@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "VS Code companion for GitHub SpecKit - spec-driven development with AI assistants",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",
@@ -48,7 +48,9 @@
         "viewType": "speckit.workflowEditor",
         "displayName": "Spec Workflow Editor",
         "selector": [
-          { "filenamePattern": "**/specs/**/*.md" }
+          {
+            "filenamePattern": "**/specs/**/*.md"
+          }
         ],
         "priority": "default"
       }
@@ -469,7 +471,11 @@
         "speckit.aiProvider": {
           "type": "string",
           "default": "claude",
-          "enum": ["claude", "gemini", "copilot"],
+          "enum": [
+            "claude",
+            "gemini",
+            "copilot"
+          ],
           "enumDescriptions": [
             "Claude Code - Full feature support (steering, agents, hooks, MCP)",
             "Gemini CLI - Steering and MCP support",

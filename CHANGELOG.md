@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.1] - 2025-12-02
+
+### Improvements
+
+- Added OpenVSX publishing support for Cursor IDE users
+- Updated acknowledgment section with project source
+
 ## [0.1.0] - 2025-12-02
 
 ### Initial Release
