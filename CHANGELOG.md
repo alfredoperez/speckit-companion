@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.2] - 2025-12-02
+
+### Fixed
+
+- Fixed OpenVSX namespace to match publisher ID (alfredoperez)
+
 ## [0.1.1] - 2025-12-02
 
 ### Improvements
