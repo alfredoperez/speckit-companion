@@ -1,0 +1,117 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile TypeScript
+        run: npm run compile
+
+      - name: Install vsce
+        run: npm install -g @vscode/vsce
+
+      - name: Build VSIX
+        run: vsce package
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Get previous tag
+        id: get_previous_tag
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          echo "PREVIOUS_TAG=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
+
+      - name: Extract changelog for current version
+        id: extract_changelog
+        run: |
+          VERSION="${{ steps.get_version.outputs.VERSION }}"
+          sed -n "/^## \[$VERSION\]/,/^## \[/p" CHANGELOG.md | sed '1d;$d' > version_changelog.txt
+          if [ -s version_changelog.txt ]; then
+            echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+            cat version_changelog.txt >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "CHANGELOG=_No changelog found for version $VERSION in CHANGELOG.md_" >> $GITHUB_OUTPUT
+          fi
+          rm -f version_changelog.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: '*.vsix'
+          generate_release_notes: true
+          name: Release v${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## 🎉 SpecKit Companion v${{ steps.get_version.outputs.VERSION }}
+
+            ${{ steps.extract_changelog.outputs.CHANGELOG }}
+
+            ### Installation
+
+            **From Extension Marketplace:**
+            ```bash
+            # VSCode (from VSCode Marketplace)
+            code --install-extension alfredo-dev.speckit-companion
+
+            # Cursor (from OpenVSX)
+            cursor --install-extension alfredo-dev.speckit-companion
+            ```
+
+            **From VSIX file:**
+            Download the `.vsix` file from assets below and install:
+            ```bash
+            # VSCode
+            code --install-extension speckit-companion-${{ steps.get_version.outputs.VERSION }}.vsix
+
+            # Cursor
+            cursor --install-extension speckit-companion-${{ steps.get_version.outputs.VERSION }}.vsix
+            ```
+
+            ### Links
+            - [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=alfredo-dev.speckit-companion)
+            - [OpenVSX Registry](https://open-vsx.org/extension/alfredo-dev/speckit-companion)
+            - [Documentation](https://github.com/alfredoperez/speckit-companion#readme)
+
+            ---
+            See below for auto-generated release notes.
+
+      - name: Publish to VSCode Marketplace
+        run: vsce publish -p ${{ secrets.VSCE_PAT }}
+        continue-on-error: true
+
+      - name: Install ovsx
+        run: npm install -g ovsx
+
+      - name: Create OpenVSX namespace (if needed)
+        run: |
+          ovsx create-namespace alfredo-dev -p ${{ secrets.OVSX_PAT }} || echo "Namespace already exists"
+        continue-on-error: true
+
+      - name: Publish to OpenVSX
+        run: ovsx publish -p ${{ secrets.OVSX_PAT }}
+        continue-on-error: true

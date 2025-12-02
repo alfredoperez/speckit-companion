@@ -1,0 +1,566 @@
+{
+  "name": "speckit-companion",
+  "displayName": "SpecKit Companion",
+  "description": "VS Code companion for GitHub SpecKit - spec-driven development with AI assistants",
+  "version": "0.1.0",
+  "license": "MIT",
+  "publisher": "alfredoperez",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alfredoperez/speckit-companion"
+  },
+  "homepage": "https://github.com/alfredoperez/speckit-companion#readme",
+  "bugs": {
+    "url": "https://github.com/alfredoperez/speckit-companion/issues"
+  },
+  "keywords": [
+    "speckit",
+    "spec-driven",
+    "claude",
+    "ai",
+    "github",
+    "workflow",
+    "specifications",
+    "development",
+    "assistant"
+  ],
+  "engines": {
+    "vscode": "^1.84.0"
+  },
+  "categories": [
+    "AI",
+    "Programming Languages",
+    "Other"
+  ],
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "activationEvents": [
+    "onStartupFinished",
+    "onCustomEditor:speckit.workflowEditor"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "speckit.workflowEditor",
+        "displayName": "Spec Workflow Editor",
+        "selector": [
+          { "filenamePattern": "**/specs/**/*.md" }
+        ],
+        "priority": "default"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "speckit",
+          "title": "SpecKit",
+          "icon": "./icons/speckit.svg"
+        }
+      ]
+    },
+    "views": {
+      "speckit": [
+        {
+          "id": "speckit.views.explorer",
+          "name": "Specs",
+          "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.views.specs.visible"
+        },
+        {
+          "id": "speckit.views.agents",
+          "name": "Agents",
+          "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.views.agents.visible"
+        },
+        {
+          "id": "speckit.views.steering",
+          "name": "Steering",
+          "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.views.steering.visible"
+        },
+        {
+          "id": "speckit.views.mcp",
+          "name": "MCP Servers",
+          "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.views.mcp.visible"
+        },
+        {
+          "id": "speckit.views.hooks",
+          "name": "Hooks",
+          "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.views.hooks.visible"
+        },
+        {
+          "id": "speckit.views.settings",
+          "name": "Settings",
+          "visibility": "collapsed",
+          "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.views.settings.visible"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "speckit.views.explorer",
+        "contents": "SpecKit CLI is not installed.\n\n[$(cloud-download) Install SpecKit CLI](command:speckit.installCli)\n\nRequires `uv` to be installed first.",
+        "when": "!speckit.cliInstalled"
+      },
+      {
+        "view": "speckit.views.explorer",
+        "contents": "SpecKit is not initialized in this workspace.\n\n[$(rocket) Initialize SpecKit](command:speckit.initWorkspace)\n\nThis will run `specify init` and create slash commands.",
+        "when": "speckit.cliInstalled && !speckit.detected"
+      },
+      {
+        "view": "speckit.views.explorer",
+        "contents": "Build features with GitHub SpecKit\n\n[$(plus) Create New Spec](command:speckit.create)",
+        "when": "speckit.detected"
+      },
+      {
+        "view": "speckit.views.settings",
+        "contents": "Configure SpecKit Companion\n\n[$(gear) Open Settings](command:speckit.settings.open)"
+      },
+      {
+        "view": "speckit.views.hooks",
+        "contents": "Automate repetitive tasks with smart triggers"
+      },
+      {
+        "view": "speckit.views.steering",
+        "contents": "[$(globe) Create User Rule](command:speckit.steering.createUserRule)\n\n[$(root-folder) Create Project Rule](command:speckit.steering.createProjectRule)"
+      },
+      {
+        "view": "speckit.views.mcp",
+        "contents": "Connect to external tools and services\nUse 'claude mcp add' to configure servers"
+      }
+    ],
+    "commands": [
+      {
+        "command": "speckit.installCli",
+        "title": "Install SpecKit CLI",
+        "category": "SpecKit",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "speckit.initWorkspace",
+        "title": "Initialize SpecKit",
+        "category": "SpecKit",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "speckit.create",
+        "title": "Create New Spec",
+        "category": "SpecKit",
+        "icon": "$(plus)"
+      },
+      {
+        "command": "speckit.specify",
+        "title": "Specify",
+        "category": "SpecKit",
+        "icon": "$(note)"
+      },
+      {
+        "command": "speckit.plan",
+        "title": "Plan",
+        "category": "SpecKit",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "speckit.tasks",
+        "title": "Tasks",
+        "category": "SpecKit",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "speckit.implement",
+        "title": "Implement",
+        "category": "SpecKit",
+        "icon": "$(code)"
+      },
+      {
+        "command": "speckit.clarify",
+        "title": "Clarify",
+        "category": "SpecKit",
+        "icon": "$(question)"
+      },
+      {
+        "command": "speckit.analyze",
+        "title": "Analyze",
+        "category": "SpecKit",
+        "icon": "$(search)"
+      },
+      {
+        "command": "speckit.checklist",
+        "title": "Checklist",
+        "category": "SpecKit",
+        "icon": "$(tasklist)"
+      },
+      {
+        "command": "speckit.constitution",
+        "title": "Constitution",
+        "category": "SpecKit",
+        "icon": "$(law)"
+      },
+      {
+        "command": "speckit.refresh",
+        "title": "Refresh Specs",
+        "category": "SpecKit",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "speckit.delete",
+        "title": "Delete Spec",
+        "category": "SpecKit",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "speckit.steering.create",
+        "title": "Create Custom Steering",
+        "category": "SpecKit",
+        "icon": "$(plus)"
+      },
+      {
+        "command": "speckit.steering.createUserRule",
+        "title": "Create User Rule",
+        "category": "SpecKit",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "speckit.steering.createProjectRule",
+        "title": "Create Project Rule",
+        "category": "SpecKit",
+        "icon": "$(root-folder)"
+      },
+      {
+        "command": "speckit.steering.refine",
+        "title": "Refine Steering",
+        "category": "SpecKit",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "speckit.steering.delete",
+        "title": "Delete Steering",
+        "category": "SpecKit",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "speckit.steering.refresh",
+        "title": "Refresh Steering",
+        "category": "SpecKit",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "speckit.agents.refresh",
+        "title": "Refresh Agents",
+        "category": "SpecKit",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "speckit.hooks.refresh",
+        "title": "Refresh Hooks",
+        "category": "SpecKit",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "speckit.mcp.refresh",
+        "title": "Refresh MCP Status",
+        "category": "SpecKit",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "speckit.settings.open",
+        "title": "SpecKit Settings",
+        "category": "SpecKit",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "speckit.checkForUpdates",
+        "title": "Check for Updates",
+        "category": "SpecKit",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "speckit.upgradeCli",
+        "title": "Upgrade CLI",
+        "category": "SpecKit",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "speckit.upgradeProject",
+        "title": "Upgrade Project Files",
+        "category": "SpecKit",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "speckit.upgradeAll",
+        "title": "Upgrade All (CLI + Project)",
+        "category": "SpecKit",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "speckit.workflowEditor.editSource",
+        "title": "Edit Source",
+        "category": "SpecKit",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "speckit.workflowEditor.refineSection",
+        "title": "Refine Section",
+        "category": "SpecKit",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "speckit.workflowEditor.removeSection",
+        "title": "Remove Section",
+        "category": "SpecKit",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "speckit.workflowEditor.addUserStory",
+        "title": "Add User Story",
+        "category": "SpecKit",
+        "icon": "$(add)"
+      },
+      {
+        "command": "speckit.workflowEditor.approveAndContinue",
+        "title": "Approve & Continue",
+        "category": "SpecKit",
+        "icon": "$(check)"
+      },
+      {
+        "command": "speckit.workflowEditor.regenerate",
+        "title": "Regenerate",
+        "category": "SpecKit",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "speckit.workflowEditor.navigateToPhase",
+        "title": "Navigate to Phase",
+        "category": "SpecKit",
+        "icon": "$(arrow-right)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "speckit.create",
+          "when": "view == speckit.views.explorer && speckit.detected",
+          "group": "navigation@1"
+        },
+        {
+          "command": "speckit.refresh",
+          "when": "view == speckit.views.explorer",
+          "group": "navigation@2"
+        },
+        {
+          "command": "speckit.steering.create",
+          "when": "view == speckit.views.steering",
+          "group": "navigation@1"
+        },
+        {
+          "command": "speckit.steering.refresh",
+          "when": "view == speckit.views.steering",
+          "group": "navigation@2"
+        },
+        {
+          "command": "speckit.mcp.refresh",
+          "when": "view == speckit.views.mcp",
+          "group": "navigation"
+        },
+        {
+          "command": "speckit.hooks.refresh",
+          "when": "view == speckit.views.hooks",
+          "group": "navigation"
+        },
+        {
+          "command": "speckit.agents.refresh",
+          "when": "view == speckit.views.agents",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "speckit.delete",
+          "when": "view == speckit.views.explorer && viewItem == spec",
+          "group": "7_modification"
+        },
+        {
+          "command": "speckit.steering.refine",
+          "when": "view == speckit.views.steering && viewItem == steering-document",
+          "group": "inline"
+        },
+        {
+          "command": "speckit.steering.delete",
+          "when": "view == speckit.views.steering && viewItem == steering-document",
+          "group": "7_modification"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "speckit.create",
+          "when": "speckit.detected"
+        },
+        {
+          "command": "speckit.specify",
+          "when": "speckit.detected"
+        },
+        {
+          "command": "speckit.plan",
+          "when": "speckit.detected"
+        },
+        {
+          "command": "speckit.tasks",
+          "when": "speckit.detected"
+        },
+        {
+          "command": "speckit.implement",
+          "when": "speckit.detected"
+        },
+        {
+          "command": "speckit.clarify",
+          "when": "speckit.detected"
+        },
+        {
+          "command": "speckit.analyze",
+          "when": "speckit.detected"
+        },
+        {
+          "command": "speckit.checklist",
+          "when": "speckit.detected"
+        },
+        {
+          "command": "speckit.constitution",
+          "when": "speckit.detected"
+        },
+        {
+          "command": "speckit.steering.create",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "speckit.checkForUpdates"
+        },
+        {
+          "command": "speckit.upgradeCli",
+          "when": "speckit.cliInstalled"
+        },
+        {
+          "command": "speckit.upgradeProject",
+          "when": "speckit.detected"
+        },
+        {
+          "command": "speckit.upgradeAll",
+          "when": "speckit.detected"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "SpecKit Companion",
+      "properties": {
+        "speckit.workflowEditor.enabled": {
+          "type": "boolean",
+          "default": true,
+          "scope": "window",
+          "order": 0,
+          "description": "Enable custom workflow editor for spec files (shows rendered markdown with action buttons)"
+        },
+        "speckit.claudePath": {
+          "type": "string",
+          "default": "claude",
+          "scope": "machine",
+          "order": 1,
+          "description": "Path to Claude Code CLI executable"
+        },
+        "speckit.aiProvider": {
+          "type": "string",
+          "default": "claude",
+          "enum": ["claude", "gemini", "copilot"],
+          "enumDescriptions": [
+            "Claude Code - Full feature support (steering, agents, hooks, MCP)",
+            "Gemini CLI - Steering and MCP support",
+            "GitHub Copilot CLI - Steering, agents, and MCP support"
+          ],
+          "scope": "machine",
+          "order": 2,
+          "description": "AI assistant to use for spec generation"
+        },
+        "speckit.geminiPath": {
+          "type": "string",
+          "default": "gemini",
+          "scope": "machine",
+          "order": 3,
+          "description": "Path to Gemini CLI executable"
+        },
+        "speckit.copilotPath": {
+          "type": "string",
+          "default": "ghcs",
+          "scope": "machine",
+          "order": 4,
+          "description": "Path to GitHub Copilot CLI executable (ghcs)"
+        },
+        "speckit.views.specs.visible": {
+          "type": "boolean",
+          "default": true,
+          "scope": "window",
+          "description": "Show Specs view"
+        },
+        "speckit.views.agents.visible": {
+          "type": "boolean",
+          "default": true,
+          "scope": "window",
+          "description": "Show Agents view"
+        },
+        "speckit.views.hooks.visible": {
+          "type": "boolean",
+          "default": true,
+          "scope": "window",
+          "description": "Show Hooks view"
+        },
+        "speckit.views.steering.visible": {
+          "type": "boolean",
+          "default": true,
+          "scope": "window",
+          "description": "Show Steering view"
+        },
+        "speckit.views.mcp.visible": {
+          "type": "boolean",
+          "default": true,
+          "scope": "window",
+          "description": "Show MCP Servers view"
+        },
+        "speckit.views.settings.visible": {
+          "type": "boolean",
+          "default": false,
+          "scope": "window",
+          "description": "Show Settings view"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package-web",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "compile-web": "webpack --mode development",
+    "watch-web": "webpack --mode development --watch",
+    "package-web": "webpack --mode production --devtool hidden-source-map",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@types/glob": "^8.1.0",
+    "@types/jest": "^30.0.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.x",
+    "@types/vscode": "^1.84.0",
+    "copy-webpack-plugin": "^13.0.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.4.0",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.3.0",
+    "vsce": "^2.15.0",
+    "webpack": "^5.100.2",
+    "webpack-cli": "^6.0.1"
+  }
+}

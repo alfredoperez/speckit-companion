@@ -1,0 +1,20 @@
+node_modules/
+dist/
+out/
+*.vsix
+.vscode-test/
+*.log
+.DS_Store
+.env
+.env.local
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
+
+# 测试相关
+coverage/
+*.snap.tmp
+.nyc_output/
+

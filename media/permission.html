@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code Permission</title>
+    <style>
+        @keyframes blink {
+
+            0%,
+            49% {
+                opacity: 1;
+            }
+
+            50%,
+            100% {
+                opacity: 0;
+            }
+        }
+
+        /* VS Code 主题变量 */
+        :root {
+            /* 使用 VS Code 提供的 CSS 变量 */
+            --vscode-editor-background: var(--vscode-editor-background);
+            --vscode-editor-foreground: var(--vscode-editor-foreground);
+            --vscode-button-background: var(--vscode-button-background);
+            --vscode-button-foreground: var(--vscode-button-foreground);
+            --vscode-button-hoverBackground: var(--vscode-button-hoverBackground);
+            --vscode-button-secondaryBackground: var(--vscode-button-secondaryBackground);
+            --vscode-button-secondaryForeground: var(--vscode-button-secondaryForeground);
+            --vscode-input-background: var(--vscode-input-background);
+            --vscode-input-border: var(--vscode-input-border);
+            --vscode-focusBorder: var(--vscode-focusBorder);
+            --vscode-badge-background: var(--vscode-badge-background);
+            --vscode-badge-foreground: var(--vscode-badge-foreground);
+            --vscode-errorForeground: var(--vscode-errorForeground);
+            --vscode-warningForeground: var(--vscode-warningForeground);
+            --vscode-successForeground: var(--vscode-successForeground);
+
+            /* 自定义主题颜色 */
+            --terminal-green: #00ff00;
+            --terminal-yellow: #ffff00;
+            --terminal-red: #ff0000;
+        }
+
+        /* 暗色主题样式 */
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: var(--vscode-font-family, 'Consolas', 'Monaco', 'Courier New', monospace);
+            background: var(--vscode-editor-background);
+            color: var(--vscode-editor-foreground);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .vscode-dark body {
+            /* 暗色主题下保持终端风格 */
+            --terminal-green: #00ff00;
+            --terminal-yellow: #ffff00;
+            --terminal-red: #ff6b6b;
+            /* 柔和的红色，不那么刺眼 */
+        }
+
+        .vscode-light body {
+            /* 亮色主题下调整颜色 - 使用深色确保可读性 */
+            --terminal-green: #1565c0;
+            /* Blue 800 - 深蓝色替代绿色 */
+            --terminal-yellow: #3e2723;
+            /* Brown 900 - 极深棕色 */
+            --terminal-red: #8d4e41;
+            /* 偏褐色的红 - 不那么刺眼 */
+
+            /* 使用 WARNING 的淡黄色背景，更加柔和 */
+            background: #fff3cd;
+        }
+
+        .container {
+            background: var(--vscode-input-background);
+            border: 2px solid var(--vscode-focusBorder);
+            padding: 30px;
+            max-width: 600px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        /* 浅色主题下的容器背景 */
+        .vscode-light .container {
+            background: #fffef9;
+            /* 更浅的奶油色，与页面背景协调 */
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.08);
+        }
+
+
+        .terminal-header {
+            color: var(--terminal-green);
+            margin-bottom: 10px;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* 浅色主题下终端头部使用深色 */
+        .vscode-light .terminal-header {
+            color: #424242;
+            /* 深灰色 */
+        }
+
+        .terminal-title {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        /* 浅色主题下标题使用深色 */
+        .vscode-light .terminal-title {
+            color: #424242;
+            /* 深灰色 */
+        }
+
+        .terminal-title::before {
+            content: '$ ';
+            color: var(--terminal-yellow);
+            margin-right: 5px;
+        }
+
+        /* 浅色主题下美元符号使用蓝色 */
+        .vscode-light .terminal-title::before {
+            color: #1565c0;
+            /* 深蓝色 */
+        }
+
+        .action-box {
+            background: var(--vscode-input-background);
+            border: 1px solid var(--vscode-input-border);
+            padding: 15px 20px;
+            margin: 5px 0 10px 0;
+            position: relative;
+        }
+
+        /* 浅色主题下 action-box 透明背景 */
+        .vscode-light .action-box {
+            background: transparent;
+            border: none;
+        }
+
+        .action-box h3 {
+            color: var(--terminal-green);
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            font-weight: normal;
+            text-transform: uppercase;
+        }
+
+        .action-box h3::before {
+            content: '[*] ';
+            color: var(--terminal-yellow);
+        }
+
+        /* 浅色主题下 action-box 标题使用深色 */
+        .vscode-light .action-box h3 {
+            color: #424242;
+            /* 深灰色 */
+        }
+
+        .action-box p {
+            margin: 10px 0;
+            font-size: 14px;
+            color: var(--terminal-green);
+        }
+
+        /* 浅色主题下 action-box 文字使用深色 */
+        .vscode-light .action-box p {
+            color: #424242;
+            /* 深灰色，易于阅读 */
+        }
+
+        .arrow-text {
+            display: block;
+            margin: 15px 0;
+            font-size: 14px;
+            color: var(--terminal-green);
+            /* 改用绿色，对比度更好 */
+        }
+
+        /* 浅色主题下 arrow-text 使用深色 */
+        .vscode-light .arrow-text {
+            color: #616161;
+            /* 中深灰色 */
+        }
+
+        /* 浅色主题下 arrow-text 光标也使用相同颜色 */
+        .vscode-light .arrow-text::after {
+            color: #616161;
+            /* 与文字相同的中深灰色 */
+        }
+
+        .arrow-text::after {
+            content: '_';
+            color: var(--terminal-green);
+            /* 光标也改为绿色 */
+            animation: blink 1s infinite;
+        }
+
+        .content {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: var(--terminal-green);
+        }
+
+        .content p {
+            margin: 10px 0;
+        }
+
+        .content strong {
+            color: var(--terminal-yellow);
+            background: var(--vscode-badge-background);
+            padding: 2px 5px;
+        }
+
+        .image-container {
+            position: relative;
+            margin: 20px 0;
+            padding: 10px;
+            background: var(--vscode-input-background);
+            border: 3px solid var(--terminal-red);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+            /* 减弱阴影 */
+        }
+
+        /* 浅色主题下使用偏红的褐色边框 */
+        .vscode-light .image-container {
+            border: 3px solid #a1665e;
+            /* 偏红的褐色 */
+            box-shadow: 0 0 20px rgba(161, 102, 94, 0.3);
+        }
+
+        .image-container::before {
+            content: 'Permission Required';
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            background: var(--vscode-editor-background);
+            color: var(--terminal-red);
+            padding: 0 10px;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        /* 浅色主题下确保 ATTENTION 标签可见 */
+        .vscode-light .image-container::before {
+            background: white;
+            border: 1px solid var(--terminal-red);
+        }
+
+        .terminal-content {
+            font-family: var(--vscode-editor-font-family, 'SF Mono', Monaco, Consolas, 'Courier New', monospace);
+            font-size: 12px;
+            /* 调小终端内容字体 */
+            line-height: 1.5;
+            padding: 15px;
+            background: var(--vscode-terminal-background, var(--vscode-editor-background));
+            color: var(--vscode-terminal-foreground, var(--vscode-editor-foreground));
+            border-radius: 4px;
+        }
+
+        .warning-banner {
+            color: var(--terminal-yellow);
+            font-weight: bold;
+            margin-bottom: 12px;
+            text-align: center;
+            letter-spacing: 1px;
+            font-size: 13px;
+            /* 调小标题字体 */
+        }
+
+        /* 浅色主题下加强警告文字背景 */
+        .vscode-light .warning-banner {
+            color: #856404;
+            /* 深棕色文字 */
+            background: #fff3cd;
+            padding: 5px;
+            border: 1px solid #ffeeba;
+        }
+
+        .warning-text {
+            margin-bottom: 20px;
+        }
+
+        .warning-text p {
+            margin: 8px 0;
+            line-height: 1.5;
+            font-size: 12px;
+            /* 调小警告文字 */
+        }
+
+        .warning-text .link {
+            color: var(--vscode-textLink-foreground);
+            text-decoration: underline;
+        }
+
+        .permission-options {
+            margin-top: 12px;
+            font-family: var(--vscode-editor-font-family, monospace);
+            font-size: 12px;
+            /* 调小选项字体 */
+        }
+
+        .permission-option {
+            padding: 5px 10px;
+            margin: 2px 0;
+        }
+
+        .permission-option.selected {
+            background: var(--vscode-list-activeSelectionBackground);
+            color: var(--vscode-list-activeSelectionForeground);
+            font-weight: bold;
+        }
+
+        /* 亮色主题适配 */
+        .vscode-light .terminal-content {
+            background: #f5f5f5;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .vscode-light .permission-option.selected {
+            background: #007acc;
+            color: white;
+        }
+
+        /* 浅色主题下确保所有黄色文字可读 */
+        .vscode-light .action-box h3::before,
+        .vscode-light .option::before,
+        .vscode-light .option::after,
+        .vscode-light .status-info::before {
+            color: var(--terminal-yellow);
+            font-weight: bold;
+        }
+
+        .vscode-light .content strong {
+            background: #fff3cd;
+            color: #856404;
+            padding: 2px 5px;
+            border-radius: 3px;
+            border: 1px solid #ffeeba;
+        }
+
+        .options {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .option {
+            padding: 12px 30px;
+            cursor: pointer;
+            transition: all 0.1s;
+            font-size: 14px;
+            font-weight: normal;
+            border: 2px solid var(--vscode-button-background);
+            text-align: center;
+            min-width: 180px;
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            text-transform: uppercase;
+            position: relative;
+            font-family: var(--vscode-font-family, 'Consolas', 'Monaco', 'Courier New', monospace);
+        }
+
+        .option::before {
+            content: '[ ';
+            color: var(--terminal-yellow);
+        }
+
+        .option::after {
+            content: ' ]';
+            color: var(--terminal-yellow);
+        }
+
+        .option:hover {
+            background: var(--vscode-button-hoverBackground);
+            color: var(--vscode-button-foreground);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .option.cancel {
+            border-color: var(--vscode-button-secondaryBackground);
+            background: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+        }
+
+        .option.cancel::before,
+        .option.cancel::after {
+            color: var(--vscode-button-secondaryForeground);
+        }
+
+        .option.cancel:hover {
+            background: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-secondaryBackground));
+            color: var(--vscode-button-secondaryForeground);
+            border-color: var(--vscode-button-secondaryBackground);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .option.accept {
+            border-color: var(--terminal-green);
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+
+            0%,
+            100% {
+                box-shadow: 0 0 5px var(--vscode-focusBorder);
+            }
+
+            50% {
+                box-shadow: 0 0 20px var(--vscode-focusBorder);
+            }
+        }
+
+        .status-info {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid var(--vscode-input-border);
+            background: var(--vscode-input-background);
+            font-size: 12px;
+            color: var(--vscode-editor-foreground);
+            opacity: 0.8;
+        }
+
+        .status-info::before {
+            content: '> ';
+            color: var(--terminal-yellow);
+        }
+
+        .issue-link {
+            color: var(--vscode-textLink-foreground);
+            text-decoration: none;
+            font-size: 12px;
+            transition: all 0.1s;
+        }
+
+        /* 浅色主题下 issue 链接颜色 */
+        .vscode-light .issue-link {
+            color: #666666;
+            /* 中灰色 */
+        }
+
+        .issue-link:hover {
+            color: var(--vscode-textLink-activeForeground);
+            text-decoration: underline;
+        }
+
+        /* 终端风格保持 - 已在 :root 中通过 CSS 变量定义 */
+
+        /* 高对比度主题支持 */
+        .vscode-high-contrast {
+            --terminal-green: var(--vscode-terminal-ansiGreen);
+            --terminal-yellow: var(--vscode-terminal-ansiYellow);
+            --terminal-red: var(--vscode-terminal-ansiRed);
+        }
+
+        /* 非交互模式提示样式 */
+        .note-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: var(--vscode-editorInfo-background, var(--vscode-input-background));
+            border: 1px solid var(--vscode-editorInfo-border, var(--vscode-input-border));
+            border-radius: 4px;
+            font-size: 15px;
+            /* 增大字体 */
+        }
+
+        .note-title {
+            color: var(--vscode-editorWarning-foreground, var(--terminal-yellow));
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            /* 增大标题字体 */
+        }
+
+        .note-text {
+            color: var(--vscode-editor-foreground);
+            line-height: 1.6;
+            margin: 0;
+            font-size: 15px;
+            /* 增大正文字体 */
+        }
+
+        .note-text code {
+            background: var(--vscode-textCodeBlock-background, rgba(0, 0, 0, 0.1));
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: var(--vscode-editor-font-family, monospace);
+            font-size: 0.9em;
+        }
+
+        /* 浅色主题下的代码块样式 */
+        .vscode-light .note-text code {
+            background: rgba(0, 0, 0, 0.06);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="terminal-header">
+            <div class="terminal-title">CLAUDE CODE PERMISSION SETUP v1.0</div>
+            <a href="#" class="issue-link" onclick="openIssue(event)">[ ISSUE #3 ]</a>
+        </div>
+
+
+        <div class="action-box">
+            <p>> SPECKIT COMPANION REQUIRES PERMISSION TO RUN COMMANDS</p>
+            <p>> REVIEW THE SECURITY WARNING</p>
+            <span class="arrow-text">> GRANT PERMISSION BELOW TO CONTINUE</span>
+
+        </div>
+
+
+
+        <div class="image-container">
+            <div class="terminal-content">
+                <div class="warning-banner">
+                    WARNING: Claude Code running in Bypass Permissions mode
+                </div>
+                <div class="warning-text">
+                    <p>In Bypass Permissions mode, Claude Code will not ask for your approval before running potentially
+                        dangerous commands.</p>
+                    <p>This mode should only be used in a sandboxed container/VM that has restricted internet access and
+                        can easily be restored if damaged.</p>
+                    <p>By proceeding, you accept all responsibility for actions taken while running in Bypass
+                        Permissions mode.</p>
+                    <p class="link">https://docs.anthropic.com/s/claude-code-security</p>
+                </div>
+                <div class="permission-options">
+                    <div class="permission-option">1. No, exit</div>
+                    <div class="permission-option selected">&gt; 2. Yes, I accept</div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- <div class="content">
+            <span class="arrow-text">> All interactive commands will fail until permissions are granted.</span>
+            <span class="arrow-text">> LOOK FOR PERMISSION REQUEST BELOW_</span>
+            <span class="arrow-text">> LOOK FOR PERMISSION REQUEST BELOW_</span>
+            <span class="arrow-text">> LOOK FOR PERMISSION REQUEST BELOW_</span>
+
+
+            <div class="note-section">
+                <p class="note-text">If using Claude Code interactive command, you must grant permissions
+                    first.</p>
+                <p class="note-text">All interactive commands will fail until permissions are granted.</p>
+            </div>
+        </div> -->
+
+        <div class="options">
+            <div class="option accept" onclick="handleAccept()">
+                Grant Permission
+            </div>
+            <div class="option cancel" onclick="handleCancel()">
+                Cancel
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const vscode = acquireVsCodeApi();
+
+        function handleAccept() {
+            vscode.postMessage({
+                command: 'accept'
+            });
+        }
+
+        function handleCancel() {
+            vscode.postMessage({
+                command: 'cancel'
+            });
+        }
+
+        function openIssue(event) {
+            event.preventDefault();
+            vscode.postMessage({
+                command: 'openIssue'
+            });
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                handleAccept();
+            } else if (e.key === 'Escape') {
+                handleCancel();
+            }
+        });
+
+        // Handle status updates from extension
+        window.addEventListener('message', event => {
+            const message = event.data;
+            if (message.command === 'updateStatus') {
+                const statusInfo = document.querySelector('.status-info');
+                if (statusInfo) {
+                    switch (message.status) {
+                        case 'verifying':
+                            statusInfo.textContent = 'STATUS: Verifying permissions...';
+                            statusInfo.style.color = 'var(--terminal-yellow)';
+                            break;
+                        case 'failed':
+                            statusInfo.textContent = 'STATUS: ' + (message.message || 'Verification failed');
+                            statusInfo.style.color = 'var(--terminal-red)';
+                            break;
+                        case 'success':
+                            statusInfo.textContent = 'STATUS: Permission granted successfully!';
+                            statusInfo.style.color = 'var(--terminal-green)';
+                            break;
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
