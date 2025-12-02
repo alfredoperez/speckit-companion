@@ -268,7 +268,7 @@ npm run package
 
 ## Acknowledgments
 
-This project builds upon the work of the open source community.
+This project builds started from all the amazing work at https://github.com/notdp/kiro-for-cc
 
 ## License
 
