@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.3] - 2025-12-03
+
+### New Features
+
+- Add `autoExecute` parameter to `executeSlashCommand` for flexible CLI control
+
+### Improvements
+
+- Simplify permission setup flow (terminal only, no WebView popup)
+- Make "Don't Ask Again" for init popup global across all projects
+- Implement command now triggers when approving tasks phase
+
+### Fixed
+
+- Fix remove button only showing on removable lines (checkbox, bullet, numbered, user-story)
+
 ## [0.1.2] - 2025-12-02
 
 ### Fixed
