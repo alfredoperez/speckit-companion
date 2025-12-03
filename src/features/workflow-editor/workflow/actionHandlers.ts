@@ -104,7 +104,15 @@ Spec file: ${document.fileName}`;
         this.outputChannel.appendLine(`[WorkflowEditor] Approve and continue`);
 
         const specInfo = parseSpecInfo(document);
-        const nextPhase = specInfo.currentPhase < 3 ? specInfo.currentPhase + 1 : 3;
+
+        // If we're on tasks phase (phase 3), run implement
+        if (specInfo.currentPhase === 3) {
+            this.outputChannel.appendLine(`[WorkflowEditor] Tasks phase - running implement`);
+            await vscode.commands.executeCommand('speckit.implement', specInfo.specDir);
+            return;
+        }
+
+        const nextPhase = specInfo.currentPhase + 1;
 
         // Determine next file (SpecKit format)
         const nextFileName = nextPhase === 2 ? 'plan.md' : 'tasks.md';

@@ -10,6 +10,19 @@ interface PhaseInfo {
     isComplete: boolean;
 }
 
+/**
+ * Generate line action buttons based on classification
+ */
+function renderLineActions(lineNum: number, refinable: boolean, removable: boolean): string {
+    const refineBtn = refinable
+        ? `<button class="line-action refine" data-action="refine" data-line="${lineNum}" title="Refine this">&#9998;</button>`
+        : '';
+    const removeBtn = removable
+        ? `<button class="line-action remove" data-action="remove" data-line="${lineNum}" title="Remove">&#128465;</button>`
+        : '';
+    return `<div class="line-actions">${refineBtn}${removeBtn}</div>`;
+}
+
 export function renderLine(line: string, lineNum: number, phaseInfo?: PhaseInfo): string {
     const classification = classifyLine(line);
     const trimmed = line.trim();
@@ -52,9 +65,7 @@ export function renderLine(line: string, lineNum: number, phaseInfo?: PhaseInfo)
         const title = cleanSectionTitle(trimmed.replace(/^### /, ''));
         return `
             <div class="line subsection-header" data-line-num="${lineNum}">
-                <div class="line-actions">
-                    <button class="line-action refine" data-action="refine" data-line="${lineNum}" title="Refine this">&#9998;</button>
-                </div>
+                ${renderLineActions(lineNum, classification.refinable, classification.removable)}
                 <h3>${escapeHtml(title)}</h3>
             </div>
         `;
@@ -65,9 +76,7 @@ export function renderLine(line: string, lineNum: number, phaseInfo?: PhaseInfo)
         const title = cleanSectionTitle(trimmed.replace(/^#### /, ''));
         return `
             <div class="line h4-header" data-line-num="${lineNum}">
-                <div class="line-actions">
-                    <button class="line-action refine" data-action="refine" data-line="${lineNum}" title="Refine this">&#9998;</button>
-                </div>
+                ${renderLineActions(lineNum, classification.refinable, classification.removable)}
                 <h4>${escapeHtml(title)}</h4>
             </div>
         `;
@@ -84,10 +93,7 @@ export function renderLine(line: string, lineNum: number, phaseInfo?: PhaseInfo)
         const content = trimmed.replace(/^- \[[ xX]\] /, '');
         return `
             <div class="line checkbox-line ${isChecked ? 'checked' : ''}" data-line-num="${lineNum}">
-                <div class="line-actions">
-                    <button class="line-action refine" data-action="refine" data-line="${lineNum}" title="Refine this">&#9998;</button>
-                    <button class="line-action remove" data-action="remove" data-line="${lineNum}" title="Remove">&#128465;</button>
-                </div>
+                ${renderLineActions(lineNum, classification.refinable, classification.removable)}
                 <span class="checkbox-marker">${isChecked ? '✅' : '⬜'}</span>
                 <span class="line-content">${parseInlineMarkdown(content)}</span>
             </div>
@@ -99,10 +105,7 @@ export function renderLine(line: string, lineNum: number, phaseInfo?: PhaseInfo)
         const content = trimmed.replace(/^[-*] /, '');
         return `
             <div class="line bullet-line" data-line-num="${lineNum}">
-                <div class="line-actions">
-                    <button class="line-action refine" data-action="refine" data-line="${lineNum}" title="Refine this">&#9998;</button>
-                    <button class="line-action remove" data-action="remove" data-line="${lineNum}" title="Remove">&#128465;</button>
-                </div>
+                ${renderLineActions(lineNum, classification.refinable, classification.removable)}
                 <span class="bullet-marker">&#8226;</span>
                 <span class="line-content">${parseInlineMarkdown(content)}</span>
             </div>
@@ -116,10 +119,7 @@ export function renderLine(line: string, lineNum: number, phaseInfo?: PhaseInfo)
         const content = match ? match[2] : trimmed;
         return `
             <div class="line numbered-line" data-line-num="${lineNum}">
-                <div class="line-actions">
-                    <button class="line-action refine" data-action="refine" data-line="${lineNum}" title="Refine this">&#9998;</button>
-                    <button class="line-action remove" data-action="remove" data-line="${lineNum}" title="Remove">&#128465;</button>
-                </div>
+                ${renderLineActions(lineNum, classification.refinable, classification.removable)}
                 <span class="number-marker">${num}.</span>
                 <span class="line-content">${parseInlineMarkdown(content)}</span>
             </div>
@@ -130,10 +130,7 @@ export function renderLine(line: string, lineNum: number, phaseInfo?: PhaseInfo)
     if (classification.type === 'user-story') {
         return `
             <div class="line user-story-line" data-line-num="${lineNum}">
-                <div class="line-actions">
-                    <button class="line-action refine" data-action="refine" data-line="${lineNum}" title="Refine this">&#9998;</button>
-                    <button class="line-action remove" data-action="remove" data-line="${lineNum}" title="Remove">&#128465;</button>
-                </div>
+                ${renderLineActions(lineNum, classification.refinable, classification.removable)}
                 <span class="line-content">${parseInlineMarkdown(trimmed)}</span>
             </div>
         `;
@@ -143,9 +140,7 @@ export function renderLine(line: string, lineNum: number, phaseInfo?: PhaseInfo)
     if (classification.refinable) {
         return `
             <div class="line content-line" data-line-num="${lineNum}">
-                <div class="line-actions">
-                    <button class="line-action refine" data-action="refine" data-line="${lineNum}" title="Refine this">&#9998;</button>
-                </div>
+                ${renderLineActions(lineNum, classification.refinable, classification.removable)}
                 <span class="line-content">${parseInlineMarkdown(trimmed)}</span>
             </div>
         `;

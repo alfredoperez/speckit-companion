@@ -142,8 +142,8 @@ export async function activate(context: vscode.ExtensionContext) {
  * Show initialization suggestion for SpecKit
  */
 async function showInitSuggestion(context: vscode.ExtensionContext): Promise<void> {
-    // Check if user dismissed this for current workspace
-    const dismissed = context.workspaceState.get<boolean>('speckit.initSuggestionDismissed', false);
+    // Check if user dismissed this globally (for all projects)
+    const dismissed = context.globalState.get<boolean>('speckit.initSuggestionDismissed', false);
     if (dismissed) {
         return;
     }
@@ -159,7 +159,8 @@ async function showInitSuggestion(context: vscode.ExtensionContext): Promise<voi
     } else if (selection === 'Learn More') {
         vscode.env.openExternal(vscode.Uri.parse('https://github.com/github/spec-kit#-get-started'));
     } else if (selection === "Don't Ask Again") {
-        await context.workspaceState.update('speckit.initSuggestionDismissed', true);
+        // Save globally so it won't show in any project
+        await context.globalState.update('speckit.initSuggestionDismissed', true);
     }
 }
 

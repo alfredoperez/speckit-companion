@@ -1,16 +1,15 @@
 import * as vscode from 'vscode';
 import { ConfigReader } from './configReader';
 import { PermissionCache, IPermissionCache } from './permissionCache';
-import { PermissionWebview } from './permissionWebview';
 import { ClaudeCodeProvider } from '../../ai-providers/claudeCodeProvider';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 
 export class PermissionManager {
     private cache: IPermissionCache;
     private configReader: ConfigReader;
-    private permissionWebview?: vscode.WebviewPanel;
     private currentTerminal?: vscode.Terminal;
     private disposables: vscode.Disposable[] = [];
+    private permissionCheckInterval?: ReturnType<typeof setInterval>;
 
     constructor(
         private context: vscode.ExtensionContext,
@@ -133,7 +132,7 @@ export class PermissionManager {
     }
 
     /**
-     * Grant permission (called from WebView)
+     * Grant permission programmatically
      */
     async grantPermission(): Promise<boolean> {
         try {
@@ -158,55 +157,55 @@ export class PermissionManager {
     }
 
     /**
-     * Show permission setup flow
+     * Show permission setup flow (simplified - terminal only, no WebView popup)
      */
     async showPermissionSetup(): Promise<boolean> {
         return new Promise((resolve) => {
             try {
                 this.outputChannel.appendLine('[PermissionManager] Starting permission setup flow...');
-                this.outputChannel.appendLine('[PermissionManager] showPermissionSetup called');
 
-                // Call ClaudeCodeProvider.createPermissionTerminal() to create terminal
+                // Create terminal for user to approve permissions
                 this.currentTerminal = ClaudeCodeProvider.createPermissionTerminal();
 
-                // Create WebView using callback pattern
-                PermissionWebview.createOrShow(
-                    this.context,
-                    {
-                        onAccept: async () => {
-                            this.outputChannel.appendLine('[PermissionManager] User accepted, granting permission');
-                            const success = await this.grantPermission();
-                            if (success) {
-                                // Close UI elements
-                                this.closeUIElements();
-                                resolve(true);
-                            }
-                            return success;
-                        },
-                        onCancel: () => {
-                            this.outputChannel.appendLine('[PermissionManager] User cancelled');
-                            // Close UI elements
-                            this.closeUIElements();
-                            resolve(false);
-                        },
-                        onDispose: () => {
-                            this.outputChannel.appendLine('[PermissionManager] WebView disposed');
-                            // Close other UI elements
-                            if (this.currentTerminal) {
-                                this.currentTerminal.dispose();
-                                this.currentTerminal = undefined;
-                            }
-                            resolve(false);
-                        }
-                    },
-                    this.outputChannel
+                // Show notification with instructions
+                vscode.window.showInformationMessage(
+                    'Claude Code permissions required. Please approve in the terminal that just opened.',
+                    'OK'
                 );
 
-                // Save WebView reference
-                this.permissionWebview = PermissionWebview.currentPanel;
-                this.outputChannel.appendLine(
-                    `[PermissionManager] WebView reference saved: ${this.permissionWebview ? 'Yes' : 'No'}`
-                );
+                // Poll for permission changes (file monitoring will also catch this)
+                let checkCount = 0;
+                const maxChecks = 300; // 5 minutes at 1 second intervals
+
+                this.permissionCheckInterval = setInterval(async () => {
+                    checkCount++;
+
+                    const hasPermission = await this.cache.refreshAndGet();
+                    if (hasPermission) {
+                        this.outputChannel.appendLine('[PermissionManager] Permission detected via polling');
+                        this.clearPermissionCheckInterval();
+                        this.closeUIElements();
+                        resolve(true);
+                        return;
+                    }
+
+                    // Check if terminal was closed by user
+                    if (!this.currentTerminal || this.currentTerminal.exitStatus !== undefined) {
+                        this.outputChannel.appendLine('[PermissionManager] Terminal closed by user');
+                        this.clearPermissionCheckInterval();
+                        resolve(false);
+                        return;
+                    }
+
+                    // Timeout after 5 minutes
+                    if (checkCount >= maxChecks) {
+                        this.outputChannel.appendLine('[PermissionManager] Permission check timed out');
+                        this.clearPermissionCheckInterval();
+                        this.closeUIElements();
+                        resolve(false);
+                    }
+                }, 1000);
+
             } catch (error) {
                 this.outputChannel.appendLine(
                     `[PermissionManager] Error in showPermissionSetup: ${error}`
@@ -217,16 +216,23 @@ export class PermissionManager {
     }
 
     /**
+     * Clear the permission check interval
+     */
+    private clearPermissionCheckInterval(): void {
+        if (this.permissionCheckInterval) {
+            clearInterval(this.permissionCheckInterval);
+            this.permissionCheckInterval = undefined;
+        }
+    }
+
+    /**
      * Close all UI elements
      */
     private closeUIElements(): void {
         this.outputChannel.appendLine('[PermissionManager] Closing UI elements');
 
-        // Close WebView
-        if (this.permissionWebview) {
-            PermissionWebview.close();
-            this.permissionWebview = undefined;
-        }
+        // Clear any pending interval
+        this.clearPermissionCheckInterval();
 
         // Close terminal
         if (this.currentTerminal) {
@@ -283,10 +289,10 @@ export class PermissionManager {
         // Clean up ConfigReader
         this.configReader.dispose();
 
-        // Clean up WebView and terminal
-        if (this.permissionWebview) {
-            this.permissionWebview.dispose();
-        }
+        // Clear any pending interval
+        this.clearPermissionCheckInterval();
+
+        // Clean up terminal
         if (this.currentTerminal) {
             this.currentTerminal.dispose();
         }

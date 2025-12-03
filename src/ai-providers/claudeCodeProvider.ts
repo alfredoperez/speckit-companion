@@ -209,8 +209,11 @@ export class ClaudeCodeProvider implements IAIProvider {
 
     /**
      * Execute a slash command in terminal
+     * @param command - The slash command to execute
+     * @param title - Terminal title
+     * @param autoExecute - If false, shows command but waits for user to press Enter (default: true)
      */
-    async executeSlashCommand(command: string, title: string = 'SpecKit - Claude Code'): Promise<vscode.Terminal> {
+    async executeSlashCommand(command: string, title: string = 'SpecKit - Claude Code', autoExecute: boolean = true): Promise<vscode.Terminal> {
         try {
             await this.ensurePermissions();
 
@@ -230,7 +233,8 @@ export class ClaudeCodeProvider implements IAIProvider {
 
             const delay = this.configManager.getTerminalDelay();
             setTimeout(() => {
-                terminal.sendText(fullCommand, true);
+                // autoExecute=false: show command but don't press Enter (user can add more input)
+                terminal.sendText(fullCommand, autoExecute);
             }, delay);
 
             return terminal;

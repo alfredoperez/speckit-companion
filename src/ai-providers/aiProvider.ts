@@ -42,8 +42,9 @@ export interface IAIProvider {
      * Execute a slash command
      * @param command The slash command (e.g., "/speckit.specify")
      * @param title Optional terminal title
+     * @param autoExecute If false, shows command but waits for user to press Enter (default: true)
      */
-    executeSlashCommand(command: string, title?: string): Promise<vscode.Terminal>;
+    executeSlashCommand(command: string, title?: string, autoExecute?: boolean): Promise<vscode.Terminal>;
 }
 
 /**
