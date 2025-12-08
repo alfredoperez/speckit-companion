@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "VS Code companion for GitHub SpecKit - spec-driven development with AI assistants",
-  "version": "0.1.3",
+  "version": "0.1.7",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",
@@ -77,6 +77,11 @@
           "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.views.agents.visible"
         },
         {
+          "id": "speckit.views.skills",
+          "name": "Skills",
+          "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.aiProvider == 'claude' && config.speckit.views.skills.visible"
+        },
+        {
           "id": "speckit.views.steering",
           "name": "Steering",
           "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.views.steering.visible"
@@ -130,6 +135,10 @@
       {
         "view": "speckit.views.mcp",
         "contents": "Connect to external tools and services\nUse 'claude mcp add' to configure servers"
+      },
+      {
+        "view": "speckit.views.skills",
+        "contents": "Model-invoked skills extend Claude's capabilities.\nCreate skills in ~/.claude/skills/ or .claude/skills/"
       }
     ],
     "commands": [
@@ -254,6 +263,12 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "speckit.skills.refresh",
+        "title": "Refresh Skills",
+        "category": "SpecKit",
+        "icon": "$(refresh)"
+      },
+      {
         "command": "speckit.hooks.refresh",
         "title": "Refresh Hooks",
         "category": "SpecKit",
@@ -373,6 +388,11 @@
         {
           "command": "speckit.agents.refresh",
           "when": "view == speckit.views.agents",
+          "group": "navigation"
+        },
+        {
+          "command": "speckit.skills.refresh",
+          "when": "view == speckit.views.skills",
           "group": "navigation"
         }
       ],
@@ -510,6 +530,12 @@
           "default": true,
           "scope": "window",
           "description": "Show Agents view"
+        },
+        "speckit.views.skills.visible": {
+          "type": "boolean",
+          "default": true,
+          "scope": "window",
+          "description": "Show Skills view (Claude Code only)"
         },
         "speckit.views.hooks.visible": {
           "type": "boolean",

@@ -38,6 +38,7 @@ export const Commands = {
         refineLine: 'speckit.workflowEditor.refineLine',
     },
     agents: { refresh: 'speckit.agents.refresh' },
+    skills: { refresh: 'speckit.skills.refresh', openSkill: 'speckit.skills.openSkill' },
     hooks: { refresh: 'speckit.hooks.refresh' },
     mcp: { refresh: 'speckit.mcp.refresh' },
     settings: { open: 'speckit.settings.open' },
@@ -54,6 +55,7 @@ export const ConfigKeys = {
     views: {
         specsVisible: 'speckit.views.specs.visible',
         agentsVisible: 'speckit.views.agents.visible',
+        skillsVisible: 'speckit.views.skills.visible',
         hooksVisible: 'speckit.views.hooks.visible',
         steeringVisible: 'speckit.views.steering.visible',
         mcpVisible: 'speckit.views.mcp.visible',
@@ -101,6 +103,7 @@ export const DefaultViewVisibility = {
     mcp: true,
     hooks: true,
     agents: true,
+    skills: true,
     settings: false,
 } as const;
 
@@ -138,6 +141,7 @@ export const TreeItemContext = {
 export const Views = {
     explorer: 'speckit.views.explorer',
     agents: 'speckit.views.agents',
+    skills: 'speckit.views.skills',
     steering: 'speckit.views.steering',
     hooks: 'speckit.views.hooks',
     mcp: 'speckit.views.mcp',

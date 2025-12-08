@@ -132,6 +132,9 @@ See configured Model Context Protocol servers for external tool integrations.
 #### Hooks View (Claude Code only)
 View automation hooks that run on events like pre-commit, post-save, etc.
 
+#### Skills View (Claude Code only)
+Browse and manage Claude Code skills from project (`.claude/skills/`), user (`~/.claude/skills/`), and installed plugins.
+
 ## Prerequisites
 
 1. **AI Coding Assistant** (at least one):
@@ -219,6 +222,7 @@ Settings are stored in `.claude/settings/speckit-settings.json`:
     "steering": { "visible": true },
     "mcp": { "visible": true },
     "hooks": { "visible": true },
+    "skills": { "visible": true },
     "settings": { "visible": false }
   }
 }
