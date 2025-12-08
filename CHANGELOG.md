@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.7] - 2025-12-08
+
+### New Features
+
+- Add Skills view with YAML frontmatter support for Claude Code skills
+
+### Fixed
+
+- Remove Claude Code as automatic reviewer in PRs
+
 ## [0.1.3] - 2025-12-03
 
 ### New Features
