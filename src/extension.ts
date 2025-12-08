@@ -10,6 +10,7 @@ import { HooksExplorerProvider } from './features/hooks';
 import { MCPExplorerProvider } from './features/mcp';
 import { OverviewProvider } from './features/settings';
 import { AgentsExplorerProvider, AgentManager } from './features/agents';
+import { SkillsExplorerProvider, SkillManager } from './features/skills';
 import { PermissionManager } from './features/permission';
 import { WorkflowEditorProvider, registerWorkflowEditorCommands } from './features/workflow-editor';
 
@@ -73,6 +74,8 @@ export async function activate(context: vscode.ExtensionContext) {
     const agentManager = new AgentManager(context, outputChannel);
     await agentManager.initializeBuiltInAgents();
 
+    const skillManager = new SkillManager(context, outputChannel);
+
     // Register tree data providers
     const overviewProvider = new OverviewProvider(context);
     const specExplorer = new SpecExplorerProvider(context, outputChannel);
@@ -80,6 +83,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const hooksExplorer = new HooksExplorerProvider(context);
     const mcpExplorer = new MCPExplorerProvider(context, outputChannel);
     const agentsExplorer = new AgentsExplorerProvider(context, agentManager, outputChannel);
+    const skillsExplorer = new SkillsExplorerProvider(context, skillManager, outputChannel);
 
     // Set managers
     steeringExplorer.setSteeringManager(steeringManager);
@@ -88,9 +92,17 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.window.registerTreeDataProvider(Views.settings, overviewProvider),
         vscode.window.registerTreeDataProvider(Views.explorer, specExplorer),
         vscode.window.registerTreeDataProvider(Views.agents, agentsExplorer),
+        vscode.window.registerTreeDataProvider(Views.skills, skillsExplorer),
         vscode.window.registerTreeDataProvider(Views.steering, steeringExplorer),
         vscode.window.registerTreeDataProvider(Views.hooks, hooksExplorer),
         vscode.window.registerTreeDataProvider(Views.mcp, mcpExplorer)
+    );
+
+    // Register Skills refresh command
+    context.subscriptions.push(
+        vscode.commands.registerCommand('speckit.skills.refresh', () => {
+            skillsExplorer.refresh();
+        })
     );
 
     // Initialize update checker

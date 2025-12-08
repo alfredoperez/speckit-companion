@@ -66,6 +66,10 @@ export interface ProviderPaths {
     agentsDir: string;
     /** Pattern for agent files */
     agentsPattern: string;
+    /** Directory for skill definitions */
+    skillsDir: string;
+    /** Pattern for skill folders (each containing SKILL.md) */
+    skillsPattern: string;
     /** Path to MCP config file (relative to home) */
     mcpConfigPath: string;
     /** Whether hooks are supported */
@@ -82,6 +86,8 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         steeringPattern: '*.md',
         agentsDir: '.claude/agents',
         agentsPattern: '*.md',
+        skillsDir: '.claude/skills',
+        skillsPattern: '*/SKILL.md',
         mcpConfigPath: '.claude/settings.json',
         supportsHooks: true,
     },
@@ -91,6 +97,8 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         steeringPattern: 'GEMINI.md',
         agentsDir: '', // Limited agent support
         agentsPattern: '',
+        skillsDir: '', // Not supported
+        skillsPattern: '',
         mcpConfigPath: '.gemini/settings.json',
         supportsHooks: false,
     },
@@ -100,6 +108,8 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         steeringPattern: '*.instructions.md',
         agentsDir: '.github/agents',
         agentsPattern: '*.agent.md',
+        skillsDir: '', // Not supported
+        skillsPattern: '',
         mcpConfigPath: '.copilot/mcp-config.json',
         supportsHooks: false,
     },
