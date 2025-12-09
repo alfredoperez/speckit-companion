@@ -31,13 +31,7 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-| Principle | Check | Status |
-|-----------|-------|--------|
-| I. Code Quality First | TypeScript strict mode, no `any` types, ESLint compliance | ☐ |
-| II. Provider-Agnostic | No hardcoded provider references in core logic | ☐ |
-| III. TreeView-First UX | Primary actions via tree view, visual feedback < 1s | ☐ |
-| IV. SpecKit Protocol | Follows `specs/{name}/` structure, respects templates | ☐ |
-| V. Defensive File Ops | Read before write, workspace-scoped, confirm destructive | ☐ |
+[Gates determined based on constitution file]
 
 ## Project Structure
 

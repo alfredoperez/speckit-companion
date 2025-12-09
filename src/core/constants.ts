@@ -92,6 +92,8 @@ export const Timing = {
     terminalDisposeDelay: 1000,
     /** Debounce delay for file watcher refresh */
     fileWatcherDebounce: 1000,
+    /** Delay for Gemini CLI to initialize before sending prompt */
+    geminiInitDelay: 5000,
 } as const;
 
 /**

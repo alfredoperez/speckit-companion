@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "VS Code companion for GitHub SpecKit - spec-driven development with AI assistants",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",

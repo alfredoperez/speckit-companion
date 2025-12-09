@@ -69,13 +69,11 @@ export class GeminiCliProvider implements IAIProvider {
 
     /**
      * Execute a prompt in a visible terminal (split view)
+     * Gemini CLI runs in interactive mode - we start it first, then send the prompt
      */
     async executeInTerminal(prompt: string, title: string = 'SpecKit - Gemini'): Promise<vscode.Terminal> {
         try {
             const cliPath = this.getCliPath();
-            const promptFilePath = await this.createTempFile(prompt, 'prompt');
-            // Gemini CLI uses -p for prompt from file or direct prompt
-            const command = `${cliPath} "$(cat "${promptFilePath}")"`;
 
             const terminal = vscode.window.createTerminal({
                 name: title,
@@ -88,19 +86,21 @@ export class GeminiCliProvider implements IAIProvider {
             terminal.show();
 
             const delay = this.configManager.getTerminalDelay();
+
+            // Start Gemini in interactive mode
             setTimeout(() => {
-                terminal.sendText(command, true);
+                terminal.sendText(cliPath, true);
             }, delay);
 
-            // Clean up temp file after delay
-            setTimeout(async () => {
-                try {
-                    await fs.promises.unlink(promptFilePath);
-                    this.outputChannel.appendLine(`[GeminiCliProvider] Cleaned up prompt file: ${promptFilePath}`);
-                } catch (e) {
-                    this.outputChannel.appendLine(`[GeminiCliProvider] Failed to cleanup temp file: ${e}`);
-                }
-            }, Timing.tempFileCleanupDelay);
+            // After Gemini initializes, send the prompt then Enter separately
+            setTimeout(() => {
+                terminal.sendText(prompt, false);  // Send text without Enter
+            }, delay + Timing.geminiInitDelay);
+
+            // Send Enter after a small delay to submit the prompt
+            setTimeout(() => {
+                terminal.sendText('', true);  // Just send Enter
+            }, delay + Timing.geminiInitDelay + 200);
 
             return terminal;
 
@@ -113,6 +113,7 @@ export class GeminiCliProvider implements IAIProvider {
 
     /**
      * Execute a prompt in headless/background mode
+     * Uses pipe to send prompt to Gemini CLI
      */
     async executeHeadless(prompt: string): Promise<AIExecutionResult> {
         this.outputChannel.appendLine(`[GeminiCliProvider] Invoking Gemini CLI in headless mode`);
@@ -125,7 +126,8 @@ export class GeminiCliProvider implements IAIProvider {
         const cliPath = this.getCliPath();
 
         const promptFilePath = await this.createTempFile(prompt, 'background-prompt');
-        const commandLine = `${cliPath} "$(cat "${promptFilePath}")"`;
+        // Use pipe to send prompt content to Gemini CLI
+        const commandLine = `cat "${promptFilePath}" | ${cliPath}`;
 
         const terminal = vscode.window.createTerminal({
             name: 'Gemini CLI Background',
@@ -188,11 +190,11 @@ export class GeminiCliProvider implements IAIProvider {
 
     /**
      * Execute a slash command in terminal
-     * Note: Gemini CLI may not support slash commands directly
+     * Gemini CLI supports slash commands in interactive mode
      */
     async executeSlashCommand(command: string, title: string = 'SpecKit - Gemini'): Promise<vscode.Terminal> {
-        // Convert slash command to regular prompt for Gemini
-        const prompt = command.startsWith('/') ? command.substring(1) : command;
-        return this.executeInTerminal(`Run the following command: ${prompt}`, title);
+        // Ensure command starts with /
+        const slashCommand = command.startsWith('/') ? command : `/${command}`;
+        return this.executeInTerminal(slashCommand, title);
     }
 }

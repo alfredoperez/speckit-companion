@@ -1,0 +1,34 @@
+name: Handle prompt dispatch
+
+on:
+  repository_dispatch:
+    types: [prompt-dispatch]
+
+jobs:
+  run-prompt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log payload
+        run: |
+          echo "Event received: ${{ toJson(github.event) }}"
+
+      - name: Post prompt as comment
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const payload = context.payload.client_payload || {};
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const promptFile = payload.prompt_file || 'unknown';
+            const prompt = payload.prompt || '';
+            const origin = payload.origin || '';
+            // Try to extract issue/PR number from origin URL
+            const m = origin.match(/\/pulls?\/(\d+)/);
+            const number = m ? parseInt(m[1], 10) : null;
+            if (!number) {
+              console.log('No issue/PR number found in origin, aborting comment.');
+              return;
+            }
+            const body = `Responding to /${promptFile}\n\nPrompt:\n\n${prompt}`;
+            await github.issues.createComment({ owner, repo, issue_number: number, body });

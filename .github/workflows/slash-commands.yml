@@ -1,0 +1,46 @@
+name: Dispatch prompt slash commands
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+jobs:
+  dispatch-prompt:
+    if: startsWith(github.event.comment.body, '/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Extract command
+        id: command
+        run: |
+          body="${{ github.event.comment.body }}"
+          cmd=$(echo "$body" | awk '{print $1}' | sed 's/^\///' | tr -d '\r\n')
+          echo "::set-output name=cmd::$cmd"
+
+      - name: Find prompt file
+        id: prompt
+        run: |
+          cmd="${{ steps.command.outputs.cmd }}"
+          # find matching file in .github/prompts
+          file=$(ls .github/prompts | grep -E "^$cmd\.(md|txt|yml|yaml|json)$" | head -n1 || true)
+          if [ -z "$file" ]; then
+            echo "::error::No prompt file found for /$cmd"
+            exit 1
+          fi
+          echo "::set-output name=file::$file"
+
+      - name: Read prompt
+        id: read
+        run: |
+          file=".github/prompts/${{ steps.prompt.outputs.file }}"
+          echo "::set-output name=prompt::$(sed 's/%/%%/g' "$file" | sed ':a;N;$!ba;s/\n/\\n/g')"
+
+      - name: Create dispatch event
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          event-type: prompt-dispatch
+          client-payload: '{"prompt_file":"${{ steps.prompt.outputs.file }}","prompt":"${{ steps.read.outputs.prompt }}","commenter":"${{ github.event.comment.user.login }}","origin":"${{ github.event.comment.html_url }}"}'
