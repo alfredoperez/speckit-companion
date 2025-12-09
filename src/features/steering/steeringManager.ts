@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { IAIProvider } from '../../ai-providers/aiProvider';
+import { getAIProvider } from '../../extension';
 import { ConfigManager } from '../../core/utils/configManager';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 
@@ -8,7 +8,6 @@ export class SteeringManager {
     private configManager: ConfigManager;
 
     constructor(
-        private aiProvider: IAIProvider,
         private outputChannel: vscode.OutputChannel
     ) {
         this.configManager = ConfigManager.getInstance();
@@ -52,7 +51,7 @@ The document should:
 3. Include code examples where appropriate
 4. Be referenced in CLAUDE.md with a @-mention`;
 
-            await this.aiProvider.executeInTerminal(prompt, 'SpecKit - Create Steering');
+            await getAIProvider().executeInTerminal(prompt, 'SpecKit - Create Steering');
 
             await NotificationUtils.showAutoDismissNotification('Claude is creating a steering document. Check the terminal for progress.');
         } catch (error) {
@@ -70,7 +69,7 @@ Please update CLAUDE.md to remove any references to this deleted document.`;
 
             await NotificationUtils.showAutoDismissNotification(`Deleting "${documentName}" and updating CLAUDE.md...`);
 
-            const result = await this.aiProvider.executeHeadless(prompt);
+            const result = await getAIProvider().executeHeadless(prompt);
 
             if (result.exitCode === 0) {
                 await NotificationUtils.showAutoDismissNotification(`Steering document "${documentName}" deleted and CLAUDE.md updated.`);
@@ -127,7 +126,7 @@ Based on the project structure and code, create steering documents for:
 
 Update CLAUDE.md to reference these new steering documents.`;
 
-            await this.aiProvider.executeInTerminal(prompt, 'SpecKit - Init Steering');
+            await getAIProvider().executeInTerminal(prompt, 'SpecKit - Init Steering');
 
             await NotificationUtils.showAutoDismissNotification('Steering documents generation started. Check the terminal for progress.');
         });
@@ -142,7 +141,7 @@ Analyze the document and:
 3. Fill in any gaps in coverage
 4. Update based on current best practices`;
 
-        await this.aiProvider.executeInTerminal(prompt, 'SpecKit - Refine Steering');
+        await getAIProvider().executeInTerminal(prompt, 'SpecKit - Refine Steering');
 
         await NotificationUtils.showAutoDismissNotification('Claude is refining the steering document. Check the terminal for progress.');
     }

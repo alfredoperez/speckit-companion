@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { IAIProvider } from '../../ai-providers/aiProvider';
+import { getAIProvider } from '../../extension';
 import { SpecExplorerProvider } from './specExplorerProvider';
 import { SpecKitDetector } from '../../speckit/detector';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
@@ -11,7 +11,6 @@ import { sanitizeShellInput } from '../../core/utils/sanitize';
  */
 export function registerSpecKitCommands(
     context: vscode.ExtensionContext,
-    aiProvider: IAIProvider,
     specExplorer: SpecExplorerProvider,
     specKitDetector: SpecKitDetector,
     outputChannel: vscode.OutputChannel
@@ -53,7 +52,7 @@ export function registerSpecKitCommands(
             NotificationUtils.showAutoDismissNotification('Creating spec with SpecKit. Check the terminal for progress.');
 
             const prompt = `/speckit.specify ${sanitizedDescription}`;
-            await aiProvider.executeInTerminal(prompt, 'SpecKit - Creating Spec');
+            await getAIProvider().executeInTerminal(prompt, 'SpecKit - Creating Spec');
         })
     );
 
@@ -86,7 +85,7 @@ export function registerSpecKitCommands(
     );
 
     // Register phase commands
-    registerPhaseCommands(context, aiProvider, outputChannel);
+    registerPhaseCommands(context, outputChannel);
 
     // Watch specs/ directory
     const specsWatcher = vscode.workspace.createFileSystemWatcher('**/specs/**/*');
@@ -101,7 +100,6 @@ export function registerSpecKitCommands(
  */
 function registerPhaseCommands(
     context: vscode.ExtensionContext,
-    aiProvider: IAIProvider,
     outputChannel: vscode.OutputChannel
 ): void {
     const phaseCommands = [
@@ -126,7 +124,7 @@ function registerPhaseCommands(
                 }
 
                 const prompt = `/speckit.${cmd.name} ${targetDir}`;
-                await aiProvider.executeInTerminal(prompt, `SpecKit - ${cmd.title}`);
+                await getAIProvider().executeInTerminal(prompt, `SpecKit - ${cmd.title}`);
             })
         );
     }
@@ -137,7 +135,7 @@ function registerPhaseCommands(
             outputChannel.appendLine(`[SpecKit] Constitution command triggered`);
 
             const prompt = `/speckit.constitution`;
-            await aiProvider.executeInTerminal(prompt, 'SpecKit - Constitution');
+            await getAIProvider().executeInTerminal(prompt, 'SpecKit - Constitution');
         })
     );
 }

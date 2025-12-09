@@ -1,19 +1,18 @@
 import * as vscode from 'vscode';
-import { IAIProvider } from '../../ai-providers/aiProvider';
+import { getAIProvider } from '../../extension';
 
 /**
  * Register workflow editor action commands
  */
 export function registerWorkflowEditorCommands(
     context: vscode.ExtensionContext,
-    aiProvider: IAIProvider,
     outputChannel: vscode.OutputChannel
 ): void {
     context.subscriptions.push(
         vscode.commands.registerCommand('speckit.workflowEditor.refineSection',
             async (uri: vscode.Uri, sectionId: string, prompt: string) => {
                 outputChannel.appendLine(`[WorkflowEditor] Refine section command: ${sectionId}`);
-                await aiProvider.executeInTerminal(prompt, 'Refining Section');
+                await getAIProvider().executeInTerminal(prompt, 'Refining Section');
             }
         ),
 

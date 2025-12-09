@@ -69,7 +69,7 @@ export async function activate(context: vscode.ExtensionContext) {
     permissionManager = new PermissionManager(context, outputChannel);
     await permissionManager.initializePermissions();
 
-    const steeringManager = new SteeringManager(aiProvider, outputChannel);
+    const steeringManager = new SteeringManager(outputChannel);
 
     const agentManager = new AgentManager(context, outputChannel);
     await agentManager.initializeBuiltInAgents();
@@ -111,7 +111,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // Register all commands
     registerCliCommands(context, specKitDetector);
     registerSteeringCommands(context, steeringManager, steeringExplorer, agentsExplorer, outputChannel);
-    registerSpecKitCommands(context, aiProvider, specExplorer, specKitDetector, outputChannel);
+    registerSpecKitCommands(context, specExplorer, specKitDetector, outputChannel);
     registerUtilityCommands(context, hooksExplorer, mcpExplorer, updateChecker, outputChannel);
 
     // Set up file watchers
@@ -134,17 +134,19 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     // Register workflow editor action commands
-    registerWorkflowEditorCommands(context, aiProvider, outputChannel);
+    registerWorkflowEditorCommands(context, outputChannel);
 
     // Listen for provider configuration changes
     context.subscriptions.push(
-        vscode.workspace.onDidChangeConfiguration(e => {
+        vscode.workspace.onDidChangeConfiguration(async e => {
             if (e.affectsConfiguration('speckit.aiProvider')) {
-                // Clear cached provider and reinitialize
-                AIProviderFactory.clearCache();
-                aiProvider = AIProviderFactory.getProvider(context, outputChannel);
-                outputChannel.appendLine(`[Extension] AI provider changed to: ${aiProvider.name}`);
-                vscode.window.showInformationMessage(`SpecKit now using ${aiProvider.name}`);
+                const action = await vscode.window.showInformationMessage(
+                    'AI provider changed. Reload window to apply changes.',
+                    'Reload Now'
+                );
+                if (action === 'Reload Now') {
+                    vscode.commands.executeCommand('workbench.action.reloadWindow');
+                }
             }
         })
     );
