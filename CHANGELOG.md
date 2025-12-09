@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2025-12-09
+
+### New Features
+
+- Improved Gemini CLI support with proper interactive mode handling
+
+### Fixed
+
+- Fix extension reload prompt when changing AI provider
+
 ## [0.1.7] - 2025-12-08
 
 ### New Features
