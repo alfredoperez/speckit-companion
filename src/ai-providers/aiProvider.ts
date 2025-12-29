@@ -154,17 +154,17 @@ export async function promptForProviderSelection(): Promise<AIProviderType | und
         [
             {
                 label: '$(hubot) Claude Code',
-                description: 'Full feature support (steering, agents, hooks, MCP)',
+                description: 'Full feature support: steering, agents, hooks, and MCP',
                 value: 'claude' as AIProviderType
             },
             {
                 label: '$(github) GitHub Copilot CLI',
-                description: 'Steering, agents, and MCP support',
+                description: 'Steering, agents, and MCP support (no hooks)',
                 value: 'copilot' as AIProviderType
             },
             {
                 label: '$(sparkle) Gemini CLI',
-                description: 'Steering and MCP support',
+                description: 'Steering and MCP support (no agents or hooks)',
                 value: 'gemini' as AIProviderType
             }
         ],
