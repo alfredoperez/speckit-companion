@@ -139,7 +139,15 @@ export function getConfiguredProviderType(): AIProviderType {
 /**
  * Prompt user to select their AI provider and save the selection.
  * Shows a QuickPick with available providers and saves choice to global settings.
- * @returns The selected provider type, or undefined if user cancelled
+ * 
+ * @returns The selected provider type, or undefined if user cancelled.
+ * 
+ * @remarks
+ * When undefined is returned (user cancelled), the caller should handle this case
+ * appropriately - typically by showing an error and preventing further initialization.
+ * If the caller continues without handling the cancellation, the extension will fall
+ * back to the default provider ('claude') from settings, which may trigger unwanted
+ * permission flows.
  */
 export async function promptForProviderSelection(): Promise<AIProviderType | undefined> {
     const selection = await vscode.window.showQuickPick(

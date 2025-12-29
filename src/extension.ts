@@ -67,8 +67,9 @@ export async function activate(context: vscode.ExtensionContext) {
         outputChannel.appendLine('[Extension] AI provider not configured, prompting user...');
         const selectedProvider = await promptForProviderSelection();
         if (!selectedProvider) {
-            outputChannel.appendLine('[Extension] User cancelled provider selection');
-            vscode.window.showWarningMessage('SpecKit Companion requires an AI provider to be selected. You can configure it later in settings.');
+            outputChannel.appendLine('[Extension] User cancelled provider selection, extension will not activate');
+            vscode.window.showErrorMessage('SpecKit Companion requires an AI provider to be selected to function. Please configure an AI provider in the extension settings.');
+            return;
         }
     }
 
