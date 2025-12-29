@@ -116,11 +116,64 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
 };
 
 /**
+ * Check if the AI provider has been explicitly configured by the user.
+ * Returns true if the setting exists at global, workspace, or folder level.
+ * @returns True if provider has been explicitly set, false if using default
+ */
+export function isProviderConfigured(): boolean {
+    const config = vscode.workspace.getConfiguration('speckit');
+    const inspection = config.inspect<AIProviderType>('aiProvider');
+    
+    // Check if set at any level (global, workspace, or folder)
+    return !!(inspection?.globalValue || inspection?.workspaceValue || inspection?.workspaceFolderValue);
+}
+
+/**
  * Get the configured AI provider type from settings
  */
 export function getConfiguredProviderType(): AIProviderType {
     const config = vscode.workspace.getConfiguration('speckit');
     return config.get<AIProviderType>('aiProvider', 'claude');
+}
+
+/**
+ * Prompt user to select their AI provider and save the selection.
+ * Shows a QuickPick with available providers and saves choice to global settings.
+ * @returns The selected provider type, or undefined if user cancelled
+ */
+export async function promptForProviderSelection(): Promise<AIProviderType | undefined> {
+    const selection = await vscode.window.showQuickPick(
+        [
+            {
+                label: '$(hubot) Claude Code',
+                description: 'Full feature support (steering, agents, hooks, MCP)',
+                value: 'claude' as AIProviderType
+            },
+            {
+                label: '$(github) GitHub Copilot CLI',
+                description: 'Steering, agents, and MCP support',
+                value: 'copilot' as AIProviderType
+            },
+            {
+                label: '$(sparkle) Gemini CLI',
+                description: 'Steering and MCP support',
+                value: 'gemini' as AIProviderType
+            }
+        ],
+        {
+            placeHolder: 'Select your AI coding assistant',
+            title: 'SpecKit Companion - Choose AI Provider',
+            ignoreFocusOut: true
+        }
+    );
+
+    if (selection) {
+        const config = vscode.workspace.getConfiguration('speckit');
+        await config.update('aiProvider', selection.value, vscode.ConfigurationTarget.Global);
+        return selection.value;
+    }
+    
+    return undefined;
 }
 
 /**

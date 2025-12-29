@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 // AI Providers
-import { IAIProvider, AIProviderFactory } from './ai-providers';
+import { IAIProvider, AIProviderFactory, isProviderConfigured, promptForProviderSelection } from './ai-providers';
 
 // Features
 import { SteeringManager, SteeringExplorerProvider, registerSteeringCommands } from './features/steering';
@@ -60,6 +60,16 @@ export async function activate(context: vscode.ExtensionContext) {
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (!workspaceFolders || workspaceFolders.length === 0) {
         outputChannel.appendLine('WARNING: No workspace folder found!');
+    }
+
+    // Prompt for AI provider selection if not configured
+    if (!isProviderConfigured()) {
+        outputChannel.appendLine('[Extension] AI provider not configured, prompting user...');
+        const selectedProvider = await promptForProviderSelection();
+        if (!selectedProvider) {
+            outputChannel.appendLine('[Extension] User cancelled provider selection');
+            vscode.window.showWarningMessage('SpecKit Companion requires an AI provider to be selected. You can configure it later in settings.');
+        }
     }
 
     // Initialize providers and managers
