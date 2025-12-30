@@ -4,7 +4,7 @@
     "module": "ES2020",
     "lib": ["ES2020", "DOM"],
     "outDir": "./dist/webview",
-    "rootDir": "./webview-src",
+    "rootDir": "./webview/src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -15,7 +15,7 @@
     "declaration": false
   },
   "include": [
-    "webview-src/**/*"
+    "webview/src/**/*"
   ],
   "exclude": [
     "node_modules",

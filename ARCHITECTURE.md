@@ -33,17 +33,25 @@ src/
 └── watchers/             # File system watchers
     └── fileWatchers.ts   # Watches .claude/ for changes
 
-webview-src/              # Workflow editor webview (TypeScript)
-├── workflow.ts           # Main webview entry
-├── render/               # Content rendering
-│   └── lineRenderer.ts   # Renders markdown lines with actions
-├── markdown/             # Markdown parsing
-│   └── classifier.ts     # Classifies line types
-├── ui/                   # UI components
-└── types.ts              # Webview types
+webview/                  # Workflow editor webview
+├── src/                  # TypeScript source
+│   ├── workflow.ts       # Main webview entry
+│   ├── render/           # Content rendering
+│   │   └── lineRenderer.ts   # Renders markdown lines with actions
+│   ├── markdown/         # Markdown parsing
+│   │   └── classifier.ts     # Classifies line types
+│   ├── ui/               # UI components
+│   └── types.ts          # Webview types
+└── styles/               # CSS stylesheets
+    ├── workflow.css      # Workflow editor styles
+    └── spec-markdown.css # Spec markdown styles
 
-webview/                  # Compiled webview assets
-└── workflow.css          # Styles for workflow editor
+assets/                   # Static assets
+├── icons/                # Extension icons (SVG)
+└── media/                # Media files (images, HTML)
+
+docs/                     # Documentation assets
+└── screenshots/          # README screenshots
 ```
 
 ## Key Components

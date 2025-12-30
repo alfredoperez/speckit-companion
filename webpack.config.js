@@ -52,7 +52,7 @@ const webviewConfig = {
   target: 'web', // Webview runs in browser context
   mode: 'none',
 
-  entry: './webview-src/workflow.ts', // Webview entry point
+  entry: './webview/src/workflow.ts', // Webview entry point
   output: {
     path: path.resolve(__dirname, 'dist', 'webview'),
     filename: 'workflow.js',
@@ -81,8 +81,9 @@ const webviewConfig = {
   plugins: [
     new CopyPlugin({
       patterns: [
-        // Copy CSS file to webview output
-        { from: 'webview/workflow.css', to: 'workflow.css' }
+        // Copy CSS files to webview output
+        { from: 'webview/styles/workflow.css', to: 'workflow.css' },
+        { from: 'webview/styles/spec-markdown.css', to: 'spec-markdown.css' }
       ]
     })
   ]

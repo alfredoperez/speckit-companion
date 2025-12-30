@@ -17,7 +17,8 @@ node_modules/**
 README*.md
 .DS_Store
 *.vsix
-!media/**
+!assets/media/**
+!assets/icons/**
 .claude/**
 CLAUDE.md
 scripts/**
@@ -28,7 +29,7 @@ jest.config.js
 tsconfig.test.json
 coverage/**
 dist/__tests__/**
-screenshots/**
+docs/screenshots/**
 webpack.config.js
 *.log
 **/*.ts

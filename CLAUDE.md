@@ -30,26 +30,24 @@ npm run package
 ### Project Structure
 
 ```plain
-src/
-├── extension.ts           # Extension entry point, command registration
-├── constants.ts          # Centralized configuration constants
-├── features/            # Business logic for features
-│   ├── spec/
-│   │   └── specManager.ts      # Spec lifecycle management
-│   └── steering/
-│       └── steeringManager.ts  # Steering document management
-├── providers/           # VSCode TreeDataProviders
-│   ├── claudeCodeProvider.ts   # Claude CLI integration
-│   ├── specExplorerProvider.ts # Spec tree view
-│   ├── steeringExplorerProvider.ts # Steering tree view
-│   ├── hooksExplorerProvider.ts    # Hooks tree view
-│   ├── mcpExplorerProvider.ts      # MCP servers tree view
-│   └── overviewProvider.ts         # Settings overview
-├── prompts/            # AI prompt templates
-│   ├── specPrompts.ts          # Spec generation prompts
-│   └── steeringPrompts.ts      # Steering doc prompts
-└── utils/              # Utility functions
-    └── configManager.ts        # Configuration management
+src/                      # Main extension source (Node.js)
+├── extension.ts          # Extension entry point, command registration
+├── core/                 # Core utilities and types
+├── features/             # Business logic for features
+├── ai-providers/         # AI provider integrations
+├── speckit/              # SpecKit CLI integration
+└── utils/                # Utility functions
+
+webview/                  # Workflow editor webview
+├── src/                  # TypeScript source (browser)
+└── styles/               # CSS stylesheets
+
+assets/                   # Static assets
+├── icons/                # Extension icons (SVG)
+└── media/                # Media files (images, HTML)
+
+docs/                     # Documentation assets
+└── screenshots/          # README screenshots
 ```
 
 ### Core Components
