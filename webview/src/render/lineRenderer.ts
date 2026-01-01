@@ -14,13 +14,16 @@ interface PhaseInfo {
  * Generate line action buttons based on classification
  */
 function renderLineActions(lineNum: number, refinable: boolean, removable: boolean): string {
+    const editBtn = refinable
+        ? `<button class="line-action edit" data-action="edit" data-line="${lineNum}" title="Edit">&#9998;</button>`
+        : '';
     const refineBtn = refinable
-        ? `<button class="line-action refine" data-action="refine" data-line="${lineNum}" title="Refine this">&#9998;</button>`
+        ? `<button class="line-action refine" data-action="refine" data-line="${lineNum}" title="Refine with AI">&#10024;</button>`
         : '';
     const removeBtn = removable
         ? `<button class="line-action remove" data-action="remove" data-line="${lineNum}" title="Remove">&#128465;</button>`
         : '';
-    return `<div class="line-actions">${refineBtn}${removeBtn}</div>`;
+    return `<div class="line-actions">${editBtn}${refineBtn}${removeBtn}</div>`;
 }
 
 export function renderLine(line: string, lineNum: number, phaseInfo?: PhaseInfo): string {

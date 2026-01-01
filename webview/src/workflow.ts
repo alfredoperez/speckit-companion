@@ -4,7 +4,7 @@
  */
 import type { SpecInfo, ExtensionToWebviewMessage, VSCodeApi } from './types';
 import { renderContent } from './render';
-import { updatePhaseUI, showRefineInput } from './ui';
+import { updatePhaseUI, showRefineInput, showInlineEdit } from './ui';
 
 // These are injected by the webview HTML
 declare const vscode: VSCodeApi;
@@ -106,6 +106,14 @@ function setupEventListeners(): void {
             const command = button.dataset.command;
 
             switch (action) {
+                case 'edit': {
+                    if (!lineNum) break;
+                    const lineEl = document.querySelector(`[data-line-num="${lineNum}"]`) as HTMLElement;
+                    if (lineEl) {
+                        showInlineEdit(lineNum, lineEl, vscode);
+                    }
+                    break;
+                }
                 case 'refine': {
                     if (!lineNum) break;
                     const lineEl = document.querySelector(`[data-line-num="${lineNum}"]`);

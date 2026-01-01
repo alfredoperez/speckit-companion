@@ -98,6 +98,44 @@ Spec file: ${document.fileName}`;
     }
 
     /**
+     * Edit a line's text content (preserves markdown prefix)
+     */
+    async editLine(document: vscode.TextDocument, lineNum: number, newText: string): Promise<void> {
+        this.outputChannel.appendLine(`[WorkflowEditor] Edit line ${lineNum}: ${newText}`);
+
+        const text = document.getText();
+        const lines = text.split('\n');
+
+        if (lineNum < 0 || lineNum >= lines.length) {
+            this.outputChannel.appendLine(`[WorkflowEditor] Invalid line number: ${lineNum}`);
+            return;
+        }
+
+        const originalLine = lines[lineNum];
+
+        // Extract markdown prefix (checkbox, bullet, number, etc.)
+        const prefixMatch = originalLine.match(/^(\s*(?:- \[[ xX]\] |- |\* |\d+\. )?)/);
+        const prefix = prefixMatch ? prefixMatch[1] : '';
+
+        // Combine prefix with new text
+        const updatedLine = prefix + newText;
+
+        // Replace the line
+        lines[lineNum] = updatedLine;
+
+        // Apply edit
+        const edit = new vscode.WorkspaceEdit();
+        const fullRange = new vscode.Range(
+            document.positionAt(0),
+            document.positionAt(text.length)
+        );
+        edit.replace(document.uri, fullRange, lines.join('\n'));
+        await vscode.workspace.applyEdit(edit);
+
+        this.outputChannel.appendLine(`[WorkflowEditor] Line updated: "${updatedLine}"`);
+    }
+
+    /**
      * Approve current phase and navigate to next
      */
     async approveAndContinue(document: vscode.TextDocument): Promise<void> {

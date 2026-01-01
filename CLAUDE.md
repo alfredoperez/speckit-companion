@@ -122,9 +122,13 @@ This should be replaced with actual Claude CLI integration when testing is compl
 - **New Prompts**: Add to `src/prompts/` for AI-assisted features
 
 ## Recent Changes
+- 002-edit-input-sizing: Implemented auto-sizing input with original value display for refine popover
+  - CSS `field-sizing: content` with hidden span fallback for older browsers
+  - Original value displayed above input with visual distinction (italic, muted, accent border)
+  - Files modified: `webview/styles/workflow.css`, `webview/src/ui/refinePopover.ts`
 - 001-skills: Added TypeScript 5.3+ (strict mode enabled) + VS Code Extension API (`@types/vscode ^1.84.0`), js-yaml ^4.1.0
 - 001-due-dates: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 
 ## Active Technologies
-- TypeScript 5.3+ (strict mode enabled) + VS Code Extension API (`@types/vscode ^1.84.0`), js-yaml ^4.1.0 (001-skills)
-- File system (skills stored as SKILL.md files with YAML frontmatter) (001-skills)
+- TypeScript 5.3+ (strict mode enabled) + VS Code Extension API (`@types/vscode ^1.84.0`), Webpack, vanilla TypeScript (no UI framework)
+- CSS `field-sizing: content` for auto-sizing inputs (Chrome 123+, with JS fallback)

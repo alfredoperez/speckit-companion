@@ -16,6 +16,13 @@ export function registerWorkflowEditorCommands(
             }
         ),
 
+        vscode.commands.registerCommand('speckit.workflowEditor.refineLine',
+            async (uri: vscode.Uri, lineNum: number, prompt: string) => {
+                outputChannel.appendLine(`[WorkflowEditor] Refine line command: line ${lineNum}`);
+                await getAIProvider().executeInTerminal(prompt, 'Refining Line');
+            }
+        ),
+
         vscode.commands.registerCommand('speckit.workflowEditor.removeSection',
             async (uri: vscode.Uri, sectionId: string) => {
                 outputChannel.appendLine(`[WorkflowEditor] Remove section command: ${sectionId}`);

@@ -13,6 +13,7 @@ export interface VSCodeApi {
 export type WebviewToExtensionMessage =
     | { type: 'editSource' }
     | { type: 'refineLine'; lineNum: number; content: string; instruction: string }
+    | { type: 'editLine'; lineNum: number; newText: string }
     | { type: 'removeLine'; lineNum: number }
     | { type: 'approveAndContinue' }
     | { type: 'regenerate' }

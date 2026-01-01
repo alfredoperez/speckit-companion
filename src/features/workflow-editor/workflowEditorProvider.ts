@@ -110,6 +110,10 @@ export class WorkflowEditorProvider implements vscode.CustomTextEditorProvider {
                 await this.actionHandlers.refineLine(document, message.lineNum, message.content, message.instruction);
                 break;
 
+            case 'editLine':
+                await this.actionHandlers.editLine(document, message.lineNum, message.newText);
+                break;
+
             case 'removeLine':
                 await this.actionHandlers.removeLine(document, message.lineNum);
                 break;
