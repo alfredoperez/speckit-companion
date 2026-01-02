@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.11] - 2025-01-02
+
+### New Features
+
+- Add configurable Gemini CLI initialization delay setting (`speckit.geminiInitDelay`)
+- Add setting to disable phase completion notifications (`speckit.notifications.phaseCompletion`)
+
+### Improvements
+
+- Increase default Gemini CLI init delay from 5s to 8s for better reliability
+
 ## [0.2.10] - 2025-01-02
 
 ### New Features

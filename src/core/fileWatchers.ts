@@ -13,6 +13,14 @@ import {
 import { NotificationUtils } from './utils/notificationUtils';
 
 /**
+ * Check if phase completion notifications are enabled
+ */
+function isPhaseCompletionNotificationEnabled(): boolean {
+    const config = vscode.workspace.getConfiguration('speckit');
+    return config.get<boolean>('notifications.phaseCompletion', true);
+}
+
+/**
  * Set up file watchers for the extension
  */
 export function setupFileWatchers(
@@ -171,7 +179,9 @@ export function setupTasksWatcher(
 
                 for (const phaseName of completedPhases) {
                     outputChannel.appendLine(`[TasksWatcher] Phase completed: "${phaseName}" in ${specName}`);
-                    await NotificationUtils.showPhaseCompleteNotification(specName, phaseName, uri.fsPath);
+                    if (isPhaseCompletionNotificationEnabled()) {
+                        await NotificationUtils.showPhaseCompleteNotification(specName, phaseName, uri.fsPath);
+                    }
                 }
             } catch (error) {
                 outputChannel.appendLine(`[TasksWatcher] Error processing ${uri.fsPath}: ${error}`);

@@ -55,6 +55,14 @@ export class GeminiCliProvider implements IAIProvider {
     }
 
     /**
+     * Get the Gemini CLI initialization delay from settings
+     */
+    private getInitDelay(): number {
+        const config = vscode.workspace.getConfiguration('speckit');
+        return config.get<number>('geminiInitDelay', Timing.geminiInitDelay);
+    }
+
+    /**
      * Create a temporary file with content
      */
     private async createTempFile(content: string, prefix: string = 'prompt'): Promise<string> {
@@ -86,6 +94,7 @@ export class GeminiCliProvider implements IAIProvider {
             terminal.show();
 
             const delay = this.configManager.getTerminalDelay();
+            const initDelay = this.getInitDelay();
 
             // Start Gemini in interactive mode
             setTimeout(() => {
@@ -95,12 +104,12 @@ export class GeminiCliProvider implements IAIProvider {
             // After Gemini initializes, send the prompt then Enter separately
             setTimeout(() => {
                 terminal.sendText(prompt, false);  // Send text without Enter
-            }, delay + Timing.geminiInitDelay);
+            }, delay + initDelay);
 
             // Send Enter after a small delay to submit the prompt
             setTimeout(() => {
                 terminal.sendText('', true);  // Just send Enter
-            }, delay + Timing.geminiInitDelay + 200);
+            }, delay + initDelay + 200);
 
             return terminal;
 

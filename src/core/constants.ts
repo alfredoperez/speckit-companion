@@ -52,6 +52,7 @@ export const ConfigKeys = {
     workflowEditorEnabled: 'speckit.workflowEditor.enabled',
     claudePath: 'speckit.claudePath',
     aiProvider: 'speckit.aiProvider',
+    geminiInitDelay: 'speckit.geminiInitDelay',
     views: {
         specsVisible: 'speckit.views.specs.visible',
         agentsVisible: 'speckit.views.agents.visible',
@@ -60,6 +61,9 @@ export const ConfigKeys = {
         steeringVisible: 'speckit.views.steering.visible',
         mcpVisible: 'speckit.views.mcp.visible',
         settingsVisible: 'speckit.views.settings.visible',
+    },
+    notifications: {
+        phaseCompletion: 'speckit.notifications.phaseCompletion',
     },
 } as const;
 
@@ -92,8 +96,8 @@ export const Timing = {
     terminalDisposeDelay: 1000,
     /** Debounce delay for file watcher refresh */
     fileWatcherDebounce: 1000,
-    /** Delay for Gemini CLI to initialize before sending prompt */
-    geminiInitDelay: 5000,
+    /** Delay for Gemini CLI to initialize before sending prompt (configurable via settings) */
+    geminiInitDelay: 8000,
 } as const;
 
 /**

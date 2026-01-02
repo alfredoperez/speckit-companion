@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "VS Code companion for GitHub SpecKit - spec-driven development with AI assistants",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",
@@ -518,6 +518,21 @@
           "scope": "machine",
           "order": 4,
           "description": "Path to GitHub Copilot CLI executable (ghcs)"
+        },
+        "speckit.geminiInitDelay": {
+          "type": "number",
+          "default": 8000,
+          "minimum": 3000,
+          "maximum": 30000,
+          "scope": "machine",
+          "order": 5,
+          "description": "Delay in milliseconds before sending prompt to Gemini CLI (allows time for initialization)"
+        },
+        "speckit.notifications.phaseCompletion": {
+          "type": "boolean",
+          "default": true,
+          "scope": "window",
+          "description": "Show notification when a task phase is completed"
         },
         "speckit.views.specs.visible": {
           "type": "boolean",
