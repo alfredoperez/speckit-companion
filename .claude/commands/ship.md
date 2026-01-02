@@ -47,10 +47,25 @@ If there are uncommitted changes:
 
 ### 5. Update Changelog
 
-- Add a new entry to CHANGELOG.md for the new version
-- Include the date in format YYYY-MM-DD
-- Categorize changes under: New Features, Improvements, Fixed
-- Keep entries concise but descriptive
+**IMPORTANT: Always update the changelog before releasing!**
+
+- Read CHANGELOG.md to see the current format and last entry
+- Add a new entry at the top for the new version
+- Format:
+  ```markdown
+  ## [X.X.X] - YYYY-MM-DD
+
+  ### New Features
+  - Feature description
+
+  ### Improvements
+  - Improvement description
+
+  ### Fixed
+  - Fix description
+  ```
+- Base the entry on the commit message from step 4 and any recent commits
+- Ask user to confirm the changelog entry before proceeding
 
 ### 6. Version Bump & Package
 
