@@ -122,6 +122,18 @@ This should be replaced with actual Claude CLI integration when testing is compl
 - **New Prompts**: Add to `src/prompts/` for AI-assisted features
 
 ## Recent Changes
+- 001-speckit-views-enhancement: Implemented SpecKit views enhancement feature
+  - **US1**: Fixed contextual initialization message - now only shows when a valid workspace is open
+    - Added workspace check before showing init suggestion in `src/extension.ts:50-55`
+  - **US2**: Added SpecKit Files section to steering view
+    - New types in `src/features/steering/types.ts`: SpecKitFileType, SpecKitFile, SpecKitFilesResult
+    - Scans `.specify/` directory for constitution, scripts, and templates
+    - Files are clickable and open in the editor
+    - Modified: `src/features/steering/steeringExplorerProvider.ts`
+  - **US3**: Organized SpecKit files into collapsible categories
+    - Constitution, Scripts, Templates categories with appropriate icons
+    - File watcher for `.specify/` directory with debounced refresh (1s)
+    - Modified: `src/core/fileWatchers.ts`
 - 001-theme-integration: Implemented VS Code theme integration for workflow editor
   - All hardcoded colors replaced with CSS custom properties mapped to VS Code theme variables
   - Theme-specific fallbacks for light, dark, and high-contrast modes
@@ -133,8 +145,7 @@ This should be replaced with actual Claude CLI integration when testing is compl
   - CSS `field-sizing: content` with hidden span fallback for older browsers
   - Original value displayed above input with visual distinction (italic, muted, accent border)
   - Files modified: `webview/styles/workflow.css`, `webview/src/ui/refinePopover.ts`
-- 001-skills: Added TypeScript 5.3+ (strict mode enabled) + VS Code Extension API (`@types/vscode ^1.84.0`), js-yaml ^4.1.0
 
 ## Active Technologies
-- VS Code CSS Custom Properties (--vscode-* variables) for theme integration (001-theme-integration)
-- CSS color-mix() for transparent accent variants (001-theme-integration)
+- TypeScript 5.3+ (ES2022 target, strict mode enabled) + VS Code Extension API (`@types/vscode ^1.84.0`), js-yaml ^4.1.0 (001-speckit-views-enhancement)
+- File system (`.specify/` directory structure in workspace) (001-speckit-views-enhancement)

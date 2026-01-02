@@ -32,6 +32,9 @@ export function setupFileWatchers(
 
     // Watch for changes in CLAUDE.md files
     setupClaudeMdWatchers(context, steeringExplorer);
+
+    // Watch for changes in .specify directory (US3 - 001-speckit-views-enhancement)
+    setupSpecifyDirectoryWatcher(context, steeringExplorer, outputChannel);
 }
 
 /**
@@ -109,6 +112,36 @@ function setupClaudeMdWatchers(
     projectClaudeMdWatcher.onDidDelete(() => steeringExplorer.refresh());
 
     context.subscriptions.push(globalClaudeMdWatcher, projectClaudeMdWatcher);
+}
+
+/**
+ * Watch .specify directory for SpecKit file changes
+ * (US3 - 001-speckit-views-enhancement)
+ */
+function setupSpecifyDirectoryWatcher(
+    context: vscode.ExtensionContext,
+    steeringExplorer: SteeringExplorerProvider,
+    outputChannel: vscode.OutputChannel
+): void {
+    const specifyWatcher = vscode.workspace.createFileSystemWatcher('**/.specify/**/*');
+
+    let refreshTimeout: NodeJS.Timeout | undefined;
+    const debouncedRefresh = (event: string, uri: vscode.Uri) => {
+        outputChannel.appendLine(`[FileWatcher] .specify ${event}: ${uri.fsPath}`);
+
+        if (refreshTimeout) {
+            clearTimeout(refreshTimeout);
+        }
+        refreshTimeout = setTimeout(() => {
+            steeringExplorer.refresh();
+        }, 1000);
+    };
+
+    specifyWatcher.onDidCreate((uri) => debouncedRefresh('Create', uri));
+    specifyWatcher.onDidDelete((uri) => debouncedRefresh('Delete', uri));
+    specifyWatcher.onDidChange((uri) => debouncedRefresh('Change', uri));
+
+    context.subscriptions.push(specifyWatcher);
 }
 
 /**

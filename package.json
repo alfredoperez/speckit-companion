@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "VS Code companion for GitHub SpecKit - spec-driven development with AI assistants",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",
@@ -72,6 +72,11 @@
           "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.views.specs.visible"
         },
         {
+          "id": "speckit.views.steering",
+          "name": "Steering",
+          "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.views.steering.visible"
+        },
+        {
           "id": "speckit.views.agents",
           "name": "Agents",
           "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.views.agents.visible"
@@ -80,11 +85,6 @@
           "id": "speckit.views.skills",
           "name": "Skills",
           "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.aiProvider == 'claude' && config.speckit.views.skills.visible"
-        },
-        {
-          "id": "speckit.views.steering",
-          "name": "Steering",
-          "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.views.steering.visible"
         },
         {
           "id": "speckit.views.mcp",

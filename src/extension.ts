@@ -48,7 +48,9 @@ export async function activate(context: vscode.ExtensionContext) {
     outputChannel.appendLine(`Constitution needs setup: ${constitutionNeedsSetup}`);
 
     // Show init suggestion when CLI is installed but workspace is not initialized
-    if (cliInstalled && !workspaceInitialized) {
+    // ONLY if a workspace is actually open (US1 fix - 001-speckit-views-enhancement)
+    const hasWorkspace = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0;
+    if (cliInstalled && !workspaceInitialized && hasWorkspace) {
         await showInitSuggestion(context);
     }
 
