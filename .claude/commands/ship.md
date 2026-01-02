@@ -57,4 +57,16 @@ If there are uncommitted changes:
 - Install the new .vsix in VS Code using `code --install-extension speckit-companion-X.X.X.vsix`
 - Report success with the installed version
 
+### 7. Merge to Main & Tag
+
+If on a feature branch:
+- Ask user if they want to merge to main and create a release tag
+- If yes:
+  - `git checkout main`
+  - `git merge <feature-branch> --no-edit`
+  - `git tag -a vX.X.X -m "<commit message from step 4>"`
+  - `git push origin main`
+  - `git push origin vX.X.X`
+- Report the tag URL: `https://github.com/alfredoperez/speckit-companion/releases/tag/vX.X.X`
+
 Make sure to ask for user confirmation before creating commits. Handle errors gracefully.
