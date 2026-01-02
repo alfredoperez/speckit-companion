@@ -12,18 +12,19 @@ interface PhaseInfo {
 
 /**
  * Generate line action buttons based on classification
+ * Icons first, then text labels
  */
 function renderLineActions(lineNum: number, refinable: boolean, removable: boolean): string {
     const editBtn = refinable
-        ? `<button class="line-action edit" data-action="edit" data-line="${lineNum}" title="Edit">&#9998;</button>`
-        : '';
-    const refineBtn = refinable
-        ? `<button class="line-action refine" data-action="refine" data-line="${lineNum}" title="Refine with AI">&#10024;</button>`
+        ? `<button class="line-action edit" data-action="edit" data-line="${lineNum}" title="Edit">✏️</button>`
         : '';
     const removeBtn = removable
-        ? `<button class="line-action remove" data-action="remove" data-line="${lineNum}" title="Remove">&#128465;</button>`
+        ? `<button class="line-action remove" data-action="remove" data-line="${lineNum}" title="Delete">🗑️</button>`
         : '';
-    return `<div class="line-actions">${editBtn}${refineBtn}${removeBtn}</div>`;
+    const refineBtn = refinable
+        ? `<button class="line-action refine" data-action="refine" data-line="${lineNum}" title="Refine with AI">Refine</button>`
+        : '';
+    return `<div class="line-actions">${editBtn}${removeBtn}${refineBtn}</div>`;
 }
 
 export function renderLine(line: string, lineNum: number, phaseInfo?: PhaseInfo): string {

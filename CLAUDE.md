@@ -122,13 +122,19 @@ This should be replaced with actual Claude CLI integration when testing is compl
 - **New Prompts**: Add to `src/prompts/` for AI-assisted features
 
 ## Recent Changes
+- 001-theme-integration: Implemented VS Code theme integration for workflow editor
+  - All hardcoded colors replaced with CSS custom properties mapped to VS Code theme variables
+  - Theme-specific fallbacks for light, dark, and high-contrast modes
+  - Typography uses VS Code font settings (--vscode-font-family, --vscode-editor-font-family)
+  - Compact layout with reduced header margins (~30% vertical space reduction)
+  - Empty lines have no hover effects (pointer-events: none)
+  - Files modified: `webview/styles/workflow.css`
 - 002-edit-input-sizing: Implemented auto-sizing input with original value display for refine popover
   - CSS `field-sizing: content` with hidden span fallback for older browsers
   - Original value displayed above input with visual distinction (italic, muted, accent border)
   - Files modified: `webview/styles/workflow.css`, `webview/src/ui/refinePopover.ts`
 - 001-skills: Added TypeScript 5.3+ (strict mode enabled) + VS Code Extension API (`@types/vscode ^1.84.0`), js-yaml ^4.1.0
-- 001-due-dates: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 
 ## Active Technologies
-- TypeScript 5.3+ (strict mode enabled) + VS Code Extension API (`@types/vscode ^1.84.0`), Webpack, vanilla TypeScript (no UI framework)
-- CSS `field-sizing: content` for auto-sizing inputs (Chrome 123+, with JS fallback)
+- VS Code CSS Custom Properties (--vscode-* variables) for theme integration (001-theme-integration)
+- CSS color-mix() for transparent accent variants (001-theme-integration)

@@ -60,13 +60,34 @@ export function parseSpecInfo(document: vscode.TextDocument): SpecInfo {
     const nextFileName = currentPhase === 1 ? 'plan.md' : currentPhase === 2 ? 'tasks.md' : null;
     const nextPhaseExists = nextFileName ? fs.existsSync(path.join(dirPath, nextFileName)) : false;
 
+    // Calculate completed phases based on file existence and task completion
+    const completedPhases: number[] = [];
+    let taskCompletionPercent = 0;
+
+    // Phase 1 (spec) is complete if plan.md exists
+    if (fs.existsSync(path.join(dirPath, 'plan.md'))) {
+        completedPhases.push(1);
+    }
+    // Phase 2 (plan) is complete if tasks.md exists
+    const tasksPath = path.join(dirPath, 'tasks.md');
+    if (fs.existsSync(tasksPath)) {
+        completedPhases.push(2);
+        completedPhases.push(3);  // Phase 3 (tasks) complete when file exists
+
+        // Get task completion stats for Done indicator
+        const taskStats = getTaskCompletionStats(tasksPath);
+        taskCompletionPercent = taskStats.percent;
+    }
+
     // Find ALL documents in same folder for tabs (consistent order)
     const allDocs = getRelatedDocs(dirPath, fileName, documentType);
 
     return {
         currentPhase,
+        completedPhases,
         phaseIcon,
-        progressPercent: (currentPhase / 3) * 100,
+        progressPercent: (currentPhase / 4) * 100,
+        taskCompletionPercent,
         specDir: dirPath,
         documentType,
         enhancementButton,
@@ -140,4 +161,28 @@ export function formatDocName(name: string): string {
         .split('-')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
+}
+
+/**
+ * Get task completion stats from tasks.md
+ * Returns { complete: boolean, percent: number }
+ */
+function getTaskCompletionStats(tasksPath: string): { complete: boolean; percent: number } {
+    try {
+        const content = fs.readFileSync(tasksPath, 'utf-8');
+        const unchecked = (content.match(/- \[ \]/g) || []).length;
+        const checked = (content.match(/- \[x\]/gi) || []).length;
+        const total = checked + unchecked;
+
+        if (total === 0) {
+            return { complete: false, percent: 0 };
+        }
+
+        const percent = Math.round((checked / total) * 100);
+        const complete = checked > 0 && unchecked === 0;
+
+        return { complete, percent };
+    } catch {
+        return { complete: false, percent: 0 };
+    }
 }

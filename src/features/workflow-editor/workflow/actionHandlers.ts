@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import type { SpecInfo } from '../../../core/types';
 import { parseSpecInfo } from './specInfoParser';
+import { openSpecFile } from '../../../core/utils/fileOpener';
 
 /**
  * Action handlers for the workflow editor
@@ -24,11 +25,8 @@ export class WorkflowActionHandlers {
     async switchToDocument(currentDocument: vscode.TextDocument, fileName: string): Promise<void> {
         const specInfo = parseSpecInfo(currentDocument);
         const targetPath = path.join(specInfo.specDir, fileName);
-        const targetUri = vscode.Uri.file(targetPath);
 
-        if (fs.existsSync(targetPath)) {
-            await vscode.commands.executeCommand('vscode.openWith', targetUri, 'speckit.workflowEditor');
-        }
+        await openSpecFile(targetPath, { outputChannel: this.outputChannel });
     }
 
     /**
@@ -156,12 +154,11 @@ Spec file: ${document.fileName}`;
         const nextFileName = nextPhase === 2 ? 'plan.md' : 'tasks.md';
 
         const nextFilePath = path.join(specInfo.specDir, nextFileName);
-        const nextFileUri = vscode.Uri.file(nextFilePath);
 
-        // Check if next file exists
+        // Check if next file exists using sync check (for quick decision)
         if (fs.existsSync(nextFilePath)) {
-            // Open with the workflow editor
-            await vscode.commands.executeCommand('vscode.openWith', nextFileUri, 'speckit.workflowEditor');
+            // Open with retry logic
+            await openSpecFile(nextFilePath, { outputChannel: this.outputChannel });
         } else {
             // Generate immediately without confirmation
             await this.generateContent(document, nextPhase === 2 ? 'plan' : 'tasks');
@@ -201,16 +198,9 @@ Spec file: ${document.fileName}`;
                         phase === 'plan' ? 'plan.md' : 'tasks.md';
 
         const filePath = path.join(specInfo.specDir, fileName);
-        const fileUri = vscode.Uri.file(filePath);
 
-        try {
-            // Check if file exists
-            await vscode.workspace.fs.stat(fileUri);
-            // Open with the workflow editor
-            await vscode.commands.executeCommand('vscode.openWith', fileUri, 'speckit.workflowEditor');
-        } catch (error) {
-            vscode.window.showWarningMessage(`${fileName} does not exist yet.`);
-        }
+        // Use centralized file opener with retry logic
+        await openSpecFile(filePath, { outputChannel: this.outputChannel });
     }
 
     /**

@@ -39,6 +39,7 @@ h1 {
     border-bottom: 2px solid var(--vscode-textLink-foreground, #3794ff);
     padding-bottom: 8px;
     margin-bottom: 24px;
+    text-align: center;
 }
 
 /* Section headers */
@@ -47,6 +48,7 @@ h2 {
     border-bottom: 1px solid var(--vscode-panel-border, #444);
     padding-bottom: 6px;
     margin-top: 32px;
+    text-align: center;
 }
 
 /* Sub-section headers */

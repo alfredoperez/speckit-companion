@@ -79,23 +79,48 @@ export function generateWebviewHtml(
 
 /**
  * Generate the phase stepper navigation
+ * - "active" = currently viewing this phase (blue ring)
+ * - "completed" = file exists (green checkmark)
+ * - Done shows progress percentage or checkmark when 100%
  */
 function generatePhaseStepper(specInfo: SpecInfo): string {
+    const phase1Complete = specInfo.completedPhases.includes(1);
+    const phase2Complete = specInfo.completedPhases.includes(2);
+    const phase3Complete = specInfo.completedPhases.includes(3);
+    const taskPercent = specInfo.taskCompletionPercent || 0;
+    const allTasksDone = taskPercent === 100;
+
+    // Done indicator: checkmark if 100%, percentage if in progress, "4" if not started
+    let doneIndicator = '4';
+    let doneClass = '';
+    if (allTasksDone) {
+        doneIndicator = '✓';
+        doneClass = 'completed';
+    } else if (phase3Complete && taskPercent > 0) {
+        doneIndicator = `${taskPercent}%`;
+        doneClass = 'in-progress';
+    }
+
     return `
         <nav class="phase-stepper">
-            <div class="step ${specInfo.currentPhase === 1 ? 'active' : specInfo.currentPhase > 1 ? 'completed' : ''}" data-phase="spec">
-                <div class="step-indicator">${specInfo.currentPhase > 1 ? '✓' : '1'}</div>
+            <div class="step ${specInfo.currentPhase === 1 ? 'active' : ''} ${phase1Complete ? 'completed' : ''}" data-phase="spec">
+                <div class="step-indicator">${phase1Complete ? '✓' : '1'}</div>
                 <div class="step-label">Spec</div>
             </div>
-            <div class="step-connector ${specInfo.currentPhase > 1 ? 'completed' : ''}"></div>
-            <div class="step ${specInfo.currentPhase === 2 ? 'active' : specInfo.currentPhase > 2 ? 'completed' : ''}" data-phase="plan">
-                <div class="step-indicator">${specInfo.currentPhase > 2 ? '✓' : '2'}</div>
+            <div class="step-connector ${phase1Complete ? 'completed' : ''}"></div>
+            <div class="step ${specInfo.currentPhase === 2 ? 'active' : ''} ${phase2Complete ? 'completed' : ''}" data-phase="plan">
+                <div class="step-indicator">${phase2Complete ? '✓' : '2'}</div>
                 <div class="step-label">Plan</div>
             </div>
-            <div class="step-connector ${specInfo.currentPhase > 2 ? 'completed' : ''}"></div>
-            <div class="step ${specInfo.currentPhase === 3 ? 'active' : ''}" data-phase="tasks">
-                <div class="step-indicator">3</div>
+            <div class="step-connector ${phase2Complete ? 'completed' : ''}"></div>
+            <div class="step ${specInfo.currentPhase === 3 ? 'active' : ''} ${phase3Complete ? 'completed' : ''}" data-phase="tasks">
+                <div class="step-indicator">${phase3Complete ? '✓' : '3'}</div>
                 <div class="step-label">Tasks</div>
+            </div>
+            <div class="step-connector ${phase3Complete ? 'completed' : ''}"></div>
+            <div class="step ${doneClass}" data-phase="done">
+                <div class="step-indicator">${doneIndicator}</div>
+                <div class="step-label">Done</div>
             </div>
         </nav>`;
 }

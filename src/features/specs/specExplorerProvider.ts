@@ -181,12 +181,9 @@ export class SpecExplorerProvider implements vscode.TreeDataProvider<SpecItem> {
                 parentElement.specName,
                 'related',
                 {
-                    command: 'vscode.openWith',
+                    command: 'speckit.openSpecFile',
                     title: `Open ${fileName}`,
-                    arguments: [
-                        vscode.Uri.file(fullPath),
-                        'speckit.workflowEditor'
-                    ]
+                    arguments: [fullPath]
                 },
                 `${specPath}/${fileName}`,
                 specPath,
@@ -210,14 +207,11 @@ export class SpecExplorerProvider implements vscode.TreeDataProvider<SpecItem> {
         // Scan for related documents
         const relatedDocs = this.getRelatedDocs(specFullPath);
 
-        // Open file directly with the workflow editor
+        // Open file using centralized command (validates at click time with retry logic)
         const createOpenCommand = (fileName: string, title: string) => ({
-            command: 'vscode.openWith',
+            command: 'speckit.openSpecFile',
             title,
-            arguments: [
-                vscode.Uri.file(path.join(basePath, specPath, fileName)),
-                'speckit.workflowEditor'
-            ]
+            arguments: [path.join(basePath, specPath, fileName)]
         });
 
         // Check status of each document

@@ -1,42 +1,52 @@
 /**
  * SpecKit Companion - Workflow Editor Styles
- * v0.1.4 - Line-level actions UI
+ * v0.2.0 - VS Code Theme Integration
  */
 
 /* ============================================
-   Dark Professional Color System
+   VS Code Theme-Aware Color System
    ============================================ */
 
 :root {
-    /* Core backgrounds */
-    --bg-primary: #0a0a0a;
-    --bg-secondary: #141414;
-    --bg-elevated: #1a1a1a;
-    --bg-hover: #1f1f1f;
+    /* Core backgrounds - mapped to VS Code theme variables */
+    --bg-primary: var(--vscode-editor-background, #1e1e1e);
+    --bg-secondary: var(--vscode-sideBar-background, #252526);
+    --bg-elevated: var(--vscode-editorWidget-background, #252526);
+    --bg-hover: var(--vscode-list-hoverBackground, #2a2d2e);
 
-    /* Text colors */
-    --text-primary: #fafafa;
-    --text-secondary: #a1a1a1;
-    --text-muted: #666666;
+    /* Text colors - mapped to VS Code theme variables */
+    --text-primary: var(--vscode-editor-foreground, #d4d4d4);
+    --text-secondary: var(--vscode-descriptionForeground, #858585);
+    --text-muted: var(--vscode-disabledForeground, #6c6c6c);
 
-    /* Accent colors */
-    --accent: #3b82f6;
-    --accent-hover: #60a5fa;
-    --accent-subtle: rgba(59, 130, 246, 0.1);
-    --accent-glow: 0 0 20px rgba(59, 130, 246, 0.3);
+    /* Accent colors - mapped to VS Code theme variables */
+    --accent: var(--vscode-focusBorder, #007fd4);
+    --accent-hover: var(--vscode-button-hoverBackground, #0062a3);
+    --accent-subtle: color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 10%, transparent);
+    --accent-glow: 0 0 20px color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 30%, transparent);
 
-    /* Status colors */
-    --success: #22c55e;
-    --success-subtle: rgba(34, 197, 94, 0.1);
-    --warning: #f59e0b;
-    --warning-subtle: rgba(245, 158, 11, 0.1);
-    --error: #ef4444;
-    --error-subtle: rgba(239, 68, 68, 0.1);
+    /* Status colors - mapped to VS Code theme variables */
+    --success: var(--vscode-testing-iconPassed, #388a34);
+    --success-subtle: color-mix(in srgb, var(--vscode-testing-iconPassed, #388a34) 10%, transparent);
+    --warning: var(--vscode-editorWarning-foreground, #cca700);
+    --warning-subtle: color-mix(in srgb, var(--vscode-editorWarning-foreground, #cca700) 10%, transparent);
+    --error: var(--vscode-editorError-foreground, #f14c4c);
+    --error-subtle: color-mix(in srgb, var(--vscode-editorError-foreground, #f14c4c) 10%, transparent);
 
-    /* Borders */
-    --border: #262626;
-    --border-hover: #404040;
-    --border-accent: rgba(59, 130, 246, 0.5);
+    /* Borders - mapped to VS Code theme variables */
+    --border: var(--vscode-panel-border, #3c3c3c);
+    --border-hover: var(--vscode-contrastBorder, #6c6c6c);
+    --border-accent: color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 50%, transparent);
+
+    /* Typography - mapped to VS Code theme variables */
+    --font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+    --font-mono: var(--vscode-editor-font-family, 'Consolas', 'Monaco', monospace);
+    --font-size: var(--vscode-editor-font-size, 13px);
+
+    /* Semantic header colors - mapped to VS Code theme variables */
+    --header-title: var(--vscode-textLink-foreground, #3794ff);
+    --header-section: var(--vscode-symbolIcon-classForeground, #ee9d28);
+    --header-subsection: var(--vscode-descriptionForeground, #858585);
 
     /* Original value display tokens */
     --original-value-color: var(--text-muted);
@@ -56,6 +66,47 @@
     --transition-slow: 300ms;
 }
 
+/* ============================================
+   Theme-Specific Fallbacks
+   ============================================ */
+
+body.vscode-light {
+    --bg-primary: var(--vscode-editor-background, #ffffff);
+    --bg-secondary: var(--vscode-sideBar-background, #f3f3f3);
+    --bg-elevated: var(--vscode-editorWidget-background, #f3f3f3);
+    --bg-hover: var(--vscode-list-hoverBackground, #e8e8e8);
+    --text-primary: var(--vscode-editor-foreground, #333333);
+    --text-secondary: var(--vscode-descriptionForeground, #717171);
+    --text-muted: var(--vscode-disabledForeground, #a0a0a0);
+    --border: var(--vscode-panel-border, #e0e0e0);
+    --border-hover: var(--vscode-contrastBorder, #c0c0c0);
+}
+
+body.vscode-dark {
+    --bg-primary: var(--vscode-editor-background, #1e1e1e);
+    --bg-secondary: var(--vscode-sideBar-background, #252526);
+    --bg-elevated: var(--vscode-editorWidget-background, #252526);
+    --bg-hover: var(--vscode-list-hoverBackground, #2a2d2e);
+    --text-primary: var(--vscode-editor-foreground, #d4d4d4);
+    --text-secondary: var(--vscode-descriptionForeground, #858585);
+    --text-muted: var(--vscode-disabledForeground, #6c6c6c);
+    --border: var(--vscode-panel-border, #3c3c3c);
+    --border-hover: var(--vscode-contrastBorder, #6c6c6c);
+}
+
+body.vscode-high-contrast {
+    --bg-primary: var(--vscode-editor-background, #000000);
+    --bg-secondary: var(--vscode-sideBar-background, #000000);
+    --bg-elevated: var(--vscode-editorWidget-background, #000000);
+    --bg-hover: var(--vscode-list-hoverBackground, #0a0a0a);
+    --text-primary: var(--vscode-editor-foreground, #ffffff);
+    --text-secondary: var(--vscode-descriptionForeground, #ffffff);
+    --text-muted: var(--vscode-disabledForeground, #a0a0a0);
+    --border: var(--vscode-contrastBorder, #ffffff);
+    --border-hover: var(--vscode-contrastBorder, #ffffff);
+    --accent: var(--vscode-focusBorder, #f38518);
+}
+
 * {
     box-sizing: border-box;
 }
@@ -63,8 +114,8 @@
 body {
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 14px;
+    font-family: var(--font-family);
+    font-size: var(--font-size);
     background: var(--bg-primary);
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
@@ -111,16 +162,16 @@ body {
 }
 
 .step-indicator {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     border: 2px solid var(--border);
     background: var(--bg-primary);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
-    font-size: 14px;
+    font-weight: 700;
+    font-size: 16px;
     color: var(--text-muted);
     transition: all var(--transition-normal) ease;
     margin-bottom: 8px;
@@ -131,7 +182,7 @@ body {
     background: var(--accent);
     border-color: var(--accent);
     color: white;
-    box-shadow: var(--accent-glow);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.4), 0 0 20px var(--accent), 0 0 40px rgba(59, 130, 246, 0.3);
 }
 
 .step.completed .step-indicator {
@@ -140,9 +191,22 @@ body {
     color: white;
 }
 
+/* When viewing a completed phase - show both states */
+.step.active.completed .step-indicator {
+    background: var(--success);
+    border-color: var(--success);
+    color: white;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.4), 0 0 20px var(--accent), 0 0 40px rgba(59, 130, 246, 0.3);
+}
+
+.step.active.completed .step-label {
+    color: var(--accent);
+    font-weight: 700;
+}
+
 .step-label {
-    font-size: 12px;
-    font-weight: 500;
+    font-size: 13px;
+    font-weight: 600;
     color: var(--text-muted);
     transition: color var(--transition-normal);
     white-space: nowrap;
@@ -150,11 +214,28 @@ body {
 
 .step.active .step-label {
     color: var(--accent);
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .step.completed .step-label {
     color: var(--success);
+}
+
+/* In-progress state (partial completion) */
+.step.in-progress .step-indicator {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.step.in-progress .step-label {
+    color: var(--accent);
+}
+
+.step-connector.in-progress {
+    background: linear-gradient(90deg, var(--success) 0%, var(--accent) 100%);
 }
 
 .step-connector {
@@ -217,13 +298,8 @@ body {
     overflow-y: auto;
     padding: 24px;
     scroll-behavior: smooth;
-}
-
-/* Inner content wrapper for optimal readability */
-.content > * {
-    max-width: 70ch;
-    margin-left: auto;
-    margin-right: auto;
+    max-width: 800px;
+    margin: 0 auto;
 }
 
 /* ============================================
@@ -231,21 +307,21 @@ body {
    ============================================ */
 
 .doc-title {
-    color: #22D3EE;  /* Teal/cyan */
+    color: var(--header-title);
     font-size: 24px;
     font-weight: 600;
-    margin: 0 0 24px 0;
+    margin: 0 0 16px 0;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--border);
 }
 
 .section-header {
-    color: #A78BFA;  /* Purple */
+    color: var(--header-section);
     font-size: 18px;
     font-weight: 600;
-    margin: 32px 0 16px 0;
+    margin: 20px 0 10px 0;
     padding-bottom: 8px;
-    border-bottom: 1px solid #A78BFA;
+    border-bottom: 1px solid var(--header-section);
 }
 
 .section-header.phase-completed {
@@ -282,13 +358,17 @@ body {
 }
 
 .section-header[data-type="requirement"] {
-    color: #a78bfa;
-    border-bottom-color: #a78bfa;
+    color: var(--header-section);
+    border-bottom-color: var(--header-section);
 }
 
 /* Subsection headers */
+.subsection-header {
+    margin: 16px 0 8px 0;
+}
+
 .subsection-header h3 {
-    color: #A78BFA;  /* Purple */
+    color: var(--header-subsection);
     font-size: 15px;
     font-weight: 600;
     margin: 0;
@@ -296,7 +376,7 @@ body {
 
 /* H4 headers */
 .h4-header h4 {
-    color: #A78BFA;  /* Purple like other headers */
+    color: var(--header-subsection);
     font-size: 14px;
     font-weight: 600;
     margin: 0;
@@ -308,7 +388,7 @@ body {
 
 .line {
     position: relative;
-    padding: 3px 8px 3px 44px;
+    padding: 3px 12px;
     border-radius: var(--radius-sm);
     transition: background var(--transition-fast);
     min-height: 24px;
@@ -317,10 +397,15 @@ body {
 .line.empty {
     padding: 2px 8px;
     min-height: 8px;
+    pointer-events: none;
 }
 
 .line:hover {
     background: var(--bg-hover);
+}
+
+.line.empty:hover {
+    background: transparent;
 }
 
 /* Line content */
@@ -330,7 +415,7 @@ body {
 }
 
 .line-content strong {
-    color: #22D3EE;  /* Teal/cyan */
+    color: var(--header-title);
     font-weight: 600;
 }
 
@@ -342,7 +427,7 @@ body {
     background: var(--bg-elevated);
     padding: 2px 6px;
     border-radius: var(--radius-sm);
-    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-family: var(--font-mono);
     font-size: 0.9em;
     color: var(--accent-hover);
     border: 1px solid var(--border);
@@ -354,13 +439,19 @@ body {
 
 .line-actions {
     position: absolute;
-    left: 4px;
+    left: -4px;
     top: 50%;
     transform: translateY(-50%);
     display: flex;
     gap: 2px;
     opacity: 0;
     transition: opacity var(--transition-fast);
+    background: var(--bg-primary);
+    padding: 2px 4px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--accent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    z-index: 10;
 }
 
 .line:hover .line-actions {
@@ -368,30 +459,38 @@ body {
 }
 
 .line-action {
-    width: 20px;
-    height: 20px;
-    min-width: 20px;
-    padding: 0;
+    padding: 2px 6px;
     border: none;
-    background: transparent;
+    background: var(--accent-subtle);
     cursor: pointer;
-    font-size: 14px;
-    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: var(--radius-sm);
     transition: all var(--transition-fast);
-    opacity: 0.8;
+    white-space: nowrap;
 }
 
 .line-action:hover {
-    color: var(--accent);
+    color: white;
+    background: var(--accent);
+}
+
+.line-action.edit,
+.line-action.remove {
+    background: transparent;
+    font-size: 14px;
+    padding: 2px 4px;
+}
+
+.line-action.edit:hover {
     background: var(--accent-subtle);
 }
 
 .line-action.remove:hover {
-    color: var(--error);
     background: var(--error-subtle);
 }
 
@@ -481,7 +580,7 @@ body {
     border-bottom: 1px solid var(--border);
     font-size: 11px;
     color: var(--text-muted);
-    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -493,8 +592,8 @@ body {
 }
 
 .code-block code {
-    font-family: 'SF Mono', 'Fira Code', monospace;
-    font-size: 13px;
+    font-family: var(--font-mono);
+    font-size: var(--font-size);
     color: var(--text-secondary);
     line-height: 1.5;
     background: none;
@@ -538,7 +637,7 @@ body {
     background: var(--bg-elevated);
     padding: 2px 6px;
     border-radius: var(--radius-sm);
-    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-family: var(--font-mono);
     font-size: 0.9em;
     color: var(--accent-hover);
     border: 1px solid var(--border);

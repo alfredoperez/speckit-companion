@@ -19,6 +19,7 @@ import { SpecKitDetector, UpdateChecker, registerCliCommands, registerUtilityCom
 
 // Core
 import { Views, setupFileWatchers, setupTasksWatcher } from './core';
+import { openSpecFile } from './core/utils/fileOpener';
 
 let aiProvider: IAIProvider;
 let permissionManager: PermissionManager;
@@ -102,6 +103,13 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand('speckit.skills.refresh', () => {
             skillsExplorer.refresh();
+        })
+    );
+
+    // Register file opener command for spec files (with retry logic)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('speckit.openSpecFile', async (filePath: string) => {
+            await openSpecFile(filePath, { outputChannel });
         })
     );
 

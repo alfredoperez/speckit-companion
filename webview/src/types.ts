@@ -30,8 +30,10 @@ export type ExtensionToWebviewMessage =
 // Spec info passed from extension
 export interface SpecInfo {
     currentPhase: number;
+    completedPhases: number[];  // Phases that are complete based on file existence
     phaseIcon: string;
     progressPercent: number;
+    taskCompletionPercent: number;  // 0-100, percentage of tasks completed
     specDir: string;
     documentType: 'spec' | 'plan' | 'tasks' | 'other';
     enhancementButton: EnhancementButton | null;
