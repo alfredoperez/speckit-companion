@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.10] - 2025-01-02
+
+### New Features
+
+- Add SpecKit Files section to Steering view showing `.specify/` directory contents
+- Display constitution, scripts, and templates from SpecKit project configuration
+- File watcher for `.specify/` directory with automatic refresh
+
+### Improvements
+
+- Fixed contextual initialization message - only shows when valid workspace is open
+- SpecKit files organized into collapsible categories with appropriate icons
+
+## [0.2.9] - 2024-12-30
+
+### New Features
+
+- VS Code theme integration for workflow editor
+- All hardcoded colors replaced with CSS custom properties mapped to VS Code theme variables
+- Theme-specific fallbacks for light, dark, and high-contrast modes
+
+### Improvements
+
+- Compact layout with reduced header margins (~30% vertical space reduction)
+- Typography uses VS Code font settings
+
 ## [0.2.0] - 2025-12-09
 
 ### New Features

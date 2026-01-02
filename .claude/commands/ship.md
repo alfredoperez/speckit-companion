@@ -45,19 +45,26 @@ If there are uncommitted changes:
 - Create the commit WITHOUT Claude Code attribution (no co-author, no generated-by footer)
 - Format: Just the user's message, nothing else
 
-### 5. Version Bump & Package
+### 5. Update Changelog
+
+- Add a new entry to CHANGELOG.md for the new version
+- Include the date in format YYYY-MM-DD
+- Categorize changes under: New Features, Improvements, Fixed
+- Keep entries concise but descriptive
+
+### 6. Version Bump & Package
 
 - Bump the patch version using `npm version patch --no-git-tag-version`
 - Run `npm run compile` to ensure build succeeds
 - Run `npm run package` to create the .vsix file
 - Commit the version bump with message "chore: bump version to X.X.X"
 
-### 6. Install Extension
+### 7. Install Extension
 
 - Install the new .vsix in VS Code using `code --install-extension speckit-companion-X.X.X.vsix`
 - Report success with the installed version
 
-### 7. Merge to Main & Tag
+### 8. Merge to Main & Tag
 
 If on a feature branch:
 - Ask user if they want to merge to main and create a release tag
