@@ -3,6 +3,7 @@ import { ConfigReader } from './configReader';
 import { PermissionCache, IPermissionCache } from './permissionCache';
 import { ClaudeCodeProvider } from '../../ai-providers/claudeCodeProvider';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
+import { getConfiguredProviderType } from '../../ai-providers/aiProvider';
 
 export class PermissionManager {
     private cache: IPermissionCache;
@@ -59,9 +60,17 @@ export class PermissionManager {
 
     /**
      * Initialize permission system (called on extension startup)
+     * Only runs for Claude Code provider - other providers don't require this permission flow
      */
     async initializePermissions(): Promise<boolean> {
         this.outputChannel.appendLine('[PermissionManager] Initializing permissions...');
+
+        // Check if we're using Claude Code provider
+        const providerType = getConfiguredProviderType();
+        if (providerType !== 'claude') {
+            this.outputChannel.appendLine(`[PermissionManager] Skipping permission check for provider: ${providerType}`);
+            return true;
+        }
 
         // Always start file monitoring to detect permission changes
         this.startMonitoring();
