@@ -122,6 +122,23 @@ This should be replaced with actual Claude CLI integration when testing is compl
 - **New Prompts**: Add to `src/prompts/` for AI-assisted features
 
 ## Recent Changes
+- 001-spec-editor-webview: Implemented Spec Editor Webview feature
+  - **Core Feature**: Rich webview-based spec editor with multi-line text input, image attachments, and AI CLI submission
+  - **Files Created**:
+    - `src/features/spec-editor/` - Feature module (types, provider, commands, managers)
+    - `webview/src/spec-editor/` - Browser-side webview code
+    - `webview/styles/spec-editor.css` - Themed styles
+  - **Key Components**:
+    - `SpecEditorProvider`: WebviewPanel-based editor with submit/preview/cancel
+    - `TempFileManager`: Manifest-based temp file management with cleanup
+    - `SpecDraftManager`: Draft persistence via workspaceState
+  - **User Stories Implemented**:
+    - US1: Multi-line text editor with keyboard shortcuts (Ctrl+Enter, Esc)
+    - US2: Image attachments via file picker or drag-drop (2MB/10MB limits)
+    - US3: Automatic temp file management with cleanup
+    - US4: Load previous spec as template
+  - **Integration**: Command `speckit.openSpecEditor` with keybinding Ctrl+Shift+N
+  - Added TypeScript 5.3+ (ES2022 target, strict mode enabled) + VS Code Extension API (`@types/vscode ^1.84.0`), Webpack 5
 - 001-speckit-views-enhancement: Implemented SpecKit views enhancement feature
   - **US1**: Fixed contextual initialization message - now only shows when a valid workspace is open
     - Added workspace check before showing init suggestion in `src/extension.ts:50-55`
@@ -141,11 +158,10 @@ This should be replaced with actual Claude CLI integration when testing is compl
   - Compact layout with reduced header margins (~30% vertical space reduction)
   - Empty lines have no hover effects (pointer-events: none)
   - Files modified: `webview/styles/workflow.css`
-- 002-edit-input-sizing: Implemented auto-sizing input with original value display for refine popover
   - CSS `field-sizing: content` with hidden span fallback for older browsers
   - Original value displayed above input with visual distinction (italic, muted, accent border)
   - Files modified: `webview/styles/workflow.css`, `webview/src/ui/refinePopover.ts`
 
 ## Active Technologies
-- TypeScript 5.3+ (ES2022 target, strict mode enabled) + VS Code Extension API (`@types/vscode ^1.84.0`), js-yaml ^4.1.0 (001-speckit-views-enhancement)
-- File system (`.specify/` directory structure in workspace) (001-speckit-views-enhancement)
+- TypeScript 5.3+ (ES2022 target, strict mode enabled) + VS Code Extension API (`@types/vscode ^1.84.0`), Webpack 5 (001-spec-editor-webview)
+- Local filesystem (context.globalStorageUri for temp files), VS Code workspaceState for drafts (001-spec-editor-webview)

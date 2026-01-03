@@ -13,6 +13,7 @@ import { AgentsExplorerProvider, AgentManager } from './features/agents';
 import { SkillsExplorerProvider, SkillManager } from './features/skills';
 import { PermissionManager } from './features/permission';
 import { WorkflowEditorProvider, registerWorkflowEditorCommands } from './features/workflow-editor';
+import { registerSpecEditorCommands } from './features/spec-editor';
 
 // SpecKit CLI integration
 import { SpecKitDetector, UpdateChecker, registerCliCommands, registerUtilityCommands } from './speckit';
@@ -156,6 +157,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Register workflow editor action commands
     registerWorkflowEditorCommands(context, outputChannel);
+
+    // Register spec editor commands
+    registerSpecEditorCommands(context, outputChannel);
 
     // Listen for provider configuration changes
     context.subscriptions.push(

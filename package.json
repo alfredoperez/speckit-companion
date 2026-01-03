@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "VS Code companion for GitHub SpecKit - spec-driven development with AI assistants",
-  "version": "0.2.21",
+  "version": "0.2.25",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",
@@ -351,6 +351,12 @@
         "title": "Navigate to Phase",
         "category": "SpecKit",
         "icon": "$(arrow-right)"
+      },
+      {
+        "command": "speckit.openSpecEditor",
+        "title": "Open Spec Editor",
+        "category": "SpecKit",
+        "icon": "$(edit)"
       }
     ],
     "menus": {
@@ -471,6 +477,14 @@
         }
       ]
     },
+    "keybindings": [
+      {
+        "command": "speckit.openSpecEditor",
+        "key": "ctrl+shift+n",
+        "mac": "cmd+shift+n",
+        "when": "speckit.detected"
+      }
+    ],
     "configuration": {
       "title": "SpecKit Companion",
       "properties": {

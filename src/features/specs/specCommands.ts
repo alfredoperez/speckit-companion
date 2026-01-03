@@ -4,7 +4,6 @@ import { getAIProvider } from '../../extension';
 import { SpecExplorerProvider } from './specExplorerProvider';
 import { SpecKitDetector } from '../../speckit/detector';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
-import { sanitizeShellInput } from '../../core/utils/sanitize';
 import type { SpecTreeItem } from '../../core/types/config';
 
 /**
@@ -16,7 +15,7 @@ export function registerSpecKitCommands(
     specKitDetector: SpecKitDetector,
     outputChannel: vscode.OutputChannel
 ): void {
-    // SpecKit Create - Create new spec folder and invoke specify
+    // SpecKit Create - Open the spec editor webview
     context.subscriptions.push(
         vscode.commands.registerCommand('speckit.create', async () => {
             outputChannel.appendLine('\n=== COMMAND speckit.create TRIGGERED ===');
@@ -32,28 +31,8 @@ export function registerSpecKitCommands(
                 return;
             }
 
-            const description = await vscode.window.showInputBox({
-                title: 'Create New Spec',
-                prompt: 'Describe the feature you want to build',
-                placeHolder: 'Enter your feature description...',
-                ignoreFocusOut: true
-            });
-
-            if (!description) {
-                return;
-            }
-
-            // Sanitize user input to prevent command injection
-            const sanitizedDescription = sanitizeShellInput(description);
-            if (!sanitizedDescription) {
-                vscode.window.showErrorMessage('Please enter a valid description.');
-                return;
-            }
-
-            NotificationUtils.showAutoDismissNotification('Creating spec with SpecKit. Check the terminal for progress.');
-
-            const prompt = `/speckit.specify ${sanitizedDescription}`;
-            await getAIProvider().executeInTerminal(prompt, 'SpecKit - Creating Spec');
+            // Open the spec editor webview
+            await vscode.commands.executeCommand('speckit.openSpecEditor');
         })
     );
 
