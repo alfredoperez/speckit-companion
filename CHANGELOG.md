@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.21] - 2025-01-02
+
+### Improvements
+
+- Internal refactoring for better code maintainability
+- Add architecture documentation (`docs/HOW_THIS_WORKS.md`)
+- Add `/install-local` command for developers
+
 ## [0.2.11] - 2025-01-02
 
 ### New Features
