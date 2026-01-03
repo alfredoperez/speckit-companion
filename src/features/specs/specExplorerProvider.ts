@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { BaseTreeDataProvider } from '../../core/providers';
 
 export interface SpecInfo {
     name: string;
@@ -20,15 +21,9 @@ const STATUS_INDICATORS = {
 
 type DocumentStatus = 'empty' | 'partial' | 'complete';
 
-export class SpecExplorerProvider implements vscode.TreeDataProvider<SpecItem> {
-    private _onDidChangeTreeData: vscode.EventEmitter<SpecItem | undefined | null | void> = new vscode.EventEmitter<SpecItem | undefined | null | void>();
-    readonly onDidChangeTreeData: vscode.Event<SpecItem | undefined | null | void> = this._onDidChangeTreeData.event;
-
-    private outputChannel: vscode.OutputChannel;
-    private isLoading: boolean = false;
-
-    constructor(private context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel) {
-        this.outputChannel = outputChannel;
+export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
+    constructor(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel) {
+        super(context, { name: 'SpecExplorerProvider', outputChannel });
     }
 
     refresh(): void {
@@ -39,10 +34,6 @@ export class SpecExplorerProvider implements vscode.TreeDataProvider<SpecItem> {
             this.isLoading = false;
             this._onDidChangeTreeData.fire();
         }, 100);
-    }
-
-    getTreeItem(element: SpecItem): vscode.TreeItem {
-        return element;
     }
 
     /**
@@ -66,7 +57,7 @@ export class SpecExplorerProvider implements vscode.TreeDataProvider<SpecItem> {
             }
         } catch {
             // specs/ directory doesn't exist
-            this.outputChannel.appendLine('[SpecExplorer] specs/ directory not found');
+            this.log('specs/ directory not found');
         }
 
         return specs;
@@ -271,7 +262,7 @@ class SpecItem extends vscode.TreeItem {
         public readonly label: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
         public readonly contextValue: string,
-        private readonly context: vscode.ExtensionContext,
+        private readonly extContext: vscode.ExtensionContext,
         public readonly specName?: string,
         public readonly documentType?: string,
         public readonly command?: vscode.Command,

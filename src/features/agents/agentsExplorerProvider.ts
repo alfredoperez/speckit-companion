@@ -2,36 +2,30 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { AgentManager, AgentInfo } from './agentManager';
 import { getConfiguredProviderType, getProviderPaths } from '../../ai-providers/aiProvider';
+import { BaseTreeDataProvider } from '../../core/providers';
 
-export class AgentsExplorerProvider implements vscode.TreeDataProvider<AgentItem> {
-    private _onDidChangeTreeData: vscode.EventEmitter<AgentItem | undefined | null | void> = new vscode.EventEmitter<AgentItem | undefined | null | void>();
-    readonly onDidChangeTreeData: vscode.Event<AgentItem | undefined | null | void> = this._onDidChangeTreeData.event;
-
+export class AgentsExplorerProvider extends BaseTreeDataProvider<AgentItem> {
     private fileWatcher: vscode.FileSystemWatcher | undefined;
     private userFileWatcher: vscode.FileSystemWatcher | undefined;
-    private isLoading: boolean = false;
 
     constructor(
-        private context: vscode.ExtensionContext,
+        context: vscode.ExtensionContext,
         private agentManager: AgentManager,
-        private outputChannel: vscode.OutputChannel
+        outputChannel: vscode.OutputChannel
     ) {
+        super(context, { name: 'AgentsExplorerProvider', outputChannel });
         this.setupFileWatchers();
     }
 
     refresh(): void {
         this.isLoading = true;
         this._onDidChangeTreeData.fire(); // Show loading state immediately
-        
+
         // Simulate async loading
         setTimeout(() => {
             this.isLoading = false;
             this._onDidChangeTreeData.fire(); // Show actual content
         }, 100);
-    }
-
-    getTreeItem(element: AgentItem): vscode.TreeItem {
-        return element;
     }
 
     async getChildren(element?: AgentItem): Promise<AgentItem[]> {
@@ -40,7 +34,6 @@ export class AgentsExplorerProvider implements vscode.TreeDataProvider<AgentItem
         }
 
         const providerType = getConfiguredProviderType();
-        const providerPaths = getProviderPaths(providerType);
 
         // Gemini has limited agent support
         if (providerType === 'gemini' && !element) {
@@ -145,13 +138,14 @@ export class AgentsExplorerProvider implements vscode.TreeDataProvider<AgentItem
             this.userFileWatcher.onDidChange(() => this._onDidChangeTreeData.fire());
             this.userFileWatcher.onDidDelete(() => this._onDidChangeTreeData.fire());
         } catch (error) {
-            this.outputChannel.appendLine(`[AgentsExplorer] Failed to watch user agents directory: ${error}`);
+            this.log(`Failed to watch user agents directory: ${error}`);
         }
     }
 
     dispose(): void {
         this.fileWatcher?.dispose();
         this.userFileWatcher?.dispose();
+        super.dispose();
     }
 }
 

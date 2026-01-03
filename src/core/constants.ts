@@ -157,3 +157,67 @@ export const Views = {
 export const EditorTypes = {
     workflowEditor: 'speckit.workflowEditor',
 } as const;
+
+/**
+ * Standard file names used throughout the extension
+ */
+export const FileNames = {
+    /** Spec requirements document */
+    specFile: 'spec.md',
+    /** Design/plan document */
+    planFile: 'plan.md',
+    /** Tasks document */
+    tasksFile: 'tasks.md',
+    /** Claude Code steering file */
+    claudeMd: 'CLAUDE.md',
+    /** Gemini CLI steering file */
+    geminiMd: 'GEMINI.md',
+    /** Copilot CLI steering file */
+    copilotInstructions: 'copilot-instructions.md',
+    /** Skill definition file */
+    skillDefinition: 'SKILL.md',
+    /** Claude settings file */
+    settingsJson: 'settings.json',
+    /** Installed plugins manifest */
+    installedPluginsJson: 'installed_plugins.json',
+    /** SpecKit settings file */
+    speckitSettingsJson: 'speckit-settings.json',
+    /** Constitution file */
+    constitutionMd: 'constitution.md',
+} as const;
+
+/**
+ * Standard directory names used throughout the extension
+ */
+export const Directories = {
+    /** Claude configuration directory */
+    claude: '.claude',
+    /** Gemini configuration directory */
+    gemini: '.gemini',
+    /** SpecKit configuration directory */
+    specify: '.specify',
+    /** GitHub directory (for Copilot) */
+    github: '.github',
+    /** Specs directory */
+    specs: 'specs',
+    /** Agents directory */
+    agents: 'agents',
+    /** Skills directory */
+    skills: 'skills',
+    /** Steering documents directory */
+    steering: 'steering',
+    /** Plugins directory */
+    plugins: 'plugins',
+    /** System prompts directory */
+    systemPrompts: 'system-prompts',
+    /** Settings directory */
+    settings: 'settings',
+    /** Memory directory (SpecKit) */
+    memory: 'memory',
+    /** Scripts directory (SpecKit) */
+    scripts: 'scripts',
+    /** Templates directory (SpecKit) */
+    templates: 'templates',
+    /** Instructions directory (Copilot) */
+    instructions: 'instructions',
+} as const;

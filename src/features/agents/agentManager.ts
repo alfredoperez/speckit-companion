@@ -3,6 +3,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as yaml from 'js-yaml';
+import type { AgentFrontmatter, InstalledPlugin, InstalledPluginsFile } from '../../core/types/config';
+import { handleError } from '../../core/errors';
 
 export interface AgentInfo {
     name: string;
@@ -63,7 +65,7 @@ export class AgentManager {
                     await vscode.workspace.fs.copy(sourceUri, targetUri, { overwrite: true });
                     this.outputChannel.appendLine(`[AgentManager] Updated agent ${agentName}`);
                 } catch (error) {
-                    this.outputChannel.appendLine(`[AgentManager] Failed to copy agent ${agentName}: ${error}`);
+                    handleError(error, { outputChannel: this.outputChannel, context: `AgentManager.copyAgent(${agentName})` });
                 }
             }
             
@@ -71,7 +73,7 @@ export class AgentManager {
             await this.initializeSystemPrompt();
             
         } catch (error) {
-            this.outputChannel.appendLine(`[AgentManager] Failed to initialize agents: ${error}`);
+            handleError(error, { outputChannel: this.outputChannel, context: 'AgentManager.initializeBuiltInAgents' });
         }
     }
 
@@ -202,15 +204,15 @@ export class AgentManager {
                 return null;
             }
 
-            let frontmatter: any;
+            let frontmatter: AgentFrontmatter | undefined;
             try {
                 // Debug: log the frontmatter content for spec-system-prompt-loader
                 if (path.basename(filePath) === 'spec-system-prompt-loader.md') {
                     this.outputChannel.appendLine(`[AgentManager] Frontmatter content for spec-system-prompt-loader:`);
                     this.outputChannel.appendLine(frontmatterMatch[1]);
                 }
-                
-                frontmatter = yaml.load(frontmatterMatch[1]) as any;
+
+                frontmatter = yaml.load(frontmatterMatch[1]) as AgentFrontmatter | undefined;
                 this.outputChannel.appendLine(`[AgentManager] Successfully parsed YAML for: ${path.basename(filePath)}`);
             } catch (yamlError) {
                 this.outputChannel.appendLine(`[AgentManager] YAML parse error in ${path.basename(filePath)}: ${yamlError}`);
@@ -222,13 +224,13 @@ export class AgentManager {
             }
             
             return {
-                name: frontmatter.name || path.basename(filePath, '.md'),
-                description: frontmatter.description || '',
+                name: frontmatter?.name || path.basename(filePath, '.md'),
+                description: frontmatter?.description || '',
                 path: filePath,
                 type,
-                tools: Array.isArray(frontmatter.tools) 
-                    ? frontmatter.tools 
-                    : (frontmatter.tools ? frontmatter.tools.split(',').map((t: string) => t.trim()) : undefined)
+                tools: Array.isArray(frontmatter?.tools)
+                    ? frontmatter.tools
+                    : (frontmatter?.tools ? frontmatter.tools.split(',').map((t: string) => t.trim()) : undefined)
             };
         } catch (error) {
             this.outputChannel.appendLine(`[AgentManager] Failed to parse agent file ${filePath}: ${error}`);
@@ -266,7 +268,7 @@ export class AgentManager {
             }
 
             const installedPluginsContent = await fs.promises.readFile(installedPluginsPath, 'utf-8');
-            const installedPlugins = JSON.parse(installedPluginsContent);
+            const installedPlugins: InstalledPluginsFile = JSON.parse(installedPluginsContent);
 
             if (!installedPlugins.plugins) {
                 this.outputChannel.appendLine('[AgentManager] No plugins found in installed_plugins.json');
@@ -274,7 +276,7 @@ export class AgentManager {
             }
 
             for (const [pluginKey, pluginInfo] of Object.entries(installedPlugins.plugins)) {
-                const pluginData = pluginInfo as { installPath?: string };
+                const pluginData: InstalledPlugin = pluginInfo;
                 if (!pluginData.installPath) {
                     this.outputChannel.appendLine(`[AgentManager] Plugin ${pluginKey} has no installPath, skipping`);
                     continue;

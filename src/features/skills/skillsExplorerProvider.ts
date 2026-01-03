@@ -2,21 +2,19 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { SkillManager, SkillInfo, SkillType } from './skillManager';
 import { getConfiguredProviderType } from '../../ai-providers/aiProvider';
+import { BaseTreeDataProvider } from '../../core/providers';
 
-export class SkillsExplorerProvider implements vscode.TreeDataProvider<SkillItem> {
-    private _onDidChangeTreeData: vscode.EventEmitter<SkillItem | undefined | null | void> = new vscode.EventEmitter<SkillItem | undefined | null | void>();
-    readonly onDidChangeTreeData: vscode.Event<SkillItem | undefined | null | void> = this._onDidChangeTreeData.event;
-
+export class SkillsExplorerProvider extends BaseTreeDataProvider<SkillItem> {
     private projectFileWatcher: vscode.FileSystemWatcher | undefined;
     private userFileWatcher: vscode.FileSystemWatcher | undefined;
     private pluginsFileWatcher: vscode.FileSystemWatcher | undefined;
-    private isLoading: boolean = false;
 
     constructor(
-        private context: vscode.ExtensionContext,
+        context: vscode.ExtensionContext,
         private skillManager: SkillManager,
-        private outputChannel: vscode.OutputChannel
+        outputChannel: vscode.OutputChannel
     ) {
+        super(context, { name: 'SkillsExplorerProvider', outputChannel });
         this.setupFileWatchers();
     }
 
@@ -29,10 +27,6 @@ export class SkillsExplorerProvider implements vscode.TreeDataProvider<SkillItem
             this.isLoading = false;
             this._onDidChangeTreeData.fire(); // Show actual content
         }, 100);
-    }
-
-    getTreeItem(element: SkillItem): vscode.TreeItem {
-        return element;
     }
 
     async getChildren(element?: SkillItem): Promise<SkillItem[]> {
@@ -154,7 +148,7 @@ export class SkillsExplorerProvider implements vscode.TreeDataProvider<SkillItem
             this.userFileWatcher.onDidChange(() => this._onDidChangeTreeData.fire());
             this.userFileWatcher.onDidDelete(() => this._onDidChangeTreeData.fire());
         } catch (error) {
-            this.outputChannel.appendLine(`[SkillsExplorer] Failed to watch user skills directory: ${error}`);
+            this.log(`Failed to watch user skills directory: ${error}`);
         }
 
         // Watch installed_plugins.json for plugin skill changes
@@ -171,7 +165,7 @@ export class SkillsExplorerProvider implements vscode.TreeDataProvider<SkillItem
             this.pluginsFileWatcher.onDidChange(() => this._onDidChangeTreeData.fire());
             this.pluginsFileWatcher.onDidDelete(() => this._onDidChangeTreeData.fire());
         } catch (error) {
-            this.outputChannel.appendLine(`[SkillsExplorer] Failed to watch plugins file: ${error}`);
+            this.log(`Failed to watch plugins file: ${error}`);
         }
     }
 
@@ -179,6 +173,7 @@ export class SkillsExplorerProvider implements vscode.TreeDataProvider<SkillItem
         this.projectFileWatcher?.dispose();
         this.userFileWatcher?.dispose();
         this.pluginsFileWatcher?.dispose();
+        super.dispose();
     }
 }
 

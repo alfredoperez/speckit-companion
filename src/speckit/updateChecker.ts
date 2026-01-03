@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { NotificationUtils } from '../core/utils/notificationUtils';
+import type { GitHubRelease } from '../core/types/config';
 
 export class UpdateChecker {
     private static readonly SKIP_VERSION_KEY = 'speckit.skipVersion';
@@ -64,17 +65,17 @@ export class UpdateChecker {
     /**
      * Fetch latest release from GitHub API
      */
-    private async fetchLatestRelease(): Promise<any> {
+    private async fetchLatestRelease(): Promise<GitHubRelease | null> {
         try {
             this.outputChannel.appendLine('[UpdateChecker] Fetching latest release from GitHub...');
             const response = await fetch('https://api.github.com/repos/alfredoperez/speckit-companion/releases/latest');
-            
+
             if (!response.ok) {
                 this.outputChannel.appendLine(`[UpdateChecker] GitHub API returned ${response.status}: ${response.statusText}`);
                 return null;
             }
-            
-            const release: any = await response.json();
+
+            const release = await response.json() as GitHubRelease;
             this.outputChannel.appendLine(`[UpdateChecker] Latest release: ${release?.tag_name || 'unknown'}`);
             return release;
         } catch (error) {

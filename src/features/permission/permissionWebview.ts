@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 
-// 定义回调接口
+// Callback interface definition
 interface PermissionWebviewCallbacks {
     onAccept: () => Promise<boolean>;
     onCancel: () => void;
@@ -109,14 +109,14 @@ export class PermissionWebview {
                             if (PermissionWebview.callbacks) {
                                 const success = await PermissionWebview.callbacks.onAccept();
                                 if (!success) {
-                                    // 更新 UI 状态显示失败
+                                    // Update UI status to show failure
                                     panel.webview.postMessage({
                                         command: 'updateStatus',
                                         status: 'failed',
-                                        message: '无法设置权限，请重试'
+                                        message: 'Unable to set permission, please try again'
                                     });
                                 }
-                                // 注意：不在这里关闭 webview，由 Manager 控制
+                                // Note: Don't close webview here, controlled by Manager
                             }
                             return;
                         case 'cancel':
@@ -124,7 +124,7 @@ export class PermissionWebview {
                             if (PermissionWebview.callbacks) {
                                 PermissionWebview.callbacks.onCancel();
                             }
-                            // 注意：不在这里关闭 webview，由 Manager 控制
+                            // Note: Don't close webview here, controlled by Manager
                             return;
                         case 'openIssue':
                             await vscode.env.openExternal(vscode.Uri.parse('https://github.com/alfredoperez/speckit-companion/issues'));
@@ -142,7 +142,7 @@ export class PermissionWebview {
                     if (PermissionWebview.callbacks) {
                         PermissionWebview.callbacks.onDispose();
                     }
-                    // 注意：清理工作由 Manager 控制
+                    // Note: Cleanup is controlled by Manager
                 },
                 null,
                 context.subscriptions

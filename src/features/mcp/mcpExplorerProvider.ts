@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { getConfiguredProviderType } from '../../ai-providers/aiProvider';
+import { BaseTreeDataProvider } from '../../core/providers';
 
 const execAsync = promisify(exec);
 
@@ -20,19 +21,15 @@ interface MCPServerInfo {
     removeCommand?: string;  // Command to remove the server
 }
 
-export class MCPExplorerProvider implements vscode.TreeDataProvider<MCPItem> {
-    private _onDidChangeTreeData: vscode.EventEmitter<MCPItem | undefined | null | void> = new vscode.EventEmitter<MCPItem | undefined | null | void>();
-    readonly onDidChangeTreeData: vscode.Event<MCPItem | undefined | null | void> = this._onDidChangeTreeData.event;
-
+export class MCPExplorerProvider extends BaseTreeDataProvider<MCPItem> {
     private servers: Map<string, MCPServerInfo> = new Map();
-    private outputChannel: vscode.OutputChannel;
-    private isLoading: boolean = true;
 
     constructor(
-        private context: vscode.ExtensionContext,
+        context: vscode.ExtensionContext,
         outputChannel: vscode.OutputChannel
     ) {
-        this.outputChannel = outputChannel;
+        super(context, { name: 'MCPExplorerProvider', outputChannel });
+        this.isLoading = true;
         this.loadMCPServers();
     }
 
@@ -40,10 +37,6 @@ export class MCPExplorerProvider implements vscode.TreeDataProvider<MCPItem> {
         this.isLoading = true;
         this._onDidChangeTreeData.fire(); // Fire immediately to show loading state
         this.loadMCPServers();
-    }
-
-    getTreeItem(element: MCPItem): vscode.TreeItem {
-        return element;
     }
 
     async getChildren(element?: MCPItem): Promise<MCPItem[]> {
@@ -232,7 +225,7 @@ export class MCPExplorerProvider implements vscode.TreeDataProvider<MCPItem> {
 
             // Only log errors, not normal output
             if (stderr) {
-                this.outputChannel.appendLine(`claude mcp list stderr: ${stderr}`);
+                this.log(`claude mcp list stderr: ${stderr}`);
 
                 if (!stdout) {
                     return;
@@ -251,7 +244,7 @@ export class MCPExplorerProvider implements vscode.TreeDataProvider<MCPItem> {
             this.loadAllServerDetailsAsync();
 
         } catch (error) {
-            this.outputChannel.appendLine(`Failed to load MCP servers: ${error}`);
+            this.log(`Failed to load MCP servers: ${error}`);
             // Show error in tree view
             this.servers.clear();
         }
@@ -265,7 +258,7 @@ export class MCPExplorerProvider implements vscode.TreeDataProvider<MCPItem> {
             const colonIndex = line.indexOf(':');
             if (colonIndex > 0) {
                 const name = line.substring(0, colonIndex).trim();
-                
+
                 // Parse status from the line
                 let status: 'connected' | 'disconnected' = 'disconnected';
                 if (line.includes('✓ Connected')) {
@@ -273,7 +266,7 @@ export class MCPExplorerProvider implements vscode.TreeDataProvider<MCPItem> {
                 } else if (line.includes('✗ Failed to connect')) {
                     status = 'disconnected';
                 }
-                
+
                 this.servers.set(name, {
                     name,
                     type: 'stdio', // Default, will be updated with details
@@ -295,7 +288,7 @@ export class MCPExplorerProvider implements vscode.TreeDataProvider<MCPItem> {
 
         // Don't await - let them run in background
         Promise.all(detailPromises).catch(err => {
-            this.outputChannel.appendLine(`Error loading server details: ${err}`);
+            this.log(`Error loading server details: ${err}`);
         });
     }
 
@@ -308,7 +301,7 @@ export class MCPExplorerProvider implements vscode.TreeDataProvider<MCPItem> {
             const { stdout, stderr } = await execAsync(`claude mcp get ${name}`, { cwd });
 
             if (stderr) {
-                this.outputChannel.appendLine(`Error getting details for ${name}: ${stderr}`);
+                this.log(`Error getting details for ${name}: ${stderr}`);
                 // Don't return here - stderr might just be warnings
             }
 
@@ -320,7 +313,7 @@ export class MCPExplorerProvider implements vscode.TreeDataProvider<MCPItem> {
             }
 
         } catch (error) {
-            this.outputChannel.appendLine(`Failed to get details for ${name}: ${error}`);
+            this.log(`Failed to get details for ${name}: ${error}`);
             // Don't remove the server from the list, just show it with default values
             const server = this.servers.get(name);
             if (server) {
@@ -411,7 +404,7 @@ class MCPItem extends vscode.TreeItem {
         public readonly contextValue: string,
         public readonly id: string,
         public readonly serverInfo?: MCPServerInfo,
-        private readonly context?: vscode.ExtensionContext
+        private readonly extContext?: vscode.ExtensionContext
     ) {
         super(label, collapsibleState);
 
@@ -447,10 +440,10 @@ class MCPItem extends vscode.TreeItem {
             } else {
                 this.iconPath = new vscode.ThemeIcon('circle-outline');
             }
-        } else if (context) {
+        } else if (extContext) {
             this.iconPath = {
-                light: vscode.Uri.file(context.asAbsolutePath('icons/server.svg')),
-                dark: vscode.Uri.file(context.asAbsolutePath('icons/server.svg'))
+                light: vscode.Uri.file(extContext.asAbsolutePath('icons/server.svg')),
+                dark: vscode.Uri.file(extContext.asAbsolutePath('icons/server.svg'))
             };
         } else {
             this.iconPath = new vscode.ThemeIcon('server-environment');
@@ -459,14 +452,14 @@ class MCPItem extends vscode.TreeItem {
         // Set tooltips
         if (contextValue === 'mcp-server' && serverInfo) {
             let tooltipText = `MCP Server: ${label}\nType: ${serverInfo.type}\nScope: ${serverInfo.scope}`;
-            
+
             // Add status info to tooltip
             if (serverInfo.status === 'disconnected') {
                 tooltipText += '\nStatus: ✗ Failed to connect';
             } else if (serverInfo.status === 'connected') {
                 tooltipText += '\nStatus: ✓ Connected';
             }
-            
+
             this.tooltip = tooltipText;
         } else if (contextValue === 'mcp-detail') {
             this.tooltip = label;

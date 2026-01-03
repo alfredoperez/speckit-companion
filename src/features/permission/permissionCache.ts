@@ -18,42 +18,42 @@ export class PermissionCache extends vscode.EventEmitter<boolean> implements IPe
     }
 
     /**
-     * 获取权限状态（使用缓存）
+     * Get permission status (uses cache)
      */
     async get(): Promise<boolean> {
-        // 如果有缓存直接返回
+        // Return cached value if available
         if (this.cache !== undefined) {
             return this.cache;
         }
 
-        // 否则调用 refreshAndGet
+        // Otherwise call refreshAndGet
         return this.refreshAndGet();
     }
 
     /**
-     * 刷新缓存（不返回值）
+     * Refresh cache (no return value)
      */
     async refresh(): Promise<void> {
         await this.refreshAndGet();
     }
 
     /**
-     * 刷新缓存并返回最新值
+     * Refresh cache and return latest value
      */
     async refreshAndGet(): Promise<boolean> {
-        // 保存旧值
+        // Save old value
         const oldValue = this.cache;
 
-        // 从 ConfigReader 读取最新状态
+        // Read latest status from ConfigReader
         this.cache = await this.configReader.getBypassPermissionStatus();
 
-        // 只在权限状态变化时打印日志
+        // Only log when permission status changes
         if (oldValue !== this.cache) {
             this.outputChannel.appendLine(
                 `[PermissionCache] Permission changed: ${oldValue} -> ${this.cache}`
             );
 
-            // 如果权限从 false 变为 true，触发事件
+            // If permission changed from false to true, fire event
             if (oldValue === false && this.cache === true) {
                 this.outputChannel.appendLine(
                     '[PermissionCache] Permission granted! Firing event.'
@@ -61,7 +61,7 @@ export class PermissionCache extends vscode.EventEmitter<boolean> implements IPe
                 this.fire(true);
             }
 
-            // 如果权限从 true 变为 false，也触发事件
+            // If permission changed from true to false, also fire event
             if (oldValue === true && this.cache === false) {
                 this.outputChannel.appendLine(
                     '[PermissionCache] Permission revoked! Firing event.'

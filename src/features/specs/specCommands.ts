@@ -5,6 +5,7 @@ import { SpecExplorerProvider } from './specExplorerProvider';
 import { SpecKitDetector } from '../../speckit/detector';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import { sanitizeShellInput } from '../../core/utils/sanitize';
+import type { SpecTreeItem } from '../../core/types/config';
 
 /**
  * Register SpecKit workflow commands (create, specify, plan, tasks, etc.)
@@ -66,7 +67,7 @@ export function registerSpecKitCommands(
 
     // Spec delete
     context.subscriptions.push(
-        vscode.commands.registerCommand('speckit.delete', async (item: any) => {
+        vscode.commands.registerCommand('speckit.delete', async (item: SpecTreeItem) => {
             const confirm = await vscode.window.showWarningMessage(
                 `Delete spec "${item.label}"? This cannot be undone.`,
                 'Delete',

@@ -4,15 +4,13 @@ import * as fs from 'fs';
 import { SteeringManager } from './steeringManager';
 import { getConfiguredProviderType, getProviderPaths, AIProviderType } from '../../ai-providers/aiProvider';
 import { SpecKitFilesResult, SPECKIT_PATHS } from './types';
+import { BaseTreeDataProvider } from '../../core/providers';
 
-export class SteeringExplorerProvider implements vscode.TreeDataProvider<SteeringItem> {
-    private _onDidChangeTreeData: vscode.EventEmitter<SteeringItem | undefined | null | void> = new vscode.EventEmitter<SteeringItem | undefined | null | void>();
-    readonly onDidChangeTreeData: vscode.Event<SteeringItem | undefined | null | void> = this._onDidChangeTreeData.event;
-
+export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem> {
     private steeringManager!: SteeringManager;
-    private isLoading: boolean = false;
 
-    constructor(private context: vscode.ExtensionContext) {
+    constructor(context: vscode.ExtensionContext) {
+        super(context, { name: 'SteeringExplorerProvider' });
         // We'll set the steering manager later from extension.ts
     }
 
@@ -23,16 +21,12 @@ export class SteeringExplorerProvider implements vscode.TreeDataProvider<Steerin
     refresh(): void {
         this.isLoading = true;
         this._onDidChangeTreeData.fire(); // Show loading state immediately
-        
+
         // Simulate async loading
         setTimeout(() => {
             this.isLoading = false;
             this._onDidChangeTreeData.fire(); // Show actual content
         }, 100);
-    }
-
-    getTreeItem(element: SteeringItem): vscode.TreeItem {
-        return element;
     }
 
     async getChildren(element?: SteeringItem): Promise<SteeringItem[]> {
@@ -272,7 +266,6 @@ export class SteeringExplorerProvider implements vscode.TreeDataProvider<Steerin
             return { constitution: null, scripts: [], templates: [] };
         }
 
-        const basePath = path.join(workspaceFolder.uri.fsPath, SPECKIT_PATHS.BASE);
         const result: SpecKitFilesResult = {
             constitution: null,
             scripts: [],
@@ -430,7 +423,7 @@ class SteeringItem extends vscode.TreeItem {
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
         public readonly contextValue: string,
         public readonly resourcePath: string,
-        private readonly context: vscode.ExtensionContext,
+        private readonly extContext: vscode.ExtensionContext,
         public readonly command?: vscode.Command,
         private readonly filename?: string
     ) {
