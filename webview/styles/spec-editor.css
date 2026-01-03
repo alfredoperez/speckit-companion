@@ -151,25 +151,12 @@
     font-size: 14px;
 }
 
-/* Drop zone */
-.image-drop-zone {
-    border: 2px dashed var(--vscode-widget-border);
-    border-radius: 8px;
-    padding: 24px;
-    text-align: center;
-    transition: all 0.2s ease;
-    margin-bottom: 12px;
-}
-
-.image-drop-zone.drag-over {
-    border-color: var(--vscode-focusBorder);
-    background-color: var(--vscode-list-hoverBackground);
-}
-
-.image-drop-zone p {
-    margin: 0;
+/* Paste hint */
+.paste-hint {
+    margin: 0 0 12px 0;
     color: var(--vscode-descriptionForeground);
-    font-size: 0.85em;
+    font-size: 0.8em;
+    font-style: italic;
 }
 
 /* Thumbnail grid */

@@ -30,7 +30,6 @@ function getElements() {
         errorContainer: document.getElementById('error-container') as HTMLElement,
         thumbnails: document.getElementById('thumbnails') as HTMLElement,
         sizeInfo: document.getElementById('sizeInfo') as HTMLElement,
-        dropZone: document.getElementById('dropZone') as HTMLElement,
         loadingOverlay: document.getElementById('loadingOverlay') as HTMLElement,
         submitBtn: document.getElementById('submitBtn') as HTMLButtonElement,
         previewBtn: document.getElementById('previewBtn') as HTMLButtonElement,
@@ -260,30 +259,6 @@ function setupEventListeners(): void {
         input.click();
     });
 
-    // Drag and drop
-    elements.dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        elements.dropZone.classList.add('drag-over');
-    });
-
-    elements.dropZone.addEventListener('dragleave', () => {
-        elements.dropZone.classList.remove('drag-over');
-    });
-
-    elements.dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        elements.dropZone.classList.remove('drag-over');
-
-        const files = e.dataTransfer?.files;
-        if (files) {
-            Array.from(files).forEach(file => {
-                if (file.type.startsWith('image/')) {
-                    handleImageFile(file);
-                }
-            });
-        }
-    });
-
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
         // Ctrl/Cmd + Enter to submit
@@ -303,6 +278,24 @@ function setupEventListeners(): void {
         if (e.key === 'Escape') {
             e.preventDefault();
             vscode.postMessage({ type: 'cancel' });
+        }
+    });
+
+    // Clipboard paste for images
+    document.addEventListener('paste', (e) => {
+        const items = e.clipboardData?.items;
+        if (!items) return;
+
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (item.type.startsWith('image/')) {
+                e.preventDefault();
+                const file = item.getAsFile();
+                if (file) {
+                    handleImageFile(file);
+                }
+                break;
+            }
         }
     });
 }

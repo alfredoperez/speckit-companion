@@ -122,6 +122,7 @@ This should be replaced with actual Claude CLI integration when testing is compl
 - **New Prompts**: Add to `src/prompts/` for AI-assisted features
 
 ## Recent Changes
+- 001-plan-step-highlight: Added TypeScript 5.3+ (ES2022 target, strict mode enabled) + VS Code Extension API (`@types/vscode ^1.84.0`), Webpack 5
 - 001-spec-editor-webview: Implemented Spec Editor Webview feature
   - **Core Feature**: Rich webview-based spec editor with multi-line text input, image attachments, and AI CLI submission
   - **Files Created**:
@@ -151,7 +152,6 @@ This should be replaced with actual Claude CLI integration when testing is compl
     - Constitution, Scripts, Templates categories with appropriate icons
     - File watcher for `.specify/` directory with debounced refresh (1s)
     - Modified: `src/core/fileWatchers.ts`
-- 001-theme-integration: Implemented VS Code theme integration for workflow editor
   - All hardcoded colors replaced with CSS custom properties mapped to VS Code theme variables
   - Theme-specific fallbacks for light, dark, and high-contrast modes
   - Typography uses VS Code font settings (--vscode-font-family, --vscode-editor-font-family)
@@ -163,5 +163,4 @@ This should be replaced with actual Claude CLI integration when testing is compl
   - Files modified: `webview/styles/workflow.css`, `webview/src/ui/refinePopover.ts`
 
 ## Active Technologies
-- TypeScript 5.3+ (ES2022 target, strict mode enabled) + VS Code Extension API (`@types/vscode ^1.84.0`), Webpack 5 (001-spec-editor-webview)
-- Local filesystem (context.globalStorageUri for temp files), VS Code workspaceState for drafts (001-spec-editor-webview)
+- N/A (no persistent storage required for this feature) (001-plan-step-highlight)

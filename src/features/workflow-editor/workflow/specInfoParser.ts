@@ -47,8 +47,9 @@ export function parseSpecInfo(document: vscode.TextDocument): SpecInfo {
             tooltip: 'Analyze task dependencies and complexity'
         };
     } else if (fileName === 'research.md') {
-        currentPhase = 1;
+        currentPhase = 2;  // Research is part of Plan phase
         phaseIcon = '🔍';
+        documentType = 'plan';  // Treat as plan-related
     } else if (fileName.endsWith('.md')) {
         // Related docs (data-model.md, quickstart.md, etc.) are part of the Plan phase
         currentPhase = 2;
@@ -110,13 +111,10 @@ function getRelatedDocs(dirPath: string, currentFileName: string, documentType: 
 
         // For phase 2 (plan) or related docs, show tabs
         if (documentType === 'plan' || otherDocs.includes(currentFileName)) {
-            // Workflow order: research → plan → data-model → quickstart → others alphabetically
-            const docOrder = ['research.md', 'plan.md', 'data-model.md', 'quickstart.md'];
-
             // Collect all docs that exist
             const docsToShow: RelatedDoc[] = [];
 
-            // Add plan.md if it exists
+            // Add plan.md first if it exists
             if (fs.existsSync(path.join(dirPath, 'plan.md'))) {
                 docsToShow.push({
                     name: 'Plan',
@@ -125,23 +123,14 @@ function getRelatedDocs(dirPath: string, currentFileName: string, documentType: 
                 });
             }
 
-            // Add other docs
-            otherDocs.forEach(f => {
+            // Add other docs and sort alphabetically
+            const sortedOtherDocs = [...otherDocs].sort((a, b) => a.localeCompare(b));
+            sortedOtherDocs.forEach(f => {
                 docsToShow.push({
                     name: formatDocName(f.replace('.md', '')),
                     fileName: f,
                     path: path.join(dirPath, f)
                 });
-            });
-
-            // Sort by workflow order
-            docsToShow.sort((a, b) => {
-                const aIdx = docOrder.indexOf(a.fileName);
-                const bIdx = docOrder.indexOf(b.fileName);
-                if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
-                if (aIdx !== -1) return -1;
-                if (bIdx !== -1) return 1;
-                return a.fileName.localeCompare(b.fileName);
             });
 
             return docsToShow;

@@ -174,12 +174,15 @@ export class SpecEditorProvider {
             // Get AI provider and execute
             const provider = AIProviderFactory.getProvider(this.context, this.outputChannel);
 
-            // Generate prompt with the content and image references
-            const prompt = await this.tempFileManager.generateMarkdown(
+            // Generate markdown with the content and image references
+            const markdownContent = await this.tempFileManager.generateMarkdown(
                 tempFileSet.id,
                 content,
                 images
             );
+
+            // Prepend the speckit.specify command to trigger the workflow
+            const prompt = `/speckit.specify ${markdownContent}`;
 
             // Execute in terminal
             await provider.executeInTerminal(prompt, 'SpecKit - New Spec');
@@ -240,15 +243,11 @@ export class SpecEditorProvider {
             this.attachedImages.set(image.id, image);
             this.outputChannel.appendLine(`[SpecEditor] Image saved: ${image.id} (${name})`);
 
-            // Convert file path to webview URI for thumbnail
-            const thumbnailUri = this.panel?.webview.asWebviewUri(
-                vscode.Uri.file(image.filePath)
-            );
-
+            // Use data URI for thumbnail display (more reliable in webviews)
             this.postMessage({
                 type: 'imageSaved',
                 imageId: image.id,
-                thumbnailUri: thumbnailUri?.toString() || image.thumbnailDataUri,
+                thumbnailUri: image.thumbnailDataUri,
                 originalName: name
             });
 
@@ -405,9 +404,7 @@ Example:
                         Attach Image
                     </button>
                 </div>
-                <div class="image-drop-zone" id="dropZone">
-                    <p>Drag and drop images here, or use the button above</p>
-                </div>
+                <p class="paste-hint">Use the button above or paste (Ctrl+V / Cmd+V) to attach images</p>
                 <div class="image-thumbnails" id="thumbnails"></div>
                 <div class="image-size-info" id="sizeInfo"></div>
             </div>
