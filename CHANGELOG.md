@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.26] - 2025-01-02
+
+### New Features
+
+- **Spec Editor**: New rich webview for creating specifications
+  - Multi-line text editor with formatting preservation
+  - Image attachments via file picker or drag-and-drop
+  - Load existing specs as templates
+  - Keyboard shortcuts (Ctrl+Enter to submit, Esc to cancel)
+- Plus button in Specs view now opens the Spec Editor
+
+### Improvements
+
+- Automatic temp file cleanup for submitted specs
+- VS Code theme integration for Spec Editor
+
 ## [0.2.21] - 2025-01-02
 
 ### Improvements
