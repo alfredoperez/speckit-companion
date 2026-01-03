@@ -12,7 +12,11 @@ description: Review code, update docs, and package a new version (project)
 
 ## Your task
 
-Help the user prepare and package a new version of the extension by:
+Help the user prepare and package a new version of the extension.
+
+**Note:** Arguments passed to this command are optional context/description (e.g., "refactoring and cleanup"). They are NOT the commit message or version number - those will be determined during the process.
+
+Steps:
 
 ### 1. Code Quality Review
 
@@ -41,9 +45,16 @@ If recent commits modified files in `webview/` or `src/features/`:
 
 If there are uncommitted changes:
 - Show a summary of what will be committed
-- Ask user for a commit message
+- Suggest a commit message using **conventional commit format**:
+  - `feat:` - New feature
+  - `fix:` - Bug fix
+  - `refactor:` - Code refactoring (no functional change)
+  - `docs:` - Documentation only
+  - `chore:` - Maintenance tasks
+  - `style:` - Formatting, whitespace
+- Include a body with bullet points for significant changes
+- Ask user to confirm or modify the commit message
 - Create the commit WITHOUT Claude Code attribution (no co-author, no generated-by footer)
-- Format: Just the user's message, nothing else
 
 ### 5. Update Changelog
 
@@ -64,6 +75,9 @@ If there are uncommitted changes:
   ### Fixed
   - Fix description
   ```
+- **Keep entries end-user friendly** - Focus on what changed for users, not implementation details
+  - Good: "Internal refactoring for better code maintainability"
+  - Bad: "Migrate all 7 providers to use BaseTreeDataProvider abstract class"
 - Base the entry on the commit message from step 4 and any recent commits
 - Ask user to confirm the changelog entry before proceeding
 
@@ -79,9 +93,9 @@ If there are uncommitted changes:
 - Install the new .vsix in VS Code using `code --install-extension speckit-companion-X.X.X.vsix`
 - Report success with the installed version
 
-### 8. Merge to Main & Tag
+### 8. Tag & Push
 
-If on a feature branch:
+**If on a feature branch:**
 - Ask user if they want to merge to main and create a release tag
 - If yes:
   - `git checkout main`
@@ -89,6 +103,14 @@ If on a feature branch:
   - `git tag -a vX.X.X -m "<commit message from step 4>"`
   - `git push origin main`
   - `git push origin vX.X.X`
+
+**If already on main:**
+- Ask user if they want to create a release tag and push
+- If yes:
+  - `git tag -a vX.X.X -m "<commit message from step 4>"`
+  - `git push origin main`
+  - `git push origin vX.X.X`
+
 - Report the tag URL: `https://github.com/alfredoperez/speckit-companion/releases/tag/vX.X.X`
 
 Make sure to ask for user confirmation before creating commits. Handle errors gracefully.
