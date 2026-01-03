@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.28] - 2026-01-02
+
+### Improvements
+
+- **Spec Editor**: Replace drag-and-drop with clipboard paste (Ctrl+V / Cmd+V) for image attachments
+- **Spec Editor**: More reliable image thumbnail display
+- **Workflow Editor**: Research tab now correctly appears under Plan phase
+- **Workflow Editor**: Related docs sorted alphabetically for consistency
+- Updated screenshots with higher quality images
+
+### Housekeeping
+
+- Removed unused legacy assets
+
 ## [0.2.26] - 2025-01-02
 
 ### New Features
