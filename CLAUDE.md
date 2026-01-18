@@ -122,8 +122,38 @@ This should be replaced with actual Claude CLI integration when testing is compl
 - **New Prompts**: Add to `src/prompts/` for AI-assisted features
 
 ## Recent Changes
-- 001-plan-step-highlight: Added TypeScript 5.3+ (ES2022 target, strict mode enabled) + VS Code Extension API (`@types/vscode ^1.84.0`), Webpack 5
-- 001-spec-editor-webview: Implemented Spec Editor Webview feature
+- 007-spec-viewer-webview: Implemented Unified Spec Viewer Webview Panel
+  - **Core Feature**: Read-only webview panel for viewing spec documents (spec.md, plan.md, tasks.md) with tabbed navigation
+  - **Files Created**:
+    - `src/features/spec-viewer/` - Feature module (types, provider, commands)
+    - `webview/src/spec-viewer/` - Browser-side webview code
+    - `webview/styles/spec-viewer.css` - Themed styles
+  - **Key Components**:
+    - `SpecViewerProvider`: Singleton WebviewPanel with document switching and live refresh
+    - Document scanning for core (spec/plan/tasks) and related documents
+    - Full markdown rendering with syntax highlighting via highlight.js CDN
+  - **User Stories Implemented**:
+    - US1: View Spec Document in unified panel (singleton pattern)
+    - US2: Tab navigation between spec/plan/tasks and related documents
+    - US3: Rendered markdown with syntax highlighting
+    - US4: Edit button opens document in VS Code editor (ViewColumn.Beside)
+    - US5: Panel persistence, focus management, and live file watcher updates (500ms debounce)
+  - **Integration**: Command `speckit.viewSpecDocument`, file watcher in `src/core/fileWatchers.ts`
+  - **Tech**: VS Code theme variables, high-contrast mode support, CSP with CDN allowlist
+- 005-speckit-views-enhancement: Enhanced SpecKit views with contextual initialization and file visibility
+  - **US1**: Fixed contextual initialization message - now only shows when a valid workspace is open
+    - Added workspace check before showing init suggestion in `src/extension.ts:50-55`
+  - **US2**: Added SpecKit Files section to steering view
+    - New types in `src/features/steering/types.ts`: SpecKitFileType, SpecKitFile, SpecKitFilesResult, SPECKIT_CONTEXT_VALUES, SPECKIT_ICONS, SPECKIT_PATHS
+    - Scans `.specify/` directory for constitution, scripts, and templates
+    - Files are clickable and open in the editor
+    - Modified: `src/features/steering/steeringExplorerProvider.ts`
+  - **US3**: Organized SpecKit files into collapsible categories
+    - Constitution, Scripts, Templates categories with appropriate icons
+    - File watcher for `.specify/` directory with debounced refresh (1s)
+    - Modified: `src/core/fileWatchers.ts`
+- 006-plan-step-highlight: Added TypeScript 5.3+ (ES2022 target, strict mode enabled) + VS Code Extension API (`@types/vscode ^1.84.0`), Webpack 5
+- 004-spec-editor-webview: Implemented Spec Editor Webview feature
   - **Core Feature**: Rich webview-based spec editor with multi-line text input, image attachments, and AI CLI submission
   - **Files Created**:
     - `src/features/spec-editor/` - Feature module (types, provider, commands, managers)
@@ -139,19 +169,6 @@ This should be replaced with actual Claude CLI integration when testing is compl
     - US3: Automatic temp file management with cleanup
     - US4: Load previous spec as template
   - **Integration**: Command `speckit.openSpecEditor` with keybinding Ctrl+Shift+N
-  - Added TypeScript 5.3+ (ES2022 target, strict mode enabled) + VS Code Extension API (`@types/vscode ^1.84.0`), Webpack 5
-- 001-speckit-views-enhancement: Implemented SpecKit views enhancement feature
-  - **US1**: Fixed contextual initialization message - now only shows when a valid workspace is open
-    - Added workspace check before showing init suggestion in `src/extension.ts:50-55`
-  - **US2**: Added SpecKit Files section to steering view
-    - New types in `src/features/steering/types.ts`: SpecKitFileType, SpecKitFile, SpecKitFilesResult
-    - Scans `.specify/` directory for constitution, scripts, and templates
-    - Files are clickable and open in the editor
-    - Modified: `src/features/steering/steeringExplorerProvider.ts`
-  - **US3**: Organized SpecKit files into collapsible categories
-    - Constitution, Scripts, Templates categories with appropriate icons
-    - File watcher for `.specify/` directory with debounced refresh (1s)
-    - Modified: `src/core/fileWatchers.ts`
   - All hardcoded colors replaced with CSS custom properties mapped to VS Code theme variables
   - Theme-specific fallbacks for light, dark, and high-contrast modes
   - Typography uses VS Code font settings (--vscode-font-family, --vscode-editor-font-family)
@@ -163,4 +180,4 @@ This should be replaced with actual Claude CLI integration when testing is compl
   - Files modified: `webview/styles/workflow.css`, `webview/src/ui/refinePopover.ts`
 
 ## Active Technologies
-- N/A (no persistent storage required for this feature) (001-plan-step-highlight)
+- N/A (reads spec files directly from workspace filesystem) (007-spec-viewer-webview)

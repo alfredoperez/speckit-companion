@@ -4,6 +4,7 @@ import { SteeringExplorerProvider } from '../features/steering/steeringExplorerP
 import { HooksExplorerProvider } from '../features/hooks/hooksExplorerProvider';
 import { MCPExplorerProvider } from '../features/mcp/mcpExplorerProvider';
 import { AgentsExplorerProvider } from '../features/agents/agentsExplorerProvider';
+import { SpecViewerProvider } from '../features/spec-viewer/specViewerProvider';
 import {
     parseTasksFile,
     detectNewlyCompletedPhases,
@@ -41,7 +42,7 @@ export function setupFileWatchers(
     // Watch for changes in CLAUDE.md files
     setupClaudeMdWatchers(context, steeringExplorer);
 
-    // Watch for changes in .specify directory (US3 - 001-speckit-views-enhancement)
+    // Watch for changes in .specify directory (US3 - 005-speckit-views-enhancement)
     setupSpecifyDirectoryWatcher(context, steeringExplorer, outputChannel);
 }
 
@@ -124,7 +125,7 @@ function setupClaudeMdWatchers(
 
 /**
  * Watch .specify directory for SpecKit file changes
- * (US3 - 001-speckit-views-enhancement)
+ * (US3 - 005-speckit-views-enhancement)
  */
 function setupSpecifyDirectoryWatcher(
     context: vscode.ExtensionContext,
@@ -234,4 +235,38 @@ async function initializeExistingTasksCache(outputChannel: vscode.OutputChannel)
     } catch (error) {
         outputChannel.appendLine(`[TasksWatcher] Error scanning for tasks.md files: ${error}`);
     }
+}
+
+/**
+ * Watch spec markdown files for live content updates in the spec viewer
+ * (US5 - 007-spec-viewer-webview)
+ */
+export function setupSpecViewerWatcher(
+    context: vscode.ExtensionContext,
+    specViewer: SpecViewerProvider,
+    outputChannel: vscode.OutputChannel
+): void {
+    const specMarkdownWatcher = vscode.workspace.createFileSystemWatcher('**/specs/**/*.md');
+
+    let debounceTimer: NodeJS.Timeout | undefined;
+
+    const handleChange = (uri: vscode.Uri) => {
+        if (debounceTimer) {
+            clearTimeout(debounceTimer);
+        }
+        debounceTimer = setTimeout(() => {
+            outputChannel.appendLine(`[SpecViewerWatcher] File changed: ${uri.fsPath}`);
+            specViewer.refreshIfDisplaying(uri.fsPath);
+        }, 500);
+    };
+
+    specMarkdownWatcher.onDidChange(handleChange);
+    specMarkdownWatcher.onDidCreate(handleChange);
+    specMarkdownWatcher.onDidDelete((uri) => {
+        outputChannel.appendLine(`[SpecViewerWatcher] File deleted: ${uri.fsPath}`);
+        specViewer.handleFileDeleted(uri.fsPath);
+    });
+
+    context.subscriptions.push(specMarkdownWatcher);
+    outputChannel.appendLine('[SpecViewerWatcher] Watcher registered for specs/**/*.md');
 }

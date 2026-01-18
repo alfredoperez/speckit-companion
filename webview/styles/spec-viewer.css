@@ -1,0 +1,2367 @@
+/**
+ * SpecKit Companion - Spec Viewer Styles
+ * v0.3.0 - Enhanced with Rich Color System from Workflow Editor
+ */
+
+/* ============================================
+   VS Code Theme-Aware Color System
+   ============================================ */
+
+:root {
+    /* Type Scale - Minor Third (1.2) */
+    --text-xs: 0.694rem;    /* ~11px */
+    --text-sm: 0.833rem;    /* ~13px */
+    --text-base: 1rem;      /* 16px */
+    --text-lg: 1.2rem;      /* ~19px */
+    --text-xl: 1.44rem;     /* ~23px */
+    --text-2xl: 1.728rem;   /* ~28px */
+    --text-3xl: 2.074rem;   /* ~33px */
+
+    /* Line Heights */
+    --leading-tight: 1.25;
+    --leading-snug: 1.375;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.625;
+    --leading-loose: 1.75;
+
+    /* Spacing Scale */
+    --space-1: 0.25rem;   /* 4px */
+    --space-2: 0.5rem;    /* 8px */
+    --space-3: 0.75rem;   /* 12px */
+    --space-4: 1rem;      /* 16px */
+    --space-5: 1.5rem;    /* 24px */
+    --space-6: 2rem;      /* 32px */
+    --space-8: 3rem;      /* 48px */
+
+    /* Core backgrounds - mapped to VS Code theme variables */
+    --bg-primary: var(--vscode-editor-background, #1e1e1e);
+    --bg-secondary: var(--vscode-sideBar-background, #252526);
+    --bg-elevated: var(--vscode-editorWidget-background, #252526);
+    --bg-hover: var(--vscode-list-hoverBackground, #2a2d2e);
+
+    /* Text colors - mapped to VS Code theme variables */
+    --text-primary: var(--vscode-editor-foreground, #d4d4d4);
+    --text-secondary: var(--vscode-descriptionForeground, #858585);
+    --text-muted: var(--vscode-disabledForeground, #6c6c6c);
+
+    /* Accent colors - mapped to VS Code theme variables */
+    --accent: var(--vscode-focusBorder, #007fd4);
+    --accent-hover: var(--vscode-button-hoverBackground, #0062a3);
+    --accent-subtle: color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 10%, transparent);
+    --accent-glow: 0 0 20px color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 30%, transparent);
+
+    /* Status colors - mapped to VS Code theme variables */
+    --success: var(--vscode-testing-iconPassed, #388a34);
+    --success-subtle: color-mix(in srgb, var(--vscode-testing-iconPassed, #388a34) 10%, transparent);
+    --success-glow: 0 0 12px color-mix(in srgb, var(--vscode-testing-iconPassed, #388a34) 50%, transparent);
+    --warning: var(--vscode-editorWarning-foreground, #cca700);
+    --warning-subtle: color-mix(in srgb, var(--vscode-editorWarning-foreground, #cca700) 10%, transparent);
+    --error: var(--vscode-editorError-foreground, #f14c4c);
+    --error-subtle: color-mix(in srgb, var(--vscode-editorError-foreground, #f14c4c) 10%, transparent);
+
+    /* Review mode colors - purple for reviewing completed steps */
+    --review: #a855f7;
+    --review-subtle: color-mix(in srgb, #a855f7 10%, transparent);
+    --review-glow: 0 0 12px color-mix(in srgb, #a855f7 50%, transparent);
+
+    /* Borders - mapped to VS Code theme variables */
+    --border: var(--vscode-panel-border, #3c3c3c);
+    --border-hover: var(--vscode-contrastBorder, #6c6c6c);
+    --border-accent: color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 50%, transparent);
+
+    /* Typography - mapped to VS Code theme variables with professional fallbacks */
+    --font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif);
+    --font-mono: var(--vscode-editor-font-family, 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', 'Monaco', 'Menlo', monospace);
+    --font-size: var(--vscode-editor-font-size, 14px);
+
+    /* Semantic header colors - mapped to VS Code theme variables */
+    --header-title: var(--vscode-textLink-foreground, #3794ff);
+    --header-section: var(--vscode-symbolIcon-classForeground, #ee9d28);
+    --header-subsection: var(--vscode-descriptionForeground, #858585);
+
+    /* Code block backgrounds */
+    --bg-code: color-mix(in srgb, var(--vscode-editor-background, #1e1e1e) 95%, black);
+    --bg-code-header: color-mix(in srgb, var(--vscode-editor-background, #1e1e1e) 90%, black);
+    --border-code: var(--vscode-panel-border, #3c3c3c);
+
+    /* Syntax colors - VS Code Dark+ inspired */
+    --code-text: #d4d4d4;
+    --code-keyword: #569cd6;
+    --code-string: #ce9178;
+    --code-number: #b5cea8;
+    --code-function: #dcdcaa;
+    --code-comment: #6a9955;
+    --code-variable: #9cdcfe;
+    --code-type: #4ec9b0;
+
+    /* Task styling */
+    --bg-task: color-mix(in srgb, var(--vscode-editor-background, #1e1e1e) 97%, var(--vscode-focusBorder, #007fd4));
+    --bg-task-hover: color-mix(in srgb, var(--vscode-editor-background, #1e1e1e) 94%, var(--vscode-focusBorder, #007fd4));
+    --bg-task-done: color-mix(in srgb, var(--vscode-editor-background, #1e1e1e) 97%, var(--vscode-testing-iconPassed, #388a34));
+    --border-task: var(--vscode-panel-border, #3c3c3c);
+    --task-pending: var(--vscode-editorWarning-foreground, #cca700);
+    --border-checkbox: var(--vscode-checkbox-border, #3c3c3c);
+    --bg-checkbox: var(--vscode-checkbox-background, #3c3c3c);
+
+    /* Misc */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+    /* Timing */
+    --transition-fast: 150ms;
+    --transition-normal: 200ms;
+    --transition-slow: 300ms;
+
+    /* Layout */
+    --tab-height: 40px;
+    --header-height: 48px;
+    --content-padding: 24px;
+}
+
+/* ============================================
+   Theme-Specific Fallbacks
+   ============================================ */
+
+body.vscode-light {
+    --bg-primary: var(--vscode-editor-background, #ffffff);
+    --bg-secondary: var(--vscode-sideBar-background, #f3f3f3);
+    --bg-elevated: var(--vscode-editorWidget-background, #f3f3f3);
+    --bg-hover: var(--vscode-list-hoverBackground, #e8e8e8);
+    --text-primary: var(--vscode-editor-foreground, #333333);
+    --text-secondary: var(--vscode-descriptionForeground, #717171);
+    --text-muted: var(--vscode-disabledForeground, #a0a0a0);
+    --border: var(--vscode-panel-border, #e0e0e0);
+    --border-hover: var(--vscode-contrastBorder, #c0c0c0);
+
+    /* Light theme code colors */
+    --bg-code: #f5f5f5;
+    --bg-code-header: #e8e8e8;
+    --code-text: #333333;
+    --code-keyword: #0000ff;
+    --code-string: #a31515;
+    --code-number: #098658;
+    --code-function: #795e26;
+    --code-comment: #008000;
+    --code-variable: #001080;
+    --code-type: #267f99;
+
+    /* Light theme task colors */
+    --bg-task: #f8f9fa;
+    --bg-task-hover: #f0f2f4;
+    --bg-task-done: #f0fff4;
+}
+
+body.vscode-dark {
+    --bg-primary: var(--vscode-editor-background, #1e1e1e);
+    --bg-secondary: var(--vscode-sideBar-background, #252526);
+    --bg-elevated: var(--vscode-editorWidget-background, #252526);
+    --bg-hover: var(--vscode-list-hoverBackground, #2a2d2e);
+    --text-primary: var(--vscode-editor-foreground, #d4d4d4);
+    --text-secondary: var(--vscode-descriptionForeground, #858585);
+    --text-muted: var(--vscode-disabledForeground, #6c6c6c);
+    --border: var(--vscode-panel-border, #3c3c3c);
+    --border-hover: var(--vscode-contrastBorder, #6c6c6c);
+}
+
+body.vscode-high-contrast {
+    --bg-primary: var(--vscode-editor-background, #000000);
+    --bg-secondary: var(--vscode-sideBar-background, #000000);
+    --bg-elevated: var(--vscode-editorWidget-background, #000000);
+    --bg-hover: var(--vscode-list-hoverBackground, #0a0a0a);
+    --text-primary: var(--vscode-editor-foreground, #ffffff);
+    --text-secondary: var(--vscode-descriptionForeground, #ffffff);
+    --text-muted: var(--vscode-disabledForeground, #a0a0a0);
+    --border: var(--vscode-contrastBorder, #ffffff);
+    --border-hover: var(--vscode-contrastBorder, #ffffff);
+    --accent: var(--vscode-focusBorder, #f38518);
+}
+
+/* ============================================
+   Base Styles
+   ============================================ */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-family);
+    font-size: var(--font-size);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   Layout Container
+   ============================================ */
+
+.viewer-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ============================================
+   Compact Navigation Bar
+   ============================================ */
+
+.compact-nav {
+    flex-shrink: 0;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+}
+
+.nav-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--space-4);
+    height: 48px;
+}
+
+/* ============================================
+   Unified Step-Tabs (Merged Stepper + Tabs)
+   ============================================ */
+
+.step-tabs {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.step-tab {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: all var(--transition-fast);
+    border-radius: var(--radius-sm);
+}
+
+.step-tab:hover:not(:disabled) {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+/* Status indicator (checkmark or empty circle) */
+.step-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    font-size: 9px;
+    font-weight: 700;
+    color: transparent;
+    background: transparent;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+/* File exists - green check */
+.step-tab.exists .step-status {
+    background: var(--success);
+    border-color: var(--success);
+    color: white;
+}
+
+.step-tab.exists .step-label {
+    color: var(--text-secondary);
+}
+
+/* Currently viewing - prominent highlight */
+.step-tab.viewing {
+    background: var(--accent-subtle);
+    border: 2px solid var(--accent);
+    margin: -2px;  /* Compensate for border to avoid layout shift */
+}
+
+.step-tab.viewing .step-status {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    box-shadow: 0 0 0 3px var(--accent-subtle);
+}
+
+.step-tab.viewing .step-label {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+/* Workflow phase indicator (when not viewing) */
+.step-tab.workflow:not(.viewing) .step-status {
+    box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 3px color-mix(in srgb, var(--success) 60%, transparent);
+}
+
+.step-tab.workflow:not(.viewing) .step-label {
+    color: var(--text-primary);
+}
+
+/* In progress (tasks partial) - show percentage only when viewing */
+.step-tab.in-progress .step-status {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    font-size: 8px;
+    width: auto;
+    min-width: 24px;
+    padding: 0 4px;
+    border-radius: 8px;
+}
+
+/* Percentage always visible for in-progress tasks */
+/* Rule removed - percentage should always show next to Tasks tab */
+
+/* Tasks actively being worked on - prominent percentage badge with pulsing glow */
+.step-tab.tasks-active {
+    background: var(--accent-subtle);
+    border: 2px solid var(--accent);
+    margin: -2px;
+}
+
+.step-tab.tasks-active .step-status {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    width: auto;
+    min-width: 32px;
+    padding: 0 6px;
+    border-radius: 10px;
+    box-shadow: 0 0 0 3px var(--accent-subtle);
+    animation: pulse-badge 2s ease-in-out infinite;
+}
+
+.step-tab.tasks-active .step-label {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+/* Review mode - viewing a completed step that isn't the current workflow phase */
+.step-tab.reviewing {
+    background: var(--review-subtle);
+    border: 2px solid var(--review);
+    margin: -2px;
+    animation: review-glow 2s ease-in-out infinite;
+}
+
+.step-tab.reviewing .step-status {
+    background: var(--review);
+    border-color: var(--review);
+    color: white;
+    box-shadow: 0 0 0 3px var(--review-subtle);
+}
+
+.step-tab.reviewing .step-label {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+/* Keep green checkmark visible for completed steps in review mode */
+.step-tab.reviewing.exists .step-status {
+    background: var(--review);
+    border-color: var(--review);
+}
+
+/* Disabled state */
+.step-tab.disabled,
+.step-tab:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Connector lines between steps */
+.step-connector {
+    width: 24px;
+    height: 2px;
+    background: var(--border);
+    transition: background var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.step-connector.filled {
+    background: var(--success);
+}
+
+/* Completion badge (shown at right of nav when 100% complete) */
+.completion-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    margin-left: 16px;
+    background: color-mix(in srgb, var(--success) 20%, transparent);
+    color: var(--success);
+    border: 1px solid var(--success);
+    border-radius: var(--radius-md);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    animation: glow-complete 2s ease-in-out infinite;
+    box-shadow: var(--success-glow);
+}
+
+/* ============================================
+   Related Documents Bar
+   ============================================ */
+
+.related-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px var(--space-4);
+    gap: var(--space-2);
+    background: color-mix(in srgb, var(--bg-primary) 50%, var(--bg-secondary));
+    /* Border removed - use spacing for separation */
+    font-size: 12px;
+}
+
+.related-bar-content {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.back-link {
+    padding: 4px 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: inherit;
+    transition: color var(--transition-fast);
+    border-radius: var(--radius-sm);
+}
+
+.back-link:hover {
+    color: var(--accent);
+    background: var(--bg-hover);
+}
+
+.related-divider {
+    color: var(--border);
+    margin: 0 var(--space-1);
+}
+
+.overview-divider {
+    /* Visual divider between Overview tab and related tabs */
+    width: 1px;
+    height: 12px;
+    background: var(--border);
+    opacity: 0.5;  /* Subtle divider */
+    margin: 0 var(--space-2);
+}
+
+.related-tabs {
+    display: flex;
+    gap: 2px;
+}
+
+/* Overview tab - first tab linking to main document */
+.overview-tab {
+    padding: 4px 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: inherit;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.overview-tab:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.overview-tab.active {
+    color: var(--accent);
+    background: var(--accent-subtle);
+    font-weight: 600;
+}
+
+.related-tab {
+    padding: 4px 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: inherit;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.related-tab:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.related-tab.active {
+    color: var(--header-section);
+    background: var(--bg-primary);
+    font-weight: 500;
+}
+
+/* ============================================
+   Content Area
+   ============================================ */
+
+.content-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--content-padding);
+    scroll-behavior: smooth;
+}
+
+/* Instant render - no animation delay */
+.viewer-container {
+    opacity: 1;
+}
+
+/* ============================================
+   Empty State
+   ============================================ */
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    color: var(--text-secondary);
+    font-style: italic;
+    text-align: center;
+    padding: var(--content-padding);
+}
+
+/* ============================================
+   Markdown Content Styles
+   ============================================ */
+
+#markdown-content {
+    font-family: var(--font-family);
+    font-size: 15px;
+    line-height: var(--leading-loose);
+    color: var(--text-secondary);
+    max-width: 72ch;
+    margin: 0 auto;
+    padding-left: 32px;  /* Space for gutter buttons */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.01em;
+}
+
+/* Headings with professional document typography */
+#markdown-content h1 {
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    line-height: var(--leading-tight);
+    letter-spacing: -0.02em;
+    margin: 0 0 var(--space-3) 0;
+    padding-bottom: var(--space-3);
+    border-bottom: 2px solid var(--border);
+    color: var(--text-primary);
+}
+
+/* ============================================
+   Spec Metadata Bar (compact header info)
+   ============================================ */
+
+.spec-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) 0;
+    margin-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border);
+}
+
+.meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+}
+
+.meta-label {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.meta-branch {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    padding: 2px 8px;
+    background: var(--accent-subtle);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    color: var(--accent);
+}
+
+.meta-status {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+}
+
+.meta-status-draft {
+    background: var(--warning-subtle);
+    color: var(--warning);
+    border: 1px solid var(--warning);
+}
+
+.meta-status-ready,
+.meta-status-approved {
+    background: var(--success-subtle);
+    color: var(--success);
+    border: 1px solid var(--success);
+}
+
+.meta-status-in-progress {
+    background: var(--accent-subtle);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+}
+
+.meta-date {
+    color: var(--text-secondary);
+}
+
+.spec-input {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    padding: var(--space-2) var(--space-3);
+    margin: var(--space-2) 0 var(--space-4) 0;
+    background: var(--bg-secondary);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-style: italic;
+}
+
+.spec-input .meta-label {
+    font-style: normal;
+    margin-right: var(--space-1);
+}
+
+/* ============================================
+   User Story Cards - Clean Professional Style
+   ============================================ */
+
+.user-story-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-2) 0;
+    margin: var(--space-4) 0 var(--space-2) 0;
+    border-bottom: 1px solid var(--border);
+}
+
+/* Metadata line (US-1 · Critical) */
+.user-story-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
+.user-story-meta .meta-icon {
+    width: 14px;
+    height: 14px;
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+
+.story-id {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+}
+
+.meta-separator {
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+/* User story title - large and prominent */
+/* Use high specificity to override #markdown-content h3 */
+#markdown-content .user-story-title,
+.user-story-title {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    line-height: var(--leading-snug);
+    color: var(--text-primary);
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+/* Priority with small colored dot */
+.story-priority {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: capitalize;
+}
+
+.priority-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.priority-dot.p1 {
+    background: var(--error);
+}
+
+.priority-dot.p2 {
+    background: var(--warning);
+}
+
+.priority-dot.p3 {
+    background: var(--accent);
+}
+
+.priority-dot.p4,
+.priority-dot.p5 {
+    background: var(--text-muted);
+}
+
+/* Legacy priority pill styles (kept for backwards compatibility) */
+.priority-p1 {
+    color: var(--error);
+}
+
+.priority-p2 {
+    color: var(--warning);
+}
+
+.priority-p3 {
+    color: var(--accent);
+}
+
+.priority-p4,
+.priority-p5 {
+    color: var(--text-muted);
+}
+
+/* ============================================
+   Acceptance Scenario Table
+   ============================================ */
+
+.scenario-table {
+    width: 100%;
+    margin: var(--space-2) 0;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+    table-layout: fixed;
+}
+
+.scenario-table thead th {
+    text-align: left;
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border);
+}
+
+.scenario-table th.col-given {
+    width: 30%;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 5%, transparent);
+    border-left: 3px solid var(--accent);
+}
+
+.scenario-table th.col-when {
+    width: 30%;
+    color: var(--warning);
+    background: color-mix(in srgb, var(--warning) 5%, transparent);
+    border-left: 3px solid var(--warning);
+}
+
+.scenario-table th.col-then {
+    width: 40%;
+    color: var(--success);
+    background: color-mix(in srgb, var(--success) 5%, transparent);
+    border-left: 3px solid var(--success);
+}
+
+.scenario-table tbody td {
+    padding: var(--space-3);
+    vertical-align: top;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    line-height: var(--leading-relaxed);
+}
+
+.scenario-table td.col-given {
+    border-left: 3px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.scenario-table td.col-when {
+    border-left: 3px solid color-mix(in srgb, var(--warning) 30%, transparent);
+}
+
+.scenario-table td.col-then {
+    border-left: 3px solid color-mix(in srgb, var(--success) 30%, transparent);
+}
+
+.scenario-table tbody tr:hover td {
+    background: var(--bg-hover);
+}
+
+.scenario-table .scenario-empty {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Scenario label (no line wrapper) */
+.scenario-label {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: var(--space-4) 0 var(--space-2) 0;
+}
+
+/* Row number column (first column) */
+.scenario-table th.col-num,
+.scenario-table td.col-num {
+    width: 48px;
+    text-align: center;
+    vertical-align: middle;
+    padding: var(--space-2);
+    position: relative;
+    border-left: none;
+    background: transparent;
+}
+
+.scenario-table th.col-num {
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+}
+
+/* Row number text */
+.row-num {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    transition: opacity var(--transition-fast);
+}
+
+/* Hide row number on hover, show + button */
+.scenario-row:hover .row-num {
+    opacity: 0;
+}
+
+/* Row add button (+ on table rows) */
+.row-add-btn {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    opacity: 0;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.scenario-row:hover .row-add-btn {
+    opacity: 1;
+}
+
+.row-add-btn:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.row-add-btn:active {
+    transform: translate(-50%, -50%) scale(0.95);
+}
+
+/* Scenario row with refinement */
+.scenario-row.has-refinement {
+    background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+.scenario-row.has-refinement td.col-num {
+    border-left: 3px solid var(--accent);
+}
+
+/* Editing state for scenario row */
+.scenario-row.editing {
+    background: var(--bg-hover);
+}
+
+/* Inline editor row for scenario table */
+.inline-editor-row {
+    background: transparent;
+}
+
+.inline-editor-row .editor-cell {
+    padding: 0;
+    border: none;
+}
+
+.inline-editor-row .inline-editor {
+    margin: 0;
+    border-radius: 0;
+    border-left: 3px solid var(--accent);
+}
+
+/* Editor context showing the scenario content */
+.editor-context {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    padding-bottom: 8px;
+}
+
+.editor-context-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-right: 8px;
+}
+
+.editor-context-text {
+    font-style: italic;
+}
+
+/* Comment row for scenario table */
+.comment-row {
+    background: transparent;
+}
+
+.comment-row .comment-cell {
+    padding: 0;
+    border: none;
+}
+
+.comment-row .inline-comment {
+    margin: 0;
+    border-radius: 0;
+}
+
+/* Legacy scenario keyword styles (kept for backwards compatibility) */
+.scenario-keyword {
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+.scenario-given {
+    color: var(--accent);
+}
+
+.scenario-when {
+    color: var(--warning);
+}
+
+.scenario-then {
+    color: var(--success);
+}
+
+#markdown-content h2 {
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    line-height: var(--leading-snug);
+    letter-spacing: -0.01em;
+    margin: var(--space-8) 0 var(--space-4) 0;
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+#markdown-content h3 {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    line-height: var(--leading-snug);
+    margin: var(--space-6) 0 var(--space-3) 0;
+    color: var(--text-primary);
+}
+
+#markdown-content h4,
+#markdown-content h5,
+#markdown-content h6 {
+    font-size: var(--text-base);
+    font-weight: 600;
+    line-height: var(--leading-normal);
+    margin: var(--space-5) 0 var(--space-2) 0;
+    color: var(--text-primary);
+}
+
+/* Paragraphs */
+#markdown-content p {
+    margin: 0 0 var(--space-4) 0;
+    line-height: var(--leading-loose);
+    color: var(--text-secondary);
+}
+
+#markdown-content p + p {
+    margin-top: var(--space-4);
+}
+
+/* Lists */
+#markdown-content ul,
+#markdown-content ol {
+    margin: 0 0 var(--space-4) 0;
+    padding-left: var(--space-5);
+}
+
+#markdown-content li {
+    margin: var(--space-2) 0;
+    line-height: var(--leading-relaxed);
+    color: var(--text-secondary);
+}
+
+#markdown-content li > ul,
+#markdown-content li > ol {
+    margin: var(--space-1) 0;
+}
+
+/* Section Progress Bar (after h3 headings) */
+#markdown-content .section-progress {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin: var(--space-2) 0 var(--space-3) 0;
+}
+
+#markdown-content .section-progress-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+#markdown-content .section-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width var(--transition-normal) ease;
+}
+
+#markdown-content .section-progress-fill.complete {
+    background: var(--success);
+}
+
+#markdown-content .section-progress-text {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* Task list container - simple list */
+#markdown-content ul:has(.task-item),
+#markdown-content ul.task-list-simple {
+    list-style: none;
+    padding-left: 0;
+    margin: var(--space-2) 0 var(--space-4) 0;
+}
+
+/* Task item - simple style (no card) */
+#markdown-content li.task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding: var(--space-1) 0;
+    margin: 0;
+    background: transparent;
+    border: none;
+    transition: all var(--transition-fast);
+    list-style: none;
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    cursor: help;
+}
+
+#markdown-content li.task-item:hover {
+    background: var(--bg-hover);
+    margin: 0 calc(-1 * var(--space-2));
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+}
+
+/* Completed task - keep readable, checkmark is enough */
+#markdown-content li.task-item.checked {
+    /* No opacity change - keep fully visible */
+}
+
+#markdown-content li.task-item.checked .task-text {
+    /* Keep normal color - green checkmark indicates completion */
+    color: var(--text-secondary);
+}
+
+/* Custom checkbox styling - compact and clickable */
+#markdown-content li.task-item input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    margin: 2px 0 0 0;
+    border: 2px solid var(--border-checkbox);
+    border-radius: var(--radius-sm);
+    background: var(--bg-checkbox);
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    transition: all var(--transition-fast);
+}
+
+#markdown-content li.task-item input[type="checkbox"]:hover {
+    border-color: var(--accent);
+    background: var(--accent-subtle);
+}
+
+#markdown-content li.task-item input[type="checkbox"]:checked {
+    background: var(--success);
+    border-color: var(--success);
+}
+
+#markdown-content li.task-item input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    line-height: 1;
+}
+
+/* Links */
+#markdown-content a {
+    color: var(--accent);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+#markdown-content a:hover {
+    text-decoration: underline;
+    color: var(--accent-hover);
+}
+
+/* Inline code */
+#markdown-content code:not(pre code) {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    padding: 2px 6px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--code-variable);
+}
+
+/* Code block container - professional style */
+#markdown-content pre.code-block {
+    position: relative;
+    margin: var(--space-5) 0;
+    padding: 0;
+    background: var(--bg-code);
+    border: 1px solid var(--border-code);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+/* Language label */
+#markdown-content pre.code-block::before {
+    content: attr(data-language);
+    display: block;
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    background: var(--bg-code-header);
+    border-bottom: 1px solid var(--border-code);
+}
+
+#markdown-content pre.code-block:not([data-language])::before {
+    display: none;
+}
+
+#markdown-content pre.code-block code {
+    display: block;
+    padding: var(--space-4);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: var(--leading-relaxed);
+    overflow-x: auto;
+    tab-size: 4;
+    color: var(--code-text);
+    background: transparent;
+    border: none;
+}
+
+/* Tree structure blocks */
+#markdown-content pre.tree-structure {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    margin: var(--space-4) 0;
+    overflow-x: auto;
+}
+
+#markdown-content pre.tree-structure code {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+    color: var(--text-secondary);
+    white-space: pre;
+    display: block;
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+/* Legacy pre blocks (fallback) */
+#markdown-content pre:not(.code-block):not(.tree-structure):not(.mermaid) {
+    margin: var(--space-4) 0;
+    padding: var(--space-4);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+}
+
+#markdown-content pre:not(.code-block):not(.tree-structure):not(.mermaid) code {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+    display: block;
+    color: var(--text-secondary);
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+/* Blockquotes */
+#markdown-content blockquote {
+    margin: var(--space-5) 0;
+    padding: var(--space-3) var(--space-4);
+    border-left: 4px solid var(--accent);
+    background: var(--accent-subtle);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    color: var(--text-primary);
+}
+
+#markdown-content blockquote p {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+/* ============================================
+   Callout Blocks
+   ============================================ */
+
+.callout {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    margin: var(--space-4) 0;
+    border-radius: var(--radius-md);
+    border-left: 4px solid;
+    background: var(--bg-secondary);
+}
+
+.callout-icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.callout-content {
+    flex: 1;
+    line-height: var(--leading-relaxed);
+    color: var(--text-primary);
+}
+
+.callout-label {
+    font-weight: 600;
+    margin-right: var(--space-1);
+}
+
+/* Purpose callout - Blue/Info */
+.callout-purpose {
+    background: var(--accent-subtle);
+    border-left-color: var(--accent);
+}
+
+.callout-purpose .callout-icon::before {
+    content: 'ℹ️';
+}
+
+.callout-purpose .callout-label {
+    color: var(--accent);
+}
+
+/* Note callout - Blue/Info */
+.callout-note {
+    background: var(--accent-subtle);
+    border-left-color: var(--accent);
+}
+
+.callout-note .callout-icon::before {
+    content: '📝';
+}
+
+.callout-note .callout-label {
+    color: var(--accent);
+}
+
+/* Tip callout - Green */
+.callout-tip {
+    background: var(--success-subtle);
+    border-left-color: var(--success);
+}
+
+.callout-tip .callout-icon::before {
+    content: '💡';
+}
+
+.callout-tip .callout-label {
+    color: var(--success);
+}
+
+/* Checkpoint callout - Green/Success */
+.callout-checkpoint {
+    background: var(--success-subtle);
+    border-left-color: var(--success);
+}
+
+.callout-checkpoint .callout-icon::before {
+    content: '✅';
+}
+
+.callout-checkpoint .callout-label {
+    color: var(--success);
+}
+
+/* Warning callout - Yellow/Orange */
+.callout-warning {
+    background: var(--warning-subtle);
+    border-left-color: var(--warning);
+}
+
+.callout-warning .callout-icon::before {
+    content: '⚠️';
+}
+
+.callout-warning .callout-label {
+    color: var(--warning);
+}
+
+/* Important callout - Orange */
+.callout-important {
+    background: var(--warning-subtle);
+    border-left-color: var(--warning);
+}
+
+.callout-important .callout-icon::before {
+    content: '❗';
+}
+
+.callout-important .callout-label {
+    color: var(--warning);
+}
+
+/* Critical callout - Red/Error */
+.callout-critical {
+    background: var(--error-subtle);
+    border-left-color: var(--error);
+}
+
+.callout-critical .callout-icon::before {
+    content: '🚨';
+}
+
+.callout-critical .callout-label {
+    color: var(--error);
+}
+
+/* Horizontal rules */
+#markdown-content hr {
+    margin: var(--space-6) 0;
+    border: none;
+    border-top: 1px solid var(--border);
+}
+
+/* Tables */
+#markdown-content table {
+    width: 100%;
+    margin: var(--space-5) 0;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+}
+
+#markdown-content th {
+    text-align: left;
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+#markdown-content td {
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--text-secondary);
+}
+
+#markdown-content tr:hover td {
+    background: var(--bg-hover);
+}
+
+/* Images */
+#markdown-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+    margin: var(--space-4) 0;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Strong and emphasis */
+#markdown-content strong {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+#markdown-content em {
+    font-style: italic;
+}
+
+/* ============================================
+   Mermaid Diagram Styling
+   ============================================ */
+
+.mermaid-container {
+    margin: var(--space-5) 0;
+    padding: var(--space-4);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow-x: auto;
+}
+
+.mermaid {
+    display: flex;
+    justify-content: center;
+    background: transparent;
+    font-family: var(--font-family);
+}
+
+.mermaid svg {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Mermaid theme overrides for better VS Code integration */
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node ellipse,
+.mermaid .node polygon {
+    fill: var(--bg-elevated) !important;
+    stroke: var(--accent) !important;
+    stroke-width: 2px !important;
+}
+
+.mermaid .node .label,
+.mermaid .nodeLabel,
+.mermaid .label {
+    color: var(--text-primary) !important;
+    fill: var(--text-primary) !important;
+}
+
+.mermaid .edgePath .path {
+    stroke: var(--accent) !important;
+    stroke-width: 2px !important;
+}
+
+.mermaid .edgeLabel {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    fill: var(--text-primary) !important;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+/* State diagram specific */
+.mermaid .statediagram-state rect {
+    fill: var(--bg-elevated) !important;
+    stroke: var(--accent) !important;
+}
+
+.mermaid .statediagram-state .state-title {
+    fill: var(--text-primary) !important;
+    font-weight: 600;
+}
+
+/* Edge labels (transition labels) */
+.mermaid .transition,
+.mermaid .edgeLabel span,
+.mermaid .edgeLabel p,
+.mermaid text.edgeLabel {
+    fill: var(--header-section) !important;
+    color: var(--header-section) !important;
+    font-weight: 500;
+}
+
+/* Start/end nodes */
+.mermaid .start-state,
+.mermaid circle[class*="start"] {
+    fill: var(--success) !important;
+}
+
+.mermaid .end-state,
+.mermaid circle[class*="end"] {
+    fill: var(--text-muted) !important;
+}
+
+/* ============================================
+   Line Styles with GitHub-style Review
+   ============================================ */
+
+.line {
+    position: relative;
+    padding: 3px 12px;  /* Normal padding - button positioned outside content flow */
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    min-height: 24px;
+}
+
+.line.empty {
+    padding: 2px 8px;
+    min-height: 8px;
+    pointer-events: none;
+}
+
+.line:hover {
+    background: var(--bg-hover);
+}
+
+.line.empty:hover {
+    background: transparent;
+}
+
+/* Line with active editor */
+.line.editing {
+    background: var(--bg-hover);
+}
+
+/* Line with refinement comment - no border, comment card below is sufficient indicator */
+.line.has-refinement {
+    /* Border removed - rely on the inline comment card for indication */
+}
+
+.line-content {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.line-content strong {
+    color: var(--header-title);
+    font-weight: 600;
+}
+
+/* Line content that wraps p tags - high specificity to override #markdown-content p */
+#markdown-content .line .line-content p,
+#markdown-content .line-content p,
+.line-content p {
+    margin: 0;
+}
+
+/* Override any paragraph margin inside line wrappers */
+.line p {
+    margin: 0;
+}
+
+/* ============================================
+   Plus Button (GitHub-style gutter)
+   ============================================ */
+
+.line-add-btn {
+    position: absolute;
+    left: -28px;  /* Position in left gutter, outside content flow */
+    top: 2px;
+    width: 22px;
+    height: 22px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    opacity: 0;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+}
+
+.line:hover .line-add-btn {
+    opacity: 1;
+}
+
+.line-add-btn:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    transform: scale(1.1);
+}
+
+.line-add-btn:active {
+    transform: scale(0.95);
+}
+
+/* Hide + button on empty lines */
+.line.empty .line-add-btn {
+    display: none;
+}
+
+/* Comment slot container */
+.line-comment-slot {
+    margin-top: 0;
+}
+
+/* ============================================
+   Inline Editor (GitHub-style)
+   ============================================ */
+
+.inline-editor {
+    margin: 8px 0 4px 0;
+    padding: 12px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    animation: slideDown var(--transition-fast) ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.editor-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+/* Context action buttons - subtle but clearly interactive */
+.context-action {
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.context-action:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+/* Remove actions - subtle red on hover */
+.context-action[data-action="remove-line"],
+.context-action[data-action="remove-story"],
+.context-action[data-action="remove-section"],
+.context-action[data-action="remove-scenario"],
+.context-action[data-action="remove-task"] {
+    color: var(--text-muted);
+}
+
+.context-action[data-action="remove-line"]:hover,
+.context-action[data-action="remove-story"]:hover,
+.context-action[data-action="remove-section"]:hover,
+.context-action[data-action="remove-scenario"]:hover,
+.context-action[data-action="remove-task"]:hover {
+    background: var(--error-subtle);
+    color: var(--error);
+}
+
+/* Toggle task action - subtle green on hover */
+.context-action[data-action="toggle-task"] {
+    color: var(--text-muted);
+}
+
+.context-action[data-action="toggle-task"]:hover {
+    background: var(--success-subtle);
+    color: var(--success);
+}
+
+.editor-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 0;
+}
+
+.editor-comment-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.editor-textarea {
+    width: 100%;
+    min-height: 60px;
+    padding: 10px 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-family: var(--font-family);
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+    transition: border-color var(--transition-fast);
+}
+
+.editor-textarea:focus {
+    border-color: var(--accent);
+}
+
+.editor-textarea::placeholder {
+    color: var(--text-muted);
+}
+
+.editor-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.editor-cancel,
+.editor-add {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.editor-cancel {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+}
+
+.editor-cancel:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-hover);
+}
+
+.editor-add {
+    background: var(--accent);
+    border: none;
+    color: white;
+}
+
+.editor-add:hover {
+    background: var(--accent-hover);
+}
+
+/* ============================================
+   Inline Comment Cards (GitHub-style)
+   ============================================ */
+
+.inline-comment {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 8px 0 0 0;
+    padding: 8px 12px;
+    background: var(--bg-secondary);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    animation: fadeIn var(--transition-fast) ease-out;
+}
+
+.comment-icon {
+    flex-shrink: 0;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.comment-text {
+    flex: 1;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.comment-delete {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.comment-delete:hover {
+    background: var(--error-subtle);
+    color: var(--error);
+}
+
+/* ============================================
+   Refine Submit Button (Footer)
+   ============================================ */
+
+.refine-submit-btn {
+    display: none;
+    padding: 10px 20px;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius-md);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+}
+
+.refine-submit-btn.visible {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    animation: slideIn var(--transition-normal) ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.refine-submit-btn:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--accent-glow);
+}
+
+.refine-submit-btn:active {
+    transform: translateY(0);
+}
+
+/* ============================================
+   Legacy Line Actions (kept for compatibility)
+   ============================================ */
+
+.line-actions {
+    display: none;  /* Hidden - replaced by + button */
+}
+
+/* Inline edit input (legacy) */
+.inline-edit-input {
+    width: 100%;
+    padding: 6px 10px;
+    background: var(--bg-primary);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: inherit;
+    font-family: inherit;
+    line-height: inherit;
+    outline: none;
+    box-shadow: 0 0 0 2px var(--accent-subtle);
+}
+
+.inline-edit-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-subtle), var(--accent-glow);
+}
+
+/* ============================================
+   Footer Actions
+   ============================================ */
+
+.actions {
+    display: flex;
+    justify-content: flex-end;  /* Right-align all actions */
+    align-items: center;
+    padding: 8px 16px;  /* More compact padding */
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    gap: 6px;  /* Tighter spacing */
+}
+
+.actions-left {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+    margin-right: auto;  /* Push to left when present */
+}
+
+.actions-right {
+    display: flex;
+    gap: 6px;  /* Tighter spacing */
+    flex-shrink: 0;
+}
+
+.actions button {
+    padding: 6px 12px;  /* More compact */
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 12px;  /* Smaller text */
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;  /* Tighter gap */
+    transition: all var(--transition-fast) ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.actions button.primary {
+    background: var(--accent);
+    color: white;
+    border: none;
+    box-shadow: var(--shadow-sm);
+}
+
+.actions button.primary:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--accent-glow);
+}
+
+.actions button.secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+.actions button.secondary:hover:not(:disabled) {
+    background: var(--bg-hover);
+    border-color: var(--border-hover);
+}
+
+.actions button.secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.actions button.enhancement {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.actions button.enhancement .icon {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.actions button.enhancement:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+}
+
+.actions button.enhancement:hover .icon {
+    color: var(--text-primary);
+}
+
+/* ============================================
+   Refine Modal
+   ============================================ */
+
+.refine-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 999;
+    animation: fadeIn var(--transition-fast) ease;
+}
+
+.refine-popover {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    min-width: 400px;
+    max-width: 500px;
+    animation: modalSlideIn var(--transition-normal) ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -48%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+.refine-popover-header {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.original-value-reference {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-bottom: 12px;
+    padding: 8px 10px;
+    background: var(--bg-secondary);
+    border-left: 2px solid var(--accent);
+    border-radius: var(--radius-sm);
+    word-break: break-word;
+    max-height: 60px;
+    overflow-y: auto;
+}
+
+.original-value-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    font-style: normal;
+    display: block;
+}
+
+.refine-input {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: var(--font-family);
+    outline: none;
+    transition: border-color var(--transition-fast);
+}
+
+.refine-input:focus {
+    border-color: var(--accent);
+}
+
+.refine-input::placeholder {
+    color: var(--text-muted);
+}
+
+.refine-popover-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.refine-popover-actions button {
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.refine-cancel {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+}
+
+.refine-cancel:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-hover);
+}
+
+.refine-submit {
+    background: var(--accent);
+    border: none;
+    color: white;
+}
+
+.refine-submit:hover {
+    background: var(--accent-hover);
+}
+
+/* ============================================
+   Loading Overlay
+   ============================================ */
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Pulsing blue glow for active tasks progress badge */
+@keyframes pulse-badge {
+    0%, 100% {
+        box-shadow: 0 0 0 3px var(--accent-subtle), 0 0 8px var(--accent);
+    }
+    50% {
+        box-shadow: 0 0 0 5px var(--accent-subtle), 0 0 16px var(--accent);
+    }
+}
+
+/* Glowing green effect for PROJECT COMPLETE badge */
+@keyframes glow-complete {
+    0%, 100% {
+        box-shadow: 0 0 8px color-mix(in srgb, var(--success) 40%, transparent);
+        border-color: var(--success);
+    }
+    50% {
+        box-shadow: 0 0 16px color-mix(in srgb, var(--success) 60%, transparent);
+        border-color: color-mix(in srgb, var(--success) 80%, white);
+    }
+}
+
+/* Purple glow for review mode */
+@keyframes review-glow {
+    0%, 100% {
+        box-shadow: 0 0 0 0 transparent;
+    }
+    50% {
+        box-shadow: 0 0 8px var(--review-glow);
+    }
+}
+
+/* ============================================
+   Syntax Highlighting (hljs compatibility)
+   ============================================ */
+
+/* Only override background to be transparent - let CDN styles handle colors */
+.hljs {
+    background: transparent !important;
+}
+
+/* Ensure code blocks have proper padding when hljs is applied */
+pre.code-block code.hljs {
+    padding: var(--space-4);
+}
+
+/* ============================================
+   Scrollbar Styling
+   ============================================ */
+
+.content-area::-webkit-scrollbar {
+    width: 10px;
+}
+
+.content-area::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.content-area::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 5px;
+}
+
+.content-area::-webkit-scrollbar-thumb:hover {
+    background: var(--border-hover);
+}
+
+/* ============================================
+   Focus States (Accessibility)
+   ============================================ */
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* ============================================
+   High Contrast Theme Adjustments
+   ============================================ */
+
+@media (prefers-contrast: more) {
+    .tab-button.active {
+        outline: 2px solid var(--accent);
+        outline-offset: -2px;
+    }
+
+    .edit-button:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    #markdown-content a {
+        text-decoration: underline;
+    }
+
+    .step-indicator {
+        border-width: 3px;
+    }
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+
+@media (max-width: 500px) {
+    .actions {
+        padding: 8px 12px;
+    }
+
+    .actions button {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .actions-right .secondary {
+        display: none;
+    }
+
+    .phase-stepper {
+        padding: 12px 16px;
+    }
+
+    .step-connector {
+        width: 30px;
+    }
+
+    .step-indicator {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+    }
+}

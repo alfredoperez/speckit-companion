@@ -130,4 +130,45 @@ const specEditorConfig = {
   ]
 };
 
-module.exports = [extensionConfig, webviewConfig, specEditorConfig];
+/**@type {import('webpack').Configuration}*/
+const specViewerConfig = {
+  target: 'web', // Webview runs in browser context
+  mode: 'none',
+
+  entry: './webview/src/spec-viewer/index.ts', // Spec viewer entry point
+  output: {
+    path: path.resolve(__dirname, 'dist', 'webview'),
+    filename: 'spec-viewer.js',
+    libraryTarget: 'window'
+  },
+  resolve: {
+    extensions: ['.ts', '.js']
+  },
+  module: {
+    rules: [
+      {
+        test: /\.ts$/,
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: 'ts-loader',
+            options: {
+              configFile: 'tsconfig.webview.json'
+            }
+          }
+        ]
+      }
+    ]
+  },
+  devtool: 'nosources-source-map',
+  plugins: [
+    new CopyPlugin({
+      patterns: [
+        // Copy spec-viewer CSS to webview output
+        { from: 'webview/styles/spec-viewer.css', to: 'spec-viewer.css' }
+      ]
+    })
+  ]
+};
+
+module.exports = [extensionConfig, webviewConfig, specEditorConfig, specViewerConfig];

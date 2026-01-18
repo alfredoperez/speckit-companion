@@ -172,7 +172,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 parentElement.specName,
                 'related',
                 {
-                    command: 'speckit.openSpecFile',
+                    command: 'speckit.viewSpecDocument',
                     title: `Open ${fileName}`,
                     arguments: [fullPath]
                 },
@@ -198,9 +198,9 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
         // Scan for related documents
         const relatedDocs = this.getRelatedDocs(specFullPath);
 
-        // Open file using centralized command (validates at click time with retry logic)
+        // Open file in unified spec viewer webview (singleton panel with tabs)
         const createOpenCommand = (fileName: string, title: string) => ({
-            command: 'speckit.openSpecFile',
+            command: 'speckit.viewSpecDocument',
             title,
             arguments: [path.join(basePath, specPath, fileName)]
         });

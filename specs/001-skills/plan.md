@@ -1,98 +1,104 @@
-# Implementation Plan: Claude Code Skills Explorer
+# Implementation Plan: [FEATURE]
 
-**Branch**: `001-skills` | **Date**: 2025-12-08 | **Spec**: [spec.md](./spec.md)
-**Input**: Feature specification from `/specs/001-skills/spec.md`
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+
+**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
 ## Summary
 
-Add a new Skills section to the SpecKit Companion sidebar that displays Claude Code Skills grouped by type (Plugin, User, Project). Skills are detected from `~/.claude/skills/` (user), `.claude/skills/` (project), and installed plugins. The feature is only visible when Claude Code is selected as the AI provider, following the existing pattern established by the Agents tree view.
+[Extract from feature spec: primary requirement + technical approach from research]
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.3+ (strict mode enabled)
-**Primary Dependencies**: VS Code Extension API (`@types/vscode ^1.84.0`), js-yaml ^4.1.0
-**Storage**: File system (skills stored as SKILL.md files with YAML frontmatter)
-**Testing**: Jest 29.x with ts-jest (manual testing via Extension Development Host F5)
-**Target Platform**: VS Code ^1.84.0 (Windows, macOS, Linux)
-**Project Type**: Single project (VS Code Extension)
-**Performance Goals**: Skills list should load within 1 second, visual feedback < 1s per Constitution III
-**Constraints**: Workspace-scoped file operations per Constitution V, provider-agnostic architecture per Constitution II
-**Scale/Scope**: Typically < 50 skills across all sources (user, project, plugins)
+<!--
+  ACTION REQUIRED: Replace the content in this section with the technical details
+  for the project. The structure here is presented in advisory capacity to guide
+  the iteration process.
+-->
+
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
+**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
+**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Project Type**: [single/web/mobile - determines source structure]  
+**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
+**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-| Principle | Check | Status |
-|-----------|-------|--------|
-| I. Code Quality First | TypeScript strict mode enabled in tsconfig.json, no `any` types (use proper interfaces like `SkillInfo`), ESLint compliance | PASS |
-| II. Provider-Agnostic | Skills view only shown when Claude Code selected (via `when` clause), uses `getConfiguredProviderType()` pattern from agents | PASS |
-| III. TreeView-First UX | Tree view as primary UI, click to open SKILL.md, hover for tooltip, refresh action in view title | PASS |
-| IV. SpecKit Protocol | Feature in `specs/001-skills/` with spec.md, plan.md, etc. Manager pattern in `src/features/skills/` | PASS |
-| V. Defensive File Ops | Read-only operations (scanning directories, parsing YAML), no file writes needed | PASS |
+[Gates determined based on constitution file]
 
 ## Project Structure
 
 ### Documentation (this feature)
 
 ```text
-specs/001-skills/
-├── spec.md              # Feature specification
+specs/[###-feature]/
 ├── plan.md              # This file (/speckit.plan command output)
 ├── research.md          # Phase 0 output (/speckit.plan command)
 ├── data-model.md        # Phase 1 output (/speckit.plan command)
 ├── quickstart.md        # Phase 1 output (/speckit.plan command)
-├── contracts/           # Phase 1 output (N/A - no API)
-└── tasks.md             # Phase 2 output (/speckit.tasks command)
+├── contracts/           # Phase 1 output (/speckit.plan command)
+└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
 ```
 
 ### Source Code (repository root)
+<!--
+  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
+  for this feature. Delete unused options and expand the chosen structure with
+  real paths (e.g., apps/admin, packages/something). The delivered plan must
+  not include Option labels.
+-->
 
 ```text
+# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
 src/
-├── features/
-│   └── skills/                          # NEW: Skills feature module
-│       ├── index.ts                     # Re-exports for clean imports
-│       ├── skillManager.ts              # Business logic for skill detection/parsing
-│       └── skillsExplorerProvider.ts    # TreeDataProvider for Skills view
-├── ai-providers/
-│   └── aiProvider.ts                    # Add skillsDir to ProviderPaths (Claude only)
-├── core/
-│   ├── constants.ts                     # Add Views.skills constant
-│   └── fileWatchers.ts                  # Add skills file watcher setup
-├── extension.ts                         # Register Skills view and commands
-└── package.json                         # Add skills view, commands, menus
+├── models/
+├── services/
+├── cli/
+└── lib/
+
+tests/
+├── contract/
+├── integration/
+└── unit/
+
+# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
+backend/
+├── src/
+│   ├── models/
+│   ├── services/
+│   └── api/
+└── tests/
+
+frontend/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   └── services/
+└── tests/
+
+# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
+api/
+└── [same as backend above]
+
+ios/ or android/
+└── [platform-specific structure: feature modules, UI flows, platform tests]
 ```
 
-**Structure Decision**: VS Code Extension single-project structure. New feature follows existing Manager + Provider pattern (like `features/agents/`).
+**Structure Decision**: [Document the selected structure and reference the real
+directories captured above]
 
 ## Complexity Tracking
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-No violations - all Constitution principles are satisfied.
-
-## Constitution Check (Post-Design)
-
-*Re-evaluated after Phase 1 design artifacts completed.*
-
-| Principle | Verification | Status |
-|-----------|--------------|--------|
-| I. Code Quality First | `SkillInfo` interface defined with proper types; `SkillItem` class with typed properties; no `any` usage in data model | PASS |
-| II. Provider-Agnostic | View uses `when: "config.speckit.aiProvider == 'claude'"` clause; `skillsDir` added only for Claude in ProviderPaths | PASS |
-| III. TreeView-First UX | TreeDataProvider pattern; click opens SKILL.md; tooltip shows description; refresh in view/title menu | PASS |
-| IV. SpecKit Protocol | `skillManager.ts` follows Manager pattern; `skillsExplorerProvider.ts` follows Provider pattern | PASS |
-| V. Defensive File Ops | All operations are read-only (fs.readDirectory, fs.readFile); handles missing directories gracefully | PASS |
-
-## Generated Artifacts
-
-| Artifact | Path | Status |
-|----------|------|--------|
-| Research | `specs/001-skills/research.md` | Complete |
-| Data Model | `specs/001-skills/data-model.md` | Complete |
-| Quickstart | `specs/001-skills/quickstart.md` | Complete |
-| Contracts | N/A (no external API) | N/A |
-
-## Next Steps
-
-Run `/speckit.tasks` to generate `tasks.md` with implementation tasks.
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|-----------|------------|-------------------------------------|
+| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |

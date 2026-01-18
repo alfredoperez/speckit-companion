@@ -1,11 +1,12 @@
 /**
- * SpecKit Files Types
+ * SpecKit Files Contracts
  *
  * TypeScript interfaces for SpecKit file management in the steering view.
- * These types define the data structures used to represent and
+ * These contracts define the data structures used to represent and
  * manipulate SpecKit configuration files.
  *
  * @feature 005-speckit-views-enhancement
+ * @date 2026-01-02
  */
 
 /**
@@ -75,7 +76,7 @@ export type SpecKitContextValue = typeof SPECKIT_CONTEXT_VALUES[keyof typeof SPE
  * Maps context values to VS Code ThemeIcon names
  */
 export const SPECKIT_ICONS: Record<SpecKitContextValue, string> = {
-  [SPECKIT_CONTEXT_VALUES.HEADER]: 'seedling',
+  [SPECKIT_CONTEXT_VALUES.HEADER]: 'law',
   [SPECKIT_CONTEXT_VALUES.CONSTITUTION]: 'law',
   [SPECKIT_CONTEXT_VALUES.SCRIPTS_CATEGORY]: 'code',
   [SPECKIT_CONTEXT_VALUES.SCRIPT]: 'terminal',

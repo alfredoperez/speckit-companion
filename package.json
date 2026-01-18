@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "VS Code companion for GitHub SpecKit - spec-driven development with AI assistants",
-  "version": "0.2.28",
+  "version": "0.2.63",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",
@@ -357,6 +357,12 @@
         "title": "Open Spec Editor",
         "category": "SpecKit",
         "icon": "$(edit)"
+      },
+      {
+        "command": "speckit.viewSpecDocument",
+        "title": "View Spec Document",
+        "category": "SpecKit",
+        "icon": "$(preview)"
       }
     ],
     "menus": {
