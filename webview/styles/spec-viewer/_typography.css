@@ -1,0 +1,116 @@
+/**
+ * SpecKit Companion - Typography Styles
+ * Headings, paragraphs, and lists
+ */
+
+/* ============================================
+   Headings
+   ============================================ */
+
+/* Headings with professional document typography */
+#markdown-content h1 {
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    line-height: var(--leading-tight);
+    letter-spacing: -0.02em;
+    margin: 0 0 var(--space-3) 0;
+    padding-bottom: var(--space-3);
+    border-bottom: 2px solid var(--border);
+    color: var(--text-primary);
+}
+
+#markdown-content h2 {
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    line-height: var(--leading-snug);
+    letter-spacing: -0.01em;
+    margin: var(--space-8) 0 var(--space-4) 0;
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+#markdown-content h3 {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    line-height: var(--leading-snug);
+    margin: var(--space-6) 0 var(--space-3) 0;
+    color: var(--text-primary);
+}
+
+#markdown-content h4,
+#markdown-content h5,
+#markdown-content h6 {
+    font-size: var(--text-base);
+    font-weight: 600;
+    line-height: var(--leading-normal);
+    margin: var(--space-5) 0 var(--space-2) 0;
+    color: var(--text-primary);
+}
+
+/* ============================================
+   Paragraphs
+   ============================================ */
+
+#markdown-content p {
+    margin: 0 0 var(--space-4) 0;
+    line-height: var(--leading-loose);
+    color: var(--text-secondary);
+}
+
+#markdown-content p + p {
+    margin-top: var(--space-4);
+}
+
+/* ============================================
+   Lists
+   ============================================ */
+
+#markdown-content ul,
+#markdown-content ol {
+    margin: 0 0 var(--space-4) 0;
+    padding-left: var(--space-5);
+}
+
+#markdown-content li {
+    margin: var(--space-2) 0;
+    line-height: var(--leading-relaxed);
+    color: var(--text-secondary);
+}
+
+#markdown-content li > ul,
+#markdown-content li > ol {
+    margin: var(--space-1) 0;
+}
+
+/* ============================================
+   Blockquotes
+   ============================================ */
+
+#markdown-content blockquote {
+    margin: var(--space-5) 0;
+    padding: var(--space-3) var(--space-4);
+    border-left: 4px solid var(--accent);
+    background: var(--accent-subtle);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    color: var(--text-primary);
+}
+
+#markdown-content blockquote p {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+/* ============================================
+   Inline code
+   ============================================ */
+
+#markdown-content code:not(pre code) {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    padding: 2px 6px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--code-variable);
+}

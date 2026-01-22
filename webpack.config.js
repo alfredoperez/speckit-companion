@@ -165,7 +165,9 @@ const specViewerConfig = {
     new CopyPlugin({
       patterns: [
         // Copy spec-viewer CSS to webview output
-        { from: 'webview/styles/spec-viewer.css', to: 'spec-viewer.css' }
+        { from: 'webview/styles/spec-viewer.css', to: 'spec-viewer.css' },
+        // Copy spec-viewer CSS partials (for @import resolution)
+        { from: 'webview/styles/spec-viewer', to: 'spec-viewer' }
       ]
     })
   ]

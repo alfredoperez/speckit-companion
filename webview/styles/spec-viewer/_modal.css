@@ -1,0 +1,152 @@
+/**
+ * SpecKit Companion - Modal Styles
+ * Refine modal dialog and loading overlay
+ */
+
+/* ============================================
+   Refine Modal
+   ============================================ */
+
+.refine-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 999;
+    animation: fadeIn var(--transition-fast) ease;
+}
+
+.refine-popover {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    min-width: 400px;
+    max-width: 500px;
+    animation: modalSlideIn var(--transition-normal) ease;
+}
+
+.refine-popover-header {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.original-value-reference {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-bottom: 12px;
+    padding: 8px 10px;
+    background: var(--bg-secondary);
+    border-left: 2px solid var(--accent);
+    border-radius: var(--radius-sm);
+    word-break: break-word;
+    max-height: 60px;
+    overflow-y: auto;
+}
+
+.original-value-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    font-style: normal;
+    display: block;
+}
+
+.refine-input {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: var(--font-family);
+    outline: none;
+    transition: border-color var(--transition-fast);
+}
+
+.refine-input:focus {
+    border-color: var(--accent);
+}
+
+.refine-input::placeholder {
+    color: var(--text-muted);
+}
+
+.refine-popover-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.refine-popover-actions button {
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.refine-cancel {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+}
+
+.refine-cancel:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-hover);
+}
+
+.refine-submit {
+    background: var(--accent);
+    border: none;
+    color: white;
+}
+
+.refine-submit:hover {
+    background: var(--accent-hover);
+}
+
+/* ============================================
+   Loading Overlay
+   ============================================ */
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}

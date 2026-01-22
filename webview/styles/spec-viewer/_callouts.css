@@ -1,0 +1,138 @@
+/**
+ * SpecKit Companion - Callout Styles
+ * Callout blocks for notes, warnings, etc.
+ */
+
+/* ============================================
+   Callout Blocks
+   ============================================ */
+
+.callout {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    margin: var(--space-4) 0;
+    border-radius: var(--radius-md);
+    border-left: 4px solid;
+    background: var(--bg-secondary);
+}
+
+.callout-icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.callout-content {
+    flex: 1;
+    line-height: var(--leading-relaxed);
+    color: var(--text-primary);
+}
+
+.callout-label {
+    font-weight: 600;
+    margin-right: var(--space-1);
+}
+
+/* Purpose callout - Blue/Info */
+.callout-purpose {
+    background: var(--accent-subtle);
+    border-left-color: var(--accent);
+}
+
+.callout-purpose .callout-icon::before {
+    content: 'ℹ️';
+}
+
+.callout-purpose .callout-label {
+    color: var(--accent);
+}
+
+/* Note callout - Blue/Info */
+.callout-note {
+    background: var(--accent-subtle);
+    border-left-color: var(--accent);
+}
+
+.callout-note .callout-icon::before {
+    content: '📝';
+}
+
+.callout-note .callout-label {
+    color: var(--accent);
+}
+
+/* Tip callout - Green */
+.callout-tip {
+    background: var(--success-subtle);
+    border-left-color: var(--success);
+}
+
+.callout-tip .callout-icon::before {
+    content: '💡';
+}
+
+.callout-tip .callout-label {
+    color: var(--success);
+}
+
+/* Checkpoint callout - Green/Success */
+.callout-checkpoint {
+    background: var(--success-subtle);
+    border-left-color: var(--success);
+}
+
+.callout-checkpoint .callout-icon::before {
+    content: '✅';
+}
+
+.callout-checkpoint .callout-label {
+    color: var(--success);
+}
+
+/* Warning callout - Yellow/Orange */
+.callout-warning {
+    background: var(--warning-subtle);
+    border-left-color: var(--warning);
+}
+
+.callout-warning .callout-icon::before {
+    content: '⚠️';
+}
+
+.callout-warning .callout-label {
+    color: var(--warning);
+}
+
+/* Important callout - Orange */
+.callout-important {
+    background: var(--warning-subtle);
+    border-left-color: var(--warning);
+}
+
+.callout-important .callout-icon::before {
+    content: '❗';
+}
+
+.callout-important .callout-label {
+    color: var(--warning);
+}
+
+/* Critical callout - Red/Error */
+.callout-critical {
+    background: var(--error-subtle);
+    border-left-color: var(--error);
+}
+
+.callout-critical .callout-icon::before {
+    content: '🚨';
+}
+
+.callout-critical .callout-label {
+    color: var(--error);
+}

@@ -1,0 +1,23 @@
+/**
+ * SpecKit Companion - Spec Viewer Styles
+ * v0.3.0 - Enhanced with Rich Color System from Workflow Editor
+ *
+ * This file imports all CSS partials for the spec viewer.
+ * Partials are organized by component/feature for maintainability.
+ */
+
+@import '_variables.css';
+@import '_base.css';
+@import '_navigation.css';
+@import '_content.css';
+@import '_typography.css';
+@import '_code.css';
+@import '_tables.css';
+@import '_callouts.css';
+@import '_tasks.css';
+@import '_line-actions.css';
+@import '_editor.css';
+@import '_refinements.css';
+@import '_modal.css';
+@import '_footer.css';
+@import '_animations.css';

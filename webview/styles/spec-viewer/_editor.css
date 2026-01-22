@@ -1,0 +1,147 @@
+/**
+ * SpecKit Companion - Inline Editor Styles
+ * GitHub-style inline editor
+ */
+
+/* ============================================
+   Inline Editor (GitHub-style)
+   ============================================ */
+
+.inline-editor {
+    margin: 8px 0 4px 0;
+    padding: 12px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    animation: slideDown var(--transition-fast) ease-out;
+}
+
+.editor-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+/* Context action buttons - subtle but clearly interactive */
+.context-action {
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.context-action:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+/* Remove actions - subtle red on hover */
+.context-action[data-action="remove-line"],
+.context-action[data-action="remove-story"],
+.context-action[data-action="remove-section"],
+.context-action[data-action="remove-scenario"],
+.context-action[data-action="remove-task"] {
+    color: var(--text-muted);
+}
+
+.context-action[data-action="remove-line"]:hover,
+.context-action[data-action="remove-story"]:hover,
+.context-action[data-action="remove-section"]:hover,
+.context-action[data-action="remove-scenario"]:hover,
+.context-action[data-action="remove-task"]:hover {
+    background: var(--error-subtle);
+    color: var(--error);
+}
+
+/* Toggle task action - subtle green on hover */
+.context-action[data-action="toggle-task"] {
+    color: var(--text-muted);
+}
+
+.context-action[data-action="toggle-task"]:hover {
+    background: var(--success-subtle);
+    color: var(--success);
+}
+
+.editor-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 0;
+}
+
+.editor-comment-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.editor-textarea {
+    width: 100%;
+    min-height: 60px;
+    padding: 10px 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-family: var(--font-family);
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+    transition: border-color var(--transition-fast);
+}
+
+.editor-textarea:focus {
+    border-color: var(--accent);
+}
+
+.editor-textarea::placeholder {
+    color: var(--text-muted);
+}
+
+.editor-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.editor-cancel,
+.editor-add {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.editor-cancel {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+}
+
+.editor-cancel:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-hover);
+}
+
+.editor-add {
+    background: var(--accent);
+    border: none;
+    color: white;
+}
+
+.editor-add:hover {
+    background: var(--accent-hover);
+}

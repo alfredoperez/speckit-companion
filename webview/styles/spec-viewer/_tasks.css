@@ -1,0 +1,131 @@
+/**
+ * SpecKit Companion - Task List Styles
+ * Task lists, checkboxes, and progress bars
+ */
+
+/* ============================================
+   Section Progress Bar (after h3 headings)
+   ============================================ */
+
+#markdown-content .section-progress {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin: var(--space-2) 0 var(--space-3) 0;
+}
+
+#markdown-content .section-progress-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+#markdown-content .section-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width var(--transition-normal) ease;
+}
+
+#markdown-content .section-progress-fill.complete {
+    background: var(--success);
+}
+
+#markdown-content .section-progress-text {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* ============================================
+   Task List Container
+   ============================================ */
+
+/* Task list container - simple list */
+#markdown-content ul:has(.task-item),
+#markdown-content ul.task-list-simple {
+    list-style: none;
+    padding-left: 0;
+    margin: var(--space-2) 0 var(--space-4) 0;
+}
+
+/* ============================================
+   Task Item - Simple Style
+   ============================================ */
+
+#markdown-content li.task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding: var(--space-1) 0;
+    margin: 0;
+    background: transparent;
+    border: none;
+    transition: all var(--transition-fast);
+    list-style: none;
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    cursor: help;
+}
+
+#markdown-content li.task-item:hover {
+    background: var(--bg-hover);
+    margin: 0 calc(-1 * var(--space-2));
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+}
+
+/* Completed task - keep readable, checkmark is enough */
+#markdown-content li.task-item.checked {
+    /* No opacity change - keep fully visible */
+}
+
+#markdown-content li.task-item.checked .task-text {
+    /* Keep normal color - green checkmark indicates completion */
+    color: var(--text-secondary);
+}
+
+/* ============================================
+   Custom Checkbox Styling
+   ============================================ */
+
+#markdown-content li.task-item input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    margin: 2px 0 0 0;
+    border: 2px solid var(--border-checkbox);
+    border-radius: var(--radius-sm);
+    background: var(--bg-checkbox);
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    transition: all var(--transition-fast);
+}
+
+#markdown-content li.task-item input[type="checkbox"]:hover {
+    border-color: var(--accent);
+    background: var(--accent-subtle);
+}
+
+#markdown-content li.task-item input[type="checkbox"]:checked {
+    background: var(--success);
+    border-color: var(--success);
+}
+
+#markdown-content li.task-item input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    line-height: 1;
+}

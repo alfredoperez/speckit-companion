@@ -63,6 +63,28 @@ docs/                     # Documentation assets
 - **Provider Pattern**: Each tree view has a Provider class extending `vscode.TreeDataProvider`
 - **Command Registration**: All commands are registered in `activate()` with pattern `kfc.{feature}.{action}`
 
+### Modular Webview Pattern (spec-viewer)
+
+Large webview features use a modular structure for maintainability:
+
+**Extension side** (`src/features/spec-viewer/`):
+- `specViewerProvider.ts` - Main provider class
+- `messageHandlers.ts` - Webview message routing
+- `documentScanner.ts` - File discovery
+- `phaseCalculation.ts` - Workflow phase logic
+- `html/` - HTML generation modules
+- `utils.ts`, `types.ts` - Shared utilities
+
+**Webview side** (`webview/src/spec-viewer/`):
+- `index.ts` - Entry point, initialization
+- `markdown/` - Rendering pipeline (renderer, preprocessors, scenarios)
+- `editor/` - Inline editing (inlineEditor, refinements, lineActions)
+- `navigation.ts`, `highlighting.ts`, `modal.ts`, `actions.ts`
+
+**CSS partials** (`webview/styles/spec-viewer/`):
+- `index.css` imports 15 partials (_variables, _base, _navigation, etc.)
+- Webpack CopyPlugin copies partials to dist for @import resolution
+
 ### Data Structure
 
 User data is stored in workspace `.claude/` directory:
@@ -124,10 +146,10 @@ This should be replaced with actual Claude CLI integration when testing is compl
 ## Recent Changes
 - 007-spec-viewer-webview: Implemented Unified Spec Viewer Webview Panel
   - **Core Feature**: Read-only webview panel for viewing spec documents (spec.md, plan.md, tasks.md) with tabbed navigation
-  - **Files Created**:
-    - `src/features/spec-viewer/` - Feature module (types, provider, commands)
-    - `webview/src/spec-viewer/` - Browser-side webview code
-    - `webview/styles/spec-viewer.css` - Themed styles
+  - **Files Created** (modular architecture):
+    - `src/features/spec-viewer/` - 12 modules (provider, handlers, html/, utils)
+    - `webview/src/spec-viewer/` - 17 modules (markdown/, editor/, navigation)
+    - `webview/styles/spec-viewer/` - 16 CSS partials with @import structure
   - **Key Components**:
     - `SpecViewerProvider`: Singleton WebviewPanel with document switching and live refresh
     - Document scanning for core (spec/plan/tasks) and related documents

@@ -1,0 +1,317 @@
+/**
+ * SpecKit Companion - Navigation Styles
+ * Compact navigation bar and step-tabs
+ */
+
+/* ============================================
+   Compact Navigation Bar
+   ============================================ */
+
+.compact-nav {
+    flex-shrink: 0;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+}
+
+.nav-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--space-4);
+    height: 48px;
+}
+
+/* ============================================
+   Unified Step-Tabs (Merged Stepper + Tabs)
+   ============================================ */
+
+.step-tabs {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.step-tab {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: all var(--transition-fast);
+    border-radius: var(--radius-sm);
+}
+
+.step-tab:hover:not(:disabled) {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+/* Status indicator (checkmark or empty circle) */
+.step-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    font-size: 9px;
+    font-weight: 700;
+    color: transparent;
+    background: transparent;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+/* File exists - green check */
+.step-tab.exists .step-status {
+    background: var(--success);
+    border-color: var(--success);
+    color: white;
+}
+
+.step-tab.exists .step-label {
+    color: var(--text-secondary);
+}
+
+/* Currently viewing - prominent highlight */
+.step-tab.viewing {
+    background: var(--accent-subtle);
+    border: 2px solid var(--accent);
+    margin: -2px;  /* Compensate for border to avoid layout shift */
+}
+
+.step-tab.viewing .step-status {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    box-shadow: 0 0 0 3px var(--accent-subtle);
+}
+
+.step-tab.viewing .step-label {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+/* Workflow phase indicator (when not viewing) */
+.step-tab.workflow:not(.viewing) .step-status {
+    box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 3px color-mix(in srgb, var(--success) 60%, transparent);
+}
+
+.step-tab.workflow:not(.viewing) .step-label {
+    color: var(--text-primary);
+}
+
+/* In progress (tasks partial) - show percentage only when viewing */
+.step-tab.in-progress .step-status {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    font-size: 8px;
+    width: auto;
+    min-width: 24px;
+    padding: 0 4px;
+    border-radius: 8px;
+}
+
+/* Tasks actively being worked on - prominent percentage badge with pulsing glow */
+.step-tab.tasks-active {
+    background: var(--accent-subtle);
+    border: 2px solid var(--accent);
+    margin: -2px;
+}
+
+.step-tab.tasks-active .step-status {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    width: auto;
+    min-width: 32px;
+    padding: 0 6px;
+    border-radius: 10px;
+    box-shadow: 0 0 0 3px var(--accent-subtle);
+    animation: pulse-badge 2s ease-in-out infinite;
+}
+
+.step-tab.tasks-active .step-label {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+/* Review mode - viewing a completed step that isn't the current workflow phase */
+.step-tab.reviewing {
+    background: var(--review-subtle);
+    border: 2px solid var(--review);
+    margin: -2px;
+    animation: review-glow 2s ease-in-out infinite;
+}
+
+.step-tab.reviewing .step-status {
+    background: var(--review);
+    border-color: var(--review);
+    color: white;
+    box-shadow: 0 0 0 3px var(--review-subtle);
+}
+
+.step-tab.reviewing .step-label {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+/* Keep green checkmark visible for completed steps in review mode */
+.step-tab.reviewing.exists .step-status {
+    background: var(--review);
+    border-color: var(--review);
+}
+
+/* Disabled state */
+.step-tab.disabled,
+.step-tab:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Connector lines between steps */
+.step-connector {
+    width: 24px;
+    height: 2px;
+    background: var(--border);
+    transition: background var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.step-connector.filled {
+    background: var(--success);
+}
+
+/* Completion badge (shown at right of nav when 100% complete) */
+.completion-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    margin-left: 16px;
+    background: color-mix(in srgb, var(--success) 20%, transparent);
+    color: var(--success);
+    border: 1px solid var(--success);
+    border-radius: var(--radius-md);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    animation: glow-complete 2s ease-in-out infinite;
+    box-shadow: var(--success-glow);
+}
+
+/* ============================================
+   Related Documents Bar
+   ============================================ */
+
+.related-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px var(--space-4);
+    gap: var(--space-2);
+    background: color-mix(in srgb, var(--bg-primary) 50%, var(--bg-secondary));
+    font-size: 12px;
+}
+
+.related-bar-content {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.back-link {
+    padding: 4px 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: inherit;
+    transition: color var(--transition-fast);
+    border-radius: var(--radius-sm);
+}
+
+.back-link:hover {
+    color: var(--accent);
+    background: var(--bg-hover);
+}
+
+.related-divider {
+    color: var(--border);
+    margin: 0 var(--space-1);
+}
+
+.overview-divider {
+    width: 1px;
+    height: 12px;
+    background: var(--border);
+    opacity: 0.5;
+    margin: 0 var(--space-2);
+}
+
+.related-tabs {
+    display: flex;
+    gap: 2px;
+}
+
+/* Overview tab - first tab linking to main document */
+.overview-tab {
+    padding: 4px 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: inherit;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.overview-tab:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.overview-tab.active {
+    color: var(--accent);
+    background: var(--accent-subtle);
+    font-weight: 600;
+}
+
+.related-tab {
+    padding: 4px 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: inherit;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.related-tab:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.related-tab.active {
+    color: var(--header-section);
+    background: var(--bg-primary);
+    font-weight: 500;
+}
