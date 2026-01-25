@@ -9,8 +9,8 @@
 
 .line {
     position: relative;
-    padding: 3px 8px 3px 0;  /* Reduced right padding */
-    margin-left: 32px;  /* Left margin for gutter button */
+    padding: 2px 0;  /* Minimal vertical padding */
+    margin-left: 0;  /* No left margin - button now on right */
     border-radius: var(--radius-sm);
     transition: all var(--transition-fast);
     min-height: 24px;
@@ -30,8 +30,13 @@
     background: transparent;
 }
 
-/* Line with active editor */
+/* Line with active editor - stable background, no hover changes */
 .line.editing {
+    background: var(--bg-hover);
+}
+
+/* Prevent hover changes while editing */
+.line.editing:hover {
     background: var(--bg-hover);
 }
 
@@ -68,7 +73,8 @@
 
 .line-add-btn {
     position: absolute;
-    left: -28px;  /* Position in left gutter */
+    left: auto;  /* Unset left positioning */
+    right: 0;  /* Position on right side */
     top: 4px;  /* Align to top */
     width: 22px;
     height: 22px;
@@ -121,7 +127,7 @@
 
 li.line {
     position: relative;
-    padding-right: 8px;
+    padding-right: 0;  /* No extra padding */
     margin: 0;
     list-style-position: outside;
 }
@@ -136,7 +142,8 @@ li.line .line-content {
 }
 
 li.line .line-add-btn {
-    left: -28px;
+    left: auto;  /* Unset left positioning */
+    right: 0;  /* Position on right side */
     top: 4px;
 }
 
@@ -147,6 +154,12 @@ li.line .line-comment-slot {
 /* Comment slot container */
 .line-comment-slot {
     margin-top: 0;
+}
+
+/* Full-width inline editor */
+.line .line-comment-slot .inline-editor {
+    margin-left: 0;
+    width: 100%;
 }
 
 /* ============================================

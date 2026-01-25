@@ -17,6 +17,11 @@ declare const vscode: VSCodeApi;
 export function showInlineEditor(lineElement: HTMLElement): void {
     console.log('[SpecViewer] showInlineEditor called with element:', lineElement);
 
+    // Block editing when spec is completed
+    if (document.body.dataset.specStatus === 'spec-completed') {
+        return;
+    }
+
     // Close any existing editor first
     closeInlineEditor();
 
@@ -118,6 +123,11 @@ export function closeInlineEditor(): void {
  * Show inline editor for a scenario table row
  */
 export function showInlineEditorForRow(rowElement: HTMLElement, rowNum: number): void {
+    // Block editing when spec is completed
+    if (document.body.dataset.specStatus === 'spec-completed') {
+        return;
+    }
+
     // Close any existing editor first
     closeInlineEditor();
 
@@ -259,11 +269,16 @@ export function setupLineActions(): void {
         if (addBtn || target.classList.contains('line-add-btn')) {
             const btn = addBtn || target;
             const lineNum = parseInt(btn.dataset.line || '0', 10);
-            console.log('[SpecViewer] Add button clicked, lineNum:', lineNum);
+            const listId = btn.dataset.listId;
+            console.log('[SpecViewer] Add button clicked, lineNum:', lineNum, 'listId:', listId);
 
-            const lineEl = document.querySelector(`.line[data-line="${lineNum}"]`) as HTMLElement;
+            // Use scoped selector with data-list-id to find the correct element within the correct list
+            const selector = listId
+                ? `.line[data-line="${lineNum}"][data-list-id="${listId}"]`
+                : `.line[data-line="${lineNum}"]`;
+            const lineEl = document.querySelector(selector) as HTMLElement;
             if (!lineEl) {
-                console.warn('[SpecViewer] Line element not found for line:', lineNum);
+                console.warn('[SpecViewer] Line element not found for line:', lineNum, 'with listId:', listId);
                 return;
             }
             console.log('[SpecViewer] Found line element:', lineEl);

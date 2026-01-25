@@ -40,7 +40,7 @@
     display: block;
     padding: var(--space-4);
     font-family: var(--font-mono);
-    font-size: var(--text-sm);
+    font-size: 12px; /* Fixed size per FR-010 */
     line-height: var(--leading-relaxed);
     overflow-x: auto;
     tab-size: 4;
@@ -61,7 +61,7 @@
 
 #markdown-content pre.tree-structure code {
     font-family: var(--font-mono);
-    font-size: var(--text-sm);
+    font-size: 12px; /* Fixed size for consistency with code blocks */
     line-height: var(--leading-normal);
     color: var(--text-secondary);
     white-space: pre;
