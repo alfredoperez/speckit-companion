@@ -15,11 +15,17 @@ declare const vscode: VSCodeApi;
  * Show inline editor below a line
  */
 export function showInlineEditor(lineElement: HTMLElement): void {
+    console.log('[SpecViewer] showInlineEditor called with element:', lineElement);
+
     // Close any existing editor first
     closeInlineEditor();
 
     const lineNum = parseInt(lineElement.dataset.line || '0', 10);
-    if (!lineNum) return;
+    console.log('[SpecViewer] Opening inline editor for line:', lineNum);
+    if (!lineNum) {
+        console.warn('[SpecViewer] Invalid line number, aborting');
+        return;
+    }
 
     const lineType = detectLineType(lineElement);
 
@@ -29,7 +35,6 @@ export function showInlineEditor(lineElement: HTMLElement): void {
         <div class="editor-actions">
             ${getContextActions(lineType, lineNum)}
         </div>
-        <div class="editor-divider"></div>
         <div class="editor-comment-section">
             <textarea class="editor-textarea" placeholder="Add a comment or refinement instruction..."></textarea>
             <div class="editor-buttons">
@@ -90,7 +95,7 @@ export function showInlineEditor(lineElement: HTMLElement): void {
     contextButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
             const action = (e.target as HTMLElement).dataset.action;
-            handleContextAction(action || '', lineNum, closeInlineEditor);
+            handleContextAction(action || '', lineNum, closeInlineEditor, lineElement);
         });
     });
 }
@@ -131,7 +136,6 @@ export function showInlineEditorForRow(rowElement: HTMLElement, rowNum: number):
                     <span class="editor-context-label">Scenario ${rowNum}:</span>
                     <span class="editor-context-text">${escapeHtml(scenarioContent)}</span>
                 </div>
-                <div class="editor-divider"></div>
                 <div class="editor-comment-section">
                     <textarea class="editor-textarea" placeholder="Add a comment or refinement instruction..."></textarea>
                     <div class="editor-buttons">
@@ -248,13 +252,22 @@ export function setupLineActions(): void {
     document.addEventListener('click', (e) => {
         const target = e.target as HTMLElement;
 
+        // Check if click is on button or inside button (SVG elements)
+        const addBtn = target.closest('.line-add-btn') as HTMLElement;
+
         // Handle "+" button click for lines
-        if (target.classList.contains('line-add-btn')) {
-            const lineNum = parseInt(target.dataset.line || '0', 10);
+        if (addBtn || target.classList.contains('line-add-btn')) {
+            const btn = addBtn || target;
+            const lineNum = parseInt(btn.dataset.line || '0', 10);
+            console.log('[SpecViewer] Add button clicked, lineNum:', lineNum);
+
             const lineEl = document.querySelector(`.line[data-line="${lineNum}"]`) as HTMLElement;
-            if (lineEl) {
-                showInlineEditor(lineEl);
+            if (!lineEl) {
+                console.warn('[SpecViewer] Line element not found for line:', lineNum);
+                return;
             }
+            console.log('[SpecViewer] Found line element:', lineEl);
+            showInlineEditor(lineEl);
             return;
         }
 

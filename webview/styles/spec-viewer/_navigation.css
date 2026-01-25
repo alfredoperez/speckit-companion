@@ -16,7 +16,7 @@
 .nav-primary {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     padding: 0 var(--space-4);
     height: 48px;
 }
@@ -200,7 +200,7 @@
     align-items: center;
     gap: 6px;
     padding: 8px 14px;
-    margin-left: 16px;
+    margin-left: auto;
     background: color-mix(in srgb, var(--success) 20%, transparent);
     color: var(--success);
     border: 1px solid var(--success);

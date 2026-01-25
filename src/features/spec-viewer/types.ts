@@ -123,7 +123,7 @@ export const PHASE_ENHANCEMENT_BUTTONS: Record<CoreDocumentType, EnhancementButt
         label: 'Clarify',
         command: 'speckit.clarify',
         icon: '❓',
-        tooltip: 'Ask clarifying questions about the spec'
+        tooltip: 'Refine any requirements further'
     },
     plan: {
         label: 'Checklist',
@@ -321,3 +321,25 @@ export const EMPTY_STATE_MESSAGES: Record<CoreDocumentType, string> = {
  * Default empty state message for related documents
  */
 export const DEFAULT_EMPTY_MESSAGE = 'Document not found.';
+
+// ============================================
+// Spec Status Types
+// ============================================
+
+/**
+ * Spec document status values
+ * Used to control UI element visibility
+ */
+export type SpecStatus =
+    | 'draft'           // Default - shows all editing controls
+    | 'in-progress'     // Shows all editing controls
+    | 'spec-completed'  // Hides add-comment buttons, DRAFT badge, refinement CTAs
+    | 'plan-completed'  // Future use
+    | 'done';           // Future use
+
+/**
+ * Check if a status allows editing/refinement
+ */
+export function isEditableStatus(status: SpecStatus): boolean {
+    return status === 'draft' || status === 'in-progress';
+}

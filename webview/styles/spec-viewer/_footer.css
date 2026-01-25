@@ -46,16 +46,16 @@
 }
 
 .actions button.primary {
-    background: var(--accent);
+    background: var(--review);
     color: white;
     border: none;
     box-shadow: var(--shadow-sm);
 }
 
 .actions button.primary:hover {
-    background: var(--accent-hover);
+    background: color-mix(in srgb, var(--review) 85%, black);
     transform: translateY(-1px);
-    box-shadow: var(--accent-glow);
+    box-shadow: var(--review-glow);
 }
 
 .actions button.secondary {
@@ -94,4 +94,15 @@
 
 .actions button.enhancement:hover .icon {
     color: var(--text-primary);
+}
+
+/* ============================================
+   State-based hiding (completed specs)
+   ============================================ */
+
+/* Hide refinement CTAs when spec is completed */
+body[data-spec-status="spec-completed"] .actions button.enhancement,
+body[data-spec-status="spec-completed"] #clarify-btn,
+body[data-spec-status="spec-completed"] #refine-submit-btn {
+    display: none;
 }

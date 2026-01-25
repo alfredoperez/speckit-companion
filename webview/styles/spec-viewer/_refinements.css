@@ -67,24 +67,17 @@
     border: none;
     border-radius: var(--radius-md);
     color: white;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: all var(--transition-fast);
-    box-shadow: var(--shadow-sm);
-}
-
-.refine-submit-btn.visible {
-    display: inline-flex;
     align-items: center;
-    gap: 4px;
-    animation: slideIn var(--transition-normal) ease-out;
+    gap: 8px;
 }
 
 .refine-submit-btn:hover {
     background: var(--accent-hover);
     transform: translateY(-1px);
-    box-shadow: var(--accent-glow);
 }
 
 .refine-submit-btn:active {

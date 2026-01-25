@@ -165,7 +165,7 @@ export function updateRefineButton(): void {
     const count = getPendingRefinementsCount();
     let btn = document.getElementById('refine-submit-btn') as HTMLButtonElement | null;
 
-    // Create button if it doesn't exist
+    // Create button in footer if it doesn't exist
     if (!btn) {
         const actionsRight = document.querySelector('.actions-right');
         if (actionsRight) {
@@ -173,16 +173,16 @@ export function updateRefineButton(): void {
             btn.id = 'refine-submit-btn';
             btn.className = 'refine-submit-btn';
             btn.addEventListener('click', submitAllRefinements);
-            actionsRight.insertBefore(btn, actionsRight.firstChild);
+            actionsRight.appendChild(btn);
         }
     }
 
     if (btn) {
         if (count > 0) {
-            btn.classList.add('visible');
-            btn.innerHTML = `📝 Refine (${count} comment${count > 1 ? 's' : ''}) →`;
+            btn.style.display = 'inline-flex';
+            btn.textContent = `📝 Refine (${count} comment${count > 1 ? 's' : ''}) →`;
         } else {
-            btn.classList.remove('visible');
+            btn.style.display = 'none';
         }
     }
 }

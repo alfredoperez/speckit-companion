@@ -9,12 +9,11 @@
 
 #markdown-content {
     font-family: var(--font-family);
-    font-size: 15px;
+    font-size: 14px;
     line-height: var(--leading-loose);
     color: var(--text-secondary);
     max-width: 72ch;
     margin: 0 auto;
-    padding-left: 32px;  /* Space for gutter buttons */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     letter-spacing: -0.01em;
@@ -124,7 +123,7 @@
    ============================================ */
 
 #markdown-content hr {
-    margin: var(--space-6) 0;
+    margin: 16px 0;
     border: none;
     border-top: 1px solid var(--border);
 }
@@ -152,4 +151,13 @@
 
 #markdown-content em {
     font-style: italic;
+}
+
+/* ============================================
+   State-based hiding (completed specs)
+   ============================================ */
+
+/* Hide DRAFT badge when spec is completed */
+body[data-spec-status="spec-completed"] .meta-status-draft {
+    display: none;
 }

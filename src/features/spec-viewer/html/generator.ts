@@ -8,6 +8,7 @@ import {
     SpecDocument,
     DocumentType,
     PhaseInfo,
+    SpecStatus,
     PHASE_ENHANCEMENT_BUTTONS
 } from '../types';
 import { escapeHtml, escapeHtmlAttribute, generateNonce } from '../utils';
@@ -26,7 +27,8 @@ export function generateHtml(
     currentDocType: DocumentType,
     specName: string,
     phases: PhaseInfo[],
-    taskCompletionPercent: number
+    taskCompletionPercent: number,
+    specStatus: SpecStatus = 'draft'
 ): string {
     // Get URIs for resources
     const styleUri = webview.asWebviewUri(
@@ -117,7 +119,7 @@ export function generateHtml(
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
     <title>Spec: ${escapeHtml(specName)}</title>
 </head>
-<body style="background: var(--vscode-editor-background, #1e1e1e);">
+<body style="background: var(--vscode-editor-background, #1e1e1e);" data-spec-status="${specStatus}">
     <div class="viewer-container">
         ${navHtml}
 

@@ -252,7 +252,7 @@
     opacity: 0;
 }
 
-/* Row add button (+ on table rows) */
+/* Row add button (comment icon on table rows) */
 .row-add-btn {
     position: absolute;
     left: 50%;
@@ -261,12 +261,9 @@
     width: 24px;
     height: 24px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--accent);
-    background: var(--accent);
+    border: 1px solid #22c55e;
+    background: #22c55e;
     color: white;
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 1;
     opacity: 0;
     transition: all var(--transition-fast);
     cursor: pointer;
@@ -275,13 +272,19 @@
     justify-content: center;
 }
 
+.row-add-btn svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
 .scenario-row:hover .row-add-btn {
     opacity: 1;
 }
 
 .row-add-btn:hover {
-    background: var(--accent-hover);
-    border-color: var(--accent-hover);
+    background: #16a34a;
+    border-color: #16a34a;
     transform: translate(-50%, -50%) scale(1.1);
 }
 
@@ -366,5 +369,43 @@
 }
 
 .scenario-then {
+    color: var(--success);
+}
+
+/* ============================================
+   Acceptance Scenarios List Format
+   ============================================ */
+
+.acceptance-scenarios {
+    margin: var(--space-2) 0 var(--space-4) 0;
+    padding-left: var(--space-5);
+}
+
+.scenario-item {
+    margin: var(--space-1) 0;
+    padding: 3px 8px 3px 0;
+    list-style-position: outside;
+}
+
+.scenario-item .line-content {
+    display: inline;
+}
+
+/* Keyword emphasis colors */
+.scenario-item .keyword-given,
+.scenario-item .keyword-when,
+.scenario-item .keyword-then {
+    font-weight: 600;
+}
+
+.scenario-item .keyword-given {
+    color: var(--accent);
+}
+
+.scenario-item .keyword-when {
+    color: var(--warning);
+}
+
+.scenario-item .keyword-then {
     color: var(--success);
 }

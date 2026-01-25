@@ -13,7 +13,7 @@
     background: var(--bg-elevated);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
+    box-shadow: none;
     animation: slideDown var(--transition-fast) ease-out;
 }
 
@@ -73,11 +73,7 @@
     color: var(--success);
 }
 
-.editor-divider {
-    height: 1px;
-    background: var(--border);
-    margin: 8px 0;
-}
+/* Editor divider removed per FR-011 */
 
 .editor-comment-section {
     display: flex;
