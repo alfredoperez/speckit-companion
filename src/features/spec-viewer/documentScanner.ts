@@ -26,6 +26,63 @@ export async function fileExists(filePath: string): Promise<boolean> {
 }
 
 /**
+ * Convert nested file path to display name
+ * e.g., "contracts/webview-messages.md" -> "Contracts: Webview Messages"
+ */
+function nestedFileToDisplayName(relativePath: string): string {
+    const parts = relativePath.replace(/\.md$/i, '').split('/');
+    return parts
+        .map(part => part.replace(/[-_]/g, ' ').replace(/\b\w/g, char => char.toUpperCase()))
+        .join(': ');
+}
+
+/**
+ * Convert nested file path to document type
+ * e.g., "contracts/webview-messages.md" -> "contracts/webview-messages"
+ */
+function nestedFileToDocType(relativePath: string): string {
+    return relativePath.replace(/\.md$/i, '').toLowerCase();
+}
+
+/**
+ * Recursively scan a directory for .md files
+ */
+async function scanDirectoryRecursive(
+    dirPath: string,
+    basePath: string,
+    outputChannel: vscode.OutputChannel
+): Promise<{ relativePath: string; fullPath: string }[]> {
+    const results: { relativePath: string; fullPath: string }[] = [];
+
+    try {
+        const uri = vscode.Uri.file(dirPath);
+        const entries = await vscode.workspace.fs.readDirectory(uri);
+
+        for (const [name, fileType] of entries) {
+            const fullPath = path.join(dirPath, name);
+            const relativePath = path.relative(basePath, fullPath);
+
+            // Skip hidden directories and special folders
+            if (name.startsWith('.') || name === 'checklists') {
+                continue;
+            }
+
+            if (fileType === vscode.FileType.Directory) {
+                // Recurse into subdirectory
+                const subResults = await scanDirectoryRecursive(fullPath, basePath, outputChannel);
+                results.push(...subResults);
+            } else if (fileType === vscode.FileType.File && name.endsWith('.md')) {
+                results.push({ relativePath, fullPath });
+            }
+        }
+    } catch (error) {
+        outputChannel.appendLine(`[SpecViewer] Error scanning subdirectory ${dirPath}: ${error}`);
+    }
+
+    return results;
+}
+
+/**
  * Scan spec directory for available documents
  */
 export async function scanDocuments(
@@ -50,24 +107,26 @@ export async function scanDocuments(
         });
     }
 
-    // Scan for related documents
+    // Scan for related documents (including subdirectories)
     try {
-        const uri = vscode.Uri.file(specDirectory);
-        const entries = await vscode.workspace.fs.readDirectory(uri);
+        const allFiles = await scanDirectoryRecursive(specDirectory, specDirectory, outputChannel);
 
-        for (const [name, fileType] of entries) {
-            if (fileType !== vscode.FileType.File) continue;
-            if (!name.endsWith('.md')) continue;
+        for (const { relativePath, fullPath } of allFiles) {
+            const fileName = path.basename(relativePath);
 
             // Skip core documents (already added)
-            if (Object.values(CORE_DOCUMENT_FILES).includes(name)) continue;
+            if (Object.values(CORE_DOCUMENT_FILES).includes(fileName) && !relativePath.includes('/')) {
+                continue;
+            }
 
-            const filePath = path.join(specDirectory, name);
+            // Determine if this is a nested file (contains path separator)
+            const isNested = relativePath.includes('/') || relativePath.includes(path.sep);
+
             documents.push({
-                type: fileNameToDocType(name),
-                displayName: fileNameToDisplayName(name),
-                fileName: name,
-                filePath,
+                type: isNested ? nestedFileToDocType(relativePath) : fileNameToDocType(fileName),
+                displayName: isNested ? nestedFileToDisplayName(relativePath) : fileNameToDisplayName(fileName),
+                fileName: relativePath, // Use relative path for nested files
+                filePath: fullPath,
                 exists: true,
                 isCore: false,
                 category: 'related'

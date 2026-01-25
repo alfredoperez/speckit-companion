@@ -94,7 +94,7 @@ function registerPhaseCommands(
 
     for (const cmd of phaseCommands) {
         context.subscriptions.push(
-            vscode.commands.registerCommand(`speckit.${cmd.name}`, async (specDir?: string) => {
+            vscode.commands.registerCommand(`speckit.${cmd.name}`, async (specDir?: string, refinementContext?: string) => {
                 outputChannel.appendLine(`[SpecKit] ${cmd.title} command triggered for: ${specDir}`);
 
                 const targetDir = specDir || await getActiveSpecDir();
@@ -103,7 +103,10 @@ function registerPhaseCommands(
                     return;
                 }
 
-                const prompt = `/speckit.${cmd.name} ${targetDir}`;
+                let prompt = `/speckit.${cmd.name} ${targetDir}`;
+                if (refinementContext) {
+                    prompt += refinementContext;
+                }
                 await getAIProvider().executeInTerminal(prompt, `SpecKit - ${cmd.title}`);
             })
         );

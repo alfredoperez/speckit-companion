@@ -302,6 +302,10 @@ export type ViewerToExtensionMessage =
     | {
           type: 'stepperClick';
           phase: 'spec' | 'plan' | 'tasks' | 'done';
+      }
+    | {
+          type: 'submitRefinements';
+          refinements: Array<{ lineNum: number; lineContent: string; comment: string }>;
       };
 
 // ============================================

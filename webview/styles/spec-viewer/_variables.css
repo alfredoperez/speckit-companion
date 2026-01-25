@@ -59,6 +59,10 @@
     --error: var(--vscode-editorError-foreground, #f14c4c);
     --error-subtle: color-mix(in srgb, var(--vscode-editorError-foreground, #f14c4c) 10%, transparent);
 
+    /* Extended callout colors */
+    --purple: var(--vscode-symbolIcon-classForeground, #9a6dd7);
+    --gray: var(--vscode-descriptionForeground, #858585);
+
     /* Review mode colors - purple for reviewing completed steps */
     --review: #a855f7;
     --review-subtle: color-mix(in srgb, #a855f7 10%, transparent);

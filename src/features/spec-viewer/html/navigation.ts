@@ -68,9 +68,9 @@ export function generateCompactNav(
         ? `<span class="completion-badge">🌱 Spec Completed</span>`
         : '';
 
-    // Related docs bar - only show when viewing plan/tasks or their related docs
-    // Hide when viewing spec since related docs typically belong to plan phase
-    const showRelatedBar = relatedDocs.length > 0 && currentDocType !== 'spec';
+    // Related docs bar - only show when viewing plan or related docs
+    // Hide in Tasks view since related docs belong to the Plan phase, not Tasks
+    const showRelatedBar = relatedDocs.length > 0 && (currentDocType === 'plan' || isViewingRelatedDoc);
     const isCoreDoc = ['spec', 'plan', 'tasks'].includes(currentDocType);
 
     // Get the parent phase for overview tab (spec, plan, or tasks)

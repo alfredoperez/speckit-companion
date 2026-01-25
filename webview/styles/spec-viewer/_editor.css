@@ -75,10 +75,16 @@
 
 /* Editor divider removed per FR-011 */
 
+/* Ensure no visual separators between editor sections */
+.editor-actions {
+    border-bottom: none;
+}
+
 .editor-comment-section {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    border-top: none;
 }
 
 .editor-textarea {

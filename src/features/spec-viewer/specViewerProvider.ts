@@ -344,7 +344,11 @@ export class SpecViewerProvider {
       instance.panel.title = `Spec: ${specName} - ${docDisplayName}`;
 
       // Extract spec status for conditional UI
-      const specStatus = extractSpecStatus(content);
+      // Use task completion to determine completed status when tasks are 100% done
+      let specStatus = extractSpecStatus(content);
+      if (taskCompletionPercent === 100) {
+        specStatus = "spec-completed";
+      }
 
       // Generate and set HTML
       instance.panel.webview.html = generateHtml(
