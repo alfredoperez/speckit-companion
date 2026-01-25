@@ -1,26 +1,26 @@
-import * as vscode from 'vscode';
-import type { SpecInfo } from '../../../core/types';
+import * as vscode from "vscode";
+import type { SpecInfo } from "../../../core/types";
 
 /**
  * Generate HTML for the workflow editor webview
  */
 export function generateWebviewHtml(
-    webview: vscode.Webview,
-    extensionUri: vscode.Uri,
-    content: string,
-    specInfo: SpecInfo
+  webview: vscode.Webview,
+  extensionUri: vscode.Uri,
+  content: string,
+  specInfo: SpecInfo,
 ): string {
-    // Get URIs for webview resources (built from webview-src to dist/webview)
-    const styleUri = webview.asWebviewUri(
-        vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'workflow.css')
-    );
-    const scriptUri = webview.asWebviewUri(
-        vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'workflow.js')
-    );
+  // Get URIs for webview resources (built from webview-src to dist/webview)
+  const styleUri = webview.asWebviewUri(
+    vscode.Uri.joinPath(extensionUri, "dist", "webview", "workflow.css"),
+  );
+  const scriptUri = webview.asWebviewUri(
+    vscode.Uri.joinPath(extensionUri, "dist", "webview", "workflow.js"),
+  );
 
-    const nonce = generateNonce();
+  const nonce = generateNonce();
 
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
@@ -40,7 +40,7 @@ export function generateWebviewHtml(
         <div class="workflow-editor">
             ${generatePhaseStepper(specInfo)}
 
-            ${specInfo.allDocs.length > 1 ? generateDocTabs(specInfo) : ''}
+            ${specInfo.allDocs.length > 1 ? generateDocTabs(specInfo) : ""}
 
             <main class="content" id="content">
                 <div class="loading">Loading...</div>
@@ -84,44 +84,58 @@ export function generateWebviewHtml(
  * - Done shows progress percentage or checkmark when 100%
  */
 function generatePhaseStepper(specInfo: SpecInfo): string {
-    const phase1Complete = specInfo.completedPhases.includes(1);
-    const phase2Complete = specInfo.completedPhases.includes(2);
-    const phase3Complete = specInfo.completedPhases.includes(3);
-    const taskPercent = specInfo.taskCompletionPercent || 0;
-    const allTasksDone = taskPercent === 100;
+  const phase1Complete = specInfo.completedPhases.includes(1);
+  const phase2Complete = specInfo.completedPhases.includes(2);
+  const phase3Complete = specInfo.completedPhases.includes(3);
+  const taskPercent = specInfo.taskCompletionPercent || 0;
+  const allTasksDone = taskPercent === 100;
 
-    // Done indicator: checkmark if 100%, percentage if in progress, "4" if not started
-    let doneIndicator = '4';
-    let doneClass = '';
-    if (allTasksDone) {
-        doneIndicator = '✓';
-        doneClass = 'completed';
-    } else if (phase3Complete && taskPercent > 0) {
-        doneIndicator = `${taskPercent}%`;
-        doneClass = 'in-progress';
-    }
+  // Done indicator: checkmark if 100%, percentage if in progress, "4" if not started
+  let doneIndicator = "4";
+  let doneClass = "";
+  if (allTasksDone) {
+    doneIndicator = "✓";
+    doneClass = "completed";
+  } else if (phase3Complete && taskPercent > 0) {
+    doneIndicator = `${taskPercent}%`;
+    doneClass = "in-progress";
+  }
 
-    return `
-        <nav class="phase-stepper">
-            <div class="step ${specInfo.currentPhase === 1 ? 'active' : ''} ${phase1Complete ? 'completed' : ''}" data-phase="spec">
-                <div class="step-indicator">${phase1Complete ? '✓' : '1'}</div>
-                <div class="step-label">Spec</div>
-            </div>
-            <div class="step-connector ${phase1Complete ? 'completed' : ''}"></div>
-            <div class="step ${specInfo.currentPhase === 2 ? 'active' : ''} ${phase2Complete ? 'completed' : ''}" data-phase="plan">
-                <div class="step-indicator">${phase2Complete ? '✓' : '2'}</div>
-                <div class="step-label">Plan</div>
-            </div>
-            <div class="step-connector ${phase2Complete ? 'completed' : ''}"></div>
-            <div class="step ${specInfo.currentPhase === 3 ? 'active' : ''} ${phase3Complete ? 'completed' : ''}" data-phase="tasks">
-                <div class="step-indicator">${phase3Complete ? '✓' : '3'}</div>
-                <div class="step-label">Tasks</div>
-            </div>
-            <div class="step-connector ${phase3Complete ? 'completed' : ''}"></div>
+  // Customize Done step content based on completion
+  let doneStepHtml = "";
+
+  if (allTasksDone) {
+    doneStepHtml = `
+            <div class="step spec-completed-badge" data-phase="done">
+                <span class="badge-icon">🌱</span>
+                <span class="badge-text">SPEC COMPLETED</span>
+            </div>`;
+  } else {
+    doneStepHtml = `
             <div class="step ${doneClass}" data-phase="done">
                 <div class="step-indicator">${doneIndicator}</div>
                 <div class="step-label">Done</div>
+            </div>`;
+  }
+
+  return `
+        <nav class="phase-stepper">
+            <div class="step ${specInfo.currentPhase === 1 ? "active" : ""} ${phase1Complete ? "completed" : ""}" data-phase="spec">
+                <div class="step-indicator">${phase1Complete ? "✓" : "1"}</div>
+                <div class="step-label">Spec</div>
             </div>
+            <div class="step-connector ${phase1Complete ? "completed" : ""}"></div>
+            <div class="step ${specInfo.currentPhase === 2 ? "active" : ""} ${phase2Complete ? "completed" : ""}" data-phase="plan">
+                <div class="step-indicator">${phase2Complete ? "✓" : "2"}</div>
+                <div class="step-label">Plan</div>
+            </div>
+            <div class="step-connector ${phase2Complete ? "completed" : ""}"></div>
+            <div class="step ${specInfo.currentPhase === 3 ? "active" : ""} ${phase3Complete ? "completed" : ""}" data-phase="tasks">
+                <div class="step-indicator">${phase3Complete ? "✓" : "3"}</div>
+                <div class="step-label">Tasks</div>
+            </div>
+            <div class="step-connector ${phase3Complete ? "completed" : ""}"></div>
+            ${doneStepHtml}
         </nav>`;
 }
 
@@ -129,13 +143,17 @@ function generatePhaseStepper(specInfo: SpecInfo): string {
  * Generate document tabs for related docs
  */
 function generateDocTabs(specInfo: SpecInfo): string {
-    return `
+  return `
         <div class="doc-tabs">
-            ${specInfo.allDocs.map(doc => `
-                <button class="doc-tab ${doc.fileName === specInfo.currentFileName ? 'active' : ''}" data-file="${doc.fileName}">
+            ${specInfo.allDocs
+              .map(
+                doc => `
+                <button class="doc-tab ${doc.fileName === specInfo.currentFileName ? "active" : ""}" data-file="${doc.fileName}">
                     ${doc.name}
                 </button>
-            `).join('')}
+            `,
+              )
+              .join("")}
         </div>`;
 }
 
@@ -143,20 +161,24 @@ function generateDocTabs(specInfo: SpecInfo): string {
  * Generate the footer with action buttons
  */
 function generateFooter(specInfo: SpecInfo): string {
-    return `
+  return `
         <footer class="actions">
             <div class="actions-left">
-                ${specInfo.enhancementButton ? `
-                    <button id="enhance" class="enhancement" data-command="${specInfo.enhancementButton.command}" title="${specInfo.enhancementButton.tooltip || ''}">
+                ${
+                  specInfo.enhancementButton
+                    ? `
+                    <button id="enhance" class="enhancement" data-command="${specInfo.enhancementButton.command}" title="${specInfo.enhancementButton.tooltip || ""}">
                         <span class="icon">${specInfo.enhancementButton.icon}</span>
                         ${specInfo.enhancementButton.label}
                     </button>
-                ` : ''}
+                `
+                    : ""
+                }
             </div>
             <div class="actions-right">
                 <button id="editSource" class="secondary">Edit Source</button>
                 <button id="regenerate" class="secondary">Regenerate</button>
-                <button id="approve" class="primary">${specInfo.nextPhaseExists ? '→ Go to Next Phase' : '✓ Approve & Next Phase'}</button>
+                <button id="approve" class="primary">${specInfo.nextPhaseExists ? "→ Go to Next Phase" : "✓ Approve & Next Phase"}</button>
             </div>
         </footer>`;
 }
@@ -165,10 +187,11 @@ function generateFooter(specInfo: SpecInfo): string {
  * Generate a random nonce for CSP
  */
 export function generateNonce(): string {
-    let text = '';
-    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for (let i = 0; i < 32; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
+  let text = "";
+  const possible =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  for (let i = 0; i < 32; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
 }

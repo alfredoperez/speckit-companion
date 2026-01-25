@@ -1,0 +1,97 @@
+/**
+ * SpecKit Companion - Callout Styles
+ * Callout blocks for notes, warnings, etc.
+ */
+
+/* ============================================
+   Callout Blocks
+   ============================================ */
+
+.callout {
+    padding: 8px 14px;
+    margin: 0 0 16px 0;
+    border-radius: 0;
+    border-left: 4px solid;
+    background: transparent;
+}
+
+.callout-icon {
+    display: none;
+}
+
+.callout-content {
+    line-height: var(--leading-relaxed);
+    color: var(--text-primary);
+}
+
+.callout-label {
+    display: block;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+/* Purpose callout - Blue/Info */
+.callout-purpose {
+    border-left-color: var(--accent);
+}
+
+.callout-purpose .callout-label {
+    color: var(--accent);
+}
+
+/* Note callout - Blue/Info */
+.callout-note {
+    border-left-color: var(--accent);
+}
+
+.callout-note .callout-label {
+    color: var(--accent);
+}
+
+/* Tip callout - Green */
+.callout-tip {
+    border-left-color: var(--success);
+}
+
+.callout-tip .callout-label {
+    color: var(--success);
+}
+
+/* Checkpoint callout - Green/Success */
+.callout-checkpoint {
+    border-left-color: var(--success);
+}
+
+.callout-checkpoint .callout-label {
+    color: var(--success);
+}
+
+/* Warning callout - Yellow/Orange */
+.callout-warning {
+    border-left-color: var(--warning);
+}
+
+.callout-warning .callout-label {
+    color: var(--warning);
+}
+
+/* Important callout - Orange */
+.callout-important {
+    border-left-color: var(--warning);
+}
+
+.callout-important .callout-label {
+    color: var(--warning);
+}
+
+/* Critical callout - Red/Error */
+.callout-critical {
+    border-left-color: var(--error);
+}
+
+.callout-critical .callout-label {
+    color: var(--error);
+}

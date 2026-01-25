@@ -5,7 +5,7 @@
  * These types define the data structures used to represent and
  * manipulate SpecKit configuration files.
  *
- * @feature 001-speckit-views-enhancement
+ * @feature 005-speckit-views-enhancement
  */
 
 /**

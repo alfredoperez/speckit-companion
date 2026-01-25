@@ -1,0 +1,27 @@
+/**
+ * SpecKit Companion - Spec Viewer Styles
+ * v0.3.0 - Enhanced with Rich Color System from Workflow Editor
+ *
+ * This file imports the modular CSS from spec-viewer/ directory.
+ * For maintainability, styles are split into partials by component.
+ *
+ * Structure:
+ *   spec-viewer/
+ *   ├── _variables.css    - Theme variables and design tokens
+ *   ├── _base.css         - Reset, body, layout
+ *   ├── _navigation.css   - Step tabs, related bar
+ *   ├── _content.css      - Markdown rendering base
+ *   ├── _typography.css   - Headings, paragraphs
+ *   ├── _code.css         - Code blocks, syntax highlighting
+ *   ├── _tables.css       - Tables, scenario tables
+ *   ├── _callouts.css     - Callout blocks
+ *   ├── _tasks.css        - Task lists, progress bars
+ *   ├── _line-actions.css - Line hover, "+" button
+ *   ├── _editor.css       - Inline editor
+ *   ├── _refinements.css  - Comment cards
+ *   ├── _modal.css        - Refine modal
+ *   ├── _footer.css       - Footer actions
+ *   └── _animations.css   - Keyframes
+ */
+
+@import 'spec-viewer/index.css';

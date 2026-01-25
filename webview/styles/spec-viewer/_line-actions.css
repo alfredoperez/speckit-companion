@@ -1,0 +1,188 @@
+/**
+ * SpecKit Companion - Line Action Styles
+ * Line hover effects and "+" button
+ */
+
+/* ============================================
+   Line Styles with GitHub-style Review
+   ============================================ */
+
+.line {
+    position: relative;
+    padding: 3px 8px 3px 0;  /* Reduced right padding */
+    margin-left: 32px;  /* Left margin for gutter button */
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    min-height: 24px;
+}
+
+.line.empty {
+    padding: 2px 8px;
+    min-height: 8px;
+    pointer-events: none;
+}
+
+.line:hover {
+    background: var(--bg-hover);
+}
+
+.line.empty:hover {
+    background: transparent;
+}
+
+/* Line with active editor */
+.line.editing {
+    background: var(--bg-hover);
+}
+
+/* Line with refinement comment - no border, comment card below is sufficient indicator */
+.line.has-refinement {
+    /* Border removed - rely on the inline comment card for indication */
+}
+
+.line-content {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.line-content strong {
+    color: var(--header-title);
+    font-weight: 600;
+}
+
+/* Line content that wraps p tags - high specificity to override #markdown-content p */
+#markdown-content .line .line-content p,
+#markdown-content .line-content p,
+.line-content p {
+    margin: 0;
+}
+
+/* Override any paragraph margin inside line wrappers */
+.line p {
+    margin: 0;
+}
+
+/* ============================================
+   Plus Button (GitHub-style gutter)
+   ============================================ */
+
+.line-add-btn {
+    position: absolute;
+    left: -28px;  /* Position in left gutter */
+    top: 4px;  /* Align to top */
+    width: 22px;
+    height: 22px;
+    border-radius: var(--radius-sm);
+    border: 1px solid #22c55e;
+    background: #22c55e;
+    color: white;
+    opacity: 0;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+}
+
+.line-add-btn svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.line:hover .line-add-btn {
+    opacity: 1;
+}
+
+/* Hide button when editor is open */
+.line.editing .line-add-btn {
+    display: none;
+}
+
+.line-add-btn:hover {
+    background: #16a34a;
+    border-color: #16a34a;
+    transform: scale(1.1);
+}
+
+.line-add-btn:active {
+    transform: scale(0.95);
+}
+
+/* Hide + button on empty lines */
+.line.empty .line-add-btn {
+    display: none;
+}
+
+/* ============================================
+   List Items with Line Actions
+   ============================================ */
+
+li.line {
+    position: relative;
+    padding-right: 8px;
+    margin: 0;
+    list-style-position: outside;
+}
+
+li.line:hover {
+    background: var(--bg-hover);
+    border-radius: var(--radius-sm);
+}
+
+li.line .line-content {
+    display: inline;
+}
+
+li.line .line-add-btn {
+    left: -28px;
+    top: 4px;
+}
+
+li.line .line-comment-slot {
+    margin-top: var(--space-2);
+}
+
+/* Comment slot container */
+.line-comment-slot {
+    margin-top: 0;
+}
+
+/* ============================================
+   Legacy Line Actions (kept for compatibility)
+   ============================================ */
+
+.line-actions {
+    display: none;  /* Hidden - replaced by + button */
+}
+
+/* Inline edit input (legacy) */
+.inline-edit-input {
+    width: 100%;
+    padding: 6px 10px;
+    background: var(--bg-primary);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: inherit;
+    font-family: inherit;
+    line-height: inherit;
+    outline: none;
+    box-shadow: 0 0 0 2px var(--accent-subtle);
+}
+
+.inline-edit-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-subtle), var(--accent-glow);
+}
+
+/* ============================================
+   State-based hiding (completed specs)
+   ============================================ */
+
+/* Hide add buttons when spec is completed */
+body[data-spec-status="spec-completed"] .line-add-btn,
+body[data-spec-status="spec-completed"] .row-add-btn {
+    display: none !important;
+}

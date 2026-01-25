@@ -29,7 +29,7 @@ npm run package
 
 ### Project Structure
 
-```plain
+```
 src/                      # Main extension source (Node.js)
 ├── extension.ts          # Extension entry point, command registration
 ├── core/                 # Core utilities and types
@@ -38,129 +38,66 @@ src/                      # Main extension source (Node.js)
 ├── speckit/              # SpecKit CLI integration
 └── utils/                # Utility functions
 
-webview/                  # Workflow editor webview
-├── src/                  # TypeScript source (browser)
+webview/                  # Webview UI code (browser context)
+├── src/                  # TypeScript source
+│   ├── spec-viewer/      # Spec viewer webview
+│   ├── spec-editor/      # Spec editor webview
+│   └── workflow.ts       # Workflow editor
 └── styles/               # CSS stylesheets
+    ├── spec-viewer/      # Modular CSS partials
+    ├── spec-editor.css
+    └── workflow.css
 
-assets/                   # Static assets
-├── icons/                # Extension icons (SVG)
-└── media/                # Media files (images, HTML)
-
-docs/                     # Documentation assets
-└── screenshots/          # README screenshots
+assets/                   # Static assets (icons, media)
 ```
-
-### Core Components
-
-1. **Extension Entry** (`src/extension.ts`): Registers all commands and initializes providers
-2. **Feature Managers** (`src/features/`): Business logic for specs and steering documents
-3. **Providers** (`src/providers/`): VSCode TreeDataProviders for UI views
-4. **Prompts** (`src/prompts/`): AI prompt templates for spec generation
 
 ### Key Patterns
 
-- **Manager Pattern**: Each feature has a Manager class that handles file operations and business logic
-- **Provider Pattern**: Each tree view has a Provider class extending `vscode.TreeDataProvider`
-- **Command Registration**: All commands are registered in `activate()` with pattern `kfc.{feature}.{action}`
+- **Manager Pattern**: Each feature has a Manager class handling file operations and business logic
+- **Provider Pattern**: Tree views use Provider classes extending `vscode.TreeDataProvider`
+- **Webview Pattern**: Complex UIs use WebviewPanel with message passing between extension and webview
+- **Command Registration**: Commands registered in `activate()` with pattern `speckit.{feature}.{action}`
 
-### Data Structure
+### Modular Webview Structure
 
-User data is stored in workspace `.claude/` directory:
+The spec-viewer uses a modular architecture:
 
-```plain
+**Extension side** (`src/features/spec-viewer/`):
+- `specViewerProvider.ts` - Main WebviewPanel provider
+- `messageHandlers.ts` - Webview message routing
+- `html/` - HTML generation modules
+
+**Webview side** (`webview/src/spec-viewer/`):
+- `markdown/` - Rendering pipeline (renderer, preprocessors, scenarios)
+- `editor/` - Inline editing (inlineEditor, refinements, lineActions)
+
+**CSS** (`webview/styles/spec-viewer/`):
+- Modular partials imported via `index.css`
+
+### Data Storage
+
+User data stored in workspace `.claude/` directory:
+
+```
 .claude/
 ├── specs/{spec-name}/
-│   ├── requirements.md
-│   ├── design.md
+│   ├── spec.md
+│   ├── plan.md
 │   └── tasks.md
-├── steering/*.md
-└── settings/kfc-settings.json
+└── steering/*.md
 ```
 
-## Spec Workflow Implementation
+## Important Notes
 
-The spec workflow follows these states:
-
-1. Requirements → Review → Design
-2. Design → Review → Tasks
-3. Tasks → Review → Complete
-
-Each transition requires explicit user approval. The workflow is implemented in `specPrompts.ts` and enforced by the spec agent system prompt.
-
-## Claude Code Integration
-
-The extension integrates with Claude CLI through the `ClaudeCodeProvider`:
-
-- Sends commands via VS Code terminal
-- Uses temporary files for long prompts
-- Supports system prompts for context injection
-- Terminal commands are built with format: `claude [options] < promptFile`
-
-## Testing & Debugging
-
-Currently, the claudeCodeProvider has a test echo command at line 62:
-
-```typescript
-let command = `echo "HELLO WORLD"`;
-```
-
-This should be replaced with actual Claude CLI integration when testing is complete.
-
-## Important Implementation Notes
-
-1. **File Operations**: Always use `vscode.Uri` and workspace-relative paths
-2. **Tree Updates**: Call `refresh()` on providers after any data changes
-3. **Error Handling**: All file operations should have try-catch blocks
-4. **User Prompts**: Use `vscode.window.showInputBox()` for user input
+1. **File Operations**: Use `vscode.Uri` and workspace-relative paths
+2. **Tree Updates**: Call `refresh()` on providers after data changes
+3. **Webview Communication**: Use `postMessage()` for extension ↔ webview messaging
+4. **CSS Variables**: Webviews use VS Code theme variables (e.g., `--vscode-editor-background`)
 5. **Context Menus**: Defined in `package.json` under `contributes.menus`
 
-## Extension Points
+## Tech Stack
 
-- **New Managers**: Add to `src/features/` following existing patterns
-- **New Providers**: Add to `src/providers/` extending `TreeDataProvider`
-- **New Commands**: Register in `extension.ts` and add to `package.json`
-- **New Prompts**: Add to `src/prompts/` for AI-assisted features
-
-## Recent Changes
-- 001-plan-step-highlight: Added TypeScript 5.3+ (ES2022 target, strict mode enabled) + VS Code Extension API (`@types/vscode ^1.84.0`), Webpack 5
-- 001-spec-editor-webview: Implemented Spec Editor Webview feature
-  - **Core Feature**: Rich webview-based spec editor with multi-line text input, image attachments, and AI CLI submission
-  - **Files Created**:
-    - `src/features/spec-editor/` - Feature module (types, provider, commands, managers)
-    - `webview/src/spec-editor/` - Browser-side webview code
-    - `webview/styles/spec-editor.css` - Themed styles
-  - **Key Components**:
-    - `SpecEditorProvider`: WebviewPanel-based editor with submit/preview/cancel
-    - `TempFileManager`: Manifest-based temp file management with cleanup
-    - `SpecDraftManager`: Draft persistence via workspaceState
-  - **User Stories Implemented**:
-    - US1: Multi-line text editor with keyboard shortcuts (Ctrl+Enter, Esc)
-    - US2: Image attachments via file picker or drag-drop (2MB/10MB limits)
-    - US3: Automatic temp file management with cleanup
-    - US4: Load previous spec as template
-  - **Integration**: Command `speckit.openSpecEditor` with keybinding Ctrl+Shift+N
-  - Added TypeScript 5.3+ (ES2022 target, strict mode enabled) + VS Code Extension API (`@types/vscode ^1.84.0`), Webpack 5
-- 001-speckit-views-enhancement: Implemented SpecKit views enhancement feature
-  - **US1**: Fixed contextual initialization message - now only shows when a valid workspace is open
-    - Added workspace check before showing init suggestion in `src/extension.ts:50-55`
-  - **US2**: Added SpecKit Files section to steering view
-    - New types in `src/features/steering/types.ts`: SpecKitFileType, SpecKitFile, SpecKitFilesResult
-    - Scans `.specify/` directory for constitution, scripts, and templates
-    - Files are clickable and open in the editor
-    - Modified: `src/features/steering/steeringExplorerProvider.ts`
-  - **US3**: Organized SpecKit files into collapsible categories
-    - Constitution, Scripts, Templates categories with appropriate icons
-    - File watcher for `.specify/` directory with debounced refresh (1s)
-    - Modified: `src/core/fileWatchers.ts`
-  - All hardcoded colors replaced with CSS custom properties mapped to VS Code theme variables
-  - Theme-specific fallbacks for light, dark, and high-contrast modes
-  - Typography uses VS Code font settings (--vscode-font-family, --vscode-editor-font-family)
-  - Compact layout with reduced header margins (~30% vertical space reduction)
-  - Empty lines have no hover effects (pointer-events: none)
-  - Files modified: `webview/styles/workflow.css`
-  - CSS `field-sizing: content` with hidden span fallback for older browsers
-  - Original value displayed above input with visual distinction (italic, muted, accent border)
-  - Files modified: `webview/styles/workflow.css`, `webview/src/ui/refinePopover.ts`
-
-## Active Technologies
-- N/A (no persistent storage required for this feature) (001-plan-step-highlight)
+- TypeScript 5.3+ (ES2022 target, strict mode)
+- VS Code Extension API (`@types/vscode ^1.84.0`)
+- Webpack 5 for bundling
+- highlight.js (CDN) for syntax highlighting in webviews

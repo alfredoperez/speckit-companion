@@ -8,62 +8,95 @@
    ============================================ */
 
 :root {
-    /* Core backgrounds - mapped to VS Code theme variables */
-    --bg-primary: var(--vscode-editor-background, #1e1e1e);
-    --bg-secondary: var(--vscode-sideBar-background, #252526);
-    --bg-elevated: var(--vscode-editorWidget-background, #252526);
-    --bg-hover: var(--vscode-list-hoverBackground, #2a2d2e);
+  /* Core backgrounds - mapped to VS Code theme variables */
+  --bg-primary: var(--vscode-editor-background, #1e1e1e);
+  --bg-secondary: var(--vscode-sideBar-background, #252526);
+  --bg-elevated: var(--vscode-editorWidget-background, #252526);
+  --bg-hover: var(--vscode-list-hoverBackground, #2a2d2e);
 
-    /* Text colors - mapped to VS Code theme variables */
-    --text-primary: var(--vscode-editor-foreground, #d4d4d4);
-    --text-secondary: var(--vscode-descriptionForeground, #858585);
-    --text-muted: var(--vscode-disabledForeground, #6c6c6c);
+  /* Text colors - mapped to VS Code theme variables */
+  --text-primary: var(--vscode-editor-foreground, #d4d4d4);
+  --text-secondary: var(--vscode-descriptionForeground, #858585);
+  --text-muted: var(--vscode-disabledForeground, #6c6c6c);
 
-    /* Accent colors - mapped to VS Code theme variables */
-    --accent: var(--vscode-focusBorder, #007fd4);
-    --accent-hover: var(--vscode-button-hoverBackground, #0062a3);
-    --accent-subtle: color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 10%, transparent);
-    --accent-glow: 0 0 20px color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 30%, transparent);
+  /* Accent colors - mapped to VS Code theme variables */
+  --accent: var(--vscode-focusBorder, #007fd4);
+  --accent-hover: var(--vscode-button-hoverBackground, #0062a3);
+  --accent-subtle: color-mix(
+    in srgb,
+    var(--vscode-focusBorder, #007fd4) 10%,
+    transparent
+  );
+  --accent-glow: 0 0 20px
+    color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 30%, transparent);
 
-    /* Status colors - mapped to VS Code theme variables */
-    --success: var(--vscode-testing-iconPassed, #388a34);
-    --success-subtle: color-mix(in srgb, var(--vscode-testing-iconPassed, #388a34) 10%, transparent);
-    --warning: var(--vscode-editorWarning-foreground, #cca700);
-    --warning-subtle: color-mix(in srgb, var(--vscode-editorWarning-foreground, #cca700) 10%, transparent);
-    --error: var(--vscode-editorError-foreground, #f14c4c);
-    --error-subtle: color-mix(in srgb, var(--vscode-editorError-foreground, #f14c4c) 10%, transparent);
+  /* Status colors - mapped to VS Code theme variables */
+  --success: var(--vscode-testing-iconPassed, #388a34);
+  --success-subtle: color-mix(
+    in srgb,
+    var(--vscode-testing-iconPassed, #388a34) 10%,
+    transparent
+  );
+  --warning: var(--vscode-editorWarning-foreground, #cca700);
+  --warning-subtle: color-mix(
+    in srgb,
+    var(--vscode-editorWarning-foreground, #cca700) 10%,
+    transparent
+  );
+  --error: var(--vscode-editorError-foreground, #f14c4c);
+  --error-subtle: color-mix(
+    in srgb,
+    var(--vscode-editorError-foreground, #f14c4c) 10%,
+    transparent
+  );
 
-    /* Borders - mapped to VS Code theme variables */
-    --border: var(--vscode-panel-border, #3c3c3c);
-    --border-hover: var(--vscode-contrastBorder, #6c6c6c);
-    --border-accent: color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 50%, transparent);
+  /* Borders - mapped to VS Code theme variables */
+  --border: var(--vscode-panel-border, #3c3c3c);
+  --border-hover: var(--vscode-contrastBorder, #6c6c6c);
+  --border-accent: color-mix(
+    in srgb,
+    var(--vscode-focusBorder, #007fd4) 50%,
+    transparent
+  );
 
-    /* Typography - mapped to VS Code theme variables */
-    --font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
-    --font-mono: var(--vscode-editor-font-family, 'Consolas', 'Monaco', monospace);
-    --font-size: var(--vscode-editor-font-size, 13px);
+  /* Typography - mapped to VS Code theme variables */
+  --font-family: var(
+    --vscode-font-family,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif
+  );
+  --font-mono: var(
+    --vscode-editor-font-family,
+    "Consolas",
+    "Monaco",
+    monospace
+  );
+  --font-size: var(--vscode-editor-font-size, 13px);
 
-    /* Semantic header colors - mapped to VS Code theme variables */
-    --header-title: var(--vscode-textLink-foreground, #3794ff);
-    --header-section: var(--vscode-symbolIcon-classForeground, #ee9d28);
-    --header-subsection: var(--vscode-descriptionForeground, #858585);
+  /* Semantic header colors - mapped to VS Code theme variables */
+  --header-title: var(--vscode-textLink-foreground, #3794ff);
+  --header-section: var(--vscode-symbolIcon-classForeground, #ee9d28);
+  --header-subsection: var(--vscode-descriptionForeground, #858585);
 
-    /* Original value display tokens */
-    --original-value-color: var(--text-muted);
-    --original-value-font-size: 12px;
+  /* Original value display tokens */
+  --original-value-color: var(--text-muted);
+  --original-value-font-size: 12px;
 
-    /* Misc */
-    --radius-sm: 4px;
-    --radius-md: 8px;
-    --radius-lg: 12px;
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  /* Misc */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
 
-    /* Timing */
-    --transition-fast: 150ms;
-    --transition-normal: 200ms;
-    --transition-slow: 300ms;
+  /* Timing */
+  --transition-fast: 150ms;
+  --transition-normal: 200ms;
+  --transition-slow: 300ms;
 }
 
 /* ============================================
@@ -71,55 +104,55 @@
    ============================================ */
 
 body.vscode-light {
-    --bg-primary: var(--vscode-editor-background, #ffffff);
-    --bg-secondary: var(--vscode-sideBar-background, #f3f3f3);
-    --bg-elevated: var(--vscode-editorWidget-background, #f3f3f3);
-    --bg-hover: var(--vscode-list-hoverBackground, #e8e8e8);
-    --text-primary: var(--vscode-editor-foreground, #333333);
-    --text-secondary: var(--vscode-descriptionForeground, #717171);
-    --text-muted: var(--vscode-disabledForeground, #a0a0a0);
-    --border: var(--vscode-panel-border, #e0e0e0);
-    --border-hover: var(--vscode-contrastBorder, #c0c0c0);
+  --bg-primary: var(--vscode-editor-background, #ffffff);
+  --bg-secondary: var(--vscode-sideBar-background, #f3f3f3);
+  --bg-elevated: var(--vscode-editorWidget-background, #f3f3f3);
+  --bg-hover: var(--vscode-list-hoverBackground, #e8e8e8);
+  --text-primary: var(--vscode-editor-foreground, #333333);
+  --text-secondary: var(--vscode-descriptionForeground, #717171);
+  --text-muted: var(--vscode-disabledForeground, #a0a0a0);
+  --border: var(--vscode-panel-border, #e0e0e0);
+  --border-hover: var(--vscode-contrastBorder, #c0c0c0);
 }
 
 body.vscode-dark {
-    --bg-primary: var(--vscode-editor-background, #1e1e1e);
-    --bg-secondary: var(--vscode-sideBar-background, #252526);
-    --bg-elevated: var(--vscode-editorWidget-background, #252526);
-    --bg-hover: var(--vscode-list-hoverBackground, #2a2d2e);
-    --text-primary: var(--vscode-editor-foreground, #d4d4d4);
-    --text-secondary: var(--vscode-descriptionForeground, #858585);
-    --text-muted: var(--vscode-disabledForeground, #6c6c6c);
-    --border: var(--vscode-panel-border, #3c3c3c);
-    --border-hover: var(--vscode-contrastBorder, #6c6c6c);
+  --bg-primary: var(--vscode-editor-background, #1e1e1e);
+  --bg-secondary: var(--vscode-sideBar-background, #252526);
+  --bg-elevated: var(--vscode-editorWidget-background, #252526);
+  --bg-hover: var(--vscode-list-hoverBackground, #2a2d2e);
+  --text-primary: var(--vscode-editor-foreground, #d4d4d4);
+  --text-secondary: var(--vscode-descriptionForeground, #858585);
+  --text-muted: var(--vscode-disabledForeground, #6c6c6c);
+  --border: var(--vscode-panel-border, #3c3c3c);
+  --border-hover: var(--vscode-contrastBorder, #6c6c6c);
 }
 
 body.vscode-high-contrast {
-    --bg-primary: var(--vscode-editor-background, #000000);
-    --bg-secondary: var(--vscode-sideBar-background, #000000);
-    --bg-elevated: var(--vscode-editorWidget-background, #000000);
-    --bg-hover: var(--vscode-list-hoverBackground, #0a0a0a);
-    --text-primary: var(--vscode-editor-foreground, #ffffff);
-    --text-secondary: var(--vscode-descriptionForeground, #ffffff);
-    --text-muted: var(--vscode-disabledForeground, #a0a0a0);
-    --border: var(--vscode-contrastBorder, #ffffff);
-    --border-hover: var(--vscode-contrastBorder, #ffffff);
-    --accent: var(--vscode-focusBorder, #f38518);
+  --bg-primary: var(--vscode-editor-background, #000000);
+  --bg-secondary: var(--vscode-sideBar-background, #000000);
+  --bg-elevated: var(--vscode-editorWidget-background, #000000);
+  --bg-hover: var(--vscode-list-hoverBackground, #0a0a0a);
+  --text-primary: var(--vscode-editor-foreground, #ffffff);
+  --text-secondary: var(--vscode-descriptionForeground, #ffffff);
+  --text-muted: var(--vscode-disabledForeground, #a0a0a0);
+  --border: var(--vscode-contrastBorder, #ffffff);
+  --border-hover: var(--vscode-contrastBorder, #ffffff);
+  --accent: var(--vscode-focusBorder, #f38518);
 }
 
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 body {
-    margin: 0;
-    padding: 0;
-    font-family: var(--font-family);
-    font-size: var(--font-size);
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* ============================================
@@ -127,10 +160,10 @@ body {
    ============================================ */
 
 .workflow-editor {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* ============================================
@@ -138,118 +171,167 @@ body {
    ============================================ */
 
 .phase-stepper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px 24px 20px;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-    gap: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 24px 24px 20px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 0;
+  padding-left: 20px;
 }
 
 .step {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    cursor: pointer;
-    padding: 0 8px;
-    transition: opacity var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  padding: 0 8px;
+  transition: opacity var(--transition-normal);
 }
 
 .step:hover {
-    opacity: 0.8;
+  opacity: 0.8;
 }
 
 .step-indicator {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 2px solid var(--border);
-    background: var(--bg-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 16px;
-    color: var(--text-muted);
-    transition: all var(--transition-normal) ease;
-    margin-bottom: 8px;
-    flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text-muted);
+  transition: all var(--transition-normal) ease;
+  margin-bottom: 8px;
+  flex-shrink: 0;
 }
 
 .step.active .step-indicator {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: white;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.4), 0 0 20px var(--accent), 0 0 40px rgba(59, 130, 246, 0.3);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  box-shadow:
+    0 0 0 4px rgba(59, 130, 246, 0.4),
+    0 0 20px var(--accent),
+    0 0 40px rgba(59, 130, 246, 0.3);
 }
 
 .step.completed .step-indicator {
-    background: var(--success);
-    border-color: var(--success);
-    color: white;
+  background: var(--success);
+  border-color: var(--success);
+  color: white;
 }
 
 /* When viewing a completed phase - show both states */
 .step.active.completed .step-indicator {
-    background: var(--success);
-    border-color: var(--success);
-    color: white;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.4), 0 0 20px var(--accent), 0 0 40px rgba(59, 130, 246, 0.3);
+  background: var(--success);
+  border-color: var(--success);
+  color: white;
+  box-shadow:
+    0 0 0 4px rgba(59, 130, 246, 0.4),
+    0 0 20px var(--accent),
+    0 0 40px rgba(59, 130, 246, 0.3);
 }
 
 .step.active.completed .step-label {
-    color: var(--accent);
-    font-weight: 700;
+  color: var(--accent);
+  font-weight: 700;
 }
 
 .step-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-muted);
-    transition: color var(--transition-normal);
-    white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: color var(--transition-normal);
+  white-space: nowrap;
 }
 
 .step.active .step-label {
-    color: var(--accent);
-    font-weight: 700;
+  color: var(--accent);
+  font-weight: 700;
 }
 
 .step.completed .step-label {
-    color: var(--success);
+  color: var(--success);
 }
 
 /* In-progress state (partial completion) */
 .step.in-progress .step-indicator {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: white;
-    font-size: 11px;
-    font-weight: 700;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .step.in-progress .step-label {
-    color: var(--accent);
+  color: var(--accent);
 }
 
 .step-connector.in-progress {
-    background: linear-gradient(90deg, var(--success) 0%, var(--accent) 100%);
+  background: linear-gradient(90deg, var(--success) 0%, var(--accent) 100%);
 }
 
 .step-connector {
-    width: 60px;
-    height: 2px;
-    background: var(--border);
-    margin: 0 4px;
-    margin-bottom: 28px;
-    transition: background var(--transition-normal);
-    flex-shrink: 0;
+  width: 60px;
+  height: 2px;
+  background: var(--border);
+  margin: 0 4px;
+  margin-bottom: 28px;
+  transition: background var(--transition-normal);
+  flex-shrink: 0;
 }
 
 .step-connector.completed {
-    background: var(--success);
+  background: var(--success);
+}
+
+/* Auto-push the Done step to the right */
+.step[data-phase="done"] {
+  margin-left: auto;
+}
+
+/* Spec Completed Badge */
+.step.spec-completed-badge {
+  flex-direction: row;
+  align-items: center;
+  background: rgba(46, 160, 67, 0.15); /* VS Code success subtle-ish */
+  border: 1px solid var(--success);
+  border-radius: var(--radius-md);
+  padding: 6px 16px;
+  gap: 8px;
+  height: 36px; /* Match approximately */
+  opacity: 1;
+}
+
+.step.spec-completed-badge .badge-icon {
+  font-size: 14px;
+  /* Use a nice green or accent color */
+  color: var(--success);
+}
+
+.step.spec-completed-badge .badge-text {
+  font-weight: 700;
+  color: var(--success);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.step.spec-completed-badge:hover {
+  opacity: 1;
+  background: rgba(46, 160, 67, 0.25);
+}
+
+.step.spec-completed-badge .step-indicator,
+.step.spec-completed-badge .step-label {
+  display: none;
 }
 
 /* ============================================
@@ -257,36 +339,36 @@ body {
    ============================================ */
 
 .doc-tabs {
-    display: flex;
-    gap: 2px;
-    padding: 0 24px;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border);
-    overflow-x: auto;
-    flex-shrink: 0;
+  display: flex;
+  gap: 2px;
+  padding: 0 24px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  flex-shrink: 0;
 }
 
 .doc-tab {
-    padding: 10px 16px;
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    color: var(--text-muted);
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    white-space: nowrap;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
 }
 
 .doc-tab:hover {
-    color: var(--text-secondary);
-    background: var(--bg-hover);
+  color: var(--text-secondary);
+  background: var(--bg-hover);
 }
 
 .doc-tab.active {
-    color: var(--accent);
-    border-bottom-color: var(--accent);
+  color: var(--accent);
+  border-bottom-color: var(--accent);
 }
 
 /* ============================================
@@ -294,12 +376,12 @@ body {
    ============================================ */
 
 .content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 24px;
-    scroll-behavior: smooth;
-    max-width: 800px;
-    margin: 0 auto;
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  scroll-behavior: smooth;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 /* ============================================
@@ -307,79 +389,79 @@ body {
    ============================================ */
 
 .doc-title {
-    color: var(--header-title);
-    font-size: 24px;
-    font-weight: 600;
-    margin: 0 0 16px 0;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
+  color: var(--header-title);
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
 }
 
 .section-header {
-    color: var(--header-section);
-    font-size: 18px;
-    font-weight: 600;
-    margin: 20px 0 10px 0;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--header-section);
+  color: var(--header-section);
+  font-size: 18px;
+  font-weight: 600;
+  margin: 20px 0 10px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--header-section);
 }
 
 .section-header.phase-completed {
-    color: var(--success);
-    border-bottom-color: var(--success);
+  color: var(--success);
+  border-bottom-color: var(--success);
 }
 
 .section-header .phase-complete {
-    font-size: 20px;
-    margin-left: 8px;
+  font-size: 20px;
+  margin-left: 8px;
 }
 
 .section-header .phase-progress {
-    font-size: 14px;
-    font-weight: 400;
-    color: var(--text-muted);
-    margin-left: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-left: 8px;
 }
 
 /* Section type colors */
 .section-header[data-type="user-story"] {
-    color: var(--accent);
-    border-bottom-color: var(--accent);
+  color: var(--accent);
+  border-bottom-color: var(--accent);
 }
 
 .section-header[data-type="acceptance"] {
-    color: var(--success);
-    border-bottom-color: var(--success);
+  color: var(--success);
+  border-bottom-color: var(--success);
 }
 
 .section-header[data-type="constraint"] {
-    color: var(--warning);
-    border-bottom-color: var(--warning);
+  color: var(--warning);
+  border-bottom-color: var(--warning);
 }
 
 .section-header[data-type="requirement"] {
-    color: var(--header-section);
-    border-bottom-color: var(--header-section);
+  color: var(--header-section);
+  border-bottom-color: var(--header-section);
 }
 
 /* Subsection headers */
 .subsection-header {
-    margin: 16px 0 8px 0;
+  margin: 16px 0 8px 0;
 }
 
 .subsection-header h3 {
-    color: var(--header-subsection);
-    font-size: 15px;
-    font-weight: 600;
-    margin: 0;
+  color: var(--header-subsection);
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
 }
 
 /* H4 headers */
 .h4-header h4 {
-    color: var(--header-subsection);
-    font-size: 14px;
-    font-weight: 600;
-    margin: 0;
+  color: var(--header-subsection);
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
 }
 
 /* ============================================
@@ -387,50 +469,50 @@ body {
    ============================================ */
 
 .line {
-    position: relative;
-    padding: 3px 12px;
-    border-radius: var(--radius-sm);
-    transition: background var(--transition-fast);
-    min-height: 24px;
+  position: relative;
+  padding: 3px 12px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+  min-height: 24px;
 }
 
 .line.empty {
-    padding: 2px 8px;
-    min-height: 8px;
-    pointer-events: none;
+  padding: 2px 8px;
+  min-height: 8px;
+  pointer-events: none;
 }
 
 .line:hover {
-    background: var(--bg-hover);
+  background: var(--bg-hover);
 }
 
 .line.empty:hover {
-    background: transparent;
+  background: transparent;
 }
 
 /* Line content */
 .line-content {
-    color: var(--text-secondary);
-    line-height: 1.6;
+  color: var(--text-secondary);
+  line-height: 1.6;
 }
 
 .line-content strong {
-    color: var(--header-title);
-    font-weight: 600;
+  color: var(--header-title);
+  font-weight: 600;
 }
 
 .line-content em {
-    font-style: italic;
+  font-style: italic;
 }
 
 .line-content code {
-    background: var(--bg-elevated);
-    padding: 2px 6px;
-    border-radius: var(--radius-sm);
-    font-family: var(--font-mono);
-    font-size: 0.9em;
-    color: var(--accent-hover);
-    border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--accent-hover);
+  border: 1px solid var(--border);
 }
 
 /* ============================================
@@ -438,60 +520,60 @@ body {
    ============================================ */
 
 .line-actions {
-    position: absolute;
-    left: -4px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    gap: 2px;
-    opacity: 0;
-    transition: opacity var(--transition-fast);
-    background: var(--bg-primary);
-    padding: 2px 4px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--accent);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    z-index: 10;
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  background: var(--bg-primary);
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 10;
 }
 
 .line:hover .line-actions {
-    opacity: 1;
+  opacity: 1;
 }
 
 .line-action {
-    padding: 2px 6px;
-    border: none;
-    background: var(--accent-subtle);
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--accent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--radius-sm);
-    transition: all var(--transition-fast);
-    white-space: nowrap;
+  padding: 2px 6px;
+  border: none;
+  background: var(--accent-subtle);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  white-space: nowrap;
 }
 
 .line-action:hover {
-    color: white;
-    background: var(--accent);
+  color: white;
+  background: var(--accent);
 }
 
 .line-action.edit,
 .line-action.remove {
-    background: transparent;
-    font-size: 14px;
-    padding: 2px 4px;
+  background: transparent;
+  font-size: 14px;
+  padding: 2px 4px;
 }
 
 .line-action.edit:hover {
-    background: var(--accent-subtle);
+  background: var(--accent-subtle);
 }
 
 .line-action.remove:hover {
-    background: var(--error-subtle);
+  background: var(--error-subtle);
 }
 
 /* ============================================
@@ -500,66 +582,66 @@ body {
 
 /* Bullet lines */
 .bullet-line {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .bullet-marker {
-    color: var(--accent);
-    font-size: 16px;
-    line-height: 1.6;
-    flex-shrink: 0;
+  color: var(--accent);
+  font-size: 16px;
+  line-height: 1.6;
+  flex-shrink: 0;
 }
 
 /* Numbered lines */
 .numbered-line {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .number-marker {
-    color: var(--accent);
-    font-weight: 600;
-    min-width: 24px;
-    flex-shrink: 0;
-    line-height: 1.6;
+  color: var(--accent);
+  font-weight: 600;
+  min-width: 24px;
+  flex-shrink: 0;
+  line-height: 1.6;
 }
 
 /* Checkbox lines */
 .checkbox-line {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .checkbox-marker {
-    font-size: 20px;
-    line-height: 1.4;
-    flex-shrink: 0;
+  font-size: 20px;
+  line-height: 1.4;
+  flex-shrink: 0;
 }
 
 .checkbox-line.checked .line-content {
-    color: var(--text-muted);
-    text-decoration: line-through;
+  color: var(--text-muted);
+  text-decoration: line-through;
 }
 
 /* User story lines */
 .user-story-line .line-content {
-    color: var(--text-primary);
+  color: var(--text-primary);
 }
 
 /* Content lines */
 .content-line .line-content {
-    color: var(--text-secondary);
+  color: var(--text-secondary);
 }
 
 /* Removing animation */
 .line.removing {
-    opacity: 0;
-    transform: translateX(-20px);
-    transition: all var(--transition-normal) ease;
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: all var(--transition-normal) ease;
 }
 
 /* ============================================
@@ -567,38 +649,38 @@ body {
    ============================================ */
 
 .code-block {
-    margin: 12px 0;
-    border-radius: var(--radius-md);
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    overflow: hidden;
+  margin: 12px 0;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  overflow: hidden;
 }
 
 .code-lang {
-    padding: 4px 12px;
-    background: var(--bg-elevated);
-    border-bottom: 1px solid var(--border);
-    font-size: 11px;
-    color: var(--text-muted);
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+  padding: 4px 12px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .code-block pre {
-    margin: 0;
-    padding: 12px 16px;
-    overflow-x: auto;
+  margin: 0;
+  padding: 12px 16px;
+  overflow-x: auto;
 }
 
 .code-block code {
-    font-family: var(--font-mono);
-    font-size: var(--font-size);
-    color: var(--text-secondary);
-    line-height: 1.5;
-    background: none;
-    border: none;
-    padding: 0;
+  font-family: var(--font-mono);
+  font-size: var(--font-size);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  background: none;
+  border: none;
+  padding: 0;
 }
 
 /* ============================================
@@ -606,41 +688,41 @@ body {
    ============================================ */
 
 .md-table {
-    width: 100%;
-    margin: 12px 0;
-    border-collapse: collapse;
-    font-size: 14px;
+  width: 100%;
+  margin: 12px 0;
+  border-collapse: collapse;
+  font-size: 14px;
 }
 
 .md-table th,
 .md-table td {
-    padding: 10px 14px;
-    text-align: left;
-    border: 1px solid var(--border);
+  padding: 10px 14px;
+  text-align: left;
+  border: 1px solid var(--border);
 }
 
 .md-table th {
-    background: var(--bg-secondary);
-    font-weight: 600;
-    color: var(--text-primary);
+  background: var(--bg-secondary);
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .md-table td {
-    color: var(--text-secondary);
+  color: var(--text-secondary);
 }
 
 .md-table tr:hover td {
-    background: var(--bg-hover);
+  background: var(--bg-hover);
 }
 
 .md-table code {
-    background: var(--bg-elevated);
-    padding: 2px 6px;
-    border-radius: var(--radius-sm);
-    font-family: var(--font-mono);
-    font-size: 0.9em;
-    color: var(--accent-hover);
-    border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--accent-hover);
+  border: 1px solid var(--border);
 }
 
 /* ============================================
@@ -648,22 +730,22 @@ body {
    ============================================ */
 
 .mermaid-container {
-    margin: 16px 0;
-    padding: 16px;
-    background: var(--bg-secondary);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border);
-    overflow-x: auto;
+  margin: 16px 0;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  overflow-x: auto;
 }
 
 .mermaid-container .mermaid {
-    display: flex;
-    justify-content: center;
+  display: flex;
+  justify-content: center;
 }
 
 .mermaid-container svg {
-    max-width: 100%;
-    height: auto;
+  max-width: 100%;
+  height: auto;
 }
 
 /* ============================================
@@ -671,141 +753,141 @@ body {
    ============================================ */
 
 .refine-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 999;
-    animation: fadeIn var(--transition-fast) ease;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 999;
+  animation: fadeIn var(--transition-fast) ease;
 }
 
 .refine-popover {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 20px;
-    box-shadow: var(--shadow-lg);
-    z-index: 1000;
-    min-width: 500px;
-    max-width: 600px;
-    animation: modalSlideIn var(--transition-normal) ease;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  min-width: 500px;
+  max-width: 600px;
+  animation: modalSlideIn var(--transition-normal) ease;
 }
 
 @keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: translate(-50%, -48%);
-    }
-    to {
-        opacity: 1;
-        transform: translate(-50%, -50%);
-    }
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
 }
 
 .edit-input-container {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .original-value-reference {
-    font-size: var(--original-value-font-size);
-    color: var(--original-value-color);
-    font-style: italic;
-    margin-bottom: 8px;
-    padding: 6px 8px;
-    background: var(--bg-secondary);
-    border-left: 2px solid var(--accent);
-    border-radius: var(--radius-sm);
-    word-break: break-word;
-    max-height: 60px;
-    overflow-y: auto;
+  font-size: var(--original-value-font-size);
+  color: var(--original-value-color);
+  font-style: italic;
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  background: var(--bg-secondary);
+  border-left: 2px solid var(--accent);
+  border-radius: var(--radius-sm);
+  word-break: break-word;
+  max-height: 60px;
+  overflow-y: auto;
 }
 
 .original-value-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-    font-style: normal;
-    display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  font-style: normal;
+  display: block;
 }
 
 .refine-popover-header {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-muted);
-    margin-bottom: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .refine-input {
-    width: 100%;
-    min-width: 200px;
-    max-width: 100%;
-    padding: 10px 12px;
-    background: var(--bg-primary);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-    font-size: 14px;
-    outline: none;
-    transition: border-color var(--transition-fast);
-    /* Auto-sizing: use field-sizing if browser supports it (Chrome 123+) */
-    field-sizing: content;
+  width: 100%;
+  min-width: 200px;
+  max-width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition-fast);
+  /* Auto-sizing: use field-sizing if browser supports it (Chrome 123+) */
+  field-sizing: content;
 }
 
 .refine-input:focus {
-    border-color: var(--accent);
+  border-color: var(--accent);
 }
 
 .refine-input::placeholder {
-    color: var(--text-muted);
+  color: var(--text-muted);
 }
 
 .refine-popover-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .refine-popover-actions button {
-    padding: 6px 12px;
-    font-size: 12px;
-    font-weight: 500;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: all var(--transition-fast);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
 .refine-cancel {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
 }
 
 .refine-cancel:hover {
-    background: var(--bg-hover);
-    border-color: var(--border-hover);
+  background: var(--bg-hover);
+  border-color: var(--border-hover);
 }
 
 .refine-submit {
-    background: var(--accent);
-    border: none;
-    color: white;
+  background: var(--accent);
+  border: none;
+  color: white;
 }
 
 .refine-submit:hover {
-    background: var(--accent-hover);
+  background: var(--accent-hover);
 }
 
 /* ============================================
@@ -813,25 +895,25 @@ body {
    ============================================ */
 
 .inline-edit-input {
-    min-width: 200px;
-    max-width: 100%;
-    width: 100%;
-    padding: 4px 8px;
-    background: var(--bg-primary);
-    border: 1px solid var(--accent);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-    font-size: inherit;
-    font-family: inherit;
-    line-height: 1.6;
-    outline: none;
-    box-shadow: 0 0 0 2px var(--accent-subtle);
-    resize: none;
-    overflow: hidden;
+  min-width: 200px;
+  max-width: 100%;
+  width: 100%;
+  padding: 4px 8px;
+  background: var(--bg-primary);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: inherit;
+  font-family: inherit;
+  line-height: 1.6;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-subtle);
+  resize: none;
+  overflow: hidden;
 }
 
 .inline-edit-input:focus {
-    border-color: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 
 /* ============================================
@@ -839,9 +921,9 @@ body {
    ============================================ */
 
 hr.divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 24px 0;
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 24px 0;
 }
 
 /* ============================================
@@ -849,99 +931,99 @@ hr.divider {
    ============================================ */
 
 .actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    background: var(--bg-secondary);
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
-    gap: 8px;
-    flex-wrap: wrap;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .actions-left {
-    display: flex;
-    gap: 8px;
-    flex-shrink: 0;
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .actions-right {
-    display: flex;
-    gap: 8px;
-    flex-shrink: 0;
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 /* Fixed button sizes - don't grow */
 .actions button {
-    padding: 8px 14px;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all var(--transition-fast) ease;
-    white-space: nowrap;
-    flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all var(--transition-fast) ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .actions button.primary {
-    background: var(--accent);
-    color: white;
-    border: none;
-    box-shadow: var(--shadow-sm);
+  background: var(--accent);
+  color: white;
+  border: none;
+  box-shadow: var(--shadow-sm);
 }
 
 .actions button.primary:hover {
-    background: var(--accent-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--accent-glow);
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--accent-glow);
 }
 
 .actions button.secondary {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-primary);
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
 }
 
 .actions button.secondary:hover {
-    background: var(--bg-hover);
-    border-color: var(--border-hover);
+  background: var(--bg-hover);
+  border-color: var(--border-hover);
 }
 
 /* Enhancement button */
 .actions button.enhancement {
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
 }
 
 .actions button.enhancement .icon {
-    font-size: 14px;
+  font-size: 14px;
 }
 
 .actions button.enhancement:hover {
-    border-color: var(--accent);
-    color: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* Responsive: hide some buttons on narrow screens */
 @media (max-width: 500px) {
-    .actions {
-        padding: 8px 12px;
-    }
+  .actions {
+    padding: 8px 12px;
+  }
 
-    .actions button {
-        padding: 6px 10px;
-        font-size: 12px;
-    }
+  .actions button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
 
-    /* Hide Edit Source and Regenerate on narrow screens */
-    .actions-right .secondary {
-        display: none;
-    }
+  /* Hide Edit Source and Regenerate on narrow screens */
+  .actions-right .secondary {
+    display: none;
+  }
 }
 
 /* ============================================
@@ -949,50 +1031,51 @@ hr.divider {
    ============================================ */
 
 .empty-state {
-    text-align: center;
-    padding: 64px 24px;
-    color: var(--text-secondary);
+  text-align: center;
+  padding: 64px 24px;
+  color: var(--text-secondary);
 }
 
 .empty-state h2 {
-    margin: 0 0 12px 0;
-    color: var(--text-primary);
-    font-size: 20px;
-    font-weight: 600;
+  margin: 0 0 12px 0;
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 600;
 }
 
 .empty-state p {
-    margin: 0 0 32px 0;
-    color: var(--text-muted);
+  margin: 0 0 32px 0;
+  color: var(--text-muted);
 }
 
 .empty-state button {
-    padding: 14px 32px;
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all var(--transition-normal) ease;
-    animation: pulse-glow 2s infinite;
+  padding: 14px 32px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all var(--transition-normal) ease;
+  animation: pulse-glow 2s infinite;
 }
 
 .empty-state button:hover {
-    background: var(--accent-hover);
-    transform: translateY(-2px);
-    box-shadow: var(--accent-glow);
-    animation: none;
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--accent-glow);
+  animation: none;
 }
 
 @keyframes pulse-glow {
-    0%, 100% {
-        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
-    }
-    50% {
-        box-shadow: 0 0 0 12px rgba(59, 130, 246, 0);
-    }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(59, 130, 246, 0);
+  }
 }
 
 /* ============================================
@@ -1000,26 +1083,28 @@ hr.divider {
    ============================================ */
 
 .loading {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    color: var(--text-muted);
-    gap: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  gap: 16px;
 }
 
 .loading-spinner {
-    width: 32px;
-    height: 32px;
-    border: 3px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ============================================
@@ -1027,21 +1112,21 @@ hr.divider {
    ============================================ */
 
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: transparent;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 4px;
+  background: var(--border);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--border-hover);
+  background: var(--border-hover);
 }
 
 /* ============================================
@@ -1051,8 +1136,8 @@ hr.divider {
 button:focus-visible,
 a:focus-visible,
 input:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* ============================================
@@ -1060,10 +1145,16 @@ input:focus-visible {
    ============================================ */
 
 .fade-in {
-    animation: fadeIn var(--transition-normal) ease;
+  animation: fadeIn var(--transition-normal) ease;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

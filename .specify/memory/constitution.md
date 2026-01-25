@@ -1,18 +1,18 @@
 <!--
 Sync Impact Report:
-- Version change: none -> 1.0.0
+- Version change: 1.0.0 -> 1.1.0 (MINOR)
 - List of modified principles:
-  - NEW: I. Extensibility and Configuration
-  - NEW: II. Spec-Driven Workflow
-  - NEW: III. Visual and Interactive
+  - UNCHANGED: I. Extensibility and Configuration
+  - UNCHANGED: II. Spec-Driven Workflow
+  - UNCHANGED: III. Visual and Interactive
+  - NEW: IV. Modular Architecture for Complex Features
 - Added sections:
-  - AI Provider Integration
-  - User Interface
+  - Principle IV: Modular Architecture for Complex Features
 - Removed sections: none
 - Templates requiring updates:
-  - ✅ .specify/templates/plan-template.md
-  - ✅ .specify/templates/spec-template.md
-  - ✅ .specify/templates/tasks-template.md
+  - ✅ .specify/templates/plan-template.md (no changes needed - already supports structure docs)
+  - ✅ .specify/templates/spec-template.md (no changes needed - story-based structure compatible)
+  - ✅ .specify/templates/tasks-template.md (no changes needed - phase structure compatible)
 - Follow-up TODOs: none
 -->
 # SpecKit Companion Constitution
@@ -28,6 +28,16 @@ The extension MUST enforce and facilitate the spec-driven development workflow a
 ### III. Visual and Interactive
 The extension is a GUI tool and SHOULD prioritize a visual and interactive user experience. While it integrates with CLI tools, the primary interface for the user is within the VS Code UI. New features SHOULD have a visual component and be interactive, rather than just exposing CLI commands.
 
+### IV. Modular Architecture for Complex Features
+Complex features (particularly webview-based features) MUST adopt a modular file structure for maintainability. When a feature grows beyond 3-4 files or has distinct responsibilities (e.g., message handling, HTML generation, state management), it MUST be split into focused modules with clear separation of concerns.
+
+**Required structure for large webview features:**
+- **Extension side**: Separate modules for provider, message handlers, HTML generation, and utilities
+- **Webview side**: Separate modules for entry point, rendering pipeline, state management, and UI interactions
+- **CSS**: Use partial files with `@import` structure when styles exceed 200 lines
+
+This pattern ensures features remain testable, navigable, and maintainable as complexity grows.
+
 ## AI Provider Integration
 
 The extension MUST support multiple AI providers. Each provider is integrated via a dedicated `AIProvider` implementation that abstracts the specific CLI commands and file paths. When adding a new provider, a new implementation of the `AIProvider` interface must be created.
@@ -40,4 +50,4 @@ The user interface is built using VS Code's native UI components. The extension 
 
 All pull requests and reviews must verify compliance with this constitution. Any deviation from these principles requires a formal amendment to this document. Amendments require documentation, approval, and a migration plan if they introduce breaking changes.
 
-**Version**: 1.0.0 | **Ratified**: 2025-12-08 | **Last Amended**: 2025-12-08
+**Version**: 1.1.0 | **Ratified**: 2025-12-08 | **Last Amended**: 2026-01-18

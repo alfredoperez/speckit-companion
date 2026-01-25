@@ -1,0 +1,411 @@
+/**
+ * SpecKit Companion - Table Styles
+ * Tables, scenario tables, and user story cards
+ */
+
+/* ============================================
+   Standard Tables
+   ============================================ */
+
+#markdown-content table {
+    width: 100%;
+    margin: var(--space-5) 0;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+}
+
+#markdown-content th {
+    text-align: left;
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+#markdown-content td {
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--text-secondary);
+}
+
+#markdown-content tr:hover td {
+    background: var(--bg-hover);
+}
+
+/* ============================================
+   User Story Cards - Clean Professional Style
+   ============================================ */
+
+.user-story-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-2) 0;
+    margin: var(--space-4) 0 var(--space-2) 0;
+    border-bottom: 1px solid var(--border);
+}
+
+/* Metadata line (US-1 · Critical) */
+.user-story-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
+.user-story-meta .meta-icon {
+    width: 14px;
+    height: 14px;
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+
+.story-id {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+}
+
+.meta-separator {
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+/* User story title - large and prominent */
+/* Use high specificity to override #markdown-content h3 */
+#markdown-content .user-story-title,
+.user-story-title {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    line-height: var(--leading-snug);
+    color: var(--text-primary);
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+/* Priority with small colored dot */
+.story-priority {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: capitalize;
+}
+
+.priority-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.priority-dot.p1 {
+    background: var(--error);
+}
+
+.priority-dot.p2 {
+    background: var(--warning);
+}
+
+.priority-dot.p3 {
+    background: var(--accent);
+}
+
+.priority-dot.p4,
+.priority-dot.p5 {
+    background: var(--text-muted);
+}
+
+/* Legacy priority pill styles (kept for backwards compatibility) */
+.priority-p1 {
+    color: var(--error);
+}
+
+.priority-p2 {
+    color: var(--warning);
+}
+
+.priority-p3 {
+    color: var(--accent);
+}
+
+.priority-p4,
+.priority-p5 {
+    color: var(--text-muted);
+}
+
+/* ============================================
+   Acceptance Scenario Table
+   ============================================ */
+
+.scenario-table {
+    width: 100%;
+    margin: var(--space-2) 0;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+    table-layout: fixed;
+}
+
+.scenario-table thead th {
+    text-align: left;
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border);
+}
+
+.scenario-table th.col-given {
+    width: 30%;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 5%, transparent);
+    border-left: 3px solid var(--accent);
+}
+
+.scenario-table th.col-when {
+    width: 30%;
+    color: var(--warning);
+    background: color-mix(in srgb, var(--warning) 5%, transparent);
+    border-left: 3px solid var(--warning);
+}
+
+.scenario-table th.col-then {
+    width: 40%;
+    color: var(--success);
+    background: color-mix(in srgb, var(--success) 5%, transparent);
+    border-left: 3px solid var(--success);
+}
+
+.scenario-table tbody td {
+    padding: var(--space-3);
+    vertical-align: top;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    line-height: var(--leading-relaxed);
+}
+
+.scenario-table td.col-given {
+    border-left: 3px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.scenario-table td.col-when {
+    border-left: 3px solid color-mix(in srgb, var(--warning) 30%, transparent);
+}
+
+.scenario-table td.col-then {
+    border-left: 3px solid color-mix(in srgb, var(--success) 30%, transparent);
+}
+
+.scenario-table tbody tr:hover td {
+    background: var(--bg-hover);
+}
+
+.scenario-table .scenario-empty {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Scenario label (no line wrapper) */
+.scenario-label {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: var(--space-4) 0 var(--space-2) 0;
+}
+
+/* Row number column (first column) */
+.scenario-table th.col-num,
+.scenario-table td.col-num {
+    width: 48px;
+    text-align: center;
+    vertical-align: middle;
+    padding: var(--space-2);
+    position: relative;
+    border-left: none;
+    background: transparent;
+}
+
+.scenario-table th.col-num {
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+}
+
+/* Row number text */
+.row-num {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    transition: opacity var(--transition-fast);
+}
+
+/* Hide row number on hover, show + button */
+.scenario-row:hover .row-num {
+    opacity: 0;
+}
+
+/* Row add button (comment icon on table rows) */
+.row-add-btn {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-sm);
+    border: 1px solid #22c55e;
+    background: #22c55e;
+    color: white;
+    opacity: 0;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.row-add-btn svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.scenario-row:hover .row-add-btn {
+    opacity: 1;
+}
+
+.row-add-btn:hover {
+    background: #16a34a;
+    border-color: #16a34a;
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.row-add-btn:active {
+    transform: translate(-50%, -50%) scale(0.95);
+}
+
+/* Scenario row with refinement */
+.scenario-row.has-refinement {
+    background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+.scenario-row.has-refinement td.col-num {
+    border-left: 3px solid var(--accent);
+}
+
+/* Editing state for scenario row */
+.scenario-row.editing {
+    background: var(--bg-hover);
+}
+
+/* Inline editor row for scenario table */
+.inline-editor-row {
+    background: transparent;
+}
+
+.inline-editor-row .editor-cell {
+    padding: 0;
+    border: none;
+}
+
+.inline-editor-row .inline-editor {
+    margin: 0;
+    border-radius: 0;
+    border-left: 3px solid var(--accent);
+}
+
+/* Editor context showing the scenario content */
+.editor-context {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    padding-bottom: 8px;
+}
+
+.editor-context-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-right: 8px;
+}
+
+.editor-context-text {
+    font-style: italic;
+}
+
+/* Comment row for scenario table */
+.comment-row {
+    background: transparent;
+}
+
+.comment-row .comment-cell {
+    padding: 0;
+    border: none;
+}
+
+.comment-row .inline-comment {
+    margin: 0;
+    border-radius: 0;
+}
+
+/* Legacy scenario keyword styles (kept for backwards compatibility) */
+.scenario-keyword {
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+.scenario-given {
+    color: var(--accent);
+}
+
+.scenario-when {
+    color: var(--warning);
+}
+
+.scenario-then {
+    color: var(--success);
+}
+
+/* ============================================
+   Acceptance Scenarios List Format
+   ============================================ */
+
+.acceptance-scenarios {
+    margin: var(--space-2) 0 var(--space-4) 0;
+    padding-left: var(--space-5);
+}
+
+.scenario-item {
+    margin: var(--space-1) 0;
+    padding: 3px 8px 3px 0;
+    list-style-position: outside;
+}
+
+.scenario-item .line-content {
+    display: inline;
+}
+
+/* Keyword emphasis colors */
+.scenario-item .keyword-given,
+.scenario-item .keyword-when,
+.scenario-item .keyword-then {
+    font-weight: 600;
+}
+
+.scenario-item .keyword-given {
+    color: var(--accent);
+}
+
+.scenario-item .keyword-when {
+    color: var(--warning);
+}
+
+.scenario-item .keyword-then {
+    color: var(--success);
+}

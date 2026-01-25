@@ -1,0 +1,181 @@
+/**
+ * SpecKit Companion - CSS Variables
+ * Theme-aware color system and design tokens
+ */
+
+/* ============================================
+   VS Code Theme-Aware Color System
+   ============================================ */
+
+:root {
+    /* Type Scale - Minor Third (1.2) */
+    --text-xs: 0.694rem;    /* ~11px */
+    --text-sm: 0.833rem;    /* ~13px */
+    --text-base: 1rem;      /* 16px */
+    --text-lg: 1.2rem;      /* ~19px */
+    --text-xl: 1.44rem;     /* ~23px */
+    --text-2xl: 1.728rem;   /* ~28px */
+    --text-3xl: 2.074rem;   /* ~33px */
+
+    /* Line Heights */
+    --leading-tight: 1.25;
+    --leading-snug: 1.375;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.625;
+    --leading-loose: 1.75;
+
+    /* Spacing Scale */
+    --space-1: 0.25rem;   /* 4px */
+    --space-2: 0.5rem;    /* 8px */
+    --space-3: 0.75rem;   /* 12px */
+    --space-4: 1rem;      /* 16px */
+    --space-5: 1.5rem;    /* 24px */
+    --space-6: 2rem;      /* 32px */
+    --space-8: 3rem;      /* 48px */
+
+    /* Core backgrounds - mapped to VS Code theme variables */
+    --bg-primary: var(--vscode-editor-background, #1e1e1e);
+    --bg-secondary: var(--vscode-sideBar-background, #252526);
+    --bg-elevated: var(--vscode-editorWidget-background, #252526);
+    --bg-hover: var(--vscode-list-hoverBackground, #2a2d2e);
+
+    /* Text colors - mapped to VS Code theme variables */
+    --text-primary: var(--vscode-editor-foreground, #d4d4d4);
+    --text-secondary: var(--vscode-descriptionForeground, #858585);
+    --text-muted: var(--vscode-disabledForeground, #6c6c6c);
+
+    /* Accent colors - mapped to VS Code theme variables */
+    --accent: var(--vscode-focusBorder, #007fd4);
+    --accent-hover: var(--vscode-button-hoverBackground, #0062a3);
+    --accent-subtle: color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 10%, transparent);
+    --accent-glow: 0 0 20px color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 30%, transparent);
+
+    /* Status colors - mapped to VS Code theme variables */
+    --success: var(--vscode-testing-iconPassed, #388a34);
+    --success-subtle: color-mix(in srgb, var(--vscode-testing-iconPassed, #388a34) 10%, transparent);
+    --success-glow: 0 0 12px color-mix(in srgb, var(--vscode-testing-iconPassed, #388a34) 50%, transparent);
+    --warning: var(--vscode-editorWarning-foreground, #cca700);
+    --warning-subtle: color-mix(in srgb, var(--vscode-editorWarning-foreground, #cca700) 10%, transparent);
+    --error: var(--vscode-editorError-foreground, #f14c4c);
+    --error-subtle: color-mix(in srgb, var(--vscode-editorError-foreground, #f14c4c) 10%, transparent);
+
+    /* Review mode colors - purple for reviewing completed steps */
+    --review: #a855f7;
+    --review-subtle: color-mix(in srgb, #a855f7 10%, transparent);
+    --review-glow: 0 0 12px color-mix(in srgb, #a855f7 50%, transparent);
+
+    /* Borders - mapped to VS Code theme variables */
+    --border: var(--vscode-panel-border, #3c3c3c);
+    --border-hover: var(--vscode-contrastBorder, #6c6c6c);
+    --border-accent: color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 50%, transparent);
+
+    /* Typography - mapped to VS Code theme variables with professional fallbacks */
+    --font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif);
+    --font-mono: var(--vscode-editor-font-family, 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', 'Monaco', 'Menlo', monospace);
+    --font-size: var(--vscode-editor-font-size, 14px);
+
+    /* Semantic header colors - mapped to VS Code theme variables */
+    --header-title: var(--vscode-textLink-foreground, #3794ff);
+    --header-section: var(--vscode-symbolIcon-classForeground, #ee9d28);
+    --header-subsection: var(--vscode-descriptionForeground, #858585);
+
+    /* Code block backgrounds */
+    --bg-code: color-mix(in srgb, var(--vscode-editor-background, #1e1e1e) 95%, black);
+    --bg-code-header: color-mix(in srgb, var(--vscode-editor-background, #1e1e1e) 90%, black);
+    --border-code: var(--vscode-panel-border, #3c3c3c);
+
+    /* Syntax colors - VS Code Dark+ inspired */
+    --code-text: #d4d4d4;
+    --code-keyword: #569cd6;
+    --code-string: #ce9178;
+    --code-number: #b5cea8;
+    --code-function: #dcdcaa;
+    --code-comment: #6a9955;
+    --code-variable: #9cdcfe;
+    --code-type: #4ec9b0;
+
+    /* Task styling */
+    --bg-task: color-mix(in srgb, var(--vscode-editor-background, #1e1e1e) 97%, var(--vscode-focusBorder, #007fd4));
+    --bg-task-hover: color-mix(in srgb, var(--vscode-editor-background, #1e1e1e) 94%, var(--vscode-focusBorder, #007fd4));
+    --bg-task-done: color-mix(in srgb, var(--vscode-editor-background, #1e1e1e) 97%, var(--vscode-testing-iconPassed, #388a34));
+    --border-task: var(--vscode-panel-border, #3c3c3c);
+    --task-pending: var(--vscode-editorWarning-foreground, #cca700);
+    --border-checkbox: var(--vscode-checkbox-border, #3c3c3c);
+    --bg-checkbox: var(--vscode-checkbox-background, #3c3c3c);
+
+    /* Misc */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+    /* Timing */
+    --transition-fast: 150ms;
+    --transition-normal: 200ms;
+    --transition-slow: 300ms;
+
+    /* Layout */
+    --tab-height: 40px;
+    --header-height: 48px;
+    --content-padding: 24px;
+}
+
+/* ============================================
+   Theme-Specific Fallbacks
+   ============================================ */
+
+body.vscode-light {
+    --bg-primary: var(--vscode-editor-background, #ffffff);
+    --bg-secondary: var(--vscode-sideBar-background, #f3f3f3);
+    --bg-elevated: var(--vscode-editorWidget-background, #f3f3f3);
+    --bg-hover: var(--vscode-list-hoverBackground, #e8e8e8);
+    --text-primary: var(--vscode-editor-foreground, #333333);
+    --text-secondary: var(--vscode-descriptionForeground, #717171);
+    --text-muted: var(--vscode-disabledForeground, #a0a0a0);
+    --border: var(--vscode-panel-border, #e0e0e0);
+    --border-hover: var(--vscode-contrastBorder, #c0c0c0);
+
+    /* Light theme code colors */
+    --bg-code: #f5f5f5;
+    --bg-code-header: #e8e8e8;
+    --code-text: #333333;
+    --code-keyword: #0000ff;
+    --code-string: #a31515;
+    --code-number: #098658;
+    --code-function: #795e26;
+    --code-comment: #008000;
+    --code-variable: #001080;
+    --code-type: #267f99;
+
+    /* Light theme task colors */
+    --bg-task: #f8f9fa;
+    --bg-task-hover: #f0f2f4;
+    --bg-task-done: #f0fff4;
+}
+
+body.vscode-dark {
+    --bg-primary: var(--vscode-editor-background, #1e1e1e);
+    --bg-secondary: var(--vscode-sideBar-background, #252526);
+    --bg-elevated: var(--vscode-editorWidget-background, #252526);
+    --bg-hover: var(--vscode-list-hoverBackground, #2a2d2e);
+    --text-primary: var(--vscode-editor-foreground, #d4d4d4);
+    --text-secondary: var(--vscode-descriptionForeground, #858585);
+    --text-muted: var(--vscode-disabledForeground, #6c6c6c);
+    --border: var(--vscode-panel-border, #3c3c3c);
+    --border-hover: var(--vscode-contrastBorder, #6c6c6c);
+}
+
+body.vscode-high-contrast {
+    --bg-primary: var(--vscode-editor-background, #000000);
+    --bg-secondary: var(--vscode-sideBar-background, #000000);
+    --bg-elevated: var(--vscode-editorWidget-background, #000000);
+    --bg-hover: var(--vscode-list-hoverBackground, #0a0a0a);
+    --text-primary: var(--vscode-editor-foreground, #ffffff);
+    --text-secondary: var(--vscode-descriptionForeground, #ffffff);
+    --text-muted: var(--vscode-disabledForeground, #a0a0a0);
+    --border: var(--vscode-contrastBorder, #ffffff);
+    --border-hover: var(--vscode-contrastBorder, #ffffff);
+    --accent: var(--vscode-focusBorder, #f38518);
+}

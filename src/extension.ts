@@ -14,12 +14,13 @@ import { SkillsExplorerProvider, SkillManager } from './features/skills';
 import { PermissionManager } from './features/permission';
 import { WorkflowEditorProvider, registerWorkflowEditorCommands } from './features/workflow-editor';
 import { registerSpecEditorCommands } from './features/spec-editor';
+import { registerSpecViewerCommands, isSpecDocument } from './features/spec-viewer';
 
 // SpecKit CLI integration
 import { SpecKitDetector, UpdateChecker, registerCliCommands, registerUtilityCommands } from './speckit';
 
 // Core
-import { Views, setupFileWatchers, setupTasksWatcher } from './core';
+import { Views, setupFileWatchers, setupTasksWatcher, setupSpecViewerWatcher } from './core';
 import { openSpecFile } from './core/utils/fileOpener';
 
 let aiProvider: IAIProvider;
@@ -49,7 +50,7 @@ export async function activate(context: vscode.ExtensionContext) {
     outputChannel.appendLine(`Constitution needs setup: ${constitutionNeedsSetup}`);
 
     // Show init suggestion when CLI is installed but workspace is not initialized
-    // ONLY if a workspace is actually open (US1 fix - 001-speckit-views-enhancement)
+    // ONLY if a workspace is actually open (US1 fix - 005-speckit-views-enhancement)
     const hasWorkspace = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0;
     if (cliInstalled && !workspaceInitialized && hasWorkspace) {
         await showInitSuggestion(context);
@@ -160,6 +161,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Register spec editor commands
     registerSpecEditorCommands(context, outputChannel);
+
+    // Register spec viewer commands and get provider instance
+    const specViewer = registerSpecViewerCommands(context, outputChannel);
+
+    // Set up spec viewer file watcher
+    setupSpecViewerWatcher(context, specViewer, outputChannel);
 
     // Listen for provider configuration changes
     context.subscriptions.push(
