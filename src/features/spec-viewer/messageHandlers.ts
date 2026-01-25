@@ -70,6 +70,9 @@ export function createMessageHandlers(
             case 'toggleCheckbox':
                 await handleToggleCheckbox(specDirectory, message.lineNum, message.checked, deps);
                 break;
+            case 'submitRefinements':
+                await handleSubmitRefinements(specDirectory, message.refinements, deps);
+                break;
         }
     };
 }
@@ -350,5 +353,41 @@ async function handleToggleCheckbox(
         }
     } catch (error) {
         deps.outputChannel.appendLine(`[SpecViewer] Error toggling checkbox: ${error}`);
+    }
+}
+
+/**
+ * Handle submit refinements - run current phase command with refinement context
+ */
+async function handleSubmitRefinements(
+    specDirectory: string,
+    refinements: Array<{ lineNum: number; lineContent: string; comment: string }>,
+    deps: MessageHandlerDependencies
+): Promise<void> {
+    const instance = deps.getInstance(specDirectory);
+    if (!instance) return;
+
+    const docType = instance.state.currentDocument;
+
+    // Format refinements as context string
+    const refinementText = refinements
+        .map(r => `- Line ${r.lineNum} ("${r.lineContent.slice(0, 50)}${r.lineContent.length > 50 ? '...' : ''}"): ${r.comment}`)
+        .join('\n');
+
+    const context = `\n\nRefinements requested:\n${refinementText}`;
+
+    // Determine command based on current document type
+    let command = '';
+    if (docType === 'spec') {
+        command = 'speckit.specify';
+    } else if (docType === 'plan') {
+        command = 'speckit.plan';
+    } else if (docType === 'tasks') {
+        command = 'speckit.tasks';
+    }
+
+    if (command) {
+        deps.outputChannel.appendLine(`[SpecViewer] Submitting ${refinements.length} refinements for ${docType}`);
+        vscode.commands.executeCommand(command, specDirectory, context);
     }
 }

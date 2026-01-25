@@ -28,9 +28,8 @@
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-3);
-    padding: var(--space-3) 0;
-    margin-bottom: var(--space-4);
-    border-bottom: 1px solid var(--border);
+    padding: var(--space-2) 0;
+    margin-bottom: var(--space-3);
 }
 
 .meta-item {

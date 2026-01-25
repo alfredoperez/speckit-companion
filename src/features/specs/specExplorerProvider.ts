@@ -133,19 +133,52 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
     }
 
     /**
-     * Scan for related documents in a spec folder
+     * Scan for related documents in a spec folder (including subdirectories)
      * Returns files that are not spec.md, plan.md, or tasks.md
      */
     private getRelatedDocs(specFullPath: string): string[] {
         const mainDocs = ['spec.md', 'plan.md', 'tasks.md'];
-        try {
-            const files = fs.readdirSync(specFullPath);
-            return files
-                .filter(f => f.endsWith('.md') && !mainDocs.includes(f))
-                .sort();
-        } catch {
-            return [];
-        }
+        const results: string[] = [];
+
+        const scanDir = (dirPath: string, relativePath: string = '') => {
+            try {
+                const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+                for (const entry of entries) {
+                    // Skip hidden directories and checklists
+                    if (entry.name.startsWith('.') || entry.name === 'checklists') {
+                        continue;
+                    }
+
+                    const entryRelativePath = relativePath ? `${relativePath}/${entry.name}` : entry.name;
+
+                    if (entry.isDirectory()) {
+                        scanDir(path.join(dirPath, entry.name), entryRelativePath);
+                    } else if (entry.isFile() && entry.name.endsWith('.md')) {
+                        // Skip core docs at root level
+                        if (!relativePath && mainDocs.includes(entry.name)) {
+                            continue;
+                        }
+                        results.push(entryRelativePath);
+                    }
+                }
+            } catch {
+                // Directory read error
+            }
+        };
+
+        scanDir(specFullPath);
+        return results.sort();
+    }
+
+    /**
+     * Convert nested file path to display name
+     * e.g., "contracts/webview-messages.md" -> "Contracts: Webview Messages"
+     */
+    private nestedFileToDisplayName(relativePath: string): string {
+        const parts = relativePath.replace(/\.md$/i, '').split('/');
+        return parts
+            .map(part => part.replace(/[-_]/g, ' ').replace(/\b\w/g, char => char.toUpperCase()))
+            .join(': ');
     }
 
     /**
@@ -160,12 +193,16 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
         const basePath = workspaceFolder.uri.fsPath;
         const specPath = parentElement.specPath || `specs/${parentElement.specName}`;
 
-        return parentElement.relatedDocs.map(fileName => {
-            const fullPath = path.join(basePath, specPath, fileName);
+        return parentElement.relatedDocs.map(relativePath => {
+            const fullPath = path.join(basePath, specPath, relativePath);
             const status = this.getDocumentStatus(fullPath);
+            const isNested = relativePath.includes('/');
+            const displayName = isNested
+                ? this.nestedFileToDisplayName(relativePath)
+                : relativePath.replace('.md', '');
 
             return new SpecItem(
-                fileName.replace('.md', ''),
+                displayName,
                 vscode.TreeItemCollapsibleState.None,
                 'spec-related-doc',
                 this.context,
@@ -173,10 +210,10 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 'related',
                 {
                     command: 'speckit.viewSpecDocument',
-                    title: `Open ${fileName}`,
+                    title: `Open ${relativePath}`,
                     arguments: [fullPath]
                 },
-                `${specPath}/${fileName}`,
+                `${specPath}/${relativePath}`,
                 specPath,
                 status
             );

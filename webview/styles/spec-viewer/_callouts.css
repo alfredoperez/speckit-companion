@@ -33,7 +33,7 @@
     margin-bottom: 4px;
 }
 
-/* Purpose callout - Blue/Info */
+/* Purpose callout - Blue/Info (key info) */
 .callout-purpose {
     border-left-color: var(--accent);
 }
@@ -42,13 +42,13 @@
     color: var(--accent);
 }
 
-/* Note callout - Blue/Info */
+/* Note callout - Purple (secondary info) */
 .callout-note {
-    border-left-color: var(--accent);
+    border-left-color: var(--purple);
 }
 
 .callout-note .callout-label {
-    color: var(--accent);
+    color: var(--purple);
 }
 
 /* Tip callout - Green */

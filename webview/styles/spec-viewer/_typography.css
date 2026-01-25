@@ -30,7 +30,7 @@
     font-size: 15px;
     font-weight: 600;
     line-height: 1.4;
-    margin: 20px 0 6px 0;
+    margin: 12px 0 6px 0;
     color: var(--text-primary);
 }
 
@@ -84,9 +84,9 @@
    ============================================ */
 
 #markdown-content blockquote {
-    margin: var(--space-5) 0;
-    padding: var(--space-3) var(--space-4);
-    border-left: 4px solid var(--accent);
+    margin: var(--space-3) 0;
+    padding: var(--space-2) var(--space-3);
+    border-left: 3px solid var(--accent);
     background: var(--accent-subtle);
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     color: var(--text-primary);
