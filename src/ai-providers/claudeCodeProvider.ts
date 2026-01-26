@@ -44,6 +44,25 @@ export class ClaudeCodeProvider implements IAIProvider {
     }
 
     /**
+     * Get permission flag based on user setting
+     * Returns the --permission-mode flag or empty string for default mode
+     */
+    private getPermissionFlag(): string {
+        const config = vscode.workspace.getConfiguration('speckit');
+        const mode = config.get<string>('claudePermissionMode', 'bypassPermissions');
+        return mode === 'bypassPermissions' ? '--permission-mode bypassPermissions ' : '';
+    }
+
+    /**
+     * Static version of getPermissionFlag for use in static methods
+     */
+    private static getPermissionFlagStatic(): string {
+        const config = vscode.workspace.getConfiguration('speckit');
+        const mode = config.get<string>('claudePermissionMode', 'bypassPermissions');
+        return mode === 'bypassPermissions' ? '--permission-mode bypassPermissions ' : '';
+    }
+
+    /**
      * Create a temporary file with content
      */
     private async createTempFile(content: string, prefix: string = 'prompt'): Promise<string> {
@@ -93,7 +112,8 @@ export class ClaudeCodeProvider implements IAIProvider {
             await this.ensurePermissions();
 
             const promptFilePath = await this.createTempFile(prompt, 'prompt');
-            const command = `claude --permission-mode bypassPermissions "$(cat "${promptFilePath}")"`;
+            const permissionFlag = this.getPermissionFlag();
+            const command = `claude ${permissionFlag}"$(cat "${promptFilePath}")"`;
 
             const terminal = vscode.window.createTerminal({
                 name: title,
@@ -144,7 +164,8 @@ export class ClaudeCodeProvider implements IAIProvider {
         const cwd = workspaceFolder?.uri.fsPath;
 
         const promptFilePath = await this.createTempFile(prompt, 'background-prompt');
-        const commandLine = `claude --permission-mode bypassPermissions "$(cat "${promptFilePath}")"`;
+        const permissionFlag = this.getPermissionFlag();
+        const commandLine = `claude ${permissionFlag}"$(cat "${promptFilePath}")"`;
 
         const terminal = vscode.window.createTerminal({
             name: 'Claude Code Background',
@@ -219,7 +240,8 @@ export class ClaudeCodeProvider implements IAIProvider {
 
             // Ensure command starts with /
             const slashCommand = command.startsWith('/') ? command : `/${command}`;
-            const fullCommand = `claude --permission-mode bypassPermissions "${slashCommand}"`;
+            const permissionFlag = this.getPermissionFlag();
+            const fullCommand = `claude ${permissionFlag}"${slashCommand}"`;
 
             const terminal = vscode.window.createTerminal({
                 name: title,
@@ -279,8 +301,9 @@ export class ClaudeCodeProvider implements IAIProvider {
         });
 
         terminal.show();
+        const permissionFlag = ClaudeCodeProvider.getPermissionFlagStatic();
         terminal.sendText(
-            'claude --permission-mode bypassPermissions',
+            `claude ${permissionFlag}`.trim(),
             true
         );
 
