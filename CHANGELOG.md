@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2026-01-25
+
+### New Features
+
+- **Claude Permission Mode Setting**: New `speckit.claudePermissionMode` setting to choose between YOLO mode (bypass all permissions) or interactive permission prompts
+- **Codex CLI Support**: Added OpenAI Codex CLI as a new AI provider with prompt template support
+
+### Improvements
+
+- **Spec Viewer**: Improved UX with inline line actions (refine, remove) on hover
+- **Spec Viewer**: Refined typography and visual polish
+- **Spec Viewer**: Modularized codebase for better maintainability
+- **Steering**: Recursive document scanning for nested steering files
+- **Steering**: Fixed refine button functionality
+
+### Housekeeping
+
+- Internal code refactoring and modularization
+
 ## [0.2.28] - 2026-01-02
 
 ### Improvements

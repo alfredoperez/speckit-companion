@@ -36,14 +36,14 @@ A VSCode extension that brings spec-driven development to AI coding assistants u
 
 SpecKit Companion works with multiple AI coding assistants:
 
-| Feature | Claude Code | GitHub Copilot CLI | Gemini CLI |
-|---------|-------------|-------------------|------------|
-| **Steering File** | CLAUDE.md | .github/copilot-instructions.md | GEMINI.md |
-| **Steering Path** | .claude/steering/ | .github/instructions/*.instructions.md | Hierarchical GEMINI.md |
-| **Agents** | .claude/agents/*.md | .github/agents/*.agent.md | Limited support |
-| **Hooks** | .claude/settings.json | Not supported | Not supported |
-| **MCP Servers** | .claude/settings.json | ~/.copilot/mcp-config.json | ~/.gemini/settings.json |
-| **CLI Command** | `claude` | `ghcs` / `gh copilot` | `gemini` |
+| Feature | Claude Code | GitHub Copilot CLI | Gemini CLI | Codex CLI |
+|---------|-------------|-------------------|------------|-----------|
+| **Steering File** | CLAUDE.md | .github/copilot-instructions.md | GEMINI.md | .codex/AGENTS.md |
+| **Steering Path** | .claude/steering/ | .github/instructions/*.instructions.md | Hierarchical GEMINI.md | .codex/ |
+| **Agents** | .claude/agents/*.md | .github/agents/*.agent.md | Limited support | .codex/agents/*.md |
+| **Hooks** | .claude/settings.json | Not supported | Not supported | Not supported |
+| **MCP Servers** | .claude/settings.json | ~/.copilot/mcp-config.json | ~/.gemini/settings.json | Not supported |
+| **CLI Command** | `claude` | `ghcs` / `gh copilot` | `gemini` | `codex` |
 
 Configure your preferred provider in VS Code settings: `speckit.aiProvider`
 
@@ -141,6 +141,7 @@ Browse and manage Claude Code skills from project (`.claude/skills/`), user (`~/
    - [Claude Code](https://claude.ai/code) - Full feature support
    - [GitHub Copilot CLI](https://docs.github.com/copilot/using-github-copilot/using-github-copilot-in-the-command-line) - Steering, agents, MCP
    - [Gemini CLI](https://github.com/google-gemini/gemini-cli) - Steering, MCP
+   - [Codex CLI](https://github.com/openai/codex) - Steering, agents
 
 2. **SpecKit CLI**: Install via uv:
    ```bash
