@@ -10,6 +10,7 @@ export const Commands = {
     clarify: 'speckit.clarify',
     analyze: 'speckit.analyze',
     checklist: 'speckit.checklist',
+    customCommand: 'speckit.customCommand',
     constitution: 'speckit.constitution',
     refresh: 'speckit.refresh',
     delete: 'speckit.delete',
@@ -53,6 +54,7 @@ export const ConfigKeys = {
     claudePath: 'speckit.claudePath',
     aiProvider: 'speckit.aiProvider',
     geminiInitDelay: 'speckit.geminiInitDelay',
+    customCommands: 'speckit.customCommands',
     views: {
         specsVisible: 'speckit.views.specs.visible',
         agentsVisible: 'speckit.views.agents.visible',

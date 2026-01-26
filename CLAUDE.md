@@ -101,3 +101,11 @@ User data stored in workspace `.claude/` directory:
 - VS Code Extension API (`@types/vscode ^1.84.0`)
 - Webpack 5 for bundling
 - highlight.js (CDN) for syntax highlighting in webviews
+
+## Active Technologies
+- TypeScript 5.3+ (ES2022 target, strict mode) + VS Code Extension API (`@types/vscode ^1.84.0`), Webpack 5 (011-spec-viewer-polish)
+- N/A (file-based in `.claude/specs/` directory) (011-spec-viewer-polish)
+- File-based in `.codex/` directory structure (012-codex-cli-provider)
+
+## Recent Changes
+- 011-spec-viewer-polish: Added TypeScript 5.3+ (ES2022 target, strict mode) + VS Code Extension API (`@types/vscode ^1.84.0`), Webpack 5

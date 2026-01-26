@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "VS Code companion for GitHub SpecKit - spec-driven development with AI assistants",
-  "version": "0.2.80",
+  "version": "0.2.85",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",
@@ -84,7 +84,7 @@
         {
           "id": "speckit.views.skills",
           "name": "Skills",
-          "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.aiProvider == 'claude' && config.speckit.views.skills.visible"
+          "when": "!(workbenchState == empty || workspaceFolderCount == 0) && (config.speckit.aiProvider == 'claude' || config.speckit.aiProvider == 'codex') && config.speckit.views.skills.visible"
         },
         {
           "id": "speckit.views.mcp",
@@ -201,6 +201,12 @@
         "title": "Checklist",
         "category": "SpecKit",
         "icon": "$(tasklist)"
+      },
+      {
+        "command": "speckit.customCommand",
+        "title": "Run Custom Command",
+        "category": "SpecKit",
+        "icon": "$(terminal)"
       },
       {
         "command": "speckit.constitution",
@@ -514,12 +520,14 @@
           "enum": [
             "claude",
             "gemini",
-            "copilot"
+            "copilot",
+            "codex"
           ],
           "enumDescriptions": [
             "Claude Code - Full feature support (steering, agents, hooks, MCP)",
             "Gemini CLI - Steering and MCP support",
-            "GitHub Copilot CLI - Steering, agents, and MCP support"
+            "GitHub Copilot CLI - Steering, agents, and MCP support",
+            "Codex CLI - Steering, skills, and MCP support"
           ],
           "scope": "machine",
           "order": 2,
@@ -547,6 +555,48 @@
           "scope": "machine",
           "order": 5,
           "description": "Delay in milliseconds before sending prompt to Gemini CLI (allows time for initialization)"
+        },
+        "speckit.customCommands": {
+          "type": "array",
+          "default": [],
+          "scope": "window",
+          "order": 6,
+          "description": "Custom SpecKit slash commands available in 'Run Custom Command'. Each entry can be a string (command name) or an object with name, title, command, requiresSpecDir, and autoExecute.",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Command name (e.g., \"review\" becomes /speckit.review)"
+              },
+              {
+                "type": "object",
+                "required": [],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Command name (e.g., \"review\" becomes /speckit.review)"
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "Display title in the picker"
+                  },
+                  "command": {
+                    "type": "string",
+                    "description": "Full slash command (e.g., \"/speckit.review\"). If omitted, name is used."
+                  },
+                  "requiresSpecDir": {
+                    "type": "boolean",
+                    "description": "Append or inject the spec directory (default: true)"
+                  },
+                  "autoExecute": {
+                    "type": "boolean",
+                    "description": "Auto-run the command in the terminal (default: true)"
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
+          }
         },
         "speckit.notifications.phaseCompletion": {
           "type": "boolean",

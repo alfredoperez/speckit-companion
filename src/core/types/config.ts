@@ -69,3 +69,17 @@ export interface SpecTreeItem {
     label: string;
     specPath?: string;
 }
+
+// Custom slash command configuration (settings)
+export interface CustomCommandConfig {
+    /** Optional friendly name (used for labels) */
+    name?: string;
+    /** Optional display title shown in quick pick */
+    title?: string;
+    /** Full slash command (e.g., "/speckit.review") */
+    command?: string;
+    /** Whether to append or inject the spec directory */
+    requiresSpecDir?: boolean;
+    /** Whether to auto-execute in terminal (default: true) */
+    autoExecute?: boolean;
+}

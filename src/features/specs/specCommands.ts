@@ -4,7 +4,8 @@ import { getAIProvider } from '../../extension';
 import { SpecExplorerProvider } from './specExplorerProvider';
 import { SpecKitDetector } from '../../speckit/detector';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
-import type { SpecTreeItem } from '../../core/types/config';
+import type { CustomCommandConfig, SpecTreeItem } from '../../core/types/config';
+import { Commands, ConfigKeys } from '../../core/constants';
 
 /**
  * Register SpecKit workflow commands (create, specify, plan, tasks, etc.)
@@ -66,6 +67,7 @@ export function registerSpecKitCommands(
 
     // Register phase commands
     registerPhaseCommands(context, outputChannel);
+    registerCustomCommand(context, outputChannel);
 
     // Watch specs/ directory
     const specsWatcher = vscode.workspace.createFileSystemWatcher('**/specs/**/*');
@@ -74,6 +76,14 @@ export function registerSpecKitCommands(
     specsWatcher.onDidChange(() => specExplorer.refresh());
     context.subscriptions.push(specsWatcher);
 }
+
+type NormalizedCustomCommand = {
+    label: string;
+    description: string;
+    command: string;
+    requiresSpecDir: boolean;
+    autoExecute: boolean;
+};
 
 /**
  * Register phase-specific commands (specify, plan, tasks, implement, etc.)
@@ -121,6 +131,140 @@ function registerPhaseCommands(
             await getAIProvider().executeInTerminal(prompt, 'SpecKit - Constitution');
         })
     );
+}
+
+/**
+ * Register custom command runner (Quick Pick)
+ */
+function registerCustomCommand(
+    context: vscode.ExtensionContext,
+    outputChannel: vscode.OutputChannel
+): void {
+    context.subscriptions.push(
+        vscode.commands.registerCommand(Commands.customCommand, async (specDir?: string) => {
+            const customCommands = loadCustomCommands();
+
+            if (customCommands.length === 0) {
+                vscode.window.showInformationMessage('No custom commands configured. Add speckit.customCommands in settings.');
+                return;
+            }
+
+            const selection = await vscode.window.showQuickPick(
+                customCommands.map(command => ({
+                    label: command.label,
+                    description: command.description,
+                    command
+                })),
+                {
+                    title: 'Run SpecKit Custom Command',
+                    placeHolder: 'Select a custom command'
+                }
+            );
+
+            if (!selection) {
+                return;
+            }
+
+            const selectedCommand = selection.command;
+            const targetDir = selectedCommand.requiresSpecDir ? (specDir || await getActiveSpecDir()) : undefined;
+
+            if (selectedCommand.requiresSpecDir && !targetDir) {
+                vscode.window.showErrorMessage('No spec directory found. Open a spec file or pass a spec directory.');
+                return;
+            }
+
+            let commandText = selectedCommand.command;
+            if (selectedCommand.requiresSpecDir && targetDir) {
+                if (commandText.includes('${specDir}')) {
+                    commandText = commandText.replace(/\$\{specDir\}/g, targetDir);
+                } else {
+                    commandText = `${commandText} ${targetDir}`;
+                }
+            }
+
+            outputChannel.appendLine(`[SpecKit] Custom command triggered: ${commandText}`);
+            await getAIProvider().executeSlashCommand(
+                commandText,
+                `SpecKit - ${selectedCommand.label}`,
+                selectedCommand.autoExecute
+            );
+        })
+    );
+}
+
+function loadCustomCommands(): NormalizedCustomCommand[] {
+    const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
+    const rawCommands = config.get<Array<CustomCommandConfig | string>>(
+        'customCommands',
+        []
+    );
+
+    const normalized = rawCommands
+        .map(entry => normalizeCustomCommand(entry))
+        .filter((entry): entry is NormalizedCustomCommand => entry !== null);
+
+    return normalized;
+}
+
+function normalizeCustomCommand(entry: CustomCommandConfig | string): NormalizedCustomCommand | null {
+    if (typeof entry === 'string') {
+        const trimmed = entry.trim();
+        if (!trimmed) {
+            return null;
+        }
+        return buildCustomCommand({
+            name: trimmed
+        });
+    }
+
+    const name = entry.name?.trim();
+    const title = entry.title?.trim();
+    const command = entry.command?.trim();
+
+    if (!name && !command) {
+        return null;
+    }
+
+    return buildCustomCommand({
+        name,
+        title,
+        command,
+        requiresSpecDir: entry.requiresSpecDir,
+        autoExecute: entry.autoExecute
+    });
+}
+
+function buildCustomCommand(config: {
+    name?: string;
+    title?: string;
+    command?: string;
+    requiresSpecDir?: boolean;
+    autoExecute?: boolean;
+}): NormalizedCustomCommand | null {
+    const rawCommand = config.command?.length ? config.command : config.name;
+    if (!rawCommand) {
+        return null;
+    }
+
+    let commandText = rawCommand.trim();
+    if (!commandText.startsWith('/')) {
+        if (commandText.startsWith('speckit.')) {
+            commandText = `/${commandText}`;
+        } else {
+            commandText = `/speckit.${commandText}`;
+        }
+    }
+
+    const label = config.title || config.name || commandText;
+    const description = commandText;
+
+    return {
+        label,
+        description,
+        command: commandText,
+        requiresSpecDir: config.requiresSpecDir ?? true,
+        autoExecute: config.autoExecute ?? true
+    };
 }
 
 /**
