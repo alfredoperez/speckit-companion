@@ -205,6 +205,24 @@ Access these commands via the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`):
 | `SpecKit: Upgrade Project Files` | Update project's SpecKit configuration |
 | `SpecKit: Upgrade All (CLI + Project)` | Upgrade both CLI and project files |
 | `SpecKit: Check for Updates` | Check for new extension versions |
+| `SpecKit: Run Custom Command` | Run a configured custom SpecKit slash command |
+
+### Custom Commands
+
+You can add custom SpecKit slash commands in VS Code settings and run them with **SpecKit: Run Custom Command**.
+
+```json
+{
+  "speckit.customCommands": [
+    "review",
+    {
+      "title": "Risk Review",
+      "command": "/speckit.risk-review ${specDir}",
+      "autoExecute": false
+    }
+  ]
+}
+```
 
 ## Configuration
 

@@ -50,7 +50,7 @@ export interface IAIProvider {
 /**
  * Supported AI provider types
  */
-export type AIProviderType = 'claude' | 'gemini' | 'copilot';
+export type AIProviderType = 'claude' | 'gemini' | 'copilot' | 'codex';
 
 /**
  * Provider configuration paths and patterns
@@ -113,6 +113,17 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         mcpConfigPath: '.copilot/mcp-config.json',
         supportsHooks: false,
     },
+    codex: {
+        steeringFile: 'AGENTS.md',
+        steeringDir: '.codex',
+        steeringPattern: 'AGENTS.md',
+        agentsDir: '', // Codex uses AGENTS.md hierarchy, not separate agents
+        agentsPattern: '',
+        skillsDir: '.codex/skills',
+        skillsPattern: '*/SKILL.md',
+        mcpConfigPath: '~/.codex/config.toml', // Note: home directory, TOML format
+        supportsHooks: false,
+    },
 };
 
 /**
@@ -166,6 +177,11 @@ export async function promptForProviderSelection(): Promise<AIProviderType | und
                 label: '$(sparkle) Gemini CLI',
                 description: 'Steering and MCP support (no agents or hooks)',
                 value: 'gemini' as AIProviderType
+            },
+            {
+                label: '$(terminal) Codex CLI',
+                description: 'Steering, skills, and MCP support',
+                value: 'codex' as AIProviderType
             }
         ],
         {
