@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "VS Code companion for GitHub SpecKit - spec-driven development with AI assistants",
-  "version": "0.2.85",
+  "version": "0.2.86",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",
@@ -532,6 +532,21 @@
           "scope": "machine",
           "order": 2,
           "description": "AI assistant to use for spec generation"
+        },
+        "speckit.claudePermissionMode": {
+          "type": "string",
+          "default": "bypassPermissions",
+          "enum": [
+            "bypassPermissions",
+            "default"
+          ],
+          "enumDescriptions": [
+            "Skip all permission prompts (YOLO mode)",
+            "Use default interactive permission prompts"
+          ],
+          "scope": "machine",
+          "order": 3,
+          "description": "Controls how Claude CLI handles permission prompts"
         },
         "speckit.geminiPath": {
           "type": "string",

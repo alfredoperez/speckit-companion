@@ -53,6 +53,7 @@ export const ConfigKeys = {
     workflowEditorEnabled: 'speckit.workflowEditor.enabled',
     claudePath: 'speckit.claudePath',
     aiProvider: 'speckit.aiProvider',
+    claudePermissionMode: 'speckit.claudePermissionMode',
     geminiInitDelay: 'speckit.geminiInitDelay',
     customCommands: 'speckit.customCommands',
     views: {

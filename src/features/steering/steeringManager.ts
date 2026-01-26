@@ -178,8 +178,11 @@ Analyze the document and:
         terminal.show();
 
         const delay = this.configManager.getTerminalDelay();
+        const config = vscode.workspace.getConfiguration('speckit');
+        const mode = config.get<string>('claudePermissionMode', 'bypassPermissions');
+        const permissionFlag = mode === 'bypassPermissions' ? '--permission-mode bypassPermissions ' : '';
         setTimeout(() => {
-            terminal.sendText('claude --permission-mode bypassPermissions "/init"');
+            terminal.sendText(`claude ${permissionFlag}"/init"`);
         }, delay);
     }
 
