@@ -18,9 +18,12 @@ export function parseInlineMarkdown(line: string): string {
         .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.+?)\*/g, '<em>$1</em>')
-        .replace(/___(.+?)___/g, '<strong><em>$1</em></strong>')
-        .replace(/__(.+?)__/g, '<strong>$1</strong>')
-        .replace(/_(.+?)_/g, '<em>$1</em>')
+        // Underscore bold+italic: only match at word boundaries (not intraword)
+        .replace(/(?<![a-zA-Z0-9])___(?!\s)(.+?)(?<!\s)___(?![a-zA-Z0-9])/g, '<strong><em>$1</em></strong>')
+        // Underscore bold: only match at word boundaries (not intraword)
+        .replace(/(?<![a-zA-Z0-9])__(?!\s)(.+?)(?<!\s)__(?![a-zA-Z0-9])/g, '<strong>$1</strong>')
+        // Underscore italic: only match at word boundaries (not intraword)
+        .replace(/(?<![a-zA-Z0-9])_(?!\s)(.+?)(?<!\s)_(?![a-zA-Z0-9])/g, '<em>$1</em>')
         .replace(/`([^`]+)`/g, '<code>$1</code>')
         .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
 }
