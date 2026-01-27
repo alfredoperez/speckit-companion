@@ -8,6 +8,7 @@
 import * as vscode from 'vscode';
 import { WorkflowConfig } from './types';
 import { getWorkflows, getFeatureWorkflow, saveFeatureWorkflow, getWorkflow } from './workflowManager';
+import { ConfigKeys } from '../../core/constants';
 
 /**
  * Check if workflow selection is needed
@@ -110,6 +111,9 @@ function buildWorkflowDetail(workflow: WorkflowConfig): string {
     if (workflow['step-plan'] && workflow['step-plan'] !== 'speckit.plan') {
         customSteps.push(`plan: ${workflow['step-plan']}`);
     }
+    if (workflow['step-tasks'] && workflow['step-tasks'] !== 'speckit.tasks') {
+        customSteps.push(`tasks: ${workflow['step-tasks']}`);
+    }
     if (workflow['step-implement'] && workflow['step-implement'] !== 'speckit.implement') {
         customSteps.push(`implement: ${workflow['step-implement']}`);
     }
@@ -128,7 +132,7 @@ function buildWorkflowDetail(workflow: WorkflowConfig): string {
 }
 
 /**
- * Get the workflow for a feature, prompting for selection if needed
+ * Get the workflow for a feature, auto-selecting based on settings
  * @param featureDir Path to feature directory
  * @returns Selected workflow or undefined if cancelled
  */
@@ -143,13 +147,23 @@ export async function getOrSelectWorkflow(featureDir: string): Promise<WorkflowC
         // Workflow no longer exists, need to select new one
     }
 
-    // Check if selection is needed
-    if (!needsSelection()) {
-        // Auto-select default workflow
-        const workflows = getWorkflows();
-        return workflows[0];
+    // Get the configured default workflow
+    const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
+    const defaultWorkflowName = config.get<string>('defaultWorkflow', 'default');
+    const workflows = getWorkflows();
+
+    // Find the configured default workflow
+    let selectedWorkflow = workflows.find(w => w.name === defaultWorkflowName);
+
+    if (!selectedWorkflow) {
+        // Configured workflow doesn't exist, warn and fall back
+        vscode.window.showWarningMessage(
+            `Default workflow "${defaultWorkflowName}" not found. Using built-in default.`
+        );
+        selectedWorkflow = workflows[0];
     }
 
-    // Show selection picker
-    return selectWorkflow(featureDir);
+    // Auto-select the default workflow
+    await saveFeatureWorkflow(featureDir, selectedWorkflow.name);
+    return selectedWorkflow;
 }

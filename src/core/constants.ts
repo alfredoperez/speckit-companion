@@ -57,6 +57,7 @@ export const ConfigKeys = {
     geminiInitDelay: 'speckit.geminiInitDelay',
     customCommands: 'speckit.customCommands',
     customWorkflows: 'speckit.customWorkflows',
+    defaultWorkflow: 'speckit.defaultWorkflow',
     views: {
         specsVisible: 'speckit.views.specs.visible',
         agentsVisible: 'speckit.views.agents.visible',

@@ -95,7 +95,7 @@ type NormalizedCustomCommand = {
 /**
  * Workflow-enabled steps that support custom command mapping
  */
-const WORKFLOW_STEPS: WorkflowStep[] = ['specify', 'plan', 'implement'];
+const WORKFLOW_STEPS: WorkflowStep[] = ['specify', 'plan', 'tasks', 'implement'];
 
 /**
  * Register phase-specific commands (specify, plan, tasks, implement, etc.)
@@ -107,7 +107,7 @@ function registerPhaseCommands(
     const phaseCommands = [
         { name: 'specify', title: 'Specify', isWorkflowStep: true },
         { name: 'plan', title: 'Plan', isWorkflowStep: true },
-        { name: 'tasks', title: 'Tasks', isWorkflowStep: false },
+        { name: 'tasks', title: 'Tasks', isWorkflowStep: true },
         { name: 'implement', title: 'Implement', isWorkflowStep: true },
         { name: 'clarify', title: 'Clarify', isWorkflowStep: false },
         { name: 'analyze', title: 'Analyze', isWorkflowStep: false },

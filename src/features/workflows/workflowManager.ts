@@ -27,6 +27,7 @@ export const DEFAULT_WORKFLOW: WorkflowConfig = {
     description: 'Standard SpecKit workflow',
     'step-specify': 'speckit.specify',
     'step-plan': 'speckit.plan',
+    'step-tasks': 'speckit.tasks',
     'step-implement': 'speckit.implement',
     checkpoints: [],
 };
@@ -60,7 +61,7 @@ export function validateWorkflow(config: WorkflowConfig): ValidationResult {
     }
 
     // Validate step commands if provided
-    const steps = ['step-specify', 'step-plan', 'step-implement'] as const;
+    const steps = ['step-specify', 'step-plan', 'step-tasks', 'step-implement'] as const;
     for (const step of steps) {
         const value = config[step];
         if (value !== undefined && typeof value !== 'string') {
@@ -284,6 +285,15 @@ export function validateWorkflowsOnActivation(): void {
     if (hasErrors) {
         vscode.window.showWarningMessage(
             'Some workflows have configuration errors and will be skipped. Check the settings.'
+        );
+    }
+
+    // Validate defaultWorkflow setting
+    const defaultWorkflowName = config.get<string>('defaultWorkflow', 'default');
+    const allWorkflowNames = ['default', ...seenNames];
+    if (!allWorkflowNames.includes(defaultWorkflowName)) {
+        vscode.window.showWarningMessage(
+            `Default workflow "${defaultWorkflowName}" is not configured. Check your speckit.defaultWorkflow setting.`
         );
     }
 }
