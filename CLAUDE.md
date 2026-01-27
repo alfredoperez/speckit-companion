@@ -106,6 +106,7 @@ User data stored in workspace `.claude/` directory:
 - TypeScript 5.3+ (ES2022 target, strict mode) + VS Code Extension API (`@types/vscode ^1.84.0`), Webpack 5 (011-spec-viewer-polish)
 - N/A (file-based in `.claude/specs/` directory) (011-spec-viewer-polish)
 - File-based in `.codex/` directory structure (012-codex-cli-provider)
+- File-based in `.claude/` directory structure for feature context persistence (001-custom-workflows)
 
 ## Recent Changes
 - 011-spec-viewer-polish: Added TypeScript 5.3+ (ES2022 target, strict mode) + VS Code Extension API (`@types/vscode ^1.84.0`), Webpack 5

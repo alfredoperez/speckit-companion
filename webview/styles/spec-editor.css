@@ -257,6 +257,47 @@
 }
 
 /* ============================================
+   Workflow Row
+   ============================================ */
+
+.workflow-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.workflow-row .template-loader {
+    margin-bottom: 0;
+}
+
+.workflow-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.workflow-selector label {
+    font-size: 0.85em;
+    color: var(--vscode-descriptionForeground);
+}
+
+.workflow-selector select {
+    padding: 4px 8px;
+    border: 1px solid var(--vscode-input-border, var(--vscode-widget-border));
+    border-radius: 4px;
+    background-color: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    font-size: 0.85em;
+    cursor: pointer;
+}
+
+.workflow-selector select:focus {
+    outline: none;
+    border-color: var(--vscode-focusBorder);
+}
+
+/* ============================================
    Action Buttons
    ============================================ */
 

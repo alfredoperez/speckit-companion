@@ -210,20 +210,60 @@ Access these commands via the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`):
 
 ### Custom Commands
 
-You can add custom SpecKit slash commands in VS Code settings and run them with **SpecKit: Run Custom Command**.
+Add custom SpecKit slash commands in VS Code settings. Run them with **SpecKit: Run Custom Command** or see them in the workflow editor based on `step`.
 
 ```json
 {
   "speckit.customCommands": [
     "review",
     {
-      "title": "Risk Review",
-      "command": "/speckit.risk-review ${specDir}",
-      "autoExecute": false
+      "name": "commit",
+      "title": "Commit Changes",
+      "command": "/speckit.commit",
+      "step": "tasks",
+      "tooltip": "Generate a commit for completed work",
+      "requiresSpecDir": false
+    },
+    {
+      "name": "pr",
+      "title": "Create PR",
+      "command": "/speckit.pr",
+      "step": "tasks",
+      "tooltip": "Create a pull request for the feature"
     }
   ]
 }
 ```
+
+**Properties:**
+- `name` - Command identifier
+- `title` - Display name in picker
+- `command` - Slash command to execute
+- `step` - Phase to show in: `spec`, `plan`, `tasks`, or `all` (default)
+- `tooltip` - Description shown on hover
+- `autoExecute` - Auto-run in terminal (default: true)
+- `requiresSpecDir` - Inject spec directory (default: true)
+
+### Custom Workflows
+
+Define alternative workflows with different commands for each step:
+
+```json
+{
+  "speckit.customWorkflows": [
+    {
+      "name": "light",
+      "displayName": "Light Workflow",
+      "description": "Streamlined workflow for small features",
+      "step-specify": "/speckit.light-specify",
+      "step-plan": "/speckit.light-plan",
+      "step-implement": "/speckit.light-implement"
+    }
+  ]
+}
+```
+
+When multiple workflows exist, you'll be prompted to choose when starting a new spec.
 
 ## Configuration
 

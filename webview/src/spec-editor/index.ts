@@ -35,8 +35,16 @@ function getElements() {
         previewBtn: document.getElementById('previewBtn') as HTMLButtonElement,
         cancelBtn: document.getElementById('cancelBtn') as HTMLButtonElement,
         attachImageBtn: document.getElementById('attachImageBtn') as HTMLButtonElement,
-        loadTemplateBtn: document.getElementById('loadTemplateBtn') as HTMLButtonElement
+        loadTemplateBtn: document.getElementById('loadTemplateBtn') as HTMLButtonElement,
+        workflowSelector: document.getElementById('workflowSelector') as HTMLElement,
+        workflowSelect: document.getElementById('workflowSelect') as HTMLSelectElement
     };
+}
+
+// Get selected workflow
+function getSelectedWorkflow(): string {
+    const { workflowSelect } = getElements();
+    return workflowSelect?.value || 'default';
 }
 
 // ============================================
@@ -225,7 +233,8 @@ function setupEventListeners(): void {
         vscode.postMessage({
             type: 'submit',
             content: elements.textarea.value,
-            images: attachedImages.map(img => img.id)
+            images: attachedImages.map(img => img.id),
+            workflow: getSelectedWorkflow()
         });
     });
 
@@ -269,7 +278,8 @@ function setupEventListeners(): void {
                 vscode.postMessage({
                     type: 'submit',
                     content: elements.textarea.value,
-                    images: attachedImages.map(img => img.id)
+                    images: attachedImages.map(img => img.id),
+                    workflow: getSelectedWorkflow()
                 });
             }
         }
@@ -301,6 +311,33 @@ function setupEventListeners(): void {
 }
 
 // ============================================
+// Workflow Selector
+// ============================================
+
+interface WorkflowDefinition {
+    name: string;
+    displayName: string;
+    description?: string;
+}
+
+function initWorkflows(workflows: WorkflowDefinition[]): void {
+    const { workflowSelector, workflowSelect } = getElements();
+
+    // Only show selector if there are custom workflows (more than just default)
+    if (workflows.length <= 1) {
+        workflowSelector.style.display = 'none';
+        return;
+    }
+
+    // Populate dropdown
+    workflowSelect.innerHTML = workflows.map(wf =>
+        `<option value="${wf.name}" title="${wf.description || ''}">${wf.displayName}</option>`
+    ).join('');
+
+    workflowSelector.style.display = 'flex';
+}
+
+// ============================================
 // Message Handler
 // ============================================
 
@@ -308,6 +345,10 @@ function handleMessage(event: MessageEvent): void {
     const message = event.data as ExtensionToSpecEditorMessage;
 
     switch (message.type) {
+        case 'init':
+            initWorkflows(message.workflows);
+            break;
+
         case 'imageSaved':
             attachedImages.push({
                 id: message.imageId,
@@ -362,4 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Listen for messages from extension
     window.addEventListener('message', handleMessage);
+
+    // Signal ready to receive workflows
+    vscode.postMessage({ type: 'ready' });
 });

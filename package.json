@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "VS Code companion for GitHub SpecKit - spec-driven development with AI assistants",
-  "version": "0.3.0",
+  "version": "0.3.3",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",
@@ -576,7 +576,7 @@
           "default": [],
           "scope": "window",
           "order": 6,
-          "description": "Custom SpecKit slash commands available in 'Run Custom Command'. Each entry can be a string (command name) or an object with name, title, command, requiresSpecDir, and autoExecute.",
+          "description": "Custom SpecKit slash commands available in 'Run Custom Command'. Each entry can be a string (command name) or an object with name, title, command, step, tooltip, requiresSpecDir, and autoExecute.",
           "items": {
             "anyOf": [
               {
@@ -606,6 +606,21 @@
                   "autoExecute": {
                     "type": "boolean",
                     "description": "Auto-run the command in the terminal (default: true)"
+                  },
+                  "step": {
+                    "type": "string",
+                    "enum": [
+                      "spec",
+                      "plan",
+                      "tasks",
+                      "all"
+                    ],
+                    "default": "all",
+                    "description": "Which phase to show this command in (spec, plan, tasks, or all)"
+                  },
+                  "tooltip": {
+                    "type": "string",
+                    "description": "Tooltip text shown on hover"
                   }
                 },
                 "additionalProperties": false
@@ -660,6 +675,47 @@
           "default": false,
           "scope": "window",
           "description": "Show Settings view"
+        },
+        "speckit.customWorkflows": {
+          "type": "array",
+          "default": [],
+          "scope": "window",
+          "order": 7,
+          "description": "Custom workflow definitions for spec-driven development",
+          "items": {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*$",
+                "description": "Unique workflow identifier (lowercase, hyphenated)"
+              },
+              "displayName": {
+                "type": "string",
+                "description": "Display name shown in workflow picker"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description shown in workflow picker"
+              },
+              "step-specify": {
+                "type": "string",
+                "description": "Custom command for specify step"
+              },
+              "step-plan": {
+                "type": "string",
+                "description": "Custom command for plan step"
+              },
+              "step-implement": {
+                "type": "string",
+                "description": "Custom command for implement step"
+              }
+            },
+            "additionalProperties": false
+          }
         }
       }
     }

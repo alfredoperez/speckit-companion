@@ -9,6 +9,32 @@
     "chat.tools.terminal.autoApprove": {
         ".specify/scripts/bash/": true,
         ".specify/scripts/powershell/": true
-    }
+    },
+    "speckit.customCommands": [
+        {
+            "name": "commit",
+            "title": "Commit",
+            "command": "/speckit.commit",
+            "step": "tasks",
+            "tooltip": "Generate a commit for completed work"
+        },
+        {
+            "name": "pr",
+            "title": "Create PR",
+            "command": "/speckit.pr",
+            "step": "tasks",
+            "tooltip": "Create a pull request for the feature"
+        }
+    ],
+    "speckit.customWorkflows": [
+        {
+            "name": "light",
+            "displayName": "Light Workflow",
+            "description": "Streamlined workflow for small features",
+            "step-specify": "/speckit.light-specify",
+            "step-plan": "/speckit.light-plan",
+            "step-implement": "/speckit.light-implement"
+        }
+    ]
 }
 

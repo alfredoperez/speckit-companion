@@ -138,16 +138,39 @@ export interface TempFileManifest {
 }
 
 // ============================================
+// Workflow Types
+// ============================================
+
+/**
+ * A workflow definition for spec-driven development
+ */
+export interface WorkflowDefinition {
+    /** Unique workflow identifier */
+    name: string;
+    /** Display name shown in picker */
+    displayName: string;
+    /** Description shown in picker */
+    description?: string;
+    /** Command for specify step */
+    stepSpecify: string;
+    /** Command for plan step */
+    stepPlan?: string;
+    /** Command for implement step */
+    stepImplement?: string;
+}
+
+// ============================================
 // Message Types: Webview → Extension
 // ============================================
 
 export type SpecEditorToExtensionMessage =
-    | { type: 'submit'; content: string; images: string[] }
+    | { type: 'submit'; content: string; images: string[]; workflow: string }
     | { type: 'preview' }
     | { type: 'attachImage'; name: string; size: number; dataUri: string }
     | { type: 'removeImage'; imageId: string }
     | { type: 'loadTemplate'; specPath: string }
     | { type: 'requestTemplateDialog' }
+    | { type: 'ready' }
     | { type: 'cancel' };
 
 // ============================================
@@ -155,6 +178,7 @@ export type SpecEditorToExtensionMessage =
 // ============================================
 
 export type ExtensionToSpecEditorMessage =
+    | { type: 'init'; workflows: WorkflowDefinition[] }
     | { type: 'imageSaved'; imageId: string; thumbnailUri: string; originalName: string }
     | { type: 'imageRemoved'; imageId: string }
     | { type: 'templateLoaded'; content: string }

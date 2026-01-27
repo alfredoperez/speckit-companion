@@ -6,6 +6,13 @@ import { SpecKitDetector } from '../../speckit/detector';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig, SpecTreeItem } from '../../core/types/config';
 import { Commands, ConfigKeys } from '../../core/constants';
+import {
+    getOrSelectWorkflow,
+    resolveStepCommand,
+    executeCheckpointsForTrigger,
+    WorkflowStep,
+    WorkflowConfig,
+} from '../workflows';
 
 /**
  * Register SpecKit workflow commands (create, specify, plan, tasks, etc.)
@@ -86,6 +93,11 @@ type NormalizedCustomCommand = {
 };
 
 /**
+ * Workflow-enabled steps that support custom command mapping
+ */
+const WORKFLOW_STEPS: WorkflowStep[] = ['specify', 'plan', 'implement'];
+
+/**
  * Register phase-specific commands (specify, plan, tasks, implement, etc.)
  */
 function registerPhaseCommands(
@@ -93,13 +105,13 @@ function registerPhaseCommands(
     outputChannel: vscode.OutputChannel
 ): void {
     const phaseCommands = [
-        { name: 'specify', title: 'Specify' },
-        { name: 'plan', title: 'Plan' },
-        { name: 'tasks', title: 'Tasks' },
-        { name: 'implement', title: 'Implement' },
-        { name: 'clarify', title: 'Clarify' },
-        { name: 'analyze', title: 'Analyze' },
-        { name: 'checklist', title: 'Checklist' },
+        { name: 'specify', title: 'Specify', isWorkflowStep: true },
+        { name: 'plan', title: 'Plan', isWorkflowStep: true },
+        { name: 'tasks', title: 'Tasks', isWorkflowStep: false },
+        { name: 'implement', title: 'Implement', isWorkflowStep: true },
+        { name: 'clarify', title: 'Clarify', isWorkflowStep: false },
+        { name: 'analyze', title: 'Analyze', isWorkflowStep: false },
+        { name: 'checklist', title: 'Checklist', isWorkflowStep: false },
     ];
 
     for (const cmd of phaseCommands) {
@@ -113,6 +125,19 @@ function registerPhaseCommands(
                     return;
                 }
 
+                // Handle workflow-enabled steps
+                if (cmd.isWorkflowStep && WORKFLOW_STEPS.includes(cmd.name as WorkflowStep)) {
+                    await executeWorkflowStep(
+                        cmd.name as WorkflowStep,
+                        cmd.title,
+                        targetDir,
+                        refinementContext,
+                        outputChannel
+                    );
+                    return;
+                }
+
+                // Non-workflow steps use default command
                 let prompt = `/speckit.${cmd.name} ${targetDir}`;
                 if (refinementContext) {
                     prompt += refinementContext;
@@ -131,6 +156,100 @@ function registerPhaseCommands(
             await getAIProvider().executeInTerminal(prompt, 'SpecKit - Constitution');
         })
     );
+}
+
+/**
+ * Execute a workflow-enabled step with workflow selection and custom command mapping
+ */
+async function executeWorkflowStep(
+    step: WorkflowStep,
+    title: string,
+    targetDir: string,
+    refinementContext: string | undefined,
+    outputChannel: vscode.OutputChannel
+): Promise<void> {
+    // Get or select workflow for this feature
+    const workflow = await getOrSelectWorkflow(targetDir);
+    if (!workflow) {
+        // User cancelled selection
+        outputChannel.appendLine(`[SpecKit] ${title} cancelled - no workflow selected`);
+        return;
+    }
+
+    outputChannel.appendLine(`[SpecKit] Using workflow: ${workflow.displayName || workflow.name}`);
+
+    // Resolve the command for this step
+    const command = resolveStepCommand(workflow, step);
+    outputChannel.appendLine(`[SpecKit] Resolved command: ${command}`);
+
+    // Check if command exists (warn if custom command may not exist)
+    if (command !== `speckit.${step}`) {
+        outputChannel.appendLine(`[SpecKit] Using custom command: ${command}`);
+    }
+
+    // Build and execute the prompt
+    let prompt = `/${command} ${targetDir}`;
+    if (refinementContext) {
+        prompt += refinementContext;
+    }
+
+    await getAIProvider().executeInTerminal(prompt, `SpecKit - ${title}`);
+
+    // Execute checkpoints after implement step
+    if (step === 'implement') {
+        await executeImplementCheckpoints(workflow, targetDir, outputChannel);
+    }
+}
+
+/**
+ * Execute checkpoints after the implement step
+ */
+async function executeImplementCheckpoints(
+    workflow: WorkflowConfig,
+    featureDir: string,
+    outputChannel: vscode.OutputChannel
+): Promise<void> {
+    const featureName = path.basename(featureDir);
+
+    // Get current branch name
+    let branchName = 'main';
+    try {
+        const gitExtension = vscode.extensions.getExtension('vscode.git');
+        if (gitExtension) {
+            const git = gitExtension.exports.getAPI(1);
+            const repo = git.repositories[0];
+            if (repo && repo.state.HEAD) {
+                branchName = repo.state.HEAD.name || 'main';
+            }
+        }
+    } catch (error) {
+        outputChannel.appendLine(`[SpecKit] Could not get branch name: ${error}`);
+    }
+
+    const context = {
+        featureName,
+        branchName,
+        commitMessage: `feat(${featureName}): implement feature`,
+    };
+
+    // Execute 'after-implement' checkpoints
+    outputChannel.appendLine(`[SpecKit] Checking for after-implement checkpoints...`);
+    const results = await executeCheckpointsForTrigger(workflow, 'after-implement', featureDir, context);
+
+    for (const result of results) {
+        outputChannel.appendLine(`[SpecKit] Checkpoint result: ${result.status} - ${result.output || result.error || ''}`);
+    }
+
+    // Check if any checkpoint was completed that should trigger 'after-commit' checkpoints
+    const commitCompleted = results.some(r => r.status === 'completed');
+    if (commitCompleted) {
+        outputChannel.appendLine(`[SpecKit] Checking for after-commit checkpoints...`);
+        const afterCommitResults = await executeCheckpointsForTrigger(workflow, 'after-commit', featureDir, context);
+
+        for (const result of afterCommitResults) {
+            outputChannel.appendLine(`[SpecKit] Checkpoint result: ${result.status} - ${result.output || result.error || ''}`);
+        }
+    }
 }
 
 /**
