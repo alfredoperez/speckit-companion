@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.1] - 2026-01-27
+
+### New Features
+
+- **Custom Workflows**: Define alternative workflows with custom commands for each step via `speckit.customWorkflows` setting
+- **Workflow Selector**: Dropdown in spec editor to choose between default and custom workflows
+- **Light Workflow Commands**: New streamlined commands (`light-specify`, `light-plan`, `light-implement`) for rapid development
+- **Git Commands**: New `/speckit.commit` and `/speckit.pr` commands for workflow automation
+
+### Improvements
+
+- **Custom Commands**: Added `step` property to show commands in specific phases (spec, plan, tasks)
+- **Custom Commands**: Added `tooltip` property for hover descriptions
+- Simplified `customWorkflows` schema by removing `checkpoints` (handled by AI CLI)
+
 ## [0.3.0] - 2026-01-25
 
 ### New Features
