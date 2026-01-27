@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.4] - 2026-01-27
+
+### New Features
+
+- **Default Workflow Setting**: New `speckit.defaultWorkflow` setting to auto-select a workflow for new features without prompting
+- **Step-Tasks Support**: Added `step-tasks` as a workflow-configurable step alongside specify, plan, and implement
+- **Dynamic Footer Buttons**: Approve button in spec viewer now dynamically updates based on document type and workflow progress
+
+### Improvements
+
+- Footer button text contextually shows "Generate Plan", "Generate Tasks", or "Implement Tasks" based on current phase
+- Validates `defaultWorkflow` setting on extension activation with warning if configured workflow doesn't exist
+
 ## [0.3.1] - 2026-01-27
 
 ### New Features
