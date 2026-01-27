@@ -199,6 +199,16 @@ export interface ViewerPanelConfig {
 // ============================================
 
 /**
+ * Footer button state for message-based updates
+ */
+export interface FooterState {
+    /** Whether to show the approve/next-step button */
+    showApproveButton: boolean;
+    /** Text for the approve button */
+    approveText: string;
+}
+
+/**
  * Navigation state for message-based updates
  */
 export interface NavState {
@@ -214,6 +224,8 @@ export interface NavState {
     taskCompletionPercent: number;
     /** Whether viewing a related doc */
     isViewingRelatedDoc: boolean;
+    /** Footer button state for dynamic updates */
+    footerState?: FooterState;
 }
 
 /**

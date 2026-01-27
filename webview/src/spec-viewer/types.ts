@@ -30,6 +30,14 @@ export interface SpecDocument {
 }
 
 /**
+ * Footer button state for message-based updates
+ */
+export interface FooterState {
+    showApproveButton: boolean;
+    approveText: string;
+}
+
+/**
  * Navigation state for message-based updates
  */
 export interface NavState {
@@ -39,6 +47,7 @@ export interface NavState {
     workflowPhase: 'spec' | 'plan' | 'tasks' | 'done';
     taskCompletionPercent: number;
     isViewingRelatedDoc: boolean;
+    footerState?: FooterState;
 }
 
 // ============================================

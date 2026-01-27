@@ -466,6 +466,30 @@ export class SpecViewerProvider {
       );
       const workflowPhase = calculateWorkflowPhase(coreDocs);
 
+      // Calculate footer state (same logic as generator.ts)
+      const planExists = coreDocs.find(d => d.type === "plan")?.exists ?? false;
+      const tasksExists = coreDocs.find(d => d.type === "tasks")?.exists ?? false;
+
+      let showApproveButton = false;
+      let approveText = "";
+
+      if (documentType === "spec") {
+        if (!planExists) {
+          showApproveButton = true;
+          approveText = "Generate Plan";
+        }
+      } else if (documentType === "plan") {
+        if (!tasksExists) {
+          showApproveButton = true;
+          approveText = "Generate Tasks";
+        }
+      } else if (documentType === "tasks") {
+        if (taskCompletionPercent < 100) {
+          showApproveButton = true;
+          approveText = "Implement Tasks";
+        }
+      }
+
       const navState: NavState = {
         coreDocs,
         relatedDocs,
@@ -473,6 +497,10 @@ export class SpecViewerProvider {
         workflowPhase,
         taskCompletionPercent,
         isViewingRelatedDoc,
+        footerState: {
+          showApproveButton,
+          approveText,
+        },
       };
 
       // Update internal state

@@ -116,6 +116,35 @@ export function updateNavState(navState: NavState): void {
             }
         }
     }
+
+    // Update footer buttons based on footerState
+    if (navState.footerState) {
+        const approveButton = document.getElementById('approve');
+        const actionsRight = document.querySelector('.actions-right');
+
+        if (navState.footerState.showApproveButton) {
+            if (approveButton) {
+                // Button exists, update its text and make sure it's visible
+                approveButton.textContent = navState.footerState.approveText;
+                approveButton.style.display = '';
+            } else if (actionsRight) {
+                // Button doesn't exist, create it
+                const newButton = document.createElement('button');
+                newButton.id = 'approve';
+                newButton.className = 'primary';
+                newButton.textContent = navState.footerState.approveText;
+                newButton.addEventListener('click', () => {
+                    vscode.postMessage({ type: 'approve' });
+                });
+                actionsRight.appendChild(newButton);
+            }
+        } else {
+            // Hide the approve button if it exists
+            if (approveButton) {
+                approveButton.style.display = 'none';
+            }
+        }
+    }
 }
 
 /**
