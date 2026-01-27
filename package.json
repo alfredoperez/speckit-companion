@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "VS Code companion for GitHub SpecKit - spec-driven development with AI assistants",
-  "version": "0.3.1",
+  "version": "0.3.3",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",
@@ -709,6 +709,10 @@
                 "type": "string",
                 "description": "Custom command for plan step"
               },
+              "step-tasks": {
+                "type": "string",
+                "description": "Custom command for tasks step"
+              },
               "step-implement": {
                 "type": "string",
                 "description": "Custom command for implement step"
@@ -717,6 +721,13 @@
             "additionalProperties": false
           }
         }
+      },
+      "speckit.defaultWorkflow": {
+        "type": "string",
+        "default": "default",
+        "scope": "window",
+        "order": 8,
+        "description": "Workflow to auto-select for new features. Must match a workflow name from customWorkflows or 'default'."
       }
     }
   },

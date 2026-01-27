@@ -40,6 +40,7 @@ export interface WorkflowConfig {
     description?: string;
     'step-specify'?: string;
     'step-plan'?: string;
+    'step-tasks'?: string;
     'step-implement'?: string;
     checkpoints?: CheckpointConfig[];
 }
@@ -56,7 +57,7 @@ export interface FeatureWorkflowContext {
 /**
  * Workflow step identifiers
  */
-export type WorkflowStep = 'specify' | 'plan' | 'implement';
+export type WorkflowStep = 'specify' | 'plan' | 'tasks' | 'implement';
 
 /**
  * Validation result for workflow configurations
