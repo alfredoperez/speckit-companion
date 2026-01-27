@@ -17,19 +17,27 @@ export interface VSCodeApi {
 // ============================================
 
 export type SpecEditorToExtensionMessage =
-    | { type: 'submit'; content: string; images: string[] }
+    | { type: 'submit'; content: string; images: string[]; workflow: string }
     | { type: 'preview' }
     | { type: 'attachImage'; name: string; size: number; dataUri: string }
     | { type: 'removeImage'; imageId: string }
     | { type: 'loadTemplate'; specPath: string }
     | { type: 'requestTemplateDialog' }
+    | { type: 'ready' }
     | { type: 'cancel' };
 
 // ============================================
 // Message Types: Extension → Webview
 // ============================================
 
+export interface WorkflowDefinition {
+    name: string;
+    displayName: string;
+    description?: string;
+}
+
 export type ExtensionToSpecEditorMessage =
+    | { type: 'init'; workflows: WorkflowDefinition[] }
     | { type: 'imageSaved'; imageId: string; thumbnailUri: string; originalName: string }
     | { type: 'imageRemoved'; imageId: string }
     | { type: 'templateLoaded'; content: string }

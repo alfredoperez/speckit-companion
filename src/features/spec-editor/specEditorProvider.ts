@@ -5,7 +5,8 @@ import { AIProviderFactory, getConfiguredProviderType } from '../../ai-providers
 import type {
     SpecEditorToExtensionMessage,
     ExtensionToSpecEditorMessage,
-    AttachedImage
+    AttachedImage,
+    WorkflowDefinition
 } from './types';
 
 /**
@@ -35,6 +36,7 @@ export class SpecEditorProvider {
     private panel: vscode.WebviewPanel | undefined;
     private sessionId: string | undefined;
     private attachedImages: Map<string, AttachedImage> = new Map();
+    private workflows: Map<string, WorkflowDefinition> = new Map();
 
     constructor(
         private readonly context: vscode.ExtensionContext,
@@ -42,6 +44,53 @@ export class SpecEditorProvider {
         private readonly tempFileManager: TempFileManager,
         private readonly draftManager: SpecDraftManager
     ) {}
+
+    /**
+     * Get available workflows from settings
+     */
+    private getWorkflows(): WorkflowDefinition[] {
+        const config = vscode.workspace.getConfiguration('speckit');
+        const customWorkflows = config.get<Array<{
+            name: string;
+            displayName?: string;
+            description?: string;
+            'step-specify'?: string;
+            'step-plan'?: string;
+            'step-implement'?: string;
+        }>>('customWorkflows', []);
+
+        // Always include default workflow
+        const workflows: WorkflowDefinition[] = [
+            {
+                name: 'default',
+                displayName: 'Default',
+                description: 'Standard SpecKit workflow',
+                stepSpecify: '/speckit.specify'
+            }
+        ];
+
+        // Add custom workflows
+        for (const wf of customWorkflows) {
+            if (wf.name && wf.name !== 'default') {
+                workflows.push({
+                    name: wf.name,
+                    displayName: wf.displayName || wf.name,
+                    description: wf.description,
+                    stepSpecify: wf['step-specify'] || `/speckit.${wf.name}-specify`,
+                    stepPlan: wf['step-plan'],
+                    stepImplement: wf['step-implement']
+                });
+            }
+        }
+
+        // Cache workflows for lookup
+        this.workflows.clear();
+        for (const wf of workflows) {
+            this.workflows.set(wf.name, wf);
+        }
+
+        return workflows;
+    }
 
     /**
      * Show the spec editor webview
@@ -99,8 +148,12 @@ export class SpecEditorProvider {
         this.outputChannel.appendLine(`[SpecEditor] Received message: ${message.type}`);
 
         switch (message.type) {
+            case 'ready':
+                await this.handleReady();
+                break;
+
             case 'submit':
-                await this.handleSubmit(message.content, message.images);
+                await this.handleSubmit(message.content, message.images, message.workflow);
                 break;
 
             case 'preview':
@@ -130,9 +183,18 @@ export class SpecEditorProvider {
     }
 
     /**
+     * Handle webview ready - send initial data
+     */
+    private async handleReady(): Promise<void> {
+        const workflows = this.getWorkflows();
+        this.outputChannel.appendLine(`[SpecEditor] Sending ${workflows.length} workflows to webview`);
+        this.postMessage({ type: 'init', workflows });
+    }
+
+    /**
      * Handle spec submission
      */
-    private async handleSubmit(content: string, imageIds: string[]): Promise<void> {
+    private async handleSubmit(content: string, imageIds: string[], workflowName: string): Promise<void> {
         if (!this.sessionId) {
             this.postMessage({ type: 'error', message: 'No active session' });
             return;
@@ -145,7 +207,13 @@ export class SpecEditorProvider {
 
         try {
             this.postMessage({ type: 'submissionStarted' });
-            this.outputChannel.appendLine(`[SpecEditor] Submitting spec with ${imageIds.length} images`);
+            this.outputChannel.appendLine(`[SpecEditor] Submitting spec with workflow: ${workflowName}, ${imageIds.length} images`);
+
+            // Get selected workflow
+            const workflow = this.workflows.get(workflowName) || this.workflows.get('default');
+            if (!workflow) {
+                throw new Error(`Workflow '${workflowName}' not found`);
+            }
 
             // Get attached images
             const images = imageIds
@@ -181,8 +249,9 @@ export class SpecEditorProvider {
                 images
             );
 
-            // Prepend the speckit.specify command to trigger the workflow
-            const prompt = `/speckit.specify ${markdownContent}`;
+            // Use workflow's specify command
+            const prompt = `${workflow.stepSpecify} ${markdownContent}`;
+            this.outputChannel.appendLine(`[SpecEditor] Using command: ${workflow.stepSpecify}`);
 
             // Execute in terminal
             await provider.executeInTerminal(prompt, 'SpecKit - New Spec');
@@ -372,11 +441,19 @@ export class SpecEditorProvider {
         <div class="spec-editor-content">
             <div id="error-container"></div>
 
-            <div class="template-loader">
-                <button class="load-template-btn" id="loadTemplateBtn">
-                    <span class="codicon">📄</span>
-                    Load Existing Spec
-                </button>
+            <div class="workflow-row">
+                <div class="template-loader">
+                    <button class="load-template-btn" id="loadTemplateBtn">
+                        <span class="codicon">📄</span>
+                        Load Existing Spec
+                    </button>
+                </div>
+                <div class="workflow-selector" id="workflowSelector" style="display: none;">
+                    <label for="workflowSelect">Workflow</label>
+                    <select id="workflowSelect">
+                        <option value="default">Default</option>
+                    </select>
+                </div>
             </div>
 
             <div class="editor-container">

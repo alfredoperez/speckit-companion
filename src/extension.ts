@@ -15,6 +15,7 @@ import { PermissionManager } from './features/permission';
 import { WorkflowEditorProvider, registerWorkflowEditorCommands } from './features/workflow-editor';
 import { registerSpecEditorCommands } from './features/spec-editor';
 import { registerSpecViewerCommands, isSpecDocument } from './features/spec-viewer';
+import { validateWorkflowsOnActivation, registerWorkflowConfigChangeListener } from './features/workflows';
 
 // SpecKit CLI integration
 import { SpecKitDetector, UpdateChecker, registerCliCommands, registerUtilityCommands } from './speckit';
@@ -142,6 +143,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Set up tasks watcher for phase completion notifications
     setupTasksWatcher(context, outputChannel);
+
+    // Validate custom workflows on activation and register change listener
+    validateWorkflowsOnActivation();
+    context.subscriptions.push(registerWorkflowConfigChangeListener(context));
+    outputChannel.appendLine('Custom workflows validated');
 
     // Check for updates on startup
     updateChecker.checkForUpdates();

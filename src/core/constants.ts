@@ -56,6 +56,7 @@ export const ConfigKeys = {
     claudePermissionMode: 'speckit.claudePermissionMode',
     geminiInitDelay: 'speckit.geminiInitDelay',
     customCommands: 'speckit.customCommands',
+    customWorkflows: 'speckit.customWorkflows',
     views: {
         specsVisible: 'speckit.views.specs.visible',
         agentsVisible: 'speckit.views.agents.visible',
