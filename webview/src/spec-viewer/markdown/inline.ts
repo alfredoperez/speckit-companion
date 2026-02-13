@@ -31,28 +31,37 @@ export function escapeHtmlInScenario(text: string): string {
 export function parseInline(text: string): string {
     if (!text) return '';
 
+    // Protect inline code first: extract backtick spans so their contents
+    // are not processed by emphasis/link regexes.
+    const codeSpans: string[] = [];
     let result = text
         // Escape HTML first
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
+        // Stash inline code
+        .replace(/`([^`]+)`/g, (_match, code) => {
+            codeSpans.push(`<code>${code}</code>`);
+            return `\x00CODE${codeSpans.length - 1}\x00`;
+        })
         // Bold + Italic
         .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
         .replace(/___(.+?)___/g, '<strong><em>$1</em></strong>')
         // Bold
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
         .replace(/__(.+?)__/g, '<strong>$1</strong>')
-        // Italic
+        // Italic — asterisk variant works as before
         .replace(/\*(.+?)\*/g, '<em>$1</em>')
-        .replace(/_(.+?)_/g, '<em>$1</em>')
+        // Italic — underscore variant: only match when not inside a word
+        .replace(/(?<!\w)_([^_]+)_(?!\w)/g, '<em>$1</em>')
         // Strikethrough
         .replace(/~~(.+?)~~/g, '<del>$1</del>')
-        // Inline code
-        .replace(/`([^`]+)`/g, '<code>$1</code>')
         // Links
         .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
         // Images
-        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
+        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">')
+        // Restore inline code spans
+        .replace(/\x00CODE(\d+)\x00/g, (_match, idx) => codeSpans[parseInt(idx)]);
 
     // Post-process: Style acceptance scenario keywords (Given/When/Then)
     result = result
