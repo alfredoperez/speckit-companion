@@ -84,12 +84,20 @@ export async function activate(context: vscode.ExtensionContext) {
     outputChannel.appendLine(`[Extension] Using AI provider: ${aiProvider.name}`);
 
     permissionManager = new PermissionManager(context, outputChannel);
-    await permissionManager.initializePermissions();
+    if (hasWorkspace) {
+        await permissionManager.initializePermissions();
+    } else {
+        outputChannel.appendLine('[Extension] No workspace open, skipping permission initialization');
+    }
 
     const steeringManager = new SteeringManager(outputChannel);
 
     const agentManager = new AgentManager(context, outputChannel);
-    await agentManager.initializeBuiltInAgents();
+    if (hasWorkspace) {
+        await agentManager.initializeBuiltInAgents();
+    } else {
+        outputChannel.appendLine('[Extension] No workspace open, skipping agent initialization');
+    }
 
     const skillManager = new SkillManager(context, outputChannel);
 

@@ -4,7 +4,6 @@
 
 // Claude config (~/.claude.json)
 export interface ClaudeConfig {
-    bypassPermissionsModeAccepted?: boolean;
     [key: string]: unknown;
 }
 

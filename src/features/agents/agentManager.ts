@@ -48,17 +48,27 @@ export class AgentManager {
             return;
         }
 
+        const sourceDir = path.join(this.extensionPath, 'dist/resources/agents');
+
+        // Check if source directory exists before attempting to copy
+        try {
+            await vscode.workspace.fs.stat(vscode.Uri.file(sourceDir));
+        } catch {
+            this.outputChannel.appendLine('[AgentManager] Built-in agents source directory not found, skipping');
+            return;
+        }
+
         const targetDir = path.join(this.workspaceRoot, '.claude/agents/kfc');
-        
+
         try {
             // Ensure target directory exists
             await vscode.workspace.fs.createDirectory(vscode.Uri.file(targetDir));
-            
+
             // Copy each built-in agent (always overwrite to ensure latest version)
             for (const agentName of this.BUILT_IN_AGENTS) {
-                const sourcePath = path.join(this.extensionPath, 'dist/resources/agents', `${agentName}.md`);
+                const sourcePath = path.join(sourceDir, `${agentName}.md`);
                 const targetPath = path.join(targetDir, `${agentName}.md`);
-                
+
                 try {
                     const sourceUri = vscode.Uri.file(sourcePath);
                     const targetUri = vscode.Uri.file(targetPath);
@@ -68,10 +78,10 @@ export class AgentManager {
                     handleError(error, { outputChannel: this.outputChannel, context: `AgentManager.copyAgent(${agentName})` });
                 }
             }
-            
+
             // Also copy system prompt if it doesn't exist
             await this.initializeSystemPrompt();
-            
+
         } catch (error) {
             handleError(error, { outputChannel: this.outputChannel, context: 'AgentManager.initializeBuiltInAgents' });
         }
@@ -89,10 +99,18 @@ export class AgentManager {
         const sourcePath = path.join(this.extensionPath, 'dist/resources/prompts', 'spec-workflow-starter.md');
         const targetPath = path.join(systemPromptDir, 'spec-workflow-starter.md');
 
+        // Check if source file exists before attempting to copy
+        try {
+            await vscode.workspace.fs.stat(vscode.Uri.file(sourcePath));
+        } catch {
+            this.outputChannel.appendLine('[AgentManager] System prompt source file not found, skipping');
+            return;
+        }
+
         try {
             // Ensure directory exists
             await vscode.workspace.fs.createDirectory(vscode.Uri.file(systemPromptDir));
-            
+
             // Always overwrite to ensure latest version
             await vscode.workspace.fs.copy(vscode.Uri.file(sourcePath), vscode.Uri.file(targetPath), { overwrite: true });
             this.outputChannel.appendLine('[AgentManager] Updated system prompt');
