@@ -5,6 +5,7 @@ import * as os from 'os';
 import * as yaml from 'js-yaml';
 import type { AgentFrontmatter, InstalledPlugin, InstalledPluginsFile } from '../../core/types/config';
 import { handleError } from '../../core/errors';
+import { getConfiguredProviderType } from '../../ai-providers/aiProvider';
 
 export interface AgentInfo {
     name: string;
@@ -45,6 +46,11 @@ export class AgentManager {
     async initializeBuiltInAgents(): Promise<void> {
         if (!this.workspaceRoot) {
             this.outputChannel.appendLine('[AgentManager] No workspace root found, skipping agent initialization');
+            return;
+        }
+
+        if (getConfiguredProviderType() !== 'claude') {
+            this.outputChannel.appendLine(`[AgentManager] Provider is not Claude, skipping built-in agent initialization`);
             return;
         }
 

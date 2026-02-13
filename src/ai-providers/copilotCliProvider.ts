@@ -76,10 +76,29 @@ export class CopilotCliProvider implements IAIProvider {
     }
 
     /**
+     * Check if Copilot CLI is installed and show helpful error if not
+     */
+    private async ensureInstalled(): Promise<void> {
+        const installed = await this.isInstalled();
+        if (!installed) {
+            const action = await vscode.window.showErrorMessage(
+                'GitHub Copilot CLI (ghcs) is not installed. Install it with: gh extension install github/gh-copilot',
+                'Copy Install Command'
+            );
+            if (action === 'Copy Install Command') {
+                await vscode.env.clipboard.writeText('gh extension install github/gh-copilot');
+                vscode.window.showInformationMessage('Install command copied to clipboard');
+            }
+            throw new Error('GitHub Copilot CLI is not installed');
+        }
+    }
+
+    /**
      * Execute a prompt in a visible terminal (split view)
      */
     async executeInTerminal(prompt: string, title: string = 'SpecKit - Copilot'): Promise<vscode.Terminal> {
         try {
+            await this.ensureInstalled();
             const cliPath = this.getCliPath();
             const promptFilePath = await this.createTempFile(prompt, 'prompt');
             // GitHub Copilot CLI uses direct prompt
@@ -123,6 +142,7 @@ export class CopilotCliProvider implements IAIProvider {
      * Execute a prompt in headless/background mode
      */
     async executeHeadless(prompt: string): Promise<AIExecutionResult> {
+        await this.ensureInstalled();
         this.outputChannel.appendLine(`[CopilotCliProvider] Invoking Copilot CLI in headless mode`);
         this.outputChannel.appendLine(`========================================`);
         this.outputChannel.appendLine(prompt);
@@ -199,6 +219,7 @@ export class CopilotCliProvider implements IAIProvider {
      * Note: Copilot CLI may handle slash commands differently
      */
     async executeSlashCommand(command: string, title: string = 'SpecKit - Copilot'): Promise<vscode.Terminal> {
+        await this.ensureInstalled();
         // Convert slash command to regular prompt for Copilot
         const prompt = command.startsWith('/') ? command.substring(1) : command;
         return this.executeInTerminal(`Run the following command: ${prompt}`, title);

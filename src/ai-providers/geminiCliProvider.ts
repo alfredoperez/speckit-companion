@@ -76,11 +76,30 @@ export class GeminiCliProvider implements IAIProvider {
     }
 
     /**
+     * Check if Gemini CLI is installed and show helpful error if not
+     */
+    private async ensureInstalled(): Promise<void> {
+        const installed = await this.isInstalled();
+        if (!installed) {
+            const action = await vscode.window.showErrorMessage(
+                'Gemini CLI is not installed. Install it with: npm install -g @google/gemini-cli',
+                'Copy Install Command'
+            );
+            if (action === 'Copy Install Command') {
+                await vscode.env.clipboard.writeText('npm install -g @google/gemini-cli');
+                vscode.window.showInformationMessage('Install command copied to clipboard');
+            }
+            throw new Error('Gemini CLI is not installed');
+        }
+    }
+
+    /**
      * Execute a prompt in a visible terminal (split view)
      * Gemini CLI runs in interactive mode - we start it first, then send the prompt
      */
     async executeInTerminal(prompt: string, title: string = 'SpecKit - Gemini'): Promise<vscode.Terminal> {
         try {
+            await this.ensureInstalled();
             const cliPath = this.getCliPath();
 
             const terminal = vscode.window.createTerminal({
@@ -125,6 +144,7 @@ export class GeminiCliProvider implements IAIProvider {
      * Uses pipe to send prompt to Gemini CLI
      */
     async executeHeadless(prompt: string): Promise<AIExecutionResult> {
+        await this.ensureInstalled();
         this.outputChannel.appendLine(`[GeminiCliProvider] Invoking Gemini CLI in headless mode`);
         this.outputChannel.appendLine(`========================================`);
         this.outputChannel.appendLine(prompt);
@@ -202,6 +222,7 @@ export class GeminiCliProvider implements IAIProvider {
      * Gemini CLI supports slash commands in interactive mode
      */
     async executeSlashCommand(command: string, title: string = 'SpecKit - Gemini'): Promise<vscode.Terminal> {
+        await this.ensureInstalled();
         // Ensure command starts with /
         const slashCommand = command.startsWith('/') ? command : `/${command}`;
         return this.executeInTerminal(slashCommand, title);
