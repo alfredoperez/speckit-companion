@@ -74,9 +74,12 @@
     --border-accent: color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 50%, transparent);
 
     /* Typography - mapped to VS Code theme variables with professional fallbacks */
-    --font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif);
+    --font-family: 'Geist', var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif);
     --font-mono: var(--vscode-editor-font-family, 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', 'Monaco', 'Menlo', monospace);
-    --font-size: var(--vscode-editor-font-size, 14px);
+    --font-size: var(--vscode-editor-font-size, 15px);
+
+    /* Body text - brighter than --text-secondary but softer than --text-primary */
+    --text-body: #d0d0d0;
 
     /* Semantic header colors - mapped to VS Code theme variables */
     --header-title: var(--vscode-textLink-foreground, #3794ff);
@@ -137,6 +140,7 @@ body.vscode-light {
     --bg-hover: var(--vscode-list-hoverBackground, #e8e8e8);
     --text-primary: var(--vscode-editor-foreground, #333333);
     --text-secondary: var(--vscode-descriptionForeground, #717171);
+    --text-body: #4a4a4a;
     --text-muted: var(--vscode-disabledForeground, #a0a0a0);
     --border: var(--vscode-panel-border, #e0e0e0);
     --border-hover: var(--vscode-contrastBorder, #c0c0c0);
@@ -178,6 +182,7 @@ body.vscode-high-contrast {
     --bg-hover: var(--vscode-list-hoverBackground, #0a0a0a);
     --text-primary: var(--vscode-editor-foreground, #ffffff);
     --text-secondary: var(--vscode-descriptionForeground, #ffffff);
+    --text-body: var(--vscode-editor-foreground, #ffffff);
     --text-muted: var(--vscode-disabledForeground, #a0a0a0);
     --border: var(--vscode-contrastBorder, #ffffff);
     --border-hover: var(--vscode-contrastBorder, #ffffff);

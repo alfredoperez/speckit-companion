@@ -8,7 +8,8 @@ import {
     preprocessSpecMetadata,
     preprocessUserStories,
     preprocessAcceptanceScenarios,
-    preprocessCallouts
+    preprocessCallouts,
+    preprocessHtmlComments
 } from './preprocessors';
 import { parseAcceptanceScenarios } from './scenarios';
 
@@ -129,6 +130,7 @@ function addTaskProgressHeaders(html: string): string {
  */
 export function renderMarkdown(markdown: string): string {
     // Preprocess special patterns before main rendering
+    markdown = preprocessHtmlComments(markdown);
     markdown = preprocessSpecMetadata(markdown);
     markdown = preprocessUserStories(markdown);
     markdown = parseAcceptanceScenarios(markdown);  // New: Convert to tables
@@ -310,6 +312,10 @@ export function renderMarkdown(markdown: string): string {
             line.includes('<div class="spec-input') ||
             line.includes('<p class="scenario-label') ||
             line.includes('<table class="scenario-table') ||
+            line.includes('<details') ||
+            line.includes('<summary') ||
+            line.includes('</details>') ||
+            line.includes('</summary>') ||
             line.includes('<span class="meta-') ||
             line.includes('<span class="story-') ||
             line.includes('<span class="priority-') ||
@@ -336,9 +342,6 @@ export function renderMarkdown(markdown: string): string {
     if (inCodeBlock && codeContent.length > 0) {
         html += `<pre><code>${escapeHtml(codeContent.join('\n'))}</code></pre>\n`;
     }
-
-    // Post-process: Add progress header to task lists
-    html = addTaskProgressHeaders(html);
 
     return html;
 }

@@ -27,7 +27,7 @@
     padding: var(--space-3) var(--space-4);
     border: 1px solid var(--border);
     vertical-align: top;
-    color: var(--text-secondary);
+    color: var(--text-body);
 }
 
 #markdown-content tr:hover td {
@@ -189,7 +189,7 @@
     padding: var(--space-3);
     vertical-align: top;
     border-bottom: 1px solid var(--border);
-    color: var(--text-secondary);
+    color: var(--text-body);
     line-height: var(--leading-relaxed);
 }
 
@@ -398,14 +398,19 @@
     font-weight: 600;
 }
 
-.scenario-item .keyword-given {
-    color: var(--accent);
+#markdown-content .scenario-item .keyword-given {
+    color: #4fc1ff;
 }
 
-.scenario-item .keyword-when {
-    color: var(--warning);
+#markdown-content .scenario-item .keyword-when {
+    color: #e5c07b;
 }
 
-.scenario-item .keyword-then {
-    color: var(--success);
+#markdown-content .scenario-item .keyword-then {
+    color: #73c991;
+}
+
+/* Brighten scenario item body text */
+.scenario-item .line-content {
+    color: var(--text-body);
 }

@@ -9,9 +9,9 @@
 
 #markdown-content {
     font-family: var(--font-family);
-    font-size: 14px;
+    font-size: 16px;
     line-height: var(--leading-loose);
-    color: var(--text-secondary);
+    color: var(--text-body);
     max-width: 72ch;
     margin: 0 auto;
     -webkit-font-smoothing: antialiased;

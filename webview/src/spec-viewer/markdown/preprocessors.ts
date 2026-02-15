@@ -108,6 +108,18 @@ export function preprocessAcceptanceScenarios(markdown: string): string {
 }
 
 /**
+ * Preprocess HTML comments into collapsible "Template Instructions" blocks
+ * Empty comments are removed entirely.
+ */
+export function preprocessHtmlComments(markdown: string): string {
+    return markdown.replace(/<!--([\s\S]*?)-->/g, (_match, content) => {
+        const trimmed = content.trim();
+        if (!trimmed) return '';
+        return `\n<details class="template-instructions"><summary>Template Instructions</summary>\n\n${trimmed}\n\n</details>\n`;
+    });
+}
+
+/**
  * Preprocess markdown to convert special patterns into callout blocks
  */
 export function preprocessCallouts(markdown: string): string {

@@ -32,58 +32,61 @@
 }
 
 .actions button {
-    padding: 6px 12px;  /* More compact */
+    padding: 6px 14px;
     border-radius: var(--radius-sm);
     cursor: pointer;
-    font-size: 12px;  /* Smaller text */
+    font-size: 13px;
     font-weight: 500;
     display: flex;
     align-items: center;
-    gap: 4px;  /* Tighter gap */
+    gap: 5px;
     transition: all var(--transition-fast) ease;
     white-space: nowrap;
     flex-shrink: 0;
 }
 
 .actions button.primary {
-    background: var(--review);
+    background: var(--accent);
     color: white;
     border: none;
+    padding: 8px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
     box-shadow: var(--shadow-sm);
 }
 
 .actions button.primary:hover {
-    background: color-mix(in srgb, var(--review) 85%, black);
+    background: var(--accent-hover);
     transform: translateY(-1px);
-    box-shadow: var(--review-glow);
+    box-shadow: var(--accent-glow);
 }
 
 .actions button.secondary {
     background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-primary);
+    border: none;
+    color: var(--text-secondary);
 }
 
 .actions button.secondary:hover:not(:disabled) {
+    color: var(--text-primary);
     background: var(--bg-hover);
-    border-color: var(--border-hover);
 }
 
 .actions button.secondary:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
 }
 
 .actions button.enhancement {
-    background: transparent;
+    background: var(--bg-elevated);
     border: 1px solid var(--border);
-    color: var(--text-secondary);
+    color: var(--text-primary);
     font-weight: 500;
 }
 
 .actions button.enhancement .icon {
-    font-size: 12px;
-    color: var(--text-muted);
+    font-size: 13px;
 }
 
 .actions button.enhancement:hover {
@@ -92,29 +95,11 @@
     color: var(--text-primary);
 }
 
-.actions button.enhancement:hover .icon {
-    color: var(--text-primary);
-}
-
 /* ============================================
    State-based hiding (completed specs)
    ============================================ */
 
-/* Hide refinement CTAs when spec is completed */
-body[data-spec-status="spec-completed"] .actions button.enhancement,
-body[data-spec-status="spec-completed"] #clarify-btn,
-body[data-spec-status="spec-completed"] #refine-submit-btn {
-    display: none;
-}
-
-/* Hide progression CTAs (Generate Plan/Tasks, Implement Tasks) when spec is completed */
-body[data-spec-status="spec-completed"] .actions button.primary,
-body[data-spec-status="spec-completed"] #approve-btn,
-body[data-spec-status="spec-completed"] #approve {
-    display: none;
-}
-
-/* Hide Edit Source/Regenerate buttons when spec is completed */
-body[data-spec-status="spec-completed"] .actions button.secondary {
+/* Hide entire footer when spec is completed */
+body[data-spec-status="spec-completed"] .actions {
     display: none;
 }

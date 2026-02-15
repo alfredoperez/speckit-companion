@@ -220,17 +220,18 @@
 .related-bar {
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 6px var(--space-4);
-    gap: var(--space-2);
+    justify-content: flex-start;
+    padding: 0 var(--space-4);
+    gap: 0;
     background: color-mix(in srgb, var(--bg-primary) 50%, var(--bg-secondary));
+    border-bottom: 1px solid var(--border);
     font-size: 12px;
 }
 
 .related-bar-content {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: 0;
 }
 
 .back-link {
@@ -256,29 +257,26 @@
 }
 
 .overview-divider {
-    width: 1px;
-    height: 12px;
-    background: var(--border);
-    opacity: 0.5;
-    margin: 0 var(--space-2);
+    display: none;
 }
 
 .related-tabs {
     display: flex;
-    gap: 2px;
+    gap: 0;
 }
 
 /* Overview tab - first tab linking to main document */
 .overview-tab {
-    padding: 4px 10px;
+    padding: 8px 12px;
     border: none;
+    border-bottom: 2px solid transparent;
     background: transparent;
     color: var(--text-secondary);
     cursor: pointer;
     font-size: 12px;
     font-weight: 500;
     font-family: inherit;
-    border-radius: var(--radius-sm);
+    border-radius: 0;
     transition: all var(--transition-fast);
 }
 
@@ -288,20 +286,21 @@
 }
 
 .overview-tab.active {
-    color: var(--accent);
-    background: var(--accent-subtle);
+    color: var(--text-primary);
+    border-bottom-color: var(--accent);
     font-weight: 600;
 }
 
 .related-tab {
-    padding: 4px 10px;
+    padding: 8px 12px;
     border: none;
+    border-bottom: 2px solid transparent;
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
     font-size: 12px;
     font-family: inherit;
-    border-radius: var(--radius-sm);
+    border-radius: 0;
     transition: all var(--transition-fast);
 }
 
@@ -311,7 +310,7 @@
 }
 
 .related-tab.active {
-    color: var(--header-section);
-    background: var(--bg-primary);
+    color: var(--text-primary);
+    border-bottom-color: var(--accent);
     font-weight: 500;
 }

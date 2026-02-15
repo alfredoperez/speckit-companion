@@ -12,7 +12,7 @@
     margin: 0 0 16px 0;
     border-radius: 0;
     border-left: 4px solid;
-    background: transparent;
+    background: color-mix(in srgb, var(--border) 15%, transparent);
 }
 
 .callout-icon {
@@ -94,4 +94,32 @@
 
 .callout-critical .callout-label {
     color: var(--error);
+}
+
+/* ============================================
+   Template Instructions (collapsed HTML comments)
+   ============================================ */
+
+details.template-instructions {
+    margin: var(--space-2) 0 var(--space-4) 0;
+    padding: var(--space-2) var(--space-3);
+    border-left: 3px solid var(--text-muted);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    background: color-mix(in srgb, var(--border) 10%, transparent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+details.template-instructions summary {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    cursor: pointer;
+    user-select: none;
+}
+
+details.template-instructions summary:hover {
+    color: var(--text-secondary);
 }

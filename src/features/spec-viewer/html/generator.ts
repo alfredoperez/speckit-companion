@@ -115,6 +115,15 @@ export function generateHtml(
                    script-src 'nonce-${nonce}' https://cdn.jsdelivr.net;
                    img-src ${webview.cspSource} data: https:;
                    font-src ${webview.cspSource} https://cdn.jsdelivr.net;">
+    <style nonce="${nonce}">
+      @font-face {
+        font-family: 'Geist';
+        font-style: normal;
+        font-display: swap;
+        font-weight: 100 900;
+        src: url(https://cdn.jsdelivr.net/fontsource/fonts/geist:vf@latest/latin-wght-normal.woff2) format('woff2-variations');
+      }
+    </style>
     <link href="${styleUri}" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
     <title>Spec: ${escapeHtml(specName)}</title>

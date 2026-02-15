@@ -18,19 +18,19 @@
 }
 
 #markdown-content h2 {
-    font-size: 18px;
+    font-size: 1.35rem;
     font-weight: 600;
     line-height: var(--leading-snug);
     letter-spacing: -0.01em;
-    margin: 24px 0 8px 0;
+    margin: 32px 0 12px 0;
     color: var(--text-primary);
 }
 
 #markdown-content h3 {
-    font-size: 15px;
+    font-size: 1.125rem;
     font-weight: 600;
     line-height: 1.4;
-    margin: 12px 0 6px 0;
+    margin: 20px 0 8px 0;
     color: var(--text-primary);
 }
 
@@ -51,7 +51,7 @@
 #markdown-content p {
     margin: 0 0 var(--space-4) 0;
     line-height: var(--leading-loose);
-    color: var(--text-secondary);
+    color: var(--text-body);
 }
 
 #markdown-content p + p {
@@ -69,9 +69,9 @@
 }
 
 #markdown-content li {
-    margin: 0;
+    margin-bottom: 2px;
     line-height: var(--leading-relaxed);
-    color: var(--text-secondary);
+    color: var(--text-body);
 }
 
 #markdown-content li > ul,
