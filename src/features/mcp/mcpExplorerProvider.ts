@@ -23,6 +23,7 @@ interface MCPServerInfo {
 
 export class MCPExplorerProvider extends BaseTreeDataProvider<MCPItem> {
     private servers: Map<string, MCPServerInfo> = new Map();
+    private loadError: string | undefined;
 
     constructor(
         context: vscode.ExtensionContext,
@@ -94,9 +95,9 @@ export class MCPExplorerProvider extends BaseTreeDataProvider<MCPItem> {
 
             if (items.length === 0) {
                 items.push(new MCPItem(
-                    'No MCP servers configured',
+                    this.loadError ?? 'No MCP servers configured',
                     vscode.TreeItemCollapsibleState.None,
-                    'mcp-empty',
+                    this.loadError ? 'mcp-error' : 'mcp-empty',
                     'empty',
                     undefined,
                     this.context
@@ -213,6 +214,7 @@ export class MCPExplorerProvider extends BaseTreeDataProvider<MCPItem> {
 
     private async loadMCPServers() {
         this.servers.clear();
+        this.loadError = undefined;
 
         try {
             // Get workspace folder path
@@ -228,6 +230,8 @@ export class MCPExplorerProvider extends BaseTreeDataProvider<MCPItem> {
                 this.log(`claude mcp list stderr: ${stderr}`);
 
                 if (!stdout) {
+                    this.isLoading = false;
+                    this._onDidChangeTreeData.fire();
                     return;
                 }
             }
@@ -245,8 +249,12 @@ export class MCPExplorerProvider extends BaseTreeDataProvider<MCPItem> {
 
         } catch (error) {
             this.log(`Failed to load MCP servers: ${error}`);
-            // Show error in tree view
             this.servers.clear();
+            this.loadError = error instanceof Error && error.message.includes('not found')
+                ? 'claude CLI not found — ensure it is installed and in PATH'
+                : `Failed to run claude mcp list`;
+            this.isLoading = false;
+            this._onDidChangeTreeData.fire();
         }
     }
 
