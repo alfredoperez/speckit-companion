@@ -4,6 +4,7 @@ import { ClaudeCodeProvider } from './claudeCodeProvider';
 import { GeminiCliProvider } from './geminiCliProvider';
 import { CopilotCliProvider } from './copilotCliProvider';
 import { CodexCliProvider } from './codexCliProvider';
+import { QwenCliProvider } from './qwenCliProvider';
 
 /**
  * Factory for creating AI provider instances based on configuration
@@ -52,6 +53,9 @@ export class AIProviderFactory {
             case 'codex':
                 provider = new CodexCliProvider(context, outputChannel);
                 break;
+            case 'qwen':
+                provider = new QwenCliProvider(context, outputChannel);
+                break;
             default:
                 outputChannel.appendLine(`[AIProviderFactory] Unknown provider type: ${type}, falling back to Claude Code`);
                 provider = new ClaudeCodeProvider(context, outputChannel);
@@ -76,7 +80,8 @@ export class AIProviderFactory {
             { type: 'claude', name: 'Claude Code', available: true },
             { type: 'gemini', name: 'Gemini CLI', available: true },
             { type: 'copilot', name: 'GitHub Copilot CLI', available: true },
-            { type: 'codex', name: 'Codex CLI', available: true }
+            { type: 'codex', name: 'Codex CLI', available: true },
+            { type: 'qwen', name: 'Qwen Code', available: true }
         ];
     }
 }

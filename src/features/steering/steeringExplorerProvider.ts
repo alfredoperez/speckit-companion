@@ -212,6 +212,10 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                 globalPath = null;
                 projectPath = workspaceRoot ? path.join(workspaceRoot, '.github', 'copilot-instructions.md') : null;
                 break;
+            case 'qwen':
+                globalPath = path.join(home, '.qwen', 'QWEN.md');
+                projectPath = workspaceRoot ? path.join(workspaceRoot, 'QWEN.md') : null;
+                break;
         }
 
         return {

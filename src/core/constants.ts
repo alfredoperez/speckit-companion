@@ -56,6 +56,8 @@ export const ConfigKeys = {
     claudePermissionMode: 'speckit.claudePermissionMode',
     geminiInitDelay: 'speckit.geminiInitDelay',
     customCommands: 'speckit.customCommands',
+    qwenPath: 'speckit.qwenPath',
+    qwenYoloMode: 'speckit.qwenYoloMode',
     customWorkflows: 'speckit.customWorkflows',
     defaultWorkflow: 'speckit.defaultWorkflow',
     views: {
@@ -179,6 +181,8 @@ export const FileNames = {
     geminiMd: 'GEMINI.md',
     /** Copilot CLI steering file */
     copilotInstructions: 'copilot-instructions.md',
+    /** Qwen Code steering file */
+    qwenMd: 'QWEN.md',
     /** Skill definition file */
     skillDefinition: 'SKILL.md',
     /** Claude settings file */
@@ -199,6 +203,8 @@ export const Directories = {
     claude: '.claude',
     /** Gemini configuration directory */
     gemini: '.gemini',
+    /** Qwen Code configuration directory */
+    qwen: '.qwen',
     /** SpecKit configuration directory */
     specify: '.specify',
     /** GitHub directory (for Copilot) */

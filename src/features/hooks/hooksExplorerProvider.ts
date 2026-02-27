@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { getConfiguredProviderType } from '../../ai-providers/aiProvider';
+import { getConfiguredProviderType, getProviderPaths } from '../../ai-providers/aiProvider';
 import { BaseTreeDataProvider } from '../../core/providers';
 import type { HookTrigger, HookAction, HookInfo, ClaudeSettingsJson } from '../../core/types/config';
 
@@ -28,10 +28,10 @@ export class HooksExplorerProvider extends BaseTreeDataProvider<HookItem> {
 
         // Hooks are only supported for Claude Code
         const providerType = getConfiguredProviderType();
-        if (providerType !== 'claude' && !element) {
+        if (!getProviderPaths(providerType).supportsHooks && !element) {
             return [
                 new HookItem(
-                    `Hooks not supported for ${providerType === 'gemini' ? 'Gemini CLI' : 'GitHub Copilot CLI'}`,
+                    `Hooks not supported for this provider`,
                     vscode.TreeItemCollapsibleState.None,
                     'hooks-not-supported',
                     'not-supported',

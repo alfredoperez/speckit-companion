@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { getConfiguredProviderType } from '../../ai-providers/aiProvider';
+import { getConfiguredProviderType, getProviderPaths } from '../../ai-providers/aiProvider';
 import { BaseTreeDataProvider } from '../../core/providers';
 
 const execAsync = promisify(exec);
@@ -48,9 +48,7 @@ export class MCPExplorerProvider extends BaseTreeDataProvider<MCPItem> {
             // For non-Claude providers, show info message about MCP config location
             const providerType = getConfiguredProviderType();
             if (providerType !== 'claude') {
-                const configPath = providerType === 'gemini'
-                    ? '~/.gemini/settings.json'
-                    : '~/.copilot/mcp-config.json';
+                const configPath = getProviderPaths(providerType).mcpConfigPath;
                 items.push(new MCPItem(
                     `MCP config: ${configPath}`,
                     vscode.TreeItemCollapsibleState.None,
