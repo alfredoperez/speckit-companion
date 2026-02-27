@@ -91,7 +91,9 @@ export type ViewerToExtensionMessage =
     // Stepper navigation
     | { type: 'stepperClick'; phase: 'spec' | 'plan' | 'tasks' | 'done' }
     // Batch refinements submission (GitHub-style review)
-    | { type: 'submitRefinements'; refinements: Array<{ lineNum: number; lineContent: string; comment: string }> };
+    | { type: 'submitRefinements'; refinements: Array<{ lineNum: number; lineContent: string; comment: string }> }
+    // File reference click
+    | { type: 'openFile'; filename: string };
 
 // ============================================
 // Message Types: Extension → Webview

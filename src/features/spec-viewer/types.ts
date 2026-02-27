@@ -318,6 +318,11 @@ export type ViewerToExtensionMessage =
     | {
           type: 'submitRefinements';
           refinements: Array<{ lineNum: number; lineContent: string; comment: string }>;
+      }
+    // File reference click
+    | {
+          type: 'openFile';
+          filename: string;
       };
 
 // ============================================

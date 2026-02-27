@@ -1,41 +1,41 @@
 {
-    "chat.promptFilesRecommendations": {
-        "speckit.constitution": true,
-        "speckit.specify": true,
-        "speckit.plan": true,
-        "speckit.tasks": true,
-        "speckit.implement": true
+  "chat.promptFilesRecommendations": {
+    "speckit.constitution": true,
+    "speckit.specify": true,
+    "speckit.plan": true,
+    "speckit.tasks": true,
+    "speckit.implement": true
+  },
+  "chat.tools.terminal.autoApprove": {
+    ".specify/scripts/bash/": true,
+    ".specify/scripts/powershell/": true
+  },
+  "speckit.defaultWorkflow": "",
+  "speckit.customCommands": [
+    {
+      "name": "commit",
+      "title": "Commit",
+      "command": "/speckit.commit",
+      "step": "tasks",
+      "tooltip": "Generate a commit for completed work"
     },
-    "chat.tools.terminal.autoApprove": {
-        ".specify/scripts/bash/": true,
-        ".specify/scripts/powershell/": true
-    },
-    "speckit.defaultWorkflow": "",
-    "speckit.customCommands": [
-        {
-            "name": "commit",
-            "title": "Commit",
-            "command": "/speckit.commit",
-            "step": "tasks",
-            "tooltip": "Generate a commit for completed work"
-        },
-        {
-            "name": "pr",
-            "title": "Create PR",
-            "command": "/speckit.pr",
-            "step": "tasks",
-            "tooltip": "Create a pull request for the feature"
-        }
-    ],
-    "speckit.customWorkflows": [
-        {
-            "name": "light",
-            "displayName": "Light Workflow",
-            "description": "Streamlined workflow for small features",
-            "step-specify": "/speckit.light-specify",
-            "step-plan": "/speckit.light-plan",
-            "step-implement": "/speckit.light-implement"
-        }
-    ]
+    {
+      "name": "pr",
+      "title": "Create PR",
+      "command": "/speckit.pr",
+      "step": "tasks",
+      "tooltip": "Create a pull request for the feature"
+    }
+  ],
+  "speckit.customWorkflows": [
+    {
+      "name": "sdd",
+      "displayName": "SDD Workflow",
+      "description": "Streamlined Spec-Driven Development Workflow",
+      "step-specify": "/sdd.specify",
+      "step-plan": "/sdd.plan",
+      "step-tasks": "/sdd.tasks",
+      "step-implement": "/sdd.implement"
+    }
+  ]
 }
-

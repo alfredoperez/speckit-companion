@@ -17,7 +17,7 @@ import { applyHighlighting, initializeMermaid } from './highlighting';
 import { updateNavState, setupTabNavigation, setupStepperNavigation } from './navigation';
 import { setupLineActions } from './editor';
 import { setupRefineModal } from './modal';
-import { setupEditButton, setupFooterActions, setupCheckboxToggle } from './actions';
+import { setupEditButton, setupFooterActions, setupCheckboxToggle, setupFileRefClickHandler } from './actions';
 
 // Get VS Code API
 declare const vscode: VSCodeApi;
@@ -129,6 +129,7 @@ function init(): void {
     setupRefineModal();
     setupLineActions();
     setupCheckboxToggle();
+    setupFileRefClickHandler();
     restoreCurrentState();
 
     // Handle initial content (passed via data attribute)
