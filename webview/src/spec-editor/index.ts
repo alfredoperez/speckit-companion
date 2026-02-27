@@ -32,7 +32,6 @@ function getElements() {
         sizeInfo: document.getElementById('sizeInfo') as HTMLElement,
         loadingOverlay: document.getElementById('loadingOverlay') as HTMLElement,
         submitBtn: document.getElementById('submitBtn') as HTMLButtonElement,
-        previewBtn: document.getElementById('previewBtn') as HTMLButtonElement,
         cancelBtn: document.getElementById('cancelBtn') as HTMLButtonElement,
         attachImageBtn: document.getElementById('attachImageBtn') as HTMLButtonElement,
         loadTemplateBtn: document.getElementById('loadTemplateBtn') as HTMLButtonElement,
@@ -96,12 +95,11 @@ function escapeHtml(text: string): string {
 // ============================================
 
 function setLoading(loading: boolean): void {
-    const { loadingOverlay, submitBtn, previewBtn } = getElements();
+    const { loadingOverlay, submitBtn } = getElements();
     isSubmitting = loading;
 
     loadingOverlay.style.display = loading ? 'flex' : 'none';
     submitBtn.disabled = loading;
-    previewBtn.disabled = loading;
 }
 
 // ============================================
@@ -236,11 +234,6 @@ function setupEventListeners(): void {
             images: attachedImages.map(img => img.id),
             workflow: getSelectedWorkflow()
         });
-    });
-
-    // Preview button
-    elements.previewBtn.addEventListener('click', () => {
-        vscode.postMessage({ type: 'preview' });
     });
 
     // Cancel button
