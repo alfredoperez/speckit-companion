@@ -50,7 +50,7 @@ export interface IAIProvider {
 /**
  * Supported AI provider types
  */
-export type AIProviderType = 'claude' | 'gemini' | 'copilot' | 'codex';
+export type AIProviderType = 'claude' | 'gemini' | 'copilot' | 'codex' | 'qwen';
 
 /**
  * Provider configuration paths and patterns
@@ -124,6 +124,17 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         mcpConfigPath: '~/.codex/config.toml', // Note: home directory, TOML format
         supportsHooks: false,
     },
+    qwen: {
+        steeringFile: 'QWEN.md',
+        steeringDir: '.qwen/steering',
+        steeringPattern: '*.md',
+        agentsDir: '',
+        agentsPattern: '',
+        skillsDir: '',
+        skillsPattern: '',
+        mcpConfigPath: '.qwen/settings.json',
+        supportsHooks: false,
+    },
 };
 
 /**
@@ -182,6 +193,11 @@ export async function promptForProviderSelection(): Promise<AIProviderType | und
                 label: '$(terminal) Codex CLI',
                 description: 'Steering, skills, and MCP support',
                 value: 'codex' as AIProviderType
+            },
+            {
+                label: '$(hubot) Qwen Code',
+                description: 'Steering and MCP support (no agents or hooks)',
+                value: 'qwen' as AIProviderType
             }
         ],
         {

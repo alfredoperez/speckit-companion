@@ -35,10 +35,11 @@ export class AgentsExplorerProvider extends BaseTreeDataProvider<AgentItem> {
 
         const providerType = getConfiguredProviderType();
 
-        // Gemini has limited agent support
-        if (providerType === 'gemini' && !element) {
+        // Some providers have no agent support (data-driven via PROVIDER_PATHS)
+        const noAgentSupport = !getProviderPaths(providerType).agentsDir;
+        if (noAgentSupport && !element) {
             return [new AgentItem(
-                'Agents not supported for Gemini CLI',
+                'Agents not supported for this provider',
                 vscode.TreeItemCollapsibleState.None,
                 'agent-not-supported'
             )];

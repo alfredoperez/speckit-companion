@@ -521,13 +521,15 @@
             "claude",
             "gemini",
             "copilot",
-            "codex"
+            "codex",
+            "qwen"
           ],
           "enumDescriptions": [
             "Claude Code - Full feature support (steering, agents, hooks, MCP)",
             "Gemini CLI - Steering and MCP support",
             "GitHub Copilot CLI - Steering, agents, and MCP support",
-            "Codex CLI - Steering, skills, and MCP support"
+            "Codex CLI - Steering, skills, and MCP support",
+            "Qwen Code - Steering and MCP support"
           ],
           "scope": "machine",
           "order": 2,
@@ -570,6 +572,20 @@
           "scope": "machine",
           "order": 5,
           "description": "Delay in milliseconds before sending prompt to Gemini CLI (allows time for initialization)"
+        },
+        "speckit.qwenPath": {
+          "type": "string",
+          "default": "qwen",
+          "scope": "machine",
+          "order": 6,
+          "description": "Path to Qwen Code CLI executable"
+        },
+        "speckit.qwenYoloMode": {
+          "type": "boolean",
+          "default": false,
+          "scope": "machine",
+          "order": 7,
+          "description": "Enable YOLO mode (--yolo) to auto-approve all Qwen actions"
         },
         "speckit.customCommands": {
           "type": "array",
