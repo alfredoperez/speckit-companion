@@ -490,8 +490,7 @@ Example:
         <footer class="spec-editor-actions">
             <button class="btn-cancel" id="cancelBtn">Cancel</button>
             <div class="action-spacer"></div>
-            <button class="btn-secondary" id="previewBtn">Preview</button>
-            <button class="btn-primary" id="submitBtn">Submit to AI</button>
+            <button class="btn-primary" id="submitBtn">Submit</button>
         </footer>
 
         <div class="keyboard-hints">
