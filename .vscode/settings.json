@@ -32,10 +32,10 @@
       "name": "sdd",
       "displayName": "SDD Workflow",
       "description": "Streamlined Spec-Driven Development Workflow",
-      "step-specify": "/sdd.specify",
-      "step-plan": "/sdd.plan",
-      "step-tasks": "/sdd.tasks",
-      "step-implement": "/sdd.implement"
+      "step-specify": "sdd.specify",
+      "step-plan": "sdd.plan",
+      "step-tasks": "sdd.tasks",
+      "step-implement": "sdd.implement"
     }
   ]
 }

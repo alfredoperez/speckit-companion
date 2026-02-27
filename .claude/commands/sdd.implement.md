@@ -22,19 +22,21 @@ If no tasks found, stop: "Run `/sdd.specify`, `/sdd.plan`, and `/sdd.tasks` firs
 
 ---
 
-### 2. Confirm Branch
+### 2. Create Worktree + Branch
 
-Confirm current branch matches the spec:
-
-```bash
-git branch --show-current
-```
-
-Should output `{NNN}-{slug}`. If not, checkout the branch:
+Using {NNN}-{slug} from the spec dir found in Step 1:
 
 ```bash
-git checkout {NNN}-{slug}
+git worktree add ../{NNN}-{slug} -b {NNN}-{slug}
 ```
+
+If branch already exists (re-run):
+
+```bash
+git worktree add ../{NNN}-{slug} {NNN}-{slug}
+```
+
+All subsequent steps run from the `../{NNN}-{slug}` worktree.
 
 ---
 

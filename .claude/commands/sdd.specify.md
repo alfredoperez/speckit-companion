@@ -30,36 +30,39 @@ Generate a concise slug (2–4 words, action-noun format, lowercase, hyphens):
 
 ---
 
-### 2. Determine Branch Number
+### 2. Determine Spec Number + Create Directory
 
-Find the highest existing `NNN` across all sources:
+Scan `specs/` locally for directories matching `[0-9]+-*`:
 
-```bash
-git fetch --all --prune
-```
-
-- Local branches: `git branch | grep -E '^\s*[0-9]+'`
-- Remote branches: `git ls-remote --heads origin | grep -E 'refs/heads/[0-9]+'`
-- Spec dirs: list directories under `specs/` matching `[0-9]+-*`
-
-Extract the highest number N found; use N+1 as the new number. If no branches or spec dirs exist, start at 1.
-
----
-
-### 3. Create Branch and Directory
+- Extract the highest number N found; use N+1 as the new number.
+- If no spec dirs exist, start at 1.
 
 ```bash
-git checkout -b {NNN}-{slug}
 mkdir -p specs/{NNN}-{slug}
 ```
 
 ---
 
-### 4. Explore Inline
+### 3. Explore Inline
 
 Without spawning a subagent, read 2–3 relevant files to understand the feature area:
 - Find files related to the feature description using Glob/Grep
 - Read key sections to understand patterns, architecture, and constraints
+
+---
+
+### 4. Detect Complexity
+
+Based on what you found in Explore, classify the change:
+
+| Signal | Mode |
+|--------|------|
+| Touches 1 existing file, change is <10 lines | **minimal** |
+| Pure style or config tweak | **minimal** |
+| Touches 2+ files, or adds a new component/service | **normal** |
+| Introduces new public behavior or API | **normal** |
+
+If unclear, default to **normal**.
 
 ---
 
@@ -101,9 +104,61 @@ Without spawning a subagent, read 2–3 relevant files to understand the feature
 
 ---
 
-### 6. Summary
+### 6. Minimal Mode — Write `plan.md` + `tasks.md`
 
-Display exactly this format:
+Skip this step if mode is **normal**.
+
+Write `specs/{NNN}-{slug}/plan.md`:
+
+```markdown
+# Plan: {Feature Name}
+
+**Spec**: specs/{NNN}-{slug}/spec.md | **Date**: {TODAY}
+
+## Approach
+
+[1–2 sentences describing the implementation strategy.]
+
+## Files to Change
+
+- `path/to/file` — [what changes]
+
+## Phase 1 Tasks
+
+| ID | Do | Verify |
+|----|-----|--------|
+| T001 | [task description] | [verification step] |
+```
+
+Write `specs/{NNN}-{slug}/tasks.md`:
+
+```markdown
+# Tasks: {Feature Name}
+
+## Phase 1 — Core
+
+- [ ] **T001** · [task description]
+  - **Do**: [specific action]
+  - **Verify**: [how to confirm it works]
+```
+
+---
+
+### 7. Summary
+
+**Minimal mode** — display exactly this format:
+
+```
+--- Specify complete (Fast Mode) ---
+Feature: {name}  |  Mode: minimal
+Spec:    specs/{NNN}-{slug}/spec.md
+Plan:    specs/{NNN}-{slug}/plan.md
+Tasks:   specs/{NNN}-{slug}/tasks.md
+
+Small change — all files ready. Run /sdd.implement when ready.
+```
+
+**Normal mode** — display exactly this format:
 
 ```
 --- Specify complete ---
