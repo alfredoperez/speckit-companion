@@ -93,6 +93,28 @@
 }
 
 /* ============================================
+   Inline Code — File References
+   ============================================ */
+
+/* Clickable file reference buttons */
+#markdown-content .file-ref {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: underline;
+    color: var(--vscode-textLink-foreground);
+}
+
+#markdown-content .file-ref code {
+    font-family: var(--font-mono);
+    color: inherit;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+/* ============================================
    Syntax Highlighting (hljs compatibility)
    ============================================ */
 

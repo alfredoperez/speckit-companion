@@ -4,6 +4,7 @@
  */
 
 import * as vscode from 'vscode';
+import * as path from 'path';
 import {
     SpecViewerState,
     ViewerToExtensionMessage,
@@ -72,6 +73,9 @@ export function createMessageHandlers(
                 break;
             case 'submitRefinements':
                 await handleSubmitRefinements(specDirectory, message.refinements, deps);
+                break;
+            case 'openFile':
+                await handleOpenFile(message.filename, deps);
                 break;
         }
     };
@@ -353,6 +357,28 @@ async function handleToggleCheckbox(
         }
     } catch (error) {
         deps.outputChannel.appendLine(`[SpecViewer] Error toggling checkbox: ${error}`);
+    }
+}
+
+/**
+ * Handle open file request from a file reference click
+ */
+async function handleOpenFile(
+    filename: string,
+    deps: MessageHandlerDependencies
+): Promise<void> {
+    const basename = path.basename(filename);
+    const results = await vscode.workspace.findFiles(`**/${basename}`, null, 1);
+    if (results.length === 0) {
+        vscode.window.showWarningMessage(`File not found in workspace: ${basename}`);
+        return;
+    }
+    try {
+        const doc = await vscode.workspace.openTextDocument(results[0]);
+        await vscode.window.showTextDocument(doc, { viewColumn: vscode.ViewColumn.Beside });
+        deps.outputChannel.appendLine(`[SpecViewer] Opened file ref: ${results[0].fsPath}`);
+    } catch (error) {
+        deps.outputChannel.appendLine(`[SpecViewer] Error opening file ref: ${error}`);
     }
 }
 

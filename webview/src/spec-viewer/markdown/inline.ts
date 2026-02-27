@@ -41,7 +41,12 @@ export function parseInline(text: string): string {
         .replace(/>/g, '&gt;')
         // Stash inline code
         .replace(/`([^`]+)`/g, (_match, code) => {
-            codeSpans.push(`<code>${code}</code>`);
+            const filenamePattern = /[^\s/\\]+\.[a-zA-Z][a-zA-Z0-9]+$/;
+            if (filenamePattern.test(code)) {
+                codeSpans.push(`<button class="file-ref" data-filename="${code}"><code>${code}</code></button>`);
+            } else {
+                codeSpans.push(`<code>${code}</code>`);
+            }
             return `\x00CODE${codeSpans.length - 1}\x00`;
         })
         // Bold + Italic

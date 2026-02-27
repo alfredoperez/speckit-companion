@@ -2,7 +2,7 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>/src', '<rootDir>/tests'],
+  roots: ['<rootDir>/src', '<rootDir>/webview/src'],
   testMatch: [
     '**/tests/**/*.test.[jt]s',
     '**/?(*.)+(spec|test).[jt]s'

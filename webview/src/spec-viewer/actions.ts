@@ -47,6 +47,20 @@ export function setupFooterActions(): void {
 }
 
 /**
+ * Setup delegated click handler for file reference buttons
+ */
+export function setupFileRefClickHandler(): void {
+    document.addEventListener('click', (e) => {
+        const el = (e.target as HTMLElement).closest('.file-ref') as HTMLElement | null;
+        if (!el) return;
+        const filename = el.dataset.filename;
+        if (filename) {
+            vscode.postMessage({ type: 'openFile', filename });
+        }
+    });
+}
+
+/**
  * Setup checkbox toggle handler for task items
  */
 export function setupCheckboxToggle(): void {
