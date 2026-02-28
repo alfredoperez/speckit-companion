@@ -64,7 +64,27 @@ Update `specs/{NNN}-{slug}/state.json`:
 
 ---
 
-### 3. Summary
+### 3. Checkpoint — Plan Review
+
+Display the full contents of `plan.md`, then use the **AskUserQuestion** tool with:
+
+```
+--- Plan ready for review ---
+[paste plan.md content]
+```
+
+Call **AskUserQuestion** with these options:
+- **Approve** — proceed to summary and offer `sdd.tasks` handoff
+- **Edit** — user provides edit notes in the "Other" field; apply changes, update `plan.md`, redisplay checkpoint
+
+Do NOT proceed to tasks or close the command until the user responds.
+
+- **On Approve**: show the summary below and offer the `sdd.tasks` handoff.
+- **On Edit**: apply the changes, update `plan.md`, then redisplay this checkpoint.
+
+---
+
+### 4. Summary
 
 Display exactly this format:
 

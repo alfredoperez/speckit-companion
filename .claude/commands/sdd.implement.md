@@ -51,7 +51,15 @@ This will:
 - Create a new branch based on HEAD
 - **Switch the session's working directory** into the worktree
 
-After entering the worktree, run `git branch --show-current` and store the branch name for use in Step 8 (Commit + PR).
+After entering the worktree, copy the spec artifacts from the main tree so they are available inside the worktree:
+
+```bash
+cp -r {REPO_ROOT}/specs/{NNN}-{slug}/ specs/{NNN}-{slug}/
+```
+
+Where `{REPO_ROOT}` is the main working tree root (the parent of `.claude/worktrees/`). This makes `spec.md`, `plan.md`, `tasks.md`, and `state.json` available inside the worktree.
+
+Then run `git branch --show-current` and store the branch name for use in Step 8 (Commit + PR).
 
 **If `EnterWorktree` fails** (worktree already exists from a previous run):
 
@@ -121,7 +129,7 @@ Wait for both subagents to complete before proceeding to CP1.
 
 ### 5. Checkpoint 1 — Code Review
 
-Display exactly this format and **wait for user response**:
+Display exactly this format, then use the **AskUserQuestion** tool:
 
 ```
 --- CP1: Implementation ---
@@ -139,13 +147,13 @@ Verification:
 - [ ] {edge case from spec}  →  expected result
 
 Run tests: nx test ngx-dev-toolbar
-
-Continue / Fix: <describe what to fix>
 ```
 
-Start in background: `git fetch origin main`
+Call **AskUserQuestion** with these options:
+- **Continue** — proceed to Phase 2 / commit
+- **Fix** — user provides fix notes in the "Other" field; address the issue, update `tasks.md`, return to CP1
 
-If user says **fix**: address the issue, update tasks.md, then return to CP1.
+Start in background: `git fetch origin main`
 
 ---
 
@@ -153,7 +161,7 @@ If user says **fix**: address the issue, update tasks.md, then return to CP1.
 
 Only show this checkpoint if the user ran tests after CP1.
 
-Display exactly this format and **wait for user response**:
+Display exactly this format, then use the **AskUserQuestion** tool:
 
 ```
 --- CP2: Test Results ---
@@ -162,17 +170,17 @@ Display exactly this format and **wait for user response**:
   — or —
 
 {Which tests failed and why (brief diagnosis)}
-
-Continue / Fix: <describe what to fix>
 ```
 
-If user says **fix**: address failing tests, then return to CP2.
+Call **AskUserQuestion** with these options:
+- **Continue** — proceed to CP3
+- **Fix** — user provides fix notes in the "Other" field; fix failing tests, return to CP2
 
 ---
 
 ### 7. Checkpoint 3 — Commit + PR
 
-Display exactly this format and **wait for user response**:
+Display exactly this format, then use the **AskUserQuestion** tool:
 
 ```
 --- CP3: Commit & PR ---
@@ -193,11 +201,12 @@ PR body:
   - [verify step from tasks]
 
   Closes #{N}  (omit if no issue)
-
-Approve / Edit commit / Edit PR
 ```
 
-On **Approve**, proceed to commit and PR. On **Edit commit** or **Edit PR**, apply the user's changes and redisplay CP3.
+Call **AskUserQuestion** with these options:
+- **Approve** — proceed to commit and PR
+- **Edit commit** — user provides notes in the "Other" field; apply changes to commit message, redisplay CP3
+- **Edit PR** — user provides notes in the "Other" field; apply changes to PR body, redisplay CP3
 
 ---
 

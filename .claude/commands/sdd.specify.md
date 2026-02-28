@@ -44,7 +44,7 @@ mkdir -p specs/{NNN}-{slug}
 Write `specs/{NNN}-{slug}/state.json`:
 
 ```json
-{ "step": "specify", "task": null, "updated": "{TODAY}" }
+{ "step": "specify", "branch": "{NNN}-{slug}", "task": null, "updated": "{TODAY}" }
 ```
 
 ---
@@ -52,7 +52,7 @@ Write `specs/{NNN}-{slug}/state.json`:
 ### 3. Explore Inline
 
 Without spawning a subagent, read 2–3 relevant files to understand the feature area:
-- Find files related to the feature description using Glob/Grep
+- Run Glob and Grep searches in parallel (single message, multiple tool calls) to find files related to the feature description
 - Read key sections to understand patterns, architecture, and constraints
 
 ---
@@ -148,6 +148,12 @@ Write `specs/{NNN}-{slug}/tasks.md`:
   - **Verify**: [how to confirm it works]
 ```
 
+Update `specs/{NNN}-{slug}/state.json`:
+
+```json
+{ "step": "tasks", "branch": "{NNN}-{slug}", "task": null, "updated": "{TODAY}" }
+```
+
 ---
 
 ### 7. Summary
@@ -156,12 +162,12 @@ Write `specs/{NNN}-{slug}/tasks.md`:
 
 ```
 --- Specify complete (Fast Mode) ---
-Feature: {name}  |  Mode: minimal
+Feature: {Feature Name}  |  Branch: {NNN}-{slug}
 Spec:    specs/{NNN}-{slug}/spec.md
 Plan:    specs/{NNN}-{slug}/plan.md
 Tasks:   specs/{NNN}-{slug}/tasks.md
 
-Small change — all files ready. Run /sdd.implement when ready.
+Next: /sdd.implement {NNN}-{slug}
 ```
 
 **Normal mode** — display exactly this format:

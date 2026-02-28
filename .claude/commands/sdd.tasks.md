@@ -2,7 +2,7 @@
 description: "SDD — Spec-Driven Development: generate a lean phased task list."
 handoffs:
   - label: Implement
-    agent: speckit.implement
+    agent: sdd.implement
     prompt: Implement the tasks
     send: true
 ---
@@ -94,5 +94,5 @@ Display exactly this format:
 Feature: {Feature Name}
 Tasks:   specs/{NNN}-{slug}/tasks.md  —  {N} tasks ({N} sequential, {N} parallel)
 
-Next: /speckit.implement {NNN}-{slug}
+Next: /sdd.implement {NNN}-{slug}
 ```
