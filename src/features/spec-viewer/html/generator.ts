@@ -9,7 +9,7 @@ import {
     DocumentType,
     PhaseInfo,
     SpecStatus,
-    PHASE_ENHANCEMENT_BUTTONS
+    EnhancementButton
 } from '../types';
 import { escapeHtml, escapeHtmlAttribute, generateNonce } from '../utils';
 import { calculateWorkflowPhase } from '../phaseCalculation';
@@ -28,7 +28,8 @@ export function generateHtml(
     specName: string,
     phases: PhaseInfo[],
     taskCompletionPercent: number,
-    specStatus: SpecStatus = 'draft'
+    specStatus: SpecStatus = 'draft',
+    enhancementButton: EnhancementButton | null = null
 ): string {
     // Get URIs for resources
     const styleUri = webview.asWebviewUri(
@@ -52,11 +53,6 @@ export function generateHtml(
     // Get current document for edit button state
     const currentDoc = documents.find(d => d.type === currentDocType);
     const editDisabled = !currentDoc?.exists;
-
-    // Get enhancement button for current phase
-    const enhancementButton = currentDocType === 'spec' || currentDocType === 'plan' || currentDocType === 'tasks'
-        ? PHASE_ENHANCEMENT_BUTTONS[currentDocType]
-        : null;
 
     // Smart CTA button logic:
     // - Show "Generate Plan/Tasks" when next phase doesn't exist yet

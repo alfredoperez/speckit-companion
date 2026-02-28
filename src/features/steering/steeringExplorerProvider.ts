@@ -5,6 +5,9 @@ import { SteeringManager } from './steeringManager';
 import { getConfiguredProviderType, getProviderPaths, AIProviderType } from '../../ai-providers/aiProvider';
 import { SpecKitFilesResult, SPECKIT_PATHS } from './types';
 import { BaseTreeDataProvider } from '../../core/providers';
+import { getWorkflow } from '../../features/workflows/workflowManager';
+import { WorkflowConfig } from '../../features/workflows/types';
+import { ConfigKeys } from '../../core/constants';
 
 export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem> {
     private steeringManager!: SteeringManager;
@@ -112,6 +115,18 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                 ));
             }
 
+            // Workflow Commands - show command files referenced by active workflow
+            const workflowCommands = await this.getWorkflowCommandFiles();
+            if (workflowCommands.length > 0) {
+                items.push(new SteeringItem(
+                    'Workflow Commands',
+                    vscode.TreeItemCollapsibleState.Expanded,
+                    'workflow-commands-header',
+                    '',
+                    this.context
+                ));
+            }
+
             // Add create buttons for missing files (Claude only for now)
             if (providerType === 'claude') {
                 if (!globalExists) {
@@ -178,6 +193,8 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             return this.getSpecKitScripts();
         } else if (element.contextValue === 'speckit-templates-category') {
             return this.getSpecKitTemplates();
+        } else if (element.contextValue === 'workflow-commands-header') {
+            return this.getWorkflowCommandChildren();
         }
 
         return [];
@@ -419,6 +436,92 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             path.relative(workspacePath, template.path)
         ));
     }
+
+    /**
+     * Get workflow command files referenced by the active workflow
+     */
+    private async getWorkflowCommandFiles(): Promise<Array<{ name: string; path: string }>> {
+        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+        if (!workspaceFolder) return [];
+
+        const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
+        const defaultWorkflowName = config.get<string>('defaultWorkflow', 'default');
+        const workflow = getWorkflow(defaultWorkflowName) || getWorkflow('default');
+        if (!workflow || workflow.name === 'default') return [];
+
+        return this.resolveWorkflowCommandFiles(workflow, workspaceFolder.uri.fsPath);
+    }
+
+    /**
+     * Resolve command names from a workflow config to file paths
+     */
+    private resolveWorkflowCommandFiles(
+        workflow: WorkflowConfig,
+        workspaceRoot: string
+    ): Array<{ name: string; path: string }> {
+        const commandNames = new Set<string>();
+
+        // Collect step commands that differ from defaults
+        const stepKeys = ['step-specify', 'step-plan', 'step-tasks', 'step-implement'] as const;
+        const defaults: Record<string, string> = {
+            'step-specify': 'speckit.specify',
+            'step-plan': 'speckit.plan',
+            'step-tasks': 'speckit.tasks',
+            'step-implement': 'speckit.implement',
+        };
+
+        for (const key of stepKeys) {
+            const value = workflow[key];
+            if (value && value !== defaults[key]) {
+                commandNames.add(value);
+            }
+        }
+
+        // Collect commands from customCommands setting
+        const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
+        const rawCommands = config.get<Array<Record<string, unknown> | string>>('customCommands', []);
+        for (const entry of rawCommands) {
+            if (typeof entry === 'string') continue;
+            const cmd = (entry.command as string) || (entry.name ? `speckit.${entry.name}` : undefined);
+            if (cmd) {
+                // Strip leading slash and add to set
+                commandNames.add(cmd.replace(/^\//, ''));
+            }
+        }
+
+        // Resolve to file paths
+        const files: Array<{ name: string; path: string }> = [];
+        for (const cmdName of commandNames) {
+            const filePath = path.join(workspaceRoot, '.claude', 'commands', `${cmdName}.md`);
+            if (fs.existsSync(filePath)) {
+                files.push({ name: `${cmdName}.md`, path: filePath });
+            }
+        }
+
+        return files.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    /**
+     * Get children for the Workflow Commands header
+     */
+    private async getWorkflowCommandChildren(): Promise<SteeringItem[]> {
+        const commandFiles = await this.getWorkflowCommandFiles();
+        const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
+
+        return commandFiles.map(file => new SteeringItem(
+            file.name.replace('.md', ''),
+            vscode.TreeItemCollapsibleState.None,
+            'workflow-command',
+            file.path,
+            this.context,
+            {
+                command: 'vscode.open',
+                title: 'Open Workflow Command',
+                arguments: [vscode.Uri.file(file.path)]
+            },
+            path.relative(workspacePath, file.path)
+        ));
+    }
 }
 
 class SteeringItem extends vscode.TreeItem {
@@ -492,6 +595,13 @@ class SteeringItem extends vscode.TreeItem {
         } else if (contextValue === 'speckit-template') {
             this.iconPath = new vscode.ThemeIcon('file');
             this.tooltip = `Template: ${resourcePath}`;
+            this.description = filename;
+        } else if (contextValue === 'workflow-commands-header') {
+            this.iconPath = new vscode.ThemeIcon('rocket');
+            this.tooltip = 'Command files referenced by the active workflow';
+        } else if (contextValue === 'workflow-command') {
+            this.iconPath = new vscode.ThemeIcon('terminal');
+            this.tooltip = `Workflow command: ${resourcePath}`;
             this.description = filename;
         }
 

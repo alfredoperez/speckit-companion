@@ -103,7 +103,7 @@ export function validateWorkflow(config: WorkflowConfig): ValidationResult {
  * Get all configured workflows including the default
  * @returns Array of workflow configurations
  */
-export function getWorkflows(): WorkflowConfig[] {
+export function getWorkflows(outputChannel?: vscode.OutputChannel): WorkflowConfig[] {
     const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
     const customWorkflows = config.get<WorkflowConfig[]>('customWorkflows', []);
 
@@ -115,8 +115,8 @@ export function getWorkflows(): WorkflowConfig[] {
         if (result.valid) {
             // Check for duplicates
             if (seenNames.has(workflow.name)) {
-                vscode.window.showWarningMessage(
-                    `Duplicate workflow name "${workflow.name}" - skipping duplicate`
+                outputChannel?.appendLine(
+                    `[Workflows] Duplicate workflow name "${workflow.name}" - skipping duplicate`
                 );
                 continue;
             }
@@ -125,8 +125,8 @@ export function getWorkflows(): WorkflowConfig[] {
         } else {
             // Log validation errors
             const errorMsg = result.errors.join('; ');
-            vscode.window.showWarningMessage(
-                `Invalid workflow "${workflow.name || 'unnamed'}": ${errorMsg}`
+            outputChannel?.appendLine(
+                `[Workflows] Invalid workflow "${workflow.name || 'unnamed'}": ${errorMsg}`
             );
         }
     }
@@ -161,9 +161,6 @@ export async function getFeatureWorkflow(
         // Validate the workflow still exists
         const workflow = getWorkflow(context.workflow);
         if (!workflow) {
-            vscode.window.showWarningMessage(
-                `Workflow "${context.workflow}" no longer exists. Please select a new workflow.`
-            );
             return undefined;
         }
 
@@ -243,7 +240,7 @@ export function registerWorkflowConfigChangeListener(
  * Validate all workflows and display warnings for any issues
  * Called during extension activation
  */
-export function validateWorkflowsOnActivation(): void {
+export function validateWorkflowsOnActivation(outputChannel?: vscode.OutputChannel): void {
     const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
     const customWorkflows = config.get<WorkflowConfig[]>('customWorkflows', []);
 
@@ -259,8 +256,8 @@ export function validateWorkflowsOnActivation(): void {
 
         // Check for duplicate names
         if (workflow.name && seenNames.has(workflow.name)) {
-            vscode.window.showWarningMessage(
-                `Duplicate workflow name "${workflow.name}" found in settings`
+            outputChannel?.appendLine(
+                `[Workflows] Duplicate workflow name "${workflow.name}" found in settings`
             );
             hasErrors = true;
         }
@@ -268,23 +265,23 @@ export function validateWorkflowsOnActivation(): void {
             seenNames.add(workflow.name);
         }
 
-        // Show validation warnings
+        // Log validation warnings
         for (const warning of result.warnings) {
-            vscode.window.showWarningMessage(`Workflow "${workflow.name}": ${warning}`);
+            outputChannel?.appendLine(`[Workflows] "${workflow.name}": ${warning}`);
         }
 
-        // Show validation errors
+        // Log validation errors
         if (!result.valid) {
             hasErrors = true;
             for (const error of result.errors) {
-                vscode.window.showWarningMessage(`Workflow "${workflow.name || 'unnamed'}": ${error}`);
+                outputChannel?.appendLine(`[Workflows] "${workflow.name || 'unnamed'}": ${error}`);
             }
         }
     }
 
     if (hasErrors) {
-        vscode.window.showWarningMessage(
-            'Some workflows have configuration errors and will be skipped. Check the settings.'
+        outputChannel?.appendLine(
+            '[Workflows] Some workflows have configuration errors and will be skipped. Check the settings.'
         );
     }
 
@@ -292,8 +289,8 @@ export function validateWorkflowsOnActivation(): void {
     const defaultWorkflowName = config.get<string>('defaultWorkflow', 'default');
     const allWorkflowNames = ['default', ...seenNames];
     if (!allWorkflowNames.includes(defaultWorkflowName)) {
-        vscode.window.showWarningMessage(
-            `Default workflow "${defaultWorkflowName}" is not configured. Check your speckit.defaultWorkflow setting.`
+        outputChannel?.appendLine(
+            `[Workflows] Default workflow "${defaultWorkflowName}" is not configured. Check your speckit.defaultWorkflow setting.`
         );
     }
 }

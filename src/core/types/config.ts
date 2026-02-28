@@ -77,6 +77,10 @@ export interface CustomCommandConfig {
     title?: string;
     /** Full slash command (e.g., "/speckit.review") */
     command?: string;
+    /** Workflow step to show this command in: "spec", "plan", "tasks", or "all" */
+    step?: string;
+    /** Tooltip text shown on hover */
+    tooltip?: string;
     /** Whether to append or inject the spec directory */
     requiresSpecDir?: boolean;
     /** Whether to auto-execute in terminal (default: true) */
