@@ -153,7 +153,7 @@ export async function activate(context: vscode.ExtensionContext) {
     setupTasksWatcher(context, outputChannel);
 
     // Validate custom workflows on activation and register change listener
-    validateWorkflowsOnActivation();
+    validateWorkflowsOnActivation(outputChannel);
     context.subscriptions.push(registerWorkflowConfigChangeListener(context));
     outputChannel.appendLine('Custom workflows validated');
 

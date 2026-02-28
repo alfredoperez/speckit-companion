@@ -9,8 +9,9 @@ import {
     SpecViewerState,
     ViewerToExtensionMessage,
     DocumentType,
-    PHASE_ENHANCEMENT_BUTTONS
 } from './types';
+import { ConfigKeys } from '../../core/constants';
+import type { CustomCommandConfig } from '../../core/types/config';
 
 /**
  * Interface for message handler dependencies
@@ -209,7 +210,7 @@ async function handleApprove(
 }
 
 /**
- * Handle clarify/enhancement button
+ * Handle clarify/enhancement button - executes the first matching customCommand for the current step
  */
 async function handleClarify(
     specDirectory: string,
@@ -219,13 +220,26 @@ async function handleClarify(
     if (!instance) return;
 
     const docType = instance.state.currentDocument;
-    if (docType === 'spec' || docType === 'plan' || docType === 'tasks') {
-        const button = PHASE_ENHANCEMENT_BUTTONS[docType];
-        if (button) {
-            // Pass specDirectory as argument
-            vscode.commands.executeCommand(button.command, specDirectory);
-        }
+    if (docType !== 'spec' && docType !== 'plan' && docType !== 'tasks') return;
+
+    const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
+    const rawCommands = config.get<Array<CustomCommandConfig | string>>('customCommands', []);
+
+    // Find the first matching command for this step
+    for (const entry of rawCommands) {
+        if (typeof entry === 'string') continue;
+        const step = entry.step || 'all';
+        if (step !== docType && step !== 'all') continue;
+
+        const command = entry.command || (entry.name ? `/speckit.${entry.name}` : undefined);
+        if (!command) continue;
+
+        deps.outputChannel.appendLine(`[SpecViewer] Executing enhancement command: ${command}`);
+        vscode.commands.executeCommand('speckit.runCustomCommand', command, specDirectory);
+        return;
     }
+
+    deps.outputChannel.appendLine(`[SpecViewer] No custom command configured for step: ${docType}`);
 }
 
 /**

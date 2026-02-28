@@ -115,29 +115,6 @@ export interface EnhancementButton {
     tooltip?: string;
 }
 
-/**
- * Phase-specific enhancement buttons
- */
-export const PHASE_ENHANCEMENT_BUTTONS: Record<CoreDocumentType, EnhancementButton> = {
-    spec: {
-        label: 'Clarify',
-        command: 'speckit.clarify',
-        icon: '❓',
-        tooltip: 'Refine any requirements further'
-    },
-    plan: {
-        label: 'Checklist',
-        command: 'speckit.checklist',
-        icon: '✅',
-        tooltip: 'Generate a checklist for the plan'
-    },
-    tasks: {
-        label: 'Analyze',
-        command: 'speckit.analyze',
-        icon: '🔍',
-        tooltip: 'Analyze task consistency'
-    }
-};
 
 /**
  * State for the spec viewer panel
@@ -206,6 +183,8 @@ export interface FooterState {
     showApproveButton: boolean;
     /** Text for the approve button */
     approveText: string;
+    /** Enhancement button config, or null if none */
+    enhancementButton?: EnhancementButton | null;
 }
 
 /**
@@ -226,6 +205,8 @@ export interface NavState {
     isViewingRelatedDoc: boolean;
     /** Footer button state for dynamic updates */
     footerState?: FooterState;
+    /** Enhancement button config, or null if none */
+    enhancementButton?: EnhancementButton | null;
 }
 
 /**
