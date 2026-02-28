@@ -72,6 +72,17 @@ export function registerSpecKitCommands(
         })
     );
 
+    // Open source file from sidebar inline action
+    context.subscriptions.push(
+        vscode.commands.registerCommand('speckit.openSpecSource', async (item: vscode.TreeItem) => {
+            const uri = item?.resourceUri;
+            if (uri) {
+                const doc = await vscode.workspace.openTextDocument(uri);
+                await vscode.window.showTextDocument(doc);
+            }
+        })
+    );
+
     // Register phase commands
     registerPhaseCommands(context, outputChannel);
     registerCustomCommand(context, outputChannel);
