@@ -51,15 +51,16 @@ This will:
 - Create a new branch based on HEAD
 - **Switch the session's working directory** into the worktree
 
-After entering the worktree, copy the spec artifacts from the main tree so they are available inside the worktree:
+After entering the worktree, rename the branch (EnterWorktree adds a `worktree-` prefix) and copy the spec artifacts:
 
 ```bash
+git branch -m {NNN}-{slug}
 cp -r {REPO_ROOT}/specs/{NNN}-{slug}/ specs/{NNN}-{slug}/
 ```
 
 Where `{REPO_ROOT}` is the main working tree root (the parent of `.claude/worktrees/`). This makes `spec.md`, `plan.md`, `tasks.md`, and `state.json` available inside the worktree.
 
-Then run `git branch --show-current` and store the branch name for use in Step 8 (Commit + PR).
+The branch name for Step 8 is `{NNN}-{slug}`.
 
 **If `EnterWorktree` fails** (worktree already exists from a previous run):
 
