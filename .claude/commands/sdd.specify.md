@@ -41,6 +41,12 @@ Scan `specs/` locally for directories matching `[0-9]+-*`:
 mkdir -p specs/{NNN}-{slug}
 ```
 
+Write `specs/{NNN}-{slug}/state.json`:
+
+```json
+{ "step": "specify", "task": null, "updated": "{TODAY}" }
+```
+
 ---
 
 ### 3. Explore Inline

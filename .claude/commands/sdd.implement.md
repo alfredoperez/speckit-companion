@@ -13,6 +13,7 @@ Read in parallel:
 - `specs/{NNN}-{slug}/tasks.md` — all Phase 1 and Phase 2 tasks
 - `specs/{NNN}-{slug}/spec.md` — feature name, requirements, scenarios (for CP1 verification)
 - `specs/{NNN}-{slug}/plan.md` — approach, files, issue number if present
+- `specs/{NNN}-{slug}/state.json` — current step/task (if exists; note if resuming mid-implement)
 
 Determine commit scope from the primary directory being modified (e.g., `toolbar`, `ui`, `core`). If unclear, omit scope.
 
@@ -20,23 +21,46 @@ Determine issue number from plan.md or spec.md if present.
 
 If no tasks found, stop: "Run `/sdd.specify`, `/sdd.plan`, and `/sdd.tasks` first."
 
+Update `specs/{NNN}-{slug}/state.json`:
+
+```json
+{ "step": "implement", "task": "T001", "updated": "{TODAY}" }
+```
+
+---
+
+### Context Recovery (if resuming)
+
+If `state.json` shows `step = "implement"` and `task = "T00N"`:
+
+1. Check if worktree exists at `.claude/worktrees/{NNN}-{slug}/` — if so, `cd` into it
+2. If no worktree exists, use `EnterWorktree` with `name: "{NNN}-{slug}"` to create one
+3. Read `spec.md` for feature context
+4. Read `tasks.md` — `[x]` = done, `[ ]` = remaining
+5. Resume from the first unchecked task
+6. Do NOT re-run completed tasks — trust the checkmarks and existing commits
+
 ---
 
 ### 2. Create Worktree + Branch
 
-Using {NNN}-{slug} from the spec dir found in Step 1:
+Use Claude's built-in **`EnterWorktree`** tool with `name` set to `{NNN}-{slug}`.
+
+This will:
+- Create a worktree at `.claude/worktrees/{NNN}-{slug}/`
+- Create a new branch based on HEAD
+- **Switch the session's working directory** into the worktree
+
+After entering the worktree, run `git branch --show-current` and store the branch name for use in Step 8 (Commit + PR).
+
+**If `EnterWorktree` fails** (worktree already exists from a previous run):
 
 ```bash
-git worktree add ../{NNN}-{slug} -b {NNN}-{slug}
+cd .claude/worktrees/{NNN}-{slug}
+git branch --show-current
 ```
 
-If branch already exists (re-run):
-
-```bash
-git worktree add ../{NNN}-{slug} {NNN}-{slug}
-```
-
-All subsequent steps run from the `../{NNN}-{slug}` worktree.
+All subsequent steps run from the worktree.
 
 ---
 
@@ -49,6 +73,7 @@ For each task:
 1. Perform the work described in the **Do** field
 2. Run the **Verify** check
 3. Mark complete in `specs/{NNN}-{slug}/tasks.md`: `- [ ]` → `- [x]`
+4. Update `specs/{NNN}-{slug}/state.json` — set `task` to the next task ID (or `null` after the last task)
 
 **Deviation rules:**
 
@@ -198,10 +223,10 @@ Rules:
 - `Closes #N` line: only if issue number exists
 - **No Co-Authored-By or attribution lines**
 
-Push and open PR:
+Push and open PR (use the branch name obtained from `git branch --show-current` in Step 2):
 
 ```bash
-git push -u origin {NNN}-{slug}
+git push -u origin {branch-name}
 gh pr create \
   --title "{type}({scope}): {short description}" \
   --body "$(cat <<'EOF'
@@ -241,5 +266,5 @@ Display exactly this format:
 Feature: {Feature Name}
 Commit:  {type}({scope}): {description}
 PR:      {PR URL}
-Branch:  {NNN}-{slug}
+Branch:  {branch-name}
 ```

@@ -17,8 +17,15 @@ Otherwise, find the most recently modified directory under `specs/` that contain
 Read in parallel:
 - `specs/{NNN}-{slug}/spec.md` — feature name, requirements, scenarios
 - `specs/{NNN}-{slug}/plan.md` — approach, files to create/modify
+- `specs/{NNN}-{slug}/state.json` — current step/task (if exists)
 
 If no spec/plan found, stop: "Run `/sdd.specify` and `/sdd.plan` first."
+
+Update `specs/{NNN}-{slug}/state.json`:
+
+```json
+{ "step": "tasks", "task": null, "updated": "{TODAY}" }
+```
 
 ---
 

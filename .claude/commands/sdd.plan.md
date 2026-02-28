@@ -14,10 +14,17 @@ handoffs:
 If `$ARGUMENTS` is provided, use `specs/{$ARGUMENTS}/` as the target directory.
 Otherwise, find the most recently modified directory under `specs/` that contains a `spec.md`.
 
-Read:
+Read in parallel:
 - `specs/{NNN}-{slug}/spec.md` — feature name, requirements, scenarios
+- `specs/{NNN}-{slug}/state.json` — current step/task (if exists)
 
 If no spec found, stop: "Run `/sdd.specify` first."
+
+Update `specs/{NNN}-{slug}/state.json`:
+
+```json
+{ "step": "plan", "task": null, "updated": "{TODAY}" }
+```
 
 ---
 
