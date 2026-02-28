@@ -99,7 +99,9 @@
    State-based hiding (completed specs)
    ============================================ */
 
-/* Hide entire footer when spec is completed */
-body[data-spec-status="spec-completed"] .actions {
+/* Hide action buttons except "Edit Source" when spec is completed */
+body[data-spec-status="spec-completed"] .actions-left,
+body[data-spec-status="spec-completed"] #regenerate,
+body[data-spec-status="spec-completed"] #approve {
     display: none;
 }
