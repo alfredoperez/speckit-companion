@@ -336,6 +336,14 @@ class SpecItem extends vscode.TreeItem {
             this.tooltip = `${documentType}: ${specName}/${label} — ${statusLabel}`;
 
             this.contextValue = `spec-document-${documentType}`;
+
+            // Set resourceUri so inline actions can resolve the file path
+            if (filePath) {
+                const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+                if (workspaceFolder) {
+                    this.resourceUri = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, filePath));
+                }
+            }
         } else if (contextValue === 'spec-related-doc') {
             this.iconPath = new vscode.ThemeIcon('file-text');
             const statusIndicator = status ? STATUS_INDICATORS[status] : STATUS_INDICATORS.empty;

@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "VS Code companion for GitHub SpecKit - spec-driven development with AI assistants",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",
@@ -369,6 +369,12 @@
         "title": "View Spec Document",
         "category": "SpecKit",
         "icon": "$(preview)"
+      },
+      {
+        "command": "speckit.openSpecSource",
+        "title": "Open Source File",
+        "category": "SpecKit",
+        "icon": "$(go-to-file)"
       }
     ],
     "menus": {
@@ -429,6 +435,11 @@
           "command": "speckit.steering.delete",
           "when": "view == speckit.views.steering && viewItem == steering-document",
           "group": "7_modification"
+        },
+        {
+          "command": "speckit.openSpecSource",
+          "when": "view == speckit.views.explorer && viewItem =~ /spec-document-/",
+          "group": "inline"
         }
       ],
       "commandPalette": [
@@ -486,6 +497,10 @@
         {
           "command": "speckit.upgradeAll",
           "when": "speckit.detected"
+        },
+        {
+          "command": "speckit.openSpecSource",
+          "when": "false"
         }
       ]
     },
@@ -761,7 +776,7 @@
     "install-local": "npm version patch --no-git-tag-version && npm run package && code --install-extension speckit-companion-$(node -p \"require('./package.json').version\").vsix --force"
   },
   "dependencies": {
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.1"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
