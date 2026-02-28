@@ -263,6 +263,8 @@ Define alternative workflows with different commands for each step:
 }
 ```
 
+Each `step-*` field maps a workflow phase to a custom command. Enhancement buttons in the spec viewer footer are driven by `customCommands` entries with a matching `step` — if none are configured, no button is shown.
+
 When multiple workflows exist, you'll be prompted to choose when starting a new spec.
 
 ## Configuration

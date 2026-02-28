@@ -20,12 +20,15 @@ import {
   DEFAULT_EMPTY_MESSAGE,
   DocumentType,
   EMPTY_STATE_MESSAGES,
+  EnhancementButton,
   ExtensionToViewerMessage,
   NavState,
   SpecStatus,
   SpecViewerState,
 } from "./types";
 import { getDocumentTypeFromPath, getSpecDirectoryFromPath } from "./utils";
+import { ConfigKeys } from "../../core/constants";
+import type { CustomCommandConfig } from "../../core/types/config";
 
 // Re-export utility functions for external use
 export {
@@ -350,6 +353,10 @@ export class SpecViewerProvider {
         specStatus = "spec-completed";
       }
 
+      // Resolve enhancement button from customCommands
+      const enhancementButtons = this.resolveEnhancementButtons(doc?.type || "spec");
+      const enhancementButton = enhancementButtons[0] || null;
+
       // Generate and set HTML
       instance.panel.webview.html = generateHtml(
         instance.panel.webview,
@@ -362,6 +369,7 @@ export class SpecViewerProvider {
         phases,
         taskCompletionPercent,
         specStatus,
+        enhancementButton,
       );
 
       this.outputChannel.appendLine(
@@ -377,6 +385,42 @@ export class SpecViewerProvider {
         recoverable: true,
       });
     }
+  }
+
+  /**
+   * Resolve enhancement buttons for a document type from customCommands setting
+   */
+  private resolveEnhancementButtons(
+    docType: DocumentType,
+  ): EnhancementButton[] {
+    if (docType !== "spec" && docType !== "plan" && docType !== "tasks") {
+      return [];
+    }
+
+    const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
+    const rawCommands = config.get<Array<CustomCommandConfig | string>>("customCommands", []);
+
+    const buttons: EnhancementButton[] = [];
+    for (const entry of rawCommands) {
+      if (typeof entry === "string") continue;
+      const step = entry.step || "all";
+      if (step !== docType && step !== "all") continue;
+
+      const title = entry.title || entry.name;
+      if (!title) continue;
+
+      const command = entry.command || (entry.name ? `/speckit.${entry.name}` : undefined);
+      if (!command) continue;
+
+      buttons.push({
+        label: title,
+        command,
+        icon: "⚡",
+        tooltip: entry.tooltip || title,
+      });
+    }
+
+    return buttons;
   }
 
   /**
@@ -490,6 +534,10 @@ export class SpecViewerProvider {
         }
       }
 
+      // Resolve enhancement button from customCommands
+      const enhancementButtons = this.resolveEnhancementButtons(documentType);
+      const enhancementButton = enhancementButtons[0] || null;
+
       const navState: NavState = {
         coreDocs,
         relatedDocs,
@@ -500,7 +548,9 @@ export class SpecViewerProvider {
         footerState: {
           showApproveButton,
           approveText,
+          enhancementButton,
         },
+        enhancementButton,
       };
 
       // Update internal state

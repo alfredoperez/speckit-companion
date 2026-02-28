@@ -136,7 +136,7 @@ function buildWorkflowDetail(workflow: WorkflowConfig): string {
  * @param featureDir Path to feature directory
  * @returns Selected workflow or undefined if cancelled
  */
-export async function getOrSelectWorkflow(featureDir: string): Promise<WorkflowConfig | undefined> {
+export async function getOrSelectWorkflow(featureDir: string, outputChannel?: vscode.OutputChannel): Promise<WorkflowConfig | undefined> {
     // Check if feature has existing workflow
     const existingContext = await getFeatureWorkflow(featureDir);
     if (existingContext) {
@@ -150,15 +150,15 @@ export async function getOrSelectWorkflow(featureDir: string): Promise<WorkflowC
     // Get the configured default workflow
     const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
     const defaultWorkflowName = config.get<string>('defaultWorkflow', 'default');
-    const workflows = getWorkflows();
+    const workflows = getWorkflows(outputChannel);
 
     // Find the configured default workflow
     let selectedWorkflow = workflows.find(w => w.name === defaultWorkflowName);
 
     if (!selectedWorkflow) {
-        // Configured workflow doesn't exist, warn and fall back
-        vscode.window.showWarningMessage(
-            `Default workflow "${defaultWorkflowName}" not found. Using built-in default.`
+        // Configured workflow doesn't exist, log and fall back silently
+        outputChannel?.appendLine(
+            `[Workflows] Default workflow "${defaultWorkflowName}" not found. Using built-in default.`
         );
         selectedWorkflow = workflows[0];
     }
