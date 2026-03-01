@@ -235,10 +235,10 @@ Call **AskUserQuestion** with these options:
 
 ### 8. Commit + PR
 
-Stage the changed files explicitly (no `git add -A`):
+Stage the changed files explicitly (no `git add -A`). **Always include the spec artifacts** (`specs/{NNN}-{slug}/`) alongside implementation files:
 
 ```bash
-git add path/to/file1 path/to/file2 ...
+git add path/to/file1 path/to/file2 ... specs/{NNN}-{slug}/
 ```
 
 Commit using conventional commit format:
