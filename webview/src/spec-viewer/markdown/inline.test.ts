@@ -115,20 +115,21 @@ describe('parseInline', () => {
     // Path with directory prefix → full path stored in data-filename
     // -------------------------------------------------------------------------
     describe('path with directory prefix → full path in data-filename', () => {
-        it('stores the full path (including directory) in data-filename', () => {
+        it('displays basename and stores full path with title tooltip', () => {
             // Arrange
             const input = '`src/utils/helpers.ts`';
 
             // Act
             const result = parseInline(input);
 
-            // Assert — the full path is preserved in data-filename so the
-            // extension handler can call path.basename on it when needed.
+            // Assert — full path preserved in data-filename, basename shown as text
             expect(result).toContain('data-filename="src/utils/helpers.ts"');
+            expect(result).toContain('title="src/utils/helpers.ts"');
+            expect(result).toContain('<code>helpers.ts</code>');
             expect(result).toContain('<button class="file-ref"');
         });
 
-        it('stores a deeply nested path correctly in data-filename', () => {
+        it('displays basename for deeply nested path with title tooltip', () => {
             // Arrange
             const input = '`webview/src/spec-viewer/markdown/inline.ts`';
 
@@ -139,7 +140,22 @@ describe('parseInline', () => {
             expect(result).toContain(
                 'data-filename="webview/src/spec-viewer/markdown/inline.ts"'
             );
+            expect(result).toContain('title="webview/src/spec-viewer/markdown/inline.ts"');
+            expect(result).toContain('<code>inline.ts</code>');
             expect(result).toContain('<button class="file-ref"');
+        });
+
+        it('does not add title attribute for simple filenames without directory', () => {
+            // Arrange
+            const input = '`helpers.ts`';
+
+            // Act
+            const result = parseInline(input);
+
+            // Assert — no directory means no title tooltip
+            expect(result).toContain('data-filename="helpers.ts"');
+            expect(result).toContain('<code>helpers.ts</code>');
+            expect(result).not.toContain('title=');
         });
     });
 

@@ -93,25 +93,53 @@
 }
 
 /* ============================================
-   Inline Code — File References
+   Inline Code — File References (pill buttons)
    ============================================ */
 
-/* Clickable file reference buttons */
+/* Clickable file reference pill buttons */
 #markdown-content .file-ref {
-    background: none;
-    border: none;
-    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 6px 1px 4px;
+    border-radius: 4px;
+    background: var(--accent-subtle);
+    border: 1px solid var(--border-accent);
     cursor: pointer;
-    text-decoration: underline;
+    text-decoration: none;
     color: var(--vscode-textLink-foreground);
+    font-size: 0.9em;
+    line-height: inherit;
+    vertical-align: baseline;
 }
 
+/* File icon via codicon font */
+#markdown-content .file-ref::before {
+    font-family: 'codicon';
+    content: '\eb60';
+    font-size: 12px;
+    line-height: 1;
+    speak: never;
+}
+
+#markdown-content .file-ref:hover {
+    background: color-mix(in srgb, var(--vscode-textLink-foreground) 15%, transparent);
+    border-color: color-mix(in srgb, var(--vscode-textLink-foreground) 60%, transparent);
+}
+
+#markdown-content .file-ref:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+/* Reset nested code inside pill — inherit from button */
 #markdown-content .file-ref code {
     font-family: var(--font-mono);
     color: inherit;
     background: none;
     border: none;
     padding: 0;
+    font-size: 0.9em;
 }
 
 /* ============================================
