@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2026-03-01
+
+### New Features
+
+- **File Reference Buttons**: Smaller, more compact pill buttons using VS Code's native codicon font instead of custom SVG icons
+- **Short File Names**: File-ref buttons now show basename only for paths with directories, with full path in tooltip
+- **Source File Button**: Always-visible source file button and new sidebar "Open Source" action (#25)
+- **Custom Workflows UX**: Dynamic sub-commands and output channel logging for custom workflows (#24)
+- **Spec Editor CTA**: Simplified create spec footer call-to-action (#23)
+- **Clickable File References**: Code spans referencing files are now clickable buttons in the spec viewer (#22)
+- **Qwen Code CLI**: Added Qwen Code as a new AI provider (#21)
+
+### Bug Fixes
+
+- **MCP Panel**: Resolved infinite spinner when Claude CLI is unavailable
+- **Spec Viewer**: Brighter text, tighter layout, and cleaner navigation
+
+### Improvements
+
+- **SDD Worktree**: Strengthened worktree entry instructions with `pwd` verification and branch rename checks
+- **SDD Commands**: Added AskUserQuestion to checkpoints and fixed minimal mode state
+- **Project Structure**: Updated CLAUDE.md to reflect current codebase layout
+
 ## [0.4.0] - 2026-02-13
 
 ### Bug Fixes
