@@ -35,10 +35,11 @@ If `state.json` shows `step = "implement"` and `task = "T00N"`:
 
 1. Check if worktree exists at `.claude/worktrees/{NNN}-{slug}/` — if so, `cd` into it
 2. If no worktree exists, use `EnterWorktree` with `name: "{NNN}-{slug}"` to create one
-3. Read `spec.md` for feature context
-4. Read `tasks.md` — `[x]` = done, `[ ]` = remaining
-5. Resume from the first unchecked task
-6. Do NOT re-run completed tasks — trust the checkmarks and existing commits
+3. Verify branch name: `git branch --show-current` — if it starts with `worktree-`, rename it: `git branch -m {NNN}-{slug}`
+4. Read `spec.md` for feature context
+5. Read `tasks.md` — `[x]` = done, `[ ]` = remaining
+6. Resume from the first unchecked task
+7. Do NOT re-run completed tasks — trust the checkmarks and existing commits
 
 ---
 
@@ -51,16 +52,37 @@ This will:
 - Create a new branch based on HEAD
 - **Switch the session's working directory** into the worktree
 
-After entering the worktree, rename the branch (EnterWorktree adds a `worktree-` prefix) and copy the spec artifacts:
+**Immediately after `EnterWorktree`, verify you are inside the worktree:**
+
+```bash
+pwd
+```
+
+The output **must** contain `.claude/worktrees/{NNN}-{slug}`. **If `pwd` does NOT show the worktree path, `cd` into `.claude/worktrees/{NNN}-{slug}/` before continuing.**
+
+**Immediately rename the branch** (EnterWorktree adds a `worktree-` prefix):
 
 ```bash
 git branch -m {NNN}-{slug}
+```
+
+Verify the rename succeeded:
+
+```bash
+git branch --show-current
+```
+
+It should print `{NNN}-{slug}` (no `worktree-` prefix). The branch name for Step 8 is `{NNN}-{slug}`.
+
+Copy the spec artifacts into the worktree:
+
+```bash
 cp -r {REPO_ROOT}/specs/{NNN}-{slug}/ specs/{NNN}-{slug}/
 ```
 
 Where `{REPO_ROOT}` is the main working tree root (the parent of `.claude/worktrees/`). This makes `spec.md`, `plan.md`, `tasks.md`, and `state.json` available inside the worktree.
 
-The branch name for Step 8 is `{NNN}-{slug}`.
+**All subsequent steps run from the worktree.**
 
 **If `EnterWorktree` fails** (worktree already exists from a previous run):
 
@@ -69,7 +91,7 @@ cd .claude/worktrees/{NNN}-{slug}
 git branch --show-current
 ```
 
-All subsequent steps run from the worktree.
+If the branch name starts with `worktree-`, rename it: `git branch -m {NNN}-{slug}`
 
 ---
 

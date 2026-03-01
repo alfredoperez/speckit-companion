@@ -43,7 +43,10 @@ export function parseInline(text: string): string {
         .replace(/`([^`]+)`/g, (_match, code) => {
             const filenamePattern = /[^\s/\\]+\.[a-zA-Z][a-zA-Z0-9]+$/;
             if (filenamePattern.test(code)) {
-                codeSpans.push(`<button class="file-ref" data-filename="${code}"><code>${code}</code></button>`);
+                const hasDir = code.includes('/');
+                const basename = hasDir ? code.slice(code.lastIndexOf('/') + 1) : code;
+                const titleAttr = hasDir ? ` title="${code}"` : '';
+                codeSpans.push(`<button class="file-ref" data-filename="${code}"${titleAttr}><code>${basename}</code></button>`);
             } else {
                 codeSpans.push(`<code>${code}</code>`);
             }
