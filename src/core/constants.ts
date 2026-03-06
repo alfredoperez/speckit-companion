@@ -43,6 +43,11 @@ export const Commands = {
     hooks: { refresh: 'speckit.hooks.refresh' },
     mcp: { refresh: 'speckit.mcp.refresh' },
     settings: { open: 'speckit.settings.open' },
+    feedback: {
+        bugReport: 'speckit.feedback.bugReport',
+        featureRequest: 'speckit.feedback.featureRequest',
+        review: 'speckit.feedback.review',
+    },
 } as const;
 
 /**
@@ -113,11 +118,11 @@ export const Timing = {
 export const DefaultViewVisibility = {
     specs: true,
     steering: true,
-    mcp: true,
-    hooks: true,
-    agents: true,
-    skills: true,
-    settings: false,
+    mcp: false,
+    hooks: false,
+    agents: false,
+    skills: false,
+    settings: true,
 } as const;
 
 /**

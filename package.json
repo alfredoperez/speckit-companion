@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "VS Code companion for GitHub SpecKit - spec-driven development with AI assistants",
-  "version": "0.5.0",
+  "version": "0.5.2",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",
@@ -119,10 +119,6 @@
         "view": "speckit.views.explorer",
         "contents": "Build features with GitHub SpecKit\n\n[$(plus) Create New Spec](command:speckit.create)",
         "when": "speckit.detected"
-      },
-      {
-        "view": "speckit.views.settings",
-        "contents": "Configure SpecKit Companion\n\n[$(gear) Open Settings](command:speckit.settings.open)"
       },
       {
         "view": "speckit.views.hooks",
@@ -299,6 +295,24 @@
         "icon": "$(sync)"
       },
       {
+        "command": "speckit.feedback.bugReport",
+        "title": "Report a Bug",
+        "category": "SpecKit",
+        "icon": "$(bug)"
+      },
+      {
+        "command": "speckit.feedback.featureRequest",
+        "title": "Request a Feature",
+        "category": "SpecKit",
+        "icon": "$(lightbulb)"
+      },
+      {
+        "command": "speckit.feedback.review",
+        "title": "Rate SpecKit on Marketplace",
+        "category": "SpecKit",
+        "icon": "$(star-empty)"
+      },
+      {
         "command": "speckit.upgradeCli",
         "title": "Upgrade CLI",
         "category": "SpecKit",
@@ -424,6 +438,11 @@
         {
           "command": "speckit.delete",
           "when": "view == speckit.views.explorer && viewItem == spec",
+          "group": "inline"
+        },
+        {
+          "command": "speckit.delete",
+          "when": "view == speckit.views.explorer && viewItem == spec",
           "group": "7_modification"
         },
         {
@@ -485,6 +504,15 @@
         },
         {
           "command": "speckit.checkForUpdates"
+        },
+        {
+          "command": "speckit.feedback.bugReport"
+        },
+        {
+          "command": "speckit.feedback.featureRequest"
+        },
+        {
+          "command": "speckit.feedback.review"
         },
         {
           "command": "speckit.upgradeCli",
