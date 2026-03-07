@@ -12,6 +12,8 @@ import {
     CORE_DOCUMENT_DISPLAY_NAMES
 } from './types';
 import { fileNameToDocType, fileNameToDisplayName } from './utils';
+import type { WorkflowStepConfig } from '../workflows';
+import { getStepFile } from '../workflows';
 
 /**
  * Check if a file exists
@@ -84,22 +86,45 @@ async function scanDirectoryRecursive(
 
 /**
  * Scan spec directory for available documents
+ * @param steps Optional workflow steps to use for core document identification.
+ *              When provided, uses step file mappings instead of hard-coded CORE_DOCUMENT_FILES.
  */
 export async function scanDocuments(
     specDirectory: string,
-    outputChannel: vscode.OutputChannel
+    outputChannel: vscode.OutputChannel,
+    steps?: WorkflowStepConfig[]
 ): Promise<SpecDocument[]> {
     const documents: SpecDocument[] = [];
 
+    // Build core document list from workflow steps or fallback to defaults
+    const coreFiles: { type: string; fileName: string; displayName: string }[] = [];
+    if (steps && steps.length > 0) {
+        for (const step of steps) {
+            const fileName = getStepFile(step);
+            const displayName = step.label ?? step.name.charAt(0).toUpperCase() + step.name.slice(1);
+            coreFiles.push({ type: step.name, fileName, displayName });
+        }
+    } else {
+        for (const [type, fileName] of Object.entries(CORE_DOCUMENT_FILES)) {
+            coreFiles.push({
+                type,
+                fileName,
+                displayName: CORE_DOCUMENT_DISPLAY_NAMES[type as CoreDocumentType]
+            });
+        }
+    }
+
+    const coreFileNames = new Set(coreFiles.map(c => c.fileName));
+
     // Add core documents (always shown in tabs)
-    for (const [type, fileName] of Object.entries(CORE_DOCUMENT_FILES)) {
-        const filePath = path.join(specDirectory, fileName);
+    for (const core of coreFiles) {
+        const filePath = path.join(specDirectory, core.fileName);
         const exists = await fileExists(filePath);
 
         documents.push({
-            type: type as CoreDocumentType,
-            displayName: CORE_DOCUMENT_DISPLAY_NAMES[type as CoreDocumentType],
-            fileName,
+            type: core.type,
+            displayName: core.displayName,
+            fileName: core.fileName,
             filePath,
             exists,
             isCore: true,
@@ -115,7 +140,7 @@ export async function scanDocuments(
             const fileName = path.basename(relativePath);
 
             // Skip core documents (already added)
-            if (Object.values(CORE_DOCUMENT_FILES).includes(fileName) && !relativePath.includes('/')) {
+            if (coreFileNames.has(fileName) && !relativePath.includes('/')) {
                 continue;
             }
 
@@ -136,13 +161,13 @@ export async function scanDocuments(
         outputChannel.appendLine(`[SpecViewer] Error scanning directory: ${error}`);
     }
 
-    // Sort: core documents first (in order), then related docs alphabetically
+    // Sort: core documents first (in step order), then related docs alphabetically
+    const coreOrder = coreFiles.map(c => c.type);
     documents.sort((a, b) => {
         if (a.isCore && !b.isCore) return -1;
         if (!a.isCore && b.isCore) return 1;
         if (a.isCore && b.isCore) {
-            const order = ['spec', 'plan', 'tasks'];
-            return order.indexOf(a.type) - order.indexOf(b.type);
+            return coreOrder.indexOf(a.type) - coreOrder.indexOf(b.type);
         }
         return a.displayName.localeCompare(b.displayName);
     });

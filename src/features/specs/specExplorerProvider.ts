@@ -2,6 +2,14 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { BaseTreeDataProvider } from '../../core/providers';
+import {
+    getWorkflow,
+    getFeatureWorkflow,
+    DEFAULT_WORKFLOW,
+    getStepFile,
+    normalizeWorkflowConfig,
+} from '../workflows';
+import type { WorkflowStepConfig } from '../workflows';
 
 export interface SpecInfo {
     name: string;
@@ -98,9 +106,9 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
 
             return specItems;
         } else if (element.contextValue === 'spec') {
-            // Show spec documents (spec.md, plan.md, tasks.md)
+            // Show workflow step documents dynamically
             const specPath = element.specPath || `specs/${element.specName}`;
-            return this.getSpecDocuments(element.specName!, specPath);
+            return await this.getSpecDocuments(element.specName!, specPath);
         } else if (element.contextValue?.startsWith('spec-document-') && element.relatedDocs && element.relatedDocs.length > 0) {
             // Show related documents as children
             return this.getRelatedDocItems(element);
@@ -134,10 +142,10 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
 
     /**
      * Scan for related documents in a spec folder (including subdirectories)
-     * Returns files that are not spec.md, plan.md, or tasks.md
+     * Returns files that are not step output files
      */
-    private getRelatedDocs(specFullPath: string): string[] {
-        const mainDocs = ['spec.md', 'plan.md', 'tasks.md'];
+    private getRelatedDocs(specFullPath: string, steps: WorkflowStepConfig[]): string[] {
+        const stepFiles = new Set(steps.map(s => getStepFile(s)));
         const results: string[] = [];
 
         const scanDir = (dirPath: string, relativePath: string = '') => {
@@ -154,8 +162,8 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                     if (entry.isDirectory()) {
                         scanDir(path.join(dirPath, entry.name), entryRelativePath);
                     } else if (entry.isFile() && entry.name.endsWith('.md')) {
-                        // Skip core docs at root level
-                        if (!relativePath && mainDocs.includes(entry.name)) {
+                        // Skip step output files at root level
+                        if (!relativePath && stepFiles.has(entry.name)) {
                             continue;
                         }
                         results.push(entryRelativePath);
@@ -221,9 +229,43 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
     }
 
     /**
-     * Get SpecKit documents (spec.md, plan.md, tasks.md) with related docs grouped under plan
+     * Resolve the active workflow's steps for a given spec directory
      */
-    private getSpecDocuments(specName: string, specPath: string): SpecItem[] {
+    private async getWorkflowSteps(specFullPath: string): Promise<WorkflowStepConfig[]> {
+        try {
+            const featureContext = await getFeatureWorkflow(specFullPath);
+            if (featureContext) {
+                const workflow = getWorkflow(featureContext.workflow);
+                if (workflow) {
+                    const normalized = normalizeWorkflowConfig(workflow);
+                    return normalized.steps ?? DEFAULT_WORKFLOW.steps!;
+                }
+            }
+        } catch {
+            // Fall through to default
+        }
+        return DEFAULT_WORKFLOW.steps!;
+    }
+
+    /**
+     * Scan a directory for .md sub-files (non-recursive)
+     */
+    private scanSubDir(dirPath: string): string[] {
+        try {
+            const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+            return entries
+                .filter(e => e.isFile() && e.name.endsWith('.md'))
+                .map(e => e.name)
+                .sort();
+        } catch {
+            return [];
+        }
+    }
+
+    /**
+     * Get workflow step documents dynamically from the active workflow
+     */
+    private async getSpecDocuments(specName: string, specPath: string): Promise<SpecItem[]> {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         if (!workspaceFolder) {
             return [];
@@ -232,65 +274,64 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
         const basePath = workspaceFolder.uri.fsPath;
         const specFullPath = path.join(basePath, specPath);
 
-        // Scan for related documents
-        const relatedDocs = this.getRelatedDocs(specFullPath);
+        // Get workflow steps
+        const steps = await this.getWorkflowSteps(specFullPath);
 
-        // Open file in unified spec viewer webview (singleton panel with tabs)
+        // Scan for related documents (not associated with any step)
+        const relatedDocs = this.getRelatedDocs(specFullPath, steps);
+
         const createOpenCommand = (fileName: string, title: string) => ({
             command: 'speckit.viewSpecDocument',
             title,
             arguments: [path.join(basePath, specPath, fileName)]
         });
 
-        // Check status of each document
-        const specStatus = this.getDocumentStatus(path.join(basePath, specPath, 'spec.md'));
-        const planStatus = this.getDocumentStatus(path.join(basePath, specPath, 'plan.md'));
-        const tasksStatus = this.getDocumentStatus(path.join(basePath, specPath, 'tasks.md'));
+        const items: SpecItem[] = [];
 
-        // Plan is collapsible if it has related docs
-        const planCollapsible = relatedDocs.length > 0
-            ? vscode.TreeItemCollapsibleState.Collapsed
-            : vscode.TreeItemCollapsibleState.None;
+        for (const step of steps) {
+            const stepFile = getStepFile(step);
+            const stepLabel = step.label ?? step.name.charAt(0).toUpperCase() + step.name.slice(1);
+            const status = this.getDocumentStatus(path.join(specFullPath, stepFile));
 
-        return [
-            new SpecItem(
-                'spec',
-                vscode.TreeItemCollapsibleState.None,
-                'spec-document',
-                this.context,
-                specName,
-                'spec',
-                createOpenCommand('spec.md', 'Open Spec'),
-                `${specPath}/spec.md`,
-                specPath,
-                specStatus
-            ),
-            new SpecItem(
-                'plan',
-                planCollapsible,
-                'spec-document',
-                this.context,
-                specName,
-                'plan',
-                createOpenCommand('plan.md', 'Open Plan'),
-                `${specPath}/plan.md`,
-                specPath,
-                planStatus,
-                relatedDocs  // Pass related docs for children
-            ),
-            new SpecItem(
-                'tasks',
-                vscode.TreeItemCollapsibleState.None,
-                'spec-document',
-                this.context,
-                specName,
-                'tasks',
-                createOpenCommand('tasks.md', 'Open Tasks'),
-                `${specPath}/tasks.md`,
-                specPath,
-                tasksStatus
-            )
-        ];
+            // Determine sub-files for this step
+            let childFiles: string[] = [];
+            if (step.subFiles && step.subFiles.length > 0) {
+                childFiles = step.subFiles;
+            } else if (step.subDir) {
+                const subDirPath = path.join(specFullPath, step.subDir);
+                childFiles = this.scanSubDir(subDirPath).map(f => `${step.subDir}/${f}`);
+            }
+
+            // For the "plan" step (or any step with sub-files), also include related docs as children
+            // This preserves the existing behavior where related docs appear under plan
+            let stepRelatedDocs: string[] = [];
+            if (step.includeRelatedDocs && relatedDocs.length > 0) {
+                stepRelatedDocs = relatedDocs;
+            }
+
+            const allChildren = [...childFiles, ...stepRelatedDocs];
+            const collapsible = allChildren.length > 0
+                ? vscode.TreeItemCollapsibleState.Collapsed
+                : vscode.TreeItemCollapsibleState.None;
+
+            items.push(
+                new SpecItem(
+                    stepLabel.toLowerCase(),
+                    collapsible,
+                    'spec-document',
+                    this.context,
+                    specName,
+                    step.name,
+                    createOpenCommand(stepFile, `Open ${stepLabel}`),
+                    `${specPath}/${stepFile}`,
+                    specPath,
+                    status,
+                    allChildren.length > 0 ? allChildren : undefined
+                )
+            );
+        }
+
+        return items;
     }
 }
 

@@ -10,6 +10,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import {
     WorkflowConfig,
+    WorkflowStepConfig,
     WorkflowStep,
     ValidationResult,
     FeatureWorkflowContext,
@@ -25,12 +26,67 @@ export const DEFAULT_WORKFLOW: WorkflowConfig = {
     name: 'default',
     displayName: 'Default',
     description: 'Standard SpecKit workflow',
-    'step-specify': 'speckit.specify',
-    'step-plan': 'speckit.plan',
-    'step-tasks': 'speckit.tasks',
-    'step-implement': 'speckit.implement',
+    steps: [
+        { name: 'specify', label: 'Specify', command: 'speckit.specify', file: 'spec.md' },
+        { name: 'plan', label: 'Plan', command: 'speckit.plan', file: 'plan.md', includeRelatedDocs: true },
+        { name: 'tasks', label: 'Tasks', command: 'speckit.tasks', file: 'tasks.md' },
+        { name: 'implement', label: 'Implement', command: 'speckit.implement' },
+    ],
     checkpoints: [],
 };
+
+/**
+ * Legacy step key to default file mapping
+ */
+const LEGACY_STEP_DEFAULTS: Record<string, { name: string; label: string; file: string }> = {
+    'step-specify': { name: 'specify', label: 'Specify', file: 'spec.md' },
+    'step-plan': { name: 'plan', label: 'Plan', file: 'plan.md' },
+    'step-tasks': { name: 'tasks', label: 'Tasks', file: 'tasks.md' },
+    'step-implement': { name: 'implement', label: 'Implement', file: 'implement.md' },
+};
+
+/**
+ * Normalize a workflow config: convert legacy `step-*` keys to `steps` array
+ */
+export function normalizeWorkflowConfig(config: WorkflowConfig): WorkflowConfig {
+    // Already has steps array — use as-is
+    if (config.steps && config.steps.length > 0) {
+        return config;
+    }
+
+    // Convert legacy step-* keys to steps array
+    const steps: WorkflowStepConfig[] = [];
+    const legacyKeys = ['step-specify', 'step-plan', 'step-tasks', 'step-implement'] as const;
+
+    for (const key of legacyKeys) {
+        const command = config[key];
+        if (command && typeof command === 'string' && command.trim()) {
+            const defaults = LEGACY_STEP_DEFAULTS[key];
+            steps.push({
+                name: defaults.name,
+                label: defaults.label,
+                command: command.trim(),
+                file: defaults.file,
+                ...(key === 'step-plan' && { includeRelatedDocs: true }),
+            });
+        }
+    }
+
+    // If no legacy keys were set either, return the default steps
+    if (steps.length === 0) {
+        return { ...config, steps: DEFAULT_WORKFLOW.steps };
+    }
+
+    return { ...config, steps };
+}
+
+/**
+ * Resolve the output file for a workflow step
+ * Uses step.file if set, otherwise defaults to `{step.name}.md`
+ */
+export function getStepFile(step: WorkflowStepConfig): string {
+    return step.file ?? `${step.name}.md`;
+}
 
 /**
  * Validate a workflow configuration
@@ -60,9 +116,26 @@ export function validateWorkflow(config: WorkflowConfig): ValidationResult {
         );
     }
 
-    // Validate step commands if provided
-    const steps = ['step-specify', 'step-plan', 'step-tasks', 'step-implement'] as const;
-    for (const step of steps) {
+    // Validate steps array if provided (new format)
+    if (config.steps) {
+        if (!Array.isArray(config.steps)) {
+            errors.push('Steps must be an array');
+        } else {
+            for (let i = 0; i < config.steps.length; i++) {
+                const step = config.steps[i];
+                if (!step.name || typeof step.name !== 'string') {
+                    errors.push(`Step ${i + 1}: name is required and must be a string`);
+                }
+                if (!step.command || typeof step.command !== 'string') {
+                    errors.push(`Step ${i + 1}: command is required and must be a string`);
+                }
+            }
+        }
+    }
+
+    // Validate legacy step commands if provided
+    const legacySteps = ['step-specify', 'step-plan', 'step-tasks', 'step-implement'] as const;
+    for (const step of legacySteps) {
         const value = config[step];
         if (value !== undefined && typeof value !== 'string') {
             errors.push(`Invalid ${step} value: must be a string`);
@@ -121,7 +194,7 @@ export function getWorkflows(outputChannel?: vscode.OutputChannel): WorkflowConf
                 continue;
             }
             seenNames.add(workflow.name);
-            validWorkflows.push(workflow);
+            validWorkflows.push(normalizeWorkflowConfig(workflow));
         } else {
             // Log validation errors
             const errorMsg = result.errors.join('; ');
@@ -205,20 +278,20 @@ export async function saveFeatureWorkflow(
 /**
  * Resolve the command for a workflow step
  * @param workflow Workflow configuration
- * @param step Step name (specify, plan, implement)
+ * @param step Step name (e.g., "specify", "plan", "design")
  * @returns Resolved command name
  */
 export function resolveStepCommand(workflow: WorkflowConfig, step: WorkflowStep): string {
-    const stepKey = `step-${step}` as keyof WorkflowConfig;
-    const customCommand = workflow[stepKey] as string | undefined;
-
-    if (customCommand && customCommand.trim()) {
-        return customCommand;
+    // Look up in steps array first (normalized configs always have this)
+    const normalized = normalizeWorkflowConfig(workflow);
+    const stepConfig = normalized.steps?.find(s => s.name === step);
+    if (stepConfig) {
+        return stepConfig.command;
     }
 
-    // Fall back to default workflow commands
-    const defaultCommand = DEFAULT_WORKFLOW[stepKey] as string;
-    return defaultCommand;
+    // Fall back to default workflow
+    const defaultStep = DEFAULT_WORKFLOW.steps?.find(s => s.name === step);
+    return defaultStep?.command ?? `speckit.${step}`;
 }
 
 /**
