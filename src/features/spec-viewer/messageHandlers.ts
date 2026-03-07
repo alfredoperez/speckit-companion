@@ -11,6 +11,7 @@ import {
     DocumentType,
 } from './types';
 import { ConfigKeys } from '../../core/constants';
+import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig } from '../../core/types/config';
 
 /**
@@ -254,7 +255,7 @@ async function handleRefineLine(
 ): Promise<void> {
     deps.outputChannel.appendLine(`[SpecViewer] Refine line ${lineNum}: ${instruction}`);
     // TODO: Implement AI-based refinement
-    vscode.window.showInformationMessage(`Refining line ${lineNum}...`);
+    NotificationUtils.showStatusBarMessage(`$(sync~spin) Refining line ${lineNum}...`);
 }
 
 /**

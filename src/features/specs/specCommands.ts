@@ -274,11 +274,6 @@ function registerCustomCommand(
         vscode.commands.registerCommand(Commands.customCommand, async (specDir?: string) => {
             const customCommands = loadCustomCommands();
 
-            if (customCommands.length === 0) {
-                vscode.window.showInformationMessage('No custom commands configured. Add speckit.customCommands in settings.');
-                return;
-            }
-
             const selection = await vscode.window.showQuickPick(
                 customCommands.map(command => ({
                     label: command.label,
@@ -287,7 +282,9 @@ function registerCustomCommand(
                 })),
                 {
                     title: 'Run SpecKit Custom Command',
-                    placeHolder: 'Select a custom command'
+                    placeHolder: customCommands.length === 0
+                        ? 'No custom commands configured — add speckit.customCommands in settings'
+                        : 'Select a custom command'
                 }
             );
 

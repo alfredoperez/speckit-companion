@@ -6,6 +6,7 @@ import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
 import { ConfigKeys, Timing } from '../core/constants';
 import { IAIProvider, AIExecutionResult } from './aiProvider';
+import { NotificationUtils } from '../core/utils/notificationUtils';
 
 const execAsync = promisify(exec);
 
@@ -87,7 +88,7 @@ export class CopilotCliProvider implements IAIProvider {
             );
             if (action === 'Copy Install Command') {
                 await vscode.env.clipboard.writeText('gh extension install github/gh-copilot');
-                vscode.window.showInformationMessage('Install command copied to clipboard');
+                NotificationUtils.showStatusBarMessage('$(check) Install command copied to clipboard');
             }
             throw new Error('GitHub Copilot CLI is not installed');
         }
