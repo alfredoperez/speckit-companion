@@ -104,9 +104,9 @@ type NormalizedCustomCommand = {
 };
 
 /**
- * Workflow-enabled steps that support custom command mapping
+ * Default workflow-enabled steps (used for static command registration)
  */
-const WORKFLOW_STEPS: WorkflowStep[] = ['specify', 'plan', 'tasks', 'implement'];
+const DEFAULT_WORKFLOW_STEPS: WorkflowStep[] = ['specify', 'plan', 'tasks', 'implement'];
 
 /**
  * Register phase-specific commands (specify, plan, tasks, implement, etc.)
@@ -137,7 +137,7 @@ function registerPhaseCommands(
                 }
 
                 // Handle workflow-enabled steps
-                if (cmd.isWorkflowStep && WORKFLOW_STEPS.includes(cmd.name as WorkflowStep)) {
+                if (cmd.isWorkflowStep && DEFAULT_WORKFLOW_STEPS.includes(cmd.name as WorkflowStep)) {
                     await executeWorkflowStep(
                         cmd.name as WorkflowStep,
                         cmd.title,

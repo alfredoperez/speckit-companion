@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "VS Code companion for GitHub SpecKit - spec-driven development with AI assistants",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",
@@ -775,6 +775,51 @@
               "step-implement": {
                 "type": "string",
                 "description": "Custom command for implement step"
+              },
+              "steps": {
+                "type": "array",
+                "description": "Flexible workflow steps (overrides step-* keys when present)",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "command"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Step identifier (e.g., 'specify', 'design', 'plan')"
+                    },
+                    "label": {
+                      "type": "string",
+                      "description": "Display label shown in sidebar (defaults to capitalized name)"
+                    },
+                    "command": {
+                      "type": "string",
+                      "description": "Command to execute for this step (e.g., 'sdd.specify')"
+                    },
+                    "file": {
+                      "type": "string",
+                      "description": "Primary output file for this step (defaults to '{name}.md')"
+                    },
+                    "subFiles": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Explicit list of sub-files shown as children in sidebar"
+                    },
+                    "subDir": {
+                      "type": "string",
+                      "description": "Directory to scan for sub-files (non-recursive, .md only)"
+                    },
+                    "includeRelatedDocs": {
+                      "type": "boolean",
+                      "description": "When true, unassigned .md files in the spec folder are grouped under this step"
+                    }
+                  },
+                  "additionalProperties": false
+                }
               }
             },
             "additionalProperties": false

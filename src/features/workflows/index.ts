@@ -11,6 +11,7 @@ export type {
     CheckpointTrigger,
     CheckpointStatus,
     CheckpointConfig,
+    WorkflowStepConfig,
     WorkflowConfig,
     FeatureWorkflowContext,
     WorkflowStep,
@@ -30,6 +31,8 @@ export {
     getFeatureWorkflow,
     saveFeatureWorkflow,
     resolveStepCommand,
+    normalizeWorkflowConfig,
+    getStepFile,
     validateWorkflowsOnActivation,
     registerWorkflowConfigChangeListener,
 } from './workflowManager';
