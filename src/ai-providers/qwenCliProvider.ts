@@ -6,6 +6,7 @@ import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
 import { ConfigKeys, Timing } from '../core/constants';
 import { IAIProvider, AIExecutionResult } from './aiProvider';
+import { NotificationUtils } from '../core/utils/notificationUtils';
 
 const execAsync = promisify(exec);
 
@@ -94,7 +95,7 @@ export class QwenCliProvider implements IAIProvider {
             );
             if (action === 'Copy Install Command') {
                 await vscode.env.clipboard.writeText('npm install -g @qwen-code/qwen-code@latest');
-                vscode.window.showInformationMessage('Install command copied to clipboard');
+                NotificationUtils.showStatusBarMessage('$(check) Install command copied to clipboard');
             }
             throw new Error('Qwen Code CLI is not installed');
         }

@@ -44,6 +44,15 @@ export class NotificationUtils {
     }
 
     /**
+     * Show a transient status bar message that auto-dismisses
+     * @param text - The message to display (supports codicons e.g. "$(check) Done")
+     * @param timeoutMs - Duration in milliseconds (default: 3000ms)
+     */
+    static showStatusBarMessage(text: string, timeoutMs = 3000): void {
+        vscode.window.setStatusBarMessage(text, timeoutMs);
+    }
+
+    /**
      * Show a phase completion notification with action to open the tasks file
      * @param specName - Name of the spec (e.g., "remove-invoice-filters")
      * @param phaseName - Name of the completed phase (e.g., "Foundational")
