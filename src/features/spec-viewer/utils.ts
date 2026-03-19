@@ -5,6 +5,8 @@
 
 import * as path from 'path';
 import { CORE_DOCUMENT_FILES, CoreDocumentType, DocumentType } from './types';
+import type { WorkflowStepConfig } from '../workflows';
+import { getStepFile } from '../workflows';
 
 /**
  * Generates a random nonce for CSP
@@ -46,11 +48,21 @@ export function isSpecDocument(filePath: string): boolean {
 
 /**
  * Get document type from file path
+ * @param steps Optional workflow steps for matching custom step files
  */
-export function getDocumentTypeFromPath(filePath: string): DocumentType {
+export function getDocumentTypeFromPath(filePath: string, steps?: WorkflowStepConfig[]): DocumentType {
     const fileName = path.basename(filePath).toLowerCase();
 
-    // Check core documents
+    // Check workflow steps first if provided
+    if (steps) {
+        for (const step of steps) {
+            if (fileName === getStepFile(step).toLowerCase()) {
+                return step.name;
+            }
+        }
+    }
+
+    // Check core documents (fallback)
     for (const [type, file] of Object.entries(CORE_DOCUMENT_FILES)) {
         if (fileName === file) {
             return type as CoreDocumentType;

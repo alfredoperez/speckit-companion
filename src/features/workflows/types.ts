@@ -32,15 +32,41 @@ export interface CheckpointConfig {
 }
 
 /**
+ * Configuration for a single workflow step
+ */
+export interface WorkflowStepConfig {
+    /** Step identifier (e.g., "specify", "plan", "design") */
+    name: string;
+    /** Display label shown in sidebar (e.g., "Specify", "Plan") */
+    label?: string;
+    /** Command to execute for this step (e.g., "speckit.specify") */
+    command: string;
+    /** Primary output file for this step (e.g., "spec.md"). Defaults to `{name}.md` */
+    file?: string;
+    /** Explicit list of sub-files shown as children in sidebar */
+    subFiles?: string[];
+    /** Directory to scan for sub-files (non-recursive, .md only) */
+    subDir?: string;
+    /** When true, unassigned .md files in the spec folder are grouped under this step */
+    includeRelatedDocs?: boolean;
+}
+
+/**
  * Workflow configuration from VS Code settings
  */
 export interface WorkflowConfig {
     name: string;
     displayName?: string;
     description?: string;
+    /** Flexible steps array (new format) */
+    steps?: WorkflowStepConfig[];
+    /** @deprecated Legacy step keys — use `steps` array instead */
     'step-specify'?: string;
+    /** @deprecated */
     'step-plan'?: string;
+    /** @deprecated */
     'step-tasks'?: string;
+    /** @deprecated */
     'step-implement'?: string;
     checkpoints?: CheckpointConfig[];
 }
@@ -56,8 +82,9 @@ export interface FeatureWorkflowContext {
 
 /**
  * Workflow step identifiers
+ * Now a string to support arbitrary custom step names
  */
-export type WorkflowStep = 'specify' | 'plan' | 'tasks' | 'implement';
+export type WorkflowStep = string;
 
 /**
  * Validation result for workflow configurations

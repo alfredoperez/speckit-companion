@@ -4,15 +4,54 @@
  */
 
 import { SpecDocument, DocumentType, PhaseInfo } from './types';
+import type { WorkflowStepConfig } from '../workflows';
 
 /**
  * Calculate phase information for the stepper
+ * @param steps Optional workflow steps for dynamic phase count
  */
 export function calculatePhases(
     documents: SpecDocument[],
     currentDocType: DocumentType,
-    content: string
+    content: string,
+    steps?: WorkflowStepConfig[]
 ): PhaseInfo[] {
+    // Dynamic phases from workflow steps
+    if (steps && steps.length > 0) {
+        const phases: PhaseInfo[] = [];
+        const lastStepType = steps[steps.length - 1].name;
+        const lastStepCompletion = currentDocType === lastStepType
+            ? calculateTaskCompletion(content, lastStepType)
+            : 0;
+
+        for (let i = 0; i < steps.length; i++) {
+            const step = steps[i];
+            const stepExists = documents.some(d => d.type === step.name && d.exists);
+            const label = step.label ?? step.name.charAt(0).toUpperCase() + step.name.slice(1);
+            const phaseNum = Math.min(i + 1, 4) as 1 | 2 | 3 | 4;
+
+            phases.push({
+                phase: phaseNum,
+                label,
+                completed: stepExists,
+                active: currentDocType === step.name,
+                progressPercent: step.name === lastStepType && stepExists ? lastStepCompletion : undefined
+            });
+        }
+
+        // Add "Done" phase
+        phases.push({
+            phase: Math.min(steps.length + 1, 4) as 1 | 2 | 3 | 4,
+            label: 'Done',
+            completed: lastStepCompletion === 100,
+            active: false,
+            progressPercent: documents.some(d => d.type === lastStepType && d.exists) ? lastStepCompletion : undefined
+        });
+
+        return phases;
+    }
+
+    // Default 4-phase calculation (backward compat)
     const specExists = documents.some(d => d.type === 'spec' && d.exists);
     const planExists = documents.some(d => d.type === 'plan' && d.exists);
     const tasksExists = documents.some(d => d.type === 'tasks' && d.exists);
@@ -50,8 +89,15 @@ export function calculatePhases(
 
 /**
  * Get phase number from document type
+ * @param steps Optional workflow steps for dynamic phase mapping
  */
-export function getPhaseNumber(docType: DocumentType): 1 | 2 | 3 | 4 {
+export function getPhaseNumber(docType: DocumentType, steps?: WorkflowStepConfig[]): 1 | 2 | 3 | 4 {
+    if (steps) {
+        const index = steps.findIndex(s => s.name === docType);
+        if (index >= 0) {
+            return Math.min(index + 1, 4) as 1 | 2 | 3 | 4;
+        }
+    }
     switch (docType) {
         case 'spec': return 1;
         case 'plan': return 2;

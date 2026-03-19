@@ -2,6 +2,21 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import type { SpecInfo, RelatedDoc, EnhancementButton } from '../../../core/types';
+import {
+    DEFAULT_WORKFLOW,
+    getFeatureWorkflow,
+    getWorkflow,
+    normalizeWorkflowConfig,
+    getStepFile,
+} from '../../workflows';
+import type { WorkflowStepConfig } from '../../workflows';
+
+/**
+ * Get workflow steps for a spec directory (synchronous fallback to default)
+ */
+function getWorkflowStepsSync(): WorkflowStepConfig[] {
+    return DEFAULT_WORKFLOW.steps!;
+}
 
 /**
  * Parse spec information from a document
@@ -10,84 +25,104 @@ export function parseSpecInfo(document: vscode.TextDocument): SpecInfo {
     const fileName = path.basename(document.fileName);
     const dirPath = path.dirname(document.fileName);
 
-    // Detect current phase and document type based on filename (SpecKit format only)
+    // Get workflow steps (sync — use default, async enrichment not available here)
+    const steps = getWorkflowStepsSync();
+
+    // Find the matching step for the current file
+    const matchedStepIndex = steps.findIndex(s => getStepFile(s).toLowerCase() === fileName.toLowerCase());
+    const matchedStep = matchedStepIndex >= 0 ? steps[matchedStepIndex] : null;
+
     let currentPhase = 1;
     let phaseIcon = '📋';
     let documentType: 'spec' | 'plan' | 'tasks' | 'other' = 'other';
     let enhancementButton: EnhancementButton | null = null;
 
-    if (fileName === 'spec.md') {
-        currentPhase = 1;
-        phaseIcon = '📋';
-        documentType = 'spec';
-        enhancementButton = {
-            label: 'Clarify',
-            command: 'clarify',
-            icon: '?',
-            tooltip: 'Ask clarifying questions about ambiguous requirements'
-        };
-    } else if (fileName === 'plan.md') {
-        currentPhase = 2;
-        phaseIcon = '🔷';
-        documentType = 'plan';
-        enhancementButton = {
-            label: 'Checklist',
-            command: 'checklist',
-            icon: '✓',
-            tooltip: 'Generate implementation checklist from design'
-        };
-    } else if (fileName === 'tasks.md') {
-        currentPhase = 3;
-        phaseIcon = '✅';
-        documentType = 'tasks';
-        enhancementButton = {
-            label: 'Analyze',
-            command: 'analyze',
-            icon: '⚡',
-            tooltip: 'Analyze task dependencies and complexity'
-        };
+    if (matchedStep) {
+        currentPhase = matchedStepIndex + 1;
+        // Map known step names to their icons and enhancement buttons
+        switch (matchedStep.name) {
+            case 'specify':
+                phaseIcon = '📋';
+                documentType = 'spec';
+                enhancementButton = {
+                    label: 'Clarify',
+                    command: 'clarify',
+                    icon: '?',
+                    tooltip: 'Ask clarifying questions about ambiguous requirements'
+                };
+                break;
+            case 'plan':
+                phaseIcon = '🔷';
+                documentType = 'plan';
+                enhancementButton = {
+                    label: 'Checklist',
+                    command: 'checklist',
+                    icon: '✓',
+                    tooltip: 'Generate implementation checklist from design'
+                };
+                break;
+            case 'tasks':
+                phaseIcon = '✅';
+                documentType = 'tasks';
+                enhancementButton = {
+                    label: 'Analyze',
+                    command: 'analyze',
+                    icon: '⚡',
+                    tooltip: 'Analyze task dependencies and complexity'
+                };
+                break;
+            default:
+                phaseIcon = '📄';
+                documentType = 'other';
+                break;
+        }
     } else if (fileName === 'research.md') {
-        currentPhase = 2;  // Research is part of Plan phase
+        currentPhase = 2;
         phaseIcon = '🔍';
-        documentType = 'plan';  // Treat as plan-related
+        documentType = 'plan';
     } else if (fileName.endsWith('.md')) {
-        // Related docs (data-model.md, quickstart.md, etc.) are part of the Plan phase
         currentPhase = 2;
         phaseIcon = '📄';
-        documentType = 'plan';  // Treat as plan-related
+        documentType = 'plan';
     }
 
     // Check if next phase file exists
-    const nextFileName = currentPhase === 1 ? 'plan.md' : currentPhase === 2 ? 'tasks.md' : null;
-    const nextPhaseExists = nextFileName ? fs.existsSync(path.join(dirPath, nextFileName)) : false;
+    const nextStep = matchedStepIndex >= 0 && matchedStepIndex + 1 < steps.length
+        ? steps[matchedStepIndex + 1]
+        : null;
+    const nextPhaseExists = nextStep
+        ? fs.existsSync(path.join(dirPath, getStepFile(nextStep)))
+        : false;
 
-    // Calculate completed phases based on file existence and task completion
+    // Calculate completed phases based on file existence
     const completedPhases: number[] = [];
     let taskCompletionPercent = 0;
 
-    // Phase 1 (spec) is complete if plan.md exists
-    if (fs.existsSync(path.join(dirPath, 'plan.md'))) {
-        completedPhases.push(1);
-    }
-    // Phase 2 (plan) is complete if tasks.md exists
-    const tasksPath = path.join(dirPath, 'tasks.md');
-    if (fs.existsSync(tasksPath)) {
-        completedPhases.push(2);
-        completedPhases.push(3);  // Phase 3 (tasks) complete when file exists
+    for (let i = 0; i < steps.length; i++) {
+        const stepFile = getStepFile(steps[i]);
+        const stepPath = path.join(dirPath, stepFile);
+        if (fs.existsSync(stepPath)) {
+            completedPhases.push(i + 1);
 
-        // Get task completion stats for Done indicator
-        const taskStats = getTaskCompletionStats(tasksPath);
-        taskCompletionPercent = taskStats.percent;
+            // Check task completion for the last step that has checkboxes
+            if (steps[i].name === 'tasks' || i === steps.length - 1) {
+                const taskStats = getTaskCompletionStats(stepPath);
+                if (taskStats.percent > 0) {
+                    taskCompletionPercent = taskStats.percent;
+                }
+            }
+        }
     }
 
-    // Find ALL documents in same folder for tabs (consistent order)
-    const allDocs = getRelatedDocs(dirPath, fileName, documentType);
+    // Find ALL documents in same folder for tabs
+    const stepFiles = steps.map(s => getStepFile(s));
+    const allDocs = getRelatedDocs(dirPath, fileName, documentType, stepFiles);
 
     return {
         currentPhase,
         completedPhases,
         phaseIcon,
-        progressPercent: (currentPhase / 4) * 100,
+        progressPercent: (currentPhase / (steps.length + 1)) * 100,
         taskCompletionPercent,
         specDir: dirPath,
         documentType,
@@ -101,8 +136,7 @@ export function parseSpecInfo(document: vscode.TextDocument): SpecInfo {
 /**
  * Get related documents for tab display
  */
-function getRelatedDocs(dirPath: string, currentFileName: string, documentType: string): RelatedDoc[] {
-    const mainDocs = ['spec.md', 'plan.md', 'tasks.md'];
+function getRelatedDocs(dirPath: string, currentFileName: string, documentType: string, mainDocs: string[] = ['spec.md', 'plan.md', 'tasks.md']): RelatedDoc[] {
 
     try {
         const files = fs.readdirSync(dirPath);

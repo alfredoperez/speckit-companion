@@ -246,26 +246,92 @@ Add custom SpecKit slash commands in VS Code settings. Run them with **SpecKit: 
 
 ### Custom Workflows
 
-Define alternative workflows with different commands for each step:
+Define alternative workflows with custom steps, output files, and sub-documents. Workflows are fully flexible — you're not limited to the default specify/plan/tasks/implement phases.
+
+#### Basic example — remap default steps to different commands
 
 ```json
 {
   "speckit.customWorkflows": [
     {
-      "name": "light",
-      "displayName": "Light Workflow",
-      "description": "Streamlined workflow for small features",
-      "step-specify": "/speckit.light-specify",
-      "step-plan": "/speckit.light-plan",
-      "step-implement": "/speckit.light-implement"
+      "name": "sdd",
+      "displayName": "SDD Workflow",
+      "description": "Spec-Driven Development workflow",
+      "steps": [
+        { "name": "specify", "label": "Specify", "command": "sdd.specify", "file": "spec.md" },
+        { "name": "plan",    "label": "Plan",    "command": "sdd.plan",    "file": "plan.md" },
+        { "name": "tasks",   "label": "Tasks",   "command": "sdd.tasks",   "file": "tasks.md" },
+        { "name": "implement","label": "Implement","command": "sdd.implement" }
+      ]
     }
   ]
 }
 ```
 
-Each `step-*` field maps a workflow phase to a custom command. Enhancement buttons in the spec viewer footer are driven by `customCommands` entries with a matching `step` — if none are configured, no button is shown.
+#### Custom steps — use any names and files
 
-When multiple workflows exist, you'll be prompted to choose when starting a new spec.
+```json
+{
+  "speckit.customWorkflows": [
+    {
+      "name": "design-first",
+      "displayName": "Design-First",
+      "description": "Architecture-focused workflow",
+      "steps": [
+        { "name": "design",    "label": "Design",    "command": "my.design",    "file": "design.md" },
+        { "name": "prototype", "label": "Prototype",  "command": "my.prototype", "file": "prototype.md" },
+        { "name": "implement", "label": "Implement",  "command": "my.implement" }
+      ]
+    }
+  ]
+}
+```
+
+#### Steps with sub-files
+
+Steps can declare child documents that appear as expandable items in the sidebar:
+
+```json
+{
+  "steps": [
+    {
+      "name": "plan",
+      "label": "Plan",
+      "command": "speckit.plan",
+      "file": "plan.md",
+      "subDir": "plan"
+    }
+  ]
+}
+```
+
+This scans `plan/` for `.md` files and shows them as children of the Plan step. You can also use an explicit list:
+
+```json
+{
+  "subFiles": ["plan/architecture.md", "plan/api-design.md"]
+}
+```
+
+#### Step properties
+
+| Property | Required | Description |
+|----------|----------|-------------|
+| `name` | Yes | Step identifier (e.g., `"specify"`, `"design"`) |
+| `command` | Yes | Slash command to execute (e.g., `"sdd.specify"`) |
+| `label` | No | Display name in sidebar (defaults to capitalized `name`) |
+| `file` | No | Output file for this step (defaults to `{name}.md`) |
+| `subFiles` | No | Array of child file paths shown under this step |
+| `subDir` | No | Directory to scan for child `.md` files (non-recursive) |
+| `includeRelatedDocs` | No | When `true`, unassigned `.md` files (e.g., `quickstart.md`, `research.md`) in the spec folder are grouped under this step. Only one step should have this flag. |
+
+#### Behavior
+
+- The sidebar shows only the steps declared by the active workflow
+- Steps with missing output files appear as "not started"
+- When multiple workflows exist, you're prompted to choose when starting a new spec
+- The default workflow (`spec.md` → `plan.md` → `tasks.md` → implement) is always available
+- Any `.md` files not associated with a step are grouped under the step with `includeRelatedDocs: true` (the Plan step in the default workflow)
 
 ## Configuration
 
