@@ -5,15 +5,18 @@
 ![GitHub Release](https://img.shields.io/github/v/release/alfredoperez/speckit-companion?label=version)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-A VS Code extension that brings structured, spec-driven development to AI coding assistants. Define requirements, generate plans, track tasks, and manage steering documents — all from a visual sidebar that works with Claude Code, GitHub Copilot CLI, Gemini CLI, and Codex CLI.
-
 ![SpecKit Companion](docs/screenshots/hero.png)
+
+- **Define** requirements with structured specs
+- **Track** progress through Specify → Plan → Tasks → Done
+- **Review** with inline comments, just like a code review
+- **Extend** with custom workflows, commands, and any AI assistant
 
 ## Features
 
 ### Visual Workflow Editor
 
-Guide your features through structured phases — Specify, Plan, Tasks, and Implement — with a dedicated editor that renders markdown specs, shows phase progress, and provides one-click actions for each step.
+Guide your features through structured phases with a dedicated editor that renders markdown specs, shows phase progress, and provides one-click actions for each step.
 
 ![Workflow Editor](docs/screenshots/workflow-spec.png)
 
