@@ -5,36 +5,68 @@
 ![GitHub Release](https://img.shields.io/github/v/release/alfredoperez/speckit-companion?label=version)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-A VSCode extension that brings spec-driven development to AI coding assistants using [GitHub SpecKit](https://github.com/github/spec-kit).
+![SpecKit Companion](docs/screenshots/hero.png)
 
-![SpecKit Companion Sidebar](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/specify-extension.png)
+- **Define** requirements with structured specs
+- **Track** progress through Specify → Plan → Tasks → Done
+- **Review** with inline comments, just like a code review
+- **Extend** with custom workflows, commands, and any AI assistant
 
 ## Features
 
-### Spec-Driven Development with GitHub SpecKit
+### Visual Workflow Editor
 
-- **SpecKit Integration**: Full integration with GitHub's SpecKit for spec-driven development
-- **Visual Workflow Editor**: Review and edit spec documents (spec.md, plan.md, tasks.md) with a custom editor
-- **Progress Tracking**: Visual phase indicators showing workflow progress
+Guide your features through structured phases with a dedicated editor that renders markdown specs, shows phase progress, and provides one-click actions for each step.
 
-### Setup Assistance
+![Workflow Editor](docs/screenshots/workflow-spec.png)
 
-- **CLI Detection**: Automatically detects if SpecKit CLI is installed
-- **Install Prompts**: Prompts to install SpecKit CLI if not detected
-- **Workspace Initialization**: Suggests initializing SpecKit when CLI is installed but workspace isn't set up
-- **Upgrade Commands**: One-click upgrades for CLI, project files, or both via Command Palette
+### Inline Review Comments
 
-### AI Coding Assistant Companion Features
+Review spec documents with inline comments. Add feedback directly on specific lines, refine requirements, and collaborate on specs before implementation begins.
 
-- **Steering Management**: Browse and manage steering files (CLAUDE.md, GEMINI.md, copilot-instructions.md)
-- **Agent Explorer**: View and manage custom agents at user and project levels
-- **MCP Servers**: View configured Model Context Protocol servers
-- **Hooks Management**: View and manage Claude Code hooks (Claude only)
-- **Extension Updates**: Automatic update notifications when new versions are available
+![Inline Comments](docs/screenshots/inline-comment-dialog.png)
+
+### Create Specs Visually
+
+Create new specs with a dedicated dialog — write a detailed description, select your workflow, and attach screenshots or mockups for context.
+
+![Create Spec](docs/screenshots/create-spec.png)
+
+### Spec-Driven Phases
+
+Each feature flows through four phases:
+
+**Specify** — Define requirements with user stories and acceptance scenarios.
+
+![Spec Phase](docs/screenshots/workflow-spec.png)
+
+**Plan** — Create the technical design with research, data models, and implementation strategy.
+
+![Plan Phase](docs/screenshots/workflow-plan.png)
+
+**Tasks** — Generate an implementation checklist with progress tracking and parallel execution markers.
+
+![Tasks Phase](docs/screenshots/workflow-tasks.png)
+
+### Sidebar at a Glance
+
+The sidebar organizes everything your AI assistant needs: **Specs** for feature development, **Steering** for AI guidance documents, **Agents** for custom agent definitions, **Skills** for reusable capabilities, and **Hooks** for automation triggers.
+
+![Sidebar Overview](docs/screenshots/sidebar-overview.png)
+
+### Custom Workflows & Commands
+
+SpecKit Companion isn't tied to a single methodology. Swap out the default phases for any SDD workflow — [Agent Teams Lite](https://github.com/Gentleman-Programming/agent-teams-lite), your own team's process, or anything that uses commands and produces markdown files. Define custom steps, labels, output files, and sub-documents. Add custom commands that appear as action buttons in specific phases (e.g., Verify, Archive, Commit, Create PR).
+
+The sidebar, progress tracking, and workflow editor all adapt automatically to your custom workflow. [See Configuration below.](#configuration)
+
+## Getting Started
+
+1. **Install** the extension from a `.vsix` file or the VS Code marketplace
+2. **Open the sidebar** — click the SpecKit icon in the activity bar
+3. **Create a spec** — click the `+` button in the Specs view to start your first feature
 
 ## Supported AI Providers
-
-SpecKit Companion works with multiple AI coding assistants:
 
 | Feature | Claude Code | GitHub Copilot CLI | Gemini CLI | Codex CLI |
 |---------|-------------|-------------------|------------|-----------|
@@ -45,210 +77,58 @@ SpecKit Companion works with multiple AI coding assistants:
 | **MCP Servers** | .claude/settings.json | ~/.copilot/mcp-config.json | ~/.gemini/settings.json | Not supported |
 | **CLI Command** | `claude` | `ghcs` / `gh copilot` | `gemini` | `codex` |
 
-Configure your preferred provider in VS Code settings: `speckit.aiProvider`
+Configure your preferred provider: **Settings > speckit.aiProvider**
 
-## How It Works
+## Configuration
 
-SpecKit Companion provides a visual interface for spec-driven development:
+### Spec Directories
 
-### 1. Specs View
-Browse and manage your feature specifications. Each spec folder contains:
-- `spec.md` - Requirements and user stories
-- `plan.md` - Technical design document
-- `tasks.md` - Implementation checklist with progress tracking
-
-![Specs View](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/specify-extension.png)
-
-### 2. Visual Workflow Editor
-
-The workflow editor guides you through the three phases of spec-driven development. Each phase has dedicated actions and content sections.
-
-#### Phase 1: Spec
-
-Define your feature requirements with user stories and acceptance scenarios.
-
-![Spec Phase](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/specify-spec.png)
-
-**Actions:**
-- **Clarify** - Ask SpecKit to identify ambiguities and ask clarifying questions
-- **Edit Source** - Open the raw markdown file for direct editing
-- **Regenerate** - Re-run the spec generation with updated input
-- **Approve & Next Phase** - Mark the spec as approved and proceed to planning
-
-#### Phase 2: Plan
-
-Create the technical implementation plan based on approved requirements.
-
-![Plan Phase](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/specify-plan.png)
-
-**Tabs** (generated by SpecKit):
-- **Research** - Background research and analysis
-- **Plan** - Core implementation strategy
-- **Data Model** - Database/state structure definitions
-- **Quickstart** - Getting started guide for implementation
-
-**Actions:**
-- **Checklist** - Generate a custom checklist for the feature (SpecKit command)
-- **Edit Source** - Open the raw markdown file for direct editing
-- **Regenerate** - Re-run the plan generation
-- **Approve & Next Phase** - Mark the plan as approved and proceed to tasks
-
-#### Phase 3: Tasks
-
-Implementation checklist with trackable tasks organized by user story.
-
-![Tasks Phase](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/specify-tasks.png)
-
-**Content sections:**
-- **Format** - Task ID conventions with parallel execution markers and story grouping
-- **Path Conventions** - Project structure and file location references
-- **Phases** - Tasks grouped into implementation phases with progress tracking
-
-**Actions:**
-- **Analyze** - Run cross-artifact consistency and quality analysis (SpecKit command)
-- **Edit Source** - Open the raw markdown file for direct editing
-- **Regenerate** - Re-run task generation
-- **Approve & Next Phase** - Mark the tasks as approved and complete the workflow
-
-### 3. Other Views
-
-The extension provides additional views for managing AI assistant configurations:
-
-![Other Views](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/other-views.png)
-
-#### Agents View
-Browse custom AI agents defined in:
-- `.claude/agents/` (Claude Code)
-- `.github/agents/` (GitHub Copilot)
-
-#### Steering View
-Manage AI guidance files based on your selected provider:
-- **Global Rule** - User-level instructions (e.g., ~/.claude/CLAUDE.md, ~/.gemini/GEMINI.md)
-- **Project Rule** - Project-specific instructions (e.g., ./CLAUDE.md, ./GEMINI.md, .github/copilot-instructions.md)
-
-#### MCP Servers View
-See configured Model Context Protocol servers for external tool integrations.
-
-#### Hooks View (Claude Code only)
-View automation hooks that run on events like pre-commit, post-save, etc.
-
-#### Skills View (Claude Code only)
-Browse and manage Claude Code skills from project (`.claude/skills/`), user (`~/.claude/skills/`), and installed plugins.
-
-## Prerequisites
-
-1. **AI Coding Assistant** (at least one):
-   - [Claude Code](https://claude.ai/code) - Full feature support
-   - [GitHub Copilot CLI](https://docs.github.com/copilot/using-github-copilot/using-github-copilot-in-the-command-line) - Steering, agents, MCP
-   - [Gemini CLI](https://github.com/google-gemini/gemini-cli) - Steering, MCP
-   - [Codex CLI](https://github.com/openai/codex) - Steering, agents
-
-2. **SpecKit CLI**: Install via uv:
-   ```bash
-   uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
-   ```
-
-## Installation
-
-### From VSIX file
-
-Download the latest `.vsix` file from releases, then:
-
-```bash
-# VSCode
-code --install-extension speckit-companion-{version}.vsix
-
-# Cursor
-cursor --install-extension speckit-companion-{version}.vsix
-```
-
-### Platform Support
-
-| Platform     | Support | Notes           |
-| ------------ | ------- | --------------- |
-| macOS        | Yes     | Fully supported |
-| Linux        | Yes     | Fully supported |
-| Windows WSL  | Yes     | Supported       |
-| Windows      | No      | Not supported   |
-
-## Usage
-
-### Quick Start
-
-1. Click the SpecKit icon in the activity bar
-2. If SpecKit CLI is not installed, follow the prompts to install it
-3. Initialize SpecKit in your workspace with `specify init <project-name>`
-4. Create and manage specs from the SPECS view
-
-### SpecKit Workflow
-
-1. **Spec**: Define requirements for your feature
-2. **Plan**: Create technical design after spec approval
-3. **Tasks**: Generate implementation tasks from the plan
-4. **Implementation**: Execute tasks one by one
-
-### Steering Documents
-
-Create project-specific AI guidance:
-
-- Click the sparkle icon to create custom steering documents
-- Initialize steering with code style, architecture, and testing guidelines
-- Documents are stored in `.claude/steering/`
-
-### Available Commands
-
-Access these commands via the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`):
-
-| Command | Description |
-|---------|-------------|
-| `SpecKit: Install SpecKit CLI` | Install SpecKit CLI using uv |
-| `SpecKit: Upgrade CLI` | Upgrade SpecKit CLI to latest version |
-| `SpecKit: Upgrade Project Files` | Update project's SpecKit configuration |
-| `SpecKit: Upgrade All (CLI + Project)` | Upgrade both CLI and project files |
-| `SpecKit: Check for Updates` | Check for new extension versions |
-| `SpecKit: Run Custom Command` | Run a configured custom SpecKit slash command |
-
-### Custom Commands
-
-Add custom SpecKit slash commands in VS Code settings. Run them with **SpecKit: Run Custom Command** or see them in the workflow editor based on `step`.
+By default, specs live in `specs/`. You can configure multiple directories or use glob patterns:
 
 ```json
 {
-  "speckit.customCommands": [
-    "review",
+  "speckit.specDirectories": ["specs", "openspec/changes/*"]
+}
+```
+
+Simple names (e.g., `specs`) list their children as specs. Patterns with wildcards treat each match as a spec folder.
+
+### Custom Workflows
+
+Define alternative workflows with custom steps, output files, and sub-documents. Any SDD methodology that uses commands and produces markdown files can be plugged into SpecKit Companion.
+
+#### Real-world example — Agent Teams Lite
+
+Here's a full configuration using [Agent Teams Lite](https://github.com/Gentleman-Programming/agent-teams-lite), a multi-agent SDD framework:
+
+```json
+{
+  "speckit.customWorkflows": [
     {
-      "name": "commit",
-      "title": "Commit Changes",
-      "command": "/speckit.commit",
-      "step": "tasks",
-      "tooltip": "Generate a commit for completed work",
-      "requiresSpecDir": false
-    },
-    {
-      "name": "pr",
-      "title": "Create PR",
-      "command": "/speckit.pr",
-      "step": "tasks",
-      "tooltip": "Create a pull request for the feature"
+      "name": "agent-teams-lite",
+      "displayName": "Agent Teams Lite (SDD)",
+      "description": "Multi-agent SDD workflow",
+      "steps": [
+        { "name": "specify", "label": "Spec",   "command": "sdd-spec",   "file": "spec.md", "subDir": "specs" },
+        { "name": "plan",    "label": "Design", "command": "sdd-design", "file": "design.md", "includeRelatedDocs": true },
+        { "name": "tasks",   "label": "Tasks",  "command": "sdd-tasks",  "file": "tasks.md" }
+      ]
     }
+  ],
+  "speckit.specDirectories": ["specs", "openspec/changes/*", "openspec/changes/archive/*"],
+  "speckit.customCommands": [
+    { "name": "verify",  "title": "Verify",  "command": "/sdd-verify",  "step": "tasks", "tooltip": "Validate implementation matches specs" },
+    { "name": "archive", "title": "Archive", "command": "/sdd-archive", "step": "tasks", "tooltip": "Archive completed change" }
   ]
 }
 ```
 
-**Properties:**
-- `name` - Command identifier
-- `title` - Display name in picker
-- `command` - Slash command to execute
-- `step` - Phase to show in: `spec`, `plan`, `tasks`, or `all` (default)
-- `tooltip` - Description shown on hover
-- `autoExecute` - Auto-run in terminal (default: true)
-- `requiresSpecDir` - Inject spec directory (default: true)
+Notice how custom workflows, spec directories, and custom commands work together:
+- The workflow defines **Spec → Design → Tasks** phases with custom labels and commands
+- `specDirectories` tells the sidebar where to find specs (including archived ones)
+- Custom commands add **Verify** and **Archive** buttons to the Tasks phase
 
-### Custom Workflows
-
-Define alternative workflows with custom steps, output files, and sub-documents. Workflows are fully flexible — you're not limited to the default specify/plan/tasks/implement phases.
-
-#### Basic example — remap default steps to different commands
+#### Basic example — remap default steps
 
 ```json
 {
@@ -256,31 +136,11 @@ Define alternative workflows with custom steps, output files, and sub-documents.
     {
       "name": "sdd",
       "displayName": "SDD Workflow",
-      "description": "Spec-Driven Development workflow",
       "steps": [
-        { "name": "specify", "label": "Specify", "command": "sdd.specify", "file": "spec.md" },
-        { "name": "plan",    "label": "Plan",    "command": "sdd.plan",    "file": "plan.md" },
-        { "name": "tasks",   "label": "Tasks",   "command": "sdd.tasks",   "file": "tasks.md" },
-        { "name": "implement","label": "Implement","command": "sdd.implement" }
-      ]
-    }
-  ]
-}
-```
-
-#### Custom steps — use any names and files
-
-```json
-{
-  "speckit.customWorkflows": [
-    {
-      "name": "design-first",
-      "displayName": "Design-First",
-      "description": "Architecture-focused workflow",
-      "steps": [
-        { "name": "design",    "label": "Design",    "command": "my.design",    "file": "design.md" },
-        { "name": "prototype", "label": "Prototype",  "command": "my.prototype", "file": "prototype.md" },
-        { "name": "implement", "label": "Implement",  "command": "my.implement" }
+        { "name": "specify",   "label": "Specify",   "command": "sdd.specify",   "file": "spec.md" },
+        { "name": "plan",      "label": "Plan",      "command": "sdd.plan",      "file": "plan.md" },
+        { "name": "tasks",     "label": "Tasks",     "command": "sdd.tasks",     "file": "tasks.md" },
+        { "name": "implement", "label": "Implement", "command": "sdd.implement", "actionOnly": true }
       ]
     }
   ]
@@ -313,7 +173,7 @@ This scans `plan/` for `.md` files and shows them as children of the Plan step. 
 }
 ```
 
-#### Step properties
+#### Step Properties
 
 | Property | Required | Description |
 |----------|----------|-------------|
@@ -321,73 +181,69 @@ This scans `plan/` for `.md` files and shows them as children of the Plan step. 
 | `command` | Yes | Slash command to execute (e.g., `"sdd.specify"`) |
 | `label` | No | Display name in sidebar (defaults to capitalized `name`) |
 | `file` | No | Output file for this step (defaults to `{name}.md`) |
+| `actionOnly` | No | When `true`, the step has no output file and is hidden from the document tree (e.g., an "Implement" step that just runs a command) |
 | `subFiles` | No | Array of child file paths shown under this step |
 | `subDir` | No | Directory to scan for child `.md` files (non-recursive) |
-| `includeRelatedDocs` | No | When `true`, unassigned `.md` files (e.g., `quickstart.md`, `research.md`) in the spec folder are grouped under this step. Only one step should have this flag. |
+| `includeRelatedDocs` | No | When `true`, unassigned `.md` files in the spec folder are grouped under this step. Only one step should have this flag. |
 
 #### Behavior
 
 - The sidebar shows only the steps declared by the active workflow
 - Steps with missing output files appear as "not started"
+- Steps with `actionOnly: true` are action-only — they appear in the workflow editor but not in the file tree
 - When multiple workflows exist, you're prompted to choose when starting a new spec
 - The default workflow (`spec.md` → `plan.md` → `tasks.md` → implement) is always available
-- Any `.md` files not associated with a step are grouped under the step with `includeRelatedDocs: true` (the Plan step in the default workflow)
 
-## Configuration
+### Custom Commands
 
-Settings are stored in `.claude/settings/speckit-settings.json`:
+Add custom slash commands that appear in the workflow editor and the **SpecKit: Run Custom Command** picker.
 
 ```json
 {
-  "paths": {
-    "specs": "specs",
-    "steering": ".claude/steering",
-    "settings": ".claude/settings"
-  },
-  "views": {
-    "specs": { "visible": true },
-    "steering": { "visible": true },
-    "mcp": { "visible": true },
-    "hooks": { "visible": true },
-    "skills": { "visible": true },
-    "settings": { "visible": false }
-  }
+  "speckit.customCommands": [
+    "review",
+    {
+      "name": "commit",
+      "title": "Commit Changes",
+      "command": "/speckit.commit",
+      "step": "tasks",
+      "tooltip": "Generate a commit for completed work",
+      "requiresSpecDir": false
+    },
+    {
+      "name": "pr",
+      "title": "Create PR",
+      "command": "/speckit.pr",
+      "step": "tasks",
+      "tooltip": "Create a pull request for the feature"
+    }
+  ]
 }
 ```
 
-## Workspace Structure
-
-```plain
-your-project/
-├── specs/                    # Feature specifications (SpecKit format)
-│   └── {spec-name}/
-│       ├── spec.md           # Requirements/specification
-│       ├── plan.md           # Technical design
-│       └── tasks.md          # Implementation steps
-├── .claude/
-│   ├── commands/             # SpecKit slash commands
-│   │   └── speckit.*.md
-│   ├── steering/             # AI guidance documents
-│   │   └── *.md
-│   └── settings/
-│       └── speckit-settings.json
-```
+**Properties:**
+- `name` — Command identifier
+- `title` — Display name in picker
+- `command` — Slash command to execute
+- `step` — Phase to show in: `spec`, `plan`, `tasks`, or `all` (default)
+- `tooltip` — Description shown on hover
+- `autoExecute` — Auto-run in terminal (default: true)
+- `requiresSpecDir` — Inject spec directory (default: true)
 
 ## Development
 
 ### Setup
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/alfredoperez/speckit-companion.git
 cd speckit-companion
-
 npm install
 npm run compile
 ```
 
 ### Running
 
-1. Open the project in VSCode
+1. Open the project in VS Code
 2. Press `F5` to launch Extension Development Host
 
 ### Building
@@ -397,9 +253,18 @@ npm run package
 # Output: speckit-companion-{version}.vsix
 ```
 
+### Platform Support
+
+| Platform     | Support | Notes           |
+| ------------ | ------- | --------------- |
+| macOS        | Yes     | Fully supported |
+| Linux        | Yes     | Fully supported |
+| Windows WSL  | Yes     | Supported       |
+| Windows      | No      | Not supported   |
+
 ## Acknowledgments
 
-This project builds started from all the amazing work at https://github.com/notdp/kiro-for-cc
+This project started from the amazing work at https://github.com/notdp/kiro-for-cc
 
 ## License
 

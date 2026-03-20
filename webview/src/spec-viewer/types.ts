@@ -100,7 +100,7 @@ export type ViewerToExtensionMessage =
     | { type: 'editSource' }
     | { type: 'regenerate' }
     | { type: 'approve' }
-    | { type: 'clarify' }
+    | { type: 'clarify'; command?: string }
     // Stepper navigation
     | { type: 'stepperClick'; phase: string }
     // Batch refinements submission (GitHub-style review)
