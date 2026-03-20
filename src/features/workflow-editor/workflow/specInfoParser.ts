@@ -3,18 +3,37 @@ import * as path from 'path';
 import * as fs from 'fs';
 import type { SpecInfo, RelatedDoc, EnhancementButton } from '../../../core/types';
 import {
-    DEFAULT_WORKFLOW,
     getFeatureWorkflow,
     getWorkflow,
     normalizeWorkflowConfig,
     getStepFile,
+    DEFAULT_WORKFLOW,
+    type WorkflowStepConfig,
 } from '../../workflows';
-import type { WorkflowStepConfig } from '../../workflows';
 
 /**
- * Get workflow steps for a spec directory (synchronous fallback to default)
+ * Resolve workflow steps for a spec directory
  */
-function getWorkflowStepsSync(): WorkflowStepConfig[] {
+function resolveStepsSync(dirPath: string): WorkflowStepConfig[] {
+    // Try to read .speckit.json synchronously
+    try {
+        const contextPath = path.join(dirPath, '.speckit.json');
+        if (fs.existsSync(contextPath)) {
+            const content = fs.readFileSync(contextPath, 'utf-8');
+            const ctx = JSON.parse(content);
+            if (ctx.workflow) {
+                const wf = getWorkflow(ctx.workflow);
+                if (wf) {
+                    const normalized = normalizeWorkflowConfig(wf);
+                    if (normalized.steps && normalized.steps.length > 0) {
+                        return normalized.steps;
+                    }
+                }
+            }
+        }
+    } catch {
+        // fall through
+    }
     return DEFAULT_WORKFLOW.steps!;
 }
 
@@ -25,56 +44,42 @@ export function parseSpecInfo(document: vscode.TextDocument): SpecInfo {
     const fileName = path.basename(document.fileName);
     const dirPath = path.dirname(document.fileName);
 
-    // Get workflow steps (sync — use default, async enrichment not available here)
-    const steps = getWorkflowStepsSync();
+    // Resolve workflow steps dynamically (exclude action-only steps)
+    const steps = resolveStepsSync(dirPath).filter(s => !s.actionOnly);
 
-    // Find the matching step for the current file
-    const matchedStepIndex = steps.findIndex(s => getStepFile(s).toLowerCase() === fileName.toLowerCase());
-    const matchedStep = matchedStepIndex >= 0 ? steps[matchedStepIndex] : null;
+    // Build step-to-file and file-to-step maps
+    const fileToStep = new Map<string, WorkflowStepConfig>();
+    for (const step of steps) {
+        fileToStep.set(getStepFile(step), step);
+    }
 
+    // Detect current phase and document type based on workflow steps
     let currentPhase = 1;
     let phaseIcon = '📋';
     let documentType: 'spec' | 'plan' | 'tasks' | 'other' = 'other';
     let enhancementButton: EnhancementButton | null = null;
 
+    const matchedStep = fileToStep.get(fileName);
     if (matchedStep) {
-        currentPhase = matchedStepIndex + 1;
-        // Map known step names to their icons and enhancement buttons
-        switch (matchedStep.name) {
-            case 'specify':
-                phaseIcon = '📋';
-                documentType = 'spec';
-                enhancementButton = {
-                    label: 'Clarify',
-                    command: 'clarify',
-                    icon: '?',
-                    tooltip: 'Ask clarifying questions about ambiguous requirements'
-                };
-                break;
-            case 'plan':
-                phaseIcon = '🔷';
-                documentType = 'plan';
-                enhancementButton = {
-                    label: 'Checklist',
-                    command: 'checklist',
-                    icon: '✓',
-                    tooltip: 'Generate implementation checklist from design'
-                };
-                break;
-            case 'tasks':
-                phaseIcon = '✅';
-                documentType = 'tasks';
-                enhancementButton = {
-                    label: 'Analyze',
-                    command: 'analyze',
-                    icon: '⚡',
-                    tooltip: 'Analyze task dependencies and complexity'
-                };
-                break;
-            default:
-                phaseIcon = '📄';
-                documentType = 'other';
-                break;
+        const stepIndex = steps.indexOf(matchedStep);
+        currentPhase = stepIndex + 1;
+
+        // Map known step names to icons and types
+        const iconMap: Record<string, string> = { specify: '📋', plan: '🔷', tasks: '✅', implement: '🚀' };
+        phaseIcon = iconMap[matchedStep.name] || '📄';
+
+        // Map to documentType (for backward compat with spec/plan/tasks)
+        if (matchedStep.name === 'specify' || getStepFile(matchedStep) === 'spec.md') {
+            documentType = 'spec';
+            enhancementButton = { label: 'Clarify', command: 'clarify', icon: '?', tooltip: 'Ask clarifying questions about ambiguous requirements' };
+        } else if (matchedStep.name === 'plan' || getStepFile(matchedStep) === 'plan.md') {
+            documentType = 'plan';
+            enhancementButton = { label: 'Checklist', command: 'checklist', icon: '✓', tooltip: 'Generate implementation checklist from design' };
+        } else if (matchedStep.name === 'tasks' || getStepFile(matchedStep) === 'tasks.md') {
+            documentType = 'tasks';
+            enhancementButton = { label: 'Analyze', command: 'analyze', icon: '⚡', tooltip: 'Analyze task dependencies and complexity' };
+        } else {
+            documentType = 'other';
         }
     } else if (fileName === 'research.md') {
         currentPhase = 2;
@@ -87,12 +92,9 @@ export function parseSpecInfo(document: vscode.TextDocument): SpecInfo {
     }
 
     // Check if next phase file exists
-    const nextStep = matchedStepIndex >= 0 && matchedStepIndex + 1 < steps.length
-        ? steps[matchedStepIndex + 1]
-        : null;
-    const nextPhaseExists = nextStep
-        ? fs.existsSync(path.join(dirPath, getStepFile(nextStep)))
-        : false;
+    const nextStepIndex = currentPhase; // 0-indexed next = currentPhase (since currentPhase is 1-indexed)
+    const nextStep = steps[nextStepIndex];
+    const nextPhaseExists = nextStep ? fs.existsSync(path.join(dirPath, getStepFile(nextStep))) : false;
 
     // Calculate completed phases based on file existence
     const completedPhases: number[] = [];
@@ -104,25 +106,22 @@ export function parseSpecInfo(document: vscode.TextDocument): SpecInfo {
         if (fs.existsSync(stepPath)) {
             completedPhases.push(i + 1);
 
-            // Check task completion for the last step that has checkboxes
-            if (steps[i].name === 'tasks' || i === steps.length - 1) {
+            // Check task completion for steps that produce tasks-like files
+            if (steps[i].name === 'tasks' || stepFile === 'tasks.md') {
                 const taskStats = getTaskCompletionStats(stepPath);
-                if (taskStats.percent > 0) {
-                    taskCompletionPercent = taskStats.percent;
-                }
+                taskCompletionPercent = taskStats.percent;
             }
         }
     }
 
-    // Find ALL documents in same folder for tabs
-    const stepFiles = steps.map(s => getStepFile(s));
-    const allDocs = getRelatedDocs(dirPath, fileName, documentType, stepFiles);
+    const totalPhases = steps.length + 1; // steps + Done
+    const allDocs = getRelatedDocs(dirPath, fileName, documentType, steps);
 
     return {
         currentPhase,
         completedPhases,
         phaseIcon,
-        progressPercent: (currentPhase / (steps.length + 1)) * 100,
+        progressPercent: (currentPhase / totalPhases) * 100,
         taskCompletionPercent,
         specDir: dirPath,
         documentType,
@@ -134,26 +133,33 @@ export function parseSpecInfo(document: vscode.TextDocument): SpecInfo {
 }
 
 /**
- * Get related documents for tab display
+ * Get related documents for tab display.
+ * Uses workflow steps to determine which files are "main" docs.
  */
-function getRelatedDocs(dirPath: string, currentFileName: string, documentType: string, mainDocs: string[] = ['spec.md', 'plan.md', 'tasks.md']): RelatedDoc[] {
+function getRelatedDocs(dirPath: string, currentFileName: string, documentType: string, steps?: WorkflowStepConfig[]): RelatedDoc[] {
+    // Build the set of main doc filenames from workflow steps
+    const mainDocs = steps
+        ? steps.map(s => getStepFile(s))
+        : ['spec.md', 'plan.md', 'tasks.md'];
 
     try {
         const files = fs.readdirSync(dirPath);
         // Get non-main docs
         const otherDocs = files.filter(f => f.endsWith('.md') && !mainDocs.includes(f));
 
-        // For phase 2 (plan) or related docs, show tabs
+        // For plan-like docs or related docs, show tabs
         if (documentType === 'plan' || otherDocs.includes(currentFileName)) {
-            // Collect all docs that exist
             const docsToShow: RelatedDoc[] = [];
 
-            // Add plan.md first if it exists
-            if (fs.existsSync(path.join(dirPath, 'plan.md'))) {
+            // Add the plan step's file first if it exists
+            const planFile = steps
+                ? getStepFile(steps.find(s => s.name === 'plan') || { name: 'plan', command: '' })
+                : 'plan.md';
+            if (fs.existsSync(path.join(dirPath, planFile))) {
                 docsToShow.push({
                     name: 'Plan',
-                    fileName: 'plan.md',
-                    path: path.join(dirPath, 'plan.md')
+                    fileName: planFile,
+                    path: path.join(dirPath, planFile)
                 });
             }
 

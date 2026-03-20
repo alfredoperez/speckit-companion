@@ -12,6 +12,7 @@ import {
     initializeCache,
 } from '../speckit/taskProgressService';
 import { NotificationUtils } from './utils/notificationUtils';
+import { getFileWatcherPatterns } from './specDirectoryResolver';
 
 /**
  * Check if phase completion notifications are enabled
@@ -160,9 +161,6 @@ export function setupTasksWatcher(
     context: vscode.ExtensionContext,
     outputChannel: vscode.OutputChannel
 ): void {
-    // Watch for tasks.md files in specs directories
-    const tasksWatcher = vscode.workspace.createFileSystemWatcher('**/specs/**/tasks.md');
-
     // Debounce to avoid multiple notifications for rapid saves
     let debounceTimeout: NodeJS.Timeout | undefined;
 
@@ -203,10 +201,15 @@ export function setupTasksWatcher(
         }
     };
 
-    tasksWatcher.onDidChange(handleTasksChange);
-    tasksWatcher.onDidCreate(handleTasksCreate);
-
-    context.subscriptions.push(tasksWatcher);
+    // Watch for tasks.md files in configured spec directories
+    const watcherPatterns = getFileWatcherPatterns();
+    const taskPatterns = watcherPatterns.tasks;
+    for (const pattern of taskPatterns) {
+        const watcher = vscode.workspace.createFileSystemWatcher(pattern);
+        watcher.onDidChange(handleTasksChange);
+        watcher.onDidCreate(handleTasksCreate);
+        context.subscriptions.push(watcher);
+    }
 
     // Initialize cache for existing tasks.md files on startup
     initializeExistingTasksCache(outputChannel);
@@ -218,7 +221,13 @@ export function setupTasksWatcher(
  */
 async function initializeExistingTasksCache(outputChannel: vscode.OutputChannel): Promise<void> {
     try {
-        const tasksFiles = await vscode.workspace.findFiles('**/specs/**/tasks.md', '**/node_modules/**');
+        const watcherPatterns = getFileWatcherPatterns();
+        const allTasksFiles: vscode.Uri[] = [];
+        for (const pattern of watcherPatterns.tasks) {
+            const files = await vscode.workspace.findFiles(pattern, '**/node_modules/**');
+            allTasksFiles.push(...files);
+        }
+        const tasksFiles = allTasksFiles;
         outputChannel.appendLine(`[TasksWatcher] Found ${tasksFiles.length} existing tasks.md files`);
 
         for (const uri of tasksFiles) {
@@ -246,7 +255,11 @@ export function setupSpecViewerWatcher(
     specViewer: SpecViewerProvider,
     outputChannel: vscode.OutputChannel
 ): void {
-    const specMarkdownWatcher = vscode.workspace.createFileSystemWatcher('**/specs/**/*.md');
+    const watcherPatterns = getFileWatcherPatterns();
+    const mdPatterns = watcherPatterns.markdown;
+    // Create watchers for all configured markdown patterns
+    const mdWatchers = mdPatterns.map(p => vscode.workspace.createFileSystemWatcher(p));
+    const specMarkdownWatcher = mdWatchers[0] || vscode.workspace.createFileSystemWatcher('**/specs/**/*.md');
 
     let debounceTimer: NodeJS.Timeout | undefined;
 
@@ -260,13 +273,16 @@ export function setupSpecViewerWatcher(
         }, 500);
     };
 
-    specMarkdownWatcher.onDidChange(handleChange);
-    specMarkdownWatcher.onDidCreate(handleChange);
-    specMarkdownWatcher.onDidDelete((uri) => {
+    const handleDelete = (uri: vscode.Uri) => {
         outputChannel.appendLine(`[SpecViewerWatcher] File deleted: ${uri.fsPath}`);
         specViewer.handleFileDeleted(uri.fsPath);
-    });
+    };
 
-    context.subscriptions.push(specMarkdownWatcher);
-    outputChannel.appendLine('[SpecViewerWatcher] Watcher registered for specs/**/*.md');
+    for (const watcher of mdWatchers) {
+        watcher.onDidChange(handleChange);
+        watcher.onDidCreate(handleChange);
+        watcher.onDidDelete(handleDelete);
+        context.subscriptions.push(watcher);
+    }
+    outputChannel.appendLine(`[SpecViewerWatcher] Watchers registered for ${mdPatterns.length} spec patterns`);
 }

@@ -4,9 +4,10 @@
  */
 
 import * as path from 'path';
+import * as vscode from 'vscode';
 import { CORE_DOCUMENT_FILES, CoreDocumentType, DocumentType } from './types';
-import type { WorkflowStepConfig } from '../workflows';
-import { getStepFile } from '../workflows';
+import type { WorkflowStepConfig } from '../workflows/types';
+import { isInsideSpecDirectory } from '../../core/specDirectoryResolver';
 
 /**
  * Generates a random nonce for CSP
@@ -43,26 +44,37 @@ export function fileNameToDocType(fileName: string): string {
  */
 export function isSpecDocument(filePath: string): boolean {
     const fileName = path.basename(filePath).toLowerCase();
-    return fileName.endsWith('.md') && filePath.includes('/specs/');
+    if (!fileName.endsWith('.md')) {
+        return false;
+    }
+
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if (workspaceRoot) {
+        return isInsideSpecDirectory(filePath, workspaceRoot) !== undefined;
+    }
+
+    // Fallback: check for /specs/ in path
+    return filePath.includes('/specs/');
 }
 
 /**
- * Get document type from file path
- * @param steps Optional workflow steps for matching custom step files
+ * Get document type from file path.
+ * When `steps` is provided, matches against workflow step files first.
  */
 export function getDocumentTypeFromPath(filePath: string, steps?: WorkflowStepConfig[]): DocumentType {
     const fileName = path.basename(filePath).toLowerCase();
 
-    // Check workflow steps first if provided
+    // Check workflow steps first when available
     if (steps) {
         for (const step of steps) {
-            if (fileName === getStepFile(step).toLowerCase()) {
+            const stepFile = (step.file ?? `${step.name}.md`).toLowerCase();
+            if (fileName === stepFile) {
                 return step.name;
             }
         }
     }
 
-    // Check core documents (fallback)
+    // Check core documents
     for (const [type, file] of Object.entries(CORE_DOCUMENT_FILES)) {
         if (fileName === file) {
             return type as CoreDocumentType;

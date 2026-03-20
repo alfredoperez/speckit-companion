@@ -63,6 +63,7 @@ export const ConfigKeys = {
     customCommands: 'speckit.customCommands',
     qwenPath: 'speckit.qwenPath',
     qwenYoloMode: 'speckit.qwenYoloMode',
+    specDirectories: 'speckit.specDirectories',
     customWorkflows: 'speckit.customWorkflows',
     defaultWorkflow: 'speckit.defaultWorkflow',
     views: {

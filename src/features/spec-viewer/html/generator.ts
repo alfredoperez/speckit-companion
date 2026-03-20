@@ -29,7 +29,7 @@ export function generateHtml(
     phases: PhaseInfo[],
     taskCompletionPercent: number,
     specStatus: SpecStatus = 'draft',
-    enhancementButton: EnhancementButton | null = null
+    enhancementButtons: EnhancementButton[] = []
 ): string {
     // Get URIs for resources
     const styleUri = webview.asWebviewUri(
@@ -54,38 +54,37 @@ export function generateHtml(
     const currentDoc = documents.find(d => d.type === currentDocType);
     const editDisabled = !currentDoc?.exists;
 
-    // Smart CTA button logic:
-    // - Show "Generate Plan/Tasks" when next phase doesn't exist yet
-    // - Hide when next phase already exists (user can navigate via tabs)
-    // - For tasks: show "Implement Tasks" when not complete, hide when 100% complete
-    const planExists = coreDocs.find(d => d.type === 'plan')?.exists ?? false;
-    const tasksExists = coreDocs.find(d => d.type === 'tasks')?.exists ?? false;
+    // Determine if viewing a related doc
+    const coreDocTypes = coreDocs.map(d => d.type);
+    const isViewingRelatedDoc = !coreDocTypes.includes(currentDocType);
 
+    // Smart CTA button logic:
+    // - Show next step's label when next phase doesn't exist yet
+    // - Hide when next phase already exists (user can navigate via tabs)
+    // - For last step: show "Implement" when not complete, hide when 100% complete
     let showApproveButton = false;
     let approveText = '';
 
-    if (currentDocType === 'spec') {
-        // Show "Generate Plan" only if plan doesn't exist
-        if (!planExists) {
-            showApproveButton = true;
-            approveText = 'Generate Plan';
-        }
-    } else if (currentDocType === 'plan') {
-        // Show "Generate Tasks" only if tasks doesn't exist
-        if (!tasksExists) {
-            showApproveButton = true;
-            approveText = 'Generate Tasks';
-        }
-    } else if (currentDocType === 'tasks') {
-        // Show "Implement Tasks" only if not 100% complete
-        if (taskCompletionPercent < 100) {
-            showApproveButton = true;
-            approveText = 'Implement Tasks';
+    let currentIndex = coreDocs.findIndex(d => d.type === currentDocType);
+    if (currentIndex < 0 && isViewingRelatedDoc) {
+        const parentStep = relatedDocs.find(d => d.type === currentDocType)?.parentStep;
+        if (parentStep) {
+            currentIndex = coreDocs.findIndex(d => d.type === parentStep);
         }
     }
-
-    // Determine if viewing a related doc
-    const isViewingRelatedDoc = !['spec', 'plan', 'tasks'].includes(currentDocType);
+    if (currentIndex >= 0 && currentIndex < coreDocs.length - 1) {
+        const nextDoc = coreDocs[currentIndex + 1];
+        if (!nextDoc.exists) {
+            showApproveButton = true;
+            approveText = nextDoc.label;
+        }
+    } else if (currentIndex === coreDocs.length - 1) {
+        // Last step: show implement button if not complete
+        if (taskCompletionPercent < 100) {
+            showApproveButton = true;
+            approveText = 'Implement';
+        }
+    }
 
     // Calculate workflow phase (where we ARE in spec-driven development)
     const workflowPhase = calculateWorkflowPhase(coreDocs);
@@ -135,17 +134,19 @@ export function generateHtml(
 
         <footer class="actions">
             <div class="actions-left">
-                ${enhancementButton ? `
-                <button id="enhance" class="enhancement" data-command="${enhancementButton.command}" title="${enhancementButton.tooltip || ''}">
-                    <span class="icon">${enhancementButton.icon}</span>
-                    ${enhancementButton.label}
+                ${enhancementButtons.map((btn, i) => `
+                <button class="enhancement" data-command="${btn.command}" title="${btn.tooltip || ''}" id="enhance-${i}">
+                    <span class="icon">${btn.icon}</span>
+                    ${btn.label}
                 </button>
-                ` : ''}
+                `).join('')}
             </div>
             <div class="actions-right">
+                ${specStatus !== 'archived' ? `
                 <button id="editSource" class="secondary" ${editDisabled ? 'disabled' : ''}>Edit Source</button>
                 <button id="regenerate" class="secondary">Regenerate</button>
                 ${showApproveButton ? `<button id="approve" class="primary">${approveText}</button>` : ''}
+                ` : '<span class="archived-badge">Archived</span>'}
             </div>
         </footer>
     </div>

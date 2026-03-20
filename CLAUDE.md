@@ -97,10 +97,20 @@ User data stored in workspace `.claude/` directory:
 4. **CSS Variables**: Webviews use VS Code theme variables (e.g., `--vscode-editor-background`)
 5. **Context Menus**: Defined in `package.json` under `contributes.menus`
 
+## Testing
+
+```bash
+npm test              # Run all tests
+npm run test:watch    # Watch mode
+```
+
+- **BDD style**: Use `describe`/`it` blocks that describe behavior, not implementation
+- **VS Code mock**: Extension-side tests use `tests/__mocks__/vscode.ts` (mapped via `jest.config.js` `moduleNameMapper`). Add mock APIs there as needed.
+- **Config**: Jest uses `ts-jest` with `tsconfig.test.json`
+
 ## Tech Stack
 
 - TypeScript 5.3+ (ES2022 target, strict mode)
 - VS Code Extension API (`@types/vscode ^1.84.0`)
 - Webpack 5 for bundling
 - highlight.js (CDN) for syntax highlighting in webviews
-

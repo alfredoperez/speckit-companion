@@ -14,10 +14,15 @@ import * as vscode from 'vscode';
 export type CoreDocumentType = 'spec' | 'plan' | 'tasks';
 
 /**
- * Extended to include related documents
+ * Workflow-defined document types (custom step names like "design", "prototype")
+ */
+export type WorkflowDocumentType = string;
+
+/**
+ * Extended to include related and workflow documents
  * Related docs are identified by their filename
  */
-export type DocumentType = CoreDocumentType | string;
+export type DocumentType = CoreDocumentType | WorkflowDocumentType;
 
 // ============================================
 // Phase Types (for stepper)
@@ -65,7 +70,7 @@ export const CORE_DOCUMENT_FILES: Record<CoreDocumentType, string> = {
 /**
  * Display name mapping for core documents
  */
-export const CORE_DOCUMENT_DISPLAY_NAMES: Record<CoreDocumentType, string> = {
+export const CORE_DOCUMENT_LABELS: Record<CoreDocumentType, string> = {
     spec: 'Spec',
     plan: 'Plan',
     tasks: 'Tasks'
@@ -82,8 +87,8 @@ export interface SpecDocument {
     /** Document type for navigation */
     type: DocumentType;
 
-    /** Display name shown in tab (e.g., "Spec", "Plan", "Research") */
-    displayName: string;
+    /** Label shown in tab (e.g., "Spec", "Plan", "Research") */
+    label: string;
 
     /** Filename (e.g., "spec.md", "research.md") */
     fileName: string;
@@ -99,6 +104,9 @@ export interface SpecDocument {
 
     /** Category for navigation grouping */
     category: DocumentCategory;
+
+    /** Parent workflow step name (e.g., 'specify') when discovered via subDir */
+    parentStep?: string;
 }
 
 /**
@@ -126,6 +134,9 @@ export interface SpecViewerState {
 
     /** Absolute path to the spec directory */
     specDirectory: string;
+
+    /** Absolute path to the change root (parent of specs/ subdir), or null for flat layout */
+    changeRoot?: string | null;
 
     /** Currently displayed document type */
     currentDocument: DocumentType;
@@ -183,8 +194,8 @@ export interface FooterState {
     showApproveButton: boolean;
     /** Text for the approve button */
     approveText: string;
-    /** Enhancement button config, or null if none */
-    enhancementButton?: EnhancementButton | null;
+    /** Enhancement buttons config */
+    enhancementButtons?: EnhancementButton[];
 }
 
 /**
@@ -197,16 +208,16 @@ export interface NavState {
     relatedDocs: SpecDocument[];
     /** Currently displayed document type */
     currentDoc: DocumentType;
-    /** Current workflow phase */
-    workflowPhase: 'spec' | 'plan' | 'tasks' | 'done';
+    /** Current workflow phase (step type of the last existing doc) */
+    workflowPhase: string;
     /** Task completion percentage */
     taskCompletionPercent: number;
     /** Whether viewing a related doc */
     isViewingRelatedDoc: boolean;
     /** Footer button state for dynamic updates */
     footerState?: FooterState;
-    /** Enhancement button config, or null if none */
-    enhancementButton?: EnhancementButton | null;
+    /** Enhancement buttons config */
+    enhancementButtons?: EnhancementButton[];
 }
 
 /**
@@ -291,10 +302,11 @@ export type ViewerToExtensionMessage =
       }
     | {
           type: 'clarify';
+          command?: string;
       }
     | {
           type: 'stepperClick';
-          phase: 'spec' | 'plan' | 'tasks' | 'done';
+          phase: string;
       }
     | {
           type: 'submitRefinements';
@@ -337,7 +349,8 @@ export type SpecStatus =
     | 'in-progress'     // Shows all editing controls
     | 'spec-completed'  // Hides add-comment buttons, DRAFT badge, refinement CTAs
     | 'plan-completed'  // Future use
-    | 'done';           // Future use
+    | 'done'            // All steps complete
+    | 'archived';       // Read-only, no editing controls
 
 /**
  * Check if a status allows editing/refinement

@@ -8,6 +8,7 @@ import type {
     AttachedImage,
     WorkflowDefinition
 } from './types';
+import { normalizeWorkflowConfig, resolveStepCommand } from '../workflows';
 
 /**
  * Generates a random nonce for CSP
@@ -72,13 +73,14 @@ export class SpecEditorProvider {
         // Add custom workflows
         for (const wf of customWorkflows) {
             if (wf.name && wf.name !== 'default') {
+                const normalized = normalizeWorkflowConfig(wf as any);
                 workflows.push({
                     name: wf.name,
                     displayName: wf.displayName || wf.name,
                     description: wf.description,
-                    stepSpecify: wf['step-specify'] || `/speckit.${wf.name}-specify`,
-                    stepPlan: wf['step-plan'],
-                    stepImplement: wf['step-implement']
+                    stepSpecify: `/${resolveStepCommand(normalized, 'specify')}`,
+                    stepPlan: wf['step-plan'] || (normalized.steps?.find(s => s.name === 'plan')?.command),
+                    stepImplement: wf['step-implement'] || (normalized.steps?.find(s => s.name === 'implement')?.command),
                 });
             }
         }

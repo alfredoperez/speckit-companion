@@ -15,9 +15,9 @@ declare const vscode: VSCodeApi;
 export function updateNavState(navState: NavState): void {
     const { currentDoc, workflowPhase, taskCompletionPercent, isViewingRelatedDoc, relatedDocs, coreDocs } = navState;
 
-    // Determine the parent phase for related docs
-    // Related docs are associated with 'plan' phase (research, data-model, etc.)
-    const parentPhaseForRelated = 'plan';
+    // Determine the parent phase for the current related doc (if viewing one)
+    const viewingRelatedDoc = isViewingRelatedDoc ? relatedDocs.find(d => d.type === currentDoc) : undefined;
+    const parentPhaseForRelated = viewingRelatedDoc?.parentStep || coreDocs?.[0]?.type || 'spec';
 
     // Update step-tabs: active/viewing/reviewing states
     document.querySelectorAll('.step-tab').forEach(tab => {
@@ -26,8 +26,10 @@ export function updateNavState(navState: NavState): void {
         if (!phase) return;
 
         // Check if this phase's document exists
-        const docExists = coreDocs?.find(d => d.type === phase)?.exists ?? tabEl.classList.contains('exists');
-        // When viewing a related doc, highlight the parent phase (plan)
+        const docExists = coreDocs?.find(d => d.type === phase)?.exists
+            || relatedDocs?.some(d => d.parentStep === phase)
+            || tabEl.classList.contains('exists');
+        // When viewing a related doc, highlight the parent phase
         const isViewing = phase === currentDoc || (isViewingRelatedDoc && phase === parentPhaseForRelated);
         const inProgress = phase === 'tasks' && taskCompletionPercent > 0 && taskCompletionPercent < 100;
 
@@ -90,9 +92,13 @@ export function updateNavState(navState: NavState): void {
     // Update related tabs visibility and active state
     const relatedBar = document.querySelector('.related-bar') as HTMLElement | null;
     if (relatedBar) {
-        // Show related bar only when viewing plan/tasks or their related docs
-        // Hide when viewing spec since related docs typically belong to plan phase
-        const showRelatedBar = relatedDocs.length > 0 && currentDoc !== 'spec';
+        // Show related bar when the current step has related docs (filtered by parentStep)
+        const coreDocTypes = coreDocs?.map(d => d.type) ?? [];
+        const isCoreDocNow = coreDocTypes.includes(currentDoc);
+        const relevantRelatedDocs = relatedDocs.filter(d =>
+            !d.parentStep || d.parentStep === currentDoc
+        );
+        const showRelatedBar = (relevantRelatedDocs.length > 0 && isCoreDocNow) || isViewingRelatedDoc;
         relatedBar.style.display = showRelatedBar ? 'flex' : 'none';
 
         // Update related tab active states
@@ -102,17 +108,26 @@ export function updateNavState(navState: NavState): void {
             tabEl.classList.toggle('active', docType === currentDoc);
         });
 
-        // Update Overview tab state
+        // Update Overview tab state — hide if the core doc doesn't exist
         const overviewTab = relatedBar.querySelector('.overview-tab') as HTMLElement | null;
+        const overviewDivider = relatedBar.querySelector('.overview-divider') as HTMLElement | null;
         if (overviewTab) {
-            const isCoreDoc = ['spec', 'plan', 'tasks'].includes(currentDoc);
-            const isOverviewActive = isCoreDoc && !isViewingRelatedDoc;
-            overviewTab.classList.toggle('active', isOverviewActive);
+            const parentPhase = isViewingRelatedDoc ? parentPhaseForRelated : currentDoc;
+            const parentCoreDoc = coreDocs?.find(d => d.type === parentPhase);
+            const parentCoreExists = parentCoreDoc?.exists ?? false;
 
-            // Update the overview tab's data-doc to point to the current parent phase
-            const parentPhase = isViewingRelatedDoc ? 'plan' : currentDoc;
-            if (['spec', 'plan', 'tasks'].includes(parentPhase)) {
-                overviewTab.dataset.doc = parentPhase;
+            if (!parentCoreExists) {
+                overviewTab.style.display = 'none';
+                if (overviewDivider) overviewDivider.style.display = 'none';
+            } else {
+                overviewTab.style.display = '';
+                if (overviewDivider) overviewDivider.style.display = '';
+                const isOverviewActive = isCoreDocNow && !isViewingRelatedDoc;
+                overviewTab.classList.toggle('active', isOverviewActive);
+
+                if (coreDocTypes.includes(parentPhase)) {
+                    overviewTab.dataset.doc = parentPhase;
+                }
             }
         }
     }
@@ -124,11 +139,9 @@ export function updateNavState(navState: NavState): void {
 
         if (navState.footerState.showApproveButton) {
             if (approveButton) {
-                // Button exists, update its text and make sure it's visible
                 approveButton.textContent = navState.footerState.approveText;
                 approveButton.style.display = '';
             } else if (actionsRight) {
-                // Button doesn't exist, create it
                 const newButton = document.createElement('button');
                 newButton.id = 'approve';
                 newButton.className = 'primary';
@@ -139,9 +152,26 @@ export function updateNavState(navState: NavState): void {
                 actionsRight.appendChild(newButton);
             }
         } else {
-            // Hide the approve button if it exists
             if (approveButton) {
                 approveButton.style.display = 'none';
+            }
+        }
+
+        // Update enhancement buttons
+        const actionsLeft = document.querySelector('.actions-left');
+        if (actionsLeft && navState.footerState.enhancementButtons) {
+            // Clear existing enhancement buttons
+            actionsLeft.innerHTML = '';
+            for (const btn of navState.footerState.enhancementButtons) {
+                const button = document.createElement('button');
+                button.className = 'enhancement';
+                button.dataset.command = btn.command;
+                button.title = btn.tooltip || '';
+                button.innerHTML = `<span class="icon">${btn.icon}</span> ${btn.label}`;
+                button.addEventListener('click', () => {
+                    vscode.postMessage({ type: 'clarify' });
+                });
+                actionsLeft.appendChild(button);
             }
         }
     }
@@ -158,7 +188,7 @@ export function setupTabNavigation(): void {
         btn.addEventListener('click', () => {
             if (btn.disabled) return;
 
-            const phase = btn.dataset.phase as 'spec' | 'plan' | 'tasks' | 'done';
+            const phase = btn.dataset.phase;
             if (phase && phase !== 'done') {
                 vscode.postMessage({
                     type: 'stepperClick',

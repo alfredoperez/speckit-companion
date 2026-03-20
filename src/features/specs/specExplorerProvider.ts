@@ -3,13 +3,15 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { BaseTreeDataProvider } from '../../core/providers';
 import {
-    getWorkflow,
     getFeatureWorkflow,
-    DEFAULT_WORKFLOW,
-    getStepFile,
+    getWorkflow,
     normalizeWorkflowConfig,
+    getStepFile,
+    DEFAULT_WORKFLOW,
+    WorkflowStepConfig,
 } from '../workflows';
-import type { WorkflowStepConfig } from '../workflows';
+import { resolveSpecDirectories, hasDuplicateNames, deriveChangeRoot, type SpecDirectoryInfo } from '../../core/specDirectoryResolver';
+import { ConfigKeys } from '../../core/constants';
 
 export interface SpecInfo {
     name: string;
@@ -45,7 +47,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
     }
 
     /**
-     * Get list of specs from specs/ directory
+     * Get list of specs from configured spec directories
      */
     private async getSpecs(): Promise<SpecInfo[]> {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -53,22 +55,12 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             return [];
         }
 
-        const specs: SpecInfo[] = [];
-        const specsPath = path.join(workspaceFolder.uri.fsPath, 'specs');
-
         try {
-            const entries = await vscode.workspace.fs.readDirectory(vscode.Uri.file(specsPath));
-            for (const [name, type] of entries) {
-                if (type === vscode.FileType.Directory) {
-                    specs.push({ name, path: `specs/${name}` });
-                }
-            }
+            return await resolveSpecDirectories(workspaceFolder.uri.fsPath);
         } catch {
-            // specs/ directory doesn't exist
-            this.log('specs/ directory not found');
+            this.log('Error resolving spec directories');
+            return [];
         }
-
-        return specs;
     }
 
     async getChildren(element?: SpecItem): Promise<SpecItem[]> {
@@ -92,21 +84,30 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
 
             // Show all specs
             const specs = await this.getSpecs();
-            const specItems = specs.map(spec => new SpecItem(
-                spec.name,
-                vscode.TreeItemCollapsibleState.Expanded,
-                'spec',
-                this.context,
-                spec.name,
-                undefined,
-                undefined,
-                undefined,
-                spec.path
-            ));
+            const duplicateNames = hasDuplicateNames(specs);
+            const specItems = specs.map(spec => {
+                const item = new SpecItem(
+                    spec.name,
+                    vscode.TreeItemCollapsibleState.Expanded,
+                    'spec',
+                    this.context,
+                    spec.name,
+                    undefined,
+                    undefined,
+                    undefined,
+                    spec.path
+                );
+                // Show parent path for disambiguation when names collide
+                if (duplicateNames.has(spec.name)) {
+                    const parentDir = spec.path.substring(0, spec.path.lastIndexOf('/'));
+                    item.description = parentDir;
+                }
+                return item;
+            });
 
             return specItems;
         } else if (element.contextValue === 'spec') {
-            // Show workflow step documents dynamically
+            // Show spec documents based on active workflow steps
             const specPath = element.specPath || `specs/${element.specName}`;
             return await this.getSpecDocuments(element.specName!, specPath);
         } else if (element.contextValue?.startsWith('spec-document-') && element.relatedDocs && element.relatedDocs.length > 0) {
@@ -142,10 +143,10 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
 
     /**
      * Scan for related documents in a spec folder (including subdirectories)
-     * Returns files that are not step output files
+     * Returns files that are not spec.md, plan.md, or tasks.md
      */
-    private getRelatedDocs(specFullPath: string, steps: WorkflowStepConfig[]): string[] {
-        const stepFiles = new Set(steps.map(s => getStepFile(s)));
+    private getRelatedDocs(specFullPath: string): string[] {
+        const mainDocs = ['spec.md', 'plan.md', 'tasks.md'];
         const results: string[] = [];
 
         const scanDir = (dirPath: string, relativePath: string = '') => {
@@ -162,8 +163,8 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                     if (entry.isDirectory()) {
                         scanDir(path.join(dirPath, entry.name), entryRelativePath);
                     } else if (entry.isFile() && entry.name.endsWith('.md')) {
-                        // Skip step output files at root level
-                        if (!relativePath && stepFiles.has(entry.name)) {
+                        // Skip core docs at root level
+                        if (!relativePath && mainDocs.includes(entry.name)) {
                             continue;
                         }
                         results.push(entryRelativePath);
@@ -184,6 +185,17 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
      */
     private nestedFileToDisplayName(relativePath: string): string {
         const parts = relativePath.replace(/\.md$/i, '').split('/');
+        // For subDir patterns like "specs/home/spec" → just show "Home"
+        // Extract the meaningful middle part (folder name) when 3+ segments
+        if (parts.length >= 3) {
+            const folderName = parts[parts.length - 2];
+            return folderName.replace(/[-_]/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+        }
+        // For 2 segments like "specs/navigation" → show "Navigation"
+        if (parts.length === 2) {
+            const name = parts[parts.length - 1];
+            return name.replace(/[-_]/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+        }
         return parts
             .map(part => part.replace(/[-_]/g, ' ').replace(/\b\w/g, char => char.toUpperCase()))
             .join(': ');
@@ -229,41 +241,96 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
     }
 
     /**
-     * Resolve the active workflow's steps for a given spec directory
+     * Resolve workflow steps for a feature directory.
+     * Returns the steps array from the feature's workflow, falling back to the default.
      */
-    private async getWorkflowSteps(specFullPath: string): Promise<WorkflowStepConfig[]> {
+    private async resolveWorkflowSteps(featureDir: string): Promise<WorkflowStepConfig[]> {
         try {
-            const featureContext = await getFeatureWorkflow(specFullPath);
-            if (featureContext) {
-                const workflow = getWorkflow(featureContext.workflow);
-                if (workflow) {
-                    const normalized = normalizeWorkflowConfig(workflow);
-                    return normalized.steps ?? DEFAULT_WORKFLOW.steps!;
+            const ctx = await getFeatureWorkflow(featureDir);
+            if (ctx) {
+                const wf = getWorkflow(ctx.workflow);
+                if (wf) {
+                    const normalized = normalizeWorkflowConfig(wf);
+                    if (normalized.steps && normalized.steps.length > 0) {
+                        return normalized.steps;
+                    }
                 }
             }
         } catch {
-            // Fall through to default
+            // fall through
         }
+
+        // Fall back to defaultWorkflow setting
+        const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
+        const defaultWorkflowName = config.get<string>("defaultWorkflow", "default");
+        if (defaultWorkflowName !== "default") {
+            const wf = getWorkflow(defaultWorkflowName);
+            if (wf) {
+                const normalized = normalizeWorkflowConfig(wf);
+                if (normalized.steps && normalized.steps.length > 0) {
+                    return normalized.steps;
+                }
+            }
+        }
+
         return DEFAULT_WORKFLOW.steps!;
     }
 
     /**
-     * Scan a directory for .md sub-files (non-recursive)
+     * Get step-specific icon
      */
-    private scanSubDir(dirPath: string): string[] {
-        try {
-            const entries = fs.readdirSync(dirPath, { withFileTypes: true });
-            return entries
-                .filter(e => e.isFile() && e.name.endsWith('.md'))
-                .map(e => e.name)
-                .sort();
-        } catch {
-            return [];
-        }
+    private getStepIcon(stepName: string): string {
+        const iconMap: Record<string, string> = {
+            specify: 'chip',
+            plan: 'layers',
+            tasks: 'tasklist',
+            implement: 'rocket',
+        };
+        return iconMap[stepName] || 'file';
     }
 
     /**
-     * Get workflow step documents dynamically from the active workflow
+     * Get sub-files for a step: explicit subFiles list, or scan subDir
+     */
+    private getStepSubFiles(specFullPath: string, step: WorkflowStepConfig): string[] {
+        if (step.subFiles && step.subFiles.length > 0) {
+            // Return only those that exist
+            return step.subFiles.filter(f => {
+                try {
+                    return fs.existsSync(path.join(specFullPath, f));
+                } catch {
+                    return false;
+                }
+            });
+        }
+        if (step.subDir) {
+            const dirPath = path.join(specFullPath, step.subDir);
+            const stepFile = getStepFile(step);
+            const results: string[] = [];
+            try {
+                const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+                for (const e of entries) {
+                    if (e.isFile() && e.name.endsWith('.md')) {
+                        // Flat .md files in subDir
+                        results.push(`${step.subDir}/${e.name}`);
+                    } else if (e.isDirectory()) {
+                        // Subdirectory: check if step file exists inside
+                        const subFilePath = path.join(dirPath, e.name, stepFile);
+                        if (fs.existsSync(subFilePath)) {
+                            results.push(`${step.subDir}/${e.name}/${stepFile}`);
+                        }
+                    }
+                }
+                return results.sort();
+            } catch {
+                return [];
+            }
+        }
+        return [];
+    }
+
+    /**
+     * Get SpecKit documents based on the active workflow's steps, with related docs
      */
     private async getSpecDocuments(specName: string, specPath: string): Promise<SpecItem[]> {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -274,61 +341,97 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
         const basePath = workspaceFolder.uri.fsPath;
         const specFullPath = path.join(basePath, specPath);
 
-        // Get workflow steps
-        const steps = await this.getWorkflowSteps(specFullPath);
+        // Compute change root for two-level layouts
+        const changeRoot = deriveChangeRoot(specFullPath, basePath);
+        const changeRootRelative = changeRoot ? path.relative(basePath, changeRoot).replace(/\\/g, '/') : null;
 
-        // Scan for related documents (not associated with any step)
-        const relatedDocs = this.getRelatedDocs(specFullPath, steps);
+        const allSteps = await this.resolveWorkflowSteps(specFullPath);
+        const steps = allSteps.filter(s => !s.actionOnly);
 
-        const createOpenCommand = (fileName: string, title: string) => ({
+        // Scan for related documents not covered by any step
+        const allRelatedDocs = this.getRelatedDocs(specFullPath);
+        // Also scan changeRoot for related docs
+        if (changeRoot && changeRoot !== specFullPath) {
+            const changeRootRelated = this.getRelatedDocs(changeRoot);
+            for (const doc of changeRootRelated) {
+                if (!allRelatedDocs.includes(doc)) {
+                    allRelatedDocs.push(doc);
+                }
+            }
+        }
+        const stepFiles = new Set(steps.map(s => getStepFile(s)));
+
+        // Collect all sub-file paths across all steps so they can be excluded from related docs
+        const allSubFiles = new Set<string>();
+        for (const step of steps) {
+            for (const sf of this.getStepSubFiles(specFullPath, step)) {
+                allSubFiles.add(sf);
+            }
+        }
+
+        const createOpenCommand = (filePath: string, title: string) => ({
             command: 'speckit.viewSpecDocument',
             title,
-            arguments: [path.join(basePath, specPath, fileName)]
+            arguments: [filePath]
         });
 
         const items: SpecItem[] = [];
 
         for (const step of steps) {
-            const stepFile = getStepFile(step);
-            const stepLabel = step.label ?? step.name.charAt(0).toUpperCase() + step.name.slice(1);
-            const status = this.getDocumentStatus(path.join(specFullPath, stepFile));
+            const file = getStepFile(step);
+            const label = step.label || step.name.charAt(0).toUpperCase() + step.name.slice(1);
+
+            // Try specFullPath first, then changeRoot for the file
+            let resolvedFilePath = path.join(specFullPath, file);
+            let status = this.getDocumentStatus(resolvedFilePath);
+
+            if (status === 'empty' && changeRoot && changeRoot !== specFullPath) {
+                const changeRootFilePath = path.join(changeRoot, file);
+                const changeRootStatus = this.getDocumentStatus(changeRootFilePath);
+                if (changeRootStatus !== 'empty') {
+                    resolvedFilePath = changeRootFilePath;
+                    status = changeRootStatus;
+                }
+            }
+
+            const iconName = this.getStepIcon(step.name);
 
             // Determine sub-files for this step
-            let childFiles: string[] = [];
-            if (step.subFiles && step.subFiles.length > 0) {
-                childFiles = step.subFiles;
-            } else if (step.subDir) {
-                const subDirPath = path.join(specFullPath, step.subDir);
-                childFiles = this.scanSubDir(subDirPath).map(f => `${step.subDir}/${f}`);
+            const subFiles = this.getStepSubFiles(specFullPath, step);
+
+            // If core file doesn't exist but sub-files do, treat step as complete
+            if (status === 'empty' && subFiles.length > 0) {
+                status = 'complete';
             }
 
-            // For the "plan" step (or any step with sub-files), also include related docs as children
-            // This preserves the existing behavior where related docs appear under plan
-            let stepRelatedDocs: string[] = [];
-            if (step.includeRelatedDocs && relatedDocs.length > 0) {
-                stepRelatedDocs = relatedDocs;
+            // Also include related docs that aren't step files (attach to plan-like step)
+            let relatedForStep: string[] = [];
+            if (step.includeRelatedDocs) {
+                // Attach non-step related docs to this step per workflow config
+                relatedForStep = allRelatedDocs.filter(d => !stepFiles.has(d) && !allSubFiles.has(d));
             }
 
-            const allChildren = [...childFiles, ...stepRelatedDocs];
-            const collapsible = allChildren.length > 0
+            const childDocs = [...subFiles, ...relatedForStep];
+            const collapsible = childDocs.length > 0
                 ? vscode.TreeItemCollapsibleState.Collapsed
                 : vscode.TreeItemCollapsibleState.None;
 
-            items.push(
-                new SpecItem(
-                    stepLabel.toLowerCase(),
-                    collapsible,
-                    'spec-document',
-                    this.context,
-                    specName,
-                    step.name,
-                    createOpenCommand(stepFile, `Open ${stepLabel}`),
-                    `${specPath}/${stepFile}`,
-                    specPath,
-                    status,
-                    allChildren.length > 0 ? allChildren : undefined
-                )
-            );
+            const relativeFilePath = path.relative(basePath, resolvedFilePath).replace(/\\/g, '/');
+
+            items.push(new SpecItem(
+                label,
+                collapsible,
+                'spec-document',
+                this.context,
+                specName,
+                step.name,
+                createOpenCommand(resolvedFilePath, `Open ${label}`),
+                relativeFilePath,
+                specPath,
+                status,
+                childDocs.length > 0 ? childDocs : undefined,
+                iconName
+            ));
         }
 
         return items;
@@ -347,7 +450,8 @@ class SpecItem extends vscode.TreeItem {
         private readonly filePath?: string,
         public readonly specPath?: string,
         private readonly status?: DocumentStatus,
-        public readonly relatedDocs?: string[]
+        public readonly relatedDocs?: string[],
+        private readonly iconName?: string
     ) {
         super(label, collapsibleState);
 
@@ -358,16 +462,8 @@ class SpecItem extends vscode.TreeItem {
             this.iconPath = new vscode.ThemeIcon('beaker');
             this.tooltip = `SpecKit Spec: ${label}`;
         } else if (contextValue === 'spec-document') {
-            // Set icon based on document type
-            if (documentType === 'spec') {
-                this.iconPath = new vscode.ThemeIcon('chip');
-            } else if (documentType === 'plan') {
-                this.iconPath = new vscode.ThemeIcon('layers');
-            } else if (documentType === 'tasks') {
-                this.iconPath = new vscode.ThemeIcon('tasklist');
-            } else {
-                this.iconPath = new vscode.ThemeIcon('file');
-            }
+            // Set icon from explicit iconName or fallback to document type
+            this.iconPath = new vscode.ThemeIcon(iconName || 'file');
 
             // Add status indicator to description
             const statusIndicator = status ? STATUS_INDICATORS[status] : STATUS_INDICATORS.empty;

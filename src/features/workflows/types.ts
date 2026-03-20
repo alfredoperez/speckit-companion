@@ -37,17 +37,19 @@ export interface CheckpointConfig {
 export interface WorkflowStepConfig {
     /** Step identifier (e.g., "specify", "plan", "design") */
     name: string;
-    /** Display label shown in sidebar (e.g., "Specify", "Plan") */
+    /** Display label (e.g., "Specify", "Plan"). Defaults to capitalized name */
     label?: string;
-    /** Command to execute for this step (e.g., "speckit.specify") */
+    /** Command to execute for this step (e.g., "speckit.specify", "sdd.plan") */
     command: string;
-    /** Primary output file for this step (e.g., "spec.md"). Defaults to `{name}.md` */
+    /** Primary output file (e.g., "spec.md"). Defaults to `{name}.md` */
     file?: string;
+    /** If true, step is action-only (no output file) and hidden from the document tree */
+    actionOnly?: boolean;
     /** Explicit list of sub-files shown as children in sidebar */
     subFiles?: string[];
-    /** Directory to scan for sub-files (non-recursive, .md only) */
+    /** Subdirectory to scan for child .md files */
     subDir?: string;
-    /** When true, unassigned .md files in the spec folder are grouped under this step */
+    /** If true, unattached related docs are shown as children of this step */
     includeRelatedDocs?: boolean;
 }
 
@@ -58,7 +60,7 @@ export interface WorkflowConfig {
     name: string;
     displayName?: string;
     description?: string;
-    /** Flexible steps array (new format) */
+    /** New flexible steps array */
     steps?: WorkflowStepConfig[];
     /** @deprecated Legacy step keys — use `steps` array instead */
     'step-specify'?: string;
@@ -77,12 +79,13 @@ export interface WorkflowConfig {
 export interface FeatureWorkflowContext {
     workflow: string;
     selectedAt: string;
+    /** Current step in the workflow (e.g. "specify", "plan", "tasks", "done", "archived") */
+    currentStep?: string;
     checkpointStatus?: Record<CheckpointId, CheckpointStatus>;
 }
 
 /**
- * Workflow step identifiers
- * Now a string to support arbitrary custom step names
+ * Workflow step identifiers (now accepts any string for custom steps)
  */
 export type WorkflowStep = string;
 

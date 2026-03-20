@@ -25,10 +25,14 @@ export function setupEditButton(): void {
  * Setup footer action button handlers
  */
 export function setupFooterActions(): void {
-    const { enhanceButton, editSourceButton, regenerateButton, approveButton } = getElements();
+    const { editSourceButton, regenerateButton, approveButton } = getElements();
 
-    enhanceButton?.addEventListener('click', () => {
-        vscode.postMessage({ type: 'clarify' });
+    // Handle all enhancement buttons (multiple supported)
+    document.querySelectorAll('.enhancement').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const command = (btn as HTMLElement).dataset.command;
+            vscode.postMessage({ type: 'clarify', command });
+        });
     });
 
     editSourceButton?.addEventListener('click', () => {

@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "VS Code companion for GitHub SpecKit - spec-driven development with AI assistants",
-  "version": "0.5.3",
+  "version": "0.5.24",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",
@@ -630,6 +630,18 @@
           "order": 7,
           "description": "Enable YOLO mode (--yolo) to auto-approve all Qwen actions"
         },
+        "speckit.specDirectories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "specs"
+          ],
+          "scope": "window",
+          "order": 5,
+          "description": "Glob patterns for spec directories. Simple names (e.g. 'specs') list their children as specs. Patterns with wildcards (e.g. 'openspec/changes/*') treat each match as a spec folder. Use step-level subDir to discover sub-specs within each match."
+        },
         "speckit.customCommands": {
           "type": "array",
           "default": [],
@@ -778,7 +790,7 @@
               },
               "steps": {
                 "type": "array",
-                "description": "Flexible workflow steps (overrides step-* keys when present)",
+                "description": "Flexible workflow steps (replaces legacy step-* keys)",
                 "items": {
                   "type": "object",
                   "required": [
@@ -788,19 +800,19 @@
                   "properties": {
                     "name": {
                       "type": "string",
-                      "description": "Step identifier (e.g., 'specify', 'design', 'plan')"
+                      "description": "Step identifier (e.g., 'specify', 'plan', 'design')"
                     },
                     "label": {
                       "type": "string",
-                      "description": "Display label shown in sidebar (defaults to capitalized name)"
+                      "description": "Display label (defaults to capitalized name)"
                     },
                     "command": {
                       "type": "string",
-                      "description": "Command to execute for this step (e.g., 'sdd.specify')"
+                      "description": "Command to execute for this step (e.g., 'speckit.specify')"
                     },
                     "file": {
                       "type": "string",
-                      "description": "Primary output file for this step (defaults to '{name}.md')"
+                      "description": "Primary output file (defaults to '{name}.md')"
                     },
                     "subFiles": {
                       "type": "array",
@@ -811,11 +823,11 @@
                     },
                     "subDir": {
                       "type": "string",
-                      "description": "Directory to scan for sub-files (non-recursive, .md only)"
+                      "description": "Subdirectory to scan for child .md files"
                     },
-                    "includeRelatedDocs": {
+                    "actionOnly": {
                       "type": "boolean",
-                      "description": "When true, unassigned .md files in the spec folder are grouped under this step"
+                      "description": "If true, step is action-only (no output file) and hidden from the document tree"
                     }
                   },
                   "additionalProperties": false
