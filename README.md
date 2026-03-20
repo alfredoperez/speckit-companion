@@ -5,7 +5,7 @@
 ![GitHub Release](https://img.shields.io/github/v/release/alfredoperez/speckit-companion?label=version)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-![SpecKit Companion](docs/screenshots/hero.png)
+![SpecKit Companion](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/hero.png)
 
 - **Define** requirements with structured specs
 - **Track** progress through Specify → Plan → Tasks → Done
@@ -18,19 +18,19 @@
 
 Guide your features through structured phases with a dedicated editor that renders markdown specs, shows phase progress, and provides one-click actions for each step.
 
-![Workflow Editor](docs/screenshots/workflow-spec.png)
+![Workflow Editor](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/workflow-spec.png)
 
 ### Inline Review Comments
 
 Review spec documents with inline comments. Add feedback directly on specific lines, refine requirements, and collaborate on specs before implementation begins.
 
-![Inline Comments](docs/screenshots/inline-comment-dialog.png)
+![Inline Comments](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/inline-comment-dialog.png)
 
 ### Create Specs Visually
 
 Create new specs with a dedicated dialog — write a detailed description, select your workflow, and attach screenshots or mockups for context.
 
-![Create Spec](docs/screenshots/create-spec.png)
+![Create Spec](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/create-spec.png)
 
 ### Spec-Driven Phases
 
@@ -38,21 +38,21 @@ Each feature flows through four phases:
 
 **Specify** — Define requirements with user stories and acceptance scenarios.
 
-![Spec Phase](docs/screenshots/workflow-spec.png)
+![Spec Phase](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/workflow-spec.png)
 
 **Plan** — Create the technical design with research, data models, and implementation strategy.
 
-![Plan Phase](docs/screenshots/workflow-plan.png)
+![Plan Phase](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/workflow-plan.png)
 
 **Tasks** — Generate an implementation checklist with progress tracking and parallel execution markers.
 
-![Tasks Phase](docs/screenshots/workflow-tasks.png)
+![Tasks Phase](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/workflow-tasks.png)
 
 ### Sidebar at a Glance
 
 The sidebar organizes everything your AI assistant needs: **Specs** for feature development, **Steering** for AI guidance documents, **Agents** for custom agent definitions, **Skills** for reusable capabilities, and **Hooks** for automation triggers.
 
-![Sidebar Overview](docs/screenshots/sidebar-overview.png)
+![Sidebar Overview](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/sidebar-overview.png)
 
 ### Custom Workflows & Commands
 
