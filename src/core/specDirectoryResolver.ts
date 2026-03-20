@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import * as fs from 'fs';
 import { ConfigKeys } from './constants';
 
 export interface SpecDirectoryInfo {
@@ -13,6 +12,25 @@ export interface SpecDirectoryInfo {
  */
 function hasGlob(pattern: string): boolean {
     return pattern.includes('*') || pattern.includes('?') || pattern.includes('{');
+}
+
+/**
+ * Get a forward-slash-normalized relative path from an absolute path and workspace root.
+ */
+function toRelativePath(absolutePath: string, workspaceRoot: string): string {
+    const normalized = absolutePath.replace(/\\/g, '/');
+    const normalizedRoot = workspaceRoot.replace(/\\/g, '/');
+    if (normalized.startsWith(normalizedRoot)) {
+        return normalized.substring(normalizedRoot.length + 1);
+    }
+    return normalized;
+}
+
+/**
+ * Convert a single glob segment (e.g. "spec-*") to a RegExp that matches one path segment.
+ */
+function globSegmentToRegex(segment: string): RegExp {
+    return new RegExp('^' + segment.replace(/\*/g, '.*').replace(/\?/g, '.') + '$');
 }
 
 /**
@@ -78,8 +96,7 @@ export async function resolveSpecDirectories(workspaceRoot: string): Promise<Spe
         }
     }
 
-    // Add parent path disambiguation for duplicate names
-    return addDisambiguation(specs);
+    return specs;
 }
 
 /**
@@ -178,20 +195,6 @@ async function expandGlobPattern(workspaceRoot: string, pattern: string): Promis
 }
 
 /**
- * Add parent path to description for specs with duplicate names
- */
-function addDisambiguation(specs: SpecDirectoryInfo[]): SpecDirectoryInfo[] {
-    // Count occurrences of each name
-    const nameCounts = new Map<string, number>();
-    for (const spec of specs) {
-        nameCounts.set(spec.name, (nameCounts.get(spec.name) || 0) + 1);
-    }
-    // No mutation needed — disambiguation is handled at display time via description
-    // Just mark which ones need it by returning as-is; the provider checks for dupes
-    return specs;
-}
-
-/**
  * Derive the change root from a spec directory path.
  * For a pattern like "openspec/changes/STAR/specs/STAR" and spec dir
  * "openspec/changes/nav-bar/specs/navigation/", the change root is
@@ -201,15 +204,7 @@ function addDisambiguation(specs: SpecDirectoryInfo[]): SpecDirectoryInfo[] {
  */
 export function deriveChangeRoot(specDirAbsolute: string, workspaceRoot: string): string | null {
     const patterns = getConfiguredPatterns();
-    const normalizedRoot = workspaceRoot.replace(/\\/g, '/');
-    const normalizedDir = specDirAbsolute.replace(/\\/g, '/');
-
-    let relativePath: string;
-    if (normalizedDir.startsWith(normalizedRoot)) {
-        relativePath = normalizedDir.substring(normalizedRoot.length + 1);
-    } else {
-        relativePath = normalizedDir;
-    }
+    const relativePath = toRelativePath(specDirAbsolute, workspaceRoot);
 
     for (const pattern of patterns) {
         if (!hasGlob(pattern)) continue;
@@ -250,8 +245,7 @@ function matchGlobAsPrefix(relativePath: string, pattern: string): boolean {
         if (patternPart === '*' || patternPart === '**') {
             continue;
         } else if (patternPart.includes('*') || patternPart.includes('?')) {
-            const regex = new RegExp('^' + patternPart.replace(/\*/g, '.*').replace(/\?/g, '.') + '$');
-            if (!regex.test(pathParts[i])) {
+            if (!globSegmentToRegex(patternPart).test(pathParts[i])) {
                 return false;
             }
         } else {
@@ -270,16 +264,7 @@ function matchGlobAsPrefix(relativePath: string, pattern: string): boolean {
  */
 export function isInsideSpecDirectory(filePath: string, workspaceRoot: string): string | undefined {
     const patterns = getConfiguredPatterns();
-    const normalizedFile = filePath.replace(/\\/g, '/');
-    const normalizedRoot = workspaceRoot.replace(/\\/g, '/');
-
-    // Get relative path from workspace root
-    let relativePath: string;
-    if (normalizedFile.startsWith(normalizedRoot)) {
-        relativePath = normalizedFile.substring(normalizedRoot.length + 1);
-    } else {
-        relativePath = normalizedFile;
-    }
+    const relativePath = toRelativePath(filePath, workspaceRoot);
 
     for (const pattern of patterns) {
         if (hasGlob(pattern)) {
@@ -329,9 +314,7 @@ function matchGlobSpecDir(relativePath: string, pattern: string): string | undef
             // Wildcard matches any single segment
             pathIdx++;
         } else if (patternPart.includes('*') || patternPart.includes('?')) {
-            // Partial glob — convert to regex
-            const regex = new RegExp('^' + patternPart.replace(/\*/g, '.*').replace(/\?/g, '.') + '$');
-            if (!regex.test(pathParts[pathIdx])) {
+            if (!globSegmentToRegex(patternPart).test(pathParts[pathIdx])) {
                 return undefined;
             }
             pathIdx++;
@@ -358,15 +341,9 @@ export function getFileWatcherPatterns(): { specs: string[]; tasks: string[]; ma
     const markdown: string[] = [];
 
     for (const pattern of patterns) {
-        if (hasGlob(pattern)) {
-            specs.push(`**/${pattern}/**/*`);
-            tasks.push(`**/${pattern}/**/tasks.md`);
-            markdown.push(`**/${pattern}/**/*.md`);
-        } else {
-            specs.push(`**/${pattern}/**/*`);
-            tasks.push(`**/${pattern}/**/tasks.md`);
-            markdown.push(`**/${pattern}/**/*.md`);
-        }
+        specs.push(`**/${pattern}/**/*`);
+        tasks.push(`**/${pattern}/**/tasks.md`);
+        markdown.push(`**/${pattern}/**/*.md`);
     }
 
     return { specs, tasks, markdown };
