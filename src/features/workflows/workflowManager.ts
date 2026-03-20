@@ -27,65 +27,57 @@ export const DEFAULT_WORKFLOW: WorkflowConfig = {
     displayName: 'Default',
     description: 'Standard SpecKit workflow',
     steps: [
-        { name: 'specify', label: 'Specify', command: 'speckit.specify', file: 'spec.md' },
-        { name: 'plan', label: 'Plan', command: 'speckit.plan', file: 'plan.md', includeRelatedDocs: true },
+        { name: 'specify', label: 'Specs', command: 'speckit.specify', file: 'spec.md' },
+        { name: 'plan', label: 'Plan', command: 'speckit.plan', file: 'plan.md' },
         { name: 'tasks', label: 'Tasks', command: 'speckit.tasks', file: 'tasks.md' },
-        { name: 'implement', label: 'Implement', command: 'speckit.implement' },
+        { name: 'implement', label: 'Implement', command: 'speckit.implement', actionOnly: true },
     ],
+    'step-specify': 'speckit.specify',
+    'step-plan': 'speckit.plan',
+    'step-tasks': 'speckit.tasks',
+    'step-implement': 'speckit.implement',
     checkpoints: [],
 };
 
 /**
- * Legacy step key to default file mapping
+ * Get the resolved file for a workflow step.
+ * Returns the explicit `file` property or defaults to `{name}.md`.
  */
-const LEGACY_STEP_DEFAULTS: Record<string, { name: string; label: string; file: string }> = {
-    'step-specify': { name: 'specify', label: 'Specify', file: 'spec.md' },
-    'step-plan': { name: 'plan', label: 'Plan', file: 'plan.md' },
-    'step-tasks': { name: 'tasks', label: 'Tasks', file: 'tasks.md' },
-    'step-implement': { name: 'implement', label: 'Implement', file: 'implement.md' },
-};
+export function getStepFile(step: WorkflowStepConfig): string {
+    return step.file ?? `${step.name}.md`;
+}
 
 /**
- * Normalize a workflow config: convert legacy `step-*` keys to `steps` array
+ * Convert legacy `step-*` keys into a `steps` array.
+ * If `steps` is already present, returns the config as-is.
  */
 export function normalizeWorkflowConfig(config: WorkflowConfig): WorkflowConfig {
-    // Already has steps array — use as-is
     if (config.steps && config.steps.length > 0) {
         return config;
     }
 
-    // Convert legacy step-* keys to steps array
-    const steps: WorkflowStepConfig[] = [];
-    const legacyKeys = ['step-specify', 'step-plan', 'step-tasks', 'step-implement'] as const;
+    const legacyMap: { key: keyof WorkflowConfig; name: string; label: string; file?: string; actionOnly?: boolean }[] = [
+        { key: 'step-specify', name: 'specify', label: 'Specs', file: 'spec.md' },
+        { key: 'step-plan', name: 'plan', label: 'Plan', file: 'plan.md' },
+        { key: 'step-tasks', name: 'tasks', label: 'Tasks', file: 'tasks.md' },
+        { key: 'step-implement', name: 'implement', label: 'Implement', actionOnly: true },
+    ];
 
-    for (const key of legacyKeys) {
-        const command = config[key];
+    const steps: WorkflowStepConfig[] = [];
+    for (const entry of legacyMap) {
+        const command = config[entry.key] as string | undefined;
         if (command && typeof command === 'string' && command.trim()) {
-            const defaults = LEGACY_STEP_DEFAULTS[key];
             steps.push({
-                name: defaults.name,
-                label: defaults.label,
+                name: entry.name,
+                label: entry.label,
                 command: command.trim(),
-                file: defaults.file,
-                ...(key === 'step-plan' && { includeRelatedDocs: true }),
+                ...(entry.file ? { file: entry.file } : {}),
+                ...(entry.actionOnly ? { actionOnly: true } : {}),
             });
         }
     }
 
-    // If no legacy keys were set either, return the default steps
-    if (steps.length === 0) {
-        return { ...config, steps: DEFAULT_WORKFLOW.steps };
-    }
-
     return { ...config, steps };
-}
-
-/**
- * Resolve the output file for a workflow step
- * Uses step.file if set, otherwise defaults to `{step.name}.md`
- */
-export function getStepFile(step: WorkflowStepConfig): string {
-    return step.file ?? `${step.name}.md`;
 }
 
 /**
@@ -116,26 +108,9 @@ export function validateWorkflow(config: WorkflowConfig): ValidationResult {
         );
     }
 
-    // Validate steps array if provided (new format)
-    if (config.steps) {
-        if (!Array.isArray(config.steps)) {
-            errors.push('Steps must be an array');
-        } else {
-            for (let i = 0; i < config.steps.length; i++) {
-                const step = config.steps[i];
-                if (!step.name || typeof step.name !== 'string') {
-                    errors.push(`Step ${i + 1}: name is required and must be a string`);
-                }
-                if (!step.command || typeof step.command !== 'string') {
-                    errors.push(`Step ${i + 1}: command is required and must be a string`);
-                }
-            }
-        }
-    }
-
-    // Validate legacy step commands if provided
-    const legacySteps = ['step-specify', 'step-plan', 'step-tasks', 'step-implement'] as const;
-    for (const step of legacySteps) {
+    // Validate step commands if provided
+    const steps = ['step-specify', 'step-plan', 'step-tasks', 'step-implement'] as const;
+    for (const step of steps) {
         const value = config[step];
         if (value !== undefined && typeof value !== 'string') {
             errors.push(`Invalid ${step} value: must be a string`);
@@ -219,29 +194,40 @@ export function getWorkflow(name: string): WorkflowConfig | undefined {
 
 /**
  * Get the selected workflow for a feature from .speckit.json
+ * Checks both featureDir and optional changeRoot for the context file.
  * @param featureDir Path to feature directory
+ * @param changeRoot Optional change root directory to also check
  * @returns Workflow context or undefined if not selected
  */
 export async function getFeatureWorkflow(
-    featureDir: string
+    featureDir: string,
+    changeRoot?: string | null
 ): Promise<FeatureWorkflowContext | undefined> {
-    const contextPath = path.join(featureDir, FEATURE_CONTEXT_FILE);
-
-    try {
-        const content = await fs.promises.readFile(contextPath, 'utf-8');
-        const context = JSON.parse(content) as FeatureWorkflowContext;
-
-        // Validate the workflow still exists
-        const workflow = getWorkflow(context.workflow);
-        if (!workflow) {
-            return undefined;
-        }
-
-        return context;
-    } catch {
-        // File doesn't exist or is invalid
-        return undefined;
+    // Try featureDir first, then changeRoot
+    const dirsToCheck = [featureDir];
+    if (changeRoot && changeRoot !== featureDir) {
+        dirsToCheck.push(changeRoot);
     }
+
+    for (const dir of dirsToCheck) {
+        const contextPath = path.join(dir, FEATURE_CONTEXT_FILE);
+        try {
+            const content = await fs.promises.readFile(contextPath, 'utf-8');
+            const context = JSON.parse(content) as FeatureWorkflowContext;
+
+            // Validate the workflow still exists
+            const workflow = getWorkflow(context.workflow);
+            if (!workflow) {
+                continue;
+            }
+
+            return context;
+        } catch {
+            // File doesn't exist or is invalid, try next
+        }
+    }
+
+    return undefined;
 }
 
 /**
@@ -282,14 +268,24 @@ export async function saveFeatureWorkflow(
  * @returns Resolved command name
  */
 export function resolveStepCommand(workflow: WorkflowConfig, step: WorkflowStep): string {
-    // Look up in steps array first (normalized configs always have this)
+    // Try new steps array first
     const normalized = normalizeWorkflowConfig(workflow);
-    const stepConfig = normalized.steps?.find(s => s.name === step);
-    if (stepConfig) {
-        return stepConfig.command;
+    if (normalized.steps) {
+        const found = normalized.steps.find(s => s.name === step);
+        if (found) {
+            return found.command;
+        }
     }
 
-    // Fall back to default workflow
+    // Legacy fallback
+    const stepKey = `step-${step}` as keyof WorkflowConfig;
+    const customCommand = workflow[stepKey] as string | undefined;
+
+    if (customCommand && customCommand.trim()) {
+        return customCommand;
+    }
+
+    // Fall back to default workflow commands
     const defaultStep = DEFAULT_WORKFLOW.steps?.find(s => s.name === step);
     return defaultStep?.command ?? `speckit.${step}`;
 }

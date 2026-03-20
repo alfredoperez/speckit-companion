@@ -13,7 +13,6 @@ export interface ViewerElements {
     relatedTabs: NodeListOf<HTMLButtonElement>;
     backLink: HTMLButtonElement | null;
     // Footer buttons
-    enhanceButton: HTMLButtonElement | null;
     editSourceButton: HTMLButtonElement | null;
     regenerateButton: HTMLButtonElement | null;
     approveButton: HTMLButtonElement | null;
@@ -40,7 +39,6 @@ export function getElements(): ViewerElements {
         relatedTabs: document.querySelectorAll('.related-tab') as NodeListOf<HTMLButtonElement>,
         backLink: document.querySelector('.back-link') as HTMLButtonElement | null,
         // Footer buttons
-        enhanceButton: document.getElementById('enhance') as HTMLButtonElement | null,
         editSourceButton: document.getElementById('editSource') as HTMLButtonElement | null,
         regenerateButton: document.getElementById('regenerate') as HTMLButtonElement | null,
         approveButton: document.getElementById('approve') as HTMLButtonElement | null,

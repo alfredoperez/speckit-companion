@@ -29,6 +29,14 @@ import {
 import { getDocumentTypeFromPath, getSpecDirectoryFromPath } from "./utils";
 import { ConfigKeys } from "../../core/constants";
 import type { CustomCommandConfig } from "../../core/types/config";
+import { deriveChangeRoot } from "../../core/specDirectoryResolver";
+import {
+  DEFAULT_WORKFLOW,
+  getFeatureWorkflow,
+  getWorkflow,
+  normalizeWorkflowConfig,
+} from "../workflows";
+import type { WorkflowStepConfig } from "../workflows/types";
 
 // Re-export utility functions for external use
 export {
@@ -84,18 +92,85 @@ export class SpecViewerProvider {
   ) {}
 
   /**
+   * Resolve workflow steps for a spec directory.
+   */
+  private async resolveWorkflowSteps(
+    specDirectory: string,
+    changeRoot?: string | null,
+  ): Promise<WorkflowStepConfig[]> {
+    try {
+      // 1. Check for feature-level .speckit.json (checks both specDir and changeRoot)
+      const ctx = await getFeatureWorkflow(specDirectory, changeRoot);
+      if (ctx) {
+        const wf = getWorkflow(ctx.workflow);
+        if (wf) {
+          const normalized = normalizeWorkflowConfig(wf);
+          if (normalized.steps && normalized.steps.length > 0) {
+            return normalized.steps;
+          }
+        }
+      }
+    } catch {
+      // fall through
+    }
+
+    // 2. Fall back to defaultWorkflow setting
+    const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
+    const defaultWorkflowName = config.get<string>("defaultWorkflow", "default");
+    if (defaultWorkflowName !== "default") {
+      const wf = getWorkflow(defaultWorkflowName);
+      if (wf) {
+        const normalized = normalizeWorkflowConfig(wf);
+        if (normalized.steps && normalized.steps.length > 0) {
+          return normalized.steps;
+        }
+      }
+    }
+
+    return DEFAULT_WORKFLOW.steps!;
+  }
+
+  /**
+   * Compute the change root for a spec directory
+   */
+  private computeChangeRoot(specDirectory: string): string | null {
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    if (!workspaceFolder) return null;
+    return deriveChangeRoot(specDirectory, workspaceFolder.uri.fsPath);
+  }
+
+  /**
    * Show the spec viewer with the specified document
    */
   public async show(filePath: string): Promise<void> {
-    const specDirectory = getSpecDirectoryFromPath(filePath);
-    const documentType = getDocumentTypeFromPath(filePath);
+    let specDirectory = getSpecDirectoryFromPath(filePath);
+    let documentType = getDocumentTypeFromPath(filePath);
 
     this.outputChannel.appendLine(
       `[SpecViewer] Opening ${documentType} from ${specDirectory}`,
     );
 
     // Check if panel already exists for this spec
-    const existingInstance = this.panels.get(specDirectory);
+    let existingInstance = this.panels.get(specDirectory);
+
+    // If no exact match, check if this file is a sub-doc of an existing panel
+    if (!existingInstance) {
+      for (const [panelDir, inst] of this.panels) {
+        if (filePath.startsWith(panelDir + path.sep)) {
+          // Find the matching related doc by filePath
+          const matchingDoc = inst.state.availableDocuments.find(
+            d => d.filePath === filePath,
+          );
+          if (matchingDoc) {
+            specDirectory = panelDir;
+            documentType = matchingDoc.type;
+            existingInstance = inst;
+            break;
+          }
+        }
+      }
+    }
+
     if (existingInstance) {
       // Update existing panel and reveal
       await this.updateContent(specDirectory, documentType);
@@ -239,6 +314,10 @@ export class SpecViewerProvider {
       updateContent: (dir, docType) => this.updateContent(dir, docType),
       sendContentUpdateMessage: (dir, docType) =>
         this.sendContentUpdateMessage(dir, docType),
+      resolveWorkflowSteps: dir => {
+        const inst = this.getInstance(dir);
+        return this.resolveWorkflowSteps(dir, inst?.state.changeRoot);
+      },
       outputChannel: this.outputChannel,
       context: this.context,
     });
@@ -261,18 +340,37 @@ export class SpecViewerProvider {
     if (!instance) return;
 
     try {
-      // Scan for available documents
-      const documents = await scanDocuments(specDirectory, this.outputChannel);
+      // Compute change root for two-level layouts
+      const changeRoot = this.computeChangeRoot(specDirectory);
+
+      // Scan for available documents using workflow steps
+      const steps = await this.resolveWorkflowSteps(specDirectory, changeRoot);
+      const documents = await scanDocuments(specDirectory, this.outputChannel, steps, changeRoot);
       const specName = path.basename(specDirectory);
 
       // Find the requested document (or fallback to first available)
       let doc = documents.find(d => d.type === documentType);
+      if (!doc) {
+        // Type name mismatch (e.g. "spec" vs "specify") — try matching by file name
+        const requestedFile = `${documentType}.md`;
+        doc = documents.find(d => d.isCore && d.fileName === requestedFile);
+      }
       if (!doc) {
         // Try to find first existing core document
         doc = documents.find(d => d.isCore && d.exists);
       }
       if (!doc) {
         doc = documents[0]; // Fallback to first document
+      }
+
+      // If the core doc doesn't exist but sub-specs do, redirect to the first sub-spec
+      if (doc && !doc.exists && doc.isCore) {
+        const firstSubSpec = documents.find(
+          d => d.parentStep === doc!.type && d.exists,
+        );
+        if (firstSubSpec) {
+          doc = firstSubSpec;
+        }
       }
 
       // Read content
@@ -334,6 +432,7 @@ export class SpecViewerProvider {
       instance.state = {
         specName,
         specDirectory,
+        changeRoot,
         currentDocument: doc?.type || "spec",
         availableDocuments: documents,
         lastUpdated: Date.now(),
@@ -343,8 +442,8 @@ export class SpecViewerProvider {
       };
 
       // Update panel title
-      const docDisplayName = doc?.displayName || "Spec";
-      instance.panel.title = `Spec: ${specName} - ${docDisplayName}`;
+      const docLabel = doc?.label || "Spec";
+      instance.panel.title = `Spec: ${specName} - ${docLabel}`;
 
       // Extract spec status for conditional UI
       // Use task completion to determine completed status when tasks are 100% done
@@ -353,9 +452,14 @@ export class SpecViewerProvider {
         specStatus = "spec-completed";
       }
 
-      // Resolve enhancement button from customCommands
+      // Check for archived/done state from .speckit.json
+      const featureCtx = await getFeatureWorkflow(specDirectory, changeRoot);
+      if (featureCtx?.currentStep === "archived" || featureCtx?.currentStep === "done") {
+        specStatus = "archived";
+      }
+
+      // Resolve enhancement buttons from customCommands
       const enhancementButtons = this.resolveEnhancementButtons(doc?.type || "spec");
-      const enhancementButton = enhancementButtons[0] || null;
 
       // Generate and set HTML
       instance.panel.webview.html = generateHtml(
@@ -369,7 +473,7 @@ export class SpecViewerProvider {
         phases,
         taskCompletionPercent,
         specStatus,
-        enhancementButton,
+        enhancementButtons,
       );
 
       this.outputChannel.appendLine(
@@ -393,10 +497,6 @@ export class SpecViewerProvider {
   private resolveEnhancementButtons(
     docType: DocumentType,
   ): EnhancementButton[] {
-    if (docType !== "spec" && docType !== "plan" && docType !== "tasks") {
-      return [];
-    }
-
     const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
     const rawCommands = config.get<Array<CustomCommandConfig | string>>("customCommands", []);
 
@@ -447,7 +547,7 @@ export class SpecViewerProvider {
 
     try {
       // Find the requested document
-      const doc = instance.state.availableDocuments.find(
+      let doc = instance.state.availableDocuments.find(
         d => d.type === documentType,
       );
       if (!doc) {
@@ -455,6 +555,17 @@ export class SpecViewerProvider {
           `[SpecViewer] Document not found: ${documentType}`,
         );
         return;
+      }
+
+      // If the core doc doesn't exist but sub-specs do, redirect to the first sub-spec
+      if (!doc.exists && doc.isCore) {
+        const firstSubSpec = instance.state.availableDocuments.find(
+          d => d.parentStep === documentType && d.exists,
+        );
+        if (firstSubSpec) {
+          doc = firstSubSpec;
+          documentType = firstSubSpec.type;
+        }
       }
 
       // Read content
@@ -505,38 +616,37 @@ export class SpecViewerProvider {
       const relatedDocs = instance.state.availableDocuments.filter(
         d => d.category === "related",
       );
-      const isViewingRelatedDoc = !["spec", "plan", "tasks"].includes(
-        documentType,
-      );
+      const coreDocTypes = coreDocs.map(d => d.type);
+      const isViewingRelatedDoc = !coreDocTypes.includes(documentType);
       const workflowPhase = calculateWorkflowPhase(coreDocs);
 
       // Calculate footer state (same logic as generator.ts)
-      const planExists = coreDocs.find(d => d.type === "plan")?.exists ?? false;
-      const tasksExists = coreDocs.find(d => d.type === "tasks")?.exists ?? false;
-
       let showApproveButton = false;
       let approveText = "";
 
-      if (documentType === "spec") {
-        if (!planExists) {
-          showApproveButton = true;
-          approveText = "Generate Plan";
+      let currentIndex = coreDocs.findIndex(d => d.type === documentType);
+      if (currentIndex < 0 && isViewingRelatedDoc) {
+        const parentStep = relatedDocs.find(d => d.type === documentType)?.parentStep;
+        if (parentStep) {
+          currentIndex = coreDocs.findIndex(d => d.type === parentStep);
         }
-      } else if (documentType === "plan") {
-        if (!tasksExists) {
+      }
+      if (currentIndex >= 0 && currentIndex < coreDocs.length - 1) {
+        const nextDoc = coreDocs[currentIndex + 1];
+        if (!nextDoc.exists) {
           showApproveButton = true;
-          approveText = "Generate Tasks";
+          approveText = nextDoc.label;
         }
-      } else if (documentType === "tasks") {
+      } else if (currentIndex === coreDocs.length - 1) {
+        // Last step: show implement button if not complete
         if (taskCompletionPercent < 100) {
           showApproveButton = true;
-          approveText = "Implement Tasks";
+          approveText = "Implement";
         }
       }
 
-      // Resolve enhancement button from customCommands
+      // Resolve enhancement buttons from customCommands
       const enhancementButtons = this.resolveEnhancementButtons(documentType);
-      const enhancementButton = enhancementButtons[0] || null;
 
       const navState: NavState = {
         coreDocs,
@@ -548,9 +658,9 @@ export class SpecViewerProvider {
         footerState: {
           showApproveButton,
           approveText,
-          enhancementButton,
+          enhancementButtons,
         },
-        enhancementButton,
+        enhancementButtons,
       };
 
       // Update internal state
@@ -559,8 +669,8 @@ export class SpecViewerProvider {
       instance.state.currentPhase = getPhaseNumber(documentType);
 
       // Update panel title
-      const docDisplayName = doc.displayName || "Spec";
-      instance.panel.title = `Spec: ${instance.state.specName} - ${docDisplayName}`;
+      const docLabel = doc.label || "Spec";
+      instance.panel.title = `Spec: ${instance.state.specName} - ${docLabel}`;
 
       // Send content via message (no full HTML regeneration)
       const encodedContent = Buffer.from(content).toString("base64");

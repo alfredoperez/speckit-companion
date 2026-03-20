@@ -21,12 +21,23 @@ export type DocumentType = CoreDocumentType | string;
 
 export interface SpecDocument {
     type: DocumentType;
-    displayName: string;
+    label: string;
     fileName: string;
     filePath: string;
     exists: boolean;
     isCore: boolean;
     category?: 'core' | 'related';
+    parentStep?: string;
+}
+
+/**
+ * Enhancement button configuration
+ */
+export interface EnhancementButton {
+    label: string;
+    command: string;
+    icon: string;
+    tooltip?: string;
 }
 
 /**
@@ -35,6 +46,7 @@ export interface SpecDocument {
 export interface FooterState {
     showApproveButton: boolean;
     approveText: string;
+    enhancementButtons?: EnhancementButton[];
 }
 
 /**
@@ -44,10 +56,11 @@ export interface NavState {
     coreDocs: SpecDocument[];
     relatedDocs: SpecDocument[];
     currentDoc: DocumentType;
-    workflowPhase: 'spec' | 'plan' | 'tasks' | 'done';
+    workflowPhase: string;
     taskCompletionPercent: number;
     isViewingRelatedDoc: boolean;
     footerState?: FooterState;
+    enhancementButtons?: EnhancementButton[];
 }
 
 // ============================================
@@ -89,7 +102,7 @@ export type ViewerToExtensionMessage =
     | { type: 'approve' }
     | { type: 'clarify' }
     // Stepper navigation
-    | { type: 'stepperClick'; phase: 'spec' | 'plan' | 'tasks' | 'done' }
+    | { type: 'stepperClick'; phase: string }
     // Batch refinements submission (GitHub-style review)
     | { type: 'submitRefinements'; refinements: Array<{ lineNum: number; lineContent: string; comment: string }> }
     // File reference click

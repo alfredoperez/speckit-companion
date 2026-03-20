@@ -13,6 +13,8 @@ import {
 import { ConfigKeys } from '../../core/constants';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig } from '../../core/types/config';
+import type { WorkflowStepConfig } from '../workflows/types';
+import { getAIProvider } from '../../extension';
 
 /**
  * Interface for message handler dependencies
@@ -21,6 +23,7 @@ export interface MessageHandlerDependencies {
     getInstance: (specDirectory: string) => { state: SpecViewerState; debounceTimer: NodeJS.Timeout | undefined } | undefined;
     updateContent: (specDirectory: string, documentType: DocumentType) => Promise<void>;
     sendContentUpdateMessage: (specDirectory: string, documentType: DocumentType) => Promise<void>;
+    resolveWorkflowSteps: (specDirectory: string) => Promise<WorkflowStepConfig[]>;
     outputChannel: vscode.OutputChannel;
     context: vscode.ExtensionContext;
 }
@@ -59,7 +62,7 @@ export function createMessageHandlers(
                 await handleApprove(specDirectory, deps);
                 break;
             case 'clarify':
-                await handleClarify(specDirectory, deps);
+                await handleClarify(specDirectory, deps, message.command);
                 break;
             case 'refineLine':
                 await handleRefineLine(specDirectory, message.lineNum, message.content, message.instruction, deps);
@@ -151,7 +154,7 @@ async function handleRefresh(
  */
 async function handleStepperClick(
     specDirectory: string,
-    phase: 'spec' | 'plan' | 'tasks' | 'done',
+    phase: string,
     deps: MessageHandlerDependencies
 ): Promise<void> {
     if (phase === 'done') return; // Done is not clickable
@@ -170,19 +173,11 @@ async function handleRegenerate(
     if (!instance) return;
 
     const docType = instance.state.currentDocument;
-    let command = '';
+    const steps = await deps.resolveWorkflowSteps(specDirectory);
+    const currentStep = steps.find(s => s.name === docType);
 
-    if (docType === 'spec') {
-        command = 'speckit.specify';
-    } else if (docType === 'plan') {
-        command = 'speckit.plan';
-    } else if (docType === 'tasks') {
-        command = 'speckit.tasks';
-    }
-
-    if (command) {
-        // Pass specDirectory as argument
-        vscode.commands.executeCommand(command, specDirectory);
+    if (currentStep) {
+        executeStepInTerminal(currentStep, specDirectory, deps);
     }
 }
 
@@ -197,46 +192,87 @@ async function handleApprove(
     if (!instance) return;
 
     const docType = instance.state.currentDocument;
+    const steps = await deps.resolveWorkflowSteps(specDirectory);
+    // Filter out actionOnly steps for navigation purposes
+    const navSteps = steps.filter(s => !s.actionOnly);
+    let currentIndex = navSteps.findIndex(s => s.name === docType);
+    if (currentIndex < 0) {
+        // Viewing a related doc — resolve parent step
+        const relatedDoc = instance.state.availableDocuments.find(
+            d => d.type === docType && d.category === 'related'
+        );
+        if (relatedDoc?.parentStep) {
+            currentIndex = navSteps.findIndex(s => s.name === relatedDoc.parentStep);
+        }
+    }
 
-    if (docType === 'spec') {
-        // Generate plan
-        vscode.commands.executeCommand('speckit.plan', specDirectory);
-    } else if (docType === 'plan') {
-        // Generate tasks
-        vscode.commands.executeCommand('speckit.tasks', specDirectory);
-    } else if (docType === 'tasks') {
-        // Implement tasks
-        vscode.commands.executeCommand('speckit.implement', specDirectory);
+    if (currentIndex >= 0 && currentIndex < navSteps.length - 1) {
+        // Execute next step's command
+        const nextStep = navSteps[currentIndex + 1];
+        executeStepInTerminal(nextStep, specDirectory, deps);
+    } else if (currentIndex === navSteps.length - 1) {
+        // Last navigable step: find the actionOnly implement step
+        const implementStep = steps.find(s => s.actionOnly);
+        if (implementStep) {
+            executeStepInTerminal(implementStep, specDirectory, deps);
+        }
     }
 }
 
 /**
- * Handle clarify/enhancement button - executes the first matching customCommand for the current step
+ * Execute a workflow step command in the terminal.
+ * Uses changeRoot (if available) as the path argument so commands receive
+ * the change root, not the nested spec dir.
+ */
+function executeStepInTerminal(
+    step: WorkflowStepConfig,
+    specDirectory: string,
+    deps: MessageHandlerDependencies
+): void {
+    const instance = deps.getInstance(specDirectory);
+    const targetPath = instance?.state.changeRoot || specDirectory;
+    const label = step.label || step.name;
+    const prompt = `/${step.command} ${targetPath}`;
+    deps.outputChannel.appendLine(`[SpecViewer] Executing step "${label}": ${prompt}`);
+    getAIProvider().executeInTerminal(prompt, `SpecKit - ${label}`);
+}
+
+/**
+ * Handle clarify/enhancement button - executes the matching customCommand in the AI terminal
  */
 async function handleClarify(
     specDirectory: string,
-    deps: MessageHandlerDependencies
+    deps: MessageHandlerDependencies,
+    buttonCommand?: string
 ): Promise<void> {
     const instance = deps.getInstance(specDirectory);
     if (!instance) return;
 
     const docType = instance.state.currentDocument;
-    if (docType !== 'spec' && docType !== 'plan' && docType !== 'tasks') return;
 
     const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
     const rawCommands = config.get<Array<CustomCommandConfig | string>>('customCommands', []);
 
-    // Find the first matching command for this step
+    // Find the matching command - prefer exact match from button, fall back to first match for step
     for (const entry of rawCommands) {
         if (typeof entry === 'string') continue;
-        const step = entry.step || 'all';
-        if (step !== docType && step !== 'all') continue;
 
         const command = entry.command || (entry.name ? `/speckit.${entry.name}` : undefined);
         if (!command) continue;
 
-        deps.outputChannel.appendLine(`[SpecViewer] Executing enhancement command: ${command}`);
-        vscode.commands.executeCommand('speckit.runCustomCommand', command, specDirectory);
+        // If button sent a specific command, match it; otherwise match by step
+        if (buttonCommand) {
+            if (command !== buttonCommand) continue;
+        } else {
+            const step = entry.step || 'all';
+            if (step !== docType && step !== 'all') continue;
+        }
+
+        const targetPath = instance.state.changeRoot || specDirectory;
+        const label = entry.title || entry.name || 'Enhancement';
+        const prompt = `${command} "${targetPath}"`;
+        deps.outputChannel.appendLine(`[SpecViewer] Executing enhancement command: ${prompt}`);
+        getAIProvider().executeInTerminal(prompt, `SpecKit - ${label}`);
         return;
     }
 
@@ -417,18 +453,15 @@ async function handleSubmitRefinements(
 
     const context = `\n\nRefinements requested:\n${refinementText}`;
 
-    // Determine command based on current document type
-    let command = '';
-    if (docType === 'spec') {
-        command = 'speckit.specify';
-    } else if (docType === 'plan') {
-        command = 'speckit.plan';
-    } else if (docType === 'tasks') {
-        command = 'speckit.tasks';
-    }
+    // Determine command from workflow steps
+    const steps = await deps.resolveWorkflowSteps(specDirectory);
+    const currentStep = steps.find(s => s.name === docType);
 
-    if (command) {
+    if (currentStep) {
+        const command = currentStep.command;
         deps.outputChannel.appendLine(`[SpecViewer] Submitting ${refinements.length} refinements for ${docType}`);
         vscode.commands.executeCommand(command, specDirectory, context);
+    } else {
+        deps.outputChannel.appendLine(`[SpecViewer] No workflow step found for: ${docType}`);
     }
 }

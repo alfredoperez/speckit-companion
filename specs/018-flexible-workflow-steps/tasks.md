@@ -27,11 +27,11 @@
   - **Verify**: `npm run compile` passes; running a workflow step command dispatches the correct command for both default and custom workflows.
 
 - [x] **T005** Add `WorkflowDocumentType` to spec-viewer types *(depends on T001)* — `src/features/spec-viewer/types.ts`
-  - **Do**: Already satisfied — `DocumentType = CoreDocumentType | string` already accepts any step name.
+  - **Do**: Add `type WorkflowDocumentType = string` alongside existing `CoreDocumentType`. Update `DocumentType` to be `CoreDocumentType | WorkflowDocumentType`. Keep `CORE_DOCUMENTS`, `CORE_DOCUMENT_FILES`, and `CORE_DOCUMENT_DISPLAY_NAMES` unchanged for backward compat.
   - **Verify**: `npm run compile` passes; existing `DocumentType` usages remain valid.
 
 - [x] **T006** Make document scanner workflow-aware *(depends on T002, T005)* — `src/features/spec-viewer/documentScanner.ts`
-  - **Do**: Update `scanDocuments()` to accept an optional `steps: WorkflowStepConfig[]` parameter. When provided, use steps' `file` properties to identify core documents instead of the hard-coded `CORE_DOCUMENT_FILES` map. When not provided (backward compat), fall back to `CORE_DOCUMENT_FILES`. Update sort order to follow step declaration order.
+  - **Do**: Update `scanForDocuments()` to accept an optional `steps: WorkflowStepConfig[]` parameter. When provided, use steps' `file` properties to identify core documents instead of the hard-coded `CORE_DOCUMENT_FILES` map. When not provided (backward compat), fall back to `CORE_DOCUMENT_FILES`. Update sort order to follow step declaration order.
   - **Verify**: `npm run compile` passes; spec viewer still correctly identifies spec/plan/tasks for default workflow.
 
 - [x] **T007** Update `getDocumentTypeFromPath()` for workflow context *(depends on T005)* — `src/features/spec-viewer/utils.ts`
@@ -39,7 +39,7 @@
   - **Verify**: `npm run compile` passes.
 
 - [x] **T008** Make phase calculation dynamic *(depends on T002)* — `src/features/spec-viewer/phaseCalculation.ts`
-  - **Do**: Update `calculatePhases()` and `getPhaseNumber()` to accept the active workflow's step count. Phase N corresponds to step N's file existing. Replace the hard-coded 4-phase switch with a loop over the workflow steps. Default to 4 phases when no workflow context is provided.
+  - **Do**: Update `calculatePhase()` and `getPhaseNumber()` to accept the active workflow's step count. Phase N corresponds to step N's file existing. Replace the hard-coded 4-phase switch with a loop over the workflow steps. Default to 4 phases when no workflow context is provided.
   - **Verify**: `npm run compile` passes; default workflow still calculates phases 1–4 correctly.
 
 - [x] **T009** Update specInfoParser for workflow-aware file detection *(depends on T002)* — `src/features/workflow-editor/workflow/specInfoParser.ts`

@@ -1,29 +1,104 @@
-# Plan: Flexible Workflow Steps
+# Implementation Plan: [FEATURE]
 
-**Spec**: [spec.md](./spec.md) | **Date**: 2026-03-07
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
-## Approach
+**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
-Replace the hard-coded 4-step workflow model (`step-specify`, `step-plan`, `step-tasks`, `step-implement`) with a flexible `steps` array on `WorkflowConfig`. Each step declares its own name, label, command, output file, and optional sub-file config. The sidebar, spec viewer, document scanner, and phase calculation all become workflow-aware — reading step definitions from the active workflow instead of hard-coded constants. The built-in default workflow is migrated to the new schema while preserving identical behavior. A backward-compatibility layer in `workflowManager` transparently upgrades old-format configs (with `step-*` keys) to the new `steps` array format, so existing user settings continue to work without migration.
+## Summary
 
-## Files
+[Extract from feature spec: primary requirement + technical approach from research]
 
-### Modify
+## Technical Context
 
-| File | Change |
-|------|--------|
-| `src/features/workflows/types.ts` | Add `WorkflowStepConfig` interface with `name`, `label`, `command`, `file?`, `subFiles?`, `subDir?`. Change `WorkflowConfig` to use `steps: WorkflowStepConfig[]` instead of four `step-*` keys. Keep `WorkflowStep` type as a union but make it extensible (or replace with `string`). |
-| `src/features/workflows/workflowManager.ts` | Update `DEFAULT_WORKFLOW` to use new `steps` array. Add `normalizeWorkflowConfig()` that converts old `step-*` format to `steps` array for backward compat. Update `getActiveWorkflow()` / `getWorkflows()` to normalize configs on read. Add `getStepFile(step)` helper to resolve a step's output file (uses `step.file` or falls back to `{stepName}.md`). |
-| `src/features/specs/specExplorerProvider.ts` | Replace hard-coded `getSpecDocuments()` (which always returns spec/plan/tasks) with a dynamic method that reads the active workflow's `steps` array and builds tree items accordingly. Use `getStepFile()` to resolve which file to check for existence. Support `subFiles`/`subDir` for child items. |
-| `src/features/specs/specCommands.ts` | Replace hard-coded `WORKFLOW_STEPS` array and phase definitions with dynamic step list from active workflow. Update `resolveStepCommand()` to use step's `command` field. |
-| `src/features/spec-viewer/types.ts` | Keep `CORE_DOCUMENTS` and `CORE_DOCUMENT_FILES` for backward compat in the spec viewer, but add a `WorkflowDocumentType` that can represent any workflow step's document type (a string, not just the 3 core types). |
-| `src/features/spec-viewer/documentScanner.ts` | Make `scanForDocuments()` workflow-aware: accept the active workflow's steps, use their `file` properties to identify core documents instead of the hard-coded `CORE_DOCUMENT_FILES` map. |
-| `src/features/spec-viewer/utils.ts` | Update `getDocumentTypeFromPath()` to accept an optional workflow context so it can identify custom step files as core document types. |
-| `src/features/spec-viewer/phaseCalculation.ts` | Replace hard-coded 4-phase logic with dynamic phase calculation based on the active workflow's step count. Phase N = step N's file exists. |
-| `src/features/workflow-editor/workflow/specInfoParser.ts` | Replace hard-coded `spec.md`/`plan.md`/`tasks.md` detection with workflow-aware file discovery using the active workflow's steps. |
-| `package.json` | Update `speckit.customWorkflows` JSON schema to support the new `steps` array format alongside the legacy `step-*` keys. Add `steps` array item schema with `name`, `label`, `command`, `file`, `subFiles`, `subDir` properties. |
+<!--
+  ACTION REQUIRED: Replace the content in this section with the technical details
+  for the project. The structure here is presented in advisory capacity to guide
+  the iteration process.
+-->
 
-## Risks
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
+**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
+**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Project Type**: [single/web/mobile - determines source structure]  
+**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
+**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
-- **Backward compatibility**: Existing users have workflows with `step-specify` etc. in their settings. Mitigated by the `normalizeWorkflowConfig()` shim that auto-upgrades old format on read — no user migration needed.
-- **Phase calculation**: Current phase logic is tightly coupled to 3 files. Dynamic phase count may surprise UI that expects exactly 4 phases. Mitigated by capping phase display at the workflow's actual step count.
+## Constitution Check
+
+*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+
+[Gates determined based on constitution file]
+
+## Project Structure
+
+### Documentation (this feature)
+
+```text
+specs/[###-feature]/
+├── plan.md              # This file (/speckit.plan command output)
+├── research.md          # Phase 0 output (/speckit.plan command)
+├── data-model.md        # Phase 1 output (/speckit.plan command)
+├── quickstart.md        # Phase 1 output (/speckit.plan command)
+├── contracts/           # Phase 1 output (/speckit.plan command)
+└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
+```
+
+### Source Code (repository root)
+<!--
+  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
+  for this feature. Delete unused options and expand the chosen structure with
+  real paths (e.g., apps/admin, packages/something). The delivered plan must
+  not include Option labels.
+-->
+
+```text
+# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
+src/
+├── models/
+├── services/
+├── cli/
+└── lib/
+
+tests/
+├── contract/
+├── integration/
+└── unit/
+
+# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
+backend/
+├── src/
+│   ├── models/
+│   ├── services/
+│   └── api/
+└── tests/
+
+frontend/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   └── services/
+└── tests/
+
+# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
+api/
+└── [same as backend above]
+
+ios/ or android/
+└── [platform-specific structure: feature modules, UI flows, platform tests]
+```
+
+**Structure Decision**: [Document the selected structure and reference the real
+directories captured above]
+
+## Complexity Tracking
+
+> **Fill ONLY if Constitution Check has violations that must be justified**
+
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|-----------|------------|-------------------------------------|
+| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |

@@ -103,4 +103,3 @@ User data stored in workspace `.claude/` directory:
 - VS Code Extension API (`@types/vscode ^1.84.0`)
 - Webpack 5 for bundling
 - highlight.js (CDN) for syntax highlighting in webviews
-

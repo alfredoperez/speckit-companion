@@ -9,11 +9,10 @@ import {
     SpecDocument,
     CoreDocumentType,
     CORE_DOCUMENT_FILES,
-    CORE_DOCUMENT_DISPLAY_NAMES
+    CORE_DOCUMENT_LABELS
 } from './types';
 import { fileNameToDocType, fileNameToDisplayName } from './utils';
-import type { WorkflowStepConfig } from '../workflows';
-import { getStepFile } from '../workflows';
+import type { WorkflowStepConfig } from '../workflows/types';
 
 /**
  * Check if a file exists
@@ -85,91 +84,191 @@ async function scanDirectoryRecursive(
 }
 
 /**
- * Scan spec directory for available documents
- * @param steps Optional workflow steps to use for core document identification.
- *              When provided, uses step file mappings instead of hard-coded CORE_DOCUMENT_FILES.
+ * Scan spec directory for available documents.
+ * When `steps` is provided, uses workflow step files as core documents
+ * instead of the hard-coded CORE_DOCUMENT_FILES.
+ * When `changeRoot` is provided, also checks the change root for step files
+ * (e.g. design.md, tasks.md at the change root level).
  */
 export async function scanDocuments(
     specDirectory: string,
     outputChannel: vscode.OutputChannel,
-    steps?: WorkflowStepConfig[]
+    steps?: WorkflowStepConfig[],
+    changeRoot?: string | null
 ): Promise<SpecDocument[]> {
     const documents: SpecDocument[] = [];
 
-    // Build core document list from workflow steps or fallback to defaults
-    const coreFiles: { type: string; fileName: string; displayName: string }[] = [];
+    // Build core documents from workflow steps or fall back to defaults
+    const coreFiles = new Set<string>();
+
     if (steps && steps.length > 0) {
         for (const step of steps) {
-            const fileName = getStepFile(step);
-            const displayName = step.label ?? step.name.charAt(0).toUpperCase() + step.name.slice(1);
-            coreFiles.push({ type: step.name, fileName, displayName });
-        }
-    } else {
-        for (const [type, fileName] of Object.entries(CORE_DOCUMENT_FILES)) {
-            coreFiles.push({
-                type,
-                fileName,
-                displayName: CORE_DOCUMENT_DISPLAY_NAMES[type as CoreDocumentType]
-            });
-        }
-    }
+            // Skip action-only steps (e.g. implement/apply) — they have no output file
+            if (step.actionOnly) continue;
 
-    const coreFileNames = new Set(coreFiles.map(c => c.fileName));
+            const fileName = step.file ?? `${step.name}.md`;
 
-    // Add core documents (always shown in tabs)
-    for (const core of coreFiles) {
-        const filePath = path.join(specDirectory, core.fileName);
-        const exists = await fileExists(filePath);
+            // Try specDirectory first, then changeRoot
+            let filePath = path.join(specDirectory, fileName);
+            let exists = await fileExists(filePath);
 
-        documents.push({
-            type: core.type,
-            displayName: core.displayName,
-            fileName: core.fileName,
-            filePath,
-            exists,
-            isCore: true,
-            category: 'core'
-        });
-    }
-
-    // Scan for related documents (including subdirectories)
-    try {
-        const allFiles = await scanDirectoryRecursive(specDirectory, specDirectory, outputChannel);
-
-        for (const { relativePath, fullPath } of allFiles) {
-            const fileName = path.basename(relativePath);
-
-            // Skip core documents (already added)
-            if (coreFileNames.has(fileName) && !relativePath.includes('/')) {
-                continue;
+            if (!exists && changeRoot && changeRoot !== specDirectory) {
+                const changeRootPath = path.join(changeRoot, fileName);
+                const existsAtRoot = await fileExists(changeRootPath);
+                if (existsAtRoot) {
+                    filePath = changeRootPath;
+                    exists = true;
+                }
             }
 
-            // Determine if this is a nested file (contains path separator)
-            const isNested = relativePath.includes('/') || relativePath.includes(path.sep);
+            const label = step.label || step.name.charAt(0).toUpperCase() + step.name.slice(1);
 
+            coreFiles.add(fileName);
             documents.push({
-                type: isNested ? nestedFileToDocType(relativePath) : fileNameToDocType(fileName),
-                displayName: isNested ? nestedFileToDisplayName(relativePath) : fileNameToDisplayName(fileName),
-                fileName: relativePath, // Use relative path for nested files
-                filePath: fullPath,
-                exists: true,
-                isCore: false,
-                category: 'related'
+                type: step.name,
+                label,
+                fileName,
+                filePath,
+                exists,
+                isCore: true,
+                category: 'core'
+            });
+
+            // Scan subDir for sub-specs belonging to this step
+            if (step.subDir) {
+                const stepFile = step.file ?? `${step.name}.md`;
+                const subDirPath = path.join(specDirectory, step.subDir);
+                try {
+                    const subDirUri = vscode.Uri.file(subDirPath);
+                    const subEntries = await vscode.workspace.fs.readDirectory(subDirUri);
+                    for (const [name, fileType] of subEntries) {
+                        if (fileType === vscode.FileType.Directory) {
+                            const subSpecFile = path.join(subDirPath, name, stepFile);
+                            const subExists = await fileExists(subSpecFile);
+                            if (subExists) {
+                                const subName = name.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                                const docType = `${step.subDir}/${name}`;
+                                documents.push({
+                                    type: docType,
+                                    label: subName,
+                                    fileName: `${step.subDir}/${name}/${stepFile}`,
+                                    filePath: subSpecFile,
+                                    exists: true,
+                                    isCore: false,
+                                    category: 'related',
+                                    parentStep: step.name
+                                });
+                            }
+                        } else if (fileType === vscode.FileType.File && name.endsWith('.md')) {
+                            // Flat .md files in subDir
+                            const flatFilePath = path.join(subDirPath, name);
+                            const flatDocType = `${step.subDir}/${name.replace(/\.md$/i, '')}`;
+                            const flatLabel = name.replace(/\.md$/i, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                            documents.push({
+                                type: flatDocType,
+                                label: flatLabel,
+                                fileName: `${step.subDir}/${name}`,
+                                filePath: flatFilePath,
+                                exists: true,
+                                isCore: false,
+                                category: 'related',
+                                parentStep: step.name
+                            });
+                        }
+                    }
+                } catch {
+                    // subDir doesn't exist
+                }
+            }
+        }
+    } else {
+        // Default: hard-coded core documents
+        for (const [type, fileName] of Object.entries(CORE_DOCUMENT_FILES)) {
+            let filePath = path.join(specDirectory, fileName);
+            let exists = await fileExists(filePath);
+
+            if (!exists && changeRoot && changeRoot !== specDirectory) {
+                const changeRootPath = path.join(changeRoot, fileName);
+                const existsAtRoot = await fileExists(changeRootPath);
+                if (existsAtRoot) {
+                    filePath = changeRootPath;
+                    exists = true;
+                }
+            }
+
+            coreFiles.add(fileName);
+            documents.push({
+                type: type as CoreDocumentType,
+                label: CORE_DOCUMENT_LABELS[type as CoreDocumentType],
+                fileName,
+                filePath,
+                exists,
+                isCore: true,
+                category: 'core'
             });
         }
-    } catch (error) {
-        outputChannel.appendLine(`[SpecViewer] Error scanning directory: ${error}`);
     }
 
-    // Sort: core documents first (in step order), then related docs alphabetically
-    const coreOrder = coreFiles.map(c => c.type);
+    // Collect file paths already discovered by subDir scans to avoid duplicates
+    const subDirFiles = new Set(
+        documents.filter(d => d.parentStep).map(d => d.filePath)
+    );
+
+    // Scan for related documents (including subdirectories)
+    // Scan both specDirectory and changeRoot
+    const seenRelativePaths = new Set<string>();
+
+    const scanRelatedDocs = async (dir: string) => {
+        try {
+            const allFiles = await scanDirectoryRecursive(dir, dir, outputChannel);
+
+            for (const { relativePath, fullPath } of allFiles) {
+                const fileName = path.basename(relativePath);
+
+                // Skip files already discovered by subDir scans
+                if (subDirFiles.has(fullPath)) continue;
+
+                // Skip core documents (already added)
+                if (coreFiles.has(fileName) && !relativePath.includes('/')) {
+                    continue;
+                }
+
+                // Skip duplicates across dirs
+                if (seenRelativePaths.has(relativePath)) continue;
+                seenRelativePaths.add(relativePath);
+
+                // Determine if this is a nested file (contains path separator)
+                const isNested = relativePath.includes('/') || relativePath.includes(path.sep);
+
+                documents.push({
+                    type: isNested ? nestedFileToDocType(relativePath) : fileNameToDocType(fileName),
+                    label: isNested ? nestedFileToDisplayName(relativePath) : fileNameToDisplayName(fileName),
+                    fileName: relativePath,
+                    filePath: fullPath,
+                    exists: true,
+                    isCore: false,
+                    category: 'related'
+                });
+            }
+        } catch (error) {
+            outputChannel.appendLine(`[SpecViewer] Error scanning directory ${dir}: ${error}`);
+        }
+    };
+
+    await scanRelatedDocs(specDirectory);
+    if (changeRoot && changeRoot !== specDirectory) {
+        await scanRelatedDocs(changeRoot);
+    }
+
+    // Sort: core documents first (in step declaration order), then related docs alphabetically
+    const coreOrder = documents.filter(d => d.isCore).map(d => d.type);
     documents.sort((a, b) => {
         if (a.isCore && !b.isCore) return -1;
         if (!a.isCore && b.isCore) return 1;
         if (a.isCore && b.isCore) {
             return coreOrder.indexOf(a.type) - coreOrder.indexOf(b.type);
         }
-        return a.displayName.localeCompare(b.displayName);
+        return a.label.localeCompare(b.label);
     });
 
     return documents;

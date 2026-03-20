@@ -12,30 +12,30 @@ export function generateCompactNav(
     coreDocs: SpecDocument[],
     relatedDocs: SpecDocument[],
     currentDocType: DocumentType,
-    workflowPhase: 'spec' | 'plan' | 'tasks' | 'done',
+    workflowPhase: string,
     isViewingRelatedDoc: boolean,
     taskCompletionPercent: number
 ): string {
     // Calculate if project is complete (persists regardless of current view)
     const isProjectComplete = taskCompletionPercent === 100;
 
-    // Unified step-tabs: each step is a tab with status indicator
+    // Unified step-tabs: each core doc is a tab with status indicator
     // Note: "Done" is no longer a step - it's shown as a completion badge instead
-    const phases = ['spec', 'plan', 'tasks'] as const;
-    const stepTabsHtml = phases.map((phase, i) => {
-        const doc = coreDocs.find(d => d.type === phase);
-        const exists = doc?.exists ?? false;
-        const isViewing = phase === currentDocType || (isViewingRelatedDoc && phase === 'plan');
+    const stepTabsHtml = coreDocs.map((doc, i) => {
+        const phase = doc.type;
+        const exists = doc.exists || relatedDocs.some(d => d.parentStep === phase);
+        const isViewing = phase === currentDocType ||
+            (isViewingRelatedDoc && relatedDocs.some(d => d.type === currentDocType && d.parentStep === phase));
         const isWorkflow = phase === workflowPhase;
-        const isClickable = exists || phase === 'spec';
-        const inProgress = phase === 'tasks' && taskCompletionPercent > 0 && taskCompletionPercent < 100;
+        const isClickable = exists || i === 0;
+        const isLastStep = i === coreDocs.length - 1;
+        const inProgress = isLastStep && taskCompletionPercent > 0 && taskCompletionPercent < 100;
 
         // Review mode: viewing a completed step that isn't the current workflow phase
-        // This helps distinguish "actively working on a step" vs "reviewing a completed step"
         const isReviewing = isViewing && exists && phase !== workflowPhase && !isViewingRelatedDoc;
 
-        // Tasks-active: viewing tasks with progress (special prominent state)
-        const isTasksActive = phase === 'tasks' && isViewing && inProgress;
+        // Tasks-active: viewing last step with progress (special prominent state)
+        const isTasksActive = isLastStep && isViewing && inProgress;
 
         const classes = [
             'step-tab',
@@ -47,12 +47,12 @@ export function generateCompactNav(
             inProgress && !isTasksActive ? 'in-progress' : ''
         ].filter(Boolean).join(' ');
 
-        const label = phase.charAt(0).toUpperCase() + phase.slice(1);
-        // Show percentage for tasks in-progress, checkmark for completed files
+        const label = doc.label;
+        // Show percentage for last step in-progress, checkmark for completed files
         const statusIcon = inProgress ? `${taskCompletionPercent}%` : (exists ? '✓' : '');
 
         // Connector line between steps
-        const connector = i < phases.length - 1
+        const connector = i < coreDocs.length - 1
             ? `<span class="step-connector ${exists ? 'filled' : ''}"></span>`
             : '';
 
@@ -68,26 +68,46 @@ export function generateCompactNav(
         ? `<span class="completion-badge">🌱 Spec Completed</span>`
         : '';
 
-    // Related docs bar - only show when viewing plan or related docs
-    // Hide in Tasks view since related docs belong to the Plan phase, not Tasks
-    const showRelatedBar = relatedDocs.length > 0 && (currentDocType === 'plan' || isViewingRelatedDoc);
-    const isCoreDoc = ['spec', 'plan', 'tasks'].includes(currentDocType);
+    // Related docs bar - show when the current step has related docs (filtered by parentStep)
+    // or when viewing a related doc itself
+    const relevantRelatedDocs = relatedDocs.filter(d =>
+        !d.parentStep || d.parentStep === currentDocType
+    );
+    const showRelatedBar = (relevantRelatedDocs.length > 0 && coreDocs.some(d => d.type === currentDocType)) || isViewingRelatedDoc;
+    const isCoreDoc = coreDocs.some(d => d.type === currentDocType);
 
-    // Get the parent phase for overview tab (spec, plan, or tasks)
-    const parentPhase = isViewingRelatedDoc ? 'plan' : currentDocType;
+    // Get the parent phase for overview tab
+    const parentPhase = isViewingRelatedDoc
+        ? (relatedDocs.find(d => d.type === currentDocType)?.parentStep || currentDocType)
+        : currentDocType;
+    const parentCoreDoc = coreDocs.find(d => d.type === parentPhase);
+    const parentCoreExists = parentCoreDoc?.exists ?? false;
     const isOverviewActive = isCoreDoc && !isViewingRelatedDoc;
 
-    const relatedTabsHtml = relatedDocs.map(doc => {
+    // When viewing a related doc, show siblings (docs with same parentStep)
+    const displayRelatedDocs = isViewingRelatedDoc
+        ? relatedDocs.filter(d => {
+            const viewingDoc = relatedDocs.find(rd => rd.type === currentDocType);
+            return !d.parentStep || d.parentStep === viewingDoc?.parentStep;
+        })
+        : relevantRelatedDocs;
+
+    const relatedTabsHtml = displayRelatedDocs.map(doc => {
         const isActive = doc.type === currentDocType;
-        return `<button class="related-tab ${isActive ? 'active' : ''}" data-doc="${doc.type}">${doc.displayName}</button>`;
+        return `<button class="related-tab ${isActive ? 'active' : ''}" data-doc="${doc.type}">${doc.label}</button>`;
     }).join('');
 
     // Build the related bar with Overview tab and centered layout
+    // Only show Overview tab when the core step file exists
+    const overviewTabHtml = parentCoreExists
+        ? `<button class="overview-tab ${isOverviewActive ? 'active' : ''}" data-doc="${parentPhase}">Overview</button>
+                    <span class="overview-divider"></span>`
+        : '';
+
     const relatedBarHtml = showRelatedBar
         ? `<div class="related-bar" style="${showRelatedBar ? '' : 'display: none;'}">
                 <div class="related-bar-content">
-                    <button class="overview-tab ${isOverviewActive ? 'active' : ''}" data-doc="${parentPhase}">Overview</button>
-                    <span class="overview-divider"></span>
+                    ${overviewTabHtml}
                     <div class="related-tabs">${relatedTabsHtml}</div>
                 </div>
             </div>`

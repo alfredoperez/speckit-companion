@@ -6,6 +6,7 @@ import { SpecKitDetector } from '../../speckit/detector';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig, SpecTreeItem } from '../../core/types/config';
 import { Commands, ConfigKeys } from '../../core/constants';
+import { isInsideSpecDirectory, getFileWatcherPatterns } from '../../core/specDirectoryResolver';
 import {
     getOrSelectWorkflow,
     resolveStepCommand,
@@ -63,7 +64,9 @@ export function registerSpecKitCommands(
             if (confirm === 'Delete') {
                 const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
                 if (workspaceFolder) {
-                    const specPath = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, 'specs', item.label));
+                    // Use specPath from tree item if available, fall back to specs/<label>
+                    const relativePath = (item as SpecTreeItem).specPath || `specs/${item.label}`;
+                    const specPath = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, relativePath));
                     await vscode.workspace.fs.delete(specPath, { recursive: true });
                     specExplorer.refresh();
                     NotificationUtils.showAutoDismissNotification(`Spec "${item.label}" deleted`);
@@ -87,12 +90,15 @@ export function registerSpecKitCommands(
     registerPhaseCommands(context, outputChannel);
     registerCustomCommand(context, outputChannel);
 
-    // Watch specs/ directory
-    const specsWatcher = vscode.workspace.createFileSystemWatcher('**/specs/**/*');
-    specsWatcher.onDidCreate(() => specExplorer.refresh());
-    specsWatcher.onDidDelete(() => specExplorer.refresh());
-    specsWatcher.onDidChange(() => specExplorer.refresh());
-    context.subscriptions.push(specsWatcher);
+    // Watch configured spec directories
+    const watcherPatterns = getFileWatcherPatterns();
+    for (const pattern of watcherPatterns.specs) {
+        const watcher = vscode.workspace.createFileSystemWatcher(pattern);
+        watcher.onDidCreate(() => specExplorer.refresh());
+        watcher.onDidDelete(() => specExplorer.refresh());
+        watcher.onDidChange(() => specExplorer.refresh());
+        context.subscriptions.push(watcher);
+    }
 }
 
 type NormalizedCustomCommand = {
@@ -104,9 +110,9 @@ type NormalizedCustomCommand = {
 };
 
 /**
- * Default workflow-enabled steps (used for static command registration)
+ * Default workflow step names that are always registered as VS Code commands
  */
-const DEFAULT_WORKFLOW_STEPS: WorkflowStep[] = ['specify', 'plan', 'tasks', 'implement'];
+const DEFAULT_WORKFLOW_STEP_NAMES = ['specify', 'plan', 'tasks', 'implement'];
 
 /**
  * Register phase-specific commands (specify, plan, tasks, implement, etc.)
@@ -136,10 +142,10 @@ function registerPhaseCommands(
                     return;
                 }
 
-                // Handle workflow-enabled steps
-                if (cmd.isWorkflowStep && DEFAULT_WORKFLOW_STEPS.includes(cmd.name as WorkflowStep)) {
+                // Handle workflow-enabled steps (default steps + any step name from workflow)
+                if (cmd.isWorkflowStep) {
                     await executeWorkflowStep(
-                        cmd.name as WorkflowStep,
+                        cmd.name,
                         cmd.title,
                         targetDir,
                         refinementContext,
@@ -404,15 +410,14 @@ async function getActiveSpecDir(): Promise<string | undefined> {
     }
 
     const filePath = activeEditor.document.fileName;
-    const normalizedPath = filePath.replace(/\\/g, '/');
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    if (!workspaceFolder) {
+        return undefined;
+    }
 
-    // Check if file is in specs/ directory
-    const specsMatch = normalizedPath.match(/\/specs\/([^/]+)\//);
-    if (specsMatch) {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (workspaceFolder) {
-            return path.join(workspaceFolder.uri.fsPath, 'specs', specsMatch[1]);
-        }
+    const specRelPath = isInsideSpecDirectory(filePath, workspaceFolder.uri.fsPath);
+    if (specRelPath) {
+        return path.join(workspaceFolder.uri.fsPath, specRelPath);
     }
 
     return undefined;
