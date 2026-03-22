@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] - 2026-03-22
+
+### New Features
+
+- **Configurable Spec Directories**: New `speckit.specDirectories` setting with glob pattern support for flexible project layouts (e.g., `openspec/changes/*/specs/*`). Empty directories auto-hidden from sidebar (#31)
+- **Action-Only Workflow Steps**: Workflow steps now support an `actionOnly` flag for commands that don't produce output files (#31)
+- **Flexible Workflow Steps**: Added `includeRelatedDocs` support for surfacing related documents in the workflow viewer (#30)
+- **Feedback Entry Points**: Settings panel now shows Report a Bug, Request a Feature, and Rate on Marketplace items with dedicated icons (#29)
+- **Inline Spec Delete**: Trash icon appears on hover for spec rows in the sidebar (#29)
+
+### Bug Fixes
+
+- **Status Bar Messages**: Replaced noisy info popup notifications with unobtrusive status bar messages (#27, #28)
+
+### Improvements
+
+- **README Overhaul**: Updated documentation with blog screenshots and refreshed configuration guide (#32)
+- **Spec Viewer Overhaul**: Document scanner, phase calculation, and navigation rebuilt for custom workflow steps and configurable directories
+- **Explorer Deduplication**: Spec explorer now deduplicates spec names across multiple directories
+
 ## [0.5.0] - 2026-03-01
 
 ### New Features
