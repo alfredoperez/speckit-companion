@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { SteeringManager } from './steeringManager';
 import { SteeringExplorerProvider } from './steeringExplorerProvider';
-import { AgentsExplorerProvider } from '../agents/agentsExplorerProvider';
 
 /**
  * Register steering-related commands
@@ -10,7 +9,6 @@ export function registerSteeringCommands(
     context: vscode.ExtensionContext,
     steeringManager: SteeringManager,
     steeringExplorer: SteeringExplorerProvider,
-    agentsExplorer: AgentsExplorerProvider,
     outputChannel: vscode.OutputChannel
 ): void {
     context.subscriptions.push(
@@ -44,10 +42,16 @@ export function registerSteeringCommands(
             steeringExplorer.refresh();
         }),
 
-        // Agents commands
+        // Agents refresh — merged into steering
         vscode.commands.registerCommand('speckit.agents.refresh', async () => {
-            outputChannel.appendLine('[Manual Refresh] Refreshing agents explorer...');
-            agentsExplorer.refresh();
+            outputChannel.appendLine('[Manual Refresh] Refreshing steering explorer (agents)...');
+            steeringExplorer.refresh();
+        }),
+
+        // Hooks refresh — merged into steering
+        vscode.commands.registerCommand('speckit.hooks.refresh', async () => {
+            outputChannel.appendLine('[Manual Refresh] Refreshing steering explorer (hooks)...');
+            steeringExplorer.refresh();
         })
     );
 }

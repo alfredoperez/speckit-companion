@@ -13,8 +13,6 @@ export interface SpecKitSettings {
     views: {
         specs: { visible: boolean };
         steering: { visible: boolean };
-        mcp: { visible: boolean };
-        hooks: { visible: boolean };
         settings: { visible: boolean };
     };
 }
@@ -116,8 +114,6 @@ export class ConfigManager {
             views: {
                 specs: { visible: DefaultViewVisibility.specs },
                 steering: { visible: DefaultViewVisibility.steering },
-                mcp: { visible: DefaultViewVisibility.mcp },
-                hooks: { visible: DefaultViewVisibility.hooks },
                 settings: { visible: DefaultViewVisibility.settings }
             }
         };
