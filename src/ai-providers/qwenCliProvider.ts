@@ -4,6 +4,7 @@ import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
+import { convertPathIfWSL } from '../core/utils/pathUtils';
 import { ConfigKeys, Timing } from '../core/constants';
 import { IAIProvider, AIExecutionResult } from './aiProvider';
 import { NotificationUtils } from '../core/utils/notificationUtils';
@@ -68,19 +69,7 @@ export class QwenCliProvider implements IAIProvider {
         const tempFile = path.join(tempDir, `${prefix}-${Date.now()}.md`);
         await fs.promises.writeFile(tempFile, content);
 
-        return this.convertPathIfWSL(tempFile);
-    }
-
-    /**
-     * Convert Windows path to WSL path if needed
-     */
-    private convertPathIfWSL(filePath: string): string {
-        if (process.platform === 'win32' && filePath.match(/^[A-Za-z]:\\/)) {
-            let wslPath = filePath.replace(/\\/g, '/');
-            wslPath = wslPath.replace(/^([A-Za-z]):/, (_match, drive) => `/mnt/${drive.toLowerCase()}`);
-            return wslPath;
-        }
-        return filePath;
+        return convertPathIfWSL(tempFile);
     }
 
     /**
