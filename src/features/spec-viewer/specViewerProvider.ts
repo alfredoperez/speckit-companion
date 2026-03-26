@@ -9,6 +9,7 @@ import * as vscode from "vscode";
 import { scanDocuments } from "./documentScanner";
 import { generateHtml } from "./html";
 import { createMessageHandlers } from "./messageHandlers";
+import { computeStaleness } from "./staleness";
 import {
   calculatePhases,
   calculateTaskCompletion,
@@ -461,6 +462,9 @@ export class SpecViewerProvider {
       // Resolve enhancement buttons from customCommands
       const enhancementButtons = this.resolveEnhancementButtons(doc?.type || "spec");
 
+      // Compute staleness for workflow documents
+      const stalenessMap = await computeStaleness(documents);
+
       // Generate and set HTML
       instance.panel.webview.html = generateHtml(
         instance.panel.webview,
@@ -474,6 +478,7 @@ export class SpecViewerProvider {
         taskCompletionPercent,
         specStatus,
         enhancementButtons,
+        stalenessMap,
       );
 
       this.outputChannel.appendLine(
@@ -648,6 +653,9 @@ export class SpecViewerProvider {
       // Resolve enhancement buttons from customCommands
       const enhancementButtons = this.resolveEnhancementButtons(documentType);
 
+      // Compute staleness for workflow documents
+      const stalenessMap = await computeStaleness(instance.state.availableDocuments);
+
       const navState: NavState = {
         coreDocs,
         relatedDocs,
@@ -661,6 +669,7 @@ export class SpecViewerProvider {
           enhancementButtons,
         },
         enhancementButtons,
+        stalenessMap,
       };
 
       // Update internal state

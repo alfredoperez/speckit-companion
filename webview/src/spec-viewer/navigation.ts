@@ -41,7 +41,7 @@ export function updateNavState(navState: NavState): void {
         const isTasksActive = phase === 'tasks' && isViewing && inProgress;
 
         // Reset classes
-        tabEl.classList.remove('viewing', 'reviewing', 'tasks-active', 'workflow', 'in-progress');
+        tabEl.classList.remove('viewing', 'reviewing', 'tasks-active', 'workflow', 'in-progress', 'stale');
 
         // Apply appropriate viewing class
         if (isReviewing) {
@@ -69,6 +69,21 @@ export function updateNavState(navState: NavState): void {
                     tabEl.classList.add('in-progress');
                 }
             }
+        }
+
+        // Update staleness badge
+        const isStale = navState.stalenessMap?.[phase]?.isStale ?? false;
+        let staleBadge = tabEl.querySelector('.stale-badge') as HTMLElement | null;
+        if (isStale) {
+            tabEl.classList.add('stale');
+            if (!staleBadge) {
+                staleBadge = document.createElement('span');
+                staleBadge.className = 'stale-badge';
+                staleBadge.textContent = '!';
+                tabEl.appendChild(staleBadge);
+            }
+        } else {
+            if (staleBadge) staleBadge.remove();
         }
     });
 
@@ -129,6 +144,26 @@ export function updateNavState(navState: NavState): void {
                     overviewTab.dataset.doc = parentPhase;
                 }
             }
+        }
+    }
+
+    // Update stale warning banner
+    const staleBanner = document.getElementById('stale-banner');
+    if (staleBanner) {
+        const currentStaleness = navState.stalenessMap?.[currentDoc];
+        if (currentStaleness?.isStale) {
+            staleBanner.style.display = '';
+            staleBanner.innerHTML = `
+                <span class="stale-banner-message">${currentStaleness.staleReason}</span>
+                <button id="stale-regen" class="stale-regen-btn">Regenerate</button>
+            `;
+            const regenBtn = document.getElementById('stale-regen');
+            regenBtn?.addEventListener('click', () => {
+                vscode.postMessage({ type: 'regenerate' });
+            });
+        } else {
+            staleBanner.style.display = 'none';
+            staleBanner.innerHTML = '';
         }
     }
 
