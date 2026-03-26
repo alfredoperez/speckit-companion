@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0] - 2026-03-26
+
+### New Features
+
+- **Scoped Related Docs**: Related documents in the spec viewer are now scoped to their parent workflow step (#38)
+- **Welcome Buttons**: Conditional welcome buttons for init and constitution setup in sidebar views (#37)
+
 ## [0.7.0] - 2026-03-26
 
 ### New Features
