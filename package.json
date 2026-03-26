@@ -87,18 +87,7 @@
     "viewsWelcome": [
       {
         "view": "speckit.views.explorer",
-        "contents": "SpecKit CLI is not installed.\n\n[$(cloud-download) Install SpecKit CLI](command:speckit.installCli)\n\nRequires `uv` to be installed first.",
-        "when": "!speckit.cliInstalled"
-      },
-      {
-        "view": "speckit.views.explorer",
-        "contents": "SpecKit is not initialized in this workspace.\n\n[$(rocket) Initialize SpecKit](command:speckit.initWorkspace)\n\nThis will run `specify init` and create slash commands.",
-        "when": "speckit.cliInstalled && !speckit.detected"
-      },
-      {
-        "view": "speckit.views.explorer",
-        "contents": "Build features with GitHub SpecKit\n\n[$(plus) Create New Spec](command:speckit.create)",
-        "when": "speckit.detected"
+        "contents": "Build features with specs\n\n[$(plus) Create New Spec](command:speckit.create)"
       },
       {
         "view": "speckit.views.steering",
@@ -357,7 +346,7 @@
       "view/title": [
         {
           "command": "speckit.create",
-          "when": "view == speckit.views.explorer && speckit.detected",
+          "when": "view == speckit.views.explorer",
           "group": "navigation@1"
         },
         {
@@ -405,36 +394,28 @@
       ],
       "commandPalette": [
         {
-          "command": "speckit.create",
-          "when": "speckit.detected"
+          "command": "speckit.create"
         },
         {
-          "command": "speckit.specify",
-          "when": "speckit.detected"
+          "command": "speckit.specify"
         },
         {
-          "command": "speckit.plan",
-          "when": "speckit.detected"
+          "command": "speckit.plan"
         },
         {
-          "command": "speckit.tasks",
-          "when": "speckit.detected"
+          "command": "speckit.tasks"
         },
         {
-          "command": "speckit.implement",
-          "when": "speckit.detected"
+          "command": "speckit.implement"
         },
         {
-          "command": "speckit.clarify",
-          "when": "speckit.detected"
+          "command": "speckit.clarify"
         },
         {
-          "command": "speckit.analyze",
-          "when": "speckit.detected"
+          "command": "speckit.analyze"
         },
         {
-          "command": "speckit.checklist",
-          "when": "speckit.detected"
+          "command": "speckit.checklist"
         },
         {
           "command": "speckit.constitution",
@@ -478,8 +459,7 @@
       {
         "command": "speckit.openSpecEditor",
         "key": "ctrl+shift+n",
-        "mac": "cmd+shift+n",
-        "when": "speckit.detected"
+        "mac": "cmd+shift+n"
       }
     ],
     "configuration": {

@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { getAIProvider } from '../../extension';
 import { SpecExplorerProvider } from './specExplorerProvider';
-import { SpecKitDetector } from '../../speckit/detector';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig, SpecTreeItem } from '../../core/types/config';
 import { Commands, ConfigKeys } from '../../core/constants';
@@ -21,24 +20,12 @@ import {
 export function registerSpecKitCommands(
     context: vscode.ExtensionContext,
     specExplorer: SpecExplorerProvider,
-    specKitDetector: SpecKitDetector,
     outputChannel: vscode.OutputChannel
 ): void {
     // SpecKit Create - Open the spec editor webview
     context.subscriptions.push(
         vscode.commands.registerCommand('speckit.create', async () => {
             outputChannel.appendLine('\n=== COMMAND speckit.create TRIGGERED ===');
-
-            if (!specKitDetector.workspaceInitialized) {
-                const result = await vscode.window.showWarningMessage(
-                    'SpecKit is not initialized in this workspace.',
-                    'Initialize SpecKit'
-                );
-                if (result === 'Initialize SpecKit') {
-                    await specKitDetector.initializeWorkspace();
-                }
-                return;
-            }
 
             // Open the spec editor webview
             await vscode.commands.executeCommand('speckit.openSpecEditor');

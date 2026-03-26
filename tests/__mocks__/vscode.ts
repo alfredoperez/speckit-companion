@@ -56,4 +56,28 @@ export const workspace = {
 export const window = {
     showInformationMessage: jest.fn(),
     showErrorMessage: jest.fn(),
+    showWarningMessage: jest.fn(),
+    showInputBox: jest.fn(),
+    showQuickPick: jest.fn(),
+    showTextDocument: jest.fn(),
+    activeTextEditor: undefined as any,
+    createTerminal: jest.fn().mockReturnValue({ show: jest.fn(), sendText: jest.fn() }),
+    createOutputChannel: jest.fn().mockReturnValue({
+        appendLine: jest.fn(),
+        show: jest.fn(),
+        dispose: jest.fn(),
+    }),
+};
+
+export const commands = {
+    registerCommand: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+    executeCommand: jest.fn(),
+};
+
+export const extensions = {
+    getExtension: jest.fn(),
+};
+
+export const env = {
+    openExternal: jest.fn(),
 };
