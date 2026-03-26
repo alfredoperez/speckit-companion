@@ -87,7 +87,18 @@
     "viewsWelcome": [
       {
         "view": "speckit.views.explorer",
-        "contents": "Build features with specs\n\n[$(plus) Create New Spec](command:speckit.create)"
+        "contents": "SpecKit CLI detected. Initialize this workspace to start building with specs.\n\n[$(gear) Initialize Workspace](command:speckit.initWorkspace)",
+        "when": "speckit.cliInstalled && !speckit.detected"
+      },
+      {
+        "view": "speckit.views.explorer",
+        "contents": "Configure your project principles to guide AI-assisted development.\n\n[$(book) Configure Constitution](command:speckit.constitution)\n\n[$(plus) Create New Spec](command:speckit.create)",
+        "when": "speckit.detected && speckit.constitutionNeedsSetup"
+      },
+      {
+        "view": "speckit.views.explorer",
+        "contents": "Build features with specs\n\n[$(plus) Create New Spec](command:speckit.create)",
+        "when": "speckit.detected && !speckit.constitutionNeedsSetup"
       },
       {
         "view": "speckit.views.steering",
