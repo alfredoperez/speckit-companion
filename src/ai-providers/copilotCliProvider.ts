@@ -4,7 +4,7 @@ import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
-import { ConfigKeys, Timing } from '../core/constants';
+import { CLIDefaults, ConfigKeys, Timing } from '../core/constants';
 import { IAIProvider, AIExecutionResult } from './aiProvider';
 import { NotificationUtils } from '../core/utils/notificationUtils';
 
@@ -12,7 +12,7 @@ const execAsync = promisify(exec);
 
 /**
  * GitHub Copilot CLI provider implementation
- * Supports ghcs (GitHub Copilot in the Shell) command
+ * Supports copilot (GitHub Copilot CLI) command
  */
 export class CopilotCliProvider implements IAIProvider {
     public readonly name = 'GitHub Copilot CLI';
@@ -37,21 +37,14 @@ export class CopilotCliProvider implements IAIProvider {
 
     /**
      * Check if GitHub Copilot CLI is installed
-     * Checks for ghcs (GitHub Copilot Shell) command
+     * Checks for copilot command
      */
     async isInstalled(): Promise<boolean> {
         try {
-            // Try ghcs first (preferred)
-            await execAsync('ghcs --version');
+            await execAsync(`${CLIDefaults.copilot} --version`);
             return true;
         } catch {
-            try {
-                // Fallback to gh copilot
-                await execAsync('gh copilot --version');
-                return true;
-            } catch {
-                return false;
-            }
+            return false;
         }
     }
 
@@ -60,7 +53,17 @@ export class CopilotCliProvider implements IAIProvider {
      */
     private getCliPath(): string {
         const config = vscode.workspace.getConfiguration('speckit');
-        return config.get<string>('copilotPath', 'ghcs');
+        return config.get<string>('copilotPath', CLIDefaults.copilot);
+    }
+
+    /**
+     * Get permission flag based on user setting
+     * Returns --yolo flag or empty string for default mode
+     */
+    private getPermissionFlag(): string {
+        const config = vscode.workspace.getConfiguration('speckit');
+        const mode = config.get<string>('copilotPermissionMode', 'yolo');
+        return mode === 'yolo' ? '--yolo ' : '';
     }
 
     /**
@@ -83,7 +86,7 @@ export class CopilotCliProvider implements IAIProvider {
         const installed = await this.isInstalled();
         if (!installed) {
             const action = await vscode.window.showErrorMessage(
-                'GitHub Copilot CLI (ghcs) is not installed. Install it with: gh extension install github/gh-copilot',
+                'GitHub Copilot CLI is not installed. Install it with: gh extension install github/gh-copilot',
                 'Copy Install Command'
             );
             if (action === 'Copy Install Command') {
@@ -101,9 +104,11 @@ export class CopilotCliProvider implements IAIProvider {
         try {
             await this.ensureInstalled();
             const cliPath = this.getCliPath();
-            const promptFilePath = await this.createTempFile(prompt, 'prompt');
-            // GitHub Copilot CLI uses direct prompt
-            const command = `${cliPath} "$(cat "${promptFilePath}")"`;
+            const permissionFlag = this.getPermissionFlag();
+            // Strip leading slash from prompt — Copilot doesn't use slash commands
+            const cleanPrompt = prompt.startsWith('/') ? prompt.substring(1) : prompt;
+            const promptFilePath = await this.createTempFile(cleanPrompt, 'prompt');
+            const command = `${cliPath} ${permissionFlag}-p "$(cat "${promptFilePath}")"`;
 
             const terminal = vscode.window.createTerminal({
                 name: title,
@@ -144,17 +149,20 @@ export class CopilotCliProvider implements IAIProvider {
      */
     async executeHeadless(prompt: string): Promise<AIExecutionResult> {
         await this.ensureInstalled();
+        // Strip leading slash from prompt — Copilot doesn't use slash commands
+        const cleanPrompt = prompt.startsWith('/') ? prompt.substring(1) : prompt;
         this.outputChannel.appendLine(`[CopilotCliProvider] Invoking Copilot CLI in headless mode`);
         this.outputChannel.appendLine(`========================================`);
-        this.outputChannel.appendLine(prompt);
+        this.outputChannel.appendLine(cleanPrompt);
         this.outputChannel.appendLine(`========================================`);
 
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         const cwd = workspaceFolder?.uri.fsPath;
         const cliPath = this.getCliPath();
 
-        const promptFilePath = await this.createTempFile(prompt, 'background-prompt');
-        const commandLine = `${cliPath} "$(cat "${promptFilePath}")"`;
+        const permissionFlag = this.getPermissionFlag();
+        const promptFilePath = await this.createTempFile(cleanPrompt, 'background-prompt');
+        const commandLine = `${cliPath} ${permissionFlag}-p "$(cat "${promptFilePath}")"`;
 
         const terminal = vscode.window.createTerminal({
             name: 'Copilot CLI Background',
@@ -217,12 +225,11 @@ export class CopilotCliProvider implements IAIProvider {
 
     /**
      * Execute a slash command in terminal
-     * Note: Copilot CLI may handle slash commands differently
+     * Copilot CLI doesn't have slash commands, so we pass the command as a prompt
      */
     async executeSlashCommand(command: string, title: string = 'SpecKit - Copilot'): Promise<vscode.Terminal> {
         await this.ensureInstalled();
-        // Convert slash command to regular prompt for Copilot
         const prompt = command.startsWith('/') ? command.substring(1) : command;
-        return this.executeInTerminal(`Run the following command: ${prompt}`, title);
+        return this.executeInTerminal(prompt, title);
     }
 }

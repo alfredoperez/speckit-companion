@@ -75,6 +75,13 @@ export const ConfigKeys = {
 } as const;
 
 /**
+ * Default CLI executable commands for AI providers
+ */
+export const CLIDefaults = {
+    copilot: 'copilot',
+} as const;
+
+/**
  * Default paths used by the extension
  */
 export const DefaultPaths = {

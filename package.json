@@ -524,10 +524,21 @@
         },
         "speckit.copilotPath": {
           "type": "string",
-          "default": "ghcs",
+          "default": "copilot",
           "scope": "machine",
           "order": 4,
-          "description": "Path to GitHub Copilot CLI executable (ghcs)"
+          "description": "Path to GitHub Copilot CLI executable"
+        },
+        "speckit.copilotPermissionMode": {
+          "type": "string",
+          "enum": [
+            "yolo",
+            "default"
+          ],
+          "default": "yolo",
+          "scope": "machine",
+          "order": 5,
+          "description": "Permission mode for Copilot CLI. 'yolo' auto-approves all actions, 'default' prompts for confirmation."
         },
         "speckit.geminiInitDelay": {
           "type": "number",
