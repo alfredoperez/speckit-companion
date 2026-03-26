@@ -6,11 +6,9 @@ import { IAIProvider, AIProviderFactory, isProviderConfigured, promptForProvider
 // Features
 import { SteeringManager, SteeringExplorerProvider, registerSteeringCommands } from './features/steering';
 import { SpecExplorerProvider, registerSpecKitCommands } from './features/specs';
-import { HooksExplorerProvider } from './features/hooks';
-import { MCPExplorerProvider } from './features/mcp';
 import { OverviewProvider } from './features/settings';
-import { AgentsExplorerProvider, AgentManager } from './features/agents';
-import { SkillsExplorerProvider, SkillManager } from './features/skills';
+import { AgentManager } from './features/agents';
+import { SkillManager } from './features/skills';
 import { PermissionManager } from './features/permission';
 import { WorkflowEditorProvider, registerWorkflowEditorCommands } from './features/workflow-editor';
 import { registerSpecEditorCommands } from './features/spec-editor';
@@ -105,28 +103,22 @@ export async function activate(context: vscode.ExtensionContext) {
     const overviewProvider = new OverviewProvider(context);
     const specExplorer = new SpecExplorerProvider(context, outputChannel);
     const steeringExplorer = new SteeringExplorerProvider(context);
-    const hooksExplorer = new HooksExplorerProvider(context);
-    const mcpExplorer = new MCPExplorerProvider(context, outputChannel);
-    const agentsExplorer = new AgentsExplorerProvider(context, agentManager, outputChannel);
-    const skillsExplorer = new SkillsExplorerProvider(context, skillManager, outputChannel);
 
     // Set managers
     steeringExplorer.setSteeringManager(steeringManager);
+    steeringExplorer.setAgentManager(agentManager);
+    steeringExplorer.setSkillManager(skillManager);
 
     context.subscriptions.push(
         vscode.window.registerTreeDataProvider(Views.settings, overviewProvider),
         vscode.window.registerTreeDataProvider(Views.explorer, specExplorer),
-        vscode.window.registerTreeDataProvider(Views.agents, agentsExplorer),
-        vscode.window.registerTreeDataProvider(Views.skills, skillsExplorer),
-        vscode.window.registerTreeDataProvider(Views.steering, steeringExplorer),
-        vscode.window.registerTreeDataProvider(Views.hooks, hooksExplorer),
-        vscode.window.registerTreeDataProvider(Views.mcp, mcpExplorer)
+        vscode.window.registerTreeDataProvider(Views.steering, steeringExplorer)
     );
 
     // Register Skills refresh command
     context.subscriptions.push(
         vscode.commands.registerCommand('speckit.skills.refresh', () => {
-            skillsExplorer.refresh();
+            steeringExplorer.refresh();
         })
     );
 
@@ -142,12 +134,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Register all commands
     registerCliCommands(context, specKitDetector);
-    registerSteeringCommands(context, steeringManager, steeringExplorer, agentsExplorer, outputChannel);
+    registerSteeringCommands(context, steeringManager, steeringExplorer, outputChannel);
     registerSpecKitCommands(context, specExplorer, outputChannel);
-    registerUtilityCommands(context, hooksExplorer, mcpExplorer, updateChecker, outputChannel);
+    registerUtilityCommands(context, updateChecker, outputChannel);
 
     // Set up file watchers
-    setupFileWatchers(context, specExplorer, steeringExplorer, hooksExplorer, mcpExplorer, agentsExplorer, outputChannel);
+    setupFileWatchers(context, specExplorer, steeringExplorer, outputChannel);
 
     // Set up tasks watcher for phase completion notifications
     setupTasksWatcher(context, outputChannel);
