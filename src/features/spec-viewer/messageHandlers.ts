@@ -458,9 +458,11 @@ async function handleSubmitRefinements(
     const currentStep = steps.find(s => s.name === docType);
 
     if (currentStep) {
-        const command = currentStep.command;
+        const targetPath = instance.state.changeRoot || specDirectory;
+        const label = currentStep.label || currentStep.name;
+        const prompt = `/${currentStep.command} ${targetPath}${context}`;
         deps.outputChannel.appendLine(`[SpecViewer] Submitting ${refinements.length} refinements for ${docType}`);
-        vscode.commands.executeCommand(command, specDirectory, context);
+        getAIProvider().executeInTerminal(prompt, `SpecKit - Refine ${label}`);
     } else {
         deps.outputChannel.appendLine(`[SpecViewer] No workflow step found for: ${docType}`);
     }
