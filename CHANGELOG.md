@@ -2,17 +2,6 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.7.8] - 2026-03-26
-
-### New Features
-
-- **Scoped related docs**: Related documents are now scoped to their parent workflow step in the spec viewer (#38)
-- **Conditional welcome buttons**: Added context-aware welcome buttons for workspace init and constitution setup (#37)
-
-### Bug Fixes
-
-- **File explorer rendering**: Clicking a spec file in the VS Code file explorer now opens the same SpecViewerProvider used by the sidebar, instead of the old WorkflowEditor with different styling
-
 ## [0.7.0] - 2026-03-26
 
 ### New Features
