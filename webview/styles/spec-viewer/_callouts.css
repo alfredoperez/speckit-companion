@@ -9,7 +9,7 @@
 
 .callout {
     padding: 8px 14px;
-    margin: 0 0 16px 0;
+    margin: 0 0 10px 0;
     border-radius: 0;
     border-left: 4px solid;
     background: color-mix(in srgb, var(--border) 15%, transparent);
@@ -101,7 +101,7 @@
    ============================================ */
 
 details.template-instructions {
-    margin: var(--space-2) 0 var(--space-4) 0;
+    margin: var(--space-1) 0 var(--space-2) 0;
     padding: var(--space-2) var(--space-3);
     border-left: 3px solid var(--text-muted);
     font-size: var(--text-sm);

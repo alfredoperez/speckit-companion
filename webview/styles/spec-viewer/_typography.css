@@ -9,29 +9,29 @@
 
 /* Headings with professional document typography */
 #markdown-content h1 {
-    font-size: var(--text-3xl);
+    font-size: 1.6rem;
     font-weight: 700;
     line-height: var(--leading-tight);
     letter-spacing: -0.02em;
-    margin: 0 0 20px 0;
-    color: var(--text-primary);
+    margin: 0 0 14px 0;
+    color: var(--header-title);
 }
 
 #markdown-content h2 {
-    font-size: 1.35rem;
+    font-size: 1.15rem;
     font-weight: 600;
     line-height: var(--leading-snug);
     letter-spacing: -0.01em;
-    margin: 32px 0 12px 0;
-    color: var(--text-primary);
+    margin: 20px 0 8px 0;
+    color: var(--header-section);
 }
 
 #markdown-content h3 {
-    font-size: 1.125rem;
+    font-size: 1rem;
     font-weight: 600;
     line-height: 1.4;
-    margin: 20px 0 8px 0;
-    color: var(--text-primary);
+    margin: 14px 0 6px 0;
+    color: var(--header-subsection);
 }
 
 #markdown-content h4,
@@ -40,8 +40,8 @@
     font-size: var(--text-base);
     font-weight: 600;
     line-height: var(--leading-normal);
-    margin: 16px 0 6px 0;
-    color: var(--text-primary);
+    margin: 12px 0 4px 0;
+    color: var(--header-subsection);
 }
 
 /* ============================================
@@ -55,7 +55,7 @@
 }
 
 #markdown-content p + p {
-    margin-top: var(--space-4);
+    margin-top: var(--space-2);
 }
 
 /* ============================================
