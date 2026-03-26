@@ -54,12 +54,12 @@ export async function activate(context: vscode.ExtensionContext) {
     // ONLY if a workspace is actually open (US1 fix - 005-speckit-views-enhancement)
     const hasWorkspace = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0;
     if (cliInstalled && !workspaceInitialized && hasWorkspace) {
-        await showInitSuggestion(context);
+        showInitSuggestion(context);
     }
 
     // Show constitution setup recommendation if needed
     if (workspaceInitialized && constitutionNeedsSetup) {
-        await showConstitutionSetupSuggestion();
+        showConstitutionSetupSuggestion();
     }
 
     // Check workspace state
@@ -143,7 +143,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // Register all commands
     registerCliCommands(context, specKitDetector);
     registerSteeringCommands(context, steeringManager, steeringExplorer, agentsExplorer, outputChannel);
-    registerSpecKitCommands(context, specExplorer, specKitDetector, outputChannel);
+    registerSpecKitCommands(context, specExplorer, outputChannel);
     registerUtilityCommands(context, hooksExplorer, mcpExplorer, updateChecker, outputChannel);
 
     // Set up file watchers

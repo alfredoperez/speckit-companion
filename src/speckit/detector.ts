@@ -272,17 +272,6 @@ export class SpecKitDetector {
      * Create a new spec using SpecKit
      */
     async createSpec(): Promise<void> {
-        if (!this._isInitialized) {
-            const initFirst = await vscode.window.showWarningMessage(
-                'SpecKit is not initialized in this workspace.',
-                'Initialize SpecKit'
-            );
-            if (initFirst === 'Initialize SpecKit') {
-                await this.initializeWorkspace();
-            }
-            return;
-        }
-
         const description = await vscode.window.showInputBox({
             title: 'Create New Spec',
             prompt: 'What feature do you want to build?',
