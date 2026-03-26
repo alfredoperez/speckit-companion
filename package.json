@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "VS Code companion for GitHub SpecKit - spec-driven development with AI assistants",
-  "version": "0.7.0",
+  "version": "0.7.4",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",
@@ -748,6 +748,10 @@
                     "actionOnly": {
                       "type": "boolean",
                       "description": "If true, step is action-only (no output file) and hidden from the document tree"
+                    },
+                    "includeRelatedDocs": {
+                      "type": "boolean",
+                      "description": "When true, unassigned related .md files in the spec folder are grouped under this step"
                     }
                   },
                   "additionalProperties": false

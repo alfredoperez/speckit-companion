@@ -71,7 +71,7 @@ export function generateCompactNav(
     // Related docs bar - show when the current step has related docs (filtered by parentStep)
     // or when viewing a related doc itself
     const relevantRelatedDocs = relatedDocs.filter(d =>
-        !d.parentStep || d.parentStep === currentDocType
+        d.parentStep === currentDocType
     );
     const showRelatedBar = (relevantRelatedDocs.length > 0 && coreDocs.some(d => d.type === currentDocType)) || isViewingRelatedDoc;
     const isCoreDoc = coreDocs.some(d => d.type === currentDocType);

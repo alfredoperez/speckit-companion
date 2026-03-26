@@ -260,6 +260,37 @@ export async function scanDocuments(
         await scanRelatedDocs(changeRoot);
     }
 
+    // Assign parentStep to orphan related docs (no parentStep yet)
+    if (steps && steps.length > 0) {
+        const includeRelatedStep = steps.find(s => !s.actionOnly && s.includeRelatedDocs);
+        const contentSteps = steps.filter(s => !s.actionOnly);
+        const fallbackStep = contentSteps.length >= 2 ? contentSteps[1] : contentSteps[contentSteps.length - 1];
+
+        for (const doc of documents) {
+            if (doc.isCore || doc.parentStep) continue;
+
+            // 1. Match against each step's subFiles list
+            const matchingStep = steps.find(s =>
+                !s.actionOnly && s.subFiles?.some(f => doc.fileName === f || doc.fileName.endsWith(`/${f}`))
+            );
+            if (matchingStep) {
+                doc.parentStep = matchingStep.name;
+                continue;
+            }
+
+            // 2. Assign to the step with includeRelatedDocs: true
+            if (includeRelatedStep) {
+                doc.parentStep = includeRelatedStep.name;
+                continue;
+            }
+
+            // 3. Fall back to second content step (plan-like) or last if only one
+            if (fallbackStep) {
+                doc.parentStep = fallbackStep.name;
+            }
+        }
+    }
+
     // Sort: core documents first (in step declaration order), then related docs alphabetically
     const coreOrder = documents.filter(d => d.isCore).map(d => d.type);
     documents.sort((a, b) => {
