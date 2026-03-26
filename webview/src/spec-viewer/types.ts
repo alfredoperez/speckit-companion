@@ -41,6 +41,20 @@ export interface EnhancementButton {
 }
 
 /**
+ * Staleness information for a single document
+ */
+export interface StalenessInfo {
+    isStale: boolean;
+    staleReason: string;
+    newerUpstream: string;
+}
+
+/**
+ * Map of document type to its staleness state
+ */
+export type StalenessMap = Record<DocumentType, StalenessInfo>;
+
+/**
  * Footer button state for message-based updates
  */
 export interface FooterState {
@@ -61,6 +75,7 @@ export interface NavState {
     isViewingRelatedDoc: boolean;
     footerState?: FooterState;
     enhancementButtons?: EnhancementButton[];
+    stalenessMap?: StalenessMap;
 }
 
 // ============================================

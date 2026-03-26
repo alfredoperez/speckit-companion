@@ -3,7 +3,7 @@
  * Generates the compact navigation bar HTML
  */
 
-import { SpecDocument, DocumentType } from '../types';
+import { SpecDocument, DocumentType, StalenessMap } from '../types';
 
 /**
  * Generate the unified navigation bar (merged tabs + stepper)
@@ -14,7 +14,8 @@ export function generateCompactNav(
     currentDocType: DocumentType,
     workflowPhase: string,
     isViewingRelatedDoc: boolean,
-    taskCompletionPercent: number
+    taskCompletionPercent: number,
+    stalenessMap?: StalenessMap
 ): string {
     // Calculate if project is complete (persists regardless of current view)
     const isProjectComplete = taskCompletionPercent === 100;
@@ -37,6 +38,8 @@ export function generateCompactNav(
         // Tasks-active: viewing last step with progress (special prominent state)
         const isTasksActive = isLastStep && isViewing && inProgress;
 
+        const isStale = stalenessMap?.[phase]?.isStale ?? false;
+
         const classes = [
             'step-tab',
             exists ? 'exists' : '',
@@ -44,12 +47,14 @@ export function generateCompactNav(
             isTasksActive ? 'tasks-active' : '',
             isWorkflow && !isViewing ? 'workflow' : '',
             !isClickable ? 'disabled' : '',
-            inProgress && !isTasksActive ? 'in-progress' : ''
+            inProgress && !isTasksActive ? 'in-progress' : '',
+            isStale ? 'stale' : ''
         ].filter(Boolean).join(' ');
 
         const label = doc.label;
         // Show percentage for last step in-progress, checkmark for completed files
         const statusIcon = inProgress ? `${taskCompletionPercent}%` : (exists ? '✓' : '');
+        const staleBadge = isStale ? '<span class="stale-badge">!</span>' : '';
 
         // Connector line between steps
         const connector = i < coreDocs.length - 1
@@ -58,7 +63,7 @@ export function generateCompactNav(
 
         return `<button class="${classes}" data-phase="${phase}" ${!isClickable ? 'disabled' : ''}>
             <span class="step-status">${statusIcon}</span>
-            <span class="step-label">${label}</span>
+            <span class="step-label">${label}</span>${staleBadge}
         </button>${connector}`;
     }).join('');
 

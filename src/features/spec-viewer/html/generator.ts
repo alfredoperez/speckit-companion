@@ -9,7 +9,8 @@ import {
     DocumentType,
     PhaseInfo,
     SpecStatus,
-    EnhancementButton
+    EnhancementButton,
+    StalenessMap
 } from '../types';
 import { escapeHtml, escapeHtmlAttribute, generateNonce } from '../utils';
 import { calculateWorkflowPhase } from '../phaseCalculation';
@@ -29,7 +30,8 @@ export function generateHtml(
     phases: PhaseInfo[],
     taskCompletionPercent: number,
     specStatus: SpecStatus = 'draft',
-    enhancementButtons: EnhancementButton[] = []
+    enhancementButtons: EnhancementButton[] = [],
+    stalenessMap?: StalenessMap
 ): string {
     // Get URIs for resources
     const styleUri = webview.asWebviewUri(
@@ -96,8 +98,18 @@ export function generateHtml(
         currentDocType,
         workflowPhase,
         isViewingRelatedDoc,
-        taskCompletionPercent
+        taskCompletionPercent,
+        stalenessMap
     );
+
+    // Stale warning banner (between nav and content)
+    const currentStaleness = stalenessMap?.[currentDocType];
+    const staleBannerHtml = currentStaleness?.isStale
+        ? `<div class="stale-banner" id="stale-banner">
+            <span class="stale-banner-message">${escapeHtml(currentStaleness.staleReason)}</span>
+            <button id="stale-regen" class="stale-regen-btn">Regenerate</button>
+        </div>`
+        : '<div class="stale-banner" id="stale-banner" style="display: none;"></div>';
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -127,6 +139,7 @@ export function generateHtml(
 <body style="background: var(--vscode-editor-background, #1e1e1e);" data-spec-status="${specStatus}">
     <div class="viewer-container">
         ${navHtml}
+        ${staleBannerHtml}
 
         <main class="content-area" id="content-area">
             ${contentHtml}

@@ -183,6 +183,27 @@ export interface ViewerPanelConfig {
 }
 
 // ============================================
+// Staleness Types
+// ============================================
+
+/**
+ * Staleness information for a single document
+ */
+export interface StalenessInfo {
+    /** Whether this document is stale relative to its upstream */
+    isStale: boolean;
+    /** Human-readable reason (e.g., "Plan was generated before the current spec") */
+    staleReason: string;
+    /** Label of the newest upstream document that caused staleness */
+    newerUpstream: string;
+}
+
+/**
+ * Map of document type to its staleness state
+ */
+export type StalenessMap = Record<DocumentType, StalenessInfo>;
+
+// ============================================
 // Message Protocols
 // ============================================
 
@@ -218,6 +239,8 @@ export interface NavState {
     footerState?: FooterState;
     /** Enhancement buttons config */
     enhancementButtons?: EnhancementButton[];
+    /** Staleness state for each core document */
+    stalenessMap?: StalenessMap;
 }
 
 /**

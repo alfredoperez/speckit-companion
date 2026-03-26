@@ -1,0 +1,62 @@
+/**
+ * SpecKit Companion - Staleness Warning Styles
+ * Warning banner and stale badges for outdated workflow documents
+ */
+
+/* ============================================
+   Stale Warning Banner
+   ============================================ */
+
+.stale-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: var(--vscode-inputValidation-warningBackground, rgba(255, 170, 0, 0.1));
+    border-bottom: 1px solid var(--vscode-editorWarning-foreground, #cca700);
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.stale-banner-message {
+    flex: 1;
+    color: var(--vscode-editorWarning-foreground, #cca700);
+}
+
+.stale-regen-btn {
+    flex-shrink: 0;
+    padding: 3px 10px;
+    font-size: 11px;
+    border-radius: 3px;
+    border: 1px solid var(--vscode-editorWarning-foreground, #cca700);
+    background: transparent;
+    color: var(--vscode-editorWarning-foreground, #cca700);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.stale-regen-btn:hover {
+    background: var(--vscode-editorWarning-foreground, #cca700);
+    color: var(--vscode-editor-background, #1e1e1e);
+}
+
+/* ============================================
+   Stale Badge on Tabs
+   ============================================ */
+
+.stale-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1;
+    border-radius: 50%;
+    background: var(--vscode-editorWarning-foreground, #cca700);
+    color: var(--vscode-editor-background, #1e1e1e);
+    margin-left: 4px;
+    position: relative;
+    top: -1px;
+}

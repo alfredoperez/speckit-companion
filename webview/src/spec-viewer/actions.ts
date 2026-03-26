@@ -48,6 +48,12 @@ export function setupFooterActions(): void {
     approveButton?.addEventListener('click', () => {
         vscode.postMessage({ type: 'approve' });
     });
+
+    // Stale banner regen button (if present on initial load)
+    const staleRegenButton = document.getElementById('stale-regen');
+    staleRegenButton?.addEventListener('click', () => {
+        vscode.postMessage({ type: 'regenerate' });
+    });
 }
 
 /**
