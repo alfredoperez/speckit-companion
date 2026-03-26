@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0] - 2026-03-26
+
+### New Features
+
+- **Optional SpecKit CLI**: Extension now works without SpecKit CLI initialization (#35)
+- **Copilot permission mode**: New `speckit.copilotPermissionMode` setting to control auto-approval (`yolo`/`default`)
+
+### Bug Fixes
+
+- **Copilot CLI command**: Replaced `ghcs` (shell suggestion tool) with `copilot` CLI — the correct coding assistant executable (#36)
+- **Copilot non-interactive mode**: Added `-p` flag for prompt mode and `--yolo` for auto-approving shell actions
+- **Copilot slash commands**: Strip leading `/` from prompts since Copilot CLI doesn't use slash commands
+
+### Improvements
+
+- **Steering sidebar consolidation**: Merged agents, skills, and hooks into the steering view (#34)
+- **CLI defaults constant**: Added `CLIDefaults` constant for centralized provider executable names
+
 ## [0.6.0] - 2026-03-22
 
 ### New Features
