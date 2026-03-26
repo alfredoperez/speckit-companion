@@ -77,26 +77,6 @@
           "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.views.steering.visible"
         },
         {
-          "id": "speckit.views.agents",
-          "name": "Agents",
-          "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.views.agents.visible"
-        },
-        {
-          "id": "speckit.views.skills",
-          "name": "Skills",
-          "when": "!(workbenchState == empty || workspaceFolderCount == 0) && (config.speckit.aiProvider == 'claude' || config.speckit.aiProvider == 'codex') && config.speckit.views.skills.visible"
-        },
-        {
-          "id": "speckit.views.mcp",
-          "name": "MCP Servers",
-          "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.views.mcp.visible"
-        },
-        {
-          "id": "speckit.views.hooks",
-          "name": "Hooks",
-          "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.views.hooks.visible"
-        },
-        {
           "id": "speckit.views.settings",
           "name": "Settings",
           "visibility": "collapsed",
@@ -121,20 +101,8 @@
         "when": "speckit.detected"
       },
       {
-        "view": "speckit.views.hooks",
-        "contents": "Automate repetitive tasks with smart triggers"
-      },
-      {
         "view": "speckit.views.steering",
         "contents": "[$(globe) Create User Rule](command:speckit.steering.createUserRule)\n\n[$(root-folder) Create Project Rule](command:speckit.steering.createProjectRule)"
-      },
-      {
-        "view": "speckit.views.mcp",
-        "contents": "Connect to external tools and services\nUse 'claude mcp add' to configure servers"
-      },
-      {
-        "view": "speckit.views.skills",
-        "contents": "Model-invoked skills extend Claude's capabilities.\nCreate skills in ~/.claude/skills/ or .claude/skills/"
       }
     ],
     "commands": [
@@ -277,12 +245,6 @@
         "icon": "$(refresh)"
       },
       {
-        "command": "speckit.mcp.refresh",
-        "title": "Refresh MCP Status",
-        "category": "SpecKit",
-        "icon": "$(refresh)"
-      },
-      {
         "command": "speckit.settings.open",
         "title": "SpecKit Settings",
         "category": "SpecKit",
@@ -412,26 +374,6 @@
           "command": "speckit.steering.refresh",
           "when": "view == speckit.views.steering",
           "group": "navigation@2"
-        },
-        {
-          "command": "speckit.mcp.refresh",
-          "when": "view == speckit.views.mcp",
-          "group": "navigation"
-        },
-        {
-          "command": "speckit.hooks.refresh",
-          "when": "view == speckit.views.hooks",
-          "group": "navigation"
-        },
-        {
-          "command": "speckit.agents.refresh",
-          "when": "view == speckit.views.agents",
-          "group": "navigation"
-        },
-        {
-          "command": "speckit.skills.refresh",
-          "when": "view == speckit.views.skills",
-          "group": "navigation"
         }
       ],
       "view/item/context": [
@@ -568,11 +510,11 @@
             "qwen"
           ],
           "enumDescriptions": [
-            "Claude Code - Full feature support (steering, agents, hooks, MCP)",
-            "Gemini CLI - Steering and MCP support",
-            "GitHub Copilot CLI - Steering, agents, and MCP support",
-            "Codex CLI - Steering, skills, and MCP support",
-            "Qwen Code - Steering and MCP support"
+            "Claude Code - Full feature support (steering, agents, skills, hooks)",
+            "Gemini CLI - Steering support",
+            "GitHub Copilot CLI - Steering and agents support",
+            "Codex CLI - Steering and skills support",
+            "Qwen Code - Steering support"
           ],
           "scope": "machine",
           "order": 2,
@@ -711,35 +653,11 @@
           "scope": "window",
           "description": "Show Specs view"
         },
-        "speckit.views.agents.visible": {
-          "type": "boolean",
-          "default": true,
-          "scope": "window",
-          "description": "Show Agents view"
-        },
-        "speckit.views.skills.visible": {
-          "type": "boolean",
-          "default": true,
-          "scope": "window",
-          "description": "Show Skills view (Claude Code only)"
-        },
-        "speckit.views.hooks.visible": {
-          "type": "boolean",
-          "default": true,
-          "scope": "window",
-          "description": "Show Hooks view"
-        },
         "speckit.views.steering.visible": {
           "type": "boolean",
           "default": true,
           "scope": "window",
           "description": "Show Steering view"
-        },
-        "speckit.views.mcp.visible": {
-          "type": "boolean",
-          "default": true,
-          "scope": "window",
-          "description": "Show MCP Servers view"
         },
         "speckit.views.settings.visible": {
           "type": "boolean",

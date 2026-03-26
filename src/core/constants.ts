@@ -40,8 +40,6 @@ export const Commands = {
     },
     agents: { refresh: 'speckit.agents.refresh' },
     skills: { refresh: 'speckit.skills.refresh', openSkill: 'speckit.skills.openSkill' },
-    hooks: { refresh: 'speckit.hooks.refresh' },
-    mcp: { refresh: 'speckit.mcp.refresh' },
     settings: { open: 'speckit.settings.open' },
     feedback: {
         bugReport: 'speckit.feedback.bugReport',
@@ -68,11 +66,7 @@ export const ConfigKeys = {
     defaultWorkflow: 'speckit.defaultWorkflow',
     views: {
         specsVisible: 'speckit.views.specs.visible',
-        agentsVisible: 'speckit.views.agents.visible',
-        skillsVisible: 'speckit.views.skills.visible',
-        hooksVisible: 'speckit.views.hooks.visible',
         steeringVisible: 'speckit.views.steering.visible',
-        mcpVisible: 'speckit.views.mcp.visible',
         settingsVisible: 'speckit.views.settings.visible',
     },
     notifications: {
@@ -119,10 +113,6 @@ export const Timing = {
 export const DefaultViewVisibility = {
     specs: true,
     steering: true,
-    mcp: false,
-    hooks: false,
-    agents: false,
-    skills: false,
     settings: true,
 } as const;
 
@@ -151,7 +141,6 @@ export const TreeItemContext = {
     agent: 'agent',
     agentBuiltIn: 'agent-builtin',
     hook: 'hook',
-    mcpServer: 'mcp-server',
 } as const;
 
 /**
@@ -159,11 +148,7 @@ export const TreeItemContext = {
  */
 export const Views = {
     explorer: 'speckit.views.explorer',
-    agents: 'speckit.views.agents',
-    skills: 'speckit.views.skills',
     steering: 'speckit.views.steering',
-    hooks: 'speckit.views.hooks',
-    mcp: 'speckit.views.mcp',
     settings: 'speckit.views.settings',
 } as const;
 

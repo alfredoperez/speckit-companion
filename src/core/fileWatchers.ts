@@ -1,9 +1,6 @@
 import * as vscode from 'vscode';
 import { SpecExplorerProvider } from '../features/specs/specExplorerProvider';
 import { SteeringExplorerProvider } from '../features/steering/steeringExplorerProvider';
-import { HooksExplorerProvider } from '../features/hooks/hooksExplorerProvider';
-import { MCPExplorerProvider } from '../features/mcp/mcpExplorerProvider';
-import { AgentsExplorerProvider } from '../features/agents/agentsExplorerProvider';
 import { SpecViewerProvider } from '../features/spec-viewer/specViewerProvider';
 import {
     parseTasksFile,
@@ -29,16 +26,13 @@ export function setupFileWatchers(
     context: vscode.ExtensionContext,
     specExplorer: SpecExplorerProvider,
     steeringExplorer: SteeringExplorerProvider,
-    hooksExplorer: HooksExplorerProvider,
-    mcpExplorer: MCPExplorerProvider,
-    agentsExplorer: AgentsExplorerProvider,
     outputChannel: vscode.OutputChannel
 ): void {
     // Watch for changes in .claude directory with debouncing
-    setupClaudeDirectoryWatcher(context, specExplorer, steeringExplorer, hooksExplorer, mcpExplorer, agentsExplorer, outputChannel);
+    setupClaudeDirectoryWatcher(context, specExplorer, steeringExplorer, outputChannel);
 
     // Watch for changes in Claude settings
-    setupClaudeSettingsWatcher(context, hooksExplorer, mcpExplorer);
+    setupClaudeSettingsWatcher(context, steeringExplorer);
 
     // Watch for changes in CLAUDE.md files
     setupClaudeMdWatchers(context, steeringExplorer);
@@ -54,9 +48,6 @@ function setupClaudeDirectoryWatcher(
     context: vscode.ExtensionContext,
     specExplorer: SpecExplorerProvider,
     steeringExplorer: SteeringExplorerProvider,
-    hooksExplorer: HooksExplorerProvider,
-    mcpExplorer: MCPExplorerProvider,
-    agentsExplorer: AgentsExplorerProvider,
     outputChannel: vscode.OutputChannel
 ): void {
     const claudeWatcher = vscode.workspace.createFileSystemWatcher('**/.claude/**/*');
@@ -71,9 +62,6 @@ function setupClaudeDirectoryWatcher(
         refreshTimeout = setTimeout(() => {
             specExplorer.refresh();
             steeringExplorer.refresh();
-            hooksExplorer.refresh();
-            mcpExplorer.refresh();
-            agentsExplorer.refresh();
         }, 1000);
     };
 
@@ -89,16 +77,14 @@ function setupClaudeDirectoryWatcher(
  */
 function setupClaudeSettingsWatcher(
     context: vscode.ExtensionContext,
-    hooksExplorer: HooksExplorerProvider,
-    mcpExplorer: MCPExplorerProvider
+    steeringExplorer: SteeringExplorerProvider
 ): void {
     const claudeSettingsWatcher = vscode.workspace.createFileSystemWatcher(
         new vscode.RelativePattern(process.env.HOME || '', '.claude/settings.json')
     );
 
     claudeSettingsWatcher.onDidChange(() => {
-        hooksExplorer.refresh();
-        mcpExplorer.refresh();
+        steeringExplorer.refresh();
     });
 
     context.subscriptions.push(claudeSettingsWatcher);
