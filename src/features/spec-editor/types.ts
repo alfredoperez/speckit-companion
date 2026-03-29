@@ -157,6 +157,8 @@ export interface WorkflowDefinition {
     stepPlan?: string;
     /** Command for implement step */
     stepImplement?: string;
+    /** Custom command button shown next to Submit */
+    submitCommand?: { label: string; command: string };
 }
 
 // ============================================
@@ -165,6 +167,7 @@ export interface WorkflowDefinition {
 
 export type SpecEditorToExtensionMessage =
     | { type: 'submit'; content: string; images: string[]; workflow: string }
+    | { type: 'submitCustom'; content: string; images: string[]; workflow: string; command: string }
     | { type: 'preview' }
     | { type: 'attachImage'; name: string; size: number; dataUri: string }
     | { type: 'removeImage'; imageId: string }

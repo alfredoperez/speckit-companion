@@ -18,6 +18,7 @@ export interface VSCodeApi {
 
 export type SpecEditorToExtensionMessage =
     | { type: 'submit'; content: string; images: string[]; workflow: string }
+    | { type: 'submitCustom'; content: string; images: string[]; workflow: string; command: string }
     | { type: 'preview' }
     | { type: 'attachImage'; name: string; size: number; dataUri: string }
     | { type: 'removeImage'; imageId: string }
@@ -34,6 +35,7 @@ export interface WorkflowDefinition {
     name: string;
     displayName: string;
     description?: string;
+    submitCommand?: { label: string; command: string };
 }
 
 export type ExtensionToSpecEditorMessage =

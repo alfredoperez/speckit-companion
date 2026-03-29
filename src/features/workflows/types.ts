@@ -71,6 +71,8 @@ export interface WorkflowConfig {
     /** @deprecated */
     'step-implement'?: string;
     checkpoints?: CheckpointConfig[];
+    /** Custom command button shown next to Submit in the spec editor */
+    submitCommand?: { label: string; command: string };
 }
 
 /**

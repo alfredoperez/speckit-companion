@@ -18,6 +18,7 @@ declare const vscode: VSCodeApi;
 // State
 let attachedImages: AttachedImageUI[] = [];
 let isSubmitting = false;
+let workflowList: WorkflowDefinition[] = [];
 
 // ============================================
 // DOM Elements
@@ -36,7 +37,9 @@ function getElements() {
         attachImageBtn: document.getElementById('attachImageBtn') as HTMLButtonElement,
         loadTemplateBtn: document.getElementById('loadTemplateBtn') as HTMLButtonElement,
         workflowSelector: document.getElementById('workflowSelector') as HTMLElement,
-        workflowSelect: document.getElementById('workflowSelect') as HTMLSelectElement
+        workflowSelect: document.getElementById('workflowSelect') as HTMLSelectElement,
+        customCommandBtn: document.getElementById('customCommandBtn') as HTMLButtonElement,
+        keyboardHints: document.querySelector('.keyboard-hints') as HTMLElement
     };
 }
 
@@ -95,11 +98,14 @@ function escapeHtml(text: string): string {
 // ============================================
 
 function setLoading(loading: boolean): void {
-    const { loadingOverlay, submitBtn } = getElements();
+    const { loadingOverlay, submitBtn, customCommandBtn } = getElements();
     isSubmitting = loading;
 
     loadingOverlay.style.display = loading ? 'flex' : 'none';
     submitBtn.disabled = loading;
+    if (customCommandBtn) {
+        customCommandBtn.disabled = loading;
+    }
 }
 
 // ============================================
@@ -236,6 +242,22 @@ function setupEventListeners(): void {
         });
     });
 
+    // Custom command button
+    elements.customCommandBtn?.addEventListener('click', () => {
+        if (isSubmitting) return;
+        const workflow = workflowList.find(wf => wf.name === getSelectedWorkflow());
+        const cmd = workflow?.submitCommand;
+        if (!cmd) return;
+        clearError();
+        vscode.postMessage({
+            type: 'submitCustom',
+            content: elements.textarea.value,
+            images: attachedImages.map(img => img.id),
+            workflow: getSelectedWorkflow(),
+            command: cmd.command
+        } as any);
+    });
+
     // Cancel button
     elements.cancelBtn.addEventListener('click', () => {
         vscode.postMessage({ type: 'cancel' });
@@ -277,6 +299,26 @@ function setupEventListeners(): void {
             }
         }
 
+        // Ctrl/Cmd + Shift + Enter to submit custom command
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Enter') {
+            e.preventDefault();
+            if (!isSubmitting) {
+                const workflow = workflowList.find(wf => wf.name === getSelectedWorkflow());
+                const cmd = workflow?.submitCommand;
+                if (cmd) {
+                    clearError();
+                    vscode.postMessage({
+                        type: 'submitCustom',
+                        content: elements.textarea.value,
+                        images: attachedImages.map(img => img.id),
+                        workflow: getSelectedWorkflow(),
+                        command: cmd.command
+                    } as any);
+                }
+            }
+            return;
+        }
+
         // Escape to cancel
         if (e.key === 'Escape') {
             e.preventDefault();
@@ -311,14 +353,19 @@ interface WorkflowDefinition {
     name: string;
     displayName: string;
     description?: string;
+    submitCommand?: { label: string; command: string };
 }
 
 function initWorkflows(workflows: WorkflowDefinition[], defaultWorkflow?: string): void {
     const { workflowSelector, workflowSelect } = getElements();
 
+    // Store for later lookup
+    workflowList = workflows;
+
     // Only show selector if there are custom workflows (more than just default)
     if (workflows.length <= 1) {
         workflowSelector.style.display = 'none';
+        updateCustomCommandButton(workflows[0]?.name || 'default');
         return;
     }
 
@@ -333,6 +380,36 @@ function initWorkflows(workflows: WorkflowDefinition[], defaultWorkflow?: string
     }
 
     workflowSelector.style.display = 'flex';
+
+    // Update custom command button for initial selection
+    updateCustomCommandButton(workflowSelect.value);
+
+    // Update on workflow change
+    workflowSelect.addEventListener('change', () => {
+        updateCustomCommandButton(workflowSelect.value);
+    });
+}
+
+function updateCustomCommandButton(workflowName: string): void {
+    const { customCommandBtn, keyboardHints } = getElements();
+    const workflow = workflowList.find(wf => wf.name === workflowName);
+    const cmd = workflow?.submitCommand;
+
+    if (cmd && customCommandBtn) {
+        customCommandBtn.textContent = cmd.label;
+        customCommandBtn.style.display = '';
+        customCommandBtn.disabled = isSubmitting;
+        if (keyboardHints) {
+            keyboardHints.innerHTML = `<kbd>Ctrl</kbd>+<kbd>Enter</kbd> to submit \u00b7 <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd> for ${escapeHtml(cmd.label)} \u00b7 <kbd>Esc</kbd> to cancel`;
+        }
+    } else {
+        if (customCommandBtn) {
+            customCommandBtn.style.display = 'none';
+        }
+        if (keyboardHints) {
+            keyboardHints.innerHTML = `<kbd>Ctrl</kbd>+<kbd>Enter</kbd> to submit \u00b7 <kbd>Esc</kbd> to cancel`;
+        }
+    }
 }
 
 // ============================================

@@ -708,6 +708,22 @@
                 "type": "string",
                 "description": "Custom command for implement step"
               },
+              "submitCommand": {
+                "type": "object",
+                "description": "Custom command button shown next to Submit in the spec editor",
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "description": "Button label (e.g., 'Auto')"
+                  },
+                  "command": {
+                    "type": "string",
+                    "description": "Command to execute (e.g., 'sdd:auto')"
+                  }
+                },
+                "required": ["label", "command"],
+                "additionalProperties": false
+              },
               "steps": {
                 "type": "array",
                 "description": "Flexible workflow steps (replaces legacy step-* keys)",

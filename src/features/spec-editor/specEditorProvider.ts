@@ -81,6 +81,7 @@ export class SpecEditorProvider {
                     stepSpecify: `/${resolveStepCommand(normalized, 'specify')}`,
                     stepPlan: wf['step-plan'] || (normalized.steps?.find(s => s.name === 'plan')?.command),
                     stepImplement: wf['step-implement'] || (normalized.steps?.find(s => s.name === 'implement')?.command),
+                    submitCommand: (wf as any).submitCommand,
                 });
             }
         }
@@ -158,6 +159,10 @@ export class SpecEditorProvider {
                 await this.handleSubmit(message.content, message.images, message.workflow);
                 break;
 
+            case 'submitCustom':
+                await this.handleSubmit(message.content, message.images, message.workflow, message.command);
+                break;
+
             case 'preview':
                 await this.handlePreview();
                 break;
@@ -199,7 +204,7 @@ export class SpecEditorProvider {
     /**
      * Handle spec submission
      */
-    private async handleSubmit(content: string, imageIds: string[], workflowName: string): Promise<void> {
+    private async handleSubmit(content: string, imageIds: string[], workflowName: string, customCommand?: string): Promise<void> {
         if (!this.sessionId) {
             this.postMessage({ type: 'error', message: 'No active session' });
             return;
@@ -254,9 +259,10 @@ export class SpecEditorProvider {
                 images
             );
 
-            // Use workflow's specify command
-            const prompt = `${workflow.stepSpecify} ${markdownContent}`;
-            this.outputChannel.appendLine(`[SpecEditor] Using command: ${workflow.stepSpecify}`);
+            // Use custom command if provided, otherwise workflow's specify command
+            const command = customCommand ? `/${customCommand}` : workflow.stepSpecify;
+            const prompt = `${command} ${markdownContent}`;
+            this.outputChannel.appendLine(`[SpecEditor] Using command: ${command}`);
 
             // Execute in terminal
             await provider.executeInTerminal(prompt, 'SpecKit - New Spec');
@@ -495,6 +501,7 @@ Example:
         <footer class="spec-editor-actions">
             <button class="btn-cancel" id="cancelBtn">Cancel</button>
             <div class="action-spacer"></div>
+            <button class="btn-secondary" id="customCommandBtn" style="display: none;"></button>
             <button class="btn-primary" id="submitBtn">Submit</button>
         </footer>
 
