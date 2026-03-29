@@ -14,7 +14,6 @@ import { ConfigKeys } from '../../core/constants';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig } from '../../core/types/config';
 import type { WorkflowStepConfig } from '../workflows/types';
-import { getAIProvider } from '../../extension';
 
 /**
  * Interface for message handler dependencies
@@ -24,6 +23,7 @@ export interface MessageHandlerDependencies {
     updateContent: (specDirectory: string, documentType: DocumentType) => Promise<void>;
     sendContentUpdateMessage: (specDirectory: string, documentType: DocumentType) => Promise<void>;
     resolveWorkflowSteps: (specDirectory: string) => Promise<WorkflowStepConfig[]>;
+    executeInTerminal: (prompt: string) => Promise<void>;
     outputChannel: vscode.OutputChannel;
     context: vscode.ExtensionContext;
 }
@@ -177,7 +177,7 @@ async function handleRegenerate(
     const currentStep = steps.find(s => s.name === docType);
 
     if (currentStep) {
-        executeStepInTerminal(currentStep, specDirectory, deps);
+        await executeStepInTerminal(currentStep, specDirectory, deps);
     }
 }
 
@@ -209,32 +209,32 @@ async function handleApprove(
     if (currentIndex >= 0 && currentIndex < navSteps.length - 1) {
         // Execute next step's command
         const nextStep = navSteps[currentIndex + 1];
-        executeStepInTerminal(nextStep, specDirectory, deps);
+        await executeStepInTerminal(nextStep, specDirectory, deps);
     } else if (currentIndex === navSteps.length - 1) {
         // Last navigable step: find the actionOnly implement step
         const implementStep = steps.find(s => s.actionOnly);
         if (implementStep) {
-            executeStepInTerminal(implementStep, specDirectory, deps);
+            await executeStepInTerminal(implementStep, specDirectory, deps);
         }
     }
 }
 
 /**
- * Execute a workflow step command in the terminal.
+ * Execute a workflow step command in a VS Code terminal.
  * Uses changeRoot (if available) as the path argument so commands receive
  * the change root, not the nested spec dir.
  */
-function executeStepInTerminal(
+async function executeStepInTerminal(
     step: WorkflowStepConfig,
     specDirectory: string,
     deps: MessageHandlerDependencies
-): void {
+): Promise<void> {
     const instance = deps.getInstance(specDirectory);
     const targetPath = instance?.state.changeRoot || specDirectory;
     const label = step.label || step.name;
     const prompt = `/${step.command} ${targetPath}`;
     deps.outputChannel.appendLine(`[SpecViewer] Executing step "${label}": ${prompt}`);
-    getAIProvider().executeInTerminal(prompt, `SpecKit - ${label}`);
+    await deps.executeInTerminal(prompt);
 }
 
 /**
@@ -271,8 +271,8 @@ async function handleClarify(
         const targetPath = instance.state.changeRoot || specDirectory;
         const label = entry.title || entry.name || 'Enhancement';
         const prompt = `${command} "${targetPath}"`;
-        deps.outputChannel.appendLine(`[SpecViewer] Executing enhancement command: ${prompt}`);
-        getAIProvider().executeInTerminal(prompt, `SpecKit - ${label}`);
+        deps.outputChannel.appendLine(`[SpecViewer] Executing enhancement command "${label}": ${prompt}`);
+        await deps.executeInTerminal(prompt);
         return;
     }
 
@@ -462,7 +462,7 @@ async function handleSubmitRefinements(
         const label = currentStep.label || currentStep.name;
         const prompt = `/${currentStep.command} ${targetPath}${context}`;
         deps.outputChannel.appendLine(`[SpecViewer] Submitting ${refinements.length} refinements for ${docType}`);
-        getAIProvider().executeInTerminal(prompt, `SpecKit - Refine ${label}`);
+        await deps.executeInTerminal(prompt);
     } else {
         deps.outputChannel.appendLine(`[SpecViewer] No workflow step found for: ${docType}`);
     }

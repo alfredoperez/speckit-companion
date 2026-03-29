@@ -68,14 +68,9 @@
     color: var(--text-secondary);
 }
 
-.actions button.secondary:hover:not(:disabled) {
+.actions button.secondary:hover {
     color: var(--text-primary);
     background: var(--bg-hover);
-}
-
-.actions button.secondary:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
 }
 
 .actions button.enhancement {
@@ -93,6 +88,21 @@
     background: var(--bg-hover);
     border-color: var(--border-hover);
     color: var(--text-primary);
+}
+
+/* ============================================
+   Action Toast
+   ============================================ */
+
+.action-toast {
+    font-size: 12px;
+    color: var(--text-secondary);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.action-toast.visible {
+    opacity: 1;
 }
 
 /* ============================================

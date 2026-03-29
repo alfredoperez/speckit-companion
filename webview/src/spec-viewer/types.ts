@@ -132,7 +132,8 @@ export type ExtensionToViewerMessage =
     | { type: 'documentsUpdated'; documents: SpecDocument[]; currentDocument: DocumentType }
     | { type: 'error'; message: string; recoverable: boolean }
     | { type: 'fileDeleted'; filePath: string }
-    | { type: 'navStateUpdated'; navState: NavState };
+    | { type: 'navStateUpdated'; navState: NavState }
+    | { type: 'actionToast'; message: string };
 
 // ============================================
 // Refinement Types (GitHub-style review)

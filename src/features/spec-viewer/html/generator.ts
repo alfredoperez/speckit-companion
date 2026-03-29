@@ -147,6 +147,7 @@ export function generateHtml(
 
         <footer class="actions">
             <div class="actions-left">
+                <span class="action-toast" id="action-toast"></span>
                 ${enhancementButtons.map((btn, i) => `
                 <button class="enhancement" data-command="${btn.command}" title="${btn.tooltip || ''}" id="enhance-${i}">
                     <span class="icon">${btn.icon}</span>

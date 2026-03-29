@@ -272,6 +272,10 @@ export type ExtensionToViewerMessage =
     | {
           type: 'navStateUpdated';
           navState: NavState;
+      }
+    | {
+          type: 'actionToast';
+          message: string;
       };
 
 /**
