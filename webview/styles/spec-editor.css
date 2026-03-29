@@ -351,6 +351,11 @@
     background-color: var(--vscode-list-hoverBackground);
 }
 
+#commandButtons {
+    display: inline-flex;
+    gap: 8px;
+}
+
 .action-spacer {
     flex: 1;
 }

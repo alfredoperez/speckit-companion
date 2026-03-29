@@ -71,8 +71,24 @@ export interface WorkflowConfig {
     /** @deprecated */
     'step-implement'?: string;
     checkpoints?: CheckpointConfig[];
-    /** Custom command button shown next to Submit in the spec editor */
-    submitCommand?: { label: string; command: string };
+    /** Custom command buttons shown next to step actions */
+    commands?: WorkflowCommandConfig[];
+}
+
+/**
+ * Custom command button associated with a workflow step
+ */
+export interface WorkflowCommandConfig {
+    /** Unique command identifier */
+    name: string;
+    /** Button label */
+    title?: string;
+    /** Command to execute (e.g., '/sdd:auto') */
+    command: string;
+    /** Which workflow step this command is associated with */
+    step: string;
+    /** Tooltip shown on hover */
+    tooltip?: string;
 }
 
 /**

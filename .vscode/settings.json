@@ -23,7 +23,15 @@
         { "name": "tasks", "label": "Tasks", "command": "sdd.tasks", "file": "tasks.md" },
         { "name": "implement", "label": "Implement", "command": "sdd.implement", "actionOnly": true }
       ],
-      "submitCommand": { "label": "Auto", "command": "sdd:auto" }
+      "commands": [
+        {
+          "name": "auto",
+          "title": "Auto Mode",
+          "command": "/sdd:auto",
+          "step": "specify",
+          "tooltip": "Goes through the whole specification in auto mode"
+        }
+      ]
     }
   ]
 }

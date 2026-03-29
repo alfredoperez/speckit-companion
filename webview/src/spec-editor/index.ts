@@ -38,7 +38,7 @@ function getElements() {
         loadTemplateBtn: document.getElementById('loadTemplateBtn') as HTMLButtonElement,
         workflowSelector: document.getElementById('workflowSelector') as HTMLElement,
         workflowSelect: document.getElementById('workflowSelect') as HTMLSelectElement,
-        customCommandBtn: document.getElementById('customCommandBtn') as HTMLButtonElement,
+        commandButtonsContainer: document.getElementById('commandButtons') as HTMLElement,
         keyboardHints: document.querySelector('.keyboard-hints') as HTMLElement
     };
 }
@@ -98,13 +98,15 @@ function escapeHtml(text: string): string {
 // ============================================
 
 function setLoading(loading: boolean): void {
-    const { loadingOverlay, submitBtn, customCommandBtn } = getElements();
+    const { loadingOverlay, submitBtn, commandButtonsContainer } = getElements();
     isSubmitting = loading;
 
     loadingOverlay.style.display = loading ? 'flex' : 'none';
     submitBtn.disabled = loading;
-    if (customCommandBtn) {
-        customCommandBtn.disabled = loading;
+    if (commandButtonsContainer) {
+        commandButtonsContainer.querySelectorAll('button').forEach(btn => {
+            (btn as HTMLButtonElement).disabled = loading;
+        });
     }
 }
 
@@ -242,22 +244,6 @@ function setupEventListeners(): void {
         });
     });
 
-    // Custom command button
-    elements.customCommandBtn?.addEventListener('click', () => {
-        if (isSubmitting) return;
-        const workflow = workflowList.find(wf => wf.name === getSelectedWorkflow());
-        const cmd = workflow?.submitCommand;
-        if (!cmd) return;
-        clearError();
-        vscode.postMessage({
-            type: 'submitCustom',
-            content: elements.textarea.value,
-            images: attachedImages.map(img => img.id),
-            workflow: getSelectedWorkflow(),
-            command: cmd.command
-        } as any);
-    });
-
     // Cancel button
     elements.cancelBtn.addEventListener('click', () => {
         vscode.postMessage({ type: 'cancel' });
@@ -299,26 +285,6 @@ function setupEventListeners(): void {
             }
         }
 
-        // Ctrl/Cmd + Shift + Enter to submit custom command
-        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Enter') {
-            e.preventDefault();
-            if (!isSubmitting) {
-                const workflow = workflowList.find(wf => wf.name === getSelectedWorkflow());
-                const cmd = workflow?.submitCommand;
-                if (cmd) {
-                    clearError();
-                    vscode.postMessage({
-                        type: 'submitCustom',
-                        content: elements.textarea.value,
-                        images: attachedImages.map(img => img.id),
-                        workflow: getSelectedWorkflow(),
-                        command: cmd.command
-                    } as any);
-                }
-            }
-            return;
-        }
-
         // Escape to cancel
         if (e.key === 'Escape') {
             e.preventDefault();
@@ -353,7 +319,7 @@ interface WorkflowDefinition {
     name: string;
     displayName: string;
     description?: string;
-    submitCommand?: { label: string; command: string };
+    specifyCommands?: Array<{ name: string; title: string; command: string; tooltip?: string }>;
 }
 
 function initWorkflows(workflows: WorkflowDefinition[], defaultWorkflow?: string): void {
@@ -365,7 +331,7 @@ function initWorkflows(workflows: WorkflowDefinition[], defaultWorkflow?: string
     // Only show selector if there are custom workflows (more than just default)
     if (workflows.length <= 1) {
         workflowSelector.style.display = 'none';
-        updateCustomCommandButton(workflows[0]?.name || 'default');
+        updateCommandButtons(workflows[0]?.name || 'default');
         return;
     }
 
@@ -381,34 +347,61 @@ function initWorkflows(workflows: WorkflowDefinition[], defaultWorkflow?: string
 
     workflowSelector.style.display = 'flex';
 
-    // Update custom command button for initial selection
-    updateCustomCommandButton(workflowSelect.value);
+    // Update command buttons for initial selection
+    updateCommandButtons(workflowSelect.value);
 
     // Update on workflow change
     workflowSelect.addEventListener('change', () => {
-        updateCustomCommandButton(workflowSelect.value);
+        updateCommandButtons(workflowSelect.value);
     });
 }
 
-function updateCustomCommandButton(workflowName: string): void {
-    const { customCommandBtn, keyboardHints } = getElements();
-    const workflow = workflowList.find(wf => wf.name === workflowName);
-    const cmd = workflow?.submitCommand;
+function sendCommand(command: string): void {
+    if (isSubmitting) return;
+    const elements = getElements();
+    clearError();
+    vscode.postMessage({
+        type: 'submitCommand',
+        content: elements.textarea.value,
+        images: attachedImages.map(img => img.id),
+        workflow: getSelectedWorkflow(),
+        command
+    } as any);
+}
 
-    if (cmd && customCommandBtn) {
-        customCommandBtn.textContent = cmd.label;
-        customCommandBtn.style.display = '';
-        customCommandBtn.disabled = isSubmitting;
-        if (keyboardHints) {
-            keyboardHints.innerHTML = `<kbd>Ctrl</kbd>+<kbd>Enter</kbd> to submit \u00b7 <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd> for ${escapeHtml(cmd.label)} \u00b7 <kbd>Esc</kbd> to cancel`;
-        }
-    } else {
-        if (customCommandBtn) {
-            customCommandBtn.style.display = 'none';
-        }
+function updateCommandButtons(workflowName: string): void {
+    const { commandButtonsContainer, keyboardHints } = getElements();
+    const workflow = workflowList.find(wf => wf.name === workflowName);
+    const commands = workflow?.specifyCommands || [];
+
+    if (!commandButtonsContainer) return;
+
+    // Clear existing buttons
+    commandButtonsContainer.innerHTML = '';
+
+    if (commands.length === 0) {
+        commandButtonsContainer.style.display = 'none';
         if (keyboardHints) {
             keyboardHints.innerHTML = `<kbd>Ctrl</kbd>+<kbd>Enter</kbd> to submit \u00b7 <kbd>Esc</kbd> to cancel`;
         }
+        return;
+    }
+
+    commandButtonsContainer.style.display = '';
+    for (const cmd of commands) {
+        const btn = document.createElement('button');
+        btn.className = 'btn-secondary';
+        btn.textContent = cmd.title;
+        btn.disabled = isSubmitting;
+        if (cmd.tooltip) {
+            btn.title = cmd.tooltip;
+        }
+        btn.addEventListener('click', () => sendCommand(cmd.command));
+        commandButtonsContainer.appendChild(btn);
+    }
+
+    if (keyboardHints) {
+        keyboardHints.innerHTML = `<kbd>Ctrl</kbd>+<kbd>Enter</kbd> to submit \u00b7 <kbd>Esc</kbd> to cancel`;
     }
 }
 

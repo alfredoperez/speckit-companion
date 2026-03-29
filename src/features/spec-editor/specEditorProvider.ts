@@ -81,7 +81,9 @@ export class SpecEditorProvider {
                     stepSpecify: `/${resolveStepCommand(normalized, 'specify')}`,
                     stepPlan: wf['step-plan'] || (normalized.steps?.find(s => s.name === 'plan')?.command),
                     stepImplement: wf['step-implement'] || (normalized.steps?.find(s => s.name === 'implement')?.command),
-                    submitCommand: (wf as any).submitCommand,
+                    specifyCommands: ((wf as any).commands || [])
+                        .filter((c: any) => c.step === 'specify')
+                        .map((c: any) => ({ name: c.name, title: c.title || c.name, command: c.command, tooltip: c.tooltip })),
                 });
             }
         }
@@ -159,7 +161,7 @@ export class SpecEditorProvider {
                 await this.handleSubmit(message.content, message.images, message.workflow);
                 break;
 
-            case 'submitCustom':
+            case 'submitCommand':
                 await this.handleSubmit(message.content, message.images, message.workflow, message.command);
                 break;
 
@@ -501,7 +503,7 @@ Example:
         <footer class="spec-editor-actions">
             <button class="btn-cancel" id="cancelBtn">Cancel</button>
             <div class="action-spacer"></div>
-            <button class="btn-secondary" id="customCommandBtn" style="display: none;"></button>
+            <span id="commandButtons" style="display: none;"></span>
             <button class="btn-primary" id="submitBtn">Submit</button>
         </footer>
 

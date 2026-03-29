@@ -708,21 +708,36 @@
                 "type": "string",
                 "description": "Custom command for implement step"
               },
-              "submitCommand": {
-                "type": "object",
-                "description": "Custom command button shown next to Submit in the spec editor",
-                "properties": {
-                  "label": {
-                    "type": "string",
-                    "description": "Button label (e.g., 'Auto')"
+              "commands": {
+                "type": "array",
+                "description": "Custom command buttons shown next to step actions (e.g., next to Submit for specify step)",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "command", "step"],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Unique command identifier"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Button label (e.g., 'Auto Mode')"
+                    },
+                    "command": {
+                      "type": "string",
+                      "description": "Command to execute (e.g., '/sdd:auto')"
+                    },
+                    "step": {
+                      "type": "string",
+                      "description": "Which workflow step this command is associated with (e.g., 'specify')"
+                    },
+                    "tooltip": {
+                      "type": "string",
+                      "description": "Tooltip shown on hover"
+                    }
                   },
-                  "command": {
-                    "type": "string",
-                    "description": "Command to execute (e.g., 'sdd:auto')"
-                  }
-                },
-                "required": ["label", "command"],
-                "additionalProperties": false
+                  "additionalProperties": false
+                }
               },
               "steps": {
                 "type": "array",
