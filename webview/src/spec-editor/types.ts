@@ -37,7 +37,7 @@ export interface WorkflowDefinition {
 }
 
 export type ExtensionToSpecEditorMessage =
-    | { type: 'init'; workflows: WorkflowDefinition[] }
+    | { type: 'init'; workflows: WorkflowDefinition[]; defaultWorkflow?: string }
     | { type: 'imageSaved'; imageId: string; thumbnailUri: string; originalName: string }
     | { type: 'imageRemoved'; imageId: string }
     | { type: 'templateLoaded'; content: string }

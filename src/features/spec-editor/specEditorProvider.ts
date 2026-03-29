@@ -189,8 +189,11 @@ export class SpecEditorProvider {
      */
     private async handleReady(): Promise<void> {
         const workflows = this.getWorkflows();
-        this.outputChannel.appendLine(`[SpecEditor] Sending ${workflows.length} workflows to webview`);
-        this.postMessage({ type: 'init', workflows });
+        const defaultWorkflow = vscode.workspace
+            .getConfiguration('speckit')
+            .get<string>('defaultWorkflow', 'default');
+        this.outputChannel.appendLine(`[SpecEditor] Sending ${workflows.length} workflows to webview (default: ${defaultWorkflow})`);
+        this.postMessage({ type: 'init', workflows, defaultWorkflow });
     }
 
     /**

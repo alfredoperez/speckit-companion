@@ -313,7 +313,7 @@ interface WorkflowDefinition {
     description?: string;
 }
 
-function initWorkflows(workflows: WorkflowDefinition[]): void {
+function initWorkflows(workflows: WorkflowDefinition[], defaultWorkflow?: string): void {
     const { workflowSelector, workflowSelect } = getElements();
 
     // Only show selector if there are custom workflows (more than just default)
@@ -327,6 +327,11 @@ function initWorkflows(workflows: WorkflowDefinition[]): void {
         `<option value="${wf.name}" title="${wf.description || ''}">${wf.displayName}</option>`
     ).join('');
 
+    // Pre-select the default workflow
+    if (defaultWorkflow) {
+        workflowSelect.value = defaultWorkflow;
+    }
+
     workflowSelector.style.display = 'flex';
 }
 
@@ -339,7 +344,7 @@ function handleMessage(event: MessageEvent): void {
 
     switch (message.type) {
         case 'init':
-            initWorkflows(message.workflows);
+            initWorkflows(message.workflows, message.defaultWorkflow);
             break;
 
         case 'imageSaved':

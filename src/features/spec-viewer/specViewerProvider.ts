@@ -10,6 +10,7 @@ import { scanDocuments } from "./documentScanner";
 import { generateHtml } from "./html";
 import { createMessageHandlers } from "./messageHandlers";
 import { computeStaleness } from "./staleness";
+import { getAIProvider } from "../../extension";
 import {
   calculatePhases,
   calculateTaskCompletion,
@@ -204,9 +205,16 @@ export class SpecViewerProvider {
     this.outputChannel.appendLine(
       `[SpecViewer] Refreshing due to file change: ${filePath}`,
     );
+
+    // Auto-navigate to newly created file
+    const docType = getDocumentTypeFromPath(filePath);
+    const wasNew = !instance.state.availableDocuments.find(
+      d => d.type === docType && d.exists,
+    );
+
     await this.updateContent(
       instance.state.specDirectory,
-      instance.state.currentDocument,
+      wasNew ? docType : instance.state.currentDocument,
     );
   }
 
@@ -318,6 +326,11 @@ export class SpecViewerProvider {
       resolveWorkflowSteps: dir => {
         const inst = this.getInstance(dir);
         return this.resolveWorkflowSteps(dir, inst?.state.changeRoot);
+      },
+      executeInTerminal: async (prompt: string) => {
+        const inst = this.getInstance(specDirectory);
+        inst?.panel.webview.postMessage({ type: 'actionToast', message: 'Opening terminal…' });
+        await getAIProvider().executeInTerminal(prompt);
       },
       outputChannel: this.outputChannel,
       context: this.context,

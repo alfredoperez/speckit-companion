@@ -96,6 +96,16 @@ function handleMessage(event: MessageEvent): void {
             const { contentArea } = getElements();
             contentArea.innerHTML = `<div class="empty-state">The file has been deleted.</div>`;
             break;
+
+        case 'actionToast': {
+            const toast = document.getElementById('action-toast');
+            if (toast) {
+                toast.textContent = message.message;
+                toast.classList.add('visible');
+                setTimeout(() => toast.classList.remove('visible'), 2000);
+            }
+            break;
+        }
     }
 }
 
