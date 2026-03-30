@@ -713,7 +713,11 @@
                 "description": "Custom command buttons shown next to step actions (e.g., next to Submit for specify step)",
                 "items": {
                   "type": "object",
-                  "required": ["name", "command", "step"],
+                  "required": [
+                    "name",
+                    "command",
+                    "step"
+                  ],
                   "properties": {
                     "name": {
                       "type": "string",
