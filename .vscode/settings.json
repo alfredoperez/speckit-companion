@@ -27,7 +27,7 @@
         {
           "name": "auto",
           "title": "Auto Mode",
-          "command": "/sdd:auto",
+          "command": "sdd:auto",
           "step": "specify",
           "tooltip": "Goes through the whole specification in auto mode"
         }
