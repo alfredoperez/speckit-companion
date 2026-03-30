@@ -141,11 +141,48 @@ Notice how custom workflows, spec directories, and custom commands work together
         { "name": "plan",      "label": "Plan",      "command": "sdd.plan",      "file": "plan.md" },
         { "name": "tasks",     "label": "Tasks",     "command": "sdd.tasks",     "file": "tasks.md" },
         { "name": "implement", "label": "Implement", "command": "sdd.implement", "actionOnly": true }
+      ],
+      "commands": [
+        {
+          "name": "auto",
+          "title": "Auto Mode",
+          "command": "sdd:auto",
+          "step": "specify",
+          "tooltip": "Goes through the whole specification in auto mode"
+        }
       ]
     }
   ]
 }
 ```
+
+#### Workflow Commands
+
+Workflows can define `commands` — extra action buttons that appear next to the primary action for a given step. For example, a command with `"step": "specify"` renders as a button next to **Submit** in the spec editor.
+
+```json
+{
+  "commands": [
+    {
+      "name": "auto",
+      "title": "Auto Mode",
+      "command": "sdd:auto",
+      "step": "specify",
+      "tooltip": "Runs the full pipeline automatically"
+    }
+  ]
+}
+```
+
+| Property | Required | Description |
+|----------|----------|-------------|
+| `name` | Yes | Unique command identifier |
+| `command` | Yes | Command to execute (e.g., `"sdd:auto"` — no leading slash needed) |
+| `step` | Yes | Which workflow step to show this button on (e.g., `"specify"`) |
+| `title` | No | Button label (defaults to `name`) |
+| `tooltip` | No | Hover text for the button |
+
+Commands with `step: "specify"` appear as secondary buttons next to Submit in the spec creation dialog. Multiple commands per step are supported.
 
 #### Steps with sub-files
 
