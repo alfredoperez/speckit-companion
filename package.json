@@ -708,6 +708,41 @@
                 "type": "string",
                 "description": "Custom command for implement step"
               },
+              "commands": {
+                "type": "array",
+                "description": "Custom command buttons shown next to step actions (e.g., next to Submit for specify step)",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "command",
+                    "step"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Unique command identifier"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Button label (e.g., 'Auto Mode')"
+                    },
+                    "command": {
+                      "type": "string",
+                      "description": "Command to execute (e.g., '/sdd:auto')"
+                    },
+                    "step": {
+                      "type": "string",
+                      "description": "Which workflow step this command is associated with (e.g., 'specify')"
+                    },
+                    "tooltip": {
+                      "type": "string",
+                      "description": "Tooltip shown on hover"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
               "steps": {
                 "type": "array",
                 "description": "Flexible workflow steps (replaces legacy step-* keys)",

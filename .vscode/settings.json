@@ -22,6 +22,15 @@
         { "name": "plan", "label": "Plan", "command": "sdd.plan", "file": "plan.md" },
         { "name": "tasks", "label": "Tasks", "command": "sdd.tasks", "file": "tasks.md" },
         { "name": "implement", "label": "Implement", "command": "sdd.implement", "actionOnly": true }
+      ],
+      "commands": [
+        {
+          "name": "auto",
+          "title": "Auto Mode",
+          "command": "sdd:auto",
+          "step": "specify",
+          "tooltip": "Goes through the whole specification in auto mode"
+        }
       ]
     }
   ]

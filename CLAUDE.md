@@ -89,6 +89,10 @@ User data stored in workspace `.claude/` directory:
 └── steering/*.md
 ```
 
+## Documentation
+
+When adding, changing, or removing a user-facing feature, update the README.md to reflect the change. Keep the README as the single source of truth for configuration options, workflow setup, and feature descriptions.
+
 ## Important Notes
 
 1. **File Operations**: Use `vscode.Uri` and workspace-relative paths
