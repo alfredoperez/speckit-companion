@@ -4,7 +4,8 @@ import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
-import { CLIDefaults, ConfigKeys, Timing } from '../core/constants';
+import { CLIDefaults, Timing } from '../core/constants';
+import { waitForShellReady } from '../core/utils/terminalUtils';
 import { IAIProvider, AIExecutionResult } from './aiProvider';
 import { NotificationUtils } from '../core/utils/notificationUtils';
 
@@ -27,12 +28,6 @@ export class CopilotCliProvider implements IAIProvider {
 
         this.configManager = ConfigManager.getInstance();
         this.configManager.loadSettings();
-
-        vscode.workspace.onDidChangeConfiguration(e => {
-            if (e.affectsConfiguration(ConfigKeys.namespace)) {
-                this.configManager.loadSettings();
-            }
-        });
     }
 
     /**
@@ -120,10 +115,8 @@ export class CopilotCliProvider implements IAIProvider {
 
             terminal.show();
 
-            const delay = this.configManager.getTerminalDelay();
-            setTimeout(() => {
-                terminal.sendText(command, true);
-            }, delay);
+            await waitForShellReady(terminal);
+            terminal.sendText(command, true);
 
             // Clean up temp file after delay
             setTimeout(async () => {
@@ -170,57 +163,48 @@ export class CopilotCliProvider implements IAIProvider {
             hideFromUser: true
         });
 
-        return new Promise((resolve) => {
-            let shellIntegrationChecks = 0;
+        await waitForShellReady(terminal);
 
-            const checkShellIntegration = setInterval(() => {
-                shellIntegrationChecks++;
+        if (terminal.shellIntegration) {
+            const execution = terminal.shellIntegration.executeCommand(commandLine);
 
-                if (terminal.shellIntegration) {
-                    clearInterval(checkShellIntegration);
+            return new Promise((resolve) => {
+                const disposable = vscode.window.onDidEndTerminalShellExecution(event => {
+                    if (event.terminal === terminal && event.execution === execution) {
+                        disposable.dispose();
 
-                    const execution = terminal.shellIntegration.executeCommand(commandLine);
+                        if (event.exitCode !== 0) {
+                            this.outputChannel.appendLine(`[CopilotCliProvider] Command failed with exit code: ${event.exitCode}`);
+                        }
 
-                    const disposable = vscode.window.onDidEndTerminalShellExecution(event => {
-                        if (event.terminal === terminal && event.execution === execution) {
-                            disposable.dispose();
+                        resolve({
+                            exitCode: event.exitCode,
+                            output: undefined
+                        });
 
-                            if (event.exitCode !== 0) {
-                                this.outputChannel.appendLine(`[CopilotCliProvider] Command failed with exit code: ${event.exitCode}`);
+                        setTimeout(async () => {
+                            terminal.dispose();
+                            try {
+                                await fs.promises.unlink(promptFilePath);
+                            } catch (e) {
+                                // Ignore cleanup errors
                             }
+                        }, Timing.terminalDisposeDelay);
+                    }
+                });
+            });
+        } else {
+            this.outputChannel.appendLine(`[CopilotCliProvider] Shell integration not available, using fallback mode`);
+            terminal.sendText(commandLine);
 
-                            resolve({
-                                exitCode: event.exitCode,
-                                output: undefined
-                            });
-
-                            setTimeout(async () => {
-                                terminal.dispose();
-                                try {
-                                    await fs.promises.unlink(promptFilePath);
-                                } catch (e) {
-                                    // Ignore cleanup errors
-                                }
-                            }, Timing.terminalDisposeDelay);
-                        }
-                    });
-                } else if (shellIntegrationChecks > Timing.shellIntegrationMaxChecks) {
-                    clearInterval(checkShellIntegration);
-                    this.outputChannel.appendLine(`[CopilotCliProvider] Shell integration not available, using fallback mode`);
-                    terminal.sendText(commandLine);
-
-                    setTimeout(async () => {
-                        resolve({ exitCode: undefined });
-                        terminal.dispose();
-                        try {
-                            await fs.promises.unlink(promptFilePath);
-                        } catch (e) {
-                            // Ignore cleanup errors
-                        }
-                    }, Timing.shellIntegrationFallbackTimeout);
-                }
-            }, Timing.shellIntegrationCheckInterval);
-        });
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve({ exitCode: undefined });
+                    terminal.dispose();
+                    fs.promises.unlink(promptFilePath).catch(() => {});
+                }, Timing.shellReadyTimeoutMs);
+            });
+        }
     }
 
     /**

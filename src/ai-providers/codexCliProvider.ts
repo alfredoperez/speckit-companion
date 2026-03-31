@@ -5,7 +5,8 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
 import { convertPathIfWSL } from '../core/utils/pathUtils';
-import { ConfigKeys, Timing } from '../core/constants';
+import { Timing } from '../core/constants';
+import { waitForShellReady } from '../core/utils/terminalUtils';
 import { IAIProvider, AIExecutionResult } from './aiProvider';
 import { NotificationUtils } from '../core/utils/notificationUtils';
 
@@ -24,12 +25,6 @@ export class CodexCliProvider implements IAIProvider {
 
         this.configManager = ConfigManager.getInstance();
         this.configManager.loadSettings();
-        // Listen for configuration changes
-        vscode.workspace.onDidChangeConfiguration(e => {
-            if (e.affectsConfiguration(ConfigKeys.namespace)) {
-                this.configManager.loadSettings();
-            }
-        });
     }
 
     /**
@@ -146,10 +141,8 @@ export class CodexCliProvider implements IAIProvider {
 
             terminal.show();
 
-            const delay = this.configManager.getTerminalDelay();
-            setTimeout(() => {
-                terminal.sendText(command, true);
-            }, delay);
+            await waitForShellReady(terminal);
+            terminal.sendText(command, true);
 
             // Clean up temp file after delay (only if we created one)
             if (tempFilePath) {
@@ -210,63 +203,54 @@ export class CodexCliProvider implements IAIProvider {
             hideFromUser: true
         });
 
-        return new Promise((resolve) => {
-            let shellIntegrationChecks = 0;
+        await waitForShellReady(terminal);
 
-            const checkShellIntegration = setInterval(() => {
-                shellIntegrationChecks++;
+        if (terminal.shellIntegration) {
+            const execution = terminal.shellIntegration.executeCommand(commandLine);
 
-                if (terminal.shellIntegration) {
-                    clearInterval(checkShellIntegration);
+            return new Promise((resolve) => {
+                const disposable = vscode.window.onDidEndTerminalShellExecution(event => {
+                    if (event.terminal === terminal && event.execution === execution) {
+                        disposable.dispose();
 
-                    const execution = terminal.shellIntegration.executeCommand(commandLine);
+                        if (event.exitCode !== 0) {
+                            this.outputChannel.appendLine(`[Codex] Command failed with exit code: ${event.exitCode}`);
+                            this.outputChannel.appendLine(`[Codex] Command was: ${commandLine}`);
+                        }
 
-                    const disposable = vscode.window.onDidEndTerminalShellExecution(event => {
-                        if (event.terminal === terminal && event.execution === execution) {
-                            disposable.dispose();
+                        resolve({
+                            exitCode: event.exitCode,
+                            output: undefined
+                        });
 
-                            if (event.exitCode !== 0) {
-                                this.outputChannel.appendLine(`[Codex] Command failed with exit code: ${event.exitCode}`);
-                                this.outputChannel.appendLine(`[Codex] Command was: ${commandLine}`);
-                            }
-
-                            resolve({
-                                exitCode: event.exitCode,
-                                output: undefined
-                            });
-
-                            setTimeout(async () => {
-                                terminal.dispose();
-                                if (tempFilePath) {
-                                    try {
-                                        await fs.promises.unlink(tempFilePath);
-                                        this.outputChannel.appendLine(`[Codex] Cleaned up temp file: ${tempFilePath}`);
-                                    } catch (e) {
-                                        this.outputChannel.appendLine(`[Codex] Failed to cleanup temp file: ${e}`);
-                                    }
+                        setTimeout(async () => {
+                            terminal.dispose();
+                            if (tempFilePath) {
+                                try {
+                                    await fs.promises.unlink(tempFilePath);
+                                    this.outputChannel.appendLine(`[Codex] Cleaned up temp file: ${tempFilePath}`);
+                                } catch (e) {
+                                    this.outputChannel.appendLine(`[Codex] Failed to cleanup temp file: ${e}`);
                                 }
-                            }, Timing.terminalDisposeDelay);
-                        }
-                    });
-                } else if (shellIntegrationChecks > Timing.shellIntegrationMaxChecks) {
-                    clearInterval(checkShellIntegration);
-                    this.outputChannel.appendLine(`[Codex] Shell integration not available, using fallback mode`);
-                    terminal.sendText(commandLine);
-
-                    setTimeout(async () => {
-                        resolve({ exitCode: undefined });
-                        terminal.dispose();
-                        if (tempFilePath) {
-                            try {
-                                await fs.promises.unlink(tempFilePath);
-                            } catch (e) {
-                                // Ignore cleanup errors
                             }
-                        }
-                    }, Timing.shellIntegrationFallbackTimeout);
-                }
-            }, Timing.shellIntegrationCheckInterval);
-        });
+                        }, Timing.terminalDisposeDelay);
+                    }
+                });
+            });
+        } else {
+            this.outputChannel.appendLine(`[Codex] Shell integration not available, using fallback mode`);
+            terminal.sendText(commandLine);
+
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve({ exitCode: undefined });
+                    terminal.dispose();
+                    if (tempFilePath) {
+                        fs.promises.unlink(tempFilePath).catch(() => {});
+                    }
+                }, Timing.shellReadyTimeoutMs);
+            });
+        }
     }
 
     /**
@@ -306,11 +290,8 @@ export class CodexCliProvider implements IAIProvider {
 
             terminal.show();
 
-            const delay = this.configManager.getTerminalDelay();
-            setTimeout(() => {
-                // autoExecute=false: show command but don't press Enter (user can add more input)
-                terminal.sendText(terminalCommand, autoExecute);
-            }, delay);
+            await waitForShellReady(terminal);
+            terminal.sendText(terminalCommand, autoExecute);
 
             return terminal;
 

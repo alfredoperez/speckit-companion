@@ -5,7 +5,8 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
 import { convertPathIfWSL } from '../core/utils/pathUtils';
-import { ConfigKeys, Timing } from '../core/constants';
+import { Timing } from '../core/constants';
+import { waitForShellReady } from '../core/utils/terminalUtils';
 import { getPermissionManager } from '../extension';
 import { IAIProvider, AIExecutionResult } from './aiProvider';
 
@@ -24,12 +25,6 @@ export class ClaudeCodeProvider implements IAIProvider {
 
         this.configManager = ConfigManager.getInstance();
         this.configManager.loadSettings();
-        // Listen for configuration changes
-        vscode.workspace.onDidChangeConfiguration(e => {
-            if (e.affectsConfiguration(ConfigKeys.namespace)) {
-                this.configManager.loadSettings();
-            }
-        });
     }
 
     /**
@@ -114,10 +109,8 @@ export class ClaudeCodeProvider implements IAIProvider {
 
             terminal.show();
 
-            const delay = this.configManager.getTerminalDelay();
-            setTimeout(() => {
-                terminal.sendText(command, true);
-            }, delay);
+            await waitForShellReady(terminal);
+            terminal.sendText(command, true);
 
             // Clean up temp file after delay
             setTimeout(async () => {
@@ -162,59 +155,50 @@ export class ClaudeCodeProvider implements IAIProvider {
             hideFromUser: true
         });
 
-        return new Promise((resolve) => {
-            let shellIntegrationChecks = 0;
+        await waitForShellReady(terminal);
 
-            const checkShellIntegration = setInterval(() => {
-                shellIntegrationChecks++;
+        if (terminal.shellIntegration) {
+            const execution = terminal.shellIntegration.executeCommand(commandLine);
 
-                if (terminal.shellIntegration) {
-                    clearInterval(checkShellIntegration);
+            return new Promise((resolve) => {
+                const disposable = vscode.window.onDidEndTerminalShellExecution(event => {
+                    if (event.terminal === terminal && event.execution === execution) {
+                        disposable.dispose();
 
-                    const execution = terminal.shellIntegration.executeCommand(commandLine);
+                        if (event.exitCode !== 0) {
+                            this.outputChannel.appendLine(`[Claude] Command failed with exit code: ${event.exitCode}`);
+                            this.outputChannel.appendLine(`[Claude] Command was: ${commandLine}`);
+                        }
 
-                    const disposable = vscode.window.onDidEndTerminalShellExecution(event => {
-                        if (event.terminal === terminal && event.execution === execution) {
-                            disposable.dispose();
+                        resolve({
+                            exitCode: event.exitCode,
+                            output: undefined
+                        });
 
-                            if (event.exitCode !== 0) {
-                                this.outputChannel.appendLine(`[Claude] Command failed with exit code: ${event.exitCode}`);
-                                this.outputChannel.appendLine(`[Claude] Command was: ${commandLine}`);
+                        setTimeout(async () => {
+                            terminal.dispose();
+                            try {
+                                await fs.promises.unlink(promptFilePath);
+                                this.outputChannel.appendLine(`[Claude] Cleaned up temp file: ${promptFilePath}`);
+                            } catch (e) {
+                                this.outputChannel.appendLine(`[Claude] Failed to cleanup temp file: ${e}`);
                             }
+                        }, Timing.terminalDisposeDelay);
+                    }
+                });
+            });
+        } else {
+            this.outputChannel.appendLine(`[Claude] Shell integration not available, using fallback mode`);
+            terminal.sendText(commandLine);
 
-                            resolve({
-                                exitCode: event.exitCode,
-                                output: undefined
-                            });
-
-                            setTimeout(async () => {
-                                terminal.dispose();
-                                try {
-                                    await fs.promises.unlink(promptFilePath);
-                                    this.outputChannel.appendLine(`[Claude] Cleaned up temp file: ${promptFilePath}`);
-                                } catch (e) {
-                                    this.outputChannel.appendLine(`[Claude] Failed to cleanup temp file: ${e}`);
-                                }
-                            }, Timing.terminalDisposeDelay);
-                        }
-                    });
-                } else if (shellIntegrationChecks > Timing.shellIntegrationMaxChecks) {
-                    clearInterval(checkShellIntegration);
-                    this.outputChannel.appendLine(`[Claude] Shell integration not available, using fallback mode`);
-                    terminal.sendText(commandLine);
-
-                    setTimeout(async () => {
-                        resolve({ exitCode: undefined });
-                        terminal.dispose();
-                        try {
-                            await fs.promises.unlink(promptFilePath);
-                        } catch (e) {
-                            // Ignore cleanup errors
-                        }
-                    }, Timing.shellIntegrationFallbackTimeout);
-                }
-            }, Timing.shellIntegrationCheckInterval);
-        });
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve({ exitCode: undefined });
+                    terminal.dispose();
+                    fs.promises.unlink(promptFilePath).catch(() => {});
+                }, Timing.shellReadyTimeoutMs);
+            });
+        }
     }
 
     /**
@@ -242,11 +226,8 @@ export class ClaudeCodeProvider implements IAIProvider {
 
             terminal.show();
 
-            const delay = this.configManager.getTerminalDelay();
-            setTimeout(() => {
-                // autoExecute=false: show command but don't press Enter (user can add more input)
-                terminal.sendText(fullCommand, autoExecute);
-            }, delay);
+            await waitForShellReady(terminal);
+            terminal.sendText(fullCommand, autoExecute);
 
             return terminal;
 
@@ -281,7 +262,7 @@ export class ClaudeCodeProvider implements IAIProvider {
     /**
      * Create permission setup terminal
      */
-    static createPermissionTerminal(): vscode.Terminal {
+    static async createPermissionTerminal(): Promise<vscode.Terminal> {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         const terminal = vscode.window.createTerminal({
             name: 'Claude Code - Permission Setup',
@@ -290,6 +271,7 @@ export class ClaudeCodeProvider implements IAIProvider {
         });
 
         terminal.show();
+        await waitForShellReady(terminal);
         const permissionFlag = ClaudeCodeProvider.getPermissionFlagStatic();
         terminal.sendText(
             `claude ${permissionFlag}`.trim(),

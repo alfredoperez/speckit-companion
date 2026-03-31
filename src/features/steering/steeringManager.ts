@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { getAIProvider } from '../../extension';
 import { ConfigManager } from '../../core/utils/configManager';
+import { waitForShellReady } from '../../core/utils/terminalUtils';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 
 export class SteeringManager {
@@ -177,13 +178,11 @@ Analyze the document and:
         });
         terminal.show();
 
-        const delay = this.configManager.getTerminalDelay();
         const config = vscode.workspace.getConfiguration('speckit');
         const mode = config.get<string>('claudePermissionMode', 'bypassPermissions');
         const permissionFlag = mode === 'bypassPermissions' ? '--permission-mode bypassPermissions ' : '';
-        setTimeout(() => {
-            terminal.sendText(`claude ${permissionFlag}"/init"`);
-        }, delay);
+        await waitForShellReady(terminal);
+        terminal.sendText(`claude ${permissionFlag}"/init"`);
     }
 
     async createUserClaudeMd() {

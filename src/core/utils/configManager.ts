@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { DefaultPaths, DefaultViewVisibility, Timing } from '../constants';
+import { DefaultPaths, DefaultViewVisibility } from '../constants';
 
 const CONFIG_FILE_NAME = 'speckit-settings.json';
 
@@ -102,10 +102,6 @@ export class ConfigManager {
             throw new Error('No workspace folder found');
         }
         return path.join(this.workspaceFolder.uri.fsPath, this.getPath(type));
-    }
-
-    getTerminalDelay(): number {
-        return Timing.terminalVenvActivationDelay;
     }
 
     private getDefaultSettings(): SpecKitSettings {
