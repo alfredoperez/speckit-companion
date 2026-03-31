@@ -20,6 +20,8 @@ import { SpecKitDetector, UpdateChecker, registerCliCommands, registerUtilityCom
 
 // Core
 import { Views, setupFileWatchers, setupTasksWatcher, setupSpecViewerWatcher } from './core';
+import { ConfigKeys } from './core/constants';
+import { ConfigManager } from './core/utils/configManager';
 import { openSpecFile } from './core/utils/fileOpener';
 
 let aiProvider: IAIProvider;
@@ -37,6 +39,7 @@ export function getAIProvider(): IAIProvider {
 export async function activate(context: vscode.ExtensionContext) {
     // Create output channel for debugging
     outputChannel = vscode.window.createOutputChannel('SpecKit Companion');
+    context.subscriptions.push(outputChannel);
 
     // Initialize SpecKit detector
     const specKitDetector = SpecKitDetector.getInstance();
@@ -81,7 +84,18 @@ export async function activate(context: vscode.ExtensionContext) {
     aiProvider = AIProviderFactory.getProvider(context, outputChannel);
     outputChannel.appendLine(`[Extension] Using AI provider: ${aiProvider.name}`);
 
+    // Reload ConfigManager settings on configuration changes (single listener for all consumers)
+    const configManager = ConfigManager.getInstance();
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeConfiguration(e => {
+            if (e.affectsConfiguration(ConfigKeys.namespace)) {
+                configManager.loadSettings();
+            }
+        })
+    );
+
     permissionManager = new PermissionManager(context, outputChannel);
+    context.subscriptions.push(permissionManager);
     if (hasWorkspace) {
         await permissionManager.initializePermissions();
     } else {
@@ -231,7 +245,5 @@ async function showConstitutionSetupSuggestion(): Promise<void> {
 }
 
 export function deactivate() {
-    if (permissionManager) {
-        permissionManager.dispose();
-    }
+    // All disposables are registered in context.subscriptions and disposed automatically by VS Code
 }

@@ -4,7 +4,8 @@ import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
-import { ConfigKeys, Timing } from '../core/constants';
+import { Timing } from '../core/constants';
+import { waitForShellReady } from '../core/utils/terminalUtils';
 import { IAIProvider, AIExecutionResult } from './aiProvider';
 import { NotificationUtils } from '../core/utils/notificationUtils';
 
@@ -27,12 +28,6 @@ export class GeminiCliProvider implements IAIProvider {
 
         this.configManager = ConfigManager.getInstance();
         this.configManager.loadSettings();
-
-        vscode.workspace.onDidChangeConfiguration(e => {
-            if (e.affectsConfiguration(ConfigKeys.namespace)) {
-                this.configManager.loadSettings();
-            }
-        });
     }
 
     /**
@@ -113,23 +108,21 @@ export class GeminiCliProvider implements IAIProvider {
 
             terminal.show();
 
-            const delay = this.configManager.getTerminalDelay();
             const initDelay = this.getInitDelay();
 
-            // Start Gemini in interactive mode
-            setTimeout(() => {
-                terminal.sendText(cliPath, true);
-            }, delay);
+            // Wait for shell to be ready, then start Gemini in interactive mode
+            await waitForShellReady(terminal);
+            terminal.sendText(cliPath, true);
 
             // After Gemini initializes, send the prompt then Enter separately
             setTimeout(() => {
                 terminal.sendText(prompt, false);  // Send text without Enter
-            }, delay + initDelay);
+            }, initDelay);
 
             // Send Enter after a small delay to submit the prompt
             setTimeout(() => {
                 terminal.sendText('', true);  // Just send Enter
-            }, delay + initDelay + 200);
+            }, initDelay + 200);
 
             return terminal;
 
@@ -165,57 +158,48 @@ export class GeminiCliProvider implements IAIProvider {
             hideFromUser: true
         });
 
-        return new Promise((resolve) => {
-            let shellIntegrationChecks = 0;
+        await waitForShellReady(terminal);
 
-            const checkShellIntegration = setInterval(() => {
-                shellIntegrationChecks++;
+        if (terminal.shellIntegration) {
+            const execution = terminal.shellIntegration.executeCommand(commandLine);
 
-                if (terminal.shellIntegration) {
-                    clearInterval(checkShellIntegration);
+            return new Promise((resolve) => {
+                const disposable = vscode.window.onDidEndTerminalShellExecution(event => {
+                    if (event.terminal === terminal && event.execution === execution) {
+                        disposable.dispose();
 
-                    const execution = terminal.shellIntegration.executeCommand(commandLine);
+                        if (event.exitCode !== 0) {
+                            this.outputChannel.appendLine(`[GeminiCliProvider] Command failed with exit code: ${event.exitCode}`);
+                        }
 
-                    const disposable = vscode.window.onDidEndTerminalShellExecution(event => {
-                        if (event.terminal === terminal && event.execution === execution) {
-                            disposable.dispose();
+                        resolve({
+                            exitCode: event.exitCode,
+                            output: undefined
+                        });
 
-                            if (event.exitCode !== 0) {
-                                this.outputChannel.appendLine(`[GeminiCliProvider] Command failed with exit code: ${event.exitCode}`);
+                        setTimeout(async () => {
+                            terminal.dispose();
+                            try {
+                                await fs.promises.unlink(promptFilePath);
+                            } catch (e) {
+                                // Ignore cleanup errors
                             }
+                        }, Timing.terminalDisposeDelay);
+                    }
+                });
+            });
+        } else {
+            this.outputChannel.appendLine(`[GeminiCliProvider] Shell integration not available, using fallback mode`);
+            terminal.sendText(commandLine);
 
-                            resolve({
-                                exitCode: event.exitCode,
-                                output: undefined
-                            });
-
-                            setTimeout(async () => {
-                                terminal.dispose();
-                                try {
-                                    await fs.promises.unlink(promptFilePath);
-                                } catch (e) {
-                                    // Ignore cleanup errors
-                                }
-                            }, Timing.terminalDisposeDelay);
-                        }
-                    });
-                } else if (shellIntegrationChecks > Timing.shellIntegrationMaxChecks) {
-                    clearInterval(checkShellIntegration);
-                    this.outputChannel.appendLine(`[GeminiCliProvider] Shell integration not available, using fallback mode`);
-                    terminal.sendText(commandLine);
-
-                    setTimeout(async () => {
-                        resolve({ exitCode: undefined });
-                        terminal.dispose();
-                        try {
-                            await fs.promises.unlink(promptFilePath);
-                        } catch (e) {
-                            // Ignore cleanup errors
-                        }
-                    }, Timing.shellIntegrationFallbackTimeout);
-                }
-            }, Timing.shellIntegrationCheckInterval);
-        });
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve({ exitCode: undefined });
+                    terminal.dispose();
+                    fs.promises.unlink(promptFilePath).catch(() => {});
+                }, Timing.shellReadyTimeoutMs);
+            });
+        }
     }
 
     /**

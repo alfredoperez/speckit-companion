@@ -96,16 +96,10 @@ export const DefaultPaths = {
  * Timing constants (in milliseconds)
  */
 export const Timing = {
-    /** Delay before sending command to terminal (allows venv activation) */
-    terminalVenvActivationDelay: 800,
+    /** Timeout for waiting for shell integration to become available */
+    shellReadyTimeoutMs: 5000,
     /** Delay before cleaning up temporary prompt files */
     tempFileCleanupDelay: 30000,
-    /** Interval for checking shell integration availability */
-    shellIntegrationCheckInterval: 100,
-    /** Maximum number of shell integration checks before fallback */
-    shellIntegrationMaxChecks: 20,
-    /** Fallback timeout when shell integration unavailable */
-    shellIntegrationFallbackTimeout: 5000,
     /** Delay before disposing terminal after execution */
     terminalDisposeDelay: 1000,
     /** Debounce delay for file watcher refresh */

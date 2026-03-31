@@ -1,0 +1,43 @@
+{
+  "step": "implement",
+  "task": null,
+  "substep": "commit",
+  "next": null,
+  "updated": "2026-03-31",
+  "approach": "Extract shared waitForShellReady utility using VS Code's onDidChangeTerminalShellIntegration event, replacing fixed 800ms setTimeout across all providers",
+  "last_action": "CP3 approved, committing",
+  "files_modified": [
+    "src/core/constants.ts",
+    "src/core/utils/terminalUtils.ts",
+    "src/core/utils/configManager.ts",
+    "src/ai-providers/claudeCodeProvider.ts",
+    "src/ai-providers/geminiCliProvider.ts",
+    "src/ai-providers/copilotCliProvider.ts",
+    "src/ai-providers/codexCliProvider.ts",
+    "src/ai-providers/qwenCliProvider.ts",
+    "src/features/steering/steeringManager.ts",
+    "src/extension.ts",
+    "src/core/utils/__tests__/terminalUtils.test.ts"
+  ],
+  "decisions": [
+    "Used event-based shell integration detection (onDidChangeTerminalShellIntegration) instead of polling, with timeout fallback for older VS Code versions",
+    "Kept Gemini initDelay as separate setTimeout after shell ready — it's for CLI startup, not shell readiness"
+  ],
+  "concerns": [],
+  "task_summaries": {
+    "T001": { "status": "DONE", "did": "Replaced terminalVenvActivationDelay with shellReadyTimeoutMs: 5000", "files": ["src/core/constants.ts"], "concerns": [] },
+    "T002": { "status": "DONE", "did": "Created waitForShellReady utility with event-based detection and timeout fallback", "files": ["src/core/utils/terminalUtils.ts"], "concerns": [] },
+    "T003": { "status": "DONE", "did": "Removed getTerminalDelay() and unused Timing import from configManager", "files": ["src/core/utils/configManager.ts"], "concerns": [] },
+    "T004": { "status": "DONE", "did": "Updated ClaudeCodeProvider to use waitForShellReady everywhere", "files": ["src/ai-providers/claudeCodeProvider.ts"], "concerns": [] },
+    "T005": { "status": "DONE", "did": "Updated all remaining providers to use waitForShellReady", "files": ["src/ai-providers/geminiCliProvider.ts", "src/ai-providers/copilotCliProvider.ts", "src/ai-providers/codexCliProvider.ts", "src/ai-providers/qwenCliProvider.ts"], "concerns": [] },
+    "T006": { "status": "DONE", "did": "Updated steeringManager to use waitForShellReady", "files": ["src/features/steering/steeringManager.ts"], "concerns": [] },
+    "T007": { "status": "DONE", "did": "Audited extension.ts — all disposables properly registered", "files": ["src/extension.ts"], "concerns": [] },
+    "T008": { "status": "DONE", "did": "Added 6 unit tests for waitForShellReady", "files": ["src/core/utils/__tests__/terminalUtils.test.ts"], "concerns": [] },
+    "T009": { "status": "DONE", "did": "README checked — no stale timing references", "files": [], "concerns": [] }
+  },
+  "step_summaries": {
+    "specify": { "complexity": "normal", "requirements": 5, "scenarios": 4, "key_finding": "executeHeadless already uses shellIntegration API correctly but executeInTerminal/executeSlashCommand use a fixed 800ms setTimeout" },
+    "plan": { "approach_summary": "Extract shared waitForShellReady utility using VS Code's onDidChangeTerminalShellIntegration event", "files_planned": 10, "risks": ["VS Code < 1.93 lacks event API — fallback needed", "Gemini has separate init delay"] },
+    "tasks": { "total": 9, "phase1": 7, "phase2": 2 }
+  }
+}
