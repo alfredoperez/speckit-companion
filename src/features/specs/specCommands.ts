@@ -74,7 +74,7 @@ export function registerSpecKitCommands(
     );
 
     // Register phase commands
-    registerPhaseCommands(context, outputChannel);
+    registerPhaseCommands(context, specExplorer, outputChannel);
     registerCustomCommand(context, outputChannel);
 
     // Watch configured spec directories
@@ -106,6 +106,7 @@ const DEFAULT_WORKFLOW_STEP_NAMES = ['specify', 'plan', 'tasks', 'implement'];
  */
 function registerPhaseCommands(
     context: vscode.ExtensionContext,
+    specExplorer: SpecExplorerProvider,
     outputChannel: vscode.OutputChannel
 ): void {
     const phaseCommands = [
@@ -128,6 +129,10 @@ function registerPhaseCommands(
                     vscode.window.showErrorMessage('No spec directory found. Create a spec first.');
                     return;
                 }
+
+                // Mark this spec as active (spinning indicator)
+                const specName = path.basename(targetDir);
+                specExplorer.setActiveSpec(specName);
 
                 // Handle workflow-enabled steps (default steps + any step name from workflow)
                 if (cmd.isWorkflowStep) {

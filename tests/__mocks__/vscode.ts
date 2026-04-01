@@ -7,6 +7,51 @@ export enum FileType {
     SymbolicLink = 64,
 }
 
+export enum TreeItemCollapsibleState {
+    None = 0,
+    Collapsed = 1,
+    Expanded = 2,
+}
+
+export class ThemeIcon {
+    constructor(public readonly id: string) {}
+}
+
+export class TreeItem {
+    label: string;
+    collapsibleState: TreeItemCollapsibleState;
+    iconPath?: any;
+    tooltip?: string;
+    description?: string;
+    contextValue?: string;
+    command?: any;
+    resourceUri?: any;
+
+    constructor(label: string, collapsibleState: TreeItemCollapsibleState = TreeItemCollapsibleState.None) {
+        this.label = label;
+        this.collapsibleState = collapsibleState;
+    }
+}
+
+export class EventEmitter<T> {
+    private listeners: Array<(e: T) => void> = [];
+
+    event = (listener: (e: T) => void) => {
+        this.listeners.push(listener);
+        return { dispose: () => { this.listeners = this.listeners.filter(l => l !== listener); } };
+    };
+
+    fire(data?: T): void {
+        for (const listener of this.listeners) {
+            listener(data as T);
+        }
+    }
+
+    dispose(): void {
+        this.listeners = [];
+    }
+}
+
 export class Uri {
     readonly scheme: string;
     readonly fsPath: string;

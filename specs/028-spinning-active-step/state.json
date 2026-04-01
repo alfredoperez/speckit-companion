@@ -1,0 +1,72 @@
+{
+  "step": "implement",
+  "task": null,
+  "substep": "code-review",
+  "next": null,
+  "updated": "2026-03-31",
+  "approach": "Group specs by mtime into Active/Earlier, spin spec node on step click, remove static circles",
+  "last_action": "Phase 2 complete — tests (19 new, 80 total passing) and README updated",
+  "files_modified": [
+    "src/features/specs/specExplorerProvider.ts",
+    "src/features/specs/specCommands.ts",
+    "src/features/specs/__tests__/specExplorerProvider.test.ts",
+    "tests/__mocks__/vscode.ts",
+    "README.md"
+  ],
+  "decisions": [
+    "Used 'pulse' icon for Active group and 'archive' for Earlier group",
+    "Kept DocumentStatus type and getDocumentStatus for tooltip use even though circles removed"
+  ],
+  "concerns": [],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added getSpecMaxMtime/isToday helpers, partitioned specs into Active/Earlier groups with spec-group contextValue",
+      "files": ["src/features/specs/specExplorerProvider.ts"],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Removed STATUS_INDICATORS constant and all circle description assignments from SpecItem constructor",
+      "files": ["src/features/specs/specExplorerProvider.ts"],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added activeSpecName property, setActiveSpec method, isActive param to SpecItem for sync~spin icon",
+      "files": ["src/features/specs/specExplorerProvider.ts"],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Passed specExplorer into registerPhaseCommands, call setActiveSpec with spec name before executing step",
+      "files": ["src/features/specs/specCommands.ts"],
+      "concerns": []
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added 19 unit tests covering grouping, mtime, active state, icons, and loading",
+      "files": ["src/features/specs/__tests__/specExplorerProvider.test.ts", "tests/__mocks__/vscode.ts"],
+      "concerns": []
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Updated README Sidebar at a Glance section with Active/Earlier grouping and spinning indicator docs",
+      "files": ["README.md"],
+      "concerns": []
+    }
+  },
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 7,
+      "scenarios": 5,
+      "key_finding": "specExplorerProvider already uses sync~spin ThemeIcon for loading state and STATUS_INDICATORS dict controls circle symbols in step descriptions"
+    },
+    "plan": {
+      "approach_summary": "Group specs by mtime into Active/Earlier, spin spec node on step click, remove static circles",
+      "files_planned": 2,
+      "risks": ["File mtime can be affected by git operations causing specs to shift groups unexpectedly — low risk since specs live in .claude/ which is typically gitignored"]
+    }
+  }
+}
