@@ -27,7 +27,7 @@ export const DEFAULT_WORKFLOW: WorkflowConfig = {
     displayName: 'Default',
     description: 'Standard SpecKit workflow',
     steps: [
-        { name: 'specify', label: 'Specs', command: 'speckit.specify', file: 'spec.md' },
+        { name: 'specify', label: 'Specification', command: 'speckit.specify', file: 'spec.md' },
         { name: 'plan', label: 'Plan', command: 'speckit.plan', file: 'plan.md', subFiles: ['research.md', 'data-model.md', 'quickstart.md'], subDir: 'contracts', includeRelatedDocs: true },
         { name: 'tasks', label: 'Tasks', command: 'speckit.tasks', file: 'tasks.md' },
         { name: 'implement', label: 'Implement', command: 'speckit.implement', actionOnly: true },

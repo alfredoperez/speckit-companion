@@ -52,6 +52,12 @@ Each feature flows through four phases:
 
 The sidebar organizes everything your AI assistant needs: **Specs** for feature development, **Steering** for AI guidance documents, **Agents** for custom agent definitions, **Skills** for reusable capabilities, and **Hooks** for automation triggers.
 
+Specs are grouped into two collapsible sections:
+- **Active** — Specs modified today, sorted newest-first, expanded by default
+- **Earlier** — Older specs, collapsed by default
+
+When a workflow step command is running for a spec, the spec node displays a spinning progress indicator instead of its default icon.
+
 ![Sidebar Overview](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/sidebar-overview.png)
 
 ### Custom Workflows & Commands
