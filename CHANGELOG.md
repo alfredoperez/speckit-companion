@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.2] - 2026-04-01
+
+### New Features
+
+- **Active/Earlier Grouping**: Specs in the explorer tree are now grouped into "Active" (modified today, expanded) and "Earlier" (older, collapsed), with active specs sorted newest-first (#48)
+- **Spinning Indicator**: Spec node shows a spinning icon when a workflow step command is running
+- **Missing File Indicator**: Steps with no file show "not created" in dim text for clear visibility
+
+### Improvements
+
+- **Cleaner Tree View**: Removed static circle status indicators and step-specific icons for a less cluttered appearance
+- **Label Rename**: Default workflow step "Specify"/"Specs" renamed to "Specification" for clarity
+
+### Bug Fixes
+
+- **Dimmed Tree Items**: Fixed git-ignored spec files appearing grayed out by removing `resourceUri` from tree items (#47)
+
 ## [0.9.1] - 2026-03-31
 
 ### New Features
