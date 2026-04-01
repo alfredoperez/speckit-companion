@@ -1,0 +1,37 @@
+{
+  "step": "implement",
+  "task": null,
+  "substep": "commit",
+  "next": null,
+  "updated": "2026-03-31",
+  "approach": "Remove resourceUri from spec TreeItems, store file path in custom fileUri property instead, update command handler to use fileUri with resourceUri fallback",
+  "last_action": "CP3 approved — committing and opening PR",
+  "files_modified": [
+    "src/features/specs/specExplorerProvider.ts",
+    "src/features/specs/specCommands.ts"
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Replaced resourceUri with custom fileUri property on SpecItem to prevent VS Code git-decoration dimming",
+      "files": ["src/features/specs/specExplorerProvider.ts"],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Updated openSpecSource command to read fileUri with resourceUri fallback for backwards compat",
+      "files": ["src/features/specs/specCommands.ts"],
+      "concerns": []
+    }
+  },
+  "decisions": [],
+  "concerns": [],
+  "step_summaries": {
+    "specify": {
+      "complexity": "minimal",
+      "requirements": 2,
+      "scenarios": 2,
+      "key_finding": "resourceUri on TreeItems causes VS Code to apply git-ignored dimming; steering provider already discovered and commented this out"
+    }
+  }
+}
