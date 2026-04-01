@@ -1,0 +1,45 @@
+{
+  "step": "implement",
+  "task": null,
+  "substep": "code-review",
+  "next": null,
+  "updated": "2026-04-01",
+  "approach": "Extract executeHeadless, createTempFile, and ensureInstalled into shared utility functions, refactor all 5 providers to thin wrappers",
+  "last_action": "T009 complete — unit tests for all 3 shared utilities, 12 new tests passing",
+  "step_summaries": {
+    "specify": { "complexity": "normal", "requirements": 7, "scenarios": 5, "key_finding": "All 5 providers share near-identical executeHeadless with shell integration + fallback pattern" },
+    "plan": { "approach_summary": "Extract 3 utilities, refactor 5 providers to thin wrappers", "files_planned": 10, "risks": ["Shell integration mocking complexity", "Subtle behavior differences across providers in error logging"] }
+  },
+  "files_modified": [
+    "src/core/utils/tempFileUtils.ts",
+    "src/core/utils/installUtils.ts",
+    "src/core/utils/terminalUtils.ts",
+    "src/ai-providers/claudeCodeProvider.ts",
+    "src/ai-providers/geminiCliProvider.ts",
+    "src/ai-providers/copilotCliProvider.ts",
+    "src/ai-providers/codexCliProvider.ts",
+    "src/ai-providers/qwenCliProvider.ts",
+    "src/core/utils/__tests__/tempFileUtils.test.ts",
+    "src/core/utils/__tests__/installUtils.test.ts",
+    "src/core/utils/__tests__/terminalUtils.test.ts"
+  ],
+  "concerns": [
+    { "task": "T004", "note": "Renamed private createTempFile to createPromptFile to avoid name collision with imported utility" },
+    { "task": "T006", "note": "Kept fs import in copilotCliProvider — still used by executeInTerminal temp file cleanup" },
+    { "task": "T007", "note": "Renamed private createTempFile to createPromptFile in codexCliProvider; kept fs/path imports for other methods" }
+  ],
+  "decisions": [
+    { "task": "T004", "note": "Renamed private method to createPromptFile rather than removing it, to keep executeInTerminal calls clean" }
+  ],
+  "task_summaries": {
+    "T001": { "status": "DONE", "did": "Created createTempFile utility in tempFileUtils.ts", "files": ["src/core/utils/tempFileUtils.ts"], "concerns": [] },
+    "T002": { "status": "DONE", "did": "Created ensureCliInstalled utility in installUtils.ts", "files": ["src/core/utils/installUtils.ts"], "concerns": [] },
+    "T003": { "status": "DONE", "did": "Added executeCommandInHiddenTerminal to terminalUtils.ts", "files": ["src/core/utils/terminalUtils.ts"], "concerns": [] },
+    "T004": { "status": "DONE_WITH_CONCERNS", "did": "Refactored ClaudeCodeProvider to use shared utilities", "files": ["src/ai-providers/claudeCodeProvider.ts"], "concerns": ["Renamed createTempFile to createPromptFile"] },
+    "T005": { "status": "DONE", "did": "Refactored GeminiCliProvider to use shared utilities", "files": ["src/ai-providers/geminiCliProvider.ts"], "concerns": [] },
+    "T006": { "status": "DONE_WITH_CONCERNS", "did": "Refactored CopilotCliProvider to use shared utilities", "files": ["src/ai-providers/copilotCliProvider.ts"], "concerns": ["Kept fs import for executeInTerminal cleanup"] },
+    "T007": { "status": "DONE_WITH_CONCERNS", "did": "Refactored CodexCliProvider to use shared utilities", "files": ["src/ai-providers/codexCliProvider.ts"], "concerns": ["Renamed createTempFile to createPromptFile"] },
+    "T008": { "status": "DONE", "did": "Refactored QwenCliProvider to use shared utilities", "files": ["src/ai-providers/qwenCliProvider.ts"], "concerns": [] },
+    "T009": { "status": "DONE", "did": "Added unit tests for tempFileUtils, installUtils, and executeCommandInHiddenTerminal", "files": ["src/core/utils/__tests__/tempFileUtils.test.ts", "src/core/utils/__tests__/installUtils.test.ts", "src/core/utils/__tests__/terminalUtils.test.ts"], "concerns": [] }
+  }
+}

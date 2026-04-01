@@ -1,14 +1,13 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
-import { convertPathIfWSL } from '../core/utils/pathUtils';
 import { Timing } from '../core/constants';
-import { waitForShellReady } from '../core/utils/terminalUtils';
+import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
+import { createTempFile } from '../core/utils/tempFileUtils';
+import { ensureCliInstalled } from '../core/utils/installUtils';
 import { IAIProvider, AIExecutionResult } from './aiProvider';
-import { NotificationUtils } from '../core/utils/notificationUtils';
 
 const execAsync = promisify(exec);
 
@@ -56,34 +55,15 @@ export class QwenCliProvider implements IAIProvider {
     }
 
     /**
-     * Create a temporary file with content
-     */
-    private async createTempFile(content: string, prefix: string = 'prompt'): Promise<string> {
-        const tempDir = this.context.globalStorageUri.fsPath;
-        await vscode.workspace.fs.createDirectory(this.context.globalStorageUri);
-
-        const tempFile = path.join(tempDir, `${prefix}-${Date.now()}.md`);
-        await fs.promises.writeFile(tempFile, content);
-
-        return convertPathIfWSL(tempFile);
-    }
-
-    /**
      * Check if Qwen Code CLI is installed and show helpful error if not
      */
     private async ensureInstalled(): Promise<void> {
-        const installed = await this.isInstalled();
-        if (!installed) {
-            const action = await vscode.window.showErrorMessage(
-                'Qwen Code CLI is not installed. Install it with: npm install -g @qwen-code/qwen-code@latest',
-                'Copy Install Command'
-            );
-            if (action === 'Copy Install Command') {
-                await vscode.env.clipboard.writeText('npm install -g @qwen-code/qwen-code@latest');
-                NotificationUtils.showStatusBarMessage('$(check) Install command copied to clipboard');
-            }
-            throw new Error('Qwen Code CLI is not installed');
-        }
+        await ensureCliInstalled(
+            'Qwen Code CLI',
+            'npm install -g @qwen-code/qwen-code@latest',
+            'qwen --version',
+            this.outputChannel
+        );
     }
 
     /**
@@ -96,7 +76,7 @@ export class QwenCliProvider implements IAIProvider {
             const cliPath = this.getCliPath();
             const yoloFlag = this.getYoloMode() ? ' --yolo' : '';
 
-            const tempFilePath = await this.createTempFile(prompt, 'prompt');
+            const tempFilePath = await createTempFile(this.context, prompt, 'prompt', true);
             const command = `${cliPath}${yoloFlag} -p "$(cat "${tempFilePath}")"`;
 
             const terminal = vscode.window.createTerminal({
@@ -148,59 +128,18 @@ export class QwenCliProvider implements IAIProvider {
         const cliPath = this.getCliPath();
         const yoloFlag = this.getYoloMode() ? ' --yolo' : '';
 
-        const tempFilePath = await this.createTempFile(prompt, 'background-prompt');
+        const tempFilePath = await createTempFile(this.context, prompt, 'background-prompt', true);
         const commandLine = `${cliPath}${yoloFlag} -p "$(cat "${tempFilePath}")"`;
 
-        const terminal = vscode.window.createTerminal({
-            name: 'Qwen Code Background',
+        return executeCommandInHiddenTerminal({
+            commandLine,
             cwd,
-            hideFromUser: true
+            terminalName: 'Qwen Code Background',
+            outputChannel: this.outputChannel,
+            logPrefix: 'Qwen',
+            tempFilePath,
+            logCommandOnFailure: true
         });
-
-        await waitForShellReady(terminal);
-
-        if (terminal.shellIntegration) {
-            const execution = terminal.shellIntegration.executeCommand(commandLine);
-
-            return new Promise((resolve) => {
-                const disposable = vscode.window.onDidEndTerminalShellExecution(event => {
-                    if (event.terminal === terminal && event.execution === execution) {
-                        disposable.dispose();
-
-                        if (event.exitCode !== 0) {
-                            this.outputChannel.appendLine(`[Qwen] Command failed with exit code: ${event.exitCode}`);
-                            this.outputChannel.appendLine(`[Qwen] Command was: ${commandLine}`);
-                        }
-
-                        resolve({
-                            exitCode: event.exitCode,
-                            output: undefined
-                        });
-
-                        setTimeout(async () => {
-                            terminal.dispose();
-                            try {
-                                await fs.promises.unlink(tempFilePath);
-                                this.outputChannel.appendLine(`[Qwen] Cleaned up temp file: ${tempFilePath}`);
-                            } catch (e) {
-                                this.outputChannel.appendLine(`[Qwen] Failed to cleanup temp file: ${e}`);
-                            }
-                        }, Timing.terminalDisposeDelay);
-                    }
-                });
-            });
-        } else {
-            this.outputChannel.appendLine(`[Qwen] Shell integration not available, using fallback mode`);
-            terminal.sendText(commandLine);
-
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve({ exitCode: undefined });
-                    terminal.dispose();
-                    fs.promises.unlink(tempFilePath).catch(() => {});
-                }, Timing.shellReadyTimeoutMs);
-            });
-        }
     }
 
     /**
