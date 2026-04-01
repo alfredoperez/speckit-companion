@@ -101,6 +101,25 @@
     font-weight: 700;
 }
 
+/* Viewing a completed step - green-tinted highlight instead of purple */
+.step-tab.viewing.exists {
+    background: color-mix(in srgb, var(--success) 15%, transparent);
+    border: 2px solid var(--success);
+    margin: -2px;
+}
+
+.step-tab.viewing.exists .step-status {
+    background: var(--success);
+    border-color: var(--success);
+    color: white;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 30%, transparent);
+}
+
+.step-tab.viewing.exists .step-label {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
 /* Workflow phase indicator (when not viewing) */
 .step-tab.workflow:not(.viewing) .step-status {
     box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 3px color-mix(in srgb, var(--success) 60%, transparent);
