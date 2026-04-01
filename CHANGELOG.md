@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.1] - 2026-03-31
+
+### New Features
+
+- **Workflow Commands**: Workflows can now define `commands` — extra action buttons that appear next to the primary action for a given step (e.g., an "Auto Mode" button next to Submit in the spec editor) (#45)
+- **Action Toast & Auto-Navigate**: Spec viewer now shows a toast notification after running an action and automatically navigates to the next workflow phase (#44)
+
+### Bug Fixes
+
+- **Terminal Timing**: Replaced fixed 800ms `setTimeout` with VS Code's shell integration API (`onDidChangeTerminalShellIntegration`) for detecting terminal readiness before sending commands — prevents commands from being lost on slow shell startup (#46)
+- **Extension Host Cleanup**: Audited all disposables in `activate()` to ensure clean shutdown without "closing extension host" warnings
+
+### Improvements
+
+- **Shell Integration Fallback**: Terminals on VS Code versions below 1.93 (lacking shell integration events) gracefully fall back to a 5-second timeout
+- **Shared Utility**: New `waitForShellReady` utility used consistently across all 5 AI providers and steering manager
+
 ## [0.8.0] - 2026-03-26
 
 ### New Features
