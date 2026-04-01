@@ -439,6 +439,8 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
 }
 
 class SpecItem extends vscode.TreeItem {
+    public fileUri?: vscode.Uri;
+
     constructor(
         public readonly label: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
@@ -474,11 +476,12 @@ class SpecItem extends vscode.TreeItem {
 
             this.contextValue = `spec-document-${documentType}`;
 
-            // Set resourceUri so inline actions can resolve the file path
+            // Store file URI for inline actions (avoid resourceUri to prevent
+            // VS Code from dimming git-ignored files in the tree view)
             if (filePath) {
                 const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
                 if (workspaceFolder) {
-                    this.resourceUri = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, filePath));
+                    this.fileUri = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, filePath));
                 }
             }
         } else if (contextValue === 'spec-related-doc') {

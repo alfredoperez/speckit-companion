@@ -64,8 +64,8 @@ export function registerSpecKitCommands(
 
     // Open source file from sidebar inline action
     context.subscriptions.push(
-        vscode.commands.registerCommand('speckit.openSpecSource', async (item: vscode.TreeItem) => {
-            const uri = item?.resourceUri;
+        vscode.commands.registerCommand('speckit.openSpecSource', async (item: vscode.TreeItem & { fileUri?: vscode.Uri }) => {
+            const uri = item?.fileUri ?? item?.resourceUri;
             if (uri) {
                 const doc = await vscode.workspace.openTextDocument(uri);
                 await vscode.window.showTextDocument(doc);
