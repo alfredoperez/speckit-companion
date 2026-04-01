@@ -4,11 +4,11 @@ import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
-import { convertPathIfWSL } from '../core/utils/pathUtils';
 import { Timing } from '../core/constants';
-import { waitForShellReady } from '../core/utils/terminalUtils';
+import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
+import { createTempFile } from '../core/utils/tempFileUtils';
+import { ensureCliInstalled } from '../core/utils/installUtils';
 import { IAIProvider, AIExecutionResult } from './aiProvider';
-import { NotificationUtils } from '../core/utils/notificationUtils';
 
 const execAsync = promisify(exec);
 
@@ -42,14 +42,8 @@ export class CodexCliProvider implements IAIProvider {
     /**
      * Create a temporary file with content
      */
-    private async createTempFile(content: string, prefix: string = 'prompt'): Promise<string> {
-        const tempDir = this.context.globalStorageUri.fsPath;
-        await vscode.workspace.fs.createDirectory(this.context.globalStorageUri);
-
-        const tempFile = path.join(tempDir, `${prefix}-${Date.now()}.md`);
-        await fs.promises.writeFile(tempFile, content);
-
-        return convertPathIfWSL(tempFile);
+    private async createPromptFile(content: string, prefix: string = 'prompt'): Promise<string> {
+        return createTempFile(this.context, content, prefix, true);
     }
 
     /**
@@ -89,18 +83,12 @@ export class CodexCliProvider implements IAIProvider {
      * Check if Codex CLI is installed and show helpful error if not
      */
     private async ensureInstalled(): Promise<void> {
-        const installed = await this.isInstalled();
-        if (!installed) {
-            const action = await vscode.window.showErrorMessage(
-                'Codex CLI is not installed. Install it with: npm install -g @openai/codex',
-                'Copy Install Command'
-            );
-            if (action === 'Copy Install Command') {
-                await vscode.env.clipboard.writeText('npm install -g @openai/codex');
-                NotificationUtils.showStatusBarMessage('$(check) Install command copied to clipboard');
-            }
-            throw new Error('Codex CLI is not installed');
-        }
+        await ensureCliInstalled(
+            'Codex CLI',
+            'npm install -g @openai/codex',
+            'codex --version',
+            this.outputChannel
+        );
     }
 
     /**
@@ -127,7 +115,7 @@ export class CodexCliProvider implements IAIProvider {
                 command = `sed "s/\\$ARGUMENTS/${escapedArgs}/" "${promptFile}" | codex exec - `;
             } else {
                 // Fallback: write temp file for custom prompts
-                tempFilePath = await this.createTempFile(prompt, 'prompt');
+                tempFilePath = await this.createPromptFile(prompt, 'prompt');
                 command = `codex exec - < "${tempFilePath}" `;
             }
 
@@ -188,69 +176,22 @@ export class CodexCliProvider implements IAIProvider {
         const promptFile = parsed ? this.getPromptFilePath(parsed.skillName) : null;
 
         if (parsed && promptFile) {
-            // Use sed + pipe for known SpecKit skills
             const escapedArgs = this.escapeForSed(parsed.args);
             commandLine = `sed "s/\\$ARGUMENTS/${escapedArgs}/" "${promptFile}" | codex exec - `;
         } else {
-            // Fallback: write temp file for custom prompts
-            tempFilePath = await this.createTempFile(prompt, 'background-prompt');
+            tempFilePath = await this.createPromptFile(prompt, 'background-prompt');
             commandLine = `codex exec - < "${tempFilePath}" `;
         }
 
-        const terminal = vscode.window.createTerminal({
-            name: 'Codex CLI Background',
+        return executeCommandInHiddenTerminal({
+            commandLine,
             cwd,
-            hideFromUser: true
+            terminalName: 'Codex CLI Background',
+            outputChannel: this.outputChannel,
+            logPrefix: 'Codex',
+            tempFilePath: tempFilePath ?? undefined,
+            logCommandOnFailure: true
         });
-
-        await waitForShellReady(terminal);
-
-        if (terminal.shellIntegration) {
-            const execution = terminal.shellIntegration.executeCommand(commandLine);
-
-            return new Promise((resolve) => {
-                const disposable = vscode.window.onDidEndTerminalShellExecution(event => {
-                    if (event.terminal === terminal && event.execution === execution) {
-                        disposable.dispose();
-
-                        if (event.exitCode !== 0) {
-                            this.outputChannel.appendLine(`[Codex] Command failed with exit code: ${event.exitCode}`);
-                            this.outputChannel.appendLine(`[Codex] Command was: ${commandLine}`);
-                        }
-
-                        resolve({
-                            exitCode: event.exitCode,
-                            output: undefined
-                        });
-
-                        setTimeout(async () => {
-                            terminal.dispose();
-                            if (tempFilePath) {
-                                try {
-                                    await fs.promises.unlink(tempFilePath);
-                                    this.outputChannel.appendLine(`[Codex] Cleaned up temp file: ${tempFilePath}`);
-                                } catch (e) {
-                                    this.outputChannel.appendLine(`[Codex] Failed to cleanup temp file: ${e}`);
-                                }
-                            }
-                        }, Timing.terminalDisposeDelay);
-                    }
-                });
-            });
-        } else {
-            this.outputChannel.appendLine(`[Codex] Shell integration not available, using fallback mode`);
-            terminal.sendText(commandLine);
-
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve({ exitCode: undefined });
-                    terminal.dispose();
-                    if (tempFilePath) {
-                        fs.promises.unlink(tempFilePath).catch(() => {});
-                    }
-                }, Timing.shellReadyTimeoutMs);
-            });
-        }
     }
 
     /**

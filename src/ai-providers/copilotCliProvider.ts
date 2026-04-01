@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
 import { CLIDefaults, Timing } from '../core/constants';
-import { waitForShellReady } from '../core/utils/terminalUtils';
+import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
+import { createTempFile } from '../core/utils/tempFileUtils';
+import { ensureCliInstalled } from '../core/utils/installUtils';
 import { IAIProvider, AIExecutionResult } from './aiProvider';
-import { NotificationUtils } from '../core/utils/notificationUtils';
 
 const execAsync = promisify(exec);
 
@@ -62,34 +62,15 @@ export class CopilotCliProvider implements IAIProvider {
     }
 
     /**
-     * Create a temporary file with content
-     */
-    private async createTempFile(content: string, prefix: string = 'prompt'): Promise<string> {
-        const tempDir = this.context.globalStorageUri.fsPath;
-        await vscode.workspace.fs.createDirectory(this.context.globalStorageUri);
-
-        const tempFile = path.join(tempDir, `${prefix}-${Date.now()}.md`);
-        await fs.promises.writeFile(tempFile, content);
-
-        return tempFile;
-    }
-
-    /**
      * Check if Copilot CLI is installed and show helpful error if not
      */
     private async ensureInstalled(): Promise<void> {
-        const installed = await this.isInstalled();
-        if (!installed) {
-            const action = await vscode.window.showErrorMessage(
-                'GitHub Copilot CLI is not installed. Install it with: gh extension install github/gh-copilot',
-                'Copy Install Command'
-            );
-            if (action === 'Copy Install Command') {
-                await vscode.env.clipboard.writeText('gh extension install github/gh-copilot');
-                NotificationUtils.showStatusBarMessage('$(check) Install command copied to clipboard');
-            }
-            throw new Error('GitHub Copilot CLI is not installed');
-        }
+        await ensureCliInstalled(
+            'GitHub Copilot CLI',
+            'gh extension install github/gh-copilot',
+            `${CLIDefaults.copilot} --version`,
+            this.outputChannel
+        );
     }
 
     /**
@@ -102,7 +83,7 @@ export class CopilotCliProvider implements IAIProvider {
             const permissionFlag = this.getPermissionFlag();
             // Strip leading slash from prompt — Copilot doesn't use slash commands
             const cleanPrompt = prompt.startsWith('/') ? prompt.substring(1) : prompt;
-            const promptFilePath = await this.createTempFile(cleanPrompt, 'prompt');
+            const promptFilePath = await createTempFile(this.context, cleanPrompt, 'prompt', false);
             const command = `${cliPath} ${permissionFlag}-p "$(cat "${promptFilePath}")"`;
 
             const terminal = vscode.window.createTerminal({
@@ -154,57 +135,18 @@ export class CopilotCliProvider implements IAIProvider {
         const cliPath = this.getCliPath();
 
         const permissionFlag = this.getPermissionFlag();
-        const promptFilePath = await this.createTempFile(cleanPrompt, 'background-prompt');
+        const promptFilePath = await createTempFile(this.context, cleanPrompt, 'background-prompt', false);
         const commandLine = `${cliPath} ${permissionFlag}-p "$(cat "${promptFilePath}")"`;
 
-        const terminal = vscode.window.createTerminal({
-            name: 'Copilot CLI Background',
+        return executeCommandInHiddenTerminal({
+            commandLine,
             cwd,
-            hideFromUser: true
+            terminalName: 'Copilot CLI Background',
+            outputChannel: this.outputChannel,
+            logPrefix: 'CopilotCliProvider',
+            tempFilePath: promptFilePath,
+            logCommandOnFailure: false
         });
-
-        await waitForShellReady(terminal);
-
-        if (terminal.shellIntegration) {
-            const execution = terminal.shellIntegration.executeCommand(commandLine);
-
-            return new Promise((resolve) => {
-                const disposable = vscode.window.onDidEndTerminalShellExecution(event => {
-                    if (event.terminal === terminal && event.execution === execution) {
-                        disposable.dispose();
-
-                        if (event.exitCode !== 0) {
-                            this.outputChannel.appendLine(`[CopilotCliProvider] Command failed with exit code: ${event.exitCode}`);
-                        }
-
-                        resolve({
-                            exitCode: event.exitCode,
-                            output: undefined
-                        });
-
-                        setTimeout(async () => {
-                            terminal.dispose();
-                            try {
-                                await fs.promises.unlink(promptFilePath);
-                            } catch (e) {
-                                // Ignore cleanup errors
-                            }
-                        }, Timing.terminalDisposeDelay);
-                    }
-                });
-            });
-        } else {
-            this.outputChannel.appendLine(`[CopilotCliProvider] Shell integration not available, using fallback mode`);
-            terminal.sendText(commandLine);
-
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve({ exitCode: undefined });
-                    terminal.dispose();
-                    fs.promises.unlink(promptFilePath).catch(() => {});
-                }, Timing.shellReadyTimeoutMs);
-            });
-        }
     }
 
     /**

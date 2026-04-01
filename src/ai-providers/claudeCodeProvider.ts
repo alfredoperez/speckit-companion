@@ -1,12 +1,11 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
-import { convertPathIfWSL } from '../core/utils/pathUtils';
 import { Timing } from '../core/constants';
-import { waitForShellReady } from '../core/utils/terminalUtils';
+import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
+import { createTempFile } from '../core/utils/tempFileUtils';
 import { getPermissionManager } from '../extension';
 import { IAIProvider, AIExecutionResult } from './aiProvider';
 
@@ -61,14 +60,8 @@ export class ClaudeCodeProvider implements IAIProvider {
     /**
      * Create a temporary file with content
      */
-    private async createTempFile(content: string, prefix: string = 'prompt'): Promise<string> {
-        const tempDir = this.context.globalStorageUri.fsPath;
-        await vscode.workspace.fs.createDirectory(this.context.globalStorageUri);
-
-        const tempFile = path.join(tempDir, `${prefix}-${Date.now()}.md`);
-        await fs.promises.writeFile(tempFile, content);
-
-        return convertPathIfWSL(tempFile);
+    private async createPromptFile(content: string, prefix: string = 'prompt'): Promise<string> {
+        return createTempFile(this.context, content, prefix, true);
     }
 
     /**
@@ -95,7 +88,7 @@ export class ClaudeCodeProvider implements IAIProvider {
         try {
             await this.ensurePermissions();
 
-            const promptFilePath = await this.createTempFile(prompt, 'prompt');
+            const promptFilePath = await this.createPromptFile(prompt, 'prompt');
             const permissionFlag = this.getPermissionFlag();
             const command = `claude ${permissionFlag}"$(cat "${promptFilePath}")"`;
 
@@ -145,60 +138,19 @@ export class ClaudeCodeProvider implements IAIProvider {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         const cwd = workspaceFolder?.uri.fsPath;
 
-        const promptFilePath = await this.createTempFile(prompt, 'background-prompt');
+        const promptFilePath = await this.createPromptFile(prompt, 'background-prompt');
         const permissionFlag = this.getPermissionFlag();
         const commandLine = `claude ${permissionFlag}"$(cat "${promptFilePath}")"`;
 
-        const terminal = vscode.window.createTerminal({
-            name: 'Claude Code Background',
+        return executeCommandInHiddenTerminal({
+            commandLine,
             cwd,
-            hideFromUser: true
+            terminalName: 'Claude Code Background',
+            outputChannel: this.outputChannel,
+            logPrefix: 'Claude',
+            tempFilePath: promptFilePath,
+            logCommandOnFailure: true
         });
-
-        await waitForShellReady(terminal);
-
-        if (terminal.shellIntegration) {
-            const execution = terminal.shellIntegration.executeCommand(commandLine);
-
-            return new Promise((resolve) => {
-                const disposable = vscode.window.onDidEndTerminalShellExecution(event => {
-                    if (event.terminal === terminal && event.execution === execution) {
-                        disposable.dispose();
-
-                        if (event.exitCode !== 0) {
-                            this.outputChannel.appendLine(`[Claude] Command failed with exit code: ${event.exitCode}`);
-                            this.outputChannel.appendLine(`[Claude] Command was: ${commandLine}`);
-                        }
-
-                        resolve({
-                            exitCode: event.exitCode,
-                            output: undefined
-                        });
-
-                        setTimeout(async () => {
-                            terminal.dispose();
-                            try {
-                                await fs.promises.unlink(promptFilePath);
-                                this.outputChannel.appendLine(`[Claude] Cleaned up temp file: ${promptFilePath}`);
-                            } catch (e) {
-                                this.outputChannel.appendLine(`[Claude] Failed to cleanup temp file: ${e}`);
-                            }
-                        }, Timing.terminalDisposeDelay);
-                    }
-                });
-            });
-        } else {
-            this.outputChannel.appendLine(`[Claude] Shell integration not available, using fallback mode`);
-            terminal.sendText(commandLine);
-
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve({ exitCode: undefined });
-                    terminal.dispose();
-                    fs.promises.unlink(promptFilePath).catch(() => {});
-                }, Timing.shellReadyTimeoutMs);
-            });
-        }
     }
 
     /**
