@@ -1,0 +1,28 @@
+{
+  "step": "implement",
+  "task": null,
+  "substep": "commit",
+  "next": null,
+  "updated": "2026-04-01",
+  "approach": "CSS-only fix using compound selector .step-tab.viewing.exists to override purple highlight with green for completed steps",
+  "last_action": "CP3 approved — committing",
+  "files_modified": ["webview/styles/spec-viewer/_navigation.css"],
+  "concerns": [],
+  "decisions": [],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added .step-tab.viewing.exists compound CSS rules with green border, background, and status glow",
+      "files": ["webview/styles/spec-viewer/_navigation.css"],
+      "concerns": []
+    }
+  },
+  "step_summaries": {
+    "specify": {
+      "complexity": "minimal",
+      "requirements": 3,
+      "scenarios": 3,
+      "key_finding": "Existing class logic already applies both 'exists' and 'viewing' simultaneously — fix is CSS-only using compound selector"
+    }
+  }
+}
