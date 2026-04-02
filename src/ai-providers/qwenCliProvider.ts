@@ -7,7 +7,7 @@ import { Timing } from '../core/constants';
 import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { ensureCliInstalled } from '../core/utils/installUtils';
-import { IAIProvider, AIExecutionResult } from './aiProvider';
+import { IAIProvider, AIExecutionResult, readPermissionMode } from './aiProvider';
 
 const execAsync = promisify(exec);
 
@@ -46,12 +46,8 @@ export class QwenCliProvider implements IAIProvider {
         return config.get<string>('qwenPath', 'qwen');
     }
 
-    /**
-     * Get whether YOLO mode (--yolo) is enabled
-     */
-    private getYoloMode(): boolean {
-        const config = vscode.workspace.getConfiguration('speckit');
-        return config.get<boolean>('qwenYoloMode', false);
+    getPermissionFlag(): string {
+        return readPermissionMode() === 'auto-approve' ? '--yolo ' : '';
     }
 
     /**
@@ -74,10 +70,9 @@ export class QwenCliProvider implements IAIProvider {
         try {
             await this.ensureInstalled();
             const cliPath = this.getCliPath();
-            const yoloFlag = this.getYoloMode() ? ' --yolo' : '';
-
+            const permissionFlag = this.getPermissionFlag();
             const tempFilePath = await createTempFile(this.context, prompt, 'prompt', true);
-            const command = `${cliPath}${yoloFlag} -p "$(cat "${tempFilePath}")"`;
+            const command = `${cliPath} ${permissionFlag}-p "$(cat "${tempFilePath}")"`;
 
             const terminal = vscode.window.createTerminal({
                 name: title,
@@ -126,10 +121,9 @@ export class QwenCliProvider implements IAIProvider {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         const cwd = workspaceFolder?.uri.fsPath;
         const cliPath = this.getCliPath();
-        const yoloFlag = this.getYoloMode() ? ' --yolo' : '';
-
+        const permissionFlag = this.getPermissionFlag();
         const tempFilePath = await createTempFile(this.context, prompt, 'background-prompt', true);
-        const commandLine = `${cliPath}${yoloFlag} -p "$(cat "${tempFilePath}")"`;
+        const commandLine = `${cliPath} ${permissionFlag}-p "$(cat "${tempFilePath}")"`;
 
         return executeCommandInHiddenTerminal({
             commandLine,

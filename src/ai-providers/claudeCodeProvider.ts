@@ -6,8 +6,7 @@ import { ConfigManager } from '../core/utils/configManager';
 import { Timing } from '../core/constants';
 import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
-import { getPermissionManager } from '../extension';
-import { IAIProvider, AIExecutionResult } from './aiProvider';
+import { IAIProvider, AIExecutionResult, readPermissionMode } from './aiProvider';
 
 const execAsync = promisify(exec);
 
@@ -38,23 +37,8 @@ export class ClaudeCodeProvider implements IAIProvider {
         }
     }
 
-    /**
-     * Get permission flag based on user setting
-     * Returns the --permission-mode flag or empty string for default mode
-     */
-    private getPermissionFlag(): string {
-        const config = vscode.workspace.getConfiguration('speckit');
-        const mode = config.get<string>('claudePermissionMode', 'bypassPermissions');
-        return mode === 'bypassPermissions' ? '--permission-mode bypassPermissions ' : '';
-    }
-
-    /**
-     * Static version of getPermissionFlag for use in static methods
-     */
-    private static getPermissionFlagStatic(): string {
-        const config = vscode.workspace.getConfiguration('speckit');
-        const mode = config.get<string>('claudePermissionMode', 'bypassPermissions');
-        return mode === 'bypassPermissions' ? '--permission-mode bypassPermissions ' : '';
+    getPermissionFlag(): string {
+        return readPermissionMode() === 'auto-approve' ? '--permission-mode bypassPermissions ' : '';
     }
 
     /**
@@ -65,28 +49,10 @@ export class ClaudeCodeProvider implements IAIProvider {
     }
 
     /**
-     * Check permissions before executing
-     */
-    private async ensurePermissions(): Promise<void> {
-        const permissionManager = getPermissionManager();
-        if (permissionManager) {
-            const hasPermission = await permissionManager.checkPermission();
-            if (!hasPermission) {
-                this.outputChannel.appendLine('[ClaudeCodeProvider] No permission, showing setup');
-                const granted = await permissionManager.showPermissionSetup();
-                if (!granted) {
-                    throw new Error('Claude Code permissions not granted');
-                }
-            }
-        }
-    }
-
-    /**
      * Execute a prompt in a visible terminal (split view)
      */
     async executeInTerminal(prompt: string, title: string = 'SpecKit - Claude Code'): Promise<vscode.Terminal> {
         try {
-            await this.ensurePermissions();
 
             const promptFilePath = await this.createPromptFile(prompt, 'prompt');
             const permissionFlag = this.getPermissionFlag();
@@ -128,8 +94,6 @@ export class ClaudeCodeProvider implements IAIProvider {
      * Execute a prompt in headless/background mode
      */
     async executeHeadless(prompt: string): Promise<AIExecutionResult> {
-        await this.ensurePermissions();
-
         this.outputChannel.appendLine(`[ClaudeCodeProvider] Invoking Claude Code in headless mode`);
         this.outputChannel.appendLine(`========================================`);
         this.outputChannel.appendLine(prompt);
@@ -161,7 +125,6 @@ export class ClaudeCodeProvider implements IAIProvider {
      */
     async executeSlashCommand(command: string, title: string = 'SpecKit - Claude Code', autoExecute: boolean = true): Promise<vscode.Terminal> {
         try {
-            await this.ensurePermissions();
 
             // Ensure command starts with /
             const slashCommand = command.startsWith('/') ? command : `/${command}`;
@@ -224,7 +187,7 @@ export class ClaudeCodeProvider implements IAIProvider {
 
         terminal.show();
         await waitForShellReady(terminal);
-        const permissionFlag = ClaudeCodeProvider.getPermissionFlagStatic();
+        const permissionFlag = readPermissionMode() === 'auto-approve' ? '--permission-mode bypassPermissions ' : '';
         terminal.sendText(
             `claude ${permissionFlag}`.trim(),
             true

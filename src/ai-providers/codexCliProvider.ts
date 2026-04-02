@@ -27,6 +27,10 @@ export class CodexCliProvider implements IAIProvider {
         this.configManager.loadSettings();
     }
 
+    getPermissionFlag(): string {
+        return '';
+    }
+
     /**
      * Check if Codex CLI is installed
      */

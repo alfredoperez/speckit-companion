@@ -7,7 +7,7 @@ import { CLIDefaults, Timing } from '../core/constants';
 import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { ensureCliInstalled } from '../core/utils/installUtils';
-import { IAIProvider, AIExecutionResult } from './aiProvider';
+import { IAIProvider, AIExecutionResult, readPermissionMode } from './aiProvider';
 
 const execAsync = promisify(exec);
 
@@ -51,14 +51,8 @@ export class CopilotCliProvider implements IAIProvider {
         return config.get<string>('copilotPath', CLIDefaults.copilot);
     }
 
-    /**
-     * Get permission flag based on user setting
-     * Returns --yolo flag or empty string for default mode
-     */
-    private getPermissionFlag(): string {
-        const config = vscode.workspace.getConfiguration('speckit');
-        const mode = config.get<string>('copilotPermissionMode', 'yolo');
-        return mode === 'yolo' ? '--yolo ' : '';
+    getPermissionFlag(): string {
+        return readPermissionMode() === 'auto-approve' ? '--yolo ' : '';
     }
 
     /**
