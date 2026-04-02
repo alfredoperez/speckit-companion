@@ -18,9 +18,11 @@ export type {
     ValidationResult,
     CheckpointResult,
     CheckpointContext,
+    SpecStatus,
+    StepHistoryEntry,
 } from './types';
 
-export { WORKFLOW_NAME_PATTERN, FEATURE_CONTEXT_FILE } from './types';
+export { WORKFLOW_NAME_PATTERN, FEATURE_CONTEXT_FILE, LEGACY_CONTEXT_FILE } from './types';
 
 // Workflow Manager
 export {

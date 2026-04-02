@@ -191,6 +191,18 @@
         "icon": "$(trash)"
       },
       {
+        "command": "speckit.markCompleted",
+        "title": "Mark as Completed",
+        "category": "SpecKit",
+        "icon": "$(check)"
+      },
+      {
+        "command": "speckit.archive",
+        "title": "Archive Spec",
+        "category": "SpecKit",
+        "icon": "$(archive)"
+      },
+      {
         "command": "speckit.steering.create",
         "title": "Create Custom Steering",
         "category": "SpecKit",
@@ -384,6 +396,16 @@
         },
         {
           "command": "speckit.delete",
+          "when": "view == speckit.views.explorer && viewItem == spec",
+          "group": "7_modification"
+        },
+        {
+          "command": "speckit.markCompleted",
+          "when": "view == speckit.views.explorer && viewItem == spec",
+          "group": "7_modification"
+        },
+        {
+          "command": "speckit.archive",
           "when": "view == speckit.views.explorer && viewItem == spec",
           "group": "7_modification"
         },

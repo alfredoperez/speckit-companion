@@ -16,6 +16,7 @@ import {
     FeatureWorkflowContext,
     WORKFLOW_NAME_PATTERN,
     FEATURE_CONTEXT_FILE,
+    LEGACY_CONTEXT_FILE,
 } from './types';
 import { ConfigKeys } from '../../core/constants';
 
@@ -193,7 +194,8 @@ export function getWorkflow(name: string): WorkflowConfig | undefined {
 }
 
 /**
- * Get the selected workflow for a feature from .speckit.json
+ * Get the selected workflow for a feature from .spec-context.json.
+ * Falls back to legacy .speckit.json for migration.
  * Checks both featureDir and optional changeRoot for the context file.
  * @param featureDir Path to feature directory
  * @param changeRoot Optional change root directory to also check
@@ -209,21 +211,26 @@ export async function getFeatureWorkflow(
         dirsToCheck.push(changeRoot);
     }
 
+    // Try .spec-context.json first, then legacy .speckit.json
+    const filesToCheck = [FEATURE_CONTEXT_FILE, LEGACY_CONTEXT_FILE];
+
     for (const dir of dirsToCheck) {
-        const contextPath = path.join(dir, FEATURE_CONTEXT_FILE);
-        try {
-            const content = await fs.promises.readFile(contextPath, 'utf-8');
-            const context = JSON.parse(content) as FeatureWorkflowContext;
+        for (const file of filesToCheck) {
+            const contextPath = path.join(dir, file);
+            try {
+                const content = await fs.promises.readFile(contextPath, 'utf-8');
+                const context = JSON.parse(content) as FeatureWorkflowContext;
 
-            // Validate the workflow still exists
-            const workflow = getWorkflow(context.workflow);
-            if (!workflow) {
-                continue;
+                // Validate the workflow still exists
+                const workflow = getWorkflow(context.workflow);
+                if (!workflow) {
+                    continue;
+                }
+
+                return context;
+            } catch {
+                // File doesn't exist or is invalid, try next
             }
-
-            return context;
-        } catch {
-            // File doesn't exist or is invalid, try next
         }
     }
 
@@ -231,7 +238,7 @@ export async function getFeatureWorkflow(
 }
 
 /**
- * Save workflow selection for a feature to .speckit.json
+ * Save workflow selection for a feature to .spec-context.json
  * @param featureDir Path to feature directory
  * @param workflowName Name of selected workflow
  */
@@ -240,9 +247,11 @@ export async function saveFeatureWorkflow(
     workflowName: string
 ): Promise<void> {
     const contextPath = path.join(featureDir, FEATURE_CONTEXT_FILE);
+    const legacyPath = path.join(featureDir, LEGACY_CONTEXT_FILE);
 
-    // Read existing context or create new
+    // Read existing context or create new (try new file, then legacy)
     let context: FeatureWorkflowContext;
+    let hadLegacy = false;
     try {
         const content = await fs.promises.readFile(contextPath, 'utf-8');
         const existing = JSON.parse(content);
@@ -252,13 +261,34 @@ export async function saveFeatureWorkflow(
             selectedAt: new Date().toISOString(),
         };
     } catch {
-        context = {
-            workflow: workflowName,
-            selectedAt: new Date().toISOString(),
-        };
+        // Try legacy .speckit.json
+        try {
+            const content = await fs.promises.readFile(legacyPath, 'utf-8');
+            const existing = JSON.parse(content);
+            context = {
+                ...existing,
+                workflow: workflowName,
+                selectedAt: new Date().toISOString(),
+            };
+            hadLegacy = true;
+        } catch {
+            context = {
+                workflow: workflowName,
+                selectedAt: new Date().toISOString(),
+            };
+        }
     }
 
     await fs.promises.writeFile(contextPath, JSON.stringify(context, null, 2), 'utf-8');
+
+    // Clean up legacy file after successful migration
+    if (hadLegacy) {
+        try {
+            await fs.promises.unlink(legacyPath);
+        } catch {
+            // Ignore cleanup errors
+        }
+    }
 }
 
 /**

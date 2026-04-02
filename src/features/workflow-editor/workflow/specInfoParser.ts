@@ -9,30 +9,36 @@ import {
     getStepFile,
     DEFAULT_WORKFLOW,
     type WorkflowStepConfig,
+    FEATURE_CONTEXT_FILE,
+    LEGACY_CONTEXT_FILE,
 } from '../../workflows';
 
 /**
- * Resolve workflow steps for a spec directory
+ * Resolve workflow steps for a spec directory.
+ * Checks .spec-context.json first, then legacy .speckit.json.
  */
 function resolveStepsSync(dirPath: string): WorkflowStepConfig[] {
-    // Try to read .speckit.json synchronously
-    try {
-        const contextPath = path.join(dirPath, '.speckit.json');
-        if (fs.existsSync(contextPath)) {
-            const content = fs.readFileSync(contextPath, 'utf-8');
-            const ctx = JSON.parse(content);
-            if (ctx.workflow) {
-                const wf = getWorkflow(ctx.workflow);
-                if (wf) {
-                    const normalized = normalizeWorkflowConfig(wf);
-                    if (normalized.steps && normalized.steps.length > 0) {
-                        return normalized.steps;
+    const filesToCheck = [FEATURE_CONTEXT_FILE, LEGACY_CONTEXT_FILE];
+
+    for (const file of filesToCheck) {
+        try {
+            const contextPath = path.join(dirPath, file);
+            if (fs.existsSync(contextPath)) {
+                const content = fs.readFileSync(contextPath, 'utf-8');
+                const ctx = JSON.parse(content);
+                if (ctx.workflow) {
+                    const wf = getWorkflow(ctx.workflow);
+                    if (wf) {
+                        const normalized = normalizeWorkflowConfig(wf);
+                        if (normalized.steps && normalized.steps.length > 0) {
+                            return normalized.steps;
+                        }
                     }
                 }
             }
+        } catch {
+            // fall through
         }
-    } catch {
-        // fall through
     }
     return DEFAULT_WORKFLOW.steps!;
 }

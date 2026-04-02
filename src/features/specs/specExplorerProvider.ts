@@ -9,9 +9,12 @@ import {
     getStepFile,
     DEFAULT_WORKFLOW,
     WorkflowStepConfig,
+    FeatureWorkflowContext,
+    SpecStatus,
 } from '../workflows';
 import { resolveSpecDirectories, hasDuplicateNames, deriveChangeRoot, type SpecDirectoryInfo } from '../../core/specDirectoryResolver';
 import { ConfigKeys } from '../../core/constants';
+import { readSpecContextSync } from './specContextManager';
 
 export interface SpecInfo {
     name: string;
@@ -60,34 +63,11 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
     }
 
     /**
-     * Get the most recent mtime of any file in a spec directory
+     * Read spec context to determine status for grouping
      */
-    private getSpecMaxMtime(specFullPath: string): Date {
-        let maxMtime = new Date(0);
-        try {
-            const entries = fs.readdirSync(specFullPath, { withFileTypes: true });
-            for (const entry of entries) {
-                if (entry.isFile()) {
-                    const stat = fs.statSync(path.join(specFullPath, entry.name));
-                    if (stat.mtime > maxMtime) {
-                        maxMtime = stat.mtime;
-                    }
-                }
-            }
-        } catch {
-            // Directory read error
-        }
-        return maxMtime;
-    }
-
-    /**
-     * Check if a date is today
-     */
-    private isToday(date: Date): boolean {
-        const now = new Date();
-        return date.getFullYear() === now.getFullYear()
-            && date.getMonth() === now.getMonth()
-            && date.getDate() === now.getDate();
+    private getSpecStatus(specFullPath: string): SpecStatus {
+        const context = readSpecContextSync(specFullPath);
+        return context?.status || 'active';
     }
 
     async getChildren(element?: SpecItem): Promise<SpecItem[]> {
@@ -114,22 +94,22 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             const workspaceFolder = vscode.workspace.workspaceFolders![0];
             const basePath = workspaceFolder.uri.fsPath;
 
-            // Partition specs into active (modified today) and earlier
-            const activeSpecs: (SpecInfo & { mtime: Date })[] = [];
-            const earlierSpecs: SpecInfo[] = [];
+            // Partition specs by status from .spec-context.json
+            const activeSpecs: SpecInfo[] = [];
+            const completedSpecs: SpecInfo[] = [];
+            const archivedSpecs: SpecInfo[] = [];
 
             for (const spec of specs) {
                 const specFullPath = path.join(basePath, spec.path);
-                const mtime = this.getSpecMaxMtime(specFullPath);
-                if (this.isToday(mtime)) {
-                    activeSpecs.push({ ...spec, mtime });
+                const status = this.getSpecStatus(specFullPath);
+                if (status === 'completed') {
+                    completedSpecs.push(spec);
+                } else if (status === 'archived') {
+                    archivedSpecs.push(spec);
                 } else {
-                    earlierSpecs.push(spec);
+                    activeSpecs.push(spec);
                 }
             }
-
-            // Sort active specs newest-first
-            activeSpecs.sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
 
             const items: SpecItem[] = [];
 
@@ -144,15 +124,26 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 items.push(activeGroup);
             }
 
-            if (earlierSpecs.length > 0) {
-                const earlierGroup = new SpecItem(
-                    'Earlier',
+            if (completedSpecs.length > 0) {
+                const completedGroup = new SpecItem(
+                    'Completed',
                     vscode.TreeItemCollapsibleState.Collapsed,
                     'spec-group',
                     this.context
                 );
-                earlierGroup.groupSpecs = earlierSpecs;
-                items.push(earlierGroup);
+                completedGroup.groupSpecs = completedSpecs;
+                items.push(completedGroup);
+            }
+
+            if (archivedSpecs.length > 0) {
+                const archivedGroup = new SpecItem(
+                    'Archived',
+                    vscode.TreeItemCollapsibleState.Collapsed,
+                    'spec-group',
+                    this.context
+                );
+                archivedGroup.groupSpecs = archivedSpecs;
+                items.push(archivedGroup);
             }
 
             return items;
@@ -162,8 +153,11 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             const allSpecs = await this.getSpecs();
             const duplicateNames = hasDuplicateNames(allSpecs);
 
+            const basePath = vscode.workspace.workspaceFolders![0].uri.fsPath;
             return specs.map(spec => {
                 const isActive = this.activeSpecName === spec.name;
+                const specFullPath = path.join(basePath, spec.path);
+                const specContext = readSpecContextSync(specFullPath);
                 const item = new SpecItem(
                     spec.name,
                     vscode.TreeItemCollapsibleState.Expanded,
@@ -177,7 +171,8 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                     undefined,
                     undefined,
                     undefined,
-                    isActive
+                    isActive,
+                    specContext
                 );
                 if (duplicateNames.has(spec.name)) {
                     const parentDir = spec.path.substring(0, spec.path.lastIndexOf('/'));
@@ -417,6 +412,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
 
         const basePath = workspaceFolder.uri.fsPath;
         const specFullPath = path.join(basePath, specPath);
+        const specContext = readSpecContextSync(specFullPath);
 
         // Compute change root for two-level layouts
         const changeRoot = deriveChangeRoot(specFullPath, basePath);
@@ -504,7 +500,10 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 relativeFilePath,
                 specPath,
                 status,
-                childDocs.length > 0 ? childDocs : undefined
+                childDocs.length > 0 ? childDocs : undefined,
+                undefined,
+                undefined,
+                specContext
             ));
         }
 
@@ -529,7 +528,8 @@ class SpecItem extends vscode.TreeItem {
         private readonly status?: DocumentStatus,
         public readonly relatedDocs?: string[],
         private readonly iconName?: string,
-        private readonly isActive?: boolean
+        private readonly isActive?: boolean,
+        private readonly specContext?: FeatureWorkflowContext
     ) {
         super(label, collapsibleState);
 
@@ -537,12 +537,28 @@ class SpecItem extends vscode.TreeItem {
             this.iconPath = new vscode.ThemeIcon('sync~spin');
             this.tooltip = 'Loading specs...';
         } else if (contextValue === 'spec-group') {
-            this.iconPath = new vscode.ThemeIcon(label === 'Active' ? 'pulse' : 'archive');
-            this.tooltip = label === 'Active' ? 'Specs modified today' : 'Older specs';
+            const groupIcons: Record<string, string> = {
+                'Active': 'pulse',
+                'Completed': 'check',
+                'Archived': 'archive',
+            };
+            const groupTooltips: Record<string, string> = {
+                'Active': 'Specs in progress',
+                'Completed': 'Completed specs',
+                'Archived': 'Archived specs',
+            };
+            this.iconPath = new vscode.ThemeIcon(groupIcons[label] || 'pulse');
+            this.tooltip = groupTooltips[label] || label;
         } else if (contextValue === 'spec') {
-            this.iconPath = isActive
-                ? new vscode.ThemeIcon('sync~spin')
-                : new vscode.ThemeIcon('beaker');
+            if (isActive) {
+                this.iconPath = new vscode.ThemeIcon('sync~spin');
+            } else if (specContext?.status === 'completed') {
+                this.iconPath = new vscode.ThemeIcon('beaker', new vscode.ThemeColor('testing.iconPassed'));
+            } else if (specContext?.currentStep) {
+                this.iconPath = new vscode.ThemeIcon('beaker', new vscode.ThemeColor('charts.blue'));
+            } else {
+                this.iconPath = new vscode.ThemeIcon('beaker');
+            }
             this.tooltip = `SpecKit Spec: ${label}`;
         } else if (contextValue === 'spec-document') {
             const statusLabel = status === 'complete' ? 'Complete' : status === 'partial' ? 'In Progress' : 'Not Started';
@@ -553,6 +569,16 @@ class SpecItem extends vscode.TreeItem {
             }
 
             this.contextValue = `spec-document-${documentType}`;
+
+            // Apply step status colors from specContext (only for active specs — completed specs use the green beaker)
+            if (specContext && documentType && specContext.status !== 'completed' && specContext.status !== 'archived') {
+                const stepHistory = specContext.stepHistory;
+                if (stepHistory?.[documentType]?.completedAt) {
+                    this.iconPath = new vscode.ThemeIcon('pass', new vscode.ThemeColor('testing.iconPassed'));
+                } else if (specContext.currentStep === documentType) {
+                    this.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('charts.blue'));
+                }
+            }
 
             // Store file URI for inline actions (avoid resourceUri to prevent
             // VS Code from dimming git-ignored files in the tree view)
