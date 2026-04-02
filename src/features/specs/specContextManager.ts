@@ -20,9 +20,12 @@ function inferContextFromState(state: Record<string, unknown>): FeatureWorkflowC
     const substep = state.substep as string | null | undefined;
     const taskSummaries = state.task_summaries as Record<string, { status?: string }> | undefined;
 
-    // Infer status: if all tasks are done or step is implement with late substep, it's completed
-    let status: SpecStatus = 'active';
-    if (step === 'implement') {
+    // Use explicit status if present; otherwise infer from step/substep heuristics
+    const validStatuses: SpecStatus[] = ['active', 'completed', 'archived'];
+    let status: SpecStatus = validStatuses.includes(state.status as SpecStatus)
+        ? (state.status as SpecStatus)
+        : 'active';
+    if (status === 'active' && step === 'implement') {
         const lateSubsteps = ['code-review', 'commit', 'push', 'pr', null, undefined];
         if (lateSubsteps.includes(substep as string | null | undefined)) {
             // Check if there are task summaries — if all done, mark completed

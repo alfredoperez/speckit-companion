@@ -220,6 +220,75 @@ describe('specContextManager', () => {
         });
     });
 
+    describe('SDD state inference', () => {
+        const STATE_FILE = path.join(SPEC_DIR, 'state.json');
+
+        it('should use explicit status field when present in SDD state', async () => {
+            const state = { step: 'implement', substep: 'commit-review', status: 'completed', updated: '2026-03-26' };
+            mockReadFile.mockImplementation((filePath: string) => {
+                if (filePath === path.join(SPEC_DIR, 'state.json')) {
+                    return Promise.resolve(JSON.stringify(state));
+                }
+                return Promise.reject(new Error('ENOENT'));
+            });
+
+            const result = await readSpecContext(SPEC_DIR);
+            expect(result?.status).toBe('completed');
+        });
+
+        it('should use explicit status in .spec-context.json with SDD format', async () => {
+            const state = { step: 'implement', substep: 'commit-review', status: 'completed', updated: '2026-03-26' };
+            mockReadFile.mockImplementation((filePath: string) => {
+                if (filePath === CONTEXT_FILE) {
+                    return Promise.resolve(JSON.stringify(state));
+                }
+                return Promise.reject(new Error('ENOENT'));
+            });
+
+            const result = await readSpecContext(SPEC_DIR);
+            expect(result?.status).toBe('completed');
+        });
+
+        it('should infer status via heuristics when no explicit status field', async () => {
+            const state = { step: 'implement', substep: 'commit', updated: '2026-03-26' };
+            mockReadFile.mockImplementation((filePath: string) => {
+                if (filePath === CONTEXT_FILE) {
+                    return Promise.resolve(JSON.stringify(state));
+                }
+                return Promise.reject(new Error('ENOENT'));
+            });
+
+            const result = await readSpecContext(SPEC_DIR);
+            expect(result?.status).toBe('completed');
+        });
+
+        it('should default to active when no explicit status and heuristics do not match', async () => {
+            const state = { step: 'plan', substep: null, updated: '2026-03-26' };
+            mockReadFile.mockImplementation((filePath: string) => {
+                if (filePath === CONTEXT_FILE) {
+                    return Promise.resolve(JSON.stringify(state));
+                }
+                return Promise.reject(new Error('ENOENT'));
+            });
+
+            const result = await readSpecContext(SPEC_DIR);
+            expect(result?.status).toBe('active');
+        });
+
+        it('should sync use explicit status field (readSpecContextSync)', () => {
+            const state = { step: 'implement', substep: 'commit-review', status: 'completed', updated: '2026-03-26' };
+            mockReadFileSync.mockImplementation((filePath: string) => {
+                if (filePath === CONTEXT_FILE) {
+                    return JSON.stringify(state);
+                }
+                throw new Error('ENOENT');
+            });
+
+            const result = readSpecContextSync(SPEC_DIR);
+            expect(result?.status).toBe('completed');
+        });
+    });
+
     describe('setSpecStatus', () => {
         it('should write the status field', async () => {
             await setSpecStatus(SPEC_DIR, 'completed');
