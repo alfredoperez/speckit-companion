@@ -69,7 +69,7 @@
         {
           "id": "speckit.views.explorer",
           "name": "Specs",
-          "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.views.specs.visible"
+          "when": "!(workbenchState == empty || workspaceFolderCount == 0)"
         },
         {
           "id": "speckit.views.steering",
@@ -533,20 +533,20 @@
           "order": 2,
           "description": "AI assistant to use for spec generation"
         },
-        "speckit.claudePermissionMode": {
+        "speckit.permissionMode": {
           "type": "string",
-          "default": "bypassPermissions",
+          "default": "interactive",
           "enum": [
-            "bypassPermissions",
-            "default"
+            "interactive",
+            "auto-approve"
           ],
           "enumDescriptions": [
-            "Skip all permission prompts (YOLO mode)",
-            "Use default interactive permission prompts"
+            "The CLI prompts before taking actions (recommended)",
+            "(YOLO) Skip all permission prompts. Faster but no review of tool calls."
           ],
           "scope": "machine",
           "order": 3,
-          "description": "Controls how Claude CLI handles permission prompts"
+          "description": "Controls how the AI CLI handles permission prompts. Applies to all providers that support it (Claude, Copilot, Qwen)."
         },
         "speckit.geminiPath": {
           "type": "string",
@@ -561,17 +561,6 @@
           "scope": "machine",
           "order": 4,
           "description": "Path to GitHub Copilot CLI executable"
-        },
-        "speckit.copilotPermissionMode": {
-          "type": "string",
-          "enum": [
-            "yolo",
-            "default"
-          ],
-          "default": "yolo",
-          "scope": "machine",
-          "order": 5,
-          "description": "Permission mode for Copilot CLI. 'yolo' auto-approves all actions, 'default' prompts for confirmation."
         },
         "speckit.geminiInitDelay": {
           "type": "number",
@@ -588,13 +577,6 @@
           "scope": "machine",
           "order": 6,
           "description": "Path to Qwen Code CLI executable"
-        },
-        "speckit.qwenYoloMode": {
-          "type": "boolean",
-          "default": false,
-          "scope": "machine",
-          "order": 7,
-          "description": "Enable YOLO mode (--yolo) to auto-approve all Qwen actions"
         },
         "speckit.specDirectories": {
           "type": "array",
@@ -670,12 +652,6 @@
           "default": true,
           "scope": "window",
           "description": "Show notification when a task phase is completed"
-        },
-        "speckit.views.specs.visible": {
-          "type": "boolean",
-          "default": true,
-          "scope": "window",
-          "description": "Show Specs view"
         },
         "speckit.views.steering.visible": {
           "type": "boolean",

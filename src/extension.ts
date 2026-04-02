@@ -9,7 +9,6 @@ import { SpecExplorerProvider, registerSpecKitCommands } from './features/specs'
 import { OverviewProvider } from './features/settings';
 import { AgentManager } from './features/agents';
 import { SkillManager } from './features/skills';
-import { PermissionManager } from './features/permission';
 import { WorkflowEditorProvider, registerWorkflowEditorCommands } from './features/workflow-editor';
 import { registerSpecEditorCommands } from './features/spec-editor';
 import { registerSpecViewerCommands, isSpecDocument } from './features/spec-viewer';
@@ -25,12 +24,7 @@ import { ConfigManager } from './core/utils/configManager';
 import { openSpecFile } from './core/utils/fileOpener';
 
 let aiProvider: IAIProvider;
-let permissionManager: PermissionManager;
 export let outputChannel: vscode.OutputChannel;
-
-export function getPermissionManager(): PermissionManager {
-    return permissionManager;
-}
 
 export function getAIProvider(): IAIProvider {
     return aiProvider;
@@ -93,14 +87,6 @@ export async function activate(context: vscode.ExtensionContext) {
             }
         })
     );
-
-    permissionManager = new PermissionManager(context, outputChannel);
-    context.subscriptions.push(permissionManager);
-    if (hasWorkspace) {
-        await permissionManager.initializePermissions();
-    } else {
-        outputChannel.appendLine('[Extension] No workspace open, skipping permission initialization');
-    }
 
     const steeringManager = new SteeringManager(outputChannel);
 

@@ -29,6 +29,10 @@ export class GeminiCliProvider implements IAIProvider {
         this.configManager.loadSettings();
     }
 
+    getPermissionFlag(): string {
+        return '';
+    }
+
     /**
      * Check if Gemini CLI is installed
      */

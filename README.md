@@ -103,6 +103,23 @@ Configure your preferred provider: **Settings > speckit.aiProvider**
 
 ## Configuration
 
+### Permission Mode
+
+Controls whether AI CLIs run with permission prompts (safe) or bypass them (YOLO):
+
+```json
+{
+  "speckit.permissionMode": "interactive"
+}
+```
+
+| Value | Behavior |
+|-------|----------|
+| `"interactive"` | The CLI prompts before taking actions (recommended) |
+| `"auto-approve"` | (YOLO) Skip all permission prompts. Faster but no review of tool calls. |
+
+This applies to all providers that support it: Claude (`--permission-mode bypassPermissions`), Copilot (`--yolo`), and Qwen (`--yolo`). Gemini and Codex ignore this setting.
+
 ### Spec Directories
 
 By default, specs live in `specs/`. You can configure multiple directories or use glob patterns:

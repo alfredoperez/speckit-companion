@@ -45,6 +45,20 @@ export interface IAIProvider {
      * @param autoExecute If false, shows command but waits for user to press Enter (default: true)
      */
     executeSlashCommand(command: string, title?: string, autoExecute?: boolean): Promise<vscode.Terminal>;
+
+    /**
+     * Get the CLI permission flag for this provider based on the unified speckit.permissionMode setting.
+     * Returns an empty string when no bypass flag applies.
+     */
+    getPermissionFlag(): string;
+}
+
+/**
+ * Read the unified permission mode from settings.
+ */
+export function readPermissionMode(): 'interactive' | 'auto-approve' {
+    const config = vscode.workspace.getConfiguration('speckit');
+    return config.get<'interactive' | 'auto-approve'>('permissionMode', 'interactive');
 }
 
 /**
