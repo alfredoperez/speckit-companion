@@ -13,9 +13,11 @@ export interface ViewerElements {
     relatedTabs: NodeListOf<HTMLButtonElement>;
     backLink: HTMLButtonElement | null;
     // Footer buttons
-    editSourceButton: HTMLButtonElement | null;
     regenerateButton: HTMLButtonElement | null;
     approveButton: HTMLButtonElement | null;
+    completeSpecButton: HTMLButtonElement | null;
+    archiveSpecButton: HTMLButtonElement | null;
+    reactivateSpecButton: HTMLButtonElement | null;
     // Refine modal
     refineBackdrop: HTMLElement;
     refinePopover: HTMLElement;
@@ -39,9 +41,11 @@ export function getElements(): ViewerElements {
         relatedTabs: document.querySelectorAll('.related-tab') as NodeListOf<HTMLButtonElement>,
         backLink: document.querySelector('.back-link') as HTMLButtonElement | null,
         // Footer buttons
-        editSourceButton: document.getElementById('editSource') as HTMLButtonElement | null,
         regenerateButton: document.getElementById('regenerate') as HTMLButtonElement | null,
         approveButton: document.getElementById('approve') as HTMLButtonElement | null,
+        completeSpecButton: document.getElementById('completeSpec') as HTMLButtonElement | null,
+        archiveSpecButton: document.getElementById('archiveSpec') as HTMLButtonElement | null,
+        reactivateSpecButton: document.getElementById('reactivateSpec') as HTMLButtonElement | null,
         // Refine modal
         refineBackdrop: document.getElementById('refine-backdrop') as HTMLElement,
         refinePopover: document.getElementById('refine-popover') as HTMLElement,

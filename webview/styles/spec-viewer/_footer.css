@@ -110,7 +110,8 @@
    ============================================ */
 
 /* Hide standard workflow buttons when spec is completed (keep enhancement buttons visible) */
-body[data-spec-status="spec-completed"] #regenerate,
-body[data-spec-status="spec-completed"] #approve {
+body[data-spec-status="completed"] #regenerate,
+body[data-spec-status="completed"] #approve,
+body[data-spec-status="tasks-done"] #regenerate {
     display: none;
 }

@@ -121,7 +121,8 @@ export async function scanDocuments(
                 }
             }
 
-            const label = step.label || step.name.charAt(0).toUpperCase() + step.name.slice(1);
+            const labelOverrides: Record<string, string> = { specify: 'Specification' };
+            const label = step.label || labelOverrides[step.name] || step.name.charAt(0).toUpperCase() + step.name.slice(1);
 
             coreFiles.add(fileName);
             documents.push({

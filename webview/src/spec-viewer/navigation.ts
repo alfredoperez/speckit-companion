@@ -87,23 +87,6 @@ export function updateNavState(navState: NavState): void {
         }
     });
 
-    // Update completion badge visibility
-    const existingBadge = document.querySelector('.completion-badge');
-    if (taskCompletionPercent === 100 && !existingBadge) {
-        // Add completion badge if not present (insert before step-tabs)
-        const navPrimary = document.querySelector('.nav-primary');
-        const stepTabs = document.querySelector('.step-tabs');
-        if (navPrimary && stepTabs) {
-            const badge = document.createElement('span');
-            badge.className = 'completion-badge';
-            badge.textContent = 'PROJECT COMPLETE';
-            navPrimary.insertBefore(badge, stepTabs);
-        }
-    } else if (taskCompletionPercent < 100 && existingBadge) {
-        // Remove badge if tasks not complete
-        existingBadge.remove();
-    }
-
     // Update related tabs visibility and active state
     const relatedBar = document.querySelector('.related-bar') as HTMLElement | null;
     if (relatedBar) {
@@ -190,6 +173,28 @@ export function updateNavState(navState: NavState): void {
             if (approveButton) {
                 approveButton.style.display = 'none';
             }
+        }
+
+        // Update lifecycle buttons based on specStatus
+        // Since the footer is fully re-rendered by the generator with the new visibility rules,
+        // we just need to handle dynamic button creation/removal for tab switches
+        const specStatus = navState.footerState.specStatus || navState.specStatus || 'active';
+        const actionsRightEl = document.querySelector('.actions-right');
+        if (actionsRightEl) {
+            const isTasksDone = specStatus === 'tasks-done';
+            const isCompleted = specStatus === 'completed';
+            const isArchived = specStatus === 'archived';
+
+            // Show/hide buttons based on status
+            const completeBtn = document.getElementById('completeSpec');
+            const archiveBtn = document.getElementById('archiveSpec');
+            const regenBtn = document.getElementById('regenerate');
+            const reactivateBtn = document.getElementById('reactivateSpec');
+
+            if (completeBtn) completeBtn.style.display = isTasksDone ? '' : 'none';
+            if (archiveBtn) archiveBtn.style.display = (isArchived) ? 'none' : '';
+            if (regenBtn) regenBtn.style.display = (isTasksDone || isCompleted || isArchived) ? 'none' : '';
+            if (reactivateBtn) reactivateBtn.style.display = (isCompleted || isArchived) ? '' : 'none';
         }
 
         // Update enhancement buttons

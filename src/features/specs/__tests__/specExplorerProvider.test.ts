@@ -432,6 +432,90 @@ describe('SpecExplorerProvider', () => {
         });
     });
 
+    describe('active specs birthtime sorting', () => {
+        it('should sort active specs by birthtime descending (newest first)', async () => {
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: 'old-spec', path: 'specs/old-spec' },
+                { name: 'new-spec', path: 'specs/new-spec' },
+                { name: 'mid-spec', path: 'specs/mid-spec' },
+            ]);
+            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
+            (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
+
+            // Mock statSync to return different birthtimes
+            (mockFs.statSync as jest.Mock).mockImplementation((filePath: string) => {
+                if (filePath.includes('old-spec')) {
+                    return { birthtime: new Date('2025-01-01T00:00:00Z'), mtime: new Date(0) };
+                }
+                if (filePath.includes('new-spec')) {
+                    return { birthtime: new Date('2025-03-01T00:00:00Z'), mtime: new Date(0) };
+                }
+                if (filePath.includes('mid-spec')) {
+                    return { birthtime: new Date('2025-02-01T00:00:00Z'), mtime: new Date(0) };
+                }
+                return { birthtime: new Date(0), mtime: new Date(0) };
+            });
+
+            const groups = await provider.getChildren();
+            expect(groups).toHaveLength(1);
+            expect(groups[0].label).toBe('Active');
+
+            const specs = await provider.getChildren(groups[0]);
+            expect(specs).toHaveLength(3);
+            expect(specs[0].label).toBe('new-spec');
+            expect(specs[1].label).toBe('mid-spec');
+            expect(specs[2].label).toBe('old-spec');
+        });
+
+        it('should handle statSync errors gracefully during sorting', async () => {
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: 'spec-a', path: 'specs/spec-a' },
+                { name: 'spec-b', path: 'specs/spec-b' },
+            ]);
+            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
+            (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
+
+            // statSync throws for all paths
+            (mockFs.statSync as jest.Mock).mockImplementation(() => {
+                throw new Error('ENOENT');
+            });
+
+            const groups = await provider.getChildren();
+            const specs = await provider.getChildren(groups[0]);
+
+            // Should not crash; order is preserved (no sort change on error)
+            expect(specs).toHaveLength(2);
+        });
+
+        it('should not sort completed or archived specs by birthtime', async () => {
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: 'done-old', path: 'specs/done-old' },
+                { name: 'done-new', path: 'specs/done-new' },
+            ]);
+            (readSpecContextSync as jest.Mock).mockReturnValue({ status: 'completed' });
+            (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
+
+            // New one has later birthtime but sorting should not apply to completed
+            (mockFs.statSync as jest.Mock).mockImplementation((filePath: string) => {
+                if (filePath.includes('done-old')) {
+                    return { birthtime: new Date('2025-01-01T00:00:00Z'), mtime: new Date(0) };
+                }
+                if (filePath.includes('done-new')) {
+                    return { birthtime: new Date('2025-03-01T00:00:00Z'), mtime: new Date(0) };
+                }
+                return { birthtime: new Date(0), mtime: new Date(0) };
+            });
+
+            const groups = await provider.getChildren();
+            expect(groups[0].label).toBe('Completed');
+
+            const specs = await provider.getChildren(groups[0]);
+            // Completed specs keep original order from resolveSpecDirectories
+            expect(specs[0].label).toBe('done-old');
+            expect(specs[1].label).toBe('done-new');
+        });
+    });
+
     describe('loading state', () => {
         it('should show loading item when isLoading is true', async () => {
             provider.refresh();

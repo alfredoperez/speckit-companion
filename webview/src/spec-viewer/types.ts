@@ -61,6 +61,7 @@ export interface FooterState {
     showApproveButton: boolean;
     approveText: string;
     enhancementButtons?: EnhancementButton[];
+    specStatus?: string;
 }
 
 /**
@@ -76,6 +77,7 @@ export interface NavState {
     footerState?: FooterState;
     enhancementButtons?: EnhancementButton[];
     stalenessMap?: StalenessMap;
+    specStatus?: string;
 }
 
 // ============================================
@@ -116,6 +118,10 @@ export type ViewerToExtensionMessage =
     | { type: 'regenerate' }
     | { type: 'approve' }
     | { type: 'clarify'; command?: string }
+    // Lifecycle actions
+    | { type: 'completeSpec' }
+    | { type: 'archiveSpec' }
+    | { type: 'reactivateSpec' }
     // Stepper navigation
     | { type: 'stepperClick'; phase: string }
     // Batch refinements submission (GitHub-style review)

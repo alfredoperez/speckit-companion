@@ -14,6 +14,7 @@ import { ConfigKeys } from '../../core/constants';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig } from '../../core/types/config';
 import type { WorkflowStepConfig } from '../workflows/types';
+import { setSpecStatus } from '../specs/specContextManager';
 
 /**
  * Interface for message handler dependencies
@@ -78,6 +79,15 @@ export function createMessageHandlers(
                 break;
             case 'submitRefinements':
                 await handleSubmitRefinements(specDirectory, message.refinements, deps);
+                break;
+            case 'completeSpec':
+                await handleLifecycleAction(specDirectory, 'completed', deps);
+                break;
+            case 'archiveSpec':
+                await handleLifecycleAction(specDirectory, 'archived', deps);
+                break;
+            case 'reactivateSpec':
+                await handleLifecycleAction(specDirectory, 'active', deps);
                 break;
             case 'openFile':
                 await handleOpenFile(message.filename, deps);
@@ -235,6 +245,27 @@ async function executeStepInTerminal(
     const prompt = `/${step.command} ${targetPath}`;
     deps.outputChannel.appendLine(`[SpecViewer] Executing step "${label}": ${prompt}`);
     await deps.executeInTerminal(prompt);
+}
+
+/**
+ * Handle lifecycle action (complete or archive a spec)
+ */
+async function handleLifecycleAction(
+    specDirectory: string,
+    status: 'completed' | 'archived' | 'active',
+    deps: MessageHandlerDependencies
+): Promise<void> {
+    const instance = deps.getInstance(specDirectory);
+    if (!instance) return;
+
+    const label = status === 'active' ? 'reactivated' : status;
+    deps.outputChannel.appendLine(`[SpecViewer] Setting spec status to ${status}: ${specDirectory}`);
+
+    await setSpecStatus(specDirectory, status);
+    await vscode.commands.executeCommand('speckit.refresh');
+    await deps.updateContent(specDirectory, instance.state.currentDocument);
+
+    NotificationUtils.showAutoDismissNotification(`Spec "${instance.state.specName}" marked as ${label}`);
 }
 
 /**
