@@ -53,11 +53,18 @@ Each feature flows through four phases:
 The sidebar organizes everything your AI assistant needs: **Specs** for feature development, **Steering** for AI guidance documents, **Agents** for custom agent definitions, **Skills** for reusable capabilities, and **Hooks** for automation triggers.
 
 Specs are grouped into three collapsible sections based on their status (stored in `.spec-context.json`):
-- **Active** — Specs in progress, expanded by default
+- **Active** — Specs in progress, sorted by creation date (newest first), expanded by default
 - **Completed** — Specs marked as done, collapsed by default
 - **Archived** — Specs moved to archive, collapsed by default
 
-Right-click a spec to access **Mark as Completed** and **Archive Spec** actions.
+Right-click a spec to access **Mark as Completed** and **Archive Spec** actions. The spec viewer footer shows lifecycle buttons based on the spec's current status:
+
+- **Active** (tasks incomplete): Regenerate, Archive, + primary CTA (Plan/Tasks/Implement depending on next step)
+- **Active** (tasks 100% complete): Archive + Complete (primary)
+- **Completed**: Archive + Reactivate
+- **Archived**: Reactivate only
+
+The lifecycle flow is **Active → Completed → Archived**, with **Reactivate** available on Completed and Archived specs to return them to Active.
 
 **Color indicators:**
 - Green beaker icon — completed spec

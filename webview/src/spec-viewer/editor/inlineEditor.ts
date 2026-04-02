@@ -18,7 +18,7 @@ export function showInlineEditor(lineElement: HTMLElement): void {
     console.log('[SpecViewer] showInlineEditor called with element:', lineElement);
 
     // Block editing when spec is completed
-    if (document.body.dataset.specStatus === 'spec-completed') {
+    if (document.body.dataset.specStatus === 'completed' || document.body.dataset.specStatus === 'archived') {
         return;
     }
 
@@ -124,7 +124,7 @@ export function closeInlineEditor(): void {
  */
 export function showInlineEditorForRow(rowElement: HTMLElement, rowNum: number): void {
     // Block editing when spec is completed
-    if (document.body.dataset.specStatus === 'spec-completed') {
+    if (document.body.dataset.specStatus === 'completed' || document.body.dataset.specStatus === 'archived') {
         return;
     }
 

@@ -48,30 +48,6 @@ export {
 } from "./utils";
 
 /**
- * Extract spec status from document content
- * Status is parsed from spec metadata (e.g., "**Status**: Draft")
- */
-function extractSpecStatus(content: string): SpecStatus {
-  const patterns = [
-    /\*\*Status\*\*:\s*([\w\s-]+)/i,
-    /Status:\s*([\w\s-]+)/i,
-  ];
-  for (const pattern of patterns) {
-    const match = content.match(pattern);
-    if (match) {
-      const status = match[1].toLowerCase().trim();
-      if (status.includes("completed") || status === "done") {
-        return "spec-completed";
-      }
-      if (status.includes("progress")) {
-        return "in-progress";
-      }
-    }
-  }
-  return "draft";
-}
-
-/**
  * Panel instance data for multi-panel support
  */
 interface PanelInstance {
@@ -459,17 +435,17 @@ export class SpecViewerProvider {
       const docLabel = doc?.label || "Spec";
       instance.panel.title = `Spec: ${specName} - ${docLabel}`;
 
-      // Extract spec status for conditional UI
-      // Use task completion to determine completed status when tasks are 100% done
-      let specStatus = extractSpecStatus(content);
-      if (taskCompletionPercent === 100) {
-        specStatus = "spec-completed";
-      }
-
-      // Check for archived/done state from .spec-context.json
+      // Determine spec status for conditional UI
       const featureCtx = await getFeatureWorkflow(specDirectory, changeRoot);
-      if (featureCtx?.currentStep === "archived" || featureCtx?.currentStep === "done") {
+      let specStatus: SpecStatus;
+      if (featureCtx?.status === "archived" || featureCtx?.currentStep === "archived" || featureCtx?.currentStep === "done") {
         specStatus = "archived";
+      } else if (featureCtx?.status === "completed") {
+        specStatus = "completed";
+      } else if (taskCompletionPercent === 100) {
+        specStatus = "tasks-done";
+      } else {
+        specStatus = "active";
       }
 
       // Resolve enhancement buttons from customCommands
@@ -663,6 +639,20 @@ export class SpecViewerProvider {
         }
       }
 
+      // Determine spec status for lifecycle buttons
+      const changeRoot = instance.state.changeRoot;
+      const featureCtx = await getFeatureWorkflow(specDirectory, changeRoot);
+      let specStatus: string;
+      if (featureCtx?.status === "archived" || featureCtx?.currentStep === "archived" || featureCtx?.currentStep === "done") {
+        specStatus = "archived";
+      } else if (featureCtx?.status === "completed") {
+        specStatus = "completed";
+      } else if (taskCompletionPercent === 100) {
+        specStatus = "tasks-done";
+      } else {
+        specStatus = "active";
+      }
+
       // Resolve enhancement buttons from customCommands
       const enhancementButtons = this.resolveEnhancementButtons(documentType);
 
@@ -680,9 +670,11 @@ export class SpecViewerProvider {
           showApproveButton,
           approveText,
           enhancementButtons,
+          specStatus,
         },
         enhancementButtons,
         stalenessMap,
+        specStatus,
       };
 
       // Update internal state

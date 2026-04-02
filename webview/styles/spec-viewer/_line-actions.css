@@ -194,14 +194,18 @@ li.line .line-comment-slot {
    State-based hiding (completed specs)
    ============================================ */
 
-/* Hide add buttons when spec is completed */
-body[data-spec-status="spec-completed"] .line-add-btn,
-body[data-spec-status="spec-completed"] .row-add-btn {
+/* Hide add buttons when spec is completed or archived */
+body[data-spec-status="completed"] .line-add-btn,
+body[data-spec-status="completed"] .row-add-btn,
+body[data-spec-status="archived"] .line-add-btn,
+body[data-spec-status="archived"] .row-add-btn {
     display: none !important;
 }
 
-/* Disable hover backgrounds when spec is completed */
-body[data-spec-status="spec-completed"] .line:hover,
-body[data-spec-status="spec-completed"] li.line:hover {
+/* Disable hover backgrounds when spec is completed or archived */
+body[data-spec-status="completed"] .line:hover,
+body[data-spec-status="completed"] li.line:hover,
+body[data-spec-status="archived"] .line:hover,
+body[data-spec-status="archived"] li.line:hover {
     background: transparent;
 }

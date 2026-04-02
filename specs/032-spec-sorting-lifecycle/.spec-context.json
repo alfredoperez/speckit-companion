@@ -1,0 +1,9 @@
+{
+  "step": "implement",
+  "task": null,
+  "substep": "commit-review",
+  "next": null,
+  "updated": "2026-04-02",
+  "approach": "Add creation-date sorting to sidebar active specs and Complete/Archive lifecycle buttons to the spec viewer footer bar",
+  "last_action": "CP1 passed — fixed Specify/Specification label inconsistency"
+}

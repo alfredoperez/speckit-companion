@@ -25,7 +25,7 @@ export function setupEditButton(): void {
  * Setup footer action button handlers
  */
 export function setupFooterActions(): void {
-    const { editSourceButton, regenerateButton, approveButton } = getElements();
+    const { regenerateButton, approveButton, completeSpecButton, archiveSpecButton, reactivateSpecButton } = getElements();
 
     // Handle all enhancement buttons (multiple supported)
     document.querySelectorAll('.enhancement').forEach(btn => {
@@ -35,18 +35,24 @@ export function setupFooterActions(): void {
         });
     });
 
-    editSourceButton?.addEventListener('click', () => {
-        if (!editSourceButton.disabled) {
-            vscode.postMessage({ type: 'editSource' });
-        }
-    });
-
     regenerateButton?.addEventListener('click', () => {
         vscode.postMessage({ type: 'regenerate' });
     });
 
     approveButton?.addEventListener('click', () => {
         vscode.postMessage({ type: 'approve' });
+    });
+
+    completeSpecButton?.addEventListener('click', () => {
+        vscode.postMessage({ type: 'completeSpec' });
+    });
+
+    archiveSpecButton?.addEventListener('click', () => {
+        vscode.postMessage({ type: 'archiveSpec' });
+    });
+
+    reactivateSpecButton?.addEventListener('click', () => {
+        vscode.postMessage({ type: 'reactivateSpec' });
     });
 
     // Stale banner regen button (if present on initial load)

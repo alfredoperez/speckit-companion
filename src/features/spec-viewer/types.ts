@@ -217,6 +217,8 @@ export interface FooterState {
     approveText: string;
     /** Enhancement buttons config */
     enhancementButtons?: EnhancementButton[];
+    /** Spec status for lifecycle button visibility */
+    specStatus?: string;
 }
 
 /**
@@ -241,6 +243,8 @@ export interface NavState {
     enhancementButtons?: EnhancementButton[];
     /** Staleness state for each core document */
     stalenessMap?: StalenessMap;
+    /** Spec status for lifecycle button visibility */
+    specStatus?: string;
 }
 
 /**
@@ -339,6 +343,16 @@ export type ViewerToExtensionMessage =
           type: 'submitRefinements';
           refinements: Array<{ lineNum: number; lineContent: string; comment: string }>;
       }
+    // Lifecycle actions
+    | {
+          type: 'completeSpec';
+      }
+    | {
+          type: 'archiveSpec';
+      }
+    | {
+          type: 'reactivateSpec';
+      }
     // File reference click
     | {
           type: 'openFile';
@@ -372,16 +386,14 @@ export const DEFAULT_EMPTY_MESSAGE = 'Document not found.';
  * Used to control UI element visibility
  */
 export type SpecStatus =
-    | 'draft'           // Default - shows all editing controls
-    | 'in-progress'     // Shows all editing controls
-    | 'spec-completed'  // Hides add-comment buttons, DRAFT badge, refinement CTAs
-    | 'plan-completed'  // Future use
-    | 'done'            // All steps complete
-    | 'archived';       // Read-only, no editing controls
+    | 'active'          // Default - shows all editing controls
+    | 'tasks-done'      // All tasks 100% - shows Complete as primary CTA
+    | 'completed'       // User marked complete - shows Archive + Reactivate
+    | 'archived';       // Read-only - shows Reactivate only
 
 /**
  * Check if a status allows editing/refinement
  */
 export function isEditableStatus(status: SpecStatus): boolean {
-    return status === 'draft' || status === 'in-progress';
+    return status === 'active' || status === 'tasks-done';
 }

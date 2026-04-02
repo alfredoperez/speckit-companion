@@ -29,7 +29,7 @@ export function generateHtml(
     specName: string,
     phases: PhaseInfo[],
     taskCompletionPercent: number,
-    specStatus: SpecStatus = 'draft',
+    specStatus: SpecStatus = 'active',
     enhancementButtons: EnhancementButton[] = [],
     stalenessMap?: StalenessMap
 ): string {
@@ -52,37 +52,34 @@ export function generateHtml(
         ? `<div id="markdown-content" data-raw="${escapeHtmlAttribute(content)}"></div>`
         : `<div class="empty-state">${escapeHtml(emptyMessage)}</div>`;
 
-    // Get current document for edit button state
-    const currentDoc = documents.find(d => d.type === currentDocType);
-    const editDisabled = !currentDoc?.exists;
-
     // Determine if viewing a related doc
     const coreDocTypes = coreDocs.map(d => d.type);
     const isViewingRelatedDoc = !coreDocTypes.includes(currentDocType);
 
-    // Smart CTA button logic:
-    // - Show next step's label when next phase doesn't exist yet
-    // - Hide when next phase already exists (user can navigate via tabs)
-    // - For last step: show "Implement" when not complete, hide when 100% complete
+    // CTA button logic:
+    // - Active + tasks < 100%: show next step label or "Implement"
+    // - Active + tasks = 100%: show "Complete" as primary CTA
+    // - Completed/Archived: no CTA
+    const isTasksDone = specStatus === 'tasks-done';
     let showApproveButton = false;
     let approveText = '';
 
-    let currentIndex = coreDocs.findIndex(d => d.type === currentDocType);
-    if (currentIndex < 0 && isViewingRelatedDoc) {
-        const parentStep = relatedDocs.find(d => d.type === currentDocType)?.parentStep;
-        if (parentStep) {
-            currentIndex = coreDocs.findIndex(d => d.type === parentStep);
+    if (specStatus === 'active') {
+        // Normal CTA logic: show next step or Implement
+        let currentIndex = coreDocs.findIndex(d => d.type === currentDocType);
+        if (currentIndex < 0 && isViewingRelatedDoc) {
+            const parentStep = relatedDocs.find(d => d.type === currentDocType)?.parentStep;
+            if (parentStep) {
+                currentIndex = coreDocs.findIndex(d => d.type === parentStep);
+            }
         }
-    }
-    if (currentIndex >= 0 && currentIndex < coreDocs.length - 1) {
-        const nextDoc = coreDocs[currentIndex + 1];
-        if (!nextDoc.exists) {
-            showApproveButton = true;
-            approveText = nextDoc.label;
-        }
-    } else if (currentIndex === coreDocs.length - 1) {
-        // Last step: show implement button if not complete
-        if (taskCompletionPercent < 100) {
+        if (currentIndex >= 0 && currentIndex < coreDocs.length - 1) {
+            const nextDoc = coreDocs[currentIndex + 1];
+            if (!nextDoc.exists) {
+                showApproveButton = true;
+                approveText = nextDoc.label;
+            }
+        } else if (currentIndex === coreDocs.length - 1) {
             showApproveButton = true;
             approveText = 'Implement';
         }
@@ -156,11 +153,19 @@ export function generateHtml(
                 `).join('')}
             </div>
             <div class="actions-right">
-                ${specStatus !== 'archived' ? `
-                <button id="editSource" class="secondary" ${editDisabled ? 'disabled' : ''}>Edit Source</button>
+                ${specStatus === 'archived' ? `
+                <button id="reactivateSpec" class="secondary">Reactivate</button>
+                ` : specStatus === 'completed' ? `
+                <button id="archiveSpec" class="secondary">Archive</button>
+                <button id="reactivateSpec" class="secondary">Reactivate</button>
+                ` : isTasksDone ? `
+                <button id="archiveSpec" class="secondary">Archive</button>
+                <button id="completeSpec" class="primary">Complete</button>
+                ` : `
                 <button id="regenerate" class="secondary">Regenerate</button>
+                <button id="archiveSpec" class="secondary">Archive</button>
                 ${showApproveButton ? `<button id="approve" class="primary">${approveText}</button>` : ''}
-                ` : '<span class="archived-badge">Archived</span>'}
+                `}
             </div>
         </footer>
     </div>

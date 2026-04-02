@@ -17,11 +17,7 @@ export function generateCompactNav(
     taskCompletionPercent: number,
     stalenessMap?: StalenessMap
 ): string {
-    // Calculate if project is complete (persists regardless of current view)
-    const isProjectComplete = taskCompletionPercent === 100;
-
     // Unified step-tabs: each core doc is a tab with status indicator
-    // Note: "Done" is no longer a step - it's shown as a completion badge instead
     const stepTabsHtml = coreDocs.map((doc, i) => {
         const phase = doc.type;
         const exists = doc.exists || relatedDocs.some(d => d.parentStep === phase);
@@ -66,12 +62,6 @@ export function generateCompactNav(
             <span class="step-label">${label}</span>${staleBadge}
         </button>${connector}`;
     }).join('');
-
-    // Add completion badge when tasks are 100% complete (persists when reviewing earlier steps)
-    // Positioned on the right side of nav
-    const completionBadge = isProjectComplete
-        ? `<span class="completion-badge">🌱 Spec Completed</span>`
-        : '';
 
     // Related docs bar - show when the current step has related docs (filtered by parentStep)
     // or when viewing a related doc itself
@@ -122,7 +112,6 @@ export function generateCompactNav(
         <nav class="compact-nav">
             <div class="nav-primary">
                 <div class="step-tabs">${stepTabsHtml}</div>
-                ${completionBadge}
             </div>
             ${relatedBarHtml}
         </nav>`;
