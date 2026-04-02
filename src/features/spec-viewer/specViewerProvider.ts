@@ -101,7 +101,7 @@ export class SpecViewerProvider {
     changeRoot?: string | null,
   ): Promise<WorkflowStepConfig[]> {
     try {
-      // 1. Check for feature-level .speckit.json (checks both specDir and changeRoot)
+      // 1. Check for feature-level .spec-context.json (checks both specDir and changeRoot)
       const ctx = await getFeatureWorkflow(specDirectory, changeRoot);
       if (ctx) {
         const wf = getWorkflow(ctx.workflow);
@@ -466,7 +466,7 @@ export class SpecViewerProvider {
         specStatus = "spec-completed";
       }
 
-      // Check for archived/done state from .speckit.json
+      // Check for archived/done state from .spec-context.json
       const featureCtx = await getFeatureWorkflow(specDirectory, changeRoot);
       if (featureCtx?.currentStep === "archived" || featureCtx?.currentStep === "done") {
         specStatus = "archived";

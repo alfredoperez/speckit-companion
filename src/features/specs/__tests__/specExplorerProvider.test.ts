@@ -29,7 +29,13 @@ jest.mock('../../workflows', () => ({
     },
 }));
 
+// Mock specContextManager
+jest.mock('../specContextManager', () => ({
+    readSpecContextSync: jest.fn().mockReturnValue(undefined),
+}));
+
 import { resolveSpecDirectories, hasDuplicateNames } from '../../../core/specDirectoryResolver';
+import { readSpecContextSync } from '../specContextManager';
 
 const WORKSPACE_ROOT = '/workspace';
 
@@ -113,17 +119,11 @@ describe('SpecExplorerProvider', () => {
             expect(children).toEqual([]);
         });
 
-        it('should group specs modified today under Active', async () => {
-            const today = new Date();
+        it('should group specs with no context file under Active by default', async () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'feature-a', path: 'specs/feature-a' },
             ]);
-
-            // Mock the spec directory to have a file modified today
-            (mockFs.readdirSync as jest.Mock).mockReturnValue([
-                { name: 'spec.md', isFile: () => true },
-            ]);
-            (mockFs.statSync as jest.Mock).mockReturnValue({ mtime: today });
+            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
 
             const children = await provider.getChildren();
 
@@ -132,96 +132,93 @@ describe('SpecExplorerProvider', () => {
             expect(children[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.Expanded);
         });
 
-        it('should group specs modified before today under Earlier', async () => {
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-
+        it('should group specs with status active under Active', async () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
-                { name: 'old-feature', path: 'specs/old-feature' },
+                { name: 'feature-a', path: 'specs/feature-a' },
             ]);
-
-            (mockFs.readdirSync as jest.Mock).mockReturnValue([
-                { name: 'spec.md', isFile: () => true },
-            ]);
-            (mockFs.statSync as jest.Mock).mockReturnValue({ mtime: yesterday });
+            (readSpecContextSync as jest.Mock).mockReturnValue({ status: 'active' });
 
             const children = await provider.getChildren();
 
             expect(children).toHaveLength(1);
-            expect(children[0].label).toBe('Earlier');
+            expect(children[0].label).toBe('Active');
+            expect(children[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.Expanded);
+        });
+
+        it('should group specs with status completed under Completed', async () => {
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: 'done-feature', path: 'specs/done-feature' },
+            ]);
+            (readSpecContextSync as jest.Mock).mockReturnValue({ status: 'completed' });
+
+            const children = await provider.getChildren();
+
+            expect(children).toHaveLength(1);
+            expect(children[0].label).toBe('Completed');
             expect(children[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
         });
 
-        it('should show both Active and Earlier groups when specs span both', async () => {
-            const today = new Date();
-            const lastWeek = new Date();
-            lastWeek.setDate(lastWeek.getDate() - 7);
-
+        it('should group specs with status archived under Archived', async () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
-                { name: 'new-feature', path: 'specs/new-feature' },
+                { name: 'old-feature', path: 'specs/old-feature' },
+            ]);
+            (readSpecContextSync as jest.Mock).mockReturnValue({ status: 'archived' });
+
+            const children = await provider.getChildren();
+
+            expect(children).toHaveLength(1);
+            expect(children[0].label).toBe('Archived');
+            expect(children[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
+        });
+
+        it('should show all three groups when specs span all statuses', async () => {
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: 'active-feature', path: 'specs/active-feature' },
+                { name: 'done-feature', path: 'specs/done-feature' },
                 { name: 'old-feature', path: 'specs/old-feature' },
             ]);
 
-            (mockFs.readdirSync as jest.Mock).mockImplementation((dirPath: string) => {
-                return [{ name: 'spec.md', isFile: () => true }];
-            });
-
-            (mockFs.statSync as jest.Mock).mockImplementation((filePath: string) => {
-                if (filePath.includes('new-feature')) {
-                    return { mtime: today };
+            (readSpecContextSync as jest.Mock).mockImplementation((specPath: string) => {
+                if (specPath.includes('active-feature')) {
+                    return { status: 'active' };
                 }
-                return { mtime: lastWeek };
+                if (specPath.includes('done-feature')) {
+                    return { status: 'completed' };
+                }
+                if (specPath.includes('old-feature')) {
+                    return { status: 'archived' };
+                }
+                return undefined;
             });
 
             const children = await provider.getChildren();
 
-            expect(children).toHaveLength(2);
+            expect(children).toHaveLength(3);
             expect(children[0].label).toBe('Active');
-            expect(children[1].label).toBe('Earlier');
+            expect(children[1].label).toBe('Completed');
+            expect(children[2].label).toBe('Archived');
         });
 
-        it('should sort active specs newest-first', async () => {
-            const now = new Date();
-            const earlier = new Date(now.getTime() - 3600_000); // 1 hour ago
-
+        it('should omit empty groups', async () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
-                { name: 'older-today', path: 'specs/older-today' },
-                { name: 'newest-today', path: 'specs/newest-today' },
+                { name: 'done-feature', path: 'specs/done-feature' },
             ]);
-
-            (mockFs.readdirSync as jest.Mock).mockReturnValue([
-                { name: 'spec.md', isFile: () => true },
-            ]);
-
-            (mockFs.statSync as jest.Mock).mockImplementation((filePath: string) => {
-                if (filePath.includes('newest-today')) {
-                    return { mtime: now };
-                }
-                return { mtime: earlier };
-            });
+            (readSpecContextSync as jest.Mock).mockReturnValue({ status: 'completed' });
 
             const children = await provider.getChildren();
-            expect(children).toHaveLength(1); // One Active group
 
-            // Get specs within the Active group
-            const activeGroup = children[0];
-            const specs = await provider.getChildren(activeGroup);
-
-            expect(specs[0].label).toBe('newest-today');
-            expect(specs[1].label).toBe('older-today');
+            expect(children).toHaveLength(1);
+            expect(children[0].label).toBe('Completed');
+            // No Active or Archived groups
         });
     });
 
     describe('spec-group icons', () => {
         it('should use pulse icon for Active group', async () => {
-            const today = new Date();
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'feature', path: 'specs/feature' },
             ]);
-            (mockFs.readdirSync as jest.Mock).mockReturnValue([
-                { name: 'spec.md', isFile: () => true },
-            ]);
-            (mockFs.statSync as jest.Mock).mockReturnValue({ mtime: today });
+            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
 
             const children = await provider.getChildren();
             const activeGroup = children[0];
@@ -230,196 +227,215 @@ describe('SpecExplorerProvider', () => {
             expect((activeGroup.iconPath as vscode.ThemeIcon).id).toBe('pulse');
         });
 
-        it('should use archive icon for Earlier group', async () => {
-            const lastWeek = new Date();
-            lastWeek.setDate(lastWeek.getDate() - 7);
-
+        it('should use check icon for Completed group', async () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'feature', path: 'specs/feature' },
             ]);
-            (mockFs.readdirSync as jest.Mock).mockReturnValue([
-                { name: 'spec.md', isFile: () => true },
-            ]);
-            (mockFs.statSync as jest.Mock).mockReturnValue({ mtime: lastWeek });
+            (readSpecContextSync as jest.Mock).mockReturnValue({ status: 'completed' });
 
             const children = await provider.getChildren();
-            const earlierGroup = children[0];
 
-            expect(earlierGroup.iconPath).toBeInstanceOf(vscode.ThemeIcon);
-            expect((earlierGroup.iconPath as vscode.ThemeIcon).id).toBe('archive');
+            expect((children[0].iconPath as vscode.ThemeIcon).id).toBe('check');
+        });
+
+        it('should use archive icon for Archived group', async () => {
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: 'feature', path: 'specs/feature' },
+            ]);
+            (readSpecContextSync as jest.Mock).mockReturnValue({ status: 'archived' });
+
+            const children = await provider.getChildren();
+
+            expect((children[0].iconPath as vscode.ThemeIcon).id).toBe('archive');
         });
     });
 
-    describe('spec item icons based on active state', () => {
-        async function getSpecItems(isActive: boolean): Promise<any[]> {
-            const today = new Date();
-            const specName = 'my-feature';
-
+    describe('spec item icons based on active state and context', () => {
+        async function getSpecItems(
+            specName: string,
+            isActive: boolean,
+            specContext?: any
+        ): Promise<any[]> {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: specName, path: `specs/${specName}` },
             ]);
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
-            (mockFs.readdirSync as jest.Mock).mockReturnValue([
-                { name: 'spec.md', isFile: () => true },
-            ]);
-            (mockFs.statSync as jest.Mock).mockReturnValue({ mtime: today });
+            // Root-level getSpecStatus returns active
+            (readSpecContextSync as jest.Mock).mockReturnValue(specContext || undefined);
 
             if (isActive) {
                 provider.setActiveSpec(specName);
             }
 
             const groups = await provider.getChildren();
-            const activeGroup = groups[0];
-            return provider.getChildren(activeGroup);
+            return provider.getChildren(groups[0]);
         }
 
         it('should use sync~spin icon when spec is active', async () => {
-            const specs = await getSpecItems(true);
+            const specs = await getSpecItems('my-feature', true);
             expect(specs[0].iconPath).toBeInstanceOf(vscode.ThemeIcon);
             expect((specs[0].iconPath as vscode.ThemeIcon).id).toBe('sync~spin');
         });
 
-        it('should use beaker icon when spec is not active', async () => {
-            const specs = await getSpecItems(false);
+        it('should use beaker icon when spec is not active and has no context', async () => {
+            const specs = await getSpecItems('my-feature', false);
             expect(specs[0].iconPath).toBeInstanceOf(vscode.ThemeIcon);
             expect((specs[0].iconPath as vscode.ThemeIcon).id).toBe('beaker');
+        });
+
+        it('should use green beaker icon when spec status is completed', async () => {
+            const specs = await getSpecItems('my-feature', false, {
+                status: 'completed',
+                workflow: 'default',
+                selectedAt: '2026-01-01',
+            });
+            const icon = specs[0].iconPath as vscode.ThemeIcon;
+            expect(icon.id).toBe('beaker');
+            expect(icon.color).toBeInstanceOf(vscode.ThemeColor);
+            expect((icon.color as vscode.ThemeColor).id).toBe('testing.iconPassed');
+        });
+
+        it('should use blue beaker icon when spec has a currentStep', async () => {
+            const specs = await getSpecItems('my-feature', false, {
+                status: 'active',
+                currentStep: 'plan',
+                workflow: 'default',
+                selectedAt: '2026-01-01',
+            });
+            const icon = specs[0].iconPath as vscode.ThemeIcon;
+            expect(icon.id).toBe('beaker');
+            expect(icon.color).toBeInstanceOf(vscode.ThemeColor);
+            expect((icon.color as vscode.ThemeColor).id).toBe('charts.blue');
+        });
+
+        it('should prefer sync~spin over colored beaker when spec is active', async () => {
+            const specs = await getSpecItems('my-feature', true, {
+                status: 'active',
+                currentStep: 'plan',
+                workflow: 'default',
+                selectedAt: '2026-01-01',
+            });
+            const icon = specs[0].iconPath as vscode.ThemeIcon;
+            expect(icon.id).toBe('sync~spin');
+        });
+    });
+
+    describe('step document colored icons', () => {
+        async function getDocumentItems(specContext: any): Promise<any[]> {
+            const specName = 'my-feature';
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: specName, path: `specs/${specName}` },
+            ]);
+            (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
+            (readSpecContextSync as jest.Mock).mockReturnValue(specContext || undefined);
+            (mockFs.existsSync as jest.Mock).mockReturnValue(true);
+            (mockFs.readFileSync as jest.Mock).mockReturnValue('# Title\nLine 2\nLine 3\nLine 4\nLine 5');
+
+            const groups = await provider.getChildren();
+            const specs = await provider.getChildren(groups[0]);
+            return provider.getChildren(specs[0]);
+        }
+
+        it('should show green pass icon for completed steps', async () => {
+            const docs = await getDocumentItems({
+                workflow: 'default',
+                selectedAt: '2026-01-01',
+                currentStep: 'plan',
+                stepHistory: {
+                    specify: { startedAt: '2026-01-01T00:00:00Z', completedAt: '2026-01-01T01:00:00Z' },
+                    plan: { startedAt: '2026-01-01T01:00:00Z', completedAt: null },
+                },
+            });
+
+            // 'specify' step (first doc) should have green pass icon
+            const specifyDoc = docs.find((d: any) => d.label === 'Specification' || d.label === 'Specify');
+            expect(specifyDoc).toBeDefined();
+            const icon = specifyDoc!.iconPath as vscode.ThemeIcon;
+            expect(icon.id).toBe('pass');
+            expect(icon.color).toBeInstanceOf(vscode.ThemeColor);
+            expect((icon.color as vscode.ThemeColor).id).toBe('testing.iconPassed');
+        });
+
+        it('should show blue circle-filled icon for current step', async () => {
+            const docs = await getDocumentItems({
+                workflow: 'default',
+                selectedAt: '2026-01-01',
+                currentStep: 'plan',
+                stepHistory: {
+                    specify: { startedAt: '2026-01-01T00:00:00Z', completedAt: '2026-01-01T01:00:00Z' },
+                    plan: { startedAt: '2026-01-01T01:00:00Z', completedAt: null },
+                },
+            });
+
+            // 'plan' step should have blue circle-filled icon
+            const planDoc = docs.find((d: any) => d.label === 'Plan');
+            expect(planDoc).toBeDefined();
+            const icon = planDoc!.iconPath as vscode.ThemeIcon;
+            expect(icon.id).toBe('circle-filled');
+            expect(icon.color).toBeInstanceOf(vscode.ThemeColor);
+            expect((icon.color as vscode.ThemeColor).id).toBe('charts.blue');
+        });
+
+        it('should not add colored icon for steps with no history', async () => {
+            const docs = await getDocumentItems({
+                workflow: 'default',
+                selectedAt: '2026-01-01',
+                currentStep: 'specify',
+                stepHistory: {
+                    specify: { startedAt: '2026-01-01T00:00:00Z', completedAt: null },
+                },
+            });
+
+            // 'tasks' step (no history entry) should have no special icon
+            const tasksDoc = docs.find((d: any) => d.label === 'Tasks');
+            expect(tasksDoc).toBeDefined();
+            expect(tasksDoc!.iconPath).toBeUndefined();
+        });
+
+        it('should not show step icons for completed specs', async () => {
+            const docs = await getDocumentItems({
+                workflow: 'default',
+                selectedAt: '2026-01-01',
+                status: 'completed',
+                currentStep: 'implement',
+                stepHistory: {
+                    specify: { startedAt: '2026-01-01T00:00:00Z', completedAt: '2026-01-01T01:00:00Z' },
+                    plan: { startedAt: '2026-01-01T01:00:00Z', completedAt: '2026-01-01T02:00:00Z' },
+                    tasks: { startedAt: '2026-01-01T02:00:00Z', completedAt: '2026-01-01T03:00:00Z' },
+                },
+            });
+
+            // Completed specs: no per-step icons — green beaker is sufficient
+            for (const doc of docs) {
+                expect(doc.iconPath).toBeUndefined();
+            }
         });
     });
 
     describe('spec-document items have no status circle descriptions', () => {
-        it('should not set description on spec-document items', async () => {
-            const today = new Date();
-
+        it('should not set description on spec-document items with content', async () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'feature', path: 'specs/feature' },
             ]);
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
-            (mockFs.readdirSync as jest.Mock).mockImplementation((dirPath: string) => {
-                // For getSpecMaxMtime
-                if (typeof dirPath === 'string' && !dirPath.includes('withFileTypes')) {
-                    return [{ name: 'spec.md', isFile: () => true }];
-                }
-                return [{ name: 'spec.md', isFile: () => true }];
-            });
-            (mockFs.statSync as jest.Mock).mockReturnValue({ mtime: today });
+            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
             (mockFs.existsSync as jest.Mock).mockReturnValue(true);
             (mockFs.readFileSync as jest.Mock).mockReturnValue('# Title\nLine 2\nLine 3\nLine 4\nLine 5');
 
-            // Get groups -> specs -> documents
             const groups = await provider.getChildren();
             const specs = await provider.getChildren(groups[0]);
             const documents = await provider.getChildren(specs[0]);
 
-            // Documents should not have circle status descriptions
             for (const doc of documents) {
                 expect(doc.description).toBeUndefined();
             }
         });
     });
 
-    describe('getSpecMaxMtime (tested indirectly)', () => {
-        it('should use most recent file mtime for grouping', async () => {
-            const today = new Date();
-            const lastMonth = new Date();
-            lastMonth.setMonth(lastMonth.getMonth() - 1);
-
-            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
-                { name: 'feature', path: 'specs/feature' },
-            ]);
-
-            // Directory has two files: one old, one from today
-            (mockFs.readdirSync as jest.Mock).mockReturnValue([
-                { name: 'spec.md', isFile: () => true },
-                { name: 'plan.md', isFile: () => true },
-            ]);
-
-            (mockFs.statSync as jest.Mock).mockImplementation((filePath: string) => {
-                if (filePath.includes('plan.md')) {
-                    return { mtime: today };
-                }
-                return { mtime: lastMonth };
-            });
-
-            const children = await provider.getChildren();
-
-            // Should be Active because max mtime is today
-            expect(children).toHaveLength(1);
-            expect(children[0].label).toBe('Active');
-        });
-
-        it('should handle empty spec directory gracefully', async () => {
-            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
-                { name: 'empty-feature', path: 'specs/empty-feature' },
-            ]);
-
-            // No files in directory
-            (mockFs.readdirSync as jest.Mock).mockReturnValue([]);
-
-            const children = await provider.getChildren();
-
-            // With mtime of epoch 0, it should go to Earlier
-            expect(children).toHaveLength(1);
-            expect(children[0].label).toBe('Earlier');
-        });
-
-        it('should handle directory read errors gracefully', async () => {
-            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
-                { name: 'broken', path: 'specs/broken' },
-            ]);
-
-            (mockFs.readdirSync as jest.Mock).mockImplementation(() => {
-                throw new Error('ENOENT');
-            });
-
-            const children = await provider.getChildren();
-
-            // Error means mtime = epoch 0, so Earlier group
-            expect(children).toHaveLength(1);
-            expect(children[0].label).toBe('Earlier');
-        });
-    });
-
-    describe('isToday (tested indirectly)', () => {
-        it('should classify a date from a different year as not today', async () => {
-            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
-                { name: 'feature', path: 'specs/feature' },
-            ]);
-            (mockFs.readdirSync as jest.Mock).mockReturnValue([
-                { name: 'spec.md', isFile: () => true },
-            ]);
-            (mockFs.statSync as jest.Mock).mockReturnValue({
-                mtime: new Date(2020, 0, 1),
-            });
-
-            const children = await provider.getChildren();
-            expect(children[0].label).toBe('Earlier');
-        });
-
-        it('should classify yesterday as not today', async () => {
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-
-            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
-                { name: 'feature', path: 'specs/feature' },
-            ]);
-            (mockFs.readdirSync as jest.Mock).mockReturnValue([
-                { name: 'spec.md', isFile: () => true },
-            ]);
-            (mockFs.statSync as jest.Mock).mockReturnValue({ mtime: yesterday });
-
-            const children = await provider.getChildren();
-            expect(children[0].label).toBe('Earlier');
-        });
-    });
-
     describe('loading state', () => {
         it('should show loading item when isLoading is true', async () => {
-            // Trigger loading state
             provider.refresh();
-            // isLoading is true right after refresh()
 
-            // Access internal state - provider.isLoading is protected but set by refresh()
-            // The first call after refresh should return loading indicator
             const children = await provider.getChildren();
 
             expect(children).toHaveLength(1);

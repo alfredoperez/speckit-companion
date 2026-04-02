@@ -17,6 +17,7 @@ import {
     CheckpointId,
     FeatureWorkflowContext,
     FEATURE_CONTEXT_FILE,
+    LEGACY_CONTEXT_FILE,
 } from './types';
 
 /**
@@ -208,7 +209,8 @@ export async function executeCheckpoint(
 }
 
 /**
- * Update checkpoint status in .speckit.json
+ * Update checkpoint status in .spec-context.json
+ * Auto-migrates from legacy .speckit.json if present.
  * @param featureDir Path to feature directory
  * @param checkpointId Checkpoint identifier
  * @param status New status
@@ -219,19 +221,28 @@ async function updateCheckpointStatus(
     status: 'pending' | 'completed' | 'skipped'
 ): Promise<void> {
     const contextPath = path.join(featureDir, FEATURE_CONTEXT_FILE);
+    const legacyPath = path.join(featureDir, LEGACY_CONTEXT_FILE);
 
     try {
         let context: FeatureWorkflowContext;
+        let hadLegacy = false;
 
         try {
             const content = await fs.promises.readFile(contextPath, 'utf-8');
             context = JSON.parse(content);
         } catch {
-            // File doesn't exist, create minimal context
-            context = {
-                workflow: 'default',
-                selectedAt: new Date().toISOString(),
-            };
+            // Try legacy .speckit.json
+            try {
+                const content = await fs.promises.readFile(legacyPath, 'utf-8');
+                context = JSON.parse(content);
+                hadLegacy = true;
+            } catch {
+                // No file exists, create minimal context
+                context = {
+                    workflow: 'default',
+                    selectedAt: new Date().toISOString(),
+                };
+            }
         }
 
         // Update checkpoint status
@@ -241,6 +252,15 @@ async function updateCheckpointStatus(
         context.checkpointStatus[checkpointId] = status;
 
         await fs.promises.writeFile(contextPath, JSON.stringify(context, null, 2), 'utf-8');
+
+        // Clean up legacy file after successful migration
+        if (hadLegacy) {
+            try {
+                await fs.promises.unlink(legacyPath);
+            } catch {
+                // Ignore cleanup errors
+            }
+        }
     } catch (error) {
         console.error('Failed to update checkpoint status:', error);
     }

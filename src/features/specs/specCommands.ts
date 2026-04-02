@@ -10,9 +10,11 @@ import {
     getOrSelectWorkflow,
     resolveStepCommand,
     executeCheckpointsForTrigger,
+    normalizeWorkflowConfig,
     WorkflowStep,
     WorkflowConfig,
 } from '../workflows';
+import { updateStepProgress, setSpecStatus } from './specContextManager';
 
 /**
  * Register SpecKit workflow commands (create, specify, plan, tasks, etc.)
@@ -76,6 +78,34 @@ export function registerSpecKitCommands(
     // Register phase commands
     registerPhaseCommands(context, specExplorer, outputChannel);
     registerCustomCommand(context, outputChannel);
+
+    // Mark as Completed
+    context.subscriptions.push(
+        vscode.commands.registerCommand('speckit.markCompleted', async (item: SpecTreeItem) => {
+            const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+            if (workspaceFolder && item) {
+                const relativePath = (item as SpecTreeItem).specPath || `specs/${item.label}`;
+                const specDir = path.join(workspaceFolder.uri.fsPath, relativePath);
+                await setSpecStatus(specDir, 'completed');
+                specExplorer.refresh();
+                NotificationUtils.showAutoDismissNotification(`Spec "${item.label}" marked as completed`);
+            }
+        })
+    );
+
+    // Archive spec
+    context.subscriptions.push(
+        vscode.commands.registerCommand('speckit.archive', async (item: SpecTreeItem) => {
+            const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+            if (workspaceFolder && item) {
+                const relativePath = (item as SpecTreeItem).specPath || `specs/${item.label}`;
+                const specDir = path.join(workspaceFolder.uri.fsPath, relativePath);
+                await setSpecStatus(specDir, 'archived');
+                specExplorer.refresh();
+                NotificationUtils.showAutoDismissNotification(`Spec "${item.label}" archived`);
+            }
+        })
+    );
 
     // Watch configured spec directories
     const watcherPatterns = getFileWatcherPatterns();
@@ -186,6 +216,13 @@ async function executeWorkflowStep(
     }
 
     outputChannel.appendLine(`[SpecKit] Using workflow: ${workflow.displayName || workflow.name}`);
+
+    // Update step progress in .spec-context.json
+    const normalized = normalizeWorkflowConfig(workflow);
+    const workflowStepNames = (normalized.steps || []).map(s => s.name);
+    updateStepProgress(targetDir, step, workflowStepNames).catch(err => {
+        outputChannel.appendLine(`[SpecKit] Failed to update step progress: ${err}`);
+    });
 
     // Resolve the command for this step
     const command = resolveStepCommand(workflow, step);

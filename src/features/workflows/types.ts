@@ -92,14 +92,46 @@ export interface WorkflowCommandConfig {
 }
 
 /**
- * Feature workflow context persisted in .speckit.json
+ * Spec status for sidebar grouping
+ */
+export type SpecStatus = 'active' | 'completed' | 'archived';
+
+/**
+ * Step history entry tracking when a step was started and completed
+ */
+export interface StepHistoryEntry {
+    startedAt: string;
+    completedAt: string | null;
+}
+
+/**
+ * Feature workflow context persisted in .spec-context.json
+ *
+ * Extension-managed fields: workflow, selectedAt, currentStep, status, stepHistory, checkpointStatus
+ * SDD-enriched fields (optional): step, substep, task, next, updated, approach, last_action,
+ *   task_summaries, step_summaries, files_modified
  */
 export interface FeatureWorkflowContext {
     workflow: string;
     selectedAt: string;
     /** Current step in the workflow (e.g. "specify", "plan", "tasks", "done", "archived") */
     currentStep?: string;
+    /** Spec status for sidebar grouping */
+    status?: SpecStatus;
+    /** Step history with start/completion timestamps */
+    stepHistory?: Record<string, StepHistoryEntry>;
     checkpointStatus?: Record<CheckpointId, CheckpointStatus>;
+    /** SDD-enriched fields — extension ignores if absent */
+    step?: string;
+    substep?: string | null;
+    task?: string | null;
+    next?: string | null;
+    updated?: string;
+    approach?: string;
+    last_action?: string;
+    task_summaries?: Record<string, unknown>;
+    step_summaries?: Record<string, unknown>;
+    files_modified?: string[];
 }
 
 /**
@@ -142,4 +174,7 @@ export const WORKFLOW_NAME_PATTERN = /^[a-z][a-z0-9-]*$/;
 /**
  * File name for feature workflow context
  */
-export const FEATURE_CONTEXT_FILE = '.speckit.json';
+export const FEATURE_CONTEXT_FILE = '.spec-context.json';
+
+/** Legacy filename for migration fallback */
+export const LEGACY_CONTEXT_FILE = '.speckit.json';

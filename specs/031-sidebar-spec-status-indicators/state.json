@@ -1,0 +1,21 @@
+{
+  "step": "tasks",
+  "task": null,
+  "substep": null,
+  "next": "implement",
+  "updated": "2026-04-01",
+  "approach": "Rename .speckit.json to .spec-context.json, group sidebar by status instead of mtime, add colored ThemeIcons for step progress",
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 7,
+      "scenarios": 4,
+      "key_finding": "Active/Earlier grouping uses mtime only; currentStep from .speckit.json is available via getFeatureWorkflow() but unused in tree rendering"
+    },
+    "plan": {
+      "approach_summary": "Rename .speckit.json to .spec-context.json, group sidebar by status instead of mtime, add colored ThemeIcons for step progress",
+      "files_planned": 10,
+      "risks": ["Legacy .speckit.json files in existing projects", "SDD and extension writing concurrently"]
+    }
+  }
+}

@@ -52,9 +52,18 @@ Each feature flows through four phases:
 
 The sidebar organizes everything your AI assistant needs: **Specs** for feature development, **Steering** for AI guidance documents, **Agents** for custom agent definitions, **Skills** for reusable capabilities, and **Hooks** for automation triggers.
 
-Specs are grouped into two collapsible sections:
-- **Active** — Specs modified today, sorted newest-first, expanded by default
-- **Earlier** — Older specs, collapsed by default
+Specs are grouped into three collapsible sections based on their status (stored in `.spec-context.json`):
+- **Active** — Specs in progress, expanded by default
+- **Completed** — Specs marked as done, collapsed by default
+- **Archived** — Specs moved to archive, collapsed by default
+
+Right-click a spec to access **Mark as Completed** and **Archive Spec** actions.
+
+**Color indicators:**
+- Green beaker icon — completed spec
+- Blue beaker icon — spec with an active workflow step
+- Green check — completed step
+- Blue dot — current step
 
 When a workflow step command is running for a spec, the spec node displays a spinning progress indicator instead of its default icon.
 
