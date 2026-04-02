@@ -13,7 +13,7 @@
       "steps": [
         {
           "name": "specify",
-          "label": "Specify",
+          "label": "Specification",
           "command": "sdd:specify",
           "file": "spec.md"
         },

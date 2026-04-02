@@ -111,6 +111,17 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 }
             }
 
+            // Sort active specs by creation date (newest first)
+            activeSpecs.sort((a, b) => {
+                try {
+                    const aTime = fs.statSync(path.join(basePath, a.path)).birthtime.getTime();
+                    const bTime = fs.statSync(path.join(basePath, b.path)).birthtime.getTime();
+                    return bTime - aTime;
+                } catch {
+                    return 0;
+                }
+            });
+
             const items: SpecItem[] = [];
 
             if (activeSpecs.length > 0) {

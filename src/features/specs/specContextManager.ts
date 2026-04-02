@@ -125,7 +125,13 @@ async function tryReadJson(filePath: string): Promise<Record<string, unknown> | 
 export async function readSpecContext(specDir: string): Promise<FeatureWorkflowContext | undefined> {
     // Try .spec-context.json first
     const data = await tryReadJson(path.join(specDir, FEATURE_CONTEXT_FILE));
-    if (data) return data as unknown as FeatureWorkflowContext;
+    if (data) {
+        // If the file uses SDD format (has `step` but no `currentStep`), infer context
+        if (data.step && !data.currentStep) {
+            return inferContextFromState(data);
+        }
+        return data as unknown as FeatureWorkflowContext;
+    }
 
     // Fall back to legacy .speckit.json
     const legacy = await tryReadJson(path.join(specDir, LEGACY_CONTEXT_FILE));
@@ -144,7 +150,13 @@ export async function readSpecContext(specDir: string): Promise<FeatureWorkflowC
 export function readSpecContextSync(specDir: string): FeatureWorkflowContext | undefined {
     // Try .spec-context.json first
     const data = tryReadJsonSync(path.join(specDir, FEATURE_CONTEXT_FILE));
-    if (data) return data as unknown as FeatureWorkflowContext;
+    if (data) {
+        // If the file uses SDD format (has `step` but no `currentStep`), infer context
+        if (data.step && !data.currentStep) {
+            return inferContextFromState(data);
+        }
+        return data as unknown as FeatureWorkflowContext;
+    }
 
     // Fall back to legacy .speckit.json
     const legacy = tryReadJsonSync(path.join(specDir, LEGACY_CONTEXT_FILE));
