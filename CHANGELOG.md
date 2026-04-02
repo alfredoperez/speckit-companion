@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.3] - 2026-04-02
+
+### New Features
+
+- **Unified Permission Mode**: New `speckit.permissionMode` setting replaces per-provider settings (`claudePermissionMode`, `copilotPermissionMode`, `qwenYoloMode`). Values: `"interactive"` (default, recommended) and `"auto-approve"` (YOLO). Applies to Claude, Copilot, and Qwen. (#7)
+
+### Improvements
+
+- **Spec Viewer Lifecycle Buttons (BETA)**: Overhauled lifecycle buttons and simplified status system in the spec viewer. Status-based sidebar grouping with colored step indicators.
+- **Safe Default**: Extension no longer defaults to bypass-permissions mode. New installs start in interactive mode.
+- **Removed Permission Gate**: Removed the PermissionManager/PermissionWebview startup dialog — no permission prompt on extension activation.
+- **Specs View Always Visible**: Specs sidebar view is no longer gated behind a visibility setting — always shows when a workspace is open.
+
+### Breaking Changes
+
+- Per-provider permission settings removed: `speckit.claudePermissionMode`, `speckit.copilotPermissionMode`, `speckit.qwenYoloMode`. Use `speckit.permissionMode` instead.
+- Setting `speckit.views.specs.visible` removed — Specs view is always visible.
+
 ## [0.9.2] - 2026-04-01
 
 ### New Features
