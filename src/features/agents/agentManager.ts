@@ -299,9 +299,9 @@ export class AgentManager {
                 return agents;
             }
 
-            for (const [pluginKey, pluginInfo] of Object.entries(installedPlugins.plugins)) {
-                const pluginData: InstalledPlugin = pluginInfo;
-                if (!pluginData.installPath) {
+            for (const [pluginKey, pluginEntries] of Object.entries(installedPlugins.plugins)) {
+                const pluginData = Array.isArray(pluginEntries) ? pluginEntries[0] : pluginEntries;
+                if (!pluginData?.installPath) {
                     this.outputChannel.appendLine(`[AgentManager] Plugin ${pluginKey} has no installPath, skipping`);
                     continue;
                 }

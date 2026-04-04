@@ -6,12 +6,9 @@ import { SteeringManager } from './steeringManager';
 import { getConfiguredProviderType, getProviderPaths, AIProviderType } from '../../ai-providers/aiProvider';
 import { SpecKitFilesResult, SPECKIT_PATHS } from './types';
 import { BaseTreeDataProvider } from '../../core/providers';
-import { getWorkflow } from '../../features/workflows/workflowManager';
-import { WorkflowConfig } from '../../features/workflows/types';
-import { ConfigKeys } from '../../core/constants';
 import { AgentManager, AgentInfo } from '../agents/agentManager';
 import { SkillManager, SkillInfo, SkillType } from '../skills/skillManager';
-import type { HookTrigger, HookAction, HookInfo, ClaudeSettingsJson } from '../../core/types/config';
+import { TreeContext } from './treeContextValues';
 
 export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem> {
     private steeringManager!: SteeringManager;
@@ -133,41 +130,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
 
             const providerType = getConfiguredProviderType();
             const providerPaths = getProviderPaths(providerType);
-
-            // Get provider-specific paths
-            const { globalPath, projectPath, globalExists, projectExists } = this.getSteeringFilePaths(providerType, providerPaths);
-
-            // Show Global Rule if exists
-            if (globalExists && globalPath) {
-                items.push(new SteeringItem(
-                    'Global Rule',
-                    vscode.TreeItemCollapsibleState.None,
-                    'claude-md-global',
-                    globalPath,
-                    this.context,
-                    {
-                        command: 'vscode.open',
-                        title: `Open Global ${providerPaths.steeringFile}`,
-                        arguments: [vscode.Uri.file(globalPath)]
-                    }
-                ));
-            }
-
-            // Show Project Rule if exists
-            if (projectExists && projectPath) {
-                items.push(new SteeringItem(
-                    'Project Rule',
-                    vscode.TreeItemCollapsibleState.None,
-                    'claude-md-project',
-                    projectPath,
-                    this.context,
-                    {
-                        command: 'vscode.open',
-                        title: `Open Project ${providerPaths.steeringFile}`,
-                        arguments: [vscode.Uri.file(projectPath)]
-                    }
-                ));
-            }
+            const { globalExists, projectExists } = this.getSteeringFilePaths(providerType, providerPaths);
 
             // Traditional steering documents - provider-specific
             if (vscode.workspace.workspaceFolders && providerPaths.steeringDir) {
@@ -176,7 +139,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                     items.push(new SteeringItem(
                         'Steering Docs',
                         vscode.TreeItemCollapsibleState.Expanded,
-                        'steering-header',
+                        TreeContext.STEERING_HEADER,
                         '',
                         this.context
                     ));
@@ -192,69 +155,20 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                 items.push(new SteeringItem(
                     'SpecKit Files',
                     vscode.TreeItemCollapsibleState.Expanded,
-                    'speckit-header',
+                    TreeContext.SPECKIT_HEADER,
                     '',
                     this.context
                 ));
             }
 
-            // Workflow Steps - show steps/commands referenced by active workflow
-            const workflowStepRefs = await this.getWorkflowStepRefs();
-            if (workflowStepRefs.length > 0) {
-                items.push(new SteeringItem(
-                    'Workflow',
-                    vscode.TreeItemCollapsibleState.Expanded,
-                    'workflow-commands-header',
-                    '',
-                    this.context
-                ));
-            }
-
-            // Agents group — show if provider supports agents
-            if (this.agentManager && getProviderPaths(providerType).agentsDir) {
-                const allAgents = [
-                    ...await this.agentManager.getAgentList('plugin'),
-                    ...await this.agentManager.getAgentList('user'),
-                    ...await this.agentManager.getAgentList('project'),
-                ];
-                if (allAgents.length > 0) {
-                    items.push(new SteeringItem(
-                        'Agents',
-                        vscode.TreeItemCollapsibleState.Collapsed,
-                        'agents-header',
-                        '',
-                        this.context
-                    ));
-                }
-            }
-
-            // Skills group — only for Claude/Codex
-            if (this.skillManager && (providerType === 'claude' || providerType === 'codex')) {
-                const allSkills = await this.skillManager.getSkillList('all');
-                if (allSkills.length > 0) {
-                    items.push(new SteeringItem(
-                        'Skills',
-                        vscode.TreeItemCollapsibleState.Collapsed,
-                        'skills-header',
-                        '',
-                        this.context
-                    ));
-                }
-            }
-
-            // Hooks group — only for providers that support hooks
-            if (getProviderPaths(providerType).supportsHooks) {
-                const hooks = await this.getClaudeCodeHooks();
-                if (hooks.length > 0) {
-                    items.push(new SteeringItem(
-                        'Hooks',
-                        vscode.TreeItemCollapsibleState.Collapsed,
-                        'hooks-header',
-                        '',
-                        this.context
-                    ));
-                }
-            }
+            // AI Provider section — CLAUDE.md, agents, skills, settings under provider name
+            items.push(new SteeringItem(
+                providerPaths.displayName,
+                vscode.TreeItemCollapsibleState.Collapsed,
+                TreeContext.PROVIDER_HEADER,
+                '',
+                this.context
+            ));
 
             // Add create buttons for missing files (Claude only for now)
             if (providerType === 'claude') {
@@ -262,7 +176,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                     items.push(new SteeringItem(
                         'Create Global Rule',
                         vscode.TreeItemCollapsibleState.None,
-                        'create-global-claude',
+                        TreeContext.CREATE_GLOBAL,
                         '',
                         this.context,
                         {
@@ -276,7 +190,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                     items.push(new SteeringItem(
                         'Create Project Rule',
                         vscode.TreeItemCollapsibleState.None,
-                        'create-project-claude',
+                        TreeContext.CREATE_PROJECT,
                         '',
                         this.context,
                         {
@@ -322,22 +236,16 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             return this.getSpecKitScripts();
         } else if (element.contextValue === 'speckit-templates-category') {
             return this.getSpecKitTemplates();
-        } else if (element.contextValue === 'workflow-commands-header') {
-            return this.getWorkflowCommandChildren();
-        } else if (element.contextValue === 'agents-header') {
-            return this.getAgentsGroupChildren();
-        } else if (element.contextValue === 'agents-group') {
-            return this.getAgentChildren(element.groupType as 'project' | 'user' | 'plugin');
-        } else if (element.contextValue === 'skills-header') {
-            return this.getSkillsGroupChildren();
-        } else if (element.contextValue === 'skills-group') {
-            return this.getSkillChildren(element.groupType as SkillType);
-        } else if (element.contextValue === 'hooks-header') {
-            return this.getHooksChildren();
-        } else if (element.contextValue === 'hook') {
-            return this.getHookTriggerChildren(element);
-        } else if (element.contextValue === 'hook-trigger') {
-            return this.getHookTriggerDetails(element);
+        } else if (element.contextValue === TreeContext.PROVIDER_HEADER) {
+            return this.getProviderHeaderChildren();
+        } else if (element.contextValue === TreeContext.PROVIDER_PROJECT_GROUP) {
+            return this.getProviderProjectChildren();
+        } else if (element.contextValue === TreeContext.PROVIDER_USER_GROUP) {
+            return this.getProviderUserChildren();
+        } else if (element.contextValue === TreeContext.PROVIDER_AGENTS_GROUP) {
+            return this.getAgentsForScope(element.groupType as string);
+        } else if (element.contextValue === TreeContext.PROVIDER_SKILLS_GROUP) {
+            return this.getSkillsForScope(element.groupType as string);
         }
 
         return [];
@@ -581,82 +489,229 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
     }
 
     /**
-     * Get workflow command files referenced by the active workflow
+     * Get children for the provider header (Project, User sub-groups)
      */
-    /**
-     * Get all workflow step references for the active workflow.
-     * Returns step names with resolved file paths (command .md, skill SKILL.md, or null).
-     */
-    private async getWorkflowStepRefs(): Promise<Array<{ label: string; command: string; path: string | null; type: 'step' | 'custom-command' }>> {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder) return [];
+    private async getProviderHeaderChildren(): Promise<SteeringItem[]> {
+        const items: SteeringItem[] = [];
 
-        const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
-        const defaultWorkflowName = config.get<string>('defaultWorkflow', 'default');
-        const workflow = getWorkflow(defaultWorkflowName) || getWorkflow('default');
-        if (!workflow || workflow.name === 'default') {
-            // Fall back: check if any custom workflows are configured at all
-            const customWorkflows = config.get<Array<Record<string, unknown>>>('customWorkflows', []);
-            if (customWorkflows.length === 0) return [];
-            // Use the first configured workflow
-            const first = getWorkflow(customWorkflows[0].name as string);
-            if (!first) return [];
-            return this.resolveWorkflowStepRefs(first, workspaceFolder.uri.fsPath);
-        }
+        items.push(new SteeringItem(
+            'Project',
+            vscode.TreeItemCollapsibleState.Collapsed,
+            TreeContext.PROVIDER_PROJECT_GROUP,
+            '',
+            this.context
+        ));
 
-        return this.resolveWorkflowStepRefs(workflow, workspaceFolder.uri.fsPath);
+        items.push(new SteeringItem(
+            'User',
+            vscode.TreeItemCollapsibleState.Collapsed,
+            TreeContext.PROVIDER_USER_GROUP,
+            '',
+            this.context
+        ));
+
+        return items;
     }
 
     /**
-     * Get agent sub-groups (Plugin, User, Project)
+     * Get children for Project sub-group (CLAUDE.md, Agents, Skills, Settings)
      */
-    private async getAgentsGroupChildren(): Promise<SteeringItem[]> {
-        if (!this.agentManager) return [];
+    private async getProviderProjectChildren(): Promise<SteeringItem[]> {
         const items: SteeringItem[] = [];
         const providerType = getConfiguredProviderType();
+        const providerPaths = getProviderPaths(providerType);
+        const { projectPath, projectExists } = this.getSteeringFilePaths(providerType, providerPaths);
 
-        if (providerType === 'claude') {
-            const pluginAgents = await this.agentManager.getAgentList('plugin');
-            if (pluginAgents.length > 0) {
+        // Steering file (e.g., CLAUDE.md)
+        if (projectExists && projectPath) {
+            items.push(new SteeringItem(
+                providerPaths.steeringFile,
+                vscode.TreeItemCollapsibleState.None,
+                TreeContext.STEERING_FILE,
+                projectPath,
+                this.context,
+                {
+                    command: 'vscode.open',
+                    title: `Open Project ${providerPaths.steeringFile}`,
+                    arguments: [vscode.Uri.file(projectPath)]
+                }
+            ));
+        }
+
+        // Agents sub-header
+        if (this.agentManager && providerPaths.agentsDir) {
+            const agents = await this.agentManager.getAgentList('project');
+            if (agents.length > 0) {
                 items.push(new SteeringItem(
-                    'Plugin Agents',
+                    'Agents',
                     vscode.TreeItemCollapsibleState.Collapsed,
-                    'agents-group',
+                    TreeContext.PROVIDER_AGENTS_GROUP,
                     '',
                     this.context,
                     undefined,
                     undefined,
-                    'plugin'
+                    'project'
                 ));
             }
+        }
 
+        // Skills sub-header
+        if (this.skillManager && providerPaths.skillsDir) {
+            const skills = await this.skillManager.getSkillList('project');
+            if (skills.length > 0) {
+                items.push(new SteeringItem(
+                    'Skills',
+                    vscode.TreeItemCollapsibleState.Collapsed,
+                    TreeContext.PROVIDER_SKILLS_GROUP,
+                    '',
+                    this.context,
+                    undefined,
+                    undefined,
+                    'project'
+                ));
+            }
+        }
+
+        // Settings file
+        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        if (workspaceRoot) {
+            const settingsPath = path.join(workspaceRoot, providerPaths.mcpConfigPath);
+            if (fs.existsSync(settingsPath)) {
+                items.push(new SteeringItem(
+                    'Settings',
+                    vscode.TreeItemCollapsibleState.None,
+                    TreeContext.PROVIDER_SETTINGS,
+                    settingsPath,
+                    this.context,
+                    {
+                        command: 'vscode.open',
+                        title: 'Open Settings',
+                        arguments: [vscode.Uri.file(settingsPath)]
+                    }
+                ));
+            }
+        }
+
+        return items;
+    }
+
+    /**
+     * Get children for User sub-group (CLAUDE.md, Agents, Skills, Settings)
+     */
+    private async getProviderUserChildren(): Promise<SteeringItem[]> {
+        const items: SteeringItem[] = [];
+        const providerType = getConfiguredProviderType();
+        const providerPaths = getProviderPaths(providerType);
+        const { globalPath, globalExists } = this.getSteeringFilePaths(providerType, providerPaths);
+
+        // Steering file (e.g., CLAUDE.md)
+        if (globalExists && globalPath) {
+            items.push(new SteeringItem(
+                providerPaths.steeringFile,
+                vscode.TreeItemCollapsibleState.None,
+                TreeContext.STEERING_FILE,
+                globalPath,
+                this.context,
+                {
+                    command: 'vscode.open',
+                    title: `Open User ${providerPaths.steeringFile}`,
+                    arguments: [vscode.Uri.file(globalPath)]
+                }
+            ));
+        }
+
+        // Agents sub-header (user + plugin)
+        if (this.agentManager && providerPaths.agentsDir) {
             const userAgents = await this.agentManager.getAgentList('user');
+            let hasAgents = userAgents.length > 0;
+            if (!hasAgents && providerType === 'claude') {
+                const pluginAgents = await this.agentManager.getAgentList('plugin');
+                hasAgents = pluginAgents.length > 0;
+            }
+            if (hasAgents) {
+                items.push(new SteeringItem(
+                    'Agents',
+                    vscode.TreeItemCollapsibleState.Collapsed,
+                    TreeContext.PROVIDER_AGENTS_GROUP,
+                    '',
+                    this.context,
+                    undefined,
+                    undefined,
+                    'user'
+                ));
+            }
+        }
+
+        // Skills sub-header (user + plugin)
+        if (this.skillManager && providerPaths.skillsDir) {
+            const userSkills = await this.skillManager.getSkillList('user');
+            let hasSkills = userSkills.length > 0;
+            if (!hasSkills && providerType === 'claude') {
+                const pluginSkills = await this.skillManager.getSkillList('plugin');
+                hasSkills = pluginSkills.length > 0;
+            }
+            if (hasSkills) {
+                items.push(new SteeringItem(
+                    'Skills',
+                    vscode.TreeItemCollapsibleState.Collapsed,
+                    TreeContext.PROVIDER_SKILLS_GROUP,
+                    '',
+                    this.context,
+                    undefined,
+                    undefined,
+                    'user'
+                ));
+            }
+        }
+
+        // Settings file
+        const home = os.homedir();
+        const userSettingsPath = path.join(home, providerPaths.mcpConfigPath);
+        if (fs.existsSync(userSettingsPath)) {
             items.push(new SteeringItem(
-                'User Agents',
-                vscode.TreeItemCollapsibleState.Collapsed,
-                'agents-group',
-                '',
+                'Settings',
+                vscode.TreeItemCollapsibleState.None,
+                TreeContext.PROVIDER_SETTINGS,
+                userSettingsPath,
                 this.context,
-                undefined,
-                undefined,
-                'user'
+                {
+                    command: 'vscode.open',
+                    title: 'Open User Settings',
+                    arguments: [vscode.Uri.file(userSettingsPath)]
+                }
             ));
         }
 
-        const projectAgents = await this.agentManager.getAgentList('project');
-        if (projectAgents.length > 0 || vscode.workspace.workspaceFolders) {
-            items.push(new SteeringItem(
-                'Project Agents',
-                vscode.TreeItemCollapsibleState.Collapsed,
-                'agents-group',
-                '',
-                this.context,
-                undefined,
-                undefined,
-                'project'
-            ));
-        }
+        return items;
+    }
 
+    /**
+     * Get agents for a scope (project or user+plugin)
+     */
+    private async getAgentsForScope(scope: string): Promise<SteeringItem[]> {
+        const providerType = getConfiguredProviderType();
+        if (scope === 'project') {
+            return this.getAgentChildren('project');
+        }
+        const items = await this.getAgentChildren('user');
+        if (providerType === 'claude') {
+            items.push(...await this.getAgentChildren('plugin'));
+        }
+        return items;
+    }
+
+    /**
+     * Get skills for a scope (project or user+plugin)
+     */
+    private async getSkillsForScope(scope: string): Promise<SteeringItem[]> {
+        const providerType = getConfiguredProviderType();
+        if (scope === 'project') {
+            return this.getSkillChildren('project');
+        }
+        const items = await this.getSkillChildren('user');
+        if (providerType === 'claude') {
+            items.push(...await this.getSkillChildren('plugin'));
+        }
         return items;
     }
 
@@ -688,58 +743,6 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
     }
 
     /**
-     * Get skill sub-groups (Plugin, User, Project)
-     */
-    private async getSkillsGroupChildren(): Promise<SteeringItem[]> {
-        if (!this.skillManager) return [];
-        const items: SteeringItem[] = [];
-
-        const pluginSkills = await this.skillManager.getSkillList('plugin');
-        if (pluginSkills.length > 0) {
-            items.push(new SteeringItem(
-                'Plugin Skills',
-                vscode.TreeItemCollapsibleState.Collapsed,
-                'skills-group',
-                '',
-                this.context,
-                undefined,
-                undefined,
-                'plugin'
-            ));
-        }
-
-        const userSkills = await this.skillManager.getSkillList('user');
-        if (userSkills.length > 0) {
-            items.push(new SteeringItem(
-                'User Skills',
-                vscode.TreeItemCollapsibleState.Collapsed,
-                'skills-group',
-                '',
-                this.context,
-                undefined,
-                undefined,
-                'user'
-            ));
-        }
-
-        const projectSkills = await this.skillManager.getSkillList('project');
-        if (projectSkills.length > 0) {
-            items.push(new SteeringItem(
-                'Project Skills',
-                vscode.TreeItemCollapsibleState.Collapsed,
-                'skills-group',
-                '',
-                this.context,
-                undefined,
-                undefined,
-                'project'
-            ));
-        }
-
-        return items;
-    }
-
-    /**
      * Get individual skills for a group type
      */
     private async getSkillChildren(type: SkillType): Promise<SteeringItem[]> {
@@ -768,270 +771,11 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
         });
     }
 
-    /**
-     * Get Claude Code hooks from settings files
-     */
-    private async getClaudeCodeHooks(): Promise<HookInfo[]> {
-        const hooks: HookInfo[] = [];
 
-        // Check workspace .claude/settings.json first
-        if (vscode.workspace.workspaceFolders) {
-            const workspaceConfigPath = path.join(
-                vscode.workspace.workspaceFolders[0].uri.fsPath,
-                '.claude', 'settings.json'
-            );
-            if (fs.existsSync(workspaceConfigPath)) {
-                try {
-                    const config: ClaudeSettingsJson = JSON.parse(fs.readFileSync(workspaceConfigPath, 'utf8'));
-                    if (config.hooks) {
-                        for (const [name, value] of Object.entries(config.hooks)) {
-                            hooks.push({ name, enabled: true, config: value, configPath: workspaceConfigPath });
-                        }
-                    }
-                } catch { /* ignore parse errors */ }
-            }
-        }
-
-        // Then check global ~/.claude/settings.json
-        try {
-            const claudeConfigPath = path.join(os.homedir(), '.claude', 'settings.json');
-            if (fs.existsSync(claudeConfigPath)) {
-                const config: ClaudeSettingsJson = JSON.parse(fs.readFileSync(claudeConfigPath, 'utf8'));
-                if (config.hooks) {
-                    for (const [name, value] of Object.entries(config.hooks)) {
-                        if (!hooks.find(h => h.name === name)) {
-                            hooks.push({ name, enabled: true, config: value, configPath: claudeConfigPath });
-                        }
-                    }
-                }
-            }
-        } catch { /* ignore parse errors */ }
-
-        return hooks;
-    }
-
-    /**
-     * Get hooks as tree items
-     */
-    private async getHooksChildren(): Promise<SteeringItem[]> {
-        const hooks = await this.getClaudeCodeHooks();
-        return hooks.map(hook => {
-            const item = new SteeringItem(
-                hook.name,
-                vscode.TreeItemCollapsibleState.Collapsed,
-                'hook',
-                '',
-                this.context
-            );
-            item.hookConfig = hook.config;
-            item.hookConfigPath = hook.configPath;
-            return item;
-        });
-    }
-
-    /**
-     * Get trigger children for a hook
-     */
-    private getHookTriggerChildren(element: SteeringItem): SteeringItem[] {
-        if (!element.hookConfig || !Array.isArray(element.hookConfig)) return [];
-        return (element.hookConfig as HookTrigger[]).map((trigger, index) => {
-            const item = new SteeringItem(
-                `Trigger ${index + 1}`,
-                vscode.TreeItemCollapsibleState.Expanded,
-                'hook-trigger',
-                '',
-                this.context,
-                element.hookConfigPath ? {
-                    command: 'vscode.open',
-                    title: 'Open Configuration File',
-                    arguments: [vscode.Uri.file(element.hookConfigPath)]
-                } : undefined
-            );
-            item.hookConfig = trigger;
-            return item;
-        });
-    }
-
-    /**
-     * Get details for a single hook trigger
-     */
-    private getHookTriggerDetails(element: SteeringItem): SteeringItem[] {
-        const trigger = element.hookConfig as HookTrigger;
-        if (!trigger) return [];
-        const items: SteeringItem[] = [];
-
-        if (trigger.matcher !== undefined) {
-            items.push(new SteeringItem(
-                `Matcher: ${trigger.matcher || '(empty)'}`,
-                vscode.TreeItemCollapsibleState.None,
-                'hook-detail',
-                '',
-                this.context,
-                element.command
-            ));
-        }
-
-        if (trigger.hooks && Array.isArray(trigger.hooks)) {
-            for (const hook of trigger.hooks) {
-                if (hook.type === 'command' && hook.command) {
-                    items.push(new SteeringItem(
-                        `Command: ${hook.command}`,
-                        vscode.TreeItemCollapsibleState.None,
-                        'hook-command',
-                        '',
-                        this.context
-                    ));
-                }
-            }
-        }
-
-        return items;
-    }
-
-    /**
-     * Resolve all workflow step references to backing files.
-     * Searches: .claude/commands/, ~/.claude/commands/, skill SKILL.md paths
-     */
-    private resolveWorkflowStepRefs(
-        workflow: WorkflowConfig,
-        workspaceRoot: string
-    ): Array<{ label: string; command: string; path: string | null; type: 'step' | 'custom-command' }> {
-        const refs: Array<{ label: string; command: string; path: string | null; type: 'step' | 'custom-command' }> = [];
-        const seen = new Set<string>();
-        const home = os.homedir();
-
-        const resolveCommandPath = (cmd: string): string | null => {
-            // 1. Project .claude/commands/
-            const projectCmd = path.join(workspaceRoot, '.claude', 'commands', `${cmd}.md`);
-            if (fs.existsSync(projectCmd)) return projectCmd;
-
-            // 2. User ~/.claude/commands/
-            const userCmd = path.join(home, '.claude', 'commands', `${cmd}.md`);
-            if (fs.existsSync(userCmd)) return userCmd;
-
-            // 3. Skill SKILL.md — command format "prefix.name" or "prefix:name" maps to skill dir
-            // Check project skills
-            const skillName = cmd.includes(':') ? cmd.split(':').pop()! : cmd.split('.').pop()!;
-            const skillPrefix = cmd.includes(':') ? cmd.split(':')[0] : cmd.split('.')[0];
-
-            // Plugin skills: ~/.claude/plugins/marketplaces/*/skills/{name}/SKILL.md
-            const pluginsBase = path.join(home, '.claude', 'plugins', 'marketplaces');
-            if (fs.existsSync(pluginsBase)) {
-                try {
-                    for (const marketplace of fs.readdirSync(pluginsBase)) {
-                        // Match marketplace name containing the prefix (e.g., "sdd-marketplace" for "sdd")
-                        const skillsDir = path.join(pluginsBase, marketplace, 'skills', skillName);
-                        const skillFile = path.join(skillsDir, 'SKILL.md');
-                        if (fs.existsSync(skillFile)) return skillFile;
-                    }
-                } catch { /* ignore */ }
-            }
-
-            // User skills: ~/.claude/skills/{name}/SKILL.md
-            const userSkill = path.join(home, '.claude', 'skills', skillName, 'SKILL.md');
-            if (fs.existsSync(userSkill)) return userSkill;
-
-            // Project skills: .claude/skills/{name}/SKILL.md
-            const projectSkill = path.join(workspaceRoot, '.claude', 'skills', skillName, 'SKILL.md');
-            if (fs.existsSync(projectSkill)) return projectSkill;
-
-            return null;
-        };
-
-        // Collect from steps[] array
-        if (workflow.steps && workflow.steps.length > 0) {
-            for (const step of workflow.steps) {
-                if (step.command && !seen.has(step.command)) {
-                    seen.add(step.command);
-                    refs.push({
-                        label: step.label || step.name,
-                        command: step.command,
-                        path: resolveCommandPath(step.command),
-                        type: 'step',
-                    });
-                }
-            }
-        }
-
-        // Collect from legacy step-* keys
-        const stepKeys = ['step-specify', 'step-plan', 'step-tasks', 'step-implement'] as const;
-        const legacyLabels: Record<string, string> = {
-            'step-specify': 'Specify', 'step-plan': 'Plan',
-            'step-tasks': 'Tasks', 'step-implement': 'Implement',
-        };
-        for (const key of stepKeys) {
-            const value = workflow[key];
-            if (value && !seen.has(value)) {
-                seen.add(value);
-                refs.push({
-                    label: legacyLabels[key],
-                    command: value,
-                    path: resolveCommandPath(value),
-                    type: 'step',
-                });
-            }
-        }
-
-        // Collect from customCommands setting
-        const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
-        const rawCommands = config.get<Array<Record<string, unknown> | string>>('customCommands', []);
-        for (const entry of rawCommands) {
-            if (typeof entry === 'string') continue;
-            const cmd = (entry.command as string) || (entry.name ? `speckit.${entry.name}` : undefined);
-            if (cmd) {
-                const cleaned = cmd.replace(/^\//, '');
-                if (!seen.has(cleaned)) {
-                    seen.add(cleaned);
-                    refs.push({
-                        label: (entry.title as string) || (entry.name as string) || cleaned,
-                        command: cleaned,
-                        path: resolveCommandPath(cleaned),
-                        type: 'custom-command',
-                    });
-                }
-            }
-        }
-
-        return refs;
-    }
-
-    /**
-     * Get children for the Workflow Commands header
-     */
-    private async getWorkflowCommandChildren(): Promise<SteeringItem[]> {
-        const stepRefs = await this.getWorkflowStepRefs();
-        const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
-
-        return stepRefs.map(ref => {
-            const icon = ref.type === 'step' ? 'play' : 'terminal';
-            const relativePath = ref.path ? path.relative(workspacePath, ref.path) : ref.command;
-
-            const item = new SteeringItem(
-                ref.label,
-                vscode.TreeItemCollapsibleState.None,
-                'workflow-command',
-                ref.path || '',
-                this.context,
-                ref.path ? {
-                    command: 'vscode.open',
-                    title: 'Open',
-                    arguments: [vscode.Uri.file(ref.path)]
-                } : undefined,
-                relativePath
-            );
-            item.iconPath = new vscode.ThemeIcon(icon);
-            item.tooltip = ref.path
-                ? `${ref.command} → ${relativePath}`
-                : `${ref.command} (no backing file found)`;
-            return item;
-        });
-    }
 }
 
 class SteeringItem extends vscode.TreeItem {
     public readonly groupType?: string;
-    public hookConfig?: HookTrigger | HookTrigger[];
-    public hookConfigPath?: string;
 
     constructor(
         public readonly label: string,
@@ -1046,34 +790,27 @@ class SteeringItem extends vscode.TreeItem {
         super(label, collapsibleState);
         this.groupType = groupType;
 
-        // Set appropriate icons based on type
-        if (contextValue === 'steering-loading') {
+        const C = TreeContext;
+
+        if (contextValue === C.STEERING_LOADING) {
             this.iconPath = new vscode.ThemeIcon('sync~spin');
             this.tooltip = 'Loading steering documents...';
-        } else if (contextValue === 'claude-md-global') {
-            this.iconPath = new vscode.ThemeIcon('globe');
-            this.tooltip = `Global CLAUDE.md: ${resourcePath}`;
-            this.description = '~/.claude/CLAUDE.md';
-        } else if (contextValue === 'claude-md-project') {
-            this.iconPath = new vscode.ThemeIcon('root-folder');
-            this.tooltip = `Project CLAUDE.md: ${resourcePath}`;
-            this.description = 'CLAUDE.md';
-        } else if (contextValue === 'create-global-claude') {
+        } else if (contextValue === C.STEERING_FILE) {
+            this.iconPath = new vscode.ThemeIcon('markdown');
+            this.tooltip = resourcePath;
+        } else if (contextValue === C.CREATE_GLOBAL) {
             this.iconPath = new vscode.ThemeIcon('globe');
             this.tooltip = 'Click to create Global CLAUDE.md';
-        } else if (contextValue === 'create-project-claude') {
+        } else if (contextValue === C.CREATE_PROJECT) {
             this.iconPath = new vscode.ThemeIcon('root-folder');
             this.tooltip = 'Click to create Project CLAUDE.md';
-        } else if (contextValue === 'separator') {
+        } else if (contextValue === C.SEPARATOR) {
             this.iconPath = undefined;
             this.description = undefined;
-        } else if (contextValue === 'steering-header') {
+        } else if (contextValue === C.STEERING_HEADER) {
             this.iconPath = new vscode.ThemeIcon('folder-library');
-            this.description = undefined;
-            // Make it visually distinct but not clickable
             this.tooltip = 'Generated project steering documents';
-        } else if (contextValue === 'steering-document') {
-            // Different icons for different steering documents
+        } else if (contextValue === C.STEERING_DOCUMENT) {
             if (label === 'product') {
                 this.iconPath = new vscode.ThemeIcon('lightbulb-empty');
             } else if (label === 'tech') {
@@ -1084,87 +821,52 @@ class SteeringItem extends vscode.TreeItem {
                 this.iconPath = new vscode.ThemeIcon('file');
             }
             this.tooltip = `Steering document: ${resourcePath}`;
-            this.description = filename; // Show the relative path
-        } else if (contextValue === 'speckit-header') {
+            this.description = filename;
+        } else if (contextValue === C.SPECKIT_HEADER) {
             this.iconPath = new vscode.ThemeIcon('package');
             this.tooltip = 'SpecKit project configuration files';
-        } else if (contextValue === 'speckit-constitution') {
+        } else if (contextValue === C.SPECKIT_CONSTITUTION) {
             this.iconPath = new vscode.ThemeIcon('law');
             this.tooltip = `Project Constitution: ${resourcePath}`;
             this.description = filename;
-        } else if (contextValue === 'speckit-scripts-category') {
+        } else if (contextValue === C.SPECKIT_SCRIPTS_CATEGORY) {
             this.iconPath = new vscode.ThemeIcon('code');
             this.tooltip = 'SpecKit automation scripts';
-        } else if (contextValue === 'speckit-script') {
+        } else if (contextValue === C.SPECKIT_SCRIPT) {
             this.iconPath = new vscode.ThemeIcon('terminal');
             this.tooltip = `Script: ${resourcePath}`;
             this.description = filename;
-        } else if (contextValue === 'speckit-templates-category') {
+        } else if (contextValue === C.SPECKIT_TEMPLATES_CATEGORY) {
             this.iconPath = new vscode.ThemeIcon('note');
             this.tooltip = 'SpecKit document templates';
-        } else if (contextValue === 'speckit-template') {
+        } else if (contextValue === C.SPECKIT_TEMPLATE) {
             this.iconPath = new vscode.ThemeIcon('file');
             this.tooltip = `Template: ${resourcePath}`;
             this.description = filename;
-        } else if (contextValue === 'workflow-commands-header') {
-            this.iconPath = new vscode.ThemeIcon('rocket');
-            this.tooltip = 'Steps and commands in the active workflow';
-        } else if (contextValue === 'workflow-command') {
-            this.iconPath = new vscode.ThemeIcon('terminal');
-            this.tooltip = `Workflow command: ${resourcePath}`;
-            this.description = filename;
-        } else if (contextValue === 'agents-header') {
+        } else if (contextValue === C.PROVIDER_HEADER) {
+            this.iconPath = new vscode.ThemeIcon('hubot');
+            this.tooltip = `${label} configuration files`;
+        } else if (contextValue === C.PROVIDER_PROJECT_GROUP) {
+            this.iconPath = new vscode.ThemeIcon('root-folder');
+            this.tooltip = 'Project-scoped configuration files';
+        } else if (contextValue === C.PROVIDER_USER_GROUP) {
+            this.iconPath = new vscode.ThemeIcon('globe');
+            this.tooltip = 'User-scoped configuration files';
+        } else if (contextValue === C.PROVIDER_AGENTS_GROUP) {
             this.iconPath = new vscode.ThemeIcon('robot');
-            this.tooltip = 'Custom agents';
-        } else if (contextValue === 'agents-group') {
-            if (groupType === 'plugin') {
-                this.iconPath = new vscode.ThemeIcon('extensions');
-                this.tooltip = 'Agents from installed Claude Code plugins';
-            } else if (groupType === 'user') {
-                this.iconPath = new vscode.ThemeIcon('globe');
-                this.tooltip = 'User-wide agents available across all projects';
-            } else {
-                this.iconPath = new vscode.ThemeIcon('root-folder');
-                this.tooltip = 'Project-specific agents';
-            }
-        } else if (contextValue === 'agent') {
-            this.iconPath = new vscode.ThemeIcon('robot');
-        } else if (contextValue === 'skills-header') {
-            this.iconPath = new vscode.ThemeIcon('extensions');
-            this.tooltip = 'Claude Code skills';
-        } else if (contextValue === 'skills-group') {
-            if (groupType === 'plugin') {
-                this.iconPath = new vscode.ThemeIcon('extensions');
-                this.tooltip = 'Skills from installed Claude Code plugins';
-            } else if (groupType === 'user') {
-                this.iconPath = new vscode.ThemeIcon('globe');
-                this.tooltip = 'User-wide skills available across all projects';
-            } else {
-                this.iconPath = new vscode.ThemeIcon('root-folder');
-                this.tooltip = 'Project-specific skills';
-            }
-        } else if (contextValue === 'skill') {
+            this.tooltip = 'Agents';
+        } else if (contextValue === C.PROVIDER_SKILLS_GROUP) {
             this.iconPath = new vscode.ThemeIcon('symbol-misc');
-        } else if (contextValue === 'skill-warning') {
+            this.tooltip = 'Skills';
+        } else if (contextValue === C.PROVIDER_SETTINGS) {
+            this.iconPath = new vscode.ThemeIcon('settings-gear');
+            this.tooltip = `Settings: ${resourcePath}`;
+        } else if (contextValue === C.AGENT) {
+            this.iconPath = new vscode.ThemeIcon('robot');
+        } else if (contextValue === C.SKILL) {
+            this.iconPath = new vscode.ThemeIcon('symbol-misc');
+        } else if (contextValue === C.SKILL_WARNING) {
             this.iconPath = new vscode.ThemeIcon('warning');
-        } else if (contextValue === 'hooks-header') {
-            this.iconPath = new vscode.ThemeIcon('activate-breakpoints');
-            this.tooltip = 'Claude Code hooks';
-        } else if (contextValue === 'hook') {
-            this.iconPath = new vscode.ThemeIcon('activate-breakpoints');
-        } else if (contextValue === 'hook-trigger') {
-            this.iconPath = new vscode.ThemeIcon('run');
-        } else if (contextValue === 'hook-detail') {
-            this.iconPath = label.startsWith('Matcher:')
-                ? new vscode.ThemeIcon('filter')
-                : new vscode.ThemeIcon('circle-outline');
-        } else if (contextValue === 'hook-command') {
-            this.iconPath = new vscode.ThemeIcon('terminal');
         }
-
-        // Don't set resourceUri to avoid showing diagnostic counts
-        // if (resourcePath) {
-        //     this.resourceUri = vscode.Uri.file(resourcePath);
-        // }
     }
 }
