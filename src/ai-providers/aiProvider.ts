@@ -88,6 +88,8 @@ export interface ProviderPaths {
     mcpConfigPath: string;
     /** Whether hooks are supported */
     supportsHooks: boolean;
+    /** Human-readable provider name for UI display */
+    displayName: string;
 }
 
 /**
@@ -104,6 +106,7 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         skillsPattern: '*/SKILL.md',
         mcpConfigPath: '.claude/settings.json',
         supportsHooks: true,
+        displayName: 'Claude',
     },
     gemini: {
         steeringFile: 'GEMINI.md',
@@ -115,6 +118,7 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         skillsPattern: '',
         mcpConfigPath: '.gemini/settings.json',
         supportsHooks: false,
+        displayName: 'Gemini',
     },
     copilot: {
         steeringFile: '.github/copilot-instructions.md',
@@ -126,6 +130,7 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         skillsPattern: '',
         mcpConfigPath: '.copilot/mcp-config.json',
         supportsHooks: false,
+        displayName: 'Copilot',
     },
     codex: {
         steeringFile: 'AGENTS.md',
@@ -137,6 +142,7 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         skillsPattern: '*/SKILL.md',
         mcpConfigPath: '~/.codex/config.toml', // Note: home directory, TOML format
         supportsHooks: false,
+        displayName: 'Codex',
     },
     qwen: {
         steeringFile: 'QWEN.md',
@@ -148,6 +154,7 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         skillsPattern: '',
         mcpConfigPath: '.qwen/settings.json',
         supportsHooks: false,
+        displayName: 'Qwen',
     },
 };
 

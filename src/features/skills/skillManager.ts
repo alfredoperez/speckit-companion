@@ -130,9 +130,9 @@ export class SkillManager {
                 return skills;
             }
 
-            for (const [pluginKey, pluginInfo] of Object.entries(installedPlugins.plugins)) {
-                const pluginData = pluginInfo as { installPath?: string };
-                if (!pluginData.installPath) {
+            for (const [pluginKey, pluginEntries] of Object.entries(installedPlugins.plugins)) {
+                const pluginData = Array.isArray(pluginEntries) ? pluginEntries[0] : pluginEntries;
+                if (!pluginData?.installPath) {
                     this.outputChannel.appendLine(`[SkillManager] Plugin ${pluginKey} has no installPath, skipping`);
                     continue;
                 }

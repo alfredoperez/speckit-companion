@@ -47,15 +47,20 @@ export interface GitHubRelease {
     html_url: string;
 }
 
-// Installed plugins (agentManager.ts)
+// Installed plugins (agentManager.ts, skillManager.ts)
 export interface InstalledPlugin {
     name?: string;
     version?: string;
     installPath?: string;
+    scope?: string;
+    installedAt?: string;
+    lastUpdated?: string;
+    gitCommitSha?: string;
 }
 
 export interface InstalledPluginsFile {
-    plugins?: InstalledPlugin[];
+    version?: number;
+    plugins?: Record<string, InstalledPlugin[]>;
 }
 
 // Quick pick item with label
