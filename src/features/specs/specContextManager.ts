@@ -17,30 +17,16 @@ const STATE_FILE = 'state.json';
  */
 function inferContextFromState(state: Record<string, unknown>): FeatureWorkflowContext {
     const step = state.step as string | undefined;
-    const substep = state.substep as string | null | undefined;
-    const taskSummaries = state.task_summaries as Record<string, { status?: string }> | undefined;
 
-    // Use explicit status if present; otherwise infer from step/substep heuristics
+    // Use explicit status if present; otherwise default to active
     const validStatuses: SpecStatus[] = ['active', 'completed', 'archived'];
     let status: SpecStatus = validStatuses.includes(state.status as SpecStatus)
         ? (state.status as SpecStatus)
         : 'active';
-    if (status === 'active' && step === 'implement') {
-        const lateSubsteps = ['code-review', 'commit', 'push', 'pr', null, undefined];
-        if (lateSubsteps.includes(substep as string | null | undefined)) {
-            // Check if there are task summaries — if all done, mark completed
-            if (taskSummaries && Object.keys(taskSummaries).length > 0) {
-                const allDone = Object.values(taskSummaries).every(
-                    t => t.status === 'DONE' || t.status === 'DONE_WITH_CONCERNS'
-                );
-                if (allDone) {
-                    status = 'completed';
-                }
-            } else if (!substep || substep === 'commit' || substep === 'push' || substep === 'pr') {
-                // No task summaries but late substep — likely completed
-                status = 'completed';
-            }
-        }
+
+    // A spec is completed only when the pipeline explicitly signals done
+    if (status === 'active' && state.next === 'done') {
+        status = 'completed';
     }
 
     // Build stepHistory using workflow order — all steps before currentStep are completed
@@ -85,7 +71,7 @@ function inferContextFromState(state: Record<string, unknown>): FeatureWorkflowC
         stepHistory,
         // Preserve SDD fields
         step: step,
-        substep: substep,
+        substep: state.substep as string | null | undefined,
         task: state.task as string | null | undefined,
         next: state.next as string | null | undefined,
         updated: state.updated as string | undefined,
