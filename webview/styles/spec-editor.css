@@ -385,9 +385,7 @@
 }
 
 .preview-container code {
-    background-color: var(--vscode-textCodeBlock-background);
     padding: 2px 6px;
-    border-radius: 3px;
     font-family: var(--vscode-editor-font-family, monospace);
 }
 

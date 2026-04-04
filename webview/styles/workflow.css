@@ -506,13 +506,10 @@ body {
 }
 
 .line-content code {
-  background: var(--bg-elevated);
   padding: 2px 6px;
-  border-radius: var(--radius-sm);
   font-family: var(--font-mono);
   font-size: 0.9em;
   color: var(--accent-hover);
-  border: 1px solid var(--border);
 }
 
 /* ============================================
