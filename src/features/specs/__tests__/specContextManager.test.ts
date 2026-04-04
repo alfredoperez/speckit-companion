@@ -249,8 +249,8 @@ describe('specContextManager', () => {
             expect(result?.status).toBe('completed');
         });
 
-        it('should infer status via heuristics when no explicit status field', async () => {
-            const state = { step: 'implement', substep: 'commit', updated: '2026-03-26' };
+        it('should infer completed when next is done', async () => {
+            const state = { step: 'implement', substep: 'code-review', next: 'done', updated: '2026-03-26' };
             mockReadFile.mockImplementation((filePath: string) => {
                 if (filePath === CONTEXT_FILE) {
                     return Promise.resolve(JSON.stringify(state));
@@ -262,7 +262,20 @@ describe('specContextManager', () => {
             expect(result?.status).toBe('completed');
         });
 
-        it('should default to active when no explicit status and heuristics do not match', async () => {
+        it('should remain active during implement when next is not done', async () => {
+            const state = { step: 'implement', substep: 'code-review', next: 'commit', updated: '2026-03-26' };
+            mockReadFile.mockImplementation((filePath: string) => {
+                if (filePath === CONTEXT_FILE) {
+                    return Promise.resolve(JSON.stringify(state));
+                }
+                return Promise.reject(new Error('ENOENT'));
+            });
+
+            const result = await readSpecContext(SPEC_DIR);
+            expect(result?.status).toBe('active');
+        });
+
+        it('should default to active when no explicit status and next is not done', async () => {
             const state = { step: 'plan', substep: null, updated: '2026-03-26' };
             mockReadFile.mockImplementation((filePath: string) => {
                 if (filePath === CONTEXT_FILE) {
