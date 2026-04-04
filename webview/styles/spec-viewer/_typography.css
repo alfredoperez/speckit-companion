@@ -105,8 +105,5 @@
     font-family: var(--font-mono);
     font-size: 0.875em;
     padding: 2px 6px;
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: 4px;
     color: var(--code-variable);
 }

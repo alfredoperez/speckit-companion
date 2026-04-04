@@ -1,7 +1,7 @@
 {
   "step": "implement",
   "task": null,
-  "substep": "commit",
-  "next": null,
+  "substep": null,
+  "next": "done",
   "updated": "2026-04-04"
 }
