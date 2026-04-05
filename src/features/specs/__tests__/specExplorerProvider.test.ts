@@ -17,6 +17,7 @@ jest.mock('../../../core/specDirectoryResolver', () => ({
 // Mock the workflows module
 jest.mock('../../workflows', () => ({
     getFeatureWorkflow: jest.fn().mockResolvedValue(null),
+    getOrSelectWorkflow: jest.fn().mockResolvedValue(null),
     getWorkflow: jest.fn().mockReturnValue(null),
     normalizeWorkflowConfig: jest.fn(),
     getStepFile: jest.fn((step: any) => step.file || `${step.name}.md`),
