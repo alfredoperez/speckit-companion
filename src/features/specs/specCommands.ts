@@ -5,6 +5,7 @@ import { SpecExplorerProvider } from './specExplorerProvider';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig, SpecTreeItem } from '../../core/types/config';
 import { Commands, ConfigKeys } from '../../core/constants';
+import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { isInsideSpecDirectory, getFileWatcherPatterns } from '../../core/specDirectoryResolver';
 import {
     getOrSelectWorkflow,
@@ -177,7 +178,8 @@ function registerPhaseCommands(
                 }
 
                 // Non-workflow steps use default command
-                let prompt = `/speckit.${cmd.name} ${targetDir}`;
+                const formattedCmd = formatCommandForProvider(`speckit.${cmd.name}`);
+                let prompt = `/${formattedCmd} ${targetDir}`;
                 if (refinementContext) {
                     prompt += refinementContext;
                 }
@@ -191,7 +193,7 @@ function registerPhaseCommands(
         vscode.commands.registerCommand('speckit.constitution', async () => {
             outputChannel.appendLine(`[SpecKit] Constitution command triggered`);
 
-            const prompt = `/speckit.constitution`;
+            const prompt = `/${formatCommandForProvider('speckit.constitution')}`;
             await getAIProvider().executeInTerminal(prompt, 'SpecKit - Constitution');
         })
     );
@@ -233,8 +235,9 @@ async function executeWorkflowStep(
         outputChannel.appendLine(`[SpecKit] Using custom command: ${command}`);
     }
 
-    // Build and execute the prompt
-    let prompt = `/${command} ${targetDir}`;
+    // Build and execute the prompt (format command for current provider)
+    const formatted = formatCommandForProvider(command);
+    let prompt = `/${formatted} ${targetDir}`;
     if (refinementContext) {
         prompt += refinementContext;
     }

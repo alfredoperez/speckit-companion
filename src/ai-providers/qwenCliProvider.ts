@@ -13,6 +13,7 @@ const execAsync = promisify(exec);
 
 export class QwenCliProvider implements IAIProvider {
     public readonly name = 'Qwen Code';
+    public readonly type = 'qwen' as const;
 
     private context: vscode.ExtensionContext;
     private outputChannel: vscode.OutputChannel;

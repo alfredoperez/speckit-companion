@@ -1,0 +1,18 @@
+{
+  "integration": "qwen",
+  "version": "0.5.1.dev0",
+  "installed_at": "2026-04-05T13:34:27.882877+00:00",
+  "files": {
+    ".qwen/commands/speckit.analyze.md": "0dd76be34a60e3630f3eb8b54e4005035bc98d91e04566282b724453951d975d",
+    ".qwen/commands/speckit.checklist.md": "3bfb97f3286265a75f7f9321e79a3d31130a5be213013662fa2e43f22199942a",
+    ".qwen/commands/speckit.clarify.md": "0e7aeb5133272ace15629e560d394f9ea1622ca3873409b4d075c6c9f588d890",
+    ".qwen/commands/speckit.constitution.md": "89e14df67db5f8a52b8802a6e396b69d3e4badc46e97de804810aaaf439e0d5e",
+    ".qwen/commands/speckit.implement.md": "83628415c86ba487b3a083c7a2c0f016c9073abd02c1c7f4a30cff949b6602c0",
+    ".qwen/commands/speckit.plan.md": "da70934f84815b76da6f4689e91c266b17ef76d046c761a5012f5a9c12db4329",
+    ".qwen/commands/speckit.specify.md": "4fe230f26eb68638d7642695ca46ed7298090e5aa692fcbe556f792511578f52",
+    ".qwen/commands/speckit.tasks.md": "a58886f29f75e1a14840007772ddd954742aafb3e03d9d1231bee033e6c1626b",
+    ".qwen/commands/speckit.taskstoissues.md": "23f5098f197d2d3512907276c466a4e03b27619721cee85361f30b21289431da",
+    ".specify/integrations/qwen/scripts/update-context.ps1": "bbc1044cb18d6775c4aa795aba18f3c384b4900251148c93ce9a73a31a5b9232",
+    ".specify/integrations/qwen/scripts/update-context.sh": "88ad2887ca7a5d41023592c0ea5e4894f1d5e51d849fd2c08c31a8066e85559b"
+  }
+}

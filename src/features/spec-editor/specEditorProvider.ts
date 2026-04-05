@@ -9,6 +9,7 @@ import type {
     WorkflowDefinition
 } from './types';
 import { normalizeWorkflowConfig, resolveStepCommand } from '../workflows';
+import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 
 /**
  * Generates a random nonce for CSP
@@ -66,7 +67,7 @@ export class SpecEditorProvider {
                 name: 'default',
                 displayName: 'Default',
                 description: 'Standard SpecKit workflow',
-                stepSpecify: '/speckit.specify'
+                stepSpecify: `/${formatCommandForProvider('speckit.specify')}`
             }
         ];
 
@@ -78,9 +79,9 @@ export class SpecEditorProvider {
                     name: wf.name,
                     displayName: wf.displayName || wf.name,
                     description: wf.description,
-                    stepSpecify: `/${resolveStepCommand(normalized, 'specify')}`,
-                    stepPlan: wf['step-plan'] || (normalized.steps?.find(s => s.name === 'plan')?.command),
-                    stepImplement: wf['step-implement'] || (normalized.steps?.find(s => s.name === 'implement')?.command),
+                    stepSpecify: `/${formatCommandForProvider(resolveStepCommand(normalized, 'specify'))}`,
+                    stepPlan: formatCommandForProvider(wf['step-plan'] || (normalized.steps?.find(s => s.name === 'plan')?.command) || 'speckit.plan'),
+                    stepImplement: formatCommandForProvider(wf['step-implement'] || (normalized.steps?.find(s => s.name === 'implement')?.command) || 'speckit.implement'),
                     specifyCommands: ((wf as any).commands || [])
                         .filter((c: any) => c.step === 'specify')
                         .map((c: any) => ({ name: c.name, title: c.title || c.name, command: c.command, tooltip: c.tooltip })),

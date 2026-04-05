@@ -19,6 +19,11 @@ export interface IAIProvider {
     readonly name: string;
 
     /**
+     * The provider type identifier
+     */
+    readonly type: AIProviderType;
+
+    /**
      * Check if the AI CLI is installed and available
      */
     isInstalled(): Promise<boolean>;
@@ -90,6 +95,8 @@ export interface ProviderPaths {
     supportsHooks: boolean;
     /** Human-readable provider name for UI display */
     displayName: string;
+    /** How speckit commands are formatted: 'dot' = speckit.plan, 'dash' = speckit-plan */
+    commandFormat: 'dot' | 'dash';
 }
 
 /**
@@ -107,6 +114,7 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         mcpConfigPath: '.claude/settings.json',
         supportsHooks: true,
         displayName: 'Claude',
+        commandFormat: 'dash',
     },
     gemini: {
         steeringFile: 'GEMINI.md',
@@ -119,6 +127,7 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         mcpConfigPath: '.gemini/settings.json',
         supportsHooks: false,
         displayName: 'Gemini',
+        commandFormat: 'dot',
     },
     copilot: {
         steeringFile: '.github/copilot-instructions.md',
@@ -131,6 +140,7 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         mcpConfigPath: '.copilot/mcp-config.json',
         supportsHooks: false,
         displayName: 'Copilot',
+        commandFormat: 'dot',
     },
     codex: {
         steeringFile: 'AGENTS.md',
@@ -143,6 +153,7 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         mcpConfigPath: '~/.codex/config.toml', // Note: home directory, TOML format
         supportsHooks: false,
         displayName: 'Codex',
+        commandFormat: 'dash',
     },
     qwen: {
         steeringFile: 'QWEN.md',
@@ -155,8 +166,23 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         mcpConfigPath: '.qwen/settings.json',
         supportsHooks: false,
         displayName: 'Qwen',
+        commandFormat: 'dot',
     },
 };
+
+/**
+ * Format a speckit command for the given provider.
+ * Converts canonical dot format (speckit.specify) to provider-specific format.
+ * E.g., for Claude/Codex: speckit.specify → speckit-specify
+ */
+export function formatCommandForProvider(command: string, providerType?: AIProviderType): string {
+    const type = providerType ?? getConfiguredProviderType();
+    const { commandFormat } = PROVIDER_PATHS[type];
+    if (commandFormat === 'dash') {
+        return command.replace(/^speckit\./, 'speckit-');
+    }
+    return command;
+}
 
 /**
  * Check if the AI provider has been explicitly configured by the user.

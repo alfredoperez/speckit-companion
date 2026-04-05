@@ -107,9 +107,20 @@ Extension Host                    Webview
 
 The extension calls the SpecKit CLI (`specify`) for:
 - `specify init` - Initialize workspace
-- Slash commands via Claude Code: `/speckit.specify`, `/speckit.plan`, etc.
+- Slash commands via AI CLI: `/speckit.specify`, `/speckit.plan`, etc.
 
 CLI detection: Checks if `specify` command exists in PATH.
+
+### Provider-Specific Command Formats
+
+Different AI CLIs use different naming conventions for SpecKit commands:
+
+| Format | Providers | Example |
+|--------|-----------|---------|
+| Dot (`speckit.specify`) | Copilot, Gemini, Qwen | `/speckit.specify` |
+| Dash (`speckit-specify`) | Claude, Codex | `/speckit-specify` |
+
+This is configured via the `commandFormat` field in `PROVIDER_PATHS` (`src/ai-providers/aiProvider.ts`). To change a provider's format, edit that single field. The `formatCommandForProvider()` helper converts the canonical dot format to the provider-specific format at send-time, keeping workflow configs provider-agnostic.
 
 ## State Management
 

@@ -16,6 +16,7 @@ const execAsync = promisify(exec);
  */
 export class GeminiCliProvider implements IAIProvider {
     public readonly name = 'Gemini CLI';
+    public readonly type = 'gemini' as const;
 
     private context: vscode.ExtensionContext;
     private outputChannel: vscode.OutputChannel;

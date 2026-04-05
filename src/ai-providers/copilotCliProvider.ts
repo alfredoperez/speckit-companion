@@ -17,6 +17,7 @@ const execAsync = promisify(exec);
  */
 export class CopilotCliProvider implements IAIProvider {
     public readonly name = 'GitHub Copilot CLI';
+    public readonly type = 'copilot' as const;
 
     private context: vscode.ExtensionContext;
     private outputChannel: vscode.OutputChannel;

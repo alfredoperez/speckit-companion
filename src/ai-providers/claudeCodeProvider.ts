@@ -12,6 +12,7 @@ const execAsync = promisify(exec);
 
 export class ClaudeCodeProvider implements IAIProvider {
     public readonly name = 'Claude Code';
+    public readonly type = 'claude' as const;
 
     private context: vscode.ExtensionContext;
     private outputChannel: vscode.OutputChannel;

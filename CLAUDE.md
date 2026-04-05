@@ -95,7 +95,7 @@ When adding, changing, or removing a user-facing feature, update the README.md t
 
 When modifying spec viewer statuses, badges, buttons, or step tab behavior, update `docs/viewer-states.md` to reflect the changes. This file documents the full state machine: status lifecycle, footer button matrix, badge text logic, step tab visual states, and data flow.
 
-When modifying the project structure, adding/removing modules, or changing the architecture, update `ARCHITECTURE.md` to reflect the changes.
+When modifying the project structure, adding/removing modules, or changing the architecture, update `docs/architecture.md` to reflect the changes.
 
 ## Important Notes
 

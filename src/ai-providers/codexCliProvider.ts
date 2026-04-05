@@ -14,6 +14,7 @@ const execAsync = promisify(exec);
 
 export class CodexCliProvider implements IAIProvider {
     public readonly name = 'Codex CLI';
+    public readonly type = 'codex' as const;
 
     private context: vscode.ExtensionContext;
     private outputChannel: vscode.OutputChannel;
@@ -57,7 +58,7 @@ export class CodexCliProvider implements IAIProvider {
     private parseSlashCommand(prompt: string): { skillName: string; args: string } | null {
         // Only look at the first line of the prompt
         const firstLine = prompt.split('\n')[0].trim();
-        const match = firstLine.match(/^\/(speckit\.\w+)\s*(.*)$/);
+        const match = firstLine.match(/^\/(speckit[.\-]\w+)\s*(.*)$/);
         if (!match) return null;
         return { skillName: match[1], args: match[2]?.trim() || '' };
     }
@@ -79,8 +80,10 @@ export class CodexCliProvider implements IAIProvider {
     private getPromptFilePath(skillName: string): string | null {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         if (!workspaceFolder) return null;
-        const promptPath = path.join(workspaceFolder.uri.fsPath, '.codex', 'prompts', `${skillName}.md`);
-        return fs.existsSync(promptPath) ? `.codex/prompts/${skillName}.md` : null;
+        // Prompt files use dot notation (speckit.specify.md), normalize dash format
+        const normalized = skillName.replace(/^speckit-/, 'speckit.');
+        const promptPath = path.join(workspaceFolder.uri.fsPath, '.codex', 'prompts', `${normalized}.md`);
+        return fs.existsSync(promptPath) ? `.codex/prompts/${normalized}.md` : null;
     }
 
     /**

@@ -15,6 +15,7 @@ import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig } from '../../core/types/config';
 import type { WorkflowStepConfig } from '../workflows/types';
 import { setSpecStatus } from '../specs/specContextManager';
+import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 
 /**
  * Interface for message handler dependencies
@@ -242,7 +243,8 @@ async function executeStepInTerminal(
     const instance = deps.getInstance(specDirectory);
     const targetPath = instance?.state.changeRoot || specDirectory;
     const label = step.label || step.name;
-    const prompt = `/${step.command} ${targetPath}`;
+    const formatted = formatCommandForProvider(step.command);
+    const prompt = `/${formatted} ${targetPath}`;
     deps.outputChannel.appendLine(`[SpecViewer] Executing step "${label}": ${prompt}`);
     await deps.executeInTerminal(prompt);
 }

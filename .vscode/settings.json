@@ -1,69 +1,77 @@
 {
-  "peacock.color": "#CC5B3E",
-  "chat.tools.terminal.autoApprove": {
-    "specs/": true
-  },
-  "speckit.defaultWorkflow": "sdd",
-
-  "speckit.customWorkflows": [
-    {
-      "name": "sdd",
-      "displayName": "SDD",
-      "description": "Streamlined Spec-Driven Development Workflow",
-      "steps": [
+    "peacock.color": "#CC5B3E",
+    "chat.tools.terminal.autoApprove": {
+        "specs/": true,
+        ".specify/scripts/bash/": true,
+        ".specify/scripts/powershell/": true
+    },
+    "speckit.defaultWorkflow": "sdd",
+    "speckit.customWorkflows": [
         {
-          "name": "specify",
-          "label": "Specification",
-          "command": "sdd:specify",
-          "file": "spec.md"
-        },
-        {
-          "name": "plan",
-          "label": "Plan",
-          "command": "sdd:plan",
-          "file": "plan.md"
-        },
-        {
-          "name": "tasks",
-          "label": "Tasks",
-          "command": "sdd:tasks",
-          "file": "tasks.md"
-        },
-        {
-          "name": "implement",
-          "label": "Implement",
-          "command": "sdd:implement",
-          "actionOnly": true
+            "name": "sdd",
+            "displayName": "SDD",
+            "description": "Streamlined Spec-Driven Development Workflow",
+            "steps": [
+                {
+                    "name": "specify",
+                    "label": "Specification",
+                    "command": "sdd:specify",
+                    "file": "spec.md"
+                },
+                {
+                    "name": "plan",
+                    "label": "Plan",
+                    "command": "sdd:plan",
+                    "file": "plan.md"
+                },
+                {
+                    "name": "tasks",
+                    "label": "Tasks",
+                    "command": "sdd:tasks",
+                    "file": "tasks.md"
+                },
+                {
+                    "name": "implement",
+                    "label": "Implement",
+                    "command": "sdd:implement",
+                    "actionOnly": true
+                }
+            ],
+            "commands": [
+                {
+                    "name": "auto",
+                    "title": "Auto Mode",
+                    "command": "sdd:auto",
+                    "step": "specify",
+                    "tooltip": "Goes through the whole specification in auto mode"
+                }
+            ]
         }
-      ],
-      "commands": [
-        {
-          "name": "auto",
-          "title": "Auto Mode",
-          "command": "sdd:auto",
-          "step": "specify",
-          "tooltip": "Goes through the whole specification in auto mode"
-        }
-      ]
+    ],
+    "workbench.colorCustomizations": {
+        "commandCenter.border": "#e7e7e799",
+        "sash.hoverBorder": "#d77d66",
+        "statusBar.background": "#cc5b3e",
+        "statusBar.foreground": "#e7e7e7",
+        "statusBarItem.hoverBackground": "#d77d66",
+        "statusBarItem.remoteBackground": "#cc5b3e",
+        "statusBarItem.remoteForeground": "#e7e7e7",
+        "titleBar.activeBackground": "#cc5b3e",
+        "titleBar.activeForeground": "#e7e7e7",
+        "titleBar.inactiveBackground": "#cc5b3e99",
+        "titleBar.inactiveForeground": "#e7e7e799",
+        "activityBar.activeBackground": "#d77d66",
+        "activityBar.background": "#d77d66",
+        "activityBar.foreground": "#15202b",
+        "activityBar.inactiveForeground": "#15202b99",
+        "activityBarBadge.background": "#9ae5a9",
+        "activityBarBadge.foreground": "#15202b"
+    },
+    "chat.promptFilesRecommendations": {
+        "speckit.constitution": true,
+        "speckit.specify": true,
+        "speckit.plan": true,
+        "speckit.tasks": true,
+        "speckit.implement": true
     }
-  ],
-  "workbench.colorCustomizations": {
-    "commandCenter.border": "#e7e7e799",
-    "sash.hoverBorder": "#d77d66",
-    "statusBar.background": "#cc5b3e",
-    "statusBar.foreground": "#e7e7e7",
-    "statusBarItem.hoverBackground": "#d77d66",
-    "statusBarItem.remoteBackground": "#cc5b3e",
-    "statusBarItem.remoteForeground": "#e7e7e7",
-    "titleBar.activeBackground": "#cc5b3e",
-    "titleBar.activeForeground": "#e7e7e7",
-    "titleBar.inactiveBackground": "#cc5b3e99",
-    "titleBar.inactiveForeground": "#e7e7e799",
-    "activityBar.activeBackground": "#d77d66",
-    "activityBar.background": "#d77d66",
-    "activityBar.foreground": "#15202b",
-    "activityBar.inactiveForeground": "#15202b99",
-    "activityBarBadge.background": "#9ae5a9",
-    "activityBarBadge.foreground": "#15202b"
-  }
 }
