@@ -393,7 +393,7 @@ describe('SpecExplorerProvider', () => {
             expect(tasksDoc!.iconPath).toBeUndefined();
         });
 
-        it('should prefer step field over currentStep for in-progress icon', async () => {
+        it('should use currentStep for in-progress icon (migration maps step→currentStep)', async () => {
             const docs = await getDocumentItems({
                 workflow: 'default',
                 selectedAt: '2026-01-01',
@@ -405,18 +405,17 @@ describe('SpecExplorerProvider', () => {
                 },
             });
 
-            // 'tasks' step (from step field) should have blue circle-filled icon, not 'plan'
-            const tasksDoc = docs.find((d: any) => d.label === 'Tasks');
-            expect(tasksDoc).toBeDefined();
-            const tasksIcon = tasksDoc!.iconPath as vscode.ThemeIcon;
-            expect(tasksIcon.id).toBe('circle-filled');
-            expect((tasksIcon.color as vscode.ThemeColor).id).toBe('charts.blue');
-
-            // 'plan' should NOT have the blue dot (it's only currentStep, not step)
+            // 'plan' step (currentStep) should have blue circle-filled icon
             const planDoc = docs.find((d: any) => d.label === 'Plan');
             expect(planDoc).toBeDefined();
-            // Plan has completedAt: null and is not the active step, so no special icon
-            expect(planDoc!.iconPath).toBeUndefined();
+            const planIcon = planDoc!.iconPath as vscode.ThemeIcon;
+            expect(planIcon.id).toBe('circle-filled');
+            expect((planIcon.color as vscode.ThemeColor).id).toBe('charts.blue');
+
+            // 'tasks' should NOT have the blue dot (currentStep is 'plan', not 'tasks')
+            const tasksDoc = docs.find((d: any) => d.label === 'Tasks');
+            expect(tasksDoc).toBeDefined();
+            expect(tasksDoc!.iconPath).toBeUndefined();
         });
 
         it('should fall back to currentStep when step field is absent', async () => {

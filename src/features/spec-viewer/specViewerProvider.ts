@@ -460,7 +460,7 @@ export class SpecViewerProvider {
 
       // Compute context-driven dates
       const createdDate = computeCreatedDate(featureCtx?.stepHistory);
-      const lastUpdatedDate = computeLastUpdatedDate(featureCtx?.stepHistory, featureCtx?.updated);
+      const lastUpdatedDate = computeLastUpdatedDate(featureCtx?.stepHistory);
 
       // Generate and set HTML
       instance.panel.webview.html = generateHtml(
@@ -476,14 +476,14 @@ export class SpecViewerProvider {
         specStatus,
         enhancementButtons,
         stalenessMap,
-        mapSddStepToTab(featureCtx?.step),
+        mapSddStepToTab(featureCtx?.currentStep),
         computeBadgeText(featureCtx),
         createdDate,
         lastUpdatedDate,
         featureCtx?.specName ?? deriveSpecName(specDirectory),
         featureCtx?.branch ?? null,
         doc?.filePath ?? null,
-        featureCtx?.step ?? doc?.type ?? null,
+        featureCtx?.currentStep ?? doc?.type ?? null,
       );
 
       this.outputChannel.appendLine(
@@ -691,15 +691,15 @@ export class SpecViewerProvider {
         enhancementButtons,
         stalenessMap,
         specStatus,
-        currentTask: featureCtx?.task ?? null,
-        activeStep: mapSddStepToTab(featureCtx?.step),
+        currentTask: featureCtx?.currentTask ?? null,
+        activeStep: mapSddStepToTab(featureCtx?.currentStep),
         badgeText: computeBadgeText(featureCtx),
         createdDate: computeCreatedDate(featureCtx?.stepHistory),
-        lastUpdatedDate: computeLastUpdatedDate(featureCtx?.stepHistory, featureCtx?.updated),
+        lastUpdatedDate: computeLastUpdatedDate(featureCtx?.stepHistory),
         specContextName: featureCtx?.specName ?? deriveSpecName(specDirectory),
         branch: featureCtx?.branch ?? null,
         filePath: doc?.filePath ?? null,
-        docTypeLabel: getDocTypeLabel(featureCtx?.step ?? documentType),
+        docTypeLabel: getDocTypeLabel(featureCtx?.currentStep ?? documentType),
       };
 
       // Update internal state

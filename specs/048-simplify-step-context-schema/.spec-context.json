@@ -1,0 +1,122 @@
+{
+  "step": "implement",
+  "task": null,
+  "substep": "code-review",
+  "next": "implement",
+  "updated": "2026-04-05",
+  "workflow": "sdd",
+  "selectedAt": "2026-04-05T22:00:00.000Z",
+  "currentStep": "specify",
+  "status": "active",
+  "specName": "Simplify Step Context Schema",
+  "branch": "main",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-04-05T22:00:00.000Z",
+      "completedAt": "2026-04-05T22:05:00.000Z"
+    },
+    "plan": {
+      "startedAt": "2026-04-05T22:05:00.000Z",
+      "completedAt": "2026-04-05T22:42:00.349Z"
+    },
+    "tasks": {
+      "startedAt": "2026-04-05T22:42:00.349Z",
+      "completedAt": "2026-04-05T22:42:29.234Z"
+    },
+    "implement": {
+      "startedAt": "2026-04-05T22:43:00.000Z",
+      "completedAt": "2026-04-05T22:51:19.373Z"
+    }
+  },
+  "approach": "Unify dual-source step tracking by removing SDD-specific fields, adding migration layer in readSpecContext, and fixing fire-and-forget race in handleStepperClick",
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 9,
+      "scenarios": 5,
+      "key_finding": "step vs currentStep diverge in practice — specExplorerProvider prefers step, phaseCalculation uses step/substep/next/task for badges, and handleStepperClick fires updateStepProgress as fire-and-forget (no await before terminal dispatch)"
+    },
+    "plan": {
+      "approach_summary": "Unify dual-source step tracking by removing SDD-specific fields, adding migration layer in readSpecContext, and fixing fire-and-forget race in handleStepperClick",
+      "files_planned": 7,
+      "risks": [
+        "Awaiting updateStepProgress in handleStepperClick may add minor latency before terminal command fires — mitigate by keeping write simple (<5ms)",
+        "SDD skill templates that still write old field names will work via migration layer, but should be updated to avoid confusion"
+      ]
+    }
+  },
+  "files_modified": [
+    "src/features/workflows/types.ts",
+    "src/features/specs/specContextManager.ts",
+    "src/features/specs/__tests__/specContextManager.test.ts",
+    "src/features/spec-viewer/phaseCalculation.ts",
+    "src/features/spec-viewer/specViewerProvider.ts",
+    "src/features/specs/specExplorerProvider.ts",
+    "src/features/spec-viewer/messageHandlers.ts",
+    "src/features/specs/__tests__/specExplorerProvider.test.ts"
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added progress, currentTask, createdAt fields; marked step/substep/task/next/updated as @deprecated",
+      "files": [
+        "src/features/workflows/types.ts"
+      ],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added migrateContext() helper called from readSpecContext/readSpecContextSync — maps step→currentStep, substep→progress, task→currentTask at read time",
+      "files": [
+        "src/features/specs/specContextManager.ts"
+      ],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added 7 tests for migrateContext (old→new mapping, precedence, missing fields, null handling) plus 2 integration tests for readSpecContext/readSpecContextSync",
+      "files": [
+        "src/features/specs/__tests__/specContextManager.test.ts"
+      ],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Updated computeBadgeText signature to use currentStep/progress/currentTask, removed next param; removed contextUpdated param from computeLastUpdatedDate",
+      "files": [
+        "src/features/spec-viewer/phaseCalculation.ts"
+      ],
+      "concerns": []
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Changed all featureCtx.step→currentStep, task→currentTask, removed featureCtx.updated from computeLastUpdatedDate calls",
+      "files": [
+        "src/features/spec-viewer/specViewerProvider.ts"
+      ],
+      "concerns": []
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Replaced specContext.step ?? specContext.currentStep with just specContext.currentStep",
+      "files": [
+        "src/features/specs/specExplorerProvider.ts"
+      ],
+      "concerns": []
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Made handleStepperClick await updateStepProgress before sendContentUpdateMessage — removed fire-and-forget pattern",
+      "files": [
+        "src/features/spec-viewer/messageHandlers.ts"
+      ],
+      "concerns": []
+    }
+  },
+  "decisions": [
+    "Updated specExplorerProvider test to reflect new unified behavior — old test asserted step field preference over currentStep, which is no longer the case",
+    "Removed 'next'-based badge logic from computeBadgeText since next is no longer persisted — badges now derive from currentStep only"
+  ],
+  "concerns": [],
+  "last_action": "T007 complete — handleStepperClick now awaits updateStepProgress before terminal dispatch. All 142 tests pass."
+}

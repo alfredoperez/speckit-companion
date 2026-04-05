@@ -584,7 +584,7 @@ class SpecItem extends vscode.TreeItem {
                 const stepHistory = specContext.stepHistory;
                 if (stepHistory?.[documentType]?.completedAt) {
                     this.iconPath = new vscode.ThemeIcon('pass', new vscode.ThemeColor('testing.iconPassed'));
-                } else if ((specContext.step ?? specContext.currentStep) === documentType) {
+                } else if (specContext.currentStep === documentType) {
                     this.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('charts.blue'));
                 }
             }
