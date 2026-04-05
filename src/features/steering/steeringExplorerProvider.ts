@@ -8,7 +8,7 @@ import { SpecKitFilesResult, SPECKIT_PATHS } from './types';
 import { BaseTreeDataProvider } from '../../core/providers';
 import { AgentManager, AgentInfo } from '../agents/agentManager';
 import { SkillManager, SkillInfo, SkillType } from '../skills/skillManager';
-import { TreeContext } from './treeContextValues';
+import { AIProviders, TreeItemContext } from '../../core/constants';
 
 export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem> {
     private steeringManager!: SteeringManager;
@@ -139,7 +139,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                     items.push(new SteeringItem(
                         'Steering Docs',
                         vscode.TreeItemCollapsibleState.Expanded,
-                        TreeContext.STEERING_HEADER,
+                        TreeItemContext.steeringHeader,
                         '',
                         this.context
                     ));
@@ -155,7 +155,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                 items.push(new SteeringItem(
                     'SpecKit Files',
                     vscode.TreeItemCollapsibleState.Expanded,
-                    TreeContext.SPECKIT_HEADER,
+                    TreeItemContext.speckitHeader,
                     '',
                     this.context
                 ));
@@ -165,18 +165,18 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             items.push(new SteeringItem(
                 providerPaths.displayName,
                 vscode.TreeItemCollapsibleState.Collapsed,
-                TreeContext.PROVIDER_HEADER,
+                TreeItemContext.providerHeader,
                 '',
                 this.context
             ));
 
             // Add create buttons for missing files (Claude only for now)
-            if (providerType === 'claude') {
+            if (providerType === AIProviders.CLAUDE) {
                 if (!globalExists) {
                     items.push(new SteeringItem(
                         'Create Global Rule',
                         vscode.TreeItemCollapsibleState.None,
-                        TreeContext.CREATE_GLOBAL,
+                        TreeItemContext.createGlobal,
                         '',
                         this.context,
                         {
@@ -190,7 +190,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                     items.push(new SteeringItem(
                         'Create Project Rule',
                         vscode.TreeItemCollapsibleState.None,
-                        TreeContext.CREATE_PROJECT,
+                        TreeItemContext.createProject,
                         '',
                         this.context,
                         {
@@ -236,15 +236,15 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             return this.getSpecKitScripts();
         } else if (element.contextValue === 'speckit-templates-category') {
             return this.getSpecKitTemplates();
-        } else if (element.contextValue === TreeContext.PROVIDER_HEADER) {
+        } else if (element.contextValue === TreeItemContext.providerHeader) {
             return this.getProviderHeaderChildren();
-        } else if (element.contextValue === TreeContext.PROVIDER_PROJECT_GROUP) {
+        } else if (element.contextValue === TreeItemContext.providerProjectGroup) {
             return this.getProviderProjectChildren();
-        } else if (element.contextValue === TreeContext.PROVIDER_USER_GROUP) {
+        } else if (element.contextValue === TreeItemContext.providerUserGroup) {
             return this.getProviderUserChildren();
-        } else if (element.contextValue === TreeContext.PROVIDER_AGENTS_GROUP) {
+        } else if (element.contextValue === TreeItemContext.providerAgentsGroup) {
             return this.getAgentsForScope(element.groupType as string);
-        } else if (element.contextValue === TreeContext.PROVIDER_SKILLS_GROUP) {
+        } else if (element.contextValue === TreeItemContext.providerSkillsGroup) {
             return this.getSkillsForScope(element.groupType as string);
         }
 
@@ -267,20 +267,20 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
         let projectPath: string | null = null;
 
         switch (providerType) {
-            case 'claude':
+            case AIProviders.CLAUDE:
                 globalPath = path.join(home, '.claude', 'CLAUDE.md');
                 projectPath = workspaceRoot ? path.join(workspaceRoot, 'CLAUDE.md') : null;
                 break;
-            case 'gemini':
+            case AIProviders.GEMINI:
                 globalPath = path.join(home, '.gemini', 'GEMINI.md');
                 projectPath = workspaceRoot ? path.join(workspaceRoot, 'GEMINI.md') : null;
                 break;
-            case 'copilot':
+            case AIProviders.COPILOT:
                 // Copilot doesn't have a global file in the same way
                 globalPath = null;
                 projectPath = workspaceRoot ? path.join(workspaceRoot, '.github', 'copilot-instructions.md') : null;
                 break;
-            case 'qwen':
+            case AIProviders.QWEN:
                 globalPath = path.join(home, '.qwen', 'QWEN.md');
                 projectPath = workspaceRoot ? path.join(workspaceRoot, 'QWEN.md') : null;
                 break;
@@ -497,7 +497,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
         items.push(new SteeringItem(
             'Project',
             vscode.TreeItemCollapsibleState.Collapsed,
-            TreeContext.PROVIDER_PROJECT_GROUP,
+            TreeItemContext.providerProjectGroup,
             '',
             this.context
         ));
@@ -505,7 +505,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
         items.push(new SteeringItem(
             'User',
             vscode.TreeItemCollapsibleState.Collapsed,
-            TreeContext.PROVIDER_USER_GROUP,
+            TreeItemContext.providerUserGroup,
             '',
             this.context
         ));
@@ -527,7 +527,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             items.push(new SteeringItem(
                 providerPaths.steeringFile,
                 vscode.TreeItemCollapsibleState.None,
-                TreeContext.STEERING_FILE,
+                TreeItemContext.steeringFile,
                 projectPath,
                 this.context,
                 {
@@ -545,7 +545,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                 items.push(new SteeringItem(
                     'Agents',
                     vscode.TreeItemCollapsibleState.Collapsed,
-                    TreeContext.PROVIDER_AGENTS_GROUP,
+                    TreeItemContext.providerAgentsGroup,
                     '',
                     this.context,
                     undefined,
@@ -562,7 +562,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                 items.push(new SteeringItem(
                     'Skills',
                     vscode.TreeItemCollapsibleState.Collapsed,
-                    TreeContext.PROVIDER_SKILLS_GROUP,
+                    TreeItemContext.providerSkillsGroup,
                     '',
                     this.context,
                     undefined,
@@ -580,7 +580,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                 items.push(new SteeringItem(
                     'Settings',
                     vscode.TreeItemCollapsibleState.None,
-                    TreeContext.PROVIDER_SETTINGS,
+                    TreeItemContext.providerSettings,
                     settingsPath,
                     this.context,
                     {
@@ -609,7 +609,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             items.push(new SteeringItem(
                 providerPaths.steeringFile,
                 vscode.TreeItemCollapsibleState.None,
-                TreeContext.STEERING_FILE,
+                TreeItemContext.steeringFile,
                 globalPath,
                 this.context,
                 {
@@ -624,7 +624,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
         if (this.agentManager && providerPaths.agentsDir) {
             const userAgents = await this.agentManager.getAgentList('user');
             let hasAgents = userAgents.length > 0;
-            if (!hasAgents && providerType === 'claude') {
+            if (!hasAgents && providerType === AIProviders.CLAUDE) {
                 const pluginAgents = await this.agentManager.getAgentList('plugin');
                 hasAgents = pluginAgents.length > 0;
             }
@@ -632,7 +632,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                 items.push(new SteeringItem(
                     'Agents',
                     vscode.TreeItemCollapsibleState.Collapsed,
-                    TreeContext.PROVIDER_AGENTS_GROUP,
+                    TreeItemContext.providerAgentsGroup,
                     '',
                     this.context,
                     undefined,
@@ -646,7 +646,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
         if (this.skillManager && providerPaths.skillsDir) {
             const userSkills = await this.skillManager.getSkillList('user');
             let hasSkills = userSkills.length > 0;
-            if (!hasSkills && providerType === 'claude') {
+            if (!hasSkills && providerType === AIProviders.CLAUDE) {
                 const pluginSkills = await this.skillManager.getSkillList('plugin');
                 hasSkills = pluginSkills.length > 0;
             }
@@ -654,7 +654,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                 items.push(new SteeringItem(
                     'Skills',
                     vscode.TreeItemCollapsibleState.Collapsed,
-                    TreeContext.PROVIDER_SKILLS_GROUP,
+                    TreeItemContext.providerSkillsGroup,
                     '',
                     this.context,
                     undefined,
@@ -671,7 +671,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             items.push(new SteeringItem(
                 'Settings',
                 vscode.TreeItemCollapsibleState.None,
-                TreeContext.PROVIDER_SETTINGS,
+                TreeItemContext.providerSettings,
                 userSettingsPath,
                 this.context,
                 {
@@ -694,7 +694,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             return this.getAgentChildren('project');
         }
         const items = await this.getAgentChildren('user');
-        if (providerType === 'claude') {
+        if (providerType === AIProviders.CLAUDE) {
             items.push(...await this.getAgentChildren('plugin'));
         }
         return items;
@@ -709,7 +709,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             return this.getSkillChildren('project');
         }
         const items = await this.getSkillChildren('user');
-        if (providerType === 'claude') {
+        if (providerType === AIProviders.CLAUDE) {
             items.push(...await this.getSkillChildren('plugin'));
         }
         return items;
@@ -790,27 +790,27 @@ class SteeringItem extends vscode.TreeItem {
         super(label, collapsibleState);
         this.groupType = groupType;
 
-        const C = TreeContext;
+        const C = TreeItemContext;
 
-        if (contextValue === C.STEERING_LOADING) {
+        if (contextValue === C.steeringLoading) {
             this.iconPath = new vscode.ThemeIcon('sync~spin');
             this.tooltip = 'Loading steering documents...';
-        } else if (contextValue === C.STEERING_FILE) {
+        } else if (contextValue === C.steeringFile) {
             this.iconPath = new vscode.ThemeIcon('markdown');
             this.tooltip = resourcePath;
-        } else if (contextValue === C.CREATE_GLOBAL) {
+        } else if (contextValue === C.createGlobal) {
             this.iconPath = new vscode.ThemeIcon('globe');
             this.tooltip = 'Click to create Global CLAUDE.md';
-        } else if (contextValue === C.CREATE_PROJECT) {
+        } else if (contextValue === C.createProject) {
             this.iconPath = new vscode.ThemeIcon('root-folder');
             this.tooltip = 'Click to create Project CLAUDE.md';
-        } else if (contextValue === C.SEPARATOR) {
+        } else if (contextValue === C.separator) {
             this.iconPath = undefined;
             this.description = undefined;
-        } else if (contextValue === C.STEERING_HEADER) {
+        } else if (contextValue === C.steeringHeader) {
             this.iconPath = new vscode.ThemeIcon('folder-library');
             this.tooltip = 'Generated project steering documents';
-        } else if (contextValue === C.STEERING_DOCUMENT) {
+        } else if (contextValue === C.steeringDocument) {
             if (label === 'product') {
                 this.iconPath = new vscode.ThemeIcon('lightbulb-empty');
             } else if (label === 'tech') {
@@ -822,50 +822,50 @@ class SteeringItem extends vscode.TreeItem {
             }
             this.tooltip = `Steering document: ${resourcePath}`;
             this.description = filename;
-        } else if (contextValue === C.SPECKIT_HEADER) {
+        } else if (contextValue === C.speckitHeader) {
             this.iconPath = new vscode.ThemeIcon('package');
             this.tooltip = 'SpecKit project configuration files';
-        } else if (contextValue === C.SPECKIT_CONSTITUTION) {
+        } else if (contextValue === C.speckitConstitution) {
             this.iconPath = new vscode.ThemeIcon('law');
             this.tooltip = `Project Constitution: ${resourcePath}`;
             this.description = filename;
-        } else if (contextValue === C.SPECKIT_SCRIPTS_CATEGORY) {
+        } else if (contextValue === C.speckitScriptsCategory) {
             this.iconPath = new vscode.ThemeIcon('code');
             this.tooltip = 'SpecKit automation scripts';
-        } else if (contextValue === C.SPECKIT_SCRIPT) {
+        } else if (contextValue === C.speckitScript) {
             this.iconPath = new vscode.ThemeIcon('terminal');
             this.tooltip = `Script: ${resourcePath}`;
             this.description = filename;
-        } else if (contextValue === C.SPECKIT_TEMPLATES_CATEGORY) {
+        } else if (contextValue === C.speckitTemplatesCategory) {
             this.iconPath = new vscode.ThemeIcon('note');
             this.tooltip = 'SpecKit document templates';
-        } else if (contextValue === C.SPECKIT_TEMPLATE) {
+        } else if (contextValue === C.speckitTemplate) {
             this.iconPath = new vscode.ThemeIcon('file');
             this.tooltip = `Template: ${resourcePath}`;
             this.description = filename;
-        } else if (contextValue === C.PROVIDER_HEADER) {
+        } else if (contextValue === C.providerHeader) {
             this.iconPath = new vscode.ThemeIcon('hubot');
             this.tooltip = `${label} configuration files`;
-        } else if (contextValue === C.PROVIDER_PROJECT_GROUP) {
+        } else if (contextValue === C.providerProjectGroup) {
             this.iconPath = new vscode.ThemeIcon('root-folder');
             this.tooltip = 'Project-scoped configuration files';
-        } else if (contextValue === C.PROVIDER_USER_GROUP) {
+        } else if (contextValue === C.providerUserGroup) {
             this.iconPath = new vscode.ThemeIcon('globe');
             this.tooltip = 'User-scoped configuration files';
-        } else if (contextValue === C.PROVIDER_AGENTS_GROUP) {
+        } else if (contextValue === C.providerAgentsGroup) {
             this.iconPath = new vscode.ThemeIcon('robot');
             this.tooltip = 'Agents';
-        } else if (contextValue === C.PROVIDER_SKILLS_GROUP) {
+        } else if (contextValue === C.providerSkillsGroup) {
             this.iconPath = new vscode.ThemeIcon('symbol-misc');
             this.tooltip = 'Skills';
-        } else if (contextValue === C.PROVIDER_SETTINGS) {
+        } else if (contextValue === C.providerSettings) {
             this.iconPath = new vscode.ThemeIcon('settings-gear');
             this.tooltip = `Settings: ${resourcePath}`;
-        } else if (contextValue === C.AGENT) {
+        } else if (contextValue === C.agent) {
             this.iconPath = new vscode.ThemeIcon('robot');
-        } else if (contextValue === C.SKILL) {
+        } else if (contextValue === C.skill) {
             this.iconPath = new vscode.ThemeIcon('symbol-misc');
-        } else if (contextValue === C.SKILL_WARNING) {
+        } else if (contextValue === C.skillWarning) {
             this.iconPath = new vscode.ThemeIcon('warning');
         }
     }

@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
-import { CLIDefaults, Timing } from '../core/constants';
+import { AIProviders, CLIDefaults, Timing } from '../core/constants';
 import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { ensureCliInstalled } from '../core/utils/installUtils';
@@ -17,7 +17,7 @@ const execAsync = promisify(exec);
  */
 export class CopilotCliProvider implements IAIProvider {
     public readonly name = 'GitHub Copilot CLI';
-    public readonly type = 'copilot' as const;
+    public readonly type = AIProviders.COPILOT;
 
     private context: vscode.ExtensionContext;
     private outputChannel: vscode.OutputChannel;

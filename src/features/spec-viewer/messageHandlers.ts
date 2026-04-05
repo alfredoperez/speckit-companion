@@ -10,7 +10,7 @@ import {
     ViewerToExtensionMessage,
     DocumentType,
 } from './types';
-import { ConfigKeys } from '../../core/constants';
+import { ConfigKeys, SpecStatuses } from '../../core/constants';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig } from '../../core/types/config';
 import type { WorkflowStepConfig } from '../workflows/types';
@@ -82,13 +82,13 @@ export function createMessageHandlers(
                 await handleSubmitRefinements(specDirectory, message.refinements, deps);
                 break;
             case 'completeSpec':
-                await handleLifecycleAction(specDirectory, 'completed', deps);
+                await handleLifecycleAction(specDirectory, SpecStatuses.COMPLETED, deps);
                 break;
             case 'archiveSpec':
-                await handleLifecycleAction(specDirectory, 'archived', deps);
+                await handleLifecycleAction(specDirectory, SpecStatuses.ARCHIVED, deps);
                 break;
             case 'reactivateSpec':
-                await handleLifecycleAction(specDirectory, 'active', deps);
+                await handleLifecycleAction(specDirectory, SpecStatuses.ACTIVE, deps);
                 break;
             case 'openFile':
                 await handleOpenFile(message.filename, deps);
@@ -254,13 +254,13 @@ async function executeStepInTerminal(
  */
 async function handleLifecycleAction(
     specDirectory: string,
-    status: 'completed' | 'archived' | 'active',
+    status: typeof SpecStatuses.COMPLETED | typeof SpecStatuses.ARCHIVED | typeof SpecStatuses.ACTIVE,
     deps: MessageHandlerDependencies
 ): Promise<void> {
     const instance = deps.getInstance(specDirectory);
     if (!instance) return;
 
-    const label = status === 'active' ? 'reactivated' : status;
+    const label = status === SpecStatuses.ACTIVE ? 'reactivated' : status;
     deps.outputChannel.appendLine(`[SpecViewer] Setting spec status to ${status}: ${specDirectory}`);
 
     await setSpecStatus(specDirectory, status);

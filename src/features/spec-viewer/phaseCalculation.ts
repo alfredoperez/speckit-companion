@@ -3,7 +3,8 @@
  * Calculates workflow phases and progress
  */
 
-import { SpecDocument, DocumentType, PhaseInfo } from './types';
+import { CORE_DOCUMENTS, SpecDocument, DocumentType, PhaseInfo } from './types';
+import { SpecStatuses, WorkflowSteps } from '../../core/constants';
 
 /**
  * Calculate phase information for the stepper.
@@ -18,15 +19,15 @@ export function calculatePhases(
 ): PhaseInfo[] {
     // Default behavior: 4-phase stepper
     if (!stepCount || stepCount === 0) {
-        const specExists = documents.some(d => d.type === 'spec' && d.exists);
-        const planExists = documents.some(d => d.type === 'plan' && d.exists);
-        const tasksExists = documents.some(d => d.type === 'tasks' && d.exists);
-        const taskCompletion = currentDocType === 'tasks' ? calculateTaskCompletion(content, 'tasks') : 0;
+        const specExists = documents.some(d => d.type === CORE_DOCUMENTS.SPEC && d.exists);
+        const planExists = documents.some(d => d.type === CORE_DOCUMENTS.PLAN && d.exists);
+        const tasksExists = documents.some(d => d.type === CORE_DOCUMENTS.TASKS && d.exists);
+        const taskCompletion = currentDocType === CORE_DOCUMENTS.TASKS ? calculateTaskCompletion(content, CORE_DOCUMENTS.TASKS) : 0;
 
         return [
-            { phase: 1, label: 'Spec', completed: specExists, active: currentDocType === 'spec' },
-            { phase: 2, label: 'Plan', completed: planExists, active: currentDocType === 'plan' },
-            { phase: 3, label: 'Tasks', completed: tasksExists, active: currentDocType === 'tasks', progressPercent: tasksExists ? taskCompletion : undefined },
+            { phase: 1, label: 'Spec', completed: specExists, active: currentDocType === CORE_DOCUMENTS.SPEC },
+            { phase: 2, label: 'Plan', completed: planExists, active: currentDocType === CORE_DOCUMENTS.PLAN },
+            { phase: 3, label: 'Tasks', completed: tasksExists, active: currentDocType === CORE_DOCUMENTS.TASKS, progressPercent: tasksExists ? taskCompletion : undefined },
             { phase: 4, label: 'Done', completed: taskCompletion === 100, active: false, progressPercent: tasksExists ? taskCompletion : undefined }
         ];
     }
@@ -39,7 +40,7 @@ export function calculatePhases(
     for (let i = 0; i < coreDocs.length; i++) {
         const doc = coreDocs[i];
         const phaseNum = (i + 1) as 1 | 2 | 3 | 4;
-        const isTasksLike = doc.type === 'tasks';
+        const isTasksLike = doc.type === CORE_DOCUMENTS.TASKS;
         const taskCompletion = isTasksLike && currentDocType === doc.type
             ? calculateTaskCompletion(content, doc.type)
             : 0;
@@ -80,19 +81,17 @@ export function getPhaseNumber(docType: DocumentType, stepNames?: string[]): 1 |
             return (idx + 1) as 1 | 2 | 3 | 4;
         }
     }
-    switch (docType) {
-        case 'spec': return 1;
-        case 'plan': return 2;
-        case 'tasks': return 3;
-        default: return 1;
-    }
+    if (docType === CORE_DOCUMENTS.SPEC) return 1;
+    if (docType === CORE_DOCUMENTS.PLAN) return 2;
+    if (docType === CORE_DOCUMENTS.TASKS) return 3;
+    return 1;
 }
 
 /**
  * Calculate task completion percentage from content
  */
 export function calculateTaskCompletion(content: string, docType: DocumentType): number {
-    if (docType !== 'tasks' || !content) return 0;
+    if (docType !== CORE_DOCUMENTS.TASKS || !content) return 0;
 
     const checkboxPattern = /- \[([ xX])\]/g;
     const matches = content.matchAll(checkboxPattern);
@@ -115,7 +114,7 @@ export function calculateWorkflowPhase(coreDocs: SpecDocument[]): string {
             return coreDocs[i].type;
         }
     }
-    return coreDocs[0]?.type ?? 'spec';
+    return coreDocs[0]?.type ?? CORE_DOCUMENTS.SPEC;
 }
 
 /**
@@ -124,10 +123,10 @@ export function calculateWorkflowPhase(coreDocs: SpecDocument[]): string {
 export function mapSddStepToTab(step?: string | null): string | null {
     if (!step) return null;
     switch (step) {
-        case 'specify': return 'spec';
-        case 'plan': return 'plan';
-        case 'tasks': return 'tasks';
-        case 'implement': return 'tasks';
+        case WorkflowSteps.SPECIFY: return CORE_DOCUMENTS.SPEC;
+        case WorkflowSteps.PLAN: return CORE_DOCUMENTS.PLAN;
+        case WorkflowSteps.TASKS: return CORE_DOCUMENTS.TASKS;
+        case WorkflowSteps.IMPLEMENT: return CORE_DOCUMENTS.TASKS;
         default: return null;
     }
 }
@@ -143,23 +142,23 @@ export function computeBadgeText(ctx?: {
 } | null): string | null {
     if (!ctx) return null;
 
-    if (ctx.status === 'completed') return 'COMPLETED';
-    if (ctx.status === 'archived') return 'ARCHIVED';
+    if (ctx.status === SpecStatuses.COMPLETED) return 'COMPLETED';
+    if (ctx.status === SpecStatuses.ARCHIVED) return 'ARCHIVED';
 
     // Show next action based on current step
-    if (ctx.step === 'implement' && ctx.task) return `IMPLEMENTING ${ctx.task}`;
-    if (ctx.step === 'implement') return 'IMPLEMENTING';
+    if (ctx.step === WorkflowSteps.IMPLEMENT && ctx.task) return `IMPLEMENTING ${ctx.task}`;
+    if (ctx.step === WorkflowSteps.IMPLEMENT) return 'IMPLEMENTING';
 
     // Use next field to show what's coming
-    if (ctx.next === 'plan') return 'CREATE PLAN';
-    if (ctx.next === 'tasks') return 'CREATE TASKS';
-    if (ctx.next === 'implement') return 'IMPLEMENT';
+    if (ctx.next === WorkflowSteps.PLAN) return 'CREATE PLAN';
+    if (ctx.next === WorkflowSteps.TASKS) return 'CREATE TASKS';
+    if (ctx.next === WorkflowSteps.IMPLEMENT) return 'IMPLEMENT';
     if (ctx.next === 'done') return 'COMPLETED';
 
     // Fallback to current step
-    if (ctx.step === 'specify') return 'SPECIFYING';
-    if (ctx.step === 'plan') return 'PLANNING';
-    if (ctx.step === 'tasks') return 'CREATING TASKS';
+    if (ctx.step === WorkflowSteps.SPECIFY) return 'SPECIFYING';
+    if (ctx.step === WorkflowSteps.PLAN) return 'PLANNING';
+    if (ctx.step === WorkflowSteps.TASKS) return 'CREATING TASKS';
 
     return 'ACTIVE';
 }

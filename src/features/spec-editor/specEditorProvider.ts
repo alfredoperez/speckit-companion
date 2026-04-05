@@ -10,6 +10,7 @@ import type {
 } from './types';
 import { normalizeWorkflowConfig, resolveStepCommand } from '../workflows';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
+import { AIProviders, WorkflowSteps } from '../../core/constants';
 
 /**
  * Generates a random nonce for CSP
@@ -79,11 +80,11 @@ export class SpecEditorProvider {
                     name: wf.name,
                     displayName: wf.displayName || wf.name,
                     description: wf.description,
-                    stepSpecify: `/${formatCommandForProvider(resolveStepCommand(normalized, 'specify'))}`,
-                    stepPlan: formatCommandForProvider(wf['step-plan'] || (normalized.steps?.find(s => s.name === 'plan')?.command) || 'speckit.plan'),
-                    stepImplement: formatCommandForProvider(wf['step-implement'] || (normalized.steps?.find(s => s.name === 'implement')?.command) || 'speckit.implement'),
+                    stepSpecify: `/${formatCommandForProvider(resolveStepCommand(normalized, WorkflowSteps.SPECIFY))}`,
+                    stepPlan: formatCommandForProvider(wf[WorkflowSteps.CONFIG_PLAN] || (normalized.steps?.find(s => s.name === WorkflowSteps.PLAN)?.command) || 'speckit.plan'),
+                    stepImplement: formatCommandForProvider(wf[WorkflowSteps.CONFIG_IMPLEMENT] || (normalized.steps?.find(s => s.name === WorkflowSteps.IMPLEMENT)?.command) || 'speckit.implement'),
                     specifyCommands: ((wf as any).commands || [])
-                        .filter((c: any) => c.step === 'specify')
+                        .filter((c: any) => c.step === WorkflowSteps.SPECIFY)
                         .map((c: any) => ({ name: c.name, title: c.title || c.name, command: c.command, tooltip: c.tooltip })),
                 });
             }
@@ -236,7 +237,7 @@ export class SpecEditorProvider {
             // Warn if images attached but provider has limited support
             if (images.length > 0) {
                 const providerType = getConfiguredProviderType();
-                if (providerType === 'copilot') {
+                if (providerType === AIProviders.COPILOT) {
                     vscode.window.showWarningMessage(
                         'GitHub Copilot CLI has limited image support. Images will be included as file references but may not be processed.'
                     );

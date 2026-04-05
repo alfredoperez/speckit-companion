@@ -15,6 +15,7 @@ import {
 import { escapeHtml, escapeHtmlAttribute, generateNonce } from '../utils';
 import { calculateWorkflowPhase } from '../phaseCalculation';
 import { generateCompactNav } from './navigation';
+import { SpecStatuses } from '../../../core/constants';
 
 /**
  * Generate HTML for the webview
@@ -29,7 +30,7 @@ export function generateHtml(
     specName: string,
     phases: PhaseInfo[],
     taskCompletionPercent: number,
-    specStatus: SpecStatus = 'active',
+    specStatus: SpecStatus = SpecStatuses.ACTIVE,
     enhancementButtons: EnhancementButton[] = [],
     stalenessMap?: StalenessMap,
     activeStep?: string | null,
@@ -62,11 +63,11 @@ export function generateHtml(
     // - Active + tasks < 100%: show next step label or "Implement"
     // - Active + tasks = 100%: show "Complete" as primary CTA
     // - Completed/Archived: no CTA
-    const isTasksDone = specStatus === 'tasks-done';
+    const isTasksDone = specStatus === SpecStatuses.TASKS_DONE;
     let showApproveButton = false;
     let approveText = '';
 
-    if (specStatus === 'active') {
+    if (specStatus === SpecStatuses.ACTIVE) {
         // Normal CTA logic: show next step or Implement
         let currentIndex = coreDocs.findIndex(d => d.type === currentDocType);
         if (currentIndex < 0 && isViewingRelatedDoc) {
@@ -148,7 +149,7 @@ export function generateHtml(
 
         <footer class="actions">
             <div class="actions-left">
-                ${specStatus !== 'archived' ? `<button id="archiveSpec" class="secondary">Archive</button>` : ''}
+                ${specStatus !== SpecStatuses.ARCHIVED ? `<button id="archiveSpec" class="secondary">Archive</button>` : ''}
                 <span class="action-toast" id="action-toast"></span>
                 ${enhancementButtons.map((btn, i) => `
                 <button class="enhancement" data-command="${btn.command}" title="${btn.tooltip || ''}" id="enhance-${i}">
@@ -158,9 +159,9 @@ export function generateHtml(
                 `).join('')}
             </div>
             <div class="actions-right">
-                ${specStatus === 'archived' ? `
+                ${specStatus === SpecStatuses.ARCHIVED ? `
                 <button id="reactivateSpec" class="secondary">Reactivate</button>
-                ` : specStatus === 'completed' ? `
+                ` : specStatus === SpecStatuses.COMPLETED ? `
                 <button id="reactivateSpec" class="secondary">Reactivate</button>
                 ` : isTasksDone ? `
                 <button id="completeSpec" class="primary">Complete</button>

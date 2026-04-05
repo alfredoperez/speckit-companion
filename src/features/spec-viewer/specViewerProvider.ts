@@ -20,6 +20,7 @@ import {
   computeBadgeText,
 } from "./phaseCalculation";
 import {
+  CORE_DOCUMENTS,
   CoreDocumentType,
   DEFAULT_EMPTY_MESSAGE,
   DocumentType,
@@ -31,7 +32,7 @@ import {
   SpecViewerState,
 } from "./types";
 import { getDocumentTypeFromPath, getSpecDirectoryFromPath } from "./utils";
-import { ConfigKeys } from "../../core/constants";
+import { ConfigKeys, SpecStatuses } from "../../core/constants";
 import type { CustomCommandConfig } from "../../core/types/config";
 import { deriveChangeRoot } from "../../core/specDirectoryResolver";
 import {
@@ -391,10 +392,10 @@ export class SpecViewerProvider {
 
       // Always try to read tasks.md for completion status
       let tasksContent = "";
-      if (doc?.type === "tasks") {
+      if (doc?.type === CORE_DOCUMENTS.TASKS) {
         tasksContent = content;
       } else {
-        const tasksDoc = documents.find(d => d.type === "tasks");
+        const tasksDoc = documents.find(d => d.type === CORE_DOCUMENTS.TASKS);
         if (tasksDoc && tasksDoc.exists) {
           try {
             const uri = vscode.Uri.file(tasksDoc.filePath);
@@ -411,13 +412,13 @@ export class SpecViewerProvider {
       // Calculate phases
       const phases = calculatePhases(
         documents,
-        doc?.type || "spec",
+        doc?.type || CORE_DOCUMENTS.SPEC,
         tasksContent,
       );
-      const currentPhase = getPhaseNumber(doc?.type || "spec");
+      const currentPhase = getPhaseNumber(doc?.type || CORE_DOCUMENTS.SPEC);
       const taskCompletionPercent = calculateTaskCompletion(
         tasksContent,
-        "tasks",
+        CORE_DOCUMENTS.TASKS,
       );
 
       // Update state
@@ -425,7 +426,7 @@ export class SpecViewerProvider {
         specName,
         specDirectory,
         changeRoot,
-        currentDocument: doc?.type || "spec",
+        currentDocument: doc?.type || CORE_DOCUMENTS.SPEC,
         availableDocuments: documents,
         lastUpdated: Date.now(),
         phases,
@@ -440,18 +441,18 @@ export class SpecViewerProvider {
       // Determine spec status for conditional UI
       const featureCtx = await getFeatureWorkflow(specDirectory, changeRoot);
       let specStatus: SpecStatus;
-      if (featureCtx?.status === "archived" || featureCtx?.currentStep === "archived" || featureCtx?.currentStep === "done") {
-        specStatus = "archived";
-      } else if (featureCtx?.status === "completed") {
-        specStatus = "completed";
+      if (featureCtx?.status === SpecStatuses.ARCHIVED || featureCtx?.currentStep === SpecStatuses.ARCHIVED || featureCtx?.currentStep === "done") {
+        specStatus = SpecStatuses.ARCHIVED;
+      } else if (featureCtx?.status === SpecStatuses.COMPLETED) {
+        specStatus = SpecStatuses.COMPLETED;
       } else if (taskCompletionPercent === 100) {
-        specStatus = "tasks-done";
+        specStatus = SpecStatuses.TASKS_DONE;
       } else {
-        specStatus = "active";
+        specStatus = SpecStatuses.ACTIVE;
       }
 
       // Resolve enhancement buttons from customCommands
-      const enhancementButtons = this.resolveEnhancementButtons(doc?.type || "spec");
+      const enhancementButtons = this.resolveEnhancementButtons(doc?.type || CORE_DOCUMENTS.SPEC);
 
       // Compute staleness for workflow documents
       const stalenessMap = await computeStaleness(documents);
@@ -463,7 +464,7 @@ export class SpecViewerProvider {
         content,
         emptyMessage,
         documents,
-        doc?.type || "spec",
+        doc?.type || CORE_DOCUMENTS.SPEC,
         specName,
         phases,
         taskCompletionPercent,
@@ -582,11 +583,11 @@ export class SpecViewerProvider {
 
       // Always try to read tasks.md for completion status
       let tasksContent = "";
-      if (documentType === "tasks") {
+      if (documentType === CORE_DOCUMENTS.TASKS) {
         tasksContent = content;
       } else {
         const tasksDoc = instance.state.availableDocuments.find(
-          d => d.type === "tasks",
+          d => d.type === CORE_DOCUMENTS.TASKS,
         );
         if (tasksDoc && tasksDoc.exists) {
           try {
@@ -604,7 +605,7 @@ export class SpecViewerProvider {
       // Calculate task completion for tasks doc
       const taskCompletionPercent = calculateTaskCompletion(
         tasksContent,
-        "tasks",
+        CORE_DOCUMENTS.TASKS,
       );
 
       // Build navigation state
@@ -647,14 +648,14 @@ export class SpecViewerProvider {
       const changeRoot = instance.state.changeRoot;
       const featureCtx = await getFeatureWorkflow(specDirectory, changeRoot);
       let specStatus: string;
-      if (featureCtx?.status === "archived" || featureCtx?.currentStep === "archived" || featureCtx?.currentStep === "done") {
-        specStatus = "archived";
-      } else if (featureCtx?.status === "completed") {
-        specStatus = "completed";
+      if (featureCtx?.status === SpecStatuses.ARCHIVED || featureCtx?.currentStep === SpecStatuses.ARCHIVED || featureCtx?.currentStep === "done") {
+        specStatus = SpecStatuses.ARCHIVED;
+      } else if (featureCtx?.status === SpecStatuses.COMPLETED) {
+        specStatus = SpecStatuses.COMPLETED;
       } else if (taskCompletionPercent === 100) {
-        specStatus = "tasks-done";
+        specStatus = SpecStatuses.TASKS_DONE;
       } else {
-        specStatus = "active";
+        specStatus = SpecStatuses.ACTIVE;
       }
 
       // Resolve enhancement buttons from customCommands

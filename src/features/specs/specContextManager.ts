@@ -7,6 +7,7 @@ import {
     FEATURE_CONTEXT_FILE,
     LEGACY_CONTEXT_FILE,
 } from '../workflows/types';
+import { SpecStatuses } from '../../core/constants';
 
 /** SDD state.json filename */
 const STATE_FILE = 'state.json';
@@ -19,14 +20,14 @@ function inferContextFromState(state: Record<string, unknown>): FeatureWorkflowC
     const step = state.step as string | undefined;
 
     // Use explicit status if present; otherwise default to active
-    const validStatuses: SpecStatus[] = ['active', 'completed', 'archived'];
+    const validStatuses: SpecStatus[] = [SpecStatuses.ACTIVE, SpecStatuses.COMPLETED, SpecStatuses.ARCHIVED];
     let status: SpecStatus = validStatuses.includes(state.status as SpecStatus)
         ? (state.status as SpecStatus)
-        : 'active';
+        : SpecStatuses.ACTIVE;
 
     // A spec is completed only when the pipeline explicitly signals done
-    if (status === 'active' && state.next === 'done') {
-        status = 'completed';
+    if (status === SpecStatuses.ACTIVE && state.next === 'done') {
+        status = SpecStatuses.COMPLETED;
     }
 
     // Build stepHistory using workflow order — all steps before currentStep are completed
@@ -48,12 +49,12 @@ function inferContextFromState(state: Record<string, unknown>): FeatureWorkflowC
         // Current step: completed if spec is completed, otherwise in-progress
         stepHistory[step!] = {
             startedAt: updated,
-            completedAt: status === 'completed' ? updated : null,
+            completedAt: status === SpecStatuses.COMPLETED ? updated : null,
         };
     }
 
     // If spec is completed, mark ALL steps as completed
-    if (status === 'completed') {
+    if (status === SpecStatuses.COMPLETED) {
         for (const stepName of defaultStepOrder) {
             if (!stepHistory[stepName]) {
                 stepHistory[stepName] = { startedAt: updated, completedAt: updated };
@@ -228,7 +229,7 @@ export async function updateStepProgress(
     }
 
     // Set status to active if not already set
-    const status = context.status || 'active';
+    const status = context.status || SpecStatuses.ACTIVE;
 
     await updateSpecContext(specDir, {
         currentStep: stepName,

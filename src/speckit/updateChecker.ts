@@ -1,10 +1,11 @@
 import * as vscode from 'vscode';
+import { ConfigKeys } from '../core/constants';
 import { NotificationUtils } from '../core/utils/notificationUtils';
 import type { GitHubRelease } from '../core/types/config';
 
 export class UpdateChecker {
-    private static readonly SKIP_VERSION_KEY = 'speckit.skipVersion';
-    private static readonly LAST_CHECK_KEY = 'speckit.lastUpdateCheck';
+    private static readonly SKIP_VERSION_KEY = ConfigKeys.globalState.skipVersion;
+    private static readonly LAST_CHECK_KEY = ConfigKeys.globalState.lastUpdateCheck;
     private static readonly CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
     
     constructor(

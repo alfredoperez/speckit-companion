@@ -3,7 +3,7 @@
  * Generates the phase stepper HTML
  */
 
-import { PhaseInfo } from '../types';
+import { CORE_DOCUMENTS, PhaseInfo } from '../types';
 
 /**
  * Generate the phase stepper HTML
@@ -42,7 +42,7 @@ export function generatePhaseStepper(phases: PhaseInfo[], taskCompletionPercent:
             }
         }
 
-        const phaseKey = phase.phase === 1 ? 'spec' : phase.phase === 2 ? 'plan' : phase.phase === 3 ? 'tasks' : 'done';
+        const phaseKey = phase.phase === 1 ? CORE_DOCUMENTS.SPEC : phase.phase === 2 ? CORE_DOCUMENTS.PLAN : phase.phase === 3 ? CORE_DOCUMENTS.TASKS : 'done';
 
         return `
             <div class="step ${stepClass.trim()}" data-phase="${phaseKey}">
