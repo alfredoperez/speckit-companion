@@ -239,8 +239,8 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             try {
                 const entries = fs.readdirSync(dirPath, { withFileTypes: true });
                 for (const entry of entries) {
-                    // Skip hidden directories and checklists
-                    if (entry.name.startsWith('.') || entry.name === 'checklists') {
+                    // Skip hidden directories
+                    if (entry.name.startsWith('.')) {
                         continue;
                     }
 
@@ -584,7 +584,7 @@ class SpecItem extends vscode.TreeItem {
                 const stepHistory = specContext.stepHistory;
                 if (stepHistory?.[documentType]?.completedAt) {
                     this.iconPath = new vscode.ThemeIcon('pass', new vscode.ThemeColor('testing.iconPassed'));
-                } else if (specContext.currentStep === documentType) {
+                } else if ((specContext.step ?? specContext.currentStep) === documentType) {
                     this.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('charts.blue'));
                 }
             }

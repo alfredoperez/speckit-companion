@@ -1,0 +1,92 @@
+{
+  "auto": true,
+  "step": "implement",
+  "task": null,
+  "substep": "commit-review",
+  "next": "implement",
+  "updated": "2026-04-05",
+  "workflow": "sdd",
+  "selectedAt": "2026-04-05T21:37:27.642Z",
+  "currentStep": "tasks",
+  "status": "completed",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-04-05T21:37:27.642Z",
+      "completedAt": "2026-04-05T21:58:38.014Z"
+    },
+    "plan": {
+      "startedAt": "2026-04-05T21:58:38.014Z",
+      "completedAt": "2026-04-05T21:58:38.495Z"
+    },
+    "tasks": {
+      "startedAt": "2026-04-05T21:58:38.495Z",
+      "completedAt": null
+    }
+  },
+  "approach": "Fix step status icon to prefer specContext.step over currentStep, verify related doc child rendering and unregistered doc discovery in specExplorerProvider.ts",
+  "last_action": "CP1 approved — proceeding to commit",
+  "files_modified": [
+    "src/features/specs/specExplorerProvider.ts",
+    "src/features/specs/__tests__/specExplorerProvider.test.ts",
+    "src/features/workflows/workflowManager.ts",
+    "src/features/spec-viewer/documentScanner.ts"
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Changed step status icon check to prefer specContext.step over currentStep with nullish coalescing fallback",
+      "files": [
+        "src/features/specs/specExplorerProvider.ts"
+      ],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Verified related docs render as children; then fixed checklists to show under Specify by adding subDir config and removing hardcoded exclusion",
+      "files": [
+        "src/features/workflows/workflowManager.ts",
+        "src/features/specs/specExplorerProvider.ts",
+        "src/features/spec-viewer/documentScanner.ts"
+      ],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Verified getRelatedDocs discovery and filtering logic correctly discovers unregistered .md files and attaches to includeRelatedDocs step — no code change needed",
+      "files": [],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added 3 tests: step field preference over currentStep, currentStep fallback when step absent, completedAt green icon precedence",
+      "files": [
+        "src/features/specs/__tests__/specExplorerProvider.test.ts"
+      ],
+      "concerns": []
+    }
+  },
+  "concerns": [],
+  "decisions": [
+    "T002/T003: Related docs and unregistered doc discovery already work correctly — no code changes needed, only T001 required a fix",
+    "Added subDir: 'checklists' to Specify step so checklist docs appear under Specification instead of Plan"
+  ],
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 5,
+      "scenarios": 5,
+      "key_finding": "specExplorerProvider uses specContext.currentStep for in-progress icon but ignores specContext.step (SDD field); related docs hierarchy relies on contextValue prefix matching in getChildren"
+    },
+    "plan": {
+      "approach_summary": "Fix step status icon to prefer specContext.step over currentStep, verify related doc child rendering and unregistered doc discovery in specExplorerProvider.ts",
+      "files_planned": 1,
+      "risks": []
+    },
+    "tasks": {
+      "total_tasks": 4,
+      "phases": 1
+    }
+  },
+  "specName": "Fix Explorer Tree View",
+  "branch": "main"
+}
