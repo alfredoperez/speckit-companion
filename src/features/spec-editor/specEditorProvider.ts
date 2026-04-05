@@ -265,7 +265,34 @@ export class SpecEditorProvider {
 
             // Use custom command if provided, otherwise workflow's specify command
             const command = customCommand ? `/${customCommand}` : workflow.stepSpecify;
-            const prompt = `${command} ${markdownContent}`;
+
+            // Append instruction to write .spec-context.json so the AI provider
+            // persists workflow state for badge/date display in the spec viewer.
+            const specContextInstruction = [
+                '',
+                '## Post-Specification: Update .spec-context.json',
+                '',
+                'After writing the spec file, create or update `.spec-context.json` in the same feature directory with:',
+                '',
+                '```json',
+                '{',
+                `  "workflow": "${workflowName}",`,
+                '  "selectedAt": "<current ISO timestamp>",',
+                '  "currentStep": "specify",',
+                '  "status": "active",',
+                '  "stepHistory": {',
+                '    "specify": {',
+                '      "startedAt": "<current ISO timestamp>"',
+                '    }',
+                '  }',
+                '}',
+                '```',
+                '',
+                'If the file already exists, merge these fields into the existing content.',
+                'Replace `<current ISO timestamp>` with the actual current time in ISO 8601 format.',
+            ].join('\n');
+
+            const prompt = `${command} ${markdownContent}${specContextInstruction}`;
             this.outputChannel.appendLine(`[SpecEditor] Using command: ${command}`);
 
             // Execute in terminal
