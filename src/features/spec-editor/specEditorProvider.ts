@@ -280,6 +280,8 @@ export class SpecEditorProvider {
                 '  "selectedAt": "<current ISO timestamp>",',
                 '  "currentStep": "specify",',
                 '  "status": "active",',
+                '  "specName": "<human-readable name derived from directory slug, e.g. 046-my-feature → My Feature>",',
+                '  "branch": "<current git branch name from git rev-parse --abbrev-ref HEAD>",',
                 '  "stepHistory": {',
                 '    "specify": {',
                 '      "startedAt": "<current ISO timestamp>"',
