@@ -4,7 +4,7 @@ A comprehensive guide to the SpecKit Companion VS Code extension architecture.
 
 ## Overview
 
-SpecKit Companion is a VS Code extension that enhances AI CLI tools (Claude Code, Gemini CLI, GitHub Copilot CLI) with structured spec-driven development features. It provides visual management of specs (requirements, design, tasks) and steering documents.
+SpecKit Companion is a VS Code extension that enhances AI CLI tools (Claude Code, Gemini CLI, GitHub Copilot CLI, Codex CLI, Qwen CLI) with structured spec-driven development features. It provides visual management of specs (requirements, design, tasks) and steering documents.
 
 ### Architecture Diagram
 
@@ -12,7 +12,7 @@ SpecKit Companion is a VS Code extension that enhances AI CLI tools (Claude Code
 graph TB
     subgraph UI["VS Code Extension UI"]
         AB[Activity Bar<br/>SpecKit]
-        TV[Tree Views<br/>Specs | Steering | MCP | Agents | Skills | Hooks]
+        TV[Tree Views<br/>Specs | Steering | Settings]
         CE[Custom Editor<br/>Workflow Editor]
     end
 
@@ -20,13 +20,15 @@ graph TB
         Claude[Claude Code]
         Gemini[Gemini CLI]
         Copilot[Copilot CLI]
+        Codex[Codex CLI]
+        Qwen[Qwen CLI]
     end
 
     subgraph Managers["Feature Managers (Business Logic)"]
         SM[SteeringManager]
         AM[AgentManager]
         SKM[SkillManager]
-        PM[PermissionManager]
+        WM[WorkflowManager]
     end
 
     subgraph Core["Core Utilities & Types"]
@@ -56,6 +58,8 @@ graph TB
 | Claude Code | Full | Full | Full | Full | Full |
 | GitHub Copilot CLI | Full | Full | - | - | Full |
 | Gemini CLI | Full | Limited | - | - | Full |
+| Codex CLI | Full | - | - | - | - |
+| Qwen CLI | Full | - | - | - | - |
 
 ---
 
@@ -69,11 +73,15 @@ src/
 │   ├── aiProviderFactory.ts  # Factory pattern implementation
 │   ├── claudeCodeProvider.ts # Claude Code implementation
 │   ├── geminiCliProvider.ts  # Gemini CLI implementation
-│   └── copilotCliProvider.ts # GitHub Copilot CLI implementation
+│   ├── copilotCliProvider.ts # GitHub Copilot CLI implementation
+│   ├── codexCliProvider.ts   # Codex CLI implementation
+│   ├── qwenCliProvider.ts    # Qwen CLI implementation
+│   └── index.ts
 ├── core/                     # Core utilities & infrastructure
 │   ├── constants.ts          # Commands, ConfigKeys, Views, Timing
 │   ├── types.ts              # Message types (Extension <-> Webview)
 │   ├── fileWatchers.ts       # File system monitoring with debouncing
+│   ├── specDirectoryResolver.ts # Resolves spec directory paths
 │   ├── errors/               # Error handling utilities
 │   │   └── index.ts          # SpecKitError, handleError()
 │   ├── managers/             # Base classes for managers
@@ -89,26 +97,43 @@ src/
 │       ├── fileOpener.ts
 │       └── sanitize.ts
 ├── features/                 # Feature modules (independent)
-│   ├── specs/                # Spec explorer and commands
-│   ├── steering/             # Steering document management
 │   ├── agents/               # Agent discovery and initialization
-│   ├── skills/               # Skill management (Claude only)
-│   ├── hooks/                # Hooks view
-│   ├── mcp/                  # MCP server view
 │   ├── permission/           # Claude permission management
 │   ├── settings/             # Overview/settings provider
-│   └── workflow-editor/      # Custom markdown editor
+│   ├── skills/               # Skill management (Claude only)
+│   ├── spec-editor/          # Spec editor webview
+│   ├── spec-viewer/          # Spec viewer webview (modular)
+│   ├── specs/                # Spec explorer and commands
+│   ├── steering/             # Steering document management
+│   ├── workflow-editor/      # Custom markdown editor webview
+│   └── workflows/            # Workflow management and execution
 └── speckit/                  # SpecKit CLI integration
     ├── detector.ts           # CLI installation detection
     ├── cliCommands.ts        # CLI commands (install, init)
     ├── updateChecker.ts      # Version update detection
-    └── taskProgressService.ts # Tasks.md completion tracking
+    ├── taskProgressService.ts # Tasks.md completion tracking
+    └── utilityCommands.ts    # Utility CLI commands
 
-webview/                      # Workflow editor webview (browser)
+webview/                      # Webview UIs (browser context)
 ├── src/
-│   └── workflow.ts           # Webview TypeScript
+│   ├── spec-viewer/          # Spec viewer webview
+│   │   ├── index.ts, actions.ts, elements.ts, navigation.ts
+│   │   ├── state.ts, types.ts, highlighting.ts, modal.ts
+│   │   ├── markdown/         # Rendering pipeline
+│   │   └── editor/           # Inline editing
+│   ├── spec-editor/          # Spec editor webview
+│   │   └── index.ts, types.ts
+│   ├── markdown/             # Shared markdown utilities
+│   ├── render/               # Shared render utilities
+│   ├── ui/                   # Shared UI components
+│   ├── types.ts
+│   └── workflow.ts           # Workflow editor webview
 └── styles/
-    └── workflow.css          # Theme-aware styles
+    ├── spec-viewer/          # 16 CSS partials + index.css
+    ├── spec-editor.css
+    ├── spec-markdown.css
+    ├── spec-viewer.css
+    └── workflow.css
 ```
 
 ---
@@ -132,21 +157,21 @@ flowchart TD
     G -->|No| H[promptForProviderSelection]
     G -->|Yes| I[AIProviderFactory.getProvider]
     H --> I
-    I --> J[Initialize Managers<br/>Permission, Steering, Agent, Skill]
-    J --> K[Register TreeDataProviders<br/>7 views]
+    I --> J[Initialize Managers<br/>Permission, Steering, Agent, Skill, Workflow]
+    J --> K[Register TreeDataProviders<br/>3 views]
     K --> L[setupFileWatchers]
     L --> M[registerCommands]
 ```
 
-**Key initialization steps (lines 36-174):**
+**Key initialization steps:**
 
-1. **Output Channel** (line 38): Creates "SpecKit Companion" debug channel
-2. **SpecKit Detection** (lines 40-48): Detects CLI and workspace state
-3. **AI Provider Selection** (lines 68-77): Prompts if not configured
-4. **Manager Initialization** (lines 79-92): Creates managers in order
-5. **Provider Registration** (lines 93-113): Registers 7 tree views
-6. **File Watchers** (lines 138-142): Sets up monitoring
-7. **Workflow Editor** (lines 148-155): Conditional custom editor
+1. **Output Channel**: Creates "SpecKit Companion" debug channel
+2. **SpecKit Detection**: Detects CLI and workspace state
+3. **AI Provider Selection**: Prompts if not configured
+4. **Manager Initialization**: Creates managers in order
+5. **Provider Registration**: Registers 3 tree views
+6. **File Watchers**: Sets up monitoring
+7. **Workflow Editor**: Conditional custom editor
 
 ### AI Provider System
 
@@ -219,10 +244,6 @@ All tree views extend `BaseTreeDataProvider<T>` (`core/providers/BaseTreeDataPro
 |---------|----------|---------|
 | `speckit.views.explorer` | SpecExplorerProvider | Specs tree |
 | `speckit.views.steering` | SteeringExplorerProvider | Steering docs |
-| `speckit.views.agents` | AgentsExplorerProvider | Agent files |
-| `speckit.views.skills` | SkillsExplorerProvider | Skills (Claude) |
-| `speckit.views.mcp` | MCPExplorerProvider | MCP servers |
-| `speckit.views.hooks` | HooksExplorerProvider | Hooks |
 | `speckit.views.settings` | OverviewProvider | Settings |
 
 **Base class provides:**
@@ -291,9 +312,11 @@ sequenceDiagram
     Explorer->>UI: Tree view updates
 ```
 
-### 2. Webview Communication (Workflow Editor)
+### 2. Webview Communication
 
-**Files:**
+The extension has three webview UIs: the **Workflow Editor** (`webview/src/workflow.ts`), the **Spec Viewer** (`webview/src/spec-viewer/`), and the **Spec Editor** (`webview/src/spec-editor/`). All use the same message-passing pattern between extension and browser context.
+
+**Files (Workflow Editor example):**
 - `src/features/workflow-editor/workflowEditorProvider.ts`
 - `webview/src/workflow.ts`
 - `src/core/types.ts`
@@ -384,11 +407,21 @@ const debouncedRefresh = (event: string, uri: vscode.Uri) => {
 ### Configuration Keys
 
 ```typescript
-speckit.aiProvider          // 'claude' | 'gemini' | 'copilot'
-speckit.workflowEditor.enabled  // boolean
-speckit.claudePath          // Custom Claude CLI path
-speckit.geminiInitDelay     // Gemini startup delay (ms)
+speckit.aiProvider                    // 'claude' | 'gemini' | 'copilot' | 'codex' | 'qwen'
+speckit.workflowEditor.enabled        // boolean
+speckit.claudePath                    // Custom Claude CLI path
+speckit.geminiPath                    // Custom Gemini CLI path
+speckit.copilotPath                   // Custom Copilot CLI path
+speckit.qwenPath                      // Custom Qwen CLI path
+speckit.geminiInitDelay               // Gemini startup delay (ms)
+speckit.permissionMode                // Permission bypass mode
+speckit.specDirectories               // Additional spec directories
+speckit.customCommands                // Custom command definitions
+speckit.customWorkflows               // Custom workflow definitions
+speckit.defaultWorkflow               // Default workflow name
 speckit.notifications.phaseCompletion // boolean
+speckit.views.steering.visible        // boolean
+speckit.views.settings.visible        // boolean
 ```
 
 ### Timing Constants (milliseconds)
@@ -537,7 +570,7 @@ button.addEventListener('click', () => {
 
 ### Provider-Specific Directories
 
-The extension supports three AI providers, each with its own configuration paths:
+The extension supports five AI providers, each with its own configuration paths:
 
 | Provider | Workspace Dir | Global Dir | Config File |
 |----------|---------------|------------|-------------|
@@ -606,15 +639,15 @@ Workspace Root/
 
 ### Provider Capabilities Matrix
 
-| Feature | Claude Code | Gemini CLI | Copilot CLI |
-|---------|-------------|------------|-------------|
-| Agents | ✓ | ✓ | - |
-| Skills | ✓ | - | - |
-| Hooks | ✓ | - | - |
-| MCP Servers | ✓ | - | - |
-| Steering Docs | ✓ | ✓ | ✓ |
-| Workflow Editor | ✓ | ✓ | ✓ |
-| Permission Bypass | ✓ | - | - |
+| Feature | Claude Code | Gemini CLI | Copilot CLI | Codex CLI | Qwen CLI |
+|---------|-------------|------------|-------------|-----------|----------|
+| Agents | ✓ | ✓ | - | - | - |
+| Skills | ✓ | - | - | - | - |
+| Hooks | ✓ | - | - | - | - |
+| MCP Servers | ✓ | - | - | - | - |
+| Steering Docs | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Workflow Editor | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Permission Bypass | ✓ | - | - | - | - |
 
 ---
 
