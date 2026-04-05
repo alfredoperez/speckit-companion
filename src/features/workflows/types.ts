@@ -176,5 +176,3 @@ export const WORKFLOW_NAME_PATTERN = /^[a-z][a-z0-9-]*$/;
  */
 export const FEATURE_CONTEXT_FILE = '.spec-context.json';
 
-/** Legacy filename for migration fallback */
-export const LEGACY_CONTEXT_FILE = '.speckit.json';
