@@ -5,6 +5,7 @@
 
 import type { NavState, VSCodeApi } from './types';
 import { getElements } from './elements';
+import { escapeHtml } from './markdown';
 
 declare const vscode: VSCodeApi;
 
@@ -112,13 +113,13 @@ export function updateNavState(navState: NavState): void {
         const titleEl = specHeader.querySelector('.spec-header-title');
         if (titleEl && navState.specContextName) {
             const docTypeLabel = navState.docTypeLabel || 'Spec';
-            titleEl.innerHTML = `<span class="spec-header-doctype">${docTypeLabel}:</span> ${navState.specContextName}`;
+            titleEl.innerHTML = `<span class="spec-header-doctype">${escapeHtml(docTypeLabel)}:</span> ${escapeHtml(navState.specContextName)}`;
         }
 
         // Update branch badge
         const branchEl = specHeader.querySelector('.spec-header-branch');
         if (branchEl && navState.branch) {
-            branchEl.innerHTML = `<span class="branch-icon">&#xea68;</span> ${navState.branch}`;
+            branchEl.innerHTML = `<span class="branch-icon">&#xea68;</span> ${escapeHtml(navState.branch)}`;
         }
     }
 

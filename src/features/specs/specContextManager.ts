@@ -1,12 +1,12 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { execSync } from 'child_process';
 import {
     FeatureWorkflowContext,
     SpecStatus,
     FEATURE_CONTEXT_FILE,
 } from '../workflows/types';
 import { SpecStatuses } from '../../core/constants';
+import { formatDocName } from '../workflow-editor/workflow/specInfoParser';
 
 /**
  * Try reading a JSON file, return parsed content or undefined.
@@ -82,33 +82,14 @@ export async function updateSpecContext(
  */
 export function deriveSpecName(specDir: string): string {
     const slug = path.basename(specDir);
-    // Strip leading number prefix (e.g., "046-")
     const withoutPrefix = slug.replace(/^\d+-/, '');
-    return withoutPrefix
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-}
-
-/**
- * Get the current git branch name. Returns undefined on failure.
- */
-function getCurrentBranch(cwd?: string): string | undefined {
-    try {
-        return execSync('git rev-parse --abbrev-ref HEAD', {
-            cwd,
-            encoding: 'utf-8',
-            timeout: 3000,
-        }).trim() || undefined;
-    } catch {
-        return undefined;
-    }
+    return formatDocName(withoutPrefix);
 }
 
 /**
  * Update step progress when user clicks a step command.
  * Sets currentStep, adds stepHistory entry, completes previous step.
- * Also populates specName and branch if missing.
+ * Also populates specName if missing.
  */
 export async function updateStepProgress(
     specDir: string,
@@ -136,21 +117,15 @@ export async function updateStepProgress(
     // Set status to active if not already set
     const status = context.status || SpecStatuses.ACTIVE;
 
-    // Populate specName and branch if not already set
+    // Populate specName if not already set
     const specName = context.specName || deriveSpecName(specDir);
-    const branch = context.branch || getCurrentBranch(specDir);
 
-    const update: Partial<FeatureWorkflowContext> = {
+    await updateSpecContext(specDir, {
         currentStep: stepName,
         stepHistory,
         status,
         specName,
-    };
-    if (branch) {
-        update.branch = branch;
-    }
-
-    await updateSpecContext(specDir, update);
+    });
 }
 
 /**

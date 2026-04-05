@@ -173,7 +173,7 @@ async function handleStepperClick(
     await deps.sendContentUpdateMessage(specDirectory, phase);
 
     // Fire-and-forget: persist the step change to .spec-context.json
-    deps.resolveWorkflowSteps(specDirectory).then(steps => {
+    void deps.resolveWorkflowSteps(specDirectory).then(steps => {
         const stepNames = steps.map(s => s.name);
         updateStepProgress(specDirectory, phase, stepNames).catch(err => {
             deps.outputChannel.appendLine(`[SpecViewer] Error persisting step change: ${err}`);
