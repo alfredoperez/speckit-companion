@@ -169,18 +169,18 @@ async function handleStepperClick(
     deps: MessageHandlerDependencies
 ): Promise<void> {
     if (phase === 'done') return; // Done is not clickable
+
+    // Persist step change BEFORE updating UI so AI agent sees updated .spec-context.json
+    try {
+        const steps = await deps.resolveWorkflowSteps(specDirectory);
+        const stepNames = steps.map(s => s.name);
+        await updateStepProgress(specDirectory, phase, stepNames);
+    } catch (err) {
+        deps.outputChannel.appendLine(`[SpecViewer] Error persisting step change: ${err}`);
+    }
+
     // Use message-based update for smoother transition (no page flash)
     await deps.sendContentUpdateMessage(specDirectory, phase);
-
-    // Fire-and-forget: persist the step change to .spec-context.json
-    void deps.resolveWorkflowSteps(specDirectory).then(steps => {
-        const stepNames = steps.map(s => s.name);
-        updateStepProgress(specDirectory, phase, stepNames).catch(err => {
-            deps.outputChannel.appendLine(`[SpecViewer] Error persisting step change: ${err}`);
-        });
-    }).catch(err => {
-        deps.outputChannel.appendLine(`[SpecViewer] Error resolving workflow steps: ${err}`);
-    });
 }
 
 /**

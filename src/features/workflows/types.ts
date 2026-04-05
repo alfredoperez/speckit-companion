@@ -125,12 +125,12 @@ export interface FeatureWorkflowContext {
     specName?: string;
     /** Git branch name associated with this spec */
     branch?: string;
-    /** SDD-enriched fields — extension ignores if absent */
-    step?: string;
-    substep?: string | null;
-    task?: string | null;
-    next?: string | null;
-    updated?: string;
+    /** In-progress indicator (e.g., "exploring", "phase1") */
+    progress?: string | null;
+    /** Current task being executed (e.g., "T001") */
+    currentTask?: string | null;
+    /** ISO string when the spec was first created */
+    createdAt?: string;
     approach?: string;
     last_action?: string;
     task_summaries?: Record<string, unknown>;

@@ -166,18 +166,12 @@ export function computeCreatedDate(stepHistory?: Record<string, { startedAt?: st
 }
 
 /**
- * Compute "Last Updated" date from stepHistory and context.updated.
+ * Compute "Last Updated" date from stepHistory timestamps.
  * Returns null if only one timestamp exists (same as Created) to avoid redundancy.
  */
 export function computeLastUpdatedDate(
-    stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }> | null,
-    contextUpdated?: string | null
+    stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }> | null
 ): string | null {
-    // If context.updated exists, use it (most recent AI agent activity)
-    if (contextUpdated) {
-        return formatDisplayDate(contextUpdated);
-    }
-
     if (!stepHistory) return null;
 
     // Collect all timestamps
@@ -210,13 +204,12 @@ export function getDocTypeLabel(step?: string | null): string {
 
 /**
  * Compute a human-readable badge text from spec-context fields.
- * When substep is non-null (in-progress work), appends "..." suffix.
+ * When progress is non-null (in-progress work), appends "..." suffix.
  */
 export function computeBadgeText(ctx?: {
-    step?: string | null;
-    substep?: string | null;
-    next?: string | null;
-    task?: string | null;
+    currentStep?: string | null;
+    progress?: string | null;
+    currentTask?: string | null;
     status?: string;
 } | null): string | null {
     if (!ctx) return null;
@@ -224,24 +217,16 @@ export function computeBadgeText(ctx?: {
     if (ctx.status === SpecStatuses.COMPLETED) return 'COMPLETED';
     if (ctx.status === SpecStatuses.ARCHIVED) return 'ARCHIVED';
 
-    const inProgress = ctx.substep != null;
+    const inProgress = ctx.progress != null;
 
     // Show next action based on current step
-    if (ctx.step === WorkflowSteps.IMPLEMENT && ctx.task) return `IMPLEMENTING ${ctx.task}${inProgress ? '...' : ''}`;
-    if (ctx.step === WorkflowSteps.IMPLEMENT) return `IMPLEMENTING${inProgress ? '...' : ''}`;
-
-    // Use next field to show what's coming (not in-progress, these are "ready for" states)
-    if (!inProgress) {
-        if (ctx.next === WorkflowSteps.PLAN) return 'CREATE PLAN';
-        if (ctx.next === WorkflowSteps.TASKS) return 'CREATE TASKS';
-        if (ctx.next === WorkflowSteps.IMPLEMENT) return 'IMPLEMENT';
-        if (ctx.next === 'done') return 'COMPLETED';
-    }
+    if (ctx.currentStep === WorkflowSteps.IMPLEMENT && ctx.currentTask) return `IMPLEMENTING ${ctx.currentTask}${inProgress ? '...' : ''}`;
+    if (ctx.currentStep === WorkflowSteps.IMPLEMENT) return `IMPLEMENTING${inProgress ? '...' : ''}`;
 
     // Fallback to current step (with in-progress suffix)
-    if (ctx.step === WorkflowSteps.SPECIFY) return `SPECIFYING${inProgress ? '...' : ''}`;
-    if (ctx.step === WorkflowSteps.PLAN) return `PLANNING${inProgress ? '...' : ''}`;
-    if (ctx.step === WorkflowSteps.TASKS) return `CREATING TASKS${inProgress ? '...' : ''}`;
+    if (ctx.currentStep === WorkflowSteps.SPECIFY) return `SPECIFYING${inProgress ? '...' : ''}`;
+    if (ctx.currentStep === WorkflowSteps.PLAN) return `PLANNING${inProgress ? '...' : ''}`;
+    if (ctx.currentStep === WorkflowSteps.TASKS) return `CREATING TASKS${inProgress ? '...' : ''}`;
 
     return 'ACTIVE';
 }
