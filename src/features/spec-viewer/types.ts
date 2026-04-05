@@ -3,6 +3,7 @@
  */
 
 import * as vscode from 'vscode';
+import { SpecStatuses } from '../../core/constants';
 
 // ============================================
 // Document Types
@@ -392,14 +393,14 @@ export const DEFAULT_EMPTY_MESSAGE = 'Document not found.';
  * Used to control UI element visibility
  */
 export type SpecStatus =
-    | 'active'          // Default - shows all editing controls
-    | 'tasks-done'      // All tasks 100% - shows Complete as primary CTA
-    | 'completed'       // User marked complete - shows Archive + Reactivate
-    | 'archived';       // Read-only - shows Reactivate only
+    | typeof SpecStatuses.ACTIVE          // Default - shows all editing controls
+    | typeof SpecStatuses.TASKS_DONE      // All tasks 100% - shows Complete as primary CTA
+    | typeof SpecStatuses.COMPLETED       // User marked complete - shows Archive + Reactivate
+    | typeof SpecStatuses.ARCHIVED;       // Read-only - shows Reactivate only
 
 /**
  * Check if a status allows editing/refinement
  */
 export function isEditableStatus(status: SpecStatus): boolean {
-    return status === 'active' || status === 'tasks-done';
+    return status === SpecStatuses.ACTIVE || status === SpecStatuses.TASKS_DONE;
 }

@@ -6,6 +6,7 @@ import * as yaml from 'js-yaml';
 import type { AgentFrontmatter, InstalledPlugin, InstalledPluginsFile } from '../../core/types/config';
 import { handleError } from '../../core/errors';
 import { getConfiguredProviderType } from '../../ai-providers/aiProvider';
+import { AIProviders } from '../../core/constants';
 
 export interface AgentInfo {
     name: string;
@@ -49,7 +50,7 @@ export class AgentManager {
             return;
         }
 
-        if (getConfiguredProviderType() !== 'claude') {
+        if (getConfiguredProviderType() !== AIProviders.CLAUDE) {
             this.outputChannel.appendLine(`[AgentManager] Provider is not Claude, skipping built-in agent initialization`);
             return;
         }

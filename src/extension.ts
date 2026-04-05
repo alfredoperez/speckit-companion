@@ -195,7 +195,7 @@ export async function activate(context: vscode.ExtensionContext) {
  */
 async function showInitSuggestion(context: vscode.ExtensionContext): Promise<void> {
     // Check if user dismissed this globally (for all projects)
-    const dismissed = context.globalState.get<boolean>('speckit.initSuggestionDismissed', false);
+    const dismissed = context.globalState.get<boolean>(ConfigKeys.globalState.initSuggestionDismissed, false);
     if (dismissed) {
         return;
     }
@@ -212,7 +212,7 @@ async function showInitSuggestion(context: vscode.ExtensionContext): Promise<voi
         vscode.env.openExternal(vscode.Uri.parse('https://github.com/github/spec-kit#-get-started'));
     } else if (selection === "Don't Ask Again") {
         // Save globally so it won't show in any project
-        await context.globalState.update('speckit.initSuggestionDismissed', true);
+        await context.globalState.update(ConfigKeys.globalState.initSuggestionDismissed, true);
     }
 }
 

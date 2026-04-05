@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
-import { Timing } from '../core/constants';
+import { AIProviders, Timing } from '../core/constants';
 import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { ensureCliInstalled } from '../core/utils/installUtils';
@@ -13,7 +13,7 @@ const execAsync = promisify(exec);
 
 export class QwenCliProvider implements IAIProvider {
     public readonly name = 'Qwen Code';
-    public readonly type = 'qwen' as const;
+    public readonly type = AIProviders.QWEN;
 
     private context: vscode.ExtensionContext;
     private outputChannel: vscode.OutputChannel;

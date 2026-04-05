@@ -13,7 +13,7 @@ import {
     SpecStatus,
 } from '../workflows';
 import { resolveSpecDirectories, hasDuplicateNames, deriveChangeRoot, type SpecDirectoryInfo } from '../../core/specDirectoryResolver';
-import { ConfigKeys } from '../../core/constants';
+import { ConfigKeys, SpecStatuses, WorkflowSteps } from '../../core/constants';
 import { readSpecContextSync } from './specContextManager';
 
 export interface SpecInfo {
@@ -67,7 +67,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
      */
     private getSpecStatus(specFullPath: string): SpecStatus {
         const context = readSpecContextSync(specFullPath);
-        return context?.status || 'active';
+        return context?.status || SpecStatuses.ACTIVE;
     }
 
     async getChildren(element?: SpecItem): Promise<SpecItem[]> {
@@ -102,9 +102,9 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             for (const spec of specs) {
                 const specFullPath = path.join(basePath, spec.path);
                 const status = this.getSpecStatus(specFullPath);
-                if (status === 'completed') {
+                if (status === SpecStatuses.COMPLETED) {
                     completedSpecs.push(spec);
-                } else if (status === 'archived') {
+                } else if (status === SpecStatuses.ARCHIVED) {
                     archivedSpecs.push(spec);
                 } else {
                     activeSpecs.push(spec);
@@ -367,7 +367,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
     private getStepLabel(step: WorkflowStepConfig): string {
         if (step.label) return step.label;
         const labelMap: Record<string, string> = {
-            specify: 'Specification',
+            [WorkflowSteps.SPECIFY]: 'Specification',
         };
         return labelMap[step.name] || step.name.charAt(0).toUpperCase() + step.name.slice(1);
     }
@@ -563,7 +563,7 @@ class SpecItem extends vscode.TreeItem {
         } else if (contextValue === 'spec') {
             if (isActive) {
                 this.iconPath = new vscode.ThemeIcon('sync~spin');
-            } else if (specContext?.status === 'completed') {
+            } else if (specContext?.status === SpecStatuses.COMPLETED) {
                 this.iconPath = new vscode.ThemeIcon('beaker', new vscode.ThemeColor('testing.iconPassed'));
             } else if (specContext?.currentStep) {
                 this.iconPath = new vscode.ThemeIcon('beaker', new vscode.ThemeColor('charts.blue'));
@@ -582,7 +582,7 @@ class SpecItem extends vscode.TreeItem {
             this.contextValue = `spec-document-${documentType}`;
 
             // Apply step status colors from specContext (only for active specs — completed specs use the green beaker)
-            if (specContext && documentType && specContext.status !== 'completed' && specContext.status !== 'archived') {
+            if (specContext && documentType && specContext.status !== SpecStatuses.COMPLETED && specContext.status !== SpecStatuses.ARCHIVED) {
                 const stepHistory = specContext.stepHistory;
                 if (stepHistory?.[documentType]?.completedAt) {
                     this.iconPath = new vscode.ThemeIcon('pass', new vscode.ThemeColor('testing.iconPassed'));

@@ -18,7 +18,7 @@ import {
     FEATURE_CONTEXT_FILE,
     LEGACY_CONTEXT_FILE,
 } from './types';
-import { ConfigKeys } from '../../core/constants';
+import { ConfigKeys, WorkflowSteps } from '../../core/constants';
 
 /**
  * Default workflow configuration (always available)
@@ -28,15 +28,15 @@ export const DEFAULT_WORKFLOW: WorkflowConfig = {
     displayName: 'Default',
     description: 'Standard SpecKit workflow',
     steps: [
-        { name: 'specify', label: 'Specification', command: 'speckit.specify', file: 'spec.md' },
-        { name: 'plan', label: 'Plan', command: 'speckit.plan', file: 'plan.md', subFiles: ['research.md', 'data-model.md', 'quickstart.md'], subDir: 'contracts', includeRelatedDocs: true },
-        { name: 'tasks', label: 'Tasks', command: 'speckit.tasks', file: 'tasks.md' },
-        { name: 'implement', label: 'Implement', command: 'speckit.implement', actionOnly: true },
+        { name: WorkflowSteps.SPECIFY, label: 'Specification', command: 'speckit.specify', file: 'spec.md' },
+        { name: WorkflowSteps.PLAN, label: 'Plan', command: 'speckit.plan', file: 'plan.md', subFiles: ['research.md', 'data-model.md', 'quickstart.md'], subDir: 'contracts', includeRelatedDocs: true },
+        { name: WorkflowSteps.TASKS, label: 'Tasks', command: 'speckit.tasks', file: 'tasks.md' },
+        { name: WorkflowSteps.IMPLEMENT, label: 'Implement', command: 'speckit.implement', actionOnly: true },
     ],
-    'step-specify': 'speckit.specify',
-    'step-plan': 'speckit.plan',
-    'step-tasks': 'speckit.tasks',
-    'step-implement': 'speckit.implement',
+    [WorkflowSteps.CONFIG_SPECIFY]: 'speckit.specify',
+    [WorkflowSteps.CONFIG_PLAN]: 'speckit.plan',
+    [WorkflowSteps.CONFIG_TASKS]: 'speckit.tasks',
+    [WorkflowSteps.CONFIG_IMPLEMENT]: 'speckit.implement',
     checkpoints: [],
 };
 
@@ -58,10 +58,10 @@ export function normalizeWorkflowConfig(config: WorkflowConfig): WorkflowConfig 
     }
 
     const legacyMap: { key: keyof WorkflowConfig; name: string; label: string; file?: string; actionOnly?: boolean }[] = [
-        { key: 'step-specify', name: 'specify', label: 'Specs', file: 'spec.md' },
-        { key: 'step-plan', name: 'plan', label: 'Plan', file: 'plan.md' },
-        { key: 'step-tasks', name: 'tasks', label: 'Tasks', file: 'tasks.md' },
-        { key: 'step-implement', name: 'implement', label: 'Implement', actionOnly: true },
+        { key: WorkflowSteps.CONFIG_SPECIFY, name: WorkflowSteps.SPECIFY, label: 'Specs', file: 'spec.md' },
+        { key: WorkflowSteps.CONFIG_PLAN, name: WorkflowSteps.PLAN, label: 'Plan', file: 'plan.md' },
+        { key: WorkflowSteps.CONFIG_TASKS, name: WorkflowSteps.TASKS, label: 'Tasks', file: 'tasks.md' },
+        { key: WorkflowSteps.CONFIG_IMPLEMENT, name: WorkflowSteps.IMPLEMENT, label: 'Implement', actionOnly: true },
     ];
 
     const steps: WorkflowStepConfig[] = [];
@@ -110,7 +110,7 @@ export function validateWorkflow(config: WorkflowConfig): ValidationResult {
     }
 
     // Validate step commands if provided
-    const steps = ['step-specify', 'step-plan', 'step-tasks', 'step-implement'] as const;
+    const steps = [WorkflowSteps.CONFIG_SPECIFY, WorkflowSteps.CONFIG_PLAN, WorkflowSteps.CONFIG_TASKS, WorkflowSteps.CONFIG_IMPLEMENT] as const;
     for (const step of steps) {
         const value = config[step];
         if (value !== undefined && typeof value !== 'string') {

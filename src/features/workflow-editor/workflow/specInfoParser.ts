@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import type { SpecInfo, RelatedDoc, EnhancementButton } from '../../../core/types';
+import { WorkflowSteps } from '../../../core/constants';
+import { CORE_DOCUMENTS } from '../../spec-viewer/types';
 import {
     getFeatureWorkflow,
     getWorkflow,
@@ -71,18 +73,18 @@ export function parseSpecInfo(document: vscode.TextDocument): SpecInfo {
         currentPhase = stepIndex + 1;
 
         // Map known step names to icons and types
-        const iconMap: Record<string, string> = { specify: '📋', plan: '🔷', tasks: '✅', implement: '🚀' };
+        const iconMap: Record<string, string> = { [WorkflowSteps.SPECIFY]: '📋', [WorkflowSteps.PLAN]: '🔷', [WorkflowSteps.TASKS]: '✅', [WorkflowSteps.IMPLEMENT]: '🚀' };
         phaseIcon = iconMap[matchedStep.name] || '📄';
 
         // Map to documentType (for backward compat with spec/plan/tasks)
-        if (matchedStep.name === 'specify' || getStepFile(matchedStep) === 'spec.md') {
-            documentType = 'spec';
+        if (matchedStep.name === WorkflowSteps.SPECIFY || getStepFile(matchedStep) === 'spec.md') {
+            documentType = CORE_DOCUMENTS.SPEC;
             enhancementButton = { label: 'Clarify', command: 'clarify', icon: '?', tooltip: 'Ask clarifying questions about ambiguous requirements' };
-        } else if (matchedStep.name === 'plan' || getStepFile(matchedStep) === 'plan.md') {
-            documentType = 'plan';
+        } else if (matchedStep.name === WorkflowSteps.PLAN || getStepFile(matchedStep) === 'plan.md') {
+            documentType = CORE_DOCUMENTS.PLAN;
             enhancementButton = { label: 'Checklist', command: 'checklist', icon: '✓', tooltip: 'Generate implementation checklist from design' };
-        } else if (matchedStep.name === 'tasks' || getStepFile(matchedStep) === 'tasks.md') {
-            documentType = 'tasks';
+        } else if (matchedStep.name === WorkflowSteps.TASKS || getStepFile(matchedStep) === 'tasks.md') {
+            documentType = CORE_DOCUMENTS.TASKS;
             enhancementButton = { label: 'Analyze', command: 'analyze', icon: '⚡', tooltip: 'Analyze task dependencies and complexity' };
         } else {
             documentType = 'other';
@@ -90,11 +92,11 @@ export function parseSpecInfo(document: vscode.TextDocument): SpecInfo {
     } else if (fileName === 'research.md') {
         currentPhase = 2;
         phaseIcon = '🔍';
-        documentType = 'plan';
+        documentType = CORE_DOCUMENTS.PLAN;
     } else if (fileName.endsWith('.md')) {
         currentPhase = 2;
         phaseIcon = '📄';
-        documentType = 'plan';
+        documentType = CORE_DOCUMENTS.PLAN;
     }
 
     // Check if next phase file exists
@@ -113,7 +115,7 @@ export function parseSpecInfo(document: vscode.TextDocument): SpecInfo {
             completedPhases.push(i + 1);
 
             // Check task completion for steps that produce tasks-like files
-            if (steps[i].name === 'tasks' || stepFile === 'tasks.md') {
+            if (steps[i].name === WorkflowSteps.TASKS || stepFile === 'tasks.md') {
                 const taskStats = getTaskCompletionStats(stepPath);
                 taskCompletionPercent = taskStats.percent;
             }
@@ -154,12 +156,12 @@ function getRelatedDocs(dirPath: string, currentFileName: string, documentType: 
         const otherDocs = files.filter(f => f.endsWith('.md') && !mainDocs.includes(f));
 
         // For plan-like docs or related docs, show tabs
-        if (documentType === 'plan' || otherDocs.includes(currentFileName)) {
+        if (documentType === CORE_DOCUMENTS.PLAN || otherDocs.includes(currentFileName)) {
             const docsToShow: RelatedDoc[] = [];
 
             // Add the plan step's file first if it exists
             const planFile = steps
-                ? getStepFile(steps.find(s => s.name === 'plan') || { name: 'plan', command: '' })
+                ? getStepFile(steps.find(s => s.name === WorkflowSteps.PLAN) || { name: WorkflowSteps.PLAN, command: '' })
                 : 'plan.md';
             if (fs.existsSync(path.join(dirPath, planFile))) {
                 docsToShow.push({

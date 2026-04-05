@@ -4,7 +4,7 @@ import { getAIProvider } from '../../extension';
 import { SpecExplorerProvider } from './specExplorerProvider';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig, SpecTreeItem } from '../../core/types/config';
-import { Commands, ConfigKeys } from '../../core/constants';
+import { Commands, ConfigKeys, SpecStatuses, WorkflowSteps } from '../../core/constants';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { isInsideSpecDirectory, getFileWatcherPatterns } from '../../core/specDirectoryResolver';
 import {
@@ -87,7 +87,7 @@ export function registerSpecKitCommands(
             if (workspaceFolder && item) {
                 const relativePath = (item as SpecTreeItem).specPath || `specs/${item.label}`;
                 const specDir = path.join(workspaceFolder.uri.fsPath, relativePath);
-                await setSpecStatus(specDir, 'completed');
+                await setSpecStatus(specDir, SpecStatuses.COMPLETED);
                 specExplorer.refresh();
                 NotificationUtils.showAutoDismissNotification(`Spec "${item.label}" marked as completed`);
             }
@@ -101,7 +101,7 @@ export function registerSpecKitCommands(
             if (workspaceFolder && item) {
                 const relativePath = (item as SpecTreeItem).specPath || `specs/${item.label}`;
                 const specDir = path.join(workspaceFolder.uri.fsPath, relativePath);
-                await setSpecStatus(specDir, 'archived');
+                await setSpecStatus(specDir, SpecStatuses.ARCHIVED);
                 specExplorer.refresh();
                 NotificationUtils.showAutoDismissNotification(`Spec "${item.label}" archived`);
             }
@@ -130,7 +130,7 @@ type NormalizedCustomCommand = {
 /**
  * Default workflow step names that are always registered as VS Code commands
  */
-const DEFAULT_WORKFLOW_STEP_NAMES = ['specify', 'plan', 'tasks', 'implement'];
+const DEFAULT_WORKFLOW_STEP_NAMES = [WorkflowSteps.SPECIFY, WorkflowSteps.PLAN, WorkflowSteps.TASKS, WorkflowSteps.IMPLEMENT];
 
 /**
  * Register phase-specific commands (specify, plan, tasks, implement, etc.)
@@ -141,10 +141,10 @@ function registerPhaseCommands(
     outputChannel: vscode.OutputChannel
 ): void {
     const phaseCommands = [
-        { name: 'specify', title: 'Specify', isWorkflowStep: true },
-        { name: 'plan', title: 'Plan', isWorkflowStep: true },
-        { name: 'tasks', title: 'Tasks', isWorkflowStep: true },
-        { name: 'implement', title: 'Implement', isWorkflowStep: true },
+        { name: WorkflowSteps.SPECIFY, title: 'Specify', isWorkflowStep: true },
+        { name: WorkflowSteps.PLAN, title: 'Plan', isWorkflowStep: true },
+        { name: WorkflowSteps.TASKS, title: 'Tasks', isWorkflowStep: true },
+        { name: WorkflowSteps.IMPLEMENT, title: 'Implement', isWorkflowStep: true },
         { name: 'clarify', title: 'Clarify', isWorkflowStep: false },
         { name: 'analyze', title: 'Analyze', isWorkflowStep: false },
         { name: 'checklist', title: 'Checklist', isWorkflowStep: false },
@@ -245,7 +245,7 @@ async function executeWorkflowStep(
     await getAIProvider().executeInTerminal(prompt, `SpecKit - ${title}`);
 
     // Execute checkpoints after implement step
-    if (step === 'implement') {
+    if (step === WorkflowSteps.IMPLEMENT) {
         await executeImplementCheckpoints(workflow, targetDir, outputChannel);
     }
 }

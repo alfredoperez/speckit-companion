@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { AIProviders } from '../core/constants';
 
 /**
  * Result from executing an AI command
@@ -67,9 +68,9 @@ export function readPermissionMode(): 'interactive' | 'auto-approve' {
 }
 
 /**
- * Supported AI provider types
+ * Supported AI provider types (derived from AIProviders constant)
  */
-export type AIProviderType = 'claude' | 'gemini' | 'copilot' | 'codex' | 'qwen';
+export type AIProviderType = typeof AIProviders[keyof typeof AIProviders];
 
 /**
  * Provider configuration paths and patterns
@@ -103,7 +104,7 @@ export interface ProviderPaths {
  * Provider paths configuration for each provider type
  */
 export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
-    claude: {
+    [AIProviders.CLAUDE]: {
         steeringFile: 'CLAUDE.md',
         steeringDir: '.claude/steering',
         steeringPattern: '*.md',
@@ -116,7 +117,7 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         displayName: 'Claude',
         commandFormat: 'dash',
     },
-    gemini: {
+    [AIProviders.GEMINI]: {
         steeringFile: 'GEMINI.md',
         steeringDir: '', // Gemini uses hierarchical GEMINI.md files
         steeringPattern: 'GEMINI.md',
@@ -129,7 +130,7 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         displayName: 'Gemini',
         commandFormat: 'dot',
     },
-    copilot: {
+    [AIProviders.COPILOT]: {
         steeringFile: '.github/copilot-instructions.md',
         steeringDir: '.github/instructions',
         steeringPattern: '*.instructions.md',
@@ -142,7 +143,7 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         displayName: 'Copilot',
         commandFormat: 'dot',
     },
-    codex: {
+    [AIProviders.CODEX]: {
         steeringFile: 'AGENTS.md',
         steeringDir: '.codex',
         steeringPattern: 'AGENTS.md',
@@ -155,7 +156,7 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         displayName: 'Codex',
         commandFormat: 'dash',
     },
-    qwen: {
+    [AIProviders.QWEN]: {
         steeringFile: 'QWEN.md',
         steeringDir: '.qwen/steering',
         steeringPattern: '*.md',
@@ -202,7 +203,7 @@ export function isProviderConfigured(): boolean {
  */
 export function getConfiguredProviderType(): AIProviderType {
     const config = vscode.workspace.getConfiguration('speckit');
-    return config.get<AIProviderType>('aiProvider', 'claude');
+    return config.get<AIProviderType>('aiProvider', AIProviders.CLAUDE);
 }
 
 /**
@@ -224,27 +225,27 @@ export async function promptForProviderSelection(): Promise<AIProviderType | und
             {
                 label: '$(hubot) Claude Code',
                 description: 'Full feature support: steering, agents, hooks, and MCP',
-                value: 'claude' as AIProviderType
+                value: AIProviders.CLAUDE as AIProviderType
             },
             {
                 label: '$(github) GitHub Copilot CLI',
                 description: 'Steering, agents, and MCP support (no hooks)',
-                value: 'copilot' as AIProviderType
+                value: AIProviders.COPILOT as AIProviderType
             },
             {
                 label: '$(sparkle) Gemini CLI',
                 description: 'Steering and MCP support (no agents or hooks)',
-                value: 'gemini' as AIProviderType
+                value: AIProviders.GEMINI as AIProviderType
             },
             {
                 label: '$(terminal) Codex CLI',
                 description: 'Steering, skills, and MCP support',
-                value: 'codex' as AIProviderType
+                value: AIProviders.CODEX as AIProviderType
             },
             {
                 label: '$(hubot) Qwen Code',
                 description: 'Steering and MCP support (no agents or hooks)',
-                value: 'qwen' as AIProviderType
+                value: AIProviders.QWEN as AIProviderType
             }
         ],
         {

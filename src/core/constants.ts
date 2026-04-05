@@ -72,6 +72,11 @@ export const ConfigKeys = {
     notifications: {
         phaseCompletion: 'speckit.notifications.phaseCompletion',
     },
+    globalState: {
+        skipVersion: 'speckit.skipVersion',
+        lastUpdateCheck: 'speckit.lastUpdateCheck',
+        initSuggestionDismissed: 'speckit.initSuggestionDismissed',
+    },
 } as const;
 
 /**
@@ -142,6 +147,27 @@ export const TreeItemContext = {
     agent: 'agent',
     agentBuiltIn: 'agent-builtin',
     hook: 'hook',
+    // Consolidated from treeContextValues.ts
+    steeringLoading: 'steering-loading',
+    steeringHeader: 'steering-header',
+    steeringFile: 'steering-file',
+    speckitHeader: 'speckit-header',
+    speckitConstitution: 'speckit-constitution',
+    speckitScriptsCategory: 'speckit-scripts-category',
+    speckitScript: 'speckit-script',
+    speckitTemplatesCategory: 'speckit-templates-category',
+    speckitTemplate: 'speckit-template',
+    providerHeader: 'provider-header',
+    providerProjectGroup: 'provider-project-group',
+    providerUserGroup: 'provider-user-group',
+    providerAgentsGroup: 'provider-agents-group',
+    providerSkillsGroup: 'provider-skills-group',
+    providerSettings: 'provider-settings',
+    skill: 'skill',
+    skillWarning: 'skill-warning',
+    createGlobal: 'create-global-claude',
+    createProject: 'create-project-claude',
+    separator: 'separator',
 } as const;
 
 /**
@@ -185,6 +211,41 @@ export const FileNames = {
     speckitSettingsJson: 'speckit-settings.json',
     /** Constitution file */
     constitutionMd: 'constitution.md',
+} as const;
+
+/**
+ * Workflow step identifiers and their config key variants
+ */
+export const WorkflowSteps = {
+    SPECIFY: 'specify',
+    PLAN: 'plan',
+    TASKS: 'tasks',
+    IMPLEMENT: 'implement',
+    CONFIG_SPECIFY: 'step-specify',
+    CONFIG_PLAN: 'step-plan',
+    CONFIG_TASKS: 'step-tasks',
+    CONFIG_IMPLEMENT: 'step-implement',
+} as const;
+
+/**
+ * Spec lifecycle status values
+ */
+export const SpecStatuses = {
+    ACTIVE: 'active',
+    TASKS_DONE: 'tasks-done',
+    COMPLETED: 'completed',
+    ARCHIVED: 'archived',
+} as const;
+
+/**
+ * AI provider type identifiers
+ */
+export const AIProviders = {
+    CLAUDE: 'claude',
+    GEMINI: 'gemini',
+    COPILOT: 'copilot',
+    CODEX: 'codex',
+    QWEN: 'qwen',
 } as const;
 
 /**

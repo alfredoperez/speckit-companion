@@ -5,6 +5,7 @@ import { GeminiCliProvider } from './geminiCliProvider';
 import { CopilotCliProvider } from './copilotCliProvider';
 import { CodexCliProvider } from './codexCliProvider';
 import { QwenCliProvider } from './qwenCliProvider';
+import { AIProviders } from '../core/constants';
 
 /**
  * Factory for creating AI provider instances based on configuration
@@ -41,19 +42,19 @@ export class AIProviderFactory {
         let provider: IAIProvider;
 
         switch (type) {
-            case 'claude':
+            case AIProviders.CLAUDE:
                 provider = new ClaudeCodeProvider(context, outputChannel);
                 break;
-            case 'gemini':
+            case AIProviders.GEMINI:
                 provider = new GeminiCliProvider(context, outputChannel);
                 break;
-            case 'copilot':
+            case AIProviders.COPILOT:
                 provider = new CopilotCliProvider(context, outputChannel);
                 break;
-            case 'codex':
+            case AIProviders.CODEX:
                 provider = new CodexCliProvider(context, outputChannel);
                 break;
-            case 'qwen':
+            case AIProviders.QWEN:
                 provider = new QwenCliProvider(context, outputChannel);
                 break;
             default:
@@ -77,11 +78,11 @@ export class AIProviderFactory {
      */
     static getSupportedProviders(): { type: AIProviderType; name: string; available: boolean }[] {
         return [
-            { type: 'claude', name: 'Claude Code', available: true },
-            { type: 'gemini', name: 'Gemini CLI', available: true },
-            { type: 'copilot', name: 'GitHub Copilot CLI', available: true },
-            { type: 'codex', name: 'Codex CLI', available: true },
-            { type: 'qwen', name: 'Qwen Code', available: true }
+            { type: AIProviders.CLAUDE, name: 'Claude Code', available: true },
+            { type: AIProviders.GEMINI, name: 'Gemini CLI', available: true },
+            { type: AIProviders.COPILOT, name: 'GitHub Copilot CLI', available: true },
+            { type: AIProviders.CODEX, name: 'Codex CLI', available: true },
+            { type: AIProviders.QWEN, name: 'Qwen Code', available: true }
         ];
     }
 }

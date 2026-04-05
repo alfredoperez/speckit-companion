@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
-import { Timing } from '../core/constants';
+import { AIProviders, Timing } from '../core/constants';
 import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { IAIProvider, AIExecutionResult, readPermissionMode } from './aiProvider';
@@ -12,7 +12,7 @@ const execAsync = promisify(exec);
 
 export class ClaudeCodeProvider implements IAIProvider {
     public readonly name = 'Claude Code';
-    public readonly type = 'claude' as const;
+    public readonly type = AIProviders.CLAUDE;
 
     private context: vscode.ExtensionContext;
     private outputChannel: vscode.OutputChannel;

@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import type { SpecInfo } from '../../../core/types';
+import { WorkflowSteps } from '../../../core/constants';
+import { CORE_DOCUMENTS } from '../../spec-viewer/types';
 import { parseSpecInfo } from './specInfoParser';
 import { openSpecFile } from '../../../core/utils/fileOpener';
 
@@ -161,7 +163,7 @@ Spec file: ${document.fileName}`;
             await openSpecFile(nextFilePath, { outputChannel: this.outputChannel });
         } else {
             // Generate immediately without confirmation
-            await this.generateContent(document, nextPhase === 2 ? 'plan' : 'tasks');
+            await this.generateContent(document, nextPhase === 2 ? WorkflowSteps.PLAN : WorkflowSteps.TASKS);
         }
     }
 
@@ -175,11 +177,11 @@ Spec file: ${document.fileName}`;
         let command: string;
 
         if (specInfo.currentPhase === 1) {
-            command = 'specify';
+            command = WorkflowSteps.SPECIFY;
         } else if (specInfo.currentPhase === 2) {
-            command = 'plan';
+            command = WorkflowSteps.PLAN;
         } else {
-            command = 'tasks';
+            command = WorkflowSteps.TASKS;
         }
 
         await this.generateContent(document, command);
@@ -194,8 +196,8 @@ Spec file: ${document.fileName}`;
         const specInfo = parseSpecInfo(document);
 
         // SpecKit format file names
-        const fileName = phase === 'spec' ? 'spec.md' :
-                        phase === 'plan' ? 'plan.md' : 'tasks.md';
+        const fileName = phase === CORE_DOCUMENTS.SPEC ? 'spec.md' :
+                        phase === CORE_DOCUMENTS.PLAN ? 'plan.md' : 'tasks.md';
 
         const filePath = path.join(specInfo.specDir, fileName);
 
