@@ -393,6 +393,70 @@ describe('SpecExplorerProvider', () => {
             expect(tasksDoc!.iconPath).toBeUndefined();
         });
 
+        it('should prefer step field over currentStep for in-progress icon', async () => {
+            const docs = await getDocumentItems({
+                workflow: 'default',
+                selectedAt: '2026-01-01',
+                step: 'tasks',
+                currentStep: 'plan',
+                stepHistory: {
+                    specify: { startedAt: '2026-01-01T00:00:00Z', completedAt: '2026-01-01T01:00:00Z' },
+                    plan: { startedAt: '2026-01-01T01:00:00Z', completedAt: null },
+                },
+            });
+
+            // 'tasks' step (from step field) should have blue circle-filled icon, not 'plan'
+            const tasksDoc = docs.find((d: any) => d.label === 'Tasks');
+            expect(tasksDoc).toBeDefined();
+            const tasksIcon = tasksDoc!.iconPath as vscode.ThemeIcon;
+            expect(tasksIcon.id).toBe('circle-filled');
+            expect((tasksIcon.color as vscode.ThemeColor).id).toBe('charts.blue');
+
+            // 'plan' should NOT have the blue dot (it's only currentStep, not step)
+            const planDoc = docs.find((d: any) => d.label === 'Plan');
+            expect(planDoc).toBeDefined();
+            // Plan has completedAt: null and is not the active step, so no special icon
+            expect(planDoc!.iconPath).toBeUndefined();
+        });
+
+        it('should fall back to currentStep when step field is absent', async () => {
+            const docs = await getDocumentItems({
+                workflow: 'default',
+                selectedAt: '2026-01-01',
+                currentStep: 'plan',
+                stepHistory: {
+                    specify: { startedAt: '2026-01-01T00:00:00Z', completedAt: '2026-01-01T01:00:00Z' },
+                    plan: { startedAt: '2026-01-01T01:00:00Z', completedAt: null },
+                },
+            });
+
+            // 'plan' step should have blue circle-filled icon via currentStep fallback
+            const planDoc = docs.find((d: any) => d.label === 'Plan');
+            expect(planDoc).toBeDefined();
+            const icon = planDoc!.iconPath as vscode.ThemeIcon;
+            expect(icon.id).toBe('circle-filled');
+            expect((icon.color as vscode.ThemeColor).id).toBe('charts.blue');
+        });
+
+        it('should show green pass icon regardless of step field when completedAt is set', async () => {
+            const docs = await getDocumentItems({
+                workflow: 'default',
+                selectedAt: '2026-01-01',
+                step: 'specify',
+                currentStep: 'plan',
+                stepHistory: {
+                    specify: { startedAt: '2026-01-01T00:00:00Z', completedAt: '2026-01-01T01:00:00Z' },
+                },
+            });
+
+            // 'specify' has completedAt — green pass icon takes precedence over step field
+            const specifyDoc = docs.find((d: any) => d.label === 'Specification' || d.label === 'Specify');
+            expect(specifyDoc).toBeDefined();
+            const icon = specifyDoc!.iconPath as vscode.ThemeIcon;
+            expect(icon.id).toBe('pass');
+            expect((icon.color as vscode.ThemeColor).id).toBe('testing.iconPassed');
+        });
+
         it('should not show step icons for completed specs', async () => {
             const docs = await getDocumentItems({
                 workflow: 'default',

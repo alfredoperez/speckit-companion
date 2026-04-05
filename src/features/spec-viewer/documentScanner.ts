@@ -63,8 +63,8 @@ async function scanDirectoryRecursive(
             const fullPath = path.join(dirPath, name);
             const relativePath = path.relative(basePath, fullPath);
 
-            // Skip hidden directories and special folders
-            if (name.startsWith('.') || name === 'checklists') {
+            // Skip hidden directories
+            if (name.startsWith('.')) {
                 continue;
             }
 
