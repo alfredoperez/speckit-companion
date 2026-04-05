@@ -1,0 +1,13 @@
+{
+  "workflow": "speckit",
+  "selectedAt": "2026-04-05T23:06:33.801Z",
+  "currentStep": "specify",
+  "status": "completed",
+  "specName": "Fix Badge Status Display",
+  "branch": "049-fix-badge-status-display",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-04-05T23:06:33.801Z"
+    }
+  }
+}

@@ -74,7 +74,7 @@ These fields are written by SDD skills during execution. The extension reads the
 
 ## Removed fields
 
-The following fields were removed and should **not** be written:
+The following fields were removed and should **not** be written by the extension:
 
 | Old field | Replacement |
 |---|---|
@@ -83,3 +83,5 @@ The following fields were removed and should **not** be written:
 | `task` | `currentTask` |
 | `next` | Derived from `currentStep` + workflow step array at read time |
 | `updated` | Derived from latest `stepHistory` timestamp |
+
+> **Note:** `next` and `updated` are still written by SDD skills for CLI workflow use (resume/auto-advance and status display). The extension should ignore these fields — they are SDD-specific and not part of the SpecKit schema.
