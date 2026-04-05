@@ -65,8 +65,8 @@ export class SpecEditorProvider {
         // Always include default workflow
         const workflows: WorkflowDefinition[] = [
             {
-                name: 'default',
-                displayName: 'Default',
+                name: 'speckit',
+                displayName: 'SpecKit',
                 description: 'Standard SpecKit workflow',
                 stepSpecify: `/${formatCommandForProvider('speckit.specify')}`
             }
@@ -74,7 +74,7 @@ export class SpecEditorProvider {
 
         // Add custom workflows
         for (const wf of customWorkflows) {
-            if (wf.name && wf.name !== 'default') {
+            if (wf.name && wf.name !== 'speckit' && wf.name !== 'default') {
                 const normalized = normalizeWorkflowConfig(wf as any);
                 workflows.push({
                     name: wf.name,
@@ -200,7 +200,7 @@ export class SpecEditorProvider {
         const workflows = this.getWorkflows();
         const defaultWorkflow = vscode.workspace
             .getConfiguration('speckit')
-            .get<string>('defaultWorkflow', 'default');
+            .get<string>('defaultWorkflow', 'speckit');
         this.outputChannel.appendLine(`[SpecEditor] Sending ${workflows.length} workflows to webview (default: ${defaultWorkflow})`);
         this.postMessage({ type: 'init', workflows, defaultWorkflow });
     }
@@ -224,7 +224,7 @@ export class SpecEditorProvider {
             this.outputChannel.appendLine(`[SpecEditor] Submitting spec with workflow: ${workflowName}, ${imageIds.length} images`);
 
             // Get selected workflow
-            const workflow = this.workflows.get(workflowName) || this.workflows.get('default');
+            const workflow = this.workflows.get(workflowName) || this.workflows.get('speckit');
             if (!workflow) {
                 throw new Error(`Workflow '${workflowName}' not found`);
             }
@@ -290,6 +290,8 @@ export class SpecEditorProvider {
                 '',
                 'If the file already exists, merge these fields into the existing content.',
                 'Replace `<current ISO timestamp>` with the actual current time in ISO 8601 format.',
+                '',
+                'IMPORTANT: Only update the `.spec-context.json` for the spec being created or edited. Do NOT modify `.spec-context.json` files in other spec directories.',
             ].join('\n');
 
             const prompt = `${command} ${markdownContent}${specContextInstruction}`;
@@ -493,7 +495,7 @@ export class SpecEditorProvider {
                 <div class="workflow-selector" id="workflowSelector" style="display: none;">
                     <label for="workflowSelect">Workflow</label>
                     <select id="workflowSelect">
-                        <option value="default">Default</option>
+                        <option value="speckit">SpecKit</option>
                     </select>
                 </div>
             </div>

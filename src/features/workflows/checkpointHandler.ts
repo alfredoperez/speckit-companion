@@ -228,7 +228,7 @@ async function updateCheckpointStatus(
             context = JSON.parse(content);
         } catch {
             context = {
-                workflow: 'default',
+                workflow: 'speckit',
                 selectedAt: new Date().toISOString(),
             };
         }

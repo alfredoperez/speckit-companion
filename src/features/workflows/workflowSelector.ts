@@ -71,7 +71,7 @@ export async function selectWorkflow(featureDir: string): Promise<WorkflowConfig
     // Build quick pick items
     const items = workflows.map(workflow => ({
         label: workflow.displayName || workflow.name,
-        description: workflow.name === 'default' ? '(built-in)' : '',
+        description: workflow.name === 'speckit' ? '(built-in)' : '',
         detail: buildWorkflowDetail(workflow),
         workflow,
     }));
@@ -149,7 +149,7 @@ export async function getOrSelectWorkflow(featureDir: string, outputChannel?: vs
 
     // Get the configured default workflow
     const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
-    const defaultWorkflowName = config.get<string>('defaultWorkflow', 'default');
+    const defaultWorkflowName = config.get<string>('defaultWorkflow', 'speckit');
     const workflows = getWorkflows(outputChannel);
 
     // Find the configured default workflow

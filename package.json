@@ -796,10 +796,10 @@
         },
         "speckit.defaultWorkflow": {
           "type": "string",
-          "default": "default",
+          "default": "speckit",
           "scope": "window",
           "order": 8,
-          "description": "Workflow to auto-select for new features. Must match a workflow name from customWorkflows or 'default'."
+          "description": "Workflow to auto-select for new features. Must match a workflow name from customWorkflows or 'speckit'."
         }
       }
     }

@@ -20,11 +20,16 @@ import {
 import { ConfigKeys, WorkflowSteps } from '../../core/constants';
 
 /**
+ * Legacy alias — existing .spec-context.json files may use "default".
+ */
+const LEGACY_DEFAULT_NAME = 'default';
+
+/**
  * Default workflow configuration (always available)
  */
 export const DEFAULT_WORKFLOW: WorkflowConfig = {
-    name: 'default',
-    displayName: 'Default',
+    name: 'speckit',
+    displayName: 'SpecKit',
     description: 'Standard SpecKit workflow',
     steps: [
         { name: WorkflowSteps.SPECIFY, label: 'Specification', command: 'speckit.specify', file: 'spec.md' },
@@ -95,9 +100,9 @@ export function validateWorkflow(config: WorkflowConfig): ValidationResult {
         return { valid: false, errors, warnings };
     }
 
-    // Check reserved name
-    if (config.name === 'default') {
-        errors.push('Workflow name "default" is reserved');
+    // Check reserved names
+    if (config.name === 'speckit' || config.name === LEGACY_DEFAULT_NAME) {
+        errors.push(`Workflow name "${config.name}" is reserved`);
         return { valid: false, errors, warnings };
     }
 
@@ -156,7 +161,7 @@ export function getWorkflows(outputChannel?: vscode.OutputChannel): WorkflowConf
     const customWorkflows = config.get<WorkflowConfig[]>('customWorkflows', []);
 
     const validWorkflows: WorkflowConfig[] = [DEFAULT_WORKFLOW];
-    const seenNames = new Set<string>(['default']);
+    const seenNames = new Set<string>(['speckit', LEGACY_DEFAULT_NAME]);
 
     for (const workflow of customWorkflows) {
         const result = validateWorkflow(workflow);
@@ -188,8 +193,10 @@ export function getWorkflows(outputChannel?: vscode.OutputChannel): WorkflowConf
  * @returns Workflow configuration or undefined if not found
  */
 export function getWorkflow(name: string): WorkflowConfig | undefined {
+    // Treat legacy "default" as "speckit"
+    const resolvedName = name === LEGACY_DEFAULT_NAME ? 'speckit' : name;
     const workflows = getWorkflows();
-    return workflows.find(w => w.name === name);
+    return workflows.find(w => w.name === resolvedName);
 }
 
 /**
@@ -215,12 +222,9 @@ export async function getFeatureWorkflow(
             const content = await fs.promises.readFile(contextPath, 'utf-8');
             const context = JSON.parse(content) as FeatureWorkflowContext;
 
-            // Validate the workflow still exists
-            const workflow = getWorkflow(context.workflow);
-            if (!workflow) {
-                continue;
-            }
-
+            // Return context even if workflow name is unrecognized —
+            // callers can fall back to the default workflow for display
+            // without overwriting the user's context data.
             return context;
         } catch {
             // File doesn't exist or is invalid, try next
@@ -354,8 +358,8 @@ export function validateWorkflowsOnActivation(outputChannel?: vscode.OutputChann
     }
 
     // Validate defaultWorkflow setting
-    const defaultWorkflowName = config.get<string>('defaultWorkflow', 'default');
-    const allWorkflowNames = ['default', ...seenNames];
+    const defaultWorkflowName = config.get<string>('defaultWorkflow', 'speckit');
+    const allWorkflowNames = ['speckit', LEGACY_DEFAULT_NAME, ...seenNames];
     if (!allWorkflowNames.includes(defaultWorkflowName)) {
         outputChannel?.appendLine(
             `[Workflows] Default workflow "${defaultWorkflowName}" is not configured. Check your speckit.defaultWorkflow setting.`

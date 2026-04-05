@@ -85,19 +85,18 @@ export class SpecViewerProvider {
       // 1. Check for feature-level .spec-context.json (checks both specDir and changeRoot)
       const ctx = await getFeatureWorkflow(specDirectory, changeRoot);
       if (ctx) {
-        const wf = getWorkflow(ctx.workflow);
-        if (wf) {
-          const normalized = normalizeWorkflowConfig(wf);
-          if (normalized.steps && normalized.steps.length > 0) {
-            return normalized.steps;
-          }
+        // Resolve workflow config; fall back to default for unrecognized names
+        const wf = getWorkflow(ctx.workflow) || DEFAULT_WORKFLOW;
+        const normalized = normalizeWorkflowConfig(wf);
+        if (normalized.steps && normalized.steps.length > 0) {
+          return normalized.steps;
         }
       }
     } catch {
       // fall through
     }
 
-    // 2. No persisted workflow — auto-select default and persist it
+    // 2. No persisted context — auto-select default and persist it
     const selected = await getOrSelectWorkflow(specDirectory);
     if (selected) {
       const normalized = normalizeWorkflowConfig(selected);
