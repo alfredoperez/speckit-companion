@@ -12,7 +12,7 @@ import type {
 
 import { getElements } from './elements';
 import { saveState, restoreState } from './state';
-import { renderMarkdown, setCurrentTask } from './markdown';
+import { renderMarkdown, setCurrentTask, setHasSpecContext } from './markdown';
 import { applyHighlighting, initializeMermaid } from './highlighting';
 import { updateNavState, setupTabNavigation } from './navigation';
 import { setupLineActions } from './editor';
@@ -51,7 +51,17 @@ function updateContent(content: string): void {
 
     // Render markdown
     const html = renderMarkdown(decoded);
-    contentArea.innerHTML = `<div id="markdown-content">${html}</div>`;
+
+    // Only replace #markdown-content, preserving .spec-header and other siblings
+    let markdownEl = document.getElementById('markdown-content');
+    if (markdownEl) {
+        markdownEl.innerHTML = html;
+    } else {
+        markdownEl = document.createElement('div');
+        markdownEl.id = 'markdown-content';
+        markdownEl.innerHTML = html;
+        contentArea.appendChild(markdownEl);
+    }
 
     // Apply syntax highlighting and mermaid diagrams after DOM update
     requestAnimationFrame(() => {
@@ -72,10 +82,11 @@ function handleMessage(event: MessageEvent): void {
 
     switch (message.type) {
         case 'contentUpdated':
-            // Set current task before rendering so in-progress badges are applied
+            // Set context flags before rendering
             if (message.navState?.currentTask !== undefined) {
                 setCurrentTask(message.navState.currentTask);
             }
+            setHasSpecContext(!!(message.navState?.specContextName || message.navState?.badgeText));
             updateContent(message.content);
             // Update navigation state if provided (for smooth tab switching)
             if (message.navState) {
@@ -147,6 +158,10 @@ function init(): void {
 
     // Handle initial content (passed via data attribute)
     const { markdownContent } = getElements();
+    // Set hasSpecContext based on the structured header in the initial HTML
+    const specHeader = document.querySelector('.spec-header');
+    setHasSpecContext(specHeader?.getAttribute('data-has-context') === 'true');
+
     if (markdownContent) {
         const rawContent = markdownContent.dataset.raw;
         if (rawContent) {

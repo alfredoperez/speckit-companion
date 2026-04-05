@@ -13,9 +13,48 @@ import {
     StalenessMap
 } from '../types';
 import { escapeHtml, escapeHtmlAttribute, generateNonce } from '../utils';
-import { calculateWorkflowPhase } from '../phaseCalculation';
+import { calculateWorkflowPhase, getDocTypeLabel } from '../phaseCalculation';
 import { generateCompactNav } from './navigation';
 import { SpecStatuses } from '../../../core/constants';
+
+/**
+ * Build the structured header HTML from spec-context.json data.
+ * Line 1: badge + created date
+ * Line 2: {DocType}: {specName}
+ * Line 3: file link + branch badge
+ * Separator
+ */
+function buildHeaderHtml(
+    badgeText?: string | null,
+    createdDate?: string | null,
+    specName?: string | null,
+    filePath?: string | null,
+    branch?: string | null,
+    step?: string | null
+): string {
+    // If no context data at all, render nothing
+    if (!badgeText && !createdDate && !specName) return '';
+
+    const hasContext = !!(badgeText || specName);
+    const docTypeLabel = getDocTypeLabel(step);
+    const titleText = specName
+        ? `<span class="spec-header-doctype">${escapeHtml(docTypeLabel)}:</span> ${escapeHtml(specName)}`
+        : '';
+
+    const branchHtml = branch
+        ? `<span class="spec-header-branch"><span class="branch-icon">&#xea68;</span> ${escapeHtml(branch)}</span>`
+        : '';
+
+    return `<div class="spec-header" data-has-context="${hasContext}">
+        <div class="spec-header-row-1">
+            ${badgeText ? `<span class="spec-badge">${escapeHtml(badgeText)}</span>` : ''}
+            ${createdDate ? `<span class="spec-date"><span class="meta-label">Created:</span> <span class="meta-date">${escapeHtml(createdDate)}</span></span>` : ''}
+        </div>
+        ${titleText ? `<div class="spec-header-title">${titleText}</div>` : ''}
+        ${branchHtml ? `<div class="spec-header-row-3">${branchHtml}</div>` : ''}
+        <hr class="spec-header-separator">
+    </div>`;
+}
 
 /**
  * Generate HTML for the webview
@@ -36,7 +75,11 @@ export function generateHtml(
     activeStep?: string | null,
     badgeText?: string | null,
     createdDate?: string | null,
-    lastUpdatedDate?: string | null
+    lastUpdatedDate?: string | null,
+    contextSpecName?: string | null,
+    contextBranch?: string | null,
+    currentFilePath?: string | null,
+    currentStep?: string | null
 ): string {
     // Get URIs for resources
     const styleUri = webview.asWebviewUri(
@@ -145,13 +188,13 @@ export function generateHtml(
         ${staleBannerHtml}
 
         <main class="content-area" id="content-area">
-            ${badgeText ? `<div class="spec-badge-bar"><span class="spec-badge">${escapeHtml(badgeText)}</span></div>` : ''}
-            ${(createdDate || lastUpdatedDate) ? `<div class="spec-dates-bar">${createdDate ? `<span class="spec-date"><span class="meta-label">Created:</span> <span class="meta-date">${escapeHtml(createdDate)}</span></span>` : ''}${lastUpdatedDate ? `<span class="spec-date"><span class="meta-label">Last Updated:</span> <span class="meta-date">${escapeHtml(lastUpdatedDate)}</span></span>` : ''}</div>` : ''}
+            ${buildHeaderHtml(badgeText, createdDate, contextSpecName, currentFilePath, contextBranch, currentStep)}
             ${contentHtml}
         </main>
 
         <footer class="actions">
             <div class="actions-left">
+                <button id="editSource" class="secondary">Edit Source</button>
                 ${specStatus !== SpecStatuses.ARCHIVED ? `<button id="archiveSpec" class="secondary">Archive</button>` : ''}
                 <span class="action-toast" id="action-toast"></span>
                 ${enhancementButtons.map((btn, i) => `

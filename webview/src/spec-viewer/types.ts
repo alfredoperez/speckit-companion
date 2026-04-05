@@ -83,6 +83,10 @@ export interface NavState {
     badgeText?: string | null;
     createdDate?: string | null;
     lastUpdatedDate?: string | null;
+    specContextName?: string | null;
+    branch?: string | null;
+    filePath?: string | null;
+    docTypeLabel?: string | null;
 }
 
 // ============================================

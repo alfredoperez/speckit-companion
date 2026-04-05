@@ -194,10 +194,27 @@ export function computeLastUpdatedDate(
 }
 
 /**
- * Compute a human-readable badge text from spec-context fields
+ * Map a workflow step name to a human-readable document type label.
+ * E.g., "specify" → "Spec", "plan" → "Plan", "tasks" → "Tasks", "implement" → "Implementation"
+ */
+export function getDocTypeLabel(step?: string | null): string {
+    if (!step) return 'Spec';
+    switch (step) {
+        case WorkflowSteps.SPECIFY: return 'Spec';
+        case WorkflowSteps.PLAN: return 'Plan';
+        case WorkflowSteps.TASKS: return 'Tasks';
+        case WorkflowSteps.IMPLEMENT: return 'Implementation';
+        default: return step.charAt(0).toUpperCase() + step.slice(1);
+    }
+}
+
+/**
+ * Compute a human-readable badge text from spec-context fields.
+ * When substep is non-null (in-progress work), appends "..." suffix.
  */
 export function computeBadgeText(ctx?: {
     step?: string | null;
+    substep?: string | null;
     next?: string | null;
     task?: string | null;
     status?: string;
@@ -207,20 +224,24 @@ export function computeBadgeText(ctx?: {
     if (ctx.status === SpecStatuses.COMPLETED) return 'COMPLETED';
     if (ctx.status === SpecStatuses.ARCHIVED) return 'ARCHIVED';
 
+    const inProgress = ctx.substep != null;
+
     // Show next action based on current step
-    if (ctx.step === WorkflowSteps.IMPLEMENT && ctx.task) return `IMPLEMENTING ${ctx.task}`;
-    if (ctx.step === WorkflowSteps.IMPLEMENT) return 'IMPLEMENTING';
+    if (ctx.step === WorkflowSteps.IMPLEMENT && ctx.task) return `IMPLEMENTING ${ctx.task}${inProgress ? '...' : ''}`;
+    if (ctx.step === WorkflowSteps.IMPLEMENT) return `IMPLEMENTING${inProgress ? '...' : ''}`;
 
-    // Use next field to show what's coming
-    if (ctx.next === WorkflowSteps.PLAN) return 'CREATE PLAN';
-    if (ctx.next === WorkflowSteps.TASKS) return 'CREATE TASKS';
-    if (ctx.next === WorkflowSteps.IMPLEMENT) return 'IMPLEMENT';
-    if (ctx.next === 'done') return 'COMPLETED';
+    // Use next field to show what's coming (not in-progress, these are "ready for" states)
+    if (!inProgress) {
+        if (ctx.next === WorkflowSteps.PLAN) return 'CREATE PLAN';
+        if (ctx.next === WorkflowSteps.TASKS) return 'CREATE TASKS';
+        if (ctx.next === WorkflowSteps.IMPLEMENT) return 'IMPLEMENT';
+        if (ctx.next === 'done') return 'COMPLETED';
+    }
 
-    // Fallback to current step
-    if (ctx.step === WorkflowSteps.SPECIFY) return 'SPECIFYING';
-    if (ctx.step === WorkflowSteps.PLAN) return 'PLANNING';
-    if (ctx.step === WorkflowSteps.TASKS) return 'CREATING TASKS';
+    // Fallback to current step (with in-progress suffix)
+    if (ctx.step === WorkflowSteps.SPECIFY) return `SPECIFYING${inProgress ? '...' : ''}`;
+    if (ctx.step === WorkflowSteps.PLAN) return `PLANNING${inProgress ? '...' : ''}`;
+    if (ctx.step === WorkflowSteps.TASKS) return `CREATING TASKS${inProgress ? '...' : ''}`;
 
     return 'ACTIVE';
 }

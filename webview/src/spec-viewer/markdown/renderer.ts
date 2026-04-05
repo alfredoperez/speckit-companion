@@ -15,11 +15,22 @@ import { parseAcceptanceScenarios } from './scenarios';
 // Current task ID from spec-context (for in-progress badge)
 let currentTaskId: string | null = null;
 
+// Whether spec-context.json data is available (controls metadata stripping)
+let hasSpecContext = false;
+
 /**
  * Set the current task ID for in-progress badge rendering
  */
 export function setCurrentTask(taskId: string | null): void {
     currentTaskId = taskId;
+}
+
+/**
+ * Set whether spec-context data is available.
+ * When true, preprocessSpecMetadata strips the raw metadata block.
+ */
+export function setHasSpecContext(value: boolean): void {
+    hasSpecContext = value;
 }
 
 /**
@@ -103,7 +114,7 @@ function renderTable(rows: string[]): string {
 export function renderMarkdown(markdown: string): string {
     // Preprocess special patterns before main rendering
     markdown = preprocessHtmlComments(markdown);
-    markdown = preprocessSpecMetadata(markdown);
+    markdown = preprocessSpecMetadata(markdown, hasSpecContext);
     markdown = preprocessUserStories(markdown);
     markdown = parseAcceptanceScenarios(markdown);
     markdown = preprocessCallouts(markdown);

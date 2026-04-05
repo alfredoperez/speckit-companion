@@ -6,6 +6,7 @@ import {
     FEATURE_CONTEXT_FILE,
 } from '../workflows/types';
 import { SpecStatuses } from '../../core/constants';
+import { formatDocName } from '../workflow-editor/workflow/specInfoParser';
 
 /**
  * Try reading a JSON file, return parsed content or undefined.
@@ -76,8 +77,19 @@ export async function updateSpecContext(
 }
 
 /**
+ * Derive a human-readable spec name from a directory slug.
+ * E.g., "046-spec-viewer-header-redesign" → "Spec Viewer Header Redesign"
+ */
+export function deriveSpecName(specDir: string): string {
+    const slug = path.basename(specDir);
+    const withoutPrefix = slug.replace(/^\d+-/, '');
+    return formatDocName(withoutPrefix);
+}
+
+/**
  * Update step progress when user clicks a step command.
  * Sets currentStep, adds stepHistory entry, completes previous step.
+ * Also populates specName if missing.
  */
 export async function updateStepProgress(
     specDir: string,
@@ -105,10 +117,14 @@ export async function updateStepProgress(
     // Set status to active if not already set
     const status = context.status || SpecStatuses.ACTIVE;
 
+    // Populate specName if not already set
+    const specName = context.specName || deriveSpecName(specDir);
+
     await updateSpecContext(specDir, {
         currentStep: stepName,
         stepHistory,
         status,
+        specName,
     });
 }
 

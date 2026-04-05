@@ -102,17 +102,59 @@ flowchart TD
 |-----------|-----------|-------|
 | `status: "completed"` | COMPLETED | green |
 | `status: "archived"` | ARCHIVED | gray |
-| `step: "implement"` + `task: "T004"` | IMPLEMENTING T004 | blue |
+| `step: "implement"` + `task` + `substep` | IMPLEMENTING T004... | blue |
+| `step: "implement"` + `task` | IMPLEMENTING T004 | blue |
+| `step: "implement"` + `substep` | IMPLEMENTING... | blue |
 | `step: "implement"` (no task) | IMPLEMENTING | blue |
-| `next: "plan"` | CREATE PLAN | blue |
-| `next: "tasks"` | CREATE TASKS | blue |
-| `next: "implement"` | IMPLEMENT | blue |
-| `next: "done"` | COMPLETED | green |
+| `next: "plan"` (no substep) | CREATE PLAN | blue |
+| `next: "tasks"` (no substep) | CREATE TASKS | blue |
+| `next: "implement"` (no substep) | IMPLEMENT | blue |
+| `next: "done"` (no substep) | COMPLETED | green |
+| `step: "specify"` + `substep` | SPECIFYING... | blue |
 | `step: "specify"` | SPECIFYING | blue |
+| `step: "plan"` + `substep` | PLANNING... | blue |
 | `step: "plan"` | PLANNING | blue |
+| `step: "tasks"` + `substep` | CREATING TASKS... | blue |
 | `step: "tasks"` | CREATING TASKS | blue |
 | Fallback | ACTIVE | blue |
 | No `.spec-context.json` | *(hidden)* | — |
+
+When `substep` is non-null (in-progress work by an AI agent), the badge appends `...` to indicate active work.
+
+---
+
+## Structured Header
+
+When `.spec-context.json` data is available, a structured header renders above the markdown content:
+
+```
+[Badge] [Created Date]
+[DocType: specName]
+[branch badge]
+───────────────────────
+```
+
+| Row | Content | Source |
+|-----|---------|--------|
+| Row 1 | Badge pill + created date | `computeBadgeText()`, `computeCreatedDate()` |
+| Row 2 | `{DocType}: {specName}` | `getDocTypeLabel(step)`, `specName` or `deriveSpecName(specDir)` |
+| Row 3 | Branch badge with git icon | `branch` field from context |
+| Separator | Horizontal rule | Always shown |
+
+- **Badge color**: Uses `--header-title` (same as h1 headings) for primary color
+- **H1 hiding**: When header is present (`data-has-context="true"`), the first H1 in markdown is hidden via CSS to avoid duplicate title
+- **Metadata stripping**: When context data is available, `preprocessSpecMetadata` strips raw metadata (Status, Feature Branch, etc.) from rendered markdown
+- **Fallback**: When `specName` is missing from context, it is derived from the directory slug (e.g., `046-spec-viewer-header-redesign` → `Spec Viewer Header Redesign`)
+- **No context**: When no `.spec-context.json` exists, no header renders; markdown displays as before
+
+### Key Files
+
+| File | Role |
+|------|------|
+| `src/features/spec-viewer/html/generator.ts` | `buildHeaderHtml()` — server-side header generation |
+| `webview/src/spec-viewer/navigation.ts` | `updateNavState()` — client-side header updates on tab switch |
+| `webview/src/spec-viewer/markdown/preprocessors.ts` | `preprocessSpecMetadata()` — strips metadata when context-driven |
+| `webview/styles/spec-viewer/_content.css` | `.spec-header` layout and `.spec-badge` color styles |
 
 ---
 

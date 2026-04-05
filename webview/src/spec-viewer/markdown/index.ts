@@ -3,7 +3,7 @@
  * Exports markdown rendering functionality
  */
 
-export { renderMarkdown, setCurrentTask } from './renderer';
+export { renderMarkdown, setCurrentTask, setHasSpecContext } from './renderer';
 export { parseInline, escapeHtml, escapeHtmlInScenario } from './inline';
 export {
     preprocessSpecMetadata,

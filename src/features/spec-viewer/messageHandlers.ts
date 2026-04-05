@@ -14,7 +14,7 @@ import { ConfigKeys, SpecStatuses } from '../../core/constants';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig } from '../../core/types/config';
 import type { WorkflowStepConfig } from '../workflows/types';
-import { setSpecStatus } from '../specs/specContextManager';
+import { setSpecStatus, updateStepProgress } from '../specs/specContextManager';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 
 /**
@@ -171,6 +171,16 @@ async function handleStepperClick(
     if (phase === 'done') return; // Done is not clickable
     // Use message-based update for smoother transition (no page flash)
     await deps.sendContentUpdateMessage(specDirectory, phase);
+
+    // Fire-and-forget: persist the step change to .spec-context.json
+    void deps.resolveWorkflowSteps(specDirectory).then(steps => {
+        const stepNames = steps.map(s => s.name);
+        updateStepProgress(specDirectory, phase, stepNames).catch(err => {
+            deps.outputChannel.appendLine(`[SpecViewer] Error persisting step change: ${err}`);
+        });
+    }).catch(err => {
+        deps.outputChannel.appendLine(`[SpecViewer] Error resolving workflow steps: ${err}`);
+    });
 }
 
 /**

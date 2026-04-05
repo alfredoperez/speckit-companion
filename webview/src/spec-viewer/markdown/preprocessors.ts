@@ -4,15 +4,22 @@
  */
 
 /**
- * Preprocess spec metadata (Feature Branch, Created, Status, Input) into a compact header
+ * Preprocess spec metadata (Feature Branch, Created, Status, Input) into a compact header.
+ * When `stripForContext` is true (spec-context.json data available), the entire metadata
+ * block is stripped to avoid duplication with the structured header.
  */
-export function preprocessSpecMetadata(markdown: string): string {
+export function preprocessSpecMetadata(markdown: string, stripForContext = false): string {
     // Pattern to match metadata lines at the start (after h1)
     // Matches lines like: **Feature Branch**: `value` or **Created:** value
     const metadataPattern = /^(# .+\n+)((?:\*\*[^*]+\*\*:?\s*.+\n*)+)/m;
 
     const match = markdown.match(metadataPattern);
     if (!match) return markdown;
+
+    // When context-driven header is active, strip the entire metadata block
+    if (stripForContext) {
+        return markdown.replace(metadataPattern, '$1');
+    }
 
     const title = match[1];
     const metadataBlock = match[2];
