@@ -87,39 +87,41 @@ flowchart TD
     A --> |archived| C["ARCHIVED ⚫"]
     A --> |active| D{step?}
     D --> |implement + task| E["IMPLEMENTING T004 🔵"]
-    D --> |implement| F["IMPLEMENTING 🔵"]
-    D --> |specify| G{next?}
-    D --> |plan| H{next?}
-    D --> |tasks| I["CREATING TASKS 🔵"]
-    G --> |plan| J["CREATE PLAN 🔵"]
-    H --> |tasks| K["CREATE TASKS 🔵"]
-    G --> |fallback| L["SPECIFYING 🔵"]
-    H --> |fallback| M["PLANNING 🔵"]
+    D --> |implement + progress| F["IMPLEMENTING... 🔵"]
+    D --> |implement + completedAt| F2["IMPLEMENT COMPLETE 🔵"]
+    D --> |implement| F3["IMPLEMENTING 🔵"]
+    D --> |specify/plan/tasks| SC{completedAt + no progress?}
+    SC --> |yes| SCC["STEP COMPLETE 🔵"]
+    SC --> |no| SP{progress?}
+    SP --> |yes| SPY["STEP VERB... 🔵"]
+    SP --> |no| SPN["STEP VERB 🔵"]
     D --> |none| N["ACTIVE 🔵"]
 ```
 
-| Condition | Badge Text | Color |
-|-----------|-----------|-------|
-| `status: "completed"` | COMPLETED | green |
-| `status: "archived"` | ARCHIVED | gray |
-| `step: "implement"` + `task` + `substep` | IMPLEMENTING T004... | blue |
-| `step: "implement"` + `task` | IMPLEMENTING T004 | blue |
-| `step: "implement"` + `substep` | IMPLEMENTING... | blue |
-| `step: "implement"` (no task) | IMPLEMENTING | blue |
-| `next: "plan"` (no substep) | CREATE PLAN | blue |
-| `next: "tasks"` (no substep) | CREATE TASKS | blue |
-| `next: "implement"` (no substep) | IMPLEMENT | blue |
-| `next: "done"` (no substep) | COMPLETED | green |
-| `step: "specify"` + `substep` | SPECIFYING... | blue |
-| `step: "specify"` | SPECIFYING | blue |
-| `step: "plan"` + `substep` | PLANNING... | blue |
-| `step: "plan"` | PLANNING | blue |
-| `step: "tasks"` + `substep` | CREATING TASKS... | blue |
-| `step: "tasks"` | CREATING TASKS | blue |
-| Fallback | ACTIVE | blue |
-| No `.spec-context.json` | *(hidden)* | — |
+| Priority | Condition | Badge Text | Color |
+|----------|-----------|-----------|-------|
+| 1 | `status: "completed"` | COMPLETED | green |
+| 2 | `status: "archived"` | ARCHIVED | gray |
+| 3 | `step: "implement"` + `task` + `progress` | IMPLEMENTING T004... | blue |
+| 4 | `step: "implement"` + `task` | IMPLEMENTING T004 | blue |
+| 5 | `step: "implement"` + `progress` | IMPLEMENTING... | blue |
+| 6 | `step: "implement"` + `completedAt` | IMPLEMENT COMPLETE | blue |
+| 7 | `step: "implement"` (idle) | IMPLEMENTING | blue |
+| 8 | `step: "specify"` + `completedAt` + no `progress` | SPECIFY COMPLETE | blue |
+| 9 | `step: "plan"` + `completedAt` + no `progress` | PLAN COMPLETE | blue |
+| 10 | `step: "tasks"` + `completedAt` + no `progress` | TASKS COMPLETE | blue |
+| 11 | `step: "specify"` + `progress` | SPECIFYING... | blue |
+| 12 | `step: "plan"` + `progress` | PLANNING... | blue |
+| 13 | `step: "tasks"` + `progress` | CREATING TASKS... | blue |
+| 14 | `step: "specify"` (idle) | SPECIFYING | blue |
+| 15 | `step: "plan"` (idle) | PLANNING | blue |
+| 16 | `step: "tasks"` (idle) | CREATING TASKS | blue |
+| 17 | Fallback | ACTIVE | blue |
+| 18 | No `.spec-context.json` | *(hidden)* | — |
 
-When `substep` is non-null (in-progress work by an AI agent), the badge appends `...` to indicate active work.
+**Priority**: status > step-completion > in-progress > idle-step > fallback.
+
+When `progress` is non-null (in-progress work by an AI agent), the badge appends `...` to indicate active work. In-progress always takes precedence over step completion — if `completedAt` is set but `progress` is also non-null, the in-progress badge is shown.
 
 ---
 

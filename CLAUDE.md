@@ -148,6 +148,7 @@ npm run test:watch    # Watch mode
 - `.spec-context.json` per spec directory (file-based) (044-context-driven-badges)
 - TypeScript 5.3+ (ES2022 target, strict mode) + VS Code Extension API (`@types/vscode ^1.84.0`), Webpack 5 (045-update-docs)
 - File-based (workspace `.claude/`, `specs/`, `.specify/` directories) (045-update-docs)
+- File-based (`.spec-context.json` per spec directory) (049-fix-badge-status-display)
 
 ## Recent Changes
 - 044-context-driven-badges: Added TypeScript 5.3+ (ES2022 target, strict mode) + VS Code Extension API (`@types/vscode ^1.84.0`)
