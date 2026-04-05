@@ -1,11 +1,11 @@
 {
   "workflow": "speckit",
-  "selectedAt": "2026-04-05T12:00:00Z",
+  "selectedAt": "2026-04-05T19:37:23.966Z",
   "currentStep": "specify",
   "status": "completed",
   "stepHistory": {
     "specify": {
-      "startedAt": "2026-04-05T12:00:00Z"
+      "startedAt": "2026-04-05T19:37:23.966Z"
     }
   }
 }
