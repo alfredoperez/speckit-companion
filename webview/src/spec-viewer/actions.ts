@@ -35,6 +35,12 @@ export function setupFooterActions(): void {
         });
     });
 
+    // Edit Source button
+    const editSourceButton = document.getElementById('editSource');
+    editSourceButton?.addEventListener('click', () => {
+        vscode.postMessage({ type: 'editSource' });
+    });
+
     regenerateButton?.addEventListener('click', () => {
         vscode.postMessage({ type: 'regenerate' });
     });

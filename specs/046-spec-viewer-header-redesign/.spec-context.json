@@ -1,0 +1,149 @@
+{
+  "step": "implement",
+  "task": null,
+  "substep": "code-review",
+  "next": "implement",
+  "updated": "2026-04-05",
+  "workflow": "sdd",
+  "selectedAt": "2026-04-05T21:00:00.000Z",
+  "currentStep": "plan",
+  "status": "completed",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-04-05T21:00:00.000Z",
+      "completedAt": "2026-04-05T21:00:11.041Z"
+    },
+    "plan": {
+      "startedAt": "2026-04-05T21:00:11.041Z",
+      "completedAt": "2026-04-05T21:08:22.635Z"
+    },
+    "tasks": {
+      "startedAt": "2026-04-05T21:08:24.495Z",
+      "completedAt": "2026-04-05T21:08:30.077Z"
+    }
+  },
+  "approach": "Replace inline badge/dates bars with a structured header block rendered from spec-context.json, persist step clicks, strip raw metadata from markdown",
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 8,
+      "scenarios": 5,
+      "key_finding": "Header HTML is generated in generator.ts with badge/dates rendered inline before markdown content; step clicks only send messages but don't persist to spec-context.json"
+    },
+    "plan": {
+      "approach_summary": "Replace inline badge/dates bars with a structured header block rendered from spec-context.json, persist step clicks, strip raw metadata from markdown",
+      "files_planned": 9,
+      "risks": [
+        "Stripping metadata from markdown could break specs without spec-context.json — mitigate by only stripping when context data is available",
+        "Writing spec-context.json on every tab click introduces async I/O — mitigate by fire-and-forget write"
+      ]
+    },
+    "tasks": {
+      "task_count": 9,
+      "phases": 1
+    }
+  },
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added specName and branch optional fields to FeatureWorkflowContext interface",
+      "files": [
+        "src/features/workflows/types.ts"
+      ],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added deriveSpecName and getCurrentBranch helpers; updateStepProgress now populates specName and branch if missing",
+      "files": [
+        "src/features/specs/specContextManager.ts"
+      ],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added getDocTypeLabel helper and updated computeBadgeText to append ... when substep is non-null",
+      "files": [
+        "src/features/spec-viewer/phaseCalculation.ts"
+      ],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Replaced badge-bar + dates-bar with structured .spec-header block via buildHeaderHtml helper",
+      "files": [
+        "src/features/spec-viewer/html/generator.ts"
+      ],
+      "concerns": []
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added specContextName, branch, filePath, docTypeLabel to NavState; passed context fields to generateHtml and sendContentUpdateMessage",
+      "files": [
+        "src/features/spec-viewer/specViewerProvider.ts",
+        "src/features/spec-viewer/types.ts",
+        "webview/src/spec-viewer/types.ts"
+      ],
+      "concerns": []
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added fire-and-forget updateStepProgress call in handleStepperClick",
+      "files": [
+        "src/features/spec-viewer/messageHandlers.ts"
+      ],
+      "concerns": []
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Replaced old dates-bar/badge-bar patching with .spec-header updates (badge, date, title, file link)",
+      "files": [
+        "webview/src/spec-viewer/navigation.ts"
+      ],
+      "concerns": []
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Added setHasSpecContext flag; preprocessSpecMetadata strips metadata block when context-driven; set flag on initial load and content updates",
+      "files": [
+        "webview/src/spec-viewer/markdown/preprocessors.ts",
+        "webview/src/spec-viewer/markdown/renderer.ts",
+        "webview/src/spec-viewer/markdown/index.ts",
+        "webview/src/spec-viewer/index.ts"
+      ],
+      "concerns": []
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Replaced old badge-bar/dates-bar CSS with structured header layout styles; badge now uses --header-title color",
+      "files": [
+        "webview/styles/spec-viewer/_content.css"
+      ],
+      "concerns": []
+    }
+  },
+  "files_modified": [
+    "src/features/workflows/types.ts",
+    "src/features/specs/specContextManager.ts",
+    "src/features/spec-viewer/phaseCalculation.ts",
+    "src/features/spec-viewer/html/generator.ts",
+    "src/features/spec-viewer/specViewerProvider.ts",
+    "src/features/spec-viewer/types.ts",
+    "webview/src/spec-viewer/types.ts",
+    "src/features/spec-viewer/messageHandlers.ts",
+    "webview/src/spec-viewer/navigation.ts",
+    "webview/src/spec-viewer/markdown/preprocessors.ts",
+    "webview/src/spec-viewer/markdown/renderer.ts",
+    "webview/src/spec-viewer/markdown/index.ts",
+    "webview/src/spec-viewer/index.ts",
+    "webview/styles/spec-viewer/_content.css"
+  ],
+  "decisions": [
+    "Kept selectedAt field — it tracks workflow assignment time, distinct from stepHistory.specify.startedAt",
+    "Used module-level hasSpecContext flag (same pattern as setCurrentTask) to pass context-driven flag to preprocessSpecMetadata"
+  ],
+  "concerns": [],
+  "last_action": "T009 complete — all Phase 1 tasks done, build and 132 tests pass",
+  "specName": "Spec Viewer Header Redesign",
+  "branch": "main"
+}

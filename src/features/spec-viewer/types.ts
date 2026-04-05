@@ -256,6 +256,14 @@ export interface NavState {
     createdDate?: string | null;
     /** Last updated date derived from spec-context stepHistory/updated */
     lastUpdatedDate?: string | null;
+    /** Human-readable spec name from spec-context.json */
+    specContextName?: string | null;
+    /** Git branch name from spec-context.json */
+    branch?: string | null;
+    /** Current document file path */
+    filePath?: string | null;
+    /** Display label for the current doc type (e.g., "Spec", "Plan") */
+    docTypeLabel?: string | null;
 }
 
 /**

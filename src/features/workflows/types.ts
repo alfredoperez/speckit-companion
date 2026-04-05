@@ -121,6 +121,10 @@ export interface FeatureWorkflowContext {
     /** Step history with start/completion timestamps */
     stepHistory?: Record<string, StepHistoryEntry>;
     checkpointStatus?: Record<CheckpointId, CheckpointStatus>;
+    /** Human-readable spec name derived from directory slug */
+    specName?: string;
+    /** Git branch name associated with this spec */
+    branch?: string;
     /** SDD-enriched fields — extension ignores if absent */
     step?: string;
     substep?: string | null;

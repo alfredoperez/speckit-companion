@@ -20,6 +20,7 @@ import {
   computeBadgeText,
   computeCreatedDate,
   computeLastUpdatedDate,
+  getDocTypeLabel,
 } from "./phaseCalculation";
 import {
   CORE_DOCUMENTS,
@@ -37,6 +38,7 @@ import { getDocumentTypeFromPath, getSpecDirectoryFromPath } from "./utils";
 import { ConfigKeys, SpecStatuses } from "../../core/constants";
 import type { CustomCommandConfig } from "../../core/types/config";
 import { deriveChangeRoot } from "../../core/specDirectoryResolver";
+import { deriveSpecName } from "../specs/specContextManager";
 import {
   DEFAULT_WORKFLOW,
   getFeatureWorkflow,
@@ -478,6 +480,10 @@ export class SpecViewerProvider {
         computeBadgeText(featureCtx),
         createdDate,
         lastUpdatedDate,
+        featureCtx?.specName ?? deriveSpecName(specDirectory),
+        featureCtx?.branch ?? null,
+        doc?.filePath ?? null,
+        featureCtx?.step ?? doc?.type ?? null,
       );
 
       this.outputChannel.appendLine(
@@ -690,6 +696,10 @@ export class SpecViewerProvider {
         badgeText: computeBadgeText(featureCtx),
         createdDate: computeCreatedDate(featureCtx?.stepHistory),
         lastUpdatedDate: computeLastUpdatedDate(featureCtx?.stepHistory, featureCtx?.updated),
+        specContextName: featureCtx?.specName ?? deriveSpecName(specDirectory),
+        branch: featureCtx?.branch ?? null,
+        filePath: doc?.filePath ?? null,
+        docTypeLabel: getDocTypeLabel(featureCtx?.step ?? documentType),
       };
 
       // Update internal state

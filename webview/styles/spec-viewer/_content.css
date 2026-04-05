@@ -189,17 +189,75 @@ body[data-spec-status="archived"] .meta-status-draft {
 }
 
 /* ============================================
-   Spec Status Badge (inline with metadata bar)
+   Structured Header (spec-context driven)
    ============================================ */
+
+.spec-header {
+    max-width: 72ch;
+    margin: 0 auto var(--space-4);
+}
+
+.spec-header-row-1 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-2);
+}
+
+.spec-header-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--header-title);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+    margin-bottom: var(--space-2);
+}
+
+.spec-header-doctype {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Hide the first H1 when structured header provides the title */
+.spec-header[data-has-context="true"] ~ #markdown-content h1:first-of-type {
+    display: none;
+}
+
+.spec-header-row-3 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+}
+
+.spec-header-branch {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    padding: 2px 8px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.spec-header-branch .branch-icon {
+    font-family: 'codicon';
+    font-size: 12px;
+}
+
+.spec-header-separator {
+    display: block;
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0;
+}
 
 /* ============================================
-   Spec Badge Bar (above content)
+   Spec Badge (primary/heading color)
    ============================================ */
-
-.spec-badge-bar {
-    max-width: 72ch;
-    margin: 0 auto var(--space-2);
-}
 
 .spec-badge {
     font-size: var(--text-xs);
@@ -209,9 +267,9 @@ body[data-spec-status="archived"] .meta-status-draft {
     padding: 3px 10px;
     border-radius: var(--radius-sm);
     font-family: var(--font-mono);
-    background: var(--accent-subtle);
-    color: var(--accent);
-    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    background: color-mix(in srgb, var(--header-title) 15%, transparent);
+    color: var(--header-title);
+    border: 1px solid color-mix(in srgb, var(--header-title) 30%, transparent);
 }
 
 body[data-spec-status="completed"] .spec-badge {

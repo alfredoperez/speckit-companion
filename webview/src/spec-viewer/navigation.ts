@@ -92,40 +92,33 @@ export function updateNavState(navState: NavState): void {
         }
     });
 
-    // Update context-driven dates
-    const datesBar = document.querySelector('.spec-dates-bar');
-    if (navState.createdDate || navState.lastUpdatedDate) {
-        if (datesBar) {
-            // Update existing dates bar
-            datesBar.innerHTML = `${navState.createdDate ? `<span class="spec-date"><span class="meta-label">Created:</span> <span class="meta-date">${navState.createdDate}</span></span>` : ''}${navState.lastUpdatedDate ? `<span class="spec-date"><span class="meta-label">Last Updated:</span> <span class="meta-date">${navState.lastUpdatedDate}</span></span>` : ''}`;
-        } else {
-            // Create dates bar if it doesn't exist
-            const contentArea = document.getElementById('content-area');
-            const badgeBar = document.querySelector('.spec-badge-bar');
-            if (contentArea) {
-                const newDatesBar = document.createElement('div');
-                newDatesBar.className = 'spec-dates-bar';
-                newDatesBar.innerHTML = `${navState.createdDate ? `<span class="spec-date"><span class="meta-label">Created:</span> <span class="meta-date">${navState.createdDate}</span></span>` : ''}${navState.lastUpdatedDate ? `<span class="spec-date"><span class="meta-label">Last Updated:</span> <span class="meta-date">${navState.lastUpdatedDate}</span></span>` : ''}`;
-                // Insert after badge bar if it exists, otherwise at the start
-                if (badgeBar) {
-                    badgeBar.after(newDatesBar);
-                } else {
-                    contentArea.prepend(newDatesBar);
-                }
-            }
-        }
-    } else if (datesBar && navState.createdDate === null && navState.lastUpdatedDate === null) {
-        datesBar.remove();
-    }
-
-    // Update badge text
-    if (navState.badgeText !== undefined) {
-        const badgeEl = document.querySelector('.spec-badge');
-        const badgeBar = document.querySelector('.spec-badge-bar');
+    // Update structured header
+    const specHeader = document.querySelector('.spec-header');
+    if (specHeader) {
+        // Update badge text
+        const badgeEl = specHeader.querySelector('.spec-badge');
         if (badgeEl && navState.badgeText) {
             badgeEl.textContent = navState.badgeText;
-        } else if (badgeBar && !navState.badgeText) {
-            badgeBar.remove();
+        }
+
+        // Update created date
+        const dateEl = specHeader.querySelector('.spec-date');
+        if (dateEl && navState.createdDate) {
+            const metaDate = dateEl.querySelector('.meta-date');
+            if (metaDate) metaDate.textContent = navState.createdDate;
+        }
+
+        // Update title with doc type label
+        const titleEl = specHeader.querySelector('.spec-header-title');
+        if (titleEl && navState.specContextName) {
+            const docTypeLabel = navState.docTypeLabel || 'Spec';
+            titleEl.innerHTML = `<span class="spec-header-doctype">${docTypeLabel}:</span> ${navState.specContextName}`;
+        }
+
+        // Update branch badge
+        const branchEl = specHeader.querySelector('.spec-header-branch');
+        if (branchEl && navState.branch) {
+            branchEl.innerHTML = `<span class="branch-icon">&#xea68;</span> ${navState.branch}`;
         }
     }
 
