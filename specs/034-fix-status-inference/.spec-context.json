@@ -5,7 +5,7 @@
   "next": null,
   "updated": "2026-04-02",
   "approach": "Check for explicit status field before heuristic inference in inferContextFromState",
-  "last_action": "CP3 approved — committing",
+  "last_action": "CP3 approved \u2014 committing",
   "files_modified": [
     "src/features/specs/specContextManager.ts",
     "src/features/specs/__tests__/specContextManager.test.ts"
@@ -14,13 +14,17 @@
     "T001": {
       "status": "DONE",
       "did": "Added explicit status field check before heuristic inference in inferContextFromState",
-      "files": ["src/features/specs/specContextManager.ts"],
+      "files": [
+        "src/features/specs/specContextManager.ts"
+      ],
       "concerns": []
     },
     "T002": {
       "status": "DONE",
       "did": "Added 5 tests covering explicit status override (async + sync), heuristic fallback, and default active",
-      "files": ["src/features/specs/__tests__/specContextManager.test.ts"],
+      "files": [
+        "src/features/specs/__tests__/specContextManager.test.ts"
+      ],
       "concerns": []
     }
   },
@@ -33,5 +37,6 @@
       "scenarios": 0,
       "key_finding": "inferContextFromState computes status from step/substep heuristics but never checks an explicit status field already present in the state object"
     }
-  }
+  },
+  "status": "completed"
 }

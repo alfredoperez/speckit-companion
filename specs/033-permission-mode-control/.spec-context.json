@@ -5,7 +5,7 @@
   "next": null,
   "updated": "2026-04-02",
   "approach": "Replace per-provider permission settings with a single speckit.permissionMode setting, add getPermissionFlag() to IAIProvider interface, remove PermissionManager infrastructure",
-  "last_action": "T008 complete — documented permissionMode setting in README",
+  "last_action": "T008 complete \u2014 documented permissionMode setting in README",
   "files_modified": [
     "package.json",
     "src/ai-providers/aiProvider.ts",
@@ -21,14 +21,74 @@
     "README.md"
   ],
   "task_summaries": {
-    "T001": { "status": "DONE", "did": "Added speckit.permissionMode setting with default/bypass enum, removed 3 old per-provider settings", "files": ["package.json"], "concerns": [] },
-    "T002": { "status": "DONE", "did": "Added getPermissionFlag() to IAIProvider interface and readPermissionMode() shared helper", "files": ["src/ai-providers/aiProvider.ts"], "concerns": [] },
-    "T003": { "status": "DONE", "did": "Rewrote Claude getPermissionFlag to use readPermissionMode, removed ensurePermissions/static variant/PermissionManager import", "files": ["src/ai-providers/claudeCodeProvider.ts"], "concerns": [] },
-    "T004": { "status": "DONE", "did": "Rewrote Copilot getPermissionFlag to use readPermissionMode", "files": ["src/ai-providers/copilotCliProvider.ts"], "concerns": [] },
-    "T005": { "status": "DONE", "did": "Replaced getYoloMode() with getPermissionFlag() using readPermissionMode, updated all call sites", "files": ["src/ai-providers/qwenCliProvider.ts"], "concerns": [] },
-    "T006": { "status": "DONE", "did": "Added no-op getPermissionFlag() to Gemini and Codex providers", "files": ["src/ai-providers/geminiCliProvider.ts", "src/ai-providers/codexCliProvider.ts"], "concerns": [] },
-    "T007": { "status": "DONE", "did": "Removed PermissionManager/PermissionWebview entirely, cleaned extension.ts of all permission infrastructure", "files": ["src/extension.ts", "src/features/permission/permissionManager.ts", "src/features/permission/permissionWebview.ts", "src/features/permission/index.ts"], "concerns": [] },
-    "T008": { "status": "DONE", "did": "Added Permission Mode section to README documenting the unified setting", "files": ["README.md"], "concerns": [] }
+    "T001": {
+      "status": "DONE",
+      "did": "Added speckit.permissionMode setting with default/bypass enum, removed 3 old per-provider settings",
+      "files": [
+        "package.json"
+      ],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added getPermissionFlag() to IAIProvider interface and readPermissionMode() shared helper",
+      "files": [
+        "src/ai-providers/aiProvider.ts"
+      ],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Rewrote Claude getPermissionFlag to use readPermissionMode, removed ensurePermissions/static variant/PermissionManager import",
+      "files": [
+        "src/ai-providers/claudeCodeProvider.ts"
+      ],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Rewrote Copilot getPermissionFlag to use readPermissionMode",
+      "files": [
+        "src/ai-providers/copilotCliProvider.ts"
+      ],
+      "concerns": []
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Replaced getYoloMode() with getPermissionFlag() using readPermissionMode, updated all call sites",
+      "files": [
+        "src/ai-providers/qwenCliProvider.ts"
+      ],
+      "concerns": []
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added no-op getPermissionFlag() to Gemini and Codex providers",
+      "files": [
+        "src/ai-providers/geminiCliProvider.ts",
+        "src/ai-providers/codexCliProvider.ts"
+      ],
+      "concerns": []
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Removed PermissionManager/PermissionWebview entirely, cleaned extension.ts of all permission infrastructure",
+      "files": [
+        "src/extension.ts",
+        "src/features/permission/permissionManager.ts",
+        "src/features/permission/permissionWebview.ts",
+        "src/features/permission/index.ts"
+      ],
+      "concerns": []
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Added Permission Mode section to README documenting the unified setting",
+      "files": [
+        "README.md"
+      ],
+      "concerns": []
+    }
   },
   "concerns": [],
   "decisions": [
@@ -40,16 +100,19 @@
       "complexity": "normal",
       "requirements": 9,
       "scenarios": 5,
-      "key_finding": "Three providers already have their own permission/yolo flags with inconsistent setting names — unification into one setting with per-provider translation is straightforward"
+      "key_finding": "Three providers already have their own permission/yolo flags with inconsistent setting names \u2014 unification into one setting with per-provider translation is straightforward"
     },
     "plan": {
       "approach_summary": "Replace per-provider permission settings with a single speckit.permissionMode setting, add getPermissionFlag() to IAIProvider interface, remove PermissionManager infrastructure",
       "files_planned": 12,
-      "risks": ["Existing bypass users silently lose bypass on upgrade since new default is 'default'"]
+      "risks": [
+        "Existing bypass users silently lose bypass on upgrade since new default is 'default'"
+      ]
     },
     "tasks": {
       "total_tasks": 8,
       "phases": 1
     }
-  }
+  },
+  "status": "completed"
 }
