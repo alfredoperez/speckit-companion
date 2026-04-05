@@ -25,27 +25,36 @@
     "T001": {
       "status": "DONE",
       "did": "Removed background, border, border-radius from #markdown-content code:not(pre code) in spec-viewer typography",
-      "files": ["webview/styles/spec-viewer/_typography.css"],
+      "files": [
+        "webview/styles/spec-viewer/_typography.css"
+      ],
       "concerns": []
     },
     "T002": {
       "status": "DONE",
       "did": "Removed background-color, border-radius from p code, li code in spec-markdown",
-      "files": ["webview/styles/spec-markdown.css"],
+      "files": [
+        "webview/styles/spec-markdown.css"
+      ],
       "concerns": []
     },
     "T003": {
       "status": "DONE",
       "did": "Removed background-color, border-radius from .preview-container code in spec-editor",
-      "files": ["webview/styles/spec-editor.css"],
+      "files": [
+        "webview/styles/spec-editor.css"
+      ],
       "concerns": []
     },
     "T004": {
       "status": "DONE",
       "did": "Removed background, border, border-radius from .line-content code in workflow",
-      "files": ["webview/styles/workflow.css"],
+      "files": [
+        "webview/styles/workflow.css"
+      ],
       "concerns": []
     }
   },
-  "last_action": "T004 complete — all 4 inline code box styles removed"
+  "last_action": "T004 complete \u2014 all 4 inline code box styles removed",
+  "status": "completed"
 }

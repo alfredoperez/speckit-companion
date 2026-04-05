@@ -9,10 +9,10 @@
 
 .inline-editor {
     margin: 8px 0 4px 0;
-    padding: 12px;
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
+    padding: 8px 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
     box-shadow: none;
     animation: slideDown var(--transition-fast) ease-out;
 }
@@ -24,12 +24,12 @@
     margin-bottom: 8px;
 }
 
-/* Context action buttons - subtle but clearly interactive */
+/* Context action buttons - ghost style */
 .context-action {
     padding: 4px 10px;
     border: 1px solid var(--border);
-    background: var(--bg-secondary);
-    color: var(--text-muted);
+    background: transparent;
+    color: var(--text-secondary);
     font-size: 12px;
     font-weight: 500;
     border-radius: var(--radius-sm);
@@ -42,10 +42,11 @@
 
 .context-action:hover {
     background: var(--bg-hover);
+    border-color: var(--border);
     color: var(--text-primary);
 }
 
-/* Remove actions - subtle red on hover */
+/* Remove actions - subtle on hover */
 .context-action[data-action="remove-line"],
 .context-action[data-action="remove-story"],
 .context-action[data-action="remove-section"],
@@ -59,8 +60,8 @@
 .context-action[data-action="remove-section"]:hover,
 .context-action[data-action="remove-scenario"]:hover,
 .context-action[data-action="remove-task"]:hover {
-    background: var(--error-subtle);
-    color: var(--error);
+    background: var(--bg-hover);
+    color: var(--text-primary);
 }
 
 /* Toggle task action - subtle green on hover */
@@ -129,13 +130,13 @@
 
 .editor-cancel {
     background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
+    border: none;
+    color: var(--text-muted);
 }
 
 .editor-cancel:hover {
+    color: var(--text-primary);
     background: var(--bg-hover);
-    border-color: var(--border-hover);
 }
 
 .editor-add {

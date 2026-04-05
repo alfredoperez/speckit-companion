@@ -41,7 +41,7 @@ export function updateNavState(navState: NavState): void {
         const isTasksActive = phase === 'tasks' && isViewing && inProgress;
 
         // Reset classes
-        tabEl.classList.remove('viewing', 'reviewing', 'tasks-active', 'workflow', 'in-progress', 'stale');
+        tabEl.classList.remove('viewing', 'reviewing', 'tasks-active', 'workflow', 'in-progress', 'working', 'stale');
 
         // Apply appropriate viewing class
         if (isReviewing) {
@@ -58,6 +58,11 @@ export function updateNavState(navState: NavState): void {
         // Mark workflow phase (when not viewing)
         if (phase === workflowPhase && !isViewing) {
             tabEl.classList.add('workflow');
+        }
+
+        // Mark the step actively being worked on (from spec-context)
+        if (navState.activeStep && phase === navState.activeStep) {
+            tabEl.classList.add('working');
         }
 
         // Update Tasks tab progress indicator
@@ -86,6 +91,17 @@ export function updateNavState(navState: NavState): void {
             if (staleBadge) staleBadge.remove();
         }
     });
+
+    // Update badge text
+    if (navState.badgeText !== undefined) {
+        const badgeEl = document.querySelector('.spec-badge');
+        const badgeBar = document.querySelector('.spec-badge-bar');
+        if (badgeEl && navState.badgeText) {
+            badgeEl.textContent = navState.badgeText;
+        } else if (badgeBar && !navState.badgeText) {
+            badgeBar.remove();
+        }
+    }
 
     // Update related tabs visibility and active state
     const relatedBar = document.querySelector('.related-bar') as HTMLElement | null;
@@ -279,9 +295,3 @@ export function setupTabNavigation(): void {
     }
 }
 
-/**
- * Setup stepper navigation (legacy - kept for compatibility)
- */
-export function setupStepperNavigation(): void {
-    // Now handled by setupTabNavigation with unified step-tabs
-}

@@ -9,11 +9,11 @@
 
 /* Headings with professional document typography */
 #markdown-content h1 {
-    font-size: 1.6rem;
+    font-size: 1.8rem;
     font-weight: 700;
     line-height: var(--leading-tight);
     letter-spacing: -0.02em;
-    margin: 0 0 14px 0;
+    margin: 0 0 var(--space-4) 0;
     color: var(--header-title);
 }
 
@@ -49,7 +49,7 @@
    ============================================ */
 
 #markdown-content p {
-    margin: 0 0 var(--space-4) 0;
+    margin: 0 0 var(--space-3) 0;
     line-height: var(--leading-loose);
     color: var(--text-body);
 }
@@ -65,7 +65,7 @@
 #markdown-content ul,
 #markdown-content ol {
     margin: 0 0 var(--space-4) 0;
-    padding-left: var(--space-5);
+    padding-left: 28px;
 }
 
 #markdown-content li {

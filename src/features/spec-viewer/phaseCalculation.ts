@@ -117,3 +117,49 @@ export function calculateWorkflowPhase(coreDocs: SpecDocument[]): string {
     }
     return coreDocs[0]?.type ?? 'spec';
 }
+
+/**
+ * Map SDD step field to tab name
+ */
+export function mapSddStepToTab(step?: string | null): string | null {
+    if (!step) return null;
+    switch (step) {
+        case 'specify': return 'spec';
+        case 'plan': return 'plan';
+        case 'tasks': return 'tasks';
+        case 'implement': return 'tasks';
+        default: return null;
+    }
+}
+
+/**
+ * Compute a human-readable badge text from spec-context fields
+ */
+export function computeBadgeText(ctx?: {
+    step?: string | null;
+    next?: string | null;
+    task?: string | null;
+    status?: string;
+} | null): string | null {
+    if (!ctx) return null;
+
+    if (ctx.status === 'completed') return 'COMPLETED';
+    if (ctx.status === 'archived') return 'ARCHIVED';
+
+    // Show next action based on current step
+    if (ctx.step === 'implement' && ctx.task) return `IMPLEMENTING ${ctx.task}`;
+    if (ctx.step === 'implement') return 'IMPLEMENTING';
+
+    // Use next field to show what's coming
+    if (ctx.next === 'plan') return 'CREATE PLAN';
+    if (ctx.next === 'tasks') return 'CREATE TASKS';
+    if (ctx.next === 'implement') return 'IMPLEMENT';
+    if (ctx.next === 'done') return 'COMPLETED';
+
+    // Fallback to current step
+    if (ctx.step === 'specify') return 'SPECIFYING';
+    if (ctx.step === 'plan') return 'PLANNING';
+    if (ctx.step === 'tasks') return 'CREATING TASKS';
+
+    return 'ACTIVE';
+}

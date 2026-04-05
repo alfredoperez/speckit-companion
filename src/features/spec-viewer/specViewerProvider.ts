@@ -16,6 +16,8 @@ import {
   calculateTaskCompletion,
   calculateWorkflowPhase,
   getPhaseNumber,
+  mapSddStepToTab,
+  computeBadgeText,
 } from "./phaseCalculation";
 import {
   CoreDocumentType,
@@ -468,6 +470,8 @@ export class SpecViewerProvider {
         specStatus,
         enhancementButtons,
         stalenessMap,
+        mapSddStepToTab(featureCtx?.step),
+        computeBadgeText(featureCtx),
       );
 
       this.outputChannel.appendLine(
@@ -675,6 +679,9 @@ export class SpecViewerProvider {
         enhancementButtons,
         stalenessMap,
         specStatus,
+        currentTask: featureCtx?.task ?? null,
+        activeStep: mapSddStepToTab(featureCtx?.step),
+        badgeText: computeBadgeText(featureCtx),
       };
 
       // Update internal state

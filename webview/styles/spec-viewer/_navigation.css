@@ -16,7 +16,7 @@
 .nav-primary {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     padding: 0 var(--space-4);
     height: 48px;
 }
@@ -54,6 +54,10 @@
     background: var(--bg-hover);
 }
 
+.step-tab:focus-visible {
+    outline: none;
+}
+
 /* Status indicator (checkmark or empty circle) */
 .step-status {
     display: flex;
@@ -69,6 +73,8 @@
     background: transparent;
     transition: all var(--transition-fast);
     flex-shrink: 0;
+    overflow: visible;
+    position: relative;
 }
 
 /* File exists - green check */
@@ -82,54 +88,20 @@
     color: var(--text-secondary);
 }
 
-/* Currently viewing - prominent highlight */
-.step-tab.viewing {
-    background: var(--accent-subtle);
-    border: 2px solid var(--accent);
-    margin: -2px;  /* Compensate for border to avoid layout shift */
-}
-
-.step-tab.viewing .step-status {
-    background: var(--accent);
-    border-color: var(--accent);
+/* Currently viewing — bold + white text */
+.step-tab.viewing .step-label,
+.step-tab.reviewing .step-label,
+.step-tab.tasks-active .step-label {
     color: white;
-    box-shadow: 0 0 0 3px var(--accent-subtle);
-}
-
-.step-tab.viewing .step-label {
-    color: var(--text-primary);
-    font-weight: 700;
-}
-
-/* Viewing a completed step - green-tinted highlight instead of purple */
-.step-tab.viewing.exists {
-    background: color-mix(in srgb, var(--success) 15%, transparent);
-    border: 2px solid var(--success);
-    margin: -2px;
-}
-
-.step-tab.viewing.exists .step-status {
-    background: var(--success);
-    border-color: var(--success);
-    color: white;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 30%, transparent);
-}
-
-.step-tab.viewing.exists .step-label {
-    color: var(--text-primary);
     font-weight: 700;
 }
 
 /* Workflow phase indicator (when not viewing) */
-.step-tab.workflow:not(.viewing) .step-status {
-    box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 3px color-mix(in srgb, var(--success) 60%, transparent);
-}
-
 .step-tab.workflow:not(.viewing) .step-label {
     color: var(--text-primary);
 }
 
-/* In progress (tasks partial) - show percentage only when viewing */
+/* In progress (tasks partial) - show percentage */
 .step-tab.in-progress .step-status {
     background: var(--accent);
     border-color: var(--accent);
@@ -141,13 +113,7 @@
     border-radius: 8px;
 }
 
-/* Tasks actively being worked on - prominent percentage badge with pulsing glow */
-.step-tab.tasks-active {
-    background: var(--accent-subtle);
-    border: 2px solid var(--accent);
-    margin: -2px;
-}
-
+/* Tasks actively being worked on - prominent percentage badge */
 .step-tab.tasks-active .step-status {
     background: var(--accent);
     border-color: var(--accent);
@@ -158,45 +124,21 @@
     min-width: 32px;
     padding: 0 6px;
     border-radius: 10px;
-    box-shadow: 0 0 0 3px var(--accent-subtle);
-    animation: pulse-badge 2s ease-in-out infinite;
 }
 
-.step-tab.tasks-active .step-label {
+/* Active step being worked on (from spec-context) — pulsing glow */
+.step-tab.working .step-status {
+    animation: working-pulse 2s ease-in-out infinite;
+}
+
+.step-tab.working .step-label {
     color: var(--text-primary);
-    font-weight: 700;
-}
-
-/* Review mode - viewing a completed step that isn't the current workflow phase */
-.step-tab.reviewing {
-    background: var(--review-subtle);
-    border: 2px solid var(--review);
-    margin: -2px;
-    animation: review-glow 2s ease-in-out infinite;
-}
-
-.step-tab.reviewing .step-status {
-    background: var(--review);
-    border-color: var(--review);
-    color: white;
-    box-shadow: 0 0 0 3px var(--review-subtle);
-}
-
-.step-tab.reviewing .step-label {
-    color: var(--text-primary);
-    font-weight: 700;
-}
-
-/* Keep green checkmark visible for completed steps in review mode */
-.step-tab.reviewing.exists .step-status {
-    background: var(--review);
-    border-color: var(--review);
 }
 
 /* Disabled state */
 .step-tab.disabled,
 .step-tab:disabled {
-    opacity: 0.4;
+    opacity: 0.35;
     cursor: not-allowed;
 }
 

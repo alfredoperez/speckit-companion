@@ -9,25 +9,46 @@
 
 #markdown-content table {
     width: 100%;
-    margin: var(--space-5) 0;
+    margin: var(--space-4) 0;
     border-collapse: collapse;
     font-size: var(--text-sm);
+    border: 1px solid color-mix(in srgb, var(--text-muted) 25%, transparent);
+    border-radius: var(--radius-md);
+    overflow: hidden;
 }
 
 #markdown-content th {
     text-align: left;
-    padding: var(--space-3) var(--space-4);
+    padding: var(--space-2) var(--space-3);
     background: var(--bg-secondary);
-    border: 1px solid var(--border);
+    border-bottom: 1px solid color-mix(in srgb, var(--text-muted) 25%, transparent);
+    border-right: 1px solid color-mix(in srgb, var(--text-muted) 15%, transparent);
     font-weight: 600;
     color: var(--text-primary);
 }
 
+#markdown-content th:last-child {
+    border-right: none;
+}
+
 #markdown-content td {
-    padding: var(--space-3) var(--space-4);
-    border: 1px solid var(--border);
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid color-mix(in srgb, var(--text-muted) 15%, transparent);
+    border-right: 1px solid color-mix(in srgb, var(--text-muted) 15%, transparent);
     vertical-align: top;
     color: var(--text-body);
+}
+
+#markdown-content td:last-child {
+    border-right: none;
+}
+
+#markdown-content tr:last-child td {
+    border-bottom: none;
+}
+
+#markdown-content tbody tr:nth-child(even) td {
+    background: color-mix(in srgb, var(--bg-secondary) 50%, transparent);
 }
 
 #markdown-content tr:hover td {

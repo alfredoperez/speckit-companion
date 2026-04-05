@@ -15,7 +15,8 @@ export function generateCompactNav(
     workflowPhase: string,
     isViewingRelatedDoc: boolean,
     taskCompletionPercent: number,
-    stalenessMap?: StalenessMap
+    stalenessMap?: StalenessMap,
+    activeStep?: string | null
 ): string {
     // Unified step-tabs: each core doc is a tab with status indicator
     const stepTabsHtml = coreDocs.map((doc, i) => {
@@ -36,12 +37,15 @@ export function generateCompactNav(
 
         const isStale = stalenessMap?.[phase]?.isStale ?? false;
 
+        const isWorking = activeStep === phase;
+
         const classes = [
             'step-tab',
             exists ? 'exists' : '',
             isReviewing ? 'reviewing' : (isViewing ? 'viewing' : ''),
             isTasksActive ? 'tasks-active' : '',
             isWorkflow && !isViewing ? 'workflow' : '',
+            isWorking ? 'working' : '',
             !isClickable ? 'disabled' : '',
             inProgress && !isTasksActive ? 'in-progress' : '',
             isStale ? 'stale' : ''
@@ -100,7 +104,7 @@ export function generateCompactNav(
         : '';
 
     const relatedBarHtml = showRelatedBar
-        ? `<div class="related-bar" style="${showRelatedBar ? '' : 'display: none;'}">
+        ? `<div class="related-bar">
                 <div class="related-bar-content">
                     ${overviewTabHtml}
                     <div class="related-tabs">${relatedTabsHtml}</div>

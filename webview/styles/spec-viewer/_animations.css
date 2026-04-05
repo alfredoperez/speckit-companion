@@ -73,6 +73,16 @@
     }
 }
 
+/* Pulsing glow for active working step */
+@keyframes working-pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px var(--accent), 0 0 8px var(--accent);
+    }
+    50% {
+        box-shadow: 0 0 0 3px var(--bg-secondary), 0 0 0 5px var(--accent), 0 0 16px var(--accent);
+    }
+}
+
 /* Purple glow for review mode */
 @keyframes review-glow {
     0%, 100% {

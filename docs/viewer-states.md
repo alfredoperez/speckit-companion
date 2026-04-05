@@ -1,0 +1,221 @@
+# Spec Viewer — States & Transitions
+
+## Status Lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> active : spec created
+    active --> tasks_done : all tasks checked (auto)
+    tasks_done --> active : task unchecked
+    tasks_done --> completed : "Complete" button
+    active --> completed : "Complete" button
+    active --> archived : "Archive" button
+    completed --> archived : "Archive" button
+    completed --> active : "Reactivate" button
+    archived --> active : "Reactivate" button
+
+    state active {
+        [*] --> specifying
+        specifying --> planning : spec.md done
+        planning --> creating_tasks : plan.md done
+        creating_tasks --> implementing : tasks.md done
+    }
+```
+
+## Status Determination
+
+```mermaid
+flowchart TD
+    A[Read .spec-context.json] --> B{status = archived?<br/>OR currentStep = archived/done?}
+    B -- yes --> C[archived]
+    B -- no --> D{status = completed?}
+    D -- yes --> E[completed]
+    D -- no --> F{taskCompletionPercent = 100?}
+    F -- yes --> G[tasks-done]
+    F -- no --> H[active]
+```
+
+| Status | How it's reached | Editable? |
+|--------|-----------------|-----------|
+| `active` | Default / Reactivate button | Yes |
+| `tasks-done` | All task checkboxes checked (auto-detected) | Yes |
+| `completed` | User clicks "Complete" button | No |
+| `archived` | User clicks "Archive" button | No |
+
+---
+
+## Footer Buttons
+
+```mermaid
+flowchart LR
+    subgraph active
+        A_L["🗄 Archive"] ~~~ A_R1["Regenerate"]
+        A_R1 ~~~ A_R2["Next Step ➜"]
+    end
+    subgraph tasks-done
+        T_L["🗄 Archive"] ~~~ T_R["✅ Complete"]
+    end
+    subgraph completed
+        C_L["🗄 Archive"] ~~~ C_R["🔄 Reactivate"]
+    end
+    subgraph archived
+        AR_R["🔄 Reactivate"]
+    end
+```
+
+| Status | Left side | Right side |
+|--------|-----------|------------|
+| **active** | Archive | Regenerate, *Next Step* (if applicable) |
+| **tasks-done** | Archive | **Complete** (primary) |
+| **completed** | Archive | Reactivate |
+| **archived** | *(empty)* | Reactivate |
+
+The "Next Step" button shows only when:
+- Status is `active`
+- The next core document doesn't exist yet
+- Label shows the next step name: "Plan", "Tasks", or "Implement"
+
+The **Refine** button (`✨ Refine (N)`) appears dynamically when inline comments are pending.
+
+---
+
+## Badge Text
+
+```mermaid
+flowchart TD
+    A{status?} --> |completed| B["COMPLETED 🟢"]
+    A --> |archived| C["ARCHIVED ⚫"]
+    A --> |active| D{step?}
+    D --> |implement + task| E["IMPLEMENTING T004 🔵"]
+    D --> |implement| F["IMPLEMENTING 🔵"]
+    D --> |specify| G{next?}
+    D --> |plan| H{next?}
+    D --> |tasks| I["CREATING TASKS 🔵"]
+    G --> |plan| J["CREATE PLAN 🔵"]
+    H --> |tasks| K["CREATE TASKS 🔵"]
+    G --> |fallback| L["SPECIFYING 🔵"]
+    H --> |fallback| M["PLANNING 🔵"]
+    D --> |none| N["ACTIVE 🔵"]
+```
+
+| Condition | Badge Text | Color |
+|-----------|-----------|-------|
+| `status: "completed"` | COMPLETED | green |
+| `status: "archived"` | ARCHIVED | gray |
+| `step: "implement"` + `task: "T004"` | IMPLEMENTING T004 | blue |
+| `step: "implement"` (no task) | IMPLEMENTING | blue |
+| `next: "plan"` | CREATE PLAN | blue |
+| `next: "tasks"` | CREATE TASKS | blue |
+| `next: "implement"` | IMPLEMENT | blue |
+| `next: "done"` | COMPLETED | green |
+| `step: "specify"` | SPECIFYING | blue |
+| `step: "plan"` | PLANNING | blue |
+| `step: "tasks"` | CREATING TASKS | blue |
+| Fallback | ACTIVE | blue |
+| No `.spec-context.json` | *(hidden)* | — |
+
+---
+
+## Step Tab States
+
+```mermaid
+stateDiagram-v2
+    state "Step Tab" as tab {
+        [*] --> disabled : file doesn't exist
+        disabled --> exists : file created
+        exists --> viewing : user clicks tab
+        exists --> working : spec-context.step matches
+        viewing --> reviewing : viewing completed step,<br/>not current workflow phase
+        viewing --> tasks_active : viewing tasks<br/>with 0-100% progress
+    }
+```
+
+| Class | Meaning | Visual |
+|-------|---------|--------|
+| `exists` | File exists on disk | Green checkmark dot |
+| `viewing` | Currently displayed in viewer | White bold label |
+| `working` | Step being worked on (from `spec-context.step`) | Pulsing blue glow on dot |
+| `tasks-active` | Viewing tasks with 0-100% progress | Percentage badge in dot |
+| `in-progress` | Tasks have progress but not viewing | Percentage in dot (subtle) |
+| `workflow` | Current workflow phase (not viewing) | Bright label |
+| `reviewing` | Viewing completed step, not active workflow | White bold label |
+| `disabled` | Step not available (no file, not first) | Dimmed (opacity 0.35) |
+| `stale` | Document stale relative to upstream | `!` badge |
+
+### Working Step Mapping
+
+```mermaid
+flowchart LR
+    specify["spec-context: specify"] --> spec["Specification tab"]
+    plan["spec-context: plan"] --> plan_tab["Plan tab"]
+    tasks["spec-context: tasks"] --> tasks_tab["Tasks tab"]
+    implement["spec-context: implement"] --> tasks_tab
+```
+
+---
+
+## Sidebar Grouping
+
+```mermaid
+flowchart TD
+    subgraph "Spec Explorer Sidebar"
+        subgraph "Active (expanded)"
+            S1["spec-1 (newest)"]
+            S2["spec-2"]
+            S3["spec-3 (oldest)"]
+        end
+        subgraph "Completed (collapsed)"
+            S4["spec-4"]
+            S5["spec-5"]
+        end
+        subgraph "Archived (collapsed)"
+            S6["spec-6"]
+        end
+    end
+```
+
+| Group | Default state | Sort order |
+|-------|--------------|------------|
+| **Active** | Expanded | Newest first (by creation date) |
+| **Completed** | Collapsed | Insertion order |
+| **Archived** | Collapsed | Insertion order |
+
+---
+
+## Data Flow
+
+```mermaid
+sequenceDiagram
+    participant FS as .spec-context.json
+    participant Ext as specViewerProvider
+    participant Gen as generator.ts
+    participant WV as Webview
+
+    FS->>Ext: getFeatureWorkflow()
+    Ext->>Ext: compute specStatus, badgeText, activeStep
+    Ext->>Gen: generateHtml(specStatus, activeStep, badgeText)
+    Gen->>WV: HTML with data-spec-status, data-spec-badge
+    WV->>WV: CSS renders badge, tab states
+
+    Note over WV: On tab switch
+    Ext->>WV: contentUpdated message + navState
+    WV->>WV: updateNavState() applies tab classes
+```
+
+---
+
+## Key Files
+
+| File | Responsibility |
+|------|---------------|
+| `src/features/spec-viewer/specViewerProvider.ts` | Status computation, data flow to webview |
+| `src/features/spec-viewer/html/generator.ts` | Footer button HTML, badge attribute |
+| `src/features/spec-viewer/phaseCalculation.ts` | `computeBadgeText()`, `mapSddStepToTab()` |
+| `src/features/spec-viewer/messageHandlers.ts` | Lifecycle action handlers (complete/archive/reactivate) |
+| `src/features/spec-viewer/types.ts` | `SpecStatus` type, message types |
+| `webview/src/spec-viewer/navigation.ts` | Tab class application logic |
+| `webview/src/spec-viewer/actions.ts` | Checkbox toggle + percentage update |
+| `webview/styles/spec-viewer/_navigation.css` | Tab visual states |
+| `webview/styles/spec-viewer/_footer.css` | Button styles |
+| `webview/styles/spec-viewer/_content.css` | Badge pill styles |
+| `webview/styles/spec-viewer/_animations.css` | Working pulse animation |

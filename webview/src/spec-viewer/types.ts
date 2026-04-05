@@ -78,6 +78,9 @@ export interface NavState {
     enhancementButtons?: EnhancementButton[];
     stalenessMap?: StalenessMap;
     specStatus?: string;
+    currentTask?: string | null;
+    activeStep?: string | null;
+    badgeText?: string | null;
 }
 
 // ============================================
