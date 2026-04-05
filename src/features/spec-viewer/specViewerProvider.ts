@@ -18,6 +18,8 @@ import {
   getPhaseNumber,
   mapSddStepToTab,
   computeBadgeText,
+  computeCreatedDate,
+  computeLastUpdatedDate,
 } from "./phaseCalculation";
 import {
   CORE_DOCUMENTS,
@@ -454,6 +456,10 @@ export class SpecViewerProvider {
       // Compute staleness for workflow documents
       const stalenessMap = await computeStaleness(documents);
 
+      // Compute context-driven dates
+      const createdDate = computeCreatedDate(featureCtx?.stepHistory);
+      const lastUpdatedDate = computeLastUpdatedDate(featureCtx?.stepHistory, featureCtx?.updated);
+
       // Generate and set HTML
       instance.panel.webview.html = generateHtml(
         instance.panel.webview,
@@ -470,6 +476,8 @@ export class SpecViewerProvider {
         stalenessMap,
         mapSddStepToTab(featureCtx?.step),
         computeBadgeText(featureCtx),
+        createdDate,
+        lastUpdatedDate,
       );
 
       this.outputChannel.appendLine(
@@ -680,6 +688,8 @@ export class SpecViewerProvider {
         currentTask: featureCtx?.task ?? null,
         activeStep: mapSddStepToTab(featureCtx?.step),
         badgeText: computeBadgeText(featureCtx),
+        createdDate: computeCreatedDate(featureCtx?.stepHistory),
+        lastUpdatedDate: computeLastUpdatedDate(featureCtx?.stepHistory, featureCtx?.updated),
       };
 
       // Update internal state

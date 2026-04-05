@@ -34,7 +34,9 @@ export function generateHtml(
     enhancementButtons: EnhancementButton[] = [],
     stalenessMap?: StalenessMap,
     activeStep?: string | null,
-    badgeText?: string | null
+    badgeText?: string | null,
+    createdDate?: string | null,
+    lastUpdatedDate?: string | null
 ): string {
     // Get URIs for resources
     const styleUri = webview.asWebviewUri(
@@ -144,6 +146,7 @@ export function generateHtml(
 
         <main class="content-area" id="content-area">
             ${badgeText ? `<div class="spec-badge-bar"><span class="spec-badge">${escapeHtml(badgeText)}</span></div>` : ''}
+            ${(createdDate || lastUpdatedDate) ? `<div class="spec-dates-bar">${createdDate ? `<span class="spec-date"><span class="meta-label">Created:</span> <span class="meta-date">${escapeHtml(createdDate)}</span></span>` : ''}${lastUpdatedDate ? `<span class="spec-date"><span class="meta-label">Last Updated:</span> <span class="meta-date">${escapeHtml(lastUpdatedDate)}</span></span>` : ''}</div>` : ''}
             ${contentHtml}
         </main>
 

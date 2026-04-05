@@ -92,6 +92,32 @@ export function updateNavState(navState: NavState): void {
         }
     });
 
+    // Update context-driven dates
+    const datesBar = document.querySelector('.spec-dates-bar');
+    if (navState.createdDate || navState.lastUpdatedDate) {
+        if (datesBar) {
+            // Update existing dates bar
+            datesBar.innerHTML = `${navState.createdDate ? `<span class="spec-date"><span class="meta-label">Created:</span> <span class="meta-date">${navState.createdDate}</span></span>` : ''}${navState.lastUpdatedDate ? `<span class="spec-date"><span class="meta-label">Last Updated:</span> <span class="meta-date">${navState.lastUpdatedDate}</span></span>` : ''}`;
+        } else {
+            // Create dates bar if it doesn't exist
+            const contentArea = document.getElementById('content-area');
+            const badgeBar = document.querySelector('.spec-badge-bar');
+            if (contentArea) {
+                const newDatesBar = document.createElement('div');
+                newDatesBar.className = 'spec-dates-bar';
+                newDatesBar.innerHTML = `${navState.createdDate ? `<span class="spec-date"><span class="meta-label">Created:</span> <span class="meta-date">${navState.createdDate}</span></span>` : ''}${navState.lastUpdatedDate ? `<span class="spec-date"><span class="meta-label">Last Updated:</span> <span class="meta-date">${navState.lastUpdatedDate}</span></span>` : ''}`;
+                // Insert after badge bar if it exists, otherwise at the start
+                if (badgeBar) {
+                    badgeBar.after(newDatesBar);
+                } else {
+                    contentArea.prepend(newDatesBar);
+                }
+            }
+        }
+    } else if (datesBar && navState.createdDate === null && navState.lastUpdatedDate === null) {
+        datesBar.remove();
+    }
+
     // Update badge text
     if (navState.badgeText !== undefined) {
         const badgeEl = document.querySelector('.spec-badge');

@@ -132,6 +132,68 @@ export function mapSddStepToTab(step?: string | null): string | null {
 }
 
 /**
+ * Format an ISO timestamp as a display date (e.g., "Apr 1, 2026").
+ * Returns null if the timestamp is missing or unparseable.
+ */
+function formatDisplayDate(isoString?: string | null): string | null {
+    if (!isoString) return null;
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return null;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+/**
+ * Compute "Created" date from stepHistory.
+ * Uses specify.startedAt if available, otherwise earliest startedAt across all steps.
+ */
+export function computeCreatedDate(stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }> | null): string | null {
+    if (!stepHistory) return null;
+
+    // Prefer specify.startedAt
+    const specifyEntry = stepHistory[WorkflowSteps.SPECIFY];
+    if (specifyEntry?.startedAt) {
+        return formatDisplayDate(specifyEntry.startedAt);
+    }
+
+    // Fallback: earliest startedAt across all steps
+    let earliest: string | null = null;
+    for (const entry of Object.values(stepHistory)) {
+        if (entry.startedAt && (!earliest || entry.startedAt < earliest)) {
+            earliest = entry.startedAt;
+        }
+    }
+    return formatDisplayDate(earliest);
+}
+
+/**
+ * Compute "Last Updated" date from stepHistory and context.updated.
+ * Returns null if only one timestamp exists (same as Created) to avoid redundancy.
+ */
+export function computeLastUpdatedDate(
+    stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }> | null,
+    contextUpdated?: string | null
+): string | null {
+    // If context.updated exists, use it (most recent AI agent activity)
+    if (contextUpdated) {
+        return formatDisplayDate(contextUpdated);
+    }
+
+    if (!stepHistory) return null;
+
+    // Collect all timestamps
+    const timestamps: string[] = [];
+    for (const entry of Object.values(stepHistory)) {
+        if (entry.startedAt) timestamps.push(entry.startedAt);
+        if (entry.completedAt) timestamps.push(entry.completedAt);
+    }
+
+    if (timestamps.length <= 1) return null; // Same as Created or nothing — omit
+
+    timestamps.sort();
+    return formatDisplayDate(timestamps[timestamps.length - 1]);
+}
+
+/**
  * Compute a human-readable badge text from spec-context fields
  */
 export function computeBadgeText(ctx?: {

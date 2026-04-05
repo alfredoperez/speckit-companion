@@ -116,6 +116,33 @@ flowchart TD
 
 ---
 
+## Date Display
+
+Dates are derived from `.spec-context.json` — **not** from markdown frontmatter.
+
+### Date Derivation
+
+| Field | Source | Fallback |
+|-------|--------|----------|
+| **Created** | `stepHistory.specify.startedAt` | Earliest `startedAt` across all steps |
+| **Last Updated** | `context.updated` (AI agent activity) | Most recent timestamp across all `stepHistory` entries |
+
+### Omission Rules
+
+| Condition | Created | Last Updated |
+|-----------|---------|-------------|
+| No `.spec-context.json` | Hidden | Hidden |
+| No `stepHistory` | Hidden | Hidden |
+| Only one timestamp (same as Created) | Shown | Hidden (avoid redundancy) |
+| Unparseable ISO timestamp | Hidden | Hidden |
+| Malformed `.spec-context.json` | Hidden | Hidden |
+
+### Format
+
+Dates display as locale-friendly short format: `"Apr 1, 2026"` — computed on the extension side via `toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })`.
+
+---
+
 ## Step Tab States
 
 ```mermaid
@@ -192,9 +219,9 @@ sequenceDiagram
     participant WV as Webview
 
     FS->>Ext: getFeatureWorkflow()
-    Ext->>Ext: compute specStatus, badgeText, activeStep
-    Ext->>Gen: generateHtml(specStatus, activeStep, badgeText)
-    Gen->>WV: HTML with data-spec-status, data-spec-badge
+    Ext->>Ext: compute specStatus, badgeText, activeStep, dates
+    Ext->>Gen: generateHtml(specStatus, activeStep, badgeText, dates)
+    Gen->>WV: HTML with data-spec-status, data-spec-badge, date elements
     WV->>WV: CSS renders badge, tab states
 
     Note over WV: On tab switch
@@ -210,7 +237,7 @@ sequenceDiagram
 |------|---------------|
 | `src/features/spec-viewer/specViewerProvider.ts` | Status computation, data flow to webview |
 | `src/features/spec-viewer/html/generator.ts` | Footer button HTML, badge attribute |
-| `src/features/spec-viewer/phaseCalculation.ts` | `computeBadgeText()`, `mapSddStepToTab()` |
+| `src/features/spec-viewer/phaseCalculation.ts` | `computeBadgeText()`, `computeCreatedDate()`, `computeLastUpdatedDate()`, `mapSddStepToTab()` |
 | `src/features/spec-viewer/messageHandlers.ts` | Lifecycle action handlers (complete/archive/reactivate) |
 | `src/features/spec-viewer/types.ts` | `SpecStatus` type, message types |
 | `webview/src/spec-viewer/navigation.ts` | Tab class application logic |
