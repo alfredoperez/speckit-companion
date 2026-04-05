@@ -1,0 +1,22 @@
+{
+  "workflow": "speckit",
+  "selectedAt": "2026-04-05T23:28:33.196Z",
+  "currentStep": "tasks",
+  "status": "completed",
+  "specName": "Fix Plan Indent",
+  "branch": "049-fix-plan-indent",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-04-05T23:28:33.196Z",
+      "completedAt": "2026-04-05T23:39:05.025Z"
+    },
+    "tasks": {
+      "startedAt": "2026-04-05T23:39:05.025Z",
+      "completedAt": "2026-04-05T23:39:06.799Z"
+    },
+    "plan": {
+      "startedAt": "2026-04-05T23:39:06.799Z",
+      "completedAt": "2026-04-05T23:39:07.874Z"
+    }
+  }
+}

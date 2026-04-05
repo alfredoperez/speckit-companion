@@ -374,40 +374,39 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
      * Get sub-files for a step: explicit subFiles list, or scan subDir
      */
     private getStepSubFiles(specFullPath: string, step: WorkflowStepConfig): string[] {
+        const results: string[] = [];
+
+        // Collect explicit subFiles that exist
         if (step.subFiles && step.subFiles.length > 0) {
-            // Return only those that exist
-            return step.subFiles.filter(f => {
+            for (const f of step.subFiles) {
                 try {
-                    return fs.existsSync(path.join(specFullPath, f));
-                } catch {
-                    return false;
-                }
-            });
+                    if (fs.existsSync(path.join(specFullPath, f))) {
+                        results.push(f);
+                    }
+                } catch { /* skip */ }
+            }
         }
+
+        // Collect subDir contents
         if (step.subDir) {
             const dirPath = path.join(specFullPath, step.subDir);
             const stepFile = getStepFile(step);
-            const results: string[] = [];
             try {
                 const entries = fs.readdirSync(dirPath, { withFileTypes: true });
                 for (const e of entries) {
                     if (e.isFile() && e.name.endsWith('.md')) {
-                        // Flat .md files in subDir
                         results.push(`${step.subDir}/${e.name}`);
                     } else if (e.isDirectory()) {
-                        // Subdirectory: check if step file exists inside
                         const subFilePath = path.join(dirPath, e.name, stepFile);
                         if (fs.existsSync(subFilePath)) {
                             results.push(`${step.subDir}/${e.name}/${stepFile}`);
                         }
                     }
                 }
-                return results.sort();
-            } catch {
-                return [];
-            }
+            } catch { /* skip */ }
         }
-        return [];
+
+        return results.sort();
     }
 
     /**
