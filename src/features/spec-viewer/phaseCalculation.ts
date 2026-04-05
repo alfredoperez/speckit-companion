@@ -211,6 +211,7 @@ export function computeBadgeText(ctx?: {
     progress?: string | null;
     currentTask?: string | null;
     status?: string;
+    stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>;
 } | null): string | null {
     if (!ctx) return null;
 
@@ -218,10 +219,24 @@ export function computeBadgeText(ctx?: {
     if (ctx.status === SpecStatuses.ARCHIVED) return 'ARCHIVED';
 
     const inProgress = ctx.progress != null;
+    const stepCompleted = ctx.currentStep && ctx.stepHistory?.[ctx.currentStep]?.completedAt;
 
     // Show next action based on current step
     if (ctx.currentStep === WorkflowSteps.IMPLEMENT && ctx.currentTask) return `IMPLEMENTING ${ctx.currentTask}${inProgress ? '...' : ''}`;
-    if (ctx.currentStep === WorkflowSteps.IMPLEMENT) return `IMPLEMENTING${inProgress ? '...' : ''}`;
+    if (ctx.currentStep === WorkflowSteps.IMPLEMENT && inProgress) return 'IMPLEMENTING...';
+    if (ctx.currentStep === WorkflowSteps.IMPLEMENT && stepCompleted) return 'IMPLEMENT COMPLETE';
+    if (ctx.currentStep === WorkflowSteps.IMPLEMENT) return 'IMPLEMENTING';
+
+    // Step completion: completedAt set with no active progress
+    if (stepCompleted && !inProgress) {
+        const completionLabels: Record<string, string> = {
+            [WorkflowSteps.SPECIFY]: 'SPECIFY COMPLETE',
+            [WorkflowSteps.PLAN]: 'PLAN COMPLETE',
+            [WorkflowSteps.TASKS]: 'TASKS COMPLETE',
+        };
+        const label = completionLabels[ctx.currentStep!];
+        if (label) return label;
+    }
 
     // Fallback to current step (with in-progress suffix)
     if (ctx.currentStep === WorkflowSteps.SPECIFY) return `SPECIFYING${inProgress ? '...' : ''}`;
