@@ -7,14 +7,20 @@ import { escapeHtml, parseInline } from './inline';
 import {
     preprocessSpecMetadata,
     preprocessUserStories,
-    preprocessAcceptanceScenarios,
     preprocessCallouts,
     preprocessHtmlComments
 } from './preprocessors';
 import { parseAcceptanceScenarios } from './scenarios';
 
-// Line number counter for tracking editable content
-let currentLineNum = 0;
+// Current task ID from spec-context (for in-progress badge)
+let currentTaskId: string | null = null;
+
+/**
+ * Set the current task ID for in-progress badge rendering
+ */
+export function setCurrentTask(taskId: string | null): void {
+    currentTaskId = taskId;
+}
 
 /**
  * Check if content looks like a tree structure (file tree, directory listing, etc.)
@@ -47,7 +53,7 @@ function isTreeStructure(text: string): boolean {
 // Comment icon SVG for line action buttons
 const COMMENT_ICON_SVG = `<svg width="14" height="14" viewBox="0 0 24 24"><path fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 6h8m-4-4v8M6.099 19.5q-1.949-.192-2.927-1.172C2 17.157 2 15.271 2 11.5V11c0-3.771 0-5.657 1.172-6.828S6.229 3 10 3h1.5m-5 15c-.205 1.002-1.122 3.166-.184 3.865c.49.357 1.271-.024 2.834-.786c1.096-.535 2.206-1.148 3.405-1.424c.438-.1.885-.143 1.445-.155c3.771 0 5.657 0 6.828-1.172C21.947 17.21 21.998 15.44 22 12M8 14h6M8 9h3" color="currentColor"/></svg>`;
 
-function wrapWithLineActions(content: string, lineNum: number, _isRefinable: boolean = true): string {
+function wrapWithLineActions(content: string, lineNum: number): string {
     return `<div class="line" data-line="${lineNum}">
         <button class="line-add-btn" data-line="${lineNum}" title="Add comment">
             ${COMMENT_ICON_SVG}
@@ -92,40 +98,6 @@ function renderTable(rows: string[]): string {
 }
 
 /**
- * Add progress bars after section headings (h2/h3) that contain task lists
- */
-function addTaskProgressHeaders(html: string): string {
-    // Pattern to find h2 or h3 headings followed by content until next h2/h3 or end
-    const sectionPattern = /(<h[23]>[\s\S]*?<\/h[23]>)([\s\S]*?)(?=<h[23]>|$)/g;
-
-    return html.replace(sectionPattern, (match, heading, content) => {
-        // Count tasks in this section
-        const totalTasks = (content.match(/<li class="task-item/g) || []).length;
-        const completedTasks = (content.match(/<li class="task-item checked"/g) || []).length;
-
-        // Only add progress if section has tasks
-        if (totalTasks === 0) return match;
-
-        const percent = Math.round((completedTasks / totalTasks) * 100);
-        const allDone = completedTasks === totalTasks;
-
-        // Create compact progress bar
-        const progressBar = `
-<div class="section-progress">
-    <div class="section-progress-bar">
-        <div class="section-progress-fill ${allDone ? 'complete' : ''}" style="width: ${percent}%"></div>
-    </div>
-    <span class="section-progress-text">${completedTasks}/${totalTasks}${allDone ? ' ✓' : ''}</span>
-</div>`;
-
-        // Mark task lists with simplified class
-        const updatedContent = content.replace(/<ul>\s*(<li class="task-item)/g, '<ul class="task-list-simple">$1');
-
-        return `${heading}${progressBar}${updatedContent}`;
-    });
-}
-
-/**
  * Parse and render markdown content to HTML
  */
 export function renderMarkdown(markdown: string): string {
@@ -133,12 +105,8 @@ export function renderMarkdown(markdown: string): string {
     markdown = preprocessHtmlComments(markdown);
     markdown = preprocessSpecMetadata(markdown);
     markdown = preprocessUserStories(markdown);
-    markdown = parseAcceptanceScenarios(markdown);  // New: Convert to tables
-    markdown = preprocessAcceptanceScenarios(markdown);  // Legacy: kept for compatibility
+    markdown = parseAcceptanceScenarios(markdown);
     markdown = preprocessCallouts(markdown);
-
-    // Reset line counter
-    currentLineNum = 0;
 
     let html = '';
     const lines = markdown.split('\n');
@@ -257,18 +225,29 @@ export function renderMarkdown(markdown: string): string {
             const taskMatch = content.match(/^\[([ xX])\]\s*(.+)$/);
             if (taskMatch) {
                 const checked = taskMatch[1].toLowerCase() === 'x' ? 'checked' : '';
-                const checkedClass = checked ? ' class="task-item checked"' : ' class="task-item"';
-
-                // Extract task ID pattern like "T017 [US3]" and show as tooltip
                 const taskText = taskMatch[2];
-                const taskIdMatch = taskText.match(/^(T\d+\s*\[US\d+\])\s*(.+)$/i);
 
-                if (taskIdMatch) {
-                    const taskId = taskIdMatch[1];
-                    const cleanText = taskIdMatch[2];
-                    html += `<li${checkedClass} title="${taskId}" data-line="${sourceLineNum}"><input type="checkbox" ${checked} data-line="${sourceLineNum}"><span class="task-text">${cleanText}</span></li>\n`;
+                // Extract task ID (T001, T002, etc.) from parsed HTML
+                const taskIdExtract = taskText.match(/<strong>(T\d+)<\/strong>/i);
+                const taskId = taskIdExtract ? taskIdExtract[1] : null;
+
+                // Build classes
+                const classes = ['task-item'];
+                if (checked) classes.push('checked');
+                if (taskId && taskId === currentTaskId) classes.push('in-progress');
+
+                const classAttr = `class="${classes.join(' ')}"`;
+                const dataTaskAttr = taskId ? ` data-task-id="${taskId}"` : '';
+
+                // Extract user story ID for tooltip
+                const usMatch = taskText.match(/^(T\d+\s*\[US\d+\])\s*(.+)$/i) || taskText.match(/<strong>(T\d+)<\/strong>\s*(.*)/i);
+
+                if (usMatch && taskText.match(/\[US\d+\]/)) {
+                    const usId = usMatch[1];
+                    const cleanText = usMatch[2];
+                    html += `<li ${classAttr} title="${usId}" data-line="${sourceLineNum}"${dataTaskAttr}><input type="checkbox" ${checked} data-line="${sourceLineNum}"><span class="task-text">${cleanText}</span></li>\n`;
                 } else {
-                    html += `<li${checkedClass} data-line="${sourceLineNum}"><input type="checkbox" ${checked} data-line="${sourceLineNum}"><span class="task-text">${taskText}</span></li>\n`;
+                    html += `<li ${classAttr} data-line="${sourceLineNum}"${dataTaskAttr}><input type="checkbox" ${checked} data-line="${sourceLineNum}"><span class="task-text">${taskText}</span></li>\n`;
                 }
             } else {
                 // Wrap regular list items with line actions for commenting
@@ -343,5 +322,53 @@ export function renderMarkdown(markdown: string): string {
         html += `<pre><code>${escapeHtml(codeContent.join('\n'))}</code></pre>\n`;
     }
 
+    // Post-process: group task sub-items into .task-details containers
+    html = groupTaskDetails(html);
+
     return html;
+}
+
+/**
+ * Post-process rendered HTML to wrap consecutive non-task list items
+ * after a task-item into a .task-details container for visual grouping.
+ */
+function groupTaskDetails(html: string): string {
+    // Find task lists and group sub-items under each task
+    return html.replace(/<ul[^>]*>([\s\S]*?)<\/ul>/g, (match, content) => {
+        if (!content.includes('class="task-item')) return match;
+        const tag = match.match(/<ul[^>]*>/)?.[0] || '<ul>';
+        return `${tag}${groupTaskItemDetails(content)}</ul>`;
+    });
+}
+
+function groupTaskItemDetails(content: string): string {
+    const items = content.split(/(?=<li\s)/);
+    let result = '';
+    let detailsBuffer = '';
+
+    for (const item of items) {
+        if (!item.trim()) continue;
+
+        if (item.includes('class="task-item')) {
+            if (detailsBuffer) {
+                result += `<div class="task-details">${detailsBuffer}</div>\n`;
+                detailsBuffer = '';
+            }
+            result += item;
+        } else if (item.includes('class="line"')) {
+            detailsBuffer += item;
+        } else {
+            if (detailsBuffer) {
+                result += `<div class="task-details">${detailsBuffer}</div>\n`;
+                detailsBuffer = '';
+            }
+            result += item;
+        }
+    }
+
+    if (detailsBuffer) {
+        result += `<div class="task-details">${detailsBuffer}</div>\n`;
+    }
+
+    return result;
 }

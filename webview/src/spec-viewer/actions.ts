@@ -105,5 +105,50 @@ export function setupCheckboxToggle(): void {
             lineNum,
             checked: isChecked
         });
+
+        // Recalculate and update task completion percentage in step tabs
+        updateTaskPercentage();
+    });
+}
+
+/**
+ * Recalculate task completion and update the Tasks tab badge
+ */
+function updateTaskPercentage(): void {
+    const total = document.querySelectorAll('.task-item').length;
+    const checked = document.querySelectorAll('.task-item.checked').length;
+    if (total === 0) return;
+
+    const percent = Math.round((checked / total) * 100);
+
+    // Update the Tasks step-tab status
+    const tasksTab = document.querySelector('.step-tab[data-phase="tasks"]');
+    if (!tasksTab) return;
+
+    const statusEl = tasksTab.querySelector('.step-status');
+    if (statusEl && percent > 0 && percent < 100) {
+        statusEl.textContent = `${percent}%`;
+        tasksTab.classList.add('in-progress');
+    } else if (statusEl && percent === 100) {
+        statusEl.textContent = '✓';
+        tasksTab.classList.remove('in-progress');
+    }
+
+    // Update progress bars
+    document.querySelectorAll('.section-progress-fill').forEach(fill => {
+        const bar = fill.closest('.section-progress');
+        if (!bar) return;
+        const section = bar.nextElementSibling || bar.parentElement;
+        if (!section) return;
+        const sectionTasks = section.querySelectorAll('.task-item').length;
+        const sectionChecked = section.querySelectorAll('.task-item.checked').length;
+        if (sectionTasks > 0) {
+            const sectionPercent = Math.round((sectionChecked / sectionTasks) * 100);
+            (fill as HTMLElement).style.width = `${sectionPercent}%`;
+            const textEl = bar.querySelector('.section-progress-text');
+            if (textEl) {
+                textEl.textContent = `${sectionChecked}/${sectionTasks}${sectionPercent === 100 ? ' ✓' : ''}`;
+            }
+        }
     });
 }

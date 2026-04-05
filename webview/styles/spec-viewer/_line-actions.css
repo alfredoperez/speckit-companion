@@ -30,14 +30,14 @@
     background: transparent;
 }
 
-/* Line with active editor - stable background, no hover changes */
+/* Line with active editor - no background change */
 .line.editing {
-    background: var(--bg-hover);
+    background: transparent;
 }
 
 /* Prevent hover changes while editing */
 .line.editing:hover {
-    background: var(--bg-hover);
+    background: transparent;
 }
 
 /* Line with refinement comment - no border, comment card below is sufficient indicator */
@@ -79,8 +79,8 @@
     width: 22px;
     height: 22px;
     border-radius: var(--radius-sm);
-    border: 1px solid #22c55e;
-    background: #22c55e;
+    border: 1px solid var(--success);
+    background: var(--success);
     color: white;
     opacity: 0;
     transition: all var(--transition-fast);
@@ -107,8 +107,8 @@
 }
 
 .line-add-btn:hover {
-    background: #16a34a;
-    border-color: #16a34a;
+    background: color-mix(in srgb, var(--success) 85%, white);
+    border-color: color-mix(in srgb, var(--success) 85%, white);
     transform: scale(1.1);
 }
 

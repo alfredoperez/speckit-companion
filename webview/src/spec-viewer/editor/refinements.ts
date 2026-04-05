@@ -6,7 +6,6 @@
 import type { Refinement, VSCodeApi } from '../types';
 import { escapeHtml } from '../markdown';
 import {
-    pendingRefinements,
     addPendingRefinement,
     removePendingRefinement,
     clearPendingRefinements,
@@ -180,7 +179,7 @@ export function updateRefineButton(): void {
     if (btn) {
         if (count > 0) {
             btn.style.display = 'inline-flex';
-            btn.textContent = `📝 Refine (${count} comment${count > 1 ? 's' : ''}) →`;
+            btn.textContent = `✨ Refine (${count})`;
         } else {
             btn.style.display = 'none';
         }

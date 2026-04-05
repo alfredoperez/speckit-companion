@@ -62,22 +62,23 @@
 
 .refine-submit-btn {
     display: none;
-    padding: 10px 20px;
+    padding: 8px 20px;
     background: var(--accent);
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     color: white;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     transition: all var(--transition-fast);
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .refine-submit-btn:hover {
     background: var(--accent-hover);
     transform: translateY(-1px);
+    box-shadow: var(--accent-glow);
 }
 
 .refine-submit-btn:active {

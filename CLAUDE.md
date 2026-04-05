@@ -93,6 +93,10 @@ User data stored in workspace `.claude/` directory:
 
 When adding, changing, or removing a user-facing feature, update the README.md to reflect the change. Keep the README as the single source of truth for configuration options, workflow setup, and feature descriptions.
 
+When modifying spec viewer statuses, badges, buttons, or step tab behavior, update `docs/viewer-states.md` to reflect the changes. This file documents the full state machine: status lifecycle, footer button matrix, badge text logic, step tab visual states, and data flow.
+
+When modifying the project structure, adding/removing modules, or changing the architecture, update `ARCHITECTURE.md` to reflect the changes.
+
 ## Important Notes
 
 1. **File Operations**: Use `vscode.Uri` and workspace-relative paths

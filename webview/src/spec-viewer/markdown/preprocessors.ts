@@ -18,8 +18,10 @@ export function preprocessSpecMetadata(markdown: string): string {
     const metadataBlock = match[2];
 
     // Parse individual metadata items - captures **Label** or **Label:** then the value
+    // Also handles pipe-separated fields like: **Plan**: value | **Date**: value
     const items: { label: string; value: string }[] = [];
-    const itemPattern = /\*\*([^*]+)\*\*:?\s*(.+?)(?=\n\*\*|\n\n|$)/g;
+    const fileLinks: string[] = [];
+    const itemPattern = /\*\*([^*]+)\*\*:?\s*(.+?)(?=\s*\|\s*\*\*|\n\*\*|\n\n|$)/g;
     let itemMatch;
 
     while ((itemMatch = itemPattern.exec(metadataBlock)) !== null) {
@@ -33,17 +35,23 @@ export function preprocessSpecMetadata(markdown: string): string {
         value = value.replace(/`([^`]+)`/g, '$1');
 
         // Only include recognized metadata fields
-        const recognizedFields = ['Feature Branch', 'Created', 'Status', 'Input', 'Version', 'Author', 'Last Updated'];
+        const recognizedFields = ['Feature Branch', 'Created', 'Status', 'Input', 'Version', 'Author', 'Last Updated', 'Date', 'Plan', 'Spec', 'Slug'];
         if (!recognizedFields.includes(label)) continue;
+
+        // Collect Plan/Spec links for file link below title
+        if (label === 'Plan' || label === 'Spec') {
+            fileLinks.push(value);
+            continue;
+        }
+        if (label === 'Slug') continue;
 
         items.push({ label, value });
     }
 
-    if (items.length === 0) return markdown;
+    if (items.length === 0 && fileLinks.length === 0) return markdown;
 
     // Build compact metadata HTML
     const metadataHtml = items.map(item => {
-        // Special styling for certain fields
         if (item.label === 'Status') {
             const statusClass = item.value.toLowerCase().replace(/\s+/g, '-');
             return `<span class="meta-item"><span class="meta-status meta-status-${statusClass}">${item.value}</span></span>`;
@@ -51,17 +59,27 @@ export function preprocessSpecMetadata(markdown: string): string {
         if (item.label === 'Feature Branch') {
             return `<span class="meta-item"><span class="meta-branch">${item.value}</span></span>`;
         }
-        if (item.label === 'Created' || item.label === 'Last Updated') {
+        if (item.label === 'Created' || item.label === 'Last Updated' || item.label === 'Date') {
             return `<span class="meta-item"><span class="meta-label">${item.label}:</span> <span class="meta-date">${item.value}</span></span>`;
         }
         if (item.label === 'Input') {
-            // Input is longer, show on its own line
             return `</div><div class="spec-input"><span class="meta-label">Input:</span> ${item.value}</div><div class="spec-meta">`;
         }
         return `<span class="meta-item"><span class="meta-label">${item.label}:</span> ${item.value}</span>`;
     }).join('');
 
-    const replacement = `${title}<div class="spec-meta">${metadataHtml}</div>\n\n`;
+    // Build file link HTML (shown below title)
+    const fileLinkHtml = fileLinks.length > 0
+        ? `<div class="spec-file-link">${fileLinks.map(link => {
+            const mdLink = link.match(/\[([^\]]+)\]\(([^)]+)\)/);
+            if (mdLink) return `<a href="${mdLink[2]}" class="spec-file-ref" data-file-ref="${mdLink[1]}">${mdLink[1]}</a>`;
+            return `<span class="spec-file-ref">${link}</span>`;
+        }).join(' · ')}</div>\n`
+        : '';
+
+    // Place metadata ABOVE the title, file link BELOW
+    const metaBar = items.length > 0 ? `<div class="spec-meta">${metadataHtml}</div>\n\n` : '';
+    const replacement = `${metaBar}${title}${fileLinkHtml}\n`;
 
     return markdown.replace(metadataPattern, replacement);
 }
@@ -96,15 +114,6 @@ export function preprocessUserStories(markdown: string): string {
 
         return `<div class="user-story-header"><div class="user-story-meta">${ticketIcon}<span class="story-id">US-${num}</span><span class="meta-separator">·</span><span class="story-priority priority-${priorityClass}"><span class="priority-dot ${priorityClass}"></span>${priorityLabel}</span></div><h3 class="user-story-title">${title.trim()}</h3></div>`;
     });
-}
-
-/**
- * Preprocess acceptance scenario keywords (Given/When/Then) - legacy no-op
- * Note: Scenario formatting is now handled by parseAcceptanceScenarios()
- */
-export function preprocessAcceptanceScenarios(markdown: string): string {
-    // No-op - scenario keywords are now processed in parseAcceptanceScenarios()
-    return markdown;
 }
 
 /**

@@ -31,7 +31,9 @@ export function generateHtml(
     taskCompletionPercent: number,
     specStatus: SpecStatus = 'active',
     enhancementButtons: EnhancementButton[] = [],
-    stalenessMap?: StalenessMap
+    stalenessMap?: StalenessMap,
+    activeStep?: string | null,
+    badgeText?: string | null
 ): string {
     // Get URIs for resources
     const styleUri = webview.asWebviewUri(
@@ -96,7 +98,8 @@ export function generateHtml(
         workflowPhase,
         isViewingRelatedDoc,
         taskCompletionPercent,
-        stalenessMap
+        stalenessMap,
+        activeStep
     );
 
     // Stale warning banner (between nav and content)
@@ -133,17 +136,19 @@ export function generateHtml(
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@vscode/codicons@0.0.36/dist/codicon.css">
     <title>Spec: ${escapeHtml(specName)}</title>
 </head>
-<body style="background: var(--vscode-editor-background, #1e1e1e);" data-spec-status="${specStatus}">
+<body style="background: var(--vscode-editor-background, #1e1e1e);" data-spec-status="${specStatus}" data-spec-badge="${escapeHtml(badgeText || '')}">
     <div class="viewer-container">
         ${navHtml}
         ${staleBannerHtml}
 
         <main class="content-area" id="content-area">
+            ${badgeText ? `<div class="spec-badge-bar"><span class="spec-badge">${escapeHtml(badgeText)}</span></div>` : ''}
             ${contentHtml}
         </main>
 
         <footer class="actions">
             <div class="actions-left">
+                ${specStatus !== 'archived' ? `<button id="archiveSpec" class="secondary">Archive</button>` : ''}
                 <span class="action-toast" id="action-toast"></span>
                 ${enhancementButtons.map((btn, i) => `
                 <button class="enhancement" data-command="${btn.command}" title="${btn.tooltip || ''}" id="enhance-${i}">
@@ -156,14 +161,11 @@ export function generateHtml(
                 ${specStatus === 'archived' ? `
                 <button id="reactivateSpec" class="secondary">Reactivate</button>
                 ` : specStatus === 'completed' ? `
-                <button id="archiveSpec" class="secondary">Archive</button>
                 <button id="reactivateSpec" class="secondary">Reactivate</button>
                 ` : isTasksDone ? `
-                <button id="archiveSpec" class="secondary">Archive</button>
                 <button id="completeSpec" class="primary">Complete</button>
                 ` : `
                 <button id="regenerate" class="secondary">Regenerate</button>
-                <button id="archiveSpec" class="secondary">Archive</button>
                 ${showApproveButton ? `<button id="approve" class="primary">${approveText}</button>` : ''}
                 `}
             </div>

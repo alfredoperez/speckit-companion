@@ -245,6 +245,12 @@ export interface NavState {
     stalenessMap?: StalenessMap;
     /** Spec status for lifecycle button visibility */
     specStatus?: string;
+    /** Current task ID from spec-context (for in-progress badge) */
+    currentTask?: string | null;
+    /** Active SDD step being worked on (mapped to tab name: spec/plan/tasks) */
+    activeStep?: string | null;
+    /** Badge text for the metadata bar */
+    badgeText?: string | null;
 }
 
 /**

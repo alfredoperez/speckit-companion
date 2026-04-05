@@ -12,9 +12,9 @@ import type {
 
 import { getElements } from './elements';
 import { saveState, restoreState } from './state';
-import { renderMarkdown } from './markdown';
+import { renderMarkdown, setCurrentTask } from './markdown';
 import { applyHighlighting, initializeMermaid } from './highlighting';
-import { updateNavState, setupTabNavigation, setupStepperNavigation } from './navigation';
+import { updateNavState, setupTabNavigation } from './navigation';
 import { setupLineActions } from './editor';
 import { setupRefineModal } from './modal';
 import { setupEditButton, setupFooterActions, setupCheckboxToggle, setupFileRefClickHandler } from './actions';
@@ -72,6 +72,10 @@ function handleMessage(event: MessageEvent): void {
 
     switch (message.type) {
         case 'contentUpdated':
+            // Set current task before rendering so in-progress badges are applied
+            if (message.navState?.currentTask !== undefined) {
+                setCurrentTask(message.navState.currentTask);
+            }
             updateContent(message.content);
             // Update navigation state if provided (for smooth tab switching)
             if (message.navState) {
@@ -133,7 +137,6 @@ function restoreCurrentState(): void {
  */
 function init(): void {
     setupTabNavigation();
-    setupStepperNavigation();
     setupEditButton();
     setupFooterActions();
     setupRefineModal();
