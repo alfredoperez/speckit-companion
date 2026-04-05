@@ -9,7 +9,6 @@ import {
 
 const SPEC_DIR = '/workspace/specs/my-feature';
 const CONTEXT_FILE = path.join(SPEC_DIR, '.spec-context.json');
-const LEGACY_FILE = path.join(SPEC_DIR, '.speckit.json');
 
 // Mock fs.promises directly before module load
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -18,14 +17,11 @@ const mockReadFile: jest.Mock<any, any> = jest.fn().mockRejectedValue(new Error(
 const mockWriteFile: jest.Mock<any, any> = jest.fn().mockResolvedValue(undefined);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockReadFileSync: jest.Mock<any, any> = jest.fn(() => { throw new Error('ENOENT'); });
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockUnlink: jest.Mock<any, any> = jest.fn().mockResolvedValue(undefined);
 
 jest.mock('fs', () => ({
     promises: {
         readFile: (...args: unknown[]) => mockReadFile(...args),
         writeFile: (...args: unknown[]) => mockWriteFile(...args),
-        unlink: (...args: unknown[]) => mockUnlink(...args),
     },
     readFileSync: (...args: unknown[]) => mockReadFileSync(...args),
 }));
@@ -34,7 +30,6 @@ describe('specContextManager', () => {
     beforeEach(() => {
         mockReadFile.mockReset().mockRejectedValue(new Error('ENOENT'));
         mockWriteFile.mockReset().mockResolvedValue(undefined);
-        mockUnlink.mockReset().mockResolvedValue(undefined);
         mockReadFileSync.mockReset().mockImplementation(() => { throw new Error('ENOENT'); });
     });
 
@@ -53,19 +48,6 @@ describe('specContextManager', () => {
             expect(mockReadFile).toHaveBeenCalledWith(CONTEXT_FILE, 'utf-8');
         });
 
-        it('should fall back to .speckit.json when .spec-context.json is missing', async () => {
-            const legacyContext = { workflow: 'legacy', selectedAt: '2025-01-01' };
-            mockReadFile.mockImplementation((filePath: string) => {
-                if (filePath === CONTEXT_FILE) {
-                    return Promise.reject(new Error('ENOENT'));
-                }
-                return Promise.resolve(JSON.stringify(legacyContext));
-            });
-
-            const result = await readSpecContext(SPEC_DIR);
-            expect(result).toEqual(legacyContext);
-            expect(mockReadFile).toHaveBeenCalledWith(LEGACY_FILE, 'utf-8');
-        });
     });
 
     describe('readSpecContextSync', () => {
@@ -87,17 +69,6 @@ describe('specContextManager', () => {
             expect(mockReadFileSync).toHaveBeenCalledWith(CONTEXT_FILE, 'utf-8');
         });
 
-        it('should fall back to .speckit.json when .spec-context.json is missing', () => {
-            mockReadFileSync.mockImplementation((filePath: string) => {
-                if (filePath === CONTEXT_FILE) {
-                    throw new Error('ENOENT');
-                }
-                return JSON.stringify({ workflow: 'legacy', selectedAt: '2025-01-01' });
-            });
-
-            const result = readSpecContextSync(SPEC_DIR);
-            expect(result).toEqual({ workflow: 'legacy', selectedAt: '2025-01-01' });
-        });
     });
 
     describe('updateSpecContext', () => {
@@ -127,38 +98,6 @@ describe('specContextManager', () => {
             expect(written.workflow).toBe('default');
         });
 
-        it('should auto-migrate from .speckit.json and delete legacy file', async () => {
-            const legacyContent = { workflow: 'custom', selectedAt: '2025-06-01' };
-            mockReadFile.mockImplementation((filePath: string) => {
-                if (filePath === CONTEXT_FILE) {
-                    return Promise.reject(new Error('ENOENT'));
-                }
-                if (filePath === LEGACY_FILE) {
-                    return Promise.resolve(JSON.stringify(legacyContent));
-                }
-                return Promise.reject(new Error('ENOENT'));
-            });
-
-            await updateSpecContext(SPEC_DIR, { status: 'active' });
-
-            // Should write to .spec-context.json with merged content
-            const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
-            expect(written.workflow).toBe('custom');
-            expect(written.status).toBe('active');
-            expect(mockWriteFile).toHaveBeenCalledWith(CONTEXT_FILE, expect.any(String), 'utf-8');
-
-            // Should delete legacy file
-            expect(mockUnlink).toHaveBeenCalledWith(LEGACY_FILE);
-        });
-
-        it('should not delete legacy file when reading from .spec-context.json', async () => {
-            const existing = { workflow: 'default', selectedAt: '2026-01-01' };
-            mockReadFile.mockResolvedValue(JSON.stringify(existing));
-
-            await updateSpecContext(SPEC_DIR, { status: 'completed' });
-
-            expect(mockUnlink).not.toHaveBeenCalled();
-        });
     });
 
     describe('updateStepProgress', () => {
@@ -217,88 +156,6 @@ describe('specContextManager', () => {
 
             const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
             expect(written.stepHistory.specify.completedAt).toBe(completedAt);
-        });
-    });
-
-    describe('SDD state inference', () => {
-        const STATE_FILE = path.join(SPEC_DIR, 'state.json');
-
-        it('should use explicit status field when present in SDD state', async () => {
-            const state = { step: 'implement', substep: 'commit-review', status: 'completed', updated: '2026-03-26' };
-            mockReadFile.mockImplementation((filePath: string) => {
-                if (filePath === path.join(SPEC_DIR, 'state.json')) {
-                    return Promise.resolve(JSON.stringify(state));
-                }
-                return Promise.reject(new Error('ENOENT'));
-            });
-
-            const result = await readSpecContext(SPEC_DIR);
-            expect(result?.status).toBe('completed');
-        });
-
-        it('should use explicit status in .spec-context.json with SDD format', async () => {
-            const state = { step: 'implement', substep: 'commit-review', status: 'completed', updated: '2026-03-26' };
-            mockReadFile.mockImplementation((filePath: string) => {
-                if (filePath === CONTEXT_FILE) {
-                    return Promise.resolve(JSON.stringify(state));
-                }
-                return Promise.reject(new Error('ENOENT'));
-            });
-
-            const result = await readSpecContext(SPEC_DIR);
-            expect(result?.status).toBe('completed');
-        });
-
-        it('should infer completed when next is done', async () => {
-            const state = { step: 'implement', substep: 'code-review', next: 'done', updated: '2026-03-26' };
-            mockReadFile.mockImplementation((filePath: string) => {
-                if (filePath === CONTEXT_FILE) {
-                    return Promise.resolve(JSON.stringify(state));
-                }
-                return Promise.reject(new Error('ENOENT'));
-            });
-
-            const result = await readSpecContext(SPEC_DIR);
-            expect(result?.status).toBe('completed');
-        });
-
-        it('should remain active during implement when next is not done', async () => {
-            const state = { step: 'implement', substep: 'code-review', next: 'commit', updated: '2026-03-26' };
-            mockReadFile.mockImplementation((filePath: string) => {
-                if (filePath === CONTEXT_FILE) {
-                    return Promise.resolve(JSON.stringify(state));
-                }
-                return Promise.reject(new Error('ENOENT'));
-            });
-
-            const result = await readSpecContext(SPEC_DIR);
-            expect(result?.status).toBe('active');
-        });
-
-        it('should default to active when no explicit status and next is not done', async () => {
-            const state = { step: 'plan', substep: null, updated: '2026-03-26' };
-            mockReadFile.mockImplementation((filePath: string) => {
-                if (filePath === CONTEXT_FILE) {
-                    return Promise.resolve(JSON.stringify(state));
-                }
-                return Promise.reject(new Error('ENOENT'));
-            });
-
-            const result = await readSpecContext(SPEC_DIR);
-            expect(result?.status).toBe('active');
-        });
-
-        it('should sync use explicit status field (readSpecContextSync)', () => {
-            const state = { step: 'implement', substep: 'commit-review', status: 'completed', updated: '2026-03-26' };
-            mockReadFileSync.mockImplementation((filePath: string) => {
-                if (filePath === CONTEXT_FILE) {
-                    return JSON.stringify(state);
-                }
-                throw new Error('ENOENT');
-            });
-
-            const result = readSpecContextSync(SPEC_DIR);
-            expect(result?.status).toBe('completed');
         });
     });
 
