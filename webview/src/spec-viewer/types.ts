@@ -81,6 +81,8 @@ export interface NavState {
     currentTask?: string | null;
     activeStep?: string | null;
     badgeText?: string | null;
+    createdDate?: string | null;
+    lastUpdatedDate?: string | null;
 }
 
 // ============================================

@@ -252,6 +252,10 @@ export interface NavState {
     activeStep?: string | null;
     /** Badge text for the metadata bar */
     badgeText?: string | null;
+    /** Created date derived from spec-context stepHistory */
+    createdDate?: string | null;
+    /** Last updated date derived from spec-context stepHistory/updated */
+    lastUpdatedDate?: string | null;
 }
 
 /**

@@ -35,7 +35,7 @@ export function preprocessSpecMetadata(markdown: string): string {
         value = value.replace(/`([^`]+)`/g, '$1');
 
         // Only include recognized metadata fields
-        const recognizedFields = ['Feature Branch', 'Created', 'Status', 'Input', 'Version', 'Author', 'Last Updated', 'Date', 'Plan', 'Spec', 'Slug'];
+        const recognizedFields = ['Feature Branch', 'Status', 'Input', 'Version', 'Author', 'Plan', 'Spec', 'Slug'];
         if (!recognizedFields.includes(label)) continue;
 
         // Collect Plan/Spec links for file link below title
@@ -58,9 +58,6 @@ export function preprocessSpecMetadata(markdown: string): string {
         }
         if (item.label === 'Feature Branch') {
             return `<span class="meta-item"><span class="meta-branch">${item.value}</span></span>`;
-        }
-        if (item.label === 'Created' || item.label === 'Last Updated' || item.label === 'Date') {
-            return `<span class="meta-item"><span class="meta-label">${item.label}:</span> <span class="meta-date">${item.value}</span></span>`;
         }
         if (item.label === 'Input') {
             return `</div><div class="spec-input"><span class="meta-label">Input:</span> ${item.value}</div><div class="spec-meta">`;
