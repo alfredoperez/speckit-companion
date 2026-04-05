@@ -123,9 +123,3 @@ npm run test:watch    # Watch mode
 - Webpack 5 for bundling
 - highlight.js (CDN) for syntax highlighting in webviews
 
-## Active Technologies
-- TypeScript 5.3+ (ES2022 target, strict mode) + VS Code Extension API (`@types/vscode ^1.84.0`) (037-centralize-magic-strings)
-- N/A (no data storage changes) (037-centralize-magic-strings)
-
-## Recent Changes
-- 037-centralize-magic-strings: Added TypeScript 5.3+ (ES2022 target, strict mode) + VS Code Extension API (`@types/vscode ^1.84.0`)
