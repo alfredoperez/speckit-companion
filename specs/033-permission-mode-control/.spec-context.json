@@ -5,7 +5,7 @@
   "next": null,
   "updated": "2026-04-02",
   "approach": "Replace per-provider permission settings with a single speckit.permissionMode setting, add getPermissionFlag() to IAIProvider interface, remove PermissionManager infrastructure",
-  "last_action": "T008 complete \u2014 documented permissionMode setting in README",
+  "last_action": "T008 complete — documented permissionMode setting in README",
   "files_modified": [
     "package.json",
     "src/ai-providers/aiProvider.ts",
@@ -100,7 +100,7 @@
       "complexity": "normal",
       "requirements": 9,
       "scenarios": 5,
-      "key_finding": "Three providers already have their own permission/yolo flags with inconsistent setting names \u2014 unification into one setting with per-provider translation is straightforward"
+      "key_finding": "Three providers already have their own permission/yolo flags with inconsistent setting names — unification into one setting with per-provider translation is straightforward"
     },
     "plan": {
       "approach_summary": "Replace per-provider permission settings with a single speckit.permissionMode setting, add getPermissionFlag() to IAIProvider interface, remove PermissionManager infrastructure",
@@ -114,5 +114,7 @@
       "phases": 1
     }
   },
-  "status": "completed"
+  "status": "completed",
+  "workflow": "sdd",
+  "selectedAt": "2026-04-05T20:27:34.397Z"
 }

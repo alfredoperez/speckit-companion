@@ -55,6 +55,8 @@
       "concerns": []
     }
   },
-  "last_action": "T004 complete \u2014 all 4 inline code box styles removed",
-  "status": "completed"
+  "last_action": "T004 complete — all 4 inline code box styles removed",
+  "status": "completed",
+  "workflow": "sdd",
+  "selectedAt": "2026-04-05T20:27:34.400Z"
 }

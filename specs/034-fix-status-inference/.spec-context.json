@@ -5,7 +5,7 @@
   "next": null,
   "updated": "2026-04-02",
   "approach": "Check for explicit status field before heuristic inference in inferContextFromState",
-  "last_action": "CP3 approved \u2014 committing",
+  "last_action": "CP3 approved — committing",
   "files_modified": [
     "src/features/specs/specContextManager.ts",
     "src/features/specs/__tests__/specContextManager.test.ts"
@@ -38,5 +38,7 @@
       "key_finding": "inferContextFromState computes status from step/substep heuristics but never checks an explicit status field already present in the state object"
     }
   },
-  "status": "completed"
+  "status": "completed",
+  "workflow": "sdd",
+  "selectedAt": "2026-04-05T20:27:34.398Z"
 }
