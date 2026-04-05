@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import { BaseTreeDataProvider } from '../../core/providers';
 import {
     getFeatureWorkflow,
+    getOrSelectWorkflow,
     getWorkflow,
     normalizeWorkflowConfig,
     getStepFile,
@@ -13,7 +14,7 @@ import {
     SpecStatus,
 } from '../workflows';
 import { resolveSpecDirectories, hasDuplicateNames, deriveChangeRoot, type SpecDirectoryInfo } from '../../core/specDirectoryResolver';
-import { ConfigKeys, SpecStatuses, WorkflowSteps } from '../../core/constants';
+import { SpecStatuses, WorkflowSteps } from '../../core/constants';
 import { readSpecContextSync } from './specContextManager';
 
 export interface SpecInfo {
@@ -328,6 +329,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
     /**
      * Resolve workflow steps for a feature directory.
      * Returns the steps array from the feature's workflow, falling back to the default.
+     * When no workflow is persisted, auto-selects and persists the default.
      */
     private async resolveWorkflowSteps(featureDir: string): Promise<WorkflowStepConfig[]> {
         try {
@@ -345,16 +347,12 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             // fall through
         }
 
-        // Fall back to defaultWorkflow setting
-        const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
-        const defaultWorkflowName = config.get<string>("defaultWorkflow", "default");
-        if (defaultWorkflowName !== "default") {
-            const wf = getWorkflow(defaultWorkflowName);
-            if (wf) {
-                const normalized = normalizeWorkflowConfig(wf);
-                if (normalized.steps && normalized.steps.length > 0) {
-                    return normalized.steps;
-                }
+        // No persisted workflow — auto-select default and persist it
+        const selected = await getOrSelectWorkflow(featureDir);
+        if (selected) {
+            const normalized = normalizeWorkflowConfig(selected);
+            if (normalized.steps && normalized.steps.length > 0) {
+                return normalized.steps;
             }
         }
 

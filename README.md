@@ -267,7 +267,9 @@ This scans `plan/` for `.md` files and shows them as children of the Plan step. 
 - The sidebar shows only the steps declared by the active workflow
 - Steps with missing output files appear as "not started"
 - Steps with `actionOnly: true` are action-only — they appear in the workflow editor but not in the file tree
-- When multiple workflows exist, you're prompted to choose when starting a new spec
+- When a spec is created via the editor, the selected workflow is automatically persisted to `.spec-context.json` in the spec directory
+- If no workflow is selected, the `speckit.defaultWorkflow` setting is used (falls back to the built-in default)
+- Once persisted, all subsequent operations (viewer, step execution, command palette) use the same workflow consistently
 - The default workflow (`spec.md` → `plan.md` → `tasks.md` → implement) is always available
 
 ### Custom Commands

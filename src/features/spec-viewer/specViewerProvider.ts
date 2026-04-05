@@ -38,6 +38,7 @@ import { deriveChangeRoot } from "../../core/specDirectoryResolver";
 import {
   DEFAULT_WORKFLOW,
   getFeatureWorkflow,
+  getOrSelectWorkflow,
   getWorkflow,
   normalizeWorkflowConfig,
 } from "../workflows";
@@ -74,6 +75,7 @@ export class SpecViewerProvider {
 
   /**
    * Resolve workflow steps for a spec directory.
+   * Checks persisted context first, then auto-selects and persists the default.
    */
   private async resolveWorkflowSteps(
     specDirectory: string,
@@ -95,16 +97,12 @@ export class SpecViewerProvider {
       // fall through
     }
 
-    // 2. Fall back to defaultWorkflow setting
-    const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
-    const defaultWorkflowName = config.get<string>("defaultWorkflow", "default");
-    if (defaultWorkflowName !== "default") {
-      const wf = getWorkflow(defaultWorkflowName);
-      if (wf) {
-        const normalized = normalizeWorkflowConfig(wf);
-        if (normalized.steps && normalized.steps.length > 0) {
-          return normalized.steps;
-        }
+    // 2. No persisted workflow — auto-select default and persist it
+    const selected = await getOrSelectWorkflow(specDirectory);
+    if (selected) {
+      const normalized = normalizeWorkflowConfig(selected);
+      if (normalized.steps && normalized.steps.length > 0) {
+        return normalized.steps;
       }
     }
 
