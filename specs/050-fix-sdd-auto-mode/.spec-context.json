@@ -9,7 +9,7 @@
   "specName": "Fix SDD Auto Mode",
   "branch": "main",
   "createdAt": "2026-04-05T00:00:00.000Z",
-  "status": "active",
+  "status": "completed",
   "stepHistory": {
     "specify": {
       "startedAt": "2026-04-05T00:00:00.000Z",
@@ -43,25 +43,35 @@
     "T001": {
       "status": "DONE",
       "did": "Added getWorkflowCommands() helper to workflowManager.ts and exported from index.ts",
-      "files": ["src/features/workflows/workflowManager.ts", "src/features/workflows/index.ts"],
+      "files": [
+        "src/features/workflows/workflowManager.ts",
+        "src/features/workflows/index.ts"
+      ],
       "concerns": []
     },
     "T002": {
       "status": "DONE",
       "did": "Extended resolveEnhancementButtons() to merge workflow commands with customCommands, with deduplication",
-      "files": ["src/features/spec-viewer/specViewerProvider.ts"],
+      "files": [
+        "src/features/spec-viewer/specViewerProvider.ts"
+      ],
       "concerns": []
     },
     "T003": {
       "status": "DONE",
       "did": "Extended handleClarify() to fall back to workflow commands when no customCommand matches",
-      "files": ["src/features/spec-viewer/messageHandlers.ts"],
+      "files": [
+        "src/features/spec-viewer/messageHandlers.ts"
+      ],
       "concerns": []
     },
     "T004": {
       "status": "DONE",
       "did": "Added tests for getWorkflowCommands and clarify handler workflow fallback (4 + 4 tests)",
-      "files": ["src/features/workflows/__tests__/workflowManager.test.ts", "src/features/spec-viewer/__tests__/messageHandlers.test.ts"],
+      "files": [
+        "src/features/workflows/__tests__/workflowManager.test.ts",
+        "src/features/spec-viewer/__tests__/messageHandlers.test.ts"
+      ],
       "concerns": []
     }
   },
