@@ -41,7 +41,7 @@ export {
 } from './workflowManager';
 
 // Workflow Selector
-export { needsSelection, selectWorkflow, getOrSelectWorkflow } from './workflowSelector';
+export { needsSelection, selectWorkflow, getOrSelectWorkflow, resolveWorkflow } from './workflowSelector';
 
 // Checkpoint Handler
 export {

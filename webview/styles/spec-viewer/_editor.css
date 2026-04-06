@@ -88,6 +88,13 @@
     border-top: none;
 }
 
+.editor-comment-area {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    margin-top: var(--space-2);
+}
+
 .editor-textarea {
     width: 100%;
     min-height: 60px;

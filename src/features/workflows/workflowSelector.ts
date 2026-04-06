@@ -132,11 +132,10 @@ function buildWorkflowDetail(workflow: WorkflowConfig): string {
 }
 
 /**
- * Get the workflow for a feature, auto-selecting based on settings
- * @param featureDir Path to feature directory
- * @returns Selected workflow or undefined if cancelled
+ * Shared logic to resolve the default workflow for a feature directory.
+ * Returns the workflow config without any side effects (no disk writes).
  */
-export async function getOrSelectWorkflow(featureDir: string, outputChannel?: vscode.OutputChannel): Promise<WorkflowConfig | undefined> {
+async function resolveDefaultWorkflow(featureDir: string, outputChannel?: vscode.OutputChannel): Promise<WorkflowConfig | undefined> {
     // Check if feature has existing workflow
     const existingContext = await getFeatureWorkflow(featureDir);
     if (existingContext) {
@@ -144,7 +143,7 @@ export async function getOrSelectWorkflow(featureDir: string, outputChannel?: vs
         if (workflow) {
             return workflow;
         }
-        // Workflow no longer exists, need to select new one
+        // Workflow no longer exists, fall through to default
     }
 
     // Get the configured default workflow
@@ -152,18 +151,38 @@ export async function getOrSelectWorkflow(featureDir: string, outputChannel?: vs
     const defaultWorkflowName = config.get<string>('defaultWorkflow', 'speckit');
     const workflows = getWorkflows(outputChannel);
 
-    // Find the configured default workflow
     let selectedWorkflow = workflows.find(w => w.name === defaultWorkflowName);
 
     if (!selectedWorkflow) {
-        // Configured workflow doesn't exist, log and fall back silently
         outputChannel?.appendLine(
             `[Workflows] Default workflow "${defaultWorkflowName}" not found. Using built-in default.`
         );
         selectedWorkflow = workflows[0];
     }
 
-    // Auto-select the default workflow
-    await saveFeatureWorkflow(featureDir, selectedWorkflow.name);
     return selectedWorkflow;
+}
+
+/**
+ * Resolve the workflow for a feature without writing to disk.
+ * Used by read-only paths (tree rendering, viewer init) that should never modify .spec-context.json.
+ * @param featureDir Path to feature directory
+ * @returns Resolved workflow config
+ */
+export async function resolveWorkflow(featureDir: string, outputChannel?: vscode.OutputChannel): Promise<WorkflowConfig | undefined> {
+    return resolveDefaultWorkflow(featureDir, outputChannel);
+}
+
+/**
+ * Get the workflow for a feature, auto-selecting and persisting based on settings.
+ * Only use this from explicit user actions (step execution, workflow selection).
+ * @param featureDir Path to feature directory
+ * @returns Selected workflow or undefined if cancelled
+ */
+export async function getOrSelectWorkflow(featureDir: string, outputChannel?: vscode.OutputChannel): Promise<WorkflowConfig | undefined> {
+    const workflow = await resolveDefaultWorkflow(featureDir, outputChannel);
+    if (workflow) {
+        await saveFeatureWorkflow(featureDir, workflow.name);
+    }
+    return workflow;
 }

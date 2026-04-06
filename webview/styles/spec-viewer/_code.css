@@ -177,8 +177,33 @@ pre.code-block code.hljs {
 }
 
 .mermaid svg {
-    max-width: 100%;
     height: auto;
+    transform-origin: top left;
+}
+
+/* Zoom controls toolbar */
+.mermaid-controls {
+    display: flex;
+    gap: 4px;
+    margin-bottom: var(--space-2);
+    justify-content: flex-end;
+}
+
+.mermaid-controls button {
+    padding: 2px 8px;
+    font-size: 12px;
+    font-family: inherit;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    line-height: 1.4;
+}
+
+.mermaid-controls button:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
 }
 
 /* Mermaid theme overrides for better VS Code integration */

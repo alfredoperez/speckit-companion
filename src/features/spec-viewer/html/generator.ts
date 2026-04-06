@@ -79,7 +79,8 @@ export function generateHtml(
     contextSpecName?: string | null,
     contextBranch?: string | null,
     currentFilePath?: string | null,
-    currentStep?: string | null
+    currentStep?: string | null,
+    stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>
 ): string {
     // Get URIs for resources
     const styleUri = webview.asWebviewUri(
@@ -145,7 +146,8 @@ export function generateHtml(
         isViewingRelatedDoc,
         taskCompletionPercent,
         stalenessMap,
-        activeStep
+        activeStep,
+        stepHistory
     );
 
     // Stale warning banner (between nav and content)

@@ -250,6 +250,8 @@ export interface NavState {
     currentTask?: string | null;
     /** Active SDD step being worked on (mapped to tab name: spec/plan/tasks) */
     activeStep?: string | null;
+    /** Step history for determining completed steps */
+    stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>;
     /** Badge text for the metadata bar */
     badgeText?: string | null;
     /** Created date derived from spec-context stepHistory */

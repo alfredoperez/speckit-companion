@@ -40,7 +40,7 @@ export function showInlineEditor(lineElement: HTMLElement): void {
         <div class="editor-actions">
             ${getContextActions(lineType, lineNum)}
         </div>
-        <div class="editor-comment-section">
+        <div class="editor-comment-section editor-comment-area">
             <textarea class="editor-textarea" placeholder="Add a comment or refinement instruction..."></textarea>
             <div class="editor-buttons">
                 <button class="editor-cancel">Cancel</button>
@@ -146,7 +146,7 @@ export function showInlineEditorForRow(rowElement: HTMLElement, rowNum: number):
                     <span class="editor-context-label">Scenario ${rowNum}:</span>
                     <span class="editor-context-text">${escapeHtml(scenarioContent)}</span>
                 </div>
-                <div class="editor-comment-section">
+                <div class="editor-comment-section editor-comment-area">
                     <textarea class="editor-textarea" placeholder="Add a comment or refinement instruction..."></textarea>
                     <div class="editor-buttons">
                         <button class="editor-cancel">Cancel</button>

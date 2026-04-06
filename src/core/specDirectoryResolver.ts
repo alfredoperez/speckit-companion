@@ -54,6 +54,18 @@ async function directoryHasMarkdown(dirPath: string): Promise<boolean> {
 }
 
 /**
+ * Check if a directory contains a .spec-context.json file.
+ */
+async function directoryHasSpecContext(dirPath: string): Promise<boolean> {
+    try {
+        await vscode.workspace.fs.stat(vscode.Uri.file(path.join(dirPath, '.spec-context.json')));
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+/**
  * Resolve all configured spec directory patterns into spec folder entries.
  * - Simple names (no globs): list children of that directory, each child is a spec folder
  * - Glob patterns: each match IS a spec folder directly
@@ -82,7 +94,8 @@ export async function resolveSpecDirectories(workspaceRoot: string): Promise<Spe
                     if (type === vscode.FileType.Directory) {
                         const specPath = `${pattern}/${name}`;
                         if (!seenPaths.has(specPath)) {
-                            const hasContent = await directoryHasMarkdown(path.join(dirPath, name));
+                            const childPath = path.join(dirPath, name);
+                            const hasContent = await directoryHasMarkdown(childPath) || await directoryHasSpecContext(childPath);
                             if (hasContent) {
                                 seenPaths.add(specPath);
                                 specs.push({ name, path: specPath });
@@ -136,8 +149,8 @@ async function expandGlobPattern(workspaceRoot: string, pattern: string): Promis
             const dirParts = fileParts.slice(0, patternDepth);
             const dirAbsolute = path.join(workspaceRoot, ...dirParts);
             if (!seenDirs.has(dirAbsolute)) {
-                // Only include if the directory itself has .md files (not just nested subdirs)
-                const hasContent = await directoryHasMarkdown(dirAbsolute);
+                // Only include if the directory itself has .md files or .spec-context.json
+                const hasContent = await directoryHasMarkdown(dirAbsolute) || await directoryHasSpecContext(dirAbsolute);
                 if (hasContent) {
                     seenDirs.add(dirAbsolute);
                     const relativePath = dirParts.join('/');
@@ -145,6 +158,21 @@ async function expandGlobPattern(workspaceRoot: string, pattern: string): Promis
                 }
             }
         }
+    }
+
+    // Also look for directories with .spec-context.json (SDD in-progress specs)
+    const contextFilePattern = new vscode.RelativePattern(workspaceRoot, `${pattern}/.spec-context.json`);
+    const contextFiles = await vscode.workspace.findFiles(contextFilePattern, '**/node_modules/**');
+    for (const file of contextFiles) {
+        const dir = path.dirname(file.fsPath);
+        if (seenDirs.has(dir)) {
+            continue;
+        }
+        seenDirs.add(dir);
+
+        const relativePath = path.relative(workspaceRoot, dir).replace(/\\/g, '/');
+        const name = path.basename(dir);
+        results.push({ name, path: relativePath });
     }
 
     // Also look for spec.md directly (legacy support)

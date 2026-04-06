@@ -42,7 +42,7 @@ import { deriveSpecName } from "../specs/specContextManager";
 import {
   DEFAULT_WORKFLOW,
   getFeatureWorkflow,
-  getOrSelectWorkflow,
+  resolveWorkflow,
   getWorkflow,
   getWorkflowCommands,
   normalizeWorkflowConfig,
@@ -101,8 +101,8 @@ export class SpecViewerProvider {
       // fall through
     }
 
-    // 2. No persisted context — auto-select default and persist it
-    const selected = await getOrSelectWorkflow(specDirectory);
+    // 2. No persisted context — resolve default without writing to disk
+    const selected = await resolveWorkflow(specDirectory);
     if (selected) {
       const normalized = normalizeWorkflowConfig(selected);
       if (normalized.steps && normalized.steps.length > 0) {
@@ -485,6 +485,7 @@ export class SpecViewerProvider {
         featureCtx?.branch ?? null,
         doc?.filePath ?? null,
         featureCtx?.currentStep ?? doc?.type ?? null,
+        featureCtx?.stepHistory,
       );
 
       this.outputChannel.appendLine(
@@ -720,6 +721,7 @@ export class SpecViewerProvider {
         specStatus,
         currentTask: featureCtx?.currentTask ?? null,
         activeStep: mapSddStepToTab(featureCtx?.currentStep),
+        stepHistory: featureCtx?.stepHistory,
         badgeText: computeBadgeText(featureCtx),
         createdDate: computeCreatedDate(featureCtx?.stepHistory),
         lastUpdatedDate: computeLastUpdatedDate(featureCtx?.stepHistory),

@@ -75,9 +75,9 @@
     position: absolute;
     left: auto;  /* Unset left positioning */
     right: 0;  /* Position on right side */
-    top: 4px;  /* Align to top */
-    width: 22px;
-    height: 22px;
+    top: 2px;  /* Align to top */
+    width: 18px;
+    height: 18px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--success);
     background: var(--success);
@@ -92,8 +92,8 @@
 }
 
 .line-add-btn svg {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     flex-shrink: 0;
 }
 
@@ -129,6 +129,7 @@ li.line {
     position: relative;
     padding-right: 0;  /* No extra padding */
     margin: 0;
+    min-height: unset;
     list-style-position: outside;
 }
 
