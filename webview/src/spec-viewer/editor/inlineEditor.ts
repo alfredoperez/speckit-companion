@@ -1,27 +1,36 @@
 /**
  * SpecKit Companion - Inline Editor
- * Uses InlineEditorComponent for both line and row modes.
+ * Uses Preact render() to mount InlineEditor components.
  */
 
+import { render, h } from 'preact';
 import type { VSCodeApi } from '../types';
-import { setActiveInlineEditor } from '../state';
-import { viewerStore } from '../viewerStore';
+import { activeEditor } from '../signals';
 import { detectLineType, handleContextAction } from './lineActions';
 import { addRefinement, addRefinementForRow } from './refinements';
-import { InlineEditorComponent } from '../components/InlineEditorComponent';
+import { InlineEditor } from '../components/InlineEditor';
 
 declare const vscode: VSCodeApi;
 
-/** Currently active editor component */
-let activeEditorComponent: InlineEditorComponent | null = null;
+let activeEditorContainer: HTMLElement | null = null;
 
-/**
- * Show inline editor below a line
- */
-export function showInlineEditor(lineElement: HTMLElement): void {
-    if (document.body.dataset.specStatus === 'completed' || document.body.dataset.specStatus === 'archived') {
-        return;
+function cleanup(): void {
+    if (activeEditorContainer) {
+        render(null, activeEditorContainer);
+        const lineEl = activeEditorContainer.closest('.line');
+        const rowEl = activeEditorContainer.closest('.scenario-row');
+        // For row mode, the container is a <tbody> after the row
+        const editorRow = activeEditorContainer.closest('.inline-editor-row') || activeEditorContainer;
+        lineEl?.classList.remove('editing');
+        rowEl?.classList.remove('editing');
+        activeEditorContainer.remove();
+        activeEditorContainer = null;
+        activeEditor.value = null;
     }
+}
+
+export function showInlineEditor(lineElement: HTMLElement): void {
+    if (document.body.dataset.specStatus === 'completed' || document.body.dataset.specStatus === 'archived') return;
 
     closeInlineEditor();
 
@@ -29,72 +38,37 @@ export function showInlineEditor(lineElement: HTMLElement): void {
     if (!lineNum) return;
 
     const lineType = detectLineType(lineElement);
+    const commentSlot = lineElement.querySelector('.line-comment-slot');
+    if (!commentSlot) return;
 
-    const editor = new InlineEditorComponent({
+    const container = document.createElement('div');
+    commentSlot.appendChild(container);
+
+    render(h(InlineEditor, {
         mode: 'line',
         lineNum,
         lineType,
-        onSubmit: (comment) => {
+        onSubmit: (comment: string) => {
             addRefinement(lineNum, comment, lineElement);
             closeInlineEditor();
         },
         onCancel: () => closeInlineEditor(),
-        onContextAction: (action) => {
+        onContextAction: (action: string) => {
             handleContextAction(action, lineNum, closeInlineEditor, lineElement);
         },
-    });
+    }), container);
 
-    const commentSlot = lineElement.querySelector('.line-comment-slot');
-    if (commentSlot) {
-        editor.mount(commentSlot as HTMLElement);
-    }
-
-    activeEditorComponent = editor;
-    setActiveInlineEditor(editor.getElement());
+    activeEditorContainer = container;
+    activeEditor.value = container;
     lineElement.classList.add('editing');
 }
 
-/**
- * Close the inline editor
- */
 export function closeInlineEditor(): void {
-    if (activeEditorComponent) {
-        const el = activeEditorComponent.getElement();
-        const lineEl = el.closest('.line');
-        const rowEl = el.closest('.scenario-row');
-        lineEl?.classList.remove('editing');
-        rowEl?.classList.remove('editing');
-
-        // For row mode, also remove the parent <tr> wrapper
-        const editorRow = el.closest('.inline-editor-row');
-        if (editorRow) {
-            editorRow.remove();
-        }
-
-        activeEditorComponent.unmount();
-        activeEditorComponent = null;
-        setActiveInlineEditor(null);
-    } else {
-        // Fallback for legacy
-        const legacyEditor = viewerStore.get('activeInlineEditor');
-        if (legacyEditor) {
-            const lineEl = legacyEditor.closest('.line');
-            const rowEl = legacyEditor.closest('.scenario-row');
-            lineEl?.classList.remove('editing');
-            rowEl?.classList.remove('editing');
-            legacyEditor.remove();
-            setActiveInlineEditor(null);
-        }
-    }
+    cleanup();
 }
 
-/**
- * Show inline editor for a scenario table row
- */
 export function showInlineEditorForRow(rowElement: HTMLElement, rowNum: number): void {
-    if (document.body.dataset.specStatus === 'completed' || document.body.dataset.specStatus === 'archived') {
-        return;
-    }
+    if (document.body.dataset.specStatus === 'completed' || document.body.dataset.specStatus === 'archived') return;
 
     closeInlineEditor();
 
@@ -103,41 +77,33 @@ export function showInlineEditorForRow(rowElement: HTMLElement, rowNum: number):
     const then = rowElement.querySelector('.col-then')?.textContent?.trim() || '';
     const scenarioContent = `Given ${given}, When ${when}, Then ${then}`;
 
-    const editor = new InlineEditorComponent({
+    const container = document.createElement('tbody');
+    rowElement.parentElement?.insertBefore(container, rowElement.nextSibling);
+
+    render(h(InlineEditor, {
         mode: 'row',
         lineNum: rowNum,
         lineType: 'acceptance',
         scenarioContent,
-        onSubmit: (comment) => {
+        onSubmit: (comment: string) => {
             addRefinementForRow(rowNum, comment, scenarioContent, rowElement);
             closeInlineEditor();
         },
         onCancel: () => closeInlineEditor(),
         onContextAction: () => closeInlineEditor(),
-    });
+    }), container);
 
-    // Mount after the row element
-    const parent = rowElement.parentElement;
-    if (parent) {
-        editor.mount(parent, rowElement.nextElementSibling as HTMLElement);
-    }
-
-    activeEditorComponent = editor;
-    setActiveInlineEditor(editor.getElement().querySelector('.inline-editor') as HTMLElement || editor.getElement());
+    activeEditorContainer = container;
+    activeEditor.value = container;
     rowElement.classList.add('editing');
 }
 
-/**
- * Show inline edit input for a line (legacy - kept for compatibility)
- */
 export function showInlineEdit(lineEl: HTMLElement | null, lineNum: number, content: string): void {
     if (!lineEl) return;
-
     const contentEl = lineEl.querySelector('.line-content');
     if (!contentEl) return;
 
     const originalHtml = contentEl.innerHTML;
-
     const input = document.createElement('input');
     input.type = 'text';
     input.value = content.trim();
@@ -152,16 +118,12 @@ export function showInlineEdit(lineEl: HTMLElement | null, lineNum: number, cont
             }
             contentEl.innerHTML = originalHtml;
         }
-        if (e.key === 'Escape') {
-            contentEl.innerHTML = originalHtml;
-        }
+        if (e.key === 'Escape') contentEl.innerHTML = originalHtml;
     });
 
     input.addEventListener('blur', () => {
         setTimeout(() => {
-            if (contentEl.contains(input)) {
-                contentEl.innerHTML = originalHtml;
-            }
+            if (contentEl.contains(input)) contentEl.innerHTML = originalHtml;
         }, 100);
     });
 
@@ -171,26 +133,20 @@ export function showInlineEdit(lineEl: HTMLElement | null, lineNum: number, cont
     input.select();
 }
 
-/**
- * Setup click handlers for the "+" button
- */
 export function setupLineActions(): void {
     document.addEventListener('click', (e) => {
         const target = e.target as HTMLElement;
-
         const addBtn = target.closest('.line-add-btn') as HTMLElement;
 
         if (addBtn || target.classList.contains('line-add-btn')) {
             const btn = addBtn || target;
             const lineNum = parseInt(btn.dataset.line || '0', 10);
             const listId = btn.dataset.listId;
-
             const selector = listId
                 ? `.line[data-line="${lineNum}"][data-list-id="${listId}"]`
                 : `.line[data-line="${lineNum}"]`;
             const lineEl = document.querySelector(selector) as HTMLElement;
-            if (!lineEl) return;
-            showInlineEditor(lineEl);
+            if (lineEl) showInlineEditor(lineEl);
             return;
         }
 
@@ -201,13 +157,11 @@ export function setupLineActions(): void {
                 ? `.scenario-row[data-row="${rowNum}"][data-table-id="${tableId}"]`
                 : `.scenario-row[data-row="${rowNum}"]`;
             const rowEl = document.querySelector(selector) as HTMLElement;
-            if (rowEl) {
-                showInlineEditorForRow(rowEl, rowNum);
-            }
+            if (rowEl) showInlineEditorForRow(rowEl, rowNum);
             return;
         }
 
-        if (activeEditorComponent && !target.closest('.inline-editor') && !target.classList.contains('line-add-btn') && !target.classList.contains('row-add-btn')) {
+        if (activeEditorContainer && !target.closest('.inline-editor') && !target.classList.contains('line-add-btn') && !target.classList.contains('row-add-btn')) {
             closeInlineEditor();
         }
     });

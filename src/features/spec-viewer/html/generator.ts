@@ -82,22 +82,9 @@ export function generateHtml(
     <title>Spec: ${escapeHtml(specName)}</title>
 </head>
 <body style="background: var(--vscode-editor-background, #1e1e1e);" data-spec-status="${specStatus}" data-spec-badge="${escapeHtml(badgeText || '')}">
-    <div class="viewer-container">
-        <!-- Navigation: mounted by NavigationBar + RelatedBar components -->
-        <nav class="compact-nav" id="nav-root"></nav>
-
-        <!-- Stale banner: mounted by StaleBanner component -->
-        <div id="stale-banner-root"></div>
-
-        <main class="content-area" id="content-area">
-            <!-- Header: mounted by SpecHeader component -->
-            <div id="header-root"></div>
-            ${contentHtml}
-        </main>
-
-        <!-- Footer: mounted by FooterActions component -->
-        <div id="footer-root"></div>
-    </div>
+    <div class="viewer-container" id="app-root"></div>
+    <!-- Initial content for first render before message arrives -->
+    <template id="initial-content" data-raw="${content ? escapeHtmlAttribute(content) : ''}"></template>
 
     <div class="loading-overlay" id="loading-overlay" style="display: none;">
         <div class="loading-spinner"></div>

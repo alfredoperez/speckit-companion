@@ -1,69 +1,55 @@
 /**
  * SpecKit Companion - Spec Viewer State Management
- * Thin facade over viewerStore — setters/getters for consumers that
- * haven't migrated to using viewerStore directly.
+ * Thin facade over signals — kept for consumers not yet migrated to signals.
  */
 
 import type { Refinement, ViewerWebviewState, VSCodeApi } from './types';
-import { viewerStore } from './viewerStore';
+import { pendingRefinements, activeEditor, refineLineNum, refineContent } from './signals';
 
 declare const vscode: VSCodeApi;
 
-// ============================================
-// State Initialization (no-op, kept for compatibility)
-// ============================================
-
 export function initStateSync(): void {
-    // No-op — components use viewerStore directly.
+    // No-op — signals are reactive.
 }
 
-// ============================================
-// State Setters (delegate to store)
-// ============================================
-
 export function setCurrentRefineLineNum(lineNum: number | null): void {
-    viewerStore.set('currentRefineLineNum', lineNum);
+    refineLineNum.value = lineNum;
 }
 
 export function setCurrentRefineContent(content: string): void {
-    viewerStore.set('currentRefineContent', content);
+    refineContent.value = content;
 }
 
 export function setActiveInlineEditor(editor: HTMLElement | null): void {
-    viewerStore.set('activeInlineEditor', editor);
+    activeEditor.value = editor;
 }
 
 export function addPendingRefinement(refinement: Refinement): void {
-    const current = viewerStore.get('pendingRefinements');
-    viewerStore.set('pendingRefinements', [...current, refinement]);
+    pendingRefinements.value = [...pendingRefinements.value, refinement];
 }
 
 export function removePendingRefinement(refId: string): Refinement | undefined {
-    const current = viewerStore.get('pendingRefinements');
+    const current = pendingRefinements.value;
     const index = current.findIndex(r => r.id === refId);
     if (index > -1) {
         const removed = current[index];
-        viewerStore.set('pendingRefinements', current.filter((_, i) => i !== index));
+        pendingRefinements.value = current.filter((_, i) => i !== index);
         return removed;
     }
     return undefined;
 }
 
 export function clearPendingRefinements(): void {
-    viewerStore.set('pendingRefinements', []);
+    pendingRefinements.value = [];
 }
 
 export function getPendingRefinementsCount(): number {
-    return viewerStore.get('pendingRefinements').length;
+    return pendingRefinements.value.length;
 }
 
 export function getPendingRefinements(): Refinement[] {
-    return viewerStore.get('pendingRefinements');
+    return pendingRefinements.value;
 }
-
-// ============================================
-// State Persistence
-// ============================================
 
 export function saveState(contentArea: HTMLElement, activeTab: HTMLButtonElement | null): void {
     const state: ViewerWebviewState = {
@@ -71,7 +57,6 @@ export function saveState(contentArea: HTMLElement, activeTab: HTMLButtonElement
         scrollPosition: contentArea.scrollTop,
         specDirectory: ''
     };
-
     vscode.setState(state);
 }
 

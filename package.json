@@ -818,7 +818,9 @@
     "install-local": "npm version patch --no-git-tag-version && npm run package && code --install-extension speckit-companion-$(node -p \"require('./package.json').version\").vsix --force"
   },
   "dependencies": {
-    "js-yaml": "^4.1.1"
+    "@preact/signals": "^2.9.0",
+    "js-yaml": "^4.1.1",
+    "preact": "^10.29.1"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

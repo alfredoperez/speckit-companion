@@ -1,8 +1,3 @@
-/**
- * SpecKit Companion - Editor Module
- * Exports inline editor functionality
- */
-
 export {
     showInlineEditor,
     closeInlineEditor,
