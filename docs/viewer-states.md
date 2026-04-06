@@ -205,7 +205,7 @@ stateDiagram-v2
 |-------|---------|--------|
 | `exists` | File exists on disk | Green checkmark dot |
 | `viewing` | Currently displayed in viewer | White bold label |
-| `working` | Step being worked on (from `spec-context.step`) | Pulsing blue glow on dot |
+| `working` | Step being worked on (from `spec-context.step`, only if not completed) | Pulsing green glow on dot |
 | `tasks-active` | Viewing tasks with 0-100% progress | Percentage badge in dot |
 | `in-progress` | Tasks have progress but not viewing | Percentage in dot (subtle) |
 | `workflow` | Current workflow phase (not viewing) | Bright label |
@@ -248,8 +248,8 @@ flowchart TD
 | Group | Default state | Sort order |
 |-------|--------------|------------|
 | **Active** | Expanded | Newest first (by creation date) |
-| **Completed** | Collapsed | Insertion order |
-| **Archived** | Collapsed | Insertion order |
+| **Completed** | Collapsed | Newest first (by creation date) |
+| **Archived** | Collapsed | Newest first (by creation date) |
 
 ---
 
