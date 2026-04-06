@@ -14,6 +14,7 @@ import { ConfigKeys, SpecStatuses } from '../../core/constants';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig } from '../../core/types/config';
 import type { WorkflowStepConfig } from '../workflows/types';
+import { getFeatureWorkflow, getWorkflowCommands } from '../workflows';
 import { setSpecStatus, updateStepProgress } from '../specs/specContextManager';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 
@@ -317,6 +318,28 @@ async function handleClarify(
         deps.outputChannel.appendLine(`[SpecViewer] Executing enhancement command "${label}": ${prompt}`);
         await deps.executeInTerminal(prompt);
         return;
+    }
+
+    // Fall back to workflow commands
+    const featureCtx = await getFeatureWorkflow(specDirectory, instance.state.changeRoot);
+    if (featureCtx?.workflow) {
+        for (const wfCmd of getWorkflowCommands(featureCtx.workflow)) {
+            if (!wfCmd.command) continue;
+
+            if (buttonCommand) {
+                if (wfCmd.command !== buttonCommand) continue;
+            } else {
+                const step = wfCmd.step || 'all';
+                if (step !== docType && step !== 'all') continue;
+            }
+
+            const targetPath = instance.state.changeRoot || specDirectory;
+            const label = wfCmd.title || wfCmd.name || 'Enhancement';
+            const prompt = `${wfCmd.command} "${targetPath}"`;
+            deps.outputChannel.appendLine(`[SpecViewer] Executing workflow command "${label}": ${prompt}`);
+            await deps.executeInTerminal(prompt);
+            return;
+        }
     }
 
     deps.outputChannel.appendLine(`[SpecViewer] No custom command configured for step: ${docType}`);

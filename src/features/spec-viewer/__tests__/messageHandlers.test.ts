@@ -14,8 +14,15 @@ jest.mock('../../../core/utils/notificationUtils', () => ({
     },
 }));
 
+// Mock workflows
+jest.mock('../../workflows', () => ({
+    getFeatureWorkflow: jest.fn().mockResolvedValue(undefined),
+    getWorkflowCommands: jest.fn().mockReturnValue([]),
+}));
+
 import { setSpecStatus } from '../../specs/specContextManager';
 import { NotificationUtils } from '../../../core/utils/notificationUtils';
+import { getFeatureWorkflow, getWorkflowCommands } from '../../workflows';
 
 const SPEC_DIR = '/workspace/specs/my-feature';
 
@@ -182,5 +189,101 @@ describe('messageHandlers - lifecycle actions', () => {
                 'Spec "my-feature" marked as reactivated'
             );
         });
+    });
+});
+
+describe('messageHandlers - clarify (workflow commands)', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it('should execute a customCommand matching the button command', async () => {
+        const config = vscode.workspace.getConfiguration();
+        (config.get as jest.Mock).mockImplementation((key: string, defaultValue?: any) => {
+            if (key === 'customCommands') {
+                return [{ name: 'review', title: 'Review', command: '/speckit.review', step: 'spec' }];
+            }
+            return defaultValue;
+        });
+
+        const deps = createMockDeps();
+        const handler = createMessageHandlers(SPEC_DIR, deps);
+
+        await handler({ type: 'clarify', command: '/speckit.review' } as any);
+
+        expect(deps.executeInTerminal).toHaveBeenCalledWith(
+            expect.stringContaining('/speckit.review')
+        );
+    });
+
+    it('should fall back to workflow commands when no customCommand matches', async () => {
+        const config = vscode.workspace.getConfiguration();
+        (config.get as jest.Mock).mockImplementation((key: string, defaultValue?: any) => {
+            if (key === 'customCommands') return [];
+            return defaultValue;
+        });
+
+        (getFeatureWorkflow as jest.Mock).mockResolvedValue({ workflow: 'sdd' });
+        (getWorkflowCommands as jest.Mock).mockReturnValue([
+            { name: 'auto', title: 'Auto Mode', command: '/sdd:auto', step: 'spec' },
+        ]);
+
+        const deps = createMockDeps();
+        const handler = createMessageHandlers(SPEC_DIR, deps);
+
+        await handler({ type: 'clarify', command: '/sdd:auto' } as any);
+
+        expect(getWorkflowCommands).toHaveBeenCalledWith('sdd');
+        expect(deps.executeInTerminal).toHaveBeenCalledWith(
+            expect.stringContaining('/sdd:auto')
+        );
+    });
+
+    it('should not execute workflow command when step does not match', async () => {
+        const config = vscode.workspace.getConfiguration();
+        (config.get as jest.Mock).mockImplementation((key: string, defaultValue?: any) => {
+            if (key === 'customCommands') return [];
+            return defaultValue;
+        });
+
+        (getFeatureWorkflow as jest.Mock).mockResolvedValue({ workflow: 'sdd' });
+        (getWorkflowCommands as jest.Mock).mockReturnValue([
+            { name: 'auto', title: 'Auto Mode', command: '/sdd:auto', step: 'plan' },
+        ]);
+
+        const deps = createMockDeps({
+            getInstance: jest.fn().mockReturnValue({
+                state: { specDirectory: SPEC_DIR, specName: 'my-feature', currentDocument: 'spec', availableDocuments: [] },
+                debounceTimer: undefined,
+            }),
+        });
+        const handler = createMessageHandlers(SPEC_DIR, deps);
+
+        // No buttonCommand — falls through to step matching; "plan" !== "spec"
+        await handler({ type: 'clarify' } as any);
+
+        expect(deps.executeInTerminal).not.toHaveBeenCalled();
+    });
+
+    it('should execute workflow command with step "all" on any tab', async () => {
+        const config = vscode.workspace.getConfiguration();
+        (config.get as jest.Mock).mockImplementation((key: string, defaultValue?: any) => {
+            if (key === 'customCommands') return [];
+            return defaultValue;
+        });
+
+        (getFeatureWorkflow as jest.Mock).mockResolvedValue({ workflow: 'sdd' });
+        (getWorkflowCommands as jest.Mock).mockReturnValue([
+            { name: 'auto', title: 'Auto Mode', command: '/sdd:auto', step: 'all' },
+        ]);
+
+        const deps = createMockDeps();
+        const handler = createMessageHandlers(SPEC_DIR, deps);
+
+        await handler({ type: 'clarify' } as any);
+
+        expect(deps.executeInTerminal).toHaveBeenCalledWith(
+            expect.stringContaining('/sdd:auto')
+        );
     });
 });

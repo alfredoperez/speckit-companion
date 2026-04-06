@@ -1,0 +1,93 @@
+{
+  "workflow": "sdd",
+  "currentStep": "implement",
+  "currentTask": null,
+  "progress": "code-review",
+  "next": "implement",
+  "updated": "2026-04-05",
+  "selectedAt": "2026-04-05T00:00:00.000Z",
+  "specName": "Fix SDD Auto Mode",
+  "branch": "main",
+  "createdAt": "2026-04-05T00:00:00.000Z",
+  "status": "completed",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-04-05T00:00:00.000Z",
+      "completedAt": "2026-04-06T00:06:19.465Z"
+    },
+    "plan": {
+      "startedAt": "2026-04-06T00:06:14.831Z",
+      "completedAt": "2026-04-06T00:06:15.339Z"
+    },
+    "tasks": {
+      "startedAt": "2026-04-06T00:06:15.339Z",
+      "completedAt": "2026-04-06T00:06:18.865Z"
+    }
+  },
+  "approach": "Wire workflow commands into the existing enhancement button pipeline by extending resolveEnhancementButtons() to merge both customCommands and workflow commands sources",
+  "auto": true,
+  "last_action": "T004 complete — added unit tests for getWorkflowCommands and clarify handler workflow fallback",
+  "files_modified": [
+    "src/features/workflows/workflowManager.ts",
+    "src/features/workflows/index.ts",
+    "src/features/spec-viewer/specViewerProvider.ts",
+    "src/features/spec-viewer/messageHandlers.ts",
+    "src/features/workflows/__tests__/workflowManager.test.ts",
+    "src/features/spec-viewer/__tests__/messageHandlers.test.ts"
+  ],
+  "concerns": [],
+  "decisions": [
+    "Deduplicate buttons by command string — customCommands take priority over workflow commands"
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added getWorkflowCommands() helper to workflowManager.ts and exported from index.ts",
+      "files": [
+        "src/features/workflows/workflowManager.ts",
+        "src/features/workflows/index.ts"
+      ],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Extended resolveEnhancementButtons() to merge workflow commands with customCommands, with deduplication",
+      "files": [
+        "src/features/spec-viewer/specViewerProvider.ts"
+      ],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Extended handleClarify() to fall back to workflow commands when no customCommand matches",
+      "files": [
+        "src/features/spec-viewer/messageHandlers.ts"
+      ],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added tests for getWorkflowCommands and clarify handler workflow fallback (4 + 4 tests)",
+      "files": [
+        "src/features/workflows/__tests__/workflowManager.test.ts",
+        "src/features/spec-viewer/__tests__/messageHandlers.test.ts"
+      ],
+      "concerns": []
+    }
+  },
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 5,
+      "scenarios": 4,
+      "key_finding": "resolveEnhancementButtons only reads customCommands config, ignoring workflow commands array entirely"
+    },
+    "plan": {
+      "approach_summary": "Wire workflow commands into the existing enhancement button pipeline by extending resolveEnhancementButtons() to merge both customCommands and workflow commands sources",
+      "files_planned": 3,
+      "risks": [
+        "Duplicate buttons if same command configured in both customCommands and customWorkflows[].commands"
+      ]
+    }
+  }
+}
