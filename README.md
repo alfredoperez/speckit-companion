@@ -16,7 +16,7 @@
 
 ### Visual Workflow Editor
 
-Guide your features through structured phases with a dedicated editor that renders markdown specs, shows phase progress, and provides one-click actions for each step.
+Guide your features through structured phases with a dedicated editor that renders markdown specs, shows phase progress, and provides one-click actions for each step. Mermaid diagrams render inline with zoom controls for navigating complex diagrams.
 
 ![Workflow Editor](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/workflow-spec.png)
 
@@ -66,14 +66,16 @@ Right-click a spec to access **Mark as Completed** and **Archive Spec** actions.
 
 The lifecycle flow is **Active → Completed → Archived**, with **Reactivate** available on Completed and Archived specs to return them to Active.
 
-**Badge and dates** are derived from `.spec-context.json`:
+**Badge and dates** are derived from `.spec-context.json` (the single source of truth for workflow state):
 - The **badge** in the metadata bar shows the current workflow state (e.g., SPECIFYING, PLANNING, IMPLEMENTING, COMPLETED). Hidden when no context exists.
 - **Created** and **Last Updated** dates are derived from `stepHistory` timestamps in `.spec-context.json`. Gracefully omitted when context is missing or incomplete.
+- Specs with only a `.spec-context.json` (no markdown files yet) still appear in the explorer, so SDD in-progress specs are always visible.
 
 **Color indicators:**
 - Green beaker icon — completed spec
 - Blue beaker icon — spec with an active workflow step
 - Green check — completed step
+- Green pulsing glow — step actively being worked on
 - Blue dot — current step
 
 When a workflow step command is running for a spec, the spec node displays a spinning progress indicator instead of its default icon.

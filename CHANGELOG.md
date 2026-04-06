@@ -2,6 +2,42 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.10.0] - 2026-04-05
+
+### New Features
+
+- **Spec Context as Source of Truth**: `.spec-context.json` is now the single source of truth for workflow state, replacing scattered markdown-based heuristics. Badge text, created/last-updated dates, and step progress are all derived from context data (#61, #62)
+- **Redesigned Spec Viewer Header**: Structured metadata layout showing badge, status, created date, and last-updated date from spec-context (#64)
+- **Workflow Command Buttons**: Workflow-defined `commands` now render as action buttons in the spec-viewer footer alongside primary CTAs (#69)
+- **Mermaid Diagram Zoom**: Mermaid diagrams in the spec viewer now include zoom controls (+, −, Reset) for navigating large diagrams
+- **Provider Config Tree**: Steering sidebar restructured with Project/User groups for clearer organization of AI provider config files (#55)
+- **Provider-Aware Commands**: AI provider prompts now include spec-context instructions and use provider-specific command formatting
+
+### Bug Fixes
+
+- **Step Completion Badges**: Working/active indicator no longer shows on completed steps — uses `stepHistory.completedAt` for accurate status (#67)
+- **Workflow Persistence**: Workflow selection persists correctly across spec lifecycle; default renamed to "speckit" to prevent accidental overwrites (#60)
+- **Explorer Status Icons**: Prefer SDD `step` field for explorer status icon; checklists now appear under Specify phase (#65)
+- **Plan Sub-Files**: Combined `subFiles` and `subDir` in `getStepSubFiles` so Plan children display correctly (#68)
+- **Read-Only Tree Rendering**: New `resolveWorkflow()` avoids writing `.spec-context.json` during tree rendering and viewer init
+- **Disabled Step Tabs**: Step tabs for non-existent files are now disabled instead of being silently clickable
+- **Completed Status**: Uses explicit `next=done` for completed status instead of fragile substep heuristics (#57)
+- **Spec Directory Discovery**: Directories with `.spec-context.json` (SDD in-progress specs) now appear in explorer even without markdown files
+
+### Improvements
+
+- **Sorted Completed/Archived Specs**: Completed and archived specs now sort by creation date (newest first), matching active spec behavior
+- **Unified Step Context Schema**: Simplified step context field names for consistency (#66)
+- **Centralized Constants**: Magic strings extracted into named constants (#59)
+- **Green Working Pulse**: Active step animation uses green (success) color instead of accent blue
+- **Inline Code Styling**: Removed heavy box styling from inline code highlights for cleaner appearance
+- **Editor Comment Area**: Inline editor comment section has a visible border for better visual separation
+- **Smaller Line Actions**: Reduced add-button size for less visual clutter
+
+### Documentation
+
+- Updated architecture docs, how-it-works guide, and CLAUDE.md to reflect current codebase (#63)
+
 ## [0.9.3] - 2026-04-02
 
 ### New Features
