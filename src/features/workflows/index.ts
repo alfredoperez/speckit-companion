@@ -32,6 +32,7 @@ export {
     getStepFile,
     normalizeWorkflowConfig,
     validateWorkflow,
+    getWorkflowCommands,
     getFeatureWorkflow,
     saveFeatureWorkflow,
     resolveStepCommand,

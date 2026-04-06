@@ -11,6 +11,7 @@ import * as fs from 'fs';
 import {
     WorkflowConfig,
     WorkflowStepConfig,
+    WorkflowCommandConfig,
     WorkflowStep,
     ValidationResult,
     FeatureWorkflowContext,
@@ -197,6 +198,15 @@ export function getWorkflow(name: string): WorkflowConfig | undefined {
     const resolvedName = name === LEGACY_DEFAULT_NAME ? 'speckit' : name;
     const workflows = getWorkflows();
     return workflows.find(w => w.name === resolvedName);
+}
+
+/**
+ * Get the commands array for a workflow by name.
+ * Returns an empty array if the workflow is not found or has no commands.
+ */
+export function getWorkflowCommands(workflowName: string): WorkflowCommandConfig[] {
+    const workflow = getWorkflow(workflowName);
+    return workflow?.commands ?? [];
 }
 
 /**

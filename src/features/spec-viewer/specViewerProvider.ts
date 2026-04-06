@@ -44,6 +44,7 @@ import {
   getFeatureWorkflow,
   getOrSelectWorkflow,
   getWorkflow,
+  getWorkflowCommands,
   normalizeWorkflowConfig,
 } from "../workflows";
 import type { WorkflowStepConfig } from "../workflows/types";
@@ -452,8 +453,8 @@ export class SpecViewerProvider {
         specStatus = SpecStatuses.ACTIVE;
       }
 
-      // Resolve enhancement buttons from customCommands
-      const enhancementButtons = this.resolveEnhancementButtons(doc?.type || CORE_DOCUMENTS.SPEC);
+      // Resolve enhancement buttons from customCommands and workflow commands
+      const enhancementButtons = this.resolveEnhancementButtons(doc?.type || CORE_DOCUMENTS.SPEC, featureCtx?.workflow);
 
       // Compute staleness for workflow documents
       const stalenessMap = await computeStaleness(documents);
@@ -503,14 +504,18 @@ export class SpecViewerProvider {
 
   /**
    * Resolve enhancement buttons for a document type from customCommands setting
+   * and workflow commands.
    */
   private resolveEnhancementButtons(
     docType: DocumentType,
+    workflowName?: string,
   ): EnhancementButton[] {
     const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
     const rawCommands = config.get<Array<CustomCommandConfig | string>>("customCommands", []);
 
     const buttons: EnhancementButton[] = [];
+    const seenCommands = new Set<string>();
+
     for (const entry of rawCommands) {
       if (typeof entry === "string") continue;
       const step = entry.step || "all";
@@ -522,12 +527,34 @@ export class SpecViewerProvider {
       const command = entry.command || (entry.name ? `/speckit.${entry.name}` : undefined);
       if (!command) continue;
 
+      seenCommands.add(command);
       buttons.push({
         label: title,
         command,
         icon: "⚡",
         tooltip: entry.tooltip || title,
       });
+    }
+
+    // Merge workflow commands
+    if (workflowName) {
+      for (const wfCmd of getWorkflowCommands(workflowName)) {
+        if (!wfCmd.command) continue;
+        const step = wfCmd.step || "all";
+        if (step !== docType && step !== "all") continue;
+        if (seenCommands.has(wfCmd.command)) continue;
+
+        const title = wfCmd.title || wfCmd.name;
+        if (!title) continue;
+
+        seenCommands.add(wfCmd.command);
+        buttons.push({
+          label: title,
+          command: wfCmd.command,
+          icon: "⚡",
+          tooltip: wfCmd.tooltip || title,
+        });
+      }
     }
 
     return buttons;
@@ -669,8 +696,8 @@ export class SpecViewerProvider {
         specStatus = SpecStatuses.ACTIVE;
       }
 
-      // Resolve enhancement buttons from customCommands
-      const enhancementButtons = this.resolveEnhancementButtons(documentType);
+      // Resolve enhancement buttons from customCommands and workflow commands
+      const enhancementButtons = this.resolveEnhancementButtons(documentType, featureCtx?.workflow);
 
       // Compute staleness for workflow documents
       const stalenessMap = await computeStaleness(instance.state.availableDocuments);
