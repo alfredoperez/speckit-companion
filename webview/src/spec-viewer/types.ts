@@ -80,6 +80,7 @@ export interface NavState {
     specStatus?: string;
     currentTask?: string | null;
     activeStep?: string | null;
+    stepHistory?: Record<string, { completedAt?: string | null }>;
     badgeText?: string | null;
     createdDate?: string | null;
     lastUpdatedDate?: string | null;

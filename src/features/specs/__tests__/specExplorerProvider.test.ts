@@ -18,6 +18,7 @@ jest.mock('../../../core/specDirectoryResolver', () => ({
 jest.mock('../../workflows', () => ({
     getFeatureWorkflow: jest.fn().mockResolvedValue(null),
     getOrSelectWorkflow: jest.fn().mockResolvedValue(null),
+    resolveWorkflow: jest.fn().mockResolvedValue(null),
     getWorkflow: jest.fn().mockReturnValue(null),
     normalizeWorkflowConfig: jest.fn(),
     getStepFile: jest.fn((step: any) => step.file || `${step.name}.md`),
@@ -551,7 +552,7 @@ describe('SpecExplorerProvider', () => {
             expect(specs).toHaveLength(2);
         });
 
-        it('should not sort completed or archived specs by birthtime', async () => {
+        it('should sort completed and archived specs by birthtime descending', async () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'done-old', path: 'specs/done-old' },
                 { name: 'done-new', path: 'specs/done-new' },
@@ -574,9 +575,9 @@ describe('SpecExplorerProvider', () => {
             expect(groups[0].label).toBe('Completed');
 
             const specs = await provider.getChildren(groups[0]);
-            // Completed specs keep original order from resolveSpecDirectories
-            expect(specs[0].label).toBe('done-old');
-            expect(specs[1].label).toBe('done-new');
+            // Completed specs sorted by creation date (newest first)
+            expect(specs[0].label).toBe('done-new');
+            expect(specs[1].label).toBe('done-old');
         });
     });
 

@@ -1,0 +1,169 @@
+{
+  "workflow": "sdd",
+  "currentStep": "tasks",
+  "currentTask": null,
+  "progress": "code-review",
+  "next": "implement",
+  "updated": "2026-04-05",
+  "selectedAt": "2026-04-05T00:00:00.000Z",
+  "specName": "Explorer Viewer Fixes",
+  "branch": "main",
+  "createdAt": "2026-04-05T00:00:00.000Z",
+  "auto": true,
+  "status": "completed",
+  "approach": "Split getOrSelectWorkflow() into read-only resolveWorkflow() and keep existing for explicit actions; fix 7 webview UI issues across CSS and TypeScript",
+  "last_action": "T011 complete — all 11 tasks done, 143 tests passing",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-04-05T00:00:00.000Z",
+      "completedAt": "2026-04-06T00:45:41.586Z"
+    },
+    "plan": {
+      "startedAt": "2026-04-06T00:45:40.167Z",
+      "completedAt": "2026-04-06T00:45:40.827Z"
+    },
+    "tasks": {
+      "startedAt": "2026-04-06T00:46:04.648Z",
+      "completedAt": "2026-04-06T00:46:05.635Z"
+    }
+  },
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 12,
+      "scenarios": 10,
+      "key_finding": "getOrSelectWorkflow() always calls saveFeatureWorkflow() on line 167 — the only caller that should persist is specCommands.ts"
+    },
+    "plan": {
+      "approach_summary": "Split getOrSelectWorkflow() into read-only resolveWorkflow() and keep existing for explicit actions; fix 7 webview UI issues across CSS and TypeScript",
+      "files_planned": 12,
+      "risks": [
+        "Mermaid zoom via CSS transform may cause blurry text at non-integer scale factors",
+        "resolveWorkflow() diverging from getOrSelectWorkflow() over time"
+      ]
+    }
+  },
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added resolveWorkflow() and refactored getOrSelectWorkflow() to share resolveDefaultWorkflow() helper",
+      "files": [
+        "src/features/workflows/workflowSelector.ts",
+        "src/features/workflows/index.ts"
+      ],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Replaced getOrSelectWorkflow with resolveWorkflow in specExplorerProvider",
+      "files": [
+        "src/features/specs/specExplorerProvider.ts"
+      ],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Replaced getOrSelectWorkflow with resolveWorkflow in specViewerProvider",
+      "files": [
+        "src/features/spec-viewer/specViewerProvider.ts"
+      ],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Extracted sortByDateDesc comparator, applied to all 3 spec groups",
+      "files": [
+        "src/features/specs/specExplorerProvider.ts"
+      ],
+      "concerns": []
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added directoryHasSpecContext() check in resolveSpecDirectories and expandGlobPattern",
+      "files": [
+        "src/core/specDirectoryResolver.ts"
+      ],
+      "concerns": []
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added editor-comment-area class with border to inline editor comment sections",
+      "files": [
+        "webview/src/spec-viewer/editor/inlineEditor.ts",
+        "webview/styles/spec-viewer/_editor.css"
+      ],
+      "concerns": []
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Reduced line-add-btn to 18x18px, SVG to 12x12, set min-height:unset on li.line",
+      "files": [
+        "webview/styles/spec-viewer/_line-actions.css"
+      ],
+      "concerns": []
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Removed max-width:100% on mermaid SVG, added zoom controls with +/-/reset buttons",
+      "files": [
+        "webview/styles/spec-viewer/_code.css",
+        "webview/src/spec-viewer/highlighting.ts"
+      ],
+      "concerns": []
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Set disabled attribute on step tabs when docExists is false",
+      "files": [
+        "webview/src/spec-viewer/navigation.ts"
+      ],
+      "concerns": []
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Verified badge is already correct — only set from extension-side computeBadgeText()",
+      "files": [],
+      "concerns": []
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Added stepHistory to NavState, check completedAt before applying working class, changed pulse to --success, made working label bold accent",
+      "files": [
+        "src/features/spec-viewer/html/navigation.ts",
+        "src/features/spec-viewer/html/generator.ts",
+        "src/features/spec-viewer/specViewerProvider.ts",
+        "src/features/spec-viewer/types.ts",
+        "webview/src/spec-viewer/types.ts",
+        "webview/src/spec-viewer/navigation.ts",
+        "webview/styles/spec-viewer/_animations.css",
+        "webview/styles/spec-viewer/_navigation.css"
+      ],
+      "concerns": []
+    }
+  },
+  "files_modified": [
+    "src/features/workflows/workflowSelector.ts",
+    "src/features/workflows/index.ts",
+    "src/features/specs/specExplorerProvider.ts",
+    "src/features/spec-viewer/specViewerProvider.ts",
+    "src/core/specDirectoryResolver.ts",
+    "webview/src/spec-viewer/editor/inlineEditor.ts",
+    "webview/styles/spec-viewer/_editor.css",
+    "webview/styles/spec-viewer/_line-actions.css",
+    "webview/styles/spec-viewer/_code.css",
+    "webview/src/spec-viewer/highlighting.ts",
+    "webview/src/spec-viewer/navigation.ts",
+    "src/features/spec-viewer/html/navigation.ts",
+    "src/features/spec-viewer/html/generator.ts",
+    "src/features/spec-viewer/types.ts",
+    "webview/src/spec-viewer/types.ts",
+    "webview/styles/spec-viewer/_animations.css",
+    "webview/styles/spec-viewer/_navigation.css",
+    "src/features/specs/__tests__/specExplorerProvider.test.ts"
+  ],
+  "concerns": [],
+  "decisions": [
+    "Extracted resolveDefaultWorkflow() as shared private helper to prevent divergence between resolveWorkflow() and getOrSelectWorkflow()",
+    "T010: Badge already correctly reflects context state — no code change needed"
+  ]
+}

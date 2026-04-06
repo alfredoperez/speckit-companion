@@ -134,7 +134,48 @@ export function initializeMermaid(): void {
         });
 
         mermaid.run({ querySelector: '.mermaid' });
+        // Add zoom controls after mermaid renders (use setTimeout to wait for DOM update)
+        setTimeout(() => addMermaidZoomControls(), 100);
     } catch (e) {
         console.warn('[SpecViewer] Failed to initialize mermaid:', e);
     }
+}
+
+/**
+ * Add zoom controls to each mermaid container
+ */
+function addMermaidZoomControls(): void {
+    document.querySelectorAll('.mermaid-container').forEach(container => {
+        if (container.querySelector('.mermaid-controls')) return;
+
+        const controls = document.createElement('div');
+        controls.className = 'mermaid-controls';
+        controls.innerHTML = `
+            <button class="mermaid-zoom-out" title="Zoom out">−</button>
+            <button class="mermaid-zoom-reset" title="Reset zoom">Reset</button>
+            <button class="mermaid-zoom-in" title="Zoom in">+</button>
+        `;
+        container.insertBefore(controls, container.firstChild);
+
+        const svg = container.querySelector('.mermaid svg') as SVGElement;
+        if (!svg) return;
+
+        let zoom = 1;
+        const applyZoom = () => {
+            svg.style.transform = `scale(${zoom})`;
+        };
+
+        controls.querySelector('.mermaid-zoom-in')!.addEventListener('click', () => {
+            zoom = Math.min(3, zoom + 0.25);
+            applyZoom();
+        });
+        controls.querySelector('.mermaid-zoom-out')!.addEventListener('click', () => {
+            zoom = Math.max(0.5, zoom - 0.25);
+            applyZoom();
+        });
+        controls.querySelector('.mermaid-zoom-reset')!.addEventListener('click', () => {
+            zoom = 1;
+            applyZoom();
+        });
+    });
 }

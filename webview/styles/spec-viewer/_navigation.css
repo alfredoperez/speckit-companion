@@ -132,7 +132,8 @@
 }
 
 .step-tab.working .step-label {
-    color: var(--text-primary);
+    color: var(--accent);
+    font-weight: 700;
 }
 
 /* Disabled state */

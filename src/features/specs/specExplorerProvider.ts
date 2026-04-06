@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import { BaseTreeDataProvider } from '../../core/providers';
 import {
     getFeatureWorkflow,
-    getOrSelectWorkflow,
+    resolveWorkflow,
     getWorkflow,
     normalizeWorkflowConfig,
     getStepFile,
@@ -112,8 +112,8 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 }
             }
 
-            // Sort active specs by creation date (newest first)
-            activeSpecs.sort((a, b) => {
+            // Sort all groups by creation date (newest first)
+            const sortByDateDesc = (a: SpecInfo, b: SpecInfo) => {
                 try {
                     const aTime = fs.statSync(path.join(basePath, a.path)).birthtime.getTime();
                     const bTime = fs.statSync(path.join(basePath, b.path)).birthtime.getTime();
@@ -121,7 +121,10 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 } catch {
                     return 0;
                 }
-            });
+            };
+            activeSpecs.sort(sortByDateDesc);
+            completedSpecs.sort(sortByDateDesc);
+            archivedSpecs.sort(sortByDateDesc);
 
             const items: SpecItem[] = [];
 
@@ -347,8 +350,8 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             // fall through
         }
 
-        // No persisted workflow — auto-select default and persist it
-        const selected = await getOrSelectWorkflow(featureDir);
+        // No persisted workflow — resolve default without writing to disk
+        const selected = await resolveWorkflow(featureDir);
         if (selected) {
             const normalized = normalizeWorkflowConfig(selected);
             if (normalized.steps && normalized.steps.length > 0) {

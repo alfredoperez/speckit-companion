@@ -30,6 +30,9 @@ export function updateNavState(navState: NavState): void {
         const docExists = coreDocs?.find(d => d.type === phase)?.exists
             || relatedDocs?.some(d => d.parentStep === phase)
             || tabEl.classList.contains('exists');
+
+        // Disable tabs whose files don't exist (click handler checks btn.disabled)
+        (tabEl as HTMLButtonElement).disabled = !docExists;
         // When viewing a related doc, highlight the parent phase
         const isViewing = phase === currentDoc || (isViewingRelatedDoc && phase === parentPhaseForRelated);
         const inProgress = phase === 'tasks' && taskCompletionPercent > 0 && taskCompletionPercent < 100;
@@ -61,8 +64,8 @@ export function updateNavState(navState: NavState): void {
             tabEl.classList.add('workflow');
         }
 
-        // Mark the step actively being worked on (from spec-context)
-        if (navState.activeStep && phase === navState.activeStep) {
+        // Mark the step actively being worked on (from spec-context), but not if completed
+        if (navState.activeStep && phase === navState.activeStep && !navState.stepHistory?.[phase]?.completedAt) {
             tabEl.classList.add('working');
         }
 
