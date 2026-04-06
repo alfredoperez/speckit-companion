@@ -1,10 +1,9 @@
 /**
  * SpecKit Companion - Refinement State Management
- * Handles pending refinements for GitHub-style review
+ * Uses InlineComment component for rendering.
  */
 
 import type { Refinement, VSCodeApi } from '../types';
-import { escapeHtml } from '../markdown';
 import {
     addPendingRefinement,
     removePendingRefinement,
@@ -13,8 +12,12 @@ import {
     getPendingRefinements
 } from '../state';
 import { detectLineType } from './lineActions';
+import { InlineComment } from '../components/InlineComment';
 
 declare const vscode: VSCodeApi;
+
+// Track mounted InlineComment components for cleanup
+const commentComponents = new Map<string, InlineComment>();
 
 /**
  * Add a refinement comment for a line
@@ -24,69 +27,11 @@ export function addRefinement(lineNum: number, comment: string, lineEl: HTMLElem
     const lineContent = lineEl.querySelector('.line-content')?.textContent?.trim() || '';
     const lineType = detectLineType(lineEl);
 
-    const refinement: Refinement = {
-        id,
-        lineNum,
-        lineContent,
-        comment,
-        lineType
-    };
+    const refinement: Refinement = { id, lineNum, lineContent, comment, lineType };
 
     addPendingRefinement(refinement);
-    renderInlineComment(lineEl, refinement);
+    renderComment(lineEl, refinement, 'line');
     updateRefineButton();
-}
-
-/**
- * Remove a refinement by ID
- */
-export function removeRefinement(refId: string): void {
-    const refinement = removePendingRefinement(refId);
-    if (!refinement) return;
-
-    // Remove the comment card from DOM
-    const commentCard = document.querySelector(`.inline-comment[data-ref-id="${refId}"]`);
-    const lineEl = commentCard?.closest('.line');
-
-    commentCard?.remove();
-
-    // Remove has-refinement class if no more refinements on this line
-    if (lineEl) {
-        const hasMoreRefinements = getPendingRefinements().some(r => r.lineNum === refinement.lineNum);
-        if (!hasMoreRefinements) {
-            lineEl.classList.remove('has-refinement');
-        }
-    }
-
-    updateRefineButton();
-}
-
-/**
- * Render an inline comment card below a line
- */
-export function renderInlineComment(lineEl: HTMLElement, ref: Refinement): void {
-    lineEl.classList.add('has-refinement');
-
-    const commentCard = document.createElement('div');
-    commentCard.className = 'inline-comment';
-    commentCard.dataset.refId = ref.id;
-    commentCard.innerHTML = `
-        <span class="comment-icon">💬</span>
-        <span class="comment-text">${escapeHtml(ref.comment)}</span>
-        <button class="comment-delete" data-ref-id="${ref.id}" title="Remove comment">×</button>
-    `;
-
-    // Add to comment slot
-    const commentSlot = lineEl.querySelector('.line-comment-slot');
-    if (commentSlot) {
-        commentSlot.appendChild(commentCard);
-    }
-
-    // Setup delete button
-    const deleteBtn = commentCard.querySelector('.comment-delete');
-    deleteBtn?.addEventListener('click', () => {
-        removeRefinement(ref.id);
-    });
 }
 
 /**
@@ -97,61 +42,72 @@ export function addRefinementForRow(rowNum: number, comment: string, scenarioCon
 
     const refinement: Refinement = {
         id,
-        lineNum: rowNum,  // Use row number as line number
+        lineNum: rowNum,
         lineContent: scenarioContent,
         comment,
         lineType: 'acceptance'
     };
 
     addPendingRefinement(refinement);
-    renderInlineCommentForRow(rowEl, refinement);
+    renderComment(rowEl, refinement, 'row');
     updateRefineButton();
 }
 
 /**
- * Render an inline comment card below a scenario table row
+ * Render an inline comment — unified for both line and row modes.
  */
-export function renderInlineCommentForRow(rowEl: HTMLElement, ref: Refinement): void {
-    rowEl.classList.add('has-refinement');
+function renderComment(targetEl: HTMLElement, ref: Refinement, mode: 'line' | 'row'): void {
+    targetEl.classList.add('has-refinement');
 
-    // Create a new row for the comment
-    const commentRow = document.createElement('tr');
-    commentRow.className = 'comment-row';
-    commentRow.dataset.refId = ref.id;
-    commentRow.innerHTML = `
-        <td colspan="4" class="comment-cell">
-            <div class="inline-comment">
-                <span class="comment-icon">💬</span>
-                <span class="comment-text">${escapeHtml(ref.comment)}</span>
-                <button class="comment-delete" data-ref-id="${ref.id}" title="Remove comment">×</button>
-            </div>
-        </td>
-    `;
-
-    // Insert comment row after the scenario row
-    rowEl.after(commentRow);
-
-    // Setup delete button
-    const deleteBtn = commentRow.querySelector('.comment-delete');
-    deleteBtn?.addEventListener('click', () => {
-        removeRefinementForRow(ref.id, rowEl, commentRow);
+    const component = new InlineComment({
+        refinement: ref,
+        mode,
+        onDelete: (refId) => removeRefinement(refId, targetEl, mode),
     });
+
+    if (mode === 'line') {
+        const commentSlot = targetEl.querySelector('.line-comment-slot');
+        if (commentSlot) {
+            component.mount(commentSlot as HTMLElement);
+        }
+    } else {
+        // For row mode, mount after the target row
+        const parent = targetEl.parentElement;
+        if (parent) {
+            component.mount(parent, targetEl.nextElementSibling as HTMLElement);
+        }
+    }
+
+    commentComponents.set(ref.id, component);
 }
 
 /**
- * Remove a refinement for a scenario table row
+ * Remove a refinement by ID
  */
-export function removeRefinementForRow(refId: string, rowEl: HTMLElement, commentRow: HTMLElement): void {
+export function removeRefinement(refId: string, targetEl?: HTMLElement, mode?: 'line' | 'row'): void {
     const refinement = removePendingRefinement(refId);
     if (!refinement) return;
 
-    commentRow.remove();
+    // Unmount the component
+    const component = commentComponents.get(refId);
+    if (component) {
+        component.unmount();
+        commentComponents.delete(refId);
+    }
 
-    // Remove has-refinement class if no more refinements on this row
-    const rowNum = parseInt(rowEl.dataset.row || '0', 10);
-    const hasMoreRefinements = getPendingRefinements().some(r => r.lineNum === rowNum && r.lineType === 'acceptance');
-    if (!hasMoreRefinements) {
-        rowEl.classList.remove('has-refinement');
+    // Find the target element if not provided
+    if (!targetEl) {
+        const commentCard = document.querySelector(`[data-ref-id="${refId}"]`);
+        targetEl = (commentCard?.closest('.line') || commentCard?.closest('.scenario-row')) as HTMLElement | undefined;
+        commentCard?.remove();
+    }
+
+    // Remove has-refinement class if no more refinements on this element
+    if (targetEl) {
+        const hasMore = getPendingRefinements().some(r => r.lineNum === refinement.lineNum);
+        if (!hasMore) {
+            targetEl.classList.remove('has-refinement');
+        }
     }
 
     updateRefineButton();
@@ -164,7 +120,6 @@ export function updateRefineButton(): void {
     const count = getPendingRefinementsCount();
     let btn = document.getElementById('refine-submit-btn') as HTMLButtonElement | null;
 
-    // Create button in footer if it doesn't exist
     if (!btn) {
         const actionsRight = document.querySelector('.actions-right');
         if (actionsRight) {
@@ -193,7 +148,6 @@ export function submitAllRefinements(): void {
     const refinements = getPendingRefinements();
     if (refinements.length === 0) return;
 
-    // Send refinements to extension
     vscode.postMessage({
         type: 'submitRefinements',
         refinements: refinements.map(r => ({
@@ -203,7 +157,6 @@ export function submitAllRefinements(): void {
         }))
     });
 
-    // Clear all refinements
     clearAllRefinements();
 }
 
@@ -211,14 +164,25 @@ export function submitAllRefinements(): void {
  * Clear all pending refinements
  */
 export function clearAllRefinements(): void {
-    // Remove all comment cards
-    document.querySelectorAll('.inline-comment').forEach(el => el.remove());
+    // Unmount all comment components
+    for (const component of commentComponents.values()) {
+        component.unmount();
+    }
+    commentComponents.clear();
 
-    // Remove has-refinement class from all lines
-    document.querySelectorAll('.line.has-refinement').forEach(el => {
+    // Fallback: remove any orphaned comment cards
+    document.querySelectorAll('.inline-comment').forEach(el => el.remove());
+    document.querySelectorAll('.comment-row').forEach(el => el.remove());
+
+    document.querySelectorAll('.line.has-refinement, .scenario-row.has-refinement').forEach(el => {
         el.classList.remove('has-refinement');
     });
 
     clearPendingRefinements();
     updateRefineButton();
 }
+
+// Re-export for backward compatibility
+export { renderComment as renderInlineComment };
+export { renderComment as renderInlineCommentForRow };
+export { removeRefinement as removeRefinementForRow };

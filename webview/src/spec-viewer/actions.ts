@@ -1,72 +1,12 @@
 /**
- * SpecKit Companion - Footer Actions
- * Handles edit button and footer action buttons
+ * SpecKit Companion - Delegated Actions
+ * Handles checkbox toggle and file reference clicks (delegated handlers).
+ * Footer actions are now handled by FooterActions component.
  */
 
 import type { VSCodeApi } from './types';
-import { getElements } from './elements';
 
 declare const vscode: VSCodeApi;
-
-/**
- * Setup the edit button handler
- */
-export function setupEditButton(): void {
-    const { editButton } = getElements();
-
-    editButton?.addEventListener('click', () => {
-        if (!editButton.disabled) {
-            vscode.postMessage({ type: 'editDocument' });
-        }
-    });
-}
-
-/**
- * Setup footer action button handlers
- */
-export function setupFooterActions(): void {
-    const { regenerateButton, approveButton, completeSpecButton, archiveSpecButton, reactivateSpecButton } = getElements();
-
-    // Handle all enhancement buttons (multiple supported)
-    document.querySelectorAll('.enhancement').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const command = (btn as HTMLElement).dataset.command;
-            vscode.postMessage({ type: 'clarify', command });
-        });
-    });
-
-    // Edit Source button
-    const editSourceButton = document.getElementById('editSource');
-    editSourceButton?.addEventListener('click', () => {
-        vscode.postMessage({ type: 'editSource' });
-    });
-
-    regenerateButton?.addEventListener('click', () => {
-        vscode.postMessage({ type: 'regenerate' });
-    });
-
-    approveButton?.addEventListener('click', () => {
-        vscode.postMessage({ type: 'approve' });
-    });
-
-    completeSpecButton?.addEventListener('click', () => {
-        vscode.postMessage({ type: 'completeSpec' });
-    });
-
-    archiveSpecButton?.addEventListener('click', () => {
-        vscode.postMessage({ type: 'archiveSpec' });
-    });
-
-    reactivateSpecButton?.addEventListener('click', () => {
-        vscode.postMessage({ type: 'reactivateSpec' });
-    });
-
-    // Stale banner regen button (if present on initial load)
-    const staleRegenButton = document.getElementById('stale-regen');
-    staleRegenButton?.addEventListener('click', () => {
-        vscode.postMessage({ type: 'regenerate' });
-    });
-}
 
 /**
  * Setup delegated click handler for file reference buttons
@@ -86,7 +26,6 @@ export function setupFileRefClickHandler(): void {
  * Setup checkbox toggle handler for task items
  */
 export function setupCheckboxToggle(): void {
-    // Use event delegation for checkbox changes
     document.addEventListener('change', (e) => {
         const target = e.target as HTMLElement;
         if (target.tagName !== 'INPUT' || (target as HTMLInputElement).type !== 'checkbox') {
@@ -99,20 +38,17 @@ export function setupCheckboxToggle(): void {
 
         const isChecked = checkbox.checked;
 
-        // Update the li class for visual feedback
         const li = checkbox.closest('li');
         if (li) {
             li.classList.toggle('checked', isChecked);
         }
 
-        // Send message to extension to update the file
         vscode.postMessage({
             type: 'toggleCheckbox',
             lineNum,
             checked: isChecked
         });
 
-        // Recalculate and update task completion percentage in step tabs
         updateTaskPercentage();
     });
 }
@@ -127,7 +63,6 @@ function updateTaskPercentage(): void {
 
     const percent = Math.round((checked / total) * 100);
 
-    // Update the Tasks step-tab status
     const tasksTab = document.querySelector('.step-tab[data-phase="tasks"]');
     if (!tasksTab) return;
 
@@ -140,7 +75,6 @@ function updateTaskPercentage(): void {
         tasksTab.classList.remove('in-progress');
     }
 
-    // Update progress bars
     document.querySelectorAll('.section-progress-fill').forEach(fill => {
         const bar = fill.closest('.section-progress');
         if (!bar) return;

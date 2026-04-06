@@ -1,16 +1,11 @@
 /**
  * SpecKit Companion - Refine Modal
- * Handles the refine modal dialog
+ * Handles the refine modal dialog using viewerStore.
  */
 
 import type { VSCodeApi } from './types';
 import { getElements } from './elements';
-import {
-    currentRefineLineNum,
-    currentRefineContent,
-    setCurrentRefineLineNum,
-    setCurrentRefineContent
-} from './state';
+import { viewerStore } from './viewerStore';
 
 declare const vscode: VSCodeApi;
 
@@ -22,22 +17,10 @@ export function setupRefineModal(): void {
 
     if (!refineBackdrop || !refinePopover) return;
 
-    // Cancel button
-    refineCancel?.addEventListener('click', () => {
-        hideRefineModal();
-    });
+    refineCancel?.addEventListener('click', () => hideRefineModal());
+    refineBackdrop?.addEventListener('click', () => hideRefineModal());
+    refineSubmit?.addEventListener('click', () => submitRefine());
 
-    // Backdrop click to close
-    refineBackdrop?.addEventListener('click', () => {
-        hideRefineModal();
-    });
-
-    // Submit button
-    refineSubmit?.addEventListener('click', () => {
-        submitRefine();
-    });
-
-    // Enter key to submit
     refineInput?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -55,8 +38,10 @@ export function setupRefineModal(): void {
 export function showRefineModal(lineNum: number, content: string): void {
     const { refineBackdrop, refinePopover, refineOriginalText, refineInput } = getElements();
 
-    setCurrentRefineLineNum(lineNum);
-    setCurrentRefineContent(content);
+    viewerStore.batch((s) => {
+        s.set('currentRefineLineNum', lineNum);
+        s.set('currentRefineContent', content);
+    });
 
     if (refineOriginalText) {
         refineOriginalText.textContent = content;
@@ -68,10 +53,7 @@ export function showRefineModal(lineNum: number, content: string): void {
     refineBackdrop.style.display = 'block';
     refinePopover.style.display = 'block';
 
-    // Focus input after animation
-    setTimeout(() => {
-        refineInput?.focus();
-    }, 100);
+    setTimeout(() => refineInput?.focus(), 100);
 }
 
 /**
@@ -87,8 +69,10 @@ export function hideRefineModal(): void {
         refineInput.value = '';
     }
 
-    setCurrentRefineLineNum(null);
-    setCurrentRefineContent('');
+    viewerStore.batch((s) => {
+        s.set('currentRefineLineNum', null);
+        s.set('currentRefineContent', '');
+    });
 }
 
 /**
@@ -96,16 +80,18 @@ export function hideRefineModal(): void {
  */
 function submitRefine(): void {
     const { refineInput } = getElements();
+    const lineNum = viewerStore.get('currentRefineLineNum');
+    const content = viewerStore.get('currentRefineContent');
 
-    if (currentRefineLineNum === null || !refineInput?.value.trim()) {
+    if (lineNum === null || !refineInput?.value.trim()) {
         hideRefineModal();
         return;
     }
 
     vscode.postMessage({
         type: 'refineLine',
-        lineNum: currentRefineLineNum,
-        content: currentRefineContent,
+        lineNum,
+        content,
         instruction: refineInput.value.trim()
     });
 

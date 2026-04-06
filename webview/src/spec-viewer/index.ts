@@ -1,58 +1,54 @@
 /**
  * SpecKit Companion - Spec Viewer Webview
- * v0.3.0 - Enhanced with Phase Stepper, Footer Actions, and Refine Modal
- *
  * Entry point that initializes and coordinates all modules.
  */
 
 import type {
     VSCodeApi,
-    ExtensionToViewerMessage
+    ExtensionToViewerMessage,
+    NavState
 } from './types';
 
 import { getElements } from './elements';
-import { saveState, restoreState } from './state';
+import { saveState, restoreState, initStateSync } from './state';
 import { renderMarkdown, setCurrentTask, setHasSpecContext } from './markdown';
 import { applyHighlighting, initializeMermaid } from './highlighting';
 import { updateNavState, setupTabNavigation } from './navigation';
 import { setupLineActions } from './editor';
 import { setupRefineModal } from './modal';
-import { setupEditButton, setupFooterActions, setupCheckboxToggle, setupFileRefClickHandler } from './actions';
+import { setupCheckboxToggle, setupFileRefClickHandler } from './actions';
+import { viewerStore } from './viewerStore';
+import { NavigationBar, RelatedBar, StaleBanner, SpecHeader, FooterActions } from './components';
 
 // Get VS Code API
 declare const vscode: VSCodeApi;
+
+// Component instances
+let navigationBar: NavigationBar | null = null;
+let relatedBar: RelatedBar | null = null;
+let staleBanner: StaleBanner | null = null;
+let specHeader: SpecHeader | null = null;
+let footerActions: FooterActions | null = null;
 
 // ============================================
 // Content Updates
 // ============================================
 
-/**
- * Decode base64 with proper UTF-8 handling
- */
 function decodeBase64Utf8(base64: string): string {
     try {
         const binaryString = atob(base64);
         const bytes = Uint8Array.from(binaryString, c => c.charCodeAt(0));
         return new TextDecoder('utf-8').decode(bytes);
     } catch {
-        // Fallback: content might not be base64 encoded
         return base64;
     }
 }
 
-/**
- * Update the content area with rendered markdown
- */
 function updateContent(content: string): void {
     const { contentArea } = getElements();
-
-    // Decode base64 content with proper UTF-8 handling
     const decoded = decodeBase64Utf8(content);
-
-    // Render markdown
     const html = renderMarkdown(decoded);
 
-    // Only replace #markdown-content, preserving .spec-header and other siblings
     let markdownEl = document.getElementById('markdown-content');
     if (markdownEl) {
         markdownEl.innerHTML = html;
@@ -63,7 +59,6 @@ function updateContent(content: string): void {
         contentArea.appendChild(markdownEl);
     }
 
-    // Apply syntax highlighting and mermaid diagrams after DOM update
     requestAnimationFrame(() => {
         applyHighlighting();
         initializeMermaid();
@@ -71,46 +66,82 @@ function updateContent(content: string): void {
 }
 
 // ============================================
+// Component Mounting
+// ============================================
+
+function mountComponents(navState: NavState): void {
+    const navRoot = document.getElementById('nav-root');
+    const staleBannerRoot = document.getElementById('stale-banner-root');
+    const headerRoot = document.getElementById('header-root');
+    const footerRoot = document.getElementById('footer-root');
+
+    if (navRoot && !navigationBar) {
+        navigationBar = new NavigationBar({ navState });
+        navigationBar.mount(navRoot);
+
+        relatedBar = new RelatedBar({ navState });
+        relatedBar.mount(navRoot);
+    }
+
+    if (staleBannerRoot && !staleBanner) {
+        staleBanner = new StaleBanner({ navState });
+        staleBanner.mount(staleBannerRoot);
+    }
+
+    if (headerRoot && !specHeader) {
+        specHeader = new SpecHeader({ navState });
+        specHeader.mount(headerRoot);
+    }
+
+    if (footerRoot && !footerActions) {
+        const specStatus = document.body.dataset.specStatus || 'active';
+        footerActions = new FooterActions({
+            navState,
+            specStatus,
+            enhancementButtons: navState.footerState?.enhancementButtons ?? navState.enhancementButtons ?? [],
+        });
+        footerActions.mount(footerRoot);
+    }
+}
+
+// ============================================
 // Message Handler
 // ============================================
 
-/**
- * Handle messages from the extension
- */
 function handleMessage(event: MessageEvent): void {
     const message = event.data as ExtensionToViewerMessage;
 
     switch (message.type) {
         case 'contentUpdated':
-            // Set context flags before rendering
             if (message.navState?.currentTask !== undefined) {
                 setCurrentTask(message.navState.currentTask);
             }
             setHasSpecContext(!!(message.navState?.specContextName || message.navState?.badgeText));
             updateContent(message.content);
-            // Update navigation state if provided (for smooth tab switching)
             if (message.navState) {
+                // Mount components on first navState, then store update triggers re-renders
+                mountComponents(message.navState);
                 updateNavState(message.navState);
             }
             break;
 
         case 'navStateUpdated':
+            mountComponents(message.navState);
             updateNavState(message.navState);
             break;
 
         case 'documentsUpdated':
-            // Tab state is managed by HTML regeneration
             break;
 
         case 'error':
             console.error('[SpecViewer] Error:', message.message);
             break;
 
-        case 'fileDeleted':
-            // Show deleted state
+        case 'fileDeleted': {
             const { contentArea } = getElements();
             contentArea.innerHTML = `<div class="empty-state">The file has been deleted.</div>`;
             break;
+        }
 
         case 'actionToast': {
             const toast = document.getElementById('action-toast');
@@ -130,7 +161,7 @@ function handleMessage(event: MessageEvent): void {
 
 function saveCurrentState(): void {
     const { contentArea } = getElements();
-    const activeTab = document.querySelector('.tab-button.active') as HTMLButtonElement;
+    const activeTab = document.querySelector('.step-tab.viewing, .step-tab.reviewing') as HTMLButtonElement;
     saveState(contentArea, activeTab);
 }
 
@@ -143,24 +174,18 @@ function restoreCurrentState(): void {
 // Initialization
 // ============================================
 
-/**
- * Initialize the spec viewer webview
- */
 function init(): void {
+    initStateSync();
     setupTabNavigation();
-    setupEditButton();
-    setupFooterActions();
     setupRefineModal();
     setupLineActions();
     setupCheckboxToggle();
     setupFileRefClickHandler();
     restoreCurrentState();
 
-    // Handle initial content (passed via data attribute)
     const { markdownContent } = getElements();
-    // Set hasSpecContext based on the structured header in the initial HTML
-    const specHeader = document.querySelector('.spec-header');
-    setHasSpecContext(specHeader?.getAttribute('data-has-context') === 'true');
+    const specHeaderEl = document.querySelector('.spec-header');
+    setHasSpecContext(specHeaderEl?.getAttribute('data-has-context') === 'true');
 
     if (markdownContent) {
         const rawContent = markdownContent.dataset.raw;
@@ -169,7 +194,6 @@ function init(): void {
         }
     }
 
-    // Save state on scroll
     const { contentArea } = getElements();
     let scrollTimeout: number | undefined;
     contentArea.addEventListener('scroll', () => {
@@ -177,12 +201,8 @@ function init(): void {
         scrollTimeout = window.setTimeout(saveCurrentState, 100);
     });
 
-    // Listen for messages from extension
     window.addEventListener('message', handleMessage);
-
-    // Notify extension that webview is ready
     vscode.postMessage({ type: 'ready' });
 }
 
-// Start when DOM is ready
 document.addEventListener('DOMContentLoaded', init);

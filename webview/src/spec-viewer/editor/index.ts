@@ -14,10 +14,7 @@ export {
 export {
     addRefinement,
     removeRefinement,
-    renderInlineComment,
     addRefinementForRow,
-    renderInlineCommentForRow,
-    removeRefinementForRow,
     updateRefineButton,
     submitAllRefinements,
     clearAllRefinements
