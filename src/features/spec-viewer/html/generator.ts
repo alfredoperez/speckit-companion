@@ -10,9 +10,11 @@ import {
     PhaseInfo,
     SpecStatus,
     EnhancementButton,
-    StalenessMap
+    StalenessMap,
+    NavState
 } from '../types';
 import { escapeHtml, escapeHtmlAttribute, generateNonce } from '../utils';
+import { calculateWorkflowPhase, getDocTypeLabel } from '../phaseCalculation';
 import { SpecStatuses } from '../../../core/constants';
 
 /**
@@ -56,6 +58,63 @@ export function generateHtml(
         ? `<div id="markdown-content" data-raw="${escapeHtmlAttribute(content)}"></div>`
         : `<div class="empty-state">${escapeHtml(emptyMessage)}</div>`;
 
+    // Build initial navState for Preact components
+    const coreDocs = documents.filter(d => d.category === 'core');
+    const relatedDocs = documents.filter(d => d.category === 'related');
+    const coreDocTypes = coreDocs.map(d => d.type);
+    const isViewingRelatedDoc = !coreDocTypes.includes(currentDocType);
+    const workflowPhase = calculateWorkflowPhase(coreDocs);
+
+    // CTA button logic
+    let showApproveButton = false;
+    let approveText = '';
+    if (specStatus === SpecStatuses.ACTIVE) {
+        let currentIndex = coreDocs.findIndex(d => d.type === currentDocType);
+        if (currentIndex < 0 && isViewingRelatedDoc) {
+            const parentStep = relatedDocs.find(d => d.type === currentDocType)?.parentStep;
+            if (parentStep) {
+                currentIndex = coreDocs.findIndex(d => d.type === parentStep);
+            }
+        }
+        if (currentIndex >= 0 && currentIndex < coreDocs.length - 1) {
+            const nextDoc = coreDocs[currentIndex + 1];
+            if (!nextDoc.exists) {
+                showApproveButton = true;
+                approveText = nextDoc.label;
+            }
+        } else if (currentIndex === coreDocs.length - 1) {
+            showApproveButton = true;
+            approveText = 'Implement';
+        }
+    }
+
+    const initialNavState: NavState = {
+        coreDocs,
+        relatedDocs,
+        currentDoc: currentDocType,
+        workflowPhase,
+        taskCompletionPercent,
+        isViewingRelatedDoc,
+        footerState: {
+            showApproveButton,
+            approveText,
+            enhancementButtons,
+            specStatus,
+        },
+        enhancementButtons,
+        stalenessMap,
+        specStatus,
+        activeStep: activeStep ?? null,
+        stepHistory,
+        badgeText: badgeText ?? null,
+        createdDate: createdDate ?? null,
+        lastUpdatedDate: lastUpdatedDate ?? null,
+        specContextName: contextSpecName ?? null,
+        branch: contextBranch ?? null,
+        filePath: currentFilePath ?? null,
+        docTypeLabel: getDocTypeLabel(currentStep ?? currentDocType),
+    };
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -83,8 +142,10 @@ export function generateHtml(
 </head>
 <body style="background: var(--vscode-editor-background, #1e1e1e);" data-spec-status="${specStatus}" data-spec-badge="${escapeHtml(badgeText || '')}">
     <div class="viewer-container" id="app-root"></div>
-    <!-- Initial content for first render before message arrives -->
     <template id="initial-content" data-raw="${content ? escapeHtmlAttribute(content) : ''}"></template>
+    <script nonce="${nonce}">
+        window.__INITIAL_NAV_STATE__ = ${JSON.stringify(initialNavState)};
+    </script>
 
     <div class="loading-overlay" id="loading-overlay" style="display: none;">
         <div class="loading-spinner"></div>

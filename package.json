@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "VS Code companion for GitHub SpecKit - spec-driven development with AI assistants",
-  "version": "0.10.0",
+  "version": "0.10.5",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",
@@ -818,7 +818,7 @@
     "install-local": "npm version patch --no-git-tag-version && npm run package && code --install-extension speckit-companion-$(node -p \"require('./package.json').version\").vsix --force"
   },
   "dependencies": {
-    "@preact/signals": "^2.9.0",
+    "@preact/signals": "^1.3.4",
     "js-yaml": "^4.1.1",
     "preact": "^10.29.1"
   },

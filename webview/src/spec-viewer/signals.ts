@@ -20,3 +20,6 @@ export const refineLineNum = signal<number | null>(null);
 
 /** Current content being refined (modal) */
 export const refineContent = signal('');
+
+/** Rendered markdown HTML (set imperatively, read by App) */
+export const markdownHtml = signal('');

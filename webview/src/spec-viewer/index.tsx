@@ -5,7 +5,7 @@
 
 import { render } from 'preact';
 import type { VSCodeApi, ExtensionToViewerMessage } from './types';
-import { navState } from './signals';
+import { navState, markdownHtml } from './signals';
 import { renderMarkdown, setCurrentTask, setHasSpecContext } from './markdown';
 import { applyHighlighting, initializeMermaid } from './highlighting';
 import { setupLineActions } from './editor';
@@ -34,11 +34,10 @@ function updateContent(content: string): void {
     const decoded = decodeBase64Utf8(content);
     const html = renderMarkdown(decoded);
 
-    const markdownEl = document.getElementById('markdown-content');
-    if (markdownEl) {
-        markdownEl.innerHTML = html;
-    }
+    // Set signal — Preact re-renders the markdown-content div via dangerouslySetInnerHTML
+    markdownHtml.value = html;
 
+    // Run highlighting/mermaid after Preact commits the DOM update
     requestAnimationFrame(() => {
         applyHighlighting();
         initializeMermaid();
@@ -54,12 +53,20 @@ function handleMessage(event: MessageEvent): void {
 
     switch (message.type) {
         case 'contentUpdated':
+            console.log('[SpecViewer] contentUpdated received, hasNavState:', !!message.navState);
             if (message.navState?.currentTask !== undefined) {
                 setCurrentTask(message.navState.currentTask);
             }
             setHasSpecContext(!!(message.navState?.specContextName || message.navState?.badgeText));
             if (message.navState) {
+                console.log('[SpecViewer] setting navState signal, coreDocs:', message.navState.coreDocs?.length);
                 navState.value = message.navState;
+                console.log('[SpecViewer] navState.value set, checking DOM...');
+                requestAnimationFrame(() => {
+                    const nav = document.querySelector('.compact-nav');
+                    const footer = document.querySelector('.actions');
+                    console.log('[SpecViewer] after signal update - nav children:', nav?.childNodes.length, 'footer:', !!footer);
+                });
             }
             updateContent(message.content);
             break;
@@ -121,6 +128,15 @@ function init(): void {
     const specStatus = document.body.dataset.specStatus || 'active';
     const appRoot = document.getElementById('app-root');
 
+    // Load initial navState from server-rendered script
+    const initialNav = (window as any).__INITIAL_NAV_STATE__;
+    if (initialNav) {
+        navState.value = initialNav;
+    }
+
+    // Wire message listener before render
+    window.addEventListener('message', handleMessage);
+
     if (appRoot) {
         render(<App specStatus={specStatus} />, appRoot);
     }
@@ -134,6 +150,7 @@ function init(): void {
     // Handle initial raw content from template
     const initialContent = document.getElementById('initial-content') as HTMLTemplateElement | null;
     if (initialContent?.dataset.raw) {
+        console.log('[SpecViewer] loading initial content from template');
         updateContent(initialContent.dataset.raw);
     }
 
@@ -145,7 +162,7 @@ function init(): void {
         scrollTimeout = window.setTimeout(saveCurrentState, 100);
     });
 
-    window.addEventListener('message', handleMessage);
+    console.log('[SpecViewer] sending ready message');
     vscode.postMessage({ type: 'ready' });
 }
 
