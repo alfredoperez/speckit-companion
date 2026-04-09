@@ -533,6 +533,23 @@
           "order": 2,
           "description": "AI assistant to use for spec generation"
         },
+        "speckit.commandFormat": {
+          "type": "string",
+          "default": "auto",
+          "enum": [
+            "auto",
+            "dot",
+            "dash"
+          ],
+          "enumDescriptions": [
+            "Use provider default (Claude/Codex → dash, Gemini/Copilot/Qwen → dot)",
+            "Always use dot notation (speckit.plan)",
+            "Always use dash notation (speckit-plan)"
+          ],
+          "scope": "machine",
+          "order": 3,
+          "description": "Command format for speckit commands sent to AI CLI tools. Use 'auto' to let the provider decide, or override to 'dot' (speckit.plan) or 'dash' (speckit-plan) if your speckit version requires a specific format."
+        },
         "speckit.permissionMode": {
           "type": "string",
           "default": "interactive",
