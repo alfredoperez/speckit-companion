@@ -159,6 +159,99 @@ describe('specContextManager', () => {
         });
     });
 
+    describe('updateSpecContext transition logging', () => {
+        it('should append a transition entry when currentStep changes', async () => {
+            const existing = { workflow: 'default', selectedAt: '2026-01-01', currentStep: 'specify' };
+            mockReadFile.mockResolvedValue(JSON.stringify(existing));
+
+            await updateSpecContext(SPEC_DIR, { currentStep: 'plan' });
+
+            const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
+            expect(written.transitions).toBeDefined();
+            expect(written.transitions).toHaveLength(1);
+            expect(written.transitions[0].step).toBe('plan');
+            expect(written.transitions[0].from).toEqual({ step: 'specify', substep: null });
+            expect(written.transitions[0].by).toBe('extension');
+            expect(written.transitions[0].at).toBeDefined();
+        });
+
+        it('should set from to null when file does not exist (first creation)', async () => {
+            await updateSpecContext(SPEC_DIR, { currentStep: 'specify' });
+
+            const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
+            expect(written.transitions).toHaveLength(1);
+            expect(written.transitions[0].from).toBeNull();
+            expect(written.transitions[0].step).toBe('specify');
+        });
+
+        it('should not append transition when currentStep is unchanged', async () => {
+            const existing = { workflow: 'default', selectedAt: '2026-01-01', currentStep: 'plan' };
+            mockReadFile.mockResolvedValue(JSON.stringify(existing));
+
+            await updateSpecContext(SPEC_DIR, { currentStep: 'plan' });
+
+            const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
+            expect(written.transitions).toBeUndefined();
+        });
+
+        it('should not append transition when update has no step/substep fields', async () => {
+            const existing = { workflow: 'default', selectedAt: '2026-01-01', currentStep: 'plan' };
+            mockReadFile.mockResolvedValue(JSON.stringify(existing));
+
+            await updateSpecContext(SPEC_DIR, { status: 'completed' });
+
+            const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
+            expect(written.transitions).toBeUndefined();
+        });
+
+        it('should preserve existing transitions (append-only)', async () => {
+            const existingTransition = {
+                step: 'plan',
+                substep: null,
+                from: { step: 'specify', substep: null },
+                by: 'extension',
+                at: '2026-01-01T00:00:00.000Z',
+            };
+            const existing = {
+                workflow: 'default',
+                selectedAt: '2026-01-01',
+                currentStep: 'plan',
+                transitions: [existingTransition],
+            };
+            mockReadFile.mockResolvedValue(JSON.stringify(existing));
+
+            await updateSpecContext(SPEC_DIR, { currentStep: 'tasks' });
+
+            const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
+            expect(written.transitions).toHaveLength(2);
+            expect(written.transitions[0]).toEqual(existingTransition);
+            expect(written.transitions[1].step).toBe('tasks');
+        });
+
+        it('should preserve existing transitions when update has no step change', async () => {
+            const existingTransition = {
+                step: 'plan',
+                substep: null,
+                from: { step: 'specify', substep: null },
+                by: 'sdd',
+                at: '2026-01-01T00:00:00.000Z',
+            };
+            const existing = {
+                workflow: 'default',
+                selectedAt: '2026-01-01',
+                currentStep: 'plan',
+                transitions: [existingTransition],
+            };
+            mockReadFile.mockResolvedValue(JSON.stringify(existing));
+
+            await updateSpecContext(SPEC_DIR, { status: 'active' });
+
+            const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
+            expect(written.transitions).toHaveLength(1);
+            expect(written.transitions[0]).toEqual(existingTransition);
+        });
+    });
+
     describe('setSpecStatus', () => {
         it('should write the status field', async () => {
             await setSpecStatus(SPEC_DIR, 'completed');

@@ -10,6 +10,9 @@ import {
 } from '../speckit/taskProgressService';
 import { NotificationUtils } from './utils/notificationUtils';
 import { getFileWatcherPatterns } from './specDirectoryResolver';
+import { detectExternalTransition, transitionCache } from '../features/specs/transitionLogger';
+import { FEATURE_CONTEXT_FILE } from '../features/workflows/types';
+import type { TransitionEntry } from '../features/workflows/types';
 
 /**
  * Check if phase completion notifications are enabled
@@ -65,9 +68,47 @@ function setupClaudeDirectoryWatcher(
         }, 1000);
     };
 
+    const handleSpecContextChange = async (uri: vscode.Uri) => {
+        if (!uri.fsPath.endsWith(FEATURE_CONTEXT_FILE)) {
+            return;
+        }
+        try {
+            const content = await vscode.workspace.fs.readFile(uri);
+            const data = JSON.parse(Buffer.from(content).toString('utf-8'));
+            const specDir = uri.fsPath.replace(/[/\\].spec-context\.json$/, '');
+
+            const logMessage = detectExternalTransition(
+                specDir,
+                data.currentStep,
+                data.substep ?? null,
+                data.transitions as TransitionEntry[] | undefined
+            );
+
+            if (logMessage) {
+                outputChannel.appendLine(logMessage);
+            }
+        } catch {
+            // Ignore parse errors
+        }
+    };
+
+    const handleSpecContextDelete = (uri: vscode.Uri) => {
+        if (!uri.fsPath.endsWith(FEATURE_CONTEXT_FILE)) {
+            return;
+        }
+        const specDir = uri.fsPath.replace(/[/\\].spec-context\.json$/, '');
+        transitionCache.delete(specDir);
+    };
+
     claudeWatcher.onDidCreate((uri) => debouncedRefresh('Create', uri));
-    claudeWatcher.onDidDelete((uri) => debouncedRefresh('Delete', uri));
-    claudeWatcher.onDidChange((uri) => debouncedRefresh('Change', uri));
+    claudeWatcher.onDidDelete((uri) => {
+        handleSpecContextDelete(uri);
+        debouncedRefresh('Delete', uri);
+    });
+    claudeWatcher.onDidChange((uri) => {
+        handleSpecContextChange(uri);
+        debouncedRefresh('Change', uri);
+    });
 
     context.subscriptions.push(claudeWatcher);
 }

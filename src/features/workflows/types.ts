@@ -92,6 +92,25 @@ export interface WorkflowCommandConfig {
 }
 
 /**
+ * Previous step/substep state before a transition
+ */
+export interface TransitionFrom {
+    step: string | null;
+    substep: string | null;
+}
+
+/**
+ * A single workflow step transition recorded in .spec-context.json
+ */
+export interface TransitionEntry {
+    step: string;
+    substep: string | null;
+    from: TransitionFrom | null;
+    by: 'extension' | 'sdd' | string;
+    at: string;
+}
+
+/**
  * Spec status for sidebar grouping
  */
 export type SpecStatus = 'active' | 'completed' | 'archived';
@@ -136,6 +155,8 @@ export interface FeatureWorkflowContext {
     task_summaries?: Record<string, unknown>;
     step_summaries?: Record<string, unknown>;
     files_modified?: string[];
+    /** Append-only log of workflow step transitions */
+    transitions?: TransitionEntry[];
 }
 
 /**
