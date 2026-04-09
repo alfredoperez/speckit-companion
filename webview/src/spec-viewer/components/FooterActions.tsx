@@ -27,6 +27,7 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
         <footer class="actions">
             <div class="actions-left">
                 <Button label="Edit Source" variant="secondary" onClick={send({ type: 'editSource' })} />
+                {!isArchived && <Button label="Archive" variant="secondary" onClick={send({ type: 'archiveSpec' })} />}
                 <Toast id="action-toast" />
                 {isActive && enhancementButtons.map((btn) => (
                     <Button
@@ -41,18 +42,11 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
             </div>
             <div class="actions-right">
                 {isArchived || isCompleted ? (
-                    <>
-                        <Button label="Archive" variant="secondary" onClick={send({ type: 'archiveSpec' })} />
-                        <Button label="Reactivate" variant="primary" onClick={send({ type: 'reactivateSpec' })} />
-                    </>
+                    <Button label="Reactivate" variant="primary" onClick={send({ type: 'reactivateSpec' })} />
                 ) : isTasksDone ? (
-                    <>
-                        <Button label="Archive" variant="secondary" onClick={send({ type: 'archiveSpec' })} />
-                        <Button label="Complete" variant="primary" onClick={send({ type: 'completeSpec' })} />
-                    </>
+                    <Button label="Complete" variant="primary" onClick={send({ type: 'completeSpec' })} />
                 ) : (
                     <>
-                        {!isArchived && <Button label="Archive" variant="secondary" onClick={send({ type: 'archiveSpec' })} />}
                         <Button label="Regenerate" variant="secondary" onClick={send({ type: 'regenerate' })} />
                         {ns.footerState?.showApproveButton && (
                             <Button label={ns.footerState.approveText} variant="primary" onClick={send({ type: 'approve' })} />
