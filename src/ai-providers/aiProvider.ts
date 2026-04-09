@@ -177,6 +177,17 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
  * E.g., for Claude/Codex: speckit.specify → speckit-specify
  */
 export function formatCommandForProvider(command: string, providerType?: AIProviderType): string {
+    const config = vscode.workspace.getConfiguration('speckit');
+    const userFormat = config.get<string>('commandFormat', 'auto');
+
+    if (userFormat === 'dash') {
+        return command.replace(/^speckit\./, 'speckit-');
+    }
+    if (userFormat === 'dot') {
+        return command;
+    }
+
+    // auto — use provider default
     const type = providerType ?? getConfiguredProviderType();
     const { commandFormat } = PROVIDER_PATHS[type];
     if (commandFormat === 'dash') {

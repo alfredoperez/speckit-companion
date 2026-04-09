@@ -128,6 +128,24 @@ Controls whether AI CLIs run with permission prompts (safe) or bypass them (YOLO
 
 This applies to all providers that support it: Claude (`--permission-mode bypassPermissions`), Copilot (`--yolo`), and Qwen (`--yolo`). Gemini and Codex ignore this setting.
 
+### Command Format
+
+Controls how speckit commands are formatted when sent to AI providers:
+
+```json
+{
+  "speckit.commandFormat": "auto"
+}
+```
+
+| Value | Behavior |
+|-------|----------|
+| `"auto"` | Let the AI provider decide the format (default) |
+| `"dot"` | Always use dot notation (e.g., `speckit.plan`) |
+| `"dash"` | Always use dash notation (e.g., `speckit-plan`) |
+
+Use `auto` unless your speckit version requires a specific command format. Override with `dot` or `dash` when the provider's default doesn't match what your setup expects.
+
 ### Spec Directories
 
 By default, specs live in `specs/`. You can configure multiple directories or use glob patterns:
