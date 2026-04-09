@@ -66,6 +66,8 @@ Right-click a spec to access **Mark as Completed** and **Archive Spec** actions.
 
 The lifecycle flow is **Active → Completed → Archived**, with **Reactivate** available on Completed and Archived specs to return them to Active.
 
+**Transition logging**: Every workflow step change is automatically recorded in the `transitions` array inside `.spec-context.json`. Each entry captures the previous step, new step, source (`extension` or `sdd`), and timestamp. External changes (e.g., from SDD tools) are detected via file watcher and logged to the SpecKit output channel.
+
 **Badge and dates** are derived from `.spec-context.json` (the single source of truth for workflow state):
 - The **badge** in the metadata bar shows the current workflow state (e.g., SPECIFYING, PLANNING, IMPLEMENTING, COMPLETED). Hidden when no context exists.
 - **Created** and **Last Updated** dates are derived from `stepHistory` timestamps in `.spec-context.json`. Gracefully omitted when context is missing or incomplete.

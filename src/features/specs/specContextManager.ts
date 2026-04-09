@@ -4,9 +4,11 @@ import {
     FeatureWorkflowContext,
     SpecStatus,
     FEATURE_CONTEXT_FILE,
+    TransitionEntry,
 } from '../workflows/types';
 import { SpecStatuses } from '../../core/constants';
 import { formatDocName } from '../workflow-editor/workflow/specInfoParser';
+import { buildTransitionEntry } from './transitionLogger';
 
 /**
  * Try reading a JSON file, return parsed content or undefined.
@@ -64,15 +66,49 @@ export async function updateSpecContext(
     const contextPath = path.join(specDir, FEATURE_CONTEXT_FILE);
 
     let existing: Record<string, unknown> = {};
+    let fileExists = false;
 
     try {
         const content = await fs.promises.readFile(contextPath, 'utf-8');
         existing = JSON.parse(content);
+        fileExists = true;
     } catch {
         // No existing file, start fresh
     }
 
-    const merged = { ...existing, ...partial };
+    // Detect step/substep changes and append transition entry
+    const newStep = partial.currentStep;
+    const newSubstep = (partial as Record<string, unknown>).substep as string | null | undefined;
+    const hasStepChange = newStep !== undefined || newSubstep !== undefined;
+
+    if (hasStepChange) {
+        const oldStep = existing.currentStep as string | undefined;
+        const oldSubstep = (existing as Record<string, unknown>).substep as string | null | undefined;
+        const stepChanged = newStep !== undefined && newStep !== oldStep;
+        const substepChanged = newSubstep !== undefined && newSubstep !== oldSubstep;
+
+        if (stepChanged || substepChanged) {
+            const from = fileExists
+                ? { step: oldStep || null, substep: oldSubstep ?? null }
+                : null;
+
+            const entry = buildTransitionEntry(
+                from,
+                newStep ?? oldStep ?? '',
+                newSubstep !== undefined ? newSubstep : (oldSubstep ?? null),
+                'extension'
+            );
+
+            const existingTransitions = (existing.transitions as TransitionEntry[] | undefined) || [];
+            existing.transitions = [...existingTransitions, entry];
+        }
+    }
+
+    const merged: Record<string, unknown> = { ...existing, ...partial };
+    // Preserve transitions from existing (append-only)
+    if (existing.transitions) {
+        merged.transitions = existing.transitions;
+    }
     await fs.promises.writeFile(contextPath, JSON.stringify(merged, null, 2), 'utf-8');
 }
 
