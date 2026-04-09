@@ -1,0 +1,22 @@
+{
+  "workflow": "speckit",
+  "selectedAt": "2026-04-09T12:00:00.000Z",
+  "currentStep": "tasks",
+  "status": "active",
+  "specName": "Transition Logging",
+  "branch": "052-transition-logging",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-04-09T12:00:00.000Z",
+      "completedAt": "2026-04-09T13:23:22.362Z"
+    },
+    "plan": {
+      "startedAt": "2026-04-09T13:23:22.362Z",
+      "completedAt": "2026-04-09T13:23:23.520Z"
+    },
+    "tasks": {
+      "startedAt": "2026-04-09T13:23:23.520Z",
+      "completedAt": "2026-04-09T13:23:25.295Z"
+    }
+  }
+}
