@@ -1,0 +1,82 @@
+/**
+ * SpecKit Companion - Standalone Button Styles
+ * These styles apply to button variants regardless of parent context.
+ * The .actions-scoped styles in _footer.css override these when inside .actions.
+ */
+
+button.primary,
+button.secondary,
+button.ghost,
+button.enhancement {
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all var(--transition-fast) ease;
+    white-space: nowrap;
+    font-family: inherit;
+}
+
+button.primary {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 8px 24px;
+    box-shadow: var(--shadow-sm);
+}
+
+button.primary:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--accent-glow);
+}
+
+button.primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+button.secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+}
+
+button.secondary:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+    border-color: var(--border-hover);
+}
+
+button.ghost {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-secondary);
+}
+
+button.ghost:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+button.enhancement {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+button.enhancement .icon {
+    font-size: 13px;
+}
+
+button.enhancement:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+}

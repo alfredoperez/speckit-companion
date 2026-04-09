@@ -59,12 +59,12 @@ const webviewConfig = {
     libraryTarget: 'window'
   },
   resolve: {
-    extensions: ['.ts', '.js']
+    extensions: ['.tsx', '.ts', '.js']
   },
   module: {
     rules: [
       {
-        test: /\.ts$/,
+        test: /\.tsx?$/,
         exclude: /node_modules/,
         use: [
           {
@@ -101,12 +101,12 @@ const specEditorConfig = {
     libraryTarget: 'window'
   },
   resolve: {
-    extensions: ['.ts', '.js']
+    extensions: ['.tsx', '.ts', '.js']
   },
   module: {
     rules: [
       {
-        test: /\.ts$/,
+        test: /\.tsx?$/,
         exclude: /node_modules/,
         use: [
           {
@@ -135,19 +135,19 @@ const specViewerConfig = {
   target: 'web', // Webview runs in browser context
   mode: 'none',
 
-  entry: './webview/src/spec-viewer/index.ts', // Spec viewer entry point
+  entry: './webview/src/spec-viewer/index.tsx', // Spec viewer entry point
   output: {
     path: path.resolve(__dirname, 'dist', 'webview'),
     filename: 'spec-viewer.js',
     libraryTarget: 'window'
   },
   resolve: {
-    extensions: ['.ts', '.js']
+    extensions: ['.tsx', '.ts', '.js']
   },
   module: {
     rules: [
       {
-        test: /\.ts$/,
+        test: /\.tsx?$/,
         exclude: /node_modules/,
         use: [
           {

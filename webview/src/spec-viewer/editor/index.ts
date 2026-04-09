@@ -1,8 +1,3 @@
-/**
- * SpecKit Companion - Editor Module
- * Exports inline editor functionality
- */
-
 export {
     showInlineEditor,
     closeInlineEditor,
@@ -14,10 +9,7 @@ export {
 export {
     addRefinement,
     removeRefinement,
-    renderInlineComment,
     addRefinementForRow,
-    renderInlineCommentForRow,
-    removeRefinementForRow,
     updateRefineButton,
     submitAllRefinements,
     clearAllRefinements
