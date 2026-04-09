@@ -49,26 +49,29 @@ flowchart TD
 ```mermaid
 flowchart LR
     subgraph active
-        A_L["🗄 Archive"] ~~~ A_R1["Regenerate"]
+        A_L1["Edit Source"] ~~~ A_L2["🗄 Archive"]
+        A_L2 ~~~ A_R1["Regenerate"]
         A_R1 ~~~ A_R2["Next Step ➜"]
     end
     subgraph tasks-done
-        T_L["🗄 Archive"] ~~~ T_R["✅ Complete"]
+        T_L1["Edit Source"] ~~~ T_L2["🗄 Archive"]
+        T_L2 ~~~ T_R["✅ Complete"]
     end
     subgraph completed
-        C_L["🗄 Archive"] ~~~ C_R["🔄 Reactivate"]
+        C_L1["Edit Source"] ~~~ C_L2["🗄 Archive"]
+        C_L2 ~~~ C_R["🔄 Reactivate"]
     end
     subgraph archived
-        AR_R["🔄 Reactivate"]
+        AR_L["Edit Source"] ~~~ AR_R["🔄 Reactivate"]
     end
 ```
 
 | Status | Left side | Right side |
 |--------|-----------|------------|
-| **active** | Archive | Regenerate, *Next Step* (if applicable) |
-| **tasks-done** | Archive | **Complete** (primary) |
-| **completed** | Archive | Reactivate |
-| **archived** | *(empty)* | Reactivate |
+| **active** | Edit Source, Archive | Regenerate, *Next Step* (if applicable) |
+| **tasks-done** | Edit Source, Archive | **Complete** (primary) |
+| **completed** | Edit Source, Archive | Reactivate |
+| **archived** | Edit Source | Reactivate |
 
 The "Next Step" button shows only when:
 - Status is `active`
