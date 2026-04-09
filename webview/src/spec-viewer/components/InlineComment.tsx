@@ -26,7 +26,7 @@ export function InlineComment({ refinement, mode, onDelete }: InlineCommentProps
     if (mode === 'row') {
         return (
             <tr class="comment-row" data-ref-id={refinement.id}>
-                <td colspan={4} class="comment-cell">{inner}</td>
+                <td colSpan={4} class="comment-cell">{inner}</td>
             </tr>
         );
     }

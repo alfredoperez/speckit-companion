@@ -39,17 +39,22 @@ export function detectLineType(element: HTMLElement): LineType {
     return 'paragraph';
 }
 
+export interface ContextAction {
+    action: string;
+    label: string;
+}
+
 /**
- * Get context-aware quick action buttons based on line type
- * Uses ghost-style buttons with muted text (no emojis, minimal styling)
+ * Get context-aware quick actions based on line type.
+ * Returns data — components render the buttons.
  */
-export function getContextActions(lineType: LineType, lineNum: number): string {
-    const actions: Record<LineType, string> = {
-        'user-story': `<button class="context-action" data-action="remove-story" data-line="${lineNum}">Remove Story</button>`,
-        'acceptance': `<button class="context-action" data-action="remove-scenario" data-line="${lineNum}">Remove Scenario</button>`,
-        'task': `<button class="context-action" data-action="toggle-task" data-line="${lineNum}">Toggle</button><button class="context-action" data-action="remove-task" data-line="${lineNum}">Remove Task</button>`,
-        'section': `<button class="context-action" data-action="remove-section" data-line="${lineNum}">Remove Section</button>`,
-        'paragraph': `<button class="context-action" data-action="remove-line" data-line="${lineNum}">Remove Line</button>`
+export function getContextActions(lineType: LineType): ContextAction[] {
+    const actions: Record<LineType, ContextAction[]> = {
+        'user-story': [{ action: 'remove-story', label: 'Remove Story' }],
+        'acceptance': [{ action: 'remove-scenario', label: 'Remove Scenario' }],
+        'task': [{ action: 'toggle-task', label: 'Toggle' }, { action: 'remove-task', label: 'Remove Task' }],
+        'section': [{ action: 'remove-section', label: 'Remove Section' }],
+        'paragraph': [{ action: 'remove-line', label: 'Remove Line' }],
     };
     return actions[lineType];
 }

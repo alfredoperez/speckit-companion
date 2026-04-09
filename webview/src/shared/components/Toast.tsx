@@ -1,12 +1,9 @@
-import { useRef, useCallback } from 'preact/hooks';
-
 export interface ToastProps {
     id?: string;
 }
 
 export function Toast({ id }: ToastProps) {
-    const ref = useRef<HTMLSpanElement>(null);
-    return <span class="action-toast" id={id} ref={ref} />;
+    return <span class="action-toast" id={id} />;
 }
 
 /** Show a toast message by DOM id. */

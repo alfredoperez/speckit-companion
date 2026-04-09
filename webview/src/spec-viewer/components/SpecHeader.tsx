@@ -1,9 +1,5 @@
 import { navState } from '../signals';
 
-function escapeHtml(str: string): string {
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
 export function SpecHeader() {
     const ns = navState.value;
     if (!ns) return null;

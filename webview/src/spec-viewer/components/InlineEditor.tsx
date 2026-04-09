@@ -36,19 +36,23 @@ export function InlineEditor(props: InlineEditorProps) {
         comment ? onSubmit(comment) : onCancel();
     };
 
-    const contextHtml = mode === 'line'
-        ? getContextActions(lineType, lineNum)
-        : null;
+    const contextActions = mode === 'line' ? getContextActions(lineType) : [];
 
     const editorBody = (
         <div class="inline-editor">
-            {mode === 'line' && contextHtml && (
-                <div class="editor-actions" dangerouslySetInnerHTML={{ __html: contextHtml }}
-                    onClick={(e: MouseEvent) => {
-                        const btn = (e.target as HTMLElement).closest('.context-action') as HTMLElement;
-                        if (btn) onContextAction(btn.dataset.action || '');
-                    }}
-                />
+            {mode === 'line' && contextActions.length > 0 && (
+                <div class="editor-actions">
+                    {contextActions.map(({ action, label }) => (
+                        <button
+                            key={action}
+                            class="context-action"
+                            data-action={action}
+                            onClick={() => onContextAction(action)}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </div>
             )}
             {mode === 'row' && scenarioContent && (
                 <div class="editor-context">
@@ -74,7 +78,7 @@ export function InlineEditor(props: InlineEditorProps) {
     if (mode === 'row') {
         return (
             <tr class="inline-editor-row">
-                <td colspan={4} class="editor-cell">{editorBody}</td>
+                <td colSpan={4} class="editor-cell">{editorBody}</td>
             </tr>
         );
     }

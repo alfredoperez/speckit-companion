@@ -5,13 +5,7 @@
 
 import { render, h } from 'preact';
 import type { Refinement, VSCodeApi } from '../types';
-import {
-    addPendingRefinement,
-    removePendingRefinement,
-    clearPendingRefinements,
-    getPendingRefinementsCount,
-    getPendingRefinements
-} from '../state';
+import { pendingRefinements } from '../signals';
 import { detectLineType } from './lineActions';
 import { InlineComment } from '../components/InlineComment';
 
@@ -26,7 +20,7 @@ export function addRefinement(lineNum: number, comment: string, lineEl: HTMLElem
     const lineType = detectLineType(lineEl);
     const refinement: Refinement = { id, lineNum, lineContent, comment, lineType };
 
-    addPendingRefinement(refinement);
+    pendingRefinements.value = [...pendingRefinements.value, refinement];
     renderComment(lineEl, refinement, 'line');
     updateRefineButton();
 }
@@ -38,7 +32,7 @@ export function addRefinementForRow(rowNum: number, comment: string, scenarioCon
         comment, lineType: 'acceptance'
     };
 
-    addPendingRefinement(refinement);
+    pendingRefinements.value = [...pendingRefinements.value, refinement];
     renderComment(rowEl, refinement, 'row');
     updateRefineButton();
 }
@@ -58,7 +52,6 @@ function renderComment(targetEl: HTMLElement, ref: Refinement, mode: 'line' | 'r
         }
     } else {
         const container = document.createElement('tbody');
-        // Insert after the row
         targetEl.parentElement?.insertBefore(container, targetEl.nextSibling);
         render(h(InlineComment, { refinement: ref, mode: 'row', onDelete }), container);
         commentContainers.set(ref.id, container);
@@ -66,8 +59,11 @@ function renderComment(targetEl: HTMLElement, ref: Refinement, mode: 'line' | 'r
 }
 
 export function removeRefinement(refId: string, targetEl?: HTMLElement): void {
-    const refinement = removePendingRefinement(refId);
-    if (!refinement) return;
+    const current = pendingRefinements.value;
+    const index = current.findIndex(r => r.id === refId);
+    if (index < 0) return;
+    const refinement = current[index];
+    pendingRefinements.value = current.filter((_, i) => i !== index);
 
     // Unmount and remove container
     const container = commentContainers.get(refId);
@@ -85,7 +81,7 @@ export function removeRefinement(refId: string, targetEl?: HTMLElement): void {
     }
 
     if (targetEl) {
-        const hasMore = getPendingRefinements().some(r => r.lineNum === refinement.lineNum);
+        const hasMore = pendingRefinements.value.some(r => r.lineNum === refinement.lineNum);
         if (!hasMore) targetEl.classList.remove('has-refinement');
     }
 
@@ -93,7 +89,7 @@ export function removeRefinement(refId: string, targetEl?: HTMLElement): void {
 }
 
 export function updateRefineButton(): void {
-    const count = getPendingRefinementsCount();
+    const count = pendingRefinements.value.length;
     let btn = document.getElementById('refine-submit-btn') as HTMLButtonElement | null;
 
     if (!btn) {
@@ -114,7 +110,7 @@ export function updateRefineButton(): void {
 }
 
 export function submitAllRefinements(): void {
-    const refinements = getPendingRefinements();
+    const refinements = pendingRefinements.value;
     if (refinements.length === 0) return;
 
     vscode.postMessage({
@@ -128,7 +124,7 @@ export function submitAllRefinements(): void {
 }
 
 export function clearAllRefinements(): void {
-    for (const [id, container] of commentContainers) {
+    for (const [, container] of commentContainers) {
         render(null, container);
         container.remove();
     }
@@ -138,6 +134,6 @@ export function clearAllRefinements(): void {
     document.querySelectorAll('.comment-row').forEach(el => el.remove());
     document.querySelectorAll('.has-refinement').forEach(el => el.classList.remove('has-refinement'));
 
-    clearPendingRefinements();
+    pendingRefinements.value = [];
     updateRefineButton();
 }
