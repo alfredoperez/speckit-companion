@@ -76,7 +76,7 @@
 
 #markdown-content li {
     margin-bottom: 2px;
-    line-height: var(--leading-relaxed);
+    line-height: var(--leading-normal);
     color: var(--text-body);
 }
 
