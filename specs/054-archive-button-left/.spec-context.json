@@ -2,7 +2,7 @@
   "workflow": "speckit",
   "selectedAt": "2026-04-09T12:00:00.000Z",
   "currentStep": "plan",
-  "status": "active",
+  "status": "completed",
   "specName": "Archive Button Left",
   "branch": "054-archive-button-left",
   "stepHistory": {
