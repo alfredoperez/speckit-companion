@@ -127,6 +127,8 @@
 
 li.line {
     position: relative;
+    padding-top: 0;
+    padding-bottom: 0;
     padding-right: 0;  /* No extra padding */
     margin: 0;
     min-height: unset;
