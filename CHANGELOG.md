@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.11.0] - 2026-04-10
+
+### New Features
+
+- **Floating Toast Notifications**: Upgraded terminal toast to a floating notification with slide-in/fade-out animations, positioned at bottom-right with auto-dismiss (#81)
+- **Command Format Setting**: Added `speckit.commandFormat` setting to switch between dot (`speckit.plan`) and dash (`/speckit-plan`) command formats for compatibility with different speckit versions (fixes #73, #76)
+- **Transition Logging**: `.spec-context.json` now logs step transitions with timestamps for debugging and audit (#75)
+- **Archive Button Repositioned**: Archive button moved to left side of footer for better UX flow (#77)
+
+### Improvements
+
+- **Preact Migration**: Spec-viewer webview migrated from vanilla DOM to Preact with Storybook support (#74)
+
+### Bug Fixes
+
+- **Bullet Point Rendering**: Fixed bullet points not rendering correctly in lists containing code blocks (#79)
+- **List Item Spacing**: Reduced excessive spacing between list items in spec viewer (#80)
+- **Storybook Preact Aliases**: Added Preact aliases to resolve "React is not defined" errors in Storybook
+
 ## [0.10.0] - 2026-04-05
 
 ### New Features
