@@ -1,0 +1,104 @@
+{
+  "workflow": "sdd",
+  "selectedAt": "2026-04-10T12:00:00.000Z",
+  "currentStep": "tasks",
+  "status": "active",
+  "specName": "Floating Toast",
+  "branch": "main",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-04-10T12:00:00.000Z",
+      "completedAt": "2026-04-10T11:33:52.857Z"
+    },
+    "plan": {
+      "startedAt": "2026-04-10T11:33:52.857Z",
+      "completedAt": "2026-04-10T11:33:54.326Z"
+    },
+    "tasks": {
+      "startedAt": "2026-04-10T11:36:48.730Z",
+      "completedAt": null
+    }
+  },
+  "transitions": [
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-10T11:33:52.858Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-10T11:33:54.327Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-10T11:33:55.063Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-10T11:33:58.752Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-10T11:33:59.639Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-10T11:36:47.015Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-10T11:36:48.114Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-10T11:36:48.730Z"
+    }
+  ]
+}

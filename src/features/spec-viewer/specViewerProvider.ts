@@ -309,8 +309,6 @@ export class SpecViewerProvider {
         return this.resolveWorkflowSteps(dir, inst?.state.changeRoot);
       },
       executeInTerminal: async (prompt: string) => {
-        const inst = this.getInstance(specDirectory);
-        inst?.panel.webview.postMessage({ type: 'actionToast', message: 'Opening terminal…' });
         await getAIProvider().executeInTerminal(prompt);
       },
       outputChannel: this.outputChannel,

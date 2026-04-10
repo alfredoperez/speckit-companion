@@ -25,10 +25,10 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
 
     return (
         <footer class="actions">
+            <Toast id="action-toast" />
             <div class="actions-left">
                 <Button label="Edit Source" variant="secondary" onClick={send({ type: 'editSource' })} />
                 {!isArchived && <Button label="Archive" variant="secondary" onClick={send({ type: 'archiveSpec' })} />}
-                <Toast id="action-toast" />
                 {isActive && enhancementButtons.map((btn) => (
                     <Button
                         key={btn.command}

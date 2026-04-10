@@ -2,7 +2,7 @@
   "workflow": "sdd",
   "selectedAt": "2026-04-10T17:00:00.000Z",
   "currentStep": "specify",
-  "status": "active",
+  "status": "completed",
   "specName": "Fix List Spacing",
   "branch": "main",
   "stepHistory": {
