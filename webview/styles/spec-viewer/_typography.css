@@ -64,8 +64,14 @@
 
 #markdown-content ul,
 #markdown-content ol {
-    margin: 0 0 var(--space-4) 0;
+    margin: 0 0 var(--space-3) 0;
     padding-left: 28px;
+}
+
+/* Reduce gap between a code block and a continuation list (ol with start attribute) */
+#markdown-content pre + ol[start],
+#markdown-content pre + ul {
+    margin-top: var(--space-1);
 }
 
 #markdown-content li {

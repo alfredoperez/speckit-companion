@@ -126,6 +126,9 @@ export function renderMarkdown(markdown: string): string {
     let codeContent: string[] = [];
     let inList = false;
     let listType: 'ul' | 'ol' = 'ul';
+    let listItemCount = 0;
+    let lastClosedListType: 'ul' | 'ol' | null = null;
+    let lastClosedListCount = 0;
     let inTable = false;
     let tableRows: string[] = [];
 
@@ -134,11 +137,19 @@ export function renderMarkdown(markdown: string): string {
         // Track the original line number (1-indexed)
         const sourceLineNum = i + 1;
 
-        // Code blocks
-        if (line.startsWith('```')) {
+        // Code blocks (detect indented fences too, e.g. inside list items)
+        const trimmedLine = line.trim();
+        if (trimmedLine.startsWith('```')) {
+            // Close any open list before the code block
+            if (inList && !inCodeBlock) {
+                html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
+                lastClosedListType = listType;
+                lastClosedListCount = listItemCount;
+                inList = false;
+            }
             if (!inCodeBlock) {
                 inCodeBlock = true;
-                codeBlockLang = line.slice(3).trim();
+                codeBlockLang = trimmedLine.slice(3).trim();
                 codeContent = [];
             } else {
                 inCodeBlock = false;
@@ -183,6 +194,8 @@ export function renderMarkdown(markdown: string): string {
         // Close list if we're not on a list item
         if (inList && !line.match(/^(\s*[-*+]|\s*\d+\.)\s/)) {
             html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
+            lastClosedListType = listType;
+            lastClosedListCount = listItemCount;
             inList = false;
         }
 
@@ -190,6 +203,8 @@ export function renderMarkdown(markdown: string): string {
         if (!line.trim()) {
             if (inList) {
                 html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
+                lastClosedListType = listType;
+                lastClosedListCount = listItemCount;
                 inList = false;
             }
             continue;
@@ -198,6 +213,8 @@ export function renderMarkdown(markdown: string): string {
         // Headings - wrap h3+ with line actions for commenting
         const headingMatch = line.match(/^(#{1,6})\s+(.+)$/);
         if (headingMatch) {
+            lastClosedListType = null;
+            lastClosedListCount = 0;
             const level = headingMatch[1].length;
             const content = parseInline(headingMatch[2]);
             // Wrap h3, h4, h5, h6 with line actions (subsection headers)
@@ -211,12 +228,16 @@ export function renderMarkdown(markdown: string): string {
 
         // Horizontal rule
         if (line.match(/^[-*_]{3,}$/)) {
+            lastClosedListType = null;
+            lastClosedListCount = 0;
             html += '<hr>\n';
             continue;
         }
 
         // Blockquote - wrap with line actions for commenting
         if (line.startsWith('>')) {
+            lastClosedListType = null;
+            lastClosedListCount = 0;
             const content = parseInline(line.slice(1).trim());
             html += wrapWithLineActions(`<blockquote><p>${content}</p></blockquote>`, sourceLineNum);
             continue;
@@ -226,10 +247,15 @@ export function renderMarkdown(markdown: string): string {
         const ulMatch = line.match(/^(\s*)[-*+]\s+(.+)$/);
         if (ulMatch) {
             if (!inList || listType !== 'ul') {
-                if (inList) html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
+                if (inList) {
+                    html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
+                    lastClosedListType = listType;
+                    lastClosedListCount = listItemCount;
+                }
                 html += '<ul>\n';
                 inList = true;
                 listType = 'ul';
+                listItemCount = 0;
             }
             const content = parseInline(ulMatch[2]);
             // Check for task list
@@ -277,11 +303,23 @@ export function renderMarkdown(markdown: string): string {
         const olMatch = line.match(/^(\s*)\d+\.\s+(.+)$/);
         if (olMatch) {
             if (!inList || listType !== 'ol') {
-                if (inList) html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
-                html += '<ol>\n';
+                if (inList) {
+                    html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
+                    lastClosedListType = listType;
+                    lastClosedListCount = listItemCount;
+                }
+                // Continue numbering if resuming an interrupted ordered list
+                const startAttr = (lastClosedListType === 'ol' && lastClosedListCount > 0)
+                    ? ` start="${lastClosedListCount + 1}"`
+                    : '';
+                html += `<ol${startAttr}>\n`;
                 inList = true;
                 listType = 'ol';
+                listItemCount = lastClosedListType === 'ol' ? lastClosedListCount : 0;
+                lastClosedListType = null;
+                lastClosedListCount = 0;
             }
+            listItemCount++;
             const content = parseInline(olMatch[2]);
             // Wrap ordered list items with line actions for commenting
             html += `<li class="line" data-line="${sourceLineNum}">

@@ -152,6 +152,7 @@ npm run test:watch    # Watch mode
 - File-based (workspace `.claude/specs/` directories) (049-fix-plan-indent)
 - TypeScript 5.3+ (ES2022 target, strict mode) + VS Code Extension API (`@types/vscode ^1.84.0`), Preact (webview) (052-transition-logging)
 - TypeScript 5.3+ (ES2022 target, strict mode) + VS Code Extension API, Preact (webview) (054-archive-button-left)
+- N/A (rendering-only change) (055-fix-bullet-rendering)
 
 ## Recent Changes
 - 044-context-driven-badges: Added TypeScript 5.3+ (ES2022 target, strict mode) + VS Code Extension API (`@types/vscode ^1.84.0`)
