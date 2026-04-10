@@ -2,7 +2,7 @@
   "workflow": "sdd",
   "selectedAt": "2026-04-10T12:00:00.000Z",
   "currentStep": "tasks",
-  "status": "active",
+  "status": "completed",
   "specName": "Floating Toast",
   "branch": "main",
   "stepHistory": {
