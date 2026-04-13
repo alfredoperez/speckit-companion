@@ -18,30 +18,113 @@
     "README.md"
   ],
   "task_summaries": {
-    "T001": { "status": "DONE", "did": "Created stepLifecycle wrapper exposing startStep/completeStep/startSubstep/completeSubstep + setStatus/reactivate; all errors logged-and-swallowed.", "files": ["src/features/specs/stepLifecycle.ts"], "concerns": [] },
-    "T002": { "status": "DONE", "did": "Added BDD specs for stepLifecycle: writer args, log-not-throw on rejection, substep variants.", "files": ["src/features/specs/__tests__/stepLifecycle.test.ts"], "concerns": [] },
-    "T003": { "status": "DONE", "did": "Verified all AI provider executeInTerminal signatures already return Promise<vscode.Terminal>; no change needed.", "files": [], "concerns": ["No code change required — interface already returned vscode.Terminal."] },
-    "T004": { "status": "DONE", "did": "Created terminalStepTracker with track/register; onDidCloseTerminal fires completeStep once and deletes the entry.", "files": ["src/features/specs/terminalStepTracker.ts"], "concerns": [] },
-    "T005": { "status": "DONE", "did": "Tests cover tracked-close, untracked-close no-op, double-close no double-fire, undefined terminal.", "files": ["src/features/specs/__tests__/terminalStepTracker.test.ts", "tests/__mocks__/vscode.ts"], "concerns": [] },
-    "T006": { "status": "DONE", "did": "Wired startStep + trackTerminal into both phase command dispatch and executeWorkflowStep in specCommands.ts.", "files": ["src/features/specs/specCommands.ts"], "concerns": [] },
-    "T007": { "status": "DONE", "did": "Replaced setSpecStatus with canonical setStatus/reactivate in specCommands.ts and messageHandlers.ts; updated tests.", "files": ["src/features/specs/specCommands.ts", "src/features/spec-viewer/messageHandlers.ts", "src/features/spec-viewer/__tests__/messageHandlers.test.ts"], "concerns": [] },
-    "T008": { "status": "DONE", "did": "handleApprove fires completeStep on current step + startStep on next; handleRegenerate fires startStep.", "files": ["src/features/spec-viewer/messageHandlers.ts"], "concerns": ["Substep wrapping with CANONICAL_SUBSTEPS deferred — approve/regenerate don't currently expose multi-phase substep boundaries inside the viewer message handlers."] },
-    "T009": { "status": "DONE", "did": "extension.ts activate registers terminalStepTracker.register and wires lifecycle output channel.", "files": ["src/extension.ts"], "concerns": [] },
-    "T010": { "status": "DONE", "did": "README spec-context section now documents extension-side lifecycle writes.", "files": ["README.md"], "concerns": [] }
+    "T001": {
+      "status": "DONE",
+      "did": "Created stepLifecycle wrapper exposing startStep/completeStep/startSubstep/completeSubstep + setStatus/reactivate; all errors logged-and-swallowed.",
+      "files": [
+        "src/features/specs/stepLifecycle.ts"
+      ],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added BDD specs for stepLifecycle: writer args, log-not-throw on rejection, substep variants.",
+      "files": [
+        "src/features/specs/__tests__/stepLifecycle.test.ts"
+      ],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Verified all AI provider executeInTerminal signatures already return Promise<vscode.Terminal>; no change needed.",
+      "files": [],
+      "concerns": [
+        "No code change required — interface already returned vscode.Terminal."
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Created terminalStepTracker with track/register; onDidCloseTerminal fires completeStep once and deletes the entry.",
+      "files": [
+        "src/features/specs/terminalStepTracker.ts"
+      ],
+      "concerns": []
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Tests cover tracked-close, untracked-close no-op, double-close no double-fire, undefined terminal.",
+      "files": [
+        "src/features/specs/__tests__/terminalStepTracker.test.ts",
+        "tests/__mocks__/vscode.ts"
+      ],
+      "concerns": []
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Wired startStep + trackTerminal into both phase command dispatch and executeWorkflowStep in specCommands.ts.",
+      "files": [
+        "src/features/specs/specCommands.ts"
+      ],
+      "concerns": []
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Replaced setSpecStatus with canonical setStatus/reactivate in specCommands.ts and messageHandlers.ts; updated tests.",
+      "files": [
+        "src/features/specs/specCommands.ts",
+        "src/features/spec-viewer/messageHandlers.ts",
+        "src/features/spec-viewer/__tests__/messageHandlers.test.ts"
+      ],
+      "concerns": []
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "handleApprove fires completeStep on current step + startStep on next; handleRegenerate fires startStep.",
+      "files": [
+        "src/features/spec-viewer/messageHandlers.ts"
+      ],
+      "concerns": [
+        "Substep wrapping with CANONICAL_SUBSTEPS deferred — approve/regenerate don't currently expose multi-phase substep boundaries inside the viewer message handlers."
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "extension.ts activate registers terminalStepTracker.register and wires lifecycle output channel.",
+      "files": [
+        "src/extension.ts"
+      ],
+      "concerns": []
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "README spec-context section now documents extension-side lifecycle writes.",
+      "files": [
+        "README.md"
+      ],
+      "concerns": []
+    }
   },
   "concerns": [
-    { "task": "T003", "note": "No code change needed; AI providers already return vscode.Terminal." },
-    { "task": "T008", "note": "Substep wrapping with CANONICAL_SUBSTEPS not added — viewer approve/regenerate don't have observable multi-phase boundaries." }
+    {
+      "task": "T003",
+      "note": "No code change needed; AI providers already return vscode.Terminal."
+    },
+    {
+      "task": "T008",
+      "note": "Substep wrapping with CANONICAL_SUBSTEPS not added — viewer approve/regenerate don't have observable multi-phase boundaries."
+    }
   ],
   "decisions": [
-    { "decision": "Added setStatus and reactivate helpers to stepLifecycle.ts (rather than calling writer.updateSpecContext inline at every site) to keep callers one-liners and centralize transition appending." }
+    {
+      "decision": "Added setStatus and reactivate helpers to stepLifecycle.ts (rather than calling writer.updateSpecContext inline at every site) to keep callers one-liners and centralize transition appending."
+    }
   ],
   "last_action": "T010 complete — README updated with extension-side lifecycle writes note",
   "selectedAt": "2026-04-13T20:23:45Z",
   "specName": "Extension Lifecycle Writes",
   "branch": "main",
   "createdAt": "2026-04-13T20:23:45Z",
-  "status": "specified",
+  "status": "completed",
   "approach": "Hook specContextWriter into specCommands.ts dispatch sites and viewer messageHandlers; track spawned terminals so onDidCloseTerminal fires setStepCompleted; route status writes through canonical updateSpecContext.",
   "stepHistory": {
     "specify": {
@@ -74,17 +157,172 @@
     }
   },
   "transitions": [
-    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-13T20:23:45Z" },
-    { "step": "specify", "substep": "exploring", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-04-13T20:23:55Z" },
-    { "step": "specify", "substep": "detecting", "from": { "step": "specify", "substep": "exploring" }, "by": "sdd", "at": "2026-04-13T20:24:05Z" },
-    { "step": "specify", "substep": "writing-spec", "from": { "step": "specify", "substep": "detecting" }, "by": "sdd", "at": "2026-04-13T20:24:15Z" },
-    { "step": "specify", "substep": null, "from": { "step": "specify", "substep": "writing-spec" }, "by": "sdd", "at": "2026-04-13T20:24:30Z" },
-    { "step": "plan", "substep": "loading", "from": { "step": "specify", "substep": null }, "by": "sdd", "at": "2026-04-13T20:25:00Z" },
-    { "step": "plan", "substep": "writing-plan", "from": { "step": "plan", "substep": "loading" }, "by": "sdd", "at": "2026-04-13T20:25:10Z" },
-    { "step": "plan", "substep": null, "from": { "step": "plan", "substep": "writing-plan" }, "by": "sdd", "at": "2026-04-13T20:25:30Z" },
-    { "step": "tasks", "substep": "loading", "from": { "step": "plan", "substep": null }, "by": "sdd", "at": "2026-04-13T20:26:00Z" },
-    { "step": "tasks", "substep": "writing-tasks", "from": { "step": "tasks", "substep": "loading" }, "by": "sdd", "at": "2026-04-13T20:26:10Z" },
-    { "step": "tasks", "substep": null, "from": { "step": "tasks", "substep": "writing-tasks" }, "by": "sdd", "at": "2026-04-13T20:26:30Z" },
-    { "step": "implement", "substep": null, "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-04-13T20:30:00Z" }
+    {
+      "step": "specify",
+      "substep": "parsing",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-04-13T20:23:45Z"
+    },
+    {
+      "step": "specify",
+      "substep": "exploring",
+      "from": {
+        "step": "specify",
+        "substep": "parsing"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T20:23:55Z"
+    },
+    {
+      "step": "specify",
+      "substep": "detecting",
+      "from": {
+        "step": "specify",
+        "substep": "exploring"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T20:24:05Z"
+    },
+    {
+      "step": "specify",
+      "substep": "writing-spec",
+      "from": {
+        "step": "specify",
+        "substep": "detecting"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T20:24:15Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": "writing-spec"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T20:24:30Z"
+    },
+    {
+      "step": "plan",
+      "substep": "loading",
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-13T20:25:00Z"
+    },
+    {
+      "step": "plan",
+      "substep": "writing-plan",
+      "from": {
+        "step": "plan",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T20:25:10Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": "writing-plan"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T20:25:30Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "loading",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-13T20:26:00Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "writing-tasks",
+      "from": {
+        "step": "tasks",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T20:26:10Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": "writing-tasks"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T20:26:30Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-13T20:30:00Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T23:10:47.665Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T23:10:48.667Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T23:10:49.460Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T23:10:50.550Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T23:10:56.129Z"
+    }
   ]
 }

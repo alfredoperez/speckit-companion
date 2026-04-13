@@ -6,7 +6,7 @@
   "next": "implement",
   "updated": "2026-04-13",
   "selectedAt": "2026-04-13T11:35:05Z",
-  "status": "active",
+  "status": "completed",
   "specName": "Hide Launch Prompt",
   "branch": "main",
   "createdAt": "2026-04-13T11:35:05Z",
@@ -18,10 +18,22 @@
     "specs/059-hide-launch-prompt/tasks.md"
   ],
   "concerns": [
-    {"task": "T003", "note": "Gemini uses interactive REPL; helper pattern would break interactive UX — left unchanged"},
-    {"task": "T004", "note": "Copilot already satisfies R001 via executeInTerminal delegation — no change needed"},
-    {"task": "T005", "note": "Codex uses sed+pipe with local prompt templates; different dispatch model — left unchanged"},
-    {"task": "T006", "note": "Qwen already satisfies R001 via executeInTerminal delegation — no change needed"}
+    {
+      "task": "T003",
+      "note": "Gemini uses interactive REPL; helper pattern would break interactive UX — left unchanged"
+    },
+    {
+      "task": "T004",
+      "note": "Copilot already satisfies R001 via executeInTerminal delegation — no change needed"
+    },
+    {
+      "task": "T005",
+      "note": "Codex uses sed+pipe with local prompt templates; different dispatch model — left unchanged"
+    },
+    {
+      "task": "T006",
+      "note": "Qwen already satisfies R001 via executeInTerminal delegation — no change needed"
+    }
   ],
   "decisions": [
     "Helper signature uses options object with context, outputChannel, terminal, cliInvocation, slashCommand, promptText, autoExecute, logPrefix — supports both slash-prefixed (Claude) and prefix-less (Copilot-style) forms",
@@ -31,20 +43,26 @@
     "T001": {
       "status": "DONE",
       "did": "Added dispatchSlashCommandViaTempFile helper to src/ai-providers/aiProvider.ts with fs/createTempFile/Timing imports",
-      "files": ["src/ai-providers/aiProvider.ts"],
+      "files": [
+        "src/ai-providers/aiProvider.ts"
+      ],
       "concerns": []
     },
     "T002": {
       "status": "DONE",
       "did": "Rewrote Claude's executeSlashCommand to split slash name from args and route via helper so args are written to temp file and dispatched as claude \"/name $(cat <file>)\"",
-      "files": ["src/ai-providers/claudeCodeProvider.ts"],
+      "files": [
+        "src/ai-providers/claudeCodeProvider.ts"
+      ],
       "concerns": []
     },
     "T003": {
       "status": "DONE_WITH_CONCERNS",
       "did": "No code change — Gemini uses interactive REPL mode; slash command text appears in Gemini's UI, not in the shell command line",
       "files": [],
-      "concerns": ["Interactive REPL structurally incompatible with temp-file dispatch pattern"]
+      "concerns": [
+        "Interactive REPL structurally incompatible with temp-file dispatch pattern"
+      ]
     },
     "T004": {
       "status": "DONE",
@@ -56,7 +74,9 @@
       "status": "DONE_WITH_CONCERNS",
       "did": "No code change — Codex uses sed+pipe with local .codex/prompts/*.md templates, a different dispatch model",
       "files": [],
-      "concerns": ["Sed substitution exposes args on the terminal line — separate refactor if tightening needed"]
+      "concerns": [
+        "Sed substitution exposes args on the terminal line — separate refactor if tightening needed"
+      ]
     },
     "T006": {
       "status": "DONE",
@@ -78,10 +98,18 @@
     }
   },
   "stepHistory": {
-    "specify": {"startedAt": "2026-04-13T11:35:05Z"},
-    "plan": {"startedAt": "2026-04-13T11:40:00Z"},
-    "tasks": {"startedAt": "2026-04-13T11:45:00Z"},
-    "implement": {"startedAt": "2026-04-13T12:00:00Z"}
+    "specify": {
+      "startedAt": "2026-04-13T11:35:05Z"
+    },
+    "plan": {
+      "startedAt": "2026-04-13T11:40:00Z"
+    },
+    "tasks": {
+      "startedAt": "2026-04-13T11:45:00Z"
+    },
+    "implement": {
+      "startedAt": "2026-04-13T12:00:00Z"
+    }
   },
   "step_summaries": {
     "specify": {
@@ -98,21 +126,126 @@
         "Temp-file cleanup race with slow shell integration: reuse the proven Timing.tempFileCleanupDelay delay already used by executeInTerminal"
       ]
     },
-    "tasks": {"task_count": 8, "phases": 1}
+    "tasks": {
+      "task_count": 8,
+      "phases": 1
+    }
   },
   "transitions": [
-    {"step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-13T11:35:05Z"},
-    {"step": "specify", "substep": "exploring", "from": "parsing", "by": "sdd", "at": "2026-04-13T11:35:10Z"},
-    {"step": "specify", "substep": "detecting", "from": "exploring", "by": "sdd", "at": "2026-04-13T11:35:20Z"},
-    {"step": "specify", "substep": "writing-spec", "from": "detecting", "by": "sdd", "at": "2026-04-13T11:35:25Z"},
-    {"step": "specify", "substep": null, "from": "writing-spec", "by": "sdd", "at": "2026-04-13T11:35:30Z"},
-    {"step": "plan", "substep": "loading", "from": {"step": "specify", "substep": null}, "by": "sdd", "at": "2026-04-13T11:40:00Z"},
-    {"step": "plan", "substep": "writing-plan", "from": {"step": "plan", "substep": "loading"}, "by": "sdd", "at": "2026-04-13T11:40:05Z"},
-    {"step": "plan", "substep": null, "from": {"step": "plan", "substep": "writing-plan"}, "by": "sdd", "at": "2026-04-13T11:40:10Z"},
-    {"step": "tasks", "substep": "loading", "from": {"step": "plan", "substep": null}, "by": "sdd", "at": "2026-04-13T11:45:00Z"},
-    {"step": "tasks", "substep": "writing-tasks", "from": {"step": "tasks", "substep": "loading"}, "by": "sdd", "at": "2026-04-13T11:45:05Z"},
-    {"step": "tasks", "substep": null, "from": {"step": "tasks", "substep": "writing-tasks"}, "by": "sdd", "at": "2026-04-13T11:45:10Z"},
-    {"step": "implement", "substep": "phase1", "from": {"step": "tasks", "substep": null}, "by": "sdd", "at": "2026-04-13T12:00:00Z"},
-    {"step": "implement", "substep": "code-review", "from": {"step": "implement", "substep": "phase1"}, "by": "sdd", "at": "2026-04-13T12:05:00Z"}
+    {
+      "step": "specify",
+      "substep": "parsing",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-04-13T11:35:05Z"
+    },
+    {
+      "step": "specify",
+      "substep": "exploring",
+      "from": "parsing",
+      "by": "sdd",
+      "at": "2026-04-13T11:35:10Z"
+    },
+    {
+      "step": "specify",
+      "substep": "detecting",
+      "from": "exploring",
+      "by": "sdd",
+      "at": "2026-04-13T11:35:20Z"
+    },
+    {
+      "step": "specify",
+      "substep": "writing-spec",
+      "from": "detecting",
+      "by": "sdd",
+      "at": "2026-04-13T11:35:25Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": "writing-spec",
+      "by": "sdd",
+      "at": "2026-04-13T11:35:30Z"
+    },
+    {
+      "step": "plan",
+      "substep": "loading",
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-13T11:40:00Z"
+    },
+    {
+      "step": "plan",
+      "substep": "writing-plan",
+      "from": {
+        "step": "plan",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T11:40:05Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": "writing-plan"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T11:40:10Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "loading",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-13T11:45:00Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "writing-tasks",
+      "from": {
+        "step": "tasks",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T11:45:05Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": "writing-tasks"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T11:45:10Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-13T12:00:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": "code-review",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T12:05:00Z"
+    }
   ]
 }

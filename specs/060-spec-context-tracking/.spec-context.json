@@ -2,7 +2,7 @@
   "workflow": "speckit",
   "selectedAt": "2026-04-13T13:07:56.000Z",
   "currentStep": "specify",
-  "status": "active",
+  "status": "completed",
   "specName": "Spec Context Tracking",
   "branch": "060-spec-context-tracking",
   "stepHistory": {

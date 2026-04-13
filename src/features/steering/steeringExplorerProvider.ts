@@ -39,57 +39,69 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
     }
 
     private setupAgentFileWatchers(): void {
+        const providerPaths = getProviderPaths();
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (workspaceFolder) {
+        if (workspaceFolder && providerPaths.agentsDir) {
+            const pattern = providerPaths.agentsPattern || '*.md';
             this.agentProjectWatcher = vscode.workspace.createFileSystemWatcher(
-                new vscode.RelativePattern(workspaceFolder, '.claude/agents/**/*.md')
+                new vscode.RelativePattern(workspaceFolder, `${providerPaths.agentsDir}/**/${pattern}`)
             );
             this.agentProjectWatcher.onDidCreate(() => this._onDidChangeTreeData.fire());
             this.agentProjectWatcher.onDidChange(() => this._onDidChangeTreeData.fire());
             this.agentProjectWatcher.onDidDelete(() => this._onDidChangeTreeData.fire());
         }
 
-        const userAgentsPath = path.join(os.homedir(), '.claude/agents');
-        try {
-            this.agentUserWatcher = vscode.workspace.createFileSystemWatcher(
-                new vscode.RelativePattern(userAgentsPath, '**/*.md')
-            );
-            this.agentUserWatcher.onDidCreate(() => this._onDidChangeTreeData.fire());
-            this.agentUserWatcher.onDidChange(() => this._onDidChangeTreeData.fire());
-            this.agentUserWatcher.onDidDelete(() => this._onDidChangeTreeData.fire());
-        } catch { /* user dir may not exist */ }
+        if (providerPaths.agentsDir) {
+            const userAgentsPath = path.join(os.homedir(), providerPaths.agentsDir);
+            try {
+                const pattern = providerPaths.agentsPattern || '*.md';
+                this.agentUserWatcher = vscode.workspace.createFileSystemWatcher(
+                    new vscode.RelativePattern(userAgentsPath, `**/${pattern}`)
+                );
+                this.agentUserWatcher.onDidCreate(() => this._onDidChangeTreeData.fire());
+                this.agentUserWatcher.onDidChange(() => this._onDidChangeTreeData.fire());
+                this.agentUserWatcher.onDidDelete(() => this._onDidChangeTreeData.fire());
+            } catch { /* user dir may not exist */ }
+        }
     }
 
     private setupSkillFileWatchers(): void {
+        const providerPaths = getProviderPaths();
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (workspaceFolder) {
+        if (workspaceFolder && providerPaths.skillsDir) {
             this.skillProjectWatcher = vscode.workspace.createFileSystemWatcher(
-                new vscode.RelativePattern(workspaceFolder, '.claude/skills/**/SKILL.md')
+                new vscode.RelativePattern(workspaceFolder, `${providerPaths.skillsDir}/**/SKILL.md`)
             );
             this.skillProjectWatcher.onDidCreate(() => this._onDidChangeTreeData.fire());
             this.skillProjectWatcher.onDidChange(() => this._onDidChangeTreeData.fire());
             this.skillProjectWatcher.onDidDelete(() => this._onDidChangeTreeData.fire());
         }
 
-        const userSkillsPath = path.join(os.homedir(), '.claude/skills');
-        try {
-            this.skillUserWatcher = vscode.workspace.createFileSystemWatcher(
-                new vscode.RelativePattern(userSkillsPath, '**/SKILL.md')
-            );
-            this.skillUserWatcher.onDidCreate(() => this._onDidChangeTreeData.fire());
-            this.skillUserWatcher.onDidChange(() => this._onDidChangeTreeData.fire());
-            this.skillUserWatcher.onDidDelete(() => this._onDidChangeTreeData.fire());
-        } catch { /* user dir may not exist */ }
+        if (providerPaths.skillsDir) {
+            const userSkillsPath = path.join(os.homedir(), providerPaths.skillsDir);
+            try {
+                this.skillUserWatcher = vscode.workspace.createFileSystemWatcher(
+                    new vscode.RelativePattern(userSkillsPath, '**/SKILL.md')
+                );
+                this.skillUserWatcher.onDidCreate(() => this._onDidChangeTreeData.fire());
+                this.skillUserWatcher.onDidChange(() => this._onDidChangeTreeData.fire());
+                this.skillUserWatcher.onDidDelete(() => this._onDidChangeTreeData.fire());
+            } catch { /* user dir may not exist */ }
+        }
 
-        const pluginsPath = path.join(os.homedir(), '.claude/plugins');
-        try {
-            this.skillPluginsWatcher = vscode.workspace.createFileSystemWatcher(
-                new vscode.RelativePattern(pluginsPath, 'installed_plugins.json')
-            );
-            this.skillPluginsWatcher.onDidCreate(() => this._onDidChangeTreeData.fire());
-            this.skillPluginsWatcher.onDidChange(() => this._onDidChangeTreeData.fire());
-            this.skillPluginsWatcher.onDidDelete(() => this._onDidChangeTreeData.fire());
-        } catch { /* plugins dir may not exist */ }
+        // Plugins watcher is Claude-specific (no provider equivalent currently)
+        const providerType = getConfiguredProviderType();
+        if (providerType === AIProviders.CLAUDE) {
+            const pluginsPath = path.join(os.homedir(), '.claude/plugins');
+            try {
+                this.skillPluginsWatcher = vscode.workspace.createFileSystemWatcher(
+                    new vscode.RelativePattern(pluginsPath, 'installed_plugins.json')
+                );
+                this.skillPluginsWatcher.onDidCreate(() => this._onDidChangeTreeData.fire());
+                this.skillPluginsWatcher.onDidChange(() => this._onDidChangeTreeData.fire());
+                this.skillPluginsWatcher.onDidDelete(() => this._onDidChangeTreeData.fire());
+            } catch { /* plugins dir may not exist */ }
+        }
     }
 
     dispose(): void {
@@ -170,35 +182,33 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                 this.context
             ));
 
-            // Add create buttons for missing files (Claude only for now)
-            if (providerType === AIProviders.CLAUDE) {
-                if (!globalExists) {
-                    items.push(new SteeringItem(
-                        'Create Global Rule',
-                        vscode.TreeItemCollapsibleState.None,
-                        TreeItemContext.createGlobal,
-                        '',
-                        this.context,
-                        {
-                            command: 'speckit.steering.createUserRule',
-                            title: 'Create Global CLAUDE.md'
-                        }
-                    ));
-                }
+            // Add create buttons for missing files (only providers that own a steering file)
+            if (providerPaths.globalSteeringFile && !globalExists) {
+                items.push(new SteeringItem(
+                    'Create Global Rule',
+                    vscode.TreeItemCollapsibleState.None,
+                    TreeItemContext.createGlobal,
+                    '',
+                    this.context,
+                    {
+                        command: 'speckit.steering.createUserRule',
+                        title: `Create Global ${providerPaths.steeringFile}`
+                    }
+                ));
+            }
 
-                if (vscode.workspace.workspaceFolders && !projectExists) {
-                    items.push(new SteeringItem(
-                        'Create Project Rule',
-                        vscode.TreeItemCollapsibleState.None,
-                        TreeItemContext.createProject,
-                        '',
-                        this.context,
-                        {
-                            command: 'speckit.steering.createProjectRule',
-                            title: 'Create Project CLAUDE.md'
-                        }
-                    ));
-                }
+            if (vscode.workspace.workspaceFolders && providerPaths.steeringFile && !projectExists) {
+                items.push(new SteeringItem(
+                    'Create Project Rule',
+                    vscode.TreeItemCollapsibleState.None,
+                    TreeItemContext.createProject,
+                    '',
+                    this.context,
+                    {
+                        command: 'speckit.steering.createProjectRule',
+                        title: `Create Project ${providerPaths.steeringFile}`
+                    }
+                ));
             }
 
             return items;
@@ -254,37 +264,21 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
     /**
      * Get provider-specific steering file paths
      */
-    private getSteeringFilePaths(providerType: AIProviderType, providerPaths: ReturnType<typeof getProviderPaths>): {
+    private getSteeringFilePaths(_providerType: AIProviderType, providerPaths: ReturnType<typeof getProviderPaths>): {
         globalPath: string | null;
         projectPath: string | null;
         globalExists: boolean;
         projectExists: boolean;
     } {
-        const home = process.env.HOME || '';
+        const home = os.homedir();
         const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
 
-        let globalPath: string | null = null;
-        let projectPath: string | null = null;
-
-        switch (providerType) {
-            case AIProviders.CLAUDE:
-                globalPath = path.join(home, '.claude', 'CLAUDE.md');
-                projectPath = workspaceRoot ? path.join(workspaceRoot, 'CLAUDE.md') : null;
-                break;
-            case AIProviders.GEMINI:
-                globalPath = path.join(home, '.gemini', 'GEMINI.md');
-                projectPath = workspaceRoot ? path.join(workspaceRoot, 'GEMINI.md') : null;
-                break;
-            case AIProviders.COPILOT:
-                // Copilot doesn't have a global file in the same way
-                globalPath = null;
-                projectPath = workspaceRoot ? path.join(workspaceRoot, '.github', 'copilot-instructions.md') : null;
-                break;
-            case AIProviders.QWEN:
-                globalPath = path.join(home, '.qwen', 'QWEN.md');
-                projectPath = workspaceRoot ? path.join(workspaceRoot, 'QWEN.md') : null;
-                break;
-        }
+        const globalPath = providerPaths.globalSteeringFile
+            ? path.join(home, providerPaths.globalSteeringFile)
+            : null;
+        const projectPath = workspaceRoot
+            ? path.join(workspaceRoot, providerPaths.steeringFile)
+            : null;
 
         return {
             globalPath,

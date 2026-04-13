@@ -138,6 +138,8 @@ export type AIProviderType = typeof AIProviders[keyof typeof AIProviders];
 export interface ProviderPaths {
     /** Main steering file name (e.g., CLAUDE.md, GEMINI.md) */
     steeringFile: string;
+    /** Global steering file name relative to user home, or null if provider has no global file */
+    globalSteeringFile: string | null;
     /** Directory for additional steering files */
     steeringDir: string;
     /** Pattern for steering files in the directory */
@@ -152,12 +154,22 @@ export interface ProviderPaths {
     skillsPattern: string;
     /** Path to MCP config file (relative to home) */
     mcpConfigPath: string;
+    /** Workspace-relative provider config directory (e.g., '.claude', '.gemini') */
+    configDir: string;
     /** Whether hooks are supported */
     supportsHooks: boolean;
     /** Human-readable provider name for UI display */
     displayName: string;
     /** How speckit commands are formatted: 'dot' = speckit.plan, 'dash' = speckit-plan */
     commandFormat: 'dot' | 'dash';
+    /** Codicon string used in the provider QuickPick (e.g. '$(hubot)') */
+    quickPickIcon: string;
+    /** Description text shown in the provider QuickPick */
+    quickPickDescription: string;
+    /** Whether the CLI supports interactive permission prompting */
+    supportsInteractivePermissions: boolean;
+    /** Flag prepended to the CLI invocation when permission mode is 'auto-approve' (empty if none) */
+    autoApproveFlag: string;
 }
 
 /**
@@ -166,6 +178,7 @@ export interface ProviderPaths {
 export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
     [AIProviders.CLAUDE]: {
         steeringFile: 'CLAUDE.md',
+        globalSteeringFile: '.claude/CLAUDE.md',
         steeringDir: '.claude/steering',
         steeringPattern: '*.md',
         agentsDir: '.claude/agents',
@@ -173,12 +186,18 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         skillsDir: '.claude/skills',
         skillsPattern: '*/SKILL.md',
         mcpConfigPath: '.claude/settings.json',
+        configDir: '.claude',
         supportsHooks: true,
         displayName: 'Claude',
         commandFormat: 'dash',
+        quickPickIcon: '$(hubot)',
+        quickPickDescription: 'Full feature support: steering, agents, hooks, and MCP',
+        supportsInteractivePermissions: true,
+        autoApproveFlag: '--permission-mode bypassPermissions ',
     },
     [AIProviders.GEMINI]: {
         steeringFile: 'GEMINI.md',
+        globalSteeringFile: '.gemini/GEMINI.md',
         steeringDir: '', // Gemini uses hierarchical GEMINI.md files
         steeringPattern: 'GEMINI.md',
         agentsDir: '', // Limited agent support
@@ -186,12 +205,18 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         skillsDir: '', // Not supported
         skillsPattern: '',
         mcpConfigPath: '.gemini/settings.json',
+        configDir: '.gemini',
         supportsHooks: false,
         displayName: 'Gemini',
         commandFormat: 'dot',
+        quickPickIcon: '$(sparkle)',
+        quickPickDescription: 'Steering and MCP support (no agents or hooks)',
+        supportsInteractivePermissions: true,
+        autoApproveFlag: '',
     },
     [AIProviders.COPILOT]: {
         steeringFile: '.github/copilot-instructions.md',
+        globalSteeringFile: null,
         steeringDir: '.github/instructions',
         steeringPattern: '*.instructions.md',
         agentsDir: '.github/agents',
@@ -199,12 +224,18 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         skillsDir: '', // Not supported
         skillsPattern: '',
         mcpConfigPath: '.copilot/mcp-config.json',
+        configDir: '.github',
         supportsHooks: false,
         displayName: 'Copilot',
         commandFormat: 'dot',
+        quickPickIcon: '$(github)',
+        quickPickDescription: 'Steering, agents, and MCP support (no hooks)',
+        supportsInteractivePermissions: false,
+        autoApproveFlag: '--yolo ',
     },
     [AIProviders.CODEX]: {
         steeringFile: 'AGENTS.md',
+        globalSteeringFile: null,
         steeringDir: '.codex',
         steeringPattern: 'AGENTS.md',
         agentsDir: '', // Codex uses AGENTS.md hierarchy, not separate agents
@@ -212,12 +243,18 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         skillsDir: '.codex/skills',
         skillsPattern: '*/SKILL.md',
         mcpConfigPath: '~/.codex/config.toml', // Note: home directory, TOML format
+        configDir: '.codex',
         supportsHooks: false,
         displayName: 'Codex',
         commandFormat: 'dash',
+        quickPickIcon: '$(terminal)',
+        quickPickDescription: 'Steering, skills, and MCP support',
+        supportsInteractivePermissions: true,
+        autoApproveFlag: '',
     },
     [AIProviders.QWEN]: {
         steeringFile: 'QWEN.md',
+        globalSteeringFile: '.qwen/QWEN.md',
         steeringDir: '.qwen/steering',
         steeringPattern: '*.md',
         agentsDir: '',
@@ -225,9 +262,33 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         skillsDir: '',
         skillsPattern: '',
         mcpConfigPath: '.qwen/settings.json',
+        configDir: '.qwen',
         supportsHooks: false,
         displayName: 'Qwen',
         commandFormat: 'dot',
+        quickPickIcon: '$(hubot)',
+        quickPickDescription: 'Steering and MCP support (no agents or hooks)',
+        supportsInteractivePermissions: true,
+        autoApproveFlag: '--yolo ',
+    },
+    [AIProviders.OPENCODE]: {
+        steeringFile: 'AGENTS.md',
+        globalSteeringFile: null,
+        steeringDir: '',
+        steeringPattern: 'AGENTS.md',
+        agentsDir: '.opencode/agent',
+        agentsPattern: '*.md',
+        skillsDir: '',
+        skillsPattern: '',
+        mcpConfigPath: '.opencode/opencode.jsonc',
+        configDir: '.opencode',
+        supportsHooks: false,
+        displayName: 'OpenCode',
+        commandFormat: 'dot',
+        quickPickIcon: '$(code)',
+        quickPickDescription: 'Steering and agents support (AGENTS.md)',
+        supportsInteractivePermissions: true,
+        autoApproveFlag: '',
     },
 };
 
@@ -291,34 +352,16 @@ export function getConfiguredProviderType(): AIProviderType {
  * permission flows.
  */
 export async function promptForProviderSelection(): Promise<AIProviderType | undefined> {
+    const items = (Object.keys(PROVIDER_PATHS) as AIProviderType[]).map(type => {
+        const p = PROVIDER_PATHS[type];
+        return {
+            label: `${p.quickPickIcon} ${p.displayName}`,
+            description: p.quickPickDescription,
+            value: type,
+        };
+    });
     const selection = await vscode.window.showQuickPick(
-        [
-            {
-                label: '$(hubot) Claude Code',
-                description: 'Full feature support: steering, agents, hooks, and MCP',
-                value: AIProviders.CLAUDE as AIProviderType
-            },
-            {
-                label: '$(github) GitHub Copilot CLI',
-                description: 'Steering, agents, and MCP support (no hooks)',
-                value: AIProviders.COPILOT as AIProviderType
-            },
-            {
-                label: '$(sparkle) Gemini CLI',
-                description: 'Steering and MCP support (no agents or hooks)',
-                value: AIProviders.GEMINI as AIProviderType
-            },
-            {
-                label: '$(terminal) Codex CLI',
-                description: 'Steering, skills, and MCP support',
-                value: AIProviders.CODEX as AIProviderType
-            },
-            {
-                label: '$(hubot) Qwen Code',
-                description: 'Steering and MCP support (no agents or hooks)',
-                value: AIProviders.QWEN as AIProviderType
-            }
-        ],
+        items,
         {
             placeHolder: 'Select your AI coding assistant',
             title: 'SpecKit Companion - Choose AI Provider',

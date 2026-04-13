@@ -42,7 +42,7 @@ import { deriveSpecName } from "../specs/specContextManager";
 import { readSpecContext } from "../specs/specContextReader";
 import { writeSpecContext } from "../specs/specContextWriter";
 import { backfillMinimalContext } from "../specs/specContextBackfill";
-import { deriveViewerState } from "./stateDerivation";
+import { deriveViewerState, isStepCompleted } from "./stateDerivation";
 import { StepName, STEP_NAMES, ViewerState as CoreViewerState } from "../../core/types/specContext";
 import {
   DEFAULT_WORKFLOW,
@@ -66,12 +66,14 @@ export {
  * compatibility with the 4-phase fallback stepper.
  */
 function deriveStepBadgesWithAlias(
-  stepHistory: Record<string, { startedAt?: string; completedAt?: string | null }>
+  stepHistory: Record<string, { startedAt?: string; completedAt?: string | null }>,
+  currentStep?: string
 ): Record<string, 'not-started' | 'in-progress' | 'completed'> {
   const out: Record<string, 'not-started' | 'in-progress' | 'completed'> = {};
+  const cs = (currentStep ?? 'specify') as StepName;
   for (const [step, entry] of Object.entries(stepHistory)) {
     if (!entry?.startedAt) out[step] = 'not-started';
-    else if (entry.completedAt) out[step] = 'completed';
+    else if (isStepCompleted(step as StepName, cs, stepHistory)) out[step] = 'completed';
     else out[step] = 'in-progress';
   }
   if (out['specify'] && !out['spec']) out['spec'] = out['specify'];
@@ -468,7 +470,7 @@ export class SpecViewerProvider {
 
       // Calculate phases — reuse stepHistory from the single featureCtx read (US2).
       const stepBadges = featureCtx?.stepHistory
-        ? deriveStepBadgesWithAlias(featureCtx.stepHistory)
+        ? deriveStepBadgesWithAlias(featureCtx.stepHistory, featureCtx.currentStep)
         : undefined;
       const phases = calculatePhases(
         documents,

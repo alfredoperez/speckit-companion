@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 // AI Providers
-import { IAIProvider, AIProviderFactory, isProviderConfigured, promptForProviderSelection } from './ai-providers';
+import { IAIProvider, AIProviderFactory, isProviderConfigured, promptForProviderSelection, validatePermissionMode } from './ai-providers';
 
 // Features
 import { SteeringManager, SteeringExplorerProvider, registerSteeringCommands } from './features/steering';
@@ -190,8 +190,17 @@ export async function activate(context: vscode.ExtensionContext) {
                     vscode.commands.executeCommand('workbench.action.reloadWindow');
                 }
             }
+            if (
+                e.affectsConfiguration('speckit.permissionMode') ||
+                e.affectsConfiguration('speckit.aiProvider')
+            ) {
+                void validatePermissionMode(context);
+            }
         })
     );
+
+    // Validate provider/permission combination after activation completes (non-blocking)
+    setTimeout(() => { void validatePermissionMode(context); }, 0);
 }
 
 /**

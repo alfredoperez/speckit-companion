@@ -26,7 +26,7 @@ export function calculatePhases(
     const isCompletedByContext = (step: string): boolean | null => {
         if (!stepHistoryBadges) return null;
         const s = stepHistoryBadges[step];
-        if (s === undefined) return null;
+        if (s === undefined) return false; // step not in history = not completed (no file-existence fallback)
         return s === 'completed';
     };
     // Default behavior: 4-phase stepper

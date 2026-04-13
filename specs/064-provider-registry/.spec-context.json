@@ -1,0 +1,151 @@
+{
+  "workflow": "sdd",
+  "currentStep": "implement",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "updated": "2026-04-13",
+  "selectedAt": "2026-04-13T22:22:52Z",
+  "status": "completed",
+  "specName": "Provider Registry",
+  "branch": "main",
+  "createdAt": "2026-04-13T22:22:52Z",
+  "approach": "Extend PROVIDER_PATHS into the single source of truth for all per-provider behavior and refactor factory, QuickPick, steering sidebar, and permission helpers to derive from it.",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-04-13T22:22:52Z"
+    },
+    "plan": {
+      "startedAt": "2026-04-13T22:24:00Z"
+    },
+    "tasks": {
+      "startedAt": "2026-04-13T22:25:00Z"
+    }
+  },
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 14,
+      "scenarios": 6,
+      "key_finding": "PROVIDER_PATHS in aiProvider.ts is already a Record<AIProviderType, ProviderPaths> but factory, QuickPick, and steering sidebar maintain parallel hardcoded provider lists instead of deriving from it."
+    },
+    "plan": {
+      "approach_summary": "Extend PROVIDER_PATHS into the single source of truth for all per-provider behavior and refactor factory, QuickPick, steering sidebar, and permission helpers to derive from it.",
+      "files_planned": 14,
+      "risks": [
+        "Renamed steering methods break callers — rename and update every caller in the same commit; rely on tsc to catch stragglers.",
+        "AGENTS.md collision between OpenCode and Codex — accepted; content is provider-agnostic.",
+        "Activation-time validation noise — debounce via globalState or only fire on setting change after activation."
+      ]
+    }
+  },
+  "transitions": [
+    {
+      "step": "specify",
+      "substep": "parsing",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-04-13T22:22:52Z"
+    },
+    {
+      "step": "specify",
+      "substep": "exploring",
+      "from": {
+        "step": "specify",
+        "substep": "parsing"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T22:23:00Z"
+    },
+    {
+      "step": "specify",
+      "substep": "detecting",
+      "from": {
+        "step": "specify",
+        "substep": "exploring"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T22:23:10Z"
+    },
+    {
+      "step": "specify",
+      "substep": "writing-spec",
+      "from": {
+        "step": "specify",
+        "substep": "detecting"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T22:23:20Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": "writing-spec"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T22:23:30Z"
+    },
+    {
+      "step": "plan",
+      "substep": "loading",
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-13T22:24:00Z"
+    },
+    {
+      "step": "plan",
+      "substep": "writing-plan",
+      "from": {
+        "step": "plan",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T22:24:10Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": "writing-plan"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T22:24:20Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "loading",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-13T22:25:00Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "writing-tasks",
+      "from": {
+        "step": "tasks",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T22:25:10Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": "writing-tasks"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T22:25:20Z"
+    }
+  ]
+}
