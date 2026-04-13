@@ -83,6 +83,33 @@
     }
 }
 
+/* Blue pulse for the currently-in-progress step (ViewerState.pulse). */
+@keyframes step-tab-pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 3px var(--accent);
+    }
+    50% {
+        box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 5px var(--accent), 0 0 12px var(--accent);
+    }
+}
+
+.step-tab.pulse {
+    animation: step-tab-pulse 1.8s ease-in-out infinite;
+}
+
+.step-tab.completed {
+    border-color: var(--success);
+    box-shadow: 0 0 0 1px var(--success);
+}
+
+.step-tab__substep {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.75em;
+    opacity: 0.7;
+    font-style: italic;
+}
+
 /* Purple glow for review mode */
 @keyframes review-glow {
     0%, 100% {

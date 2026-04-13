@@ -279,6 +279,8 @@ export type ExtensionToViewerMessage =
           specName: string;
           /** Navigation state for updating tabs without full page reload */
           navState?: NavState;
+          /** Derived ViewerState (status, pulse, highlights, footer, substep). */
+          viewerState?: import('../../core/types/specContext').ViewerState;
       }
     | {
           type: 'documentsUpdated';
@@ -355,6 +357,10 @@ export type ViewerToExtensionMessage =
     | {
           type: 'clarify';
           command?: string;
+      }
+    | {
+          type: 'footerAction';
+          id: string;
       }
     | {
           type: 'stepperClick';

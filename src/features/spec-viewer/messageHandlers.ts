@@ -96,6 +96,31 @@ export function createMessageHandlers(
             case 'openFile':
                 await handleOpenFile(message.filename, deps);
                 break;
+            case 'footerAction':
+                switch (message.id) {
+                    case 'archive':
+                        await handleLifecycleAction(specDirectory, SpecStatuses.ARCHIVED, deps);
+                        break;
+                    case 'reactivate':
+                        await handleLifecycleAction(specDirectory, SpecStatuses.ACTIVE, deps);
+                        break;
+                    case 'complete':
+                        await handleLifecycleAction(specDirectory, SpecStatuses.COMPLETED, deps);
+                        break;
+                    case 'regenerate':
+                        await handleRegenerate(specDirectory, deps);
+                        break;
+                    case 'approve':
+                    case 'start':
+                        await handleApprove(specDirectory, deps);
+                        break;
+                    case 'sdd-auto':
+                        await handleClarify(specDirectory, deps, '/sdd:auto');
+                        break;
+                    default:
+                        deps.outputChannel.appendLine(`[SpecViewer] Unknown footerAction id: ${message.id}`);
+                }
+                break;
         }
     };
 }

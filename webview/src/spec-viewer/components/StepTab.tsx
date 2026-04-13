@@ -1,4 +1,11 @@
 import type { SpecDocument, StalenessMap } from '../types';
+import { viewerState } from '../signals';
+
+const DOC_TO_STEP: Record<string, string> = {
+    spec: 'specify',
+    plan: 'plan',
+    tasks: 'tasks',
+};
 
 export interface StepTabProps {
     doc: SpecDocument;
@@ -32,6 +39,12 @@ export function StepTab(props: StepTabProps) {
     const isWorking = activeStep === phase && !stepHistory?.[phase]?.completedAt;
     const isClickable = exists || index === 0;
 
+    const vs = viewerState.value;
+    const stepName = DOC_TO_STEP[phase] ?? phase;
+    const vsPulse = vs?.pulse === stepName;
+    const vsCompleted = vs?.highlights?.includes(stepName) ?? false;
+    const vsSubstep = vs?.activeSubstep?.step === stepName ? vs.activeSubstep.name : null;
+
     const classes = [
         'step-tab',
         exists && 'exists',
@@ -42,6 +55,8 @@ export function StepTab(props: StepTabProps) {
         !isClickable && 'disabled',
         inProgress && !isTasksActive && 'in-progress',
         isStale && 'stale',
+        vsPulse && 'pulse',
+        vsCompleted && 'completed',
     ].filter(Boolean).join(' ');
 
     const statusIcon = inProgress ? `${taskCompletionPercent}%` : (exists ? '✓' : '');
@@ -55,6 +70,7 @@ export function StepTab(props: StepTabProps) {
         >
             <span class="step-status">{statusIcon}</span>
             <span class="step-label">{doc.label}</span>
+            {vsSubstep && <span class="step-tab__substep">{vsSubstep}</span>}
             {isStale && <span class="stale-badge">!</span>}
         </button>
     );

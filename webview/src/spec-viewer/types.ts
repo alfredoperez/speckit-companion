@@ -109,6 +109,31 @@ export interface ViewerWebviewState {
 }
 
 // ============================================
+// Viewer State (derived from SpecContext)
+// ============================================
+
+export type StepBadgeState = 'not-started' | 'in-progress' | 'completed';
+export type FooterScope = 'spec' | 'step';
+
+/** Serializable footer action — visibleWhen function is stripped before send. */
+export interface SerializedFooterAction {
+    id: string;
+    label: string;
+    scope: FooterScope;
+    tooltip: string;
+}
+
+export interface ViewerState {
+    status: string;
+    activeStep: string;
+    steps: Record<string, StepBadgeState>;
+    pulse: string | null;
+    highlights: string[];
+    activeSubstep: { step: string; name: string } | null;
+    footer: SerializedFooterAction[];
+}
+
+// ============================================
 // Message Types: Webview → Extension
 // ============================================
 
@@ -128,6 +153,7 @@ export type ViewerToExtensionMessage =
     | { type: 'regenerate' }
     | { type: 'approve' }
     | { type: 'clarify'; command?: string }
+    | { type: 'footerAction'; id: string }
     // Lifecycle actions
     | { type: 'completeSpec' }
     | { type: 'archiveSpec' }
@@ -144,11 +170,12 @@ export type ViewerToExtensionMessage =
 // ============================================
 
 export type ExtensionToViewerMessage =
-    | { type: 'contentUpdated'; content: string; documentType: DocumentType; specName: string; navState?: NavState }
+    | { type: 'contentUpdated'; content: string; documentType: DocumentType; specName: string; navState?: NavState; viewerState?: ViewerState }
     | { type: 'documentsUpdated'; documents: SpecDocument[]; currentDocument: DocumentType }
     | { type: 'error'; message: string; recoverable: boolean }
     | { type: 'fileDeleted'; filePath: string }
     | { type: 'navStateUpdated'; navState: NavState }
+    | { type: 'viewerStateUpdated'; viewerState: ViewerState }
     | { type: 'actionToast'; message: string };
 
 // ============================================

@@ -4,10 +4,13 @@
  */
 
 import { signal } from '@preact/signals';
-import type { NavState, Refinement, DocumentType } from './types';
+import type { NavState, Refinement, DocumentType, ViewerState } from './types';
 
 /** Navigation state from extension messages */
 export const navState = signal<NavState | null>(null);
+
+/** Derived viewer state (pulse, highlights, footer, substep). */
+export const viewerState = signal<ViewerState | null>(null);
 
 /** Pending refinements for GitHub-style review */
 export const pendingRefinements = signal<Refinement[]>([]);

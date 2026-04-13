@@ -42,6 +42,8 @@ import { deriveSpecName } from "../specs/specContextManager";
 import { readSpecContext } from "../specs/specContextReader";
 import { writeSpecContext } from "../specs/specContextWriter";
 import { backfillMinimalContext } from "../specs/specContextBackfill";
+import { deriveViewerState } from "./stateDerivation";
+import { StepName, STEP_NAMES, ViewerState as CoreViewerState } from "../../core/types/specContext";
 import {
   DEFAULT_WORKFLOW,
   getFeatureWorkflow,
@@ -796,6 +798,33 @@ export class SpecViewerProvider {
       const docLabel = doc.label || "Spec";
       instance.panel.title = `Spec: ${instance.state.specName} - ${docLabel}`;
 
+      // Derive ViewerState from the canonical .spec-context.json (if present),
+      // serializing footer to strip function fields.
+      let viewerState: CoreViewerState | undefined;
+      try {
+        const specCtx = await readSpecContext(specDirectory);
+        if (specCtx) {
+          const active: StepName = (STEP_NAMES.includes(specCtx.currentStep as StepName)
+            ? (specCtx.currentStep as StepName)
+            : 'specify');
+          const derived = deriveViewerState(specCtx, active);
+          viewerState = {
+            ...derived,
+            footer: derived.footer.map(a => ({
+              id: a.id,
+              label: a.label,
+              scope: a.scope,
+              tooltip: a.tooltip,
+              // visibleWhen stripped at serialization boundary
+            })) as CoreViewerState['footer'],
+          };
+        }
+      } catch (error) {
+        this.outputChannel.appendLine(
+          `[SpecViewer] deriveViewerState failed: ${error}`,
+        );
+      }
+
       // Send content via message (no full HTML regeneration)
       const encodedContent = Buffer.from(content).toString("base64");
       this.postMessage(specDirectory, {
@@ -804,6 +833,7 @@ export class SpecViewerProvider {
         documentType,
         specName: instance.state.specName,
         navState,
+        viewerState,
       });
 
       this.outputChannel.appendLine(
