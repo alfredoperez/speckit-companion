@@ -6,6 +6,8 @@ import { IAIProvider, AIProviderFactory, isProviderConfigured, promptForProvider
 // Features
 import { SteeringManager, SteeringExplorerProvider, registerSteeringCommands } from './features/steering';
 import { SpecExplorerProvider, registerSpecKitCommands } from './features/specs';
+import { register as registerTerminalStepTracker } from './features/specs/terminalStepTracker';
+import { setLifecycleOutputChannel } from './features/specs/stepLifecycle';
 import { OverviewProvider } from './features/settings';
 import { AgentManager } from './features/agents';
 import { SkillManager } from './features/skills';
@@ -34,6 +36,8 @@ export async function activate(context: vscode.ExtensionContext) {
     // Create output channel for debugging
     outputChannel = vscode.window.createOutputChannel('SpecKit Companion');
     context.subscriptions.push(outputChannel);
+    setLifecycleOutputChannel(outputChannel);
+    context.subscriptions.push(registerTerminalStepTracker(context));
 
     // Initialize SpecKit detector
     const specKitDetector = SpecKitDetector.getInstance();

@@ -111,6 +111,7 @@ export const window = {
     showTextDocument: jest.fn(),
     activeTextEditor: undefined as any,
     createTerminal: jest.fn().mockReturnValue({ show: jest.fn(), sendText: jest.fn() }),
+    onDidCloseTerminal: jest.fn().mockReturnValue({ dispose: jest.fn() }),
     createOutputChannel: jest.fn().mockReturnValue({
         appendLine: jest.fn(),
         show: jest.fn(),

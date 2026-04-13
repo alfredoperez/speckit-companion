@@ -15,7 +15,9 @@ import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig } from '../../core/types/config';
 import type { WorkflowStepConfig } from '../workflows/types';
 import { getFeatureWorkflow, getWorkflowCommands } from '../workflows';
-import { setSpecStatus, updateStepProgress } from '../specs/specContextManager';
+import { updateStepProgress } from '../specs/specContextManager';
+import { setStatus, reactivate, startStep, completeStep } from '../specs/stepLifecycle';
+import type { StepName } from '../../core/types/specContext';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 
 /**
@@ -199,8 +201,24 @@ async function handleRegenerate(
     const currentStep = steps.find(s => s.name === docType);
 
     if (currentStep) {
+        if (isLifecycleStep(docType)) {
+            await startStep(specDirectory, docType as StepName, 'extension');
+        }
         await executeStepInTerminal(currentStep, specDirectory, deps);
     }
+}
+
+const LIFECYCLE_STEP_NAMES: ReadonlySet<string> = new Set([
+    'specify',
+    'clarify',
+    'plan',
+    'tasks',
+    'analyze',
+    'implement',
+]);
+
+function isLifecycleStep(name: string): boolean {
+    return LIFECYCLE_STEP_NAMES.has(name);
 }
 
 /**
@@ -228,14 +246,25 @@ async function handleApprove(
         }
     }
 
+    // Mark the currently-viewed step as completed (independent of AI cooperation).
+    if (isLifecycleStep(docType)) {
+        await completeStep(specDirectory, docType as StepName, 'extension');
+    }
+
     if (currentIndex >= 0 && currentIndex < navSteps.length - 1) {
         // Execute next step's command
         const nextStep = navSteps[currentIndex + 1];
+        if (isLifecycleStep(nextStep.name)) {
+            await startStep(specDirectory, nextStep.name as StepName, 'extension');
+        }
         await executeStepInTerminal(nextStep, specDirectory, deps);
     } else if (currentIndex === navSteps.length - 1) {
         // Last navigable step: find the actionOnly implement step
         const implementStep = steps.find(s => s.actionOnly);
         if (implementStep) {
+            if (isLifecycleStep(implementStep.name)) {
+                await startStep(specDirectory, implementStep.name as StepName, 'extension');
+            }
             await executeStepInTerminal(implementStep, specDirectory, deps);
         }
     }
@@ -274,7 +303,11 @@ async function handleLifecycleAction(
     const label = status === SpecStatuses.ACTIVE ? 'reactivated' : status;
     deps.outputChannel.appendLine(`[SpecViewer] Setting spec status to ${status}: ${specDirectory}`);
 
-    await setSpecStatus(specDirectory, status);
+    if (status === SpecStatuses.ACTIVE) {
+        await reactivate(specDirectory);
+    } else {
+        await setStatus(specDirectory, status as 'completed' | 'archived');
+    }
     await vscode.commands.executeCommand('speckit.refresh');
     await deps.updateContent(specDirectory, instance.state.currentDocument);
 

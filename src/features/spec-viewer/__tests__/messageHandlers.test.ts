@@ -3,7 +3,15 @@ import { createMessageHandlers, MessageHandlerDependencies } from '../messageHan
 
 // Mock specContextManager
 jest.mock('../../specs/specContextManager', () => ({
-    setSpecStatus: jest.fn().mockResolvedValue(undefined),
+    updateStepProgress: jest.fn().mockResolvedValue(undefined),
+}));
+
+// Mock stepLifecycle (canonical writer wrappers)
+jest.mock('../../specs/stepLifecycle', () => ({
+    setStatus: jest.fn().mockResolvedValue(undefined),
+    reactivate: jest.fn().mockResolvedValue(undefined),
+    startStep: jest.fn().mockResolvedValue(undefined),
+    completeStep: jest.fn().mockResolvedValue(undefined),
 }));
 
 // Mock notificationUtils
@@ -20,7 +28,7 @@ jest.mock('../../workflows', () => ({
     getWorkflowCommands: jest.fn().mockReturnValue([]),
 }));
 
-import { setSpecStatus } from '../../specs/specContextManager';
+import { setStatus, reactivate } from '../../specs/stepLifecycle';
 import { NotificationUtils } from '../../../core/utils/notificationUtils';
 import { getFeatureWorkflow, getWorkflowCommands } from '../../workflows';
 
@@ -67,7 +75,7 @@ describe('messageHandlers - lifecycle actions', () => {
 
             await handler({ type: 'completeSpec' } as any);
 
-            expect(setSpecStatus).toHaveBeenCalledWith(SPEC_DIR, 'completed');
+            expect(setStatus).toHaveBeenCalledWith(SPEC_DIR, 'completed');
         });
 
         it('should refresh the sidebar tree after setting status', async () => {
@@ -107,7 +115,7 @@ describe('messageHandlers - lifecycle actions', () => {
 
             await handler({ type: 'completeSpec' } as any);
 
-            expect(setSpecStatus).not.toHaveBeenCalled();
+            expect(setStatus).not.toHaveBeenCalled();
         });
     });
 
@@ -118,7 +126,7 @@ describe('messageHandlers - lifecycle actions', () => {
 
             await handler({ type: 'archiveSpec' } as any);
 
-            expect(setSpecStatus).toHaveBeenCalledWith(SPEC_DIR, 'archived');
+            expect(setStatus).toHaveBeenCalledWith(SPEC_DIR, 'archived');
         });
 
         it('should refresh the sidebar tree after setting status', async () => {
@@ -152,13 +160,13 @@ describe('messageHandlers - lifecycle actions', () => {
     });
 
     describe('reactivateSpec', () => {
-        it('should call setSpecStatus with active', async () => {
+        it('should call reactivate (canonical in-progress derivation)', async () => {
             const deps = createMockDeps();
             const handler = createMessageHandlers(SPEC_DIR, deps);
 
             await handler({ type: 'reactivateSpec' } as any);
 
-            expect(setSpecStatus).toHaveBeenCalledWith(SPEC_DIR, 'active');
+            expect(reactivate).toHaveBeenCalledWith(SPEC_DIR);
         });
 
         it('should refresh the sidebar tree after setting status', async () => {
