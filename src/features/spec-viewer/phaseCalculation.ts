@@ -11,12 +11,24 @@ import { SpecStatuses, WorkflowSteps } from '../../core/constants';
  * When `stepCount` is provided, generates phases dynamically for that many steps + Done.
  * Falls back to the default 4-phase (Spec, Plan, Tasks, Done) when not provided.
  */
+/**
+ * Override map: `{ stepName: StepBadgeState }` from `.spec-context.json`.
+ * When supplied, phase `completed` flags are derived ONLY from stepHistory
+ * (FR-007). File existence is ignored for completion.
+ */
 export function calculatePhases(
     documents: SpecDocument[],
     currentDocType: DocumentType,
     content: string,
-    stepCount?: number
+    stepCount?: number,
+    stepHistoryBadges?: Record<string, 'not-started' | 'in-progress' | 'completed'>
 ): PhaseInfo[] {
+    const isCompletedByContext = (step: string): boolean | null => {
+        if (!stepHistoryBadges) return null;
+        const s = stepHistoryBadges[step];
+        if (s === undefined) return null;
+        return s === 'completed';
+    };
     // Default behavior: 4-phase stepper
     if (!stepCount || stepCount === 0) {
         const specExists = documents.some(d => d.type === CORE_DOCUMENTS.SPEC && d.exists);
@@ -24,10 +36,15 @@ export function calculatePhases(
         const tasksExists = documents.some(d => d.type === CORE_DOCUMENTS.TASKS && d.exists);
         const taskCompletion = currentDocType === CORE_DOCUMENTS.TASKS ? calculateTaskCompletion(content, CORE_DOCUMENTS.TASKS) : 0;
 
+        // US2: prefer stepHistory when context is available.
+        const specDone = isCompletedByContext('specify');
+        const planDone = isCompletedByContext('plan');
+        const tasksDone = isCompletedByContext('tasks');
+
         return [
-            { phase: 1, label: 'Spec', completed: specExists, active: currentDocType === CORE_DOCUMENTS.SPEC },
-            { phase: 2, label: 'Plan', completed: planExists, active: currentDocType === CORE_DOCUMENTS.PLAN },
-            { phase: 3, label: 'Tasks', completed: tasksExists, active: currentDocType === CORE_DOCUMENTS.TASKS, progressPercent: tasksExists ? taskCompletion : undefined },
+            { phase: 1, label: 'Spec', completed: specDone ?? specExists, active: currentDocType === CORE_DOCUMENTS.SPEC },
+            { phase: 2, label: 'Plan', completed: planDone ?? planExists, active: currentDocType === CORE_DOCUMENTS.PLAN },
+            { phase: 3, label: 'Tasks', completed: tasksDone ?? tasksExists, active: currentDocType === CORE_DOCUMENTS.TASKS, progressPercent: tasksExists ? taskCompletion : undefined },
             { phase: 4, label: 'Done', completed: taskCompletion === 100, active: false, progressPercent: tasksExists ? taskCompletion : undefined }
         ];
     }
@@ -48,10 +65,12 @@ export function calculatePhases(
             lastTaskCompletion = taskCompletion;
         }
 
+        // US2: stepHistory wins over file existence when available.
+        const ctxCompleted = isCompletedByContext(doc.type);
         phases.push({
             phase: phaseNum,
             label: doc.label,
-            completed: doc.exists,
+            completed: ctxCompleted ?? doc.exists,
             active: currentDocType === doc.type,
             progressPercent: isTasksLike && doc.exists ? taskCompletion : undefined
         });
@@ -203,6 +222,29 @@ export function getDocTypeLabel(step?: string | null): string {
 }
 
 /**
+ * Map canonical status (`draft`, `specifying`, …) → human-readable badge text.
+ * Used by US1 (single-status passthrough): the same string is shown in
+ * sidebar, header, and stepper, regardless of active tab.
+ */
+const CANONICAL_STATUS_LABELS: Record<string, string> = {
+    draft: 'DRAFT',
+    specifying: 'SPECIFYING...',
+    specified: 'SPECIFY COMPLETE',
+    planning: 'PLANNING...',
+    planned: 'PLAN COMPLETE',
+    tasking: 'CREATING TASKS...',
+    'ready-to-implement': 'READY TO IMPLEMENT',
+    implementing: 'IMPLEMENTING...',
+    completed: 'COMPLETED',
+    archived: 'ARCHIVED',
+};
+
+export function canonicalStatusLabel(status?: string | null): string | null {
+    if (!status) return null;
+    return CANONICAL_STATUS_LABELS[status] ?? null;
+}
+
+/**
  * Compute a human-readable badge text from spec-context fields.
  * When progress is non-null (in-progress work), appends "..." suffix.
  */
@@ -214,6 +256,10 @@ export function computeBadgeText(ctx?: {
     stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>;
 } | null): string | null {
     if (!ctx) return null;
+
+    // US1: canonical status labels take precedence when status is the new vocab.
+    const canonical = canonicalStatusLabel(ctx.status as string | undefined);
+    if (canonical) return canonical;
 
     if (ctx.status === SpecStatuses.COMPLETED) return 'COMPLETED';
     if (ctx.status === SpecStatuses.ARCHIVED) return 'ARCHIVED';

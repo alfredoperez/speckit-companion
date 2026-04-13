@@ -1,0 +1,16 @@
+{
+  "workflow": "sdd-fast",
+  "specName": "056-fix-list-spacing",
+  "branch": "056-fix-list-spacing",
+  "currentStep": "specify",
+  "status": "specifying",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-03-25T12:00:00.000Z",
+      "completedAt": null
+    }
+  },
+  "transitions": [
+    { "step": "specify", "substep": null, "from": { "step": null, "substep": null }, "by": "extension", "at": "2026-03-25T12:00:00.000Z" }
+  ]
+}

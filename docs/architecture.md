@@ -41,9 +41,14 @@ src/
 │   ├── spec-viewer/            # specViewerProvider.ts, specViewerCommands.ts,
 │   │                           # messageHandlers.ts, documentScanner.ts,
 │   │                           # phaseCalculation.ts, staleness.ts,
+│   │                           # stateDerivation.ts (060: ctx → ViewerState),
+│   │                           # footerActions.ts (060: scope + visibility),
 │   │                           # types.ts, utils.ts, html/, __tests__/
 │   ├── specs/                  # specExplorerProvider.ts, specCommands.ts,
-│   │                           # specContextManager.ts, index.ts, __tests__/
+│   │                           # specContextManager.ts (legacy),
+│   │                           # specContextReader.ts, specContextWriter.ts,
+│   │                           # specContextBackfill.ts (060 canonical),
+│   │                           # index.ts, __tests__/
 │   ├── steering/               # steeringExplorerProvider.ts, steeringManager.ts,
 │   │                           # steeringCommands.ts, types.ts, index.ts
 │   ├── workflow-editor/        # workflowEditorProvider.ts, workflowEditorCommands.ts,
