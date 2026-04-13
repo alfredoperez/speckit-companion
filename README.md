@@ -363,6 +363,17 @@ The full JSON Schema lives at
 `src/core/types/spec-context.schema.json` and
 `specs/060-spec-context-tracking/contracts/spec-context.schema.json`.
 
+### Extension-side lifecycle writes
+
+The extension itself records `stepHistory[step].startedAt` /
+`completedAt` and the canonical `status` whenever a step is dispatched
+(via the SpecKit commands or the viewer's Approve / Regenerate buttons),
+and when a spawned terminal closes — independent of AI cooperation. Spec
+status changes (`Mark as Completed`, `Archive`, `Reactivate`) write the
+canonical status and append a transition entry, no longer relying on the
+legacy `setSpecStatus` path. Write failures log to the SpecKit output
+channel without blocking dispatch.
+
 ### Invariants
 
 - Unknown top-level fields are preserved across writes.

@@ -4,7 +4,7 @@ import { getAIProvider } from '../../extension';
 import { SpecExplorerProvider } from './specExplorerProvider';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig, SpecTreeItem } from '../../core/types/config';
-import { Commands, ConfigKeys, SpecStatuses, WorkflowSteps } from '../../core/constants';
+import { Commands, ConfigKeys, WorkflowSteps } from '../../core/constants';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { isInsideSpecDirectory, getFileWatcherPatterns } from '../../core/specDirectoryResolver';
 import {
@@ -15,7 +15,19 @@ import {
     WorkflowStep,
     WorkflowConfig,
 } from '../workflows';
-import { updateStepProgress, setSpecStatus } from './specContextManager';
+import { updateStepProgress } from './specContextManager';
+import { startStep, setStatus } from './stepLifecycle';
+import { track as trackTerminal } from './terminalStepTracker';
+import type { StepName } from '../../core/types/specContext';
+
+const LIFECYCLE_STEPS: ReadonlySet<string> = new Set([
+    'specify',
+    'plan',
+    'tasks',
+    'implement',
+    'clarify',
+    'analyze',
+]);
 
 /**
  * Register SpecKit workflow commands (create, specify, plan, tasks, etc.)
@@ -87,7 +99,7 @@ export function registerSpecKitCommands(
             if (workspaceFolder && item) {
                 const relativePath = (item as SpecTreeItem).specPath || `specs/${item.label}`;
                 const specDir = path.join(workspaceFolder.uri.fsPath, relativePath);
-                await setSpecStatus(specDir, SpecStatuses.COMPLETED);
+                await setStatus(specDir, 'completed');
                 specExplorer.refresh();
                 NotificationUtils.showAutoDismissNotification(`Spec "${item.label}" marked as completed`);
             }
@@ -101,7 +113,7 @@ export function registerSpecKitCommands(
             if (workspaceFolder && item) {
                 const relativePath = (item as SpecTreeItem).specPath || `specs/${item.label}`;
                 const specDir = path.join(workspaceFolder.uri.fsPath, relativePath);
-                await setSpecStatus(specDir, SpecStatuses.ARCHIVED);
+                await setStatus(specDir, 'archived');
                 specExplorer.refresh();
                 NotificationUtils.showAutoDismissNotification(`Spec "${item.label}" archived`);
             }
@@ -183,7 +195,13 @@ function registerPhaseCommands(
                 if (refinementContext) {
                     prompt += refinementContext;
                 }
-                await getAIProvider().executeInTerminal(prompt, `SpecKit - ${cmd.title}`);
+                if (LIFECYCLE_STEPS.has(cmd.name)) {
+                    await startStep(targetDir, cmd.name as StepName, 'extension');
+                }
+                const terminal = await getAIProvider().executeInTerminal(prompt, `SpecKit - ${cmd.title}`);
+                if (LIFECYCLE_STEPS.has(cmd.name)) {
+                    trackTerminal(terminal, targetDir, cmd.name as StepName);
+                }
             })
         );
     }
@@ -242,7 +260,13 @@ async function executeWorkflowStep(
         prompt += refinementContext;
     }
 
-    await getAIProvider().executeInTerminal(prompt, `SpecKit - ${title}`);
+    if (LIFECYCLE_STEPS.has(step)) {
+        await startStep(targetDir, step as StepName, 'extension');
+    }
+    const terminal = await getAIProvider().executeInTerminal(prompt, `SpecKit - ${title}`);
+    if (LIFECYCLE_STEPS.has(step)) {
+        trackTerminal(terminal, targetDir, step as StepName);
+    }
 
     // Execute checkpoints after implement step
     if (step === WorkflowSteps.IMPLEMENT) {
