@@ -1,0 +1,170 @@
+{
+  "workflow": "sdd",
+  "currentStep": "implement",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "auto": false,
+  "last_action": "T005 complete — documented speckit.aiContextInstructions setting in README",
+  "files_modified": [
+    "package.json",
+    "src/ai-providers/promptBuilder.ts",
+    "src/ai-providers/__tests__/promptBuilder.test.ts",
+    "src/features/specs/specCommands.ts",
+    "README.md"
+  ],
+  "task_summaries": {
+    "T001": { "status": "DONE", "did": "Added speckit.aiContextInstructions boolean config (default true) under contributes.configuration.properties", "files": ["package.json"], "concerns": [] },
+    "T002": { "status": "DONE", "did": "Created buildPrompt helper that wraps commands with a marker-delimited preamble listing canonical substeps; returns raw command when config disabled or step unknown", "files": ["src/ai-providers/promptBuilder.ts"], "concerns": [] },
+    "T003": { "status": "DONE", "did": "Added 7 unit tests covering all 4 known steps, opt-out, unknown step, omitted step, path-leakage, and token-budget (<1500 chars)", "files": ["src/ai-providers/__tests__/promptBuilder.test.ts"], "concerns": [] },
+    "T004": { "status": "DONE", "did": "Routed both executeInTerminal dispatch sites in specCommands.ts through buildPrompt; added toWorkspaceRelative helper so only workspace-relative specDir is embedded", "files": ["src/features/specs/specCommands.ts"], "concerns": [] },
+    "T005": { "status": "DONE", "did": "Added AI Context Instructions section to README between Command Format and Spec Directories", "files": ["README.md"], "concerns": [] }
+  },
+  "updated": "2026-04-13",
+  "selectedAt": "2026-04-13T20:41:52Z",
+  "specName": "AI Prompt Context Prepend",
+  "branch": "061-extension-lifecycle-writes",
+  "createdAt": "2026-04-13T20:41:52Z",
+  "status": "active",
+  "approach": "Introduce a single promptBuilder helper and route every executeInTerminal caller through it, gated by a new speckit.aiContextInstructions setting.",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-04-13T20:41:52Z",
+      "completedAt": "2026-04-13T20:41:56Z"
+    },
+    "plan": {
+      "startedAt": "2026-04-13T20:42:00Z",
+      "completedAt": "2026-04-13T20:42:02Z"
+    },
+    "tasks": {
+      "startedAt": "2026-04-13T20:42:10Z",
+      "completedAt": "2026-04-13T20:42:15Z"
+    }
+  },
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 10,
+      "scenarios": 4,
+      "key_finding": "Every AI provider implements executeInTerminal(prompt); there is no central prompt builder — each command in specCommands.ts assembles its own prompt string, so adding a wrapper helper is the clean integration point."
+    },
+    "plan": {
+      "approach_summary": "Introduce a single promptBuilder helper and route every executeInTerminal caller through it, gated by a new speckit.aiContextInstructions setting.",
+      "files_planned": 6,
+      "risks": [
+        "Token cost: +200–300 tokens per dispatch — accept per spec; revisit after launch if budget complaints surface.",
+        "AI non-compliance: Best-effort; spec 061 remains the hard guarantee for step-boundary writes.",
+        "Path leakage: Only workspace-relative specDir is embedded; unit test asserts no absolute path substrings."
+      ]
+    }
+  },
+  "transitions": [
+    {
+      "step": "specify",
+      "substep": "parsing",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-04-13T20:41:52Z"
+    },
+    {
+      "step": "specify",
+      "substep": "exploring",
+      "from": "parsing",
+      "by": "sdd",
+      "at": "2026-04-13T20:41:53Z"
+    },
+    {
+      "step": "specify",
+      "substep": "detecting",
+      "from": "exploring",
+      "by": "sdd",
+      "at": "2026-04-13T20:41:54Z"
+    },
+    {
+      "step": "specify",
+      "substep": "writing-spec",
+      "from": "detecting",
+      "by": "sdd",
+      "at": "2026-04-13T20:41:55Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": "writing-spec",
+      "by": "sdd",
+      "at": "2026-04-13T20:41:56Z"
+    },
+    {
+      "step": "plan",
+      "substep": "loading",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-04-13T20:42:00Z"
+    },
+    {
+      "step": "plan",
+      "substep": "writing-plan",
+      "from": "loading",
+      "by": "sdd",
+      "at": "2026-04-13T20:42:01Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": "writing-plan",
+      "by": "sdd",
+      "at": "2026-04-13T20:42:02Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "loading",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-04-13T20:42:10Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "writing-tasks",
+      "from": "loading",
+      "by": "sdd",
+      "at": "2026-04-13T20:42:12Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": "writing-tasks",
+      "by": "sdd",
+      "at": "2026-04-13T20:42:15Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T20:45:52.350Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T20:45:53.490Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T20:45:54.999Z"
+    }
+  ]
+}
