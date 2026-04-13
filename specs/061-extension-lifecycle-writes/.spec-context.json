@@ -1,6 +1,6 @@
 {
   "workflow": "sdd",
-  "currentStep": "plan",
+  "currentStep": "implement",
   "currentTask": null,
   "progress": "code-review",
   "next": "implement",

@@ -604,6 +604,13 @@
           "order": 6,
           "description": "Path to Qwen Code CLI executable"
         },
+        "speckit.opencodePath": {
+          "type": "string",
+          "default": "opencode",
+          "scope": "machine",
+          "order": 7,
+          "description": "Path to OpenCode CLI executable"
+        },
         "speckit.specDirectories": {
           "type": "array",
           "items": {
