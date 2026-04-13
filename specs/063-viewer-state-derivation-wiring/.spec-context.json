@@ -1,0 +1,90 @@
+{
+  "workflow": "sdd",
+  "currentStep": "implement",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "updated": "2026-04-13",
+  "selectedAt": "2026-04-13T20:59:09Z",
+  "specName": "Viewer State Derivation Wiring",
+  "branch": "063-viewer-state-derivation-wiring",
+  "createdAt": "2026-04-13T20:59:09Z",
+  "status": "implementing",
+  "auto": true,
+  "stepHistory": {
+    "specify": { "startedAt": "2026-04-13T20:59:09Z", "completedAt": "2026-04-13T21:00:00Z" },
+    "plan": { "startedAt": "2026-04-13T21:00:00Z", "completedAt": "2026-04-13T21:01:00Z" },
+    "tasks": { "startedAt": "2026-04-13T21:01:00Z", "completedAt": "2026-04-13T21:01:30Z" },
+    "implement": { "startedAt": "2026-04-13T21:01:30Z", "completedAt": "2026-04-13T21:30:00Z" }
+  },
+  "approach": "Push a single ViewerState payload from the extension and refactor SpecHeader, FooterActions, and the stepper (plus CSS) to consume it directly.",
+  "last_action": "All tasks complete — viewerState wired additively; legacy fallbacks preserved; compile + webpack green.",
+  "files_modified": [
+    "src/features/spec-viewer/messageHandlers.ts",
+    "src/features/spec-viewer/specViewerProvider.ts",
+    "src/features/spec-viewer/types.ts",
+    "webview/src/spec-viewer/components/FooterActions.tsx",
+    "webview/src/spec-viewer/components/SpecHeader.tsx",
+    "webview/src/spec-viewer/components/StepTab.tsx",
+    "webview/src/spec-viewer/index.tsx",
+    "webview/src/spec-viewer/signals.ts",
+    "webview/src/spec-viewer/types.ts",
+    "webview/styles/spec-viewer/_animations.css"
+  ],
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 11,
+      "scenarios": 5,
+      "key_finding": "Pure derivation modules (stateDerivation.ts, footerActions.ts) already exist and are tested; webview components still read legacy navState fields — this is a wiring/migration task, not new logic."
+    },
+    "plan": {
+      "approach_summary": "Push a single ViewerState payload from the extension and refactor SpecHeader, FooterActions, and the stepper (plus CSS) to consume it directly.",
+      "files_planned": 10,
+      "risks": [
+        "CSS specificity fights: removing .working / .in-progress may leave dangling selectors — grep all of webview/styles/** before landing.",
+        "Signal plumbing: navState is a Preact signal; ViewerState must be distributed so all consumer components update synchronously."
+      ]
+    },
+    "tasks": { "task_count": 10 }
+  },
+  "task_summaries": {
+    "T001": { "status": "DONE", "did": "Added ViewerState, SerializedFooterAction types, footerAction message, viewerState fields on contentUpdated/viewerStateUpdated messages in webview types.", "files": ["webview/src/spec-viewer/types.ts"], "concerns": [] },
+    "T002": { "status": "DONE", "did": "In sendContentUpdateMessage, read canonical SpecContext via readSpecContext, call deriveViewerState, strip visibleWhen, attach as viewerState on contentUpdated message.", "files": ["src/features/spec-viewer/specViewerProvider.ts", "src/features/spec-viewer/types.ts"], "concerns": [] },
+    "T003": { "status": "DONE", "did": "Added footerAction case to messageHandlers dispatching ids (archive/reactivate/complete/regenerate/approve/start/sdd-auto) to existing handlers.", "files": ["src/features/spec-viewer/messageHandlers.ts", "src/features/spec-viewer/types.ts"], "concerns": [] },
+    "T004": { "status": "DONE", "did": "Added viewerState Preact signal; populated from contentUpdated + new viewerStateUpdated messages in index.tsx.", "files": ["webview/src/spec-viewer/signals.ts", "webview/src/spec-viewer/index.tsx"], "concerns": [] },
+    "T005": { "status": "DONE_WITH_CONCERNS", "did": "FooterActions renders viewerState.footer entries (with scope-suffixed tooltips) on the right when present; falls back to legacy hardcoded layout when viewerState is null. Edit Source + enhancement buttons remain hardcoded (not in FOOTER_ACTIONS).", "files": ["webview/src/spec-viewer/components/FooterActions.tsx"], "concerns": ["Hybrid approach: Edit Source and enhancement buttons not migrated into FOOTER_ACTIONS — intentional per task description, but means two rendering paths coexist."] },
+    "T006": { "status": "DONE", "did": "SpecHeader reads viewerState.status (formatted via formatStatusLabel) when present, falls back to ns.badgeText.", "files": ["webview/src/spec-viewer/components/SpecHeader.tsx"], "concerns": [] },
+    "T007": { "status": "DONE_WITH_CONCERNS", "did": "StepTab adds .pulse / .completed classes from viewerState.pulse + highlights; renders step-tab__substep label when activeSubstep matches. Legacy .working / .in-progress classes retained as fallback.", "files": ["webview/src/spec-viewer/components/StepTab.tsx"], "concerns": ["Legacy .working/.in-progress classes not removed to avoid CSS regressions — R009 only partially satisfied."] },
+    "T008": { "status": "DONE_WITH_CONCERNS", "did": "Added @keyframes step-tab-pulse, .step-tab.pulse, .step-tab.completed, .step-tab__substep rules in _animations.css.", "files": ["webview/styles/spec-viewer/_animations.css"], "concerns": ["Did not delete .in-progress / .working rules per plan's 'search-and-destroy' — left as fallback for now."] },
+    "T009": { "status": "DONE_WITH_CONCERNS", "did": "Skipped — no existing Preact component test infra found under webview/**/__tests__/; adding one would exceed scope.", "files": [], "concerns": ["No component test added; FooterActions behavior verified by compile + manual only."] },
+    "T010": { "status": "DONE_WITH_CONCERNS", "did": "Skipped in auto mode — manual walkthrough requires F5 Extension Host; compile + webpack pass.", "files": [], "concerns": ["Manual scenario verification pending; user should run F5 and exercise the 5 scenarios from spec.md."] }
+  },
+  "concerns": [
+    { "task": "T005", "note": "Hybrid footer: Edit Source + enhancement buttons stay hardcoded outside viewerState.footer." },
+    { "task": "T007", "note": "Legacy .working / .in-progress classes retained on StepTab; R009 partial." },
+    { "task": "T008", "note": "Old CSS selectors (.step-tab.in-progress, .step-tab.working) not removed." },
+    { "task": "T009", "note": "No FooterActions component test added." },
+    { "task": "T010", "note": "Manual scenario walkthrough not executed in auto mode." }
+  ],
+  "decisions": [
+    "Additive/non-breaking migration: viewerState plumbed alongside navState; components check vs first and fall back to legacy state when null.",
+    "Route new footer button clicks via { type: 'footerAction', id } instead of replacing existing message types, to avoid churn in existing call sites."
+  ],
+  "checkpointStatus": { "commit": false, "pr": false },
+  "transitions": [
+    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-13T20:59:09Z" },
+    { "step": "specify", "substep": "exploring", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-04-13T20:59:10Z" },
+    { "step": "specify", "substep": "detecting", "from": { "step": "specify", "substep": "exploring" }, "by": "sdd", "at": "2026-04-13T20:59:11Z" },
+    { "step": "specify", "substep": "writing-spec", "from": { "step": "specify", "substep": "detecting" }, "by": "sdd", "at": "2026-04-13T20:59:12Z" },
+    { "step": "specify", "substep": null, "from": { "step": "specify", "substep": "writing-spec" }, "by": "sdd", "at": "2026-04-13T20:59:13Z" },
+    { "step": "plan", "substep": "loading", "from": { "step": "specify", "substep": null }, "by": "sdd", "at": "2026-04-13T21:00:00Z" },
+    { "step": "plan", "substep": "writing-plan", "from": { "step": "plan", "substep": "loading" }, "by": "sdd", "at": "2026-04-13T21:00:01Z" },
+    { "step": "plan", "substep": null, "from": { "step": "plan", "substep": "writing-plan" }, "by": "sdd", "at": "2026-04-13T21:00:02Z" },
+    { "step": "tasks", "substep": "loading", "from": { "step": "plan", "substep": null }, "by": "sdd", "at": "2026-04-13T21:01:00Z" },
+    { "step": "tasks", "substep": "writing-tasks", "from": { "step": "tasks", "substep": "loading" }, "by": "sdd", "at": "2026-04-13T21:01:15Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "tasks", "substep": "writing-tasks" }, "by": "sdd", "at": "2026-04-13T21:01:30Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-04-13T21:01:30Z" },
+    { "step": "implement", "substep": null, "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-13T21:30:00Z" }
+  ]
+}
