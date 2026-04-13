@@ -505,6 +505,13 @@
           "order": 0,
           "description": "Enable custom workflow editor for spec files (shows rendered markdown with action buttons)"
         },
+        "speckit.aiContextInstructions": {
+          "type": "boolean",
+          "default": true,
+          "scope": "window",
+          "order": 0,
+          "description": "Prepend a short context-update preamble to every SpecKit step prompt dispatched to the AI CLI, instructing the AI to keep .spec-context.json current with canonical substeps (plan.research, implement.run-tests, etc.). Disable if your AI ignores the preamble or you're debugging raw prompts."
+        },
         "speckit.claudePath": {
           "type": "string",
           "default": "claude",

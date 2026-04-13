@@ -6,6 +6,7 @@ import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig, SpecTreeItem } from '../../core/types/config';
 import { Commands, ConfigKeys, WorkflowSteps } from '../../core/constants';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
+import { buildPrompt } from '../../ai-providers/promptBuilder';
 import { isInsideSpecDirectory, getFileWatcherPatterns } from '../../core/specDirectoryResolver';
 import {
     getOrSelectWorkflow,
@@ -19,6 +20,13 @@ import { updateStepProgress } from './specContextManager';
 import { startStep, setStatus } from './stepLifecycle';
 import { track as trackTerminal } from './terminalStepTracker';
 import type { StepName } from '../../core/types/specContext';
+
+function toWorkspaceRelative(absOrRel: string): string {
+    const ws = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if (!ws) return absOrRel;
+    const rel = path.relative(ws, absOrRel);
+    return rel && !rel.startsWith('..') ? rel : absOrRel;
+}
 
 const LIFECYCLE_STEPS: ReadonlySet<string> = new Set([
     'specify',
@@ -198,7 +206,12 @@ function registerPhaseCommands(
                 if (LIFECYCLE_STEPS.has(cmd.name)) {
                     await startStep(targetDir, cmd.name as StepName, 'extension');
                 }
-                const terminal = await getAIProvider().executeInTerminal(prompt, `SpecKit - ${cmd.title}`);
+                const wrapped = buildPrompt({
+                    command: prompt,
+                    step: cmd.name,
+                    specDir: toWorkspaceRelative(targetDir),
+                });
+                const terminal = await getAIProvider().executeInTerminal(wrapped, `SpecKit - ${cmd.title}`);
                 if (LIFECYCLE_STEPS.has(cmd.name)) {
                     trackTerminal(terminal, targetDir, cmd.name as StepName);
                 }
@@ -263,7 +276,12 @@ async function executeWorkflowStep(
     if (LIFECYCLE_STEPS.has(step)) {
         await startStep(targetDir, step as StepName, 'extension');
     }
-    const terminal = await getAIProvider().executeInTerminal(prompt, `SpecKit - ${title}`);
+    const wrapped = buildPrompt({
+        command: prompt,
+        step,
+        specDir: toWorkspaceRelative(targetDir),
+    });
+    const terminal = await getAIProvider().executeInTerminal(wrapped, `SpecKit - ${title}`);
     if (LIFECYCLE_STEPS.has(step)) {
         trackTerminal(terminal, targetDir, step as StepName);
     }

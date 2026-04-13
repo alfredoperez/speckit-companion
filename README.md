@@ -146,6 +146,23 @@ Controls how speckit commands are formatted when sent to AI providers:
 
 Use `auto` unless your speckit version requires a specific command format. Override with `dot` or `dash` when the provider's default doesn't match what your setup expects.
 
+### AI Context Instructions
+
+Controls whether the extension prepends a short context-update preamble to every SpecKit step prompt sent to the AI CLI:
+
+```json
+{
+  "speckit.aiContextInstructions": true
+}
+```
+
+| Value | Behavior |
+|-------|----------|
+| `true` (default) | Prepend a marker-wrapped preamble that instructs the AI to keep `.spec-context.json` current, including canonical substeps (e.g., `plan.research`, `plan.design`, `implement.run-tests`). |
+| `false` | Send the raw `/speckit.<step>` command with no preamble. Useful if your AI ignores it or you're debugging raw prompts. |
+
+The preamble adds ~200–300 tokens per dispatch and is identical across all providers (Claude, Gemini, Copilot, Codex, Qwen). Extension-side step-boundary writes remain the hard guarantee for `startedAt` / `completedAt` — this preamble unlocks finer-grained substep tracking.
+
 ### Spec Directories
 
 By default, specs live in `specs/`. You can configure multiple directories or use glob patterns:
