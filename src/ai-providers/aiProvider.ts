@@ -1,5 +1,65 @@
 import * as vscode from 'vscode';
-import { AIProviders } from '../core/constants';
+import * as fs from 'fs';
+import { AIProviders, Timing } from '../core/constants';
+import { waitForShellReady } from '../core/utils/terminalUtils';
+import { createTempFile } from '../core/utils/tempFileUtils';
+
+/**
+ * Dispatch a slash command to a terminal via a temp file so the full prompt
+ * content is hidden from the terminal scrollback. The resulting line is:
+ *
+ *   <cliInvocation> "<slashCommand> $(cat "<tempfile>")"
+ *
+ * When `promptText` is empty, no temp file is created and the line becomes:
+ *
+ *   <cliInvocation> "<slashCommand>"
+ *
+ * If `slashCommand` is empty (e.g. Copilot has no slash commands), the inner
+ * quoted form is just `$(cat …)` / nothing.
+ */
+export async function dispatchSlashCommandViaTempFile(opts: {
+    context: vscode.ExtensionContext;
+    outputChannel: vscode.OutputChannel;
+    terminal: vscode.Terminal;
+    cliInvocation: string;
+    slashCommand: string;
+    promptText: string;
+    autoExecute: boolean;
+    logPrefix?: string;
+}): Promise<void> {
+    const { context, outputChannel, terminal, cliInvocation, slashCommand, promptText, autoExecute } = opts;
+    const logPrefix = opts.logPrefix ?? 'AIProvider';
+
+    let line: string;
+    let tempFilePath: string | null = null;
+
+    if (promptText && promptText.length > 0) {
+        tempFilePath = await createTempFile(context, promptText, 'prompt', true);
+        const inner = slashCommand
+            ? `${slashCommand} $(cat "${tempFilePath}")`
+            : `$(cat "${tempFilePath}")`;
+        line = `${cliInvocation} "${inner}"`;
+    } else {
+        line = slashCommand
+            ? `${cliInvocation} "${slashCommand}"`
+            : cliInvocation;
+    }
+
+    await waitForShellReady(terminal);
+    terminal.sendText(line, autoExecute);
+
+    if (tempFilePath) {
+        const fileToClean = tempFilePath;
+        setTimeout(async () => {
+            try {
+                await fs.promises.unlink(fileToClean);
+                outputChannel.appendLine(`[${logPrefix}] Cleaned up prompt file: ${fileToClean}`);
+            } catch (e) {
+                outputChannel.appendLine(`[${logPrefix}] Failed to cleanup temp file: ${e}`);
+            }
+        }, Timing.tempFileCleanupDelay);
+    }
+}
 
 /**
  * Result from executing an AI command

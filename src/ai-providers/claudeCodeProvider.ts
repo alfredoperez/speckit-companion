@@ -6,7 +6,7 @@ import { ConfigManager } from '../core/utils/configManager';
 import { AIProviders, Timing } from '../core/constants';
 import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
-import { IAIProvider, AIExecutionResult, readPermissionMode } from './aiProvider';
+import { IAIProvider, AIExecutionResult, readPermissionMode, dispatchSlashCommandViaTempFile } from './aiProvider';
 
 const execAsync = promisify(exec);
 
@@ -126,11 +126,13 @@ export class ClaudeCodeProvider implements IAIProvider {
      */
     async executeSlashCommand(command: string, title: string = 'SpecKit - Claude Code', autoExecute: boolean = true): Promise<vscode.Terminal> {
         try {
-
-            // Ensure command starts with /
             const slashCommand = command.startsWith('/') ? command : `/${command}`;
+            const firstSpace = slashCommand.indexOf(' ');
+            const slashName = firstSpace === -1 ? slashCommand : slashCommand.slice(0, firstSpace);
+            const args = firstSpace === -1 ? '' : slashCommand.slice(firstSpace + 1).trimStart();
+
             const permissionFlag = this.getPermissionFlag();
-            const fullCommand = `claude ${permissionFlag}"${slashCommand}"`;
+            const cliInvocation = `claude ${permissionFlag}`.trimEnd();
 
             const terminal = vscode.window.createTerminal({
                 name: title,
@@ -142,8 +144,16 @@ export class ClaudeCodeProvider implements IAIProvider {
 
             terminal.show();
 
-            await waitForShellReady(terminal);
-            terminal.sendText(fullCommand, autoExecute);
+            await dispatchSlashCommandViaTempFile({
+                context: this.context,
+                outputChannel: this.outputChannel,
+                terminal,
+                cliInvocation,
+                slashCommand: slashName,
+                promptText: args,
+                autoExecute,
+                logPrefix: 'Claude',
+            });
 
             return terminal;
 

@@ -1,0 +1,118 @@
+{
+  "workflow": "sdd",
+  "currentStep": "implement",
+  "currentTask": null,
+  "progress": "code-review",
+  "next": "implement",
+  "updated": "2026-04-13",
+  "selectedAt": "2026-04-13T11:35:05Z",
+  "status": "active",
+  "specName": "Hide Launch Prompt",
+  "branch": "main",
+  "createdAt": "2026-04-13T11:35:05Z",
+  "approach": "Route every executeSlashCommand through a temp .md file and dispatch via <cli> \"$(cat \"<tempfile>\")\", mirroring the existing executeInTerminal / executeHeadless pattern.",
+  "last_action": "T008 complete — Phase 1 done; Claude rewrite uses shared dispatchSlashCommandViaTempFile helper; other providers already comply via delegation or have structural non-applicability documented",
+  "files_modified": [
+    "src/ai-providers/aiProvider.ts",
+    "src/ai-providers/claudeCodeProvider.ts",
+    "specs/059-hide-launch-prompt/tasks.md"
+  ],
+  "concerns": [
+    {"task": "T003", "note": "Gemini uses interactive REPL; helper pattern would break interactive UX — left unchanged"},
+    {"task": "T004", "note": "Copilot already satisfies R001 via executeInTerminal delegation — no change needed"},
+    {"task": "T005", "note": "Codex uses sed+pipe with local prompt templates; different dispatch model — left unchanged"},
+    {"task": "T006", "note": "Qwen already satisfies R001 via executeInTerminal delegation — no change needed"}
+  ],
+  "decisions": [
+    "Helper signature uses options object with context, outputChannel, terminal, cliInvocation, slashCommand, promptText, autoExecute, logPrefix — supports both slash-prefixed (Claude) and prefix-less (Copilot-style) forms",
+    "Only Claude needed the rewrite; other providers were already compliant or structurally incompatible"
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added dispatchSlashCommandViaTempFile helper to src/ai-providers/aiProvider.ts with fs/createTempFile/Timing imports",
+      "files": ["src/ai-providers/aiProvider.ts"],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Rewrote Claude's executeSlashCommand to split slash name from args and route via helper so args are written to temp file and dispatched as claude \"/name $(cat <file>)\"",
+      "files": ["src/ai-providers/claudeCodeProvider.ts"],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "No code change — Gemini uses interactive REPL mode; slash command text appears in Gemini's UI, not in the shell command line",
+      "files": [],
+      "concerns": ["Interactive REPL structurally incompatible with temp-file dispatch pattern"]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "No code change — Copilot's executeSlashCommand already delegates to executeInTerminal which uses copilot -p \"$(cat <file>)\"",
+      "files": [],
+      "concerns": []
+    },
+    "T005": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "No code change — Codex uses sed+pipe with local .codex/prompts/*.md templates, a different dispatch model",
+      "files": [],
+      "concerns": ["Sed substitution exposes args on the terminal line — separate refactor if tightening needed"]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "No code change — Qwen's executeSlashCommand already delegates to executeInTerminal which uses qwen -p \"$(cat <file>)\"",
+      "files": [],
+      "concerns": []
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Verified: specCommands.ts:351 calls getAIProvider().executeSlashCommand(commandText, ...) — inherits Claude's temp-file hiding automatically with no call-site changes",
+      "files": [],
+      "concerns": []
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Compile passes (tsc clean). Manual smoke test deferred to user as per workflow.",
+      "files": [],
+      "concerns": []
+    }
+  },
+  "stepHistory": {
+    "specify": {"startedAt": "2026-04-13T11:35:05Z"},
+    "plan": {"startedAt": "2026-04-13T11:40:00Z"},
+    "tasks": {"startedAt": "2026-04-13T11:45:00Z"},
+    "implement": {"startedAt": "2026-04-13T12:00:00Z"}
+  },
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 6,
+      "scenarios": 4,
+      "key_finding": "executeInTerminal/executeHeadless already use createTempFile + $(cat file) pattern; executeSlashCommand is the outlier sending raw command text via sendText"
+    },
+    "plan": {
+      "approach_summary": "Route every executeSlashCommand through a temp .md file and dispatch via <cli> \"$(cat \"<tempfile>\")\", mirroring the existing executeInTerminal / executeHeadless pattern.",
+      "files_planned": 6,
+      "risks": [
+        "Shell-quoting regressions across providers: mitigate by routing all five through one shared helper so quoting logic lives in one place",
+        "Temp-file cleanup race with slow shell integration: reuse the proven Timing.tempFileCleanupDelay delay already used by executeInTerminal"
+      ]
+    },
+    "tasks": {"task_count": 8, "phases": 1}
+  },
+  "transitions": [
+    {"step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-13T11:35:05Z"},
+    {"step": "specify", "substep": "exploring", "from": "parsing", "by": "sdd", "at": "2026-04-13T11:35:10Z"},
+    {"step": "specify", "substep": "detecting", "from": "exploring", "by": "sdd", "at": "2026-04-13T11:35:20Z"},
+    {"step": "specify", "substep": "writing-spec", "from": "detecting", "by": "sdd", "at": "2026-04-13T11:35:25Z"},
+    {"step": "specify", "substep": null, "from": "writing-spec", "by": "sdd", "at": "2026-04-13T11:35:30Z"},
+    {"step": "plan", "substep": "loading", "from": {"step": "specify", "substep": null}, "by": "sdd", "at": "2026-04-13T11:40:00Z"},
+    {"step": "plan", "substep": "writing-plan", "from": {"step": "plan", "substep": "loading"}, "by": "sdd", "at": "2026-04-13T11:40:05Z"},
+    {"step": "plan", "substep": null, "from": {"step": "plan", "substep": "writing-plan"}, "by": "sdd", "at": "2026-04-13T11:40:10Z"},
+    {"step": "tasks", "substep": "loading", "from": {"step": "plan", "substep": null}, "by": "sdd", "at": "2026-04-13T11:45:00Z"},
+    {"step": "tasks", "substep": "writing-tasks", "from": {"step": "tasks", "substep": "loading"}, "by": "sdd", "at": "2026-04-13T11:45:05Z"},
+    {"step": "tasks", "substep": null, "from": {"step": "tasks", "substep": "writing-tasks"}, "by": "sdd", "at": "2026-04-13T11:45:10Z"},
+    {"step": "implement", "substep": "phase1", "from": {"step": "tasks", "substep": null}, "by": "sdd", "at": "2026-04-13T12:00:00Z"},
+    {"step": "implement", "substep": "code-review", "from": {"step": "implement", "substep": "phase1"}, "by": "sdd", "at": "2026-04-13T12:05:00Z"}
+  ]
+}
