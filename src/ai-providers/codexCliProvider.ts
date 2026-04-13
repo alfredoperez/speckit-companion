@@ -9,6 +9,7 @@ import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { ensureCliInstalled } from '../core/utils/installUtils';
 import { IAIProvider, AIExecutionResult } from './aiProvider';
+import { getPermissionFlagForProvider } from './permissionValidation';
 
 const execAsync = promisify(exec);
 
@@ -29,7 +30,7 @@ export class CodexCliProvider implements IAIProvider {
     }
 
     getPermissionFlag(): string {
-        return '';
+        return getPermissionFlagForProvider(this.type);
     }
 
     /**

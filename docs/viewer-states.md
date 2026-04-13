@@ -12,12 +12,15 @@
 > `normalizeSpecContext` at read time.
 >
 > **Badge/pulse/highlight rules**:
-> - Step badge = `completed` if `stepHistory[step].completedAt` is set;
->   `in-progress` if `startedAt` set and `completedAt` null; else
->   `not-started`.
-> - Pulse = the single step whose entry has `startedAt` set and
->   `completedAt` null. **Null when `status ∈ {completed, archived}`.**
-> - Highlight = every step with `completedAt` set, regardless of active tab.
+> - Step badge = `completed` if `stepHistory[step].completedAt` is set
+>   **OR** the step has `startedAt` and precedes `currentStep` in
+>   `STEP_NAMES` ordering (inferred completion — handles external SDD
+>   skills that only emit `startedAt`); `in-progress` if `startedAt`
+>   set and not inferred-completed; else `not-started`.
+> - Pulse = the single step whose entry has `startedAt` set and is not
+>   inferred-completed. **Null when `status ∈ {completed, archived}`.**
+> - Highlight = every step with `completedAt` set or inferred-completed,
+>   regardless of active tab.
 >
 > **Footer scope tooltips**: Every footer button declares
 > `scope: 'spec' | 'step'` and tooltips are auto-suffixed with

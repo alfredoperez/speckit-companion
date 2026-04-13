@@ -4,6 +4,8 @@
  */
 
 import { SpecDocument, DocumentType, StalenessMap } from '../types';
+import { isStepCompleted } from '../stateDerivation';
+import { StepName } from '../../../core/types/specContext';
 
 /**
  * Generate the unified navigation bar (merged tabs + stepper)
@@ -38,7 +40,8 @@ export function generateCompactNav(
 
         const isStale = stalenessMap?.[phase]?.isStale ?? false;
 
-        const isWorking = activeStep === phase && !stepHistory?.[phase]?.completedAt;
+        const isWorking = activeStep === phase &&
+            !(stepHistory && activeStep && isStepCompleted(phase as StepName, activeStep as StepName, stepHistory));
 
         const classes = [
             'step-tab',

@@ -168,7 +168,7 @@ Analyze the document and:
         }
     }
 
-    async createProjectClaudeMd() {
+    async createProjectSteeringFile() {
         const terminal = vscode.window.createTerminal({
             name: 'Claude Code - Init',
             cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
@@ -185,7 +185,7 @@ Analyze the document and:
         terminal.sendText(`claude ${permissionFlag}"/init"`);
     }
 
-    async createUserClaudeMd() {
+    async createUserSteeringFile() {
         const claudeDir = path.join(process.env.HOME || '', '.claude');
         const filePath = path.join(claudeDir, 'CLAUDE.md');
 

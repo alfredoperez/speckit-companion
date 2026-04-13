@@ -30,11 +30,11 @@ export function registerSteeringCommands(
         }),
 
         vscode.commands.registerCommand('speckit.steering.createUserRule', async () => {
-            await steeringManager.createUserClaudeMd();
+            await steeringManager.createUserSteeringFile();
         }),
 
         vscode.commands.registerCommand('speckit.steering.createProjectRule', async () => {
-            await steeringManager.createProjectClaudeMd();
+            await steeringManager.createProjectSteeringFile();
         }),
 
         vscode.commands.registerCommand('speckit.steering.refresh', async () => {

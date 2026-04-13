@@ -256,20 +256,13 @@ export class SpecEditorProvider {
             // Get AI provider and execute
             const provider = AIProviderFactory.getProvider(this.context, this.outputChannel);
 
-            // Generate markdown with the content and image references
-            const markdownContent = await this.tempFileManager.generateMarkdown(
-                tempFileSet.id,
-                content,
-                images
-            );
-
             // Use custom command if provided, otherwise workflow's specify command
             const command = customCommand ? `/${customCommand}` : workflow.stepSpecify;
 
-            // Append instruction to write .spec-context.json so the AI provider
-            // persists workflow state for badge/date display in the spec viewer.
+            // Append the .spec-context.json instructions to the temp markdown
+            // file so the AI reads them, without polluting the visible terminal
+            // with the full instruction block.
             const specContextInstruction = [
-                '',
                 '## Post-Specification: Update .spec-context.json',
                 '',
                 'After writing the spec file, create or update `.spec-context.json` in the same feature directory with:',
@@ -296,8 +289,13 @@ export class SpecEditorProvider {
                 'IMPORTANT: Only update the `.spec-context.json` for the spec being created or edited. Do NOT modify `.spec-context.json` files in other spec directories.',
             ].join('\n');
 
-            const prompt = `${command} ${markdownContent}${specContextInstruction}`;
-            this.outputChannel.appendLine(`[SpecEditor] Using command: ${command}`);
+            await this.tempFileManager.appendToMarkdownFile(
+                tempFileSet.markdownFilePath,
+                specContextInstruction
+            );
+
+            const prompt = `${command} ${tempFileSet.markdownFilePath}`;
+            this.outputChannel.appendLine(`[SpecEditor] Using command: ${command} (temp file: ${tempFileSet.markdownFilePath})`);
 
             // Execute in terminal
             await provider.executeInTerminal(prompt, 'SpecKit - New Spec');

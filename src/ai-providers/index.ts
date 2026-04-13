@@ -5,3 +5,5 @@ export * from './geminiCliProvider';
 export * from './copilotCliProvider';
 export * from './codexCliProvider';
 export * from './qwenCliProvider';
+export * from './openCodeProvider';
+export * from './permissionValidation';

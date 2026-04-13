@@ -34,6 +34,7 @@ function renderPreamble(step: PromptStep, specDir: string): string {
         `Before and after this step runs, update ${target}:`,
         '',
         `1. Pre-step: set stepHistory.${step}.startedAt = now, currentStep = "${step}", status = "${step}-in-progress", and append a transition { step: "${step}", substep: null, from, by: "ai", at: now }.`,
+        `1.5. When advancing from a previous step: set stepHistory.<previousStep>.completedAt = now (if not already set) before writing the new step.`,
         `2. Post-step: set stepHistory.${step}.completedAt = now, append a closing transition, and advance currentStep or set a terminal status.`,
         '',
         `Canonical substeps for ${step}: ${substeps}. Record each with its own startedAt/completedAt inside stepHistory.${step}.substeps[] and emit a transition with non-null substep.`,

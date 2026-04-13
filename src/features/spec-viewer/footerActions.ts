@@ -8,6 +8,7 @@
  */
 
 import { FooterAction, SpecContext, StepName } from '../../core/types/specContext';
+import { isStepCompleted } from './stateDerivation';
 
 const SCOPE_SUFFIX: Record<'spec' | 'step', string> = {
     spec: 'Affects whole spec',
@@ -68,7 +69,7 @@ export const FOOTER_ACTIONS: FooterAction[] = [
         tooltip: 'Approve this step and continue',
         visibleWhen: (ctx, step) => {
             const entry = ctx.stepHistory[step];
-            return !!entry?.startedAt && !entry?.completedAt;
+            return !!entry?.startedAt && !isStepCompleted(step, ctx.currentStep, ctx.stepHistory);
         },
     },
     {

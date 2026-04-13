@@ -527,14 +527,16 @@
             "gemini",
             "copilot",
             "codex",
-            "qwen"
+            "qwen",
+            "opencode"
           ],
           "enumDescriptions": [
             "Claude Code - Full feature support (steering, agents, skills, hooks)",
             "Gemini CLI - Steering support",
             "GitHub Copilot CLI - Steering and agents support",
             "Codex CLI - Steering and skills support",
-            "Qwen Code - Steering support"
+            "Qwen Code - Steering support",
+            "OpenCode - Steering and agents support (AGENTS.md)"
           ],
           "scope": "machine",
           "order": 2,
@@ -570,7 +572,7 @@
           ],
           "scope": "machine",
           "order": 3,
-          "description": "Controls how the AI CLI handles permission prompts. Applies to all providers that support it (Claude, Copilot, Qwen)."
+          "description": "Controls how the AI CLI handles permission prompts. 'interactive' is honored only by providers whose CLI supports interactive prompting (Claude, Gemini, Codex, Qwen, OpenCode). Copilot does not support interactive prompting and will be auto-switched to auto-approve."
         },
         "speckit.geminiPath": {
           "type": "string",

@@ -14,18 +14,53 @@
     "README.md"
   ],
   "task_summaries": {
-    "T001": { "status": "DONE", "did": "Added speckit.aiContextInstructions boolean config (default true) under contributes.configuration.properties", "files": ["package.json"], "concerns": [] },
-    "T002": { "status": "DONE", "did": "Created buildPrompt helper that wraps commands with a marker-delimited preamble listing canonical substeps; returns raw command when config disabled or step unknown", "files": ["src/ai-providers/promptBuilder.ts"], "concerns": [] },
-    "T003": { "status": "DONE", "did": "Added 7 unit tests covering all 4 known steps, opt-out, unknown step, omitted step, path-leakage, and token-budget (<1500 chars)", "files": ["src/ai-providers/__tests__/promptBuilder.test.ts"], "concerns": [] },
-    "T004": { "status": "DONE", "did": "Routed both executeInTerminal dispatch sites in specCommands.ts through buildPrompt; added toWorkspaceRelative helper so only workspace-relative specDir is embedded", "files": ["src/features/specs/specCommands.ts"], "concerns": [] },
-    "T005": { "status": "DONE", "did": "Added AI Context Instructions section to README between Command Format and Spec Directories", "files": ["README.md"], "concerns": [] }
+    "T001": {
+      "status": "DONE",
+      "did": "Added speckit.aiContextInstructions boolean config (default true) under contributes.configuration.properties",
+      "files": [
+        "package.json"
+      ],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Created buildPrompt helper that wraps commands with a marker-delimited preamble listing canonical substeps; returns raw command when config disabled or step unknown",
+      "files": [
+        "src/ai-providers/promptBuilder.ts"
+      ],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added 7 unit tests covering all 4 known steps, opt-out, unknown step, omitted step, path-leakage, and token-budget (<1500 chars)",
+      "files": [
+        "src/ai-providers/__tests__/promptBuilder.test.ts"
+      ],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Routed both executeInTerminal dispatch sites in specCommands.ts through buildPrompt; added toWorkspaceRelative helper so only workspace-relative specDir is embedded",
+      "files": [
+        "src/features/specs/specCommands.ts"
+      ],
+      "concerns": []
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added AI Context Instructions section to README between Command Format and Spec Directories",
+      "files": [
+        "README.md"
+      ],
+      "concerns": []
+    }
   },
   "updated": "2026-04-13",
   "selectedAt": "2026-04-13T20:41:52Z",
   "specName": "AI Prompt Context Prepend",
   "branch": "061-extension-lifecycle-writes",
   "createdAt": "2026-04-13T20:41:52Z",
-  "status": "active",
+  "status": "completed",
   "approach": "Introduce a single promptBuilder helper and route every executeInTerminal caller through it, gated by a new speckit.aiContextInstructions setting.",
   "stepHistory": {
     "specify": {

@@ -16,6 +16,8 @@ import {
 import { resolveSpecDirectories, hasDuplicateNames, deriveChangeRoot, type SpecDirectoryInfo } from '../../core/specDirectoryResolver';
 import { SpecStatuses, WorkflowSteps } from '../../core/constants';
 import { readSpecContextSync } from './specContextManager';
+import { isStepCompleted } from '../spec-viewer/stateDerivation';
+import { StepName, STEP_NAMES } from '../../core/types/specContext';
 
 export interface SpecInfo {
     name: string;
@@ -584,7 +586,9 @@ class SpecItem extends vscode.TreeItem {
             // Apply step status colors from specContext (only for active specs — completed specs use the green beaker)
             if (specContext && documentType && specContext.status !== SpecStatuses.COMPLETED && specContext.status !== SpecStatuses.ARCHIVED) {
                 const stepHistory = specContext.stepHistory;
-                if (stepHistory?.[documentType]?.completedAt) {
+                const stepName = documentType as StepName;
+                const cs = (specContext.currentStep ?? 'specify') as StepName;
+                if (stepHistory && STEP_NAMES.includes(stepName) && isStepCompleted(stepName, cs, stepHistory)) {
                     this.iconPath = new vscode.ThemeIcon('pass', new vscode.ThemeColor('testing.iconPassed'));
                 } else if (specContext.currentStep === documentType) {
                     this.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('charts.blue'));

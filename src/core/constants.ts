@@ -246,6 +246,7 @@ export const AIProviders = {
     COPILOT: 'copilot',
     CODEX: 'codex',
     QWEN: 'qwen',
+    OPENCODE: 'opencode',
 } as const;
 
 /**

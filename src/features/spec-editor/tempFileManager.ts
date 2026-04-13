@@ -397,4 +397,19 @@ export class TempFileManager {
         const manifest = await this.readManifest();
         return manifest.files[tempFileId]?.markdownFilePath;
     }
+
+    /**
+     * Append additional content to an existing markdown file (used for
+     * trailing instruction blocks the AI should read but the terminal
+     * shouldn't display).
+     */
+    async appendToMarkdownFile(filePath: string, content: string): Promise<void> {
+        const uri = vscode.Uri.file(filePath);
+        const existing = await vscode.workspace.fs.readFile(uri);
+        const merged = Buffer.concat([
+            Buffer.from(existing),
+            Buffer.from('\n\n' + content, 'utf-8'),
+        ]);
+        await vscode.workspace.fs.writeFile(uri, merged);
+    }
 }

@@ -6,7 +6,8 @@ import { ConfigManager } from '../core/utils/configManager';
 import { AIProviders, Timing } from '../core/constants';
 import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
-import { IAIProvider, AIExecutionResult, readPermissionMode, dispatchSlashCommandViaTempFile } from './aiProvider';
+import { IAIProvider, AIExecutionResult, dispatchSlashCommandViaTempFile } from './aiProvider';
+import { getPermissionFlagForProvider } from './permissionValidation';
 
 const execAsync = promisify(exec);
 
@@ -39,7 +40,7 @@ export class ClaudeCodeProvider implements IAIProvider {
     }
 
     getPermissionFlag(): string {
-        return readPermissionMode() === 'auto-approve' ? '--permission-mode bypassPermissions ' : '';
+        return getPermissionFlagForProvider(this.type);
     }
 
     /**
@@ -198,7 +199,7 @@ export class ClaudeCodeProvider implements IAIProvider {
 
         terminal.show();
         await waitForShellReady(terminal);
-        const permissionFlag = readPermissionMode() === 'auto-approve' ? '--permission-mode bypassPermissions ' : '';
+        const permissionFlag = getPermissionFlagForProvider(AIProviders.CLAUDE);
         terminal.sendText(
             `claude ${permissionFlag}`.trim(),
             true
