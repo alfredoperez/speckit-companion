@@ -1,0 +1,23 @@
+{
+  "workflow": "speckit-companion",
+  "specName": "054-archive-button-left",
+  "branch": "054-archive-button-left",
+  "currentStep": "plan",
+  "status": "completed",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-03-21T10:00:00.000Z",
+      "completedAt": "2026-03-21T10:30:00.000Z"
+    },
+    "plan": {
+      "startedAt": "2026-03-21T10:31:00.000Z",
+      "completedAt": "2026-03-21T11:05:00.000Z"
+    }
+  },
+  "transitions": [
+    { "step": "specify", "substep": null, "from": { "step": null, "substep": null }, "by": "extension", "at": "2026-03-21T10:00:00.000Z" },
+    { "step": "specify", "substep": null, "from": { "step": "specify", "substep": null }, "by": "extension", "at": "2026-03-21T10:30:00.000Z" },
+    { "step": "plan", "substep": null, "from": { "step": "specify", "substep": null }, "by": "extension", "at": "2026-03-21T10:31:00.000Z" },
+    { "step": "plan", "substep": null, "from": { "step": "plan", "substep": null }, "by": "extension", "at": "2026-03-21T11:05:00.000Z" }
+  ]
+}

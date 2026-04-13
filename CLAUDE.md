@@ -116,6 +116,31 @@ When modifying spec viewer statuses, badges, buttons, or step tab behavior, upda
 
 When modifying the project structure, adding/removing modules, or changing the architecture, update `docs/architecture.md` to reflect the changes.
 
+## Extension Isolation (critical)
+
+The installed SpecKit Companion extension ships ONLY what is packaged into
+the `.vsix` (code under `src/`, bundled webview, assets). It does NOT ship:
+
+- `.claude/skills/**` — dev-workspace skills; users don't have them.
+- `.specify/templates/**`, `.specify/extensions.yml`, `.specify/scripts/**`
+  — these belong to the SpecKit CLI / user's own workspace.
+- `.claude/**` in general — user-local AI setup.
+
+Any runtime behavior the extension needs must work without any of those
+files. Treat them as read-only from the extension's perspective.
+
+Correct surfaces for extension-owned behavior:
+
+1. **Extension command handlers** (`src/features/specs/specCommands.ts`,
+   viewer message handlers) — direct writes via `specContextWriter`.
+2. **Prompt text the extension builds** for the AI CLI (in
+   `ai-providers/*` / `executeInTerminal(prompt)`) — prepend/append
+   instructions here; this text is assembled at runtime by shipped code.
+
+Do NOT modify `.claude/**` or `.specify/**` to implement extension
+features. If the feature needs the AI to do something, have the extension
+embed the instruction in the prompt it dispatches.
+
 ## Important Notes
 
 1. **File Operations**: Use `vscode.Uri` and workspace-relative paths
@@ -153,6 +178,8 @@ npm run test:watch    # Watch mode
 - TypeScript 5.3+ (ES2022 target, strict mode) + VS Code Extension API (`@types/vscode ^1.84.0`), Preact (webview) (052-transition-logging)
 - TypeScript 5.3+ (ES2022 target, strict mode) + VS Code Extension API, Preact (webview) (054-archive-button-left)
 - N/A (rendering-only change) (055-fix-bullet-rendering)
+- TypeScript 5.3+ (ES2022, strict) + VS Code Extension API (`@types/vscode ^1.84.0`), Preact (webview) (060-spec-context-tracking)
+- File-based — `.spec-context.json` per spec dir under workspace `.claude/specs/` (060-spec-context-tracking)
 
 ## Recent Changes
 - 044-context-driven-badges: Added TypeScript 5.3+ (ES2022 target, strict mode) + VS Code Extension API (`@types/vscode ^1.84.0`)

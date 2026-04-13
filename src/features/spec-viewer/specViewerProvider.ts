@@ -39,6 +39,9 @@ import { ConfigKeys, SpecStatuses } from "../../core/constants";
 import type { CustomCommandConfig } from "../../core/types/config";
 import { deriveChangeRoot } from "../../core/specDirectoryResolver";
 import { deriveSpecName } from "../specs/specContextManager";
+import { readSpecContext } from "../specs/specContextReader";
+import { writeSpecContext } from "../specs/specContextWriter";
+import { backfillMinimalContext } from "../specs/specContextBackfill";
 import {
   DEFAULT_WORKFLOW,
   getFeatureWorkflow,
@@ -55,6 +58,49 @@ export {
   getSpecDirectoryFromPath,
   isSpecDocument,
 } from "./utils";
+
+/**
+ * Map stepHistory → per-step badge state; alias `specify` → `spec` for
+ * compatibility with the 4-phase fallback stepper.
+ */
+function deriveStepBadgesWithAlias(
+  stepHistory: Record<string, { startedAt?: string; completedAt?: string | null }>
+): Record<string, 'not-started' | 'in-progress' | 'completed'> {
+  const out: Record<string, 'not-started' | 'in-progress' | 'completed'> = {};
+  for (const [step, entry] of Object.entries(stepHistory)) {
+    if (!entry?.startedAt) out[step] = 'not-started';
+    else if (entry.completedAt) out[step] = 'completed';
+    else out[step] = 'in-progress';
+  }
+  if (out['specify'] && !out['spec']) out['spec'] = out['specify'];
+  return out;
+}
+
+/**
+ * Create a minimal `.spec-context.json` when none exists (FR-011).
+ * Marks only what can be verified: workflow, branch, specName, status=draft.
+ * Never reads step files to infer completion.
+ * Returns the (newly created or already existing) context.
+ */
+async function ensureSpecContext(
+  specDirectory: string,
+  workflowName?: string
+): Promise<ReturnType<typeof readSpecContext> extends Promise<infer T> ? T : never> {
+  const existing = await readSpecContext(specDirectory);
+  if (existing) return existing;
+  const specName = path.basename(specDirectory);
+  const ctx = backfillMinimalContext({
+    workflow: workflowName || 'speckit-companion',
+    specName,
+    branch: specName,
+  });
+  try {
+    await writeSpecContext(specDirectory, ctx);
+  } catch {
+    // Non-fatal: viewer still renders.
+  }
+  return ctx;
+}
 
 /**
  * Panel instance data for multi-panel support
@@ -341,6 +387,15 @@ export class SpecViewerProvider {
       const documents = await scanDocuments(specDirectory, this.outputChannel, steps, changeRoot);
       const specName = path.basename(specDirectory);
 
+      // Single context read: determine spec status + drive stepHistory badges.
+      let featureCtx = await getFeatureWorkflow(specDirectory, changeRoot);
+      if (!featureCtx) {
+        const workflowName =
+          (await resolveWorkflow(specDirectory))?.name ?? DEFAULT_WORKFLOW.name;
+        await ensureSpecContext(specDirectory, workflowName);
+        featureCtx = await getFeatureWorkflow(specDirectory, changeRoot);
+      }
+
       // Find the requested document (or fallback to first available)
       let doc = documents.find(d => d.type === documentType);
       if (!doc) {
@@ -409,11 +464,16 @@ export class SpecViewerProvider {
         }
       }
 
-      // Calculate phases
+      // Calculate phases — reuse stepHistory from the single featureCtx read (US2).
+      const stepBadges = featureCtx?.stepHistory
+        ? deriveStepBadgesWithAlias(featureCtx.stepHistory)
+        : undefined;
       const phases = calculatePhases(
         documents,
         doc?.type || CORE_DOCUMENTS.SPEC,
         tasksContent,
+        undefined,
+        stepBadges,
       );
       const currentPhase = getPhaseNumber(doc?.type || CORE_DOCUMENTS.SPEC);
       const taskCompletionPercent = calculateTaskCompletion(
@@ -438,8 +498,6 @@ export class SpecViewerProvider {
       const docLabel = doc?.label || "Spec";
       instance.panel.title = `Spec: ${specName} - ${docLabel}`;
 
-      // Determine spec status for conditional UI
-      const featureCtx = await getFeatureWorkflow(specDirectory, changeRoot);
       let specStatus: SpecStatus;
       if (featureCtx?.status === SpecStatuses.ARCHIVED || featureCtx?.currentStep === SpecStatuses.ARCHIVED || featureCtx?.currentStep === "done") {
         specStatus = SpecStatuses.ARCHIVED;

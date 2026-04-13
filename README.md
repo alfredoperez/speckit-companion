@@ -334,6 +334,51 @@ Add custom slash commands that appear in the workflow editor and the **SpecKit: 
 - `autoExecute` — Auto-run in terminal (default: true)
 - `requiresSpecDir` — Inject spec directory (default: true)
 
+## Spec Context (`.spec-context.json`)
+
+Every spec directory holds a `.spec-context.json` file that is the single
+source of truth for lifecycle state. The viewer derives badges, pulse,
+highlight, and footer button visibility from this file only — file
+existence is never used to infer step completion.
+
+### Canonical schema
+
+```json
+{
+  "workflow": "speckit-companion | sdd | sdd-fast | speckit-terminal",
+  "specName": "060-spec-context-tracking",
+  "branch": "060-spec-context-tracking",
+  "currentStep": "specify | clarify | plan | tasks | analyze | implement",
+  "status": "draft | specifying | specified | planning | planned | tasking | ready-to-implement | implementing | completed | archived",
+  "stepHistory": {
+    "specify": { "startedAt": "ISO", "completedAt": "ISO|null", "substeps": [ { "name": "validate-checklist", "startedAt": "ISO", "completedAt": "ISO|null" } ] }
+  },
+  "transitions": [
+    { "step": "specify", "substep": null, "from": { "step": null, "substep": null }, "by": "extension", "at": "ISO" }
+  ]
+}
+```
+
+The full JSON Schema lives at
+`src/core/types/spec-context.schema.json` and
+`specs/060-spec-context-tracking/contracts/spec-context.schema.json`.
+
+### Invariants
+
+- Unknown top-level fields are preserved across writes.
+- `transitions` is append-only — never rewrite prior entries.
+- When the viewer opens a spec with no context file, it writes a minimal
+  `draft` document; no step is marked completed from file presence alone.
+
+### Status vocabulary
+
+`draft` → `specifying` → `specified` → `planning` → `planned` → `tasking` →
+`ready-to-implement` → `implementing` → `completed` → `archived`.
+
+Legacy shapes (`status: "active"`, `status: "tasks-done"`, or files that
+only contain `{ status: "completed" }`) are coerced by
+`normalizeSpecContext` at read time.
+
 ## Development
 
 ### Setup

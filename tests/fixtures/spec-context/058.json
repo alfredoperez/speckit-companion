@@ -1,0 +1,17 @@
+{
+  "workflow": "sdd",
+  "specName": "058-floating-toast",
+  "branch": "058-floating-toast",
+  "currentStep": "tasks",
+  "status": "completed",
+  "stepHistory": {
+    "specify": { "startedAt": "2026-04-01T09:00:00.000Z", "completedAt": "2026-04-01T09:20:00.000Z" },
+    "plan":    { "startedAt": "2026-04-01T09:21:00.000Z", "completedAt": "2026-04-01T09:45:00.000Z" },
+    "tasks":   { "startedAt": "2026-04-01T09:46:00.000Z", "completedAt": null }
+  },
+  "transitions": [
+    { "step": "specify", "substep": null, "from": { "step": null, "substep": null }, "by": "extension", "at": "2026-04-01T09:00:00.000Z" },
+    { "step": "plan",    "substep": null, "from": { "step": "specify", "substep": null }, "by": "extension", "at": "2026-04-01T09:21:00.000Z" },
+    { "step": "tasks",   "substep": null, "from": { "step": "plan", "substep": null }, "by": "extension", "at": "2026-04-01T09:46:00.000Z" }
+  ]
+}

@@ -1,5 +1,30 @@
 # Spec Viewer — States & Transitions
 
+> **Canonical update (spec 060 — Spec-Context Tracking)**: The viewer now
+> derives badge, pulse, highlight, and footer visibility solely from
+> `.spec-context.json`. File existence is no longer used to infer step
+> completion. See `docs/architecture.md` and
+> `src/features/spec-viewer/stateDerivation.ts`.
+>
+> **Canonical statuses**: `draft` → `specifying` → `specified` → `planning`
+> → `planned` → `tasking` → `ready-to-implement` → `implementing` →
+> `completed` → `archived`. Legacy `active`/`tasks-done` are migrated by
+> `normalizeSpecContext` at read time.
+>
+> **Badge/pulse/highlight rules**:
+> - Step badge = `completed` if `stepHistory[step].completedAt` is set;
+>   `in-progress` if `startedAt` set and `completedAt` null; else
+>   `not-started`.
+> - Pulse = the single step whose entry has `startedAt` set and
+>   `completedAt` null. **Null when `status ∈ {completed, archived}`.**
+> - Highlight = every step with `completedAt` set, regardless of active tab.
+>
+> **Footer scope tooltips**: Every footer button declares
+> `scope: 'spec' | 'step'` and tooltips are auto-suffixed with
+> "(Affects whole spec)" / "(Affects this step)". SDD `Auto` appears only
+> on the Specify tab during `draft`/`specifying` for `sdd`/`sdd-fast`
+> workflows.
+
 ## Status Lifecycle
 
 ```mermaid

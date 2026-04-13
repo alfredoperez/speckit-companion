@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://speckit-companion/spec-context.schema.json",
+  "title": "SpecContext",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["workflow", "specName", "branch", "currentStep", "status", "stepHistory", "transitions"],
+  "properties": {
+    "workflow": { "type": "string", "minLength": 1 },
+    "specName": { "type": "string", "minLength": 1 },
+    "branch": { "type": "string", "minLength": 1 },
+    "selectedAt": { "type": "string", "format": "date-time" },
+    "currentStep": {
+      "type": "string",
+      "enum": ["specify", "clarify", "plan", "tasks", "analyze", "implement"]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft", "specifying", "specified",
+        "planning", "planned",
+        "tasking", "ready-to-implement",
+        "implementing", "completed", "archived"
+      ]
+    },
+    "stepHistory": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/stepHistoryEntry" }
+    },
+    "transitions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/transition" }
+    }
+  },
+  "$defs": {
+    "stepHistoryEntry": {
+      "type": "object",
+      "required": ["startedAt", "completedAt"],
+      "properties": {
+        "startedAt": { "type": "string", "format": "date-time" },
+        "completedAt": { "type": ["string", "null"], "format": "date-time" },
+        "substeps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "startedAt", "completedAt"],
+            "properties": {
+              "name": { "type": "string" },
+              "startedAt": { "type": "string", "format": "date-time" },
+              "completedAt": { "type": ["string", "null"], "format": "date-time" }
+            }
+          }
+        }
+      }
+    },
+    "transition": {
+      "type": "object",
+      "required": ["step", "substep", "from", "by", "at"],
+      "properties": {
+        "step": {
+          "type": "string",
+          "enum": ["specify", "clarify", "plan", "tasks", "analyze", "implement"]
+        },
+        "substep": { "type": ["string", "null"] },
+        "from": {
+          "type": "object",
+          "required": ["step", "substep"],
+          "properties": {
+            "step": {
+              "type": ["string", "null"],
+              "enum": ["specify", "clarify", "plan", "tasks", "analyze", "implement", null]
+            },
+            "substep": { "type": ["string", "null"] }
+          }
+        },
+        "by": { "type": "string", "enum": ["extension", "user", "cli"] },
+        "at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}
