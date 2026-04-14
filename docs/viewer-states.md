@@ -22,6 +22,16 @@
 > - Highlight = every step with `completedAt` set or inferred-completed,
 >   regardless of active tab.
 >
+> **Viewed step (spec 066)**: Clicking a step tab in the viewer uses the
+> same full-HTML regeneration path as sidebar navigation and does NOT
+> mutate `.spec-context.json`'s `currentStep`. The header badge and
+> footer continue to reflect the spec's true workflow state. The tab
+> the user is on gets a solid accent outline; when the viewed step
+> isn't the workflow phase (i.e. an earlier completed step), the
+> outline is dashed (`.reviewing`). Step tabs only render a green ✓
+> when the step's document actually exists on disk, even if
+> `viewerState.highlights` lists the step as completed.
+>
 > **Footer scope tooltips**: Every footer button declares
 > `scope: 'spec' | 'step'` and tooltips are auto-suffixed with
 > "(Affects whole spec)" / "(Affects this step)". SDD `Auto` appears only

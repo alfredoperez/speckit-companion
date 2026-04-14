@@ -30,6 +30,7 @@ export function StepTab(props: StepTabProps) {
 
     const phase = doc.type;
     const exists = doc.exists || !!hasRelatedChildren;
+    const stepDocExists = doc.exists;
     const isViewing = phase === currentDoc || (isViewingRelatedDoc && phase === parentPhaseForRelated);
     const isLastStep = index === totalSteps - 1;
     const inProgress = isLastStep && taskCompletionPercent > 0 && taskCompletionPercent < 100;
@@ -42,7 +43,8 @@ export function StepTab(props: StepTabProps) {
     const vs = viewerState.value;
     const stepName = DOC_TO_STEP[phase] ?? phase;
     const vsPulse = vs?.pulse === stepName;
-    const vsCompleted = vs?.highlights?.includes(stepName) ?? false;
+    // R003: checkmark only when completed AND the step's document exists.
+    const vsCompleted = (vs?.highlights?.includes(stepName) ?? false) && stepDocExists;
     const vsSubstep = vs?.activeSubstep?.step === stepName ? vs.activeSubstep.name : null;
 
     const classes = [
@@ -59,7 +61,8 @@ export function StepTab(props: StepTabProps) {
         vsCompleted && 'completed',
     ].filter(Boolean).join(' ');
 
-    const statusIcon = inProgress ? `${taskCompletionPercent}%` : (exists ? '✓' : '');
+    // R003/R004: only show ✓ when the step's document actually exists.
+    const statusIcon = inProgress ? `${taskCompletionPercent}%` : (stepDocExists ? '✓' : '');
 
     return (
         <button

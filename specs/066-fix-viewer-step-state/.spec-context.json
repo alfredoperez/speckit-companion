@@ -1,0 +1,258 @@
+{
+  "workflow": "sdd",
+  "currentStep": "tasks",
+  "currentTask": null,
+  "progress": null,
+  "next": "implement",
+  "updated": "2026-04-13",
+  "selectedAt": "2026-04-14T00:09:34Z",
+  "specName": "Fix Viewer Step State",
+  "branch": "main",
+  "createdAt": "2026-04-14T00:09:34Z",
+  "status": "implementing",
+  "approach": "Thread a viewedStep through ViewerState derivation so badge text, highlights, sidebar checkmarks, and footer actions reflect the viewed tab rather than the spec's currentStep.",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-04-14T00:11:12.678Z",
+      "completedAt": "2026-04-14T00:11:47.978Z"
+    },
+    "plan": {
+      "startedAt": "2026-04-14T00:11:47.980Z",
+      "completedAt": "2026-04-14T00:18:29.280Z"
+    },
+    "tasks": {
+      "startedAt": "2026-04-14T00:18:29.281Z",
+      "completedAt": "2026-04-14T00:22:37.501Z"
+    },
+    "implement": {
+      "startedAt": "2026-04-14T00:22:37.503Z",
+      "completedAt": "2026-04-14T00:26:01.845Z"
+    }
+  },
+  "transitions": [
+    {
+      "step": "specify",
+      "substep": "parsing",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-04-14T00:09:34Z"
+    },
+    {
+      "step": "specify",
+      "substep": "exploring",
+      "from": "parsing",
+      "by": "sdd",
+      "at": "2026-04-14T00:09:35Z"
+    },
+    {
+      "step": "specify",
+      "substep": "detecting",
+      "from": "exploring",
+      "by": "sdd",
+      "at": "2026-04-14T00:09:36Z"
+    },
+    {
+      "step": "specify",
+      "substep": "writing-spec",
+      "from": "detecting",
+      "by": "sdd",
+      "at": "2026-04-14T00:09:37Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": "writing-spec",
+      "by": "sdd",
+      "at": "2026-04-14T00:09:38Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-14T00:11:47.978Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-14T00:11:47.980Z"
+    },
+    {
+      "step": "plan",
+      "substep": "loading",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-13T00:00:00Z"
+    },
+    {
+      "step": "plan",
+      "substep": "writing-plan",
+      "from": {
+        "step": "plan",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T00:00:01Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": "writing-plan"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T00:00:02Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-14T00:18:29.280Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-14T00:18:29.281Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "loading",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-13T00:00:00Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "writing-tasks",
+      "from": {
+        "step": "tasks",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T00:00:01Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": "writing-tasks"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T00:00:02Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-14T00:22:37.501Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-14T00:22:37.503Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-14T00:26:01.846Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-14T00:26:08.121Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-14T00:26:47.713Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-14T00:28:48.324Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-14T00:28:49.509Z"
+    }
+  ],
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 6,
+      "scenarios": 4,
+      "key_finding": "Viewer badge comes from computeBadgeText(spec-level ctx) in src/features/spec-viewer/phaseCalculation.ts; it has no knowledge of the currently viewed tab, and StepTab highlights merge workflowPhase with viewerState.highlights regardless of file existence."
+    },
+    "plan": {
+      "approach_summary": "Thread a viewedStep through ViewerState derivation so badge text, highlights, sidebar checkmarks, and footer actions reflect the viewed tab rather than the spec's currentStep.",
+      "files_planned": 10,
+      "risks": [
+        "Webview state drift between viewedStep and currentStep on async file reloads: reset viewedStep to currentStep when a watcher triggers a context refresh that advances the workflow."
+      ]
+    },
+    "tasks": {
+      "count": 8,
+      "phases": 1
+    }
+  }
+}

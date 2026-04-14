@@ -101,6 +101,22 @@
     color: var(--text-primary);
 }
 
+/* Highlight the currently viewed step tab */
+.step-tab.viewing,
+.step-tab.reviewing {
+    outline: 1px solid var(--accent, #4a9eff);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+/* Reviewing a non-active step — dashed variant to signal context shift (R006) */
+.step-tab.reviewing {
+    outline-style: dashed;
+    opacity: 0.95;
+}
+.step-tab.reviewing .step-status {
+    border-color: var(--accent, #4a9eff);
+}
+
 /* In progress (tasks partial) - show percentage */
 .step-tab.in-progress .step-status {
     background: var(--accent);
