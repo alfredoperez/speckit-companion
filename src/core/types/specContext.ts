@@ -112,12 +112,18 @@ export interface FooterAction {
 export interface ViewerState {
     status: Status;
     activeStep: StepName;
+    /** Step the user is currently viewing (tab); may differ from `activeStep`. */
+    viewedStep?: StepName;
     steps: Record<string, StepBadgeState>;
     pulse: StepName | null;
+    /** Steps considered completed AND whose document exists. */
     highlights: StepName[];
     activeSubstep: { step: StepName; name: string } | null;
     footer: FooterAction[];
 }
+
+/** Optional derivation input — maps step → whether its document exists. */
+export type StepDocExistsMap = Partial<Record<StepName, boolean>>;
 
 /** Canonical list of substep names used by Companion prompts. */
 export const CANONICAL_SUBSTEPS = {

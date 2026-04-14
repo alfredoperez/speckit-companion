@@ -126,6 +126,7 @@ export interface SerializedFooterAction {
 export interface ViewerState {
     status: string;
     activeStep: string;
+    viewedStep?: string;
     steps: Record<string, StepBadgeState>;
     pulse: string | null;
     highlights: string[];

@@ -523,6 +523,24 @@ export class SpecViewerProvider {
       const createdDate = computeCreatedDate(featureCtx?.stepHistory);
       const lastUpdatedDate = computeLastUpdatedDate(featureCtx?.stepHistory);
 
+      // Map documents → per-step existence (keyed by both doc type name and
+      // canonical step name) so derivation can gate highlights on file presence.
+      const stepDocExists: Record<string, boolean> = {};
+      for (const d of documents) {
+        if (d.isCore) {
+          stepDocExists[d.type] = d.exists;
+          if (d.type === 'spec') stepDocExists['specify'] = d.exists;
+        }
+      }
+
+      const viewedStep = (instance.state.viewedStep ?? undefined) as StepName | undefined;
+
+      const badgeText = computeBadgeText(
+        featureCtx,
+        viewedStep ?? null,
+        stepDocExists,
+      );
+
       // Generate and set HTML
       instance.panel.webview.html = generateHtml(
         instance.panel.webview,
@@ -538,7 +556,7 @@ export class SpecViewerProvider {
         enhancementButtons,
         stalenessMap,
         mapSddStepToTab(featureCtx?.currentStep),
-        computeBadgeText(featureCtx),
+        badgeText,
         createdDate,
         lastUpdatedDate,
         featureCtx?.specName ?? deriveSpecName(specDirectory),
@@ -763,6 +781,16 @@ export class SpecViewerProvider {
       // Compute staleness for workflow documents
       const stalenessMap = await computeStaleness(instance.state.availableDocuments);
 
+      // Derive per-step doc existence for gating highlights + badge.
+      const stepDocExistsCU: Record<string, boolean> = {};
+      for (const d of instance.state.availableDocuments) {
+        if (d.isCore) {
+          stepDocExistsCU[d.type] = d.exists;
+          if (d.type === 'spec') stepDocExistsCU['specify'] = d.exists;
+        }
+      }
+      const viewedStepCU = (instance.state.viewedStep ?? undefined) as StepName | undefined;
+
       const navState: NavState = {
         coreDocs,
         relatedDocs,
@@ -782,7 +810,7 @@ export class SpecViewerProvider {
         currentTask: featureCtx?.currentTask ?? null,
         activeStep: mapSddStepToTab(featureCtx?.currentStep),
         stepHistory: featureCtx?.stepHistory,
-        badgeText: computeBadgeText(featureCtx),
+        badgeText: computeBadgeText(featureCtx, viewedStepCU ?? null, stepDocExistsCU),
         createdDate: computeCreatedDate(featureCtx?.stepHistory),
         lastUpdatedDate: computeLastUpdatedDate(featureCtx?.stepHistory),
         specContextName: featureCtx?.specName ?? deriveSpecName(specDirectory),
@@ -809,7 +837,10 @@ export class SpecViewerProvider {
           const active: StepName = (STEP_NAMES.includes(specCtx.currentStep as StepName)
             ? (specCtx.currentStep as StepName)
             : 'specify');
-          const derived = deriveViewerState(specCtx, active);
+          const derived = deriveViewerState(specCtx, active, {
+            viewedStep: viewedStepCU,
+            stepDocExists: stepDocExistsCU as Record<string, boolean>,
+          });
           viewerState = {
             ...derived,
             footer: derived.footer.map(a => ({

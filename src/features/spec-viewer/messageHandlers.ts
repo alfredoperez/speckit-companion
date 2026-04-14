@@ -15,7 +15,6 @@ import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig } from '../../core/types/config';
 import type { WorkflowStepConfig } from '../workflows/types';
 import { getFeatureWorkflow, getWorkflowCommands } from '../workflows';
-import { updateStepProgress } from '../specs/specContextManager';
 import { setStatus, reactivate, startStep, completeStep } from '../specs/stepLifecycle';
 import type { StepName } from '../../core/types/specContext';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
@@ -198,17 +197,8 @@ async function handleStepperClick(
 ): Promise<void> {
     if (phase === 'done') return; // Done is not clickable
 
-    // Persist step change BEFORE updating UI so AI agent sees updated .spec-context.json
-    try {
-        const steps = await deps.resolveWorkflowSteps(specDirectory);
-        const stepNames = steps.map(s => s.name);
-        await updateStepProgress(specDirectory, phase, stepNames);
-    } catch (err) {
-        deps.outputChannel.appendLine(`[SpecViewer] Error persisting step change: ${err}`);
-    }
-
-    // Use message-based update for smoother transition (no page flash)
-    await deps.sendContentUpdateMessage(specDirectory, phase);
+    // Full regeneration — matches sidebar navigation's appearance.
+    await deps.updateContent(specDirectory, phase);
 }
 
 /**
