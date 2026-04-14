@@ -169,9 +169,9 @@ describe('isStepCompleted — inferred completion from step ordering', () => {
         expect(isStepCompleted('implement', 'specify', history)).toBe(true);
     });
 
-    it('step with no startedAt → false even if before currentStep', () => {
+    it('step with no startedAt → true if before currentStep (inferred completion)', () => {
         const history = {};
-        expect(isStepCompleted('specify', 'implement', history)).toBe(false);
+        expect(isStepCompleted('specify', 'implement', history)).toBe(true);
     });
 });
 

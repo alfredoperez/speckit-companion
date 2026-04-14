@@ -4,10 +4,10 @@
  * Never touches the filesystem. `deriveStepBadges` uses only `stepHistory`.
  * `pulse` is null when `status` ∈ {completed, archived}.
  *
- * **Inferred completion**: a step is treated as completed when it has
- * `startedAt` set and precedes `currentStep` in `STEP_NAMES` ordering,
- * even if `completedAt` was never explicitly written (common with external
- * SDD skills that only emit `startedAt`).
+ * **Inferred completion**: a step is treated as completed when it precedes
+ * `currentStep` in `STEP_NAMES` ordering, even if it has no `stepHistory`
+ * entry at all (common with external SDD skills that advance `currentStep`
+ * without populating per-step history).
  */
 
 import {
@@ -24,7 +24,7 @@ import { getFooterActions } from './footerActions';
  *
  * A step is completed if:
  * 1. It has explicit `completedAt`, OR
- * 2. It has `startedAt` AND its index in STEP_NAMES is before `currentStep`
+ * 2. Its index in STEP_NAMES is before `currentStep`
  *    (the workflow moved past it — inferred completion).
  */
 export function isStepCompleted(
@@ -33,11 +33,14 @@ export function isStepCompleted(
     stepHistory: Record<string, { startedAt?: string; completedAt?: string | null }>
 ): boolean {
     const entry = stepHistory[step];
-    if (!entry?.startedAt) return false;
-    if (entry.completedAt) return true;
+    if (entry?.completedAt) return true;
     const stepIdx = STEP_NAMES.indexOf(step);
     const currentIdx = STEP_NAMES.indexOf(currentStep);
-    return stepIdx >= 0 && currentIdx >= 0 && stepIdx < currentIdx;
+    // Inferred completion: the workflow moved past this step.
+    if (stepIdx >= 0 && currentIdx >= 0 && stepIdx < currentIdx) return true;
+    // No history entry and not before currentStep → not completed.
+    if (!entry?.startedAt) return false;
+    return false;
 }
 
 export function deriveStepBadges(
@@ -45,13 +48,11 @@ export function deriveStepBadges(
 ): Record<string, StepBadgeState> {
     const out: Record<string, StepBadgeState> = {};
     for (const step of STEP_NAMES) {
-        const entry = ctx.stepHistory[step];
-        if (!entry || !entry.startedAt) {
-            out[step] = 'not-started';
-        } else if (isStepCompleted(step, ctx.currentStep, ctx.stepHistory)) {
+        if (isStepCompleted(step, ctx.currentStep, ctx.stepHistory)) {
             out[step] = 'completed';
         } else {
-            out[step] = 'in-progress';
+            const entry = ctx.stepHistory[step];
+            out[step] = entry?.startedAt ? 'in-progress' : 'not-started';
         }
     }
     return out;
