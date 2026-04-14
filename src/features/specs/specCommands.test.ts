@@ -34,6 +34,19 @@ jest.mock('../workflows', () => ({
     executeCheckpointsForTrigger: jest.fn(),
 }));
 
+jest.mock('./stepLifecycle', () => ({
+    startStep: jest.fn(),
+    setStatus: jest.fn().mockResolvedValue(undefined),
+    reactivate: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('./selectionContextKeys', () => ({
+    updateSelectionContextKeys: jest.fn(),
+}));
+
+import { setStatus, reactivate } from './stepLifecycle';
+import { NotificationUtils } from '../../core/utils/notificationUtils';
+
 const mockCommands = vscode.commands as jest.Mocked<typeof vscode.commands>;
 
 // Capture registered command handlers by name
@@ -45,13 +58,15 @@ function captureCommandHandlers(context: vscode.ExtensionContext) {
         return { dispose: jest.fn() };
     });
 
-    const mockExplorer = { refresh: jest.fn() } as any;
+    lastMockExplorer = { refresh: jest.fn() } as any;
     const mockOutputChannel = { appendLine: jest.fn() } as any;
 
-    registerSpecKitCommands(context, mockExplorer, mockOutputChannel);
+    registerSpecKitCommands(context, lastMockExplorer as any, mockOutputChannel);
 
     return handlers;
 }
+
+let lastMockExplorer: { refresh: jest.Mock };
 
 function createMockContext(): vscode.ExtensionContext {
     return {
@@ -64,10 +79,9 @@ beforeEach(() => {
 });
 
 describe('registerSpecKitCommands', () => {
-    it('accepts three parameters without specKitDetector', () => {
-        // The function signature should be (context, specExplorer, outputChannel)
-        // with no specKitDetector parameter. Verify it can be called with exactly 3 args.
-        expect(registerSpecKitCommands.length).toBe(3);
+    it('has no specKitDetector parameter', () => {
+        // Signature is (context, specExplorer, outputChannel, specsTreeView?) — no specKitDetector.
+        expect(registerSpecKitCommands.length).toBe(4);
     });
 
     it('registers the speckit.create command', () => {
@@ -75,6 +89,74 @@ describe('registerSpecKitCommands', () => {
         const handlers = captureCommandHandlers(context);
 
         expect(handlers.has('speckit.create')).toBe(true);
+    });
+});
+
+describe('bulk status command handlers', () => {
+    const originalWorkspaceFolders = (vscode.workspace as any).workspaceFolders;
+
+    beforeEach(() => {
+        (vscode.workspace as any).workspaceFolders = [{ uri: { fsPath: '/ws' } }];
+    });
+
+    afterEach(() => {
+        (vscode.workspace as any).workspaceFolders = originalWorkspaceFolders;
+    });
+
+    const makeItem = (name: string) => ({ label: name, specPath: `specs/${name}`, contextValue: 'spec' });
+
+    it('markCompleted on 3-item selection calls setStatus 3x, refreshes once, shows plural toast', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.markCompleted')!;
+
+        const items = [makeItem('a'), makeItem('b'), makeItem('c')];
+        await handler(items[0], items);
+
+        expect(setStatus).toHaveBeenCalledTimes(3);
+        expect(setStatus).toHaveBeenCalledWith(expect.stringContaining('specs/a'), 'completed');
+        expect(setStatus).toHaveBeenCalledWith(expect.stringContaining('specs/b'), 'completed');
+        expect(setStatus).toHaveBeenCalledWith(expect.stringContaining('specs/c'), 'completed');
+        expect(lastMockExplorer.refresh).toHaveBeenCalledTimes(1);
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledTimes(1);
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledWith('3 specs marked as completed');
+    });
+
+    it('markCompleted with only item (no items) behaves like single-select with singular toast', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.markCompleted')!;
+
+        await handler(makeItem('x'), undefined);
+
+        expect(setStatus).toHaveBeenCalledTimes(1);
+        expect(lastMockExplorer.refresh).toHaveBeenCalledTimes(1);
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledWith('1 spec marked as completed');
+    });
+
+    it('archive follows bulk semantics', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.archive')!;
+
+        await handler(undefined, [makeItem('a'), makeItem('b')]);
+
+        expect(setStatus).toHaveBeenCalledTimes(2);
+        expect(setStatus).toHaveBeenCalledWith(expect.stringContaining('specs/a'), 'archived');
+        expect(lastMockExplorer.refresh).toHaveBeenCalledTimes(1);
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledWith('2 specs archived');
+    });
+
+    it('reactivate follows bulk semantics', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.reactivate')!;
+
+        await handler(undefined, [makeItem('a'), makeItem('b'), makeItem('c')]);
+
+        expect(reactivate).toHaveBeenCalledTimes(3);
+        expect(lastMockExplorer.refresh).toHaveBeenCalledTimes(1);
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledWith('3 specs moved to active');
     });
 });
 

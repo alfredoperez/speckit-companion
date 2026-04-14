@@ -1,0 +1,310 @@
+{
+  "workflow": "sdd",
+  "currentStep": "plan",
+  "currentTask": "T001",
+  "progress": "phase1",
+  "files_modified": [],
+  "task_summaries": {},
+  "concerns": [],
+  "decisions": [],
+  "last_action": "implement started",
+  "next": "implement",
+  "updated": "2026-04-13",
+  "selectedAt": "2026-04-13T23:43:15Z",
+  "specName": "Multi Select Specs",
+  "branch": "main",
+  "createdAt": "2026-04-13T23:43:15Z",
+  "approach": "Migrate the Specs sidebar to createTreeView with canSelectMany:true and adapt status commands to operate on the full selection, using VS Code context keys for menu visibility.",
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 6,
+      "scenarios": 4,
+      "key_finding": "sidebar registered via registerTreeDataProvider in extension.ts:118; multi-select requires migrating to createTreeView with canSelectMany:true and updating specCommands.ts bulk handlers."
+    },
+    "plan": {
+      "approach_summary": "Migrate the Specs sidebar to createTreeView with canSelectMany:true and adapt status commands to operate on the full selection, using VS Code context keys for menu visibility.",
+      "files_planned": 5,
+      "risks": [
+        "Context-key staleness: If selection context keys are set only on onDidChangeSelection, a right-click that changes selection may race with menu evaluation.",
+        "Single-item invocation from keyboard/palette: When a command is invoked without a TreeView selection, the items arg is undefined."
+      ]
+    }
+  },
+  "transitions": [
+    {
+      "step": "specify",
+      "substep": "parsing",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-04-13T23:43:15Z"
+    },
+    {
+      "step": "specify",
+      "substep": "exploring",
+      "from": "parsing",
+      "by": "sdd",
+      "at": "2026-04-13T23:43:16Z"
+    },
+    {
+      "step": "specify",
+      "substep": "detecting",
+      "from": "exploring",
+      "by": "sdd",
+      "at": "2026-04-13T23:43:17Z"
+    },
+    {
+      "step": "specify",
+      "substep": "writing-spec",
+      "from": "detecting",
+      "by": "sdd",
+      "at": "2026-04-13T23:43:18Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": "writing-spec",
+      "by": "sdd",
+      "at": "2026-04-13T23:43:19Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T23:47:20.442Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T23:47:20.444Z"
+    },
+    {
+      "step": "plan",
+      "substep": "loading",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-13T23:48:00Z"
+    },
+    {
+      "step": "plan",
+      "substep": "writing-plan",
+      "from": {
+        "step": "plan",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T23:48:01Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": "writing-plan"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T23:48:02Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T23:50:37.855Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T23:50:38.521Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T23:50:45.882Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T23:50:45.883Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T23:50:58.738Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T23:51:00.397Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T23:51:01.739Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "loading",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-13T23:52:00Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "writing-tasks",
+      "from": {
+        "step": "tasks",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T23:52:01Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": "writing-tasks"
+      },
+      "by": "sdd",
+      "at": "2026-04-13T23:52:02Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T23:52:41.187Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T23:54:52.592Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T23:54:52.594Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T23:56:38.422Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T23:56:39.349Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T23:56:40.217Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-13T23:56:45.242Z"
+    }
+  ],
+  "status": "implementing",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-04-13T23:47:20.442Z",
+      "completedAt": "2026-04-13T23:47:20.442Z"
+    },
+    "plan": {
+      "startedAt": "2026-04-13T23:47:20.444Z",
+      "completedAt": "2026-04-13T23:50:45.882Z"
+    },
+    "tasks": {
+      "startedAt": "2026-04-13T23:50:45.883Z",
+      "completedAt": "2026-04-13T23:54:52.592Z"
+    },
+    "implement": {
+      "startedAt": "2026-04-13T23:54:52.594Z",
+      "completedAt": "2026-04-13T23:56:38.422Z"
+    }
+  }
+}

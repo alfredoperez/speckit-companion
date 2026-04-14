@@ -17,7 +17,8 @@ import {
     WorkflowConfig,
 } from '../workflows';
 import { updateStepProgress } from './specContextManager';
-import { startStep, setStatus } from './stepLifecycle';
+import { startStep, setStatus, reactivate } from './stepLifecycle';
+import { updateSelectionContextKeys } from './selectionContextKeys';
 import { track as trackTerminal } from './terminalStepTracker';
 import type { StepName } from '../../core/types/specContext';
 
@@ -43,8 +44,19 @@ const LIFECYCLE_STEPS: ReadonlySet<string> = new Set([
 export function registerSpecKitCommands(
     context: vscode.ExtensionContext,
     specExplorer: SpecExplorerProvider,
-    outputChannel: vscode.OutputChannel
+    outputChannel: vscode.OutputChannel,
+    specsTreeView?: vscode.TreeView<any>
 ): void {
+    function resolveTargets(item: SpecTreeItem | undefined, items: SpecTreeItem[] | undefined): SpecTreeItem[] {
+        if (items && items.length > 0) return items;
+        if (item) return [item];
+        const selection = (specsTreeView?.selection || []) as SpecTreeItem[];
+        return selection.filter(s => (s as any)?.contextValue === 'spec');
+    }
+
+    function pluralize(count: number, singular: string, plural: string): string {
+        return count === 1 ? `1 spec ${singular}` : `${count} specs ${plural}`;
+    }
     // SpecKit Create - Open the spec editor webview
     context.subscriptions.push(
         vscode.commands.registerCommand('speckit.create', async () => {
@@ -100,31 +112,64 @@ export function registerSpecKitCommands(
     registerPhaseCommands(context, specExplorer, outputChannel);
     registerCustomCommand(context, outputChannel);
 
+    function specDirFor(item: SpecTreeItem, wsPath: string): string {
+        const relativePath = (item as SpecTreeItem).specPath || `specs/${item.label}`;
+        return path.join(wsPath, relativePath);
+    }
+
+    async function runBulkStatusChange(
+        item: SpecTreeItem | undefined,
+        items: SpecTreeItem[] | undefined,
+        apply: (specDir: string) => Promise<void>,
+        singular: string,
+        plural: string
+    ): Promise<void> {
+        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+        if (!workspaceFolder) return;
+        const targets = resolveTargets(item, items);
+        updateSelectionContextKeys(targets as any);
+        if (targets.length === 0) return;
+        await Promise.all(targets.map(t => apply(specDirFor(t, workspaceFolder.uri.fsPath))));
+        specExplorer.refresh();
+        NotificationUtils.showAutoDismissNotification(pluralize(targets.length, singular, plural));
+    }
+
     // Mark as Completed
     context.subscriptions.push(
-        vscode.commands.registerCommand('speckit.markCompleted', async (item: SpecTreeItem) => {
-            const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-            if (workspaceFolder && item) {
-                const relativePath = (item as SpecTreeItem).specPath || `specs/${item.label}`;
-                const specDir = path.join(workspaceFolder.uri.fsPath, relativePath);
-                await setStatus(specDir, 'completed');
-                specExplorer.refresh();
-                NotificationUtils.showAutoDismissNotification(`Spec "${item.label}" marked as completed`);
-            }
+        vscode.commands.registerCommand('speckit.markCompleted', async (item: SpecTreeItem, items?: SpecTreeItem[]) => {
+            await runBulkStatusChange(
+                item,
+                items,
+                specDir => setStatus(specDir, 'completed'),
+                'marked as completed',
+                'marked as completed'
+            );
         })
     );
 
     // Archive spec
     context.subscriptions.push(
-        vscode.commands.registerCommand('speckit.archive', async (item: SpecTreeItem) => {
-            const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-            if (workspaceFolder && item) {
-                const relativePath = (item as SpecTreeItem).specPath || `specs/${item.label}`;
-                const specDir = path.join(workspaceFolder.uri.fsPath, relativePath);
-                await setStatus(specDir, 'archived');
-                specExplorer.refresh();
-                NotificationUtils.showAutoDismissNotification(`Spec "${item.label}" archived`);
-            }
+        vscode.commands.registerCommand('speckit.archive', async (item: SpecTreeItem, items?: SpecTreeItem[]) => {
+            await runBulkStatusChange(
+                item,
+                items,
+                specDir => setStatus(specDir, 'archived'),
+                'archived',
+                'archived'
+            );
+        })
+    );
+
+    // Reactivate (Move to Active)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('speckit.reactivate', async (item: SpecTreeItem, items?: SpecTreeItem[]) => {
+            await runBulkStatusChange(
+                item,
+                items,
+                specDir => reactivate(specDir),
+                'moved to active',
+                'moved to active'
+            );
         })
     );
 
