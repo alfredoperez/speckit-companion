@@ -92,6 +92,16 @@
     color: var(--text-primary);
 }
 
+/* Disabled state for all footer buttons (e.g. while a step is running) */
+.actions button:disabled,
+.actions button[disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+    transform: none;
+    box-shadow: none;
+}
+
 /* ============================================
    Action Toast (floating)
    ============================================ */
