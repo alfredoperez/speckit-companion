@@ -1,0 +1,40 @@
+{
+  "workflow": "sdd",
+  "currentStep": "tasks",
+  "currentTask": null,
+  "progress": null,
+  "next": "implement",
+  "updated": "2026-04-13",
+  "selectedAt": "2026-04-14T00:55:27Z",
+  "specName": "Lock Steps While Running",
+  "branch": "main",
+  "createdAt": "2026-04-14T00:55:27Z",
+  "auto": true,
+  "approach": "Derive a single isRunning from existing viewerState signals and thread it into StepTab + FooterActions to disable future tabs and Regenerate/primary buttons; add native title tooltips to all controls.",
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 7,
+      "scenarios": 4,
+      "key_finding": "StepTab clickability uses isClickable = exists || index===0; footer Regenerate/Approve live in FooterActions.tsx with no running-step awareness; viewerState already exposes activeStep + stepHistory[phase].completedAt."
+    },
+    "plan": {
+      "approach_summary": "Derive isRunning from existing viewerState signals and thread it into StepTab + FooterActions to disable future tabs and Regenerate/primary buttons; add native title tooltips to all controls.",
+      "files_planned": 3,
+      "risks": []
+    }
+  },
+  "transitions": [
+    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-14T00:55:27Z" },
+    { "step": "specify", "substep": "exploring", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-04-14T00:55:27Z" },
+    { "step": "specify", "substep": "detecting", "from": { "step": "specify", "substep": "exploring" }, "by": "sdd", "at": "2026-04-14T00:55:27Z" },
+    { "step": "specify", "substep": "writing-spec", "from": { "step": "specify", "substep": "detecting" }, "by": "sdd", "at": "2026-04-14T00:55:27Z" },
+    { "step": "specify", "substep": null, "from": { "step": "specify", "substep": "writing-spec" }, "by": "sdd", "at": "2026-04-14T00:55:27Z" },
+    { "step": "plan", "substep": "loading", "from": { "step": "specify", "substep": null }, "by": "sdd", "at": "2026-04-14T00:55:27Z" },
+    { "step": "plan", "substep": "writing-plan", "from": { "step": "plan", "substep": "loading" }, "by": "sdd", "at": "2026-04-14T00:55:27Z" },
+    { "step": "plan", "substep": null, "from": { "step": "plan", "substep": "writing-plan" }, "by": "sdd", "at": "2026-04-14T00:55:27Z" },
+    { "step": "tasks", "substep": "loading", "from": { "step": "plan", "substep": null }, "by": "sdd", "at": "2026-04-14T00:55:27Z" },
+    { "step": "tasks", "substep": "writing-tasks", "from": { "step": "tasks", "substep": "loading" }, "by": "sdd", "at": "2026-04-14T00:55:27Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "tasks", "substep": "writing-tasks" }, "by": "sdd", "at": "2026-04-14T00:55:27Z" }
+  ]
+}

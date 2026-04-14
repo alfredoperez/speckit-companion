@@ -17,6 +17,15 @@ export function NavigationBar() {
         : undefined;
     const parentPhaseForRelated = viewingRelatedDoc?.parentStep || coreDocs?.[0]?.type || 'spec';
 
+    // Index of the step currently running (activeStep with no completedAt).
+    // Future tabs beyond this index get locked while the step is in-flight.
+    const runningStepIndex = (() => {
+        if (!activeStep) return null;
+        if (stepHistory?.[activeStep]?.completedAt) return null;
+        const idx = coreDocs.findIndex(d => d.type === activeStep);
+        return idx >= 0 ? idx : null;
+    })();
+
     const handleClick = (phase: string) => {
         vscode.postMessage({ type: 'stepperClick', phase });
     };
@@ -43,6 +52,7 @@ export function NavigationBar() {
                                 stepHistory={stepHistory}
                                 stalenessMap={stalenessMap}
                                 hasRelatedChildren={hasRelatedChildren}
+                                runningStepIndex={runningStepIndex}
                                 onClick={handleClick}
                             />
                             {i < coreDocs.length - 1 && (

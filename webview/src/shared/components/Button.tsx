@@ -6,6 +6,7 @@ export interface ButtonProps extends Omit<JSX.HTMLAttributes<HTMLButtonElement>,
     label: string;
     variant?: ButtonVariant;
     icon?: string;
+    disabled?: boolean;
 }
 
 export function Button({ label, variant = 'secondary', icon, class: cls, ...rest }: ButtonProps) {

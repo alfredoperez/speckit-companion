@@ -7,6 +7,13 @@ const DOC_TO_STEP: Record<string, string> = {
     tasks: 'tasks',
 };
 
+const STEP_TOOLTIPS: Record<string, string> = {
+    spec: 'Specify — define requirements and scenarios',
+    plan: 'Plan — design the implementation approach',
+    tasks: 'Tasks — break the plan into work items',
+    done: 'Implement — execute and ship',
+};
+
 export interface StepTabProps {
     doc: SpecDocument;
     index: number;
@@ -20,13 +27,14 @@ export interface StepTabProps {
     stepHistory?: Record<string, { completedAt?: string | null }>;
     stalenessMap?: StalenessMap;
     hasRelatedChildren?: boolean;
+    runningStepIndex?: number | null;
     onClick: (phase: string) => void;
 }
 
 export function StepTab(props: StepTabProps) {
     const { doc, index, totalSteps, currentDoc, workflowPhase,
         taskCompletionPercent, isViewingRelatedDoc, parentPhaseForRelated,
-        activeStep, stepHistory, stalenessMap, hasRelatedChildren, onClick } = props;
+        activeStep, stepHistory, stalenessMap, hasRelatedChildren, runningStepIndex, onClick } = props;
 
     const phase = doc.type;
     const exists = doc.exists || !!hasRelatedChildren;
@@ -38,7 +46,11 @@ export function StepTab(props: StepTabProps) {
     const isTasksActive = isLastStep && isViewing && inProgress;
     const isStale = stalenessMap?.[phase]?.isStale ?? false;
     const isWorking = activeStep === phase && !stepHistory?.[phase]?.completedAt;
-    const isClickable = exists || index === 0;
+    const isLocked = runningStepIndex != null
+        && index > runningStepIndex
+        && !isViewing
+        && !stepDocExists;
+    const isClickable = (exists || index === 0) && !isLocked;
 
     const vs = viewerState.value;
     const stepName = DOC_TO_STEP[phase] ?? phase;
@@ -64,10 +76,16 @@ export function StepTab(props: StepTabProps) {
     // R003/R004: only show ✓ when the step's document actually exists.
     const statusIcon = inProgress ? `${taskCompletionPercent}%` : (stepDocExists ? '✓' : '');
 
+    const baseTooltip = STEP_TOOLTIPS[phase] ?? doc.label;
+    const tooltip = isLocked
+        ? `${baseTooltip} (disabled while ${activeStep} is running)`
+        : baseTooltip;
+
     return (
         <button
             class={classes}
             data-phase={phase}
+            title={tooltip}
             disabled={!isClickable}
             onClick={() => isClickable && phase !== 'done' && onClick(phase)}
         >
