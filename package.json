@@ -203,6 +203,12 @@
         "icon": "$(archive)"
       },
       {
+        "command": "speckit.reactivate",
+        "title": "Move to Active",
+        "category": "SpecKit",
+        "icon": "$(debug-restart)"
+      },
+      {
         "command": "speckit.steering.create",
         "title": "Create Custom Steering",
         "category": "SpecKit",
@@ -401,12 +407,17 @@
         },
         {
           "command": "speckit.markCompleted",
-          "when": "view == speckit.views.explorer && viewItem == spec",
+          "when": "view == speckit.views.explorer && viewItem == spec && !speckit.specs.selection.allCompleted && !speckit.specs.selection.allArchived",
           "group": "7_modification"
         },
         {
           "command": "speckit.archive",
-          "when": "view == speckit.views.explorer && viewItem == spec",
+          "when": "view == speckit.views.explorer && viewItem == spec && !speckit.specs.selection.allArchived",
+          "group": "7_modification"
+        },
+        {
+          "command": "speckit.reactivate",
+          "when": "view == speckit.views.explorer && viewItem == spec && !speckit.specs.selection.allActive",
           "group": "7_modification"
         },
         {

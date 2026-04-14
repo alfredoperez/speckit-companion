@@ -60,7 +60,7 @@
   "specName": "AI Prompt Context Prepend",
   "branch": "061-extension-lifecycle-writes",
   "createdAt": "2026-04-13T20:41:52Z",
-  "status": "completed",
+  "status": "archived",
   "approach": "Introduce a single promptBuilder helper and route every executeInTerminal caller through it, gated by a new speckit.aiContextInstructions setting.",
   "stepHistory": {
     "specify": {
@@ -200,6 +200,16 @@
       },
       "by": "extension",
       "at": "2026-04-13T20:45:54.999Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-14T00:02:17.595Z"
     }
   ]
 }

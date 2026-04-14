@@ -6,7 +6,7 @@
   "next": "done",
   "updated": "2026-04-13",
   "selectedAt": "2026-04-13T22:22:52Z",
-  "status": "completed",
+  "status": "archived",
   "specName": "Provider Registry",
   "branch": "main",
   "createdAt": "2026-04-13T22:22:52Z",
@@ -146,6 +146,16 @@
       },
       "by": "sdd",
       "at": "2026-04-13T22:25:20Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-14T00:02:17.595Z"
     }
   ]
 }

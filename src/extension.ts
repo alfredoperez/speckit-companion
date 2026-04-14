@@ -5,7 +5,7 @@ import { IAIProvider, AIProviderFactory, isProviderConfigured, promptForProvider
 
 // Features
 import { SteeringManager, SteeringExplorerProvider, registerSteeringCommands } from './features/steering';
-import { SpecExplorerProvider, registerSpecKitCommands } from './features/specs';
+import { SpecExplorerProvider, registerSpecKitCommands, updateSelectionContextKeys } from './features/specs';
 import { register as registerTerminalStepTracker } from './features/specs/terminalStepTracker';
 import { setLifecycleOutputChannel } from './features/specs/stepLifecycle';
 import { OverviewProvider } from './features/settings';
@@ -113,9 +113,15 @@ export async function activate(context: vscode.ExtensionContext) {
     steeringExplorer.setAgentManager(agentManager);
     steeringExplorer.setSkillManager(skillManager);
 
+    const specsTreeView = vscode.window.createTreeView(Views.explorer, {
+        treeDataProvider: specExplorer,
+        canSelectMany: true,
+    });
+    specsTreeView.onDidChangeSelection(e => updateSelectionContextKeys(e.selection as any));
+
     context.subscriptions.push(
         vscode.window.registerTreeDataProvider(Views.settings, overviewProvider),
-        vscode.window.registerTreeDataProvider(Views.explorer, specExplorer),
+        specsTreeView,
         vscode.window.registerTreeDataProvider(Views.steering, steeringExplorer)
     );
 
@@ -139,7 +145,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // Register all commands
     registerCliCommands(context, specKitDetector);
     registerSteeringCommands(context, steeringManager, steeringExplorer, outputChannel);
-    registerSpecKitCommands(context, specExplorer, outputChannel);
+    registerSpecKitCommands(context, specExplorer, outputChannel, specsTreeView);
     registerUtilityCommands(context, updateChecker, outputChannel);
 
     // Set up file watchers

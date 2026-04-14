@@ -9,7 +9,7 @@
   "specName": "Viewer State Derivation Wiring",
   "branch": "063-viewer-state-derivation-wiring",
   "createdAt": "2026-04-13T20:59:09Z",
-  "status": "completed",
+  "status": "archived",
   "auto": true,
   "stepHistory": {
     "specify": {
@@ -310,6 +310,16 @@
       },
       "by": "sdd",
       "at": "2026-04-13T21:30:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-14T00:02:17.595Z"
     }
   ]
 }
