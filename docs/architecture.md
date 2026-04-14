@@ -48,6 +48,7 @@ src/
 │   │                           # specContextManager.ts (legacy),
 │   │                           # specContextReader.ts, specContextWriter.ts,
 │   │                           # specContextBackfill.ts (060 canonical),
+│   │                           # specContextReconciler.ts (one-time file repair),
 │   │                           # index.ts, __tests__/
 │   ├── steering/               # steeringExplorerProvider.ts, steeringManager.ts,
 │   │                           # steeringCommands.ts, types.ts, index.ts

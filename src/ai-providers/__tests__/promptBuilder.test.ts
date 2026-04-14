@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { buildPrompt } from '../promptBuilder';
+import { buildPrompt, buildLifecyclePrompt } from '../promptBuilder';
 
 describe('buildPrompt', () => {
     const originalGetConfig = vscode.workspace.getConfiguration;
@@ -78,5 +78,42 @@ describe('buildPrompt', () => {
             const out = buildPrompt({ command: 'x', step, specDir: 'specs/001-demo' });
             expect(out.length).toBeLessThan(1500);
         }
+    });
+
+    it('preamble includes canonical status lifecycle', () => {
+        mockConfig(true);
+        const out = buildPrompt({ command: 'x', step: 'specify', specDir: 'specs/001-demo' });
+        expect(out).toContain('Canonical statuses:');
+        expect(out).toContain('ready-to-implement');
+    });
+});
+
+describe('buildLifecyclePrompt', () => {
+    const originalGetConfig = vscode.workspace.getConfiguration;
+
+    function mockConfig(enabled: boolean): void {
+        (vscode.workspace as unknown as { getConfiguration: unknown }).getConfiguration = jest
+            .fn()
+            .mockReturnValue({ get: jest.fn().mockReturnValue(enabled) });
+    }
+
+    afterEach(() => {
+        (vscode.workspace as unknown as { getConfiguration: unknown }).getConfiguration = originalGetConfig;
+    });
+
+    it('wraps command with lifecycle preamble', () => {
+        mockConfig(true);
+        const out = buildLifecyclePrompt('/sdd:auto "specs/001"', 'specs/001');
+        expect(out).toContain('<!-- speckit-companion:context-update -->');
+        expect(out).toContain('keep');
+        expect(out).toContain('specs/001/.spec-context.json');
+        expect(out).toContain('Canonical statuses:');
+        expect(out).toContain('/sdd:auto "specs/001"');
+    });
+
+    it('returns raw command when disabled', () => {
+        mockConfig(false);
+        const cmd = '/sdd:auto "specs/001"';
+        expect(buildLifecyclePrompt(cmd, 'specs/001')).toBe(cmd);
     });
 });
