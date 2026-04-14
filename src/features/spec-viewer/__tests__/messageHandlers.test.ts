@@ -29,6 +29,7 @@ jest.mock('../../workflows', () => ({
 }));
 
 import { setStatus, reactivate } from '../../specs/stepLifecycle';
+import { updateStepProgress } from '../../specs/specContextManager';
 import { NotificationUtils } from '../../../core/utils/notificationUtils';
 import { getFeatureWorkflow, getWorkflowCommands } from '../../workflows';
 
@@ -293,5 +294,31 @@ describe('messageHandlers - clarify (workflow commands)', () => {
         expect(deps.executeInTerminal).toHaveBeenCalledWith(
             expect.stringContaining('/sdd:auto')
         );
+    });
+});
+
+describe('messageHandlers - stepperClick', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it('does not mutate .spec-context.json currentStep on tab click', async () => {
+        const deps = createMockDeps();
+        const handler = createMessageHandlers(SPEC_DIR, deps);
+
+        await handler({ type: 'stepperClick', phase: 'plan' } as any);
+
+        expect(updateStepProgress).not.toHaveBeenCalled();
+        expect(deps.updateContent).toHaveBeenCalledWith(SPEC_DIR, 'plan');
+    });
+
+    it('is a no-op when phase is "done"', async () => {
+        const deps = createMockDeps();
+        const handler = createMessageHandlers(SPEC_DIR, deps);
+
+        await handler({ type: 'stepperClick', phase: 'done' } as any);
+
+        expect(deps.updateContent).not.toHaveBeenCalled();
+        expect(updateStepProgress).not.toHaveBeenCalled();
     });
 });

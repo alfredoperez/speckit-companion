@@ -142,9 +142,6 @@ export interface SpecViewerState {
     /** Currently displayed document type */
     currentDocument: DocumentType;
 
-    /** Step the user is reviewing (may differ from the workflow's currentStep). */
-    viewedStep?: string | null;
-
     /** List of all available documents in this spec */
     availableDocuments: SpecDocument[];
 

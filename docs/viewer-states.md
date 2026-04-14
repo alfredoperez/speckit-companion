@@ -22,19 +22,15 @@
 > - Highlight = every step with `completedAt` set or inferred-completed,
 >   regardless of active tab.
 >
-> **Viewed step (spec 066)**: Clicking a step tab sets a panel-local
-> `viewedStep` but does NOT mutate `.spec-context.json`'s `currentStep`.
-> When `viewedStep !== currentStep`:
-> - Header badge reflects the viewed step's own state (e.g. "PLAN COMPLETE",
->   "TASKS NOT STARTED") rather than the spec's active progress.
-> - Footer actions resolve against the viewed step (Regenerate/Archive for
->   a completed earlier step instead of Mark Completed for the current one).
-> - The viewed tab renders with a `.reviewing` indicator (dashed outline)
->   to signal context has shifted from the active/working step.
-> - Step tabs only show a green ✓ when the step's document actually exists
->   on disk, even if `viewerState.highlights` lists the step as completed.
-> - If a watcher-triggered context refresh advances the workflow past the
->   viewed step, `viewedStep` resets to the new `currentStep`.
+> **Viewed step (spec 066)**: Clicking a step tab in the viewer uses the
+> same full-HTML regeneration path as sidebar navigation and does NOT
+> mutate `.spec-context.json`'s `currentStep`. The header badge and
+> footer continue to reflect the spec's true workflow state. The tab
+> the user is on gets a solid accent outline; when the viewed step
+> isn't the workflow phase (i.e. an earlier completed step), the
+> outline is dashed (`.reviewing`). Step tabs only render a green ✓
+> when the step's document actually exists on disk, even if
+> `viewerState.highlights` lists the step as completed.
 >
 > **Footer scope tooltips**: Every footer button declares
 > `scope: 'spec' | 'step'` and tooltips are auto-suffixed with

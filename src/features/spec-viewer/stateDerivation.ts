@@ -15,7 +15,6 @@ import {
     StepName,
     StepBadgeState,
     STEP_NAMES,
-    StepDocExistsMap,
     ViewerState,
 } from '../../core/types/specContext';
 import { getFooterActions } from './footerActions';
@@ -71,16 +70,8 @@ export function derivePulse(ctx: SpecContext): StepName | null {
     return null;
 }
 
-export function deriveHighlights(
-    ctx: SpecContext,
-    stepDocExists?: StepDocExistsMap
-): StepName[] {
-    return STEP_NAMES.filter(s => {
-        if (!isStepCompleted(s, ctx.currentStep, ctx.stepHistory)) return false;
-        // R003: if we know the document doesn't exist, do not highlight.
-        if (stepDocExists && stepDocExists[s] === false) return false;
-        return true;
-    });
+export function deriveHighlights(ctx: SpecContext): StepName[] {
+    return STEP_NAMES.filter(s => isStepCompleted(s, ctx.currentStep, ctx.stepHistory));
 }
 
 export function deriveActiveSubstep(
@@ -94,29 +85,17 @@ export function deriveActiveSubstep(
     return null;
 }
 
-export interface DeriveOptions {
-    /** Tab the user is viewing; may differ from the true active step. */
-    viewedStep?: StepName;
-    /** Whether each step's document exists on disk. */
-    stepDocExists?: StepDocExistsMap;
-}
-
 export function deriveViewerState(
     ctx: SpecContext,
-    activeStep: StepName = ctx.currentStep,
-    options: DeriveOptions = {}
+    activeStep: StepName = ctx.currentStep
 ): ViewerState {
-    const { viewedStep, stepDocExists } = options;
-    // Footer actions should reflect the viewed step when one is set (R005).
-    const footerStep = viewedStep ?? activeStep;
     return {
         status: ctx.status,
         activeStep,
-        viewedStep,
         steps: deriveStepBadges(ctx),
         pulse: derivePulse(ctx),
-        highlights: deriveHighlights(ctx, stepDocExists),
+        highlights: deriveHighlights(ctx),
         activeSubstep: deriveActiveSubstep(ctx),
-        footer: getFooterActions(ctx, footerStep),
+        footer: getFooterActions(ctx, activeStep),
     };
 }

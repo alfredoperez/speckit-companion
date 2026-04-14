@@ -225,40 +225,6 @@ describe('derivePulse — inferred completion suppresses pulse on past steps', (
     });
 });
 
-describe('deriveHighlights — R003 gating on doc existence', () => {
-    it('excludes a completed step whose document does not exist', () => {
-        const ctx = baseCtx({
-            currentStep: 'tasks',
-            stepHistory: {
-                specify: { startedAt: 'a', completedAt: 'b' },
-                plan: { startedAt: 'c', completedAt: 'd' },
-                tasks: { startedAt: 'e', completedAt: null },
-            },
-        });
-        const highlights = deriveHighlights(ctx, { plan: false });
-        expect(highlights).toContain('specify');
-        expect(highlights).not.toContain('plan');
-    });
-});
-
-describe('deriveViewerState — viewedStep threading (R005)', () => {
-    it('footer uses viewedStep when provided', () => {
-        const ctx = baseCtx({
-            currentStep: 'tasks',
-            stepHistory: {
-                specify: { startedAt: 'a', completedAt: 'b' },
-                plan: { startedAt: 'c', completedAt: 'd' },
-                tasks: { startedAt: 'e', completedAt: null },
-            },
-        });
-        const vs = deriveViewerState(ctx, 'tasks', { viewedStep: 'plan' });
-        // plan has been started → regenerate available; start hidden
-        expect(vs.footer.find(a => a.id === 'regenerate')).toBeDefined();
-        expect(vs.footer.find(a => a.id === 'start')).toBeUndefined();
-        expect(vs.viewedStep).toBe('plan');
-    });
-});
-
 describe('deriveHighlights — includes inferred-completed steps', () => {
     it('highlights steps before currentStep even without completedAt', () => {
         const ctx = baseCtx({

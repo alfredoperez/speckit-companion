@@ -245,64 +245,24 @@ export function canonicalStatusLabel(status?: string | null): string | null {
 }
 
 /**
- * Compute a badge label from a single step's own state, independent of the
- * spec's overall progress. Used when the user is reviewing a step other than
- * `currentStep`.
- */
-function badgeForViewedStep(
-    step: string,
-    stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>,
-    stepDocExists?: Record<string, boolean>
-): string {
-    const entry = stepHistory?.[step];
-    const started = !!entry?.startedAt;
-    const completed = !!entry?.completedAt;
-    const docExists = stepDocExists ? stepDocExists[step] !== false : true;
-
-    const labels: Record<string, { complete: string; progress: string; none: string }> = {
-        specify:   { complete: 'SPECIFY COMPLETE',  progress: 'SPECIFYING...',     none: 'SPECIFY NOT STARTED' },
-        clarify:   { complete: 'CLARIFY COMPLETE',  progress: 'CLARIFYING...',     none: 'CLARIFY NOT STARTED' },
-        plan:      { complete: 'PLAN COMPLETE',     progress: 'PLANNING...',       none: 'PLAN NOT STARTED' },
-        tasks:     { complete: 'TASKS COMPLETE',    progress: 'CREATING TASKS...', none: 'TASKS NOT STARTED' },
-        analyze:   { complete: 'ANALYZE COMPLETE',  progress: 'ANALYZING...',      none: 'ANALYZE NOT STARTED' },
-        implement: { complete: 'IMPLEMENT COMPLETE',progress: 'IMPLEMENTING...',   none: 'IMPLEMENT NOT STARTED' },
-    };
-    const l = labels[step] ?? { complete: `${step.toUpperCase()} COMPLETE`, progress: `${step.toUpperCase()}...`, none: `${step.toUpperCase()} NOT STARTED` };
-
-    if (completed && docExists) return l.complete;
-    if (started && docExists) return l.progress;
-    return l.none;
-}
-
-/**
  * Compute a human-readable badge text from spec-context fields.
  * When progress is non-null (in-progress work), appends "..." suffix.
  */
-export function computeBadgeText(
-    ctx?: {
-        currentStep?: string | null;
-        progress?: string | null;
-        currentTask?: string | null;
-        status?: string;
-        stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>;
-    } | null,
-    viewedStep?: string | null,
-    stepDocExists?: Record<string, boolean>
-): string | null {
+export function computeBadgeText(ctx?: {
+    currentStep?: string | null;
+    progress?: string | null;
+    currentTask?: string | null;
+    status?: string;
+    stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>;
+} | null): string | null {
     if (!ctx) return null;
-
-    // Terminal statuses always win — they apply to the whole spec regardless of viewed tab.
-    if (ctx.status === SpecStatuses.COMPLETED || ctx.status === 'completed') return 'COMPLETED';
-    if (ctx.status === SpecStatuses.ARCHIVED || ctx.status === 'archived') return 'ARCHIVED';
-
-    // R001: when viewing a non-current step, compute label from that step's own state.
-    if (viewedStep && viewedStep !== ctx.currentStep) {
-        return badgeForViewedStep(viewedStep, ctx.stepHistory, stepDocExists);
-    }
 
     // US1: canonical status labels take precedence when status is the new vocab.
     const canonical = canonicalStatusLabel(ctx.status as string | undefined);
     if (canonical) return canonical;
+
+    if (ctx.status === SpecStatuses.COMPLETED) return 'COMPLETED';
+    if (ctx.status === SpecStatuses.ARCHIVED) return 'ARCHIVED';
 
     const inProgress = ctx.progress != null;
     const stepCompleted = ctx.currentStep && ctx.stepHistory?.[ctx.currentStep]?.completedAt;
