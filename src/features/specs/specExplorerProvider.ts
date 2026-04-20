@@ -28,6 +28,7 @@ type DocumentStatus = 'empty' | 'partial' | 'complete';
 
 export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
     public activeSpecName: string | null = null;
+    public expandAllSpecs: boolean = true;
 
     constructor(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel) {
         super(context, { name: 'SpecExplorerProvider', outputChannel });
@@ -39,13 +40,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
     }
 
     refresh(): void {
-        this.isLoading = true;
         this._onDidChangeTreeData.fire();
-
-        setTimeout(() => {
-            this.isLoading = false;
-            this._onDidChangeTreeData.fire();
-        }, 100);
     }
 
     /**
@@ -130,6 +125,9 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
 
             const items: SpecItem[] = [];
 
+            // Group items get stable ids so VS Code preserves the user's
+            // manual expand/collapse state across refreshes — the toggle
+            // button only affects spec items, never groups.
             if (activeSpecs.length > 0) {
                 const activeGroup = new SpecItem(
                     'Active',
@@ -137,6 +135,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                     'spec-group',
                     this.context
                 );
+                activeGroup.id = 'spec-group:active';
                 activeGroup.groupSpecs = activeSpecs;
                 items.push(activeGroup);
             }
@@ -148,6 +147,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                     'spec-group',
                     this.context
                 );
+                completedGroup.id = 'spec-group:completed';
                 completedGroup.groupSpecs = completedSpecs;
                 items.push(completedGroup);
             }
@@ -159,6 +159,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                     'spec-group',
                     this.context
                 );
+                archivedGroup.id = 'spec-group:archived';
                 archivedGroup.groupSpecs = archivedSpecs;
                 items.push(archivedGroup);
             }
@@ -177,7 +178,9 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 const specContext = readSpecContextSync(specFullPath);
                 const item = new SpecItem(
                     spec.name,
-                    vscode.TreeItemCollapsibleState.Expanded,
+                    this.expandAllSpecs
+                        ? vscode.TreeItemCollapsibleState.Expanded
+                        : vscode.TreeItemCollapsibleState.Collapsed,
                     'spec',
                     this.context,
                     spec.name,
@@ -195,6 +198,11 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                     const parentDir = spec.path.substring(0, spec.path.lastIndexOf('/'));
                     item.description = parentDir;
                 }
+                // Encode the toggle flag into the item id so VS Code treats
+                // the item as fresh on each toggle and honors the emitted
+                // collapsibleState (otherwise VS Code preserves the user's
+                // last-known expansion state and ignores re-emits).
+                item.id = `spec:${spec.path}:${this.expandAllSpecs ? 'e' : 'c'}`;
                 return item;
             });
         } else if (element.contextValue === 'spec') {
@@ -293,7 +301,9 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
     }
 
     /**
-     * Create tree items for related documents
+     * Create tree items for related documents.
+     * Returned from getChildren(stepItem) so VS Code renders them as tree
+     * children of the step — indentation is handled natively by the tree view.
      */
     private getRelatedDocItems(parentElement: SpecItem): SpecItem[] {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -583,12 +593,15 @@ class SpecItem extends vscode.TreeItem {
 
             this.contextValue = `spec-document-${documentType}`;
 
-            // Apply step status colors from specContext (only for active specs — completed specs use the green beaker)
+            // Apply step status colors from specContext (only for active specs — completed specs use the green beaker).
+            // stepHistory may be missing or partial; isStepCompleted infers completion from currentStep ordering when an
+            // entry isn't present, so fall back to {} rather than guarding the call (otherwise specs with no stepHistory
+            // never show the completed icon even though the workflow has moved past the step).
             if (specContext && documentType && specContext.status !== SpecStatuses.COMPLETED && specContext.status !== SpecStatuses.ARCHIVED) {
-                const stepHistory = specContext.stepHistory;
+                const stepHistory = specContext.stepHistory ?? {};
                 const stepName = documentType as StepName;
                 const cs = (specContext.currentStep ?? 'specify') as StepName;
-                if (stepHistory && STEP_NAMES.includes(stepName) && isStepCompleted(stepName, cs, stepHistory)) {
+                if (STEP_NAMES.includes(stepName) && isStepCompleted(stepName, cs, stepHistory)) {
                     this.iconPath = new vscode.ThemeIcon('pass', new vscode.ThemeColor('testing.iconPassed'));
                 } else if (specContext.currentStep === documentType) {
                     this.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('charts.blue'));
@@ -604,7 +617,9 @@ class SpecItem extends vscode.TreeItem {
                 }
             }
         } else if (contextValue === 'spec-related-doc') {
-            this.iconPath = new vscode.ThemeIcon('file-text');
+            // No icon — makes the tree-depth indentation visually obvious.
+            // The chevron column on siblings + the missing icon here shifts
+            // the label inward so sub-files clearly nest under their parent.
             this.tooltip = `Related: ${label}.md`;
         }
     }

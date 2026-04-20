@@ -75,6 +75,30 @@ export function registerSpecKitCommands(
         })
     );
 
+    // Toggle collapse/expand all specs — single button in the view title bar.
+    // Two menu entries (collapse / expand) swap icons via the
+    // speckit.specs.allCollapsed context key; both forward to the same toggle
+    // handler so state stays in sync.
+    //
+    // Both directions flip the provider flag and refresh. The provider encodes
+    // the flag into the spec-item id on each emit, so VS Code treats the items
+    // as fresh and honors the emitted collapsibleState. Group items keep stable
+    // ids so their expansion state is untouched by the toggle.
+    const toggleCollapseAllHandler = async () => {
+        specExplorer.expandAllSpecs = !specExplorer.expandAllSpecs;
+        await vscode.commands.executeCommand(
+            'setContext',
+            'speckit.specs.allCollapsed',
+            !specExplorer.expandAllSpecs
+        );
+        specExplorer.refresh();
+    };
+    context.subscriptions.push(
+        vscode.commands.registerCommand('speckit.specs.toggleCollapseAll', toggleCollapseAllHandler),
+        vscode.commands.registerCommand('speckit.specs.collapseAll', toggleCollapseAllHandler),
+        vscode.commands.registerCommand('speckit.specs.expandAll', toggleCollapseAllHandler)
+    );
+
     // Spec delete
     context.subscriptions.push(
         vscode.commands.registerCommand('speckit.delete', async (item: SpecTreeItem) => {
@@ -173,13 +197,23 @@ export function registerSpecKitCommands(
         })
     );
 
-    // Watch configured spec directories
+    // Watch configured spec directories with a shared 300ms debounce — long
+    // enough to coalesce bursts of writes (editors fire write→rename→cleanup
+    // within ~50ms) so the tree doesn't flicker, short enough that refreshes
+    // feel instant.
     const watcherPatterns = getFileWatcherPatterns();
+    let refreshTimeout: NodeJS.Timeout | undefined;
+    const debouncedRefresh = () => {
+        if (refreshTimeout) {
+            clearTimeout(refreshTimeout);
+        }
+        refreshTimeout = setTimeout(() => specExplorer.refresh(), 300);
+    };
     for (const pattern of watcherPatterns.specs) {
         const watcher = vscode.workspace.createFileSystemWatcher(pattern);
-        watcher.onDidCreate(() => specExplorer.refresh());
-        watcher.onDidDelete(() => specExplorer.refresh());
-        watcher.onDidChange(() => specExplorer.refresh());
+        watcher.onDidCreate(debouncedRefresh);
+        watcher.onDidDelete(debouncedRefresh);
+        watcher.onDidChange(debouncedRefresh);
         context.subscriptions.push(watcher);
     }
 }

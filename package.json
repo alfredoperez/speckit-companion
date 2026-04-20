@@ -185,6 +185,23 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "speckit.specs.toggleCollapseAll",
+        "title": "Toggle Collapse/Expand All Specs",
+        "category": "SpecKit"
+      },
+      {
+        "command": "speckit.specs.collapseAll",
+        "title": "Collapse All Specs",
+        "category": "SpecKit",
+        "icon": "$(collapse-all)"
+      },
+      {
+        "command": "speckit.specs.expandAll",
+        "title": "Expand All Specs",
+        "category": "SpecKit",
+        "icon": "$(expand-all)"
+      },
+      {
         "command": "speckit.delete",
         "title": "Delete Spec",
         "category": "SpecKit",
@@ -382,6 +399,16 @@
           "command": "speckit.refresh",
           "when": "view == speckit.views.explorer",
           "group": "navigation@2"
+        },
+        {
+          "command": "speckit.specs.collapseAll",
+          "when": "view == speckit.views.explorer && !speckit.specs.allCollapsed",
+          "group": "navigation@3"
+        },
+        {
+          "command": "speckit.specs.expandAll",
+          "when": "view == speckit.views.explorer && speckit.specs.allCollapsed",
+          "group": "navigation@3"
         },
         {
           "command": "speckit.steering.create",

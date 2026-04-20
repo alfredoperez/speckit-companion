@@ -57,6 +57,8 @@ Specs are grouped into three collapsible sections based on their status (stored 
 - **Completed** — Specs marked as done, collapsed by default
 - **Archived** — Specs moved to archive, collapsed by default
 
+The Specs view title bar exposes a **collapse/expand all** toggle (alongside the `+` and refresh buttons) that flips every spec in place between expanded and collapsed. The icon swaps to reflect the next action; state is in-memory only and is not persisted across sessions.
+
 Right-click a spec to access **Mark as Completed** and **Archive Spec** actions. The spec viewer footer shows lifecycle buttons based on the spec's current status:
 
 - **Active** (tasks incomplete): Regenerate, Archive, + primary CTA (Plan/Tasks/Implement depending on next step)

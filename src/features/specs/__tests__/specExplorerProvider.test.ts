@@ -358,6 +358,29 @@ describe('SpecExplorerProvider', () => {
             expect((icon.color as vscode.ThemeColor).id).toBe('testing.iconPassed');
         });
 
+        it('infers completion from currentStep when stepHistory is absent', async () => {
+            // Regression: previously the provider guarded the isStepCompleted call with
+            // `stepHistory &&`, which meant specs with no stepHistory never rendered green
+            // icons even though currentStep had clearly moved past earlier steps.
+            const docs = await getDocumentItems({
+                workflow: 'default',
+                selectedAt: '2026-01-01',
+                currentStep: 'implement',
+                // No stepHistory field at all.
+            });
+
+            const specifyDoc = docs.find((d: any) => d.label === 'Specification' || d.label === 'Specify');
+            const planDoc = docs.find((d: any) => d.label === 'Plan');
+            const tasksDoc = docs.find((d: any) => d.label === 'Tasks');
+
+            for (const doc of [specifyDoc, planDoc, tasksDoc]) {
+                expect(doc).toBeDefined();
+                const icon = doc!.iconPath as vscode.ThemeIcon;
+                expect(icon.id).toBe('pass');
+                expect((icon.color as vscode.ThemeColor).id).toBe('testing.iconPassed');
+            }
+        });
+
         it('should show blue circle-filled icon for current step', async () => {
             const docs = await getDocumentItems({
                 workflow: 'default',
@@ -581,15 +604,74 @@ describe('SpecExplorerProvider', () => {
         });
     });
 
-    describe('loading state', () => {
-        it('should show loading item when isLoading is true', async () => {
+    describe('refresh()', () => {
+        it('should fire onDidChangeTreeData exactly once per call (no flicker)', () => {
+            const listener = jest.fn();
+            provider.onDidChangeTreeData(listener);
+
             provider.refresh();
 
-            const children = await provider.getChildren();
+            expect(listener).toHaveBeenCalledTimes(1);
+        });
+    });
 
-            expect(children).toHaveLength(1);
-            expect(children[0].label).toBe('Loading specs...');
-            expect((children[0].iconPath as vscode.ThemeIcon).id).toBe('sync~spin');
+    describe('expandAllSpecs flag', () => {
+        async function getSpecItemsFor(flag: boolean) {
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: 'feature', path: 'specs/feature' },
+            ]);
+            (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
+            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
+            provider.expandAllSpecs = flag;
+
+            const groups = await provider.getChildren();
+            return provider.getChildren(groups[0]);
+        }
+
+        it('defaults to true', () => {
+            expect(provider.expandAllSpecs).toBe(true);
+        });
+
+        it('renders spec items Expanded when expandAllSpecs=true', async () => {
+            const specs = await getSpecItemsFor(true);
+            expect(specs[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.Expanded);
+        });
+
+        it('renders spec items Collapsed when expandAllSpecs=false', async () => {
+            const specs = await getSpecItemsFor(false);
+            expect(specs[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
+        });
+
+        it('spec item id encodes the toggle flag so VS Code treats toggles as fresh items', async () => {
+            const expanded = await getSpecItemsFor(true);
+            const collapsed = await getSpecItemsFor(false);
+            expect(expanded[0].id).toMatch(/:e$/);
+            expect(collapsed[0].id).toMatch(/:c$/);
+            expect(expanded[0].id).not.toBe(collapsed[0].id);
+        });
+
+        it('group items have stable ids that do not change with the toggle', async () => {
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: 'a', path: 'specs/a' },
+                { name: 'b', path: 'specs/b' },
+                { name: 'c', path: 'specs/c' },
+            ]);
+            (readSpecContextSync as jest.Mock).mockImplementation((p: string) => {
+                if (p.includes('/a')) return { status: 'active' };
+                if (p.includes('/b')) return { status: 'completed' };
+                if (p.includes('/c')) return { status: 'archived' };
+                return undefined;
+            });
+
+            provider.expandAllSpecs = true;
+            const groupsA = await provider.getChildren();
+            provider.expandAllSpecs = false;
+            const groupsB = await provider.getChildren();
+
+            for (let i = 0; i < groupsA.length; i++) {
+                expect(groupsA[i].id).toBe(groupsB[i].id);
+                expect(groupsA[i].id).toMatch(/^spec-group:/);
+            }
         });
     });
 });
