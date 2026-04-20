@@ -58,7 +58,7 @@ function captureCommandHandlers(context: vscode.ExtensionContext) {
         return { dispose: jest.fn() };
     });
 
-    lastMockExplorer = { refresh: jest.fn() } as any;
+    lastMockExplorer = { refresh: jest.fn(), expandAllSpecs: true } as any;
     const mockOutputChannel = { appendLine: jest.fn() } as any;
 
     registerSpecKitCommands(context, lastMockExplorer as any, mockOutputChannel);
@@ -66,7 +66,7 @@ function captureCommandHandlers(context: vscode.ExtensionContext) {
     return handlers;
 }
 
-let lastMockExplorer: { refresh: jest.Mock };
+let lastMockExplorer: { refresh: jest.Mock; expandAllSpecs: boolean };
 
 function createMockContext(): vscode.ExtensionContext {
     return {
@@ -89,6 +89,70 @@ describe('registerSpecKitCommands', () => {
         const handlers = captureCommandHandlers(context);
 
         expect(handlers.has('speckit.create')).toBe(true);
+    });
+
+    it('registers the collapse/expand toggle commands', () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+
+        expect(handlers.has('speckit.specs.toggleCollapseAll')).toBe(true);
+        expect(handlers.has('speckit.specs.collapseAll')).toBe(true);
+        expect(handlers.has('speckit.specs.expandAll')).toBe(true);
+    });
+});
+
+describe('speckit.specs.toggleCollapseAll handler', () => {
+    it('first invocation collapses: flips flag, sets context true, refreshes', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        lastMockExplorer.expandAllSpecs = true;
+        (mockCommands.executeCommand as jest.Mock).mockClear();
+
+        const handler = handlers.get('speckit.specs.toggleCollapseAll')!;
+        await handler();
+
+        expect(lastMockExplorer.expandAllSpecs).toBe(false);
+        expect(mockCommands.executeCommand).toHaveBeenCalledWith(
+            'setContext',
+            'speckit.specs.allCollapsed',
+            true
+        );
+        expect(lastMockExplorer.refresh).toHaveBeenCalledTimes(1);
+        // Must NOT call the built-in collapseAll — it would collapse group
+        // headers too, which we want left alone.
+        expect(mockCommands.executeCommand).not.toHaveBeenCalledWith(
+            'workbench.actions.treeView.speckit.views.explorer.collapseAll'
+        );
+    });
+
+    it('second invocation expands: flips flag, sets context false, refreshes', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        lastMockExplorer.expandAllSpecs = false;
+        (mockCommands.executeCommand as jest.Mock).mockClear();
+
+        const handler = handlers.get('speckit.specs.toggleCollapseAll')!;
+        await handler();
+
+        expect(lastMockExplorer.expandAllSpecs).toBe(true);
+        expect(lastMockExplorer.refresh).toHaveBeenCalledTimes(1);
+        expect(mockCommands.executeCommand).toHaveBeenCalledWith(
+            'setContext',
+            'speckit.specs.allCollapsed',
+            false
+        );
+    });
+
+    it('collapseAll and expandAll forward to the same handler', () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+
+        const toggleHandler = handlers.get('speckit.specs.toggleCollapseAll');
+        const collapseHandler = handlers.get('speckit.specs.collapseAll');
+        const expandHandler = handlers.get('speckit.specs.expandAll');
+
+        expect(collapseHandler).toBe(toggleHandler);
+        expect(expandHandler).toBe(toggleHandler);
     });
 });
 

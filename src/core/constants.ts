@@ -13,6 +13,7 @@ export const Commands = {
     customCommand: 'speckit.customCommand',
     constitution: 'speckit.constitution',
     refresh: 'speckit.refresh',
+    toggleCollapseAllSpecs: 'speckit.specs.toggleCollapseAll',
     delete: 'speckit.delete',
     installCli: 'speckit.installCli',
     initWorkspace: 'speckit.initWorkspace',

@@ -113,8 +113,10 @@ assets/                         # Static assets
 - `WorkflowEditorProvider`: Custom editor for workflow configuration files
 
 **File Watchers** — Monitor file system for changes:
-- `.claude/` directory changes trigger tree view refreshes
-- Uses debouncing (1 second) to prevent excessive updates
+- `.claude/` directory changes trigger tree view refreshes (via `core/fileWatchers.ts`, 1-second debounce)
+- Configured spec directories (e.g. `specs/`) also trigger refreshes (via the watcher block in `features/specs/specCommands.ts`, 300 ms debounce so interactive edits feel instant)
+- Both paths coalesce bursts of writes into a single refresh to prevent tree flicker
+- `SpecExplorerProvider.refresh()` fires `onDidChangeTreeData` exactly once per call (no loading-state double-fire), which preserves the user's expanded nodes across background file events
 
 **Commands** — Registered in `package.json`, handled per feature module:
 - Pattern: `speckit.{feature}.{action}` (e.g., `speckit.specs.create`, `speckit.specs.plan`)

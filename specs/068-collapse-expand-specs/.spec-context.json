@@ -1,0 +1,120 @@
+{
+  "workflow": "sdd",
+  "currentStep": "implement",
+  "currentTask": null,
+  "progress": "code-review",
+  "next": "implement",
+  "approach": "In-memory expandAllSpecs flag on SpecExplorerProvider wired to spec-item collapsible state, two title-bar commands (collapseAll + expandAll) swapping via speckit.specs.allCollapsed context key both forwarding to the same toggle handler, single-fire refresh() to kill flicker, and the duplicate un-debounced file watcher in specCommands.ts coalesced into a shared 1s debounce (kept rather than deleted because specs live in specs/ which core/fileWatchers.ts does not cover).",
+  "updated": "2026-04-20",
+  "selectedAt": "2026-04-20T21:57:36Z",
+  "specName": "Specs Pane UX — Collapse Toggle, Refresh Flicker, Sub-File Indent",
+  "branch": "fix/viewer-status-reconciliation-and-buttons",
+  "createdAt": "2026-04-20T21:57:36Z",
+  "last_action": "T009 complete — README + architecture.md updated; all 9 tasks done, tests 274/274, compile clean",
+  "files_modified": [
+    "src/features/specs/specExplorerProvider.ts",
+    "src/features/specs/specCommands.ts",
+    "src/core/constants.ts",
+    "src/extension.ts",
+    "package.json",
+    "src/features/specs/__tests__/specExplorerProvider.test.ts",
+    "src/features/specs/specCommands.test.ts",
+    "README.md",
+    "docs/architecture.md"
+  ],
+  "decisions": [
+    "Kept the specs-directory file watcher in specCommands.ts (rather than deleting per T002 primary path) because core/fileWatchers.ts only watches .claude/**/* — specs in specs/** would lose watcher coverage. Instead coalesced into a shared 1s debounce.",
+    "Used two contributed commands (speckit.specs.collapseAll + .expandAll) both forwarding to the same handler, because VS Code view/title menus cannot override the command's icon per-entry — each menu entry shows its command's own icon, gated by the speckit.specs.allCollapsed context key."
+  ],
+  "concerns": [],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Replaced SpecExplorerProvider.refresh() two-phase (loading + 100ms content) with a single onDidChangeTreeData.fire().",
+      "files": ["src/features/specs/specExplorerProvider.ts"],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Replaced three direct refresh() calls on the specs-directory watcher with a shared 1s debounced refresh. Kept watcher (rather than deleting per plan primary path) because core/fileWatchers.ts only covers .claude/**/*.",
+      "files": ["src/features/specs/specCommands.ts"],
+      "concerns": ["Deviated from plan's primary path (deletion) to the fallback (coalesce/debounce) after verifying core/fileWatchers.ts doesn't cover specs/**. Documented in decisions[]."]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added public expandAllSpecs=true field; spec items now use Expanded/Collapsed based on this flag.",
+      "files": ["src/features/specs/specExplorerProvider.ts"],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added toggleCollapseAllSpecs: 'speckit.specs.toggleCollapseAll' to the Commands map in constants.ts.",
+      "files": ["src/core/constants.ts"],
+      "concerns": []
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Registered speckit.specs.toggleCollapseAll, .collapseAll, .expandAll (all forwarding to the same toggleCollapseAllHandler); seeded speckit.specs.allCollapsed=false in extension.ts activate.",
+      "files": ["src/features/specs/specCommands.ts", "src/extension.ts"],
+      "concerns": []
+    },
+    "T006": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Contributed speckit.specs.toggleCollapseAll (palette), .collapseAll ($(collapse-all)), .expandAll ($(expand-all)); added two view/title menu entries at navigation@3 gated on speckit.specs.allCollapsed.",
+      "files": ["package.json"],
+      "concerns": ["Initial attempt tried per-menu icon override — VS Code view/title menus don't support this. Fix: contribute two commands with distinct icons and forward both to the same handler."]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Replaced obsolete loading-state test; added refresh() single-fire test and expandAllSpecs Expanded/Collapsed tests. Added toggle handler tests (first call collapses, second expands, collapseAll/expandAll forward to toggle).",
+      "files": ["src/features/specs/__tests__/specExplorerProvider.test.ts", "src/features/specs/specCommands.test.ts"],
+      "concerns": []
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Verified sub-files route through getChildren(stepItem) via the spec-document-* branch so VS Code natively indents them. Added clarifying comment to getRelatedDocItems. No code change required.",
+      "files": ["src/features/specs/specExplorerProvider.ts"],
+      "concerns": []
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "README: added title-bar toggle description under Sidebar at a Glance. architecture.md: updated File Watchers section noting specs-dir watcher, shared 1s debounce, and single-fire refresh contract.",
+      "files": ["README.md", "docs/architecture.md"],
+      "concerns": []
+    }
+  },
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 12,
+      "scenarios": 6,
+      "key_finding": "Flicker is caused by SpecExplorerProvider.refresh() firing onDidChangeTreeData twice (loading + 100ms delayed content) combined with duplicate un-debounced file watchers in specCommands.ts:180-182 overlapping the 1s-debounced watcher in core/fileWatchers.ts — any fix must collapse these into a single debounced single-fire path so expand state is preserved."
+    },
+    "plan": {
+      "approach_summary": "In-memory expandAllSpecs flag on SpecExplorerProvider wired to spec-item collapsible state, single title-bar toggle command with icon swapped via speckit.specs.allCollapsed context key, single-fire refresh() to kill flicker, and removal of duplicate un-debounced file watcher so core/fileWatchers.ts is the only refresh driver.",
+      "files_planned": 5,
+      "risks": [
+        "Built-in collapseAll command id (workbench.actions.treeView.speckit.views.explorer.collapseAll) is VS Code-generated from the view id and could drift on future versions — keep view id stable and centralize the literal.",
+        "Removing specCommands.ts:180-182 watchers may drop a load-bearing refresh trigger when specs live outside .claude/ — verify getFileWatcherPatterns().specs coverage before deletion; if needed, funnel into the same 1s debounce instead of removing."
+      ]
+    }
+  },
+  "transitions": [
+    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-20T21:57:36Z" },
+    { "step": "specify", "substep": "exploring", "from": "parsing", "by": "sdd", "at": "2026-04-20T21:57:40Z" },
+    { "step": "specify", "substep": "detecting", "from": "exploring", "by": "sdd", "at": "2026-04-20T21:58:10Z" },
+    { "step": "specify", "substep": "writing-spec", "from": "detecting", "by": "sdd", "at": "2026-04-20T21:58:15Z" },
+    { "step": "specify", "substep": null, "from": "writing-spec", "by": "sdd", "at": "2026-04-20T21:58:30Z" },
+    { "step": "specify", "substep": "writing-spec", "from": null, "by": "sdd", "at": "2026-04-20T22:05:00Z" },
+    { "step": "specify", "substep": null, "from": "writing-spec", "by": "sdd", "at": "2026-04-20T22:05:30Z" },
+    { "step": "plan", "substep": "loading", "from": null, "by": "sdd", "at": "2026-04-20T22:10:00Z" },
+    { "step": "plan", "substep": "writing-plan", "from": "loading", "by": "sdd", "at": "2026-04-20T22:10:05Z" },
+    { "step": "plan", "substep": null, "from": "writing-plan", "by": "sdd", "at": "2026-04-20T22:12:00Z" },
+    { "step": "tasks", "substep": "loading", "from": null, "by": "sdd", "at": "2026-04-20T22:15:00Z" },
+    { "step": "tasks", "substep": "writing-tasks", "from": "loading", "by": "sdd", "at": "2026-04-20T22:15:05Z" },
+    { "step": "tasks", "substep": null, "from": "writing-tasks", "by": "sdd", "at": "2026-04-20T22:18:00Z" },
+    { "step": "implement", "substep": "phase1", "from": null, "by": "sdd", "at": "2026-04-20T22:20:00Z" },
+    { "step": "implement", "substep": "hooks", "from": "phase1", "by": "sdd", "at": "2026-04-20T22:45:00Z" },
+    { "step": "implement", "substep": "code-review", "from": "hooks", "by": "sdd", "at": "2026-04-20T22:50:00Z" }
+  ]
+}
