@@ -13,14 +13,21 @@
 >
 > **Badge/pulse/highlight rules**:
 > - Step badge = `completed` if `stepHistory[step].completedAt` is set
->   **OR** the step has `startedAt` and precedes `currentStep` in
->   `STEP_NAMES` ordering (inferred completion — handles external SDD
->   skills that only emit `startedAt`); `in-progress` if `startedAt`
->   set and not inferred-completed; else `not-started`.
+>   **OR** the step precedes `currentStep` in `STEP_NAMES` ordering
+>   (inferred completion — handles external tools that advance
+>   `currentStep` without populating per-step history); `in-progress`
+>   if `startedAt` set and not inferred-completed; else `not-started`.
 > - Pulse = the single step whose entry has `startedAt` set and is not
 >   inferred-completed. **Null when `status ∈ {completed, archived}`.**
 > - Highlight = every step with `completedAt` set or inferred-completed,
 >   regardless of active tab.
+>
+> **Reconciliation**: When the extension reads `.spec-context.json` and
+> finds incomplete data (e.g., `currentStep` past steps with no history
+> entries, non-canonical status values), it performs a one-time repair
+> via `specContextReconciler.ts` — backfilling missing stepHistory
+> entries and correcting the status. The file is written back so
+> subsequent reads see clean data without re-inferring.
 >
 > **Viewed step (spec 066)**: Clicking a step tab in the viewer uses the
 > same full-HTML regeneration path as sidebar navigation and does NOT

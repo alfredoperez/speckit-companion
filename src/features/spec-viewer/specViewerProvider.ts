@@ -42,6 +42,7 @@ import { deriveSpecName } from "../specs/specContextManager";
 import { readSpecContext } from "../specs/specContextReader";
 import { writeSpecContext } from "../specs/specContextWriter";
 import { backfillMinimalContext } from "../specs/specContextBackfill";
+import { reconcileAndPersist } from "../specs/specContextReconciler";
 import { deriveViewerState, isStepCompleted } from "./stateDerivation";
 import { StepName, STEP_NAMES, ViewerState as CoreViewerState } from "../../core/types/specContext";
 import {
@@ -60,6 +61,22 @@ export {
   getSpecDirectoryFromPath,
   isSpecDocument,
 } from "./utils";
+
+/**
+ * Map stepHistory keys from step names to tab names so navState lookups
+ * (e.g., `stepHistory[activeStep]`) use consistent keys.
+ */
+function mapStepHistoryKeys(
+  stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>
+): Record<string, { completedAt?: string | null }> | undefined {
+  if (!stepHistory) return undefined;
+  const out: Record<string, { completedAt?: string | null }> = {};
+  for (const [step, entry] of Object.entries(stepHistory)) {
+    const tabName = mapSddStepToTab(step) || step;
+    out[tabName] = entry;
+  }
+  return out;
+}
 
 /**
  * Map stepHistory → per-step badge state; alias `specify` → `spec` for
@@ -537,7 +554,7 @@ export class SpecViewerProvider {
         specStatus,
         enhancementButtons,
         stalenessMap,
-        mapSddStepToTab(featureCtx?.currentStep),
+        null,
         computeBadgeText(featureCtx),
         createdDate,
         lastUpdatedDate,
@@ -545,7 +562,7 @@ export class SpecViewerProvider {
         featureCtx?.branch ?? null,
         doc?.filePath ?? null,
         featureCtx?.currentStep ?? doc?.type ?? null,
-        featureCtx?.stepHistory,
+        mapStepHistoryKeys(featureCtx?.stepHistory),
       );
 
       this.outputChannel.appendLine(
@@ -601,7 +618,8 @@ export class SpecViewerProvider {
     if (workflowName) {
       for (const wfCmd of getWorkflowCommands(workflowName)) {
         if (!wfCmd.command) continue;
-        const step = wfCmd.step || "all";
+        const rawStep = wfCmd.step || "all";
+        const step = rawStep === "all" ? "all" : (mapSddStepToTab(rawStep) || rawStep);
         if (step !== docType && step !== "all") continue;
         if (seenCommands.has(wfCmd.command)) continue;
 
@@ -780,8 +798,8 @@ export class SpecViewerProvider {
         stalenessMap,
         specStatus,
         currentTask: featureCtx?.currentTask ?? null,
-        activeStep: mapSddStepToTab(featureCtx?.currentStep),
-        stepHistory: featureCtx?.stepHistory,
+        activeStep: null,
+        stepHistory: mapStepHistoryKeys(featureCtx?.stepHistory),
         badgeText: computeBadgeText(featureCtx),
         createdDate: computeCreatedDate(featureCtx?.stepHistory),
         lastUpdatedDate: computeLastUpdatedDate(featureCtx?.stepHistory),
@@ -804,8 +822,9 @@ export class SpecViewerProvider {
       // serializing footer to strip function fields.
       let viewerState: CoreViewerState | undefined;
       try {
-        const specCtx = await readSpecContext(specDirectory);
+        let specCtx = await readSpecContext(specDirectory);
         if (specCtx) {
+          specCtx = await reconcileAndPersist(specDirectory, specCtx);
           const active: StepName = (STEP_NAMES.includes(specCtx.currentStep as StepName)
             ? (specCtx.currentStep as StepName)
             : 'specify');

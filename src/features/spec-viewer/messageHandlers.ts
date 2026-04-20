@@ -18,6 +18,7 @@ import { getFeatureWorkflow, getWorkflowCommands } from '../workflows';
 import { setStatus, reactivate, startStep, completeStep } from '../specs/stepLifecycle';
 import type { StepName } from '../../core/types/specContext';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
+import { buildPrompt, buildLifecyclePrompt } from '../../ai-providers/promptBuilder';
 
 /**
  * Interface for message handler dependencies
@@ -299,8 +300,9 @@ async function executeStepInTerminal(
     const targetPath = instance?.state.changeRoot || specDirectory;
     const label = step.label || step.name;
     const formatted = formatCommandForProvider(step.command);
-    const prompt = `/${formatted} ${targetPath}`;
-    deps.outputChannel.appendLine(`[SpecViewer] Executing step "${label}": ${prompt}`);
+    const rawPrompt = `/${formatted} ${targetPath}`;
+    const prompt = buildPrompt({ command: rawPrompt, step: step.name, specDir: targetPath });
+    deps.outputChannel.appendLine(`[SpecViewer] Executing step "${label}": ${rawPrompt}`);
     await deps.executeInTerminal(prompt);
 }
 
@@ -362,8 +364,10 @@ async function handleClarify(
 
         const targetPath = instance.state.changeRoot || specDirectory;
         const label = entry.title || entry.name || 'Enhancement';
-        const prompt = `${command} "${targetPath}"`;
-        deps.outputChannel.appendLine(`[SpecViewer] Executing enhancement command "${label}": ${prompt}`);
+        const rawPrompt = `${command} "${targetPath}"`;
+        const isMultiStep = command.includes(':auto');
+        const prompt = isMultiStep ? buildLifecyclePrompt(rawPrompt, targetPath) : rawPrompt;
+        deps.outputChannel.appendLine(`[SpecViewer] Executing enhancement command "${label}": ${rawPrompt}`);
         await deps.executeInTerminal(prompt);
         return;
     }
@@ -383,8 +387,10 @@ async function handleClarify(
 
             const targetPath = instance.state.changeRoot || specDirectory;
             const label = wfCmd.title || wfCmd.name || 'Enhancement';
-            const prompt = `${wfCmd.command} "${targetPath}"`;
-            deps.outputChannel.appendLine(`[SpecViewer] Executing workflow command "${label}": ${prompt}`);
+            const rawPrompt = `${wfCmd.command} "${targetPath}"`;
+            const isMultiStep = wfCmd.command.includes(':auto');
+            const prompt = isMultiStep ? buildLifecyclePrompt(rawPrompt, targetPath) : rawPrompt;
+            deps.outputChannel.appendLine(`[SpecViewer] Executing workflow command "${label}": ${rawPrompt}`);
             await deps.executeInTerminal(prompt);
             return;
         }
