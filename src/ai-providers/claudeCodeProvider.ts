@@ -51,14 +51,42 @@ export class ClaudeCodeProvider implements IAIProvider {
     }
 
     /**
+     * Split a prompt that contains the speckit-companion context-update preamble
+     * into a system-level preamble (passed via --append-system-prompt) and a
+     * clean user message (typically just a slash command). Keeping the preamble
+     * out of the user message lets Claude CLI route slash commands correctly
+     * and keeps the terminal view focused on what the user actually invoked.
+     */
+    private splitPreambleFromPrompt(prompt: string): { systemPrompt: string | null; userPrompt: string } {
+        const MARKER_CLOSE = '<!-- /speckit-companion:context-update -->';
+        const idx = prompt.indexOf(MARKER_CLOSE);
+        if (idx === -1) {
+            return { systemPrompt: null, userPrompt: prompt };
+        }
+        const end = idx + MARKER_CLOSE.length;
+        return {
+            systemPrompt: prompt.slice(0, end).trim(),
+            userPrompt: prompt.slice(end).trim(),
+        };
+    }
+
+    /**
      * Execute a prompt in a visible terminal (split view)
      */
     async executeInTerminal(prompt: string, title: string = 'SpecKit - Claude Code'): Promise<vscode.Terminal> {
         try {
+            const { systemPrompt, userPrompt } = this.splitPreambleFromPrompt(prompt);
 
-            const promptFilePath = await this.createPromptFile(prompt, 'prompt');
+            const promptFilePath = await this.createPromptFile(userPrompt, 'prompt');
+            const systemPromptFilePath = systemPrompt
+                ? await this.createPromptFile(systemPrompt, 'system-prompt')
+                : null;
+
             const permissionFlag = this.getPermissionFlag();
-            const command = `claude ${permissionFlag}"$(cat "${promptFilePath}")"`;
+            const systemPromptFlag = systemPromptFilePath
+                ? `--append-system-prompt "$(cat "${systemPromptFilePath}")" `
+                : '';
+            const command = `claude ${systemPromptFlag}${permissionFlag}"$(cat "${promptFilePath}")"`;
 
             const terminal = vscode.window.createTerminal({
                 name: title,
@@ -73,13 +101,16 @@ export class ClaudeCodeProvider implements IAIProvider {
             await waitForShellReady(terminal);
             terminal.sendText(command, true);
 
-            // Clean up temp file after delay
+            // Clean up temp files after delay
             setTimeout(async () => {
-                try {
-                    await fs.promises.unlink(promptFilePath);
-                    this.outputChannel.appendLine(`Cleaned up prompt file: ${promptFilePath}`);
-                } catch (e) {
-                    this.outputChannel.appendLine(`Failed to cleanup temp file: ${e}`);
+                for (const path of [promptFilePath, systemPromptFilePath]) {
+                    if (!path) continue;
+                    try {
+                        await fs.promises.unlink(path);
+                        this.outputChannel.appendLine(`Cleaned up prompt file: ${path}`);
+                    } catch (e) {
+                        this.outputChannel.appendLine(`Failed to cleanup temp file: ${e}`);
+                    }
                 }
             }, Timing.tempFileCleanupDelay);
 
@@ -104,9 +135,18 @@ export class ClaudeCodeProvider implements IAIProvider {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         const cwd = workspaceFolder?.uri.fsPath;
 
-        const promptFilePath = await this.createPromptFile(prompt, 'background-prompt');
+        const { systemPrompt, userPrompt } = this.splitPreambleFromPrompt(prompt);
+
+        const promptFilePath = await this.createPromptFile(userPrompt, 'background-prompt');
+        const systemPromptFilePath = systemPrompt
+            ? await this.createPromptFile(systemPrompt, 'background-system-prompt')
+            : null;
+
         const permissionFlag = this.getPermissionFlag();
-        const commandLine = `claude ${permissionFlag}"$(cat "${promptFilePath}")"`;
+        const systemPromptFlag = systemPromptFilePath
+            ? `--append-system-prompt "$(cat "${systemPromptFilePath}")" `
+            : '';
+        const commandLine = `claude ${systemPromptFlag}${permissionFlag}"$(cat "${promptFilePath}")"`;
 
         return executeCommandInHiddenTerminal({
             commandLine,
@@ -115,6 +155,16 @@ export class ClaudeCodeProvider implements IAIProvider {
             outputChannel: this.outputChannel,
             logPrefix: 'Claude',
             tempFilePath: promptFilePath,
+            cleanupFn: systemPromptFilePath
+                ? async () => {
+                    try {
+                        await fs.promises.unlink(systemPromptFilePath);
+                        this.outputChannel.appendLine(`Cleaned up system prompt file: ${systemPromptFilePath}`);
+                    } catch (e) {
+                        this.outputChannel.appendLine(`Failed to cleanup system prompt file: ${e}`);
+                    }
+                }
+                : undefined,
             logCommandOnFailure: true
         });
     }
