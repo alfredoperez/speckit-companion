@@ -150,7 +150,9 @@
    ============================================ */
 
 #markdown-content hr {
-    display: none;
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: var(--space-4) 0;
 }
 
 /* ============================================
@@ -195,13 +197,12 @@ body[data-spec-status="archived"] .meta-status-draft {
 .spec-header {
     max-width: 72ch;
     margin: 0 auto var(--space-4);
-}
-
-.spec-header-row-1 {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: var(--space-3);
-    margin-bottom: var(--space-2);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--border);
 }
 
 .spec-header-title {
@@ -210,7 +211,6 @@ body[data-spec-status="archived"] .meta-status-draft {
     color: var(--header-title);
     line-height: var(--leading-tight);
     letter-spacing: -0.01em;
-    margin-bottom: var(--space-2);
 }
 
 .spec-header-doctype {
@@ -221,13 +221,6 @@ body[data-spec-status="archived"] .meta-status-draft {
 /* Hide the first H1 when structured header provides the title */
 .spec-header[data-has-context="true"] ~ #markdown-content h1:first-of-type {
     display: none;
-}
-
-.spec-header-row-3 {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    margin-bottom: var(--space-3);
 }
 
 .spec-header-branch {
@@ -246,13 +239,6 @@ body[data-spec-status="archived"] .meta-status-draft {
 .spec-header-branch .branch-icon {
     font-family: 'codicon';
     font-size: 12px;
-}
-
-.spec-header-separator {
-    display: block;
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 0;
 }
 
 /* ============================================

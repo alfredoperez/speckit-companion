@@ -17,6 +17,9 @@ export function generateWebviewHtml(
   const scriptUri = webview.asWebviewUri(
     vscode.Uri.joinPath(extensionUri, "dist", "webview", "workflow.js"),
   );
+  const codiconCssUri = webview.asWebviewUri(
+    vscode.Uri.joinPath(extensionUri, "dist", "webview", "codicons", "codicon.css"),
+  );
 
   const nonce = generateNonce();
 
@@ -29,8 +32,10 @@ export function generateWebviewHtml(
               content="default-src 'none';
                        style-src ${webview.cspSource} 'unsafe-inline' https://cdn.jsdelivr.net;
                        script-src 'nonce-${nonce}' https://cdn.jsdelivr.net;
-                       img-src ${webview.cspSource} data: https:;">
+                       img-src ${webview.cspSource} data: https:;
+                       font-src ${webview.cspSource};">
         <link href="${styleUri}" rel="stylesheet">
+        <link href="${codiconCssUri}" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11/styles/github-dark.min.css">
         <script nonce="${nonce}" src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
         <script nonce="${nonce}" src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"></script>
@@ -54,23 +59,12 @@ export function generateWebviewHtml(
             const initialContent = ${JSON.stringify(content)};
             const specInfo = ${JSON.stringify(specInfo)};
 
-            // Initialize mermaid with dark theme
-            mermaid.initialize({
-                startOnLoad: false,
-                theme: 'dark',
-                themeVariables: {
-                    primaryColor: '#3b82f6',
-                    primaryTextColor: '#fafafa',
-                    primaryBorderColor: '#3b82f6',
-                    lineColor: '#666666',
-                    secondaryColor: '#1a1a1a',
-                    tertiaryColor: '#141414',
-                    background: '#0a0a0a',
-                    mainBkg: '#1a1a1a',
-                    secondBkg: '#141414'
-                }
-            });
-
+            // Mermaid init happens in workflow.ts (theme-aware, responds to
+            // VS Code theme switches via a MutationObserver on body.class).
+            // This stub avoids a startOnLoad race before workflow.js loads.
+            if (typeof mermaid !== 'undefined') {
+                mermaid.initialize({ startOnLoad: false });
+            }
         </script>
         <script nonce="${nonce}" src="${scriptUri}"></script>
     </body>
@@ -107,7 +101,7 @@ function generatePhaseStepper(specInfo: SpecInfo): string {
   if (allTasksDone) {
     doneStepHtml = `
             <div class="step spec-completed-badge" data-phase="done">
-                <span class="badge-icon">🌱</span>
+                <span class="badge-icon codicon codicon-sparkle" aria-hidden="true"></span>
                 <span class="badge-text">SPEC COMPLETED</span>
             </div>`;
   } else {

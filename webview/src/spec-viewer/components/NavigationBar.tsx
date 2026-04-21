@@ -30,6 +30,22 @@ export function NavigationBar() {
         vscode.postMessage({ type: 'stepperClick', phase });
     };
 
+    const handleRelatedClick = (docType: string) => {
+        vscode.postMessage({ type: 'switchDocument', documentType: docType });
+    };
+
+    // Related tabs for the current step — rendered in a right-aligned slot
+    // inside .nav-primary (R010, R011). The Overview tab is removed since
+    // the parent step-tab itself routes to the overview.
+    const relevantRelatedDocs = relatedDocs.filter(d =>
+        d.parentStep === currentDoc
+    );
+    const displayRelatedDocs = isViewingRelatedDoc
+        ? relatedDocs.filter(d => {
+            return !d.parentStep || d.parentStep === viewingRelatedDoc?.parentStep;
+        })
+        : relevantRelatedDocs;
+
     return (
         <div class="nav-primary">
             <div class="step-tabs">
@@ -62,6 +78,20 @@ export function NavigationBar() {
                     );
                 })}
             </div>
+            {displayRelatedDocs.length > 0 && (
+                <div class="related-tabs">
+                    {displayRelatedDocs.map(doc => (
+                        <button
+                            key={doc.type}
+                            class={`related-tab ${doc.type === currentDoc ? 'active' : ''}`}
+                            data-doc={doc.type}
+                            onClick={() => handleRelatedClick(doc.type)}
+                        >
+                            {doc.label}
+                        </button>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

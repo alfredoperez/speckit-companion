@@ -88,12 +88,10 @@ body {
 }
 
 /* ============================================
-   Focus States (Accessibility)
+   Focus States (Accessibility) — R029
    ============================================ */
 
-button:focus-visible,
-a:focus-visible,
-input:focus-visible {
+:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
 }

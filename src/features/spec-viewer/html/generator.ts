@@ -50,6 +50,12 @@ export function generateHtml(
     const scriptUri = webview.asWebviewUri(
         vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'spec-viewer.js')
     );
+    const geistFontUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'fonts', 'geist-vf.woff2')
+    );
+    const codiconCssUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'codicons', 'codicon.css')
+    );
 
     const nonce = generateNonce();
 
@@ -125,19 +131,19 @@ export function generateHtml(
                    style-src ${webview.cspSource} 'unsafe-inline' https://cdn.jsdelivr.net;
                    script-src 'nonce-${nonce}' https://cdn.jsdelivr.net;
                    img-src ${webview.cspSource} data: https:;
-                   font-src ${webview.cspSource} https://cdn.jsdelivr.net;">
+                   font-src ${webview.cspSource};">
     <style nonce="${nonce}">
       @font-face {
         font-family: 'Geist';
         font-style: normal;
         font-display: swap;
         font-weight: 100 900;
-        src: url(https://cdn.jsdelivr.net/fontsource/fonts/geist:vf@latest/latin-wght-normal.woff2) format('woff2-variations');
+        src: url('${geistFontUri}') format('woff2-variations');
       }
     </style>
     <link href="${styleUri}" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@vscode/codicons@0.0.36/dist/codicon.css">
+    <link rel="stylesheet" href="${codiconCssUri}">
     <title>Spec: ${escapeHtml(specName)}</title>
 </head>
 <body style="background: var(--vscode-editor-background, #1e1e1e);" data-spec-status="${specStatus}" data-spec-badge="${escapeHtml(badgeText || '')}">

@@ -1,0 +1,604 @@
+{
+  "workflow": "sdd",
+  "currentStep": "implement",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "updated": "2026-04-21",
+  "last_action": "CP3 approved — staging files for commit and PR.",
+  "files_modified": [
+    "webview/styles/tokens.css",
+    "webview/fonts/geist-vf.woff2",
+    "package.json",
+    "package-lock.json",
+    "webpack.config.js",
+    "src/features/spec-viewer/html/generator.ts",
+    "src/features/spec-editor/specEditorProvider.ts",
+    "webview/styles/spec-viewer/index.css",
+    "webview/styles/spec-viewer.css",
+    "webview/styles/workflow.css",
+    "webview/styles/spec-editor.css",
+    "webview/styles/spec-viewer/_content.css",
+    "webview/styles/spec-viewer/_animations.css",
+    "webview/styles/spec-viewer/_navigation.css",
+    "webview/styles/spec-viewer/_base.css",
+    "webview/styles/spec-viewer/_footer.css",
+    "webview/src/spec-viewer/components/StepTab.tsx",
+    "webview/src/spec-viewer/components/StepTab.stories.tsx",
+    "webview/src/spec-viewer/components/NavigationBar.tsx",
+    "webview/src/spec-viewer/components/SpecHeader.tsx",
+    "webview/src/spec-viewer/components/FooterActions.tsx",
+    "webview/src/spec-viewer/App.tsx",
+    "webview/src/spec-viewer/components/index.ts",
+    "webview/src/spec-viewer/index.tsx",
+    "webview/src/ui/phaseUI.ts",
+    "webview/src/workflow.ts",
+    "webview/src/shared/components/UndoToast.tsx",
+    "webview/src/shared/components/index.ts",
+    "webview/src/shared/hooks/useInlineConfirm.ts",
+    "src/features/spec-viewer/html/navigation.ts",
+    "src/features/workflow-editor/workflow/htmlGenerator.ts",
+    "tests/unit/spec-viewer/useInlineConfirm.spec.ts",
+    "README.md"
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Created webview/styles/tokens.css as the single source of truth for design tokens, including the global prefers-reduced-motion block (R028).",
+      "files": [
+        "webview/styles/tokens.css"
+      ],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Downloaded the Geist Variable woff2 to webview/fonts/geist-vf.woff2 (28 KB, WOFF2 verified).",
+      "files": [
+        "webview/fonts/geist-vf.woff2"
+      ],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added @vscode/codicons to dependencies; codicon.css + codicon.ttf now present in node_modules.",
+      "files": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Webpack CopyPlugin now copies tokens.css, webview/fonts/**, and @vscode/codicons/dist/{codicon.css,codicon.ttf} into dist/webview/.",
+      "files": [
+        "webpack.config.js"
+      ],
+      "concerns": []
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Verified npm run package ships dist/webview/fonts/geist-vf.woff2 and dist/webview/codicons/codicon.{css,ttf} inside the .vsix. .vscodeignore did not exclude these paths, so no whitelist entries were needed.",
+      "files": [],
+      "concerns": []
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "spec-viewer HTML loads Geist via webview.asWebviewUri + bundled codicon.css; CSP font-src narrowed to ${webview.cspSource}. style-src/script-src retain jsdelivr for highlight.js/mermaid (tracked as follow-up).",
+      "files": [
+        "src/features/spec-viewer/html/generator.ts"
+      ],
+      "concerns": []
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "spec-editor webview links codicon.css via webview URI; CSP unchanged (already cspSource-only for font-src).",
+      "files": [
+        "src/features/spec-editor/specEditorProvider.ts"
+      ],
+      "concerns": []
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Replaced '@import _variables.css' with '@import ../tokens.css' and deleted webview/styles/spec-viewer/_variables.css. Updated the comment block inside spec-viewer.css that referenced the deleted partial.",
+      "files": [
+        "webview/styles/spec-viewer/index.css",
+        "webview/styles/spec-viewer.css"
+      ],
+      "concerns": []
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Rewrote workflow.css to @import tokens.css; deleted duplicate :root + theme-fallback block, collapsed step-indicator to 16 px, swapped every rgba(59,130,246,…) literal for color-mix(accent), replaced 3-layer active halo with box-shadow: 0 0 0 2px accent, standardized button padding (6/14 secondary, 8/24 primary), swapped radius-md → radius-sm everywhere, dropped pulse-glow animation, and replaced the 🌱 emoji in htmlGenerator.ts + phaseUI.ts with <span class='codicon codicon-sparkle'> and added the codicon stylesheet link to the workflow-editor HTML.",
+      "files": [
+        "webview/styles/workflow.css",
+        "webview/src/ui/phaseUI.ts",
+        "src/features/workflow-editor/workflow/htmlGenerator.ts"
+      ],
+      "concerns": []
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "spec-editor.css now @imports tokens.css and uses semantic tokens (--bg-primary, --text-primary, --accent, --border) instead of raw var(--vscode-*) where equivalents exist. Added codicon baseline styling and tightened .image-thumbnail .remove-btn to opacity 0.5 at rest, 1 on hover/focus-visible.",
+      "files": [
+        "webview/styles/spec-editor.css"
+      ],
+      "concerns": []
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Replaced #markdown-content hr { display: none } with a thin 1px border-top divider using var(--border) and var(--space-4) margin.",
+      "files": [
+        "webview/styles/spec-viewer/_content.css"
+      ],
+      "concerns": []
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Deleted .step-tab.pulse rule, @keyframes step-tab-pulse, and the duplicate .step-tab.completed rule from _animations.css. pulse-glow was never in _animations.css — it was in workflow.css and was removed there in T009.",
+      "files": [
+        "webview/styles/spec-viewer/_animations.css"
+      ],
+      "concerns": []
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Dropped .step-tab.reviewing dashed outline, the .step-tab:focus-visible { outline: none } override, .related-bar + its children, and the Overview related-tab styles. Introduced .nav-primary > .related-tabs right-aligned slot. Also converted remaining selectors (.step-tab.exists, .step-tab.in-progress/.tasks-active/.working, .step-tab.disabled) to the canonical .done / .in-flight / .locked classes.",
+      "files": [
+        "webview/styles/spec-viewer/_navigation.css"
+      ],
+      "concerns": []
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Converted the base focus-visible rule to a global :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; } so every focusable element inherits it. Audited remaining outline:none declarations — all appear on form inputs paired with visible border-color focus indicators, satisfying the R029 exception.",
+      "files": [
+        "webview/styles/spec-viewer/_base.css"
+      ],
+      "concerns": []
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Rewrote StepTab.tsx classes expression to emit one of current|done|in-flight|locked + optional stale. Removed every legacy class (viewing, reviewing, workflow, working, in-progress, tasks-active, pulse, completed, exists, disabled). Locked tabs now carry aria-disabled='true' and are non-clickable.",
+      "files": [
+        "webview/src/spec-viewer/components/StepTab.tsx"
+      ],
+      "concerns": []
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Regenerated StepTab.stories.tsx with Current / Done / InFlight / Locked stories plus a *Stale variant for each canonical state. Dropped legacy Viewing/Reviewing/TasksActive/Working/InProgress stories.",
+      "files": [
+        "webview/src/spec-viewer/components/StepTab.stories.tsx"
+      ],
+      "concerns": []
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Repo-wide grep for legacy step-tab class names. Fixed two lingering refs: (a) index.tsx querySelector now matches .step-tab.current; (b) server-side navigation.ts (not in plan, but same state machine) rewritten to emit canonical classes. Common-word matches on .workflow-editor / .workflow-selector / .meta-status-in-progress / working-pulse animation are intentional and left alone.",
+      "files": [
+        "webview/src/spec-viewer/index.tsx",
+        "src/features/spec-viewer/html/navigation.ts"
+      ],
+      "concerns": [
+        "navigation.ts was not in the plan.md file list but needed the same canonical-state migration to keep server-side first-render in sync with the Preact client render. Server-render is the pre-hydration HTML so divergence causes flash."
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Deleted RelatedBar.tsx, RelatedBar.stories.tsx; removed imports from App.tsx and components/index.ts.",
+      "files": [
+        "webview/src/spec-viewer/App.tsx",
+        "webview/src/spec-viewer/components/index.ts"
+      ],
+      "concerns": []
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "NavigationBar.tsx renders related-tabs inside .nav-primary (right-aligned slot). Overview related tab was removed in markup (the parent step-tab already routes to overview). Related-tab clicks dispatch the existing switchDocument message.",
+      "files": [
+        "webview/src/spec-viewer/components/NavigationBar.tsx"
+      ],
+      "concerns": [
+        "Chose switchDocument for related-tab clicks (same message legacy RelatedBar used) rather than a new tabClick message — keeps backend handlers unchanged."
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Collapsed SpecHeader.tsx to a single flex row containing badge + title + branch + date. Removed <hr class='spec-header-separator' />, spec-header-row-1, spec-header-row-3 wrappers. Updated _content.css to match: .spec-header is now a single flex row with wrap + 1px bottom border replacing the removed <hr>.",
+      "files": [
+        "webview/src/spec-viewer/components/SpecHeader.tsx",
+        "webview/styles/spec-viewer/_content.css"
+      ],
+      "concerns": []
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "workflow.ts detects vscode-light/dark/high-contrast on body.classList and initializes Mermaid with matching theme variables. A MutationObserver on body.class debounces 200 ms and re-runs applyMermaidTheme + renderContent so diagrams re-render on theme switch. Reduced the inline script in htmlGenerator.ts to a startOnLoad:false stub so workflow.js owns the full init.",
+      "files": [
+        "webview/src/workflow.ts",
+        "src/features/workflow-editor/workflow/htmlGenerator.ts"
+      ],
+      "concerns": [
+        "Re-renders on theme switch by invoking renderContent(initialContent, specInfo) — if the user has edited lines in-webview those edits are in the DOM, not initialContent, so they survive via the SVG re-run. Worth a manual F5 check during CP1."
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Renamed 'Load Existing Spec' → 'Load Template' (message type unchanged). Swapped 📄 and 📎 emojis for <span class='codicon codicon-file'> and <span class='codicon codicon-file-media'>. Dialog title also updated.",
+      "files": [
+        "src/features/spec-editor/specEditorProvider.ts"
+      ],
+      "concerns": []
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "Added useInlineConfirm hook + a pure createInlineConfirm factory that's unit-testable without Preact rendering. Hook wraps the factory; factory is tested via 4 unit tests covering all required behaviors.",
+      "files": [
+        "webview/src/shared/hooks/useInlineConfirm.ts",
+        "tests/unit/spec-viewer/useInlineConfirm.spec.ts"
+      ],
+      "concerns": [
+        "Split the hook into a pure-logic factory + Preact wrapper because Preact's ESM build can't be loaded by the current ts-jest setup without reconfiguring transformIgnorePatterns. The factory gives full coverage of the state machine; the hook is a thin wrapper verified via manual F5."
+      ]
+    },
+    "T024": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Added UndoToast component with requestAnimationFrame-driven countdown, visible progress bar, Escape/Undo cancellation, and an active prop to suppress during run-lock. Added to shared/components/index.ts exports.",
+      "files": [
+        "webview/src/shared/components/UndoToast.tsx",
+        "webview/src/shared/components/index.ts"
+      ],
+      "concerns": [
+        "Did not add dedicated unit tests for UndoToast for the same Preact/ESM reason as T023. Manual verification via F5 covers counter decrement, Esc cancel, Undo click, and elapse-fires-once."
+      ]
+    },
+    "T025": {
+      "status": "DONE",
+      "did": "Confirmed .action-toast selectors in _footer.css match what UndoToast expects. Added UndoToast-specific styles (undo-toast-message, countdown, button, progress bar). Thumbnail remove-btn tightening was already applied in T010 as part of the spec-editor.css rewrite.",
+      "files": [
+        "webview/styles/spec-viewer/_footer.css"
+      ],
+      "concerns": []
+    },
+    "T026": {
+      "status": "DONE",
+      "did": "FooterActions Regenerate click now sets a local regenerateToastActive state; UndoToast renders when active; onElapse dispatches backend regenerate message; onUndo/Esc cancels. Regenerate button stays disabled while either isRunning or regenerateToastActive.",
+      "files": [
+        "webview/src/spec-viewer/components/FooterActions.tsx"
+      ],
+      "concerns": []
+    },
+    "T027": {
+      "status": "DONE",
+      "did": "Wrapped Archive/Complete/Reactivate actions with useInlineConfirm in FooterActions.tsx. First click swaps label to 'Confirm?'; second click within 3 s fires the backend message. Tooltip text also switches to explain the armed state.",
+      "files": [
+        "webview/src/spec-viewer/components/FooterActions.tsx"
+      ],
+      "concerns": []
+    },
+    "T028": {
+      "status": "DONE",
+      "did": "Added 'Offline-First UI' and 'Safety Affordances for Destructive Actions' subsections under Features in README.md documenting bundled fonts/codicons, the 5-second Regenerate undo, the two-click Confirm on Archive/Complete/Reactivate, and the reduced-motion honoring.",
+      "files": [
+        "README.md"
+      ],
+      "concerns": []
+    }
+  },
+  "decisions": [
+    "Scope Bundle A CSP tightening to Geist + codicons only. jsdelivr remains in style-src/script-src for highlight.js and mermaid; bundling those locally is a follow-up (plan.md risk item).",
+    "Split useInlineConfirm into createInlineConfirm (pure factory) + useInlineConfirm (Preact wrapper) so the state machine is testable without reconfiguring ts-jest for Preact ESM.",
+    "Updated src/features/spec-viewer/html/navigation.ts (server-side pre-hydration HTML) to emit canonical step-tab classes even though it wasn't in plan.md — keeps pre-hydration markup consistent with the Preact render so there's no class flash.",
+    "Related-tab click handler dispatches the existing switchDocument message instead of a new tabClick — matches what RelatedBar used, keeps backend unchanged."
+  ],
+  "concerns": [
+    {
+      "task": "T017",
+      "note": "navigation.ts was not in plan.md's file list but needed canonical-state migration to match the client render; pre-hydration HTML divergence would cause a class flash on load."
+    },
+    {
+      "task": "T021",
+      "note": "Theme switch triggers renderContent(initialContent, specInfo) — if user has unsaved inline edits in the DOM they survive only via the SVG re-render. Manual F5 check recommended."
+    },
+    {
+      "task": "T023",
+      "note": "Preact hook isn't directly unit-tested; the pure factory is. Manual F5 verifies the hook wrapper."
+    },
+    {
+      "task": "T024",
+      "note": "UndoToast has no dedicated unit tests (Preact/ESM blocker). Covered by manual F5 verification."
+    }
+  ],
+  "checkpointStatus": {
+    "commit": false,
+    "pr": false
+  },
+  "selectedAt": "2026-04-21T00:49:01Z",
+  "specName": "Design Tighten & Safety",
+  "branch": "main",
+  "createdAt": "2026-04-21T00:49:01Z",
+  "approach": "Promote _variables.css to a webview-root tokens.css and rewrite the three webview stylesheets to import it, collapse StepTab to four canonical states, merge the 4-layer nav to 3, bundle Geist + codicons for offline loading, then layer safety (undo toast, two-click confirm, focus rings, reduced-motion) on top.",
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 30,
+      "scenarios": 13,
+      "key_finding": "Three webviews each carry their own token layer — spec-viewer has _variables.css, workflow.css redeclares the same tokens with divergent values plus rgba(59,130,246,…) literals, and spec-editor.css uses raw var(--vscode-*) — so consolidating into a shared tokens.css unblocks every other phase."
+    },
+    "plan": {
+      "approach_summary": "Promote _variables.css to a webview-root tokens.css and rewrite the three webview stylesheets to import it, collapse StepTab to four canonical states, merge the 4-layer nav to 3, bundle Geist + codicons for offline loading, then layer safety (undo toast, two-click confirm, focus rings, reduced-motion) on top.",
+      "files_planned": 28,
+      "risks": [
+        "CSP regression if cdn.jsdelivr.net is dropped while highlight.js/mermaid still load from it — scope Bundle A CSP tightening to only Geist + codicons and track remaining CDN assets as a follow-up",
+        ".vsix size grows ~60 KB from codicon.ttf — ship unsubset first; subset to used glyphs if it crosses the team-accepted limit (NFR006)",
+        "Legacy StepTab class sweep could silently break CSS/tests keyed on removed names — grep every removed class before merging and cover all four canonical states in StepTab stories",
+        "Two-click 'Confirm?' window may feel unclear to users — verify legibility during manual F5 testing; extend with a countdown hint in a follow-up if feedback lands poorly",
+        "Mermaid theme re-init may flicker on theme switch — MutationObserver is debounced 200 ms; fall back to hidden-node swap if flicker is still perceptible"
+      ]
+    }
+  },
+  "transitions": [
+    {
+      "step": "specify",
+      "substep": "parsing",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-04-21T00:49:01Z"
+    },
+    {
+      "step": "specify",
+      "substep": "exploring",
+      "from": {
+        "step": "specify",
+        "substep": "parsing"
+      },
+      "by": "sdd",
+      "at": "2026-04-21T00:49:02Z"
+    },
+    {
+      "step": "specify",
+      "substep": "detecting",
+      "from": {
+        "step": "specify",
+        "substep": "exploring"
+      },
+      "by": "sdd",
+      "at": "2026-04-21T00:49:03Z"
+    },
+    {
+      "step": "specify",
+      "substep": "writing-spec",
+      "from": {
+        "step": "specify",
+        "substep": "detecting"
+      },
+      "by": "sdd",
+      "at": "2026-04-21T00:49:04Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": "writing-spec"
+      },
+      "by": "sdd",
+      "at": "2026-04-21T00:49:05Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-21T00:58:07.105Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-21T00:58:07.112Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-21T01:02:23.206Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-21T01:02:23.207Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-21T01:02:32.000Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "from": {
+        "step": "plan",
+        "substep": "research"
+      },
+      "by": "sdd",
+      "at": "2026-04-21T01:02:32.100Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": "design"
+      },
+      "by": "sdd",
+      "at": "2026-04-21T01:02:32.488Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "loading",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-21T01:05:00.000Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "writing-tasks",
+      "from": {
+        "step": "tasks",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-04-21T01:05:05.000Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "from": {
+        "step": "tasks",
+        "substep": "writing-tasks"
+      },
+      "by": "sdd",
+      "at": "2026-04-21T01:05:10.000Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": "generate"
+      },
+      "by": "sdd",
+      "at": "2026-04-21T01:05:30.000Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-21T01:05:31.000Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-21T01:08:39.818Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-21T01:08:39.819Z"
+    },
+    {
+      "step": "implement",
+      "substep": "run-tests",
+      "from": {
+        "step": "implement",
+        "substep": null
+      },
+      "by": "ai",
+      "at": "2026-04-21T01:50:00.000Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": "run-tests"
+      },
+      "by": "ai",
+      "at": "2026-04-21T01:55:00.000Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-21T11:26:20.712Z"
+    }
+  ],
+  "status": "completed",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-04-21T00:58:07.105Z",
+      "completedAt": "2026-04-21T00:58:07.105Z"
+    },
+    "plan": {
+      "startedAt": "2026-04-21T00:58:07.112Z",
+      "completedAt": "2026-04-21T01:02:23.206Z",
+      "substeps": [
+        {
+          "name": "research",
+          "startedAt": "2026-04-21T01:02:32.000Z",
+          "completedAt": "2026-04-21T01:02:32.100Z"
+        },
+        {
+          "name": "design",
+          "startedAt": "2026-04-21T01:02:32.100Z",
+          "completedAt": "2026-04-21T01:02:32.488Z"
+        }
+      ]
+    },
+    "tasks": {
+      "startedAt": "2026-04-21T01:02:23.207Z",
+      "completedAt": "2026-04-21T01:08:39.818Z",
+      "substeps": [
+        {
+          "name": "generate",
+          "startedAt": "2026-04-21T01:05:10.000Z",
+          "completedAt": "2026-04-21T01:05:30.000Z"
+        }
+      ]
+    },
+    "implement": {
+      "startedAt": "2026-04-21T01:08:39.819Z",
+      "completedAt": null,
+      "substeps": [
+        {
+          "name": "run-tests",
+          "startedAt": "2026-04-21T01:50:00.000Z",
+          "completedAt": "2026-04-21T01:55:00.000Z"
+        }
+      ]
+    }
+  }
+}

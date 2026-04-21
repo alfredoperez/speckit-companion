@@ -10,6 +10,94 @@ import { updatePhaseUI, showRefineInput, showInlineEdit } from './ui';
 declare const vscode: VSCodeApi;
 declare const initialContent: string;
 declare let specInfo: SpecInfo;
+declare const mermaid: {
+    initialize: (config: Record<string, unknown>) => void;
+    run?: (config?: { nodes?: NodeListOf<Element> }) => Promise<void>;
+};
+
+// ============================================
+// Theme-aware Mermaid (R022)
+// ============================================
+
+type MermaidTheme = 'default' | 'dark' | 'neutral';
+
+function detectMermaidTheme(): { theme: MermaidTheme; variables: Record<string, string> } {
+    const classes = document.body.classList;
+    if (classes.contains('vscode-high-contrast')) {
+        return {
+            theme: 'neutral',
+            variables: {
+                primaryColor: '#ffffff',
+                primaryTextColor: '#000000',
+                primaryBorderColor: '#ffffff',
+                lineColor: '#ffffff',
+                secondaryColor: '#000000',
+                tertiaryColor: '#000000',
+                background: '#000000',
+                mainBkg: '#000000',
+                secondBkg: '#000000',
+            },
+        };
+    }
+    if (classes.contains('vscode-light')) {
+        return {
+            theme: 'default',
+            variables: {
+                primaryColor: '#2563eb',
+                primaryTextColor: '#1e293b',
+                primaryBorderColor: '#2563eb',
+                lineColor: '#94a3b8',
+                secondaryColor: '#f1f5f9',
+                tertiaryColor: '#ffffff',
+                background: '#ffffff',
+                mainBkg: '#f8fafc',
+                secondBkg: '#ffffff',
+            },
+        };
+    }
+    // Default to dark (matches vscode-dark + no class)
+    return {
+        theme: 'dark',
+        variables: {
+            primaryColor: '#3b82f6',
+            primaryTextColor: '#fafafa',
+            primaryBorderColor: '#3b82f6',
+            lineColor: '#666666',
+            secondaryColor: '#1a1a1a',
+            tertiaryColor: '#141414',
+            background: '#0a0a0a',
+            mainBkg: '#1a1a1a',
+            secondBkg: '#141414',
+        },
+    };
+}
+
+function applyMermaidTheme(): void {
+    if (typeof mermaid === 'undefined') return;
+    const { theme, variables } = detectMermaidTheme();
+    mermaid.initialize({
+        startOnLoad: false,
+        theme,
+        themeVariables: variables,
+    });
+}
+
+function observeThemeChanges(): void {
+    let debounceId: number | undefined;
+    const observer = new MutationObserver(mutations => {
+        const classChanged = mutations.some(m => m.attributeName === 'class');
+        if (!classChanged) return;
+        if (debounceId !== undefined) {
+            window.clearTimeout(debounceId);
+        }
+        debounceId = window.setTimeout(() => {
+            applyMermaidTheme();
+            // Re-render existing diagrams with the new theme.
+            renderContent(initialContent, specInfo);
+        }, 200);
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+}
 
 // ============================================
 // Line Actions
@@ -158,5 +246,7 @@ window.addEventListener('message', event => {
 // Initial Render
 // ============================================
 
+applyMermaidTheme();
+observeThemeChanges();
 setupEventListeners();
 renderContent(initialContent, specInfo);

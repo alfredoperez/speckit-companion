@@ -9,7 +9,7 @@
   "specName": "Fix Viewer Step State",
   "branch": "main",
   "createdAt": "2026-04-14T00:09:34Z",
-  "status": "implementing",
+  "status": "completed",
   "approach": "Thread a viewedStep through ViewerState derivation so badge text, highlights, sidebar checkmarks, and footer actions reflect the viewed tab rather than the spec's currentStep.",
   "stepHistory": {
     "specify": {
@@ -234,6 +234,16 @@
       },
       "by": "extension",
       "at": "2026-04-14T00:28:49.509Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-21T11:26:24.780Z"
     }
   ],
   "step_summaries": {

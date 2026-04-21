@@ -21,29 +21,24 @@ export function SpecHeader() {
 
     return (
         <div class="spec-header" data-has-context={String(hasContext)}>
-            <div class="spec-header-row-1">
-                {badgeText && <span class="spec-badge">{badgeText}</span>}
-                {ns.createdDate && (
-                    <span class="spec-date">
-                        <span class="meta-label">Created:</span>{' '}
-                        <span class="meta-date">{ns.createdDate}</span>
-                    </span>
-                )}
-            </div>
+            {badgeText && <span class="spec-badge">{badgeText}</span>}
             {ns.specContextName && (
-                <div class="spec-header-title">
+                <span class="spec-header-title">
                     <span class="spec-header-doctype">{docTypeLabel}:</span>{' '}
                     {ns.specContextName}
-                </div>
+                </span>
             )}
             {ns.branch && (
-                <div class="spec-header-row-3">
-                    <span class="spec-header-branch">
-                        <span class="branch-icon">{'\uea68'}</span> {ns.branch}
-                    </span>
-                </div>
+                <span class="spec-header-branch">
+                    <span class="branch-icon">{''}</span> {ns.branch}
+                </span>
             )}
-            <hr class="spec-header-separator" />
+            {ns.createdDate && (
+                <span class="spec-date">
+                    <span class="meta-label">Created:</span>{' '}
+                    <span class="meta-date">{ns.createdDate}</span>
+                </span>
+            )}
         </div>
     );
 }

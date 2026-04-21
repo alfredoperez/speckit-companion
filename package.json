@@ -902,6 +902,7 @@
   },
   "dependencies": {
     "@preact/signals": "^1.3.4",
+    "@vscode/codicons": "^0.0.45",
     "js-yaml": "^4.1.1",
     "preact": "^10.29.1"
   },

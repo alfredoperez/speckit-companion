@@ -31,55 +31,80 @@
     "T001": {
       "status": "DONE",
       "did": "Replaced SpecExplorerProvider.refresh() two-phase (loading + 100ms content) with a single onDidChangeTreeData.fire().",
-      "files": ["src/features/specs/specExplorerProvider.ts"],
+      "files": [
+        "src/features/specs/specExplorerProvider.ts"
+      ],
       "concerns": []
     },
     "T002": {
       "status": "DONE_WITH_CONCERNS",
       "did": "Replaced three direct refresh() calls on the specs-directory watcher with a shared 1s debounced refresh. Kept watcher (rather than deleting per plan primary path) because core/fileWatchers.ts only covers .claude/**/*.",
-      "files": ["src/features/specs/specCommands.ts"],
-      "concerns": ["Deviated from plan's primary path (deletion) to the fallback (coalesce/debounce) after verifying core/fileWatchers.ts doesn't cover specs/**. Documented in decisions[]."]
+      "files": [
+        "src/features/specs/specCommands.ts"
+      ],
+      "concerns": [
+        "Deviated from plan's primary path (deletion) to the fallback (coalesce/debounce) after verifying core/fileWatchers.ts doesn't cover specs/**. Documented in decisions[]."
+      ]
     },
     "T003": {
       "status": "DONE",
       "did": "Added public expandAllSpecs=true field; spec items now use Expanded/Collapsed based on this flag.",
-      "files": ["src/features/specs/specExplorerProvider.ts"],
+      "files": [
+        "src/features/specs/specExplorerProvider.ts"
+      ],
       "concerns": []
     },
     "T004": {
       "status": "DONE",
       "did": "Added toggleCollapseAllSpecs: 'speckit.specs.toggleCollapseAll' to the Commands map in constants.ts.",
-      "files": ["src/core/constants.ts"],
+      "files": [
+        "src/core/constants.ts"
+      ],
       "concerns": []
     },
     "T005": {
       "status": "DONE",
       "did": "Registered speckit.specs.toggleCollapseAll, .collapseAll, .expandAll (all forwarding to the same toggleCollapseAllHandler); seeded speckit.specs.allCollapsed=false in extension.ts activate.",
-      "files": ["src/features/specs/specCommands.ts", "src/extension.ts"],
+      "files": [
+        "src/features/specs/specCommands.ts",
+        "src/extension.ts"
+      ],
       "concerns": []
     },
     "T006": {
       "status": "DONE_WITH_CONCERNS",
       "did": "Contributed speckit.specs.toggleCollapseAll (palette), .collapseAll ($(collapse-all)), .expandAll ($(expand-all)); added two view/title menu entries at navigation@3 gated on speckit.specs.allCollapsed.",
-      "files": ["package.json"],
-      "concerns": ["Initial attempt tried per-menu icon override — VS Code view/title menus don't support this. Fix: contribute two commands with distinct icons and forward both to the same handler."]
+      "files": [
+        "package.json"
+      ],
+      "concerns": [
+        "Initial attempt tried per-menu icon override — VS Code view/title menus don't support this. Fix: contribute two commands with distinct icons and forward both to the same handler."
+      ]
     },
     "T007": {
       "status": "DONE",
       "did": "Replaced obsolete loading-state test; added refresh() single-fire test and expandAllSpecs Expanded/Collapsed tests. Added toggle handler tests (first call collapses, second expands, collapseAll/expandAll forward to toggle).",
-      "files": ["src/features/specs/__tests__/specExplorerProvider.test.ts", "src/features/specs/specCommands.test.ts"],
+      "files": [
+        "src/features/specs/__tests__/specExplorerProvider.test.ts",
+        "src/features/specs/specCommands.test.ts"
+      ],
       "concerns": []
     },
     "T008": {
       "status": "DONE",
       "did": "Verified sub-files route through getChildren(stepItem) via the spec-document-* branch so VS Code natively indents them. Added clarifying comment to getRelatedDocItems. No code change required.",
-      "files": ["src/features/specs/specExplorerProvider.ts"],
+      "files": [
+        "src/features/specs/specExplorerProvider.ts"
+      ],
       "concerns": []
     },
     "T009": {
       "status": "DONE",
       "did": "README: added title-bar toggle description under Sidebar at a Glance. architecture.md: updated File Watchers section noting specs-dir watcher, shared 1s debounce, and single-fire refresh contract.",
-      "files": ["README.md", "docs/architecture.md"],
+      "files": [
+        "README.md",
+        "docs/architecture.md"
+      ],
       "concerns": []
     }
   },
@@ -100,21 +125,129 @@
     }
   },
   "transitions": [
-    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-20T21:57:36Z" },
-    { "step": "specify", "substep": "exploring", "from": "parsing", "by": "sdd", "at": "2026-04-20T21:57:40Z" },
-    { "step": "specify", "substep": "detecting", "from": "exploring", "by": "sdd", "at": "2026-04-20T21:58:10Z" },
-    { "step": "specify", "substep": "writing-spec", "from": "detecting", "by": "sdd", "at": "2026-04-20T21:58:15Z" },
-    { "step": "specify", "substep": null, "from": "writing-spec", "by": "sdd", "at": "2026-04-20T21:58:30Z" },
-    { "step": "specify", "substep": "writing-spec", "from": null, "by": "sdd", "at": "2026-04-20T22:05:00Z" },
-    { "step": "specify", "substep": null, "from": "writing-spec", "by": "sdd", "at": "2026-04-20T22:05:30Z" },
-    { "step": "plan", "substep": "loading", "from": null, "by": "sdd", "at": "2026-04-20T22:10:00Z" },
-    { "step": "plan", "substep": "writing-plan", "from": "loading", "by": "sdd", "at": "2026-04-20T22:10:05Z" },
-    { "step": "plan", "substep": null, "from": "writing-plan", "by": "sdd", "at": "2026-04-20T22:12:00Z" },
-    { "step": "tasks", "substep": "loading", "from": null, "by": "sdd", "at": "2026-04-20T22:15:00Z" },
-    { "step": "tasks", "substep": "writing-tasks", "from": "loading", "by": "sdd", "at": "2026-04-20T22:15:05Z" },
-    { "step": "tasks", "substep": null, "from": "writing-tasks", "by": "sdd", "at": "2026-04-20T22:18:00Z" },
-    { "step": "implement", "substep": "phase1", "from": null, "by": "sdd", "at": "2026-04-20T22:20:00Z" },
-    { "step": "implement", "substep": "hooks", "from": "phase1", "by": "sdd", "at": "2026-04-20T22:45:00Z" },
-    { "step": "implement", "substep": "code-review", "from": "hooks", "by": "sdd", "at": "2026-04-20T22:50:00Z" }
-  ]
+    {
+      "step": "specify",
+      "substep": "parsing",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-04-20T21:57:36Z"
+    },
+    {
+      "step": "specify",
+      "substep": "exploring",
+      "from": "parsing",
+      "by": "sdd",
+      "at": "2026-04-20T21:57:40Z"
+    },
+    {
+      "step": "specify",
+      "substep": "detecting",
+      "from": "exploring",
+      "by": "sdd",
+      "at": "2026-04-20T21:58:10Z"
+    },
+    {
+      "step": "specify",
+      "substep": "writing-spec",
+      "from": "detecting",
+      "by": "sdd",
+      "at": "2026-04-20T21:58:15Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": "writing-spec",
+      "by": "sdd",
+      "at": "2026-04-20T21:58:30Z"
+    },
+    {
+      "step": "specify",
+      "substep": "writing-spec",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-04-20T22:05:00Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": "writing-spec",
+      "by": "sdd",
+      "at": "2026-04-20T22:05:30Z"
+    },
+    {
+      "step": "plan",
+      "substep": "loading",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-04-20T22:10:00Z"
+    },
+    {
+      "step": "plan",
+      "substep": "writing-plan",
+      "from": "loading",
+      "by": "sdd",
+      "at": "2026-04-20T22:10:05Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": "writing-plan",
+      "by": "sdd",
+      "at": "2026-04-20T22:12:00Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "loading",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-04-20T22:15:00Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "writing-tasks",
+      "from": "loading",
+      "by": "sdd",
+      "at": "2026-04-20T22:15:05Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": "writing-tasks",
+      "by": "sdd",
+      "at": "2026-04-20T22:18:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-04-20T22:20:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": "hooks",
+      "from": "phase1",
+      "by": "sdd",
+      "at": "2026-04-20T22:45:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": "code-review",
+      "from": "hooks",
+      "by": "sdd",
+      "at": "2026-04-20T22:50:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-21T11:26:14.850Z"
+    }
+  ],
+  "status": "completed",
+  "stepHistory": {}
 }

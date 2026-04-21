@@ -6,7 +6,7 @@
  * Partials are organized by component/feature for maintainability.
  */
 
-@import '_variables.css';
+@import '../tokens.css';
 @import '_base.css';
 @import '_buttons.css';
 @import '_navigation.css';

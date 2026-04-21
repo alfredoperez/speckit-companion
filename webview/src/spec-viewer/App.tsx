@@ -1,6 +1,5 @@
 import { useRef, useEffect } from 'preact/hooks';
 import { NavigationBar } from './components/NavigationBar';
-import { RelatedBar } from './components/RelatedBar';
 import { StaleBanner } from './components/StaleBanner';
 import { SpecHeader } from './components/SpecHeader';
 import { FooterActions } from './components/FooterActions';
@@ -26,7 +25,6 @@ export function App({ specStatus }: AppProps) {
         <>
             <nav class="compact-nav">
                 <NavigationBar />
-                <RelatedBar />
             </nav>
             <StaleBanner />
             <main class="content-area" id="content-area">

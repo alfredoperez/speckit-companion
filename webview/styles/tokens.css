@@ -1,6 +1,6 @@
 /**
- * SpecKit Companion - CSS Variables
- * Theme-aware color system and design tokens
+ * SpecKit Companion - Design Tokens
+ * Single source of truth for all webviews (spec-viewer, spec-editor, workflow-editor).
  */
 
 /* ============================================
@@ -187,4 +187,18 @@ body.vscode-high-contrast {
     --border: var(--vscode-contrastBorder, #ffffff);
     --border-hover: var(--vscode-contrastBorder, #ffffff);
     --accent: var(--vscode-focusBorder, #f38518);
+}
+
+/* ============================================
+   Reduced Motion — global opt-out (R028)
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }

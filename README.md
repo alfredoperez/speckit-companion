@@ -92,6 +92,18 @@ SpecKit Companion isn't tied to a single methodology. Swap out the default phase
 
 The sidebar, progress tracking, and workflow editor all adapt automatically to your custom workflow. [See Configuration below.](#configuration)
 
+### Offline-First UI
+
+Fonts (Geist Variable) and icons (codicons) ship bundled inside the extension `.vsix`. The spec viewer, spec editor, and workflow editor all render identically on a plane with no internet connection — no runtime requests to CDNs for fonts or icon glyphs.
+
+### Safety Affordances for Destructive Actions
+
+Actions that change the spec's lifecycle are protected so a misfired click is easy to walk back:
+
+- **Regenerate** queues behind a 5-second undo toast. Clicking **Undo** or pressing **Esc** cancels the regeneration; otherwise the backend fires when the timer elapses.
+- **Archive**, **Complete**, and **Reactivate** each require two clicks. The first click swaps the button label to **"Confirm?"** for 3 seconds; a second click within that window confirms. Otherwise the label reverts silently and nothing happens.
+- The OS-level **Reduce Motion** preference is honored globally — in-flight step pulses and other infinite animations stop when it's enabled.
+
 ## Getting Started
 
 1. **Install** the extension from a `.vsix` file or the VS Code marketplace

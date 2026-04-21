@@ -37,13 +37,11 @@ export function StepTab(props: StepTabProps) {
         activeStep, stepHistory, stalenessMap, hasRelatedChildren, runningStepIndex, onClick } = props;
 
     const phase = doc.type;
-    const exists = doc.exists || !!hasRelatedChildren;
     const stepDocExists = doc.exists;
+    const exists = stepDocExists || !!hasRelatedChildren;
     const isViewing = phase === currentDoc || (isViewingRelatedDoc && phase === parentPhaseForRelated);
     const isLastStep = index === totalSteps - 1;
     const inProgress = isLastStep && taskCompletionPercent > 0 && taskCompletionPercent < 100;
-    const isReviewing = isViewing && exists && phase !== workflowPhase && !isViewingRelatedDoc;
-    const isTasksActive = isLastStep && isViewing && inProgress;
     const isStale = stalenessMap?.[phase]?.isStale ?? false;
     const isWorking = activeStep === phase && !stepHistory?.[phase]?.completedAt;
     const isLocked = runningStepIndex != null
@@ -54,27 +52,33 @@ export function StepTab(props: StepTabProps) {
 
     const vs = viewerState.value;
     const stepName = DOC_TO_STEP[phase] ?? phase;
-    const vsPulse = vs?.pulse === stepName;
     // R003: checkmark only when completed AND the step's document exists.
     const vsCompleted = (vs?.highlights?.includes(stepName) ?? false) && stepDocExists;
     const vsSubstep = vs?.activeSubstep?.step === stepName ? vs.activeSubstep.name : null;
 
+    // Collapse to four canonical states (R007, R008).
+    // Precedence: locked > in-flight > current > done; default = untouched.
+    let canonicalState: 'current' | 'done' | 'in-flight' | 'locked' | null = null;
+    if (isLocked) {
+        canonicalState = 'locked';
+    } else if (isWorking || inProgress) {
+        canonicalState = 'in-flight';
+    } else if (isViewing) {
+        canonicalState = 'current';
+    } else if (stepDocExists || vsCompleted) {
+        canonicalState = 'done';
+    }
+
     const classes = [
         'step-tab',
-        exists && 'exists',
-        isReviewing ? 'reviewing' : (isViewing && 'viewing'),
-        isTasksActive && 'tasks-active',
-        workflowPhase === phase && !isViewing && 'workflow',
-        isWorking && 'working',
-        !isClickable && 'disabled',
-        inProgress && !isTasksActive && 'in-progress',
+        canonicalState,
         isStale && 'stale',
-        vsPulse && 'pulse',
-        vsCompleted && 'completed',
     ].filter(Boolean).join(' ');
 
-    // R003/R004: only show ✓ when the step's document actually exists.
-    const statusIcon = inProgress ? `${taskCompletionPercent}%` : (stepDocExists ? '✓' : '');
+    // Status content: percentage in-flight, ✓ done, empty otherwise.
+    const statusIcon = canonicalState === 'in-flight' && inProgress
+        ? `${taskCompletionPercent}%`
+        : (canonicalState === 'done' ? '✓' : '');
 
     const baseTooltip = STEP_TOOLTIPS[phase] ?? doc.label;
     const tooltip = isLocked
@@ -86,6 +90,7 @@ export function StepTab(props: StepTabProps) {
             class={classes}
             data-phase={phase}
             title={tooltip}
+            aria-disabled={!isClickable}
             disabled={!isClickable}
             onClick={() => isClickable && phase !== 'done' && onClick(phase)}
         >

@@ -28,7 +28,7 @@ export function updatePhaseUI(specInfo: SpecInfo): void {
         // Transform to Badge
         step.classList.add("spec-completed-badge");
         step.innerHTML = `
-                    <span class="badge-icon">🌱</span>
+                    <span class="badge-icon codicon codicon-sparkle" aria-hidden="true"></span>
                     <span class="badge-text">SPEC COMPLETED</span>
                 `;
       } else if (!allTasksDone && isCurrentlyBadge) {

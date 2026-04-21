@@ -7,7 +7,6 @@
  *
  * Structure:
  *   spec-viewer/
- *   ├── _variables.css    - Theme variables and design tokens
  *   ├── _base.css         - Reset, body, layout
  *   ├── _navigation.css   - Step tabs, related bar
  *   ├── _content.css      - Markdown rendering base

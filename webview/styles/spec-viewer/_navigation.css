@@ -16,9 +16,15 @@
 .nav-primary {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     padding: 0 var(--space-4);
     height: 48px;
+    gap: var(--space-4);
+}
+
+/* Right-aligned slot that hosts related-tabs inside the primary nav row */
+.nav-primary > .related-tabs {
+    margin-left: auto;
 }
 
 /* ============================================
@@ -54,10 +60,6 @@
     background: var(--bg-hover);
 }
 
-.step-tab:focus-visible {
-    outline: none;
-}
-
 /* Status indicator (checkmark or empty circle) */
 .step-status {
     display: flex;
@@ -77,60 +79,31 @@
     position: relative;
 }
 
-/* File exists - green check */
-.step-tab.exists .step-status {
+/* File exists (canonical: done) — green check */
+.step-tab.done .step-status {
     background: var(--success);
     border-color: var(--success);
     color: white;
 }
 
-.step-tab.exists .step-label {
+.step-tab.done .step-label {
     color: var(--text-secondary);
 }
 
-/* Currently viewing — bold + white text */
-.step-tab.viewing .step-label,
-.step-tab.reviewing .step-label,
-.step-tab.tasks-active .step-label {
-    color: white;
-    font-weight: 700;
-}
-
-/* Workflow phase indicator (when not viewing) */
-.step-tab.workflow:not(.viewing) .step-label {
-    color: var(--text-primary);
-}
-
-/* Highlight the currently viewed step tab */
-.step-tab.viewing,
-.step-tab.reviewing {
+/* Highlight the currently viewed step tab (canonical: current) */
+.step-tab.current {
     outline: 1px solid var(--accent, #4a9eff);
     outline-offset: 2px;
     border-radius: 4px;
 }
-/* Reviewing a non-active step — dashed variant to signal context shift (R006) */
-.step-tab.reviewing {
-    outline-style: dashed;
-    opacity: 0.95;
-}
-.step-tab.reviewing .step-status {
-    border-color: var(--accent, #4a9eff);
+
+.step-tab.current .step-label {
+    color: var(--accent);
+    font-weight: 700;
 }
 
-/* In progress (tasks partial) - show percentage */
-.step-tab.in-progress .step-status {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: white;
-    font-size: 8px;
-    width: auto;
-    min-width: 24px;
-    padding: 0 4px;
-    border-radius: 8px;
-}
-
-/* Tasks actively being worked on - prominent percentage badge */
-.step-tab.tasks-active .step-status {
+/* In-flight (canonical): accent % pill + single working-pulse animation */
+.step-tab.in-flight .step-status {
     background: var(--accent);
     border-color: var(--accent);
     color: white;
@@ -140,23 +113,25 @@
     min-width: 32px;
     padding: 0 6px;
     border-radius: 10px;
-}
-
-/* Active step being worked on (from spec-context) — pulsing glow */
-.step-tab.working .step-status {
     animation: working-pulse 2s ease-in-out infinite;
 }
 
-.step-tab.working .step-label {
+.step-tab.in-flight .step-label {
     color: var(--accent);
     font-weight: 700;
 }
 
-/* Disabled state */
-.step-tab.disabled,
-.step-tab:disabled {
-    opacity: 0.35;
+/* Locked (canonical): non-clickable, dimmed */
+.step-tab.locked,
+.step-tab[aria-disabled="true"] {
+    opacity: 0.4;
     cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Orthogonal staleness flag */
+.step-tab.stale .step-status {
+    border-color: var(--warning);
 }
 
 /* Connector lines between steps */
@@ -174,81 +149,12 @@
 
 
 /* ============================================
-   Related Documents Bar
+   Related Documents Tabs (right-aligned slot in .nav-primary)
    ============================================ */
-
-.related-bar {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 0 var(--space-4);
-    gap: 0;
-    background: color-mix(in srgb, var(--bg-primary) 50%, var(--bg-secondary));
-    border-bottom: 1px solid var(--border);
-    font-size: 12px;
-}
-
-.related-bar-content {
-    display: flex;
-    align-items: center;
-    gap: 0;
-}
-
-.back-link {
-    padding: 4px 8px;
-    border: none;
-    background: transparent;
-    color: var(--text-muted);
-    cursor: pointer;
-    font-size: 12px;
-    font-family: inherit;
-    transition: color var(--transition-fast);
-    border-radius: var(--radius-sm);
-}
-
-.back-link:hover {
-    color: var(--accent);
-    background: var(--bg-hover);
-}
-
-.related-divider {
-    color: var(--border);
-    margin: 0 var(--space-1);
-}
-
-.overview-divider {
-    display: none;
-}
 
 .related-tabs {
     display: flex;
     gap: 0;
-}
-
-/* Overview tab - first tab linking to main document */
-.overview-tab {
-    padding: 8px 12px;
-    border: none;
-    border-bottom: 2px solid transparent;
-    background: transparent;
-    color: var(--text-secondary);
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
-    font-family: inherit;
-    border-radius: 0;
-    transition: all var(--transition-fast);
-}
-
-.overview-tab:hover {
-    color: var(--text-primary);
-    background: var(--bg-hover);
-}
-
-.overview-tab.active {
-    color: var(--text-primary);
-    border-bottom-color: var(--accent);
-    font-weight: 600;
 }
 
 .related-tab {

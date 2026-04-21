@@ -1,7 +1,9 @@
 /**
  * Spec Editor Webview Styles
- * Uses VS Code CSS variables for theme integration
+ * Uses shared tokens from tokens.css for theme integration.
  */
+
+@import './tokens.css';
 
 /* ============================================
    Base Layout
@@ -13,9 +15,9 @@
     height: 100vh;
     padding: 16px;
     box-sizing: border-box;
-    font-family: var(--vscode-font-family);
-    background-color: var(--vscode-editor-background);
-    color: var(--vscode-editor-foreground);
+    font-family: var(--font-family);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .spec-editor-header {
@@ -26,13 +28,13 @@
     font-size: 1.4em;
     font-weight: 500;
     margin: 0;
-    color: var(--vscode-foreground);
+    color: var(--text-primary);
 }
 
 .spec-editor-header p {
     margin: 4px 0 0;
     font-size: 0.9em;
-    color: var(--vscode-descriptionForeground);
+    color: var(--text-secondary);
 }
 
 /* ============================================
@@ -62,7 +64,7 @@
     font-size: 0.85em;
     font-weight: 500;
     margin-bottom: 6px;
-    color: var(--vscode-foreground);
+    color: var(--text-primary);
 }
 
 .spec-editor-textarea {
@@ -70,12 +72,12 @@
     width: 100%;
     min-height: 200px;
     padding: 12px;
-    border: 1px solid var(--vscode-input-border, var(--vscode-widget-border));
-    border-radius: 4px;
+    border: 1px solid var(--vscode-input-border, var(--border));
+    border-radius: var(--radius-sm);
     background-color: var(--vscode-input-background);
     color: var(--vscode-input-foreground);
-    font-family: var(--vscode-editor-font-family, monospace);
-    font-size: var(--vscode-editor-font-size, 13px);
+    font-family: var(--font-mono);
+    font-size: var(--font-size);
     line-height: 1.5;
     resize: vertical;
     box-sizing: border-box;
@@ -83,7 +85,7 @@
 
 .spec-editor-textarea:focus {
     outline: none;
-    border-color: var(--vscode-focusBorder);
+    border-color: var(--accent);
 }
 
 .spec-editor-textarea::placeholder {
@@ -93,16 +95,16 @@
 .char-count {
     margin-top: 4px;
     font-size: 0.8em;
-    color: var(--vscode-descriptionForeground);
+    color: var(--text-secondary);
     text-align: right;
 }
 
 .char-count.warning {
-    color: var(--vscode-editorWarning-foreground);
+    color: var(--warning);
 }
 
 .char-count.error {
-    color: var(--vscode-editorError-foreground);
+    color: var(--error);
 }
 
 /* ============================================
@@ -110,7 +112,7 @@
    ============================================ */
 
 .image-attachment-section {
-    border-top: 1px solid var(--vscode-widget-border);
+    border-top: 1px solid var(--border);
     padding-top: 16px;
 }
 
@@ -125,36 +127,41 @@
     font-size: 0.9em;
     font-weight: 500;
     margin: 0;
-    color: var(--vscode-foreground);
+    color: var(--text-primary);
 }
 
 .attach-image-btn {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 12px;
-    border: 1px dashed var(--vscode-button-secondaryBorder, var(--vscode-widget-border));
-    border-radius: 4px;
+    padding: 6px 14px;
+    border: 1px dashed var(--vscode-button-secondaryBorder, var(--border));
+    border-radius: var(--radius-sm);
     background: transparent;
-    color: var(--vscode-button-secondaryForeground, var(--vscode-foreground));
+    color: var(--vscode-button-secondaryForeground, var(--text-primary));
     font-size: 0.85em;
     cursor: pointer;
     transition: all 0.15s ease;
 }
 
 .attach-image-btn:hover {
-    background-color: var(--vscode-button-secondaryHoverBackground, var(--vscode-list-hoverBackground));
+    background-color: var(--vscode-button-secondaryHoverBackground, var(--bg-hover));
     border-style: solid;
 }
 
-.attach-image-btn .codicon {
+/* Codicon baseline inside spec-editor chrome */
+.attach-image-btn .codicon,
+.load-template-btn .codicon {
     font-size: 14px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
 }
 
 /* Paste hint */
 .paste-hint {
     margin: 0 0 12px 0;
-    color: var(--vscode-descriptionForeground);
+    color: var(--text-secondary);
     font-size: 0.8em;
     font-style: italic;
 }
@@ -170,10 +177,10 @@
     position: relative;
     width: 80px;
     height: 80px;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     overflow: hidden;
-    border: 1px solid var(--vscode-widget-border);
-    background-color: var(--vscode-editor-background);
+    border: 1px solid var(--border);
+    background-color: var(--bg-primary);
 }
 
 .image-thumbnail img {
@@ -205,28 +212,30 @@
     padding: 0;
     border: none;
     border-radius: 50%;
-    background-color: var(--vscode-errorForeground);
+    background-color: var(--error);
     color: white;
     font-size: 12px;
     cursor: pointer;
-    opacity: 0;
+    opacity: 0.5;
     transition: opacity 0.15s ease;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.image-thumbnail:hover .remove-btn {
+.image-thumbnail:hover .remove-btn,
+.image-thumbnail .remove-btn:hover,
+.image-thumbnail .remove-btn:focus-visible {
     opacity: 1;
 }
 
 .image-thumbnail .remove-btn:hover {
-    background-color: var(--vscode-inputValidation-errorBackground);
+    background-color: var(--vscode-inputValidation-errorBackground, var(--error));
 }
 
 .image-size-info {
     font-size: 0.75em;
-    color: var(--vscode-descriptionForeground);
+    color: var(--text-secondary);
     margin-top: 8px;
 }
 
@@ -242,18 +251,18 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 12px;
-    border: 1px solid var(--vscode-button-secondaryBorder, var(--vscode-widget-border));
-    border-radius: 4px;
+    padding: 6px 14px;
+    border: 1px solid var(--vscode-button-secondaryBorder, var(--border));
+    border-radius: var(--radius-sm);
     background: var(--vscode-button-secondaryBackground, transparent);
-    color: var(--vscode-button-secondaryForeground, var(--vscode-foreground));
+    color: var(--vscode-button-secondaryForeground, var(--text-primary));
     font-size: 0.85em;
     cursor: pointer;
     transition: background-color 0.15s ease;
 }
 
 .load-template-btn:hover {
-    background-color: var(--vscode-button-secondaryHoverBackground, var(--vscode-list-hoverBackground));
+    background-color: var(--vscode-button-secondaryHoverBackground, var(--bg-hover));
 }
 
 /* ============================================
@@ -279,13 +288,13 @@
 
 .workflow-selector label {
     font-size: 0.85em;
-    color: var(--vscode-descriptionForeground);
+    color: var(--text-secondary);
 }
 
 .workflow-selector select {
     padding: 4px 8px;
-    border: 1px solid var(--vscode-input-border, var(--vscode-widget-border));
-    border-radius: 4px;
+    border: 1px solid var(--vscode-input-border, var(--border));
+    border-radius: var(--radius-sm);
     background-color: var(--vscode-input-background);
     color: var(--vscode-input-foreground);
     font-size: 0.85em;
@@ -294,7 +303,7 @@
 
 .workflow-selector select:focus {
     outline: none;
-    border-color: var(--vscode-focusBorder);
+    border-color: var(--accent);
 }
 
 /* ============================================
@@ -305,13 +314,13 @@
     display: flex;
     gap: 12px;
     padding-top: 16px;
-    border-top: 1px solid var(--vscode-widget-border);
+    border-top: 1px solid var(--border);
 }
 
 .spec-editor-actions button {
-    padding: 8px 16px;
+    padding: 6px 14px;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     font-size: 0.9em;
     font-weight: 500;
     cursor: pointer;
@@ -324,31 +333,32 @@
 }
 
 .spec-editor-actions .btn-primary {
-    background-color: var(--vscode-button-background);
-    color: var(--vscode-button-foreground);
+    padding: 8px 24px;
+    background-color: var(--vscode-button-background, var(--accent));
+    color: var(--vscode-button-foreground, white);
 }
 
 .spec-editor-actions .btn-primary:hover:not(:disabled) {
-    background-color: var(--vscode-button-hoverBackground);
+    background-color: var(--vscode-button-hoverBackground, var(--accent-hover));
 }
 
 .spec-editor-actions .btn-secondary {
-    background-color: var(--vscode-button-secondaryBackground);
-    color: var(--vscode-button-secondaryForeground);
+    background-color: var(--vscode-button-secondaryBackground, transparent);
+    color: var(--vscode-button-secondaryForeground, var(--text-primary));
 }
 
 .spec-editor-actions .btn-secondary:hover:not(:disabled) {
-    background-color: var(--vscode-button-secondaryHoverBackground);
+    background-color: var(--vscode-button-secondaryHoverBackground, var(--bg-hover));
 }
 
 .spec-editor-actions .btn-cancel {
     background: transparent;
-    color: var(--vscode-foreground);
-    border: 1px solid var(--vscode-widget-border);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
 }
 
 .spec-editor-actions .btn-cancel:hover:not(:disabled) {
-    background-color: var(--vscode-list-hoverBackground);
+    background-color: var(--bg-hover);
 }
 
 #commandButtons {
@@ -368,31 +378,31 @@
     flex: 1;
     overflow-y: auto;
     padding: 16px;
-    border: 1px solid var(--vscode-widget-border);
-    border-radius: 4px;
-    background-color: var(--vscode-editor-background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-primary);
 }
 
 .preview-container h1,
 .preview-container h2,
 .preview-container h3 {
-    color: var(--vscode-foreground);
+    color: var(--text-primary);
 }
 
 .preview-container p {
-    color: var(--vscode-editor-foreground);
+    color: var(--text-primary);
     line-height: 1.6;
 }
 
 .preview-container code {
     padding: 2px 6px;
-    font-family: var(--vscode-editor-font-family, monospace);
+    font-family: var(--font-mono);
 }
 
 .preview-container pre {
-    background-color: var(--vscode-textCodeBlock-background);
+    background-color: var(--vscode-textCodeBlock-background, var(--bg-code));
     padding: 12px;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     overflow-x: auto;
 }
 
@@ -421,8 +431,8 @@
 .loading-spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid var(--vscode-widget-border);
-    border-top-color: var(--vscode-button-background);
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -436,10 +446,10 @@
 .error-message {
     padding: 12px;
     margin-bottom: 12px;
-    border-radius: 4px;
-    background-color: var(--vscode-inputValidation-errorBackground);
-    border: 1px solid var(--vscode-inputValidation-errorBorder);
-    color: var(--vscode-errorForeground);
+    border-radius: var(--radius-sm);
+    background-color: var(--vscode-inputValidation-errorBackground, var(--error-subtle));
+    border: 1px solid var(--vscode-inputValidation-errorBorder, var(--error));
+    color: var(--error);
     font-size: 0.9em;
 }
 
@@ -459,16 +469,16 @@
 
 .keyboard-hints {
     font-size: 0.75em;
-    color: var(--vscode-descriptionForeground);
+    color: var(--text-secondary);
     margin-top: 8px;
 }
 
 .keyboard-hints kbd {
     padding: 2px 6px;
-    border: 1px solid var(--vscode-widget-border);
+    border: 1px solid var(--border);
     border-radius: 3px;
-    background-color: var(--vscode-button-secondaryBackground);
-    font-family: var(--vscode-editor-font-family, monospace);
+    background-color: var(--vscode-button-secondaryBackground, var(--bg-elevated));
+    font-family: var(--font-mono);
     font-size: 0.9em;
 }
 

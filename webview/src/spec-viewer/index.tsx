@@ -104,7 +104,7 @@ function handleMessage(event: MessageEvent): void {
 
 function saveCurrentState(): void {
     const contentArea = document.getElementById('content-area');
-    const activeTab = document.querySelector('.step-tab.viewing, .step-tab.reviewing') as HTMLButtonElement;
+    const activeTab = document.querySelector('.step-tab.current') as HTMLButtonElement;
     if (contentArea) {
         vscode.setState({
             currentDocument: activeTab?.dataset.phase || 'spec',

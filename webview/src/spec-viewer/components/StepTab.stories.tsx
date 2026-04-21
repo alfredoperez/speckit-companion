@@ -22,37 +22,58 @@ const base = {
     onClick: (phase: string) => console.log('clicked', phase),
 };
 
-export const Default: Story = {
-    args: { ...base, doc: mockDoc('plan', false, 'Plan'), index: 1 },
-};
+const staleMap = (phase: string) => ({
+    [phase]: { isStale: true, staleReason: 'Outdated', newerUpstream: 'spec' },
+});
 
-export const Exists: Story = {
-    args: { ...base, doc: mockDoc('spec', true, 'Specification') },
-};
+// ── Canonical states ─────────────────────────────────────
 
-export const Viewing: Story = {
+export const Current: Story = {
     args: { ...base, doc: mockDoc('spec', true, 'Specification'), currentDoc: 'spec' },
 };
 
-export const Reviewing: Story = {
-    args: { ...base, doc: mockDoc('spec', true, 'Specification'), currentDoc: 'spec', workflowPhase: 'plan' },
+export const Done: Story = {
+    args: { ...base, doc: mockDoc('spec', true, 'Specification'), currentDoc: 'plan' },
 };
 
-export const TasksActive: Story = {
-    args: { ...base, doc: mockDoc('tasks', true, 'Tasks'), index: 2, currentDoc: 'tasks', taskCompletionPercent: 45 },
-};
-
-export const Working: Story = {
-    args: { ...base, doc: mockDoc('plan', true, 'Plan'), index: 1, activeStep: 'plan' },
-};
-
-export const Stale: Story = {
-    args: { ...base, doc: mockDoc('plan', true, 'Plan'), index: 1, stalenessMap: { plan: { isStale: true, staleReason: 'Outdated', newerUpstream: 'spec' } } },
-};
-
-export const InProgress: Story = {
+export const InFlight: Story = {
     args: { ...base, doc: mockDoc('tasks', true, 'Tasks'), index: 2, taskCompletionPercent: 72 },
 };
+
+export const Locked: Story = {
+    args: {
+        ...base,
+        doc: mockDoc('plan', false, 'Plan'),
+        index: 1,
+        runningStepIndex: 0,
+    },
+};
+
+// ── Canonical states × stale ─────────────────────────────
+
+export const CurrentStale: Story = {
+    args: { ...base, doc: mockDoc('spec', true, 'Specification'), currentDoc: 'spec', stalenessMap: staleMap('spec') },
+};
+
+export const DoneStale: Story = {
+    args: { ...base, doc: mockDoc('spec', true, 'Specification'), currentDoc: 'plan', stalenessMap: staleMap('spec') },
+};
+
+export const InFlightStale: Story = {
+    args: { ...base, doc: mockDoc('tasks', true, 'Tasks'), index: 2, taskCompletionPercent: 45, stalenessMap: staleMap('tasks') },
+};
+
+export const LockedStale: Story = {
+    args: {
+        ...base,
+        doc: mockDoc('plan', false, 'Plan'),
+        index: 1,
+        runningStepIndex: 0,
+        stalenessMap: staleMap('plan'),
+    },
+};
+
+// ── Full row ─────────────────────────────────────────────
 
 export const AllStates: Story = {
     render: () => (

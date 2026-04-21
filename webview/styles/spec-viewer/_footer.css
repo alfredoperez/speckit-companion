@@ -129,6 +129,56 @@
     animation: toast-slide-in 200ms ease forwards;
 }
 
+/* ============================================
+   Undo Toast (R024, R025) — extends .action-toast
+   ============================================ */
+
+.action-toast.undo-toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 8px 12px 10px;
+    overflow: hidden;
+}
+
+.undo-toast-message {
+    color: var(--text-primary);
+}
+
+.undo-toast-countdown {
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
+    font-size: 11px;
+    min-width: 2.2em;
+    text-align: right;
+}
+
+.undo-toast-button {
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--accent);
+    cursor: pointer;
+}
+
+.undo-toast-button:hover {
+    background: var(--accent-subtle);
+    border-color: var(--accent);
+}
+
+.undo-toast-progress {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    background: var(--accent);
+    transition: width 100ms linear;
+}
+
 .action-toast.hiding {
     animation: toast-fade-out 200ms ease forwards;
 }

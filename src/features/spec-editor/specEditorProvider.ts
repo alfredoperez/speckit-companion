@@ -405,7 +405,7 @@ export class SpecEditorProvider {
                 'Markdown files': ['md'],
                 'All files': ['*']
             },
-            title: 'Load Existing Spec'
+            title: 'Load Template'
         });
 
         if (result && result.length > 0) {
@@ -458,6 +458,9 @@ export class SpecEditorProvider {
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'webview', 'spec-editor.js')
         );
+        const codiconCssUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'webview', 'codicons', 'codicon.css')
+        );
 
         const nonce = generateNonce();
 
@@ -473,6 +476,7 @@ export class SpecEditorProvider {
                    img-src ${webview.cspSource} data: https:;
                    font-src ${webview.cspSource};">
     <link href="${styleUri}" rel="stylesheet">
+    <link href="${codiconCssUri}" rel="stylesheet">
     <title>New Spec</title>
 </head>
 <body>
@@ -488,8 +492,8 @@ export class SpecEditorProvider {
             <div class="workflow-row">
                 <div class="template-loader">
                     <button class="load-template-btn" id="loadTemplateBtn">
-                        <span class="codicon">📄</span>
-                        Load Existing Spec
+                        <span class="codicon codicon-file" aria-hidden="true"></span>
+                        Load Template
                     </button>
                 </div>
                 <div class="workflow-selector" id="workflowSelector" style="display: none;">
@@ -521,7 +525,7 @@ Example:
                 <div class="image-attachment-header">
                     <h3>Attachments</h3>
                     <button class="attach-image-btn" id="attachImageBtn">
-                        <span class="codicon">📎</span>
+                        <span class="codicon codicon-file-media" aria-hidden="true"></span>
                         Attach Image
                     </button>
                 </div>

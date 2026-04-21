@@ -1,7 +1,10 @@
+import { useState } from 'preact/hooks';
 import type { VSCodeApi, ViewerToExtensionMessage, SerializedFooterAction } from '../types';
 import { navState, viewerState } from '../signals';
 import { Button } from '../../shared/components/Button';
 import { Toast } from '../../shared/components/Toast';
+import { UndoToast } from '../../shared/components/UndoToast';
+import { useInlineConfirm } from '../../shared/hooks/useInlineConfirm';
 
 declare const vscode: VSCodeApi;
 
@@ -21,6 +24,8 @@ export interface FooterActionsProps {
 export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
     const ns = navState.value;
     const vs = viewerState.value;
+    const [regenerateToastActive, setRegenerateToastActive] = useState(false);
+
     if (!ns) return null;
 
     const send = (msg: ViewerToExtensionMessage) => () => vscode.postMessage(msg);
@@ -30,6 +35,31 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
     const isRunning = !!(runningStep && !ns.stepHistory?.[runningStep]?.completedAt);
     const runLockSuffix = isRunning ? ` (disabled while ${runningStep} is running)` : '';
     const withLock = (label: string) => `${label}${runLockSuffix}`;
+
+    // R024/R030: Regenerate queues behind a 5s undo toast. Never shown
+    // while another step is already running (the button stays disabled).
+    const onRegenerateClick = () => {
+        if (isRunning) return;
+        setRegenerateToastActive(true);
+    };
+    const regenerateElapse = () => {
+        setRegenerateToastActive(false);
+        vscode.postMessage({ type: 'regenerate' });
+    };
+    const regenerateUndo = () => {
+        setRegenerateToastActive(false);
+    };
+
+    // R026: Archive/Complete/Reactivate require a two-click confirm.
+    const archiveConfirm = useInlineConfirm(
+        () => vscode.postMessage({ type: 'archiveSpec' })
+    );
+    const completeConfirm = useInlineConfirm(
+        () => vscode.postMessage({ type: 'completeSpec' })
+    );
+    const reactivateConfirm = useInlineConfirm(
+        () => vscode.postMessage({ type: 'reactivateSpec' })
+    );
 
     const status = vs?.status || ns.footerState?.specStatus || ns.specStatus || initialSpecStatus;
     const isTasksDone = status === 'tasks-done';
@@ -105,10 +135,10 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
                 />
                 {!isArchived && (
                     <Button
-                        label="Archive"
+                        label={archiveConfirm.label ?? 'Archive'}
                         variant="secondary"
-                        title="Archive this spec"
-                        onClick={send({ type: 'archiveSpec' })}
+                        title={archiveConfirm.armed ? 'Click again to confirm archive' : 'Archive this spec'}
+                        onClick={archiveConfirm.onClick}
                     />
                 )}
                 {isActive && enhancementButtons.map((btn) => (
@@ -125,19 +155,23 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
             <div class="actions-right">
                 {isArchived || isCompleted ? (
                     <Button
-                        label="Reactivate"
+                        label={reactivateConfirm.label ?? 'Reactivate'}
                         variant="primary"
-                        title={isRunning ? withLock('Reactivate this spec') : 'Reactivate this spec'}
+                        title={isRunning
+                            ? withLock('Reactivate this spec')
+                            : (reactivateConfirm.armed ? 'Click again to confirm reactivate' : 'Reactivate this spec')}
                         disabled={isRunning}
-                        onClick={send({ type: 'reactivateSpec' })}
+                        onClick={reactivateConfirm.onClick}
                     />
                 ) : isTasksDone ? (
                     <Button
-                        label="Complete"
+                        label={completeConfirm.label ?? 'Complete'}
                         variant="primary"
-                        title={isRunning ? withLock('Mark this spec complete') : 'Mark this spec complete'}
+                        title={isRunning
+                            ? withLock('Mark this spec complete')
+                            : (completeConfirm.armed ? 'Click again to confirm complete' : 'Mark this spec complete')}
                         disabled={isRunning}
-                        onClick={send({ type: 'completeSpec' })}
+                        onClick={completeConfirm.onClick}
                     />
                 ) : (
                     <>
@@ -145,8 +179,8 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
                             label="Regenerate"
                             variant="secondary"
                             title={regenerateTitle}
-                            disabled={isRunning}
-                            onClick={send({ type: 'regenerate' })}
+                            disabled={isRunning || regenerateToastActive}
+                            onClick={onRegenerateClick}
                         />
                         {ns.footerState?.showApproveButton && (
                             <Button
@@ -160,6 +194,15 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
                     </>
                 )}
             </div>
+            {regenerateToastActive && (
+                <UndoToast
+                    message="Regenerating in 5s…"
+                    countdownMs={5000}
+                    onElapse={regenerateElapse}
+                    onUndo={regenerateUndo}
+                    active={regenerateToastActive}
+                />
+            )}
         </footer>
     );
 }
