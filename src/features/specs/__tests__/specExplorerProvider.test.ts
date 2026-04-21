@@ -520,6 +520,78 @@ describe('SpecExplorerProvider', () => {
         });
     });
 
+    describe('numeric-prefix sorting', () => {
+        it('sorts numeric-prefixed specs by prefix descending, ignoring birthtime', async () => {
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: '067-lock-steps', path: 'specs/067-lock-steps' },
+                { name: '069-reveal-folder', path: 'specs/069-reveal-folder' },
+                { name: '068-collapse-toggle', path: 'specs/068-collapse-toggle' },
+            ]);
+            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
+            (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
+
+            // Deliberately make birthtime orderings contradict the numeric
+            // prefix — simulates git rebase / checkout resetting birthtime.
+            (mockFs.statSync as jest.Mock).mockImplementation((filePath: string) => {
+                if (filePath.includes('067')) {
+                    return { birthtime: new Date('2025-03-01T00:00:00Z'), mtime: new Date(0) };
+                }
+                if (filePath.includes('069')) {
+                    return { birthtime: new Date('2025-01-01T00:00:00Z'), mtime: new Date(0) };
+                }
+                return { birthtime: new Date('2025-02-01T00:00:00Z'), mtime: new Date(0) };
+            });
+
+            const groups = await provider.getChildren();
+            const specs = await provider.getChildren(groups[0]);
+
+            expect(specs.map((s: any) => s.label)).toEqual([
+                '069-reveal-folder',
+                '068-collapse-toggle',
+                '067-lock-steps',
+            ]);
+        });
+
+        it('falls back to birthtime desc for specs without numeric prefix', async () => {
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: 'alpha', path: 'specs/alpha' },
+                { name: 'beta', path: 'specs/beta' },
+            ]);
+            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
+            (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
+
+            (mockFs.statSync as jest.Mock).mockImplementation((filePath: string) => {
+                if (filePath.includes('alpha')) {
+                    return { birthtime: new Date('2025-01-01T00:00:00Z'), mtime: new Date(0) };
+                }
+                return { birthtime: new Date('2025-03-01T00:00:00Z'), mtime: new Date(0) };
+            });
+
+            const groups = await provider.getChildren();
+            const specs = await provider.getChildren(groups[0]);
+
+            expect(specs.map((s: any) => s.label)).toEqual(['beta', 'alpha']);
+        });
+
+        it('numeric-prefixed specs sort before non-numeric-prefixed specs', async () => {
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: 'legacy-spec', path: 'specs/legacy-spec' },
+                { name: '001-first', path: 'specs/001-first' },
+            ]);
+            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
+            (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
+            (mockFs.statSync as jest.Mock).mockReturnValue({
+                birthtime: new Date('2025-01-01T00:00:00Z'),
+                mtime: new Date(0),
+            });
+
+            const groups = await provider.getChildren();
+            const specs = await provider.getChildren(groups[0]);
+
+            expect(specs.map((s: any) => s.label)).toEqual(['001-first', 'legacy-spec']);
+        });
+    });
+
     describe('active specs birthtime sorting', () => {
         it('should sort active specs by birthtime descending (newest first)', async () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([

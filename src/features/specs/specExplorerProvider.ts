@@ -109,8 +109,20 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 }
             }
 
-            // Sort all groups by creation date (newest first)
-            const sortByDateDesc = (a: SpecInfo, b: SpecInfo) => {
+            // Sort: numeric-prefixed specs (e.g. "069-...") by prefix desc —
+            // stable across git operations that rewrite filesystem birthtime.
+            // Specs without a numeric prefix fall back to birthtime desc and
+            // sort after the numeric ones.
+            const extractNumericPrefix = (name: string): number | null => {
+                const match = name.match(/^(\d+)/);
+                return match ? parseInt(match[1], 10) : null;
+            };
+            const sortSpecs = (a: SpecInfo, b: SpecInfo) => {
+                const aNum = extractNumericPrefix(a.name);
+                const bNum = extractNumericPrefix(b.name);
+                if (aNum !== null && bNum !== null) return bNum - aNum;
+                if (aNum !== null) return -1;
+                if (bNum !== null) return 1;
                 try {
                     const aTime = fs.statSync(path.join(basePath, a.path)).birthtime.getTime();
                     const bTime = fs.statSync(path.join(basePath, b.path)).birthtime.getTime();
@@ -119,9 +131,9 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                     return 0;
                 }
             };
-            activeSpecs.sort(sortByDateDesc);
-            completedSpecs.sort(sortByDateDesc);
-            archivedSpecs.sort(sortByDateDesc);
+            activeSpecs.sort(sortSpecs);
+            completedSpecs.sort(sortSpecs);
+            archivedSpecs.sort(sortSpecs);
 
             const items: SpecItem[] = [];
 
