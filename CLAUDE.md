@@ -180,6 +180,7 @@ npm run test:watch    # Watch mode
 - N/A (rendering-only change) (055-fix-bullet-rendering)
 - TypeScript 5.3+ (ES2022, strict) + VS Code Extension API (`@types/vscode ^1.84.0`), Preact (webview) (060-spec-context-tracking)
 - File-based — `.spec-context.json` per spec dir under workspace `.claude/specs/` (060-spec-context-tracking)
+- N/A (filesystem reveal only; no persisted state) (069-reveal-spec-folder)
 
 ## Recent Changes
 - 044-context-driven-badges: Added TypeScript 5.3+ (ES2022 target, strict mode) + VS Code Extension API (`@types/vscode ^1.84.0`)

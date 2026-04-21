@@ -121,6 +121,29 @@ export function registerSpecKitCommands(
         })
     );
 
+    // Reveal a spec's folder in the OS file browser (Finder / Explorer / default FM).
+    // Pre-stats the path so missing folders surface a visible error instead of the
+    // silent no-op `revealFileInOS` produces on some Linux desktops.
+    context.subscriptions.push(
+        vscode.commands.registerCommand('speckit.specs.reveal', async (item: SpecTreeItem) => {
+            const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+            if (!workspaceFolder) return;
+            const relativePath = (item as SpecTreeItem).specPath || `specs/${item.label}`;
+            const uri = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, relativePath));
+            try {
+                await vscode.workspace.fs.stat(uri);
+            } catch {
+                vscode.window.showErrorMessage(`Cannot reveal: ${uri.fsPath} does not exist`);
+                return;
+            }
+            try {
+                await vscode.commands.executeCommand('revealFileInOS', uri);
+            } catch (err: any) {
+                vscode.window.showErrorMessage(err?.message ?? String(err));
+            }
+        })
+    );
+
     // Open source file from sidebar inline action
     context.subscriptions.push(
         vscode.commands.registerCommand('speckit.openSpecSource', async (item: vscode.TreeItem & { fileUri?: vscode.Uri }) => {

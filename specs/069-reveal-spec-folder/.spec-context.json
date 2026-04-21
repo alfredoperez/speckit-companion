@@ -1,0 +1,279 @@
+{
+  "workflow": "speckit",
+  "selectedAt": "2026-04-20T23:17:26Z",
+  "currentStep": "implement",
+  "currentTask": null,
+  "progress": null,
+  "next": "implement",
+  "updated": "2026-04-21T00:20:00.000Z",
+  "status": "completed",
+  "specName": "Reveal Spec Folder",
+  "branch": "069-reveal-spec-folder",
+  "approach": "Register a speckit.specs.reveal command in src/features/specs/specCommands.ts that resolves SpecTreeItem.specPath (fallback specs/<label>) to an absolute Uri, stats the folder, and delegates to VS Code's built-in revealFileInOS command. Contribute the command plus a view/item/context entry gated to view == speckit.views.explorer && viewItem == spec in package.json.",
+  "step_summaries": {
+    "plan": {
+      "approach_summary": "Add speckit.specs.reveal command wired to revealFileInOS via the specs tree context menu, gated to viewItem == spec. Pre-stat the folder so missing-folder cases surface a clear error within 1s (SC-004). No new module, no new setting, no external contract — ~20 LOC + tests in existing files.",
+      "files_planned": 3,
+      "risks": [
+        "Silent no-op on some Linux desktops: revealFileInOS relies on the host; minimal Linux environments without a default file manager may silently do nothing. Mitigation: pre-stat the path so the folder-missing case is always surfaced; accept that truly-no-file-manager systems remain a host-level gap out of our scope.",
+        "Menu label is static ('Reveal in File Explorer') across OSes. Cosmetic only — a future polish could add per-OS title overrides via osx/linux/windows keys in contributes.commands."
+      ]
+    }
+  },
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-04-20T23:17:26Z",
+      "completedAt": "2026-04-21T00:01:25.560Z"
+    },
+    "plan": {
+      "startedAt": "2026-04-21T00:01:25.564Z",
+      "completedAt": "2026-04-21T00:05:00.000Z",
+      "substeps": [
+        {
+          "name": "research",
+          "startedAt": "2026-04-21T00:01:30.000Z",
+          "completedAt": "2026-04-21T00:03:00.000Z"
+        },
+        {
+          "name": "design",
+          "startedAt": "2026-04-21T00:03:00.000Z",
+          "completedAt": "2026-04-21T00:05:00.000Z"
+        }
+      ]
+    },
+    "tasks": {
+      "startedAt": "2026-04-21T00:04:47.921Z",
+      "completedAt": "2026-04-21T00:07:55.859Z",
+      "substeps": [
+        {
+          "name": "generate",
+          "startedAt": "2026-04-21T00:06:00.000Z",
+          "completedAt": "2026-04-21T00:07:00.000Z"
+        }
+      ]
+    },
+    "implement": {
+      "startedAt": "2026-04-21T00:07:55.861Z",
+      "completedAt": "2026-04-21T00:20:00.000Z",
+      "substeps": [
+        {
+          "name": "run-tests",
+          "startedAt": "2026-04-21T00:18:00.000Z",
+          "completedAt": "2026-04-21T00:19:30.000Z"
+        }
+      ]
+    }
+  },
+  "transitions": [
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-20T23:30:23.486Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-20T23:30:23.487Z"
+    },
+    {
+      "step": "plan",
+      "substep": "loading",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-20T23:47:04.100Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "from": {
+        "step": "plan",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-04-20T23:47:04.200Z"
+    },
+    {
+      "step": "plan",
+      "substep": "writing-plan",
+      "from": {
+        "step": "plan",
+        "substep": "research"
+      },
+      "by": "sdd",
+      "at": "2026-04-20T23:47:04.500Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "from": {
+        "step": "plan",
+        "substep": "writing-plan"
+      },
+      "by": "sdd",
+      "at": "2026-04-20T23:47:04.600Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": "design"
+      },
+      "by": "sdd",
+      "at": "2026-04-20T23:47:05.000Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-21T00:01:25.560Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-21T00:01:25.564Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "ai",
+      "at": "2026-04-21T00:01:30.000Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "from": {
+        "step": "plan",
+        "substep": "research"
+      },
+      "by": "ai",
+      "at": "2026-04-21T00:03:00.000Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": "design"
+      },
+      "by": "ai",
+      "at": "2026-04-21T00:05:00.000Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "ai",
+      "at": "2026-04-21T00:05:00.000Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-21T00:04:47.921Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "ai",
+      "at": "2026-04-21T00:06:00.000Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": "generate"
+      },
+      "by": "ai",
+      "at": "2026-04-21T00:07:00.000Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "ai",
+      "at": "2026-04-21T00:07:00.000Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-21T00:07:55.859Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-21T00:07:55.861Z"
+    },
+    {
+      "step": "implement",
+      "substep": "run-tests",
+      "from": {
+        "step": "implement",
+        "substep": null
+      },
+      "by": "ai",
+      "at": "2026-04-21T00:18:00.000Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": "run-tests"
+      },
+      "by": "ai",
+      "at": "2026-04-21T00:20:00.000Z"
+    }
+  ]
+}
