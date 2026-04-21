@@ -224,6 +224,91 @@ describe('bulk status command handlers', () => {
     });
 });
 
+describe('speckit.specs.reveal command handler', () => {
+    const originalWorkspaceFolders = (vscode.workspace as any).workspaceFolders;
+    const mockWindow = vscode.window as jest.Mocked<typeof vscode.window>;
+
+    beforeEach(() => {
+        (vscode.workspace as any).workspaceFolders = [{ uri: { fsPath: '/ws' } }];
+    });
+
+    afterEach(() => {
+        (vscode.workspace as any).workspaceFolders = originalWorkspaceFolders;
+    });
+
+    it('registers speckit.specs.reveal when registerSpecKitCommands runs', () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+
+        expect(handlers.has('speckit.specs.reveal')).toBe(true);
+    });
+
+    it('calls revealFileInOS with absolute folder URI resolved from specPath', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.reveal')!;
+
+        (vscode.workspace.fs.stat as jest.Mock).mockResolvedValueOnce({ type: 2 });
+
+        await handler({ label: 'my-spec', specPath: 'specs/my-spec' });
+
+        const calls = (mockCommands.executeCommand as jest.Mock).mock.calls;
+        const revealCall = calls.find(c => c[0] === 'revealFileInOS');
+        expect(revealCall).toBeDefined();
+        expect(revealCall![1].fsPath).toBe('/ws/specs/my-spec');
+    });
+
+    it('falls back to specs/<label> when specPath is undefined', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.reveal')!;
+
+        (vscode.workspace.fs.stat as jest.Mock).mockResolvedValueOnce({ type: 2 });
+
+        await handler({ label: 'foo' });
+
+        const revealCall = (mockCommands.executeCommand as jest.Mock).mock.calls
+            .find(c => c[0] === 'revealFileInOS');
+        expect(revealCall).toBeDefined();
+        expect(revealCall![1].fsPath).toBe('/ws/specs/foo');
+    });
+
+    it('shows error and does not call revealFileInOS when folder is missing', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.reveal')!;
+
+        (vscode.workspace.fs.stat as jest.Mock).mockRejectedValueOnce(new Error('ENOENT'));
+
+        await handler({ label: 'gone', specPath: 'specs/gone' });
+
+        expect(mockWindow.showErrorMessage).toHaveBeenCalledTimes(1);
+        expect((mockWindow.showErrorMessage as jest.Mock).mock.calls[0][0])
+            .toContain('/ws/specs/gone');
+        expect(mockCommands.executeCommand).not.toHaveBeenCalledWith(
+            'revealFileInOS',
+            expect.anything()
+        );
+    });
+
+    it('no-op when no workspace folder is open', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.reveal')!;
+
+        (vscode.workspace as any).workspaceFolders = undefined;
+        (vscode.workspace.fs.stat as jest.Mock).mockClear();
+
+        await handler({ label: 'anything', specPath: 'specs/anything' });
+
+        expect(vscode.workspace.fs.stat).not.toHaveBeenCalled();
+        expect(mockCommands.executeCommand).not.toHaveBeenCalledWith(
+            'revealFileInOS',
+            expect.anything()
+        );
+    });
+});
+
 describe('speckit.create command handler', () => {
     it('always opens the spec editor without any initialization check', async () => {
         const context = createMockContext();

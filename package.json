@@ -386,6 +386,11 @@
         "title": "Open Source File",
         "category": "SpecKit",
         "icon": "$(go-to-file)"
+      },
+      {
+        "command": "speckit.specs.reveal",
+        "title": "Reveal in File Explorer",
+        "category": "SpecKit"
       }
     ],
     "menus": {
@@ -446,6 +451,11 @@
           "command": "speckit.reactivate",
           "when": "view == speckit.views.explorer && viewItem == spec && !speckit.specs.selection.allActive",
           "group": "7_modification"
+        },
+        {
+          "command": "speckit.specs.reveal",
+          "when": "view == speckit.views.explorer && viewItem == spec",
+          "group": "navigation@99"
         },
         {
           "command": "speckit.steering.refine",
