@@ -1,0 +1,70 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "status": "completed",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "updated": "2026-04-21",
+  "selectedAt": "2026-04-21T23:03:55Z",
+  "specName": "Tree Group Counts",
+  "branch": "chore/expand-sdd-config",
+  "workingBranch": null,
+  "type": "feat",
+  "createdAt": "2026-04-21T23:03:55Z",
+  "approach": "Append ` (N)` to the label passed to each SpecItem group header in specExplorerProvider.ts using the array lengths already computed. In the SpecItem constructor, strip the count suffix before looking up the group icon and tooltip so the existing maps keep working.",
+  "last_action": "Pushed chore/expand-sdd-config and opened PR #101",
+  "checkpointStatus": { "commit": true, "pr": true },
+  "files_modified": [
+    "src/features/specs/specExplorerProvider.ts",
+    "src/features/specs/__tests__/specExplorerProvider.test.ts"
+  ],
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/101",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Changed the three `new SpecItem('Active'|'Completed'|'Archived', ...)` calls in getChildren to include ` (N)` suffixes using the already-computed array lengths.",
+      "files": ["src/features/specs/specExplorerProvider.ts"],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added `const baseLabel = label.split(' (')[0];` in the SpecItem `spec-group` branch and keyed groupIcons/groupTooltips off baseLabel so icon + tooltip lookups still match after the label suffix was added.",
+      "files": ["src/features/specs/specExplorerProvider.ts"],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Updated 8 group-label assertions across getChildren, sorting, and spec-group tests to expect `Active (N)` / `Completed (N)` / `Archived (N)` formats matching each fixture's spec count. All 289 tests pass.",
+      "files": ["src/features/specs/__tests__/specExplorerProvider.test.ts"],
+      "concerns": []
+    }
+  },
+  "decisions": [
+    { "at": "2026-04-21T23:03:55Z", "note": "Fixed .sdd.json pre:code-review hook to use `{ skill: \"/install-local\" }` payload instead of plain string (plain strings go to Agent, not Skill). Added pre:commit shell to unstage package.json/package-lock.json as belt-and-suspenders against install-local version bumps leaking into commits." },
+    { "at": "2026-04-21T23:03:55Z", "note": "Shipped as two commits on existing chore/expand-sdd-config branch: chore(sdd) for .sdd.json fix + feat(specs) for the tree group counts feature. Branch was not main, SDD did not auto-switch." }
+  ],
+  "step_summaries": {
+    "specify": {
+      "complexity": "minimal",
+      "requirements": 5,
+      "scenarios": 3,
+      "key_finding": "Group label is also used as the lookup key for icon and tooltip in the SpecItem constructor — appending ' (N)' requires stripping the suffix before lookup."
+    }
+  },
+  "transitions": [
+    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-21T23:03:55Z" },
+    { "step": "specify", "substep": "exploring", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-04-21T23:03:55Z" },
+    { "step": "specify", "substep": "detecting", "from": { "step": "specify", "substep": "exploring" }, "by": "sdd", "at": "2026-04-21T23:03:55Z" },
+    { "step": "specify", "substep": "writing-spec", "from": { "step": "specify", "substep": "detecting" }, "by": "sdd", "at": "2026-04-21T23:03:55Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "specify", "substep": "writing-spec" }, "by": "sdd", "at": "2026-04-21T23:03:55Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-04-21T23:03:55Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-21T23:03:55Z" },
+    { "step": "implement", "substep": "hooks", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-21T23:03:55Z" },
+    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-04-21T23:03:55Z" },
+    { "step": "implement", "substep": "test-results", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-21T23:03:55Z" },
+    { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "test-results" }, "by": "sdd", "at": "2026-04-21T23:03:55Z" },
+    { "step": "implement", "substep": null, "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-21T23:03:55Z" },
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": null }, "by": "sdd", "at": "2026-04-21T23:03:55Z" }
+  ]
+}

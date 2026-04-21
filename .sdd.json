@@ -4,8 +4,11 @@
   "buildCommand": "npm run compile",
   "testCommand": "npm test",
   "hooks": {
-    "pre:code-review": ["/install-local"],
+    "pre:code-review": [
+      { "skill": "/install-local" }
+    ],
     "pre:commit": [
+      { "shell": "git reset HEAD -- package.json package-lock.json 2>/dev/null || true", "blocking": false },
       { "shell": "npm run compile", "blocking": true }
     ]
   }

@@ -130,7 +130,7 @@ describe('SpecExplorerProvider', () => {
             const children = await provider.getChildren();
 
             expect(children).toHaveLength(1);
-            expect(children[0].label).toBe('Active');
+            expect(children[0].label).toBe('Active (1)');
             expect(children[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.Expanded);
         });
 
@@ -143,7 +143,7 @@ describe('SpecExplorerProvider', () => {
             const children = await provider.getChildren();
 
             expect(children).toHaveLength(1);
-            expect(children[0].label).toBe('Active');
+            expect(children[0].label).toBe('Active (1)');
             expect(children[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.Expanded);
         });
 
@@ -156,7 +156,7 @@ describe('SpecExplorerProvider', () => {
             const children = await provider.getChildren();
 
             expect(children).toHaveLength(1);
-            expect(children[0].label).toBe('Completed');
+            expect(children[0].label).toBe('Completed (1)');
             expect(children[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
         });
 
@@ -169,7 +169,7 @@ describe('SpecExplorerProvider', () => {
             const children = await provider.getChildren();
 
             expect(children).toHaveLength(1);
-            expect(children[0].label).toBe('Archived');
+            expect(children[0].label).toBe('Archived (1)');
             expect(children[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
         });
 
@@ -196,9 +196,9 @@ describe('SpecExplorerProvider', () => {
             const children = await provider.getChildren();
 
             expect(children).toHaveLength(3);
-            expect(children[0].label).toBe('Active');
-            expect(children[1].label).toBe('Completed');
-            expect(children[2].label).toBe('Archived');
+            expect(children[0].label).toBe('Active (1)');
+            expect(children[1].label).toBe('Completed (1)');
+            expect(children[2].label).toBe('Archived (1)');
         });
 
         it('should omit empty groups', async () => {
@@ -210,7 +210,7 @@ describe('SpecExplorerProvider', () => {
             const children = await provider.getChildren();
 
             expect(children).toHaveLength(1);
-            expect(children[0].label).toBe('Completed');
+            expect(children[0].label).toBe('Completed (1)');
             // No Active or Archived groups
         });
     });
@@ -618,7 +618,7 @@ describe('SpecExplorerProvider', () => {
 
             const groups = await provider.getChildren();
             expect(groups).toHaveLength(1);
-            expect(groups[0].label).toBe('Active');
+            expect(groups[0].label).toBe('Active (3)');
 
             const specs = await provider.getChildren(groups[0]);
             expect(specs).toHaveLength(3);
@@ -667,7 +667,7 @@ describe('SpecExplorerProvider', () => {
             });
 
             const groups = await provider.getChildren();
-            expect(groups[0].label).toBe('Completed');
+            expect(groups[0].label).toBe('Completed (2)');
 
             const specs = await provider.getChildren(groups[0]);
             // Completed specs sorted by creation date (newest first)

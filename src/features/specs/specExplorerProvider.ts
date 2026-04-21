@@ -142,7 +142,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             // button only affects spec items, never groups.
             if (activeSpecs.length > 0) {
                 const activeGroup = new SpecItem(
-                    'Active',
+                    `Active (${activeSpecs.length})`,
                     vscode.TreeItemCollapsibleState.Expanded,
                     'spec-group',
                     this.context
@@ -154,7 +154,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
 
             if (completedSpecs.length > 0) {
                 const completedGroup = new SpecItem(
-                    'Completed',
+                    `Completed (${completedSpecs.length})`,
                     vscode.TreeItemCollapsibleState.Collapsed,
                     'spec-group',
                     this.context
@@ -166,7 +166,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
 
             if (archivedSpecs.length > 0) {
                 const archivedGroup = new SpecItem(
-                    'Archived',
+                    `Archived (${archivedSpecs.length})`,
                     vscode.TreeItemCollapsibleState.Collapsed,
                     'spec-group',
                     this.context
@@ -582,8 +582,9 @@ class SpecItem extends vscode.TreeItem {
                 'Completed': 'Completed specs',
                 'Archived': 'Archived specs',
             };
-            this.iconPath = new vscode.ThemeIcon(groupIcons[label] || 'pulse');
-            this.tooltip = groupTooltips[label] || label;
+            const baseLabel = label.split(' (')[0];
+            this.iconPath = new vscode.ThemeIcon(groupIcons[baseLabel] || 'pulse');
+            this.tooltip = groupTooltips[baseLabel] || label;
         } else if (contextValue === 'spec') {
             if (isActive) {
                 this.iconPath = new vscode.ThemeIcon('sync~spin');
