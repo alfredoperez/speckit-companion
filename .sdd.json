@@ -1,5 +1,12 @@
 {
+  "branchStage": "implement",
+  "branchNameFormat": "{type}/{slug}",
+  "buildCommand": "npm run compile",
+  "testCommand": "npm test",
   "hooks": {
-    "pre:code-review": ["/install-local"]
+    "pre:code-review": ["/install-local"],
+    "pre:commit": [
+      { "shell": "npm run compile", "blocking": true }
+    ]
   }
 }
