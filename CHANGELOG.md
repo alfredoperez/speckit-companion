@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.12.0] - 2026-04-20
+
+### New Features
+
+- **Canonical `.spec-context.json`**: `.spec-context.json` is the single source of truth for workflow state, derived by the extension and consumed by the viewer (#83, #84, #86)
+- **Context Preamble for AI Prompts**: AI prompts automatically include a context-update preamble so providers keep `.spec-context.json` in sync through the lifecycle (#85)
+- **Provider Registry & OpenCode Support**: AI providers moved to a registry pattern; OpenCode joins Claude Code, Gemini, Copilot, Codex, and Qwen (#87)
+- **Multi-Select Bulk Status Commands**: Select multiple specs in the tree and change status (archive, complete, reactivate) in one action (#88)
+- **Locked Future Steps**: Workflow tabs lock future steps while a step is running and expose tooltips to explain each action (#90)
+- **Collapse/Expand All**: Spec tree now has a collapse/expand toggle with reduced flicker and tighter sub-file indentation (#95)
+- **Reveal Spec Folder**: New tree context menu to reveal a spec's folder in Finder / Explorer (#98)
+
+### Improvements
+
+- **Step Completion Inference**: Completion is inferred from file state when `stepHistory` is missing, so older specs render correctly (#87, #92)
+- **Cleaner Slash Command Routing**: Preamble is passed via `--append-system-prompt` so slash commands arrive cleanly to the AI CLI (#96)
+- **Hidden Launch Prompts**: Prompt content is dispatched via a temp file to keep the terminal view clean (#82)
+
+### Bug Fixes
+
+- **Numeric Spec Sorting**: Specs sort by numeric prefix so `069` appears above `068` and `067` (#97)
+- **Incomplete Spec-Context Reconciliation**: Viewer now reconciles partial `.spec-context.json` files and keeps lifecycle buttons enabled correctly (#93)
+- **Tab Clicks No Longer Mutate Workflow**: Clicking a step tab in the viewer no longer changes `currentStep` in `.spec-context.json` (#89)
+
 ## [0.11.0] - 2026-04-10
 
 ### New Features
