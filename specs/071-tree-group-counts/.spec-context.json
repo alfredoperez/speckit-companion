@@ -1,6 +1,7 @@
 {
   "workflow": "sdd",
-  "currentStep": "implement",
+  "currentStep": "done",
+  "status": "completed",
   "currentTask": null,
   "progress": null,
   "next": "done",
@@ -63,6 +64,7 @@
     { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-04-21T23:03:55Z" },
     { "step": "implement", "substep": "test-results", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-21T23:03:55Z" },
     { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "test-results" }, "by": "sdd", "at": "2026-04-21T23:03:55Z" },
-    { "step": "implement", "substep": null, "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-21T23:03:55Z" }
+    { "step": "implement", "substep": null, "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-21T23:03:55Z" },
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": null }, "by": "sdd", "at": "2026-04-21T23:03:55Z" }
   ]
 }
