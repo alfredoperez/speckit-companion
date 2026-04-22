@@ -13,10 +13,6 @@ declare const mermaid: {
         startOnLoad: boolean;
         theme: string;
         themeVariables?: Record<string, string>;
-        flowchart?: { useMaxWidth?: boolean };
-        sequence?: { useMaxWidth?: boolean };
-        stateDiagram?: { useMaxWidth?: boolean };
-        class?: { useMaxWidth?: boolean };
     }) => void;
     run: (config: { querySelector: string }) => void;
 };
@@ -100,12 +96,6 @@ export function initializeMermaid(): void {
         mermaid.initialize({
             startOnLoad: false,
             theme: 'base',
-            // Let diagrams render at their natural size; container handles overflow.
-            // Without this, mermaid scales SVGs down to container width, shrinking text.
-            flowchart: { useMaxWidth: false },
-            sequence: { useMaxWidth: false },
-            stateDiagram: { useMaxWidth: false },
-            class: { useMaxWidth: false },
             themeVariables: {
                 // Background colors
                 primaryColor: bgSecondary,
@@ -139,7 +129,7 @@ export function initializeMermaid(): void {
 
                 // Fonts
                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-                fontSize: '16px'
+                fontSize: '18px'
             }
         });
 

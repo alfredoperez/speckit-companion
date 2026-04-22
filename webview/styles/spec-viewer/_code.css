@@ -171,13 +171,17 @@ pre.code-block code.hljs {
 
 .mermaid {
     display: flex;
-    justify-content: flex-start;
+    justify-content: center;
     background: transparent;
     font-family: var(--font-family);
 }
 
 .mermaid svg {
     height: auto;
+    /* Force diagrams to render at a generous minimum width so per-box text
+       has enough pixels to stay legible even for short diagrams. The
+       container's overflow-x: auto handles anything wider than the viewport. */
+    min-width: min(100%, 1100px);
     transform-origin: top left;
 }
 
