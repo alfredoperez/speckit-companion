@@ -12,18 +12,11 @@
     font-size: var(--font-size);
     line-height: var(--leading-loose);
     color: var(--text-body);
+    max-width: 72ch;
+    margin: 0 auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     letter-spacing: -0.01em;
-}
-
-/* Constrain prose children to the readable column; wider blocks
-   (mermaid-container) override this via a more-specific selector
-   in _code.css. */
-#markdown-content > * {
-    max-width: clamp(72ch, 70%, 100ch);
-    margin-left: auto;
-    margin-right: auto;
 }
 
 /* ============================================
