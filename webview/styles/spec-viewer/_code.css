@@ -171,7 +171,7 @@ pre.code-block code.hljs {
 
 .mermaid {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     background: transparent;
     font-family: var(--font-family);
 }

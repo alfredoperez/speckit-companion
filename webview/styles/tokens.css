@@ -82,8 +82,8 @@
     --text-body: #d0d0d0;
 
     /* Semantic header colors - mapped to VS Code theme variables */
-    --header-title: var(--vscode-textLink-foreground, #3794ff);
-    --header-section: var(--vscode-symbolIcon-classForeground, #ee9d28);
+    --header-title: var(--vscode-foreground, #e4e4e4);
+    --header-section: var(--vscode-foreground, #e4e4e4);
     --header-subsection: var(--vscode-descriptionForeground, #858585);
 
     /* Code block backgrounds */
