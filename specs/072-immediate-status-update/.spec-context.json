@@ -1,0 +1,93 @@
+{
+  "workflow": "sdd",
+  "currentStep": "implement",
+  "currentTask": null,
+  "progress": "code-review",
+  "next": "implement",
+  "updated": "2026-04-22",
+  "selectedAt": "2026-04-22T14:55:12Z",
+  "specName": "Immediate Status Update",
+  "branch": "main",
+  "workingBranch": "feat/immediate-status-update",
+  "type": "feat",
+  "createdAt": "2026-04-22T14:55:12Z",
+  "approach": "Mirror handleLifecycleAction pattern — call deps.updateContent in handleApprove/handleRegenerate after context writes, before terminal dispatch. Harden STATUS_LIFECYCLE preamble with a prescriptive MUST-DO-BEFORE-ENDING checklist that forces the AI to set completedAt, flip status to completed form, and print Done {step}.",
+  "last_action": "T003 complete — promptBuilder renderPreamble now emits a MUST-DO-BEFORE-ENDING block with the completed-form status and Done-phrase baked in per step.",
+  "step_summaries": {
+    "specify": {
+      "complexity": "minimal",
+      "requirements": 4,
+      "scenarios": 4,
+      "key_finding": "handleLifecycleAction at messageHandlers.ts:312 already calls deps.updateContent after setStatus/reactivate — handleApprove/handleRegenerate can reuse that exact pattern."
+    },
+    "tasks": {
+      "taskCount": 3,
+      "files_touched": 2,
+      "key_finding": "Plan restricts scope to two files (messageHandlers.ts, promptBuilder.ts); T001+T002 reuse handleLifecycleAction's updateContent pattern, T003 hardens STATUS_LIFECYCLE preamble."
+    }
+  },
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added deps.updateContent() in handleApprove in both navigable-next and actionOnly-implement branches, after startStep and before executeStepInTerminal.",
+      "files": ["src/features/spec-viewer/messageHandlers.ts"],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added deps.updateContent() in handleRegenerate after startStep and before executeStepInTerminal.",
+      "files": ["src/features/spec-viewer/messageHandlers.ts"],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Rewrote renderPreamble to emit a MUST-DO-BEFORE-ENDING block with three required actions — set completedAt, flip status to the per-step completed form, print the per-step Done phrase. Added COMPLETED_STATUS_BY_STEP and DONE_PHRASE_BY_STEP maps keyed by PromptStep.",
+      "files": ["src/ai-providers/promptBuilder.ts"],
+      "concerns": [
+        "PromptStep is narrower than StepName — it only covers specify/plan/tasks/implement (the keys of CANONICAL_SUBSTEPS). 'clarify' and 'analyze' lifecycle steps go through the untouched command path (isKnownStep returns false) and fall back to the raw command with no preamble. This matches pre-existing behavior, but means the new hard requirement does not apply to those two steps."
+      ]
+    }
+  },
+  "files_modified": [
+    "src/features/spec-viewer/messageHandlers.ts",
+    "src/ai-providers/promptBuilder.ts"
+  ],
+  "decisions": [
+    "Added per-step completed-status and Done-phrase maps in promptBuilder.ts rather than parsing STATUS_LIFECYCLE at runtime — keeps the prescriptive block per-step concrete (e.g., 'flip status to \"planned\"' instead of 'flip status to the completed form') so the AI cannot misread the rule."
+  ],
+  "concerns": [
+    {
+      "task": "T003",
+      "note": "Preamble hard requirement only fires for PromptStep keys (specify/plan/tasks/implement). Lifecycle steps 'clarify' and 'analyze' bypass the preamble entirely because isKnownStep returns false — pre-existing behavior, out of scope for this spec but worth flagging for a future pass."
+    }
+  ],
+  "transitions": [
+    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-22T14:55:12Z" },
+    { "step": "specify", "substep": "exploring", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-04-22T14:55:30Z" },
+    { "step": "specify", "substep": "detecting", "from": { "step": "specify", "substep": "exploring" }, "by": "sdd", "at": "2026-04-22T14:56:00Z" },
+    { "step": "specify", "substep": "writing-spec", "from": { "step": "specify", "substep": "detecting" }, "by": "sdd", "at": "2026-04-22T14:56:15Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "specify", "substep": "writing-spec" }, "by": "sdd", "at": "2026-04-22T14:57:00Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "tasks", "substep": null }, "by": "extension", "at": "2026-04-22T15:12:13.973Z" },
+    { "step": "tasks", "substep": "generate", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-04-22T15:20:00Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "tasks", "substep": "generate" }, "by": "sdd", "at": "2026-04-22T15:21:30Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-04-22T15:22:00Z" },
+    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-22T15:30:00Z" }
+  ],
+  "status": "implementing",
+  "stepHistory": {
+    "tasks": {
+      "startedAt": "2026-04-22T15:12:13.973Z",
+      "completedAt": "2026-04-22T15:21:30Z",
+      "substeps": {
+        "generate": {
+          "startedAt": "2026-04-22T15:20:00Z",
+          "completedAt": "2026-04-22T15:21:30Z"
+        }
+      }
+    },
+    "implement": {
+      "startedAt": "2026-04-22T15:22:00Z",
+      "completedAt": null
+    }
+  }
+}

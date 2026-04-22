@@ -220,6 +220,7 @@ async function handleRegenerate(
         if (isLifecycleStep(docType)) {
             await startStep(specDirectory, docType as StepName, 'extension');
         }
+        await deps.updateContent(specDirectory, instance.state.currentDocument);
         await executeStepInTerminal(currentStep, specDirectory, deps);
     }
 }
@@ -273,6 +274,7 @@ async function handleApprove(
         if (isLifecycleStep(nextStep.name)) {
             await startStep(specDirectory, nextStep.name as StepName, 'extension');
         }
+        await deps.updateContent(specDirectory, instance.state.currentDocument);
         await executeStepInTerminal(nextStep, specDirectory, deps);
     } else if (currentIndex === navSteps.length - 1) {
         // Last navigable step: find the actionOnly implement step
@@ -281,6 +283,7 @@ async function handleApprove(
             if (isLifecycleStep(implementStep.name)) {
                 await startStep(specDirectory, implementStep.name as StepName, 'extension');
             }
+            await deps.updateContent(specDirectory, instance.state.currentDocument);
             await executeStepInTerminal(implementStep, specDirectory, deps);
         }
     }

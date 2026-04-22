@@ -33,9 +33,25 @@ const STATUS_LIFECYCLE = [
     'Always set stepHistory.<step>.completedAt before advancing currentStep to the next step.',
 ].join('\n');
 
+const COMPLETED_STATUS_BY_STEP: Record<PromptStep, string> = {
+    specify: 'specified',
+    plan: 'planned',
+    tasks: 'ready-to-implement',
+    implement: 'completed',
+};
+
+const DONE_PHRASE_BY_STEP: Record<PromptStep, string> = {
+    specify: 'Done specifying',
+    plan: 'Done planning',
+    tasks: 'Done creating tasks',
+    implement: 'Done implementing',
+};
+
 function renderPreamble(step: PromptStep, specDir: string): string {
     const substeps = CANONICAL_SUBSTEPS[step].join(', ');
     const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
+    const completedStatus = COMPLETED_STATUS_BY_STEP[step];
+    const donePhrase = DONE_PHRASE_BY_STEP[step];
     return [
         MARKER_OPEN,
         `Before and after this step runs, update ${target}:`,
@@ -47,6 +63,12 @@ function renderPreamble(step: PromptStep, specDir: string): string {
         `2. Post-step: set stepHistory.${step}.completedAt = now, set the matching completed status, append a closing transition, and advance currentStep.`,
         '',
         `Canonical substeps for ${step}: ${substeps}. Record each with its own startedAt/completedAt inside stepHistory.${step}.substeps[] and emit a transition with non-null substep.`,
+        '',
+        `MUST DO BEFORE ENDING THIS COMMAND — all three are required, do not skip any:`,
+        `  (a) Write stepHistory.${step}.completedAt = now to ${target}.`,
+        `  (b) Flip status from its in-progress form to "${completedStatus}" (the completed form for ${step}). Do not leave status stuck on the in-progress form.`,
+        `  (c) Print a single visible line "${donePhrase}" as the final terminal output.`,
+        `If you end the command without doing all three, the downstream viewer will hang on the in-progress badge. This is a hard requirement, not a suggestion.`,
         '',
         'Invariants: preserve unknown fields; transitions is append-only.',
         MARKER_CLOSE,
