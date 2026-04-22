@@ -21,23 +21,31 @@ export function SpecHeader() {
 
     return (
         <div class="spec-header" data-has-context={String(hasContext)}>
-            {badgeText && <span class="spec-badge">{badgeText}</span>}
-            {ns.specContextName && (
-                <span class="spec-header-title">
-                    <span class="spec-header-doctype">{docTypeLabel}:</span>{' '}
-                    {ns.specContextName}
-                </span>
+            {(badgeText || ns.branch) && (
+                <div class="spec-header-badges">
+                    {badgeText && <span class="spec-badge">{badgeText}</span>}
+                    {ns.branch && (
+                        <span class="spec-header-branch">
+                            <span class="branch-icon">{''}</span> {ns.branch}
+                        </span>
+                    )}
+                </div>
             )}
-            {ns.branch && (
-                <span class="spec-header-branch">
-                    <span class="branch-icon">{''}</span> {ns.branch}
-                </span>
-            )}
-            {ns.createdDate && (
-                <span class="spec-date">
-                    <span class="meta-label">Created:</span>{' '}
-                    <span class="meta-date">{ns.createdDate}</span>
-                </span>
+            {(ns.specContextName || ns.createdDate) && (
+                <div class="spec-header-main">
+                    {ns.specContextName && (
+                        <span class="spec-header-title">
+                            <span class="spec-header-doctype">{docTypeLabel}:</span>{' '}
+                            {ns.specContextName}
+                        </span>
+                    )}
+                    {ns.createdDate && (
+                        <span class="spec-date">
+                            <span class="meta-label">Created:</span>{' '}
+                            <span class="meta-date">{ns.createdDate}</span>
+                        </span>
+                    )}
+                </div>
             )}
         </div>
     );

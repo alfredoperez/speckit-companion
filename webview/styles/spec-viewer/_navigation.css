@@ -91,6 +91,12 @@
 }
 
 /* Highlight the currently viewed step tab (canonical: current) */
+.step-tab.current {
+    outline: 1px solid var(--accent, #4a9eff);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
 .step-tab.current .step-label {
     color: var(--accent);
     font-weight: 700;

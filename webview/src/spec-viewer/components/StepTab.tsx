@@ -57,21 +57,22 @@ export function StepTab(props: StepTabProps) {
     const vsSubstep = vs?.activeSubstep?.step === stepName ? vs.activeSubstep.name : null;
 
     // Collapse to four canonical states (R007, R008).
-    // Precedence: locked > in-flight > current > done; default = untouched.
+    // Precedence: locked > in-flight > done > current; default = untouched.
     let canonicalState: 'current' | 'done' | 'in-flight' | 'locked' | null = null;
     if (isLocked) {
         canonicalState = 'locked';
     } else if (isWorking || inProgress) {
         canonicalState = 'in-flight';
-    } else if (isViewing) {
-        canonicalState = 'current';
     } else if (stepDocExists || vsCompleted) {
         canonicalState = 'done';
+    } else if (isViewing) {
+        canonicalState = 'current';
     }
 
     const classes = [
         'step-tab',
         canonicalState,
+        canonicalState !== 'current' && isViewing && 'current',
         isStale && 'stale',
     ].filter(Boolean).join(' ');
 
