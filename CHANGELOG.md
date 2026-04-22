@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.12.1] - 2026-04-22
+
+### New Features
+
+- **Two-Row Viewer Header**: Spec viewer header now renders in two rows — status/branch badges above the title — instead of a single cramped flex row; the redundant `spec.md` / `plan.md` / `tasks.md` pill under the divider is gone (#119)
+- **Tree Group Counts**: Spec tree group headers now display the count of specs in each group (#101)
+- **Live Viewer Repaint**: Viewer repaints automatically on approve/regenerate and forces an AI completion marker for snappier feedback (#117)
+- **Unified Webview Tokens + Undo Safety**: Webview design tokens unified, assets bundled, and undo safety added for editor actions (d902ad4)
+
+### Improvements
+
+- **Quieter Viewer Colors + Larger Mermaid**: Title/heading colors softened, and flowchart/sequence mermaid diagrams render at natural width with larger text instead of shrinking to the container (#118)
+- **SDD Branch Auto-Creation**: `.sdd.json` now supports a `branchStage` + `branchNameFormat` to auto-create feature branches at specify or implement (#100)
+
+### Bug Fixes
+
+- **Viewed-Step Checkmark Preserved**: Clicking a completed step tab no longer hides its ✓; the accent outline marker around the currently viewed tab has been restored (#119)
+
 ## [0.12.0] - 2026-04-20
 
 ### New Features
