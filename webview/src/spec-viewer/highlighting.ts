@@ -13,6 +13,8 @@ declare const mermaid: {
         startOnLoad: boolean;
         theme: string;
         themeVariables?: Record<string, string>;
+        flowchart?: { useMaxWidth?: boolean };
+        sequence?: { useMaxWidth?: boolean };
     }) => void;
     run: (config: { querySelector: string }) => void;
 };
@@ -96,6 +98,12 @@ export function initializeMermaid(): void {
         mermaid.initialize({
             startOnLoad: false,
             theme: 'base',
+            // Disable max-width for flowchart + sequence so they render at natural
+            // width rather than being scaled down to the container (which shrinks
+            // per-box text). State / class diagrams keep defaults so we don't risk
+            // affecting mermaid's parser for those types.
+            flowchart: { useMaxWidth: false },
+            sequence: { useMaxWidth: false },
             themeVariables: {
                 // Background colors
                 primaryColor: bgSecondary,
@@ -129,16 +137,42 @@ export function initializeMermaid(): void {
 
                 // Fonts
                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-                fontSize: '14px'
+                fontSize: '18px'
             }
         });
 
         mermaid.run({ querySelector: '.mermaid' });
-        // Add zoom controls after mermaid renders (use setTimeout to wait for DOM update)
-        setTimeout(() => addMermaidZoomControls(), 100);
+        // Classify + add zoom controls after mermaid renders
+        // (use setTimeout to wait for DOM update)
+        setTimeout(() => {
+            classifyMermaidSize();
+            addMermaidZoomControls();
+        }, 100);
     } catch (e) {
         console.warn('[SpecViewer] Failed to initialize mermaid:', e);
     }
+}
+
+/**
+ * Tag each .mermaid-container as `.mermaid-wide` when the rendered SVG's
+ * intrinsic viewBox width crosses a threshold — only those get the break-out
+ * CSS width. Narrow diagrams (small state machines, short flowcharts) stay
+ * inside the 72ch prose column at their natural size instead of getting
+ * absurdly stretched.
+ */
+const WIDE_VIEWBOX_THRESHOLD = 900;
+function classifyMermaidSize(): void {
+    document.querySelectorAll('.mermaid-container').forEach(container => {
+        const svg = container.querySelector('.mermaid svg') as SVGSVGElement | null;
+        if (!svg) return;
+        const viewBox = svg.viewBox?.baseVal;
+        if (!viewBox) return;
+        if (viewBox.width >= WIDE_VIEWBOX_THRESHOLD) {
+            container.classList.add('mermaid-wide');
+        } else {
+            container.classList.remove('mermaid-wide');
+        }
+    });
 }
 
 /**
