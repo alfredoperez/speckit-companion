@@ -1,0 +1,64 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "updated": "2026-04-22",
+  "selectedAt": "2026-04-22T18:32:27Z",
+  "specName": "Viewer Header Layout",
+  "branch": "main",
+  "workingBranch": "feat/viewer-header-layout",
+  "status": "completed",
+  "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/119",
+  "prNumber": 119,
+  "type": "feat",
+  "createdAt": "2026-04-22T18:32:27Z",
+  "approach": "Two-row header: wrap badges + title in sibling divs; switch .spec-header to flex column. Suppress file-name pill by dropping Plan/Spec capture in preprocessors.ts. Also restore step-tab current outline and keep the done ✓ when a completed step is being viewed (bundled fix for pre-existing regression from PR #118).",
+  "step_summaries": {
+    "specify": {
+      "complexity": "minimal",
+      "requirements": 8,
+      "scenarios": 5,
+      "key_finding": "spec-viewer header is a single flex-wrap row in _content.css:197 and SpecHeader.tsx, and the `spec.md` pill comes from preprocessSpecMetadata capturing **Plan**/**Spec** links in preprocessors.ts. StepTab.tsx had current override done precedence and PR #118 removed the .current outline."
+    }
+  },
+  "task_summaries": {
+    "T001": { "status": "DONE", "did": "Wrapped spec-badge + spec-header-branch in .spec-header-badges and spec-header-title + spec-date in .spec-header-main; preserved outer .spec-header div, data-has-context, and empty-state return.", "files": ["webview/src/spec-viewer/components/SpecHeader.tsx"], "concerns": [] },
+    "T002": { "status": "DONE", "did": "Switched .spec-header to flex-direction column with gap var(--space-2); added .spec-header-badges and .spec-header-main rules.", "files": ["webview/styles/spec-viewer/_content.css"], "concerns": [] },
+    "T003": { "status": "DONE", "did": "Removed fileLinks/fileLinkHtml from preprocessSpecMetadata so the file-name pill no longer renders. 289 tests pass.", "files": ["webview/src/spec-viewer/markdown/preprocessors.ts"], "concerns": [] },
+    "T004": { "status": "DONE", "did": "User approved header layout at CP1.", "files": [], "concerns": [] },
+    "T005": { "status": "DONE", "did": "Reordered canonicalState precedence to locked > in-flight > done > current and added orthogonal current class when viewing. 289 tests pass.", "files": ["webview/src/spec-viewer/components/StepTab.tsx"], "concerns": [] },
+    "T006": { "status": "DONE", "did": "Restored .step-tab.current outline rule removed in PR #118.", "files": ["webview/styles/spec-viewer/_navigation.css"], "concerns": [] }
+  },
+  "files_modified": [
+    "webview/src/spec-viewer/components/SpecHeader.tsx",
+    "webview/styles/spec-viewer/_content.css",
+    "webview/src/spec-viewer/markdown/preprocessors.ts",
+    "webview/src/spec-viewer/components/StepTab.tsx",
+    "webview/styles/spec-viewer/_navigation.css"
+  ],
+  "decisions": [
+    { "note": "Bundled stepper current-indicator fix (R007, R008) into 073 after user flagged regression at CP3. Kept current class as orthogonal viewing marker rather than introducing a new `.viewing` class — minimal diff.", "at": "2026-04-22T18:40:00Z" }
+  ],
+  "concerns": [],
+  "last_action": "PR #119 opened — feat(spec-viewer): split header rows, hide file pill, restore current-step outline",
+  "transitions": [
+    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-22T18:32:27Z" },
+    { "step": "specify", "substep": "exploring", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-04-22T18:32:30Z" },
+    { "step": "specify", "substep": "detecting", "from": { "step": "specify", "substep": "exploring" }, "by": "sdd", "at": "2026-04-22T18:32:33Z" },
+    { "step": "specify", "substep": "writing-spec", "from": { "step": "specify", "substep": "detecting" }, "by": "sdd", "at": "2026-04-22T18:32:36Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "specify", "substep": "writing-spec" }, "by": "sdd", "at": "2026-04-22T18:32:42Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-04-22T18:33:10Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-22T18:34:20Z", "note": "T001-T003 parallel group complete" },
+    { "step": "implement", "substep": "hooks", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-22T18:34:50Z" },
+    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-04-22T18:35:30Z" },
+    { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-22T18:36:00Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-22T18:40:30Z", "note": "Reopened for T005-T006 bundled fix" },
+    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-22T18:41:00Z" },
+    { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-22T18:42:00Z" },
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-22T18:43:00Z" },
+    { "step": "done", "substep": null, "from": { "step": "done", "substep": null }, "by": "sdd", "at": "2026-04-22T18:45:00Z", "note": "PR #119 opened" }
+  ]
+}

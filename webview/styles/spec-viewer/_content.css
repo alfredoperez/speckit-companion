@@ -198,11 +198,25 @@ body[data-spec-status="archived"] .meta-status-draft {
     max-width: 72ch;
     margin: 0 auto var(--space-4);
     display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--border);
+}
+
+.spec-header-badges {
+    display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-3);
-    padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--border);
+}
+
+.spec-header-main {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-3);
 }
 
 .spec-header-title {

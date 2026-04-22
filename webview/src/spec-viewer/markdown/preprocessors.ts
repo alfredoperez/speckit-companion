@@ -27,7 +27,6 @@ export function preprocessSpecMetadata(markdown: string, stripForContext = false
     // Parse individual metadata items - captures **Label** or **Label:** then the value
     // Also handles pipe-separated fields like: **Plan**: value | **Date**: value
     const items: { label: string; value: string }[] = [];
-    const fileLinks: string[] = [];
     const itemPattern = /\*\*([^*]+)\*\*:?\s*(.+?)(?=\s*\|\s*\*\*|\n\*\*|\n\n|$)/g;
     let itemMatch;
 
@@ -42,20 +41,15 @@ export function preprocessSpecMetadata(markdown: string, stripForContext = false
         value = value.replace(/`([^`]+)`/g, '$1');
 
         // Only include recognized metadata fields
-        const recognizedFields = ['Feature Branch', 'Status', 'Input', 'Version', 'Author', 'Plan', 'Spec', 'Slug'];
+        const recognizedFields = ['Feature Branch', 'Status', 'Input', 'Version', 'Author', 'Slug'];
         if (!recognizedFields.includes(label)) continue;
 
-        // Collect Plan/Spec links for file link below title
-        if (label === 'Plan' || label === 'Spec') {
-            fileLinks.push(value);
-            continue;
-        }
         if (label === 'Slug') continue;
 
         items.push({ label, value });
     }
 
-    if (items.length === 0 && fileLinks.length === 0) return markdown;
+    if (items.length === 0) return markdown;
 
     // Build compact metadata HTML
     const metadataHtml = items.map(item => {
@@ -72,18 +66,9 @@ export function preprocessSpecMetadata(markdown: string, stripForContext = false
         return `<span class="meta-item"><span class="meta-label">${item.label}:</span> ${item.value}</span>`;
     }).join('');
 
-    // Build file link HTML (shown below title)
-    const fileLinkHtml = fileLinks.length > 0
-        ? `<div class="spec-file-link">${fileLinks.map(link => {
-            const mdLink = link.match(/\[([^\]]+)\]\(([^)]+)\)/);
-            if (mdLink) return `<a href="${mdLink[2]}" class="spec-file-ref" data-file-ref="${mdLink[1]}">${mdLink[1]}</a>`;
-            return `<span class="spec-file-ref">${link}</span>`;
-        }).join(' · ')}</div>\n`
-        : '';
-
-    // Place metadata ABOVE the title, file link BELOW
+    // Place metadata ABOVE the title
     const metaBar = items.length > 0 ? `<div class="spec-meta">${metadataHtml}</div>\n\n` : '';
-    const replacement = `${metaBar}${title}${fileLinkHtml}\n`;
+    const replacement = `${metaBar}${title}\n`;
 
     return markdown.replace(metadataPattern, replacement);
 }
