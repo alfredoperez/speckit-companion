@@ -1,9 +1,9 @@
 {
   "workflow": "sdd",
-  "currentStep": "implement",
+  "currentStep": "done",
   "currentTask": null,
-  "progress": "code-review",
-  "next": "implement",
+  "progress": null,
+  "next": "done",
   "updated": "2026-04-22",
   "selectedAt": "2026-04-22T14:55:12Z",
   "specName": "Immediate Status Update",
@@ -12,7 +12,9 @@
   "type": "feat",
   "createdAt": "2026-04-22T14:55:12Z",
   "approach": "Mirror handleLifecycleAction pattern — call deps.updateContent in handleApprove/handleRegenerate after context writes, before terminal dispatch. Harden STATUS_LIFECYCLE preamble with a prescriptive MUST-DO-BEFORE-ENDING checklist that forces the AI to set completedAt, flip status to completed form, and print Done {step}.",
-  "last_action": "T003 complete — promptBuilder renderPreamble now emits a MUST-DO-BEFORE-ENDING block with the completed-form status and Done-phrase baked in per step.",
+  "last_action": "PR #117 opened — feat(spec-viewer): repaint viewer on approve/regenerate and force AI completion marker.",
+  "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/117",
   "step_summaries": {
     "specify": {
       "complexity": "minimal",
@@ -24,6 +26,12 @@
       "taskCount": 3,
       "files_touched": 2,
       "key_finding": "Plan restricts scope to two files (messageHandlers.ts, promptBuilder.ts); T001+T002 reuse handleLifecycleAction's updateContent pattern, T003 hardens STATUS_LIFECYCLE preamble."
+    },
+    "implement": {
+      "tasksCompleted": 3,
+      "filesChanged": 2,
+      "prNumber": 117,
+      "key_finding": "Clean compile, clean commit on feat/immediate-status-update. Version bump from /install-local (0.12.0 → 0.12.1) was un-staged by pre:commit hook and kept out of the PR per project convention."
     }
   },
   "task_summaries": {
@@ -71,9 +79,12 @@
     { "step": "tasks", "substep": "generate", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-04-22T15:20:00Z" },
     { "step": "tasks", "substep": null, "from": { "step": "tasks", "substep": "generate" }, "by": "sdd", "at": "2026-04-22T15:21:30Z" },
     { "step": "implement", "substep": "phase1", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-04-22T15:22:00Z" },
-    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-22T15:30:00Z" }
+    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-22T15:30:00Z" },
+    { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-22T15:35:00Z" },
+    { "step": "implement", "substep": "commit", "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-22T15:36:00Z" },
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "commit" }, "by": "sdd", "at": "2026-04-22T15:37:00Z" }
   ],
-  "status": "implementing",
+  "status": "completed",
   "stepHistory": {
     "tasks": {
       "startedAt": "2026-04-22T15:12:13.973Z",
@@ -87,7 +98,7 @@
     },
     "implement": {
       "startedAt": "2026-04-22T15:22:00Z",
-      "completedAt": null
+      "completedAt": "2026-04-22T15:37:00Z"
     }
   }
 }
