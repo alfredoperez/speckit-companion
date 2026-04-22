@@ -11,6 +11,8 @@
   "workingBranch": "feat/viewer-header-layout",
   "status": "completed",
   "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/119",
+  "prNumber": 119,
   "type": "feat",
   "createdAt": "2026-04-22T18:32:27Z",
   "approach": "Two-row header: wrap badges + title in sibling divs; switch .spec-header to flex column. Suppress file-name pill by dropping Plan/Spec capture in preprocessors.ts. Also restore step-tab current outline and keep the done ✓ when a completed step is being viewed (bundled fix for pre-existing regression from PR #118).",
@@ -41,7 +43,7 @@
     { "note": "Bundled stepper current-indicator fix (R007, R008) into 073 after user flagged regression at CP3. Kept current class as orthogonal viewing marker rather than introducing a new `.viewing` class — minimal diff.", "at": "2026-04-22T18:40:00Z" }
   ],
   "concerns": [],
-  "last_action": "CP3 approved — commit staged",
+  "last_action": "PR #119 opened — feat(spec-viewer): split header rows, hide file pill, restore current-step outline",
   "transitions": [
     { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-22T18:32:27Z" },
     { "step": "specify", "substep": "exploring", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-04-22T18:32:30Z" },
@@ -56,6 +58,7 @@
     { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-22T18:40:30Z", "note": "Reopened for T005-T006 bundled fix" },
     { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-22T18:41:00Z" },
     { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-22T18:42:00Z" },
-    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-22T18:43:00Z" }
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-22T18:43:00Z" },
+    { "step": "done", "substep": null, "from": { "step": "done", "substep": null }, "by": "sdd", "at": "2026-04-22T18:45:00Z", "note": "PR #119 opened" }
   ]
 }
