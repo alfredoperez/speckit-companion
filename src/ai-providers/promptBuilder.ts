@@ -33,9 +33,25 @@ const STATUS_LIFECYCLE = [
     'Always set stepHistory.<step>.completedAt before advancing currentStep to the next step.',
 ].join('\n');
 
+const COMPLETED_STATUS_BY_STEP: Record<PromptStep, string> = {
+    specify: 'specified',
+    plan: 'planned',
+    tasks: 'ready-to-implement',
+    implement: 'completed',
+};
+
+const DONE_PHRASE_BY_STEP: Record<PromptStep, string> = {
+    specify: 'Done specifying',
+    plan: 'Done planning',
+    tasks: 'Done creating tasks',
+    implement: 'Done implementing',
+};
+
 function renderPreamble(step: PromptStep, specDir: string): string {
     const substeps = CANONICAL_SUBSTEPS[step].join(', ');
     const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
+    const completedStatus = COMPLETED_STATUS_BY_STEP[step];
+    const donePhrase = DONE_PHRASE_BY_STEP[step];
     return [
         MARKER_OPEN,
         `Before and after this step runs, update ${target}:`,
@@ -44,9 +60,14 @@ function renderPreamble(step: PromptStep, specDir: string): string {
         '',
         `1. Pre-step: set stepHistory.${step}.startedAt = now, currentStep = "${step}", and set the matching in-progress status. Append a transition { step: "${step}", substep: null, from, by: "ai", at: now }.`,
         `1.5. When advancing from a previous step: set stepHistory.<previousStep>.completedAt = now (if not already set) and its completed status before writing the new step.`,
-        `2. Post-step: set stepHistory.${step}.completedAt = now, set the matching completed status, append a closing transition, and advance currentStep.`,
         '',
         `Canonical substeps for ${step}: ${substeps}. Record each with its own startedAt/completedAt inside stepHistory.${step}.substeps[] and emit a transition with non-null substep.`,
+        '',
+        `MUST DO BEFORE ENDING — all three required:`,
+        `  (a) Set stepHistory.${step}.completedAt = now.`,
+        `  (b) Flip status to "${completedStatus}".`,
+        `  (c) Print "${donePhrase}" as the final terminal line.`,
+        `Skipping any leaves the viewer badge stuck on the in-progress form.`,
         '',
         'Invariants: preserve unknown fields; transitions is append-only.',
         MARKER_CLOSE,
