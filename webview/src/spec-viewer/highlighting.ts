@@ -13,6 +13,8 @@ declare const mermaid: {
         startOnLoad: boolean;
         theme: string;
         themeVariables?: Record<string, string>;
+        flowchart?: { useMaxWidth?: boolean };
+        sequence?: { useMaxWidth?: boolean };
     }) => void;
     run: (config: { querySelector: string }) => void;
 };
@@ -96,6 +98,12 @@ export function initializeMermaid(): void {
         mermaid.initialize({
             startOnLoad: false,
             theme: 'base',
+            // Disable max-width for flowchart + sequence so they render at natural
+            // width rather than being scaled down to the container (which shrinks
+            // per-box text). State / class diagrams keep defaults so we don't risk
+            // affecting mermaid's parser for those types.
+            flowchart: { useMaxWidth: false },
+            sequence: { useMaxWidth: false },
             themeVariables: {
                 // Background colors
                 primaryColor: bgSecondary,
