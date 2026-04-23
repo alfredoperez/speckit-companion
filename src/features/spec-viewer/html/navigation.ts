@@ -4,8 +4,6 @@
  */
 
 import { SpecDocument, DocumentType, StalenessMap } from '../types';
-import { isStepCompleted } from '../stateDerivation';
-import { StepName } from '../../../core/types/specContext';
 
 /**
  * Generate the unified navigation bar (merged tabs + stepper)
@@ -18,13 +16,22 @@ export function generateCompactNav(
     isViewingRelatedDoc: boolean,
     taskCompletionPercent: number,
     stalenessMap?: StalenessMap,
-    activeStep?: string | null,
     stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>
 ): string {
     // Unified step-tabs: each core doc is a tab with canonical state (R007, R008)
-    const runningStepIndex = activeStep
-        ? coreDocs.findIndex(d => d.type === activeStep)
-        : -1;
+    // Running step is derived from stepHistory (entry with startedAt and no
+    // completedAt) so this mirrors the webview's NavigationBar derivation.
+    const runningStepIndex = (() => {
+        if (!stepHistory) return -1;
+        for (const [stepKey, entry] of Object.entries(stepHistory)) {
+            if (entry?.startedAt && !entry?.completedAt) {
+                const idx = coreDocs.findIndex(d => d.type === stepKey);
+                if (idx >= 0) return idx;
+            }
+        }
+        return -1;
+    })();
+    const runningStepKey = runningStepIndex >= 0 ? coreDocs[runningStepIndex].type : null;
 
     const stepTabsHtml = coreDocs.map((doc, i) => {
         const phase = doc.type;
@@ -37,8 +44,7 @@ export function generateCompactNav(
 
         const isStale = stalenessMap?.[phase]?.isStale ?? false;
 
-        const isWorking = activeStep === phase &&
-            !(stepHistory && activeStep && isStepCompleted(phase as StepName, activeStep as StepName, stepHistory));
+        const isWorking = runningStepKey === phase;
 
         const isLocked = runningStepIndex >= 0
             && i > runningStepIndex
@@ -69,6 +75,9 @@ export function generateCompactNav(
             ? `${taskCompletionPercent}%`
             : (canonicalState === 'done' ? '✓' : '');
         const staleBadge = isStale ? '<span class="stale-badge">!</span>' : '';
+        const elapsedPlaceholder = canonicalState === 'in-flight' && !inProgress
+            ? '<span class="step-tab__elapsed"></span>'
+            : '';
 
         const connector = i < coreDocs.length - 1
             ? `<span class="step-connector ${exists ? 'filled' : ''}"></span>`
@@ -76,7 +85,7 @@ export function generateCompactNav(
 
         return `<button class="${classes}" data-phase="${phase}" aria-disabled="${!isClickable}" ${!isClickable ? 'disabled' : ''}>
             <span class="step-status">${statusIcon}</span>
-            <span class="step-label">${label}</span>${staleBadge}
+            <span class="step-label">${label}</span>${elapsedPlaceholder}${staleBadge}
         </button>${connector}`;
     }).join('');
 

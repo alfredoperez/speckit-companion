@@ -17,13 +17,18 @@ export function NavigationBar() {
         : undefined;
     const parentPhaseForRelated = viewingRelatedDoc?.parentStep || coreDocs?.[0]?.type || 'spec';
 
-    // Index of the step currently running (activeStep with no completedAt).
-    // Future tabs beyond this index get locked while the step is in-flight.
+    // Index of the step currently running — derive from stepHistory
+    // (entry with startedAt set and no completedAt). Future tabs beyond this
+    // index get locked while the step is in-flight.
     const runningStepIndex = (() => {
-        if (!activeStep) return null;
-        if (stepHistory?.[activeStep]?.completedAt) return null;
-        const idx = coreDocs.findIndex(d => d.type === activeStep);
-        return idx >= 0 ? idx : null;
+        if (!stepHistory) return null;
+        for (const [stepKey, entry] of Object.entries(stepHistory)) {
+            if (entry?.startedAt && !entry?.completedAt) {
+                const idx = coreDocs.findIndex(d => d.type === stepKey);
+                if (idx >= 0) return idx;
+            }
+        }
+        return null;
     })();
 
     const handleClick = (phase: string) => {
