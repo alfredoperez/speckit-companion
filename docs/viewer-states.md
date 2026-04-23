@@ -253,13 +253,18 @@ stateDiagram-v2
 |-------|---------|--------|
 | `exists` | File exists on disk | Green checkmark dot |
 | `viewing` | Currently displayed in viewer | White bold label |
-| `working` | Step being worked on (from `spec-context.step`, only if not completed) | Pulsing green glow on dot |
+| `working` | Step being worked on (from `spec-context.step`, only if not completed) | Pulsing green glow on dot + live elapsed timer (e.g. `3m 22s`) rendered via `.step-tab__elapsed` |
 | `tasks-active` | Viewing tasks with 0-100% progress | Percentage badge in dot |
 | `in-progress` | Tasks have progress but not viewing | Percentage in dot (subtle) |
 | `workflow` | Current workflow phase (not viewing) | Bright label |
 | `reviewing` | Viewing completed step, not active workflow | White bold label |
 | `disabled` | Step not available (no file, not first) | Dimmed (opacity 0.35) |
 | `stale` | Document stale relative to upstream | `!` badge |
+
+### Elapsed Timer and Completion Notifications
+
+- **Elapsed timer** (`.step-tab__elapsed`): rendered as a live `Ns` / `Mm Ss` / `Hh Mm` ticker beneath the running step tab's label. Derived from `stepHistory[step].startedAt`, so it survives webview reloads. Hidden as soon as the step's `completedAt` is written.
+- **Completion notification**: when any step's `completedAt` flips from null to a timestamp, the extension fires `vscode.window.showInformationMessage('Spec {N} · {Step} complete', 'Open spec')`. Dedupe is keyed on `{specDir}:{step}:{startedAt}` in-memory — never re-announced across viewer reopens. Gated by `speckit.notifications.stepComplete` (default `true`).
 
 ### Working Step Mapping
 

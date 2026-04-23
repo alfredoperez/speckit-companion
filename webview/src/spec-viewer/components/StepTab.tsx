@@ -1,5 +1,6 @@
 import type { SpecDocument, StalenessMap } from '../types';
 import { viewerState } from '../signals';
+import { ElapsedTimer } from './ElapsedTimer';
 
 const DOC_TO_STEP: Record<string, string> = {
     spec: 'specify',
@@ -24,7 +25,7 @@ export interface StepTabProps {
     isViewingRelatedDoc: boolean;
     parentPhaseForRelated: string;
     activeStep?: string | null;
-    stepHistory?: Record<string, { completedAt?: string | null }>;
+    stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>;
     stalenessMap?: StalenessMap;
     hasRelatedChildren?: boolean;
     runningStepIndex?: number | null;
@@ -86,6 +87,16 @@ export function StepTab(props: StepTabProps) {
         ? `${baseTooltip} (disabled while ${activeStep} is running)`
         : baseTooltip;
 
+    // Only show the elapsed ticker for a live dispatch run — not for the
+    // last-step `inProgress` case, which is driven by task-completion percent.
+    const runEntry = stepHistory?.[phase];
+    const runningStartedAt = canonicalState === 'in-flight'
+        && runEntry?.startedAt
+        && !runEntry.completedAt
+        && !inProgress
+        ? runEntry.startedAt
+        : null;
+
     return (
         <button
             class={classes}
@@ -98,6 +109,7 @@ export function StepTab(props: StepTabProps) {
             <span class="step-status">{statusIcon}</span>
             <span class="step-label">{doc.label}</span>
             {vsSubstep && <span class="step-tab__substep">{vsSubstep}</span>}
+            {runningStartedAt && <ElapsedTimer startedAt={runningStartedAt} />}
             {isStale && <span class="stale-badge">!</span>}
         </button>
     );

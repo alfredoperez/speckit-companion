@@ -44,6 +44,7 @@ import { writeSpecContext } from "../specs/specContextWriter";
 import { backfillMinimalContext } from "../specs/specContextBackfill";
 import { reconcileAndPersist } from "../specs/specContextReconciler";
 import { deriveViewerState, isStepCompleted } from "./stateDerivation";
+import { StepCompletionNotifier, NotifierContext } from "./stepCompletionNotifier";
 import { StepName, STEP_NAMES, ViewerState as CoreViewerState } from "../../core/types/specContext";
 import {
   DEFAULT_WORKFLOW,
@@ -68,9 +69,9 @@ export {
  */
 function mapStepHistoryKeys(
   stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>
-): Record<string, { completedAt?: string | null }> | undefined {
+): Record<string, { startedAt?: string; completedAt?: string | null }> | undefined {
   if (!stepHistory) return undefined;
-  const out: Record<string, { completedAt?: string | null }> = {};
+  const out: Record<string, { startedAt?: string; completedAt?: string | null }> = {};
   for (const [step, entry] of Object.entries(stepHistory)) {
     const tabName = mapSddStepToTab(step) || step;
     out[tabName] = entry;
@@ -130,6 +131,7 @@ interface PanelInstance {
   panel: vscode.WebviewPanel;
   state: SpecViewerState;
   debounceTimer: NodeJS.Timeout | undefined;
+  lastFeatureCtx?: NotifierContext | null;
 }
 
 /**
@@ -139,6 +141,9 @@ interface PanelInstance {
 export class SpecViewerProvider {
   /** Map of spec directory to panel instance */
   private panels: Map<string, PanelInstance> = new Map();
+
+  /** Fires VS Code + OS notifications when a dispatched step completes. */
+  private readonly stepCompletionNotifier = new StepCompletionNotifier();
 
   constructor(
     private readonly context: vscode.ExtensionContext,
@@ -349,6 +354,7 @@ export class SpecViewerProvider {
       if (instance.debounceTimer) {
         clearTimeout(instance.debounceTimer);
       }
+      this.stepCompletionNotifier.forget(specDirectory);
       this.panels.delete(specDirectory);
     });
 
@@ -520,7 +526,7 @@ export class SpecViewerProvider {
       instance.panel.title = `Spec: ${specName} - ${docLabel}`;
 
       let specStatus: SpecStatus;
-      if (featureCtx?.status === SpecStatuses.ARCHIVED || featureCtx?.currentStep === SpecStatuses.ARCHIVED || featureCtx?.currentStep === "done") {
+      if (featureCtx?.status === SpecStatuses.ARCHIVED || featureCtx?.currentStep === SpecStatuses.ARCHIVED) {
         specStatus = SpecStatuses.ARCHIVED;
       } else if (featureCtx?.status === SpecStatuses.COMPLETED) {
         specStatus = SpecStatuses.COMPLETED;
@@ -765,7 +771,7 @@ export class SpecViewerProvider {
       const changeRoot = instance.state.changeRoot;
       const featureCtx = await getFeatureWorkflow(specDirectory, changeRoot);
       let specStatus: string;
-      if (featureCtx?.status === SpecStatuses.ARCHIVED || featureCtx?.currentStep === SpecStatuses.ARCHIVED || featureCtx?.currentStep === "done") {
+      if (featureCtx?.status === SpecStatuses.ARCHIVED || featureCtx?.currentStep === SpecStatuses.ARCHIVED) {
         specStatus = SpecStatuses.ARCHIVED;
       } else if (featureCtx?.status === SpecStatuses.COMPLETED) {
         specStatus = SpecStatuses.COMPLETED;
@@ -780,6 +786,26 @@ export class SpecViewerProvider {
 
       // Compute staleness for workflow documents
       const stalenessMap = await computeStaleness(instance.state.availableDocuments);
+
+      // Fire step-complete notifications on live completedAt transitions (R004–R006).
+      this.stepCompletionNotifier.observe(
+        specDirectory,
+        instance.lastFeatureCtx ?? null,
+        featureCtx ?? null,
+      );
+      instance.lastFeatureCtx = featureCtx ?? null;
+
+      // Derive the running step (startedAt set, no completedAt) for the nav bar.
+      const runningStep = (() => {
+        const hist = featureCtx?.stepHistory;
+        if (!hist) return null;
+        for (const [step, entry] of Object.entries(hist)) {
+          if (entry?.startedAt && !entry?.completedAt) {
+            return mapSddStepToTab(step) || step;
+          }
+        }
+        return null;
+      })();
 
       const navState: NavState = {
         coreDocs,
@@ -798,7 +824,7 @@ export class SpecViewerProvider {
         stalenessMap,
         specStatus,
         currentTask: featureCtx?.currentTask ?? null,
-        activeStep: null,
+        activeStep: runningStep,
         stepHistory: mapStepHistoryKeys(featureCtx?.stepHistory),
         badgeText: computeBadgeText(featureCtx),
         createdDate: computeCreatedDate(featureCtx?.stepHistory),

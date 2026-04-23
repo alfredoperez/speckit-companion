@@ -129,6 +129,15 @@
     pointer-events: none;
 }
 
+/* Live elapsed-time indicator rendered on in-flight steps */
+.step-tab__elapsed {
+    margin-left: 6px;
+    font-size: 0.75rem;
+    color: var(--vscode-descriptionForeground);
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+}
+
 /* Orthogonal staleness flag */
 .step-tab.stale .step-status {
     border-color: var(--warning);

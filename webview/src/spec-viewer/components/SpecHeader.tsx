@@ -13,6 +13,7 @@ export function SpecHeader() {
     if (!ns) return null;
 
     const badgeText = vs ? formatStatusLabel(vs.status) : ns.badgeText;
+    const statusClass = vs?.status ?? ns.specStatus ?? null;
 
     const hasContext = !!(badgeText || ns.specContextName);
     if (!badgeText && !ns.createdDate && !ns.specContextName) return null;
@@ -23,7 +24,11 @@ export function SpecHeader() {
         <div class="spec-header" data-has-context={String(hasContext)}>
             {(badgeText || ns.branch) && (
                 <div class="spec-header-badges">
-                    {badgeText && <span class="spec-badge">{badgeText}</span>}
+                    {badgeText && (
+                        <span class={`spec-badge${statusClass ? ` spec-badge--${statusClass}` : ''}`}>
+                            {badgeText}
+                        </span>
+                    )}
                     {ns.branch && (
                         <span class="spec-header-branch">
                             <span class="branch-icon">{''}</span> {ns.branch}

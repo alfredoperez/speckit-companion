@@ -272,10 +272,16 @@ body[data-spec-status="archived"] .meta-status-draft {
     border: 1px solid color-mix(in srgb, var(--header-title) 30%, transparent);
 }
 
+.spec-badge--completed,
 body[data-spec-status="completed"] .spec-badge {
-    background: var(--success-subtle);
-    color: var(--success);
-    border-color: color-mix(in srgb, var(--success) 30%, transparent);
+    background: var(--vscode-charts-green, var(--success));
+    color: var(--bg-primary);
+    border-color: var(--vscode-charts-green, var(--success));
+    padding: 4px 12px;
+    font-size: var(--text-sm, 13px);
+    letter-spacing: 0.08em;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--vscode-charts-green, var(--success)) 22%, transparent);
+    font-weight: 800;
 }
 
 body[data-spec-status="archived"] .spec-badge {

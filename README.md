@@ -82,7 +82,7 @@ The lifecycle flow is **Active → Completed → Archived**, with **Reactivate**
 - Green pulsing glow — step actively being worked on
 - Blue dot — current step
 
-When a workflow step command is running for a spec, the spec node displays a spinning progress indicator instead of its default icon.
+When a workflow step command is running for a spec, the spec node displays a spinning progress indicator instead of its default icon. Running steps also show a live elapsed timer (e.g. `3m 22s`) beneath the step label in the viewer, and a notification fires when a dispatched step finishes — toggle via `speckit.notifications.stepComplete`.
 
 ![Sidebar Overview](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/sidebar-overview.png)
 
@@ -176,6 +176,18 @@ Controls whether the extension prepends a short context-update preamble to every
 | `false` | Send the raw `/speckit.<step>` command with no preamble. Useful if your AI ignores it or you're debugging raw prompts. |
 
 The preamble adds ~200–300 tokens per dispatch and is identical across all providers (Claude, Gemini, Copilot, Codex, Qwen). Extension-side step-boundary writes remain the hard guarantee for `startedAt` / `completedAt` — this preamble unlocks finer-grained substep tracking.
+
+### Step-Complete Notifications
+
+When a dispatched spec step finishes, the extension shows a VS Code information message naming the spec and step (e.g. `Spec 074 · Plan complete`). The message includes an **Open spec** action that focuses the viewer for that spec. VS Code routes info messages to the native OS notification surface when the window is unfocused, so you can tab away during long runs.
+
+```json
+{
+  "speckit.notifications.stepComplete": true
+}
+```
+
+Set to `false` to silence the message while keeping the in-viewer elapsed timer.
 
 ### Spec Directories
 
