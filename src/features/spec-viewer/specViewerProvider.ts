@@ -526,7 +526,7 @@ export class SpecViewerProvider {
       instance.panel.title = `Spec: ${specName} - ${docLabel}`;
 
       let specStatus: SpecStatus;
-      if (featureCtx?.status === SpecStatuses.ARCHIVED || featureCtx?.currentStep === SpecStatuses.ARCHIVED || featureCtx?.currentStep === "done") {
+      if (featureCtx?.status === SpecStatuses.ARCHIVED || featureCtx?.currentStep === SpecStatuses.ARCHIVED) {
         specStatus = SpecStatuses.ARCHIVED;
       } else if (featureCtx?.status === SpecStatuses.COMPLETED) {
         specStatus = SpecStatuses.COMPLETED;
@@ -771,7 +771,7 @@ export class SpecViewerProvider {
       const changeRoot = instance.state.changeRoot;
       const featureCtx = await getFeatureWorkflow(specDirectory, changeRoot);
       let specStatus: string;
-      if (featureCtx?.status === SpecStatuses.ARCHIVED || featureCtx?.currentStep === SpecStatuses.ARCHIVED || featureCtx?.currentStep === "done") {
+      if (featureCtx?.status === SpecStatuses.ARCHIVED || featureCtx?.currentStep === SpecStatuses.ARCHIVED) {
         specStatus = SpecStatuses.ARCHIVED;
       } else if (featureCtx?.status === SpecStatuses.COMPLETED) {
         specStatus = SpecStatuses.COMPLETED;
