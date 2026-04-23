@@ -282,13 +282,6 @@ body[data-spec-status="completed"] .spec-badge {
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 22%, transparent);
 }
 
-body[data-spec-status="completed"] .spec-badge::before {
-    content: "✓";
-    display: inline-block;
-    margin-right: 6px;
-    font-weight: 900;
-}
-
 body[data-spec-status="archived"] .spec-badge {
     background: var(--bg-secondary);
     color: var(--text-muted);
