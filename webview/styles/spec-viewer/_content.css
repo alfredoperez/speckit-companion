@@ -274,13 +274,13 @@ body[data-spec-status="archived"] .meta-status-draft {
 
 .spec-badge--completed,
 body[data-spec-status="completed"] .spec-badge {
-    background: #22c55e;
-    color: #0b1f10;
-    border-color: #16a34a;
+    background: var(--success);
+    color: var(--bg-primary);
+    border-color: var(--success);
     padding: 4px 12px;
     font-size: var(--text-sm, 13px);
     letter-spacing: 0.08em;
-    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.22);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 22%, transparent);
     font-weight: 800;
 }
 
