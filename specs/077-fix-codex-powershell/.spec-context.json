@@ -1,0 +1,136 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "updated": "2026-04-24",
+  "selectedAt": "2026-04-24T14:07:06Z",
+  "specName": "Fix Codex Provider PowerShell Compatibility",
+  "branch": "feat/sort-specs-tree",
+  "workingBranch": "fix/fix-codex-powershell",
+  "type": "fix",
+  "createdAt": "2026-04-24T14:07:06Z",
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/124",
+  "prNumber": 124,
+  "checkpointStatus": { "commit": true, "pr": true },
+  "approach": "Replace Unix-only shell syntax in codexCliProvider.ts with a uniform temp-file + shell-native stdin pipe, branching on the workspace's script setting (sh vs ps), with $ARGUMENTS substitution moved into Node. Added defensive tweaks: UTF-8 output encoding prelude on the PowerShell pipe, and CRLF→LF normalization on the temp file.",
+  "last_action": "PR #124 opened — fix(ai-providers): codex cross-shell command pipe for PowerShell. (PR #123 was opened from feat/sort-specs-tree which carried 076's squash-merged commits; closed and superseded by #124 on a clean fix/fix-codex-powershell branch.)",
+  "files_modified": [
+    "src/ai-providers/initOptions.ts",
+    "src/ai-providers/__tests__/initOptions.test.ts",
+    "src/ai-providers/codexCommandBuilder.ts",
+    "src/ai-providers/__tests__/codexCommandBuilder.test.ts",
+    "src/ai-providers/codexCliProvider.ts"
+  ],
+  "concerns": [
+    { "task": "T003", "note": "Windows PowerShell path is not end-to-end verified (no Windows hardware). Defensive tweaks added: $OutputEncoding set to UTF-8 before the pipe, -Encoding UTF8 on Get-Content, and CRLF→LF normalization on the temp file. Residual risk: waitForShellReady was tuned for bash/zsh prompts and may need a PS regex tweak in a follow-up if users report timing issues." }
+  ],
+  "decisions": [
+    { "task": "T003", "note": "Unified all three entry points on the temp-file pipeline — even known-skill paths go through createPromptFile now. Eliminates the dual sed/temp-file branching and keeps prompt content entirely out of the shell." },
+    { "task": "T003", "note": "Added UTF-8 prelude and -Encoding UTF8 inside buildCodexExecCommand rather than in codexCliProvider so the builder stays the single source of truth for the ps command shape." }
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added readInitOptions(outputChannel?) + resetInitOptionsCache() with per-workspace Map cache; ENOENT stays silent, other read/parse failures log once and fall back to { script: 'sh' }.",
+      "files": [
+        "src/ai-providers/initOptions.ts",
+        "src/ai-providers/__tests__/initOptions.test.ts"
+      ],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added pure buildCodexExecCommand({ script, promptFilePath, permissionFlag }) emitting cat | codex exec - for sh and (UTF-8 prelude +) Get-Content -Raw -Encoding UTF8 | codex exec - for ps. Optional permission-flag insertion before the trailing stdin dash; no < redirection.",
+      "files": [
+        "src/ai-providers/codexCommandBuilder.ts",
+        "src/ai-providers/__tests__/codexCommandBuilder.test.ts"
+      ],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Rewrote all three Codex entry points (executeInTerminal, executeHeadless, executeSlashCommand) to resolve $ARGUMENTS in Node, normalize CRLF → LF in createPromptFile, and stream via buildCodexExecCommand. Removed escapeForSed and the old `sed | codex exec -` and `codex exec - < file` shapes entirely.",
+      "files": [
+        "src/ai-providers/codexCliProvider.ts"
+      ],
+      "concerns": [
+        "Windows PowerShell end-to-end is unverified (no Windows hardware). Defensive tweaks added — should cover encoding and line-ending pitfalls — but a Windows user needs to confirm."
+      ]
+    }
+  },
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 8,
+      "scenarios": 5,
+      "key_finding": "Codex provider builds shell commands in 3 call sites with Unix-only syntax (`<` input redirection and `sed` pipelines); Claude provider uses `\"$(cat \"…\")\"` substitution but the project has no shared helper for reading `.specify/init-options.json` — that infrastructure must be added."
+    },
+    "plan": {
+      "approach_summary": "Replace Unix-only shell syntax in codexCliProvider.ts with a uniform temp-file + shell-native stdin pipe, branching on the workspace's script setting (sh vs ps), with $ARGUMENTS substitution moved into Node.",
+      "files_planned": 5,
+      "risks": [
+        "PowerShell quoting of `Get-Content … | codex exec -`: codex exec - must accept stdin identically under PowerShell's pipeline. Mitigation: use -Raw to pass the whole file as one string (matches bash cat semantics); normalize line endings in createTempFile if CRLF becomes an issue.",
+        "`Get-Content` absent in non-PowerShell Windows shells (cmd.exe): out of scope per spec. Document the sh vs ps contract in the helper so a future cmd branch is easy to add."
+      ]
+    }
+  },
+  "transitions": [
+    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-24T14:07:06Z" },
+    { "step": "specify", "substep": "exploring", "from": "parsing", "by": "sdd", "at": "2026-04-24T14:07:06Z" },
+    { "step": "specify", "substep": "detecting", "from": "exploring", "by": "sdd", "at": "2026-04-24T14:07:06Z" },
+    { "step": "specify", "substep": "writing-spec", "from": "detecting", "by": "sdd", "at": "2026-04-24T14:07:06Z" },
+    { "step": "specify", "substep": null, "from": "writing-spec", "by": "sdd", "at": "2026-04-24T14:07:06Z" },
+    { "step": "specify", "substep": null, "from": { "step": "specify", "substep": null }, "by": "extension", "at": "2026-04-24T14:12:04.021Z" },
+    { "step": "plan", "substep": null, "from": { "step": "specify", "substep": null }, "by": "extension", "at": "2026-04-24T14:12:04.022Z" },
+    { "step": "plan", "substep": "research", "from": null, "by": "sdd", "at": "2026-04-24T14:15:00.000Z" },
+    { "step": "plan", "substep": "design", "from": "research", "by": "sdd", "at": "2026-04-24T14:15:00.000Z" },
+    { "step": "plan", "substep": null, "from": "design", "by": "sdd", "at": "2026-04-24T14:15:30.000Z" },
+    { "step": "plan", "substep": null, "from": { "step": "plan", "substep": null }, "by": "extension", "at": "2026-04-24T14:19:46.492Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "plan", "substep": null }, "by": "extension", "at": "2026-04-24T14:19:46.495Z" },
+    { "step": "tasks", "substep": "generate", "from": { "step": "tasks", "substep": null }, "by": "ai", "at": "2026-04-24T14:21:30Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "tasks", "substep": "generate" }, "by": "ai", "at": "2026-04-24T14:22:30Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "tasks", "substep": null }, "by": "extension", "at": "2026-04-24T14:25:02.161Z" },
+    { "step": "implement", "substep": null, "from": { "step": "tasks", "substep": null }, "by": "extension", "at": "2026-04-24T14:25:02.164Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": null }, "by": "sdd", "at": "2026-04-24T14:26:00.000Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-24T14:30:00.000Z" },
+    { "step": "implement", "substep": "hooks", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-24T14:40:00.000Z" },
+    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-04-24T14:45:00.000Z" },
+    { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-24T14:50:00.000Z" },
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-24T14:55:00.000Z" }
+  ],
+  "status": "completed",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-04-24T14:12:04.021Z",
+      "completedAt": "2026-04-24T14:12:04.021Z"
+    },
+    "plan": {
+      "startedAt": "2026-04-24T14:12:04.022Z",
+      "completedAt": "2026-04-24T14:19:46.492Z",
+      "substeps": [
+        { "name": "research", "startedAt": "2026-04-24T14:15:00.000Z", "completedAt": "2026-04-24T14:15:00.000Z" },
+        { "name": "design", "startedAt": "2026-04-24T14:15:00.000Z", "completedAt": "2026-04-24T14:15:30.000Z" }
+      ]
+    },
+    "tasks": {
+      "startedAt": "2026-04-24T14:19:46.495Z",
+      "completedAt": "2026-04-24T14:25:02.161Z",
+      "substeps": [
+        { "name": "generate", "startedAt": "2026-04-24T14:21:30Z", "completedAt": "2026-04-24T14:22:30Z" }
+      ]
+    },
+    "implement": {
+      "startedAt": "2026-04-24T14:25:02.164Z",
+      "completedAt": "2026-04-24T14:55:00.000Z",
+      "substeps": [
+        { "name": "run-tests", "startedAt": "2026-04-24T14:39:00.000Z", "completedAt": "2026-04-24T14:40:00.000Z" }
+      ]
+    }
+  },
+  "step_summaries_tasks": {
+    "total": 3,
+    "parallel_groups": 1
+  }
+}
