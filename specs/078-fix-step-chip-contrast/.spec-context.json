@@ -6,7 +6,9 @@
   "next": "done",
   "updated": "2026-04-24",
   "checkpointStatus": { "commit": true, "pr": true },
-  "last_action": "CP3 approved — staging commit",
+  "last_action": "PR #130 opened — fix(spec-viewer): improve current-step chip contrast on purple themes",
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/130",
+  "prNumber": 130,
   "selectedAt": "2026-04-24T23:26:02Z",
   "specName": "Fix Step Chip Contrast",
   "branch": "main",
@@ -153,6 +155,16 @@
       },
       "by": "sdd",
       "at": "2026-04-24T23:38:30Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "done",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-24T23:40:00Z"
     }
   ],
   "status": "completed",
