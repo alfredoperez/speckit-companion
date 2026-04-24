@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.13.0] - 2026-04-24
+
+### New Features
+
+- **Color-Coded Badge Statuses**: Every canonical spec status (draft, specifying, specified, planning, planned, tasking, ready-to-implement, implementing, completed, archived) now has a distinct color treatment — accent in-progress tier with gentle border breath, success-subtle intermediate-done tier, muted draft tier — so header badges read at a glance (#125)
+- **Spec Header Layout Refresh**: Spec viewer header moves the created-date to a small right-aligned muted pill in row 1, drops the "Created:" prefix, gives the branch tag a purple treatment with a `git-branch` codicon, and promotes the title to its own line (#125)
+- **Live Elapsed Timer on Step Tabs**: Step tabs for running work now show a live elapsed timer (`12s` / `3m 22s` / `2h 15m`) next to the in-flight pill, derived from `stepHistory.startedAt` so it survives webview reloads. A step-complete notification fires when `completedAt` transitions (#120)
+- **Specs Tree Fuzzy Filter**: Fuzzy filter input over the specs tree for quick navigation (#121)
+- **Specs Tree Sort Options**: Sort the specs tree by name, date, or status (#122)
+
+### Improvements
+
+- **Step Tab Visual Polish**: Brighter completed-step labels, inset accent ring + tinted fill on the current step (wraps the whole tab even when in-flight), harmonized label colors (icons/rings carry state), extra breathing room on in-flight tabs so the working pulse doesn't crash into the connector (#125)
+- **Storybook Coverage**: One story per canonical status for `Primitives/Badge` and `Viewer/SpecHeader`, plus `Viewer/StepTab` stories for current+in-flight, elapsed-timer bands, and a 4-step `AllStates` row (#125)
+
+### Bug Fixes
+
+- **Codex Cross-Shell Command Pipe**: Codex provider now uses PowerShell-compatible command substitution instead of Unix `<` input redirection, and honors the `script` setting from `.specify/init-options.json` so Windows PowerShell users can run SpecKit commands without parser errors (#124)
+
 ## [0.12.1] - 2026-04-22
 
 ### New Features
