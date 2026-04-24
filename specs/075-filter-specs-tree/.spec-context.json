@@ -1,18 +1,22 @@
 {
   "workflow": "sdd",
-  "currentStep": "implement",
+  "currentStep": "done",
   "currentTask": null,
-  "progress": "hooks",
-  "next": "implement",
-  "updated": "2026-04-23",
+  "progress": null,
+  "next": "done",
+  "status": "completed",
+  "updated": "2026-04-24",
   "selectedAt": "2026-04-23T15:01:02Z",
   "specName": "Filter/search box above the specs tree",
   "branch": "feat/elapsed-timer-notification",
-  "workingBranch": null,
+  "workingBranch": "feat/filter-specs-tree",
   "type": "feat",
   "createdAt": "2026-04-23T15:01:02Z",
-  "auto": true,
-  "last_action": "Phase 1 complete (T001–T013) — filter feature + drive-by step-tab color fix. 328/328 tests pass.",
+  "auto": false,
+  "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/121",
+  "prNumber": 121,
+  "last_action": "PR #121 opened — feat(specs): add fuzzy filter to specs tree",
   "approach": "Add an in-memory filter query to SpecExplorerProvider plus a SpecsFilterState helper that reads/writes the query to workspaceState, with a title-bar action + InputBox UX and in-repo fuzzy subsequence matching.",
   "files_modified": [
     "src/features/specs/fuzzyMatch.ts",
@@ -158,6 +162,7 @@
     { "step": "implement", "substep": "phase1", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-04-23T15:06:00Z" },
     { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-23T15:07:00Z" },
     { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-23T15:08:00Z" },
-    { "step": "implement", "substep": "hooks", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-23T15:30:00Z" }
+    { "step": "implement", "substep": "hooks", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-23T15:30:00Z" },
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-04-24T00:10:00Z" }
   ]
 }
