@@ -53,13 +53,15 @@ Each feature flows through four phases:
 The sidebar organizes everything your AI assistant needs: **Specs** for feature development, **Steering** for AI guidance documents, **Agents** for custom agent definitions, **Skills** for reusable capabilities, and **Hooks** for automation triggers.
 
 Specs are grouped into three collapsible sections based on their status (stored in `.spec-context.json`):
-- **Active** — Specs in progress, sorted by creation date (newest first), expanded by default
+- **Active** — Specs in progress, ordered by numeric prefix (newest first) by default, expanded by default
 - **Completed** — Specs marked as done, collapsed by default
 - **Archived** — Specs moved to archive, collapsed by default
 
 The Specs view title bar exposes a **collapse/expand all** toggle (alongside the `+` and refresh buttons) that flips every spec in place between expanded and collapsed. The icon swaps to reflect the next action; state is in-memory only and is not persisted across sessions.
 
 **Filter specs** — click the filter icon in the Specs view title bar to open a prompt and fuzzy-filter specs by slug or feature name (matches are case-insensitive and subsequence-based, e.g. `ftr` matches `filter-specs-tree`). The query is persisted to workspace state and restored on the next activation. A clear-filter icon appears next to the filter icon while a filter is active; an empty-result message offers a one-click clear when no specs match.
+
+**Sort specs** — click the sort icon in the Specs view title bar to pick how specs are ordered within each group: **Number** (numeric prefix, default), **Name** (A–Z by slug or spec name), **Date Created** (newest first), **Date Modified** (most recently edited), or **Status** (by workflow step). Ties fall back to numeric prefix then name so output is deterministic. The chosen mode is persisted to workspace state; group order (Active → Completed → Archived) is fixed.
 
 Right-click a spec to access **Mark as Completed**, **Archive Spec**, and **Reveal in File Explorer** (opens the spec's folder in Finder / File Explorer / the default file manager) actions. The spec viewer footer shows lifecycle buttons based on the spec's current status:
 

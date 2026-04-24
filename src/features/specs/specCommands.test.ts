@@ -80,8 +80,8 @@ beforeEach(() => {
 
 describe('registerSpecKitCommands', () => {
     it('has no specKitDetector parameter', () => {
-        // Signature is (context, specExplorer, outputChannel, specsTreeView?, filterState?) — no specKitDetector.
-        expect(registerSpecKitCommands.length).toBe(5);
+        // Signature is (context, specExplorer, outputChannel, specsTreeView?, filterState?, sortState?) — no specKitDetector.
+        expect(registerSpecKitCommands.length).toBe(6);
     });
 
     it('registers the speckit.create command', () => {

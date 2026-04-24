@@ -22,6 +22,8 @@ import { updateSelectionContextKeys } from './selectionContextKeys';
 import { track as trackTerminal } from './terminalStepTracker';
 import type { StepName } from '../../core/types/specContext';
 import { SpecsFilterState } from './specsFilterState';
+import { SpecsSortState } from './specsSortState';
+import { ALL_SORT_MODES, DEFAULT_SORT_MODE, SortMode } from './specsSortMode';
 
 function toWorkspaceRelative(absOrRel: string): string {
     const ws = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -47,7 +49,8 @@ export function registerSpecKitCommands(
     specExplorer: SpecExplorerProvider,
     outputChannel: vscode.OutputChannel,
     specsTreeView?: vscode.TreeView<any>,
-    filterState?: SpecsFilterState
+    filterState?: SpecsFilterState,
+    sortState?: SpecsSortState
 ): void {
     function resolveTargets(item: SpecTreeItem | undefined, items: SpecTreeItem[] | undefined): SpecTreeItem[] {
         if (items && items.length > 0) return items;
@@ -118,6 +121,46 @@ export function registerSpecKitCommands(
             }),
             vscode.commands.registerCommand(Commands.specsFilterClear, async () => {
                 await filterState.clear();
+            })
+        );
+    }
+
+    // Sort specs: open a QuickPick with the 5 modes, check-mark the current
+    // one, and persist the selection via SpecsSortState. When the current
+    // mode is non-default we append a "Reset to default" option so the user
+    // can bail out without re-selecting Number explicitly.
+    if (sortState) {
+        const SORT_LABELS: Record<SortMode, { label: string; description: string }> = {
+            number: { label: 'Number', description: 'Numeric prefix (default)' },
+            name: { label: 'Name', description: 'A–Z by slug or spec name' },
+            dateCreated: { label: 'Date Created', description: 'Newest first' },
+            dateModified: { label: 'Date Modified', description: 'Most recently edited' },
+            status: { label: 'Status', description: 'By workflow step' },
+        };
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand(Commands.specsSort, async () => {
+                const current = sortState.getMode();
+                type SortPickItem = vscode.QuickPickItem & { mode: SortMode; reset?: boolean };
+                const items: SortPickItem[] = ALL_SORT_MODES.map(m => ({
+                    label: current === m ? `$(check) ${SORT_LABELS[m].label}` : SORT_LABELS[m].label,
+                    description: SORT_LABELS[m].description,
+                    mode: m,
+                }));
+                if (current !== DEFAULT_SORT_MODE) {
+                    items.push({
+                        label: '$(clear-all) Reset to default',
+                        description: SORT_LABELS[DEFAULT_SORT_MODE].label,
+                        mode: DEFAULT_SORT_MODE,
+                        reset: true,
+                    });
+                }
+                const picked = await vscode.window.showQuickPick(items, {
+                    title: 'Sort specs by…',
+                    placeHolder: 'Choose a sort mode',
+                });
+                if (!picked) return;
+                await sortState.setMode(picked.mode);
             })
         );
     }

@@ -20,6 +20,8 @@ import { isStepCompleted } from '../spec-viewer/stateDerivation';
 import { StepName, STEP_NAMES } from '../../core/types/specContext';
 import { SpecsFilterState } from './specsFilterState';
 import { fuzzyMatch } from './fuzzyMatch';
+import { SpecsSortState } from './specsSortState';
+import { comparators, DEFAULT_SORT_MODE } from './specsSortMode';
 
 export interface SpecInfo {
     name: string;
@@ -35,7 +37,8 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
     constructor(
         context: vscode.ExtensionContext,
         outputChannel: vscode.OutputChannel,
-        private readonly filterState?: SpecsFilterState
+        private readonly filterState?: SpecsFilterState,
+        private readonly sortState?: SpecsSortState
     ) {
         super(context, { name: 'SpecExplorerProvider', outputChannel });
     }
@@ -105,12 +108,14 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             const completedSpecs: SpecInfo[] = [];
             const archivedSpecs: SpecInfo[] = [];
             const specNameByPath = new Map<string, string | undefined>();
+            const statusByPath = new Map<string, string | undefined>();
 
             for (const spec of specs) {
                 const specFullPath = path.join(basePath, spec.path);
                 const context = readSpecContextSync(specFullPath);
                 const status = context?.status || SpecStatuses.ACTIVE;
                 specNameByPath.set(spec.path, context?.specName);
+                statusByPath.set(spec.path, context?.currentStep);
                 if (status === SpecStatuses.COMPLETED) {
                     completedSpecs.push(spec);
                 } else if (status === SpecStatuses.ARCHIVED) {
@@ -142,31 +147,16 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 Promise.resolve(p).catch(() => { /* fire-and-forget */ });
             } catch { /* fire-and-forget */ }
 
-            // Sort: numeric-prefixed specs (e.g. "069-...") by prefix desc —
-            // stable across git operations that rewrite filesystem birthtime.
-            // Specs without a numeric prefix fall back to birthtime desc and
-            // sort after the numeric ones.
-            const extractNumericPrefix = (name: string): number | null => {
-                const match = name.match(/^(\d+)/);
-                return match ? parseInt(match[1], 10) : null;
-            };
-            const sortSpecs = (a: SpecInfo, b: SpecInfo) => {
-                const aNum = extractNumericPrefix(a.name);
-                const bNum = extractNumericPrefix(b.name);
-                if (aNum !== null && bNum !== null) return bNum - aNum;
-                if (aNum !== null) return -1;
-                if (bNum !== null) return 1;
-                try {
-                    const aTime = fs.statSync(path.join(basePath, a.path)).birthtime.getTime();
-                    const bTime = fs.statSync(path.join(basePath, b.path)).birthtime.getTime();
-                    return bTime - aTime;
-                } catch {
-                    return 0;
-                }
-            };
-            filteredActive.sort(sortSpecs);
-            filteredCompleted.sort(sortSpecs);
-            filteredArchived.sort(sortSpecs);
+            // Dispatch on the active sort mode. Default ('number') preserves
+            // the historical numeric-prefix-desc ordering so nothing changes
+            // for users who never open the picker. Every comparator falls
+            // back to numeric-prefix then name on ties so output is
+            // deterministic across reloads.
+            const mode = this.sortState?.getMode() ?? DEFAULT_SORT_MODE;
+            const cmp = comparators[mode]({ basePath, specNameByPath, statusByPath });
+            filteredActive.sort(cmp);
+            filteredCompleted.sort(cmp);
+            filteredArchived.sort(cmp);
 
             const items: SpecItem[] = [];
 

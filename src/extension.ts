@@ -5,7 +5,7 @@ import { IAIProvider, AIProviderFactory, isProviderConfigured, promptForProvider
 
 // Features
 import { SteeringManager, SteeringExplorerProvider, registerSteeringCommands } from './features/steering';
-import { SpecExplorerProvider, registerSpecKitCommands, updateSelectionContextKeys, SpecsFilterState } from './features/specs';
+import { SpecExplorerProvider, registerSpecKitCommands, updateSelectionContextKeys, SpecsFilterState, SpecsSortState } from './features/specs';
 import { register as registerTerminalStepTracker } from './features/specs/terminalStepTracker';
 import { setLifecycleOutputChannel } from './features/specs/stepLifecycle';
 import { OverviewProvider } from './features/settings';
@@ -110,12 +110,14 @@ export async function activate(context: vscode.ExtensionContext) {
     const overviewProvider = new OverviewProvider(context);
     let specExplorer!: SpecExplorerProvider;
     const specsFilterState = new SpecsFilterState(context, () => specExplorer.refresh());
-    specExplorer = new SpecExplorerProvider(context, outputChannel, specsFilterState);
+    const specsSortState = new SpecsSortState(context, () => specExplorer.refresh());
+    specExplorer = new SpecExplorerProvider(context, outputChannel, specsFilterState, specsSortState);
     const steeringExplorer = new SteeringExplorerProvider(context);
 
-    // Sync the filterActive context key to any persisted query so the clear
-    // button visibility matches reality on activation.
+    // Sync the filterActive / sortActive context keys to any persisted state
+    // so title-bar menu visibility matches reality on activation.
     specsFilterState.initialize().then(undefined, () => { /* no-op */ });
+    specsSortState.initialize().then(undefined, () => { /* no-op */ });
 
     // Set managers
     steeringExplorer.setSteeringManager(steeringManager);
@@ -158,7 +160,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // Register all commands
     registerCliCommands(context, specKitDetector);
     registerSteeringCommands(context, steeringManager, steeringExplorer, outputChannel);
-    registerSpecKitCommands(context, specExplorer, outputChannel, specsTreeView, specsFilterState);
+    registerSpecKitCommands(context, specExplorer, outputChannel, specsTreeView, specsFilterState, specsSortState);
     registerUtilityCommands(context, updateChecker, outputChannel);
 
     // Set up file watchers
