@@ -219,6 +219,12 @@
         "icon": "$(clear-all)"
       },
       {
+        "command": "speckit.specs.sort",
+        "title": "Sort Specs…",
+        "category": "SpecKit",
+        "icon": "$(sort-precedence)"
+      },
+      {
         "command": "speckit.delete",
         "title": "Delete Spec",
         "category": "SpecKit",
@@ -420,6 +426,11 @@
         {
           "command": "speckit.specs.filter.clear",
           "when": "view == speckit.views.explorer && speckit.specs.filterActive",
+          "group": "navigation@0"
+        },
+        {
+          "command": "speckit.specs.sort",
+          "when": "view == speckit.views.explorer",
           "group": "navigation@0"
         },
         {

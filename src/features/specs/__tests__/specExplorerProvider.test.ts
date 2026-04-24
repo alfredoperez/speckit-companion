@@ -553,25 +553,20 @@ describe('SpecExplorerProvider', () => {
             ]);
         });
 
-        it('falls back to birthtime desc for specs without numeric prefix', async () => {
+        it('falls back to name order for specs without numeric prefix', async () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
-                { name: 'alpha', path: 'specs/alpha' },
                 { name: 'beta', path: 'specs/beta' },
+                { name: 'alpha', path: 'specs/alpha' },
             ]);
             (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
 
-            (mockFs.statSync as jest.Mock).mockImplementation((filePath: string) => {
-                if (filePath.includes('alpha')) {
-                    return { birthtime: new Date('2025-01-01T00:00:00Z'), mtime: new Date(0) };
-                }
-                return { birthtime: new Date('2025-03-01T00:00:00Z'), mtime: new Date(0) };
-            });
-
             const groups = await provider.getChildren();
             const specs = await provider.getChildren(groups[0]);
 
-            expect(specs.map((s: any) => s.label)).toEqual(['beta', 'alpha']);
+            // Default 'number' mode: non-numeric specs tie on prefix (both
+            // null) and fall back to name ascending.
+            expect(specs.map((s: any) => s.label)).toEqual(['alpha', 'beta']);
         });
 
         it('numeric-prefixed specs sort before non-numeric-prefixed specs', async () => {
@@ -593,8 +588,8 @@ describe('SpecExplorerProvider', () => {
         });
     });
 
-    describe('active specs birthtime sorting', () => {
-        it('should sort active specs by birthtime descending (newest first)', async () => {
+    describe('default sort (number mode) for non-numeric specs', () => {
+        it('sorts alphabetically when none of the specs have a numeric prefix', async () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'old-spec', path: 'specs/old-spec' },
                 { name: 'new-spec', path: 'specs/new-spec' },
@@ -603,28 +598,16 @@ describe('SpecExplorerProvider', () => {
             (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
 
-            // Mock statSync to return different birthtimes
-            (mockFs.statSync as jest.Mock).mockImplementation((filePath: string) => {
-                if (filePath.includes('old-spec')) {
-                    return { birthtime: new Date('2025-01-01T00:00:00Z'), mtime: new Date(0) };
-                }
-                if (filePath.includes('new-spec')) {
-                    return { birthtime: new Date('2025-03-01T00:00:00Z'), mtime: new Date(0) };
-                }
-                if (filePath.includes('mid-spec')) {
-                    return { birthtime: new Date('2025-02-01T00:00:00Z'), mtime: new Date(0) };
-                }
-                return { birthtime: new Date(0), mtime: new Date(0) };
-            });
-
             const groups = await provider.getChildren();
             expect(groups).toHaveLength(1);
             expect(groups[0].label).toBe('Active (3)');
 
             const specs = await provider.getChildren(groups[0]);
             expect(specs).toHaveLength(3);
-            expect(specs[0].label).toBe('new-spec');
-            expect(specs[1].label).toBe('mid-spec');
+            // Default sort: numeric-prefix desc → name asc. All three specs
+            // tie on prefix (null) so they fall through to alphabetical.
+            expect(specs[0].label).toBe('mid-spec');
+            expect(specs[1].label).toBe('new-spec');
             expect(specs[2].label).toBe('old-spec');
         });
 
@@ -648,7 +631,7 @@ describe('SpecExplorerProvider', () => {
             expect(specs).toHaveLength(2);
         });
 
-        it('should sort completed and archived specs by birthtime descending', async () => {
+        it('applies default sort inside the Completed group', async () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'done-old', path: 'specs/done-old' },
                 { name: 'done-new', path: 'specs/done-new' },
@@ -656,22 +639,11 @@ describe('SpecExplorerProvider', () => {
             (readSpecContextSync as jest.Mock).mockReturnValue({ status: 'completed' });
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
 
-            // New one has later birthtime but sorting should not apply to completed
-            (mockFs.statSync as jest.Mock).mockImplementation((filePath: string) => {
-                if (filePath.includes('done-old')) {
-                    return { birthtime: new Date('2025-01-01T00:00:00Z'), mtime: new Date(0) };
-                }
-                if (filePath.includes('done-new')) {
-                    return { birthtime: new Date('2025-03-01T00:00:00Z'), mtime: new Date(0) };
-                }
-                return { birthtime: new Date(0), mtime: new Date(0) };
-            });
-
             const groups = await provider.getChildren();
             expect(groups[0].label).toBe('Completed (2)');
 
             const specs = await provider.getChildren(groups[0]);
-            // Completed specs sorted by creation date (newest first)
+            // Tie on prefix (both null), fall back to name asc: 'n' < 'o'.
             expect(specs[0].label).toBe('done-new');
             expect(specs[1].label).toBe('done-old');
         });

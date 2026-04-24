@@ -16,6 +16,7 @@ export const Commands = {
     toggleCollapseAllSpecs: 'speckit.specs.toggleCollapseAll',
     specsFilter: 'speckit.specs.filter',
     specsFilterClear: 'speckit.specs.filter.clear',
+    specsSort: 'speckit.specs.sort',
     delete: 'speckit.delete',
     installCli: 'speckit.installCli',
     initWorkspace: 'speckit.initWorkspace',
@@ -82,6 +83,7 @@ export const ConfigKeys = {
     },
     workspaceState: {
         specsFilterQuery: 'speckit.specs.filter.query',
+        specsSortMode: 'speckit.specs.sort.mode',
     },
 } as const;
 

@@ -1,0 +1,91 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "status": "completed",
+  "updated": "2026-04-24",
+  "selectedAt": "2026-04-24T13:27:47Z",
+  "specName": "Sort Options (name / date / status)",
+  "branch": "main",
+  "workingBranch": "feat/sort-specs-tree",
+  "type": "feat",
+  "createdAt": "2026-04-24T13:27:47Z",
+  "auto": true,
+  "approach": "Mirror the recently-merged SpecsFilterState pattern with a parallel SpecsSortState class that persists a sort-mode key to workspace state and fires an onChange to refresh the tree.",
+  "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/122",
+  "prNumber": 122,
+  "last_action": "PR #122 opened — feat(specs): add sort options (name / date / status) to specs tree",
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 8,
+      "scenarios": 5,
+      "key_finding": "SpecsFilterState + fuzzyMatch pattern (recently merged PR #121) is the template: workspace-state key, onChange callback to trigger provider refresh, title-bar command + icon, sort applied after filter in specExplorerProvider.getChildren"
+    },
+    "plan": {
+      "approach_summary": "Mirror the recently-merged SpecsFilterState pattern with a parallel SpecsSortState class that persists a sort-mode key to workspace state and fires an onChange to refresh the tree.",
+      "files_planned": 10,
+      "risks": [
+        "Status sort depends on .spec-context.json.currentStep; specs that predate the context file would all tie and sort by fallback. Mitigated by the numeric-prefix tie-break so output stays deterministic.",
+        "Date sort uses fs.statSync birthtime/mtime, which git operations can rewrite. Documented as a caveat; number remains default."
+      ]
+    },
+    "tasks": { "total": 10, "parallel_groups": 2 },
+    "implement": { "tasks_completed": 10, "tests": "346 passed, 0 failed" }
+  },
+  "task_summaries": {
+    "T001": { "status": "DONE", "did": "Added Commands.specsSort + ConfigKeys.workspaceState.specsSortMode", "files": ["src/core/constants.ts"], "concerns": [] },
+    "T002": { "status": "DONE_WITH_CONCERNS", "did": "Created SortMode union, DEFAULT_SORT_MODE, and comparators map; added injectable StatFn for testability", "files": ["src/features/specs/specsSortMode.ts"], "concerns": ["Added StatFn dependency injection to ComparatorContext — diverges slightly from the plan but is required because fs.statSync isn't spyable in this Jest setup"] },
+    "T003": { "status": "DONE", "did": "Created SpecsSortState mirroring SpecsFilterState with mode coercion", "files": ["src/features/specs/specsSortState.ts"], "concerns": [] },
+    "T004": { "status": "DONE", "did": "7 tests for SpecsSortState covering default, persistence, set-to-default, clear, coerce, initialize", "files": ["src/features/specs/__tests__/specsSortState.test.ts"], "concerns": [] },
+    "T005": { "status": "DONE", "did": "10 comparator tests — numeric/name/status/date modes + tie-breaks + injected stat failures", "files": ["src/features/specs/__tests__/specsSortMode.test.ts"], "concerns": [] },
+    "T006": { "status": "DONE_WITH_CONCERNS", "did": "Replaced inline sortSpecs with comparator dispatch; added statusByPath to existing spec-context loop; updated 2 existing provider tests for new default", "files": ["src/features/specs/specExplorerProvider.ts", "src/features/specs/__tests__/specExplorerProvider.test.ts"], "concerns": ["Behavior change: non-numeric specs no longer fall back to birthtime under default sort — they now tie-break alphabetically. Users wanting birthtime must pick Date Created explicitly. Documented in README."] },
+    "T007": { "status": "DONE", "did": "Registered speckit.specs.sort QuickPick with 5 modes, current-mode checkmark, and conditional Reset option", "files": ["src/features/specs/specCommands.ts"], "concerns": [] },
+    "T008": { "status": "DONE", "did": "Wired SpecsSortState through extension.ts + updated specCommands.length assertion", "files": ["src/extension.ts", "src/features/specs/index.ts", "src/features/specs/specCommands.test.ts"], "concerns": [] },
+    "T009": { "status": "DONE", "did": "Added speckit.specs.sort command + view/title menu entry with $(sort-precedence) icon", "files": ["package.json"], "concerns": [] },
+    "T010": { "status": "DONE", "did": "Added Sort specs section in README; reworded Active group bullet to reflect new default sort", "files": ["README.md"], "concerns": [] }
+  },
+  "files_modified": [
+    "src/core/constants.ts",
+    "src/features/specs/specsSortMode.ts",
+    "src/features/specs/specsSortState.ts",
+    "src/features/specs/__tests__/specsSortState.test.ts",
+    "src/features/specs/__tests__/specsSortMode.test.ts",
+    "src/features/specs/specExplorerProvider.ts",
+    "src/features/specs/__tests__/specExplorerProvider.test.ts",
+    "src/features/specs/specCommands.ts",
+    "src/features/specs/specCommands.test.ts",
+    "src/features/specs/index.ts",
+    "src/extension.ts",
+    "package.json",
+    "README.md"
+  ],
+  "concerns": [
+    { "task": "T002", "note": "Added StatFn dependency injection because fs.statSync cannot be spied on in this Jest setup. Default behavior unchanged in production." },
+    { "task": "T006", "note": "Behavior change: default sort no longer uses birthtime fallback for non-numeric specs. Users pick Date Created mode instead. Documented in README and reflected in updated tests." }
+  ],
+  "decisions": [
+    "Sort logic extracted to specsSortMode.ts as pure functions so tests don't depend on VS Code API.",
+    "setMode('number') treated as clear() to simplify sort-active tracking (only non-default modes persist)."
+  ],
+  "transitions": [
+    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-24T13:27:47Z" },
+    { "step": "specify", "substep": "exploring", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-04-24T13:28:30Z" },
+    { "step": "specify", "substep": "detecting", "from": { "step": "specify", "substep": "exploring" }, "by": "sdd", "at": "2026-04-24T13:29:10Z" },
+    { "step": "specify", "substep": "writing-spec", "from": { "step": "specify", "substep": "detecting" }, "by": "sdd", "at": "2026-04-24T13:29:40Z" },
+    { "step": "specify", "substep": null, "from": { "step": "specify", "substep": "writing-spec" }, "by": "sdd", "at": "2026-04-24T13:30:15Z" },
+    { "step": "plan", "substep": "loading", "from": { "step": "specify", "substep": null }, "by": "sdd", "at": "2026-04-24T13:31:00Z" },
+    { "step": "plan", "substep": "writing-plan", "from": { "step": "plan", "substep": "loading" }, "by": "sdd", "at": "2026-04-24T13:31:30Z" },
+    { "step": "plan", "substep": null, "from": { "step": "plan", "substep": "writing-plan" }, "by": "sdd", "at": "2026-04-24T13:32:00Z" },
+    { "step": "tasks", "substep": "loading", "from": { "step": "plan", "substep": null }, "by": "sdd", "at": "2026-04-24T13:32:45Z" },
+    { "step": "tasks", "substep": "writing-tasks", "from": { "step": "tasks", "substep": "loading" }, "by": "sdd", "at": "2026-04-24T13:33:15Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "tasks", "substep": "writing-tasks" }, "by": "sdd", "at": "2026-04-24T13:33:45Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-04-24T13:34:30Z" },
+    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-24T13:45:00Z" },
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-24T13:50:00Z" },
+    { "step": "done", "substep": null, "from": { "step": "done", "substep": null }, "by": "sdd", "at": "2026-04-24T13:52:00Z" }
+  ]
+}
