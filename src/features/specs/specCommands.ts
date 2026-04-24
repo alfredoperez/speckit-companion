@@ -21,6 +21,7 @@ import { startStep, setStatus, reactivate } from './stepLifecycle';
 import { updateSelectionContextKeys } from './selectionContextKeys';
 import { track as trackTerminal } from './terminalStepTracker';
 import type { StepName } from '../../core/types/specContext';
+import { SpecsFilterState } from './specsFilterState';
 
 function toWorkspaceRelative(absOrRel: string): string {
     const ws = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -45,7 +46,8 @@ export function registerSpecKitCommands(
     context: vscode.ExtensionContext,
     specExplorer: SpecExplorerProvider,
     outputChannel: vscode.OutputChannel,
-    specsTreeView?: vscode.TreeView<any>
+    specsTreeView?: vscode.TreeView<any>,
+    filterState?: SpecsFilterState
 ): void {
     function resolveTargets(item: SpecTreeItem | undefined, items: SpecTreeItem[] | undefined): SpecTreeItem[] {
         if (items && items.length > 0) return items;
@@ -98,6 +100,27 @@ export function registerSpecKitCommands(
         vscode.commands.registerCommand('speckit.specs.collapseAll', toggleCollapseAllHandler),
         vscode.commands.registerCommand('speckit.specs.expandAll', toggleCollapseAllHandler)
     );
+
+    // Filter specs: prompt for a fuzzy query (prefilled with the current one so
+    // edits are incremental) and persist it via SpecsFilterState. Clearing is a
+    // separate command gated on the `speckit.specs.filterActive` context key.
+    if (filterState) {
+        context.subscriptions.push(
+            vscode.commands.registerCommand(Commands.specsFilter, async () => {
+                const current = filterState.getQuery();
+                const input = await vscode.window.showInputBox({
+                    value: current,
+                    prompt: 'Filter specs by slug or name',
+                    placeHolder: 'type to filter…',
+                });
+                if (input === undefined) return;
+                await filterState.setQuery(input);
+            }),
+            vscode.commands.registerCommand(Commands.specsFilterClear, async () => {
+                await filterState.clear();
+            })
+        );
+    }
 
     // Spec delete
     context.subscriptions.push(

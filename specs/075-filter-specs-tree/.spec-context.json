@@ -1,0 +1,168 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "status": "completed",
+  "updated": "2026-04-24",
+  "selectedAt": "2026-04-23T15:01:02Z",
+  "specName": "Filter/search box above the specs tree",
+  "branch": "feat/elapsed-timer-notification",
+  "workingBranch": "feat/filter-specs-tree",
+  "type": "feat",
+  "createdAt": "2026-04-23T15:01:02Z",
+  "auto": false,
+  "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/121",
+  "prNumber": 121,
+  "last_action": "PR #121 opened — feat(specs): add fuzzy filter to specs tree",
+  "approach": "Add an in-memory filter query to SpecExplorerProvider plus a SpecsFilterState helper that reads/writes the query to workspaceState, with a title-bar action + InputBox UX and in-repo fuzzy subsequence matching.",
+  "files_modified": [
+    "src/features/specs/fuzzyMatch.ts",
+    "src/features/specs/__tests__/fuzzyMatch.test.ts",
+    "src/core/constants.ts",
+    "src/features/specs/specsFilterState.ts",
+    "src/features/specs/__tests__/specsFilterState.test.ts",
+    "src/features/specs/specExplorerProvider.ts",
+    "src/features/specs/__tests__/specExplorerProvider.test.ts",
+    "src/features/specs/specCommands.ts",
+    "src/features/specs/specCommands.test.ts",
+    "src/features/specs/index.ts",
+    "src/extension.ts",
+    "package.json",
+    "README.md",
+    "docs/architecture.md",
+    "webview/styles/spec-viewer/_navigation.css"
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added fuzzyMatch.ts exporting normalize() and fuzzyMatch(query, ...haystacks) using subsequence matching over normalized strings.",
+      "files": ["src/features/specs/fuzzyMatch.ts"],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added fuzzyMatch.test.ts covering empty/whitespace queries, case-insensitivity, subsequence match, normalization, multiple haystacks, and undefined haystacks. 10 tests pass.",
+      "files": ["src/features/specs/__tests__/fuzzyMatch.test.ts"],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added Commands.specsFilter, Commands.specsFilterClear, and ConfigKeys.workspaceState.specsFilterQuery.",
+      "files": ["src/core/constants.ts"],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added SpecsFilterState class with getQuery/setQuery/clear/initialize; persists to workspaceState and toggles speckit.specs.filterActive context key.",
+      "files": ["src/features/specs/specsFilterState.ts"],
+      "concerns": []
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added 7 tests covering round-trip, trimming, blank→clear, clear side-effects, and initialize(). All passing.",
+      "files": ["src/features/specs/__tests__/specsFilterState.test.ts"],
+      "concerns": []
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added optional filterState ctor param to SpecExplorerProvider; cached specName during status partition; applied fuzzyMatch to each group and passed filtered arrays into group labels/children. Also set speckit.specs.noFilterMatch context key inline (merged with T011).",
+      "files": ["src/features/specs/specExplorerProvider.ts"],
+      "concerns": []
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Added 4 integration tests exercising filter matching across slug/specName, empty root on zero match, and full tree when cleared. All passing.",
+      "files": ["src/features/specs/__tests__/specExplorerProvider.test.ts"],
+      "concerns": []
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Registered speckit.specs.filter (prompts via showInputBox prefilled with current query) and speckit.specs.filter.clear commands in registerSpecKitCommands. Added optional filterState parameter.",
+      "files": ["src/features/specs/specCommands.ts"],
+      "concerns": []
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Wired SpecsFilterState into extension activation: constructed before provider with a lazy refresh callback, passed into provider and registerSpecKitCommands, initialize() called to sync the filterActive context key on activation. Exported from features/specs/index.ts.",
+      "files": ["src/extension.ts", "src/features/specs/index.ts"],
+      "concerns": []
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Added 2 commands + 2 view/title menu entries (filter at navigation@0, clear-filter gated on speckit.specs.filterActive) + 1 viewsWelcome entry for no-match state.",
+      "files": ["package.json"],
+      "concerns": []
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Inlined during T006 — setContext for speckit.specs.noFilterMatch fires from getChildren root branch based on filtered partition totals. Added 2 tests covering true/false paths. Defensive try/catch wrapper to handle jest mock not returning a thenable.",
+      "files": ["src/features/specs/specExplorerProvider.ts", "src/features/specs/__tests__/specExplorerProvider.test.ts"],
+      "concerns": []
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "README gains a filter-specs paragraph under the Sidebar at a Glance section; architecture.md lists the new modules and the workspaceState/context keys.",
+      "files": ["README.md", "docs/architecture.md"],
+      "concerns": []
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Drive-by fix bundled at user's request during implement: switched .step-tab.in-flight .step-status and .step-label to use --success instead of --accent, so the in-flight percentage pill matches its green working-pulse glow (was purple-on-green on themes where --vscode-focusBorder is purple). Also updated registerSpecKitCommands arity test from 4 to 5.",
+      "files": ["webview/styles/spec-viewer/_navigation.css", "src/features/specs/specCommands.test.ts"],
+      "concerns": []
+    }
+  },
+  "concerns": [],
+  "decisions": [
+    {
+      "task": "T000",
+      "note": "Branch-creation skipped — already on feat/elapsed-timer-notification (previous spec's merged branch). Per decision table, SDD does not switch when current != main. Proceeded on current branch."
+    },
+    {
+      "task": "T001-T002",
+      "note": "Planned as parallel [P] group but executed sequentially because T002's verify step runs tests that import T001's module — running in parallel subagents risked T002 verifying before T001 wrote the file. Sequential execution took ~2s and avoided the race."
+    },
+    {
+      "task": "T013",
+      "note": "Bundled a drive-by CSS fix unrelated to the filter feature at the user's explicit request during implement. The in-flight step-tab styling used --accent for the pill and --success for the pulse glow, producing a jarring purple-on-green state on themes where --vscode-focusBorder is purple. Switched both to --success for a consistent in-progress visual."
+    }
+  ],
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 9,
+      "scenarios": 7,
+      "key_finding": "VS Code TreeView has no native inline input; filter must use a title-bar action + InputBox, and workspaceState persistence follows the specDraftManager pattern. Tree is already status-grouped with counts (071), so counts must reflect filtered totals."
+    },
+    "plan": {
+      "approach_summary": "Add an in-memory filter query to SpecExplorerProvider plus a SpecsFilterState helper that reads/writes the query to workspaceState, with a title-bar action + InputBox UX and in-repo fuzzy subsequence matching.",
+      "files_planned": 11,
+      "risks": [
+        "VS Code TreeView selection quirk when items disappear (hidden specs lose selection — intended, matches native behavior)",
+        "Count desync with 071-tree-group-counts (mitigated: group label is built in one place from filtered length)",
+        "InputBox without typeahead (explicit scope trade-off; re-triggerable action for incremental edits)"
+      ]
+    }
+  },
+  "transitions": [
+    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-23T15:01:02Z" },
+    { "step": "specify", "substep": "exploring", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-04-23T15:01:05Z" },
+    { "step": "specify", "substep": "detecting", "from": { "step": "specify", "substep": "exploring" }, "by": "sdd", "at": "2026-04-23T15:01:30Z" },
+    { "step": "specify", "substep": "writing-spec", "from": { "step": "specify", "substep": "detecting" }, "by": "sdd", "at": "2026-04-23T15:01:35Z" },
+    { "step": "specify", "substep": null, "from": { "step": "specify", "substep": "writing-spec" }, "by": "sdd", "at": "2026-04-23T15:02:30Z" },
+    { "step": "plan", "substep": "loading", "from": { "step": "specify", "substep": null }, "by": "sdd", "at": "2026-04-23T15:03:00Z" },
+    { "step": "plan", "substep": "writing-plan", "from": { "step": "plan", "substep": "loading" }, "by": "sdd", "at": "2026-04-23T15:03:05Z" },
+    { "step": "plan", "substep": null, "from": { "step": "plan", "substep": "writing-plan" }, "by": "sdd", "at": "2026-04-23T15:04:00Z" },
+    { "step": "tasks", "substep": "loading", "from": { "step": "plan", "substep": null }, "by": "sdd", "at": "2026-04-23T15:04:30Z" },
+    { "step": "tasks", "substep": "writing-tasks", "from": { "step": "tasks", "substep": "loading" }, "by": "sdd", "at": "2026-04-23T15:04:35Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "tasks", "substep": "writing-tasks" }, "by": "sdd", "at": "2026-04-23T15:05:30Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-04-23T15:06:00Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-23T15:07:00Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-23T15:08:00Z" },
+    { "step": "implement", "substep": "hooks", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-23T15:30:00Z" },
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-04-24T00:10:00Z" }
+  ]
+}

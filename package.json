@@ -101,6 +101,11 @@
         "when": "speckit.detected && !speckit.constitutionNeedsSetup"
       },
       {
+        "view": "speckit.views.explorer",
+        "contents": "No specs match the current filter.\n\n[$(clear-all) Clear filter](command:speckit.specs.filter.clear)",
+        "when": "speckit.specs.filterActive && speckit.specs.noFilterMatch"
+      },
+      {
         "view": "speckit.views.steering",
         "contents": "[$(globe) Create User Rule](command:speckit.steering.createUserRule)\n\n[$(root-folder) Create Project Rule](command:speckit.steering.createProjectRule)"
       }
@@ -200,6 +205,18 @@
         "title": "Expand All Specs",
         "category": "SpecKit",
         "icon": "$(expand-all)"
+      },
+      {
+        "command": "speckit.specs.filter",
+        "title": "Filter Specs…",
+        "category": "SpecKit",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "speckit.specs.filter.clear",
+        "title": "Clear Specs Filter",
+        "category": "SpecKit",
+        "icon": "$(clear-all)"
       },
       {
         "command": "speckit.delete",
@@ -395,6 +412,16 @@
     ],
     "menus": {
       "view/title": [
+        {
+          "command": "speckit.specs.filter",
+          "when": "view == speckit.views.explorer",
+          "group": "navigation@0"
+        },
+        {
+          "command": "speckit.specs.filter.clear",
+          "when": "view == speckit.views.explorer && speckit.specs.filterActive",
+          "group": "navigation@0"
+        },
         {
           "command": "speckit.create",
           "when": "view == speckit.views.explorer",

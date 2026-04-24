@@ -49,6 +49,8 @@ src/
 │   │                           # specContextReader.ts, specContextWriter.ts,
 │   │                           # specContextBackfill.ts (060 canonical),
 │   │                           # specContextReconciler.ts (one-time file repair),
+│   │                           # specsFilterState.ts (075 fuzzy filter),
+│   │                           # fuzzyMatch.ts (075 in-repo matcher),
 │   │                           # index.ts, __tests__/
 │   ├── steering/               # steeringExplorerProvider.ts, steeringManager.ts,
 │   │                           # steeringCommands.ts, types.ts, index.ts
@@ -186,7 +188,8 @@ This is configured via the `commandFormat` field in `PROVIDER_PATHS` (`src/ai-pr
 
 - **In-memory**: Tree view data, webview state
 - **File-based**: `specs/*/`, `.claude/settings/speckit-settings.json`, `.spec-context.json` per spec directory
-- **VS Code**: Extension context for subscriptions, globalState for persistence
+- **VS Code**: Extension context for subscriptions, globalState for persistence, workspaceState for per-workspace UI state (e.g. `speckit.specs.filter.query` from 075)
+- **Context keys**: `speckit.specs.filterActive` (075) toggles the clear-filter title-bar action; `speckit.specs.noFilterMatch` (075) drives the empty-result `viewsWelcome` entry; `speckit.specs.allCollapsed` (068) swaps the collapse/expand icon
 
 ## Extension Points for Contributors
 
