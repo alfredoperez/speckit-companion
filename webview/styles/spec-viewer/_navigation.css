@@ -102,10 +102,13 @@
     font-weight: 700;
 }
 
-/* In-flight (canonical): accent % pill + single working-pulse animation */
+/* In-flight (canonical): success-colored % pill + matching working-pulse glow.
+   Pill background matches the green pulse (--success) so the pill and its ring
+   read as one "work in progress" state — using --accent here clashed with the
+   green pulse on themes where --vscode-focusBorder is purple. */
 .step-tab.in-flight .step-status {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: var(--success);
+    border-color: var(--success);
     color: white;
     font-size: 11px;
     font-weight: 700;
@@ -117,7 +120,7 @@
 }
 
 .step-tab.in-flight .step-label {
-    color: var(--accent);
+    color: var(--success);
     font-weight: 700;
 }
 

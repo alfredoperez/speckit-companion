@@ -59,6 +59,8 @@ Specs are grouped into three collapsible sections based on their status (stored 
 
 The Specs view title bar exposes a **collapse/expand all** toggle (alongside the `+` and refresh buttons) that flips every spec in place between expanded and collapsed. The icon swaps to reflect the next action; state is in-memory only and is not persisted across sessions.
 
+**Filter specs** — click the filter icon in the Specs view title bar to open a prompt and fuzzy-filter specs by slug or feature name (matches are case-insensitive and subsequence-based, e.g. `ftr` matches `filter-specs-tree`). The query is persisted to workspace state and restored on the next activation. A clear-filter icon appears next to the filter icon while a filter is active; an empty-result message offers a one-click clear when no specs match.
+
 Right-click a spec to access **Mark as Completed**, **Archive Spec**, and **Reveal in File Explorer** (opens the spec's folder in Finder / File Explorer / the default file manager) actions. The spec viewer footer shows lifecycle buttons based on the spec's current status:
 
 - **Active** (tasks incomplete): Regenerate, Archive, + primary CTA (Plan/Tasks/Implement depending on next step)

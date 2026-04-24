@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { SpecExplorerProvider } from '../specExplorerProvider';
+import { SpecsFilterState } from '../specsFilterState';
 
 // Mock fs module
 jest.mock('fs');
@@ -744,6 +745,114 @@ describe('SpecExplorerProvider', () => {
                 expect(groupsA[i].id).toBe(groupsB[i].id);
                 expect(groupsA[i].id).toMatch(/^spec-group:/);
             }
+        });
+    });
+
+    describe('with filter active', () => {
+        function buildFilterState(initialQuery: string): SpecsFilterState {
+            const store = new Map<string, unknown>();
+            if (initialQuery) store.set('speckit.specs.filter.query', initialQuery);
+            const fakeCtx = {
+                workspaceState: {
+                    get: jest.fn((key: string) => store.get(key)),
+                    update: jest.fn(async (key: string, value: unknown) => {
+                        if (value === undefined) store.delete(key);
+                        else store.set(key, value);
+                    }),
+                    keys: jest.fn(() => Array.from(store.keys())),
+                },
+            } as unknown as vscode.ExtensionContext;
+            return new SpecsFilterState(fakeCtx, () => { /* noop */ });
+        }
+
+        function seedThreeSpecs() {
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: '070-design-tighten-safety', path: 'specs/070-design-tighten-safety' },
+                { name: '071-tree-group-counts', path: 'specs/071-tree-group-counts' },
+                { name: '072-immediate-status-update', path: 'specs/072-immediate-status-update' },
+            ]);
+            (readSpecContextSync as jest.Mock).mockImplementation((specPath: string) => {
+                if (specPath.includes('070-')) return { status: 'active', specName: 'Design — tighten safety' };
+                if (specPath.includes('071-')) return { status: 'active', specName: 'Tree group counts' };
+                if (specPath.includes('072-')) return { status: 'completed', specName: 'Immediate status update' };
+                return undefined;
+            });
+        }
+
+        it('returns only matching specs across groups with filtered counts', async () => {
+            seedThreeSpecs();
+            const filterState = buildFilterState('tree');
+            const filteredProvider = new SpecExplorerProvider(context, outputChannel, filterState);
+
+            const groups = await filteredProvider.getChildren();
+
+            expect(groups).toHaveLength(1);
+            expect(groups[0].label).toBe('Active (1)');
+            const specs = await filteredProvider.getChildren(groups[0]);
+            expect(specs.map(s => s.label)).toEqual(['071-tree-group-counts']);
+        });
+
+        it('matches by specName when slug alone does not match', async () => {
+            seedThreeSpecs();
+            const filterState = buildFilterState('safety');
+            const filteredProvider = new SpecExplorerProvider(context, outputChannel, filterState);
+
+            const groups = await filteredProvider.getChildren();
+
+            expect(groups).toHaveLength(1);
+            expect(groups[0].label).toBe('Active (1)');
+            const specs = await filteredProvider.getChildren(groups[0]);
+            expect(specs.map(s => s.label)).toEqual(['070-design-tighten-safety']);
+        });
+
+        it('returns empty root when filter matches zero specs', async () => {
+            seedThreeSpecs();
+            const filterState = buildFilterState('zzz');
+            const filteredProvider = new SpecExplorerProvider(context, outputChannel, filterState);
+
+            const groups = await filteredProvider.getChildren();
+
+            expect(groups).toEqual([]);
+        });
+
+        it('sets speckit.specs.noFilterMatch=true when filter matches nothing', async () => {
+            seedThreeSpecs();
+            const filterState = buildFilterState('zzz');
+            const filteredProvider = new SpecExplorerProvider(context, outputChannel, filterState);
+            (vscode.commands.executeCommand as jest.Mock).mockClear();
+
+            await filteredProvider.getChildren();
+
+            expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
+                'setContext',
+                'speckit.specs.noFilterMatch',
+                true,
+            );
+        });
+
+        it('sets speckit.specs.noFilterMatch=false when filter matches at least one spec', async () => {
+            seedThreeSpecs();
+            const filterState = buildFilterState('tree');
+            const filteredProvider = new SpecExplorerProvider(context, outputChannel, filterState);
+            (vscode.commands.executeCommand as jest.Mock).mockClear();
+
+            await filteredProvider.getChildren();
+
+            expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
+                'setContext',
+                'speckit.specs.noFilterMatch',
+                false,
+            );
+        });
+
+        it('shows the full tree when filter is cleared', async () => {
+            seedThreeSpecs();
+            const filterState = buildFilterState('');
+            const filteredProvider = new SpecExplorerProvider(context, outputChannel, filterState);
+
+            const groups = await filteredProvider.getChildren();
+
+            expect(groups.map(g => g.label)).toEqual(['Active (2)', 'Completed (1)']);
         });
     });
 });

@@ -18,6 +18,8 @@ import { SpecStatuses, WorkflowSteps } from '../../core/constants';
 import { readSpecContextSync } from './specContextManager';
 import { isStepCompleted } from '../spec-viewer/stateDerivation';
 import { StepName, STEP_NAMES } from '../../core/types/specContext';
+import { SpecsFilterState } from './specsFilterState';
+import { fuzzyMatch } from './fuzzyMatch';
 
 export interface SpecInfo {
     name: string;
@@ -30,7 +32,11 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
     public activeSpecName: string | null = null;
     public expandAllSpecs: boolean = true;
 
-    constructor(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel) {
+    constructor(
+        context: vscode.ExtensionContext,
+        outputChannel: vscode.OutputChannel,
+        private readonly filterState?: SpecsFilterState
+    ) {
         super(context, { name: 'SpecExplorerProvider', outputChannel });
     }
 
@@ -92,14 +98,19 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             const workspaceFolder = vscode.workspace.workspaceFolders![0];
             const basePath = workspaceFolder.uri.fsPath;
 
-            // Partition specs by status from .spec-context.json
+            // Partition specs by status from .spec-context.json. Cache each spec's
+            // context read so the fuzzy filter below can reuse specName without a
+            // second disk read per spec.
             const activeSpecs: SpecInfo[] = [];
             const completedSpecs: SpecInfo[] = [];
             const archivedSpecs: SpecInfo[] = [];
+            const specNameByPath = new Map<string, string | undefined>();
 
             for (const spec of specs) {
                 const specFullPath = path.join(basePath, spec.path);
-                const status = this.getSpecStatus(specFullPath);
+                const context = readSpecContextSync(specFullPath);
+                const status = context?.status || SpecStatuses.ACTIVE;
+                specNameByPath.set(spec.path, context?.specName);
                 if (status === SpecStatuses.COMPLETED) {
                     completedSpecs.push(spec);
                 } else if (status === SpecStatuses.ARCHIVED) {
@@ -108,6 +119,28 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                     activeSpecs.push(spec);
                 }
             }
+
+            // Apply fuzzy filter across slug + specName when a query is active.
+            const query = this.filterState?.getQuery() ?? '';
+            let filteredActive = activeSpecs;
+            let filteredCompleted = completedSpecs;
+            let filteredArchived = archivedSpecs;
+            if (query.length > 0) {
+                const matches = (spec: SpecInfo) =>
+                    fuzzyMatch(query, spec.name, specNameByPath.get(spec.path));
+                filteredActive = activeSpecs.filter(matches);
+                filteredCompleted = completedSpecs.filter(matches);
+                filteredArchived = archivedSpecs.filter(matches);
+            }
+
+            const noFilterMatch = query.length > 0
+                && filteredActive.length === 0
+                && filteredCompleted.length === 0
+                && filteredArchived.length === 0;
+            try {
+                const p = vscode.commands.executeCommand('setContext', 'speckit.specs.noFilterMatch', noFilterMatch);
+                Promise.resolve(p).catch(() => { /* fire-and-forget */ });
+            } catch { /* fire-and-forget */ }
 
             // Sort: numeric-prefixed specs (e.g. "069-...") by prefix desc —
             // stable across git operations that rewrite filesystem birthtime.
@@ -131,48 +164,48 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                     return 0;
                 }
             };
-            activeSpecs.sort(sortSpecs);
-            completedSpecs.sort(sortSpecs);
-            archivedSpecs.sort(sortSpecs);
+            filteredActive.sort(sortSpecs);
+            filteredCompleted.sort(sortSpecs);
+            filteredArchived.sort(sortSpecs);
 
             const items: SpecItem[] = [];
 
             // Group items get stable ids so VS Code preserves the user's
             // manual expand/collapse state across refreshes — the toggle
             // button only affects spec items, never groups.
-            if (activeSpecs.length > 0) {
+            if (filteredActive.length > 0) {
                 const activeGroup = new SpecItem(
-                    `Active (${activeSpecs.length})`,
+                    `Active (${filteredActive.length})`,
                     vscode.TreeItemCollapsibleState.Expanded,
                     'spec-group',
                     this.context
                 );
                 activeGroup.id = 'spec-group:active';
-                activeGroup.groupSpecs = activeSpecs;
+                activeGroup.groupSpecs = filteredActive;
                 items.push(activeGroup);
             }
 
-            if (completedSpecs.length > 0) {
+            if (filteredCompleted.length > 0) {
                 const completedGroup = new SpecItem(
-                    `Completed (${completedSpecs.length})`,
+                    `Completed (${filteredCompleted.length})`,
                     vscode.TreeItemCollapsibleState.Collapsed,
                     'spec-group',
                     this.context
                 );
                 completedGroup.id = 'spec-group:completed';
-                completedGroup.groupSpecs = completedSpecs;
+                completedGroup.groupSpecs = filteredCompleted;
                 items.push(completedGroup);
             }
 
-            if (archivedSpecs.length > 0) {
+            if (filteredArchived.length > 0) {
                 const archivedGroup = new SpecItem(
-                    `Archived (${archivedSpecs.length})`,
+                    `Archived (${filteredArchived.length})`,
                     vscode.TreeItemCollapsibleState.Collapsed,
                     'spec-group',
                     this.context
                 );
                 archivedGroup.id = 'spec-group:archived';
-                archivedGroup.groupSpecs = archivedSpecs;
+                archivedGroup.groupSpecs = filteredArchived;
                 items.push(archivedGroup);
             }
 
