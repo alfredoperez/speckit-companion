@@ -1,0 +1,172 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "updated": "2026-04-24",
+  "checkpointStatus": { "commit": true, "pr": true },
+  "last_action": "PR #130 opened — fix(spec-viewer): improve current-step chip contrast on purple themes",
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/130",
+  "prNumber": 130,
+  "selectedAt": "2026-04-24T23:26:02Z",
+  "specName": "Fix Step Chip Contrast",
+  "branch": "main",
+  "workingBranch": "fix/fix-step-chip-contrast",
+  "type": "fix",
+  "createdAt": "2026-04-24T23:26:02Z",
+  "auto": true,
+  "approach": "Modify .step-tab.current rule in webview/styles/spec-viewer/_navigation.css: bump color-mix from 15% to 22% and add an outer box-shadow glow at 25% accent.",
+  "files_modified": [
+    "webview/styles/spec-viewer/_navigation.css"
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "In .step-tab.current: changed color-mix from 15% to 22%; added second box-shadow layer at 25% accent for outer glow.",
+      "files": [
+        "webview/styles/spec-viewer/_navigation.css"
+      ],
+      "concerns": []
+    }
+  },
+  "step_summaries": {
+    "specify": {
+      "complexity": "minimal",
+      "requirements": 4,
+      "scenarios": 3,
+      "key_finding": ".step-tab.current already uses color-mix(var(--accent, …)) on a single rule — bump the mix and add an outer box-shadow for depth"
+    }
+  },
+  "transitions": [
+    {
+      "step": "specify",
+      "substep": "parsing",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-04-24T23:26:02Z"
+    },
+    {
+      "step": "specify",
+      "substep": "exploring",
+      "from": {
+        "step": "specify",
+        "substep": "parsing"
+      },
+      "by": "sdd",
+      "at": "2026-04-24T23:26:10Z"
+    },
+    {
+      "step": "specify",
+      "substep": "detecting",
+      "from": {
+        "step": "specify",
+        "substep": "exploring"
+      },
+      "by": "sdd",
+      "at": "2026-04-24T23:26:20Z"
+    },
+    {
+      "step": "specify",
+      "substep": "writing-spec",
+      "from": {
+        "step": "specify",
+        "substep": "detecting"
+      },
+      "by": "sdd",
+      "at": "2026-04-24T23:26:30Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": "writing-spec"
+      },
+      "by": "sdd",
+      "at": "2026-04-24T23:26:45Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-24T23:27:30Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-04-24T23:28:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": "hooks",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-04-24T23:28:30Z"
+    },
+    {
+      "step": "implement",
+      "substep": "code-review",
+      "from": {
+        "step": "implement",
+        "substep": "hooks"
+      },
+      "by": "sdd",
+      "at": "2026-04-24T23:30:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-24T23:37:40.734Z"
+    },
+    {
+      "step": "implement",
+      "substep": "commit-review",
+      "from": {
+        "step": "implement",
+        "substep": "code-review"
+      },
+      "by": "sdd",
+      "at": "2026-04-24T23:38:00Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": "commit-review"
+      },
+      "by": "sdd",
+      "at": "2026-04-24T23:38:30Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "done",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-24T23:40:00Z"
+    }
+  ],
+  "status": "completed",
+  "stepHistory": {}
+}

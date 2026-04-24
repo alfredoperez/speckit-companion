@@ -95,8 +95,10 @@
    contiguous chip — including when the step is also in-flight (the pulse stays
    inside the ring instead of visually overflowing an outer outline). */
 .step-tab.current {
-    background: color-mix(in srgb, var(--accent, #4a9eff) 15%, transparent);
-    box-shadow: inset 0 0 0 2px var(--accent, #4a9eff);
+    background: color-mix(in srgb, var(--accent, #4a9eff) 22%, transparent);
+    box-shadow:
+        inset 0 0 0 2px var(--accent, #4a9eff),
+        0 0 0 1px color-mix(in srgb, var(--accent, #4a9eff) 25%, transparent);
     border-radius: 6px;
 }
 
