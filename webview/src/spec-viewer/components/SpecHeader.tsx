@@ -22,7 +22,7 @@ export function SpecHeader() {
 
     return (
         <div class="spec-header" data-has-context={String(hasContext)}>
-            {(badgeText || ns.branch) && (
+            {(badgeText || ns.branch || ns.createdDate) && (
                 <div class="spec-header-badges">
                     {badgeText && (
                         <span class={`spec-badge${statusClass ? ` spec-badge--${statusClass}` : ''}`}>
@@ -30,26 +30,22 @@ export function SpecHeader() {
                         </span>
                     )}
                     {ns.branch && (
-                        <span class="spec-header-branch">
-                            <span class="branch-icon">{''}</span> {ns.branch}
-                        </span>
-                    )}
-                </div>
-            )}
-            {(ns.specContextName || ns.createdDate) && (
-                <div class="spec-header-main">
-                    {ns.specContextName && (
-                        <span class="spec-header-title">
-                            <span class="spec-header-doctype">{docTypeLabel}:</span>{' '}
-                            {ns.specContextName}
+                        <span class="spec-header-branch" title={`Branch: ${ns.branch}`}>
+                            <span class="codicon codicon-git-branch" aria-hidden="true"></span>
+                            {ns.branch}
                         </span>
                     )}
                     {ns.createdDate && (
-                        <span class="spec-date">
-                            <span class="meta-label">Created:</span>{' '}
-                            <span class="meta-date">{ns.createdDate}</span>
-                        </span>
+                        <span class="spec-header-date">{ns.createdDate}</span>
                     )}
+                </div>
+            )}
+            {ns.specContextName && (
+                <div class="spec-header-main">
+                    <span class="spec-header-title">
+                        <span class="spec-header-doctype">{docTypeLabel}:</span>{' '}
+                        {ns.specContextName}
+                    </span>
                 </div>
             )}
         </div>

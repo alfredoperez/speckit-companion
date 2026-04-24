@@ -45,7 +45,7 @@
     padding: 8px 14px;
     border: none;
     background: transparent;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     cursor: pointer;
     font-size: 13px;
     font-weight: 500;
@@ -55,7 +55,7 @@
     border-radius: var(--radius-sm);
 }
 
-.step-tab:hover:not(:disabled) {
+.step-tab:hover:not(:disabled):not(.current) {
     color: var(--text-primary);
     background: var(--bg-hover);
 }
@@ -87,18 +87,21 @@
 }
 
 .step-tab.done .step-label {
-    color: var(--text-secondary);
+    color: var(--text-primary);
 }
 
-/* Highlight the currently viewed step tab (canonical: current) */
+/* Highlight the currently viewed step tab (canonical: current).
+   Inset ring + accent-tinted fill so the highlight wraps the whole tab as one
+   contiguous chip — including when the step is also in-flight (the pulse stays
+   inside the ring instead of visually overflowing an outer outline). */
 .step-tab.current {
-    outline: 1px solid var(--accent, #4a9eff);
-    outline-offset: 2px;
-    border-radius: 4px;
+    background: color-mix(in srgb, var(--accent, #4a9eff) 15%, transparent);
+    box-shadow: inset 0 0 0 2px var(--accent, #4a9eff);
+    border-radius: 6px;
 }
 
 .step-tab.current .step-label {
-    color: var(--accent);
+    color: var(--text-primary);
     font-weight: 700;
 }
 
@@ -119,8 +122,14 @@
     animation: working-pulse 2s ease-in-out infinite;
 }
 
+/* Extra left padding so the pill's ~16px working-pulse glow doesn't crash
+   into the preceding connector line. */
+.step-tab.in-flight {
+    padding-left: 20px;
+}
+
 .step-tab.in-flight .step-label {
-    color: var(--success);
+    color: var(--text-primary);
     font-weight: 700;
 }
 
