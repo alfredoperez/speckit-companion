@@ -1,9 +1,9 @@
 {
   "workflow": "sdd",
-  "currentStep": "implement",
+  "currentStep": "done",
   "currentTask": null,
-  "progress": "code-review",
-  "next": "implement",
+  "progress": null,
+  "next": "done",
   "updated": "2026-04-24",
   "selectedAt": "2026-04-24T14:07:06Z",
   "specName": "Fix Codex Provider PowerShell Compatibility",
@@ -11,8 +11,11 @@
   "workingBranch": "feat/sort-specs-tree",
   "type": "fix",
   "createdAt": "2026-04-24T14:07:06Z",
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/123",
+  "prNumber": 123,
+  "checkpointStatus": { "commit": true, "pr": true },
   "approach": "Replace Unix-only shell syntax in codexCliProvider.ts with a uniform temp-file + shell-native stdin pipe, branching on the workspace's script setting (sh vs ps), with $ARGUMENTS substitution moved into Node. Added defensive tweaks: UTF-8 output encoding prelude on the PowerShell pipe, and CRLF→LF normalization on the temp file.",
-  "last_action": "Installed v0.12.2 locally via /install-local. Awaiting CP1 code review.",
+  "last_action": "PR #123 opened — fix(ai-providers): codex cross-shell command pipe for PowerShell",
   "files_modified": [
     "src/ai-providers/initOptions.ts",
     "src/ai-providers/__tests__/initOptions.test.ts",
@@ -93,9 +96,11 @@
     { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": null }, "by": "sdd", "at": "2026-04-24T14:26:00.000Z" },
     { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-24T14:30:00.000Z" },
     { "step": "implement", "substep": "hooks", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-24T14:40:00.000Z" },
-    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-04-24T14:45:00.000Z" }
+    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-04-24T14:45:00.000Z" },
+    { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-24T14:50:00.000Z" },
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-24T14:55:00.000Z" }
   ],
-  "status": "implementing",
+  "status": "completed",
   "stepHistory": {
     "specify": {
       "startedAt": "2026-04-24T14:12:04.021Z",
@@ -118,7 +123,7 @@
     },
     "implement": {
       "startedAt": "2026-04-24T14:25:02.164Z",
-      "completedAt": null,
+      "completedAt": "2026-04-24T14:55:00.000Z",
       "substeps": [
         { "name": "run-tests", "startedAt": "2026-04-24T14:39:00.000Z", "completedAt": "2026-04-24T14:40:00.000Z" }
       ]
