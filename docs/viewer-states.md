@@ -251,8 +251,8 @@ stateDiagram-v2
 
 | Class | Meaning | Visual |
 |-------|---------|--------|
-| `exists` | File exists on disk | Green checkmark dot |
-| `viewing` | Currently displayed in viewer | White bold label |
+| `exists` | File exists on disk | Green checkmark dot + bright label (normal weight) |
+| `viewing` | Currently displayed in viewer | Accent-tinted fill + inset accent ring wrapping the whole tab + bold bright label |
 | `working` | Step being worked on (from `spec-context.step`, only if not completed) | Pulsing green glow on dot + live elapsed timer (e.g. `3m 22s`) rendered via `.step-tab__elapsed` |
 | `tasks-active` | Viewing tasks with 0-100% progress | Percentage badge in dot |
 | `in-progress` | Tasks have progress but not viewing | Percentage in dot (subtle) |

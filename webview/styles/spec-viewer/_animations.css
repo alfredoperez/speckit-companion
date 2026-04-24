@@ -73,6 +73,18 @@
     }
 }
 
+/* Gentle border breath for in-progress spec badges (specifying / planning /
+   tasking / implementing). Subtle enough to coexist with multiple badges in
+   a list view — border only, no glow. */
+@keyframes spec-badge-working {
+    0%, 100% {
+        border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    }
+    50% {
+        border-color: color-mix(in srgb, var(--accent) 75%, transparent);
+    }
+}
+
 /* Pulsing glow for active working step (green = active progress) */
 @keyframes working-pulse {
     0%, 100% {
