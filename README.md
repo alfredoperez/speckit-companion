@@ -114,6 +114,16 @@ Actions that change the spec's lifecycle are protected so a misfired click is ea
 2. **Open the sidebar** — the SpecKit icon is always visible in the activity bar; with no folder open, clicking it shows an empty-state panel with an **Open Folder** action
 3. **Create a spec** — once a folder is open, click the `+` button in the Specs view to start your first feature
 
+## Sample Specs
+
+Looking for "what does good look like?" The repo's own `specs/` directory is the answer — every feature ships with the spec that drove it. A few worth opening:
+
+- [`specs/008-spec-viewer-ux/`](./specs/008-spec-viewer-ux/) — **full SpecKit flow**: spec, plan, research, data model, quickstart, tasks, plus checklists and contracts.
+- [`specs/065-multi-select-specs/`](./specs/065-multi-select-specs/) — **minimal SDD flow**: just `spec.md` + `plan.md` + `tasks.md` for a small UX change.
+- [`specs/051-explorer-viewer-fixes/`](./specs/051-explorer-viewer-fixes/) — **minimal SDD flow**: same lean shape, applied to a focused bug-fix bundle.
+
+Compare the file lists side by side to see the contrast between the full and minimal flows.
+
 ## Supported AI Providers
 
 | Feature | Claude Code | GitHub Copilot CLI | Gemini CLI | Codex CLI |
