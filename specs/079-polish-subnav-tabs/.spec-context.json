@@ -1,0 +1,49 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "status": "completed",
+  "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/133",
+  "prNumber": 133,
+  "updated": "2026-04-25",
+  "selectedAt": "2026-04-24T23:44:05Z",
+  "specName": "Polish Subnav Tabs",
+  "branch": "main",
+  "workingBranch": "feat/polish-subnav-tabs",
+  "type": "feat",
+  "createdAt": "2026-04-24T23:44:05Z",
+  "auto": true,
+  "approach": "Update the Related Documents Tabs CSS rules in _navigation.css so the active state mirrors the .step-tab.current accent-pill recipe (color-mix at 18% tint + accent underline + bold --text-primary), and the inactive state uses --text-secondary with --bg-hover on hover. Pure CSS — no markup change.",
+  "files_modified": ["webview/styles/spec-viewer/_navigation.css"],
+  "last_action": "PR #133 opened — feat(spec-viewer): polish related-tab styles",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Rewrote .related-tab, .related-tab:hover, .related-tab.active in _navigation.css — base now uses --text-secondary with radius-sm; active uses 18% accent color-mix pill + bold + accent underline.",
+      "files": ["webview/styles/spec-viewer/_navigation.css"],
+      "concerns": []
+    }
+  },
+  "step_summaries": {
+    "specify": {
+      "complexity": "minimal",
+      "requirements": 4,
+      "scenarios": 3,
+      "key_finding": ".step-tab.current uses a color-mix accent pill (22%) + inset accent ring + radius-sm — the related-tab active state mirrors this recipe at a quieter 18% tint to read as one coherent system."
+    }
+  },
+  "transitions": [
+    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-24T23:44:05Z" },
+    { "step": "specify", "substep": "exploring", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-04-24T23:44:10Z" },
+    { "step": "specify", "substep": "detecting", "from": { "step": "specify", "substep": "exploring" }, "by": "sdd", "at": "2026-04-24T23:44:15Z" },
+    { "step": "specify", "substep": "writing-spec", "from": { "step": "specify", "substep": "detecting" }, "by": "sdd", "at": "2026-04-24T23:44:20Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "specify", "substep": "writing-spec" }, "by": "sdd", "at": "2026-04-24T23:44:30Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-04-24T23:45:00Z" },
+    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-24T23:47:00Z" },
+    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-24T23:50:00Z", "note": "paused — pivoting to viewer-fixes spec" },
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-25T02:00:00Z", "note": "resumed after #131 + #132 merged" }
+  ]
+}
