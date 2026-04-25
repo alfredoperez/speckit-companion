@@ -1,0 +1,64 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "updated": "2026-04-25",
+  "selectedAt": "2026-04-25T13:28:01Z",
+  "specName": "Empty-State Onboarding Card",
+  "branch": "main",
+  "workingBranch": "feat/empty-state-onboarding",
+  "type": "feat",
+  "auto": true,
+  "status": "completed",
+  "checkpointStatus": { "commit": false, "pr": false },
+  "createdAt": "2026-04-25T13:28:01Z",
+  "approach": "Rewrite the zero-spec viewsWelcome contents string in package.json to a richer onboarding card (headline + description + create button + docs link). No new commands or context keys.",
+  "last_action": "CP3 approved — preparing to commit + push + PR",
+  "files_modified": [
+    "package.json"
+  ],
+  "concerns": [
+    {
+      "task": "T001",
+      "note": "Visual verification (F5 Extension Development Host) is a manual step — automated build only confirms the JSON parses and tsc passes; the user will need to confirm the welcome view renders as intended at CP1."
+    }
+  ],
+  "decisions": [
+    "Used two stacked buttons (Create + Read the docs) separated by `\\n\\n`, mirroring the existing constitution-needs-setup welcome entry's two-action pattern.",
+    "Docs link points to the repo README (`https://github.com/alfredoperez/speckit-companion#readme`) — same URL the package.json `homepage` field already uses, so no new docs surface introduced."
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Rewrote the zero-spec viewsWelcome entry in package.json: headline (Welcome to SpecKit), one-sentence description of what a spec is, primary `Create your first spec` button, and `Read the docs` link to the README.",
+      "files": ["package.json"],
+      "concerns": [
+        "Visual confirmation requires manual F5 launch — surfaced for CP1."
+      ]
+    }
+  },
+  "step_summaries": {
+    "specify": {
+      "complexity": "minimal",
+      "requirements": 6,
+      "scenarios": 5,
+      "key_finding": "viewsWelcome already has a zero-spec entry at package.json:102 guarded by `speckit.detected && !speckit.constitutionNeedsSetup` — the change is purely a contents-string rewrite, no new commands or context keys"
+    }
+  },
+  "transitions": [
+    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-25T13:28:01Z" },
+    { "step": "specify", "substep": "exploring", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-04-25T13:28:01Z" },
+    { "step": "specify", "substep": "detecting", "from": { "step": "specify", "substep": "exploring" }, "by": "sdd", "at": "2026-04-25T13:28:01Z" },
+    { "step": "specify", "substep": "writing-spec", "from": { "step": "specify", "substep": "detecting" }, "by": "sdd", "at": "2026-04-25T13:28:01Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "specify", "substep": "writing-spec" }, "by": "sdd", "at": "2026-04-25T13:28:01Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-04-25T13:28:01Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-25T13:28:01Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-25T13:28:01Z" },
+    { "step": "implement", "substep": "hooks", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-25T13:28:01Z" },
+    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-04-25T13:28:01Z" },
+    { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-25T13:28:01Z" },
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-25T13:28:01Z" }
+  ]
+}
