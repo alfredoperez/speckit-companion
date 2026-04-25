@@ -111,8 +111,8 @@ Actions that change the spec's lifecycle are protected so a misfired click is ea
 ## Getting Started
 
 1. **Install** the extension from a `.vsix` file or the VS Code marketplace
-2. **Open the sidebar** — click the SpecKit icon in the activity bar
-3. **Create a spec** — click the `+` button in the Specs view to start your first feature
+2. **Open the sidebar** — the SpecKit icon is always visible in the activity bar; with no folder open, clicking it shows an empty-state panel with an **Open Folder** action
+3. **Create a spec** — once a folder is open, click the `+` button in the Specs view to start your first feature
 
 ## Supported AI Providers
 
