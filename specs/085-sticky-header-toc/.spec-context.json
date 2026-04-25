@@ -1,9 +1,12 @@
 {
   "workflow": "sdd",
-  "currentStep": "implement",
+  "currentStep": "done",
   "currentTask": null,
-  "progress": "commit-review",
-  "last_action": "T009 complete — buildToc wired into updateContent's rAF block; webpack build picks up toc.ts and _toc.css",
+  "progress": null,
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/139",
+  "prNumber": 139,
+  "checkpointStatus": { "commit": true, "pr": true },
+  "last_action": "PR #139 opened — feat(spec-viewer): pin header and add responsive TOC sidebar",
   "files_modified": [
     "webview/src/spec-viewer/markdown/renderer.ts",
     "webview/styles/spec-viewer/_toc.css",
@@ -71,7 +74,7 @@
       "concerns": []
     }
   },
-  "next": "implement",
+  "next": "done",
   "approach": "Pin the header above the scroll region and add a sticky TOC sidebar inside the content area, hidden via a width threshold on narrow panes.",
   "step_summaries": {
     "specify": {
@@ -234,9 +237,19 @@
       },
       "by": "sdd",
       "at": "2026-04-25T14:55:59Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-25T15:01:29Z"
     }
   ],
-  "status": "implementing",
+  "status": "completed",
   "stepHistory": {
     "specify": {
       "startedAt": "2026-04-25T14:35:37.339Z",
@@ -264,7 +277,7 @@
     },
     "implement": {
       "startedAt": "2026-04-25T14:43:01Z",
-      "completedAt": null
+      "completedAt": "2026-04-25T15:01:29Z"
     }
   }
 }
