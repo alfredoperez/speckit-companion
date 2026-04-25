@@ -496,6 +496,16 @@
           "group": "navigation@99"
         },
         {
+          "command": "speckit.specs.reveal",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-document/",
+          "group": "navigation@99"
+        },
+        {
+          "command": "speckit.specs.reveal",
+          "when": "view == speckit.views.explorer && viewItem == spec-related-doc",
+          "group": "navigation@99"
+        },
+        {
           "command": "speckit.steering.refine",
           "when": "view == speckit.views.steering && viewItem == steering-document",
           "group": "inline"

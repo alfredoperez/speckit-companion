@@ -291,6 +291,50 @@ describe('speckit.specs.reveal command handler', () => {
         );
     });
 
+    it('calls revealFileInOS with file URI when item has filePath', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.reveal')!;
+
+        (vscode.workspace.fs.stat as jest.Mock).mockResolvedValueOnce({ type: 1 });
+
+        await handler({ label: 'spec.md', filePath: 'specs/080-foo/spec.md', specPath: 'specs/080-foo' });
+
+        const revealCall = (mockCommands.executeCommand as jest.Mock).mock.calls
+            .find(c => c[0] === 'revealFileInOS');
+        expect(revealCall).toBeDefined();
+        expect(revealCall![1].fsPath).toBe('/ws/specs/080-foo/spec.md');
+    });
+
+    it('falls back to specPath when filePath is undefined', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.reveal')!;
+
+        (vscode.workspace.fs.stat as jest.Mock).mockResolvedValueOnce({ type: 2 });
+
+        await handler({ label: '080-foo', specPath: 'specs/080-foo' });
+
+        const revealCall = (mockCommands.executeCommand as jest.Mock).mock.calls
+            .find(c => c[0] === 'revealFileInOS');
+        expect(revealCall).toBeDefined();
+        expect(revealCall![1].fsPath).toBe('/ws/specs/080-foo');
+    });
+
+    it('shows error when filePath does not exist', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.reveal')!;
+
+        (vscode.workspace.fs.stat as jest.Mock).mockRejectedValueOnce(new Error('ENOENT'));
+
+        await handler({ label: 'plan.md', filePath: 'specs/080-foo/plan.md' });
+
+        expect(mockWindow.showErrorMessage).toHaveBeenCalledTimes(1);
+        expect((mockWindow.showErrorMessage as jest.Mock).mock.calls[0][0])
+            .toContain('/ws/specs/080-foo/plan.md');
+    });
+
     it('no-op when no workspace folder is open', async () => {
         const context = createMockContext();
         const handlers = captureCommandHandlers(context);

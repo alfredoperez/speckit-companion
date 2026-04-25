@@ -194,7 +194,7 @@ export function registerSpecKitCommands(
         vscode.commands.registerCommand('speckit.specs.reveal', async (item: SpecTreeItem) => {
             const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
             if (!workspaceFolder) return;
-            const relativePath = (item as SpecTreeItem).specPath || `specs/${item.label}`;
+            const relativePath = item.filePath || item.specPath || `specs/${item.label}`;
             const uri = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, relativePath));
             try {
                 await vscode.workspace.fs.stat(uri);

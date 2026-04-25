@@ -72,6 +72,8 @@ export interface LabeledItem {
 export interface SpecTreeItem {
     label: string;
     specPath?: string;
+    /** Workspace-relative file path (set on document/related-doc tree items) */
+    filePath?: string;
 }
 
 // Custom slash command configuration (settings)

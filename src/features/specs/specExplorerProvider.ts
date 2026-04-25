@@ -581,7 +581,7 @@ class SpecItem extends vscode.TreeItem {
         public readonly specName?: string,
         public readonly documentType?: string,
         public readonly command?: vscode.Command,
-        private readonly filePath?: string,
+        public readonly filePath?: string,
         public readonly specPath?: string,
         private readonly status?: DocumentStatus,
         public readonly relatedDocs?: string[],
