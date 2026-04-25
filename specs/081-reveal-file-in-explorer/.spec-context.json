@@ -5,7 +5,9 @@
   "progress": null,
   "next": "done",
   "status": "completed",
-  "checkpointStatus": { "commit": false, "pr": false },
+  "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/132",
+  "prNumber": 132,
   "updated": "2026-04-25",
   "selectedAt": "2026-04-25T00:37:54Z",
   "specName": "Reveal File In Explorer",
@@ -22,7 +24,7 @@
     "src/features/specs/specCommands.test.ts",
     "package.json"
   ],
-  "last_action": "All 4 tasks complete; build + 20/20 specCommands tests pass; v0.13.1 installed",
+  "last_action": "PR #132 opened — feat(specs): reveal file in explorer from tree-view file items",
   "task_summaries": {
     "T001": { "status": "DONE", "did": "Made SpecTreeItem.filePath public on the rich class and added optional filePath?: string to the thin SpecTreeItem interface in core/types/config.ts.", "files": ["src/features/specs/specExplorerProvider.ts", "src/core/types/config.ts"], "concerns": [] },
     "T002": { "status": "DONE", "did": "Reveal handler now resolves URI via item.filePath || item.specPath || `specs/${item.label}` — file items reveal the file, folder items reveal the directory.", "files": ["src/features/specs/specCommands.ts"], "concerns": [] },
