@@ -1,0 +1,160 @@
+{
+  "workflow": "speckit",
+  "selectedAt": "2026-04-25T02:10:47Z",
+  "currentStep": "implement",
+  "status": "completed",
+  "specName": "Always Show Icon",
+  "branch": "082-always-show-icon",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-04-25T02:10:47Z",
+      "completedAt": "2026-04-25T11:13:42.630Z"
+    },
+    "plan": {
+      "startedAt": "2026-04-25T11:13:42.633Z",
+      "completedAt": "2026-04-25T11:18:37.151Z",
+      "substeps": {
+        "research": {
+          "startedAt": "2026-04-25T11:14:30.000Z",
+          "completedAt": "2026-04-25T11:16:30.000Z"
+        },
+        "design": {
+          "startedAt": "2026-04-25T11:16:30.000Z",
+          "completedAt": "2026-04-25T11:18:00.000Z"
+        }
+      }
+    },
+    "tasks": {
+      "startedAt": "2026-04-25T11:18:37.154Z",
+      "completedAt": "2026-04-25T11:22:01.980Z",
+      "substeps": {
+        "generate": {
+          "startedAt": "2026-04-25T11:20:00.000Z",
+          "completedAt": "2026-04-25T11:22:00.000Z"
+        }
+      }
+    },
+    "implement": {
+      "startedAt": "2026-04-25T11:22:01.983Z",
+      "completedAt": "2026-04-25T11:25:30.000Z",
+      "substeps": {
+        "run-tests": {
+          "startedAt": "2026-04-25T11:24:00.000Z",
+          "completedAt": "2026-04-25T11:25:00.000Z"
+        }
+      }
+    }
+  },
+  "transitions": [
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-25T11:13:42.630Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-25T11:13:42.633Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "ai",
+      "at": "2026-04-25T11:14:30.000Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "from": {
+        "step": "plan",
+        "substep": "research"
+      },
+      "by": "ai",
+      "at": "2026-04-25T11:16:30.000Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-25T11:18:37.151Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-25T11:18:37.154Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "ai",
+      "at": "2026-04-25T11:20:00.000Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-25T11:22:01.980Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-25T11:22:01.983Z"
+    },
+    {
+      "step": "implement",
+      "substep": "run-tests",
+      "from": {
+        "step": "implement",
+        "substep": null
+      },
+      "by": "ai",
+      "at": "2026-04-25T11:24:00.000Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": "run-tests"
+      },
+      "by": "ai",
+      "at": "2026-04-25T11:25:30.000Z"
+    }
+  ]
+}

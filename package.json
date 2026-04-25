@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "VS Code companion for GitHub SpecKit - spec-driven development with AI assistants",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",
@@ -68,8 +68,7 @@
       "speckit": [
         {
           "id": "speckit.views.explorer",
-          "name": "Specs",
-          "when": "!(workbenchState == empty || workspaceFolderCount == 0)"
+          "name": "Specs"
         },
         {
           "id": "speckit.views.steering",
@@ -85,6 +84,11 @@
       ]
     },
     "viewsWelcome": [
+      {
+        "view": "speckit.views.explorer",
+        "contents": "Open a folder to start using SpecKit.\n\n[$(folder-opened) Open Folder](command:vscode.openFolder)",
+        "when": "workbenchState == empty || workspaceFolderCount == 0"
+      },
       {
         "view": "speckit.views.explorer",
         "contents": "SpecKit CLI detected. Initialize this workspace to start building with specs.\n\n[$(gear) Initialize Workspace](command:speckit.initWorkspace)",
