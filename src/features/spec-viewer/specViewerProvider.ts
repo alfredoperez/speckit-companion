@@ -565,7 +565,7 @@ export class SpecViewerProvider {
         createdDate,
         lastUpdatedDate,
         featureCtx?.specName ?? deriveSpecName(specDirectory),
-        featureCtx?.branch ?? null,
+        featureCtx?.workingBranch ?? featureCtx?.branch ?? null,
         doc?.filePath ?? null,
         featureCtx?.currentStep ?? doc?.type ?? null,
         mapStepHistoryKeys(featureCtx?.stepHistory),
@@ -830,7 +830,8 @@ export class SpecViewerProvider {
         createdDate: computeCreatedDate(featureCtx?.stepHistory),
         lastUpdatedDate: computeLastUpdatedDate(featureCtx?.stepHistory),
         specContextName: featureCtx?.specName ?? deriveSpecName(specDirectory),
-        branch: featureCtx?.branch ?? null,
+        branch: featureCtx?.workingBranch ?? featureCtx?.branch ?? null,
+        currentStep: featureCtx?.currentStep ?? documentType ?? null,
         filePath: doc?.filePath ?? null,
         docTypeLabel: getDocTypeLabel(featureCtx?.currentStep ?? documentType),
       };

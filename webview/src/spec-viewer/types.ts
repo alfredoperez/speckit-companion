@@ -86,6 +86,7 @@ export interface NavState {
     lastUpdatedDate?: string | null;
     specContextName?: string | null;
     branch?: string | null;
+    currentStep?: string | null;
     filePath?: string | null;
     docTypeLabel?: string | null;
 }

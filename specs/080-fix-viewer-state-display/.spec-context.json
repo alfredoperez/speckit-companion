@@ -1,0 +1,60 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "status": "completed",
+  "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/131",
+  "prNumber": 131,
+  "updated": "2026-04-25",
+  "selectedAt": "2026-04-25T00:01:29Z",
+  "specName": "Fix Viewer State Display",
+  "branch": "main",
+  "workingBranch": "fix/fix-viewer-state-display",
+  "type": "fix",
+  "createdAt": "2026-04-25T00:01:29Z",
+  "auto": true,
+  "approach": "Three independent viewer-side derivation fixes plumbed through .spec-context.json → SpecContext → NavState/ViewerState → Preact components. No SDD pipeline writes added; pure read-side typing + fallbacks.",
+  "files_modified": [
+    "src/core/types/specContext.ts",
+    "src/features/specs/specContextReader.ts",
+    "src/features/spec-viewer/specViewerProvider.ts",
+    "src/features/spec-viewer/types.ts",
+    "src/features/spec-viewer/html/generator.ts",
+    "src/features/spec-viewer/stateDerivation.ts",
+    "src/features/spec-viewer/__tests__/stateDerivation.test.ts",
+    "src/features/workflows/types.ts",
+    "webview/src/spec-viewer/types.ts",
+    "webview/src/spec-viewer/components/StepTab.tsx",
+    "webview/src/spec-viewer/components/NavigationBar.tsx"
+  ],
+  "concerns": [
+    { "task": "T002", "note": "Silent fix: also added workingBranch to FeatureWorkflowContext at src/features/workflows/types.ts:147 — the viewer reads featureCtx via that type, not SpecContext directly. Without this addition, the build failed with TS2339. Plan only listed SpecContext (T001 scope)." }
+  ],
+  "last_action": "PR #131 opened — fix(spec-viewer): branch chip, in-flight % pill, and substep label",
+  "task_summaries": {
+    "T001": { "status": "DONE", "did": "Added workingBranch?: string|null to SpecContext interface and preserved it in normalizeSpecContext.", "files": ["src/core/types/specContext.ts", "src/features/specs/specContextReader.ts"], "concerns": [] },
+    "T002": { "status": "DONE_WITH_CONCERNS", "did": "Branch chip in specViewerProvider falls back to workingBranch ?? branch ?? null at both writes. Silent fix: added workingBranch to FeatureWorkflowContext.", "files": ["src/features/spec-viewer/specViewerProvider.ts", "src/features/workflows/types.ts"], "concerns": ["FeatureWorkflowContext is a parallel type to SpecContext — both needed the new field. Plan missed this."] },
+    "T003": { "status": "DONE", "did": "Added currentStep?: string|null to NavState (extension types.ts), populated in initialNavState (generator.ts) and navState literal.", "files": ["src/features/spec-viewer/types.ts", "src/features/spec-viewer/html/generator.ts", "src/features/spec-viewer/specViewerProvider.ts"], "concerns": [] },
+    "T004": { "status": "DONE", "did": "Added currentStep to webview NavState + StepTabProps; rewrote inProgress predicate; NavigationBar forwards currentStep to StepTab.", "files": ["webview/src/spec-viewer/types.ts", "webview/src/spec-viewer/components/StepTab.tsx", "webview/src/spec-viewer/components/NavigationBar.tsx"], "concerns": [] },
+    "T005": { "status": "DONE", "did": "deriveActiveSubstep falls back to top-level progress when stepHistory.substeps is empty.", "files": ["src/features/spec-viewer/stateDerivation.ts"], "concerns": [] },
+    "T006": { "status": "DONE", "did": "Added 3 new test cases under describe('deriveActiveSubstep'). All 38 tests pass.", "files": ["src/features/spec-viewer/__tests__/stateDerivation.test.ts"], "concerns": [] }
+  },
+  "step_summaries": {
+    "specify": { "complexity": "minimal", "requirements": 4, "scenarios": 5, "key_finding": "html/navigation.ts is dead code — Preact NavigationBar.tsx is the live nav renderer." }
+  },
+  "transitions": [
+    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-25T00:01:29Z" },
+    { "step": "specify", "substep": "exploring", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-04-25T00:01:34Z" },
+    { "step": "specify", "substep": "detecting", "from": { "step": "specify", "substep": "exploring" }, "by": "sdd", "at": "2026-04-25T00:01:39Z" },
+    { "step": "specify", "substep": "writing-spec", "from": { "step": "specify", "substep": "detecting" }, "by": "sdd", "at": "2026-04-25T00:01:44Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "specify", "substep": "writing-spec" }, "by": "sdd", "at": "2026-04-25T00:02:00Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-04-25T00:03:00Z" },
+    { "step": "implement", "substep": "hooks", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-25T00:08:00Z" },
+    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-04-25T00:09:00Z" },
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-25T00:15:00Z" },
+    { "step": "done", "substep": null, "from": { "step": "done", "substep": null }, "by": "sdd", "at": "2026-04-25T00:18:00Z", "note": "PR #131 opened" }
+  ]
+}

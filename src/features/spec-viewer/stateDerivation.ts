@@ -83,6 +83,8 @@ export function deriveActiveSubstep(
         const active = entry?.substeps?.find(s => !s.completedAt);
         if (active) return { step, name: active.name };
     }
+    const progress = (ctx as { progress?: string | null }).progress;
+    if (progress) return { step: ctx.currentStep, name: progress };
     return null;
 }
 
