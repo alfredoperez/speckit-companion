@@ -5,7 +5,9 @@
   "progress": null,
   "next": "done",
   "status": "completed",
-  "checkpointStatus": { "commit": false, "pr": false },
+  "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/133",
+  "prNumber": 133,
   "updated": "2026-04-25",
   "selectedAt": "2026-04-24T23:44:05Z",
   "specName": "Polish Subnav Tabs",
@@ -16,7 +18,7 @@
   "auto": true,
   "approach": "Update the Related Documents Tabs CSS rules in _navigation.css so the active state mirrors the .step-tab.current accent-pill recipe (color-mix at 18% tint + accent underline + bold --text-primary), and the inactive state uses --text-secondary with --bg-hover on hover. Pure CSS — no markup change.",
   "files_modified": ["webview/styles/spec-viewer/_navigation.css"],
-  "last_action": "Resumed after viewer-fixes (#131) and reveal (#132) merged — proceeding to commit + PR",
+  "last_action": "PR #133 opened — feat(spec-viewer): polish related-tab styles",
   "task_summaries": {
     "T001": {
       "status": "DONE",
