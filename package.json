@@ -101,7 +101,7 @@
       },
       {
         "view": "speckit.views.explorer",
-        "contents": "Build features with specs\n\n[$(plus) Create New Spec](command:speckit.create)",
+        "contents": "Welcome to SpecKit\n\nA spec turns an idea into a plan and tasks your AI assistant can implement, step by step.\n\n[$(plus) Create your first spec](command:speckit.create)\n\n[$(book) Read the docs](https://github.com/alfredoperez/speckit-companion#readme)",
         "when": "speckit.detected && !speckit.constitutionNeedsSetup"
       },
       {
