@@ -5,7 +5,9 @@
   "progress": null,
   "next": "done",
   "status": "completed",
-  "checkpointStatus": { "commit": false, "pr": false },
+  "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/131",
+  "prNumber": 131,
   "updated": "2026-04-25",
   "selectedAt": "2026-04-25T00:01:29Z",
   "specName": "Fix Viewer State Display",
@@ -31,7 +33,7 @@
   "concerns": [
     { "task": "T002", "note": "Silent fix: also added workingBranch to FeatureWorkflowContext at src/features/workflows/types.ts:147 — the viewer reads featureCtx via that type, not SpecContext directly. Without this addition, the build failed with TS2339. Plan only listed SpecContext (T001 scope)." }
   ],
-  "last_action": "CP1 approved — proceeding to commit + PR",
+  "last_action": "PR #131 opened — fix(spec-viewer): branch chip, in-flight % pill, and substep label",
   "task_summaries": {
     "T001": { "status": "DONE", "did": "Added workingBranch?: string|null to SpecContext interface and preserved it in normalizeSpecContext.", "files": ["src/core/types/specContext.ts", "src/features/specs/specContextReader.ts"], "concerns": [] },
     "T002": { "status": "DONE_WITH_CONCERNS", "did": "Branch chip in specViewerProvider falls back to workingBranch ?? branch ?? null at both writes. Silent fix: added workingBranch to FeatureWorkflowContext.", "files": ["src/features/spec-viewer/specViewerProvider.ts", "src/features/workflows/types.ts"], "concerns": ["FeatureWorkflowContext is a parallel type to SpecContext — both needed the new field. Plan missed this."] },
@@ -52,6 +54,7 @@
     { "step": "implement", "substep": "phase1", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-04-25T00:03:00Z" },
     { "step": "implement", "substep": "hooks", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-25T00:08:00Z" },
     { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-04-25T00:09:00Z" },
-    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-25T00:15:00Z" }
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-25T00:15:00Z" },
+    { "step": "done", "substep": null, "from": { "step": "done", "substep": null }, "by": "sdd", "at": "2026-04-25T00:18:00Z", "note": "PR #131 opened" }
   ]
 }
