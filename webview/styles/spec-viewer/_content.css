@@ -195,14 +195,15 @@ body[data-spec-status="archived"] .meta-status-draft {
    ============================================ */
 
 .spec-header {
-    max-width: 72ch;
-    margin: 0 auto var(--space-4);
+    margin: 0;
+    padding: var(--space-3) var(--content-padding);
     display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: var(--space-2);
-    padding-bottom: var(--space-3);
     border-bottom: 1px solid var(--border);
+    background: var(--bg-primary);
+    flex-shrink: 0;
 }
 
 .spec-header-badges {
@@ -232,8 +233,10 @@ body[data-spec-status="archived"] .meta-status-draft {
     font-weight: 500;
 }
 
-/* Hide the first H1 when structured header provides the title */
-.spec-header[data-has-context="true"] ~ #markdown-content h1:first-of-type {
+/* Hide the first H1 when structured header provides the title.
+   Body attribute is set by App.tsx so the rule survives DOM hierarchy changes
+   (the spec-header is no longer always a sibling of #markdown-content). */
+body[data-has-spec-context="true"] #markdown-content h1:first-of-type {
     display: none;
 }
 

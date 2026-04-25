@@ -76,6 +76,9 @@ webview/
 │   │   ├── modal.ts
 │   │   ├── navigation.ts
 │   │   ├── state.ts
+│   │   ├── toc.ts              # Builds a sticky table-of-contents sidebar from rendered H2/H3 headings;
+│   │   │                       # tracks the active heading via IntersectionObserver and toggles a
+│   │   │                       # width-threshold class via ResizeObserver on the scroll container.
 │   │   ├── types.ts
 │   │   ├── markdown/           # Rendering pipeline (renderer, preprocessors, scenarios)
 │   │   └── editor/             # Inline editing (inlineEditor, refinements, lineActions)
@@ -90,7 +93,9 @@ webview/
 │   ├── types.ts
 │   └── workflow.ts             # Workflow editor webview
 └── styles/                     # CSS stylesheets
-    ├── spec-viewer/            # 16 modular CSS partials + index.css
+    ├── spec-viewer/            # Modular CSS partials + index.css
+    │                           #   _toc.css — Sticky outline column inside `.content-area`;
+    │                           #             hidden when the pane is narrow.
     ├── spec-editor.css
     ├── spec-markdown.css
     ├── spec-viewer.css
@@ -134,6 +139,8 @@ assets/                         # Static assets
 `agents`, `permission`, `settings`, `skills`, `spec-editor`, `spec-viewer`, `specs`, `steering`, `workflow-editor`, `workflows`
 
 ### Webview (Browser)
+
+The spec viewer column is structured `compact-nav` → `spec-header` (lifted out of the scroll region so it stays pinned) → `content-area` (a flex row holding `aside.spec-toc` and `#markdown-content`). The TOC is hidden via a `content-area--narrow` class when the scroll container drops below `--toc-min-width`.
 
 The spec viewer and workflow editor run in VS Code webviews (sandboxed browser):
 

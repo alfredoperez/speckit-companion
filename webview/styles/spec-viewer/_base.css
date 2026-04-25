@@ -48,6 +48,10 @@ body {
     overflow-y: auto;
     padding: var(--content-padding);
     scroll-behavior: smooth;
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-6);
+    align-items: flex-start;
 }
 
 /* ============================================

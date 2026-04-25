@@ -1,0 +1,81 @@
+/**
+ * SpecKit Companion - Table of Contents Sidebar
+ * Sticky outline column inside .content-area, hidden when the pane is narrow.
+ */
+
+/* Responsive threshold — read in JS via getComputedStyle, not via @media. */
+:root {
+    --toc-min-width: 780px;
+    --toc-column-width: 220px;
+}
+
+aside.spec-toc {
+    flex: 0 0 var(--toc-column-width);
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    max-height: calc(100vh - var(--space-4));
+    overflow-y: auto;
+    padding: var(--space-2) 0 var(--space-2) var(--space-2);
+    border-left: 1px solid var(--border);
+    font-size: var(--text-sm);
+    order: 2; /* sit to the right of the markdown column */
+}
+
+aside.spec-toc.spec-toc--empty {
+    display: none;
+}
+
+/* Width-class hook toggled by JS ResizeObserver on .content-area */
+.content-area--narrow aside.spec-toc {
+    display: none;
+}
+
+.spec-toc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.spec-toc-list li {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.spec-toc-link {
+    display: block;
+    padding: 4px 8px;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    line-height: 1.4;
+    transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+    cursor: pointer;
+}
+
+.spec-toc-link:hover {
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    text-decoration: none;
+}
+
+.spec-toc-link--h3 {
+    padding-left: var(--space-4);
+    font-size: var(--text-xs);
+}
+
+.spec-toc-link[aria-current="location"] {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    font-weight: 600;
+}
+
+.spec-toc-link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
