@@ -498,6 +498,11 @@
         {
           "command": "speckit.specs.reveal",
           "when": "view == speckit.views.explorer && viewItem == spec",
+          "group": "navigation@98"
+        },
+        {
+          "command": "speckit.specs.revealInExplorer",
+          "when": "view == speckit.views.explorer && viewItem == spec",
           "group": "navigation@99"
         },
         {
