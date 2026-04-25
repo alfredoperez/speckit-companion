@@ -117,6 +117,7 @@ export function generateHtml(
         lastUpdatedDate: lastUpdatedDate ?? null,
         specContextName: contextSpecName ?? null,
         branch: contextBranch ?? null,
+        currentStep: currentStep ?? null,
         filePath: currentFilePath ?? null,
         docTypeLabel: getDocTypeLabel(currentStep ?? currentDocType),
     };

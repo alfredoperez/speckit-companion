@@ -142,8 +142,10 @@ export interface FeatureWorkflowContext {
     checkpointStatus?: Record<CheckpointId, CheckpointStatus>;
     /** Human-readable spec name derived from directory slug */
     specName?: string;
-    /** Git branch name associated with this spec */
+    /** Git branch name associated with this spec (audit trail — branch when /sdd:specify ran) */
     branch?: string;
+    /** Active feature branch where implementation runs (set by /sdd:implement when branchStage matches) */
+    workingBranch?: string | null;
     /** In-progress indicator (e.g., "exploring", "phase1") */
     progress?: string | null;
     /** Current task being executed (e.g., "T001") */

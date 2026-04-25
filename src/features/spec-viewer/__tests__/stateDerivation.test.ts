@@ -3,6 +3,7 @@ import {
     deriveStepBadges,
     derivePulse,
     deriveHighlights,
+    deriveActiveSubstep,
     deriveViewerState,
 } from '../stateDerivation';
 import type { SpecContext, StepName } from '../../../core/types/specContext';
@@ -117,6 +118,38 @@ describe('deriveHighlights', () => {
         expect(highlights).toContain('specify');
         expect(highlights).toContain('plan');
         expect(highlights).not.toContain('tasks');
+    });
+});
+
+describe('deriveActiveSubstep', () => {
+    it('falls back to top-level `progress` when stepHistory.substeps is empty', () => {
+        const ctx = makeContext({
+            currentStep: 'specify',
+            stepHistory: {},
+            // top-level `progress` is a tolerated extra field on .spec-context.json
+            progress: 'exploring',
+        } as Partial<SpecContext> as SpecContext);
+        expect(deriveActiveSubstep(ctx)).toEqual({ step: 'specify', name: 'exploring' });
+    });
+
+    it('returns null when neither stepHistory.substeps nor progress is present', () => {
+        const ctx = makeContext({ currentStep: 'plan', stepHistory: {} });
+        expect(deriveActiveSubstep(ctx)).toBeNull();
+    });
+
+    it('prefers stepHistory.substeps over top-level progress', () => {
+        const ctx = makeContext({
+            currentStep: 'specify',
+            stepHistory: {
+                specify: {
+                    startedAt: '2026-01-01',
+                    completedAt: null,
+                    substeps: [{ name: 'writing-spec', startedAt: '2026-01-01', completedAt: null }],
+                },
+            },
+            progress: 'exploring',
+        } as Partial<SpecContext> as SpecContext);
+        expect(deriveActiveSubstep(ctx)).toEqual({ step: 'specify', name: 'writing-spec' });
     });
 });
 

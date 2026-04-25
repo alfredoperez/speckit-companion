@@ -83,6 +83,9 @@ export function normalizeSpecContext(raw: Record<string, unknown>): SpecContext 
             : 'speckit',
         specName: typeof raw.specName === 'string' ? (raw.specName as string) : '',
         branch: typeof raw.branch === 'string' ? (raw.branch as string) : '',
+        workingBranch: typeof raw.workingBranch === 'string'
+            ? (raw.workingBranch as string)
+            : (raw.workingBranch === null ? null : undefined),
         currentStep,
         status,
         stepHistory,

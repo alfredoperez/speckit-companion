@@ -10,7 +10,7 @@ export function NavigationBar() {
 
     const { coreDocs, relatedDocs, currentDoc, workflowPhase,
         taskCompletionPercent, isViewingRelatedDoc, activeStep,
-        stepHistory, stalenessMap } = ns;
+        currentStep, stepHistory, stalenessMap } = ns;
 
     const viewingRelatedDoc = isViewingRelatedDoc
         ? relatedDocs.find(d => d.type === currentDoc)
@@ -70,6 +70,7 @@ export function NavigationBar() {
                                 isViewingRelatedDoc={isViewingRelatedDoc}
                                 parentPhaseForRelated={parentPhaseForRelated}
                                 activeStep={activeStep}
+                                currentStep={currentStep}
                                 stepHistory={stepHistory}
                                 stalenessMap={stalenessMap}
                                 hasRelatedChildren={hasRelatedChildren}

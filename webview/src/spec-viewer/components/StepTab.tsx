@@ -25,6 +25,7 @@ export interface StepTabProps {
     isViewingRelatedDoc: boolean;
     parentPhaseForRelated: string;
     activeStep?: string | null;
+    currentStep?: string | null;
     stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>;
     stalenessMap?: StalenessMap;
     hasRelatedChildren?: boolean;
@@ -35,14 +36,14 @@ export interface StepTabProps {
 export function StepTab(props: StepTabProps) {
     const { doc, index, totalSteps, currentDoc, workflowPhase,
         taskCompletionPercent, isViewingRelatedDoc, parentPhaseForRelated,
-        activeStep, stepHistory, stalenessMap, hasRelatedChildren, runningStepIndex, onClick } = props;
+        activeStep, currentStep, stepHistory, stalenessMap, hasRelatedChildren, runningStepIndex, onClick } = props;
 
     const phase = doc.type;
     const stepDocExists = doc.exists;
     const exists = stepDocExists || !!hasRelatedChildren;
     const isViewing = phase === currentDoc || (isViewingRelatedDoc && phase === parentPhaseForRelated);
     const isLastStep = index === totalSteps - 1;
-    const inProgress = isLastStep && taskCompletionPercent > 0 && taskCompletionPercent < 100;
+    const inProgress = isLastStep && currentStep === 'implement' && taskCompletionPercent < 100;
     const isStale = stalenessMap?.[phase]?.isStale ?? false;
     const isWorking = activeStep === phase && !stepHistory?.[phase]?.completedAt;
     const isLocked = runningStepIndex != null

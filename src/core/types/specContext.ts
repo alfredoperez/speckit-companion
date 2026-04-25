@@ -82,6 +82,7 @@ export interface SpecContext {
     workflow: string;
     specName: string;
     branch: string;
+    workingBranch?: string | null;
     selectedAt?: string;
     currentStep: StepName;
     status: Status;

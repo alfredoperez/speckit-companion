@@ -260,8 +260,10 @@ export interface NavState {
     lastUpdatedDate?: string | null;
     /** Human-readable spec name from spec-context.json */
     specContextName?: string | null;
-    /** Git branch name from spec-context.json */
+    /** Git branch name from spec-context.json (workingBranch with fallback to branch) */
     branch?: string | null;
+    /** SDD currentStep from spec-context.json — drives implement-phase pill on the last step tab */
+    currentStep?: string | null;
     /** Current document file path */
     filePath?: string | null;
     /** Display label for the current doc type (e.g., "Spec", "Plan") */
