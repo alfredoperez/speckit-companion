@@ -187,6 +187,28 @@ export function registerSpecKitCommands(
         })
     );
 
+    // Reveal a tree item's file/folder in VS Code's built-in Explorer view —
+    // selects the entry in the workspace tree without opening it.
+    context.subscriptions.push(
+        vscode.commands.registerCommand('speckit.specs.revealInExplorer', async (item: SpecTreeItem) => {
+            const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+            if (!workspaceFolder) return;
+            const relativePath = item.filePath || item.specPath || `specs/${item.label}`;
+            const uri = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, relativePath));
+            try {
+                await vscode.workspace.fs.stat(uri);
+            } catch {
+                vscode.window.showErrorMessage(`Cannot reveal: ${uri.fsPath} does not exist`);
+                return;
+            }
+            try {
+                await vscode.commands.executeCommand('revealInExplorer', uri);
+            } catch (err: any) {
+                vscode.window.showErrorMessage(err?.message ?? String(err));
+            }
+        })
+    );
+
     // Reveal a spec's folder in the OS file browser (Finder / Explorer / default FM).
     // Pre-stats the path so missing folders surface a visible error instead of the
     // silent no-op `revealFileInOS` produces on some Linux desktops.
@@ -194,7 +216,7 @@ export function registerSpecKitCommands(
         vscode.commands.registerCommand('speckit.specs.reveal', async (item: SpecTreeItem) => {
             const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
             if (!workspaceFolder) return;
-            const relativePath = (item as SpecTreeItem).specPath || `specs/${item.label}`;
+            const relativePath = item.filePath || item.specPath || `specs/${item.label}`;
             const uri = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, relativePath));
             try {
                 await vscode.workspace.fs.stat(uri);

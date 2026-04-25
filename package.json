@@ -414,6 +414,11 @@
         "command": "speckit.specs.reveal",
         "title": "Reveal in File Explorer",
         "category": "SpecKit"
+      },
+      {
+        "command": "speckit.specs.revealInExplorer",
+        "title": "Reveal in Explorer View",
+        "category": "SpecKit"
       }
     ],
     "menus": {
@@ -493,6 +498,21 @@
         {
           "command": "speckit.specs.reveal",
           "when": "view == speckit.views.explorer && viewItem == spec",
+          "group": "navigation@98"
+        },
+        {
+          "command": "speckit.specs.revealInExplorer",
+          "when": "view == speckit.views.explorer && viewItem == spec",
+          "group": "navigation@99"
+        },
+        {
+          "command": "speckit.specs.revealInExplorer",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-document/",
+          "group": "navigation@99"
+        },
+        {
+          "command": "speckit.specs.revealInExplorer",
+          "when": "view == speckit.views.explorer && viewItem == spec-related-doc",
           "group": "navigation@99"
         },
         {

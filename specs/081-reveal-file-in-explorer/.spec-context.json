@@ -1,0 +1,47 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "status": "completed",
+  "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/132",
+  "prNumber": 132,
+  "updated": "2026-04-25",
+  "selectedAt": "2026-04-25T00:37:54Z",
+  "specName": "Reveal File In Explorer",
+  "branch": "main",
+  "workingBranch": "feat/reveal-file-in-explorer",
+  "type": "feat",
+  "createdAt": "2026-04-25T00:37:54Z",
+  "auto": true,
+  "approach": "Extend speckit.specs.reveal (added in spec 069) to handle file-level tree items by preferring item.filePath over item.specPath. Add menu entries for spec-document-* and spec-related-doc viewItems.",
+  "files_modified": [
+    "src/core/types/config.ts",
+    "src/features/specs/specExplorerProvider.ts",
+    "src/features/specs/specCommands.ts",
+    "src/features/specs/specCommands.test.ts",
+    "package.json"
+  ],
+  "last_action": "PR #132 opened — feat(specs): reveal file in explorer from tree-view file items",
+  "task_summaries": {
+    "T001": { "status": "DONE", "did": "Made SpecTreeItem.filePath public on the rich class and added optional filePath?: string to the thin SpecTreeItem interface in core/types/config.ts.", "files": ["src/features/specs/specExplorerProvider.ts", "src/core/types/config.ts"], "concerns": [] },
+    "T002": { "status": "DONE", "did": "Reveal handler now resolves URI via item.filePath || item.specPath || `specs/${item.label}` — file items reveal the file, folder items reveal the directory.", "files": ["src/features/specs/specCommands.ts"], "concerns": [] },
+    "T003": { "status": "DONE", "did": "Added two new context-menu entries for speckit.specs.reveal: viewItem =~ /^spec-document/ and viewItem == spec-related-doc, both in navigation@99 group.", "files": ["package.json"], "concerns": [] },
+    "T004": { "status": "DONE", "did": "Added 3 new test cases: file URI from filePath, fallback to specPath, error on missing filePath. All 20 specCommands tests pass.", "files": ["src/features/specs/specCommands.test.ts"], "concerns": [] }
+  },
+  "step_summaries": {
+    "specify": { "complexity": "minimal", "requirements": 5, "scenarios": 4, "key_finding": "Spec 069 already added speckit.specs.reveal but only wired it to viewItem == spec (folder nodes). The handler reads item.specPath; can be extended to prefer item.filePath. SpecTreeItem.filePath was private — needs to become public + added to the thin SpecTreeItem interface in core/types/config.ts." }
+  },
+  "transitions": [
+    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-25T00:37:54Z" },
+    { "step": "specify", "substep": "exploring", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-04-25T00:38:00Z" },
+    { "step": "specify", "substep": "detecting", "from": { "step": "specify", "substep": "exploring" }, "by": "sdd", "at": "2026-04-25T00:38:05Z" },
+    { "step": "specify", "substep": "writing-spec", "from": { "step": "specify", "substep": "detecting" }, "by": "sdd", "at": "2026-04-25T00:38:10Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "specify", "substep": "writing-spec" }, "by": "sdd", "at": "2026-04-25T00:38:15Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-04-25T00:39:00Z" },
+    { "step": "implement", "substep": "hooks", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-25T00:42:00Z" },
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-04-25T00:45:00Z" }
+  ]
+}
