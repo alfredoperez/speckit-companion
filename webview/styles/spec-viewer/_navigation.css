@@ -185,11 +185,11 @@
     border: none;
     border-bottom: 2px solid transparent;
     background: transparent;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     cursor: pointer;
     font-size: 12px;
     font-family: inherit;
-    border-radius: 0;
+    border-radius: var(--radius-sm);
     transition: all var(--transition-fast);
 }
 
@@ -199,7 +199,8 @@
 }
 
 .related-tab.active {
+    background: color-mix(in srgb, var(--accent, #4a9eff) 18%, transparent);
     color: var(--text-primary);
     border-bottom-color: var(--accent);
-    font-weight: 500;
+    font-weight: 600;
 }
