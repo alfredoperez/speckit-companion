@@ -1,115 +1,104 @@
-# SpecKit Companion
+# SpecKit Companion: review AI specs before they ship as broken code
 
 ![Build Status](https://img.shields.io/github/actions/workflow/status/alfredoperez/speckit-companion/release.yml?label=build)
 ![VS Code](https://img.shields.io/badge/VS%20Code-%5E1.84.0-blue)
 ![GitHub Release](https://img.shields.io/github/v/release/alfredoperez/speckit-companion?label=version)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-![SpecKit Companion](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/hero.png)
+The spec workspace for developers running AI agents through Spec-Driven Development. Catch bad specs before they become bad code.
 
-- **Define** requirements with structured specs
-- **Track** progress through Specify → Plan → Tasks → Done
-- **Review** with inline comments, just like a code review
-- **Extend** with custom workflows, commands, and any AI assistant
+![SpecKit Companion: Spec-driven development, visualized. Specify, Plan, Tasks, Done.](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/hero.jpg)
+
+## Recently Shipped
+
+- **v0.13.0** Color-coded badge statuses, live elapsed timers, fuzzy spec filter, sort options
+- **v0.12.0** OpenCode provider, multi-select bulk actions, locked future steps
+- **v0.11.0** Floating toast notifications, transition logging
+- [Full changelog →](./CHANGELOG.md)
+
+## Why it exists
+
+**Review AI-generated specs the way you review code.** Add inline comments on specific lines, refine requirements, and catch a vague requirement before the AI turns it into 200 lines of wrong code.
+
+**Plug any AI assistant into any spec-driven workflow.** Six providers ship today (Claude Code, Gemini, GitHub Copilot, Codex, Qwen, OpenCode), and the workflow engine accepts custom phases, commands, and sub-documents. Drop in [Agent Teams Lite](https://github.com/Gentleman-Programming/agent-teams-lite), your own SDD process, or anything that takes commands and produces markdown.
+
+**Spec-driven phases without leaving VS Code.** Each feature flows through Specify, Plan, Tasks, Done, with progress tracking, sticky headers, and a structured viewer built for long specs.
 
 ## Features
 
 ### Visual Workflow Editor
 
-Guide your features through structured phases with a dedicated editor that renders markdown specs, shows phase progress, and provides one-click actions for each step. Mermaid diagrams render inline with zoom controls for navigating complex diagrams.
+Guide your features through structured phases with a dedicated editor that renders markdown specs, shows phase progress, and provides one-click actions for each step. Mermaid diagrams render inline with zoom controls for navigating complex diagrams. After each action, a toast confirms the result and the viewer auto-advances to the next phase.
 
 ![Workflow Editor](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/workflow-spec.png)
+*Workflow editor. One click moves a feature from Specify to Plan to Tasks to Done. Markdown stays in your repo, never on a server.*
 
 ### Inline Review Comments
 
 Review spec documents with inline comments. Add feedback directly on specific lines, refine requirements, and collaborate on specs before implementation begins.
 
 ![Inline Comments](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/inline-comment-dialog.png)
+*Inline review comments. Catch a vague requirement on line 12 before the AI turns it into 200 lines of wrong code.*
 
 ### Create Specs Visually
 
-Create new specs with a dedicated dialog — write a detailed description, select your workflow, and attach screenshots or mockups for context.
+Create new specs with a dedicated dialog. Write a detailed description, select your workflow, and attach screenshots or mockups for context.
 
 ![Create Spec](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/create-spec.png)
+*Create-spec dialog. Write a detailed description, pick a workflow, attach a screenshot. The AI never sees a one-liner.*
 
 ### Spec-Driven Phases
 
 Each feature flows through four phases:
 
-**Specify** — Define requirements with user stories and acceptance scenarios.
+**Specify**: Define requirements with user stories and acceptance scenarios.
 
-![Spec Phase](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/workflow-spec.png)
+![Spec Phase](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/specify-spec.png)
+*Specify phase. User stories, acceptance scenarios, and edge cases captured before any code is written.*
 
-**Plan** — Create the technical design with research, data models, and implementation strategy.
+**Plan**: Create the technical design with research, data models, and implementation strategy.
 
 ![Plan Phase](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/workflow-plan.png)
+*Plan phase. Architecture, data models, and research grouped under a single step with sub-document chips.*
 
-**Tasks** — Generate an implementation checklist with progress tracking and parallel execution markers.
+**Tasks**: Generate an implementation checklist with progress tracking and parallel execution markers.
 
 ![Tasks Phase](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/workflow-tasks.png)
+*Tasks phase. Generated checklist with parallel-execution markers and live progress.*
 
 ### Reading Specs
 
 The spec viewer is built for fast scanning of long-form specs:
 
-- **Title-leading header** — the spec name dominates above a compact `[STATUS] [⌥ branch] · date` cluster, so the page anchor is the first thing your eye lands on.
-- **Sticky chrome** — step tabs (Specification / Plan / Tasks) and header stay pinned at the top while you scroll.
-- **Children rail** — when a step has sub-files (e.g., Plan's `data-model.md`, `quickstart.md`, `research.md`), they render as chips directly under the active step tab, with the parent step itself as the first chip so any sub-doc has a one-click path back to the overview.
-- **Table of contents** — sticky outline column on the left of the content area. Defaults to h2-only (so phase-heavy `tasks.md` reads as a clean ~7-entry list); a small `+` toggle expands h3 subsections when needed. Auto-hides on narrow panes.
-- **Quiet content** — when the structured header has the metadata, in-content duplicates (the `Input:` block, repeated branch chips, literal `Slug:`/`Date:` paragraphs) are suppressed so the body is just the spec content.
-- **Diagrams** — wide mermaid diagrams scroll horizontally inside the prose column instead of bleeding past it. Each diagram has its own `−` / Reset / `+` zoom controls.
+- **Title-leading header**: the spec name dominates above a compact `[STATUS] [⌥ branch] · date` cluster, so the page anchor is the first thing your eye lands on.
+- **Sticky chrome**: step tabs (Specification / Plan / Tasks) and header stay pinned at the top while you scroll.
+- **Children rail**: when a step has sub-files (e.g., Plan's `data-model.md`, `quickstart.md`, `research.md`), they render as chips directly under the active step tab, with the parent step itself as the first chip so any sub-doc has a one-click path back to the overview.
+- **Table of contents**: sticky outline column on the left of the content area. Defaults to h2-only (so phase-heavy `tasks.md` reads as a clean ~7-entry list); a small `+` toggle expands h3 subsections when needed. Auto-hides on narrow panes.
+- **Quiet content**: when the structured header has the metadata, in-content duplicates (the `Input:` block, repeated branch chips, literal `Slug:`/`Date:` paragraphs) are suppressed so the body is just the spec content.
+- **Diagrams**: wide mermaid diagrams scroll horizontally inside the prose column instead of bleeding past it. Each diagram has its own `−` / Reset / `+` zoom controls.
+
+### Custom Workflows & Commands
+
+SpecKit Companion isn't tied to a single methodology. Swap out the default phases for any SDD workflow such as [Agent Teams Lite](https://github.com/Gentleman-Programming/agent-teams-lite), your own team's process, or anything that uses commands and produces markdown files. Define custom steps, labels, output files, and sub-documents. Add custom commands that appear as action buttons in specific phases (e.g., Verify, Archive, Commit, Create PR).
+
+The sidebar, progress tracking, and workflow editor all adapt automatically to your custom workflow. [See Configuration below.](#configuration)
 
 ### Sidebar at a Glance
 
 The sidebar organizes everything your AI assistant needs: **Specs** for feature development, **Steering** for AI guidance documents, **Agents** for custom agent definitions, **Skills** for reusable capabilities, and **Hooks** for automation triggers.
 
-Specs are grouped into three collapsible sections based on their status (stored in `.spec-context.json`):
-- **Active** — Specs in progress, ordered by numeric prefix (newest first) by default, expanded by default
-- **Completed** — Specs marked as done, collapsed by default
-- **Archived** — Specs moved to archive, collapsed by default
+Specs are grouped into three collapsible sections, each with a count in the header: **Active**, **Completed**, **Archived**. Filter by name, sort by number/name/date/status, multi-select to bulk-archive or complete, and right-click for per-spec actions like Reveal in File Explorer. Header badges and tree icons are color-coded by status so progress reads at a glance.
 
-The Specs view title bar exposes a **collapse/expand all** toggle (alongside the `+` and refresh buttons) that flips every spec in place between expanded and collapsed. The icon swaps to reflect the next action; state is in-memory only and is not persisted across sessions.
+When a step command is running, the spec shows a spinner and a live elapsed timer; a step-complete notification fires when it finishes (toggle via `speckit.notifications.stepComplete`).
 
-**Filter specs** — click the filter icon in the Specs view title bar to open a prompt and fuzzy-filter specs by slug or feature name (matches are case-insensitive and subsequence-based, e.g. `ftr` matches `filter-specs-tree`). The query is persisted to workspace state and restored on the next activation. A clear-filter icon appears next to the filter icon while a filter is active; an empty-result message offers a one-click clear when no specs match.
-
-**Sort specs** — click the sort icon in the Specs view title bar to pick how specs are ordered within each group: **Number** (numeric prefix, default), **Name** (A–Z by slug or spec name), **Date Created** (newest first), **Date Modified** (most recently edited), or **Status** (by workflow step). Ties fall back to numeric prefix then name so output is deterministic. The chosen mode is persisted to workspace state; group order (Active → Completed → Archived) is fixed.
-
-Right-click a spec to access **Mark as Completed**, **Archive Spec**, and **Reveal in File Explorer** (opens the spec's folder in Finder / File Explorer / the default file manager) actions. The spec viewer footer shows lifecycle buttons based on the spec's current status:
-
-- **Active** (tasks incomplete): Regenerate, Archive, + primary CTA (Plan/Tasks/Implement depending on next step)
-- **Active** (tasks 100% complete): Archive + Complete (primary)
-- **Completed**: Archive + Reactivate
-- **Archived**: Reactivate only
-
-The lifecycle flow is **Active → Completed → Archived**, with **Reactivate** available on Completed and Archived specs to return them to Active.
-
-**Transition logging**: Every workflow step change is automatically recorded in the `transitions` array inside `.spec-context.json`. Each entry captures the previous step, new step, source (`extension` or `sdd`), and timestamp. External changes (e.g., from SDD tools) are detected via file watcher and logged to the SpecKit output channel.
-
-**Badge and dates** are derived from `.spec-context.json` (the single source of truth for workflow state):
-- The **badge** in the metadata bar shows the current workflow state (e.g., SPECIFYING, PLANNING, IMPLEMENTING, COMPLETED). Hidden when no context exists.
-- **Created** and **Last Updated** dates are derived from `stepHistory` timestamps in `.spec-context.json`. Gracefully omitted when context is missing or incomplete.
-- Specs with only a `.spec-context.json` (no markdown files yet) still appear in the explorer, so SDD in-progress specs are always visible.
-
-**Color indicators:**
-- Green beaker icon — completed spec
-- Blue beaker icon — spec with an active workflow step
-- Green check — completed step
-- Green pulsing glow — step actively being worked on
-- Blue dot — current step
-
-When a workflow step command is running for a spec, the spec node displays a spinning progress indicator instead of its default icon. Running steps also show a live elapsed timer (e.g. `3m 22s`) beneath the step label in the viewer, and a notification fires when a dispatched step finishes — toggle via `speckit.notifications.stepComplete`.
+For the full reference (lifecycle button matrix, badge tier mapping, transition logging, all icon meanings), see [`docs/sidebar.md`](./docs/sidebar.md).
 
 ![Sidebar Overview](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/sidebar-overview.png)
-
-### Custom Workflows & Commands
-
-SpecKit Companion isn't tied to a single methodology. Swap out the default phases for any SDD workflow — [Agent Teams Lite](https://github.com/Gentleman-Programming/agent-teams-lite), your own team's process, or anything that uses commands and produces markdown files. Define custom steps, labels, output files, and sub-documents. Add custom commands that appear as action buttons in specific phases (e.g., Verify, Archive, Commit, Create PR).
-
-The sidebar, progress tracking, and workflow editor all adapt automatically to your custom workflow. [See Configuration below.](#configuration)
+*Sidebar at a glance. Active, Completed, and Archived spec groups with counts; steering, agents, skills, and hooks one click away.*
 
 ### Offline-First UI
 
-Fonts (Geist Variable) and icons (codicons) ship bundled inside the extension `.vsix`. The spec viewer, spec editor, and workflow editor all render identically on a plane with no internet connection — no runtime requests to CDNs for fonts or icon glyphs.
+Fonts (Geist Variable) and icons (codicons) ship bundled inside the extension `.vsix`. The spec viewer, spec editor, and workflow editor all render identically on a plane with no internet connection. No runtime requests to CDNs for fonts or icon glyphs.
 
 ### Safety Affordances for Destructive Actions
 
@@ -117,34 +106,35 @@ Actions that change the spec's lifecycle are protected so a misfired click is ea
 
 - **Regenerate** queues behind a 5-second undo toast. Clicking **Undo** or pressing **Esc** cancels the regeneration; otherwise the backend fires when the timer elapses.
 - **Archive**, **Complete**, and **Reactivate** each require two clicks. The first click swaps the button label to **"Confirm?"** for 3 seconds; a second click within that window confirms. Otherwise the label reverts silently and nothing happens.
-- The OS-level **Reduce Motion** preference is honored globally — in-flight step pulses and other infinite animations stop when it's enabled.
+- **Locked future steps**: while a step is running, downstream step tabs lock and surface a tooltip explaining why, so dispatched work cannot be interrupted by an out-of-order click.
+- The OS-level **Reduce Motion** preference is honored globally. In-flight step pulses and other infinite animations stop when it's enabled.
 
 ## Getting Started
 
 1. **Install** the extension from a `.vsix` file or the VS Code marketplace
-2. **Open the sidebar** — the SpecKit icon is always visible in the activity bar; with no folder open, clicking it shows an empty-state panel with an **Open Folder** action
-3. **Create a spec** — once a folder is open, click the `+` button in the Specs view to start your first feature
+2. **Open the sidebar**: the SpecKit icon is always visible in the activity bar; with no folder open, clicking it shows an empty-state panel with an **Open Folder** action
+3. **Create a spec**: once a folder is open, click the `+` button in the Specs view to start your first feature
 
 ## Sample Specs
 
-Looking for "what does good look like?" The repo's own `specs/` directory is the answer — every feature ships with the spec that drove it. A few worth opening:
+Looking for "what does good look like?" The repo's own `specs/` directory is the answer. Every feature ships with the spec that drove it. A few worth opening:
 
-- [`specs/008-spec-viewer-ux/`](./specs/008-spec-viewer-ux/) — **full SpecKit flow**: spec, plan, research, data model, quickstart, tasks, plus checklists and contracts.
-- [`specs/065-multi-select-specs/`](./specs/065-multi-select-specs/) — **minimal SDD flow**: just `spec.md` + `plan.md` + `tasks.md` for a small UX change.
-- [`specs/051-explorer-viewer-fixes/`](./specs/051-explorer-viewer-fixes/) — **minimal SDD flow**: same lean shape, applied to a focused bug-fix bundle.
+- [`specs/008-spec-viewer-ux/`](./specs/008-spec-viewer-ux/): **full SpecKit flow**: spec, plan, research, data model, quickstart, tasks, plus checklists and contracts.
+- [`specs/065-multi-select-specs/`](./specs/065-multi-select-specs/): **minimal SDD flow**: just `spec.md` + `plan.md` + `tasks.md` for a small UX change.
+- [`specs/051-explorer-viewer-fixes/`](./specs/051-explorer-viewer-fixes/): **minimal SDD flow**: same lean shape, applied to a focused bug-fix bundle.
 
 Compare the file lists side by side to see the contrast between the full and minimal flows.
 
 ## Supported AI Providers
 
-| Feature | Claude Code | GitHub Copilot CLI | Gemini CLI | Codex CLI |
-|---------|-------------|-------------------|------------|-----------|
-| **Steering File** | CLAUDE.md | .github/copilot-instructions.md | GEMINI.md | .codex/AGENTS.md |
-| **Steering Path** | .claude/steering/ | .github/instructions/*.instructions.md | Hierarchical GEMINI.md | .codex/ |
-| **Agents** | .claude/agents/*.md | .github/agents/*.agent.md | Limited support | .codex/agents/*.md |
-| **Hooks** | .claude/settings.json | Not supported | Not supported | Not supported |
-| **MCP Servers** | .claude/settings.json | ~/.copilot/mcp-config.json | ~/.gemini/settings.json | Not supported |
-| **CLI Command** | `claude` | `ghcs` / `gh copilot` | `gemini` | `codex` |
+| Feature | Claude Code | GitHub Copilot CLI | Gemini CLI | Codex CLI | Qwen Code | OpenCode |
+|---------|-------------|-------------------|------------|-----------|-----------|----------|
+| **Steering File** | CLAUDE.md | .github/copilot-instructions.md | GEMINI.md | AGENTS.md | QWEN.md | AGENTS.md |
+| **Steering Path** | .claude/steering/ | .github/instructions/*.instructions.md | Hierarchical GEMINI.md | Hierarchical AGENTS.md | .qwen/steering/ | Hierarchical AGENTS.md |
+| **Agents** | .claude/agents/*.md | .github/agents/*.agent.md | Limited support | Hierarchical AGENTS.md | Not supported | .opencode/agent/*.md |
+| **Hooks** | .claude/settings.json | Not supported | Not supported | Not supported | Not supported | Not supported |
+| **MCP Servers** | .claude/settings.json | ~/.copilot/mcp-config.json | ~/.gemini/settings.json | ~/.codex/config.toml | ~/.qwen/settings.json | ~/.opencode/opencode.jsonc |
+| **CLI Command** | `claude` | `ghcs` / `gh copilot` | `gemini` | `codex` | `qwen` | `opencode` |
 
 Configure your preferred provider: **Settings > speckit.aiProvider**
 
@@ -200,7 +190,7 @@ Controls whether the extension prepends a short context-update preamble to every
 | `true` (default) | Prepend a marker-wrapped preamble that instructs the AI to keep `.spec-context.json` current, including canonical substeps (e.g., `plan.research`, `plan.design`, `implement.run-tests`). |
 | `false` | Send the raw `/speckit.<step>` command with no preamble. Useful if your AI ignores it or you're debugging raw prompts. |
 
-The preamble adds ~200–300 tokens per dispatch and is identical across all providers (Claude, Gemini, Copilot, Codex, Qwen). Extension-side step-boundary writes remain the hard guarantee for `startedAt` / `completedAt` — this preamble unlocks finer-grained substep tracking.
+The preamble adds ~200–300 tokens per dispatch and is identical across all providers (Claude, Gemini, Copilot, Codex, Qwen). Extension-side step-boundary writes remain the hard guarantee for `startedAt` / `completedAt`: this preamble unlocks finer-grained substep tracking.
 
 ### Step-Complete Notifications
 
@@ -226,11 +216,29 @@ By default, specs live in `specs/`. You can configure multiple directories or us
 
 Simple names (e.g., `specs`) list their children as specs. Patterns with wildcards treat each match as a spec folder.
 
+### SDD Branch Auto-Creation
+
+When you use SDD-style workflows, the extension can auto-create a feature branch at a chosen phase. Configure via `.sdd.json` at the workspace root:
+
+```json
+{
+  "branchStage": "implement",
+  "branchNameFormat": "{type}/{slug}"
+}
+```
+
+| Field | Values | Description |
+|-------|--------|-------------|
+| `branchStage` | `"specify"` \| `"implement"` | Phase at which the feature branch is created. Use `specify` to branch as soon as the spec exists; use `implement` to branch only when implementation begins. |
+| `branchNameFormat` | template string | Pattern for the branch name. Supported placeholders: `{type}` (workflow step name), `{slug}` (spec slug). Example: `feat/{slug}` or `{type}/{slug}`. |
+
+The active feature branch is recorded in `.spec-context.json` as `workingBranch`; the original `branch` field stays as the immutable audit value.
+
 ### Custom Workflows
 
 Define alternative workflows with custom steps, output files, and sub-documents. Any SDD methodology that uses commands and produces markdown files can be plugged into SpecKit Companion.
 
-#### Real-world example — Agent Teams Lite
+#### Real-world example: Agent Teams Lite
 
 Here's a full configuration using [Agent Teams Lite](https://github.com/Gentleman-Programming/agent-teams-lite), a multi-agent SDD framework:
 
@@ -261,7 +269,7 @@ Notice how custom workflows, spec directories, and custom commands work together
 - `specDirectories` tells the sidebar where to find specs (including archived ones)
 - Custom commands add **Verify** and **Archive** buttons to the Tasks phase
 
-#### Basic example — remap default steps
+#### Basic example: remap default steps
 
 ```json
 {
@@ -291,7 +299,7 @@ Notice how custom workflows, spec directories, and custom commands work together
 
 #### Workflow Commands
 
-Workflows can define `commands` — extra action buttons that appear next to the primary action for a given step. For example, a command with `"step": "specify"` renders as a button next to **Submit** in the spec editor.
+Workflows can define `commands`: extra action buttons that appear next to the primary action for a given step. For example, a command with `"step": "specify"` renders as a button next to **Submit** in the spec editor.
 
 ```json
 {
@@ -310,7 +318,7 @@ Workflows can define `commands` — extra action buttons that appear next to the
 | Property | Required | Description |
 |----------|----------|-------------|
 | `name` | Yes | Unique command identifier |
-| `command` | Yes | Command to execute (e.g., `"sdd:auto"` — no leading slash needed) |
+| `command` | Yes | Command to execute (e.g., `"sdd:auto"`: no leading slash needed) |
 | `step` | Yes | Which workflow step to show this button on (e.g., `"specify"`) |
 | `title` | No | Button label (defaults to `name`) |
 | `tooltip` | No | Hover text for the button |
@@ -360,7 +368,7 @@ This scans `plan/` for `.md` files and shows them as children of the Plan step. 
 
 - The sidebar shows only the steps declared by the active workflow
 - Steps with missing output files appear as "not started"
-- Steps with `actionOnly: true` are action-only — they appear in the workflow editor but not in the file tree
+- Steps with `actionOnly: true` are action-only. They appear in the workflow editor but not in the file tree
 - When a spec is created via the editor, the selected workflow is automatically persisted to `.spec-context.json` in the spec directory
 - If no workflow is selected, the `speckit.defaultWorkflow` setting is used (falls back to the built-in default)
 - Once persisted, all subsequent operations (viewer, step execution, command palette) use the same workflow consistently
@@ -394,19 +402,19 @@ Add custom slash commands that appear in the workflow editor and the **SpecKit: 
 ```
 
 **Properties:**
-- `name` — Command identifier
-- `title` — Display name in picker
-- `command` — Slash command to execute
-- `step` — Phase to show in: `spec`, `plan`, `tasks`, or `all` (default)
-- `tooltip` — Description shown on hover
-- `autoExecute` — Auto-run in terminal (default: true)
-- `requiresSpecDir` — Inject spec directory (default: true)
+- `name`: Command identifier
+- `title`: Display name in picker
+- `command`: Slash command to execute
+- `step`: Phase to show in: `spec`, `plan`, `tasks`, or `all` (default)
+- `tooltip`: Description shown on hover
+- `autoExecute`: Auto-run in terminal (default: true)
+- `requiresSpecDir`: Inject spec directory (default: true)
 
 ## Spec Context (`.spec-context.json`)
 
 Every spec directory holds a `.spec-context.json` file that is the single
 source of truth for lifecycle state. The viewer derives badges, pulse,
-highlight, and footer button visibility from this file only — file
+highlight, and footer button visibility from this file only. File
 existence is never used to infer step completion.
 
 ### Canonical schema
@@ -436,7 +444,7 @@ The full JSON Schema lives at
 The extension itself records `stepHistory[step].startedAt` /
 `completedAt` and the canonical `status` whenever a step is dispatched
 (via the SpecKit commands or the viewer's Approve / Regenerate buttons),
-and when a spawned terminal closes — independent of AI cooperation. Spec
+and when a spawned terminal closes, independent of AI cooperation. Spec
 status changes (`Mark as Completed`, `Archive`, `Reactivate`) write the
 canonical status and append a transition entry, no longer relying on the
 legacy `setSpecStatus` path. Write failures log to the SpecKit output
@@ -445,7 +453,7 @@ channel without blocking dispatch.
 ### Invariants
 
 - Unknown top-level fields are preserved across writes.
-- `transitions` is append-only — never rewrite prior entries.
+- `transitions` is append-only. Never rewrite prior entries.
 - When the viewer opens a spec with no context file, it writes a minimal
   `draft` document; no step is marked completed from file presence alone.
 
@@ -483,12 +491,12 @@ npm run package
 
 ### Platform Support
 
-| Platform     | Support | Notes           |
-| ------------ | ------- | --------------- |
-| macOS        | Yes     | Fully supported |
-| Linux        | Yes     | Fully supported |
-| Windows WSL  | Yes     | Supported       |
-| Windows      | No      | Not supported   |
+| Platform     | Support  | Notes                                                                       |
+| ------------ | -------- | --------------------------------------------------------------------------- |
+| macOS        | Yes      | Fully supported                                                             |
+| Linux        | Yes      | Fully supported                                                             |
+| Windows WSL  | Yes      | Supported                                                                   |
+| Windows      | Partial  | Codex provider works in PowerShell (since v0.13.0); other providers require WSL |
 
 ## Acknowledgments
 

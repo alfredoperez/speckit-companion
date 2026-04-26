@@ -110,11 +110,48 @@ User data stored in workspace `.claude/` directory:
 
 ## Documentation
 
-When adding, changing, or removing a user-facing feature, update the README.md to reflect the change. Keep the README as the single source of truth for configuration options, workflow setup, and feature descriptions.
+When adding, changing, or removing a user-facing feature, update README.md.
+The README is the single source of truth for configuration, workflows, and
+features. Use the map below to find the right section.
 
-When modifying spec viewer statuses, badges, buttons, or step tab behavior, update `docs/viewer-states.md` to reflect the changes. This file documents the full state machine: status lifecycle, footer button matrix, badge text logic, step tab visual states, and data flow.
+When modifying spec viewer statuses, badges, buttons, or step tab behavior,
+also update `docs/viewer-states.md` (full state machine: status lifecycle,
+footer button matrix, badge text logic, step tab visual states, data flow).
 
-When modifying the project structure, adding/removing modules, or changing the architecture, update `docs/architecture.md` to reflect the changes.
+When modifying the project structure, adding/removing modules, or changing
+the architecture, also update `docs/architecture.md`.
+
+When modifying the sidebar (filter, sort, lifecycle buttons, badge tiers,
+tree icons, transition logging), also update `docs/sidebar.md` (the long-form
+sidebar reference linked from the README).
+
+### Feature → README section map
+
+| Change you made | README section to update |
+|-----------------|--------------------------|
+| New AI provider | "Supported AI Providers" matrix (add column) + provider count anywhere it's stated (e.g. "Six providers ship today" in "Why it exists") + `package.json` `contributes.configuration["speckit.aiProvider"].enum` must match |
+| New canonical workflow status | "Header badge color tiers" in `docs/sidebar.md` + "Status vocabulary" under Spec Context in README |
+| New configuration setting | "Configuration" section in README (add subsection with JSON example + value table) |
+| New sidebar action / right-click menu item | `docs/sidebar.md` (full reference) + the lean "Sidebar at a Glance" summary in README |
+| New keyboard or visual safety affordance | "Safety Affordances for Destructive Actions" in README |
+| New workflow phase or sub-document type | "Spec-Driven Phases" in README + Step Properties table under Custom Workflows |
+| New custom command type | "Custom Commands" properties table in README |
+| New platform support / shell support | "Platform Support" table in README |
+| New webview UI element (header, badge, tab, etc.) | "Reading Specs" subsection in README + retake associated screenshot |
+| Bug fix that changes documented behavior | The README section that documented the broken behavior |
+
+### Per-release checklist (run before tagging a version)
+
+1. Run `git diff $(git describe --tags --abbrev=0)..HEAD -- README.md` to see what was already updated since the last tag.
+2. Cross-check `CHANGELOG.md` entries since the last release against the map above.
+3. For every CHANGELOG bullet under "New Features," confirm a README section was touched. If not, add one.
+4. Update the "Recently Shipped" block at the top of README with the current and previous two releases.
+5. Verify `package.json` `contributes.configuration["speckit.aiProvider"].enum` matches the README provider matrix (count + names).
+6. Verify `package.json` `engines.vscode` matches the README "VS Code" badge.
+7. Re-render any screenshot whose UI changed in this release and refresh its caption if the value prop shifted.
+
+When in doubt, look at how an existing feature is documented and follow the
+same pattern.
 
 ## Extension Isolation (critical)
 
