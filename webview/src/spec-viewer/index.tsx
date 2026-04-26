@@ -13,6 +13,7 @@ import { setupRefineModal } from './modal';
 import { setupCheckboxToggle, setupFileRefClickHandler } from './actions';
 import { showToast } from '../shared/components/Toast';
 import { App } from './App';
+import { buildToc } from './toc';
 
 declare global {
     interface Window {
@@ -44,6 +45,11 @@ function updateContent(content: string): void {
     requestAnimationFrame(() => {
         applyHighlighting();
         initializeMermaid();
+        buildToc(
+            document.getElementById('content-area'),
+            document.getElementById('markdown-content'),
+            document.getElementById('spec-toc')
+        );
     });
 }
 

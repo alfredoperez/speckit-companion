@@ -1,0 +1,283 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/139",
+  "prNumber": 139,
+  "checkpointStatus": { "commit": true, "pr": true },
+  "last_action": "PR #139 opened — feat(spec-viewer): pin header and add responsive TOC sidebar",
+  "files_modified": [
+    "webview/src/spec-viewer/markdown/renderer.ts",
+    "webview/styles/spec-viewer/_toc.css",
+    "webview/styles/spec-viewer/_base.css",
+    "webview/styles/spec-viewer/_content.css",
+    "webview/styles/spec-viewer/index.css",
+    "webview/src/spec-viewer/toc.ts",
+    "docs/architecture.md",
+    "webview/src/spec-viewer/App.tsx",
+    "webview/src/spec-viewer/index.tsx"
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added slugify() helper and per-render slugCounts map in renderMarkdown; emit `id` on h1–h3 with -2/-3 collision suffix",
+      "files": ["webview/src/spec-viewer/markdown/renderer.ts"],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Created _toc.css partial — sticky aside.spec-toc, hover/focus/active states, h3 indent, --toc-min-width custom prop, narrow + empty hide hooks",
+      "files": ["webview/styles/spec-viewer/_toc.css"],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Made .content-area a flex row (display: flex, gap, align-items: flex-start) so the TOC sidebar can sit beside #markdown-content",
+      "files": ["webview/styles/spec-viewer/_base.css"],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Removed max-width/center on .spec-header (now full-width with padding + flex-shrink:0); moved H1-suppression to body[data-has-spec-context] selector",
+      "files": ["webview/styles/spec-viewer/_content.css"],
+      "concerns": []
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added @import '_toc.css' after _content.css in the partial index",
+      "files": ["webview/styles/spec-viewer/index.css"],
+      "concerns": []
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Created toc.ts — buildToc(scrollRoot, markdownRoot, tocRoot) with smooth-scroll click handler, IntersectionObserver active tracking, ResizeObserver narrow-class toggle; idempotent teardown via WeakMap",
+      "files": ["webview/src/spec-viewer/toc.ts"],
+      "concerns": []
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Added toc.ts entry, _toc.css entry, and lifted-header layout note to docs/architecture.md",
+      "files": ["docs/architecture.md"],
+      "concerns": []
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Restructured App.tsx — moved <SpecHeader /> above <main>, added <aside class='spec-toc' id='spec-toc'> inside <main>, and a useEffect that mirrors navState's spec-context presence onto body[data-has-spec-context]",
+      "files": ["webview/src/spec-viewer/App.tsx"],
+      "concerns": []
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Imported buildToc in index.tsx; called it from updateContent's rAF block so the TOC rebuilds on each doc switch (and on initial template content)",
+      "files": ["webview/src/spec-viewer/index.tsx"],
+      "concerns": []
+    }
+  },
+  "next": "done",
+  "approach": "Pin the header above the scroll region and add a sticky TOC sidebar inside the content area, hidden via a width threshold on narrow panes.",
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 7,
+      "scenarios": 6,
+      "key_finding": "SpecHeader currently renders inside the scrolling .content-area (not in the flex-shrink:0 .compact-nav), so it scrolls away with the markdown — making it sticky requires either moving it out of .content-area or applying position:sticky within it"
+    },
+    "plan": {
+      "approach_summary": "Pin the header above the scroll region and add a sticky TOC sidebar inside the content area, hidden via a width threshold on narrow panes.",
+      "files_planned": 9,
+      "risks": [
+        "IntersectionObserver root must be .content-area, not the viewport — webview default-root observers silently fail",
+        "Heading-slug collisions: identical H2 text in one doc breaks anchor nav unless suffixed -2/-3 per render",
+        "Media queries don't re-fire reliably when an editor split is dragged in webviews — use ResizeObserver on .content-area instead",
+        "Lifting the header risks breaking the ~ sibling selector that hides the first H1; keep siblinghood inside .viewer-container or switch to a body[data-has-context] hook"
+      ]
+    }
+  },
+  "updated": "2026-04-25",
+  "selectedAt": "2026-04-25T14:20:11Z",
+  "specName": "Sticky Header & Responsive TOC",
+  "branch": "main",
+  "workingBranch": "feat/085-sticky-header-toc",
+  "type": "feat",
+  "createdAt": "2026-04-25T14:20:11Z",
+  "auto": true,
+  "transitions": [
+    {
+      "step": "specify",
+      "substep": "parsing",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-04-25T14:20:11Z"
+    },
+    {
+      "step": "specify",
+      "substep": "exploring",
+      "from": "parsing",
+      "by": "sdd",
+      "at": "2026-04-25T14:20:11Z"
+    },
+    {
+      "step": "specify",
+      "substep": "detecting",
+      "from": "exploring",
+      "by": "sdd",
+      "at": "2026-04-25T14:20:11Z"
+    },
+    {
+      "step": "specify",
+      "substep": "writing-spec",
+      "from": "detecting",
+      "by": "sdd",
+      "at": "2026-04-25T14:20:11Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": "writing-spec",
+      "by": "sdd",
+      "at": "2026-04-25T14:20:11Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-25T14:35:37.339Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-25T14:35:37.342Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-25T14:38:00Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "from": {
+        "step": "plan",
+        "substep": "research"
+      },
+      "by": "sdd",
+      "at": "2026-04-25T14:38:30Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": "design"
+      },
+      "by": "sdd",
+      "at": "2026-04-25T14:39:00Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-25T14:40:39Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "writing-tasks",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-25T14:40:45Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": "writing-tasks"
+      },
+      "by": "sdd",
+      "at": "2026-04-25T14:42:11Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-25T14:43:01Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1-group-1-complete",
+      "from": {
+        "step": "implement",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-25T14:55:59Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-04-25T15:01:29Z"
+    }
+  ],
+  "status": "completed",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-04-25T14:35:37.339Z",
+      "completedAt": "2026-04-25T14:35:37.339Z"
+    },
+    "plan": {
+      "startedAt": "2026-04-25T14:35:37.342Z",
+      "completedAt": "2026-04-25T14:39:00Z",
+      "substeps": [
+        {
+          "name": "research",
+          "startedAt": "2026-04-25T14:38:00Z",
+          "completedAt": "2026-04-25T14:38:30Z"
+        },
+        {
+          "name": "design",
+          "startedAt": "2026-04-25T14:38:30Z",
+          "completedAt": "2026-04-25T14:39:00Z"
+        }
+      ]
+    },
+    "tasks": {
+      "startedAt": "2026-04-25T14:40:39Z",
+      "completedAt": "2026-04-25T14:42:11Z"
+    },
+    "implement": {
+      "startedAt": "2026-04-25T14:43:01Z",
+      "completedAt": "2026-04-25T15:01:29Z"
+    }
+  }
+}

@@ -51,53 +51,75 @@ export function NavigationBar() {
         })
         : relevantRelatedDocs;
 
+    // Parent step for the second-row children rail. When viewing a core step,
+    // that step is its own parent; when viewing a related doc, parent comes from
+    // the doc's parentStep field. Including the parent as the first child tab
+    // gives users a single way back to the step's overview from any sub-doc.
+    const parentStepType = isViewingRelatedDoc
+        ? viewingRelatedDoc?.parentStep
+        : currentDoc;
+    const parentStepDoc = coreDocs.find(d => d.type === parentStepType);
+    const showChildrenRow = displayRelatedDocs.length > 0 && parentStepDoc;
+
     return (
-        <div class="nav-primary">
-            <div class="step-tabs">
-                {coreDocs.map((doc, i) => {
-                    const hasRelatedChildren = relatedDocs.some(d => d.parentStep === doc.type);
-                    const exists = doc.exists || hasRelatedChildren;
-                    return (
-                        <>
-                            <StepTab
-                                key={doc.type}
-                                doc={doc}
-                                index={i}
-                                totalSteps={coreDocs.length}
-                                currentDoc={currentDoc}
-                                workflowPhase={workflowPhase}
-                                taskCompletionPercent={taskCompletionPercent}
-                                isViewingRelatedDoc={isViewingRelatedDoc}
-                                parentPhaseForRelated={parentPhaseForRelated}
-                                activeStep={activeStep}
-                                currentStep={currentStep}
-                                stepHistory={stepHistory}
-                                stalenessMap={stalenessMap}
-                                hasRelatedChildren={hasRelatedChildren}
-                                runningStepIndex={runningStepIndex}
-                                onClick={handleClick}
-                            />
-                            {i < coreDocs.length - 1 && (
-                                <span class={`step-connector ${exists ? 'filled' : ''}`} />
-                            )}
-                        </>
-                    );
-                })}
+        <>
+            <div class="nav-primary">
+                <div class="step-tabs">
+                    {coreDocs.map((doc, i) => {
+                        const hasRelatedChildren = relatedDocs.some(d => d.parentStep === doc.type);
+                        const exists = doc.exists || hasRelatedChildren;
+                        return (
+                            <>
+                                <StepTab
+                                    key={doc.type}
+                                    doc={doc}
+                                    index={i}
+                                    totalSteps={coreDocs.length}
+                                    currentDoc={currentDoc}
+                                    workflowPhase={workflowPhase}
+                                    taskCompletionPercent={taskCompletionPercent}
+                                    isViewingRelatedDoc={isViewingRelatedDoc}
+                                    parentPhaseForRelated={parentPhaseForRelated}
+                                    activeStep={activeStep}
+                                    currentStep={currentStep}
+                                    stepHistory={stepHistory}
+                                    stalenessMap={stalenessMap}
+                                    hasRelatedChildren={hasRelatedChildren}
+                                    runningStepIndex={runningStepIndex}
+                                    onClick={handleClick}
+                                />
+                                {i < coreDocs.length - 1 && (
+                                    <span class={`step-connector ${exists ? 'filled' : ''}`} />
+                                )}
+                            </>
+                        );
+                    })}
+                </div>
             </div>
-            {displayRelatedDocs.length > 0 && (
-                <div class="related-tabs">
-                    {displayRelatedDocs.map(doc => (
+            {showChildrenRow && (
+                <div class="step-children" aria-label={`${parentStepDoc.label} files`}>
+                    <div class="step-children-tabs">
                         <button
-                            key={doc.type}
-                            class={`related-tab ${doc.type === currentDoc ? 'active' : ''}`}
-                            data-doc={doc.type}
-                            onClick={() => handleRelatedClick(doc.type)}
+                            key={parentStepDoc.type}
+                            class={`step-child step-child--parent ${parentStepDoc.type === currentDoc ? 'active' : ''}`}
+                            data-doc={parentStepDoc.type}
+                            onClick={() => handleRelatedClick(parentStepDoc.type)}
                         >
-                            {doc.label}
+                            {parentStepDoc.label}
                         </button>
-                    ))}
+                        {displayRelatedDocs.map(doc => (
+                            <button
+                                key={doc.type}
+                                class={`step-child ${doc.type === currentDoc ? 'active' : ''}`}
+                                data-doc={doc.type}
+                                onClick={() => handleRelatedClick(doc.type)}
+                            >
+                                {doc.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             )}
-        </div>
+        </>
     );
 }

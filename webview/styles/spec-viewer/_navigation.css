@@ -16,15 +16,9 @@
 .nav-primary {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     padding: 0 var(--space-4);
     height: 48px;
     gap: var(--space-4);
-}
-
-/* Right-aligned slot that hosts related-tabs inside the primary nav row */
-.nav-primary > .related-tabs {
-    margin-left: auto;
 }
 
 /* ============================================
@@ -96,9 +90,7 @@
    inside the ring instead of visually overflowing an outer outline). */
 .step-tab.current {
     background: color-mix(in srgb, var(--accent, #4a9eff) 22%, transparent);
-    box-shadow:
-        inset 0 0 0 2px var(--accent, #4a9eff),
-        0 0 0 1px color-mix(in srgb, var(--accent, #4a9eff) 25%, transparent);
+    box-shadow: inset 0 0 0 2px var(--accent, #4a9eff);
     border-radius: 6px;
 }
 
@@ -172,35 +164,71 @@
 
 
 /* ============================================
-   Related Documents Tabs (right-aligned slot in .nav-primary)
+   Step Children Rail (second row beneath .nav-primary)
+   Sub-files of the active step render here as visual children, mirroring
+   the tree-view hierarchy. Parent step itself is the first chip so users
+   have a single way back to the step overview from any sub-doc.
    ============================================ */
 
-.related-tabs {
+/* Subgroup row under step-tabs: chips read as children of the active step,
+   not as a second navbar. No background band, no border-bottom — the
+   .compact-nav's own bottom border still divides nav from content. */
+.step-children {
     display: flex;
-    gap: 0;
+    align-items: center;
+    padding: 0 var(--space-4) 8px;
+    flex-shrink: 0;
 }
 
-.related-tab {
-    padding: 8px 12px;
+.step-children-tabs {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.step-child {
+    padding: 4px 12px;
     border: none;
-    border-bottom: 2px solid transparent;
     background: transparent;
     color: var(--text-secondary);
     cursor: pointer;
     font-size: 12px;
     font-family: inherit;
+    font-weight: 500;
     border-radius: var(--radius-sm);
-    transition: all var(--transition-fast);
+    transition: color var(--transition-fast), background var(--transition-fast);
+    white-space: nowrap;
 }
 
-.related-tab:hover {
+.step-child:hover {
     color: var(--text-primary);
     background: var(--bg-hover);
 }
 
-.related-tab.active {
+/* Parent-doc chip distinguished from siblings: same shape, slightly stronger
+   weight + a thin trailing separator so the eye reads "[Parent] | children". */
+.step-child--parent {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-right: 6px;
+    position: relative;
+}
+
+/* Quiet middot separator between the parent chip and its sibling children.
+   Pseudo-element so it doesn't pollute screen readers, low contrast so the
+   eye reads it as rhythm not punctuation. */
+.step-child--parent::after {
+    content: '·';
+    margin-left: 8px;
+    color: var(--text-muted);
+    font-weight: normal;
+    pointer-events: none;
+}
+
+.step-child.active {
     background: color-mix(in srgb, var(--accent, #4a9eff) 18%, transparent);
     color: var(--text-primary);
-    border-bottom-color: var(--accent);
     font-weight: 600;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent, #4a9eff) 35%, transparent);
 }

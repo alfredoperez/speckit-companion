@@ -18,14 +18,18 @@ export function SpecHeader() {
     const hasContext = !!(badgeText || ns.specContextName);
     if (!badgeText && !ns.createdDate && !ns.specContextName) return null;
 
-    const docTypeLabel = ns.docTypeLabel || 'Spec';
-
     return (
         <div class="spec-header" data-has-context={String(hasContext)}>
+            {ns.specContextName && (
+                <h1 class="spec-header-title">{ns.specContextName}</h1>
+            )}
             {(badgeText || ns.branch || ns.createdDate) && (
                 <div class="spec-header-badges">
                     {badgeText && (
-                        <span class={`spec-badge${statusClass ? ` spec-badge--${statusClass}` : ''}`}>
+                        <span
+                            class={`spec-badge${statusClass ? ` spec-badge--${statusClass}` : ''}`}
+                            title={ns.createdDate ? `${badgeText} · ${ns.createdDate}` : badgeText}
+                        >
                             {badgeText}
                         </span>
                     )}
@@ -36,16 +40,10 @@ export function SpecHeader() {
                         </span>
                     )}
                     {ns.createdDate && (
-                        <span class="spec-header-date">{ns.createdDate}</span>
+                        <span class="spec-header-date" aria-label={`Created ${ns.createdDate}`}>
+                            {ns.createdDate}
+                        </span>
                     )}
-                </div>
-            )}
-            {ns.specContextName && (
-                <div class="spec-header-main">
-                    <span class="spec-header-title">
-                        <span class="spec-header-doctype">{docTypeLabel}:</span>{' '}
-                        {ns.specContextName}
-                    </span>
                 </div>
             )}
         </div>

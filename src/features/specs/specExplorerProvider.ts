@@ -22,6 +22,7 @@ import { SpecsFilterState } from './specsFilterState';
 import { fuzzyMatch } from './fuzzyMatch';
 import { SpecsSortState } from './specsSortState';
 import { comparators, DEFAULT_SORT_MODE } from './specsSortMode';
+import { fileNameToDisplayName } from '../spec-viewer/utils';
 
 export interface SpecInfo {
     name: string;
@@ -355,7 +356,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             const isNested = relativePath.includes('/');
             const displayName = isNested
                 ? this.nestedFileToDisplayName(relativePath)
-                : relativePath.replace('.md', '');
+                : fileNameToDisplayName(relativePath);
 
             return new SpecItem(
                 displayName,

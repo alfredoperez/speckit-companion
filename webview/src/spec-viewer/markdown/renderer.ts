@@ -33,6 +33,15 @@ export function setHasSpecContext(value: boolean): void {
     hasSpecContext = value;
 }
 
+function slugify(text: string): string {
+    return text
+        .toLowerCase()
+        .replace(/<[^>]+>/g, '')         // strip any inline HTML produced by parseInline
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .replace(/-{2,}/g, '-');
+}
+
 /**
  * Check if content looks like a tree structure (file tree, directory listing, etc.)
  */
@@ -120,6 +129,7 @@ export function renderMarkdown(markdown: string): string {
     markdown = preprocessCallouts(markdown);
 
     let html = '';
+    const slugCounts = new Map<string, number>();
     const lines = markdown.split('\n');
     let inCodeBlock = false;
     let codeBlockLang = '';
@@ -216,12 +226,22 @@ export function renderMarkdown(markdown: string): string {
             lastClosedListType = null;
             lastClosedListCount = 0;
             const level = headingMatch[1].length;
-            const content = parseInline(headingMatch[2]);
+            const rawText = headingMatch[2];
+            const content = parseInline(rawText);
+            let openTag = `<h${level}>`;
+            if (level <= 3) {
+                const baseSlug = slugify(rawText) || `heading-${sourceLineNum}`;
+                const prevCount = slugCounts.get(baseSlug) ?? 0;
+                const nextCount = prevCount + 1;
+                slugCounts.set(baseSlug, nextCount);
+                const id = nextCount === 1 ? baseSlug : `${baseSlug}-${nextCount}`;
+                openTag = `<h${level} id="${id}">`;
+            }
             // Wrap h3, h4, h5, h6 with line actions (subsection headers)
             if (level >= 3) {
-                html += wrapWithLineActions(`<h${level}>${content}</h${level}>`, sourceLineNum);
+                html += wrapWithLineActions(`${openTag}${content}</h${level}>`, sourceLineNum);
             } else {
-                html += `<h${level}>${content}</h${level}>\n`;
+                html += `${openTag}${content}</h${level}>\n`;
             }
             continue;
         }
