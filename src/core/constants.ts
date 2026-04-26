@@ -258,6 +258,39 @@ export const AIProviders = {
 } as const;
 
 /**
+ * Built-in workflow identifiers. Custom workflows from settings.json may use
+ * arbitrary names — these are the only ones the extension treats specially.
+ */
+export const Workflows = {
+    SPECKIT_COMPANION: 'speckit-companion',
+    SDD: 'sdd',
+    SDD_FAST: 'sdd-fast',
+} as const;
+
+/**
+ * Workflows that include explicit approval gates between steps.
+ * Used to decide whether step-scoped Approve / Start buttons are surfaced.
+ */
+export const APPROVAL_GATED_WORKFLOWS: readonly string[] = [
+    Workflows.SDD,
+    Workflows.SDD_FAST,
+];
+
+/**
+ * Footer action identifiers — referenced by getFooterActions and tests.
+ * Keep in sync with the FOOTER_ACTIONS catalog in features/spec-viewer/footerActions.ts.
+ */
+export const FooterActionIds = {
+    ARCHIVE: 'archive',
+    REACTIVATE: 'reactivate',
+    COMPLETE: 'complete',
+    START: 'start',
+    REGENERATE: 'regenerate',
+    APPROVE: 'approve',
+    SDD_AUTO: 'sdd-auto',
+} as const;
+
+/**
  * Standard directory names used throughout the extension
  */
 export const Directories = {

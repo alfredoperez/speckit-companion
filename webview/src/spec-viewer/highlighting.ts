@@ -142,37 +142,13 @@ export function initializeMermaid(): void {
         });
 
         mermaid.run({ querySelector: '.mermaid' });
-        // Classify + add zoom controls after mermaid renders
-        // (use setTimeout to wait for DOM update)
+        // Add zoom controls after mermaid renders (use setTimeout to wait for DOM update)
         setTimeout(() => {
-            classifyMermaidSize();
             addMermaidZoomControls();
         }, 100);
     } catch (e) {
         console.warn('[SpecViewer] Failed to initialize mermaid:', e);
     }
-}
-
-/**
- * Tag each .mermaid-container as `.mermaid-wide` when the rendered SVG's
- * intrinsic viewBox width crosses a threshold — only those get the break-out
- * CSS width. Narrow diagrams (small state machines, short flowcharts) stay
- * inside the 72ch prose column at their natural size instead of getting
- * absurdly stretched.
- */
-const WIDE_VIEWBOX_THRESHOLD = 900;
-function classifyMermaidSize(): void {
-    document.querySelectorAll('.mermaid-container').forEach(container => {
-        const svg = container.querySelector('.mermaid svg') as SVGSVGElement | null;
-        if (!svg) return;
-        const viewBox = svg.viewBox?.baseVal;
-        if (!viewBox) return;
-        if (viewBox.width >= WIDE_VIEWBOX_THRESHOLD) {
-            container.classList.add('mermaid-wide');
-        } else {
-            container.classList.remove('mermaid-wide');
-        }
-    });
 }
 
 /**

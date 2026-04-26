@@ -166,19 +166,8 @@ pre.code-block code.hljs {
     background: var(--bg-secondary);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
+    width: 100%;
     overflow-x: auto;
-}
-
-/* Mermaid-only break-out of the 72ch prose column — applied conditionally.
-   Only diagrams whose rendered SVG viewBox width crosses the threshold in
-   classifyMermaidSize() get the `.mermaid-wide` class and the break-out
-   width; narrow diagrams (short state machines, small flowcharts) stay
-   inside the prose column at natural size to avoid absurd up-scaling. */
-#markdown-content > .mermaid-container.mermaid-wide {
-    width: min(92vw, 1600px);
-    max-width: none;
-    margin-left: calc((100% - min(92vw, 1600px)) / 2);
-    margin-right: calc((100% - min(92vw, 1600px)) / 2);
 }
 
 .mermaid {

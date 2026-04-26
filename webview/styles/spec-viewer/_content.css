@@ -190,6 +190,17 @@ body[data-spec-status="archived"] .meta-status-draft {
     display: none;
 }
 
+/* Suppress in-content metadata that the structured header already shows.
+   The .spec-meta bar (synthesized by preprocessSpecMetadata), the .spec-input
+   callout, and any stray .meta-branch chips all duplicate fields the header
+   already renders from spec-context.json. When that header is active
+   (App.tsx sets body[data-has-spec-context="true"]), hide them. */
+body[data-has-spec-context="true"] .spec-meta,
+body[data-has-spec-context="true"] .spec-input,
+body[data-has-spec-context="true"] .meta-branch {
+    display: none;
+}
+
 /* ============================================
    Structured Header (spec-context driven)
    ============================================ */
@@ -200,37 +211,31 @@ body[data-spec-status="archived"] .meta-status-draft {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: var(--space-2);
+    gap: 6px;
     border-bottom: 1px solid var(--border);
     background: var(--bg-primary);
     flex-shrink: 0;
 }
 
+/* Title is the page anchor: largest type, page-level weight, sits above the
+   metadata cluster so the eye lands on the spec name first, not on the badge. */
+.spec-header-title {
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--header-title);
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+}
+
+/* Glance-metadata cluster: badge · branch · date all flow inline at the same
+   density. No margin-left:auto orphaning the date — the · separator carries
+   the visual rhythm instead. */
 .spec-header-badges {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-3);
-}
-
-.spec-header-main {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: var(--space-3);
-}
-
-.spec-header-title {
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: var(--header-title);
-    line-height: var(--leading-tight);
-    letter-spacing: -0.01em;
-}
-
-.spec-header-doctype {
-    color: var(--text-muted);
-    font-weight: 500;
+    gap: 8px;
 }
 
 /* Hide the first H1 when structured header provides the title.
@@ -257,13 +262,19 @@ body[data-has-spec-context="true"] #markdown-content h1:first-of-type {
     font-size: 12px;
 }
 
-/* Created-date tucked right in the top row — glance metadata, not a heading. */
+/* Created-date inline with the badge cluster — glance metadata, not a heading.
+   The leading middot is a pseudo-element so it doesn't pollute the DOM tree
+   or screen-reader output (already aria-labelled on the parent). */
 .spec-header-date {
-    margin-left: auto;
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--text-muted);
     white-space: nowrap;
+}
+
+.spec-header-date::before {
+    content: '· ';
+    color: var(--border);
 }
 
 /* ============================================
@@ -288,7 +299,6 @@ body[data-spec-status="completed"] .spec-badge {
     background: var(--vscode-charts-green, var(--success));
     color: var(--bg-primary);
     border-color: var(--vscode-charts-green, var(--success));
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--vscode-charts-green, var(--success)) 22%, transparent);
     font-weight: 800;
 }
 

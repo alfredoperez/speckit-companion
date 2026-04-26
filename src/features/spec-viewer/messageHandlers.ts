@@ -10,7 +10,7 @@ import {
     ViewerToExtensionMessage,
     DocumentType,
 } from './types';
-import { ConfigKeys, SpecStatuses } from '../../core/constants';
+import { ConfigKeys, SpecStatuses, FooterActionIds } from '../../core/constants';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig } from '../../core/types/config';
 import type { WorkflowStepConfig } from '../workflows/types';
@@ -98,23 +98,23 @@ export function createMessageHandlers(
                 break;
             case 'footerAction':
                 switch (message.id) {
-                    case 'archive':
+                    case FooterActionIds.ARCHIVE:
                         await handleLifecycleAction(specDirectory, SpecStatuses.ARCHIVED, deps);
                         break;
-                    case 'reactivate':
+                    case FooterActionIds.REACTIVATE:
                         await handleLifecycleAction(specDirectory, SpecStatuses.ACTIVE, deps);
                         break;
-                    case 'complete':
+                    case FooterActionIds.COMPLETE:
                         await handleLifecycleAction(specDirectory, SpecStatuses.COMPLETED, deps);
                         break;
-                    case 'regenerate':
+                    case FooterActionIds.REGENERATE:
                         await handleRegenerate(specDirectory, deps);
                         break;
-                    case 'approve':
-                    case 'start':
+                    case FooterActionIds.APPROVE:
+                    case FooterActionIds.START:
                         await handleApprove(specDirectory, deps);
                         break;
-                    case 'sdd-auto':
+                    case FooterActionIds.SDD_AUTO:
                         await handleClarify(specDirectory, deps, '/sdd:auto');
                         break;
                     default:

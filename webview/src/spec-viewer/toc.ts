@@ -8,6 +8,10 @@
  *   - ResizeObserver on the scroll container to toggle .content-area--narrow
  *     when its inline size drops below --toc-min-width.
  *
+ * Defaults to h2-only rendering; users can toggle h3 subsections back in via
+ * the "Show subsections" button in the TOC header. The choice is module-scoped
+ * so it persists across doc switches within a single viewer session.
+ *
  * buildToc is idempotent — it tears down prior observers before rebuilding,
  * so it can be called on every doc switch (spec → plan → tasks → related).
  */
@@ -19,6 +23,21 @@ interface ObserverPair {
 }
 
 const observers = new WeakMap<HTMLElement, ObserverPair>();
+
+let showSubsections = false;
+
+// Headings that are instructional/reference, not navigable sections.
+// They stay in the rendered markdown but get filtered out of the outline so
+// the TOC reads as "places to jump to," not "every h2 in the file."
+const TOC_SKIP_PATTERNS: RegExp[] = [
+    /^\s*Format\s*:/i,
+    /^\s*Path Conventions\s*$/i,
+];
+
+// User-story phase headings carry "(Priority: P*)" suffixes in the doc to
+// surface priority next to the heading. The user-story card already shows
+// priority prominently, so the TOC strips the suffix to keep entries scannable.
+const PRIORITY_SUFFIX = /\s*\(Priority:\s*P\d+\)\s*$/i;
 
 function prefersReducedMotion(): boolean {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -50,9 +69,17 @@ export function buildToc(
 
     teardown(tocRoot);
 
-    const headings = Array.from(
+    const allHeadings = Array.from(
         markdownRoot.querySelectorAll<HTMLElement>('h2[id], h3[id]')
-    );
+    ).filter(h => {
+        const text = (h.textContent ?? '').trim();
+        return !TOC_SKIP_PATTERNS.some(re => re.test(text));
+    });
+    const hasH3 = allHeadings.some(h => h.tagName.toLowerCase() === 'h3');
+
+    const headings = showSubsections
+        ? allHeadings
+        : allHeadings.filter(h => h.tagName.toLowerCase() === 'h2');
 
     if (headings.length === 0) {
         tocRoot.classList.add('spec-toc--empty');
@@ -61,6 +88,38 @@ export function buildToc(
     }
 
     tocRoot.classList.remove('spec-toc--empty');
+
+    // Header chrome: label + optional show-subsections toggle. Toggle only
+    // renders when the doc actually has h3 entries — no point offering it
+    // for plan.md where every heading is already an h2.
+    const header = document.createElement('div');
+    header.className = 'spec-toc-header';
+    const label = document.createElement('span');
+    label.className = 'spec-toc-label';
+    label.textContent = 'On this page';
+    header.appendChild(label);
+
+    if (hasH3) {
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'spec-toc-toggle';
+        // Icon-only toggle so the header stays on one line at the column's
+        // narrow (220px) width. Title carries the explanation for hover users;
+        // aria-label carries it for screen readers.
+        toggle.textContent = showSubsections ? '−' : '+';
+        const tooltip = showSubsections ? 'Hide subsections' : 'Show subsections';
+        toggle.title = tooltip;
+        toggle.setAttribute('aria-label', tooltip);
+        toggle.setAttribute('aria-pressed', showSubsections ? 'true' : 'false');
+        toggle.addEventListener('click', () => {
+            showSubsections = !showSubsections;
+            buildToc(scrollRoot, markdownRoot, tocRoot);
+            // Restore focus to the new toggle after the rebuild swapped DOM.
+            const next = tocRoot.querySelector<HTMLButtonElement>('.spec-toc-toggle');
+            if (next) next.focus();
+        });
+        header.appendChild(toggle);
+    }
 
     const list = document.createElement('ul');
     list.className = 'spec-toc-list';
@@ -76,7 +135,7 @@ export function buildToc(
         const a = document.createElement('a');
         a.className = `spec-toc-link spec-toc-link--${level}`;
         a.href = `#${id}`;
-        a.textContent = heading.textContent ?? '';
+        a.textContent = (heading.textContent ?? '').replace(PRIORITY_SUFFIX, '').trim();
         a.dataset.target = id;
         li.appendChild(a);
         list.appendChild(li);
@@ -84,6 +143,7 @@ export function buildToc(
     }
 
     tocRoot.innerHTML = '';
+    tocRoot.appendChild(header);
     tocRoot.appendChild(list);
 
     // Click handler — smooth scroll, honor prefers-reduced-motion, set active.

@@ -4,6 +4,7 @@
  */
 
 import { SpecDocument, DocumentType, StalenessMap } from '../types';
+import { escapeHtml } from '../utils';
 
 /**
  * Generate the unified navigation bar (merged tabs + stepper)
@@ -89,31 +90,48 @@ export function generateCompactNav(
         </button>${connector}`;
     }).join('');
 
-    // Related tabs render in a right-aligned slot inside .nav-primary.
-    // Overview tab is removed (parent step-tab routes to overview already, R011).
+    // Children rail: rendered as a second row beneath .nav-primary so the
+    // sub-files of the active step read as visual children of that step
+    // (mirrors the tree-view hierarchy). The parent step itself is the first
+    // tab in the rail, giving a single way back to the step overview.
     const relevantRelatedDocs = relatedDocs.filter(d =>
         d.parentStep === currentDocType
     );
 
+    const viewingRelatedDoc = isViewingRelatedDoc
+        ? relatedDocs.find(rd => rd.type === currentDocType)
+        : undefined;
+
     const displayRelatedDocs = isViewingRelatedDoc
         ? relatedDocs.filter(d => {
-            const viewingDoc = relatedDocs.find(rd => rd.type === currentDocType);
-            return !d.parentStep || d.parentStep === viewingDoc?.parentStep;
+            return !d.parentStep || d.parentStep === viewingRelatedDoc?.parentStep;
         })
         : relevantRelatedDocs;
 
-    const relatedTabsHtml = displayRelatedDocs.length > 0
-        ? `<div class="related-tabs">${displayRelatedDocs.map(doc => {
-            const isActive = doc.type === currentDocType;
-            return `<button class="related-tab ${isActive ? 'active' : ''}" data-doc="${doc.type}">${doc.label}</button>`;
-        }).join('')}</div>`
+    const parentStepType = isViewingRelatedDoc
+        ? viewingRelatedDoc?.parentStep
+        : currentDocType;
+    const parentStepDoc = parentStepType
+        ? coreDocs.find(d => d.type === parentStepType)
+        : undefined;
+
+    const childrenRowHtml = displayRelatedDocs.length > 0 && parentStepDoc
+        ? `<div class="step-children" aria-label="${escapeHtml(parentStepDoc.label)} files">
+            <div class="step-children-tabs">
+                <button class="step-child step-child--parent ${parentStepDoc.type === currentDocType ? 'active' : ''}" data-doc="${parentStepDoc.type}">${parentStepDoc.label}</button>
+                ${displayRelatedDocs.map(doc => {
+                    const isActive = doc.type === currentDocType;
+                    return `<button class="step-child ${isActive ? 'active' : ''}" data-doc="${doc.type}">${doc.label}</button>`;
+                }).join('')}
+            </div>
+        </div>`
         : '';
 
     return `
         <nav class="compact-nav">
             <div class="nav-primary">
                 <div class="step-tabs">${stepTabsHtml}</div>
-                ${relatedTabsHtml}
             </div>
+            ${childrenRowHtml}
         </nav>`;
 }
