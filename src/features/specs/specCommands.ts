@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { getAIProvider } from '../../extension';
-import { SpecExplorerProvider, isSpecLifecycleItem } from './specExplorerProvider';
+import { SpecExplorerProvider, SpecInfo, isSpecLifecycleItem } from './specExplorerProvider';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig, SpecTreeItem } from '../../core/types/config';
 import { Commands, ConfigKeys, SpecStatuses, WorkflowSteps } from '../../core/constants';
@@ -266,13 +266,51 @@ export function registerSpecKitCommands(
         updateSelectionContextKeys(targets as any);
         if (targets.length === 0) return;
         const wsPath = workspaceFolder.uri.fsPath;
+        const specDirs = targets.map(t => specDirFor(t, wsPath));
+        await applyBulkToSpecDirs(specDirs, apply, singular, plural, skipIf);
+    }
+
+    async function applyBulkToSpecDirs(
+        specDirs: string[],
+        apply: (specDir: string) => Promise<void>,
+        singular: string,
+        plural: string,
+        skipIf?: (status: string | undefined) => boolean
+    ): Promise<number> {
         const filtered = skipIf
-            ? targets.filter(t => !skipIf(readSpecContextSync(specDirFor(t, wsPath))?.status))
-            : targets;
-        if (filtered.length === 0) return;
-        await Promise.all(filtered.map(t => apply(specDirFor(t, wsPath))));
+            ? specDirs.filter(d => !skipIf(readSpecContextSync(d)?.status))
+            : specDirs;
+        if (filtered.length === 0) return 0;
+        await Promise.all(filtered.map(d => apply(d)));
         specExplorer.refresh();
         NotificationUtils.showAutoDismissNotification(pluralize(filtered.length, singular, plural));
+        return filtered.length;
+    }
+
+    async function runGroupBulk(
+        item: SpecTreeItem | undefined,
+        groupLabel: string,
+        actionLabel: string,
+        apply: (specDir: string) => Promise<void>,
+        singular: string,
+        plural: string,
+        skipIf: (status: string | undefined) => boolean
+    ): Promise<void> {
+        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+        if (!workspaceFolder || !item) return;
+        const groupSpecs = (item as { groupSpecs?: SpecInfo[] }).groupSpecs ?? [];
+        if (groupSpecs.length === 0) return;
+        const wsPath = workspaceFolder.uri.fsPath;
+        const specDirs = groupSpecs.map(s => path.join(wsPath, s.path));
+        const eligible = specDirs.filter(d => !skipIf(readSpecContextSync(d)?.status));
+        if (eligible.length === 0) return;
+        const confirm = await vscode.window.showWarningMessage(
+            `${actionLabel} all ${eligible.length} ${groupLabel} specs?`,
+            { modal: true },
+            actionLabel
+        );
+        if (confirm !== actionLabel) return;
+        await applyBulkToSpecDirs(eligible, apply, singular, plural);
     }
 
     // Mark as Completed
@@ -309,6 +347,55 @@ export function registerSpecKitCommands(
             await runBulkStatusChange(
                 item,
                 items,
+                specDir => reactivate(specDir),
+                'moved to active',
+                'moved to active',
+                s => s !== SpecStatuses.COMPLETED && s !== SpecStatuses.ARCHIVED
+            );
+        })
+    );
+
+    // Group bulk: Mark all as Completed (Active group)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('speckit.group.markAllCompleted', async (item: SpecTreeItem) => {
+            await runGroupBulk(
+                item,
+                'active',
+                'Mark as Completed',
+                specDir => setStatus(specDir, 'completed'),
+                'marked as completed',
+                'marked as completed',
+                s => s === SpecStatuses.COMPLETED
+            );
+        })
+    );
+
+    // Group bulk: Archive all (Active or Completed group)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('speckit.group.archiveAll', async (item: SpecTreeItem) => {
+            const ctx = (item as { contextValue?: string })?.contextValue;
+            const groupLabel = ctx === 'spec-group-completed' ? 'completed' : 'active';
+            await runGroupBulk(
+                item,
+                groupLabel,
+                'Archive',
+                specDir => setStatus(specDir, 'archived'),
+                'archived',
+                'archived',
+                s => s === SpecStatuses.ARCHIVED
+            );
+        })
+    );
+
+    // Group bulk: Reactivate all (Completed or Archived group)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('speckit.group.reactivateAll', async (item: SpecTreeItem) => {
+            const ctx = (item as { contextValue?: string })?.contextValue;
+            const groupLabel = ctx === 'spec-group-archived' ? 'archived' : 'completed';
+            await runGroupBulk(
+                item,
+                groupLabel,
+                'Reactivate',
                 specDir => reactivate(specDir),
                 'moved to active',
                 'moved to active',

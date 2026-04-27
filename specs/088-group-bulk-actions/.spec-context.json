@@ -1,0 +1,100 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "status": "completed",
+  "checkpointStatus": { "commit": true, "pr": false },
+  "last_action": "Committing feat(specs): add group header bulk actions",
+  "files_modified": [
+    "src/features/specs/specExplorerProvider.ts",
+    "src/features/specs/specCommands.ts",
+    "src/features/specs/__tests__/specGroupContextValue.test.ts",
+    "package.json",
+    "docs/sidebar.md",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Replaced uniform 'spec-group' contextValue with spec-group-active|completed|archived; added SPEC_GROUP_CONTEXT_VALUES set + isSpecGroupItem helper; updated dispatch and SpecItem icon branch to use the helper.",
+      "files": ["src/features/specs/specExplorerProvider.ts"],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added speckit.group.markAllCompleted, speckit.group.archiveAll, speckit.group.reactivateAll. Extracted applyBulkToSpecDirs helper from runBulkStatusChange so both per-item and group flows share the skip-filter / Promise.all / refresh / toast pipeline. Group flow shows a modal warning dialog with the post-skip count and dynamically picks the group label for shared archive/reactivate handlers.",
+      "files": ["src/features/specs/specCommands.ts"],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Registered the three new commands under contributes.commands and added view/item/context entries gated on viewItem == spec-group-active|completed|archived (with shared archive/reactivate using viewItem == || viewItem ==). Existing per-item when clauses use anchored ^spec-(...)$ regex so spec-group-* cannot leak.",
+      "files": ["package.json"],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added co-located test src/features/specs/__tests__/specGroupContextValue.test.ts covering the three valid group contextValues, the legacy 'spec-group' string (now false), per-spec lifecycle values, and edge cases. 6 tests pass.",
+      "files": ["src/features/specs/__tests__/specGroupContextValue.test.ts"],
+      "concerns": []
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added Group header bulk actions section to docs/sidebar.md, updated the Sidebar at a Glance summary in README.md to mention group-header bulk actions, and added an Unreleased CHANGELOG entry.",
+      "files": ["docs/sidebar.md", "README.md", "CHANGELOG.md"],
+      "concerns": []
+    }
+  },
+  "decisions": [
+    "Refactored runBulkStatusChange by extracting applyBulkToSpecDirs(specDirs, ...) so the group flow could reuse the skip-filter/Promise.all/refresh/toast pipeline without going through resolveTargets (which is selection-driven and would return the group SpecItem itself). Per-item handlers retain their existing call shape.",
+    "Test file location follows the project's co-located convention (src/features/specs/__tests__/) rather than tasks.md's tests/features/specs/ path, which doesn't exist in this repo.",
+    "Used a single shared archiveAll/reactivateAll command per group, with the handler picking the group label based on contextValue. This avoids duplicating commands per group while keeping the menu wiring simple."
+  ],
+  "concerns": [],
+  "updated": "2026-04-27",
+  "selectedAt": "2026-04-27T22:30:40Z",
+  "specName": "Group Header Bulk Actions",
+  "branch": "main",
+  "workingBranch": "feat/group-bulk-actions",
+  "type": "feat",
+  "createdAt": "2026-04-27T22:30:40Z",
+  "approach": "Extend the per-item lifecycle-encoding pattern from spec 087 to the three group headers and reuse the existing runBulkStatusChange helper, gated by a confirmation dialog.",
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 12,
+      "scenarios": 6,
+      "key_finding": "Group headers already store the post-filter `groupSpecs` array on the SpecItem and use a uniform `spec-group` contextValue — encoding the lifecycle into the contextValue (`spec-group-active|completed|archived`) extends the per-item pattern from spec 087 without any extra disk reads."
+    },
+    "plan": {
+      "approach_summary": "Extend the per-item lifecycle-encoding pattern from spec 087 to the three group headers and reuse the existing runBulkStatusChange helper, gated by a confirmation dialog.",
+      "files_planned": 3,
+      "risks": [
+        "Menu leakage from when-clause regex collision: mitigated by relying on the existing anchored `^spec-(...)$` regex and using exact-match `viewItem == spec-group-*` for the new entries.",
+        "Stale selection passed to bulk handler: mitigated by reading `element.groupSpecs` directly rather than routing through `resolveTargets` (which is selection-driven)."
+      ]
+    }
+  },
+  "transitions": [
+    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-27T22:30:40Z" },
+    { "step": "specify", "substep": "exploring", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-04-27T22:30:55Z" },
+    { "step": "specify", "substep": "detecting", "from": { "step": "specify", "substep": "exploring" }, "by": "sdd", "at": "2026-04-27T22:31:10Z" },
+    { "step": "specify", "substep": "writing-spec", "from": { "step": "specify", "substep": "detecting" }, "by": "sdd", "at": "2026-04-27T22:31:25Z" },
+    { "step": "specify", "substep": null, "from": { "step": "specify", "substep": "writing-spec" }, "by": "sdd", "at": "2026-04-27T22:31:40Z" },
+    { "step": "plan", "substep": "loading", "from": { "step": "specify", "substep": null }, "by": "sdd", "at": "2026-04-27T22:32:00Z" },
+    { "step": "plan", "substep": "writing-plan", "from": { "step": "plan", "substep": "loading" }, "by": "sdd", "at": "2026-04-27T22:32:15Z" },
+    { "step": "plan", "substep": null, "from": { "step": "plan", "substep": "writing-plan" }, "by": "sdd", "at": "2026-04-27T22:32:30Z" },
+    { "step": "tasks", "substep": "loading", "from": { "step": "plan", "substep": null }, "by": "sdd", "at": "2026-04-27T22:37:19Z" },
+    { "step": "tasks", "substep": "writing-tasks", "from": { "step": "tasks", "substep": "loading" }, "by": "sdd", "at": "2026-04-27T22:37:39Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "tasks", "substep": "writing-tasks" }, "by": "sdd", "at": "2026-04-27T22:38:21Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-04-27T22:42:11Z", "branch": "feat/group-bulk-actions" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-27T22:43:30Z", "task": "T001", "status": "DONE" },
+    { "step": "implement", "substep": "hooks", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-27T22:47:54Z", "note": "Phase 1 complete (T001–T005)" },
+    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-04-27T22:50:47Z", "note": "install-local hook ran, version bumped to 0.14.1" },
+    { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-27T22:54:07Z", "note": "CP1 approved by user (Continue)" },
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-27T22:55:38Z", "note": "CP3 approved — committing" }
+  ]
+}

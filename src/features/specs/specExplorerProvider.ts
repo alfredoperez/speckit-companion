@@ -42,6 +42,21 @@ const SPEC_LIFECYCLE_CONTEXT_VALUES: ReadonlySet<string> = new Set<SpecLifecycle
     'spec-archived',
 ]);
 
+export type SpecGroupContextValue =
+    | 'spec-group-active'
+    | 'spec-group-completed'
+    | 'spec-group-archived';
+
+const SPEC_GROUP_CONTEXT_VALUES: ReadonlySet<string> = new Set<SpecGroupContextValue>([
+    'spec-group-active',
+    'spec-group-completed',
+    'spec-group-archived',
+]);
+
+export function isSpecGroupItem(contextValue: string | undefined): boolean {
+    return contextValue !== undefined && SPEC_GROUP_CONTEXT_VALUES.has(contextValue);
+}
+
 export function lifecycleContextValue(
     specContext: FeatureWorkflowContext | undefined
 ): SpecLifecycleContextValue {
@@ -204,7 +219,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 const activeGroup = new SpecItem(
                     `Active (${filteredActive.length})`,
                     vscode.TreeItemCollapsibleState.Expanded,
-                    'spec-group',
+                    'spec-group-active',
                     this.context
                 );
                 activeGroup.id = 'spec-group:active';
@@ -216,7 +231,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 const completedGroup = new SpecItem(
                     `Completed (${filteredCompleted.length})`,
                     vscode.TreeItemCollapsibleState.Collapsed,
-                    'spec-group',
+                    'spec-group-completed',
                     this.context
                 );
                 completedGroup.id = 'spec-group:completed';
@@ -228,7 +243,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 const archivedGroup = new SpecItem(
                     `Archived (${filteredArchived.length})`,
                     vscode.TreeItemCollapsibleState.Collapsed,
-                    'spec-group',
+                    'spec-group-archived',
                     this.context
                 );
                 archivedGroup.id = 'spec-group:archived';
@@ -237,7 +252,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             }
 
             return items;
-        } else if (element.contextValue === 'spec-group') {
+        } else if (isSpecGroupItem(element.contextValue)) {
             // Show specs within a group
             const specs = element.groupSpecs || [];
             const allSpecs = await this.getSpecs();
@@ -631,7 +646,7 @@ class SpecItem extends vscode.TreeItem {
         if (contextValue === 'spec-loading') {
             this.iconPath = new vscode.ThemeIcon('sync~spin');
             this.tooltip = 'Loading specs...';
-        } else if (contextValue === 'spec-group') {
+        } else if (isSpecGroupItem(contextValue)) {
             const groupIcons: Record<string, string> = {
                 'Active': 'pulse',
                 'Completed': 'check',
