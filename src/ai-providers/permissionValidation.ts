@@ -8,10 +8,27 @@ import {
 
 const SUPPRESSED_KEY = 'speckit.permissionValidation.suppressed';
 
+const firedOverrideForProvider = new Set<AIProviderType>(); // warn once per provider
+
 export function getPermissionFlagForProvider(type: AIProviderType): string {
-    const flag = PROVIDER_PATHS[type]?.autoApproveFlag ?? '';
+    const paths = PROVIDER_PATHS[type];
+    const flag = paths?.autoApproveFlag ?? '';
     if (!flag) return '';
-    return readPermissionMode() === 'auto-approve' ? flag : '';
+
+    if (readPermissionMode() === 'auto-approve') return flag;
+
+    if (paths.supportsInteractivePermissions === false) {
+        if (!firedOverrideForProvider.has(type)) {
+            firedOverrideForProvider.add(type);
+            console.warn(
+                `[speckit] ${paths.displayName}: forcing auto-approve at dispatch — ` +
+                `the CLI cannot honor 'interactive' permissionMode in scripted mode.`
+            );
+        }
+        return flag;
+    }
+
+    return '';
 }
 
 export async function validatePermissionMode(context: vscode.ExtensionContext): Promise<void> {

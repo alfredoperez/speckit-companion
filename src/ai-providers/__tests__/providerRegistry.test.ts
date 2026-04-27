@@ -33,9 +33,11 @@ describe('Provider registry', () => {
             expect(getPermissionFlagForProvider(AIProviders.COPILOT)).toBe('--yolo ');
         });
 
-        it('returns empty string for Copilot when mode is interactive', () => {
+        it('forces auto-approve for Copilot even when mode is interactive (Copilot CLI cannot surface prompts in -p mode)', () => {
             mockPermissionMode('interactive');
-            expect(getPermissionFlagForProvider(AIProviders.COPILOT)).toBe('');
+            const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+            expect(getPermissionFlagForProvider(AIProviders.COPILOT)).toBe('--yolo ');
+            warn.mockRestore();
         });
 
         it('returns empty string for providers without an auto-approve flag (Gemini, Codex)', () => {

@@ -3,6 +3,34 @@ import * as fs from 'fs';
 import { AIProviders, Timing } from '../core/constants';
 import { waitForShellReady } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
+import { detectShell, formatPromptFileSubstitution, Shell } from '../core/utils/shellDetection';
+
+const CMD_LINE_MAX = 8000;
+
+export function buildPromptDispatchCommand(opts: {
+    cliInvocation: string;
+    flags: string;
+    promptFilePath: string;
+    promptText: string;
+    shell?: Shell;
+}): string {
+    const shell = opts.shell ?? detectShell();
+
+    if (shell === 'cmd') {
+        const escaped = opts.promptText.replace(/"/g, '""').trim();
+        const line = `${opts.cliInvocation} ${opts.flags}"${escaped}"`;
+        if (line.length > CMD_LINE_MAX) {
+            throw new Error(
+                `Prompt is too long for cmd.exe (${line.length} > ${CMD_LINE_MAX} chars). ` +
+                `Switch the VS Code default terminal to PowerShell or Git Bash.`
+            );
+        }
+        return line;
+    }
+
+    const substitution = formatPromptFileSubstitution(shell, opts.promptFilePath);
+    return `${opts.cliInvocation} ${opts.flags}"${substitution}"`;
+}
 
 /**
  * Dispatch a slash command to a terminal via a temp file so the full prompt
@@ -35,10 +63,16 @@ export async function dispatchSlashCommandViaTempFile(opts: {
 
     if (promptText && promptText.length > 0) {
         tempFilePath = await createTempFile(context, promptText, 'prompt', true);
-        const inner = slashCommand
-            ? `${slashCommand} $(cat "${tempFilePath}")`
-            : `$(cat "${tempFilePath}")`;
-        line = `${cliInvocation} "${inner}"`;
+        const shell = detectShell();
+        if (shell === 'cmd') {
+            const escaped = promptText.replace(/"/g, '""').trim();
+            const inner = slashCommand ? `${slashCommand} ${escaped}` : escaped;
+            line = `${cliInvocation} "${inner}"`;
+        } else {
+            const subst = formatPromptFileSubstitution(shell, tempFilePath);
+            const inner = slashCommand ? `${slashCommand} ${subst}` : subst;
+            line = `${cliInvocation} "${inner}"`;
+        }
     } else {
         line = slashCommand
             ? `${cliInvocation} "${slashCommand}"`

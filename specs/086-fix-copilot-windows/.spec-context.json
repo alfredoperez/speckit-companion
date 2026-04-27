@@ -1,0 +1,198 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "status": "completed",
+  "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/145",
+  "prNumber": 145,
+  "updated": "2026-04-27",
+  "selectedAt": "2026-04-27T20:01:20Z",
+  "specName": "Fix Copilot Windows Shell Compatibility",
+  "branch": "main",
+  "workingBranch": "fix/fix-copilot-windows",
+  "type": "fix",
+  "createdAt": "2026-04-27T20:01:20Z",
+  "auto": true,
+  "issueNumber": 140,
+  "approach": "Fix the two Windows-only failures with minimal-surface changes — a shell-detection helper + shared command-line builder for the bash-only `$(cat)` providers, and a hardened `getPermissionFlagForProvider` that forces auto-approve when the provider can't honor interactive prompts.",
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 7,
+      "scenarios": 6,
+      "key_finding": "Four providers (Copilot, Claude, OpenCode, Qwen) share the bash-only `$(cat \"...\")` dispatch pattern; `validatePermissionMode` already detects bad combos but only as a dismissible warning, leaving silent-hang state reachable."
+    },
+    "plan": {
+      "approach_summary": "Fix the two Windows-only failures with minimal-surface changes — a shell-detection helper + shared command-line builder for the bash-only `$(cat)` providers, and a hardened `getPermissionFlagForProvider` that forces auto-approve when the provider can't honor interactive prompts.",
+      "files_planned": 11,
+      "risks": [
+        "PowerShell version: `Get-Content -Raw` requires PS 3.0+; PS 5.1 is the Windows default so realistic install base is fine.",
+        "cmd.exe embed-fallback path is hard to verify in CI; rare as a VS Code default — best-effort with unit tests on the escaper plus runtime error if line exceeds 8191 chars.",
+        "Forcing auto-approve when user chose interactive may surprise users; mitigated by one-time output-channel notice and keeping the existing startup toast.",
+        "Touching three additional providers for R007 increases blast radius; mitigated by mechanical helper-call change plus shared unit tests."
+      ]
+    },
+    "tasks": {
+      "total": 12,
+      "parallel_groups": 2
+    }
+  },
+  "files_modified": [
+    "src/core/utils/shellDetection.ts",
+    "src/core/utils/__tests__/shellDetection.test.ts",
+    "src/ai-providers/aiProvider.ts",
+    "src/ai-providers/copilotCliProvider.ts",
+    "src/ai-providers/claudeCodeProvider.ts",
+    "src/ai-providers/openCodeProvider.ts",
+    "src/ai-providers/qwenCliProvider.ts",
+    "src/ai-providers/permissionValidation.ts",
+    "src/ai-providers/__tests__/providerRegistry.test.ts",
+    "src/ai-providers/__tests__/promptCommand.test.ts",
+    "src/ai-providers/__tests__/permissionValidation.test.ts",
+    "tests/__mocks__/vscode.ts",
+    "package.json",
+    "README.md"
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Created shellDetection.ts exporting Shell type, detectShell() and formatPromptFileSubstitution().",
+      "files": ["src/core/utils/shellDetection.ts"],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added buildPromptDispatchCommand helper in aiProvider.ts (bash/PowerShell use file substitution, cmd embeds with quote-doubling and 8000-char guard) and routed dispatchSlashCommandViaTempFile through the same shell detection.",
+      "files": ["src/ai-providers/aiProvider.ts"],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Wired Copilot provider's executeInTerminal and executeHeadless to buildPromptDispatchCommand.",
+      "files": ["src/ai-providers/copilotCliProvider.ts"],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Wired Claude provider's two call sites to buildPromptDispatchCommand and made the optional --append-system-prompt segment shell-aware via formatPromptFileSubstitution.",
+      "files": ["src/ai-providers/claudeCodeProvider.ts"],
+      "concerns": [
+        "On cmd.exe, the system-prompt file is read synchronously via fs.readFileSync and embedded into the --append-system-prompt flag — combined with the user prompt this could hit cmd's ~8191-char line limit. The embed helper throws a clear error in that case, so the failure is loud, but worth flagging for CP1."
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Wired OpenCode provider's two call sites to buildPromptDispatchCommand. No tests exist for this provider; left as-is.",
+      "files": ["src/ai-providers/openCodeProvider.ts"],
+      "concerns": []
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Wired Qwen provider's two call sites to buildPromptDispatchCommand. No tests exist for this provider; left as-is.",
+      "files": ["src/ai-providers/qwenCliProvider.ts"],
+      "concerns": []
+    },
+    "T007": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Hardened getPermissionFlagForProvider so providers with supportsInteractivePermissions=false (Copilot) always get the auto-approve flag, with a one-time-per-provider console.warn. Pre-existing test in providerRegistry.test.ts encoded the old buggy behavior; updated the assertion as a silent fix.",
+      "files": [
+        "src/ai-providers/permissionValidation.ts",
+        "src/ai-providers/__tests__/providerRegistry.test.ts"
+      ],
+      "concerns": [
+        "Used console.warn for the one-time override notice rather than vscode.window.showInformationMessage or an OutputChannel — getPermissionFlagForProvider is a pure function with no VS Code context handle. CP1: confirm console.warn in Extension Host is acceptable; if not, plumb an OutputChannel through."
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Added 14 unit tests for detectShell + formatPromptFileSubstitution; extended tests/__mocks__/vscode.ts with a mutable `env.shell` field.",
+      "files": [
+        "src/core/utils/__tests__/shellDetection.test.ts",
+        "tests/__mocks__/vscode.ts"
+      ],
+      "concerns": []
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Added 6 unit tests for buildPromptDispatchCommand covering bash, powershell, unknown, cmd quote-doubling, plain-text embed, and cmd over-length throw.",
+      "files": ["src/ai-providers/__tests__/promptCommand.test.ts"],
+      "concerns": []
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Added 7 unit tests for getPermissionFlagForProvider override matrix; uses jest.resetModules() per test for clean firedOverrideForProvider state.",
+      "files": ["src/ai-providers/__tests__/permissionValidation.test.ts"],
+      "concerns": []
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Updated speckit.permissionMode description in package.json to reflect dispatch-time enforcement of Copilot auto-switch.",
+      "files": ["package.json"],
+      "concerns": []
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Added Copilot exception callout under Permission Mode and updated Platform Support Windows row to reflect full support across all bash-only providers.",
+      "files": ["README.md"],
+      "concerns": []
+    }
+  },
+  "decisions": [
+    {
+      "task": "T001",
+      "note": "Used path.basename + lowercase + strip .exe for shell detection rather than substring matching, to handle Git Bash's `bash.exe` and PowerShell's `pwsh.exe` cleanly. Single-quoted the path in the PowerShell substitution to avoid `$` expansion in the file path."
+    },
+    {
+      "task": "T002",
+      "note": "Cap cmd.exe embed at 8000 chars (slightly under the 8191 hard limit) and throw with a message recommending PowerShell or Git Bash."
+    },
+    {
+      "task": "T004",
+      "note": "Read system-prompt file synchronously for cmd.exe (rather than skipping the system prompt or refusing). Keeps cmd.exe usable end-to-end for short prompts and fails loudly with the helper's existing length guard for long ones."
+    },
+    {
+      "task": "T007",
+      "note": "Updated the pre-existing test that asserted Copilot+interactive returned '' — the test had encoded the bug. New assertion expects --yolo and silences the one-time console.warn via jest.spyOn."
+    },
+    {
+      "task": "CP1-simplify",
+      "note": "User requested a simplify pass before commit. Stripped JSDocs that explained WHAT (kept only short WHY lines for the PowerShell single-quote rationale and warn-once intent). Extracted buildSystemPromptFlag helper to remove the 13-line duplicate in claudeCodeProvider's two call sites. Standardized claudeCodeProvider's shell-detection imports to come from shellDetection.ts only (single source of truth); removed the redundant re-export from aiProvider.ts. Did NOT collapse the per-provider temp-file/terminal/cleanup boilerplate — out of scope for this bug fix; flagged as a follow-up refactor candidate."
+    }
+  ],
+  "concerns": [
+    {
+      "task": "T004",
+      "note": "Claude provider's cmd.exe path embeds system prompt synchronously — long prompts may exceed line limit. Surfaces a clear error from buildPromptDispatchCommand."
+    },
+    {
+      "task": "T007",
+      "note": "Override notice uses console.warn (not OutputChannel/showInformationMessage) because getPermissionFlagForProvider has no VS Code context. May want to plumb a channel later."
+    }
+  ],
+  "last_action": "PR #145 opened — fix(ai-providers): support powershell and force copilot auto-approve",
+  "transitions": [
+    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-27T20:01:20Z" },
+    { "step": "specify", "substep": "exploring", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-04-27T20:01:25Z" },
+    { "step": "specify", "substep": "detecting", "from": { "step": "specify", "substep": "exploring" }, "by": "sdd", "at": "2026-04-27T20:01:30Z" },
+    { "step": "specify", "substep": "writing-spec", "from": { "step": "specify", "substep": "detecting" }, "by": "sdd", "at": "2026-04-27T20:01:35Z" },
+    { "step": "specify", "substep": null, "from": { "step": "specify", "substep": "writing-spec" }, "by": "sdd", "at": "2026-04-27T20:01:40Z" },
+    { "step": "plan", "substep": "loading", "from": { "step": "specify", "substep": null }, "by": "sdd", "at": "2026-04-27T20:15:00Z" },
+    { "step": "plan", "substep": "writing-plan", "from": { "step": "plan", "substep": "loading" }, "by": "sdd", "at": "2026-04-27T20:15:05Z" },
+    { "step": "plan", "substep": null, "from": { "step": "plan", "substep": "writing-plan" }, "by": "sdd", "at": "2026-04-27T20:15:10Z" },
+    { "step": "tasks", "substep": "loading", "from": { "step": "plan", "substep": null }, "by": "sdd", "at": "2026-04-27T20:20:00Z" },
+    { "step": "tasks", "substep": "writing-tasks", "from": { "step": "tasks", "substep": "loading" }, "by": "sdd", "at": "2026-04-27T20:20:05Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "tasks", "substep": "writing-tasks" }, "by": "sdd", "at": "2026-04-27T20:20:10Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-04-27T20:25:00Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-27T20:30:00Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-27T20:45:00Z" },
+    { "step": "implement", "substep": "hooks", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-27T21:00:00Z" },
+    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-04-27T21:05:00Z" },
+    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-27T21:30:00Z" },
+    { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-27T21:35:00Z" },
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-27T21:40:00Z" },
+    { "step": "done", "substep": null, "from": { "step": "done", "substep": null }, "by": "sdd", "at": "2026-04-27T21:45:00Z" }
+  ]
+}
