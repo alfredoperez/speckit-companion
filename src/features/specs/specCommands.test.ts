@@ -11,6 +11,10 @@ jest.mock('../../extension', () => ({
 
 jest.mock('./specExplorerProvider', () => ({
     SpecExplorerProvider: jest.fn(),
+    isSpecLifecycleItem: (cv: string | undefined) =>
+        cv !== undefined &&
+        ['spec-active', 'spec-tasks-done', 'spec-completed', 'spec-archived'].includes(cv),
+    lifecycleContextValue: jest.fn(),
 }));
 
 jest.mock('../../core/utils/notificationUtils', () => ({
@@ -44,13 +48,18 @@ jest.mock('./selectionContextKeys', () => ({
     updateSelectionContextKeys: jest.fn(),
 }));
 
+jest.mock('./specContextManager', () => ({
+    readSpecContextSync: jest.fn(),
+}));
+
 import { setStatus, reactivate } from './stepLifecycle';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
+import { readSpecContextSync } from './specContextManager';
 
 const mockCommands = vscode.commands as jest.Mocked<typeof vscode.commands>;
 
 // Capture registered command handlers by name
-function captureCommandHandlers(context: vscode.ExtensionContext) {
+function captureCommandHandlers(context: vscode.ExtensionContext, specsTreeView?: any) {
     const handlers = new Map<string, (...args: any[]) => any>();
 
     mockCommands.registerCommand.mockImplementation((name: string, handler: any) => {
@@ -61,7 +70,7 @@ function captureCommandHandlers(context: vscode.ExtensionContext) {
     lastMockExplorer = { refresh: jest.fn(), expandAllSpecs: true } as any;
     const mockOutputChannel = { appendLine: jest.fn() } as any;
 
-    registerSpecKitCommands(context, lastMockExplorer as any, mockOutputChannel);
+    registerSpecKitCommands(context, lastMockExplorer as any, mockOutputChannel, specsTreeView);
 
     return handlers;
 }
@@ -167,7 +176,11 @@ describe('bulk status command handlers', () => {
         (vscode.workspace as any).workspaceFolders = originalWorkspaceFolders;
     });
 
-    const makeItem = (name: string) => ({ label: name, specPath: `specs/${name}`, contextValue: 'spec' });
+    const makeItem = (name: string, contextValue: string = 'spec-active') => ({
+        label: name,
+        specPath: `specs/${name}`,
+        contextValue,
+    });
 
     it('markCompleted on 3-item selection calls setStatus 3x, refreshes once, shows plural toast', async () => {
         const context = createMockContext();
@@ -216,11 +229,87 @@ describe('bulk status command handlers', () => {
         const handlers = captureCommandHandlers(context);
         const handler = handlers.get('speckit.reactivate')!;
 
-        await handler(undefined, [makeItem('a'), makeItem('b'), makeItem('c')]);
+        // Reactivate skips already-active targets via the no-op filter; stub
+        // readSpecContextSync so each target reads as completed and passes the
+        // filter.
+        (readSpecContextSync as jest.Mock)
+            .mockReturnValueOnce({ status: 'completed' })
+            .mockReturnValueOnce({ status: 'completed' })
+            .mockReturnValueOnce({ status: 'completed' });
+
+        await handler(undefined, [
+            makeItem('a', 'spec-completed'),
+            makeItem('b', 'spec-completed'),
+            makeItem('c', 'spec-completed'),
+        ]);
 
         expect(reactivate).toHaveBeenCalledTimes(3);
         expect(lastMockExplorer.refresh).toHaveBeenCalledTimes(1);
         expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledWith('3 specs moved to active');
+    });
+
+    it('markCompleted is silently skipped when the only target is already completed', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.markCompleted')!;
+
+        (readSpecContextSync as jest.Mock).mockReturnValueOnce({ status: 'completed' });
+
+        await handler(makeItem('done', 'spec-completed'), undefined);
+
+        expect(setStatus).not.toHaveBeenCalled();
+        expect(NotificationUtils.showAutoDismissNotification).not.toHaveBeenCalled();
+        expect(lastMockExplorer.refresh).not.toHaveBeenCalled();
+    });
+
+    it('reactivate on a mixed [active, completed] selection only reactivates the completed target', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.reactivate')!;
+
+        (readSpecContextSync as jest.Mock)
+            .mockReturnValueOnce({ status: 'active' })
+            .mockReturnValueOnce({ status: 'completed' });
+
+        const items = [makeItem('a', 'spec-active'), makeItem('c', 'spec-completed')];
+        await handler(items[1], items);
+
+        expect(reactivate).toHaveBeenCalledTimes(1);
+        expect(reactivate).toHaveBeenCalledWith(expect.stringContaining('specs/c'));
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledWith('1 spec moved to active');
+    });
+
+    it('resolveTargets accepts all four lifecycle viewItems and rejects spec-document/spec-related-doc', async () => {
+        const context = createMockContext();
+        const treeView = {
+            selection: [
+                makeItem('a', 'spec-active'),
+                makeItem('b', 'spec-tasks-done'),
+                makeItem('c', 'spec-completed'),
+                makeItem('d', 'spec-archived'),
+                { label: 'spec.md', specPath: 'specs/a/spec.md', contextValue: 'spec-document-spec' },
+                { label: 'notes', specPath: 'specs/a/notes.md', contextValue: 'spec-related-doc' },
+            ],
+        };
+        const handlers = captureCommandHandlers(context, treeView);
+        const handler = handlers.get('speckit.archive')!;
+
+        // archive's skipIf only drops already-archived targets; our four
+        // lifecycle items include one archived (skipped) and three eligible.
+        (readSpecContextSync as jest.Mock)
+            .mockReturnValueOnce({ status: 'active' })
+            .mockReturnValueOnce({ status: 'tasks-done' })
+            .mockReturnValueOnce({ status: 'completed' })
+            .mockReturnValueOnce({ status: 'archived' });
+
+        await handler(undefined, undefined);
+
+        // 6 selected items → 4 are lifecycle specs → 1 is already-archived →
+        // 3 actually archived. Confirms (a) the spec-document / spec-related-doc
+        // entries were filtered by resolveTargets, and (b) the no-op filter
+        // dropped the archived one.
+        expect(setStatus).toHaveBeenCalledTimes(3);
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledWith('3 specs archived');
     });
 });
 

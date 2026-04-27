@@ -1,0 +1,105 @@
+{
+  "workflow": "sdd",
+  "auto": true,
+  "currentStep": "implement",
+  "currentTask": null,
+  "progress": "commit-review",
+  "next": "implement",
+  "workingBranch": "feat/group-aware-context-menu",
+  "last_action": "T005 complete — specCommands.test.ts updated with lifecycle-aware makeItem, readSpecContextSync mock, and three new no-op-filter / lifecycle-viewItem cases. All 410 tests pass; full suite and tsc green.",
+  "files_modified": [
+    "src/features/specs/specExplorerProvider.ts",
+    "package.json",
+    "src/features/specs/specCommands.ts",
+    "src/features/specs/selectionContextKeys.ts",
+    "src/features/specs/specCommands.test.ts",
+    "docs/sidebar.md"
+  ],
+  "decisions": [
+    "Standardized right-click menu titles in CP1 review: dropped 'Spec' suffix from Delete and Archive; renamed 'Move to Active' → 'Reactivate' for verb consistency. Mark as Completed unchanged.",
+    "Group-header right-click bulk actions deferred to follow-up issue #146 to keep this PR scoped to the menu-race fix."
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Added exported helpers lifecycleContextValue() and isSpecLifecycleItem() in specExplorerProvider.ts; switched the group-expansion SpecItem construction to lifecycleContextValue(specContext); replaced both === 'spec' branches in getChildren and the SpecItem icon-selection branch with isSpecLifecycleItem() calls.",
+      "files": ["src/features/specs/specExplorerProvider.ts"],
+      "concerns": [
+        "FeatureWorkflowContext.status is typed as SpecStatus (active|completed|archived) and does not include 'tasks-done'. lifecycleContextValue widens to string before switching so the SpecStatuses.TASKS_DONE case stays reachable for legacy specs that may carry that value. If R001's tasks-done branch is critical, consider widening SpecStatus to include 'tasks-done' in a follow-up."
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Replaced six context-menu when clauses in package.json: markCompleted now matches spec-active||spec-tasks-done; archive uses regex /^spec-(active|tasks-done|completed)$/; reactivate matches spec-completed||spec-archived; delete (inline + 7_modification), reveal, and the spec revealInExplorer entry use the four-value lifecycle regex. spec-document-* and spec-related-doc entries untouched.",
+      "files": ["package.json"],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "specCommands.ts: imported isSpecLifecycleItem, readSpecContextSync, SpecStatuses; resolveTargets now filters via isSpecLifecycleItem; runBulkStatusChange takes a skipIf predicate, reads status via readSpecContextSync and drops no-op targets before apply; markCompleted/archive/reactivate callers pass the appropriate skipIf.",
+      "files": ["src/features/specs/specCommands.ts"],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "selectionContextKeys.ts: dropped allActive/allCompleted/allArchived setContext writes and their predicates; recomputed mixed inline from groupCount; kept count/mixed writes; added a header comment about the new role. Post-fix on parent thread: filter changed from contextValue === 'spec' to isSpecLifecycleItem so count/mixed keep working with the new viewItems.",
+      "files": ["src/features/specs/selectionContextKeys.ts"],
+      "concerns": [
+        "Subagent left the spec-filter using === 'spec' which would have produced count=0 for every selection now that items emit lifecycle viewItems. Fixed on the parent thread by importing isSpecLifecycleItem from specExplorerProvider."
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "specCommands.test.ts: extended jest.mock('./specExplorerProvider') to expose isSpecLifecycleItem + lifecycleContextValue stubs; added jest.mock('./specContextManager') with a controllable readSpecContextSync; updated makeItem factory to accept contextValue (default spec-active); updated existing reactivate test to use spec-completed items + queue completed-status reads; added three new tests (markCompleted no-op, mixed reactivate filtering, resolveTargets accepts lifecycle viewItems and rejects spec-document/spec-related-doc).",
+      "files": ["src/features/specs/specCommands.test.ts"],
+      "concerns": []
+    }
+  },
+  "concerns": [
+    { "task": "T001", "note": "SpecStatus type does not include 'tasks-done'; lifecycleContextValue casts status to string to keep that case reachable." },
+    { "task": "T004", "note": "Subagent missed updating the contextValue filter to recognize the new lifecycle viewItems; fixed in a follow-up edit." }
+  ],
+  "updated": "2026-04-27",
+  "selectedAt": "2026-04-27T21:02:22Z",
+  "specName": "Group-aware Context Menu",
+  "branch": "fix/fix-copilot-windows",
+  "type": "feat",
+  "createdAt": "2026-04-27T21:02:22Z",
+  "approach": "Encode each spec tree item's lifecycle group directly into its contextValue so right-click menu when clauses become a pure per-item decision and no longer race with VS Code's selection update.",
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 8,
+      "scenarios": 5,
+      "key_finding": "Selection-based context keys (speckit.specs.selection.allActive/allCompleted/allArchived) already exist but race with VS Code's right-click selection update; per-item viewItem encoding eliminates the race entirely."
+    },
+    "plan": {
+      "approach_summary": "Encode each spec tree item's lifecycle group directly into its contextValue so right-click menu when clauses become a pure per-item decision and no longer race with VS Code's selection update.",
+      "files_planned": 5,
+      "risks": [
+        "Many === 'spec' strict comparisons in specExplorerProvider.ts and specCommands.ts could be missed; mitigate with a single isSpecLifecycleItem helper and a follow-up grep.",
+        "Stale when clause referencing a deprecated selection context key could escape the package.json sweep; mitigate with a post-edit grep for speckit.specs.selection.allActive|allCompleted|allArchived."
+      ]
+    }
+  },
+  "transitions": [
+    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-27T21:02:22Z" },
+    { "step": "specify", "substep": "exploring", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-04-27T21:02:30Z" },
+    { "step": "specify", "substep": "writing-spec", "from": { "step": "specify", "substep": "exploring" }, "by": "sdd", "at": "2026-04-27T21:02:35Z" },
+    { "step": "specify", "substep": null, "from": { "step": "specify", "substep": "writing-spec" }, "by": "sdd", "at": "2026-04-27T21:02:40Z" },
+    { "step": "specify", "substep": null, "from": { "step": "specify", "substep": null }, "by": "sdd", "at": "2026-04-27T21:02:45Z" },
+    { "step": "plan", "substep": "loading", "from": { "step": "specify", "substep": null }, "by": "sdd", "at": "2026-04-27T21:10:00Z" },
+    { "step": "plan", "substep": "writing-plan", "from": { "step": "plan", "substep": "loading" }, "by": "sdd", "at": "2026-04-27T21:10:05Z" },
+    { "step": "plan", "substep": null, "from": { "step": "plan", "substep": "writing-plan" }, "by": "sdd", "at": "2026-04-27T21:10:30Z" },
+    { "step": "tasks", "substep": "loading", "from": { "step": "plan", "substep": null }, "by": "sdd", "at": "2026-04-27T21:11:00Z" },
+    { "step": "tasks", "substep": "writing-tasks", "from": { "step": "tasks", "substep": "loading" }, "by": "sdd", "at": "2026-04-27T21:11:05Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "tasks", "substep": "writing-tasks" }, "by": "sdd", "at": "2026-04-27T21:11:30Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-04-27T21:12:00Z" },
+    { "step": "implement", "substep": "phase1", "task": "T001", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-27T21:13:00Z" },
+    { "step": "implement", "substep": "phase1", "task": "T002-T004", "from": { "step": "implement", "substep": "phase1", "task": "T001" }, "by": "sdd", "at": "2026-04-27T21:18:00Z" },
+    { "step": "implement", "substep": "phase1", "task": "T005", "from": { "step": "implement", "substep": "phase1", "task": "T002-T004" }, "by": "sdd", "at": "2026-04-27T21:22:00Z" },
+    { "step": "implement", "substep": "hooks", "from": { "step": "implement", "substep": "phase1", "task": "T005" }, "by": "sdd", "at": "2026-04-27T21:22:30Z" },
+    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-04-27T21:23:00Z" },
+    { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-27T21:35:00Z" }
+  ]
+}

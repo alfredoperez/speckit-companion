@@ -29,6 +29,42 @@ export interface SpecInfo {
     path: string;
 }
 
+export type SpecLifecycleContextValue =
+    | 'spec-active'
+    | 'spec-tasks-done'
+    | 'spec-completed'
+    | 'spec-archived';
+
+const SPEC_LIFECYCLE_CONTEXT_VALUES: ReadonlySet<string> = new Set<SpecLifecycleContextValue>([
+    'spec-active',
+    'spec-tasks-done',
+    'spec-completed',
+    'spec-archived',
+]);
+
+export function lifecycleContextValue(
+    specContext: FeatureWorkflowContext | undefined
+): SpecLifecycleContextValue {
+    // `SpecStatus` is narrowed to active/completed/archived, but legacy specs
+    // and the `SpecStatuses.TASKS_DONE` constant can both surface 'tasks-done'
+    // at runtime — widen to string before matching so that case is reachable.
+    const status = specContext?.status as string | undefined;
+    switch (status) {
+        case SpecStatuses.TASKS_DONE:
+            return 'spec-tasks-done';
+        case SpecStatuses.COMPLETED:
+            return 'spec-completed';
+        case SpecStatuses.ARCHIVED:
+            return 'spec-archived';
+        default:
+            return 'spec-active';
+    }
+}
+
+export function isSpecLifecycleItem(contextValue: string | undefined): boolean {
+    return contextValue !== undefined && SPEC_LIFECYCLE_CONTEXT_VALUES.has(contextValue);
+}
+
 type DocumentStatus = 'empty' | 'partial' | 'complete';
 
 export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
@@ -217,7 +253,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                     this.expandAllSpecs
                         ? vscode.TreeItemCollapsibleState.Expanded
                         : vscode.TreeItemCollapsibleState.Collapsed,
-                    'spec',
+                    lifecycleContextValue(specContext),
                     this.context,
                     spec.name,
                     undefined,
@@ -241,7 +277,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 item.id = `spec:${spec.path}:${this.expandAllSpecs ? 'e' : 'c'}`;
                 return item;
             });
-        } else if (element.contextValue === 'spec') {
+        } else if (isSpecLifecycleItem(element.contextValue)) {
             // Show spec documents based on active workflow steps
             const specPath = element.specPath || `specs/${element.specName}`;
             return await this.getSpecDocuments(element.specName!, specPath);
@@ -609,7 +645,7 @@ class SpecItem extends vscode.TreeItem {
             const baseLabel = label.split(' (')[0];
             this.iconPath = new vscode.ThemeIcon(groupIcons[baseLabel] || 'pulse');
             this.tooltip = groupTooltips[baseLabel] || label;
-        } else if (contextValue === 'spec') {
+        } else if (isSpecLifecycleItem(contextValue)) {
             if (isActive) {
                 this.iconPath = new vscode.ThemeIcon('sync~spin');
             } else if (specContext?.status === SpecStatuses.COMPLETED) {

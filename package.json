@@ -230,7 +230,7 @@
       },
       {
         "command": "speckit.delete",
-        "title": "Delete Spec",
+        "title": "Delete",
         "category": "SpecKit",
         "icon": "$(trash)"
       },
@@ -242,13 +242,13 @@
       },
       {
         "command": "speckit.archive",
-        "title": "Archive Spec",
+        "title": "Archive",
         "category": "SpecKit",
         "icon": "$(archive)"
       },
       {
         "command": "speckit.reactivate",
-        "title": "Move to Active",
+        "title": "Reactivate",
         "category": "SpecKit",
         "icon": "$(debug-restart)"
       },
@@ -476,37 +476,37 @@
       "view/item/context": [
         {
           "command": "speckit.delete",
-          "when": "view == speckit.views.explorer && viewItem == spec",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|completed|archived)$/",
           "group": "inline"
         },
         {
           "command": "speckit.delete",
-          "when": "view == speckit.views.explorer && viewItem == spec",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|completed|archived)$/",
           "group": "7_modification"
         },
         {
           "command": "speckit.markCompleted",
-          "when": "view == speckit.views.explorer && viewItem == spec && !speckit.specs.selection.allCompleted && !speckit.specs.selection.allArchived",
+          "when": "view == speckit.views.explorer && (viewItem == spec-active || viewItem == spec-tasks-done)",
           "group": "7_modification"
         },
         {
           "command": "speckit.archive",
-          "when": "view == speckit.views.explorer && viewItem == spec && !speckit.specs.selection.allArchived",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|completed)$/",
           "group": "7_modification"
         },
         {
           "command": "speckit.reactivate",
-          "when": "view == speckit.views.explorer && viewItem == spec && !speckit.specs.selection.allActive",
+          "when": "view == speckit.views.explorer && (viewItem == spec-completed || viewItem == spec-archived)",
           "group": "7_modification"
         },
         {
           "command": "speckit.specs.reveal",
-          "when": "view == speckit.views.explorer && viewItem == spec",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|completed|archived)$/",
           "group": "navigation@98"
         },
         {
           "command": "speckit.specs.revealInExplorer",
-          "when": "view == speckit.views.explorer && viewItem == spec",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|completed|archived)$/",
           "group": "navigation@99"
         },
         {

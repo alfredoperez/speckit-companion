@@ -28,7 +28,7 @@ Ties fall back to numeric prefix then name so output is deterministic. The chose
 
 ## Right-click and multi-select
 
-Right-click a spec to access **Mark as Completed**, **Archive Spec**, and **Reveal in File Explorer** (opens the spec's folder in Finder, File Explorer, or the default file manager).
+Right-click a spec to access **Mark as Completed**, **Archive**, **Reactivate**, **Delete**, and **Reveal in File Explorer** (opens the spec's folder in Finder, File Explorer, or the default file manager). Menu items reflect the spec's lifecycle group — e.g., "Reactivate" appears only on completed or archived specs, "Mark as Completed" only on active ones.
 
 **Multi-select** specs with shift-click or cmd/ctrl-click and bulk-archive, complete, or reactivate from the same right-click menu.
 
