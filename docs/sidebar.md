@@ -32,6 +32,16 @@ Right-click a spec to access **Mark as Completed**, **Archive**, **Reactivate**,
 
 **Multi-select** specs with shift-click or cmd/ctrl-click and bulk-archive, complete, or reactivate from the same right-click menu.
 
+## Group header bulk actions
+
+Right-click a group header to apply a lifecycle transition to every spec in the group at once. The visible items reflect the group:
+
+- **Active** — *Mark all as Completed*, *Archive all*
+- **Completed** — *Reactivate all*, *Archive all*
+- **Archived** — *Reactivate all*
+
+Each action shows a confirmation dialog of the form `"{Action} all {N} {group} specs?"` (e.g., `"Archive all 12 active specs?"`) before any `.spec-context.json` files are written. Specs already in the target status are silently skipped, and if the post-skip set is empty no dialog is shown. When a filter is active, the count reflects only the visible specs — the action operates exclusively on the visible set.
+
 ## Lifecycle button matrix
 
 The spec viewer footer shows lifecycle buttons based on the spec's current status:

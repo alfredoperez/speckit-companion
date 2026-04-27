@@ -253,6 +253,24 @@
         "icon": "$(debug-restart)"
       },
       {
+        "command": "speckit.group.markAllCompleted",
+        "title": "Mark all as Completed",
+        "category": "SpecKit",
+        "icon": "$(check-all)"
+      },
+      {
+        "command": "speckit.group.archiveAll",
+        "title": "Archive all",
+        "category": "SpecKit",
+        "icon": "$(archive)"
+      },
+      {
+        "command": "speckit.group.reactivateAll",
+        "title": "Reactivate all",
+        "category": "SpecKit",
+        "icon": "$(debug-restart)"
+      },
+      {
         "command": "speckit.steering.create",
         "title": "Create Custom Steering",
         "category": "SpecKit",
@@ -498,6 +516,21 @@
           "command": "speckit.reactivate",
           "when": "view == speckit.views.explorer && (viewItem == spec-completed || viewItem == spec-archived)",
           "group": "7_modification"
+        },
+        {
+          "command": "speckit.group.markAllCompleted",
+          "when": "view == speckit.views.explorer && viewItem == spec-group-active",
+          "group": "7_modification@1"
+        },
+        {
+          "command": "speckit.group.archiveAll",
+          "when": "view == speckit.views.explorer && (viewItem == spec-group-active || viewItem == spec-group-completed)",
+          "group": "7_modification@2"
+        },
+        {
+          "command": "speckit.group.reactivateAll",
+          "when": "view == speckit.views.explorer && (viewItem == spec-group-completed || viewItem == spec-group-archived)",
+          "group": "7_modification@3"
         },
         {
           "command": "speckit.specs.reveal",
