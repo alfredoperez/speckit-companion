@@ -5,8 +5,10 @@
   "progress": null,
   "next": "done",
   "status": "completed",
-  "checkpointStatus": { "commit": true, "pr": false },
-  "last_action": "Committing feat(specs): add group header bulk actions",
+  "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/148",
+  "prNumber": 148,
+  "last_action": "PR #148 opened — feat(specs): add group header bulk actions",
   "files_modified": [
     "src/features/specs/specExplorerProvider.ts",
     "src/features/specs/specCommands.ts",
@@ -95,6 +97,7 @@
     { "step": "implement", "substep": "hooks", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-27T22:47:54Z", "note": "Phase 1 complete (T001–T005)" },
     { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-04-27T22:50:47Z", "note": "install-local hook ran, version bumped to 0.14.1" },
     { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-27T22:54:07Z", "note": "CP1 approved by user (Continue)" },
-    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-27T22:55:38Z", "note": "CP3 approved — committing" }
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-27T22:55:38Z", "note": "CP3 approved — committing" },
+    { "step": "done", "substep": null, "from": { "step": "done", "substep": null }, "by": "sdd", "at": "2026-04-27T22:57:23Z", "note": "PR #148 opened" }
   ]
 }
