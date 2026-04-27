@@ -5,7 +5,9 @@
   "progress": null,
   "next": "done",
   "status": "completed",
-  "checkpointStatus": { "commit": false, "pr": false },
+  "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/145",
+  "prNumber": 145,
   "updated": "2026-04-27",
   "selectedAt": "2026-04-27T20:01:20Z",
   "specName": "Fix Copilot Windows Shell Compatibility",
@@ -170,7 +172,7 @@
       "note": "Override notice uses console.warn (not OutputChannel/showInformationMessage) because getPermissionFlagForProvider has no VS Code context. May want to plumb a channel later."
     }
   ],
-  "last_action": "CP1 simplify pass: stripped 4 multi-line JSDocs, dropped duplicate inline comments, extracted buildSystemPromptFlag helper in claudeCodeProvider.ts (de-duped 13-line block), standardized shellDetection imports. Net -102 lines across 4 files; tests still 407/407 green.",
+  "last_action": "PR #145 opened — fix(ai-providers): support powershell and force copilot auto-approve",
   "transitions": [
     { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-27T20:01:20Z" },
     { "step": "specify", "substep": "exploring", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-04-27T20:01:25Z" },
@@ -190,6 +192,7 @@
     { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-04-27T21:05:00Z" },
     { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-27T21:30:00Z" },
     { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-27T21:35:00Z" },
-    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-27T21:40:00Z" }
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-27T21:40:00Z" },
+    { "step": "done", "substep": null, "from": { "step": "done", "substep": null }, "by": "sdd", "at": "2026-04-27T21:45:00Z" }
   ]
 }
