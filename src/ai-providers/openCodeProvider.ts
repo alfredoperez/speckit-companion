@@ -7,7 +7,7 @@ import { AIProviders, Timing } from '../core/constants';
 import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { ensureCliInstalled } from '../core/utils/installUtils';
-import { IAIProvider, AIExecutionResult } from './aiProvider';
+import { IAIProvider, AIExecutionResult, buildPromptDispatchCommand } from './aiProvider';
 import { getPermissionFlagForProvider } from './permissionValidation';
 
 export class OpenCodeProvider implements IAIProvider {
@@ -59,7 +59,12 @@ export class OpenCodeProvider implements IAIProvider {
             const cliPath = this.getCliPath();
             const permissionFlag = this.getPermissionFlag();
             const tempFilePath = await createTempFile(this.context, prompt, 'prompt', true);
-            const command = `${cliPath} ${permissionFlag}-p "$(cat "${tempFilePath}")"`;
+            const command = buildPromptDispatchCommand({
+                cliInvocation: cliPath,
+                flags: `${permissionFlag}-p `,
+                promptFilePath: tempFilePath,
+                promptText: prompt,
+            });
 
             const terminal = vscode.window.createTerminal({
                 name: title,
@@ -101,7 +106,12 @@ export class OpenCodeProvider implements IAIProvider {
         const cliPath = this.getCliPath();
         const permissionFlag = this.getPermissionFlag();
         const tempFilePath = await createTempFile(this.context, prompt, 'background-prompt', true);
-        const commandLine = `${cliPath} ${permissionFlag}-p "$(cat "${tempFilePath}")"`;
+        const commandLine = buildPromptDispatchCommand({
+            cliInvocation: cliPath,
+            flags: `${permissionFlag}-p `,
+            promptFilePath: tempFilePath,
+            promptText: prompt,
+        });
 
         return executeCommandInHiddenTerminal({
             commandLine,

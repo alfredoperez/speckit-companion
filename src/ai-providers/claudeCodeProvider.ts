@@ -6,8 +6,18 @@ import { ConfigManager } from '../core/utils/configManager';
 import { AIProviders, Timing } from '../core/constants';
 import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
-import { IAIProvider, AIExecutionResult, dispatchSlashCommandViaTempFile } from './aiProvider';
+import { IAIProvider, AIExecutionResult, dispatchSlashCommandViaTempFile, buildPromptDispatchCommand } from './aiProvider';
+import { detectShell, formatPromptFileSubstitution, Shell } from '../core/utils/shellDetection';
 import { getPermissionFlagForProvider } from './permissionValidation';
+
+function buildSystemPromptFlag(shell: Shell, systemPromptFilePath: string | null): string {
+    if (!systemPromptFilePath) return '';
+    if (shell === 'cmd') {
+        const content = fs.readFileSync(systemPromptFilePath, 'utf8').replace(/"/g, '""').trim();
+        return `--append-system-prompt "${content}" `;
+    }
+    return `--append-system-prompt "${formatPromptFileSubstitution(shell, systemPromptFilePath)}" `;
+}
 
 const execAsync = promisify(exec);
 
@@ -83,10 +93,14 @@ export class ClaudeCodeProvider implements IAIProvider {
                 : null;
 
             const permissionFlag = this.getPermissionFlag();
-            const systemPromptFlag = systemPromptFilePath
-                ? `--append-system-prompt "$(cat "${systemPromptFilePath}")" `
-                : '';
-            const command = `claude ${systemPromptFlag}${permissionFlag}"$(cat "${promptFilePath}")"`;
+            const shell = detectShell();
+            const command = buildPromptDispatchCommand({
+                cliInvocation: 'claude',
+                flags: `${buildSystemPromptFlag(shell, systemPromptFilePath)}${permissionFlag}`,
+                promptFilePath,
+                promptText: userPrompt,
+                shell,
+            });
 
             const terminal = vscode.window.createTerminal({
                 name: title,
@@ -143,10 +157,14 @@ export class ClaudeCodeProvider implements IAIProvider {
             : null;
 
         const permissionFlag = this.getPermissionFlag();
-        const systemPromptFlag = systemPromptFilePath
-            ? `--append-system-prompt "$(cat "${systemPromptFilePath}")" `
-            : '';
-        const commandLine = `claude ${systemPromptFlag}${permissionFlag}"$(cat "${promptFilePath}")"`;
+        const shell = detectShell();
+        const commandLine = buildPromptDispatchCommand({
+            cliInvocation: 'claude',
+            flags: `${buildSystemPromptFlag(shell, systemPromptFilePath)}${permissionFlag}`,
+            promptFilePath,
+            promptText: userPrompt,
+            shell,
+        });
 
         return executeCommandInHiddenTerminal({
             commandLine,

@@ -157,6 +157,8 @@ Controls whether AI CLIs run with permission prompts (safe) or bypass them (YOLO
 
 This applies to all providers that support it: Claude (`--permission-mode bypassPermissions`), Copilot (`--yolo`), and Qwen (`--yolo`). Gemini and Codex ignore this setting.
 
+> **Copilot exception**: GitHub Copilot CLI cannot surface permission prompts in `-p` mode. Even with `permissionMode: "interactive"`, the extension auto-switches Copilot to auto-approve at dispatch time — otherwise the terminal would silently hang waiting for a prompt that never appears. This is enforced at runtime; dismissing the startup warning toast does not re-enable interactive mode for Copilot.
+
 ### Command Format
 
 Controls how speckit commands are formatted when sent to AI providers:
@@ -496,7 +498,7 @@ npm run package
 | macOS        | Yes      | Fully supported                                                             |
 | Linux        | Yes      | Fully supported                                                             |
 | Windows WSL  | Yes      | Supported                                                                   |
-| Windows      | Partial  | Codex provider works in PowerShell (since v0.13.0); other providers require WSL |
+| Windows      | Yes      | All bash-only providers (Copilot, Claude, OpenCode, Qwen) auto-detect PowerShell and use the equivalent `Get-Content -Raw` substitution; cmd.exe is supported on a best-effort basis (long prompts may exceed cmd's 8191-char line limit — switch to PowerShell or Git Bash if you hit it). |
 
 ## Acknowledgments
 

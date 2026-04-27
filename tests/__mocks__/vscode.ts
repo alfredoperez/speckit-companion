@@ -130,4 +130,5 @@ export const extensions = {
 
 export const env = {
     openExternal: jest.fn(),
+    shell: '' as string,
 };

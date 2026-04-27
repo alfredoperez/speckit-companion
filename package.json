@@ -689,7 +689,7 @@
           ],
           "scope": "machine",
           "order": 3,
-          "description": "Controls how the AI CLI handles permission prompts. 'interactive' is honored only by providers whose CLI supports interactive prompting (Claude, Gemini, Codex, Qwen, OpenCode). Copilot does not support interactive prompting and will be auto-switched to auto-approve."
+          "description": "Controls how the AI CLI handles permission prompts. 'interactive' is honored only by providers whose CLI supports interactive prompting (Claude, Gemini, Codex, Qwen, OpenCode). Copilot's CLI cannot surface prompts in -p mode and is auto-switched to auto-approve at dispatch time, regardless of this setting — dismissing the startup warning will not re-enable interactive mode for Copilot."
         },
         "speckit.geminiPath": {
           "type": "string",

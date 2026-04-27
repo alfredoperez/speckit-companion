@@ -7,7 +7,7 @@ import { AIProviders, CLIDefaults, Timing } from '../core/constants';
 import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { ensureCliInstalled } from '../core/utils/installUtils';
-import { IAIProvider, AIExecutionResult } from './aiProvider';
+import { IAIProvider, AIExecutionResult, buildPromptDispatchCommand } from './aiProvider';
 import { getPermissionFlagForProvider } from './permissionValidation';
 
 const execAsync = promisify(exec);
@@ -80,7 +80,12 @@ export class CopilotCliProvider implements IAIProvider {
             // Strip leading slash from prompt — Copilot doesn't use slash commands
             const cleanPrompt = prompt.startsWith('/') ? prompt.substring(1) : prompt;
             const promptFilePath = await createTempFile(this.context, cleanPrompt, 'prompt', false);
-            const command = `${cliPath} ${permissionFlag}-p "$(cat "${promptFilePath}")"`;
+            const command = buildPromptDispatchCommand({
+                cliInvocation: cliPath,
+                flags: `${permissionFlag}-p `,
+                promptFilePath,
+                promptText: cleanPrompt,
+            });
 
             const terminal = vscode.window.createTerminal({
                 name: title,
@@ -132,7 +137,12 @@ export class CopilotCliProvider implements IAIProvider {
 
         const permissionFlag = this.getPermissionFlag();
         const promptFilePath = await createTempFile(this.context, cleanPrompt, 'background-prompt', false);
-        const commandLine = `${cliPath} ${permissionFlag}-p "$(cat "${promptFilePath}")"`;
+        const commandLine = buildPromptDispatchCommand({
+            cliInvocation: cliPath,
+            flags: `${permissionFlag}-p `,
+            promptFilePath,
+            promptText: cleanPrompt,
+        });
 
         return executeCommandInHiddenTerminal({
             commandLine,
