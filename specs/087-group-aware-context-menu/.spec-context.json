@@ -1,12 +1,16 @@
 {
   "workflow": "sdd",
   "auto": true,
-  "currentStep": "implement",
+  "currentStep": "done",
   "currentTask": null,
-  "progress": "commit-review",
-  "next": "implement",
+  "progress": null,
+  "next": "done",
+  "status": "completed",
+  "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/147",
+  "prNumber": 147,
   "workingBranch": "feat/group-aware-context-menu",
-  "last_action": "T005 complete — specCommands.test.ts updated with lifecycle-aware makeItem, readSpecContextSync mock, and three new no-op-filter / lifecycle-viewItem cases. All 410 tests pass; full suite and tsc green.",
+  "last_action": "PR #147 opened — feat(specs): show right-click menu actions per spec lifecycle group",
   "files_modified": [
     "src/features/specs/specExplorerProvider.ts",
     "package.json",
@@ -100,6 +104,7 @@
     { "step": "implement", "substep": "phase1", "task": "T005", "from": { "step": "implement", "substep": "phase1", "task": "T002-T004" }, "by": "sdd", "at": "2026-04-27T21:22:00Z" },
     { "step": "implement", "substep": "hooks", "from": { "step": "implement", "substep": "phase1", "task": "T005" }, "by": "sdd", "at": "2026-04-27T21:22:30Z" },
     { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-04-27T21:23:00Z" },
-    { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-27T21:35:00Z" }
+    { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-27T21:35:00Z" },
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-27T21:38:00Z" }
   ]
 }
