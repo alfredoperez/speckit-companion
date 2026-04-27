@@ -2,6 +2,10 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { readSpecContextSync } from './specContextManager';
 import { SpecStatuses } from '../../core/constants';
+import { isSpecLifecycleItem } from './specExplorerProvider';
+
+// Menu visibility is driven by per-item viewItem (see SpecItem.contextValue in specExplorerProvider.ts);
+// this module now writes only count/mixed for any UI that still depends on them.
 
 export interface SelectableSpecItem {
     contextValue?: string;
@@ -16,22 +20,16 @@ function resolveStatus(item: SelectableSpecItem): string {
 }
 
 export function updateSelectionContextKeys(selection: readonly SelectableSpecItem[]): void {
-    const specs = (selection || []).filter(i => i?.contextValue === 'spec');
+    const specs = (selection || []).filter(i => isSpecLifecycleItem(i?.contextValue));
     const statuses = specs.map(resolveStatus);
     const count = statuses.length;
 
-    const isCompleted = (s: string) => s === SpecStatuses.COMPLETED;
-    const isArchived = (s: string) => s === SpecStatuses.ARCHIVED;
-    const isActive = (s: string) => !isCompleted(s) && !isArchived(s);
-
-    const allActive = count > 0 && statuses.every(isActive);
-    const allCompleted = count > 0 && statuses.every(isCompleted);
-    const allArchived = count > 0 && statuses.every(isArchived);
-    const mixed = count > 1 && !allActive && !allCompleted && !allArchived;
+    const someCompleted = statuses.some(s => s === SpecStatuses.COMPLETED);
+    const someArchived = statuses.some(s => s === SpecStatuses.ARCHIVED);
+    const someActive = statuses.some(s => s !== SpecStatuses.COMPLETED && s !== SpecStatuses.ARCHIVED);
+    const groupCount = (someCompleted ? 1 : 0) + (someArchived ? 1 : 0) + (someActive ? 1 : 0);
+    const mixed = count > 1 && groupCount > 1;
 
     vscode.commands.executeCommand('setContext', 'speckit.specs.selection.count', count);
-    vscode.commands.executeCommand('setContext', 'speckit.specs.selection.allActive', allActive);
-    vscode.commands.executeCommand('setContext', 'speckit.specs.selection.allCompleted', allCompleted);
-    vscode.commands.executeCommand('setContext', 'speckit.specs.selection.allArchived', allArchived);
     vscode.commands.executeCommand('setContext', 'speckit.specs.selection.mixed', mixed);
 }

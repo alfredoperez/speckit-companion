@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { getAIProvider } from '../../extension';
-import { SpecExplorerProvider } from './specExplorerProvider';
+import { SpecExplorerProvider, isSpecLifecycleItem } from './specExplorerProvider';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig, SpecTreeItem } from '../../core/types/config';
-import { Commands, ConfigKeys, WorkflowSteps } from '../../core/constants';
+import { Commands, ConfigKeys, SpecStatuses, WorkflowSteps } from '../../core/constants';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { buildPrompt } from '../../ai-providers/promptBuilder';
 import { isInsideSpecDirectory, getFileWatcherPatterns } from '../../core/specDirectoryResolver';
@@ -16,7 +16,7 @@ import {
     WorkflowStep,
     WorkflowConfig,
 } from '../workflows';
-import { updateStepProgress } from './specContextManager';
+import { updateStepProgress, readSpecContextSync } from './specContextManager';
 import { startStep, setStatus, reactivate } from './stepLifecycle';
 import { updateSelectionContextKeys } from './selectionContextKeys';
 import { track as trackTerminal } from './terminalStepTracker';
@@ -56,7 +56,7 @@ export function registerSpecKitCommands(
         if (items && items.length > 0) return items;
         if (item) return [item];
         const selection = (specsTreeView?.selection || []) as SpecTreeItem[];
-        return selection.filter(s => (s as any)?.contextValue === 'spec');
+        return selection.filter(s => isSpecLifecycleItem((s as any)?.contextValue));
     }
 
     function pluralize(count: number, singular: string, plural: string): string {
@@ -257,16 +257,22 @@ export function registerSpecKitCommands(
         items: SpecTreeItem[] | undefined,
         apply: (specDir: string) => Promise<void>,
         singular: string,
-        plural: string
+        plural: string,
+        skipIf?: (status: string | undefined) => boolean
     ): Promise<void> {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         if (!workspaceFolder) return;
         const targets = resolveTargets(item, items);
         updateSelectionContextKeys(targets as any);
         if (targets.length === 0) return;
-        await Promise.all(targets.map(t => apply(specDirFor(t, workspaceFolder.uri.fsPath))));
+        const wsPath = workspaceFolder.uri.fsPath;
+        const filtered = skipIf
+            ? targets.filter(t => !skipIf(readSpecContextSync(specDirFor(t, wsPath))?.status))
+            : targets;
+        if (filtered.length === 0) return;
+        await Promise.all(filtered.map(t => apply(specDirFor(t, wsPath))));
         specExplorer.refresh();
-        NotificationUtils.showAutoDismissNotification(pluralize(targets.length, singular, plural));
+        NotificationUtils.showAutoDismissNotification(pluralize(filtered.length, singular, plural));
     }
 
     // Mark as Completed
@@ -277,7 +283,8 @@ export function registerSpecKitCommands(
                 items,
                 specDir => setStatus(specDir, 'completed'),
                 'marked as completed',
-                'marked as completed'
+                'marked as completed',
+                s => s === SpecStatuses.COMPLETED
             );
         })
     );
@@ -290,7 +297,8 @@ export function registerSpecKitCommands(
                 items,
                 specDir => setStatus(specDir, 'archived'),
                 'archived',
-                'archived'
+                'archived',
+                s => s === SpecStatuses.ARCHIVED
             );
         })
     );
@@ -303,7 +311,8 @@ export function registerSpecKitCommands(
                 items,
                 specDir => reactivate(specDir),
                 'moved to active',
-                'moved to active'
+                'moved to active',
+                s => s !== SpecStatuses.COMPLETED && s !== SpecStatuses.ARCHIVED
             );
         })
     );
