@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### New Features
+
+- **Pinned Viewer Header + Responsive TOC Sidebar**: Spec viewer header stays pinned while scrolling, and a responsive table-of-contents sidebar links to each H2/H3 for fast navigation in long specs (#139)
+- **Onboarding Card for Zero-Spec Workspaces**: Replaces the silent empty welcome view with a "Create your first spec" card that links to docs and triggers the spec editor in one click (#137)
+- **Always-Show SpecKit Icon + Empty-State Welcome**: The activity-bar icon now appears whether or not a workspace is open, and shows a contextual empty state instead of disappearing — fixes the "extension didn't load" confusion on first install (#134)
+- **Reveal in Finder + Explorer View from Tree**: Tree view file items now expose "Reveal in OS Finder" and "Reveal in Explorer View" context-menu actions (#132)
+
+### Improvements
+
+- **README Refresh**: Top-of-page positioning rewritten, latest features documented, factual gaps fixed, and a maintenance rule added so the README stays current per release (#143)
+- **Sample Specs Section in README**: Points to in-repo example specs so new users have a clear "what does good look like" reference (#136)
+- **Polished Related-Tab Styles**: Related-tab styling now matches the step-tab chip language for visual consistency in the spec viewer (#133)
+
+### Bug Fixes
+
+- **Viewer State Display**: Fixed branch chip rendering, in-flight `%` pill, and substep label in the spec viewer (#131)
+- **Current-Step Chip Contrast**: Improved current-step chip contrast on purple themes so the active step stays readable (#130)
+
 ## [0.13.0] - 2026-04-24
 
 ### New Features
