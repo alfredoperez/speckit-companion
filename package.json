@@ -441,6 +441,16 @@
         "command": "speckit.specs.revealInExplorer",
         "title": "Reveal in Explorer View",
         "category": "SpecKit"
+      },
+      {
+        "command": "speckit.specs.copyPath",
+        "title": "Copy Path",
+        "category": "SpecKit"
+      },
+      {
+        "command": "speckit.specs.copyName",
+        "title": "Copy Name",
+        "category": "SpecKit"
       }
     ],
     "menus": {
@@ -566,6 +576,16 @@
           "command": "speckit.openSpecSource",
           "when": "view == speckit.views.explorer && viewItem =~ /spec-document-/",
           "group": "inline"
+        },
+        {
+          "command": "speckit.specs.copyPath",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|completed|archived)$/",
+          "group": "9_clipboard@1"
+        },
+        {
+          "command": "speckit.specs.copyName",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|completed|archived)$/",
+          "group": "9_clipboard@2"
         }
       ],
       "commandPalette": [
@@ -627,6 +647,14 @@
         },
         {
           "command": "speckit.openSpecSource",
+          "when": "false"
+        },
+        {
+          "command": "speckit.specs.copyPath",
+          "when": "false"
+        },
+        {
+          "command": "speckit.specs.copyName",
           "when": "false"
         }
       ]

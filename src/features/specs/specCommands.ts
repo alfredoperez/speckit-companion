@@ -232,6 +232,26 @@ export function registerSpecKitCommands(
         })
     );
 
+    // Copy the spec's workspace-relative path (e.g. "specs/089-copy-spec-path-name") to the clipboard.
+    context.subscriptions.push(
+        vscode.commands.registerCommand('speckit.specs.copyPath', async (item: SpecTreeItem) => {
+            if (!item) return;
+            const relativePath = item.specPath || `specs/${item.label}`;
+            await vscode.env.clipboard.writeText(relativePath);
+            NotificationUtils.showAutoDismissNotification(`Copied "${relativePath}"`);
+        })
+    );
+
+    // Copy the spec's slug (the directory name, e.g. "089-copy-spec-path-name") to the clipboard.
+    context.subscriptions.push(
+        vscode.commands.registerCommand('speckit.specs.copyName', async (item: SpecTreeItem) => {
+            if (!item) return;
+            const slug = item.specPath ? item.specPath.replace(/^specs\//, '') : String(item.label);
+            await vscode.env.clipboard.writeText(slug);
+            NotificationUtils.showAutoDismissNotification(`Copied "${slug}"`);
+        })
+    );
+
     // Open source file from sidebar inline action
     context.subscriptions.push(
         vscode.commands.registerCommand('speckit.openSpecSource', async (item: vscode.TreeItem & { fileUri?: vscode.Uri }) => {
