@@ -500,6 +500,10 @@ npm run package
 | Windows WSL  | Yes      | Supported                                                                   |
 | Windows      | Yes      | All bash-only providers (Copilot, Claude, OpenCode, Qwen) auto-detect PowerShell and use the equivalent `Get-Content -Raw` substitution; cmd.exe is supported on a best-effort basis (long prompts may exceed cmd's 8191-char line limit — switch to PowerShell or Git Bash if you hit it). |
 
+## Contributing
+
+PRs welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, the `F5` dev-host loop, test conventions, the Conventional Commit style this repo uses, and the README docs map you should follow before opening a PR.
+
 ## Acknowledgments
 
 This project started from the amazing work at https://github.com/notdp/kiro-for-cc
