@@ -39,6 +39,19 @@ export class WorkflowEditorProvider implements vscode.CustomTextEditorProvider {
         webviewPanel: vscode.WebviewPanel,
         _token: vscode.CancellationToken
     ): Promise<void> {
+        const activeTabInput = vscode.window.tabGroups.activeTabGroup?.activeTab?.input;
+        const isDiffContext =
+            document.uri.scheme !== 'file' ||
+            activeTabInput instanceof vscode.TabInputTextDiff;
+
+        if (isDiffContext) {
+            this.outputChannel.appendLine(
+                `[WorkflowEditor] Diff context detected, skipping redirect: ${document.fileName}`
+            );
+            webviewPanel.webview.html = renderPlainText(document.getText());
+            return;
+        }
+
         this.outputChannel.appendLine(`[WorkflowEditor] Redirecting to SpecViewer: ${document.fileName}`);
 
         // Custom editors require HTML to be set
@@ -50,4 +63,15 @@ export class WorkflowEditorProvider implements vscode.CustomTextEditorProvider {
         // Defer closing the custom editor tab to let VS Code finish the transition
         setTimeout(() => webviewPanel.dispose(), 100);
     }
+}
+
+function escapeHtml(text: string): string {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function renderPlainText(text: string): string {
+    return `<!DOCTYPE html><html><body style="margin:0;padding:12px;font-family:var(--vscode-editor-font-family,monospace);font-size:var(--vscode-editor-font-size,13px);color:var(--vscode-editor-foreground);background:var(--vscode-editor-background);"><pre style="white-space:pre-wrap;margin:0;">${escapeHtml(text)}</pre></body></html>`;
 }
