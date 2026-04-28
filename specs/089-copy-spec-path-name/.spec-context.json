@@ -5,7 +5,9 @@
   "progress": null,
   "next": "done",
   "status": "completed",
-  "checkpointStatus": { "commit": false, "pr": false },
+  "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/149",
+  "prNumber": 149,
   "updated": "2026-04-27",
   "selectedAt": "2026-04-27T23:04:37Z",
   "specName": "Copy Spec Path / Name",
@@ -14,7 +16,7 @@
   "type": "feat",
   "createdAt": "2026-04-27T23:04:37Z",
   "approach": "Add speckit.specs.copyPath and speckit.specs.copyName commands following the existing reveal-handler pattern in specCommands.ts; wire via package.json view/item/context in a new 9_clipboard group.",
-  "last_action": "CP3 approved — about to commit and push.",
+  "last_action": "PR #149 opened — feat(specs): copy spec path or name from right-click menu",
   "files_modified": [
     "src/features/specs/specCommands.ts",
     "package.json",
@@ -87,6 +89,7 @@
     { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-04-27T23:25:00Z" },
     { "step": "implement", "substep": "test-results", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-27T23:30:00Z" },
     { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "test-results" }, "by": "sdd", "at": "2026-04-27T23:30:30Z" },
-    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-27T23:31:00Z" }
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-27T23:31:00Z" },
+    { "step": "done", "substep": null, "from": { "step": "done", "substep": null }, "by": "sdd", "at": "2026-04-27T23:35:00Z" }
   ]
 }
