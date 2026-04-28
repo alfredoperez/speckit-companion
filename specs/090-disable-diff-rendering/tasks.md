@@ -13,7 +13,9 @@
 
 ## Phase 1: Core Implementation
 
-- [x] **T001** Skip redirect for diff/non-file contexts — `src/features/workflow-editor/workflowEditorProvider.ts` | R001, R002, R004
-  - **Do**: At the top of `resolveCustomTextEditor`, compute `isDiffContext = document.uri.scheme !== 'file' || vscode.window.tabGroups.activeTabGroup?.activeTab?.input instanceof vscode.TabInputTextDiff`. If `isDiffContext`, log to `outputChannel` (e.g. `[WorkflowEditor] Diff context detected, skipping redirect: <fileName>`), set `webviewPanel.webview.html` to a minimal HTML page that wraps `document.getText()` inside a `<pre>` (HTML-escape `&`, `<`, `>` to avoid injection), and `return` without calling `speckit.viewSpecDocument` or scheduling `webviewPanel.dispose()`. Otherwise keep the existing redirect path unchanged.
-  - **Verify**: `npm run compile` succeeds. Manual smoke test in Extension Development Host: (1) clicking a spec.md from the explorer still opens the SpecViewer panel, (2) opening Source Control diff for a modified spec.md shows the text diff editor without the SpecViewer popping up, (3) the workflow editor tab does not appear blank if it ever lands on a diff side.
-  - **Leverage**: existing `outputChannel.appendLine` pattern in the same file (line 42); HTML escape pattern can be a small inline helper since no shared util exists for this case.
+- [x] **T001** ~~Skip redirect for diff/non-file contexts~~ — superseded by T002. The detection-based fix did not catch all diff entry points; replaced with full removal.
+
+- [x] **T002** Delete the custom editor and its package.json contributions — `src/features/workflow-editor/workflowEditorProvider.ts`, `src/features/workflow-editor/index.ts`, `src/extension.ts`, `package.json` | R001, R002, R003, R004, R005
+  - **Do**: Delete `workflowEditorProvider.ts`. Drop the `workflowEditorProvider` re-export from `workflow-editor/index.ts`. In `extension.ts`, remove the `WorkflowEditorProvider` import and the registration block guarded by `speckit.workflowEditor.enabled`. In `package.json`, remove the `contributes.customEditors` block, the `onCustomEditor:speckit.workflowEditor` activation event, and the `speckit.workflowEditor.enabled` configuration property.
+  - **Verify**: `npm run compile` passes. Manual: (1) Source Control click on a modified spec.md opens text diff editor — no SpecViewer popup. (2) File Explorer click on spec.md opens raw markdown. (3) SpecKit sidebar click on a spec still opens the SpecViewer.
+  - **Leverage**: The `speckit.viewSpecDocument` command path used by `specExplorerProvider.ts:420,556` is the only entry point we need for the SpecViewer.

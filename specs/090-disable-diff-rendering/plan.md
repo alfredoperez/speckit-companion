@@ -4,8 +4,11 @@
 
 ## Approach
 
-In `WorkflowEditorProvider.resolveCustomTextEditor`, gate the existing redirect (`speckit.viewSpecDocument` + `webviewPanel.dispose`) on a "is this a normal file open?" check. Skip the redirect when the document URI scheme is not `file` or when the active tab is a `TabInputTextDiff`. When skipping, render the raw document text in the webview as a plain `<pre>` block so the panel is never blank.
+The first attempt tried to detect diff context inside `WorkflowEditorProvider.resolveCustomTextEditor` and skip the redirect. That fight against VS Code's editor-resolution timing turned out to be unwinnable. Instead, delete the custom editor entirely. The SpecKit sidebar already opens the SpecViewer directly via `speckit.viewSpecDocument`, so removing the auto-redirect doesn't lose any reachable functionality.
 
 ## Files to Change
 
-- `src/features/workflow-editor/workflowEditorProvider.ts` — add diff/non-file detection at the top of `resolveCustomTextEditor`. If detected, set the webview HTML to escape-rendered raw text and return early without dispatching `speckit.viewSpecDocument` or disposing the panel.
+- `src/features/workflow-editor/workflowEditorProvider.ts` — **delete** the file. No callers remain after the extension.ts edit below.
+- `src/features/workflow-editor/index.ts` — drop the `workflowEditorProvider` re-export. Keep the `workflowEditorCommands` export.
+- `src/extension.ts` — remove the `WorkflowEditorProvider` import and the `if (workflowEditor.enabled)` registration block. Leave `registerWorkflowEditorCommands` call alone (those commands may still be referenced elsewhere).
+- `package.json` — remove the `customEditors` block under `contributes`, the `onCustomEditor:speckit.workflowEditor` entry from `activationEvents`, and the `speckit.workflowEditor.enabled` property from `contributes.configuration`.

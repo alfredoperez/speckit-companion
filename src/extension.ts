@@ -11,7 +11,7 @@ import { setLifecycleOutputChannel } from './features/specs/stepLifecycle';
 import { OverviewProvider } from './features/settings';
 import { AgentManager } from './features/agents';
 import { SkillManager } from './features/skills';
-import { WorkflowEditorProvider, registerWorkflowEditorCommands } from './features/workflow-editor';
+import { registerWorkflowEditorCommands } from './features/workflow-editor';
 import { registerSpecEditorCommands } from './features/spec-editor';
 import { registerSpecViewerCommands, isSpecDocument } from './features/spec-viewer';
 import { validateWorkflowsOnActivation, registerWorkflowConfigChangeListener } from './features/workflows';
@@ -177,15 +177,6 @@ export async function activate(context: vscode.ExtensionContext) {
     // Check for updates on startup
     updateChecker.checkForUpdates();
     outputChannel.appendLine('Update check initiated');
-
-    // Register Workflow Editor provider if enabled
-    const workflowConfig = vscode.workspace.getConfiguration('speckit');
-    if (workflowConfig.get<boolean>('workflowEditor.enabled', true)) {
-        context.subscriptions.push(
-            WorkflowEditorProvider.register(context, outputChannel)
-        );
-        outputChannel.appendLine('Workflow Editor provider registered');
-    }
 
     // Register workflow editor action commands
     registerWorkflowEditorCommands(context, outputChannel);
