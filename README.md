@@ -502,10 +502,7 @@ npm run package
 
 ## Contributing
 
-PRs welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup,
-the `F5` dev-host loop, test conventions, the Conventional Commit style
-this repo uses, and the README docs map you should follow before opening
-a PR.
+PRs welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, the `F5` dev-host loop, test conventions, the Conventional Commit style this repo uses, and the README docs map you should follow before opening a PR.
 
 ## Acknowledgments
 
