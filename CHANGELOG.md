@@ -4,9 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-04-27
+
 ### New Features
 
-- **Group Header Bulk Actions**: Right-click the Active, Completed, or Archived group header in the Specs sidebar to apply a lifecycle transition to every visible spec at once (Mark all as Completed / Archive all / Reactivate all). Gated by a confirmation dialog with the post-skip count.
+- **Copy Spec Path / Copy Spec Name**: Right-click a spec in the sidebar to copy either the workspace-relative path or just the slug, ready to paste into PRs, chat, or external tools (#149)
+- **Group Header Bulk Actions**: Right-click the Active, Completed, or Archived group header in the Specs sidebar to apply a lifecycle transition to every visible spec at once (Mark all as Completed / Archive all / Reactivate all). Gated by a confirmation dialog with the post-skip count (#148)
+- **Group-Aware Right-Click Menu**: Per-spec right-click actions now hide options that don't apply to that spec's lifecycle group, so you only see actions you can actually run (#147)
+
+### Bug Fixes
+
+- **Diff View No Longer Hijacked**: Removed the custom editor that auto-redirected every `specs/**/*.md` open to the SpecViewer panel. Source Control diffs now show VS Code's text diff editor and the regular File Explorer opens raw markdown — the SpecKit sidebar remains the canonical entry point for SpecViewer (#150)
+- **PowerShell + Copilot Auto-Approve**: Codex provider now uses PowerShell-compatible command substitution; Copilot CLI auto-approve flag is forced so commands no longer hang waiting on a prompt that can't be surfaced (#145)
 
 ## [0.14.0] - 2026-04-27
 

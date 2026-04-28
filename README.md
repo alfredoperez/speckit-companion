@@ -11,9 +11,9 @@ The spec workspace for developers running AI agents through Spec-Driven Developm
 
 ## Recently Shipped
 
+- **v0.15.0** Group header bulk actions, group-aware right-click menu, copy spec path/name, diff-view fix
+- **v0.14.0** Pinned viewer header + responsive TOC, onboarding card, always-show activity-bar icon
 - **v0.13.0** Color-coded badge statuses, live elapsed timers, fuzzy spec filter, sort options
-- **v0.12.0** OpenCode provider, multi-select bulk actions, locked future steps
-- **v0.11.0** Floating toast notifications, transition logging
 - [Full changelog →](./CHANGELOG.md)
 
 ## Why it exists
