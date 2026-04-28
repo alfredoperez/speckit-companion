@@ -38,23 +38,10 @@
     "theme": "dark"
   },
   "activationEvents": [
-    "onStartupFinished",
-    "onCustomEditor:speckit.workflowEditor"
+    "onStartupFinished"
   ],
   "main": "./dist/extension.js",
   "contributes": {
-    "customEditors": [
-      {
-        "viewType": "speckit.workflowEditor",
-        "displayName": "Spec Workflow Editor",
-        "selector": [
-          {
-            "filenamePattern": "**/specs/**/*.md"
-          }
-        ],
-        "priority": "default"
-      }
-    ],
     "viewsContainers": {
       "activitybar": [
         {
@@ -669,13 +656,6 @@
     "configuration": {
       "title": "SpecKit Companion",
       "properties": {
-        "speckit.workflowEditor.enabled": {
-          "type": "boolean",
-          "default": true,
-          "scope": "window",
-          "order": 0,
-          "description": "Enable custom workflow editor for spec files (shows rendered markdown with action buttons)"
-        },
         "speckit.aiContextInstructions": {
           "type": "boolean",
           "default": true,
