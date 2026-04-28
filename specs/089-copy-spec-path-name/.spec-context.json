@@ -1,0 +1,92 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "status": "completed",
+  "checkpointStatus": { "commit": false, "pr": false },
+  "updated": "2026-04-27",
+  "selectedAt": "2026-04-27T23:04:37Z",
+  "specName": "Copy Spec Path / Name",
+  "branch": "main",
+  "workingBranch": "feat/089-copy-spec-path-name",
+  "type": "feat",
+  "createdAt": "2026-04-27T23:04:37Z",
+  "approach": "Add speckit.specs.copyPath and speckit.specs.copyName commands following the existing reveal-handler pattern in specCommands.ts; wire via package.json view/item/context in a new 9_clipboard group.",
+  "last_action": "CP3 approved — about to commit and push.",
+  "files_modified": [
+    "src/features/specs/specCommands.ts",
+    "package.json",
+    "src/features/specs/specCommands.test.ts",
+    "tests/__mocks__/vscode.ts",
+    "docs/sidebar.md",
+    "README.md"
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Registered speckit.specs.copyPath and speckit.specs.copyName handlers using vscode.env.clipboard.writeText + NotificationUtils.showAutoDismissNotification, mirroring the reveal-handler pattern.",
+      "files": ["src/features/specs/specCommands.ts"],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Declared both commands in package.json and wired view/item/context entries in a new 9_clipboard group; added when:false palette entries.",
+      "files": ["package.json"],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added 8 BDD-style Jest tests (4 per handler) covering specPath path, label fallback, notification, and undefined-item no-op. Added clipboard.writeText mock to tests/__mocks__/vscode.ts.",
+      "files": ["src/features/specs/specCommands.test.ts", "tests/__mocks__/vscode.ts"],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Documented Copy Path / Copy Name in docs/sidebar.md under the 'Right-click and multi-select' section, noting the 9_clipboard group placement and use cases.",
+      "files": ["docs/sidebar.md"],
+      "concerns": []
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added a one-line mention of Copy Path / Copy Name to README's 'Sidebar at a Glance' section.",
+      "files": ["README.md"],
+      "concerns": []
+    }
+  },
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 7,
+      "scenarios": 4,
+      "key_finding": "speckit.specs.reveal/revealInExplorer in src/features/specs/specCommands.ts establishes the pattern: read item.specPath (fallback to specs/${item.label}), wired via package.json view/item/context for viewItem matching ^spec-(active|tasks-done|completed|archived)$"
+    },
+    "plan": {
+      "approach_summary": "Add speckit.specs.copyPath and speckit.specs.copyName commands following the existing reveal-handler pattern in specCommands.ts; wire via package.json view/item/context in a new 9_clipboard group.",
+      "files_planned": 5,
+      "risks": []
+    }
+  },
+  "transitions": [
+    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-27T23:04:37Z" },
+    { "step": "specify", "substep": "exploring", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-04-27T23:05:00Z" },
+    { "step": "specify", "substep": "detecting", "from": { "step": "specify", "substep": "exploring" }, "by": "sdd", "at": "2026-04-27T23:05:30Z" },
+    { "step": "specify", "substep": "writing-spec", "from": { "step": "specify", "substep": "detecting" }, "by": "sdd", "at": "2026-04-27T23:06:00Z" },
+    { "step": "specify", "substep": null, "from": { "step": "specify", "substep": "writing-spec" }, "by": "sdd", "at": "2026-04-27T23:07:00Z" },
+    { "step": "plan", "substep": "loading", "from": { "step": "specify", "substep": null }, "by": "sdd", "at": "2026-04-27T23:08:00Z" },
+    { "step": "plan", "substep": "writing-plan", "from": { "step": "plan", "substep": "loading" }, "by": "sdd", "at": "2026-04-27T23:08:30Z" },
+    { "step": "plan", "substep": null, "from": { "step": "plan", "substep": "writing-plan" }, "by": "sdd", "at": "2026-04-27T23:09:00Z" },
+    { "step": "tasks", "substep": "loading", "from": { "step": "plan", "substep": null }, "by": "sdd", "at": "2026-04-27T23:10:00Z" },
+    { "step": "tasks", "substep": "writing-tasks", "from": { "step": "tasks", "substep": "loading" }, "by": "sdd", "at": "2026-04-27T23:10:30Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "tasks", "substep": "writing-tasks" }, "by": "sdd", "at": "2026-04-27T23:11:00Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-04-27T23:12:00Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-27T23:13:00Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-27T23:20:00Z" },
+    { "step": "implement", "substep": "hooks", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-04-27T23:21:00Z" },
+    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-04-27T23:25:00Z" },
+    { "step": "implement", "substep": "test-results", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-04-27T23:30:00Z" },
+    { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "test-results" }, "by": "sdd", "at": "2026-04-27T23:30:30Z" },
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-04-27T23:31:00Z" }
+  ]
+}

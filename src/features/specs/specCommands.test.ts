@@ -533,3 +533,103 @@ describe('speckit.create command handler', () => {
         expect(vscode.window.showInformationMessage).not.toHaveBeenCalled();
     });
 });
+
+describe('speckit.specs.copyPath command handler', () => {
+    const mockClipboardWriteText = (vscode.env as any).clipboard.writeText as jest.Mock;
+
+    it('writes specPath to clipboard when item.specPath is set', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.copyPath')!;
+
+        await handler({ label: '089-copy-spec-path-name', specPath: 'specs/089-copy-spec-path-name' });
+
+        expect(mockClipboardWriteText).toHaveBeenCalledTimes(1);
+        expect(mockClipboardWriteText).toHaveBeenCalledWith('specs/089-copy-spec-path-name');
+    });
+
+    it('falls back to specs/${label} when specPath is missing', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.copyPath')!;
+
+        await handler({ label: 'my-spec' });
+
+        expect(mockClipboardWriteText).toHaveBeenCalledTimes(1);
+        expect(mockClipboardWriteText).toHaveBeenCalledWith('specs/my-spec');
+    });
+
+    it('shows an auto-dismiss notification after copying', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.copyPath')!;
+
+        await handler({ label: 'my-spec', specPath: 'specs/my-spec' });
+
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledTimes(1);
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledWith(
+            expect.stringContaining('Copied')
+        );
+    });
+
+    it('does nothing when item is undefined', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.copyPath')!;
+
+        await handler(undefined);
+
+        expect(mockClipboardWriteText).not.toHaveBeenCalled();
+        expect(NotificationUtils.showAutoDismissNotification).not.toHaveBeenCalled();
+    });
+});
+
+describe('speckit.specs.copyName command handler', () => {
+    const mockClipboardWriteText = (vscode.env as any).clipboard.writeText as jest.Mock;
+
+    it('writes slug (specPath without specs/ prefix) when specPath is set', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.copyName')!;
+
+        await handler({ label: '089-copy-spec-path-name', specPath: 'specs/089-copy-spec-path-name' });
+
+        expect(mockClipboardWriteText).toHaveBeenCalledTimes(1);
+        expect(mockClipboardWriteText).toHaveBeenCalledWith('089-copy-spec-path-name');
+    });
+
+    it('falls back to label when specPath is missing', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.copyName')!;
+
+        await handler({ label: 'my-spec' });
+
+        expect(mockClipboardWriteText).toHaveBeenCalledTimes(1);
+        expect(mockClipboardWriteText).toHaveBeenCalledWith('my-spec');
+    });
+
+    it('shows an auto-dismiss notification after copying', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.copyName')!;
+
+        await handler({ label: 'my-spec', specPath: 'specs/my-spec' });
+
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledTimes(1);
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledWith(
+            expect.stringContaining('Copied')
+        );
+    });
+
+    it('does nothing when item is undefined', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.copyName')!;
+
+        await handler(undefined);
+
+        expect(mockClipboardWriteText).not.toHaveBeenCalled();
+        expect(NotificationUtils.showAutoDismissNotification).not.toHaveBeenCalled();
+    });
+});

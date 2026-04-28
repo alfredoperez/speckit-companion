@@ -131,4 +131,7 @@ export const extensions = {
 export const env = {
     openExternal: jest.fn(),
     shell: '' as string,
+    clipboard: {
+        writeText: jest.fn().mockResolvedValue(undefined),
+    },
 };

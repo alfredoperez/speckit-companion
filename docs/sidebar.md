@@ -28,7 +28,9 @@ Ties fall back to numeric prefix then name so output is deterministic. The chose
 
 ## Right-click and multi-select
 
-Right-click a spec to access **Mark as Completed**, **Archive**, **Reactivate**, **Delete**, and **Reveal in File Explorer** (opens the spec's folder in Finder, File Explorer, or the default file manager). Menu items reflect the spec's lifecycle group — e.g., "Reactivate" appears only on completed or archived specs, "Mark as Completed" only on active ones.
+Right-click a spec to access **Mark as Completed**, **Archive**, **Reactivate**, **Delete**, **Reveal in File Explorer** (opens the spec's folder in Finder, File Explorer, or the default file manager), **Copy Path**, and **Copy Name**. Menu items reflect the spec's lifecycle group — e.g., "Reactivate" appears only on completed or archived specs, "Mark as Completed" only on active ones.
+
+**Copy Path** copies the workspace-relative spec directory (e.g. `specs/089-copy-spec-path-name`) to the clipboard; **Copy Name** copies just the slug (e.g. `089-copy-spec-path-name`). Both show a brief auto-dismiss notification and live in a `9_clipboard` group below the modification and reveal entries — useful when referencing a spec in PRs, chat, or external tools. They appear on specs in any lifecycle (active, tasks-done, completed, archived) and are not shown on document children, related docs, or group headers.
 
 **Multi-select** specs with shift-click or cmd/ctrl-click and bulk-archive, complete, or reactivate from the same right-click menu.
 

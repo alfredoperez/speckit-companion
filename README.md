@@ -87,7 +87,7 @@ The sidebar, progress tracking, and workflow editor all adapt automatically to y
 
 The sidebar organizes everything your AI assistant needs: **Specs** for feature development, **Steering** for AI guidance documents, **Agents** for custom agent definitions, **Skills** for reusable capabilities, and **Hooks** for automation triggers.
 
-Specs are grouped into three collapsible sections, each with a count in the header: **Active**, **Completed**, **Archived**. Filter by name, sort by number/name/date/status, multi-select to bulk-archive or complete, and right-click for per-spec actions like Reveal in File Explorer. **Right-click a group header** to apply lifecycle actions to every spec in the group at once (e.g., *Archive all*, *Reactivate all*) — each gated by a confirmation dialog. Header badges and tree icons are color-coded by status so progress reads at a glance.
+Specs are grouped into three collapsible sections, each with a count in the header: **Active**, **Completed**, **Archived**. Filter by name, sort by number/name/date/status, multi-select to bulk-archive or complete, and right-click for per-spec actions like Reveal in File Explorer. Right-click also offers **Copy Path** (workspace-relative path) and **Copy Name** (slug only) for referencing specs in PRs, chat, or external tools. **Right-click a group header** to apply lifecycle actions to every spec in the group at once (e.g., *Archive all*, *Reactivate all*) — each gated by a confirmation dialog. Header badges and tree icons are color-coded by status so progress reads at a glance.
 
 When a step command is running, the spec shows a spinner and a live elapsed timer; a step-complete notification fires when it finishes (toggle via `speckit.notifications.stepComplete`).
 
