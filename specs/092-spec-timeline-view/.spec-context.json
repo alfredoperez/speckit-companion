@@ -52,7 +52,8 @@
     { "step": "implement", "substep": null, "from": { "step": "tasks", "substep": null }, "by": "extension", "at": "2026-04-29T00:25:21.262Z" },
     { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": null }, "by": "ai", "at": "2026-04-29T00:25:51Z" },
     { "step": "implement", "substep": "run-tests", "from": { "step": "implement", "substep": "phase1" }, "by": "ai", "at": "2026-04-29T00:35:00Z" },
-    { "step": "implement", "substep": null, "from": { "step": "implement", "substep": "run-tests" }, "by": "ai", "at": "2026-04-29T00:36:47Z" }
+    { "step": "implement", "substep": null, "from": { "step": "implement", "substep": "run-tests" }, "by": "ai", "at": "2026-04-29T00:36:47Z" },
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": null }, "by": "ai", "at": "2026-04-29T00:40:00Z" }
   ],
   "task_summaries": {
     "T001": {
@@ -200,9 +201,11 @@
     { "task": "T012", "note": "Diverged from plan's contentUpdated wording; viewerStateUpdated is functionally equivalent and avoids clobbering markdown." },
     { "task": "T016", "note": "Plan didn't mention threading specViewer through setupFileWatchers, but it was unavoidable to wire the watcher → viewer refresh." }
   ],
-  "last_action": "All Phase 1 tasks complete; all 438 tests passing.",
+  "last_action": "PR #152 opened — feat(spec-viewer): per-spec timeline panel",
   "status": "completed",
-  "checkpointStatus": { "commit": false, "pr": false },
+  "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/152",
+  "prNumber": 152,
   "stepHistory": {
     "specify": {
       "startedAt": "2026-04-28T23:39:19.773Z",
