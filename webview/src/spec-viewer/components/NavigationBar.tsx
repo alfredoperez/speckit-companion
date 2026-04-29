@@ -1,5 +1,5 @@
 import type { VSCodeApi } from '../types';
-import { navState } from '../signals';
+import { navState, timelineVisible } from '../signals';
 import { StepTab } from './StepTab';
 
 declare const vscode: VSCodeApi;
@@ -61,6 +61,11 @@ export function NavigationBar() {
     const parentStepDoc = coreDocs.find(d => d.type === parentStepType);
     const showChildrenRow = displayRelatedDocs.length > 0 && parentStepDoc;
 
+    const timelineActive = timelineVisible.value;
+    const handleTimelineToggle = () => {
+        timelineVisible.value = !timelineVisible.value;
+    };
+
     return (
         <>
             <div class="nav-primary">
@@ -95,6 +100,15 @@ export function NavigationBar() {
                         );
                     })}
                 </div>
+                <button
+                    type="button"
+                    class="timeline-toggle"
+                    aria-pressed={timelineActive}
+                    title="Toggle timeline of all spec transitions"
+                    onClick={handleTimelineToggle}
+                >
+                    Timeline
+                </button>
             </div>
             {showChildrenRow && (
                 <div class="step-children" aria-label={`${parentStepDoc.label} files`}>

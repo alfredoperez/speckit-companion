@@ -76,6 +76,7 @@ The spec viewer is built for fast scanning of long-form specs:
 - **Table of contents**: sticky outline column on the left of the content area. Defaults to h2-only (so phase-heavy `tasks.md` reads as a clean ~7-entry list); a small `+` toggle expands h3 subsections when needed. Auto-hides on narrow panes.
 - **Quiet content**: when the structured header has the metadata, in-content duplicates (the `Input:` block, repeated branch chips, literal `Slug:`/`Date:` paragraphs) are suppressed so the body is just the spec content.
 - **Diagrams**: wide mermaid diagrams scroll horizontally inside the prose column instead of bleeding past it. Each diagram has its own `−` / Reset / `+` zoom controls.
+- **Timeline**: a `Timeline` toggle on the right side of the navigation bar swaps the markdown pane for a chronological list of every transition logged in `.spec-context.json` — step, substep, actor (`extension`, `cli`, `sdd`, `ai`, `user`), and a relative timestamp with the absolute ISO on hover. Entries group by step (oldest at the top), update live when another `/sdd:*` skill or external CLI appends a row, and show an empty state for specs that have not run any pipeline steps yet. Toggle off to return to the spec content; the markdown pane stays mounted so the swap is instant.
 
 ### Custom Workflows & Commands
 

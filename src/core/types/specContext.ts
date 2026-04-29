@@ -64,7 +64,7 @@ export interface TransitionFrom {
     substep: string | null;
 }
 
-export type TransitionBy = 'extension' | 'user' | 'cli';
+export type TransitionBy = 'extension' | 'user' | 'cli' | 'sdd' | 'ai';
 
 export interface Transition {
     step: StepName;
@@ -118,6 +118,7 @@ export interface ViewerState {
     highlights: StepName[];
     activeSubstep: { step: StepName; name: string } | null;
     footer: FooterAction[];
+    transitions: Transition[];
 }
 
 /** Canonical list of substep names used by Companion prompts. */

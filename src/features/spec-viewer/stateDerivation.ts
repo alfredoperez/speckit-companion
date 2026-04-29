@@ -100,5 +100,6 @@ export function deriveViewerState(
         highlights: deriveHighlights(ctx),
         activeSubstep: deriveActiveSubstep(ctx),
         footer: getFooterActions(ctx, activeStep),
+        transitions: ctx.transitions ?? [],
     };
 }

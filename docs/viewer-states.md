@@ -278,6 +278,44 @@ flowchart LR
 
 ---
 
+## Timeline Panel
+
+A `Timeline` button at the right of the navigation bar swaps the markdown pane
+for a chronological list of every entry in `.spec-context.json#transitions`.
+
+```mermaid
+stateDiagram-v2
+    [*] --> markdown : viewer opens
+    markdown --> timeline : user clicks Timeline (aria-pressed=true)
+    timeline --> markdown : user clicks Timeline again
+    timeline --> timeline : .spec-context.json append → transitions signal updates
+```
+
+**Behavior**:
+
+- **Toggle**: clicking `Timeline` flips the `timelineVisible` signal. The markdown
+  pane is hidden via the `hidden` attribute (kept mounted so the toggle back is
+  instant); the `<TimelinePanel />` is mounted lazily on first reveal so initial
+  spec render is never blocked (NFR003).
+- **Empty state**: when `transitions` is missing or `[]`, the panel renders a
+  `No transitions recorded yet` placeholder instead of a blank area.
+- **Grouping**: consecutive entries with the same `step` collapse under one
+  `<section class="timeline-step-group">` heading, in original (oldest-first)
+  order — the array is never reversed or sorted.
+- **Entries**: each row shows the substep (or `—` when null), an actor badge
+  whose class derives from `by` (`is-extension`, `is-cli`, `is-sdd`, `is-ai`,
+  `is-user`), and a relative timestamp (`Xs`/`Xm`/`Xh`/`Xd ago`) with the
+  absolute ISO available on hover via `<time title={iso}>`.
+- **Live updates**: when the existing `.spec-context.json` watcher fires,
+  `specViewerProvider.refreshContextIfDisplaying` re-derives `viewerState` and
+  posts `viewerStateUpdated`; the webview wires `viewerState.transitions` into
+  the `transitions` signal, so a new row appears without a reload (R008,
+  NFR004). No new watcher, no polling.
+- **Override scope**: the toggle only swaps the main pane. Step tabs, header,
+  staleness banner, and footer remain visible and active.
+
+---
+
 ## Sidebar Grouping
 
 ```mermaid
