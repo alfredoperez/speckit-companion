@@ -5,7 +5,7 @@
 
 import { render } from 'preact';
 import type { VSCodeApi, ExtensionToViewerMessage, NavState } from './types';
-import { navState, markdownHtml, viewerState } from './signals';
+import { navState, markdownHtml, viewerState, transitions } from './signals';
 import { renderMarkdown, setCurrentTask, setHasSpecContext } from './markdown';
 import { applyHighlighting, initializeMermaid } from './highlighting';
 import { setupLineActions } from './editor';
@@ -71,6 +71,7 @@ function handleMessage(event: MessageEvent): void {
             }
             if (message.viewerState) {
                 viewerState.value = message.viewerState;
+                transitions.value = message.viewerState.transitions ?? [];
             }
             updateContent(message.content);
             break;
@@ -81,6 +82,7 @@ function handleMessage(event: MessageEvent): void {
 
         case 'viewerStateUpdated':
             viewerState.value = message.viewerState;
+            transitions.value = message.viewerState.transitions ?? [];
             break;
 
         case 'documentsUpdated':

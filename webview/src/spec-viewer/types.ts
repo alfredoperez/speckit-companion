@@ -124,6 +124,19 @@ export interface SerializedFooterAction {
     tooltip: string;
 }
 
+export interface TransitionFrom {
+    step: string | null;
+    substep: string | null;
+}
+
+export interface Transition {
+    step: string;
+    substep: string | null;
+    from: TransitionFrom;
+    by: string;
+    at: string;
+}
+
 export interface ViewerState {
     status: string;
     activeStep: string;
@@ -132,6 +145,7 @@ export interface ViewerState {
     highlights: string[];
     activeSubstep: { step: string; name: string } | null;
     footer: SerializedFooterAction[];
+    transitions: Transition[];
 }
 
 // ============================================

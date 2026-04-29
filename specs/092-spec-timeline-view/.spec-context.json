@@ -1,0 +1,235 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "updated": "2026-04-29",
+  "selectedAt": "2026-04-28T17:15:20Z",
+  "specName": "Per-Spec Timeline View",
+  "branch": "main",
+  "workingBranch": null,
+  "type": "feat",
+  "createdAt": "2026-04-28T17:15:20Z",
+  "approach": "Add a new Preact TimelinePanel to the spec-viewer webview that renders the existing transitions[] array from .spec-context.json as a vertical, oldest-first list grouped by step.",
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 11,
+      "scenarios": 6,
+      "key_finding": "`.spec-context.json` already stores a structured `transitions` array (step, substep, from, by, at) written by every /sdd:* skill via buildTransitionEntry, but no spec-viewer code or webview component currently reads or renders it — the data is ready, only a UI surface is missing."
+    },
+    "plan": {
+      "approach_summary": "Add a new Preact TimelinePanel to the spec-viewer webview that renders the existing transitions[] array from .spec-context.json as a vertical, oldest-first list grouped by step.",
+      "files_planned": 18,
+      "risks": [
+        "TransitionBy type widen could collide with downstream consumers — mitigated by grepping for narrow switches before merging.",
+        "contentUpdated message becomes the carrier for both markdown and context-only changes — split into transitionsUpdated later if it gets noisy."
+      ]
+    },
+    "implement": {
+      "tasks_completed": 19,
+      "tests_passing": "438/438",
+      "checkpoints": ["code-review", "test-results", "commit-review"],
+      "key_finding": "Live updates use viewerStateUpdated (not contentUpdated) to avoid clobbering markdown when the .spec-context.json watcher fires; index.tsx wires transitions on both message types."
+    }
+  },
+  "transitions": [
+    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-04-28T17:15:20Z" },
+    { "step": "specify", "substep": "exploring", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-04-28T17:15:25Z" },
+    { "step": "specify", "substep": "detecting", "from": { "step": "specify", "substep": "exploring" }, "by": "sdd", "at": "2026-04-28T17:15:35Z" },
+    { "step": "specify", "substep": "writing-spec", "from": { "step": "specify", "substep": "detecting" }, "by": "sdd", "at": "2026-04-28T17:15:40Z" },
+    { "step": "specify", "substep": null, "from": { "step": "specify", "substep": "writing-spec" }, "by": "sdd", "at": "2026-04-28T17:15:55Z" },
+    { "step": "specify", "substep": null, "from": { "step": "specify", "substep": null }, "by": "extension", "at": "2026-04-28T23:39:19.773Z" },
+    { "step": "plan", "substep": null, "from": { "step": "specify", "substep": null }, "by": "extension", "at": "2026-04-28T23:39:19.775Z" },
+    { "step": "plan", "substep": "research", "from": { "step": "plan", "substep": null }, "by": "ai", "at": "2026-04-28T23:42:00.000Z" },
+    { "step": "plan", "substep": "design", "from": { "step": "plan", "substep": "research" }, "by": "ai", "at": "2026-04-28T23:45:00.000Z" },
+    { "step": "plan", "substep": null, "from": { "step": "plan", "substep": null }, "by": "extension", "at": "2026-04-28T23:47:23.692Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "plan", "substep": null }, "by": "extension", "at": "2026-04-28T23:47:23.695Z" },
+    { "step": "tasks", "substep": "generate", "from": { "step": "tasks", "substep": null }, "by": "ai", "at": "2026-04-28T23:50:00.000Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "tasks", "substep": "generate" }, "by": "ai", "at": "2026-04-28T23:55:00.000Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "tasks", "substep": null }, "by": "extension", "at": "2026-04-29T00:25:21.261Z" },
+    { "step": "implement", "substep": null, "from": { "step": "tasks", "substep": null }, "by": "extension", "at": "2026-04-29T00:25:21.262Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": null }, "by": "ai", "at": "2026-04-29T00:25:51Z" },
+    { "step": "implement", "substep": "run-tests", "from": { "step": "implement", "substep": "phase1" }, "by": "ai", "at": "2026-04-29T00:35:00Z" },
+    { "step": "implement", "substep": null, "from": { "step": "implement", "substep": "run-tests" }, "by": "ai", "at": "2026-04-29T00:36:47Z" }
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Widened TransitionBy to include 'sdd' and 'ai' literals already present on disk.",
+      "files": ["src/core/types/specContext.ts"],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added transitions field to canonical ViewerState (auto-flows into ExtensionToViewerMessage.contentUpdated payload).",
+      "files": ["src/core/types/specContext.ts"],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Mirrored Transition type and added transitions field to webview ViewerState mirror.",
+      "files": ["webview/src/spec-viewer/types.ts"],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Created formatRelativeTime helper with just-now / Xm / Xh / Xd buckets and unknown fallback.",
+      "files": ["webview/src/spec-viewer/relativeTime.ts"],
+      "concerns": []
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Wrote _timeline.css with vertical-rail layout, step-grouped headings, actor badge variants, and theme-token colors.",
+      "files": ["webview/styles/spec-viewer/_timeline.css"],
+      "concerns": []
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Populated viewerState.transitions from ctx.transitions in deriveViewerState.",
+      "files": ["src/features/spec-viewer/stateDerivation.ts"],
+      "concerns": []
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Added Jest cases for populated, missing, and empty transitions array.",
+      "files": ["src/features/spec-viewer/__tests__/transitionsViewerState.test.ts"],
+      "concerns": []
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Added bucket-boundary tests for formatRelativeTime with pinned now argument.",
+      "files": ["webview/src/spec-viewer/__tests__/relativeTime.test.ts"],
+      "concerns": []
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Built TimelineEntry component rendering substep, actor badge, and relative time with absolute ISO in title.",
+      "files": ["webview/src/spec-viewer/components/TimelineEntry.tsx"],
+      "concerns": []
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Added timelineVisible and transitions signals to signals.ts.",
+      "files": ["webview/src/spec-viewer/signals.ts"],
+      "concerns": []
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Added @import for _timeline.css to index.css.",
+      "files": ["webview/styles/spec-viewer/index.css"],
+      "concerns": []
+    },
+    "T012": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Added refreshContextIfDisplaying to SpecViewerProvider — posts viewerStateUpdated (not contentUpdated) to avoid clobbering markdown.",
+      "files": ["src/features/spec-viewer/specViewerProvider.ts"],
+      "concerns": ["Used viewerStateUpdated message instead of contentUpdated as plan suggested — keeps markdown intact and is reactive enough; T014 wires transitions on both message types so behavior is identical."]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Built TimelinePanel — empty state when no transitions, otherwise grouped by consecutive same-step entries.",
+      "files": ["webview/src/spec-viewer/components/TimelinePanel.tsx"],
+      "concerns": []
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Wired transitions signal in both contentUpdated and viewerStateUpdated handlers in index.tsx.",
+      "files": ["webview/src/spec-viewer/index.tsx"],
+      "concerns": []
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Added Timeline toggle button to the right end of nav-primary with aria-pressed.",
+      "files": ["webview/src/spec-viewer/components/NavigationBar.tsx"],
+      "concerns": []
+    },
+    "T016": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Wired specViewer.refreshContextIfDisplaying into handleSpecContextChange; reordered extension.ts so specViewer is created before setupFileWatchers.",
+      "files": ["src/core/fileWatchers.ts", "src/extension.ts"],
+      "concerns": ["Required threading specViewer through setupFileWatchers + setupClaudeDirectoryWatcher signature and reordering specViewer creation in extension.ts. Plan didn't call out the extension.ts wiring change but it was unavoidable."]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Rendered TimelinePanel in App with lazy first-mount and hidden-attribute toggling so the markdown pane stays mounted.",
+      "files": ["webview/src/spec-viewer/App.tsx"],
+      "concerns": []
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Added Timeline subsection under 'Reading Specs' in README.",
+      "files": ["README.md"],
+      "concerns": []
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Added Timeline Panel section to docs/viewer-states.md describing toggle behavior, grouping, live updates, and override scope.",
+      "files": ["docs/viewer-states.md"],
+      "concerns": []
+    }
+  },
+  "files_modified": [
+    "src/core/types/specContext.ts",
+    "src/features/spec-viewer/stateDerivation.ts",
+    "src/features/spec-viewer/specViewerProvider.ts",
+    "src/features/spec-viewer/__tests__/transitionsViewerState.test.ts",
+    "src/core/fileWatchers.ts",
+    "src/extension.ts",
+    "webview/src/spec-viewer/types.ts",
+    "webview/src/spec-viewer/relativeTime.ts",
+    "webview/src/spec-viewer/signals.ts",
+    "webview/src/spec-viewer/index.tsx",
+    "webview/src/spec-viewer/App.tsx",
+    "webview/src/spec-viewer/components/NavigationBar.tsx",
+    "webview/src/spec-viewer/components/TimelineEntry.tsx",
+    "webview/src/spec-viewer/components/TimelinePanel.tsx",
+    "webview/src/spec-viewer/__tests__/relativeTime.test.ts",
+    "webview/styles/spec-viewer/_timeline.css",
+    "webview/styles/spec-viewer/index.css",
+    "README.md",
+    "docs/viewer-states.md"
+  ],
+  "decisions": [
+    "Use viewerStateUpdated (not contentUpdated) for context-only refreshes to avoid re-rendering markdown on every transition append.",
+    "Lazy-mount TimelinePanel on first toggle reveal so initial spec render is never blocked (NFR003).",
+    "Keep markdown pane mounted but hidden via the hidden attribute when timeline is on, so toggling back is instant."
+  ],
+  "concerns": [
+    { "task": "T012", "note": "Diverged from plan's contentUpdated wording; viewerStateUpdated is functionally equivalent and avoids clobbering markdown." },
+    { "task": "T016", "note": "Plan didn't mention threading specViewer through setupFileWatchers, but it was unavoidable to wire the watcher → viewer refresh." }
+  ],
+  "last_action": "All Phase 1 tasks complete; all 438 tests passing.",
+  "status": "completed",
+  "checkpointStatus": { "commit": false, "pr": false },
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-04-28T23:39:19.773Z",
+      "completedAt": "2026-04-28T23:39:19.773Z"
+    },
+    "plan": {
+      "startedAt": "2026-04-28T23:39:19.775Z",
+      "completedAt": "2026-04-28T23:47:23.692Z",
+      "substeps": [
+        { "name": "research", "startedAt": "2026-04-28T23:42:00.000Z", "completedAt": "2026-04-28T23:45:00.000Z" },
+        { "name": "design", "startedAt": "2026-04-28T23:45:00.000Z", "completedAt": "2026-04-28T23:50:00.000Z" }
+      ]
+    },
+    "tasks": {
+      "startedAt": "2026-04-28T23:47:23.695Z",
+      "completedAt": "2026-04-29T00:25:21.261Z",
+      "substeps": [
+        { "name": "generate", "startedAt": "2026-04-28T23:50:00.000Z", "completedAt": "2026-04-28T23:55:00.000Z" }
+      ]
+    },
+    "implement": {
+      "startedAt": "2026-04-29T00:25:21.262Z",
+      "completedAt": "2026-04-29T00:36:47Z",
+      "substeps": [
+        { "name": "phase1", "startedAt": "2026-04-29T00:25:51Z", "completedAt": "2026-04-29T00:35:00Z" },
+        { "name": "run-tests", "startedAt": "2026-04-29T00:35:00Z", "completedAt": "2026-04-29T00:36:47Z" }
+      ]
+    }
+  }
+}
