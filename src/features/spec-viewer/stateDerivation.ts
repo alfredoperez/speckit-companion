@@ -21,6 +21,7 @@ import {
     CheckpointStatus,
 } from '../../core/types/specContext';
 import { getFooterActions } from './footerActions';
+import { deriveStepHistory } from '../specs/stepHistoryDerivation';
 
 /**
  * Pull a tolerated extra field from `SpecContext` (it has a permissive
@@ -159,7 +160,9 @@ export function deriveViewerState(
         activeSubstep: deriveActiveSubstep(ctx),
         footer: getFooterActions(ctx, activeStep),
         transitions: ctx.transitions ?? [],
-        stepHistory: ctx.stepHistory ?? {},
+        // Derive stepHistory from the reliable transitions[] sequence rather
+        // than trusting the on-disk stepHistory (AI-typed, unreliable).
+        stepHistory: deriveStepHistory(ctx.transitions ?? [], ctx.currentStep),
         approach: pickString(ctx, 'approach'),
         lastAction: pickString(ctx, 'last_action'),
         taskSummaries: pickRecord<TaskSummary>(ctx, 'task_summaries'),

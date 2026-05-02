@@ -311,12 +311,27 @@ stateDiagram-v2
 | `"beta"` (default) | visible | `Activity` + small `beta` pill |
 | `"on"` | visible | `Activity` (no pill) |
 
-**Substep durations are intentionally not surfaced.** The on-disk substep
-timestamps (`stepHistory.substeps[].startedAt/completedAt`, `transitions[].at`
-when `by ∈ {sdd, ai}`) are typed by the AI/skill, not derived from
-`Date.now()` or shell `date -u`, so they round to `:00.000Z` and don't reflect
-real timing. Only step-level boundaries — written by the extension on tab
-advance / approval — get a real duration.
+**stepHistory is derived, not read from disk.** The extension owns this
+field. `deriveStepHistory(transitions, currentStep)` in
+`src/features/specs/stepHistoryDerivation.ts` rebuilds it on every read by
+walking `transitions[]`: each step's `startedAt` is its first transition,
+`completedAt` is the first transition of the next step (a real boundary
+when `by: "extension"`). The AI is told (via `promptBuilder.ts`) not to
+write this field; whatever it ships on disk gets ignored.
+
+Substep timestamps inside a phase are still derived from AI-typed
+`transitions[].at` values (when `by ∈ {sdd, ai}`), so the Phases card
+deliberately renders substeps as ordered name + actor only — no `+offset`
+or per-substep duration. The step-level duration shown in the heading is
+the only timing signal in the panel, and it's reliable when the boundary
+transitions were extension-written.
+
+**Optional: real substep timestamps via shell hook.** Users can opt into
+real substep timing by adding a `pre:task` / step-boundary hook to their
+`.sdd.json` that runs `date -u +"%Y-%m-%dT%H:%M:%SZ"` and appends a
+transition. The extension prompts (since v0.15.6) tell skills to use this
+exact command for every transition `at` field, so well-behaved skills
+already produce real timestamps without the hook.
 
 **Live updates**: when `.spec-context.json` changes on disk, the existing
 watcher invokes `specViewerProvider.refreshContextIfDisplaying`, which
