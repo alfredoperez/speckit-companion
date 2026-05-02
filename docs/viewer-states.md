@@ -278,41 +278,55 @@ flowchart LR
 
 ---
 
-## Timeline Panel
+## Activity Panel
 
-A `Timeline` button at the right of the navigation bar swaps the markdown pane
-for a chronological list of every entry in `.spec-context.json#transitions`.
+An `Activity` button at the right of the navigation bar swaps the markdown
+pane for a card-stack overview of everything `.spec-context.json` exposes
+through `viewerState`.
 
 ```mermaid
 stateDiagram-v2
     [*] --> markdown : viewer opens
-    markdown --> timeline : user clicks Timeline (aria-pressed=true)
-    timeline --> markdown : user clicks Timeline again
-    timeline --> timeline : .spec-context.json append → transitions signal updates
+    markdown --> activity : user clicks Activity (aria-pressed=true)
+    activity --> markdown : user clicks Activity again
+    activity --> activity : .spec-context.json change → viewerState refresh
 ```
 
-**Behavior**:
+**Cards (top to bottom; each hides when its data is empty)**:
 
-- **Toggle**: clicking `Timeline` flips the `timelineVisible` signal. The markdown
-  pane is hidden via the `hidden` attribute (kept mounted so the toggle back is
-  instant); the `<TimelinePanel />` is mounted lazily on first reveal so initial
-  spec render is never blocked (NFR003).
-- **Empty state**: when `transitions` is missing or `[]`, the panel renders a
-  `No transitions recorded yet` placeholder instead of a blank area.
-- **Grouping**: consecutive entries with the same `step` collapse under one
-  `<section class="timeline-step-group">` heading, in original (oldest-first)
-  order — the array is never reversed or sorted.
-- **Entries**: each row shows the substep (or `—` when null), an actor badge
-  whose class derives from `by` (`is-extension`, `is-cli`, `is-sdd`, `is-ai`,
-  `is-user`), and a relative timestamp (`Xs`/`Xm`/`Xh`/`Xd ago`) with the
-  absolute ISO available on hover via `<time title={iso}>`.
-- **Live updates**: when the existing `.spec-context.json` watcher fires,
-  `specViewerProvider.refreshContextIfDisplaying` re-derives `viewerState` and
-  posts `viewerStateUpdated`; the webview wires `viewerState.transitions` into
-  the `transitions` signal, so a new row appears without a reload (R008,
-  NFR004). No new watcher, no polling.
-- **Override scope**: the toggle only swaps the main pane. Step tabs, header,
-  staleness banner, and footer remain visible and active.
+| Card | Source fields |
+|------|---------------|
+| Approach | `approach`, `last_action`, `status`, `prUrl`/`prNumber`, `checkpointStatus.{commit, pr}` |
+| Phases | `stepHistory` (step-level `startedAt`/`completedAt`) + `transitions` for substep names + actor (`by`) |
+| Tasks | `task_summaries.T###` — `status`, `did`, `files`, per-task `concerns` |
+| Decisions | `decisions[]` |
+| Concerns | `concerns[]` (`{ task?, note }`) |
+| Files touched | `files_modified[]`, clickable |
+
+**Setting gate** — `speckit.viewer.activityPanel`:
+
+| Value | Toggle visibility | Label |
+|-------|------------------|-------|
+| `"off"` | hidden | — |
+| `"beta"` (default) | visible | `Activity` + small `beta` pill |
+| `"on"` | visible | `Activity` (no pill) |
+
+**Substep durations are intentionally not surfaced.** The on-disk substep
+timestamps (`stepHistory.substeps[].startedAt/completedAt`, `transitions[].at`
+when `by ∈ {sdd, ai}`) are typed by the AI/skill, not derived from
+`Date.now()` or shell `date -u`, so they round to `:00.000Z` and don't reflect
+real timing. Only step-level boundaries — written by the extension on tab
+advance / approval — get a real duration.
+
+**Live updates**: when `.spec-context.json` changes on disk, the existing
+watcher invokes `specViewerProvider.refreshContextIfDisplaying`, which
+re-derives `viewerState` and posts `viewerStateUpdated`. Cards re-render
+from the new state without a reload.
+
+**Toggle mechanics**: clicking `Activity` flips the `activityVisible` signal.
+The markdown pane stays mounted (hidden via the `hidden` attribute) so
+toggling back is instant. `<ActivityPanel />` mounts lazily on first reveal
+so initial spec render is never blocked.
 
 ---
 

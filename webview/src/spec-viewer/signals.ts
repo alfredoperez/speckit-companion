@@ -27,8 +27,8 @@ export const refineContent = signal('');
 /** Rendered markdown HTML (set imperatively, read by App) */
 export const markdownHtml = signal('');
 
-/** Whether the timeline panel is visible (toggled from the nav bar). */
-export const timelineVisible = signal(false);
+/** Whether the activity panel is visible (toggled from the nav bar). */
+export const activityVisible = signal(false);
 
 /** Transitions array mirrored from viewerState for the timeline panel. */
 export const transitions = signal<Transition[]>([]);

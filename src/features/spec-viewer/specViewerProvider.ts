@@ -151,6 +151,17 @@ export class SpecViewerProvider {
   ) {}
 
   /**
+   * Read `speckit.viewer.activityPanel` from VS Code settings. Falls back
+   * to `"beta"` if the setting is missing or has an unknown value.
+   */
+  private readActivityPanelMode(): 'off' | 'beta' | 'on' {
+    const v = vscode.workspace
+      .getConfiguration('speckit.viewer')
+      .get<string>('activityPanel', 'beta');
+    return v === 'off' || v === 'on' ? v : 'beta';
+  }
+
+  /**
    * Resolve workflow steps for a spec directory.
    * Checks persisted context first, then auto-selects and persists the default.
    */
@@ -421,6 +432,7 @@ export class SpecViewerProvider {
       updateContent: (dir, docType) => this.updateContent(dir, docType),
       sendContentUpdateMessage: (dir, docType) =>
         this.sendContentUpdateMessage(dir, docType),
+      refreshContextIfDisplaying: ctxPath => this.refreshContextIfDisplaying(ctxPath),
       resolveWorkflowSteps: dir => {
         const inst = this.getInstance(dir);
         return this.resolveWorkflowSteps(dir, inst?.state.changeRoot);
@@ -613,6 +625,7 @@ export class SpecViewerProvider {
         doc?.filePath ?? null,
         featureCtx?.currentStep ?? doc?.type ?? null,
         mapStepHistoryKeys(featureCtx?.stepHistory),
+        this.readActivityPanelMode(),
       );
 
       this.outputChannel.appendLine(
@@ -878,6 +891,7 @@ export class SpecViewerProvider {
         currentStep: featureCtx?.currentStep ?? documentType ?? null,
         filePath: doc?.filePath ?? null,
         docTypeLabel: getDocTypeLabel(featureCtx?.currentStep ?? documentType),
+        activityPanelMode: this.readActivityPanelMode(),
       };
 
       // Update internal state

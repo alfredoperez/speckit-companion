@@ -89,6 +89,7 @@ export interface NavState {
     currentStep?: string | null;
     filePath?: string | null;
     docTypeLabel?: string | null;
+    activityPanelMode?: 'off' | 'beta' | 'on';
 }
 
 // ============================================
@@ -137,6 +138,36 @@ export interface Transition {
     at: string;
 }
 
+export interface SubstepEntry {
+    name: string;
+    startedAt: string;
+    completedAt: string | null;
+}
+
+export interface StepHistoryEntry {
+    startedAt: string;
+    completedAt: string | null;
+    /** Array on SDD specs, Record on speckit specs — normalize at consumer. */
+    substeps?: SubstepEntry[] | Record<string, { startedAt: string; completedAt: string | null }>;
+}
+
+export interface TaskSummary {
+    status: string;
+    did?: string;
+    files?: string[];
+    concerns?: string[];
+}
+
+export interface ConcernEntry {
+    task?: string;
+    note: string;
+}
+
+export interface CheckpointStatus {
+    commit?: boolean;
+    pr?: boolean;
+}
+
 export interface ViewerState {
     status: string;
     activeStep: string;
@@ -146,6 +177,17 @@ export interface ViewerState {
     activeSubstep: { step: string; name: string } | null;
     footer: SerializedFooterAction[];
     transitions: Transition[];
+    stepHistory: Record<string, StepHistoryEntry>;
+    approach?: string;
+    lastAction?: string;
+    taskSummaries?: Record<string, TaskSummary>;
+    decisions?: string[];
+    concerns?: ConcernEntry[];
+    filesModified?: string[];
+    prUrl?: string;
+    prNumber?: number;
+    checkpointStatus?: CheckpointStatus;
+    stepSummaries?: Record<string, Record<string, unknown>>;
 }
 
 // ============================================

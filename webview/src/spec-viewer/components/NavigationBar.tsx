@@ -1,5 +1,5 @@
 import type { VSCodeApi } from '../types';
-import { navState, timelineVisible } from '../signals';
+import { navState, activityVisible } from '../signals';
 import { StepTab } from './StepTab';
 
 declare const vscode: VSCodeApi;
@@ -61,9 +61,10 @@ export function NavigationBar() {
     const parentStepDoc = coreDocs.find(d => d.type === parentStepType);
     const showChildrenRow = displayRelatedDocs.length > 0 && parentStepDoc;
 
-    const timelineActive = timelineVisible.value;
-    const handleTimelineToggle = () => {
-        timelineVisible.value = !timelineVisible.value;
+    const activityActive = activityVisible.value;
+    const activityMode = ns.activityPanelMode ?? 'beta';
+    const handleActivityToggle = () => {
+        activityVisible.value = !activityVisible.value;
     };
 
     return (
@@ -100,15 +101,20 @@ export function NavigationBar() {
                         );
                     })}
                 </div>
-                <button
-                    type="button"
-                    class="timeline-toggle"
-                    aria-pressed={timelineActive}
-                    title="Toggle timeline of all spec transitions"
-                    onClick={handleTimelineToggle}
-                >
-                    Timeline
-                </button>
+                {activityMode !== 'off' && (
+                    <button
+                        type="button"
+                        class="activity-toggle"
+                        aria-pressed={activityActive}
+                        title="Toggle the activity overview for this spec"
+                        onClick={handleActivityToggle}
+                    >
+                        Activity
+                        {activityMode === 'beta' && (
+                            <span class="activity-toggle__beta">beta</span>
+                        )}
+                    </button>
+                )}
             </div>
             {showChildrenRow && (
                 <div class="step-children" aria-label={`${parentStepDoc.label} files`}>

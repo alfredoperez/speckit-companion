@@ -268,6 +268,8 @@ export interface NavState {
     filePath?: string | null;
     /** Display label for the current doc type (e.g., "Spec", "Plan") */
     docTypeLabel?: string | null;
+    /** Activity panel visibility mode (from `speckit.viewer.activityPanel` setting). */
+    activityPanelMode?: 'off' | 'beta' | 'on';
 }
 
 /**
