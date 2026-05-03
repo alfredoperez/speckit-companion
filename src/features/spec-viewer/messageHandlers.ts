@@ -557,7 +557,10 @@ async function handleOpenFile(
 }
 
 /**
- * Handle submit refinements - run current phase command with refinement context
+ * Handle submit refinements — dispatch a direct-edit prompt for the current
+ * doc. We deliberately avoid invoking any per-step slash command (e.g.
+ * /speckit.plan) because some of those commands re-run setup scripts that
+ * overwrite the existing file from a template (see issue #153).
  */
 async function handleSubmitRefinements(
     specDirectory: string,
@@ -568,25 +571,23 @@ async function handleSubmitRefinements(
     if (!instance) return;
 
     const docType = instance.state.currentDocument;
+    const filename = `${docType}.md`;
+    const targetPath = instance.state.changeRoot || specDirectory;
 
-    // Format refinements as context string
     const refinementText = refinements
         .map(r => `- Line ${r.lineNum} ("${r.lineContent.slice(0, 50)}${r.lineContent.length > 50 ? '...' : ''}"): ${r.comment}`)
         .join('\n');
 
-    const context = `\n\nRefinements requested:\n${refinementText}`;
+    const prompt = [
+        `Edit ${targetPath}/${filename} in place to apply ONLY these line-specific refinements.`,
+        `DO NOT regenerate from any template.`,
+        `DO NOT run any setup script (e.g. setup-spec.sh, setup-plan.sh, setup-tasks.sh).`,
+        `DO NOT replace the file — make targeted edits only.`,
+        ``,
+        `Refinements requested:`,
+        refinementText,
+    ].join('\n');
 
-    // Determine command from workflow steps
-    const steps = await deps.resolveWorkflowSteps(specDirectory);
-    const currentStep = steps.find(s => s.name === docType);
-
-    if (currentStep) {
-        const targetPath = instance.state.changeRoot || specDirectory;
-        const label = currentStep.label || currentStep.name;
-        const prompt = `/${currentStep.command} ${targetPath}${context}`;
-        deps.outputChannel.appendLine(`[SpecViewer] Submitting ${refinements.length} refinements for ${docType}`);
-        await deps.executeInTerminal(prompt);
-    } else {
-        deps.outputChannel.appendLine(`[SpecViewer] No workflow step found for: ${docType}`);
-    }
+    deps.outputChannel.appendLine(`[SpecViewer] Submitting ${refinements.length} refinements for ${docType} (direct edit)`);
+    await deps.executeInTerminal(prompt);
 }
