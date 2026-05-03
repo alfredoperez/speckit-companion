@@ -1,0 +1,65 @@
+{
+  "workflow": "sdd",
+  "currentStep": "implement",
+  "currentTask": null,
+  "progress": "code-review",
+  "next": "implement",
+  "updated": "2026-05-03",
+  "selectedAt": "2026-05-03T19:56:13Z",
+  "specName": "Fix Refine Template Overwrite",
+  "branch": "main",
+  "workingBranch": "fix/fix-refine-overwrite",
+  "type": "fix",
+  "auto": true,
+  "createdAt": "2026-05-03T19:56:13Z",
+  "approach": "Replace the slash-command refinement dispatch in handleSubmitRefinements with a freeform direct-edit prompt that names the target file and explicitly forbids running setup scripts, regenerating from a template, or replacing the file. Apply uniformly to spec/plan/tasks. Leave executeStepInTerminal (the legitimate slash-command path used by step-advance buttons) untouched.",
+  "last_action": "install-local hook done — vsix v0.15.1 installed; entering CP1 code review",
+  "files_modified": [
+    "src/features/spec-viewer/messageHandlers.ts",
+    "src/features/spec-viewer/__tests__/messageHandlers.test.ts",
+    "CHANGELOG.md"
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Rewrote handleSubmitRefinements to build a direct-edit prompt that names the target file and forbids regen/setup-script/file-replace, dropping the slash-command dispatch.",
+      "files": ["src/features/spec-viewer/messageHandlers.ts"],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added a submitRefinements describe block (4 tests) asserting prompt does not start with /, contains DO-NOT guardrails, includes the user comments, and uses the same path for spec/tasks docs.",
+      "files": ["src/features/spec-viewer/__tests__/messageHandlers.test.ts"],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added a Bug Fixes entry under CHANGELOG Unreleased referencing #153. README was checked — Refine has no dedicated section, so the fix is internal-behavior only and no README change is required.",
+      "files": ["CHANGELOG.md"],
+      "concerns": []
+    }
+  },
+  "step_summaries": {
+    "specify": {
+      "complexity": "minimal",
+      "requirements": 5,
+      "scenarios": 3,
+      "key_finding": "Refinement reuses the per-step slash command via resolveWorkflowSteps in handleSubmitRefinements; executeStepInTerminal is a separate path and stays untouched."
+    }
+  },
+  "transitions": [
+    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-05-03T19:56:13Z" },
+    { "step": "specify", "substep": "exploring", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-05-03T19:56:14Z" },
+    { "step": "specify", "substep": "detecting", "from": { "step": "specify", "substep": "exploring" }, "by": "sdd", "at": "2026-05-03T19:56:15Z" },
+    { "step": "specify", "substep": "writing-spec", "from": { "step": "specify", "substep": "detecting" }, "by": "sdd", "at": "2026-05-03T19:56:16Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "specify", "substep": "writing-spec" }, "by": "sdd", "at": "2026-05-03T19:56:17Z" },
+    { "step": "tasks", "substep": null, "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-05-03T19:56:18Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-05-03T19:57:00Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-05-03T19:57:01Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-05-03T19:57:30Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-05-03T19:58:00Z" },
+    { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-05-03T19:58:30Z" },
+    { "step": "implement", "substep": "hooks", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-05-03T19:58:45Z" },
+    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-05-03T19:59:00Z" }
+  ]
+}

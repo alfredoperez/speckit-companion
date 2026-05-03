@@ -322,3 +322,79 @@ describe('messageHandlers - stepperClick', () => {
         expect(updateStepProgress).not.toHaveBeenCalled();
     });
 });
+
+describe('messageHandlers - submitRefinements', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    function dispatchRefinements(currentDocument: 'spec' | 'plan' | 'tasks') {
+        const deps = createMockDeps({
+            getInstance: jest.fn().mockReturnValue({
+                state: {
+                    specDirectory: SPEC_DIR,
+                    specName: 'my-feature',
+                    currentDocument,
+                    availableDocuments: [],
+                },
+                debounceTimer: undefined,
+            }),
+        });
+        const handler = createMessageHandlers(SPEC_DIR, deps);
+
+        const refinements = [
+            { lineNum: 5, lineContent: 'first line content', comment: 'tighten wording' },
+            { lineNum: 12, lineContent: 'second line content', comment: 'add detail' },
+        ];
+
+        return { deps, handler, refinements };
+    }
+
+    it('does not invoke a slash command (avoids running setup-plan.sh)', async () => {
+        const { deps, handler, refinements } = dispatchRefinements('plan');
+
+        await handler({ type: 'submitRefinements', refinements } as any);
+
+        expect(deps.executeInTerminal).toHaveBeenCalledTimes(1);
+        const prompt = (deps.executeInTerminal as jest.Mock).mock.calls[0][0] as string;
+        expect(prompt.startsWith('/')).toBe(false);
+        expect(prompt).not.toMatch(/\/speckit\./);
+    });
+
+    it('includes guardrails forbidding template regen and setup scripts', async () => {
+        const { deps, handler, refinements } = dispatchRefinements('plan');
+
+        await handler({ type: 'submitRefinements', refinements } as any);
+
+        const prompt = (deps.executeInTerminal as jest.Mock).mock.calls[0][0] as string;
+        expect(prompt).toContain('DO NOT regenerate');
+        expect(prompt).toContain('DO NOT run any setup script');
+        expect(prompt).toContain('DO NOT replace the file');
+    });
+
+    it('targets the correct doc filename and includes the user comments', async () => {
+        const { deps, handler, refinements } = dispatchRefinements('plan');
+
+        await handler({ type: 'submitRefinements', refinements } as any);
+
+        const prompt = (deps.executeInTerminal as jest.Mock).mock.calls[0][0] as string;
+        expect(prompt).toContain(`${SPEC_DIR}/plan.md`);
+        expect(prompt).toContain('Line 5');
+        expect(prompt).toContain('Line 12');
+        expect(prompt).toContain('tighten wording');
+        expect(prompt).toContain('add detail');
+    });
+
+    it('uses the same direct-edit path for spec and tasks', async () => {
+        for (const doc of ['spec', 'tasks'] as const) {
+            const { deps, handler, refinements } = dispatchRefinements(doc);
+
+            await handler({ type: 'submitRefinements', refinements } as any);
+
+            const prompt = (deps.executeInTerminal as jest.Mock).mock.calls[0][0] as string;
+            expect(prompt.startsWith('/')).toBe(false);
+            expect(prompt).toContain(`${SPEC_DIR}/${doc}.md`);
+            expect(prompt).toContain('DO NOT regenerate');
+        }
+    });
+});

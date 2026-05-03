@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Bug Fixes
+
+- **Refine No Longer Wipes plan.md**: The Refine button used to dispatch the per-step slash command (e.g. `/speckit.plan`), whose first action copies the plan template over the existing file. Refinement now sends a direct-edit prompt that names the target file and forbids running setup scripts or regenerating from a template, applied uniformly to spec / plan / tasks (#153).
+
 ## [0.15.0] - 2026-04-27
 
 ### New Features
