@@ -1,19 +1,23 @@
 {
   "workflow": "sdd",
-  "currentStep": "implement",
+  "currentStep": "done",
   "currentTask": null,
-  "progress": "code-review",
-  "next": "implement",
+  "progress": null,
+  "next": "done",
+  "status": "completed",
   "updated": "2026-05-03",
   "selectedAt": "2026-05-03T19:56:13Z",
   "specName": "Fix Refine Template Overwrite",
   "branch": "main",
   "workingBranch": "fix/fix-refine-overwrite",
   "type": "fix",
-  "auto": true,
+  "auto": false,
   "createdAt": "2026-05-03T19:56:13Z",
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/155",
+  "prNumber": 155,
+  "checkpointStatus": { "commit": true, "pr": true },
   "approach": "Replace the slash-command refinement dispatch in handleSubmitRefinements with a freeform direct-edit prompt that names the target file and explicitly forbids running setup scripts, regenerating from a template, or replacing the file. Apply uniformly to spec/plan/tasks. Leave executeStepInTerminal (the legitimate slash-command path used by step-advance buttons) untouched.",
-  "last_action": "install-local hook done — vsix v0.15.1 installed; entering CP1 code review",
+  "last_action": "PR #155 opened — fix(spec-viewer): stop refine from wiping plan.md via slash command",
   "files_modified": [
     "src/features/spec-viewer/messageHandlers.ts",
     "src/features/spec-viewer/__tests__/messageHandlers.test.ts",
@@ -60,6 +64,9 @@
     { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-05-03T19:58:00Z" },
     { "step": "implement", "substep": "phase1", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-05-03T19:58:30Z" },
     { "step": "implement", "substep": "hooks", "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-05-03T19:58:45Z" },
-    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-05-03T19:59:00Z" }
+    { "step": "implement", "substep": "code-review", "from": { "step": "implement", "substep": "hooks" }, "by": "sdd", "at": "2026-05-03T19:59:00Z" },
+    { "step": "implement", "substep": "test-results", "from": { "step": "implement", "substep": "code-review" }, "by": "sdd", "at": "2026-05-03T19:59:30Z" },
+    { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "test-results" }, "by": "sdd", "at": "2026-05-03T20:00:00Z" },
+    { "step": "done", "substep": null, "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-05-03T20:00:30Z" }
   ]
 }
