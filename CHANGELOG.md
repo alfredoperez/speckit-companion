@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### New Features
+
+- **Beta Features settings section**: Split extension settings into two groups in VS Code's Settings UI — the main "SpecKit Companion" group and a new "SpecKit Companion: Beta Features" group. The Activity panel toggle (`speckit.viewer.activityPanel`, values `off` / `beta` / `on`) now lives in the Beta group so users can find and change it instead of relying on its undeclared default.
+
 ## [0.15.0] - 2026-04-27
 
 ### New Features

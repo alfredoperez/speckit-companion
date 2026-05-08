@@ -653,347 +653,370 @@
         "mac": "cmd+shift+n"
       }
     ],
-    "configuration": {
-      "title": "SpecKit Companion",
-      "properties": {
-        "speckit.aiContextInstructions": {
-          "type": "boolean",
-          "default": true,
-          "scope": "window",
-          "order": 0,
-          "description": "Prepend a short context-update preamble to every SpecKit step prompt dispatched to the AI CLI, instructing the AI to keep .spec-context.json current with canonical substeps (plan.research, implement.run-tests, etc.). Disable if your AI ignores the preamble or you're debugging raw prompts."
-        },
-        "speckit.notifications.stepComplete": {
-          "type": "boolean",
-          "default": true,
-          "scope": "window",
-          "order": 0,
-          "description": "Show a notification when a dispatched spec step completes."
-        },
-        "speckit.claudePath": {
-          "type": "string",
-          "default": "claude",
-          "scope": "machine",
-          "order": 1,
-          "description": "Path to Claude Code CLI executable"
-        },
-        "speckit.aiProvider": {
-          "type": "string",
-          "default": "claude",
-          "enum": [
-            "claude",
-            "gemini",
-            "copilot",
-            "codex",
-            "qwen",
-            "opencode"
-          ],
-          "enumDescriptions": [
-            "Claude Code - Full feature support (steering, agents, skills, hooks)",
-            "Gemini CLI - Steering support",
-            "GitHub Copilot CLI - Steering and agents support",
-            "Codex CLI - Steering and skills support",
-            "Qwen Code - Steering support",
-            "OpenCode - Steering and agents support (AGENTS.md)"
-          ],
-          "scope": "machine",
-          "order": 2,
-          "description": "AI assistant to use for spec generation"
-        },
-        "speckit.commandFormat": {
-          "type": "string",
-          "default": "auto",
-          "enum": [
-            "auto",
-            "dot",
-            "dash"
-          ],
-          "enumDescriptions": [
-            "Use provider default (Claude/Codex → dash, Gemini/Copilot/Qwen → dot)",
-            "Always use dot notation (speckit.plan)",
-            "Always use dash notation (speckit-plan)"
-          ],
-          "scope": "machine",
-          "order": 3,
-          "description": "Command format for speckit commands sent to AI CLI tools. Use 'auto' to let the provider decide, or override to 'dot' (speckit.plan) or 'dash' (speckit-plan) if your speckit version requires a specific format."
-        },
-        "speckit.permissionMode": {
-          "type": "string",
-          "default": "interactive",
-          "enum": [
-            "interactive",
-            "auto-approve"
-          ],
-          "enumDescriptions": [
-            "The CLI prompts before taking actions (recommended)",
-            "(YOLO) Skip all permission prompts. Faster but no review of tool calls."
-          ],
-          "scope": "machine",
-          "order": 3,
-          "description": "Controls how the AI CLI handles permission prompts. 'interactive' is honored only by providers whose CLI supports interactive prompting (Claude, Gemini, Codex, Qwen, OpenCode). Copilot's CLI cannot surface prompts in -p mode and is auto-switched to auto-approve at dispatch time, regardless of this setting — dismissing the startup warning will not re-enable interactive mode for Copilot."
-        },
-        "speckit.geminiPath": {
-          "type": "string",
-          "default": "gemini",
-          "scope": "machine",
-          "order": 3,
-          "description": "Path to Gemini CLI executable"
-        },
-        "speckit.copilotPath": {
-          "type": "string",
-          "default": "copilot",
-          "scope": "machine",
-          "order": 4,
-          "description": "Path to GitHub Copilot CLI executable"
-        },
-        "speckit.geminiInitDelay": {
-          "type": "number",
-          "default": 8000,
-          "minimum": 3000,
-          "maximum": 30000,
-          "scope": "machine",
-          "order": 5,
-          "description": "Delay in milliseconds before sending prompt to Gemini CLI (allows time for initialization)"
-        },
-        "speckit.qwenPath": {
-          "type": "string",
-          "default": "qwen",
-          "scope": "machine",
-          "order": 6,
-          "description": "Path to Qwen Code CLI executable"
-        },
-        "speckit.opencodePath": {
-          "type": "string",
-          "default": "opencode",
-          "scope": "machine",
-          "order": 7,
-          "description": "Path to OpenCode CLI executable"
-        },
-        "speckit.specDirectories": {
-          "type": "array",
-          "items": {
-            "type": "string"
+    "configuration": [
+      {
+        "title": "SpecKit Companion",
+        "properties": {
+          "speckit.aiContextInstructions": {
+            "type": "boolean",
+            "default": true,
+            "scope": "window",
+            "order": 0,
+            "description": "Prepend a short context-update preamble to every SpecKit step prompt dispatched to the AI CLI, instructing the AI to keep .spec-context.json current with canonical substeps (plan.research, implement.run-tests, etc.). Disable if your AI ignores the preamble or you're debugging raw prompts."
           },
-          "default": [
-            "specs"
-          ],
-          "scope": "window",
-          "order": 5,
-          "description": "Glob patterns for spec directories. Simple names (e.g. 'specs') list their children as specs. Patterns with wildcards (e.g. 'openspec/changes/*') treat each match as a spec folder. Use step-level subDir to discover sub-specs within each match."
-        },
-        "speckit.customCommands": {
-          "type": "array",
-          "default": [],
-          "scope": "window",
-          "order": 6,
-          "description": "Custom SpecKit slash commands available in 'Run Custom Command'. Each entry can be a string (command name) or an object with name, title, command, step, tooltip, requiresSpecDir, and autoExecute.",
-          "items": {
-            "anyOf": [
-              {
-                "type": "string",
-                "description": "Command name (e.g., \"review\" becomes /speckit.review)"
-              },
-              {
-                "type": "object",
-                "required": [],
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "description": "Command name (e.g., \"review\" becomes /speckit.review)"
-                  },
-                  "title": {
-                    "type": "string",
-                    "description": "Display title in the picker"
-                  },
-                  "command": {
-                    "type": "string",
-                    "description": "Full slash command (e.g., \"/speckit.review\"). If omitted, name is used."
-                  },
-                  "requiresSpecDir": {
-                    "type": "boolean",
-                    "description": "Append or inject the spec directory (default: true)"
-                  },
-                  "autoExecute": {
-                    "type": "boolean",
-                    "description": "Auto-run the command in the terminal (default: true)"
-                  },
-                  "step": {
-                    "type": "string",
-                    "enum": [
-                      "spec",
-                      "plan",
-                      "tasks",
-                      "all"
-                    ],
-                    "default": "all",
-                    "description": "Which phase to show this command in (spec, plan, tasks, or all)"
-                  },
-                  "tooltip": {
-                    "type": "string",
-                    "description": "Tooltip text shown on hover"
-                  }
-                },
-                "additionalProperties": false
-              }
-            ]
-          }
-        },
-        "speckit.notifications.phaseCompletion": {
-          "type": "boolean",
-          "default": true,
-          "scope": "window",
-          "description": "Show notification when a task phase is completed"
-        },
-        "speckit.views.steering.visible": {
-          "type": "boolean",
-          "default": true,
-          "scope": "window",
-          "description": "Show Steering view"
-        },
-        "speckit.views.settings.visible": {
-          "type": "boolean",
-          "default": false,
-          "scope": "window",
-          "description": "Show Settings view"
-        },
-        "speckit.customWorkflows": {
-          "type": "array",
-          "default": [],
-          "scope": "window",
-          "order": 7,
-          "description": "Custom workflow definitions for spec-driven development",
-          "items": {
-            "type": "object",
-            "required": [
-              "name"
+          "speckit.notifications.stepComplete": {
+            "type": "boolean",
+            "default": true,
+            "scope": "window",
+            "order": 0,
+            "description": "Show a notification when a dispatched spec step completes."
+          },
+          "speckit.claudePath": {
+            "type": "string",
+            "default": "claude",
+            "scope": "machine",
+            "order": 1,
+            "description": "Path to Claude Code CLI executable"
+          },
+          "speckit.aiProvider": {
+            "type": "string",
+            "default": "claude",
+            "enum": [
+              "claude",
+              "gemini",
+              "copilot",
+              "codex",
+              "qwen",
+              "opencode"
             ],
-            "properties": {
-              "name": {
-                "type": "string",
-                "pattern": "^[a-z][a-z0-9-]*$",
-                "description": "Unique workflow identifier (lowercase, hyphenated)"
-              },
-              "displayName": {
-                "type": "string",
-                "description": "Display name shown in workflow picker"
-              },
-              "description": {
-                "type": "string",
-                "description": "Description shown in workflow picker"
-              },
-              "step-specify": {
-                "type": "string",
-                "description": "Custom command for specify step"
-              },
-              "step-plan": {
-                "type": "string",
-                "description": "Custom command for plan step"
-              },
-              "step-tasks": {
-                "type": "string",
-                "description": "Custom command for tasks step"
-              },
-              "step-implement": {
-                "type": "string",
-                "description": "Custom command for implement step"
-              },
-              "commands": {
-                "type": "array",
-                "description": "Custom command buttons shown next to step actions (e.g., next to Submit for specify step)",
-                "items": {
+            "enumDescriptions": [
+              "Claude Code - Full feature support (steering, agents, skills, hooks)",
+              "Gemini CLI - Steering support",
+              "GitHub Copilot CLI - Steering and agents support",
+              "Codex CLI - Steering and skills support",
+              "Qwen Code - Steering support",
+              "OpenCode - Steering and agents support (AGENTS.md)"
+            ],
+            "scope": "machine",
+            "order": 2,
+            "description": "AI assistant to use for spec generation"
+          },
+          "speckit.commandFormat": {
+            "type": "string",
+            "default": "auto",
+            "enum": [
+              "auto",
+              "dot",
+              "dash"
+            ],
+            "enumDescriptions": [
+              "Use provider default (Claude/Codex → dash, Gemini/Copilot/Qwen → dot)",
+              "Always use dot notation (speckit.plan)",
+              "Always use dash notation (speckit-plan)"
+            ],
+            "scope": "machine",
+            "order": 3,
+            "description": "Command format for speckit commands sent to AI CLI tools. Use 'auto' to let the provider decide, or override to 'dot' (speckit.plan) or 'dash' (speckit-plan) if your speckit version requires a specific format."
+          },
+          "speckit.permissionMode": {
+            "type": "string",
+            "default": "interactive",
+            "enum": [
+              "interactive",
+              "auto-approve"
+            ],
+            "enumDescriptions": [
+              "The CLI prompts before taking actions (recommended)",
+              "(YOLO) Skip all permission prompts. Faster but no review of tool calls."
+            ],
+            "scope": "machine",
+            "order": 3,
+            "description": "Controls how the AI CLI handles permission prompts. 'interactive' is honored only by providers whose CLI supports interactive prompting (Claude, Gemini, Codex, Qwen, OpenCode). Copilot's CLI cannot surface prompts in -p mode and is auto-switched to auto-approve at dispatch time, regardless of this setting — dismissing the startup warning will not re-enable interactive mode for Copilot."
+          },
+          "speckit.geminiPath": {
+            "type": "string",
+            "default": "gemini",
+            "scope": "machine",
+            "order": 3,
+            "description": "Path to Gemini CLI executable"
+          },
+          "speckit.copilotPath": {
+            "type": "string",
+            "default": "copilot",
+            "scope": "machine",
+            "order": 4,
+            "description": "Path to GitHub Copilot CLI executable"
+          },
+          "speckit.geminiInitDelay": {
+            "type": "number",
+            "default": 8000,
+            "minimum": 3000,
+            "maximum": 30000,
+            "scope": "machine",
+            "order": 5,
+            "description": "Delay in milliseconds before sending prompt to Gemini CLI (allows time for initialization)"
+          },
+          "speckit.qwenPath": {
+            "type": "string",
+            "default": "qwen",
+            "scope": "machine",
+            "order": 6,
+            "description": "Path to Qwen Code CLI executable"
+          },
+          "speckit.opencodePath": {
+            "type": "string",
+            "default": "opencode",
+            "scope": "machine",
+            "order": 7,
+            "description": "Path to OpenCode CLI executable"
+          },
+          "speckit.specDirectories": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              "specs"
+            ],
+            "scope": "window",
+            "order": 5,
+            "description": "Glob patterns for spec directories. Simple names (e.g. 'specs') list their children as specs. Patterns with wildcards (e.g. 'openspec/changes/*') treat each match as a spec folder. Use step-level subDir to discover sub-specs within each match."
+          },
+          "speckit.customCommands": {
+            "type": "array",
+            "default": [],
+            "scope": "window",
+            "order": 6,
+            "description": "Custom SpecKit slash commands available in 'Run Custom Command'. Each entry can be a string (command name) or an object with name, title, command, step, tooltip, requiresSpecDir, and autoExecute.",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Command name (e.g., \"review\" becomes /speckit.review)"
+                },
+                {
                   "type": "object",
-                  "required": [
-                    "name",
-                    "command",
-                    "step"
-                  ],
+                  "required": [],
                   "properties": {
                     "name": {
                       "type": "string",
-                      "description": "Unique command identifier"
+                      "description": "Command name (e.g., \"review\" becomes /speckit.review)"
                     },
                     "title": {
                       "type": "string",
-                      "description": "Button label (e.g., 'Auto Mode')"
+                      "description": "Display title in the picker"
                     },
                     "command": {
                       "type": "string",
-                      "description": "Command to execute (e.g., '/sdd:auto')"
+                      "description": "Full slash command (e.g., \"/speckit.review\"). If omitted, name is used."
+                    },
+                    "requiresSpecDir": {
+                      "type": "boolean",
+                      "description": "Append or inject the spec directory (default: true)"
+                    },
+                    "autoExecute": {
+                      "type": "boolean",
+                      "description": "Auto-run the command in the terminal (default: true)"
                     },
                     "step": {
                       "type": "string",
-                      "description": "Which workflow step this command is associated with (e.g., 'specify')"
+                      "enum": [
+                        "spec",
+                        "plan",
+                        "tasks",
+                        "all"
+                      ],
+                      "default": "all",
+                      "description": "Which phase to show this command in (spec, plan, tasks, or all)"
                     },
                     "tooltip": {
                       "type": "string",
-                      "description": "Tooltip shown on hover"
+                      "description": "Tooltip text shown on hover"
                     }
                   },
                   "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "speckit.notifications.phaseCompletion": {
+            "type": "boolean",
+            "default": true,
+            "scope": "window",
+            "description": "Show notification when a task phase is completed"
+          },
+          "speckit.views.steering.visible": {
+            "type": "boolean",
+            "default": true,
+            "scope": "window",
+            "description": "Show Steering view"
+          },
+          "speckit.views.settings.visible": {
+            "type": "boolean",
+            "default": false,
+            "scope": "window",
+            "description": "Show Settings view"
+          },
+          "speckit.customWorkflows": {
+            "type": "array",
+            "default": [],
+            "scope": "window",
+            "order": 7,
+            "description": "Custom workflow definitions for spec-driven development",
+            "items": {
+              "type": "object",
+              "required": [
+                "name"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9-]*$",
+                  "description": "Unique workflow identifier (lowercase, hyphenated)"
+                },
+                "displayName": {
+                  "type": "string",
+                  "description": "Display name shown in workflow picker"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description shown in workflow picker"
+                },
+                "step-specify": {
+                  "type": "string",
+                  "description": "Custom command for specify step"
+                },
+                "step-plan": {
+                  "type": "string",
+                  "description": "Custom command for plan step"
+                },
+                "step-tasks": {
+                  "type": "string",
+                  "description": "Custom command for tasks step"
+                },
+                "step-implement": {
+                  "type": "string",
+                  "description": "Custom command for implement step"
+                },
+                "commands": {
+                  "type": "array",
+                  "description": "Custom command buttons shown next to step actions (e.g., next to Submit for specify step)",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "command",
+                      "step"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Unique command identifier"
+                      },
+                      "title": {
+                        "type": "string",
+                        "description": "Button label (e.g., 'Auto Mode')"
+                      },
+                      "command": {
+                        "type": "string",
+                        "description": "Command to execute (e.g., '/sdd:auto')"
+                      },
+                      "step": {
+                        "type": "string",
+                        "description": "Which workflow step this command is associated with (e.g., 'specify')"
+                      },
+                      "tooltip": {
+                        "type": "string",
+                        "description": "Tooltip shown on hover"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "steps": {
+                  "type": "array",
+                  "description": "Flexible workflow steps (replaces legacy step-* keys)",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "command"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Step identifier (e.g., 'specify', 'plan', 'design')"
+                      },
+                      "label": {
+                        "type": "string",
+                        "description": "Display label (defaults to capitalized name)"
+                      },
+                      "command": {
+                        "type": "string",
+                        "description": "Command to execute for this step (e.g., 'speckit.specify')"
+                      },
+                      "file": {
+                        "type": "string",
+                        "description": "Primary output file (defaults to '{name}.md')"
+                      },
+                      "subFiles": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "Explicit list of sub-files shown as children in sidebar"
+                      },
+                      "subDir": {
+                        "type": "string",
+                        "description": "Subdirectory to scan for child .md files"
+                      },
+                      "actionOnly": {
+                        "type": "boolean",
+                        "description": "If true, step is action-only (no output file) and hidden from the document tree"
+                      },
+                      "includeRelatedDocs": {
+                        "type": "boolean",
+                        "description": "When true, unassigned related .md files in the spec folder are grouped under this step"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
                 }
               },
-              "steps": {
-                "type": "array",
-                "description": "Flexible workflow steps (replaces legacy step-* keys)",
-                "items": {
-                  "type": "object",
-                  "required": [
-                    "name",
-                    "command"
-                  ],
-                  "properties": {
-                    "name": {
-                      "type": "string",
-                      "description": "Step identifier (e.g., 'specify', 'plan', 'design')"
-                    },
-                    "label": {
-                      "type": "string",
-                      "description": "Display label (defaults to capitalized name)"
-                    },
-                    "command": {
-                      "type": "string",
-                      "description": "Command to execute for this step (e.g., 'speckit.specify')"
-                    },
-                    "file": {
-                      "type": "string",
-                      "description": "Primary output file (defaults to '{name}.md')"
-                    },
-                    "subFiles": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "description": "Explicit list of sub-files shown as children in sidebar"
-                    },
-                    "subDir": {
-                      "type": "string",
-                      "description": "Subdirectory to scan for child .md files"
-                    },
-                    "actionOnly": {
-                      "type": "boolean",
-                      "description": "If true, step is action-only (no output file) and hidden from the document tree"
-                    },
-                    "includeRelatedDocs": {
-                      "type": "boolean",
-                      "description": "When true, unassigned related .md files in the spec folder are grouped under this step"
-                    }
-                  },
-                  "additionalProperties": false
-                }
-              }
-            },
-            "additionalProperties": false
+              "additionalProperties": false
+            }
+          },
+          "speckit.defaultWorkflow": {
+            "type": "string",
+            "default": "speckit",
+            "scope": "window",
+            "order": 8,
+            "description": "Workflow to auto-select for new features. Must match a workflow name from customWorkflows or 'speckit'."
           }
-        },
-        "speckit.defaultWorkflow": {
-          "type": "string",
-          "default": "speckit",
-          "scope": "window",
-          "order": 8,
-          "description": "Workflow to auto-select for new features. Must match a workflow name from customWorkflows or 'speckit'."
+        }
+      },
+      {
+        "title": "SpecKit Companion: Beta Features",
+        "properties": {
+          "speckit.viewer.activityPanel": {
+            "type": "string",
+            "default": "beta",
+            "enum": [
+              "off",
+              "beta",
+              "on"
+            ],
+            "enumDescriptions": [
+              "Hide the Activity panel toggle in the spec viewer.",
+              "Show the Activity panel toggle with a \"beta\" badge (default).",
+              "Show the Activity panel toggle with no badge (treat as stable)."
+            ],
+            "scope": "window",
+            "description": "Per-spec Activity panel in the spec viewer — a chronological timeline of transitions, decisions, files modified, and step history derived from .spec-context.json."
+          }
         }
       }
-    }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run package-web",
