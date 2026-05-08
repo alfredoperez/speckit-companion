@@ -564,7 +564,7 @@ async function handleOpenFile(
 }
 
 /**
- * Handle submit refinements — dispatch a direct-edit prompt for the current
+ * Handle submit refinements - dispatch a direct-edit prompt for the current
  * doc. We deliberately avoid invoking any per-step slash command (e.g.
  * /speckit.plan) because some of those commands re-run setup scripts that
  * overwrite the existing file from a template (see issue #153).
