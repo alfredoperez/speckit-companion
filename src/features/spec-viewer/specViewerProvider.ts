@@ -151,6 +151,17 @@ export class SpecViewerProvider {
   ) {}
 
   /**
+   * Read `speckit.viewer.activityPanel` from VS Code settings. Falls back
+   * to `"beta"` if the setting is missing or has an unknown value.
+   */
+  private readActivityPanelMode(): 'off' | 'beta' | 'on' {
+    const v = vscode.workspace
+      .getConfiguration('speckit.viewer')
+      .get<string>('activityPanel', 'beta');
+    return v === 'off' || v === 'on' ? v : 'beta';
+  }
+
+  /**
    * Resolve workflow steps for a spec directory.
    * Checks persisted context first, then auto-selects and persists the default.
    */
@@ -272,6 +283,50 @@ export class SpecViewerProvider {
   }
 
   /**
+   * Re-read `.spec-context.json` and re-post `viewerState` (including
+   * `transitions`) to the open viewer for the spec containing this context
+   * file. Markdown is not touched. No-op when no panel is open.
+   */
+  public async refreshContextIfDisplaying(specContextPath: string): Promise<void> {
+    const specDir = path.dirname(specContextPath);
+    const instance = this.panels.get(specDir);
+    if (!instance) return;
+
+    try {
+      let specCtx = await readSpecContext(specDir);
+      if (!specCtx) return;
+      specCtx = await reconcileAndPersist(specDir, specCtx);
+
+      const active: StepName = STEP_NAMES.includes(specCtx.currentStep as StepName)
+        ? (specCtx.currentStep as StepName)
+        : 'specify';
+      const derived = deriveViewerState(specCtx, active);
+      const viewerState: CoreViewerState = {
+        ...derived,
+        footer: derived.footer.map(a => ({
+          id: a.id,
+          label: a.label,
+          scope: a.scope,
+          tooltip: a.tooltip,
+        })) as CoreViewerState['footer'],
+      };
+
+      // Send a contentUpdated message with empty content — the webview only
+      // applies the viewerState fields when content is empty/unchanged. To
+      // avoid clobbering the markdown, only post viewerState via the
+      // viewerStateUpdated channel (the webview's index.tsx handles it).
+      instance.panel.webview.postMessage({
+        type: 'viewerStateUpdated',
+        viewerState,
+      });
+    } catch (error) {
+      this.outputChannel.appendLine(
+        `[SpecViewer] refreshContextIfDisplaying failed: ${error}`,
+      );
+    }
+  }
+
+  /**
    * Handle file deletion
    */
   public handleFileDeleted(filePath: string): void {
@@ -377,6 +432,7 @@ export class SpecViewerProvider {
       updateContent: (dir, docType) => this.updateContent(dir, docType),
       sendContentUpdateMessage: (dir, docType) =>
         this.sendContentUpdateMessage(dir, docType),
+      refreshContextIfDisplaying: ctxPath => this.refreshContextIfDisplaying(ctxPath),
       resolveWorkflowSteps: dir => {
         const inst = this.getInstance(dir);
         return this.resolveWorkflowSteps(dir, inst?.state.changeRoot);
@@ -569,6 +625,7 @@ export class SpecViewerProvider {
         doc?.filePath ?? null,
         featureCtx?.currentStep ?? doc?.type ?? null,
         mapStepHistoryKeys(featureCtx?.stepHistory),
+        this.readActivityPanelMode(),
       );
 
       this.outputChannel.appendLine(
@@ -834,6 +891,7 @@ export class SpecViewerProvider {
         currentStep: featureCtx?.currentStep ?? documentType ?? null,
         filePath: doc?.filePath ?? null,
         docTypeLabel: getDocTypeLabel(featureCtx?.currentStep ?? documentType),
+        activityPanelMode: this.readActivityPanelMode(),
       };
 
       // Update internal state

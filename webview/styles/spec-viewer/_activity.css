@@ -1,0 +1,511 @@
+/**
+ * SpecKit Companion - Activity Panel Styles
+ * Card-stack layout: Approach, Phases, Tasks, Decisions, Concerns, Files.
+ * Each card is hidden by its component when its data is absent.
+ *
+ * Substep timing inside Phases is intentionally NOT rendered — the on-disk
+ * substep timestamps are AI-typed and unreliable. Only step-level durations
+ * (extension-stamped) are shown.
+ */
+
+.activity-panel {
+    padding: var(--space-5) var(--space-6);
+    overflow-y: auto;
+    max-width: 880px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.activity-empty {
+    padding: var(--space-6);
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    text-align: center;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+}
+
+/* ============================================
+   Generic card chrome
+   ============================================ */
+
+.activity-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.activity-card__title {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-elevated);
+}
+
+.activity-card__count {
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 0.78rem;
+    letter-spacing: 0;
+}
+
+.activity-card__body {
+    padding: var(--space-4);
+    color: var(--text-body);
+    font-size: var(--text-sm);
+    line-height: var(--leading-snug);
+}
+
+/* ============================================
+   Approach card
+   ============================================ */
+
+.activity-approach__text {
+    margin: 0 0 var(--space-3);
+    color: var(--text-primary);
+}
+
+.activity-approach__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: center;
+    margin-bottom: var(--space-2);
+}
+
+.activity-approach__last-action {
+    margin: var(--space-2) 0 0;
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+}
+
+.activity-approach__last-action-label {
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+}
+
+.activity-status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+}
+
+.activity-status-pill.is-completed {
+    color: var(--success);
+    border-color: color-mix(in srgb, var(--success) 50%, transparent);
+    background: color-mix(in srgb, var(--success) 12%, transparent);
+}
+
+.activity-status-pill.is-implementing,
+.activity-status-pill.is-planning,
+.activity-status-pill.is-tasking,
+.activity-status-pill.is-specifying {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.activity-status-pill.is-archived {
+    color: var(--text-muted);
+    border-color: var(--border);
+    background: var(--bg-hover);
+}
+
+.activity-checkpoint {
+    display: inline-flex;
+    align-items: center;
+    color: var(--success);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.activity-pr-link {
+    color: var(--accent);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px dashed color-mix(in srgb, var(--accent) 50%, transparent);
+    padding-bottom: 1px;
+}
+
+.activity-pr-link:hover {
+    border-bottom-style: solid;
+}
+
+/* ============================================
+   Phases card
+   ============================================ */
+
+.phases-step {
+    position: relative;
+    padding-left: var(--space-5);
+    margin-bottom: var(--space-3);
+}
+
+.phases-step:last-child {
+    margin-bottom: 0;
+}
+
+.phases-step::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 22px;
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
+}
+
+.phases-step__heading {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 var(--space-2) calc(var(--space-5) * -1);
+    padding-left: var(--space-5);
+    text-transform: capitalize;
+    position: relative;
+}
+
+.phases-step__heading::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 0.5em;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 3px var(--bg-secondary);
+}
+
+.phases-step.is-in-flight .phases-step__heading::before {
+    background: var(--accent);
+    animation: phases-pulse 2s ease-in-out infinite;
+}
+
+@keyframes phases-pulse {
+    0%, 100% { box-shadow: 0 0 0 3px var(--bg-secondary), 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); }
+    50%      { box-shadow: 0 0 0 3px var(--bg-secondary), 0 0 0 6px color-mix(in srgb, var(--accent) 0%, transparent); }
+}
+
+.phases-step__name {
+    font-weight: 700;
+}
+
+.phases-step__meta {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    font-size: 0.78rem;
+    font-weight: 500;
+    text-transform: none;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.phases-step__meta > span + span::before {
+    content: '·';
+    margin-right: var(--space-2);
+    color: var(--text-muted);
+}
+
+.phases-step__duration {
+    color: var(--text-secondary);
+}
+
+.phases-event {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 3px 0;
+    font-size: var(--text-sm);
+    color: var(--text-body);
+}
+
+.phases-event--empty {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.78rem;
+}
+
+.phases-event__name {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    min-width: 7em;
+}
+
+/* ============================================
+   Actor badge (shared)
+   ============================================ */
+
+.activity-actor-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 7px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.activity-actor-badge.is-extension {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.activity-actor-badge.is-cli {
+    color: var(--warning);
+    border-color: color-mix(in srgb, var(--warning) 50%, transparent);
+    background: color-mix(in srgb, var(--warning) 12%, transparent);
+}
+
+.activity-actor-badge.is-sdd {
+    color: var(--success);
+    border-color: color-mix(in srgb, var(--success) 50%, transparent);
+    background: color-mix(in srgb, var(--success) 12%, transparent);
+}
+
+.activity-actor-badge.is-ai {
+    color: var(--purple);
+    border-color: color-mix(in srgb, var(--purple) 50%, transparent);
+    background: color-mix(in srgb, var(--purple) 12%, transparent);
+}
+
+.activity-actor-badge.is-user {
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+    background: var(--bg-hover);
+}
+
+/* ============================================
+   Tasks card
+   ============================================ */
+
+.task-row {
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.task-row:first-child { padding-top: 0; }
+.task-row:last-child  { padding-bottom: 0; border-bottom: none; }
+
+.task-row__head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.task-row__id {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.task-row__status {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 1px 7px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+}
+
+.task-row__status.is-done {
+    color: var(--success);
+    border-color: color-mix(in srgb, var(--success) 50%, transparent);
+    background: color-mix(in srgb, var(--success) 12%, transparent);
+}
+
+.task-row__status.is-done-concerns {
+    color: var(--warning);
+    border-color: color-mix(in srgb, var(--warning) 50%, transparent);
+    background: color-mix(in srgb, var(--warning) 12%, transparent);
+}
+
+.task-row__did {
+    color: var(--text-body);
+    font-size: 0.86rem;
+    flex: 1 1 16em;
+    min-width: 0;
+}
+
+.task-row__files {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: var(--space-2);
+}
+
+.task-row__file {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    padding: 1px 7px;
+    border: 1px solid var(--border);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.task-row__file:hover {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+.task-row__concerns {
+    margin: var(--space-2) 0 0;
+    padding-left: var(--space-4);
+    color: var(--warning);
+    font-size: 0.82rem;
+}
+
+.task-row__concerns li { margin-bottom: 2px; }
+
+/* ============================================
+   Decisions / Concerns lists
+   ============================================ */
+
+.activity-list {
+    margin: 0;
+    padding-left: var(--space-4);
+    color: var(--text-body);
+}
+
+.activity-list li {
+    margin-bottom: var(--space-2);
+}
+
+.activity-list li:last-child {
+    margin-bottom: 0;
+}
+
+.activity-task-chip {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    padding: 1px 6px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-right: var(--space-2);
+    background: var(--bg-primary);
+}
+
+.activity-concern__note {
+    color: var(--text-body);
+}
+
+/* ============================================
+   Files card
+   ============================================ */
+
+.activity-files {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.activity-files__item {
+    width: 100%;
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    padding: 4px 8px;
+    background: transparent;
+    color: var(--text-body);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.activity-files__item:hover {
+    background: var(--bg-hover);
+    border-color: var(--border);
+    color: var(--accent);
+}
+
+/* ============================================
+   Activity toggle button in nav-primary
+   ============================================ */
+
+.activity-toggle {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    border-radius: var(--radius-sm);
+    transition: color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.activity-toggle:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.activity-toggle[aria-pressed='true'] {
+    color: var(--text-primary);
+    background: color-mix(in srgb, var(--accent, #4a9eff) 22%, transparent);
+    box-shadow: inset 0 0 0 2px var(--accent, #4a9eff);
+    font-weight: 700;
+}
+
+.activity-toggle__beta {
+    display: inline-block;
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--warning) 18%, transparent);
+    color: var(--warning);
+    border: 1px solid color-mix(in srgb, var(--warning) 50%, transparent);
+    line-height: 1.2;
+}

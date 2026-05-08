@@ -10,6 +10,7 @@ import {
     ViewerToExtensionMessage,
     DocumentType,
 } from './types';
+import { SPEC_CONTEXT_FILENAME } from '../specs/specContextReader';
 import { ConfigKeys, SpecStatuses, FooterActionIds } from '../../core/constants';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig } from '../../core/types/config';
@@ -27,6 +28,7 @@ export interface MessageHandlerDependencies {
     getInstance: (specDirectory: string) => { state: SpecViewerState; debounceTimer: NodeJS.Timeout | undefined } | undefined;
     updateContent: (specDirectory: string, documentType: DocumentType) => Promise<void>;
     sendContentUpdateMessage: (specDirectory: string, documentType: DocumentType) => Promise<void>;
+    refreshContextIfDisplaying: (specContextPath: string) => Promise<void>;
     resolveWorkflowSteps: (specDirectory: string) => Promise<WorkflowStepConfig[]>;
     executeInTerminal: (prompt: string) => Promise<void>;
     outputChannel: vscode.OutputChannel;
@@ -56,6 +58,11 @@ export function createMessageHandlers(
                 break;
             case 'ready':
                 deps.outputChannel.appendLine('[SpecViewer] Webview ready');
+                // Push viewerState (incl. transitions) — initial HTML hydrates
+                // navState and markdown, but viewerState only flows via message.
+                await deps.refreshContextIfDisplaying(
+                    path.join(specDirectory, SPEC_CONTEXT_FILENAME),
+                );
                 break;
             case 'stepperClick':
                 await handleStepperClick(specDirectory, message.phase, deps);
@@ -557,7 +564,7 @@ async function handleOpenFile(
 }
 
 /**
- * Handle submit refinements — dispatch a direct-edit prompt for the current
+ * Handle submit refinements - dispatch a direct-edit prompt for the current
  * doc. We deliberately avoid invoking any per-step slash command (e.g.
  * /speckit.plan) because some of those commands re-run setup scripts that
  * overwrite the existing file from a template (see issue #153).

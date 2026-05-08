@@ -48,6 +48,7 @@ function createMockDeps(overrides?: Partial<MessageHandlerDependencies>): Messag
         }),
         updateContent: jest.fn().mockResolvedValue(undefined),
         sendContentUpdateMessage: jest.fn().mockResolvedValue(undefined),
+        refreshContextIfDisplaying: jest.fn().mockResolvedValue(undefined),
         resolveWorkflowSteps: jest.fn().mockResolvedValue([]),
         executeInTerminal: jest.fn().mockResolvedValue(undefined),
         outputChannel: {

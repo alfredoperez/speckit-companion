@@ -278,6 +278,73 @@ flowchart LR
 
 ---
 
+## Activity Panel
+
+An `Activity` button at the right of the navigation bar swaps the markdown
+pane for a card-stack overview of everything `.spec-context.json` exposes
+through `viewerState`.
+
+```mermaid
+stateDiagram-v2
+    [*] --> markdown : viewer opens
+    markdown --> activity : user clicks Activity (aria-pressed=true)
+    activity --> markdown : user clicks Activity again
+    activity --> activity : .spec-context.json change → viewerState refresh
+```
+
+**Cards (top to bottom; each hides when its data is empty)**:
+
+| Card | Source fields |
+|------|---------------|
+| Approach | `approach`, `last_action`, `status`, `prUrl`/`prNumber`, `checkpointStatus.{commit, pr}` |
+| Phases | `stepHistory` (step-level `startedAt`/`completedAt`) + `transitions` for substep names + actor (`by`) |
+| Tasks | `task_summaries.T###` — `status`, `did`, `files`, per-task `concerns` |
+| Decisions | `decisions[]` |
+| Concerns | `concerns[]` (`{ task?, note }`) |
+| Files touched | `files_modified[]`, clickable |
+
+**Setting gate** — `speckit.viewer.activityPanel`:
+
+| Value | Toggle visibility | Label |
+|-------|------------------|-------|
+| `"off"` | hidden | — |
+| `"beta"` (default) | visible | `Activity` + small `beta` pill |
+| `"on"` | visible | `Activity` (no pill) |
+
+**stepHistory is derived, not read from disk.** The extension owns this
+field. `deriveStepHistory(transitions, currentStep)` in
+`src/features/specs/stepHistoryDerivation.ts` rebuilds it on every read by
+walking `transitions[]`: each step's `startedAt` is its first transition,
+`completedAt` is the first transition of the next step (a real boundary
+when `by: "extension"`). The AI is told (via `promptBuilder.ts`) not to
+write this field; whatever it ships on disk gets ignored.
+
+Substep timestamps inside a phase are still derived from AI-typed
+`transitions[].at` values (when `by ∈ {sdd, ai}`), so the Phases card
+deliberately renders substeps as ordered name + actor only — no `+offset`
+or per-substep duration. The step-level duration shown in the heading is
+the only timing signal in the panel, and it's reliable when the boundary
+transitions were extension-written.
+
+**Optional: real substep timestamps via shell hook.** Users can opt into
+real substep timing by adding a `pre:task` / step-boundary hook to their
+`.sdd.json` that runs `date -u +"%Y-%m-%dT%H:%M:%SZ"` and appends a
+transition. The extension prompts (since v0.15.6) tell skills to use this
+exact command for every transition `at` field, so well-behaved skills
+already produce real timestamps without the hook.
+
+**Live updates**: when `.spec-context.json` changes on disk, the existing
+watcher invokes `specViewerProvider.refreshContextIfDisplaying`, which
+re-derives `viewerState` and posts `viewerStateUpdated`. Cards re-render
+from the new state without a reload.
+
+**Toggle mechanics**: clicking `Activity` flips the `activityVisible` signal.
+The markdown pane stays mounted (hidden via the `hidden` attribute) so
+toggling back is instant. `<ActivityPanel />` mounts lazily on first reveal
+so initial spec render is never blocked.
+
+---
+
 ## Sidebar Grouping
 
 ```mermaid

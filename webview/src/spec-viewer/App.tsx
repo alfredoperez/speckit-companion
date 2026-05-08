@@ -1,9 +1,10 @@
-import { useRef, useEffect } from 'preact/hooks';
+import { useRef, useEffect, useState } from 'preact/hooks';
 import { NavigationBar } from './components/NavigationBar';
 import { StaleBanner } from './components/StaleBanner';
 import { SpecHeader } from './components/SpecHeader';
 import { FooterActions } from './components/FooterActions';
-import { markdownHtml, navState } from './signals';
+import { ActivityPanel } from './components/ActivityPanel';
+import { markdownHtml, navState, activityVisible } from './signals';
 
 export interface AppProps {
     specStatus: string;
@@ -13,6 +14,11 @@ export function App({ specStatus }: AppProps) {
     const contentRef = useRef<HTMLDivElement>(null);
     const html = markdownHtml.value;
     const ns = navState.value;
+    const showActivity = activityVisible.value;
+    const [hasMountedActivity, setHasMountedActivity] = useState(false);
+    useEffect(() => {
+        if (showActivity) setHasMountedActivity(true);
+    }, [showActivity]);
 
     // After Preact sets innerHTML via dangerouslySetInnerHTML,
     // fire a custom event so highlighting/mermaid can run
@@ -41,8 +47,14 @@ export function App({ specStatus }: AppProps) {
                     id="markdown-content"
                     ref={contentRef}
                     dangerouslySetInnerHTML={{ __html: html }}
+                    hidden={showActivity}
                 />
-                <aside class="spec-toc" id="spec-toc" aria-label="Table of contents"></aside>
+                {hasMountedActivity && (
+                    <div hidden={!showActivity}>
+                        <ActivityPanel />
+                    </div>
+                )}
+                <aside class="spec-toc" id="spec-toc" aria-label="Table of contents" hidden={showActivity}></aside>
             </main>
             <FooterActions initialSpecStatus={specStatus} />
         </>

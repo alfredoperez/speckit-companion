@@ -29,10 +29,11 @@ export function setupFileWatchers(
     context: vscode.ExtensionContext,
     specExplorer: SpecExplorerProvider,
     steeringExplorer: SteeringExplorerProvider,
+    specViewer: SpecViewerProvider,
     outputChannel: vscode.OutputChannel
 ): void {
     // Watch for changes in .claude directory with debouncing
-    setupClaudeDirectoryWatcher(context, specExplorer, steeringExplorer, outputChannel);
+    setupClaudeDirectoryWatcher(context, specExplorer, steeringExplorer, specViewer, outputChannel);
 
     // Watch for changes in Claude settings
     setupClaudeSettingsWatcher(context, steeringExplorer);
@@ -51,6 +52,7 @@ function setupClaudeDirectoryWatcher(
     context: vscode.ExtensionContext,
     specExplorer: SpecExplorerProvider,
     steeringExplorer: SteeringExplorerProvider,
+    specViewer: SpecViewerProvider,
     outputChannel: vscode.OutputChannel
 ): void {
     const claudeWatcher = vscode.workspace.createFileSystemWatcher('**/.claude/**/*');
@@ -87,6 +89,10 @@ function setupClaudeDirectoryWatcher(
             if (logMessage) {
                 outputChannel.appendLine(logMessage);
             }
+
+            // Re-derive viewer state so the open viewer's timeline picks up
+            // the new transition without a reload (R008, NFR004).
+            void specViewer.refreshContextIfDisplaying(uri.fsPath);
         } catch {
             // Ignore parse errors
         }

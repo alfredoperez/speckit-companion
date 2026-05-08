@@ -64,7 +64,7 @@ export interface TransitionFrom {
     substep: string | null;
 }
 
-export type TransitionBy = 'extension' | 'user' | 'cli';
+export type TransitionBy = 'extension' | 'user' | 'cli' | 'sdd' | 'ai';
 
 export interface Transition {
     step: StepName;
@@ -110,6 +110,23 @@ export interface FooterAction {
     tooltip: string;
 }
 
+export interface TaskSummary {
+    status: 'DONE' | 'DONE_WITH_CONCERNS' | string;
+    did?: string;
+    files?: string[];
+    concerns?: string[];
+}
+
+export interface ConcernEntry {
+    task?: string;
+    note: string;
+}
+
+export interface CheckpointStatus {
+    commit?: boolean;
+    pr?: boolean;
+}
+
 export interface ViewerState {
     status: Status;
     activeStep: StepName;
@@ -118,6 +135,19 @@ export interface ViewerState {
     highlights: StepName[];
     activeSubstep: { step: StepName; name: string } | null;
     footer: FooterAction[];
+    transitions: Transition[];
+    stepHistory: Record<string, StepHistoryEntry>;
+    /** Activity panel — passthroughs from `.spec-context.json`. */
+    approach?: string;
+    lastAction?: string;
+    taskSummaries?: Record<string, TaskSummary>;
+    decisions?: string[];
+    concerns?: ConcernEntry[];
+    filesModified?: string[];
+    prUrl?: string;
+    prNumber?: number;
+    checkpointStatus?: CheckpointStatus;
+    stepSummaries?: Record<string, Record<string, unknown>>;
 }
 
 /** Canonical list of substep names used by Companion prompts. */

@@ -26,9 +26,15 @@ describe('buildPrompt', () => {
                 });
                 expect(out).toContain('<!-- speckit-companion:context-update -->');
                 expect(out).toContain('<!-- /speckit-companion:context-update -->');
-                expect(out).toContain(`stepHistory.${step}.startedAt`);
+                expect(out).toContain(`currentStep = "${step}"`);
                 expect(out.endsWith('/speckit.' + step + ' specs/001-demo')).toBe(true);
             }
+        });
+
+        it('instructs the model not to write stepHistory and to use real timestamps', () => {
+            const out = buildPrompt({ command: 'x', step: 'plan', specDir: 'specs/001-demo' });
+            expect(out).toContain('stepHistory is READ-ONLY');
+            expect(out).toContain('date -u +"%Y-%m-%dT%H:%M:%SZ"');
         });
 
         it('lists canonical substeps for the given step', () => {
@@ -72,11 +78,11 @@ describe('buildPrompt', () => {
         });
     });
 
-    it('preamble stays under ~1500 chars per step', () => {
+    it('preamble stays under ~2000 chars per step', () => {
         mockConfig(true);
         for (const step of ['specify', 'plan', 'tasks', 'implement'] as const) {
             const out = buildPrompt({ command: 'x', step, specDir: 'specs/001-demo' });
-            expect(out.length).toBeLessThan(1500);
+            expect(out.length).toBeLessThan(2000);
         }
     });
 

@@ -1,5 +1,5 @@
 import type { VSCodeApi } from '../types';
-import { navState } from '../signals';
+import { navState, activityVisible } from '../signals';
 import { StepTab } from './StepTab';
 
 declare const vscode: VSCodeApi;
@@ -61,6 +61,12 @@ export function NavigationBar() {
     const parentStepDoc = coreDocs.find(d => d.type === parentStepType);
     const showChildrenRow = displayRelatedDocs.length > 0 && parentStepDoc;
 
+    const activityActive = activityVisible.value;
+    const activityMode = ns.activityPanelMode ?? 'beta';
+    const handleActivityToggle = () => {
+        activityVisible.value = !activityVisible.value;
+    };
+
     return (
         <>
             <div class="nav-primary">
@@ -95,6 +101,20 @@ export function NavigationBar() {
                         );
                     })}
                 </div>
+                {activityMode !== 'off' && (
+                    <button
+                        type="button"
+                        class="activity-toggle"
+                        aria-pressed={activityActive}
+                        title="Toggle the activity overview for this spec"
+                        onClick={handleActivityToggle}
+                    >
+                        Activity
+                        {activityMode === 'beta' && (
+                            <span class="activity-toggle__beta">beta</span>
+                        )}
+                    </button>
+                )}
             </div>
             {showChildrenRow && (
                 <div class="step-children" aria-label={`${parentStepDoc.label} files`}>

@@ -163,8 +163,12 @@ export async function activate(context: vscode.ExtensionContext) {
     registerSpecKitCommands(context, specExplorer, outputChannel, specsTreeView, specsFilterState, specsSortState);
     registerUtilityCommands(context, updateChecker, outputChannel);
 
+    // Spec viewer needs to exist before setupFileWatchers so the .spec-context.json
+    // watcher can refresh the open viewer when transitions are appended externally.
+    const specViewer = registerSpecViewerCommands(context, outputChannel);
+
     // Set up file watchers
-    setupFileWatchers(context, specExplorer, steeringExplorer, outputChannel);
+    setupFileWatchers(context, specExplorer, steeringExplorer, specViewer, outputChannel);
 
     // Set up tasks watcher for phase completion notifications
     setupTasksWatcher(context, outputChannel);
@@ -184,10 +188,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // Register spec editor commands
     registerSpecEditorCommands(context, outputChannel);
 
-    // Register spec viewer commands and get provider instance
-    const specViewer = registerSpecViewerCommands(context, outputChannel);
-
-    // Set up spec viewer file watcher
+    // Set up spec viewer file watcher (specViewer was created above before setupFileWatchers)
     setupSpecViewerWatcher(context, specViewer, outputChannel);
 
     // Listen for provider configuration changes

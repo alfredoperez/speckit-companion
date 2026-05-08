@@ -16,8 +16,67 @@ import {
     StepBadgeState,
     STEP_NAMES,
     ViewerState,
+    TaskSummary,
+    ConcernEntry,
+    CheckpointStatus,
 } from '../../core/types/specContext';
 import { getFooterActions } from './footerActions';
+import { deriveStepHistory } from '../specs/stepHistoryDerivation';
+
+/**
+ * Pull a tolerated extra field from `SpecContext` (it has a permissive
+ * `[key: string]: unknown` index signature). Returns `undefined` when the
+ * field is missing or doesn't match the expected runtime type.
+ */
+function pickString(ctx: SpecContext, key: string): string | undefined {
+    const v = (ctx as Record<string, unknown>)[key];
+    return typeof v === 'string' && v.length > 0 ? v : undefined;
+}
+
+function pickNumber(ctx: SpecContext, key: string): number | undefined {
+    const v = (ctx as Record<string, unknown>)[key];
+    return typeof v === 'number' ? v : undefined;
+}
+
+function pickStringArray(ctx: SpecContext, key: string): string[] | undefined {
+    const v = (ctx as Record<string, unknown>)[key];
+    if (!Array.isArray(v)) return undefined;
+    const filtered = v.filter((x): x is string => typeof x === 'string');
+    return filtered.length > 0 ? filtered : undefined;
+}
+
+function pickRecord<T>(ctx: SpecContext, key: string): Record<string, T> | undefined {
+    const v = (ctx as Record<string, unknown>)[key];
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
+    return v as Record<string, T>;
+}
+
+function pickConcerns(ctx: SpecContext): ConcernEntry[] | undefined {
+    const v = (ctx as Record<string, unknown>)['concerns'];
+    if (!Array.isArray(v) || v.length === 0) return undefined;
+    const out: ConcernEntry[] = [];
+    for (const entry of v) {
+        if (typeof entry === 'string') {
+            out.push({ note: entry });
+        } else if (entry && typeof entry === 'object') {
+            const e = entry as Record<string, unknown>;
+            if (typeof e.note === 'string') {
+                out.push({ task: typeof e.task === 'string' ? e.task : undefined, note: e.note });
+            }
+        }
+    }
+    return out.length > 0 ? out : undefined;
+}
+
+function pickCheckpointStatus(ctx: SpecContext): CheckpointStatus | undefined {
+    const v = (ctx as Record<string, unknown>)['checkpointStatus'];
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
+    const r = v as Record<string, unknown>;
+    const out: CheckpointStatus = {};
+    if (typeof r.commit === 'boolean') out.commit = r.commit;
+    if (typeof r.pr === 'boolean') out.pr = r.pr;
+    return out.commit !== undefined || out.pr !== undefined ? out : undefined;
+}
 
 /**
  * Determine whether a step should be treated as completed.
@@ -100,5 +159,19 @@ export function deriveViewerState(
         highlights: deriveHighlights(ctx),
         activeSubstep: deriveActiveSubstep(ctx),
         footer: getFooterActions(ctx, activeStep),
+        transitions: ctx.transitions ?? [],
+        // Derive stepHistory from the reliable transitions[] sequence rather
+        // than trusting the on-disk stepHistory (AI-typed, unreliable).
+        stepHistory: deriveStepHistory(ctx.transitions ?? [], ctx.currentStep),
+        approach: pickString(ctx, 'approach'),
+        lastAction: pickString(ctx, 'last_action'),
+        taskSummaries: pickRecord<TaskSummary>(ctx, 'task_summaries'),
+        decisions: pickStringArray(ctx, 'decisions'),
+        concerns: pickConcerns(ctx),
+        filesModified: pickStringArray(ctx, 'files_modified'),
+        prUrl: pickString(ctx, 'prUrl'),
+        prNumber: pickNumber(ctx, 'prNumber'),
+        checkpointStatus: pickCheckpointStatus(ctx),
+        stepSummaries: pickRecord<Record<string, unknown>>(ctx, 'step_summaries'),
     };
 }
