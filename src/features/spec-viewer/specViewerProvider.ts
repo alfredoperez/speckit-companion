@@ -300,7 +300,8 @@ export class SpecViewerProvider {
       const active: StepName = STEP_NAMES.includes(specCtx.currentStep as StepName)
         ? (specCtx.currentStep as StepName)
         : 'specify';
-      const derived = deriveViewerState(specCtx, active);
+      const wfSteps = (getWorkflow(specCtx.workflow) || DEFAULT_WORKFLOW).steps;
+      const derived = deriveViewerState(specCtx, active, wfSteps);
       const viewerState: CoreViewerState = {
         ...derived,
         footer: derived.footer.map(a => ({
@@ -913,7 +914,8 @@ export class SpecViewerProvider {
           const active: StepName = (STEP_NAMES.includes(specCtx.currentStep as StepName)
             ? (specCtx.currentStep as StepName)
             : 'specify');
-          const derived = deriveViewerState(specCtx, active);
+          const wfSteps = (getWorkflow(specCtx.workflow) || DEFAULT_WORKFLOW).steps;
+          const derived = deriveViewerState(specCtx, active, wfSteps);
           viewerState = {
             ...derived,
             footer: derived.footer.map(a => ({

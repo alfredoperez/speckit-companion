@@ -22,6 +22,7 @@ import {
 } from '../../core/types/specContext';
 import { getFooterActions } from './footerActions';
 import { deriveStepHistory } from '../specs/stepHistoryDerivation';
+import type { WorkflowStepConfig } from '../workflows/types';
 
 /**
  * Pull a tolerated extra field from `SpecContext` (it has a permissive
@@ -149,7 +150,8 @@ export function deriveActiveSubstep(
 
 export function deriveViewerState(
     ctx: SpecContext,
-    activeStep: StepName = ctx.currentStep
+    activeStep: StepName = ctx.currentStep,
+    workflowSteps?: WorkflowStepConfig[]
 ): ViewerState {
     return {
         status: ctx.status,
@@ -158,7 +160,7 @@ export function deriveViewerState(
         pulse: derivePulse(ctx),
         highlights: deriveHighlights(ctx),
         activeSubstep: deriveActiveSubstep(ctx),
-        footer: getFooterActions(ctx, activeStep),
+        footer: getFooterActions(ctx, activeStep, workflowSteps),
         transitions: ctx.transitions ?? [],
         // Derive stepHistory from the reliable transitions[] sequence rather
         // than trusting the on-disk stepHistory (AI-typed, unreliable).

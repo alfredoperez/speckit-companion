@@ -77,6 +77,7 @@ The spec viewer is built for fast scanning of long-form specs:
 - **Quiet content**: when the structured header has the metadata, in-content duplicates (the `Input:` block, repeated branch chips, literal `Slug:`/`Date:` paragraphs) are suppressed so the body is just the spec content.
 - **Diagrams**: wide mermaid diagrams scroll horizontally inside the prose column instead of bleeding past it. Each diagram has its own `−` / Reset / `+` zoom controls.
 - **Activity panel**: an `Activity` toggle on the right side of the navigation bar swaps the markdown pane for a card-stack overview of everything `.spec-context.json` carries — *Approach* (one-line strategy + status pill + PR link + commit/PR checkpoints + last action), *Phases* (per-step duration and recorded substeps with actor badges), *Tasks* (per-`T###` status, summary, file chips, inline concerns), *Decisions*, *Concerns*, and *Files touched* (clickable). Each card hides itself when its data is missing, so a lean speckit-style spec collapses to just *Phases*. Visibility is gated by the `speckit.viewer.activityPanel` setting — `"off"` (hide toggle), `"beta"` (default; toggle shows a *beta* pill), `"on"` (toggle without the pill). Substep timestamps are intentionally not surfaced as durations because SDD/AI emit them by hand and they're not reliable; only step-level boundaries (extension-stamped) get duration text.
+- **Quiet, intentional footer**: the viewer footer surfaces only what fits the current moment. While a step is mid-generation it shows `Regenerate` and a forward button labelled with the next phase (`Plan` / `Tasks` / `Implement` / `Complete`). `Archive` and `Mark Completed` only appear once the spec reaches a closure-eligible stage (`ready-to-implement` and beyond), and the SDD `Auto` button has moved to the **Create New Spec** form (next to `Submit`) so it's the explicit first-time choice rather than a viewer-side surprise. The `Edit Source` button is gone too — use the sidebar's inline `Open Source File` action instead. See [`docs/viewer-states.md`](./docs/viewer-states.md) for the full footer state matrix.
 
 ### Custom Workflows & Commands
 
@@ -446,8 +447,10 @@ The full JSON Schema lives at
 
 The extension itself records `stepHistory[step].startedAt` /
 `completedAt` and the canonical `status` whenever a step is dispatched
-(via the SpecKit commands or the viewer's Approve / Regenerate buttons),
-and when a spawned terminal closes, independent of AI cooperation. Spec
+(via the SpecKit commands or the viewer's next-step / Regenerate
+buttons — the next-step button is labelled with the upcoming phase
+name, e.g. `Plan`, `Tasks`, `Implement`, or `Complete` on the final
+step), and when a spawned terminal closes, independent of AI cooperation. Spec
 status changes (`Mark as Completed`, `Archive`, `Reactivate`) write the
 canonical status and append a transition entry, no longer relying on the
 legacy `setSpecStatus` path. Write failures log to the SpecKit output

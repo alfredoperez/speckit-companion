@@ -31,6 +31,7 @@ export type Status =
     | 'tasking'
     | 'ready-to-implement'
     | 'implementing'
+    | 'implemented'
     | 'completed'
     | 'archived';
 
@@ -43,6 +44,7 @@ export const STATUSES: Status[] = [
     'tasking',
     'ready-to-implement',
     'implementing',
+    'implemented',
     'completed',
     'archived',
 ];

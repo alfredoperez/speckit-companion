@@ -1,3 +1,16 @@
+/**
+ * Storybook coverage for the spec-viewer footer.
+ *
+ * Two sections:
+ *   - Legacy stories — drive the old navState.footerState code path
+ *     (status='active' / 'tasks-done'). Kept for backward compat.
+ *   - Per-status stories — drive the catalog code path
+ *     (viewerState.footer[]) with one entry per canonical status.
+ *
+ * Story names use the visible status label only; no parens, no
+ * extra annotations.
+ */
+
 import type { Meta, StoryObj } from '@storybook/preact';
 import { navState, viewerState } from '../signals';
 import { FooterActions } from './FooterActions';
@@ -10,6 +23,8 @@ const meta: Meta<typeof FooterActions> = {
 export default meta;
 
 type Story = StoryObj<typeof FooterActions>;
+
+// ── Legacy code path (driven by navState.footerState) ──────
 
 export const Active: Story = {
     render: () => {
@@ -43,35 +58,19 @@ export const TasksDone: Story = {
     },
 };
 
-export const Completed: Story = {
-    render: () => {
-        navState.value = mockNavState({
-            footerState: { showApproveButton: false, approveText: '', enhancementButtons: [], specStatus: 'completed' },
-        });
-        return <FooterActions initialSpecStatus="completed" />;
-    },
-};
+// ── Catalog code path (driven by viewerState.footer) ───────
+// One entry per canonical spec status, in lifecycle order.
 
-export const Archived: Story = {
-    render: () => {
-        navState.value = mockNavState({
-            footerState: { showApproveButton: false, approveText: '', enhancementButtons: [], specStatus: 'archived' },
-        });
-        return <FooterActions initialSpecStatus="archived" />;
-    },
-};
+interface FooterEntry {
+    id: string;
+    label: string;
+    scope: 'spec' | 'step';
+    tooltip: string;
+}
 
-// ── Catalog path (driven by viewerState.footer) ─────────────
-// FooterActions.tsx has two render paths: the legacy one (above) driven by
-// navState.footerState, and a newer catalog-driven one that fires when
-// viewerState.footer is populated. The catalog path is what the extension
-// produces for every spec-context spec via getFooterActions(ctx, step).
-// These stories cover the catalog path's lifecycle states so we have visual
-// coverage of the action filtering done in src/features/spec-viewer/footerActions.ts.
-
-const baseViewerState = (status: string, footer: { id: string; label: string; scope: 'spec' | 'step'; tooltip: string }[]) => ({
+const baseViewerState = (status: string, activeStep: string, footer: FooterEntry[]) => ({
     status,
-    activeStep: 'tasks',
+    activeStep,
     steps: {},
     pulse: null,
     highlights: [],
@@ -79,26 +78,154 @@ const baseViewerState = (status: string, footer: { id: string; label: string; sc
     footer,
 });
 
-export const CatalogActiveTasks: Story = {
+const pauseFooter = (forwardLabel: string): FooterEntry[] => [
+    { id: 'regenerate', label: 'Regenerate', scope: 'step', tooltip: 'Re-run only the current step' },
+    { id: 'approve', label: forwardLabel, scope: 'step', tooltip: 'Approve this step and continue' },
+];
+
+const finalApprovalFooter: FooterEntry[] = [
+    { id: 'archive', label: 'Archive', scope: 'spec', tooltip: 'Archive this spec' },
+    { id: 'complete', label: 'Mark Completed', scope: 'spec', tooltip: 'Mark this spec as completed' },
+    { id: 'regenerate', label: 'Regenerate', scope: 'step', tooltip: 'Re-run only the current step' },
+];
+
+const REFINE_ACTION: FooterEntry = {
+    id: 'refine',
+    label: '✨ Refine (2)',
+    scope: 'spec',
+    tooltip: 'Submit 2 line comments for refinement',
+};
+
+const withRefine = (footer: FooterEntry[]): FooterEntry[] => [REFINE_ACTION, ...footer];
+
+// Helper to mark a story as in-flight on a given step. Sets the
+// stepHistory entry so the renderer's isRunning check fires and
+// hides the footer buttons (the catalog still emits them; the
+// hide is at the render layer).
+const inFlightNavState = (specStatus: string, step: string) =>
+    mockNavState({
+        specStatus,
+        activeStep: step,
+        stepHistory: { [step]: { startedAt: '2026-05-08T00:00:00Z', completedAt: null } },
+    });
+
+export const Specifying: Story = {
+    name: 'Specifying',
     render: () => {
-        navState.value = mockNavState({ specStatus: 'active' });
-        viewerState.value = baseViewerState('active', [
-            { id: 'archive', label: 'Archive', scope: 'spec', tooltip: 'Archive this spec' },
-            { id: 'regenerate', label: 'Regenerate', scope: 'step', tooltip: 'Re-run only the current step' },
-            { id: 'approve', label: 'Approve', scope: 'step', tooltip: 'Approve this step and continue' },
-        ]);
-        return <FooterActions initialSpecStatus="active" />;
+        // In-flight: renderer hides all buttons because isRunning=true.
+        navState.value = inFlightNavState('specifying', 'specify');
+        viewerState.value = baseViewerState('specifying', 'specify', pauseFooter('Plan'));
+        return <FooterActions initialSpecStatus="specifying" />;
     },
 };
 
-// Regression coverage: the user reported seeing Archive + Reactivate + Regenerate
-// + Approve on a completed spec. The fix in footerActions.ts:46-74 hides
-// step-scoped actions (start, regenerate, approve) when status is terminal.
-// This story asserts the catalog path now produces just Archive + Reactivate.
-export const CatalogCompleted: Story = {
+export const Specified: Story = {
+    name: 'Specified',
+    render: () => {
+        navState.value = mockNavState({ specStatus: 'specified' });
+        viewerState.value = baseViewerState('specified', 'specify', pauseFooter('Plan'));
+        return <FooterActions initialSpecStatus="specified" />;
+    },
+};
+
+export const SpecifiedWithRefine: Story = {
+    name: 'Specified With Refine',
+    render: () => {
+        navState.value = mockNavState({ specStatus: 'specified' });
+        viewerState.value = baseViewerState('specified', 'specify', withRefine(pauseFooter('Plan')));
+        return <FooterActions initialSpecStatus="specified" />;
+    },
+};
+
+export const Planning: Story = {
+    name: 'Planning',
+    render: () => {
+        navState.value = inFlightNavState('planning', 'plan');
+        viewerState.value = baseViewerState('planning', 'plan', pauseFooter('Tasks'));
+        return <FooterActions initialSpecStatus="planning" />;
+    },
+};
+
+export const Planned: Story = {
+    name: 'Planned',
+    render: () => {
+        navState.value = mockNavState({ specStatus: 'planned' });
+        viewerState.value = baseViewerState('planned', 'plan', pauseFooter('Tasks'));
+        return <FooterActions initialSpecStatus="planned" />;
+    },
+};
+
+export const PlannedWithRefine: Story = {
+    name: 'Planned With Refine',
+    render: () => {
+        navState.value = mockNavState({ specStatus: 'planned' });
+        viewerState.value = baseViewerState('planned', 'plan', withRefine(pauseFooter('Tasks')));
+        return <FooterActions initialSpecStatus="planned" />;
+    },
+};
+
+export const CreatingTasks: Story = {
+    name: 'Creating Tasks',
+    render: () => {
+        navState.value = inFlightNavState('tasking', 'tasks');
+        viewerState.value = baseViewerState('tasking', 'tasks', pauseFooter('Implement'));
+        return <FooterActions initialSpecStatus="tasking" />;
+    },
+};
+
+export const TasksCreated: Story = {
+    name: 'Tasks Created',
+    render: () => {
+        navState.value = mockNavState({ specStatus: 'ready-to-implement' });
+        viewerState.value = baseViewerState(
+            'ready-to-implement',
+            'tasks',
+            pauseFooter('Implement')
+        );
+        return <FooterActions initialSpecStatus="ready-to-implement" />;
+    },
+};
+
+export const TasksCreatedWithRefine: Story = {
+    name: 'Tasks Created With Refine',
+    render: () => {
+        navState.value = mockNavState({ specStatus: 'ready-to-implement' });
+        viewerState.value = baseViewerState(
+            'ready-to-implement',
+            'tasks',
+            withRefine(pauseFooter('Implement'))
+        );
+        return <FooterActions initialSpecStatus="ready-to-implement" />;
+    },
+};
+
+export const Implementing: Story = {
+    name: 'Implementing',
+    render: () => {
+        navState.value = inFlightNavState('implementing', 'implement');
+        viewerState.value = baseViewerState(
+            'implementing',
+            'implement',
+            pauseFooter('Complete')
+        );
+        return <FooterActions initialSpecStatus="implementing" />;
+    },
+};
+
+export const Implemented: Story = {
+    name: 'Implemented',
+    render: () => {
+        navState.value = mockNavState({ specStatus: 'implemented' });
+        viewerState.value = baseViewerState('implemented', 'implement', finalApprovalFooter);
+        return <FooterActions initialSpecStatus="implemented" />;
+    },
+};
+
+export const Completed: Story = {
+    name: 'Completed',
     render: () => {
         navState.value = mockNavState({ specStatus: 'completed' });
-        viewerState.value = baseViewerState('completed', [
+        viewerState.value = baseViewerState('completed', 'implement', [
             { id: 'archive', label: 'Archive', scope: 'spec', tooltip: 'Archive this spec' },
             { id: 'reactivate', label: 'Reactivate', scope: 'spec', tooltip: 'Reactivate archived spec' },
         ]);
@@ -106,24 +233,13 @@ export const CatalogCompleted: Story = {
     },
 };
 
-export const CatalogArchived: Story = {
+export const Archived: Story = {
+    name: 'Archived',
     render: () => {
         navState.value = mockNavState({ specStatus: 'archived' });
-        viewerState.value = baseViewerState('archived', [
+        viewerState.value = baseViewerState('archived', 'implement', [
             { id: 'reactivate', label: 'Reactivate', scope: 'spec', tooltip: 'Reactivate archived spec' },
         ]);
         return <FooterActions initialSpecStatus="archived" />;
-    },
-};
-
-export const CatalogTasksDone: Story = {
-    render: () => {
-        navState.value = mockNavState({ specStatus: 'tasks-done' });
-        viewerState.value = baseViewerState('tasks-done', [
-            { id: 'archive', label: 'Archive', scope: 'spec', tooltip: 'Archive this spec' },
-            { id: 'complete', label: 'Mark Completed', scope: 'spec', tooltip: 'Mark this spec as completed' },
-            { id: 'regenerate', label: 'Regenerate', scope: 'step', tooltip: 'Re-run only the current step' },
-        ]);
-        return <FooterActions initialSpecStatus="tasks-done" />;
     },
 };

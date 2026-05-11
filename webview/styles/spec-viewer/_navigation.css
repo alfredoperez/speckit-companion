@@ -35,7 +35,7 @@
     position: relative;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 10px;
     padding: 8px 14px;
     border: none;
     background: transparent;
@@ -99,26 +99,34 @@
     font-weight: 700;
 }
 
-/* In-flight (canonical): success-colored % pill + matching working-pulse glow.
-   Pill background matches the green pulse (--success) so the pill and its ring
-   read as one "work in progress" state — using --accent here clashed with the
-   green pulse on themes where --vscode-focusBorder is purple. */
+/* In-flight (canonical): purple badge + working-pulse glow.
+   Distinct from done-green so the active step is unmistakable.
+   Default size matches the completed checkmark (16×16); only the
+   implement-step % pill widens via :not(:empty) below. */
 .step-tab.in-flight .step-status {
-    background: var(--success);
-    border-color: var(--success);
+    background: var(--purple);
+    border-color: var(--purple);
     color: white;
     font-size: 11px;
     font-weight: 700;
+    animation: working-pulse 2s ease-in-out infinite;
+}
+
+/* The pill grows wider only when there's a percent string to show
+   (the implement-step inProgress case). Empty in-flight steps keep
+   the default 16×16 circle defined on .step-status — same size as
+   the completed checkmark, just pulsing. */
+.step-tab.in-flight .step-status:not(:empty) {
     width: auto;
     min-width: 32px;
     padding: 0 6px;
     border-radius: 10px;
-    animation: working-pulse 2s ease-in-out infinite;
 }
 
-/* Extra left padding so the pill's ~16px working-pulse glow doesn't crash
-   into the preceding connector line. */
-.step-tab.in-flight {
+/* Extra left padding when the pill is widened, so the working-pulse
+   glow doesn't crash into the preceding connector line. The default
+   16×16 in-flight badge needs no extra padding. */
+.step-tab.in-flight:has(.step-status:not(:empty)) {
     padding-left: 20px;
 }
 

@@ -1,6 +1,15 @@
 import { navState, viewerState } from '../signals';
 
+// Visible-label overrides for canonical status keys whose default
+// hyphen-split capitalization isn't the friendliest reading. Keeps
+// on-disk `.spec-context.json` keys unchanged.
+const STATUS_LABEL_OVERRIDES: Record<string, string> = {
+    tasking: 'Creating Tasks',
+    'ready-to-implement': 'Tasks Created',
+};
+
 function formatStatusLabel(status: string): string {
+    if (STATUS_LABEL_OVERRIDES[status]) return STATUS_LABEL_OVERRIDES[status];
     return status
         .split('-')
         .map(w => w.charAt(0).toUpperCase() + w.slice(1))

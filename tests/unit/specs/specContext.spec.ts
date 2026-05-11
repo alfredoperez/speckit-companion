@@ -88,6 +88,29 @@ describe('normalizeSpecContext (US3 — legacy shape migration)', () => {
         const out = normalizeSpecContext({ status: 'active' });
         expect(out.status).toBe('implementing');
     });
+
+    it('accepts the new "implemented" status as canonical', () => {
+        const out = normalizeSpecContext({ status: 'implemented' });
+        expect(out.status).toBe('implemented');
+    });
+});
+
+describe('status state machine — implement → implemented (final approval gate)', () => {
+    it('completing the implement step lands on `implemented`, not `completed`', () => {
+        // The final terminal `completed` is reserved for the user's
+        // explicit Mark-Completed click. The AI marking the implement
+        // step done only takes the spec to `implemented`.
+        const ctx = setStepStarted(fresh(), 'implement', 'extension');
+        expect(ctx.status).toBe('implementing');
+        const next = setStepCompleted(ctx, 'implement', 'extension');
+        expect(next.status).toBe('implemented');
+    });
+
+    it('non-implement steps preserve their existing completed-status mapping', () => {
+        // Sanity-check that the new wiring didn't disturb other phases.
+        const specify = setStepCompleted(setStepStarted(fresh(), 'specify', 'extension'), 'specify', 'extension');
+        expect(specify.status).toBe('specified');
+    });
 });
 
 describe('substep helpers (US4)', () => {

@@ -85,13 +85,14 @@
     }
 }
 
-/* Pulsing glow for active working step (green = active progress) */
+/* Pulsing glow for active working step (purple = active progress, distinct
+   from the green completed checkmark). */
 @keyframes working-pulse {
     0%, 100% {
-        box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px var(--success), 0 0 8px var(--success);
+        box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px var(--purple), 0 0 8px var(--purple);
     }
     50% {
-        box-shadow: 0 0 0 3px var(--bg-secondary), 0 0 0 5px var(--success), 0 0 16px var(--success);
+        box-shadow: 0 0 0 3px var(--bg-secondary), 0 0 0 5px var(--purple), 0 0 16px var(--purple);
     }
 }
 

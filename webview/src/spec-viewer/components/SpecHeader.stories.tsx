@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/preact';
-import { navState } from '../signals';
+import { navState, viewerState as vs } from '../signals';
 import { SpecHeader } from './SpecHeader';
 import { mockNavState } from './__stories__/mockData';
 
@@ -125,6 +125,73 @@ export const StatusTasksDone: Story = {
             specContextName: 'All Tasks Complete',
             docTypeLabel: 'Tasks',
         });
+        return <SpecHeader />;
+    },
+};
+
+// ── Renamed status labels (spec 094, second pass) ─────────
+// These show the friendlier visible labels for status keys
+// whose default hyphen-split capitalization isn't great.
+
+export const StatusCreatingTasks: Story = {
+    name: 'Creating Tasks',
+    decorators: [withStatus('tasking')],
+    render: () => {
+        navState.value = mockNavState({
+            specContextName: 'Tasking In Progress',
+            docTypeLabel: 'Tasks',
+        });
+        vs.value = {
+            status: 'tasking',
+            activeStep: 'tasks',
+            steps: {},
+            pulse: null,
+            highlights: [],
+            activeSubstep: null,
+            footer: [],
+        };
+        return <SpecHeader />;
+    },
+};
+
+export const StatusTasksCreated: Story = {
+    name: 'Tasks Created',
+    decorators: [withStatus('ready-to-implement')],
+    render: () => {
+        navState.value = mockNavState({
+            specContextName: 'Ready For Build',
+            docTypeLabel: 'Tasks',
+        });
+        vs.value = {
+            status: 'ready-to-implement',
+            activeStep: 'tasks',
+            steps: {},
+            pulse: null,
+            highlights: [],
+            activeSubstep: null,
+            footer: [],
+        };
+        return <SpecHeader />;
+    },
+};
+
+export const StatusImplemented: Story = {
+    name: 'Implemented',
+    decorators: [withStatus('implemented')],
+    render: () => {
+        navState.value = mockNavState({
+            specContextName: 'Build Done — Awaiting Approval',
+            docTypeLabel: 'Tasks',
+        });
+        vs.value = {
+            status: 'implemented',
+            activeStep: 'implement',
+            steps: {},
+            pulse: null,
+            highlights: [],
+            activeSubstep: null,
+            footer: [],
+        };
         return <SpecHeader />;
     },
 };

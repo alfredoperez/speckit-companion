@@ -45,7 +45,12 @@ export function StepTab(props: StepTabProps) {
     const isLastStep = index === totalSteps - 1;
     const inProgress = isLastStep && currentStep === 'implement' && taskCompletionPercent < 100;
     const isStale = stalenessMap?.[phase]?.isStale ?? false;
-    const isWorking = activeStep === phase && !stepHistory?.[phase]?.completedAt;
+
+    const stepName = DOC_TO_STEP[phase] ?? phase;
+    // `activeStep` and `stepHistory` are keyed by step name (e.g. 'specify'),
+    // not doc type (e.g. 'spec'). Compare against the mapped name so the
+    // in-flight visual fires correctly during specifying / planning / etc.
+    const isWorking = activeStep === stepName && !stepHistory?.[stepName]?.completedAt;
     const isLocked = runningStepIndex != null
         && index > runningStepIndex
         && !isViewing
@@ -53,7 +58,6 @@ export function StepTab(props: StepTabProps) {
     const isClickable = (exists || index === 0) && !isLocked;
 
     const vs = viewerState.value;
-    const stepName = DOC_TO_STEP[phase] ?? phase;
     // R003: checkmark only when completed AND the step's document exists.
     const vsCompleted = (vs?.highlights?.includes(stepName) ?? false) && stepDocExists;
     const vsSubstep = vs?.activeSubstep?.step === stepName ? vs.activeSubstep.name : null;
@@ -90,7 +94,9 @@ export function StepTab(props: StepTabProps) {
 
     // Only show the elapsed ticker for a live dispatch run — not for the
     // last-step `inProgress` case, which is driven by task-completion percent.
-    const runEntry = stepHistory?.[phase];
+    // Use the mapped stepName (matches activeStep / stepHistory keys),
+    // not the doc-type phase.
+    const runEntry = stepHistory?.[stepName];
     const runningStartedAt = canonicalState === 'in-flight'
         && runEntry?.startedAt
         && !runEntry.completedAt

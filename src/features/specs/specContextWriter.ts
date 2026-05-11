@@ -216,7 +216,12 @@ function deriveCompletedStatus(step: StepName): SpecContext['status'] {
         case 'analyze':
             return 'ready-to-implement';
         case 'implement':
-            return 'completed';
+            // The implement step finishing means the AI is done writing code,
+            // but the spec is not yet terminally completed. The user has to
+            // click "Mark Completed" to advance from `implemented` →
+            // `completed`. That final approval gate keeps the user in
+            // control of when the spec is truly closed.
+            return 'implemented';
     }
 }
 

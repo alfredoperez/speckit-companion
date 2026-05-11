@@ -8,8 +8,22 @@
 >
 > **Canonical statuses**: `draft` → `specifying` → `specified` → `planning`
 > → `planned` → `tasking` → `ready-to-implement` → `implementing` →
-> `completed` → `archived`. Legacy `active`/`tasks-done` are migrated by
-> `normalizeSpecContext` at read time.
+> `implemented` → `completed` → `archived`. Legacy `active`/`tasks-done`
+> are migrated by `normalizeSpecContext` at read time.
+>
+> **Final approval gate (`implemented`)**: When the AI finishes the
+> `implement` step, `setStepCompleted('implement')` writes
+> `status='implemented'` rather than jumping straight to `completed`.
+> Terminal `completed` is reached only when the user clicks
+> `Mark Completed` (the spec-scope action that calls
+> `completeSpec`). This keeps the user in control of when a spec is
+> truly closed.
+>
+> **Visible-label overrides**: The viewer's status badge uses friendlier
+> labels for two canonical keys without changing the on-disk values:
+> `tasking` renders as `Creating Tasks` and `ready-to-implement` renders
+> as `Tasks Created`. Other statuses use the default hyphen-split
+> capitalization (`Implemented`, `Implementing`, `Specifying`, …).
 >
 > **Badge/pulse/highlight rules**:
 > - Step badge = `completed` if `stepHistory[step].completedAt` is set
@@ -41,9 +55,81 @@
 >
 > **Footer scope tooltips**: Every footer button declares
 > `scope: 'spec' | 'step'` and tooltips are auto-suffixed with
-> "(Affects whole spec)" / "(Affects this step)". SDD `Auto` appears only
-> on the Specify tab during `draft`/`specifying` for `sdd`/`sdd-fast`
-> workflows.
+> "(Affects whole spec)" / "(Affects this step)".
+>
+> **Edit Source moved to the sidebar**: The viewer footer no longer has
+> an `Edit Source` button. The same affordance lives on each spec/step
+> row in the sidebar tree as the inline `Open Source File` action
+> (`speckit.openSpecSource`, `$(go-to-file)` icon).
+>
+> **Auto moved to the Create New Spec form**: SDD `Auto` is no longer
+> a viewer footer button. It is the canonical first-time entry point
+> for the SDD pipeline and lives in the spec-editor webview as the
+> `Auto Mode` button next to `Submit`. By the time the spec viewer
+> opens, the user has already chosen between Submit and Auto Mode.
+>
+> **Start removed**: There is no `Start` button. The viewer only opens
+> after a step has been initiated (no realistic state where Start
+> would apply).
+>
+> **Closure-eligible gate (`isSpecDone`)**: `Archive` and `Mark
+> Completed` are hidden until the spec reaches the final approval
+> gate — `status` ∈ {`implemented`, `completed`}. While the AI is
+> still creating tasks or building, the footer stays focused on the
+> forward action; the sidebar's per-row Archive remains as the
+> escape hatch. `Archive` stays visible on `completed`; `Mark
+> Completed` does not (the spec is already terminal-completed).
+>
+> **Footer left/right split**: The renderer routes catalog actions
+> into two zones:
+> - **Left** (`actions-left`): `Regenerate` only — outlined "redo
+>   this step" tool sits alone so the eye finds it without
+>   competing with lifecycle controls.
+> - **Right** (`actions-right`): `Refine`, `Approve` (forward),
+>   `Reactivate`, `Archive`, `Mark Completed`. Closure controls
+>   share the right side with the forward button so the user's
+>   "what do I do next" decision is in one place.
+>
+> **Refine scope**: Refine appears only at pause states with a
+> markdown doc to comment on (`Specified`, `Planned`,
+> `Tasks Created`). It does not surface at `Implemented` — at that
+> stage the artifact is the code, not a markdown doc, and the
+> right surfaces are `Mark Completed` / `Archive`.
+>
+> **Dynamic Approve label**: The `Approve` button's visible label is
+> derived from the active workflow's step ordering — it shows the next
+> step's label (e.g. `Plan`, `Tasks`, `Implement`) so clicking it
+> announces what comes next. Falls back to `Approve` when the
+> workflow definition is missing.
+>
+> **Approve advance window**: `Approve` stays visible across the
+> "step done, next step not started" pauses (`specified` /
+> `planned` / `ready-to-implement`) so the user can dispatch the
+> next phase from the viewer footer. It hides once a later step
+> actually starts, and on the final step (`implement`) once
+> `completedAt` is set — at `implemented` the spec-scope
+> `Mark Completed` is the right surface, not `Approve`.
+>
+> **Hide-during-in-flight**: While a step is mid-generation
+> (`startedAt` set, no `completedAt`), the renderer in
+> `webview/src/spec-viewer/components/FooterActions.tsx` filters
+> out *every* footer entry instead of rendering disabled buttons.
+> The catalog still emits the catalog-correct array — the hide is
+> at the render layer. The header status badge plus the active
+> step's pulse are the "AI is working" cues; the sidebar's per-row
+> Archive remains as an escape hatch.
+>
+> **Step-tab in-flight pill size**: The active step's
+> `.step-status` badge stays at the same 16×16 size as the
+> completed checkmark while empty, only widening to a pill when
+> there's a `taskCompletionPercent` to show on the implement step.
+> Implemented via `:not(:empty)` in
+> `webview/styles/spec-viewer/_navigation.css`.
+>
+> **Footer overflow note (future-proofing)**: After this redesign
+> the right-side bar typically holds 1–3 buttons. If more lifecycle
+> actions are added later, group secondary entries into an overflow
+> `⋯` menu — keep the dynamic next-step button as the primary surface.
 
 ## Status Lifecycle
 
