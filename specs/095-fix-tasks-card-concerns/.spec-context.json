@@ -13,9 +13,11 @@
   "type": "fix",
   "createdAt": "2026-05-20T12:50:17Z",
   "loadedDomains": [],
-  "checkpointStatus": { "commit": true, "pr": false },
+  "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/159",
+  "prNumber": 159,
   "approach": "Tolerate non-array task_summaries.concerns/files at three layers — normalize at the reader, guard in TasksCard, error-boundary around ActivityPanel — without changing the canonical TaskSummary type or forcing SDD writers to change shape.",
-  "last_action": "CP3 approved — ready to commit + open PR.",
+  "last_action": "PR #159 opened — fix(spec-viewer): tolerate non-array task_summaries concerns/files",
   "files_modified": [
     "specs/095-fix-tasks-card-concerns/fixtures/firm-11132.spec-context.json",
     "webview/src/spec-viewer/components/cards/TasksCard.tsx",
@@ -161,6 +163,7 @@
     { "step": "implement", "substep": "test-results",  "from": { "step": "implement", "substep": "code-review" },   "by": "sdd", "at": "2026-05-20T13:10:00Z" },
     { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "test-results" },  "by": "sdd", "at": "2026-05-20T13:10:01Z" },
     { "step": "implement", "substep": "commit",        "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-05-20T13:10:02Z" },
-    { "step": "done",      "substep": null,            "from": { "step": "implement", "substep": "commit" },        "by": "sdd", "at": "2026-05-20T13:10:03Z" }
+    { "step": "done",      "substep": null,            "from": { "step": "implement", "substep": "commit" },        "by": "sdd", "at": "2026-05-20T13:10:03Z" },
+    { "step": "done",      "substep": "pr-opened",     "from": { "step": "done",      "substep": null },            "by": "sdd", "at": "2026-05-20T13:11:00Z" }
   ]
 }
