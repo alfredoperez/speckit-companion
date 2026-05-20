@@ -220,7 +220,9 @@ export type ViewerToExtensionMessage =
     // Batch refinements submission (GitHub-style review)
     | { type: 'submitRefinements'; refinements: Array<{ lineNum: number; lineContent: string; comment: string }> }
     // File reference click
-    | { type: 'openFile'; filename: string };
+    | { type: 'openFile'; filename: string }
+    // Webview render-time error (reported by error boundaries)
+    | { type: 'webviewError'; source: string; message: string; stack?: string };
 
 // ============================================
 // Message Types: Extension → Webview

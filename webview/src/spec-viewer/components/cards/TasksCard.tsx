@@ -1,4 +1,5 @@
 import type { ViewerState, VSCodeApi, TaskSummary } from '../../types';
+import { toStringArray } from './toStringArray';
 
 declare const vscode: VSCodeApi;
 
@@ -45,6 +46,8 @@ export function TasksCard({ state }: TasksCardProps) {
                     const t: TaskSummary = summaries[id];
                     const did = typeof t.did === 'string' ? t.did : '';
                     const { display, truncated } = truncate(did, DID_TRUNCATE);
+                    const files = toStringArray(t.files);
+                    const concerns = toStringArray(t.concerns);
                     return (
                         <article key={id} class="task-row">
                             <div class="task-row__head">
@@ -56,9 +59,9 @@ export function TasksCard({ state }: TasksCardProps) {
                                     {display}
                                 </span>
                             </div>
-                            {(t.files && t.files.length > 0) && (
+                            {files.length > 0 && (
                                 <div class="task-row__files">
-                                    {t.files.map(f => (
+                                    {files.map(f => (
                                         <button
                                             key={f}
                                             type="button"
@@ -71,9 +74,9 @@ export function TasksCard({ state }: TasksCardProps) {
                                     ))}
                                 </div>
                             )}
-                            {(t.concerns && t.concerns.length > 0) && (
+                            {concerns.length > 0 && (
                                 <ul class="task-row__concerns">
-                                    {t.concerns.map((c, i) => (
+                                    {concerns.map((c, i) => (
                                         <li key={i}>{c}</li>
                                     ))}
                                 </ul>

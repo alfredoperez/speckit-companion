@@ -91,7 +91,80 @@ export function normalizeSpecContext(raw: Record<string, unknown>): SpecContext 
         stepHistory,
         transitions,
     };
+
+    const normalizedTaskSummaries = normalizeTaskSummaries(raw.task_summaries);
+    if (normalizedTaskSummaries) {
+        out.task_summaries = normalizedTaskSummaries;
+    }
+
     return out;
+}
+
+const EMPTY_CONCERN_SENTINELS = new Set(['', 'none', 'n/a']);
+
+/**
+ * AI writers occasionally emit `task_summaries[*].concerns` / `.files` as a
+ * plain string (`"None"`, a sentence) instead of `string[]`. Coerce inbound
+ * shapes so downstream consumers see the canonical `string[]` contract from
+ * `TaskSummary`. Returns `undefined` when the input is not a coercible
+ * object (preserves existing absence semantics).
+ */
+function normalizeTaskSummaries(raw: unknown): Record<string, unknown> | undefined {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined;
+    const out: Record<string, unknown> = {};
+    let changed = false;
+    for (const [id, value] of Object.entries(raw as Record<string, unknown>)) {
+        if (!value || typeof value !== 'object' || Array.isArray(value)) {
+            out[id] = value;
+            continue;
+        }
+        const entry = value as Record<string, unknown>;
+        const concernsCoerced = coerceStringArrayField(entry.concerns);
+        const filesCoerced = coerceStringArrayField(entry.files);
+        if (concernsCoerced.changed || filesCoerced.changed) {
+            const next: Record<string, unknown> = { ...entry };
+            applyCoercion(next, 'concerns', concernsCoerced);
+            applyCoercion(next, 'files', filesCoerced);
+            out[id] = next;
+            changed = true;
+        } else {
+            out[id] = entry;
+        }
+    }
+    return changed ? out : (raw as Record<string, unknown>);
+}
+
+interface CoerceResult {
+    changed: boolean;
+    drop: boolean;
+    value: string[];
+}
+
+function coerceStringArrayField(value: unknown): CoerceResult {
+    if (value === undefined) return { changed: false, drop: false, value: [] };
+    if (Array.isArray(value)) {
+        const filtered = value.filter((v): v is string => typeof v === 'string');
+        if (filtered.length === value.length) return { changed: false, drop: false, value: filtered };
+        return { changed: true, drop: false, value: filtered };
+    }
+    if (value === null) return { changed: true, drop: true, value: [] };
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (EMPTY_CONCERN_SENTINELS.has(trimmed.toLowerCase())) {
+            return { changed: true, drop: false, value: [] };
+        }
+        return { changed: true, drop: false, value: [trimmed] };
+    }
+    return { changed: true, drop: true, value: [] };
+}
+
+function applyCoercion(target: Record<string, unknown>, key: string, result: CoerceResult): void {
+    if (!result.changed) return;
+    if (result.drop) {
+        delete target[key];
+        return;
+    }
+    target[key] = result.value;
 }
 
 function coerceStatus(

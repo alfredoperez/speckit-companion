@@ -103,6 +103,12 @@ export function createMessageHandlers(
             case 'openFile':
                 await handleOpenFile(message.filename, deps);
                 break;
+            case 'webviewError':
+                deps.outputChannel.appendLine(
+                    `[SpecViewer] Webview error (${message.source}): ${message.message}` +
+                    (message.stack ? `\n${message.stack}` : ''),
+                );
+                break;
             case 'footerAction':
                 switch (message.id) {
                     case FooterActionIds.ARCHIVE:

@@ -1,0 +1,166 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "status": "completed",
+  "updated": "2026-05-20",
+  "selectedAt": "2026-05-20T12:50:17Z",
+  "specName": "Fix Tasks Card Concerns Crash",
+  "branch": "main",
+  "workingBranch": "fix/fix-tasks-card-concerns",
+  "type": "fix",
+  "createdAt": "2026-05-20T12:50:17Z",
+  "loadedDomains": [],
+  "checkpointStatus": { "commit": true, "pr": false },
+  "approach": "Tolerate non-array task_summaries.concerns/files at three layers — normalize at the reader, guard in TasksCard, error-boundary around ActivityPanel — without changing the canonical TaskSummary type or forcing SDD writers to change shape.",
+  "last_action": "CP3 approved — ready to commit + open PR.",
+  "files_modified": [
+    "specs/095-fix-tasks-card-concerns/fixtures/firm-11132.spec-context.json",
+    "webview/src/spec-viewer/components/cards/TasksCard.tsx",
+    "webview/src/spec-viewer/components/cards/toStringArray.ts",
+    "src/features/specs/specContextReader.ts",
+    "src/ai-providers/promptBuilder.ts",
+    "webview/src/spec-viewer/components/ActivityErrorBoundary.tsx",
+    "webview/src/spec-viewer/types.ts",
+    "src/features/spec-viewer/types.ts",
+    "src/features/spec-viewer/messageHandlers.ts",
+    "webview/src/spec-viewer/App.tsx",
+    "webview/src/spec-viewer/components/cards/__tests__/TasksCard.test.ts",
+    "src/features/specs/__tests__/specContextReader.test.ts",
+    "src/ai-providers/__tests__/promptBuilder.test.ts",
+    "webview/src/spec-viewer/components/ActivityPanel.stories.tsx",
+    ".gitignore"
+  ],
+  "decisions": [
+    "Extracted toStringArray to its own .ts file (rather than keeping it module-local in TasksCard.tsx) so it can be imported by a non-JSX .test.ts file under the existing Jest config (testEnvironment: node, no jsx in tsconfig.test.json). Same helper logic; just lives one file over.",
+    "Skipped JSX render tests for TasksCard — Jest config has no jsdom and no preact-testing-library dep. The crash boundary is the toStringArray helper, so exercising it directly (plus the end-to-end reader normalization via the FIRM-11132 fixture) covers R001 + R006 without adding test infra.",
+    "Added a `specs/_*/` ignore rule for local-only demo spec dirs so the FIRM-11132 reproducer (specs/_demo-firm-11132/) stays out of the PR."
+  ],
+  "concerns": [],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Wrote specs/095-fix-tasks-card-concerns/fixtures/firm-11132.spec-context.json — verbatim reconstruction of the final FIRM-11132 state with 4 task_summary entries whose concerns are plain strings.",
+      "files": ["specs/095-fix-tasks-card-concerns/fixtures/firm-11132.spec-context.json"],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Added toStringArray defensive coercion in TasksCard.tsx and refactored both concerns and files render paths to use it.",
+      "files": [
+        "webview/src/spec-viewer/components/cards/TasksCard.tsx",
+        "webview/src/spec-viewer/components/cards/toStringArray.ts"
+      ],
+      "concerns": [
+        "Helper extracted to its own toStringArray.ts file (not kept module-local as the task said) so it can be tested by a .test.ts file under the existing Jest config."
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Extended normalizeSpecContext to coerce every task_summaries[*].concerns and .files; mutates only when at least one entry changes (NFR001).",
+      "files": ["src/features/specs/specContextReader.ts"],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Replaced the two-line TASK SUMMARIES directive with explicit shape guidance: status DONE/DONE_WITH_CONCERNS, files string[], concerns string[], omit when empty.",
+      "files": ["src/ai-providers/promptBuilder.ts"],
+      "concerns": [
+        "Initial four-line version overshot the 2000-char preamble budget (got 2044). Trimmed to three lines preserving every shape assertion to stay under the limit — adjusted T009 to match the trimmed wording."
+      ]
+    },
+    "T005": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Created ActivityErrorBoundary as a Preact class component that posts webviewError via vscode.postMessage and renders a quiet inline notice on catch.",
+      "files": [
+        "webview/src/spec-viewer/components/ActivityErrorBoundary.tsx",
+        "webview/src/spec-viewer/types.ts",
+        "src/features/spec-viewer/types.ts",
+        "src/features/spec-viewer/messageHandlers.ts"
+      ],
+      "concerns": [
+        "Added 'webviewError' to ViewerToExtensionMessage in BOTH webview/src/spec-viewer/types.ts and src/features/spec-viewer/types.ts (these are duplicate definitions across the bundle boundary). Added a matching handler in messageHandlers.ts that logs to the output channel (NFR002)."
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Wrapped <ActivityPanel/> in <ActivityErrorBoundary> in App.tsx — no layout change.",
+      "files": ["webview/src/spec-viewer/App.tsx"],
+      "concerns": []
+    },
+    "T007": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Added 8 unit tests against toStringArray covering all R001 / R006 shapes including FIRM-11132's exact strings.",
+      "files": ["webview/src/spec-viewer/components/cards/__tests__/TasksCard.test.ts"],
+      "concerns": [
+        "Wrote a .test.ts (not .test.tsx) and exercised the helper directly rather than rendering the component — testEnvironment: 'node', no jsdom, and tsconfig.test.json has no jsx setting. The error-boundary force-throw assertion was not added since rendering the boundary needs the same JSX infra; the boundary's own logic is type-checked by tsc and trivially exercised by usage."
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Added 9 unit tests for normalizeSpecContext.task_summaries covering every R002 coercion rule plus a regression test that reads the FIRM-11132 fixture and asserts every concerns/files field is string[] (or omitted).",
+      "files": ["src/features/specs/__tests__/specContextReader.test.ts"],
+      "concerns": []
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Added a single test against the new directive's exact wording (DONE_WITH_CONCERNS, string[], Omit concerns when empty, never write \"None\"/\"N/A\") so future drift fails loudly.",
+      "files": ["src/ai-providers/__tests__/promptBuilder.test.ts"],
+      "concerns": []
+    },
+    "FOLLOWUP": {
+      "status": "DONE",
+      "did": "Per CP1 feedback: copied the fixture into specs/_demo-firm-11132/ (gitignored) for manual viewer reproduction, and added ActivityPanel.stories.tsx with 5 scenarios (empty, canonical, FIRM-11132 regression, mixed shapes, error boundary).",
+      "files": [
+        "webview/src/spec-viewer/components/ActivityPanel.stories.tsx",
+        ".gitignore"
+      ],
+      "concerns": []
+    }
+  },
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 7,
+      "scenarios": 7,
+      "key_finding": "TasksCard at webview/src/spec-viewer/components/cards/TasksCard.tsx:74-80 calls .map() on task_summaries[*].concerns assuming string[], but the AI-injected prompt directive in src/ai-providers/promptBuilder.ts:43-44 doesn't specify the shape, so writers emit a plain string like \"None\" and crash the whole Activity panel."
+    },
+    "plan": {
+      "approach_summary": "Tolerate non-array task_summaries.concerns/files at three layers — normalize at the reader, guard in TasksCard, error-boundary around ActivityPanel — without changing the canonical TaskSummary type or forcing SDD writers to change shape.",
+      "files_planned": 9,
+      "risks": [
+        "Reader coercion changes data semantically when stripping \"None\" — mitigated by spec Out-of-Scope and verified-no-other-consumers grep.",
+        "Prompt drift between speckit-companion and SDD — handled by making the viewer tolerant of both shapes, not by coordinating the SDD repo."
+      ],
+      "principles_concerns": 0,
+      "domain_concerns": 0,
+      "significance_score": 1
+    },
+    "tasks": {
+      "task_count": 9,
+      "parallel_groups": 2
+    }
+  },
+  "transitions": [
+    { "step": "specify",   "substep": "parsing",       "from": null,                                                "by": "sdd", "at": "2026-05-20T12:50:17Z" },
+    { "step": "specify",   "substep": "exploring",     "from": { "step": "specify",   "substep": "parsing" },       "by": "sdd", "at": "2026-05-20T12:50:18Z" },
+    { "step": "specify",   "substep": "detecting",     "from": { "step": "specify",   "substep": "exploring" },     "by": "sdd", "at": "2026-05-20T12:50:19Z" },
+    { "step": "specify",   "substep": "writing-spec",  "from": { "step": "specify",   "substep": "detecting" },     "by": "sdd", "at": "2026-05-20T12:50:20Z" },
+    { "step": "specify",   "substep": null,            "from": { "step": "specify",   "substep": "writing-spec" },  "by": "sdd", "at": "2026-05-20T12:50:21Z" },
+    { "step": "plan",      "substep": "loading",       "from": { "step": "specify",   "substep": null },            "by": "sdd", "at": "2026-05-20T12:51:00Z" },
+    { "step": "plan",      "substep": "writing-plan",  "from": { "step": "plan",      "substep": "loading" },       "by": "sdd", "at": "2026-05-20T12:51:01Z" },
+    { "step": "plan",      "substep": null,            "from": { "step": "plan",      "substep": "writing-plan" },  "by": "sdd", "at": "2026-05-20T12:51:02Z" },
+    { "step": "tasks",     "substep": "loading",       "from": { "step": "plan",      "substep": null },            "by": "sdd", "at": "2026-05-20T12:52:00Z" },
+    { "step": "tasks",     "substep": "writing-tasks", "from": { "step": "tasks",     "substep": "loading" },       "by": "sdd", "at": "2026-05-20T12:52:01Z" },
+    { "step": "tasks",     "substep": null,            "from": { "step": "tasks",     "substep": "writing-tasks" }, "by": "sdd", "at": "2026-05-20T12:52:02Z" },
+    { "step": "implement", "substep": "phase1",        "from": { "step": "tasks",     "substep": null },            "by": "sdd", "at": "2026-05-20T12:53:00Z" },
+    { "step": "implement", "substep": "hooks",         "from": { "step": "implement", "substep": "phase1" },        "by": "sdd", "at": "2026-05-20T13:00:00Z" },
+    { "step": "implement", "substep": "code-review",   "from": { "step": "implement", "substep": "hooks" },         "by": "sdd", "at": "2026-05-20T13:00:01Z" },
+    { "step": "implement", "substep": "test-results",  "from": { "step": "implement", "substep": "code-review" },   "by": "sdd", "at": "2026-05-20T13:10:00Z" },
+    { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "test-results" },  "by": "sdd", "at": "2026-05-20T13:10:01Z" },
+    { "step": "implement", "substep": "commit",        "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-05-20T13:10:02Z" },
+    { "step": "done",      "substep": null,            "from": { "step": "implement", "substep": "commit" },        "by": "sdd", "at": "2026-05-20T13:10:03Z" }
+  ]
+}

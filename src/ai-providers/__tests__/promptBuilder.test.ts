@@ -42,6 +42,22 @@ describe('buildPrompt', () => {
             expect(out).toContain('Canonical substeps for plan: research, design');
         });
 
+        it('documents the task_summaries field shapes (spec 095)', () => {
+            const out = buildPrompt({
+                command: '/speckit.implement x',
+                step: 'implement',
+                specDir: 'specs/001-demo',
+            });
+            // status vocabulary is explicit
+            expect(out).toContain('"DONE" or "DONE_WITH_CONCERNS"');
+            // concerns + files must be string[]
+            expect(out).toContain('concerns is string[]');
+            expect(out).toContain('files is string[]');
+            // empty concerns must be omitted, never a sentinel string
+            expect(out).toContain('Omit concerns when empty');
+            expect(out).toContain('never write "None"/"N/A"');
+        });
+
         it('returns raw command when step is unknown', () => {
             const out = buildPrompt({
                 command: '/speckit.unknown',

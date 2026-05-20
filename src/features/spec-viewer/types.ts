@@ -388,6 +388,13 @@ export type ViewerToExtensionMessage =
     | {
           type: 'openFile';
           filename: string;
+      }
+    // Webview render-time error (reported by error boundaries)
+    | {
+          type: 'webviewError';
+          source: string;
+          message: string;
+          stack?: string;
       };
 
 // ============================================

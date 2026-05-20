@@ -4,6 +4,7 @@ import { StaleBanner } from './components/StaleBanner';
 import { SpecHeader } from './components/SpecHeader';
 import { FooterActions } from './components/FooterActions';
 import { ActivityPanel } from './components/ActivityPanel';
+import { ActivityErrorBoundary } from './components/ActivityErrorBoundary';
 import { markdownHtml, navState, activityVisible } from './signals';
 
 export interface AppProps {
@@ -51,7 +52,9 @@ export function App({ specStatus }: AppProps) {
                 />
                 {hasMountedActivity && (
                     <div hidden={!showActivity}>
-                        <ActivityPanel />
+                        <ActivityErrorBoundary>
+                            <ActivityPanel />
+                        </ActivityErrorBoundary>
                     </div>
                 )}
                 <aside class="spec-toc" id="spec-toc" aria-label="Table of contents" hidden={showActivity}></aside>

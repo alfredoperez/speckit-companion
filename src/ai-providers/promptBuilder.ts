@@ -40,8 +40,9 @@ const SHARED_RULES = [
     'stepHistory is READ-ONLY. The extension derives it from transitions[] and overwrites whatever',
     'is on disk. Do not write substep startedAt/completedAt entries.',
     '',
-    'TASK SUMMARIES (implement only): after each task, write task_summaries.<TaskID>',
-    '= { status, did, files, concerns }. The viewer reads these.',
+    'TASK SUMMARIES (implement only): append task_summaries.<TaskID> = { status, did, files, concerns }.',
+    'status is "DONE" or "DONE_WITH_CONCERNS"; did is one sentence; files is string[]; concerns is string[].',
+    'Omit concerns when empty — never write "None"/"N/A". The viewer reads these.',
     '',
     'Skip step_summaries.<step>.tests_passing, .files_planned, .checkpoints — unconsumed.',
 ].join('\n');
