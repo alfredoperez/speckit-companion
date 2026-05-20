@@ -164,10 +164,10 @@ describe('normalizeSpecContext — task_summaries coercion', () => {
         expect(c.task_summaries).toBe('oops');
     });
 
-    it('regression: FIRM-11132 fixture is fully coerced after normalization', () => {
+    it('regression: legacy-string-concerns fixture is fully coerced after normalization', () => {
         const fixturePath = path.join(
             __dirname,
-            '../../../../specs/095-fix-tasks-card-concerns/fixtures/firm-11132.spec-context.json',
+            '../../../../specs/095-fix-tasks-card-concerns/fixtures/legacy-string-concerns.spec-context.json',
         );
         const raw = JSON.parse(fs.readFileSync(fixturePath, 'utf-8')) as Record<string, unknown>;
 
@@ -187,8 +187,8 @@ describe('normalizeSpecContext — task_summaries coercion', () => {
         expect(summaries.RT3.concerns).toEqual([]);
         // The substantive concern strings should normalize to single-entry arrays.
         expect(summaries['T001-T004'].concerns).toEqual([
-            'Spec Exploration Findings were wrong — superseded by RT1-RT3',
+            'Original exploration findings were wrong — superseded by RT1-RT3',
         ]);
-        expect((summaries.RT2.concerns as string[])[0]).toContain('Fees-Tax');
+        expect((summaries.RT2.concerns as string[])[0]).toContain('Section three');
     });
 });

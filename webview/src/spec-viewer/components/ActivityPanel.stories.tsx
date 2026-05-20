@@ -3,10 +3,10 @@
  * surfaces .spec-context.json data (transitions, task summaries, etc.).
  *
  * Each story drives the panel directly via the `viewerState` signal it
- * reads at render time. The FIRM-11132 story is the regression fixture
- * for spec 095 — it loads the verbatim shape AI writers produced (a
- * plain `concerns: "None"` string) and proves the panel no longer
- * blanks out.
+ * reads at render time. The legacy-shape story is the regression
+ * fixture for spec 095 — it loads the shape AI writers produced in the
+ * wild (a plain `concerns: "None"` string) and proves the panel no
+ * longer blanks out.
  */
 
 import type { Meta, StoryObj } from '@storybook/preact';
@@ -14,7 +14,7 @@ import { ActivityPanel } from './ActivityPanel';
 import { ActivityErrorBoundary } from './ActivityErrorBoundary';
 import { viewerState } from '../signals';
 import type { ViewerState, TaskSummary, Transition } from '../types';
-import firm11132 from '../../../../specs/095-fix-tasks-card-concerns/fixtures/firm-11132.spec-context.json';
+import legacyFixture from '../../../../specs/095-fix-tasks-card-concerns/fixtures/legacy-string-concerns.spec-context.json';
 
 const meta: Meta<typeof ActivityPanel> = {
     title: 'Viewer/Activity/ActivityPanel',
@@ -98,27 +98,27 @@ export const Canonical: Story = {
     },
 };
 
-// ── 3. FIRM-11132 regression (spec 095) ────────────────────────
-// Loads the verbatim final-state JSON from the FIRM-11132 bundle.
-// Before this fix the panel blanked out — `t.concerns.map()` threw
-// because the AI wrote `concerns: "None"` as a plain string. After
-// the fix, `toStringArray` coerces "None" → [] (omit the bullet
+// ── 3. Legacy-shape regression (spec 095) ──────────────────────
+// Loads the bundled `legacy-string-concerns.spec-context.json`
+// fixture. Before this fix the panel blanked out — `t.concerns.map()`
+// threw because the AI wrote `concerns: "None"` as a plain string.
+// After the fix, `toStringArray` coerces "None" → [] (omit the bullet
 // list) and substantive strings → single-entry arrays.
 
-export const Firm11132Regression: Story = {
-    name: 'FIRM-11132 — concerns as plain strings (spec 095 fixture)',
+export const LegacyStringConcerns: Story = {
+    name: 'Legacy — concerns as plain strings (spec 095 fixture)',
     render: () => {
-        const taskSummaries = firm11132.task_summaries as unknown as Record<string, TaskSummary>;
-        const transitions = firm11132.transitions as unknown as Transition[];
+        const taskSummaries = legacyFixture.task_summaries as unknown as Record<string, TaskSummary>;
+        const transitions = legacyFixture.transitions as unknown as Transition[];
         viewerState.value = baseState({
             status: 'implementing',
             activeStep: 'implement',
             taskSummaries,
             transitions,
             stepHistory: {
-                specify: { startedAt: '2026-05-18T18:02:07Z', completedAt: '2026-05-18T18:15:05.479Z' },
-                plan: { startedAt: '2026-05-18T18:15:05.479Z', completedAt: '2026-05-18T18:23:23Z' },
-                implement: { startedAt: '2026-05-18T18:23:23Z', completedAt: null },
+                specify: { startedAt: '2026-04-12T18:02:07Z', completedAt: '2026-04-12T18:15:05.479Z' },
+                plan: { startedAt: '2026-04-12T18:15:05.479Z', completedAt: '2026-04-12T18:23:23Z' },
+                implement: { startedAt: '2026-04-12T18:23:23Z', completedAt: null },
             },
         });
         return <ActivityPanel />;
@@ -150,7 +150,7 @@ export const MixedShapes: Story = {
                 status: 'DONE',
                 did: 'concerns is a substantive string sentence',
                 files: 'single/file/as/string.ts',
-                concerns: 'PDF preview still tracked separately under ART-7889',
+                concerns: 'Preview pane still tracked under a separate ticket',
             },
             T004: {
                 status: 'DONE',

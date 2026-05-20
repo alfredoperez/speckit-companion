@@ -1,0 +1,51 @@
+{
+  "workflow": "sdd",
+  "selectedAt": "2026-04-12T18:02:07Z",
+  "currentStep": "implement",
+  "status": "implementing",
+  "specName": "Sample Regression Spec",
+  "branch": "feature/sample-regression",
+  "task_summaries": {
+    "T001-T004": {
+      "status": "reverted",
+      "did": "Original edits targeted the wrong branch of the templates. Misdiagnosed; the affected rows were never the bug. All reverted via git checkout HEAD; supporting story files deleted.",
+      "files": [],
+      "concerns": "Original exploration findings were wrong — superseded by RT1-RT3"
+    },
+    "RT1": {
+      "status": "completed",
+      "did": "Reverted shared styles and three wrong-branch templates to HEAD; deleted three wrong-branch story files.",
+      "files": [],
+      "concerns": "None"
+    },
+    "RT2": {
+      "status": "completed",
+      "did": "Fixed the real bug in the read-only branch of two section components — adjusted column widths so the value column lands at the row's right edge and aligns with the total row.",
+      "files": [
+        "src/app/feature-x/components/section-one/section-one.component.html",
+        "src/app/feature-x/components/section-two/section-two.component.html"
+      ],
+      "concerns": "Section three has no read-only branch (excluded). Preview tab tracked separately. No style change."
+    },
+    "RT3": {
+      "status": "completed",
+      "did": "Rewrote spec.md (correction note + corrected root cause), plan.md, tasks.md to corrected scope.",
+      "files": [],
+      "concerns": "None"
+    }
+  },
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-04-12T18:02:07Z"
+    }
+  },
+  "transitions": [
+    { "step": "plan",      "substep": null,               "from": { "step": "specify", "substep": null },          "by": "extension", "at": "2026-04-12T18:15:05.479Z" },
+    { "step": "plan",      "substep": null,               "from": { "step": "plan",    "substep": null },          "by": "ai",        "at": "2026-04-12T18:17:43Z" },
+    { "step": "plan",      "substep": "research",         "from": { "step": "plan",    "substep": null },          "by": "ai",        "at": "2026-04-12T18:17:43Z" },
+    { "step": "plan",      "substep": "design",           "from": { "step": "plan",    "substep": "research" },    "by": "ai",        "at": "2026-04-12T18:18:42Z" },
+    { "step": "plan",      "substep": null,               "from": { "step": "plan",    "substep": "design" },      "by": "ai",        "at": "2026-04-12T18:19:12Z" },
+    { "step": "implement", "substep": null,               "from": { "step": "plan",    "substep": null },          "by": "ai",        "at": "2026-04-12T18:23:23Z" },
+    { "step": "implement", "substep": "scope-correction", "from": { "step": "implement", "substep": null },        "by": "ai",        "at": "2026-04-12T19:20:29Z" }
+  ]
+}

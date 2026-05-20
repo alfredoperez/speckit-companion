@@ -49,22 +49,23 @@ describe('TasksCard.toStringArray', () => {
         expect(toStringArray({})).toEqual([]);
     });
 
-    it('matches the FIRM-11132 task_summaries shape — every entry yields a safe string[]', () => {
-        // Exact values from the FIRM-11132 bundle's mutation 9 (final on-disk state).
-        const firm11132Concerns: Record<string, unknown> = {
-            'T001-T004': 'Spec Exploration Findings were wrong — superseded by RT1-RT3',
+    it('matches the legacy regression task_summaries shape — every entry yields a safe string[]', () => {
+        // Mirrors the shape captured in `fixtures/legacy-string-concerns.spec-context.json`:
+        // four task summary entries whose `concerns` are plain strings instead of arrays.
+        const legacyConcerns: Record<string, unknown> = {
+            'T001-T004': 'Original exploration findings were wrong — superseded by RT1-RT3',
             RT1: 'None',
-            RT2: 'Fees-Tax has no @else read-only branch (excluded). PDF preview tab still ART-7889. No SCSS change.',
+            RT2: 'Section three has no read-only branch (excluded). Preview tab tracked separately. No style change.',
             RT3: 'None',
         };
         const result: Record<string, string[]> = {};
-        for (const [id, raw] of Object.entries(firm11132Concerns)) {
+        for (const [id, raw] of Object.entries(legacyConcerns)) {
             result[id] = toStringArray(raw);
         }
         expect(result).toEqual({
-            'T001-T004': ['Spec Exploration Findings were wrong — superseded by RT1-RT3'],
+            'T001-T004': ['Original exploration findings were wrong — superseded by RT1-RT3'],
             RT1: [],
-            RT2: ['Fees-Tax has no @else read-only branch (excluded). PDF preview tab still ART-7889. No SCSS change.'],
+            RT2: ['Section three has no read-only branch (excluded). Preview tab tracked separately. No style change.'],
             RT3: [],
         });
     });

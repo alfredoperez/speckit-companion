@@ -19,7 +19,7 @@
   "approach": "Tolerate non-array task_summaries.concerns/files at three layers — normalize at the reader, guard in TasksCard, error-boundary around ActivityPanel — without changing the canonical TaskSummary type or forcing SDD writers to change shape.",
   "last_action": "PR #159 opened — fix(spec-viewer): tolerate non-array task_summaries concerns/files",
   "files_modified": [
-    "specs/095-fix-tasks-card-concerns/fixtures/firm-11132.spec-context.json",
+    "specs/095-fix-tasks-card-concerns/fixtures/legacy-string-concerns.spec-context.json",
     "webview/src/spec-viewer/components/cards/TasksCard.tsx",
     "webview/src/spec-viewer/components/cards/toStringArray.ts",
     "src/features/specs/specContextReader.ts",
@@ -37,15 +37,15 @@
   ],
   "decisions": [
     "Extracted toStringArray to its own .ts file (rather than keeping it module-local in TasksCard.tsx) so it can be imported by a non-JSX .test.ts file under the existing Jest config (testEnvironment: node, no jsx in tsconfig.test.json). Same helper logic; just lives one file over.",
-    "Skipped JSX render tests for TasksCard — Jest config has no jsdom and no preact-testing-library dep. The crash boundary is the toStringArray helper, so exercising it directly (plus the end-to-end reader normalization via the FIRM-11132 fixture) covers R001 + R006 without adding test infra.",
-    "Added a `specs/_*/` ignore rule for local-only demo spec dirs so the FIRM-11132 reproducer (specs/_demo-firm-11132/) stays out of the PR."
+    "Skipped JSX render tests for TasksCard — Jest config has no jsdom and no preact-testing-library dep. The crash boundary is the toStringArray helper, so exercising it directly (plus the end-to-end reader normalization via the regression fixture) covers R001 + R006 without adding test infra.",
+    "Added a `specs/_*/` ignore rule for local-only demo spec dirs so the local reproducer (specs/_demo-string-concerns/) stays out of the PR."
   ],
   "concerns": [],
   "task_summaries": {
     "T001": {
       "status": "DONE",
-      "did": "Wrote specs/095-fix-tasks-card-concerns/fixtures/firm-11132.spec-context.json — verbatim reconstruction of the final FIRM-11132 state with 4 task_summary entries whose concerns are plain strings.",
-      "files": ["specs/095-fix-tasks-card-concerns/fixtures/firm-11132.spec-context.json"],
+      "did": "Wrote specs/095-fix-tasks-card-concerns/fixtures/legacy-string-concerns.spec-context.json — verbatim reconstruction of the final legacy fixture state with 4 task_summary entries whose concerns are plain strings.",
+      "files": ["specs/095-fix-tasks-card-concerns/fixtures/legacy-string-concerns.spec-context.json"],
       "concerns": []
     },
     "T002": {
@@ -94,7 +94,7 @@
     },
     "T007": {
       "status": "DONE_WITH_CONCERNS",
-      "did": "Added 8 unit tests against toStringArray covering all R001 / R006 shapes including FIRM-11132's exact strings.",
+      "did": "Added 8 unit tests against toStringArray covering all R001 / R006 shapes including the regression fixture's strings.",
       "files": ["webview/src/spec-viewer/components/cards/__tests__/TasksCard.test.ts"],
       "concerns": [
         "Wrote a .test.ts (not .test.tsx) and exercised the helper directly rather than rendering the component — testEnvironment: 'node', no jsdom, and tsconfig.test.json has no jsx setting. The error-boundary force-throw assertion was not added since rendering the boundary needs the same JSX infra; the boundary's own logic is type-checked by tsc and trivially exercised by usage."
@@ -102,7 +102,7 @@
     },
     "T008": {
       "status": "DONE",
-      "did": "Added 9 unit tests for normalizeSpecContext.task_summaries covering every R002 coercion rule plus a regression test that reads the FIRM-11132 fixture and asserts every concerns/files field is string[] (or omitted).",
+      "did": "Added 9 unit tests for normalizeSpecContext.task_summaries covering every R002 coercion rule plus a regression test that reads the regression fixture and asserts every concerns/files field is string[] (or omitted).",
       "files": ["src/features/specs/__tests__/specContextReader.test.ts"],
       "concerns": []
     },
@@ -114,7 +114,7 @@
     },
     "FOLLOWUP": {
       "status": "DONE",
-      "did": "Per CP1 feedback: copied the fixture into specs/_demo-firm-11132/ (gitignored) for manual viewer reproduction, and added ActivityPanel.stories.tsx with 5 scenarios (empty, canonical, FIRM-11132 regression, mixed shapes, error boundary).",
+      "did": "Per CP1 feedback: copied the fixture into specs/_demo-string-concerns/ (gitignored) for manual viewer reproduction, and added ActivityPanel.stories.tsx with 5 scenarios (empty, canonical, legacy-shape regression, mixed shapes, error boundary).",
       "files": [
         "webview/src/spec-viewer/components/ActivityPanel.stories.tsx",
         ".gitignore"
