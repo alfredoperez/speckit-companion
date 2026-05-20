@@ -1,10 +1,9 @@
 {
-  "ai": "codex",
-  "ai_skills": true,
+  "ai": "gemini",
   "branch_numbering": "sequential",
-  "context_file": "AGENTS.md",
+  "context_file": "GEMINI.md",
   "here": true,
-  "integration": "codex",
+  "integration": "gemini",
   "preset": null,
   "script": "sh",
   "speckit_version": "0.5.1.dev0"
