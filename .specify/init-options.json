@@ -1,10 +1,9 @@
 {
-  "ai": "claude",
-  "ai_skills": true,
+  "ai": "qwen",
   "branch_numbering": "sequential",
-  "context_file": "CLAUDE.md",
+  "context_file": "QWEN.md",
   "here": true,
-  "integration": "claude",
+  "integration": "qwen",
   "preset": null,
   "script": "sh",
   "speckit_version": "0.5.1.dev0"
