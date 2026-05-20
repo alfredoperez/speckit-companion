@@ -689,7 +689,11 @@ class SpecItem extends vscode.TreeItem {
                 const stepHistory = specContext.stepHistory ?? {};
                 const stepName = documentType as StepName;
                 const cs = (specContext.currentStep ?? 'specify') as StepName;
-                if (STEP_NAMES.includes(stepName) && isStepCompleted(stepName, cs, stepHistory)) {
+                // Gate the green "pass" icon on the file actually existing —
+                // otherwise a hand-crafted .spec-context.json (or a deleted
+                // doc) can show "completed" while the description reads
+                // "not created", which is contradictory.
+                if (status !== 'empty' && STEP_NAMES.includes(stepName) && isStepCompleted(stepName, cs, stepHistory)) {
                     this.iconPath = new vscode.ThemeIcon('pass', new vscode.ThemeColor('testing.iconPassed'));
                 } else if (specContext.currentStep === documentType) {
                     this.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('charts.blue'));

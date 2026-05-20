@@ -1,6 +1,7 @@
 import { useState } from 'preact/hooks';
 import type { VSCodeApi, ViewerToExtensionMessage, SerializedFooterAction } from '../types';
 import { navState, viewerState } from '../signals';
+import { findActiveDoc } from '../scratchpad';
 import { Button } from '../../shared/components/Button';
 import { Toast } from '../../shared/components/Toast';
 import { UndoToast } from '../../shared/components/UndoToast';
@@ -62,6 +63,28 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
     const reactivateConfirm = useInlineConfirm(
         () => vscode.postMessage({ type: 'reactivateSpec' })
     );
+
+    // Scratchpad view: read-only history of inline-comment batches. The only
+    // footer affordance is Edit, which opens the file in the standard editor
+    // for manual cleanup. The dispatch path stays on the source-tab batch
+    // Refine — there is no scratchpad-tab Refine.
+    const activeDoc = findActiveDoc(ns);
+    if (activeDoc?.isScratchpad) {
+        return (
+            <footer class="actions">
+                <Toast id="action-toast" />
+                <div class="actions-left"></div>
+                <div class="actions-right">
+                    <Button
+                        label="Edit"
+                        variant="secondary"
+                        title="Open this scratchpad in the editor"
+                        onClick={send({ type: 'editDocument' })}
+                    />
+                </div>
+            </footer>
+        );
+    }
 
     const status = vs?.status || ns.footerState?.specStatus || ns.specStatus || initialSpecStatus;
     const isTasksDone = status === 'tasks-done';

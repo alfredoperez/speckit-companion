@@ -11,6 +11,7 @@ import {
     DocumentType,
 } from './types';
 import { SPEC_CONTEXT_FILENAME } from '../specs/specContextReader';
+import { extractBlock } from './extractBlock';
 import { ConfigKeys, SpecStatuses, FooterActionIds } from '../../core/constants';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig } from '../../core/types/config';
@@ -570,10 +571,11 @@ async function handleOpenFile(
 }
 
 /**
- * Handle submit refinements - dispatch a direct-edit prompt for the current
- * doc. We deliberately avoid invoking any per-step slash command (e.g.
- * /speckit.plan) because some of those commands re-run setup scripts that
- * overwrite the existing file from a template (see issue #153).
+ * Dispatch inline-comment batches as a direct-edit prompt to the AI and
+ * append the same batch to the matching scratchpad file as history.
+ *
+ * Never invoke a per-step slash command (e.g. /speckit.plan) — those re-run
+ * setup scripts that overwrite the source from a template (issue #153).
  */
 async function handleSubmitRefinements(
     specDirectory: string,
@@ -587,9 +589,130 @@ async function handleSubmitRefinements(
     const filename = `${docType}.md`;
     const targetPath = instance.state.changeRoot || specDirectory;
 
-    const refinementText = refinements
-        .map(r => `- Line ${r.lineNum} ("${r.lineContent.slice(0, 50)}${r.lineContent.length > 50 ? '...' : ''}"): ${r.comment}`)
-        .join('\n');
+    // Read the source markdown so each refinement can be enriched with its
+    // surrounding block (paragraph or list item) and nearest preceding heading.
+    // Falls back to the passed-in single line if the source can't be read.
+    const sourceDoc = instance.state.availableDocuments.find(
+        d => d.isCore && d.type === docType,
+    );
+    let sourceLines: string[] | null = null;
+    if (sourceDoc) {
+        try {
+            const data = await vscode.workspace.fs.readFile(vscode.Uri.file(sourceDoc.filePath));
+            sourceLines = Buffer.from(data).toString('utf-8').split('\n');
+        } catch {
+            sourceLines = null;
+        }
+    }
+
+    interface Enriched {
+        lineNum: number;
+        comment: string;
+        heading: string | null;
+        startLine: number;
+        endLine: number;
+        block: string;
+    }
+    const enriched: Enriched[] = refinements.map(r => {
+        if (sourceLines) {
+            const block = extractBlock(sourceLines, r.lineNum);
+            if (block) {
+                return {
+                    lineNum: r.lineNum,
+                    comment: r.comment,
+                    heading: block.heading,
+                    startLine: block.startLine,
+                    endLine: block.endLine,
+                    block: block.text,
+                };
+            }
+        }
+        return {
+            lineNum: r.lineNum,
+            comment: r.comment,
+            heading: null,
+            startLine: r.lineNum,
+            endLine: r.lineNum,
+            block: r.lineContent,
+        };
+    });
+
+    const blockquote = (text: string) =>
+        text.split('\n').map(l => `> ${l}`).join('\n');
+
+    const formatRefinement = (r: Enriched, mode: 'prompt' | 'scratchpad'): string => {
+        if (mode === 'prompt') {
+            const range = r.startLine === r.endLine
+                ? `Line ${r.lineNum}`
+                : `Line ${r.lineNum} (block lines ${r.startLine}–${r.endLine})`;
+            const where = r.heading ? `${range} in section "${r.heading}"` : range;
+            const indented = blockquote(r.block).replace(/^/gm, '  ');
+            return `- ${where}: ${r.comment}\n${indented}`;
+        }
+        const label = r.heading
+            ? `Line ${r.lineNum} · ${r.heading}`
+            : `Line ${r.lineNum}`;
+        return [
+            `### ${label}`,
+            '',
+            '**Original**',
+            '',
+            blockquote(r.block),
+            '',
+            '**Comment**',
+            '',
+            r.comment,
+        ].join('\n');
+    };
+
+    const promptRefinementText = enriched
+        .map(r => formatRefinement(r, 'prompt'))
+        .join('\n\n');
+    const scratchpadRefinementText = enriched
+        .map(r => formatRefinement(r, 'scratchpad'))
+        .join('\n\n');
+
+    // Persist this batch to the matching scratchpad file. Synthesis emits one
+    // scratchpad entry per existing core source doc, so when one matches the
+    // current docType we append; otherwise we skip persistence and just
+    // dispatch the AI prompt.
+    const scratchpad = instance.state.availableDocuments.find(
+        d => d.isScratchpad && d.scratchpadFor === docType,
+    );
+    if (scratchpad) {
+        let existing = '';
+        let wasFirstWrite = false;
+        try {
+            const data = await vscode.workspace.fs.readFile(vscode.Uri.file(scratchpad.filePath));
+            existing = Buffer.from(data).toString('utf-8');
+        } catch {
+            wasFirstWrite = true;
+        }
+        try {
+            const stamp = new Date().toISOString().slice(0, 16).replace('T', ' ');
+            const heading = `## Refinement batch · ${stamp} UTC`;
+            // Newest batch on top — reads like a review feed. Earlier history
+            // sits below a horizontal rule.
+            const trimmedExisting = existing.replace(/^\s+|\s+$/g, '');
+            const next = trimmedExisting
+                ? `${heading}\n\n${scratchpadRefinementText}\n\n---\n\n${trimmedExisting}\n`
+                : `${heading}\n\n${scratchpadRefinementText}\n`;
+            await vscode.workspace.fs.writeFile(
+                vscode.Uri.file(scratchpad.filePath),
+                Buffer.from(next, 'utf-8'),
+            );
+            deps.outputChannel.appendLine(
+                `[SpecViewer] Appended ${refinements.length} refinement(s) to ${scratchpad.fileName}`,
+            );
+            // First write needs an explicit re-scan so the chip appears
+            // without waiting on the file watcher.
+            if (wasFirstWrite) {
+                await deps.updateContent(specDirectory, instance.state.currentDocument);
+            }
+        } catch (error) {
+            deps.outputChannel.appendLine(`[SpecViewer] Error appending to scratchpad: ${error}`);
+        }
+    }
 
     const prompt = [
         `Edit ${targetPath}/${filename} in place to apply ONLY these line-specific refinements.`,
@@ -598,9 +721,10 @@ async function handleSubmitRefinements(
         `DO NOT replace the file — make targeted edits only.`,
         ``,
         `Refinements requested:`,
-        refinementText,
+        promptRefinementText,
     ].join('\n');
 
     deps.outputChannel.appendLine(`[SpecViewer] Submitting ${refinements.length} refinements for ${docType} (direct edit)`);
     await deps.executeInTerminal(prompt);
 }
+

@@ -209,7 +209,33 @@ The "Next Step" button shows only when:
 - The next core document doesn't exist yet
 - Label shows the next step name: "Plan", "Tasks", or "Implement"
 
-The **Refine** button (`✨ Refine (N)`) appears dynamically when inline comments are pending.
+The source-tab **Refine** button (`✨ Refine (N)`) still appears dynamically
+when pending inline comments are collected. Submitting it (a) dispatches a
+direct-edit prompt to the AI for the source document and (b) appends the same
+batch to the matching scratchpad file as a timestamped history block.
+
+### Scratchpad footer (overrides the matrix above)
+
+When the active document is a **scratchpad** (`*-extra.md`, `isScratchpad: true`)
+the footer is replaced by a dedicated, scratchpad-only set — gated entirely on
+the active doc, independent of spec status:
+
+| Active doc | Left side | Right side |
+|------------|-----------|------------|
+| scratchpad (file exists) | — | Edit, **Refine** |
+| scratchpad (file absent) | — | — (the create action lives in the empty-state body) |
+
+- **Edit** reuses the standard `editDocument` affordance to open the scratchpad
+  in the editor.
+- **Refine** posts `applyScratchpad`: the extension reads the scratchpad and
+  dispatches a **direct, in-place edit** of the matching source document. It is
+  never routed through the generic `footerAction` catalog and never invokes a
+  `/speckit-*` slash command (those re-run setup scripts that overwrite the
+  source from a template). An empty scratchpad is guarded — Refine dispatches
+  nothing and shows a "Nothing to apply" toast.
+- Refine on the scratchpad tab is useful for re-applying after manual edits to
+  the scratchpad file; the source-tab batch Refine remains the primary path
+  for ad-hoc line comments collected via hover.
 
 ---
 

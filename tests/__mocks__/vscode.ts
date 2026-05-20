@@ -95,6 +95,8 @@ export const workspace = {
     fs: {
         readDirectory: jest.fn().mockResolvedValue([]),
         stat: jest.fn().mockRejectedValue(new Error('not found')),
+        readFile: jest.fn().mockResolvedValue(new Uint8Array()),
+        writeFile: jest.fn().mockResolvedValue(undefined),
     },
     findFiles: jest.fn().mockResolvedValue([]),
     getConfiguration: jest.fn().mockReturnValue({

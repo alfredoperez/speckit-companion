@@ -141,6 +141,23 @@ export function renderMarkdown(markdown: string): string {
     let lastClosedListCount = 0;
     let inTable = false;
     let tableRows: string[] = [];
+    let inBlockquote = false;
+    let blockquoteLines: string[] = [];
+    let blockquoteStartLine = 0;
+
+    const flushBlockquote = () => {
+        if (!inBlockquote) return;
+        const inner = blockquoteLines
+            .map(l => parseInline(l) || '&nbsp;')
+            .join('<br>\n');
+        html += wrapWithLineActions(
+            `<blockquote><p>${inner}</p></blockquote>`,
+            blockquoteStartLine,
+        );
+        inBlockquote = false;
+        blockquoteLines = [];
+        blockquoteStartLine = 0;
+    };
 
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
@@ -185,6 +202,27 @@ export function renderMarkdown(markdown: string): string {
         if (inCodeBlock) {
             codeContent.push(line);
             continue;
+        }
+
+        // Blockquote (group consecutive '>' lines into one <blockquote>).
+        // Must come before list/empty handling so we accumulate first and
+        // flush on the first non-quoted line.
+        if (line.startsWith('>')) {
+            if (!inBlockquote) {
+                if (inList) {
+                    html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
+                    lastClosedListType = listType;
+                    lastClosedListCount = listItemCount;
+                    inList = false;
+                }
+                inBlockquote = true;
+                blockquoteStartLine = sourceLineNum;
+            }
+            // Trim a single leading "> " (preserve any further leading space).
+            blockquoteLines.push(line.replace(/^>\s?/, ''));
+            continue;
+        } else if (inBlockquote) {
+            flushBlockquote();
         }
 
         // Tables
@@ -251,15 +289,6 @@ export function renderMarkdown(markdown: string): string {
             lastClosedListType = null;
             lastClosedListCount = 0;
             html += '<hr>\n';
-            continue;
-        }
-
-        // Blockquote - wrap with line actions for commenting
-        if (line.startsWith('>')) {
-            lastClosedListType = null;
-            lastClosedListCount = 0;
-            const content = parseInline(line.slice(1).trim());
-            html += wrapWithLineActions(`<blockquote><p>${content}</p></blockquote>`, sourceLineNum);
             continue;
         }
 
@@ -381,6 +410,9 @@ export function renderMarkdown(markdown: string): string {
     }
 
     // Close any open elements
+    if (inBlockquote) {
+        flushBlockquote();
+    }
     if (inList) {
         html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
     }

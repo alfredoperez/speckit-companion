@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### New Features
+
+- **Per-Document Scratchpads**: Each core document (spec/plan/tasks) gains an optional scratchpad sub-tab — a plain markdown file (`spec-extra.md`, `plan-extra.md`, `tasks-extra.md`) for freeform refinement notes, questions, deferred concerns, or AI instructions. Scratchpads are lazily created from an empty state (single **Create `<doc>-extra.md`** action), styled distinctly in the children rail, and carry a "has notes" dot when non-empty. Their **Refine** button reads the scratchpad and dispatches a direct, in-place AI edit of the matching source document (never a template regeneration, never a slash command); empty scratchpads are guarded. Scratchpads are non-core: they never gate phase transitions, never count toward task completion, and are committable to source control.
+- **Inline comments now persist to the scratchpad**: When the existing batch **Refine** button on a source tab submits collected line comments to the AI, those same comments are also appended to the matching scratchpad file as a timestamped history block. The hover-to-add comment workflow (`+` button on each line, the comment-entry dialog, the comment cards) is unchanged — the scratchpad just becomes a durable record of every batch you've sent.
+
 ## [0.16.0] - 2026-05-12
 
 ### New Features

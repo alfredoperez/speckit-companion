@@ -240,3 +240,17 @@
     font-weight: 600;
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent, #4a9eff) 35%, transparent);
 }
+
+/* Scratchpad ("Notes") sub-tab: dashed underline + muted italic so the user
+   reads it as a working surface, not an authoritative artifact (FR-005). */
+.step-child--scratchpad {
+    font-style: italic;
+    color: var(--text-muted);
+    text-decoration: underline dashed color-mix(in srgb, var(--text-muted) 60%, transparent);
+    text-underline-offset: 3px;
+}
+
+.step-child--scratchpad.active {
+    font-style: italic;
+}
+

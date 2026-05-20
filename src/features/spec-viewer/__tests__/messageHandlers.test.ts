@@ -329,14 +329,17 @@ describe('messageHandlers - submitRefinements', () => {
         jest.clearAllMocks();
     });
 
-    function dispatchRefinements(currentDocument: 'spec' | 'plan' | 'tasks') {
+    function dispatchRefinements(
+        currentDocument: 'spec' | 'plan' | 'tasks',
+        availableDocuments: Array<Record<string, unknown>> = [],
+    ) {
         const deps = createMockDeps({
             getInstance: jest.fn().mockReturnValue({
                 state: {
                     specDirectory: SPEC_DIR,
                     specName: 'my-feature',
                     currentDocument,
-                    availableDocuments: [],
+                    availableDocuments,
                 },
                 debounceTimer: undefined,
             }),
@@ -397,5 +400,145 @@ describe('messageHandlers - submitRefinements', () => {
             expect(prompt).toContain(`${SPEC_DIR}/${doc}.md`);
             expect(prompt).toContain('DO NOT regenerate');
         }
+    });
+
+    it('appends the batch to the matching scratchpad file when one exists', async () => {
+        const scratchpad = {
+            type: 'spec-extra',
+            label: 'Spec Notes',
+            fileName: 'spec-extra.md',
+            filePath: `${SPEC_DIR}/spec-extra.md`,
+            exists: false,
+            isCore: false,
+            category: 'related',
+            parentStep: 'spec',
+            isScratchpad: true,
+            scratchpadFor: 'spec',
+        };
+        (vscode.workspace.fs.stat as jest.Mock).mockRejectedValue(new Error('not found'));
+        (vscode.workspace.fs.writeFile as jest.Mock).mockResolvedValue(undefined);
+
+        const { deps, handler, refinements } = dispatchRefinements('spec', [scratchpad]);
+
+        await handler({ type: 'submitRefinements', refinements } as any);
+
+        expect(vscode.workspace.fs.writeFile).toHaveBeenCalledTimes(1);
+        const [, data] = (vscode.workspace.fs.writeFile as jest.Mock).mock.calls[0];
+        const written = new TextDecoder().decode(data as Uint8Array);
+        expect(written).toContain('tighten wording');
+        expect(written).toContain('add detail');
+        // Batch is h2, entries are h3, labels make role unambiguous.
+        expect(written).toContain('## Refinement batch');
+        expect(written).toContain('### Line 5');
+        expect(written).toContain('### Line 12');
+        expect(written).toContain('**Original**');
+        expect(written).toContain('**Comment**');
+
+        // AI dispatch still happens — persistence is layered on, not replacing.
+        expect(deps.executeInTerminal).toHaveBeenCalledTimes(1);
+    });
+
+    it('skips scratchpad append when no matching scratchpad exists in the doc set', async () => {
+        const { deps, handler, refinements } = dispatchRefinements('spec', []);
+
+        await handler({ type: 'submitRefinements', refinements } as any);
+
+        expect(vscode.workspace.fs.writeFile).not.toHaveBeenCalled();
+        // AI dispatch still happens.
+        expect(deps.executeInTerminal).toHaveBeenCalledTimes(1);
+    });
+
+    it('enriches each refinement with its surrounding block + section heading from the source', async () => {
+        // line numbers (1-based):
+        // 1: "# Spec"
+        // 2: ""
+        // 3: "## Requirements"
+        // 4: ""
+        // 5: "Some paragraph text"
+        // 6: "that wraps onto a second line"
+        // 7: "and a third."
+        // 8: ""
+        // 9: "- **FR-001**: System MUST persist"
+        //10: "  the chosen theme across sessions."
+        //11: "- **FR-002**: Honor OS theme."
+        const sourceMd = [
+            '# Spec',
+            '',
+            '## Requirements',
+            '',
+            'Some paragraph text',
+            'that wraps onto a second line',
+            'and a third.',
+            '',
+            '- **FR-001**: System MUST persist',
+            '  the chosen theme across sessions.',
+            '- **FR-002**: Honor OS theme.',
+        ].join('\n');
+
+        const sourceDoc = {
+            type: 'spec',
+            label: 'Spec',
+            fileName: 'spec.md',
+            filePath: `${SPEC_DIR}/spec.md`,
+            exists: true,
+            isCore: true,
+            category: 'core',
+        };
+        const scratchpad = {
+            type: 'spec-extra',
+            label: 'Spec Notes',
+            fileName: 'spec-extra.md',
+            filePath: `${SPEC_DIR}/spec-extra.md`,
+            exists: false,
+            isCore: false,
+            category: 'related',
+            parentStep: 'spec',
+            isScratchpad: true,
+            scratchpadFor: 'spec',
+        };
+
+        (vscode.workspace.fs.stat as jest.Mock).mockImplementation(async (u: any) => {
+            const p = u?.fsPath ?? u?.path ?? '';
+            if (p === `${SPEC_DIR}/spec.md`) return { type: vscode.FileType.File };
+            throw new Error('not found');
+        });
+        (vscode.workspace.fs.readFile as jest.Mock).mockImplementation(async (u: any) => {
+            const p = u?.fsPath ?? u?.path ?? '';
+            if (p === `${SPEC_DIR}/spec.md`) return Buffer.from(sourceMd);
+            return Buffer.from('');
+        });
+        (vscode.workspace.fs.writeFile as jest.Mock).mockResolvedValue(undefined);
+
+        const { deps, handler } = dispatchRefinements('spec', [sourceDoc, scratchpad]);
+        const refinements = [
+            { lineNum: 6, lineContent: 'that wraps onto a second line', comment: 'tighten this paragraph' },
+            { lineNum: 9, lineContent: '- **FR-001**: System MUST persist', comment: 'scope unclear' },
+        ];
+
+        await handler({ type: 'submitRefinements', refinements } as any);
+
+        const prompt = (deps.executeInTerminal as jest.Mock).mock.calls[0][0] as string;
+
+        // Exact line numbers preserved for the AI.
+        expect(prompt).toContain('Line 6');
+        expect(prompt).toContain('Line 9');
+        // Section heading attached.
+        expect(prompt).toContain('Requirements');
+        // Full paragraph block (all three lines) for line 6.
+        expect(prompt).toContain('Some paragraph text');
+        expect(prompt).toContain('and a third.');
+        // FR-001 list item + its continuation captured (but FR-002 NOT).
+        expect(prompt).toContain('the chosen theme across sessions');
+        expect(prompt).not.toMatch(/FR-002/);
+
+        // Scratchpad gets the same enrichment, in the labeled-sections shape.
+        const [, data] = (vscode.workspace.fs.writeFile as jest.Mock).mock.calls[0];
+        const written = new TextDecoder().decode(data as Uint8Array);
+        expect(written).toContain('### Line 6 · Requirements');
+        expect(written).toContain('### Line 9 · Requirements');
+        expect(written).toContain('**Original**');
+        expect(written).toContain('**Comment**');
+        expect(written).toContain('Some paragraph text');
+        expect(written).toContain('the chosen theme across sessions');
     });
 });

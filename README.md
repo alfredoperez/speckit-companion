@@ -18,7 +18,7 @@ The spec workspace for developers running AI agents through Spec-Driven Developm
 
 ## Why it exists
 
-**Review AI-generated specs the way you review code.** Add inline comments on specific lines, refine requirements, and catch a vague requirement before the AI turns it into 200 lines of wrong code.
+**Review AI-generated specs the way you review code.** Add inline comments on specific lines, refine requirements, and catch a vague requirement before the AI turns it into 200 lines of wrong code. Every comment you submit is also captured as a markdown entry in a per-document scratchpad, so the history is durable across sessions.
 
 **Plug any AI assistant into any spec-driven workflow.** Six providers ship today (Claude Code, Gemini, GitHub Copilot, Codex, Qwen, OpenCode), and the workflow engine accepts custom phases, commands, and sub-documents. Drop in [Agent Teams Lite](https://github.com/Gentleman-Programming/agent-teams-lite), your own SDD process, or anything that takes commands and produces markdown.
 
@@ -35,10 +35,18 @@ Guide your features through structured phases with a dedicated editor that rende
 
 ### Inline Review Comments
 
-Review spec documents with inline comments. Add feedback directly on specific lines, refine requirements, and collaborate on specs before implementation begins.
+Review spec documents with inline comments. Add feedback directly on specific lines, refine requirements, and collaborate on specs before implementation begins. Every batch you submit via the **Refine** button is dispatched to the AI for a direct, in-place edit of the source document — and is also appended to the matching per-document scratchpad so you have a permanent, committable record.
 
 ![Inline Comments](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/inline-comment-dialog.png)
 *Inline review comments. Catch a vague requirement on line 12 before the AI turns it into 200 lines of wrong code.*
+
+### Per-Document Scratchpads
+
+Each core document (spec, plan, tasks) gets an optional scratchpad sub-tab — a plain markdown file (`spec-extra.md`, `plan-extra.md`, `tasks-extra.md`) for freeform refinement notes, questions, deferred concerns, or AI instructions. Two ways content lands here:
+1. Submitting line comments via the source-tab **Refine** button appends a timestamped batch entry automatically.
+2. You can also type free-form notes directly into the file (via the empty-state **Create** button or **Edit** affordance).
+
+Scratchpads are lazily created, committable, and never count toward phase gating or task completion. The scratchpad-tab **Refine** button re-applies the file to the matching source — handy after manual edits.
 
 ### Create Specs Visually
 
@@ -73,6 +81,7 @@ The spec viewer is built for fast scanning of long-form specs:
 - **Title-leading header**: the spec name dominates above a compact `[STATUS] [⌥ branch] · date` cluster, so the page anchor is the first thing your eye lands on.
 - **Sticky chrome**: step tabs (Specification / Plan / Tasks) and header stay pinned at the top while you scroll.
 - **Children rail**: when a step has sub-files (e.g., Plan's `data-model.md`, `quickstart.md`, `research.md`), they render as chips directly under the active step tab, with the parent step itself as the first chip so any sub-doc has a one-click path back to the overview.
+- **Scratchpad sub-tabs**: each core document (spec/plan/tasks) carries a `… Notes` scratchpad chip in the children rail, styled distinctly (dashed, italic) so it never reads as the authoritative artifact. Opening one whose file doesn't exist yet shows a single **Create `<doc>-extra.md`** action; once it has content a small dot marks the chip. The scratchpad footer offers **Edit** (open in the editor) and **Refine** (apply the notes to the source doc as a direct in-place edit). The **Refine** button appears only on a scratchpad tab, never on a source-document tab.
 - **Table of contents**: sticky outline column on the left of the content area. Defaults to h2-only (so phase-heavy `tasks.md` reads as a clean ~7-entry list); a small `+` toggle expands h3 subsections when needed. Auto-hides on narrow panes.
 - **Quiet content**: when the structured header has the metadata, in-content duplicates (the `Input:` block, repeated branch chips, literal `Slug:`/`Date:` paragraphs) are suppressed so the body is just the spec content.
 - **Diagrams**: wide mermaid diagrams scroll horizontally inside the prose column instead of bleeding past it. Each diagram has its own `−` / Reset / `+` zoom controls.

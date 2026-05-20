@@ -42,12 +42,17 @@ export function NavigationBar() {
     // Related tabs for the current step — rendered in a right-aligned slot
     // inside .nav-primary (R010, R011). The Overview tab is removed since
     // the parent step-tab itself routes to the overview.
+    // Scratchpads are hidden until the *-extra.md file exists on disk — the
+    // file is created as a side effect of submitting inline-comment batches,
+    // there's no manual create path.
+    const isVisible = (d: typeof relatedDocs[number]) =>
+        !d.isScratchpad || d.exists;
     const relevantRelatedDocs = relatedDocs.filter(d =>
-        d.parentStep === currentDoc
+        d.parentStep === currentDoc && isVisible(d)
     );
     const displayRelatedDocs = isViewingRelatedDoc
         ? relatedDocs.filter(d => {
-            return !d.parentStep || d.parentStep === viewingRelatedDoc?.parentStep;
+            return (!d.parentStep || d.parentStep === viewingRelatedDoc?.parentStep) && isVisible(d);
         })
         : relevantRelatedDocs;
 
@@ -130,7 +135,7 @@ export function NavigationBar() {
                         {displayRelatedDocs.map(doc => (
                             <button
                                 key={doc.type}
-                                class={`step-child ${doc.type === currentDoc ? 'active' : ''}`}
+                                class={`step-child ${doc.isScratchpad ? 'step-child--scratchpad' : ''} ${doc.type === currentDoc ? 'active' : ''}`}
                                 data-doc={doc.type}
                                 onClick={() => handleRelatedClick(doc.type)}
                             >

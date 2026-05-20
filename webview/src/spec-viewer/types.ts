@@ -17,7 +17,8 @@ export interface VSCodeApi {
 // ============================================
 
 export type CoreDocumentType = 'spec' | 'plan' | 'tasks';
-export type DocumentType = CoreDocumentType | string;
+export type ScratchpadDocumentType = 'spec-extra' | 'plan-extra' | 'tasks-extra';
+export type DocumentType = CoreDocumentType | ScratchpadDocumentType | string;
 
 export interface SpecDocument {
     type: DocumentType;
@@ -28,6 +29,10 @@ export interface SpecDocument {
     isCore: boolean;
     category?: 'core' | 'related';
     parentStep?: string;
+    /** True when this entry represents a *-extra.md scratchpad. */
+    isScratchpad?: boolean;
+    /** Source doc type this scratchpad pairs with. */
+    scratchpadFor?: DocumentType;
 }
 
 /**
