@@ -40,6 +40,9 @@ src/
 │   │                           # specEditorCommands.ts, tempFileManager.ts, types.ts, index.ts
 │   ├── spec-viewer/            # specViewerProvider.ts, specViewerCommands.ts,
 │   │                           # messageHandlers.ts, documentScanner.ts,
+│   │                           # extractBlock.ts (walks source markdown for
+│   │                           #   the block + section anchoring inline-
+│   │                           #   comment batches into the scratchpad),
 │   │                           # phaseCalculation.ts, staleness.ts,
 │   │                           # stateDerivation.ts (060: ctx → ViewerState),
 │   │                           # footerActions.ts (060: scope + visibility),
@@ -75,6 +78,9 @@ webview/
 │   │   ├── highlighting.ts
 │   │   ├── modal.ts
 │   │   ├── navigation.ts
+│   │   ├── scratchpad.ts       # Pure helper: which doc is currently active
+│   │   │                       # in nav state? Used by FooterActions to
+│   │   │                       # branch to the scratchpad-tab footer.
 │   │   ├── state.ts
 │   │   ├── toc.ts              # Builds a sticky table-of-contents sidebar from rendered H2/H3 headings;
 │   │   │                       # tracks the active heading via IntersectionObserver and toggles a

@@ -79,7 +79,7 @@ Every canonical status is mapped to a distinct color treatment so badges read at
 
 - Green beaker icon — completed spec
 - Blue beaker icon — spec with an active workflow step
-- Green check — completed step
+- Green check — completed step (requires the step's file to exist on disk; a hand-crafted or out-of-sync `.spec-context.json` that claims completion without the file shows the default empty icon instead)
 - Green pulsing glow — step actively being worked on
 - Blue dot — current step
 

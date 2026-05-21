@@ -12,9 +12,10 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/preact';
+import type { SpecDocument } from '../types';
 import { navState, viewerState } from '../signals';
 import { FooterActions } from './FooterActions';
-import { mockNavState } from './__stories__/mockData';
+import { mockDoc, mockNavState } from './__stories__/mockData';
 
 const meta: Meta<typeof FooterActions> = {
     title: 'Viewer/FooterActions',
@@ -241,5 +242,35 @@ export const Archived: Story = {
             { id: 'reactivate', label: 'Reactivate', scope: 'spec', tooltip: 'Reactivate archived spec' },
         ]);
         return <FooterActions initialSpecStatus="archived" />;
+    },
+};
+
+// ── Scratchpad tab ──────────────────────────────────────────
+// When the active doc is a scratchpad (a `<doc>-extra.md` history file),
+// the footer is replaced by a read-only set with only an Edit button.
+
+export const ScratchpadTab: Story = {
+    name: 'Scratchpad tab',
+    render: () => {
+        const specScratch: SpecDocument = {
+            type: 'spec-extra',
+            label: 'Spec Notes',
+            fileName: 'spec-extra.md',
+            filePath: '/workspace/specs/my-feature/spec-extra.md',
+            exists: true,
+            isCore: false,
+            category: 'related',
+            parentStep: 'spec',
+            isScratchpad: true,
+            scratchpadFor: 'spec',
+        };
+        navState.value = mockNavState({
+            coreDocs: [mockDoc('spec', true, 'Specification'), mockDoc('plan', true, 'Plan'), mockDoc('tasks', true, 'Tasks')],
+            relatedDocs: [specScratch],
+            currentDoc: 'spec-extra',
+            isViewingRelatedDoc: true,
+        });
+        viewerState.value = null;
+        return <FooterActions initialSpecStatus="active" />;
     },
 };

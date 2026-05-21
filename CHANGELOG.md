@@ -6,8 +6,12 @@ All notable changes to this project will be documented in this file.
 
 ### New Features
 
-- **Per-Document Scratchpads**: Each core document (spec/plan/tasks) gains an optional scratchpad sub-tab — a plain markdown file (`spec-extra.md`, `plan-extra.md`, `tasks-extra.md`) for freeform refinement notes, questions, deferred concerns, or AI instructions. Scratchpads are lazily created from an empty state (single **Create `<doc>-extra.md`** action), styled distinctly in the children rail, and carry a "has notes" dot when non-empty. Their **Refine** button reads the scratchpad and dispatches a direct, in-place AI edit of the matching source document (never a template regeneration, never a slash command); empty scratchpads are guarded. Scratchpads are non-core: they never gate phase transitions, never count toward task completion, and are committable to source control.
-- **Inline comments now persist to the scratchpad**: When the existing batch **Refine** button on a source tab submits collected line comments to the AI, those same comments are also appended to the matching scratchpad file as a timestamped history block. The hover-to-add comment workflow (`+` button on each line, the comment-entry dialog, the comment cards) is unchanged — the scratchpad just becomes a durable record of every batch you've sent.
+- **Inline review comments now persist to a per-document scratchpad**: When you submit a batch of inline comments via the source-tab **Refine** button, the AI gets the direct-edit prompt as before *and* the same batch is appended to a matching `<doc>-extra.md` history file (`spec-extra.md`, `plan-extra.md`, `tasks-extra.md`). Each entry records the exact source line, the nearest preceding heading, and the full source block (paragraph or list item, walked from the actual source markdown) so the trail stays meaningful even after the source file is edited and line numbers shift. Entries render as a labeled `## Refinement batch · TIMESTAMP` → `### Line N · Section` → **Original** quote → **Comment** layout, newest batch on top, with `---` rules between batches. The scratchpad sub-tab appears in the children rail only once the file exists (no manual create path) and is a read-only history with only an Edit affordance for manual cleanup. Scratchpads are non-core: never gate phase transitions, never count toward task completion, committable to source control.
+
+### Bug Fixes
+
+- **Multi-line blockquotes render as one card**: The viewer's markdown renderer now groups consecutive `>` lines into a single `<blockquote>` element instead of fragmenting them into one card per line.
+- **Sidebar green check no longer contradicts "not created"**: The pass icon on Spec / Plan / Tasks sub-items in the explorer tree is now gated on the file actually existing on disk, so a hand-crafted or out-of-sync `.spec-context.json` can't show "completed" next to a missing document.
 
 ## [0.16.0] - 2026-05-12
 
