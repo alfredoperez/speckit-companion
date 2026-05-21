@@ -5,7 +5,8 @@
   "testCommand": "npm test",
   "hooks": {
     "pre:code-review": [
-      { "skill": "/install-local" }
+      { "skill": "/install-local" },
+      { "skill": "/code-review" }
     ],
     "pre:commit": [
       { "shell": "git reset HEAD -- package.json package-lock.json 2>/dev/null || true", "blocking": false },
