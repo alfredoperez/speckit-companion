@@ -197,6 +197,23 @@ npm run test:watch    # Watch mode
 - **VS Code mock**: Extension-side tests use `tests/__mocks__/vscode.ts` (mapped via `jest.config.js` `moduleNameMapper`). Add mock APIs there as needed.
 - **Config**: Jest uses `ts-jest` with `tsconfig.test.json`
 
+### Demo testing specs (fixed baseline — never commit local edits)
+
+`specs/_demo-specified/`, `specs/_demo-planned/`, and `specs/_demo-tasked/` are
+**committed manual-testing fixtures**, each pinned to one viewer state:
+
+| Dir | State | Files present | Footer button it surfaces |
+|-----|-------|---------------|---------------------------|
+| `_demo-specified` | `specified` | `spec.md` | **Plan** |
+| `_demo-planned` | `planned` | `spec.md`, `plan.md` | **Tasks** |
+| `_demo-tasked` | `ready-to-implement` | `spec.md`, `plan.md`, `tasks.md` | **Implement** |
+
+They exist so the viewer can be opened against a known state during development.
+**Do NOT commit local changes to these three dirs** — when exercising them you
+will mutate `.spec-context.json`/files; never `git add` those changes. To restore
+the baseline after playing around: `git restore specs/_demo-specified specs/_demo-planned specs/_demo-tasked`
+(or `git checkout -- …`). Other `specs/_*/` dirs remain gitignored (local-only).
+
 ## Tech Stack
 
 - TypeScript 5.3+ (ES2022 target, strict mode)

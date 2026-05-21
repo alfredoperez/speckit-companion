@@ -26,3 +26,10 @@ storybook-static/
 # Local-only demo spec dirs (underscore-prefixed under specs/)
 specs/_*/
 
+# Canonical demo testing specs are committed at a fixed baseline (specified /
+# planned / tasked-out states). They are tracked, but local edits must NOT be
+# committed — see CLAUDE.md "Demo testing specs". Revert with `git restore`.
+!specs/_demo-specified/
+!specs/_demo-planned/
+!specs/_demo-tasked/
+
