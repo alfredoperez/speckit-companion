@@ -9,17 +9,54 @@ export default meta;
 
 type Story = StoryObj<typeof InlineEditor>;
 
+const lineArgs = {
+    onSubmit: (comment: string) => console.log('submit', comment),
+    onCancel: () => console.log('cancel'),
+    onContextAction: (action: string) => console.log('action', action),
+};
+
+// Single-card layout on a plain paragraph line: footer shows "Remove Line".
 export const LineMode: Story = {
     args: {
         mode: 'line',
         lineNum: 12,
         lineType: 'paragraph',
-        onSubmit: (comment: string) => console.log('submit', comment),
-        onCancel: () => console.log('cancel'),
-        onContextAction: (action: string) => console.log('action', action),
+        ...lineArgs,
     },
 };
 
+// Task line: footer carries two secondary actions (Toggle + Remove Task).
+export const TaskMode: Story = {
+    args: {
+        mode: 'line',
+        lineNum: 24,
+        lineType: 'task',
+        ...lineArgs,
+    },
+};
+
+// Section heading line: footer shows "Remove Section".
+export const SectionMode: Story = {
+    args: {
+        mode: 'line',
+        lineNum: 5,
+        lineType: 'section',
+        ...lineArgs,
+    },
+};
+
+// User story header line: footer shows "Remove Story".
+export const UserStoryMode: Story = {
+    args: {
+        mode: 'line',
+        lineNum: 8,
+        lineType: 'user-story',
+        ...lineArgs,
+    },
+};
+
+// Acceptance-scenario row: scenario context shows in the card header,
+// primary actions right-aligned, no secondary action.
 export const RowMode: Story = {
     decorators: [(Story) => <table><tbody><Story /></tbody></table>],
     args: {
@@ -27,8 +64,6 @@ export const RowMode: Story = {
         lineNum: 3,
         lineType: 'acceptance',
         scenarioContent: 'Given a user with valid credentials, When they submit the login form, Then they are redirected to the dashboard',
-        onSubmit: (comment: string) => console.log('submit', comment),
-        onCancel: () => console.log('cancel'),
-        onContextAction: (action: string) => console.log('action', action),
+        ...lineArgs,
     },
 };

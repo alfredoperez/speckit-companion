@@ -38,10 +38,28 @@ export function InlineEditor(props: InlineEditorProps) {
 
     const contextActions = mode === 'line' ? getContextActions(lineType) : [];
 
-    const editorBody = (
+    const card = (
         <div class="inline-editor">
-            {mode === 'line' && contextActions.length > 0 && (
-                <div class="editor-actions">
+            <div class="editor-header">
+                {mode === 'row' && scenarioContent ? (
+                    <>
+                        <span class="editor-context-label">Scenario {lineNum}:</span>
+                        <span class="editor-context-text">{scenarioContent}</span>
+                    </>
+                ) : (
+                    <span class="editor-header-target">Commenting on line {lineNum}</span>
+                )}
+            </div>
+            <div class="editor-body">
+                <textarea
+                    ref={textareaRef}
+                    class="editor-textarea"
+                    placeholder="Add a comment or refinement instruction..."
+                    onKeyDown={handleKeydown}
+                />
+            </div>
+            <div class="editor-footer">
+                <div class="editor-footer-actions">
                     {contextActions.map(({ action, label }) => (
                         <button
                             key={action}
@@ -53,20 +71,6 @@ export function InlineEditor(props: InlineEditorProps) {
                         </button>
                     ))}
                 </div>
-            )}
-            {mode === 'row' && scenarioContent && (
-                <div class="editor-context">
-                    <span class="editor-context-label">Scenario {lineNum}:</span>
-                    <span class="editor-context-text">{scenarioContent}</span>
-                </div>
-            )}
-            <div class="editor-comment-section editor-comment-area">
-                <textarea
-                    ref={textareaRef}
-                    class="editor-textarea"
-                    placeholder="Add a comment or refinement instruction..."
-                    onKeyDown={handleKeydown}
-                />
                 <div class="editor-buttons">
                     <button class="editor-cancel" onClick={onCancel}>Cancel</button>
                     <button class="editor-add" onClick={handleAdd}>Add Comment</button>
@@ -78,10 +82,10 @@ export function InlineEditor(props: InlineEditorProps) {
     if (mode === 'row') {
         return (
             <tr class="inline-editor-row">
-                <td colSpan={4} class="editor-cell">{editorBody}</td>
+                <td colSpan={4} class="editor-cell">{card}</td>
             </tr>
         );
     }
 
-    return editorBody;
+    return card;
 }

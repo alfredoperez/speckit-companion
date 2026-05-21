@@ -1,27 +1,85 @@
 /**
  * SpecKit Companion - Inline Editor Styles
- * GitHub-style inline editor
+ * GitHub-style inline comment composer card
  */
 
 /* ============================================
-   Inline Editor (GitHub-style)
+   Inline Editor Card (GitHub-style)
    ============================================ */
 
+/* Single bordered card: header, body, footer all live inside one boundary */
 .inline-editor {
     margin: 8px 0 4px 0;
-    padding: 8px 0;
-    background: transparent;
-    border: none;
-    border-radius: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
     box-shadow: none;
+    overflow: hidden;
     animation: slideDown var(--transition-fast) ease-out;
 }
 
-.editor-actions {
+/* Header - what's being commented on */
+.editor-header {
+    padding: var(--space-2) var(--space-3) 0;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+}
+
+.editor-header-target {
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+/* Body - the existing textarea */
+.editor-body {
+    padding: var(--space-2) var(--space-3);
+}
+
+.editor-textarea {
+    width: 100%;
+    min-height: 60px;
+    padding: 10px 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-family: var(--font-family);
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+    transition: border-color var(--transition-fast);
+}
+
+.editor-textarea:focus {
+    border-color: var(--accent);
+}
+
+.editor-textarea::placeholder {
+    color: var(--text-muted);
+}
+
+/* Footer - secondary actions left, primary actions right */
+.editor-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 var(--space-3) var(--space-2);
+}
+
+.editor-footer-actions {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
-    margin-bottom: 8px;
+}
+
+.editor-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-shrink: 0;
 }
 
 /* Context action buttons - ghost style */
@@ -74,57 +132,7 @@
     color: var(--success);
 }
 
-/* Editor divider removed per FR-011 */
-
-/* Ensure no visual separators between editor sections */
-.editor-actions {
-    border-bottom: none;
-}
-
-.editor-comment-section {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    border-top: none;
-}
-
-.editor-comment-area {
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: var(--space-3);
-    margin-top: var(--space-2);
-}
-
-.editor-textarea {
-    width: 100%;
-    min-height: 60px;
-    padding: 10px 12px;
-    background: var(--bg-primary);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-    font-size: 13px;
-    font-family: var(--font-family);
-    line-height: 1.5;
-    resize: vertical;
-    outline: none;
-    transition: border-color var(--transition-fast);
-}
-
-.editor-textarea:focus {
-    border-color: var(--accent);
-}
-
-.editor-textarea::placeholder {
-    color: var(--text-muted);
-}
-
-.editor-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-}
-
+/* Primary actions */
 .editor-cancel,
 .editor-add {
     padding: 6px 14px;
