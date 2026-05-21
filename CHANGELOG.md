@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 
 ### New Features
 
+- **IDE Chat provider — route prompts to your editor's built-in AI chat**: A new `ide-chat` value for `speckit.aiProvider` dispatches the assembled prompt to the host editor's built-in chat instead of spawning a terminal CLI. It auto-detects the host (VS Code/Copilot, Cursor, Windsurf, Antigravity), resolves the right chat command, strips the bookkeeping preamble, shortens the spec path to just the spec name, inlines the new-spec description, and formats the command per host (dot `/speckit.tasks` for Copilot/Windsurf, dash `/speckit-tasks` for Cursor/Antigravity skills). Requires spec-kit initialized for the host editor (`specify init --ai <agent>`); when it isn't, the prompt is prefilled (not sent) with an actionable warning.
+
+  > **⚠️ Cursor and Windsurf support is work-in-progress.** Only **VS Code / GitHub Copilot** is fully supported end-to-end (prefill **and** auto-submit). **Cursor** prefills the command but you must press **Enter** to send it (Cursor exposes no callable "submit prompt" command). **Windsurf** drops the prompt on open, so the command is **copied to your clipboard** and Cascade is opened for you to paste (⌘V) and press Enter. **Antigravity** is best-effort. These forks' chat commands are proprietary/undocumented and may change.
+
 - **Optional SpecKit commands surface as per-tab buttons in the spec viewer**: SpecKit's three optional refinement commands now appear as one-click footer buttons on the tab where each is most useful — **Clarify** on the Spec tab, **Checklist** on the Plan tab, and **Analyze** on the Tasks tab (right before implementing). They are built-in and workflow-agnostic (no `customCommands`/`customWorkflows` entry required), sit alongside any custom-command buttons, and dispatch the same registered command you'd run from the Command Palette (provider formatting and step tracking included). A user-defined command with the same id takes precedence so overrides always win (#156).
 
 ## [0.17.0] - 2026-05-21

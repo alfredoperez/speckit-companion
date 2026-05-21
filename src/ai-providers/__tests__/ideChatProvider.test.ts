@@ -50,10 +50,98 @@ describe('IdeChatProvider', () => {
             expect(provider.detectHostIde()).toBe('vscode');
         });
 
+        it('detects Antigravity from appName', () => {
+            (vscode.env as any).appName = 'Antigravity';
+            expect(provider.detectHostIde()).toBe('antigravity');
+        });
+
         it('returns unknown for an unrecognized editor', () => {
             (vscode.env as any).uriScheme = 'someotherfork';
             (vscode.env as any).appName = 'Some Other Editor';
             expect(provider.detectHostIde()).toBe('unknown');
+        });
+    });
+
+    describe('per-host command formatting', () => {
+        async function dispatchOn(uriScheme: string, command: string): Promise<unknown> {
+            mockAvailableCommands(['workbench.action.chat.open']);
+            (vscode.env as any).uriScheme = uriScheme;
+            jest.spyOn(provider as any, 'isWorkspaceSpecKitReady').mockResolvedValue(true);
+            await provider.executeInTerminal(command);
+            return (vscode.commands.executeCommand as jest.Mock).mock.calls.find(
+                c => c[0] === 'workbench.action.chat.open'
+            )?.[1];
+        }
+
+        it('emits the dash form for Cursor (dash-named skills)', async () => {
+            const payload = await dispatchOn('cursor', '/speckit.tasks /repo/specs/_demo-tasked');
+            expect(payload).toEqual({ query: '/speckit-tasks _demo-tasked', isPartialQuery: false });
+        });
+
+        it('emits the dash form for Antigravity', async () => {
+            const payload = await dispatchOn('antigravity', '/speckit.plan /repo/specs/_demo-planned');
+            expect(payload).toEqual({ query: '/speckit-plan _demo-planned', isPartialQuery: false });
+        });
+    });
+
+    describe('Cursor prefill (no callable submit command)', () => {
+        it('prefills the dash command and does not auto-fire any submit command', async () => {
+            mockAvailableCommands(['workbench.action.chat.open', 'composer.acceptComposerStep', 'composer.sendToAgent']);
+            (vscode.env as any).uriScheme = 'cursor';
+            jest.spyOn(provider as any, 'isWorkspaceSpecKitReady').mockResolvedValue(true);
+
+            await provider.executeInTerminal('/speckit.tasks /repo/specs/_demo-tasked');
+
+            const calls = (vscode.commands.executeCommand as jest.Mock).mock.calls.map(c => c[0]);
+            expect(calls).toContain('workbench.action.chat.open');
+            // No submit command is fired — Cursor has no callable composer submit.
+            expect(calls).not.toContain('composer.acceptComposerStep');
+            expect(calls).not.toContain('composer.sendToAgent');
+        });
+    });
+
+    describe('Windsurf clipboard fallback (host drops the query arg)', () => {
+        it('copies the command and tells the user to paste', async () => {
+            mockAvailableCommands(['workbench.action.chat.open']);
+            (vscode.env as any).uriScheme = 'windsurf';
+            jest.spyOn(provider as any, 'isWorkspaceSpecKitReady').mockResolvedValue(true);
+
+            await provider.executeInTerminal('/speckit.tasks /repo/specs/_demo-tasked');
+
+            expect(vscode.env.clipboard.writeText).toHaveBeenCalledWith('/speckit.tasks _demo-tasked');
+            expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
+                'workbench.action.chat.open',
+                expect.objectContaining({ query: '/speckit.tasks _demo-tasked' })
+            );
+            expect(vscode.window.showInformationMessage).toHaveBeenCalledTimes(1);
+        });
+
+        it('suppresses the paste guidance when spec-kit is not initialized (only warns)', async () => {
+            mockAvailableCommands(['workbench.action.chat.open']);
+            (vscode.env as any).uriScheme = 'windsurf';
+            jest.spyOn(provider as any, 'isWorkspaceSpecKitReady').mockResolvedValue(false);
+
+            await provider.executeInTerminal('/speckit.tasks /repo/specs/_demo-tasked');
+
+            expect(vscode.env.clipboard.writeText).toHaveBeenCalledWith('/speckit.tasks _demo-tasked');
+            expect(vscode.window.showWarningMessage).toHaveBeenCalledTimes(1);
+            expect(vscode.window.showInformationMessage).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('unknown host', () => {
+        it('still dispatches via the inherited base command (dot form) when present', async () => {
+            mockAvailableCommands(['workbench.action.chat.open']);
+            (vscode.env as any).uriScheme = 'someotherfork';
+            (vscode.env as any).appName = 'Some Other Editor';
+            jest.spyOn(provider as any, 'isWorkspaceSpecKitReady').mockResolvedValue(true);
+
+            await provider.executeInTerminal('/speckit.tasks /repo/specs/_demo-tasked');
+
+            expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
+                'workbench.action.chat.open',
+                { query: '/speckit.tasks _demo-tasked', isPartialQuery: false }
+            );
         });
     });
 

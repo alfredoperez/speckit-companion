@@ -9,29 +9,42 @@ import { splitContextPreamble } from './promptBuilder';
  * `unknown` means the editor was not recognized — we still try the inherited
  * base chat command before giving up.
  */
-type HostIde = 'vscode' | 'cursor' | 'windsurf' | 'unknown';
+type HostIde = 'vscode' | 'cursor' | 'windsurf' | 'antigravity' | 'unknown';
 
-/**
- * Per-IDE ordered list of candidate chat-open command IDs. The first candidate
- * that actually exists (verified against `vscode.commands.getCommands`) wins.
- *
- * VS Code / Copilot's `workbench.action.chat.open` is documented; Cursor and
- * Windsurf are VS Code forks whose own command IDs are proprietary, so we try
- * the inherited base command first (forks usually keep it) and fall back to
- * known fork-specific candidates.
- */
-const CHAT_COMMAND_CANDIDATES: Record<HostIde, readonly string[]> = {
-    vscode: ['workbench.action.chat.open'],
-    cursor: ['workbench.action.chat.open', 'aichat.newchataction', 'composer.startComposerPrompt'],
-    windsurf: ['workbench.action.chat.open', 'windsurf.prioritized.chat.open'],
-    unknown: ['workbench.action.chat.open'],
-};
+/** Inherited VS Code chat-open command — present in most forks. */
+const BASE_CHAT_OPEN = 'workbench.action.chat.open';
 
-const HOST_LABELS: Record<HostIde, string> = {
-    vscode: 'VS Code (Copilot Chat)',
-    cursor: 'Cursor (Composer)',
-    windsurf: 'Windsurf (Cascade)',
-    unknown: 'Unknown editor',
+interface HostProfile {
+    /** Human-readable label for logs and user-facing messages. */
+    label: string;
+    /**
+     * Ordered chat-open command candidates; the first one actually registered
+     * (verified against `vscode.commands.getCommands`) wins. The inherited
+     * `BASE_CHAT_OPEN` goes first; fork-specific IDs (proprietary, undocumented)
+     * follow as fallbacks.
+     */
+    chatCommands: readonly string[];
+    /**
+     * spec-kit installs this host's commands as dash-named skills
+     * (`.cursor/skills/speckit-tasks/`, `.agents/skills/speckit-tasks/`), so emit
+     * `/speckit-tasks`. Hosts with dot-named slash commands (Copilot prompts,
+     * Windsurf workflows) keep `/speckit.tasks`.
+     */
+    dashCommands: boolean;
+    /**
+     * Host's chat-open drops the `query` arg (opens an empty chat) and exposes no
+     * "open chat with a prompt" command, so copy the command to the clipboard,
+     * open the chat, and ask the user to paste + Enter. Windsurf's Cascade does this.
+     */
+    clipboardFallback: boolean;
+}
+
+const HOST_PROFILES: Record<HostIde, HostProfile> = {
+    vscode: { label: 'VS Code (Copilot Chat)', chatCommands: [BASE_CHAT_OPEN], dashCommands: false, clipboardFallback: false },
+    cursor: { label: 'Cursor (Composer)', chatCommands: [BASE_CHAT_OPEN, 'aichat.newchataction', 'composer.startComposerPrompt'], dashCommands: true, clipboardFallback: false },
+    windsurf: { label: 'Windsurf (Cascade)', chatCommands: [BASE_CHAT_OPEN, 'windsurf.prioritized.chat.open'], dashCommands: false, clipboardFallback: true },
+    antigravity: { label: 'Antigravity', chatCommands: [BASE_CHAT_OPEN], dashCommands: true, clipboardFallback: false },
+    unknown: { label: 'Unknown editor', chatCommands: [BASE_CHAT_OPEN], dashCommands: false, clipboardFallback: false },
 };
 
 /** Common tail for the no-chat-target warnings — keeps the guidance identical. */
@@ -71,6 +84,9 @@ export class IdeChatProvider implements IAIProvider {
         if (scheme === 'windsurf' || appName.includes('windsurf')) {
             return 'windsurf';
         }
+        if (scheme === 'antigravity' || scheme === 'agy' || appName.includes('antigravity')) {
+            return 'antigravity';
+        }
         if (scheme === 'vscode' || scheme === 'vscode-insiders' || appName.includes('visual studio code')) {
             return 'vscode';
         }
@@ -86,16 +102,12 @@ export class IdeChatProvider implements IAIProvider {
      */
     async resolveChatCommand(host: HostIde): Promise<string | undefined> {
         try {
-            const available = new Set(await vscode.commands.getCommands(true));
-            for (const candidate of CHAT_COMMAND_CANDIDATES[host]) {
-                if (available.has(candidate)) {
-                    return candidate;
-                }
-            }
+            const available = await vscode.commands.getCommands(true);
+            return HOST_PROFILES[host].chatCommands.find(candidate => available.includes(candidate));
         } catch (error) {
             this.outputChannel.appendLine(`[IdeChatProvider] Failed to enumerate commands: ${error}`);
+            return undefined;
         }
-        return undefined;
     }
 
     /**
@@ -111,7 +123,10 @@ export class IdeChatProvider implements IAIProvider {
     /**
      * Turn a built `/speckit.* <arg>` command into the form to send to the host
      * chat:
-     * - free-text / multi-token / non-path arguments are left as-is (e.g.
+     * - the command verb is reformatted per host — dot (`/speckit.tasks`) for
+     *   Copilot/Windsurf, dash (`/speckit-tasks`) for Cursor/Antigravity, whose
+     *   spec-kit commands are dash-named skills;
+     * - free-text / multi-token / non-path arguments are kept as-is (e.g.
      *   `specify` with a typed feature description);
      * - `specify <temp.md>` (create-new-spec dispatches the description inside a
      *   temp markdown file the chat can't read) is inlined to
@@ -120,21 +135,32 @@ export class IdeChatProvider implements IAIProvider {
      *   (the chat resolves the feature by name and it reads far better than an
      *   absolute path).
      */
-    private async buildChatQuery(prompt: string): Promise<string> {
+    private async buildChatQuery(prompt: string, host: HostIde): Promise<string> {
         const trimmed = splitContextPreamble(prompt).command.trim();
         const sp = trimmed.indexOf(' ');
-        if (sp === -1) return trimmed;
-        const cmd = trimmed.slice(0, sp);
+        if (sp === -1) return this.formatCommandForHost(trimmed, host);
+        const cmd = this.formatCommandForHost(trimmed.slice(0, sp), host);
         const arg = trimmed.slice(sp + 1).trim();
 
-        if (/\s/.test(arg)) return trimmed;     // free-text / multi-token argument
-        if (!/[/\\]/.test(arg)) return trimmed; // not a path
+        if (/\s/.test(arg)) return `${cmd} ${arg}`;     // free-text / multi-token argument
+        if (!/[/\\]/.test(arg)) return `${cmd} ${arg}`; // not a path
 
         if (/[.-]specify$/.test(cmd) && /\.md$/i.test(arg)) {
             const description = await this.readSpecDescription(arg);
             if (description) return `${cmd} ${description}`;
         }
         return `${cmd} ${this.specNameFromPath(arg)}`;
+    }
+
+    /**
+     * Reformat a `/speckit.*` command verb for the host: dash form
+     * (`/speckit-tasks`) where spec-kit installs dash-named skills (Cursor,
+     * Antigravity); dot form (`/speckit.tasks`) everywhere else. Non-speckit
+     * commands are left untouched.
+     */
+    private formatCommandForHost(cmd: string, host: HostIde): string {
+        if (!HOST_PROFILES[host].dashCommands) return cmd;
+        return cmd.replace(/^(\/?)speckit\./, '$1speckit-');
     }
 
     /** The spec name from a path: the last segment, or its parent when it's a doc file. */
@@ -164,7 +190,7 @@ export class IdeChatProvider implements IAIProvider {
     private async warnSpecKitNotReady(host: HostIde): Promise<void> {
         const init = 'Initialize SpecKit';
         const choice = await vscode.window.showWarningMessage(
-            `IDE Chat sends \`/speckit.*\` commands to ${HOST_LABELS[host]}, but spec-kit isn't ` +
+            `IDE Chat sends \`/speckit.*\` commands to ${HOST_PROFILES[host].label}, but spec-kit isn't ` +
             `initialized in this workspace — the chat won't recognize them. Run SpecKit: Initialize Workspace first.`,
             init
         );
@@ -174,20 +200,24 @@ export class IdeChatProvider implements IAIProvider {
     }
 
     /**
-     * Core dispatch: detect host, resolve a chat command, and open the host's
-     * chat with the prompt. Never throws — on no resolvable target it shows a
-     * graceful warning and returns false. Auto-submits only when spec-kit is
-     * initialized; otherwise it prefills (so an unrecognized command never fires)
-     * and warns the user to initialize spec-kit.
+     * Core dispatch: detect host, resolve a chat command, reduce the prompt to
+     * what the host chat can use, and open it. Never throws — on no resolvable
+     * target it shows a graceful warning and returns false.
+     *
+     * Submit behavior is host-specific: Copilot/VS Code auto-submits via the
+     * `query` arg when ready; Cursor prefills (it has no callable command to send
+     * a typed prompt — submit is the input's Enter handler) so the user presses
+     * Enter; Windsurf drops the query, so it falls back to the clipboard.
      */
     private async dispatchToChat(prompt: string): Promise<boolean> {
         try {
             const host = this.detectHostIde();
+            const profile = HOST_PROFILES[host];
             const command = await this.resolveChatCommand(host);
 
             if (!command) {
                 this.outputChannel.appendLine(
-                    `[IdeChatProvider] No chat command available for ${HOST_LABELS[host]} — cannot dispatch`
+                    `[IdeChatProvider] No chat command available for ${profile.label} — cannot dispatch`
                 );
                 vscode.window.showWarningMessage(
                     `SpecKit Companion couldn't find a built-in AI chat to open in this editor. ${SWITCH_TO_CLI_HINT}`
@@ -195,22 +225,39 @@ export class IdeChatProvider implements IAIProvider {
                 return false;
             }
 
-            // Reduce the built prompt to what the host chat can actually use:
-            // strip the context-update preamble, shorten spec-dir paths to the
-            // spec name, and inline a specify temp-file description.
-            const chatQuery = await this.buildChatQuery(prompt);
-
+            const chatQuery = await this.buildChatQuery(prompt, host);
             const ready = await this.isWorkspaceSpecKitReady();
             this.outputChannel.appendLine(
-                `[IdeChatProvider] Host: ${HOST_LABELS[host]} — dispatching via "${command}" (spec-kit ready: ${ready})`
+                `[IdeChatProvider] Host: ${profile.label} — dispatching via "${command}" (spec-kit ready: ${ready})`
             );
 
             if (!ready) {
                 void this.warnSpecKitNotReady(host);
             }
 
-            // Auto-submit when spec-kit is ready; otherwise prefill so the user
-            // can review/init before an unrecognized command would be sent.
+            if (profile.clipboardFallback) {
+                try {
+                    await vscode.env.clipboard.writeText(chatQuery);
+                } catch (clipErr) {
+                    this.outputChannel.appendLine(`[IdeChatProvider] Clipboard write failed: ${clipErr}`);
+                }
+                // Open with isPartialQuery:false — the host won't open in partial
+                // mode. The query is dropped either way; the clipboard carries it.
+                await vscode.commands.executeCommand(command, { query: chatQuery, isPartialQuery: false });
+                this.outputChannel.appendLine(`[IdeChatProvider] Copied command to clipboard for ${profile.label} (host drops the query arg)`);
+                // Suppress the paste guidance when not ready — the readiness
+                // warning already says the command won't be recognized.
+                if (ready) {
+                    vscode.window.showInformationMessage(
+                        `SpecKit command copied — paste it into ${profile.label} (⌘V / Ctrl+V) and press Enter.`
+                    );
+                }
+                return true;
+            }
+
+            // isPartialQuery:!ready — auto-submit when ready (Copilot), else prefill
+            // so an unrecognized command isn't fired. Cursor ignores the flag and
+            // always prefills; the user presses Enter.
             await vscode.commands.executeCommand(command, { query: chatQuery, isPartialQuery: !ready });
             return true;
         } catch (error) {

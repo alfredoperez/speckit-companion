@@ -70,3 +70,7 @@
 - [x] **T013** Reduce the dispatched query for the host chat — `src/ai-providers/ideChatProvider.ts` | R008
   - **Do**: Add async `buildChatQuery` (+ `specNameFromPath`, `readSpecDescription`): shorten a single spec-dir path arg to the spec name; leave free-text/multi-token args alone; for `specify <temp.md>` read the file and inline the description (drop the `## Post-Specification` block). Apply to the dispatched query.
   - **Verify**: tests assert `/speckit.tasks <abs-path>` → `/speckit.tasks <spec-name>`, typed `specify` text is unchanged, and `specify <temp.md>` inlines the description.
+
+- [x] **T014** Per-host command formatting + Antigravity host — `src/ai-providers/ideChatProvider.ts` | R003, R009
+  - **Do**: Add `antigravity` to `HostIde`/candidates/labels/detection. Add `DASH_COMMAND_HOSTS` ({cursor, antigravity}) and `formatCommandForHost` converting `/speckit.X` → `/speckit-X` for those hosts; apply in `buildChatQuery`. Dot form stays for Copilot/Windsurf.
+  - **Verify**: tests assert Windsurf dot, Cursor/Antigravity dash, and antigravity detection.
