@@ -586,7 +586,6 @@ async function handleSubmitRefinements(
     if (!instance) return;
 
     const docType = instance.state.currentDocument;
-    const filename = `${docType}.md`;
     const targetPath = instance.state.changeRoot || specDirectory;
 
     // Read the source markdown so each refinement can be enriched with its
@@ -595,6 +594,11 @@ async function handleSubmitRefinements(
     const sourceDoc = instance.state.availableDocuments.find(
         d => d.isCore && d.type === docType,
     );
+    // Derive the AI-prompt target filename from the resolved source doc so
+    // workflows with non-matching step / file names (SDD's `specify` step →
+    // `spec.md`) target the correct file. Fall back to `${docType}.md` only
+    // when no source doc could be resolved.
+    const filename = sourceDoc?.fileName ?? `${docType}.md`;
     let sourceLines: string[] | null = null;
     if (sourceDoc) {
         try {

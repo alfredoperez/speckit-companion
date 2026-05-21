@@ -217,25 +217,21 @@ batch to the matching scratchpad file as a timestamped history block.
 ### Scratchpad footer (overrides the matrix above)
 
 When the active document is a **scratchpad** (`*-extra.md`, `isScratchpad: true`)
-the footer is replaced by a dedicated, scratchpad-only set — gated entirely on
-the active doc, independent of spec status:
+the footer is replaced by a dedicated, read-only set — gated entirely on the
+active doc, independent of spec status:
 
 | Active doc | Left side | Right side |
 |------------|-----------|------------|
-| scratchpad (file exists) | — | Edit, **Refine** |
-| scratchpad (file absent) | — | — (the create action lives in the empty-state body) |
+| scratchpad (file exists) | — | Edit |
 
 - **Edit** reuses the standard `editDocument` affordance to open the scratchpad
-  in the editor.
-- **Refine** posts `applyScratchpad`: the extension reads the scratchpad and
-  dispatches a **direct, in-place edit** of the matching source document. It is
-  never routed through the generic `footerAction` catalog and never invokes a
-  `/speckit-*` slash command (those re-run setup scripts that overwrite the
-  source from a template). An empty scratchpad is guarded — Refine dispatches
-  nothing and shows a "Nothing to apply" toast.
-- Refine on the scratchpad tab is useful for re-applying after manual edits to
-  the scratchpad file; the source-tab batch Refine remains the primary path
-  for ad-hoc line comments collected via hover.
+  in VS Code's text editor for manual cleanup.
+- A scratchpad chip only appears in the children rail once its `*-extra.md`
+  file exists on disk — there is no manual create flow, and therefore no
+  "file absent" state to render here. The file is created as a side effect of
+  the source-tab batch Refine when it appends the first batch.
+- There is no scratchpad-tab Refine button or `applyScratchpad` message; the
+  AI dispatch path is exclusively the source-tab batch Refine described above.
 
 ---
 

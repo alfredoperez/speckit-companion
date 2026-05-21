@@ -42,11 +42,9 @@ Review spec documents with inline comments. Add feedback directly on specific li
 
 ### Per-Document Scratchpads
 
-Each core document (spec, plan, tasks) gets an optional scratchpad sub-tab — a plain markdown file (`spec-extra.md`, `plan-extra.md`, `tasks-extra.md`) for freeform refinement notes, questions, deferred concerns, or AI instructions. Two ways content lands here:
-1. Submitting line comments via the source-tab **Refine** button appends a timestamped batch entry automatically.
-2. You can also type free-form notes directly into the file (via the empty-state **Create** button or **Edit** affordance).
+Each core document (spec, plan, tasks) gets a per-doc scratchpad file (`spec-extra.md`, `plan-extra.md`, `tasks-extra.md`) that records every inline-comment batch you submit. Submitting line comments via the source-tab **Refine** button dispatches them to the AI *and* appends them to the matching scratchpad as a labeled history block (`## Refinement batch · TIMESTAMP` → `### Line N · Section` → **Original** quote → **Comment** note), newest batch on top, with `---` rules between batches.
 
-Scratchpads are lazily created, committable, and never count toward phase gating or task completion. The scratchpad-tab **Refine** button re-applies the file to the matching source — handy after manual edits.
+The scratchpad sub-tab appears in the children rail only once the file exists — there is no manual create flow. The sub-tab is a read-only history with only an **Edit** affordance for manual cleanup; it's not a freeform notes file. Scratchpads are committable, never count toward phase gating or task completion, and exist purely so your review trail survives across sessions.
 
 ### Create Specs Visually
 
@@ -81,7 +79,7 @@ The spec viewer is built for fast scanning of long-form specs:
 - **Title-leading header**: the spec name dominates above a compact `[STATUS] [⌥ branch] · date` cluster, so the page anchor is the first thing your eye lands on.
 - **Sticky chrome**: step tabs (Specification / Plan / Tasks) and header stay pinned at the top while you scroll.
 - **Children rail**: when a step has sub-files (e.g., Plan's `data-model.md`, `quickstart.md`, `research.md`), they render as chips directly under the active step tab, with the parent step itself as the first chip so any sub-doc has a one-click path back to the overview.
-- **Scratchpad sub-tabs**: each core document (spec/plan/tasks) carries a `… Notes` scratchpad chip in the children rail, styled distinctly (dashed, italic) so it never reads as the authoritative artifact. Opening one whose file doesn't exist yet shows a single **Create `<doc>-extra.md`** action; once it has content a small dot marks the chip. The scratchpad footer offers **Edit** (open in the editor) and **Refine** (apply the notes to the source doc as a direct in-place edit). The **Refine** button appears only on a scratchpad tab, never on a source-document tab.
+- **Scratchpad sub-tabs**: each core document (spec/plan/tasks) gets a `… Notes` chip in the children rail once an inline-comment batch has been submitted against it — styled distinctly (dashed, italic) so it never reads as the authoritative artifact. The chip is hidden until the `<doc>-extra.md` file exists; there is no manual create flow. Opening the chip shows the read-only refinement history (latest batch on top); the footer offers only **Edit** to open the file in VS Code's editor for manual cleanup.
 - **Table of contents**: sticky outline column on the left of the content area. Defaults to h2-only (so phase-heavy `tasks.md` reads as a clean ~7-entry list); a small `+` toggle expands h3 subsections when needed. Auto-hides on narrow panes.
 - **Quiet content**: when the structured header has the metadata, in-content duplicates (the `Input:` block, repeated branch chips, literal `Slug:`/`Date:` paragraphs) are suppressed so the body is just the spec content.
 - **Diagrams**: wide mermaid diagrams scroll horizontally inside the prose column instead of bleeding past it. Each diagram has its own `−` / Reset / `+` zoom controls.

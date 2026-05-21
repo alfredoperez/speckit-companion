@@ -211,10 +211,12 @@ export function renderMarkdown(markdown: string): string {
             if (!inBlockquote) {
                 if (inList) {
                     html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
-                    lastClosedListType = listType;
-                    lastClosedListCount = listItemCount;
                     inList = false;
                 }
+                // A blockquote breaks ordered-list continuation: the next
+                // ordered list must restart numbering rather than resume.
+                lastClosedListType = null;
+                lastClosedListCount = 0;
                 inBlockquote = true;
                 blockquoteStartLine = sourceLineNum;
             }
