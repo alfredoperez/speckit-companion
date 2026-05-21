@@ -127,9 +127,10 @@ export interface IAIProvider {
      * Execute a prompt in a visible terminal (split view)
      * @param prompt The prompt to send to the AI
      * @param title The terminal title
-     * @returns The terminal instance
+     * @returns The terminal instance, or undefined for providers that dispatch
+     *          somewhere other than a terminal (e.g. the IDE Chat provider)
      */
-    executeInTerminal(prompt: string, title?: string): Promise<vscode.Terminal>;
+    executeInTerminal(prompt: string, title?: string): Promise<vscode.Terminal | undefined>;
 
     /**
      * Execute a prompt in headless/background mode
@@ -144,7 +145,7 @@ export interface IAIProvider {
      * @param title Optional terminal title
      * @param autoExecute If false, shows command but waits for user to press Enter (default: true)
      */
-    executeSlashCommand(command: string, title?: string, autoExecute?: boolean): Promise<vscode.Terminal>;
+    executeSlashCommand(command: string, title?: string, autoExecute?: boolean): Promise<vscode.Terminal | undefined>;
 
     /**
      * Get the CLI permission flag for this provider based on the unified speckit.permissionMode setting.
@@ -321,6 +322,30 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         commandFormat: 'dot',
         quickPickIcon: '$(code)',
         quickPickDescription: 'Steering and agents support (AGENTS.md)',
+        supportsInteractivePermissions: true,
+        autoApproveFlag: '',
+    },
+    // IDE Chat dispatches the assembled prompt to the host editor's built-in
+    // chat (Copilot / Cursor / Windsurf) instead of spawning a CLI in a
+    // terminal. It owns no config directory and no steering/agents/skills
+    // surface — steering sync is governed by the host editor and is out of
+    // scope — so those fields are intentionally neutral/empty.
+    [AIProviders.IDE_CHAT]: {
+        steeringFile: '',
+        globalSteeringFile: null,
+        steeringDir: '',
+        steeringPattern: '',
+        agentsDir: '',
+        agentsPattern: '',
+        skillsDir: '',
+        skillsPattern: '',
+        mcpConfigPath: '',
+        configDir: '',
+        supportsHooks: false,
+        displayName: 'IDE Chat',
+        commandFormat: 'dot',
+        quickPickIcon: '$(comment-discussion)',
+        quickPickDescription: "Route prompts to the host editor's built-in AI chat (Copilot / Cursor / Windsurf)",
         supportsInteractivePermissions: true,
         autoApproveFlag: '',
     },

@@ -7,6 +7,7 @@ import { AIProviders, Timing } from '../core/constants';
 import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { IAIProvider, AIExecutionResult, dispatchSlashCommandViaTempFile, buildPromptDispatchCommand } from './aiProvider';
+import { splitContextPreamble } from './promptBuilder';
 import { detectShell, formatPromptFileSubstitution, Shell } from '../core/utils/shellDetection';
 import { getPermissionFlagForProvider } from './permissionValidation';
 
@@ -68,16 +69,8 @@ export class ClaudeCodeProvider implements IAIProvider {
      * and keeps the terminal view focused on what the user actually invoked.
      */
     private splitPreambleFromPrompt(prompt: string): { systemPrompt: string | null; userPrompt: string } {
-        const MARKER_CLOSE = '<!-- /speckit-companion:context-update -->';
-        const idx = prompt.indexOf(MARKER_CLOSE);
-        if (idx === -1) {
-            return { systemPrompt: null, userPrompt: prompt };
-        }
-        const end = idx + MARKER_CLOSE.length;
-        return {
-            systemPrompt: prompt.slice(0, end).trim(),
-            userPrompt: prompt.slice(end).trim(),
-        };
+        const { preamble, command } = splitContextPreamble(prompt);
+        return { systemPrompt: preamble, userPrompt: command };
     }
 
     /**

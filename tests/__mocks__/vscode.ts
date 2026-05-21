@@ -124,6 +124,7 @@ export const window = {
 export const commands = {
     registerCommand: jest.fn().mockReturnValue({ dispose: jest.fn() }),
     executeCommand: jest.fn(),
+    getCommands: jest.fn().mockResolvedValue([]),
 };
 
 export const extensions = {
@@ -133,6 +134,8 @@ export const extensions = {
 export const env = {
     openExternal: jest.fn(),
     shell: '' as string,
+    appName: '' as string,
+    uriScheme: '' as string,
     clipboard: {
         writeText: jest.fn().mockResolvedValue(undefined),
     },

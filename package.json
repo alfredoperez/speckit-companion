@@ -687,7 +687,8 @@
               "copilot",
               "codex",
               "qwen",
-              "opencode"
+              "opencode",
+              "ide-chat"
             ],
             "enumDescriptions": [
               "Claude Code - Full feature support (steering, agents, skills, hooks)",
@@ -695,7 +696,8 @@
               "GitHub Copilot CLI - Steering and agents support",
               "Codex CLI - Steering and skills support",
               "Qwen Code - Steering support",
-              "OpenCode - Steering and agents support (AGENTS.md)"
+              "OpenCode - Steering and agents support (AGENTS.md)",
+              "IDE Chat - Routes prompts to the host editor's built-in AI chat (Copilot / Cursor / Windsurf)"
             ],
             "scope": "machine",
             "order": 2,

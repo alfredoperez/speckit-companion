@@ -126,3 +126,23 @@ export function buildLifecyclePrompt(command: string, specDir?: string | null): 
     const preamble = renderLifecyclePreamble(specDir ?? '');
     return `${preamble}\n\n${command}`;
 }
+
+/**
+ * Split a built prompt into its context-update preamble and the clean command
+ * (typically just a slash command). When no preamble marker is present, the
+ * whole prompt is returned as `command`. Used by providers that must route the
+ * bookkeeping preamble separately from the user-facing command (Claude via
+ * `--append-system-prompt`) or drop it entirely (IDE Chat, whose host editor
+ * can't act on it).
+ */
+export function splitContextPreamble(prompt: string): { preamble: string | null; command: string } {
+    const idx = prompt.indexOf(MARKER_CLOSE);
+    if (idx === -1) {
+        return { preamble: null, command: prompt };
+    }
+    const end = idx + MARKER_CLOSE.length;
+    return {
+        preamble: prompt.slice(0, end).trim(),
+        command: prompt.slice(end).trim(),
+    };
+}
