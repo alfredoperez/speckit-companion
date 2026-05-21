@@ -35,6 +35,7 @@ import {
   SpecViewerState,
 } from "./types";
 import { getDocumentTypeFromPath, getSpecDirectoryFromPath } from "./utils";
+import { optionalCommandButtonsForTab } from "./optionalCommands";
 import { ConfigKeys, SpecStatuses } from "../../core/constants";
 import type { CustomCommandConfig } from "../../core/types/config";
 import { deriveChangeRoot } from "../../core/specDirectoryResolver";
@@ -699,6 +700,10 @@ export class SpecViewerProvider {
         });
       }
     }
+
+    // Append built-in optional SpecKit command buttons for this tab, deduped
+    // against user/workflow commands (which take precedence).
+    buttons.push(...optionalCommandButtonsForTab(docType, seenCommands));
 
     return buttons;
   }

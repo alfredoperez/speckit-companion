@@ -17,6 +17,7 @@ import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig } from '../../core/types/config';
 import type { WorkflowStepConfig } from '../workflows/types';
 import { getFeatureWorkflow, getWorkflowCommands } from '../workflows';
+import { isOptionalCommand } from './optionalCommands';
 import { setStatus, reactivate, startStep, completeStep } from '../specs/stepLifecycle';
 import type { StepName } from '../../core/types/specContext';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
@@ -411,6 +412,16 @@ async function handleClarify(
             await deps.executeInTerminal(prompt);
             return;
         }
+    }
+
+    // Built-in optional SpecKit commands (clarify/checklist/analyze): dispatch
+    // through the registered VS Code command so provider formatting and step
+    // tracking match invoking it from the Command Palette.
+    if (buttonCommand && isOptionalCommand(buttonCommand)) {
+        const targetPath = instance.state.changeRoot || specDirectory;
+        deps.outputChannel.appendLine(`[SpecViewer] Executing optional command "${buttonCommand}" for: ${targetPath}`);
+        await vscode.commands.executeCommand(buttonCommand, targetPath);
+        return;
     }
 
     deps.outputChannel.appendLine(`[SpecViewer] No custom command configured for step: ${docType}`);

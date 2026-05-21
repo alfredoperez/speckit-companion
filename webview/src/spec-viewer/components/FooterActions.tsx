@@ -90,7 +90,11 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
     const isTasksDone = status === 'tasks-done';
     const isCompleted = status === 'completed';
     const isArchived = status === 'archived';
-    const isActive = !isTasksDone && !isCompleted && !isArchived;
+    // 'implemented' is the "ready to mark complete" gate (Mark Completed shows).
+    // Treat it like done so refinement (enhancement) buttons stop surfacing once
+    // the tasks are complete — they only belong while the spec is still active.
+    const isReadyToComplete = status === 'implemented';
+    const isActive = !isTasksDone && !isCompleted && !isArchived && !isReadyToComplete;
 
     const enhancementButtons = ns.footerState?.enhancementButtons ?? ns.enhancementButtons ?? [];
 
@@ -104,7 +108,8 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
         const visible = isRunning ? [] : vs.footer;
 
         // Route each action to the left or right region:
-        //   Left  = Regenerate only — outlined "redo this step" tool.
+        //   Left  = Regenerate (leftmost) followed by the optional-command
+        //           enhancement buttons — the "redo / refine this step" tools.
         //   Right = lifecycle + forward motion (Refine, Approve, Reactivate,
         //           Archive, Mark Completed). Closure controls live on the
         //           right next to the next-step button so the user's eye
@@ -140,6 +145,7 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
             <footer class="actions">
                 <Toast id="action-toast" />
                 <div class="actions-left">
+                    {leftActions.map(renderAction)}
                     {isActive && enhancementButtons.map((btn) => (
                         <Button
                             key={btn.command}
@@ -150,7 +156,6 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
                             onClick={send({ type: 'clarify', command: btn.command })}
                         />
                     ))}
-                    {leftActions.map(renderAction)}
                 </div>
                 <div class="actions-right">
                     {rightActions.map(renderAction)}

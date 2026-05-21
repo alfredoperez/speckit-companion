@@ -1,0 +1,243 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "checkpointStatus": { "commit": true, "pr": true },
+  "updated": "2026-05-21",
+  "last_action": "Review feedback (T009–T010): hide optional buttons at the ready-to-complete gate and move Regenerate leftmost in FooterActions.tsx; compile + webpack clean, 551 tests pass.",
+  "files_modified": [
+    "src/features/spec-viewer/optionalCommands.ts",
+    "src/features/spec-viewer/specViewerProvider.ts",
+    "src/features/spec-viewer/messageHandlers.ts",
+    "src/features/spec-viewer/__tests__/optionalCommands.test.ts",
+    "src/features/spec-viewer/__tests__/messageHandlers.test.ts",
+    "webview/src/spec-viewer/components/FooterActions.tsx",
+    "README.md",
+    "docs/viewer-states.md",
+    "CHANGELOG.md"
+  ],
+  "task_summaries": {
+    "T001": { "status": "DONE", "did": "Created optionalCommands.ts: OPTIONAL_SPECKIT_COMMANDS table (clarify→spec, checklist→plan, analyze→tasks) plus optionalCommandButtonsForTab() and isOptionalCommand() helpers.", "files": ["src/features/spec-viewer/optionalCommands.ts"], "concerns": [] },
+    "T002": { "status": "DONE", "did": "resolveEnhancementButtons appends optionalCommandButtonsForTab(docType, seenCommands) so built-in buttons render per tab, deduped against user/workflow commands.", "files": ["src/features/spec-viewer/specViewerProvider.ts"], "concerns": [] },
+    "T003": { "status": "DONE", "did": "handleClarify dispatches built-in optional commands via vscode.commands.executeCommand(buttonCommand, targetPath) after customCommand/workflow loops fail to match.", "files": ["src/features/spec-viewer/messageHandlers.ts"], "concerns": [] },
+    "T004": { "status": "DONE", "did": "Unit tests for optionalCommandButtonsForTab (per-tab, dedup, empty) and isOptionalCommand.", "files": ["src/features/spec-viewer/__tests__/optionalCommands.test.ts"], "concerns": [] },
+    "T005": { "status": "DONE", "did": "messageHandlers tests: built-in button dispatches the registered command; a same-id customCommand wins (raw-prompt path).", "files": ["src/features/spec-viewer/__tests__/messageHandlers.test.ts"], "concerns": [] },
+    "T006": { "status": "DONE", "did": "README 'Reading Specs' documents the per-tab optional command buttons.", "files": ["README.md"], "concerns": [] },
+    "T007": { "status": "DONE", "did": "docs/viewer-states.md adds an 'Optional command buttons (per tab)' table to the Footer Buttons section.", "files": ["docs/viewer-states.md"], "concerns": [] },
+    "T008": { "status": "DONE", "did": "CHANGELOG Unreleased › New Features entry for the optional command buttons.", "files": ["CHANGELOG.md"], "concerns": [] },
+    "T009": { "status": "DONE", "did": "Tightened FooterActions isActive to also exclude 'implemented' so the optional Clarify/Checklist/Analyze buttons stop surfacing once tasks are complete and the spec is at the ready-to-mark-complete gate (both render paths).", "files": ["webview/src/spec-viewer/components/FooterActions.tsx"], "concerns": [] },
+    "T010": { "status": "DONE", "did": "Reordered actions-left so Regenerate renders before the enhancement buttons, making it the leftmost footer control; updated the routing comment.", "files": ["webview/src/spec-viewer/components/FooterActions.tsx"], "concerns": [] }
+  },
+  "approach": "Surface clarify/checklist/analyze as built-in workflow-agnostic enhancement buttons scoped to spec/plan/tasks tabs, reusing the registered VS Code commands.",
+  "selectedAt": "2026-05-21T11:25:08Z",
+  "specName": "Optional SpecKit Commands",
+  "branch": "main",
+  "workingBranch": "feat/optional-speckit-commands",
+  "type": "feat",
+  "createdAt": "2026-05-21T11:25:08Z",
+  "auto": true,
+  "loadedDomains": [],
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 7,
+      "scenarios": 4,
+      "key_finding": "clarify/analyze/checklist are already registered VS Code commands (package.json + palette) that dispatch provider-formatted prompts with step tracking; the only gap is DEFAULT_WORKFLOW has no `commands` array, so the existing enhancement-button infra (resolveEnhancementButtons + handleClarify) never surfaces them in the viewer."
+    },
+    "plan": {
+      "approach_summary": "Surface clarify/checklist/analyze as built-in workflow-agnostic enhancement buttons scoped to spec/plan/tasks tabs, reusing the registered VS Code commands.",
+      "files_planned": 8,
+      "risks": [
+        "Dispatch ordering: built-in fallback must run only after user customCommands/workflow commands fail to match, so a user override of the same command id keeps its raw-prompt behavior."
+      ],
+      "principles_concerns": 0,
+      "domain_concerns": 0,
+      "significance_score": 0
+    }
+  },
+  "transitions": [
+    {
+      "step": "specify",
+      "substep": "parsing",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-05-21T11:25:08Z"
+    },
+    {
+      "step": "specify",
+      "substep": "exploring",
+      "from": {
+        "step": "specify",
+        "substep": "parsing"
+      },
+      "by": "sdd",
+      "at": "2026-05-21T11:26:00Z"
+    },
+    {
+      "step": "specify",
+      "substep": "detecting",
+      "from": {
+        "step": "specify",
+        "substep": "exploring"
+      },
+      "by": "sdd",
+      "at": "2026-05-21T11:27:00Z"
+    },
+    {
+      "step": "specify",
+      "substep": "writing-spec",
+      "from": {
+        "step": "specify",
+        "substep": "detecting"
+      },
+      "by": "sdd",
+      "at": "2026-05-21T11:28:00Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": "writing-spec"
+      },
+      "by": "sdd",
+      "at": "2026-05-21T11:29:00Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-21T11:29:30Z"
+    },
+    {
+      "step": "plan",
+      "substep": "loading",
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-21T11:31:00Z"
+    },
+    {
+      "step": "plan",
+      "substep": "writing-plan",
+      "from": {
+        "step": "plan",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-05-21T11:32:00Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": "writing-plan"
+      },
+      "by": "sdd",
+      "at": "2026-05-21T11:33:00Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "loading",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-21T11:34:00Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "writing-tasks",
+      "from": {
+        "step": "tasks",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-05-21T11:34:30Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": "writing-tasks"
+      },
+      "by": "sdd",
+      "at": "2026-05-21T11:35:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-21T11:36:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": { "step": "implement", "substep": "phase1" },
+      "by": "sdd",
+      "at": "2026-05-21T11:45:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": "hooks",
+      "from": { "step": "implement", "substep": "phase1" },
+      "by": "sdd",
+      "at": "2026-05-21T11:46:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": "code-review",
+      "from": { "step": "implement", "substep": "hooks" },
+      "by": "sdd",
+      "at": "2026-05-21T11:47:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": "code-review",
+      "from": { "step": "implement", "substep": "code-review" },
+      "by": "sdd",
+      "at": "2026-05-21T12:04:15Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": { "step": "implement", "substep": "code-review" },
+      "by": "sdd",
+      "at": "2026-05-21T12:06:54Z"
+    }
+  ],
+  "status": "completed",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-05-21T11:30:25.512Z",
+      "completedAt": "2026-05-21T11:32:40.208Z"
+    },
+    "plan": {
+      "startedAt": "2026-05-21T11:32:40.208Z",
+      "completedAt": "2026-05-21T11:33:57.762Z"
+    },
+    "tasks": {
+      "startedAt": "2026-05-21T11:33:57.762Z",
+      "completedAt": "2026-05-21T11:38:25.349Z"
+    },
+    "implement": {
+      "startedAt": "2026-05-21T11:38:25.349Z",
+      "completedAt": "2026-05-21T12:06:54Z"
+    }
+  }
+}

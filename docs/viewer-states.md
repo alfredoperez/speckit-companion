@@ -214,6 +214,28 @@ when pending inline comments are collected. Submitting it (a) dispatches a
 direct-edit prompt to the AI for the source document and (b) appends the same
 batch to the matching scratchpad file as a timestamped history block.
 
+### Optional command buttons (per tab)
+
+SpecKit's three optional refinement commands surface as built-in enhancement
+buttons, each scoped to the tab where it is most useful. They are
+workflow-agnostic (no `customWorkflows`/`customCommands` entry required) and
+sit alongside any user-defined enhancement buttons for the active tab.
+
+| Active tab | Built-in optional button | Registered command |
+|------------|--------------------------|--------------------|
+| spec       | **Clarify**              | `speckit.clarify`   |
+| plan       | **Checklist**            | `speckit.checklist` |
+| tasks      | **Analyze**              | `speckit.analyze`   |
+
+- Each button appears only on its own tab and is hidden on the others.
+- Clicking a button dispatches the matching registered VS Code command (via
+  `executeCommand`), so behavior is identical to running it from the Command
+  Palette — provider formatting and step tracking included.
+- A user `customCommands` / workflow command with the same id takes precedence
+  and is rendered/dispatched instead (deduped by command id), so overrides win.
+- Source: `src/features/spec-viewer/optionalCommands.ts` (table + helpers),
+  wired in `resolveEnhancementButtons` (render) and `handleClarify` (dispatch).
+
 ### Scratchpad footer (overrides the matrix above)
 
 When the active document is a **scratchpad** (`*-extra.md`, `isScratchpad: true`)

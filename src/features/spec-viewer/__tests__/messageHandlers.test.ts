@@ -298,6 +298,49 @@ describe('messageHandlers - clarify (workflow commands)', () => {
     });
 });
 
+describe('messageHandlers - clarify (built-in optional commands)', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        const config = vscode.workspace.getConfiguration();
+        (config.get as jest.Mock).mockImplementation((key: string, defaultValue?: any) => {
+            if (key === 'customCommands') return [];
+            return defaultValue;
+        });
+        (getFeatureWorkflow as jest.Mock).mockResolvedValue(undefined);
+        (getWorkflowCommands as jest.Mock).mockReturnValue([]);
+    });
+
+    it('dispatches a built-in optional command via the registered VS Code command', async () => {
+        const deps = createMockDeps();
+        const handler = createMessageHandlers(SPEC_DIR, deps);
+
+        await handler({ type: 'clarify', command: 'speckit.clarify' } as any);
+
+        expect(vscode.commands.executeCommand).toHaveBeenCalledWith('speckit.clarify', SPEC_DIR);
+        expect(deps.executeInTerminal).not.toHaveBeenCalled();
+    });
+
+    it('lets a user customCommand with the same id win over the built-in', async () => {
+        const config = vscode.workspace.getConfiguration();
+        (config.get as jest.Mock).mockImplementation((key: string, defaultValue?: any) => {
+            if (key === 'customCommands') {
+                return [{ name: 'clarify', title: 'Clarify', command: 'speckit.clarify', step: 'spec' }];
+            }
+            return defaultValue;
+        });
+
+        const deps = createMockDeps();
+        const handler = createMessageHandlers(SPEC_DIR, deps);
+
+        await handler({ type: 'clarify', command: 'speckit.clarify' } as any);
+
+        expect(deps.executeInTerminal).toHaveBeenCalledWith(
+            expect.stringContaining('speckit.clarify')
+        );
+        expect(vscode.commands.executeCommand).not.toHaveBeenCalledWith('speckit.clarify', SPEC_DIR);
+    });
+});
+
 describe('messageHandlers - stepperClick', () => {
     beforeEach(() => {
         jest.clearAllMocks();
