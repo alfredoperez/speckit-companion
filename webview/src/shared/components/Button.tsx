@@ -14,7 +14,7 @@ export interface ButtonProps extends Omit<JSX.HTMLAttributes<HTMLButtonElement>,
 export function Button({ label, variant = 'secondary', icon, loading, disabled, class: cls, ...rest }: ButtonProps) {
     const className = [variant, loading && 'is-loading', cls].filter(Boolean).join(' ');
     return (
-        <button class={className} disabled={disabled || loading} {...rest}>
+        <button class={className} disabled={disabled || loading} aria-busy={loading} {...rest}>
             {loading && <span class="btn-spinner" aria-hidden="true" />}
             {!loading && icon && <span class="icon">{icon}</span>}
             {label}

@@ -19,6 +19,7 @@ import type { WorkflowStepConfig } from '../workflows/types';
 import { getFeatureWorkflow, getWorkflowCommands } from '../workflows';
 import { isOptionalCommand } from './optionalCommands';
 import { setStatus, reactivate, startStep, completeStep } from '../specs/stepLifecycle';
+import { findRunningStep } from './stateDerivation';
 import type { StepName } from '../../core/types/specContext';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { buildPrompt, buildLifecyclePrompt } from '../../ai-providers/promptBuilder';
@@ -321,16 +322,7 @@ async function handleMarkStepComplete(
     if (!instance) return;
 
     const ctx = await readSpecContext(specDirectory);
-    const hist = ctx?.stepHistory;
-    let running: string | null = null;
-    if (hist) {
-        for (const [step, entry] of Object.entries(hist)) {
-            if (entry?.startedAt && !entry?.completedAt) {
-                running = step;
-                break;
-            }
-        }
-    }
+    const running = findRunningStep(ctx?.stepHistory)?.step ?? null;
 
     if (!running || !isLifecycleStep(running)) {
         deps.outputChannel.appendLine('[SpecViewer] markStepComplete: no running step to complete');

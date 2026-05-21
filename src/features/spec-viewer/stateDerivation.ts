@@ -118,6 +118,24 @@ export function deriveStepBadges(
     return out;
 }
 
+/**
+ * The step currently in flight: `startedAt` set, no `completedAt`. Distinct from
+ * `derivePulse`, which also treats steps before `currentStep` as complete
+ * (inferred completion). This is the literal "running" entry used for the
+ * footer's Generating state and the manual mark-complete action.
+ */
+export function findRunningStep(
+    stepHistory: Record<string, { startedAt?: string; completedAt?: string | null }> | undefined
+): { step: string; startedAt: string | null } | null {
+    if (!stepHistory) return null;
+    for (const [step, entry] of Object.entries(stepHistory)) {
+        if (entry?.startedAt && !entry?.completedAt) {
+            return { step, startedAt: entry.startedAt ?? null };
+        }
+    }
+    return null;
+}
+
 export function derivePulse(ctx: SpecContext): StepName | null {
     if (ctx.status === 'completed' || ctx.status === 'archived') {
         return null;

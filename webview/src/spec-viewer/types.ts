@@ -89,6 +89,8 @@ export interface NavState {
     runningStepArtifactReady?: boolean;
     /** Spec 099: `startedAt` of the running step, for footer timeout recovery. */
     runningStepStartedAt?: string | null;
+    /** Spec 099: human label of the running step (e.g. "Tasks", "Implementation"). */
+    runningStepLabel?: string | null;
     stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>;
     badgeText?: string | null;
     createdDate?: string | null;

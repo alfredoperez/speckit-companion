@@ -99,17 +99,19 @@ const REFINE_ACTION: FooterEntry = {
 
 const withRefine = (footer: FooterEntry[]): FooterEntry[] => [REFINE_ACTION, ...footer];
 
-// Helper to mark a story as in-flight on a given step. Spec 099: the renderer
-// now shows the disabled "Generating <step>…" footer (instead of hiding the
-// buttons) while the step's artifact is not yet ready. `runningStepStartedAt`
-// is stamped "now" so the 10-minute recovery timeout has not elapsed and
-// `runningStepArtifactReady` is false, so isGenerating fires.
+// Helper to mark a story as in-flight on a given step. The renderer shows the
+// disabled "Generating <step>…" footer while the step's artifact is not yet
+// ready. `runningStepStartedAt` is stamped "now" so the recovery timeout has
+// not elapsed and `runningStepArtifactReady` is false, so isGenerating fires.
+// `runningStepLabel` mirrors what the provider ships via getDocTypeLabel.
+const STEP_LABELS: Record<string, string> = { spec: 'Spec', plan: 'Plan', tasks: 'Tasks' };
 const inFlightNavState = (specStatus: string, step: string) =>
     mockNavState({
         specStatus,
         activeStep: step,
         runningStepArtifactReady: false,
         runningStepStartedAt: new Date().toISOString(),
+        runningStepLabel: STEP_LABELS[step] ?? step,
         stepHistory: { [step]: { startedAt: new Date().toISOString(), completedAt: null } },
     });
 

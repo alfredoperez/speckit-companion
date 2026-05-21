@@ -14,22 +14,10 @@ const SCOPE_SUFFIX: Record<'spec' | 'step', string> = {
     step: 'Affects this step',
 };
 
-// Spec 099: how long to show "Generating…" before falling back to an enabled
-// footer so the UI never strands. Generous — the manual "Mark step complete"
-// button covers faster recovery.
+// How long to show "Generating…" before falling back to an enabled footer so
+// the UI never strands. Generous — the manual "Mark step complete" button
+// covers faster recovery.
 const RECOVERY_TIMEOUT_MS = 10 * 60 * 1000;
-
-const GENERATING_LABELS: Record<string, string> = {
-    spec: 'Spec',
-    specify: 'Spec',
-    plan: 'Plan',
-    tasks: 'Tasks',
-    implement: 'Implementation',
-};
-
-function generatingLabel(step: string): string {
-    return GENERATING_LABELS[step] ?? step.charAt(0).toUpperCase() + step.slice(1);
-}
 
 function withScopeSuffix(a: SerializedFooterAction): string {
     return `${a.tooltip} (${SCOPE_SUFFIX[a.scope]})`;
@@ -42,30 +30,29 @@ export interface FooterActionsProps {
 export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
     const ns = navState.value;
     const vs = viewerState.value;
+
+    // All hooks must run before the early `if (!ns)` return below, so they read
+    // navState defensively (it can be momentarily null before the first update).
     const [regenerateToastActive, setRegenerateToastActive] = useState(false);
+    const [, forceTick] = useState(0);
 
-    if (!ns) return null;
-
-    const send = (msg: ViewerToExtensionMessage) => () => vscode.postMessage(msg);
-
-    // A step is "running" when activeStep is set AND its stepHistory entry
-    // has startedAt with no completedAt. Requiring startedAt prevents
-    // false positives on terminal-archived specs where the entry is
-    // missing entirely (which previously disabled Reactivate).
-    const runningStep = ns.activeStep ?? null;
-    const runningEntry = runningStep ? ns.stepHistory?.[runningStep] : null;
+    // A step is "running" when activeStep is set AND its stepHistory entry has
+    // startedAt with no completedAt. Requiring startedAt avoids false positives
+    // on terminal-archived specs whose entry is missing entirely (which
+    // previously disabled Reactivate).
+    const runningStep = ns?.activeStep ?? null;
+    const runningEntry = runningStep ? ns?.stepHistory?.[runningStep] : null;
     const isRunning = !!(runningEntry?.startedAt && !runningEntry.completedAt);
 
-    // Spec 099: a running step is "generating" until its artifact is detected on
-    // disk (R002/R003). After RECOVERY_TIMEOUT_MS we drop back to the normal
-    // (enabled) footer so the UI never strands (R005).
-    const artifactReady = ns.runningStepArtifactReady ?? false;
-    const startedAtMs = ns.runningStepStartedAt ? Date.parse(ns.runningStepStartedAt) : NaN;
+    // A running step stays "generating" until its artifact is detected on disk;
+    // after RECOVERY_TIMEOUT_MS the footer drops back to its enabled buttons so
+    // the UI never strands.
+    const artifactReady = ns?.runningStepArtifactReady ?? false;
+    const startedAtMs = ns?.runningStepStartedAt ? Date.parse(ns.runningStepStartedAt) : NaN;
     const timedOut = !Number.isNaN(startedAtMs) && Date.now() - startedAtMs > RECOVERY_TIMEOUT_MS;
     const isGenerating = isRunning && !artifactReady && !timedOut;
 
     // Re-render once the recovery window elapses, even with no navState update.
-    const [, forceTick] = useState(0);
     useEffect(() => {
         if (!isGenerating || Number.isNaN(startedAtMs)) return;
         const remaining = startedAtMs + RECOVERY_TIMEOUT_MS - Date.now();
@@ -74,8 +61,22 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
         return () => clearTimeout(t);
     }, [isGenerating, startedAtMs]);
 
-    // R024/R030: Regenerate queues behind a 5s undo toast. Never shown
-    // while another step is already running (the button stays disabled).
+    // Archive/Complete/Reactivate require a two-click confirm.
+    const archiveConfirm = useInlineConfirm(
+        () => vscode.postMessage({ type: 'archiveSpec' })
+    );
+    const completeConfirm = useInlineConfirm(
+        () => vscode.postMessage({ type: 'completeSpec' })
+    );
+    const reactivateConfirm = useInlineConfirm(
+        () => vscode.postMessage({ type: 'reactivateSpec' })
+    );
+
+    if (!ns) return null;
+
+    const send = (msg: ViewerToExtensionMessage) => () => vscode.postMessage(msg);
+
+    // Regenerate queues behind a 5s undo toast; never shown while a step runs.
     const onRegenerateClick = () => {
         if (isRunning) return;
         setRegenerateToastActive(true);
@@ -87,17 +88,6 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
     const regenerateUndo = () => {
         setRegenerateToastActive(false);
     };
-
-    // R026: Archive/Complete/Reactivate require a two-click confirm.
-    const archiveConfirm = useInlineConfirm(
-        () => vscode.postMessage({ type: 'archiveSpec' })
-    );
-    const completeConfirm = useInlineConfirm(
-        () => vscode.postMessage({ type: 'completeSpec' })
-    );
-    const reactivateConfirm = useInlineConfirm(
-        () => vscode.postMessage({ type: 'reactivateSpec' })
-    );
 
     // Scratchpad view: read-only history of inline-comment batches. The only
     // footer affordance is Edit, which opens the file in the standard editor
@@ -121,9 +111,9 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
         );
     }
 
-    // Spec 099: while a step is generating, replace the forward button with a
-    // disabled "Generating <step>…" spinner plus a manual completion fallback.
-    // Applies to every step transition (R001/R004/R006).
+    // While a step is generating, replace the forward button with a disabled
+    // "Generating <step>…" spinner plus a manual completion fallback. Applies to
+    // every step transition.
     if (isGenerating && runningStep) {
         return (
             <footer class="actions">
@@ -131,7 +121,7 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
                 <div class="actions-left"></div>
                 <div class="actions-right">
                     <Button
-                        label={`Generating ${generatingLabel(runningStep)}…`}
+                        label={`Generating ${ns.runningStepLabel ?? 'step'}…`}
                         variant="primary"
                         loading
                         title="The AI is generating this step — the button re-enables once the artifact is ready"
@@ -164,9 +154,9 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
         const sendFooter = (id: string) => () =>
             vscode.postMessage({ type: 'footerAction', id });
 
-        // Spec 099: the generating state is handled by the early return above.
-        // Reaching here means the step is idle, ready, or past the recovery
-        // timeout — so the footer's forward/lifecycle buttons are shown enabled.
+        // The generating state is handled by the early return above. Reaching
+        // here means the step is idle, ready, or past the recovery timeout — so
+        // the footer's forward/lifecycle buttons are shown enabled.
         const visible = vs.footer;
 
         // Route each action to the left or right region:
@@ -264,9 +254,10 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
                 ))}
             </div>
             <div class="actions-right">
-                {/* Hide all step/closure controls during an in-flight step.
-                    Reactivate stays visible on terminal states because
-                    isRunning is now correctly false there. */}
+                {/* Legacy no-viewerState fallback: hides step/closure controls
+                    while a step is in flight (the catalog path above uses the
+                    richer Generating state instead). Reactivate stays visible on
+                    terminal states because isRunning is false there. */}
                 {isArchived || isCompleted ? (
                     <Button
                         label={reactivateConfirm.label ?? 'Reactivate'}

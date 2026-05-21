@@ -36,7 +36,7 @@ import {
 } from "./types";
 import { getDocumentTypeFromPath, getSpecDirectoryFromPath } from "./utils";
 import { optionalCommandButtonsForTab } from "./optionalCommands";
-import { ConfigKeys, SpecStatuses } from "../../core/constants";
+import { ConfigKeys, SpecStatuses, WorkflowSteps } from "../../core/constants";
 import type { CustomCommandConfig } from "../../core/types/config";
 import { deriveChangeRoot } from "../../core/specDirectoryResolver";
 import { deriveSpecName } from "../specs/specContextManager";
@@ -44,7 +44,7 @@ import { readSpecContext } from "../specs/specContextReader";
 import { writeSpecContext } from "../specs/specContextWriter";
 import { backfillMinimalContext } from "../specs/specContextBackfill";
 import { reconcileAndPersist } from "../specs/specContextReconciler";
-import { deriveViewerState, isStepCompleted } from "./stateDerivation";
+import { deriveViewerState, isStepCompleted, findRunningStep } from "./stateDerivation";
 import { hasNonTrivialArtifact } from "./stepArtifact";
 import { StepCompletionNotifier, NotifierContext } from "./stepCompletionNotifier";
 import { StepName, STEP_NAMES, ViewerState as CoreViewerState } from "../../core/types/specContext";
@@ -605,6 +605,14 @@ export class SpecViewerProvider {
       const createdDate = computeCreatedDate(featureCtx?.stepHistory);
       const lastUpdatedDate = computeLastUpdatedDate(featureCtx?.stepHistory);
 
+      // Running-step info so the footer's Generating state survives a full
+      // HTML refresh (e.g. the *.md file watcher), not just message updates.
+      const runInfo = await this.deriveRunningStepInfo(
+        featureCtx?.stepHistory,
+        specDirectory,
+        taskCompletionPercent,
+      );
+
       // Generate and set HTML
       instance.panel.webview.html = generateHtml(
         instance.panel.webview,
@@ -619,7 +627,7 @@ export class SpecViewerProvider {
         specStatus,
         enhancementButtons,
         stalenessMap,
-        null,
+        runInfo.tab,
         computeBadgeText(featureCtx),
         createdDate,
         lastUpdatedDate,
@@ -629,6 +637,9 @@ export class SpecViewerProvider {
         featureCtx?.currentStep ?? doc?.type ?? null,
         mapStepHistoryKeys(featureCtx?.stepHistory),
         this.readActivityPanelMode(),
+        runInfo.artifactReady,
+        runInfo.startedAt,
+        runInfo.label,
       );
 
       this.outputChannel.appendLine(
@@ -707,6 +718,41 @@ export class SpecViewerProvider {
     buttons.push(...optionalCommandButtonsForTab(docType, seenCommands));
 
     return buttons;
+  }
+
+  /**
+   * Spec 099: content-aware running-step info for the footer's Generating→ready
+   * transition. Shipped to the webview via *both* the initial HTML navState
+   * (watcher refresh path) and the contentUpdated message (tab-switch path) so
+   * the state is consistent however the viewer last refreshed. Touches disk
+   * only while a step is actually running — idle specs do no extra I/O.
+   */
+  private async deriveRunningStepInfo(
+    stepHistory: Record<string, { startedAt?: string; completedAt?: string | null }> | undefined,
+    specDirectory: string,
+    taskCompletionPercent: number,
+  ): Promise<{
+    tab: string | null;
+    artifactReady: boolean | undefined;
+    startedAt: string | null;
+    label: string | null;
+  }> {
+    const running = findRunningStep(stepHistory);
+    if (!running) {
+      return { tab: null, artifactReady: undefined, startedAt: null, label: null };
+    }
+    // The implement step produces no single markdown artifact — treat it ready
+    // once every task is checked.
+    const artifactReady =
+      running.step === WorkflowSteps.IMPLEMENT
+        ? taskCompletionPercent === 100
+        : await hasNonTrivialArtifact(specDirectory, running.step);
+    return {
+      tab: mapSddStepToTab(running.step) || running.step,
+      artifactReady,
+      startedAt: running.startedAt,
+      label: getDocTypeLabel(running.step),
+    };
   }
 
   /**
@@ -859,32 +905,12 @@ export class SpecViewerProvider {
       );
       instance.lastFeatureCtx = featureCtx ?? null;
 
-      // Derive the running step (startedAt set, no completedAt) for the nav bar.
-      const runningRaw = (() => {
-        const hist = featureCtx?.stepHistory;
-        if (!hist) return null;
-        for (const [step, entry] of Object.entries(hist)) {
-          if (entry?.startedAt && !entry?.completedAt) {
-            return { step, startedAt: entry.startedAt ?? null };
-          }
-        }
-        return null;
-      })();
-      const runningStep = runningRaw
-        ? mapSddStepToTab(runningRaw.step) || runningRaw.step
-        : null;
-
-      // Spec 099: content-aware completion for the footer's Generating→ready
-      // transition. The implement step has no single artifact — treat it ready
-      // when all tasks are checked. Scope is the button render state only.
-      const runningStepStartedAt = runningRaw?.startedAt ?? null;
-      let runningStepArtifactReady: boolean | undefined;
-      if (runningRaw) {
-        runningStepArtifactReady =
-          runningRaw.step === "implement"
-            ? taskCompletionPercent >= 100
-            : await hasNonTrivialArtifact(specDirectory, runningRaw.step);
-      }
+      // Running-step info for the nav bar + footer Generating state (spec 099).
+      const runInfo = await this.deriveRunningStepInfo(
+        featureCtx?.stepHistory,
+        specDirectory,
+        taskCompletionPercent,
+      );
 
       const navState: NavState = {
         coreDocs,
@@ -903,9 +929,10 @@ export class SpecViewerProvider {
         stalenessMap,
         specStatus,
         currentTask: featureCtx?.currentTask ?? null,
-        activeStep: runningStep,
-        runningStepArtifactReady,
-        runningStepStartedAt,
+        activeStep: runInfo.tab,
+        runningStepArtifactReady: runInfo.artifactReady,
+        runningStepStartedAt: runInfo.startedAt,
+        runningStepLabel: runInfo.label,
         stepHistory: mapStepHistoryKeys(featureCtx?.stepHistory),
         badgeText: computeBadgeText(featureCtx),
         createdDate: computeCreatedDate(featureCtx?.stepHistory),

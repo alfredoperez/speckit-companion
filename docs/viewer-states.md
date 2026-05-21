@@ -120,11 +120,14 @@
 > the provider calls `hasNonTrivialArtifact()`
 > (`src/features/spec-viewer/stepArtifact.ts`) — `<step>.md` must
 > exist with a real heading or ≥40 non-whitespace chars after
-> frontmatter is stripped — and ships `runningStepArtifactReady` +
-> `runningStepStartedAt` on the `contentUpdated` navState. The
-> existing `*.md` file watcher triggers the refresh, so no new
-> polling is added (the `implement` step has no single artifact and
-> is treated ready at 100% task completion).
+> frontmatter is stripped — and ships `runningStepArtifactReady`,
+> `runningStepStartedAt`, and `runningStepLabel` on **both** the
+> initial HTML navState (the `*.md` file-watcher refresh path) and
+> the `contentUpdated` message (the tab-switch path), so the state is
+> consistent however the viewer last refreshed. The existing `*.md`
+> watcher triggers the refresh, so no new polling is added (the
+> `implement` step has no single artifact and is treated ready at
+> 100% task completion).
 >
 > Two escape hatches keep the button from stranding: a **"Mark step
 > complete"** secondary button (posts `markStepComplete`, which

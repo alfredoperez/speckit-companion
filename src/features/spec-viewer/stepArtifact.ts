@@ -11,12 +11,14 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { FileNames, WorkflowSteps } from '../../core/constants';
+import type { StepName } from '../../core/types/specContext';
 
 /** Maps a step name to the markdown artifact it produces, if any. */
-const STEP_ARTIFACT: Record<string, string> = {
-    specify: 'spec.md',
-    plan: 'plan.md',
-    tasks: 'tasks.md',
+const STEP_ARTIFACT: Partial<Record<StepName, string>> = {
+    [WorkflowSteps.SPECIFY]: FileNames.specFile,
+    [WorkflowSteps.PLAN]: FileNames.planFile,
+    [WorkflowSteps.TASKS]: FileNames.tasksFile,
 };
 
 /** Minimum non-whitespace body length (after frontmatter strip) to count as real. */
@@ -43,7 +45,7 @@ export async function hasNonTrivialArtifact(
     specDir: string,
     step: string,
 ): Promise<boolean> {
-    const filename = STEP_ARTIFACT[step];
+    const filename = STEP_ARTIFACT[step as StepName];
     if (!filename) return false;
 
     let raw: string;

@@ -1,6 +1,6 @@
 {
   "workflow": "sdd",
-  "auto": true,
+  "auto": false,
   "currentStep": "done",
   "currentTask": null,
   "progress": null,
@@ -317,6 +317,13 @@
       "from": null,
       "by": "sdd",
       "at": "2026-05-21T13:10:00Z"
+    },
+    {
+      "step": "done",
+      "substep": "auto-disabled",
+      "from": "pr-opened",
+      "by": "sdd",
+      "at": "2026-05-21T13:10:30Z"
     }
   ],
   "status": "draft",
