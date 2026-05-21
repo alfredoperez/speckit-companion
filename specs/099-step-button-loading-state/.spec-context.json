@@ -7,8 +7,10 @@
   "next": "done",
   "status": "completed",
   "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/164",
+  "prNumber": 164,
   "loadedDomains": [],
-  "last_action": "Folded-in CP1 fix (T013): optional refinement commands hidden at the closure gate. Re-installed 0.17.2. Build + 560 tests pass.",
+  "last_action": "PR #164 opened — fix(spec-viewer): show disabled \"Generating…\" footer until step artifact lands",
   "files_modified": [
     "src/features/spec-viewer/stepArtifact.ts",
     "src/features/spec-viewer/types.ts",
@@ -308,6 +310,13 @@
       "from": "commit-review",
       "by": "sdd",
       "at": "2026-05-21T13:09:00Z"
+    },
+    {
+      "step": "done",
+      "substep": "pr-opened",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-05-21T13:10:00Z"
     }
   ],
   "status": "draft",
