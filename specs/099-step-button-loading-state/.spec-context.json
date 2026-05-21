@@ -1,0 +1,348 @@
+{
+  "workflow": "sdd",
+  "auto": false,
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "status": "completed",
+  "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/164",
+  "prNumber": 164,
+  "loadedDomains": [],
+  "last_action": "PR #164 opened — fix(spec-viewer): show disabled \"Generating…\" footer until step artifact lands",
+  "files_modified": [
+    "src/features/spec-viewer/stepArtifact.ts",
+    "src/features/spec-viewer/types.ts",
+    "webview/src/spec-viewer/types.ts",
+    "webview/src/shared/components/Button.tsx",
+    "webview/styles/spec-viewer/_buttons.css",
+    "src/features/spec-viewer/specViewerProvider.ts",
+    "src/features/spec-viewer/messageHandlers.ts",
+    "webview/src/spec-viewer/components/FooterActions.tsx",
+    "src/features/spec-viewer/__tests__/stepArtifact.test.ts",
+    "docs/viewer-states.md",
+    "README.md",
+    "webview/src/spec-viewer/components/FooterActions.stories.tsx"
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Created stepArtifact.ts with hasNonTrivialArtifact() — maps step→md file, strips frontmatter, requires a heading or ≥40 non-ws chars; missing/empty/stub → false.",
+      "files": ["src/features/spec-viewer/stepArtifact.ts"],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added runningStepArtifactReady + runningStepStartedAt to extension NavState.",
+      "files": ["src/features/spec-viewer/types.ts"],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Mirrored the two readiness fields in webview NavState and added the markStepComplete message variant.",
+      "files": ["webview/src/spec-viewer/types.ts"],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added loading prop to shared Button — renders .btn-spinner and forces disabled.",
+      "files": ["webview/src/shared/components/Button.tsx"],
+      "concerns": []
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added .btn-spinner + rotation keyframes and .is-loading style to _buttons.css (plan said _actions.css; real footer/button partials are _footer.css/_buttons.css).",
+      "files": ["webview/styles/spec-viewer/_buttons.css"],
+      "concerns": ["Plan referenced _actions.css which does not exist; spinner placed in _buttons.css to match the Button component."]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Provider derives the raw running step + startedAt and computes runningStepArtifactReady (via hasNonTrivialArtifact; implement uses taskCompletionPercent>=100), shipping both on the contentUpdated navState.",
+      "files": ["src/features/spec-viewer/specViewerProvider.ts"],
+      "concerns": []
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Added markStepComplete message handler — resolves the running step from .spec-context.json stepHistory and calls completeStep, then refreshes.",
+      "files": ["src/features/spec-viewer/messageHandlers.ts"],
+      "concerns": []
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "FooterActions early-returns a disabled 'Generating <step>…' (loading) button + 'Mark step complete' fallback while running && !artifactReady && !timedOut; useEffect timer flips after a 10-min recovery window; changed visible=vs.footer so the footer shows enabled once ready.",
+      "files": ["webview/src/spec-viewer/components/FooterActions.tsx"],
+      "concerns": ["Legacy fallback footer branch (vs.footer empty) still hides on isRunning — left as-is since SDD specs always populate vs.footer."]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Added stepArtifact.test.ts — 9 cases covering heading/body/empty/whitespace/frontmatter-only/stub/missing/implement; all green.",
+      "files": ["src/features/spec-viewer/__tests__/stepArtifact.test.ts"],
+      "concerns": []
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Rewrote the viewer-states 'Hide-during-in-flight' note as 'Generating-during-in-flight' (disabled spinner button, content-aware completion, manual button, 10-min timeout).",
+      "files": ["docs/viewer-states.md"],
+      "concerns": []
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Updated README 'Quiet, intentional footer' bullet to describe the disabled Generating state, content-based re-enable, manual completion, and recovery timeout.",
+      "files": ["README.md"],
+      "concerns": []
+    },
+    "build": {
+      "status": "DONE",
+      "did": "npm run compile + webview tsc --noEmit clean; npm test → 50 suites / 560 tests pass.",
+      "files": [],
+      "concerns": []
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "CP1 follow-up — added Storybook coverage for the Generating state: updated inFlightNavState (recent startedAt + runningStepArtifactReady:false) so in-flight stories render Generating, plus dedicated Generating Tasks/Plan, artifact-ready, and recovery-timeout stories. Live on http://localhost:6006.",
+      "files": ["webview/src/spec-viewer/components/FooterActions.stories.tsx"],
+      "concerns": []
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Folded-in unrelated fix: optional refinement commands (Clarify/Checklist/Analyze) now hidden once the footer offers complete/reactivate (closure-ready), gating on actual footer actions rather than the status string. Added a suppression story + README note.",
+      "files": ["webview/src/spec-viewer/components/FooterActions.tsx", "webview/src/spec-viewer/components/FooterActions.stories.tsx", "README.md"],
+      "concerns": ["Unrelated to the spec-099 scope; folded into this PR at the user's request."]
+    }
+  },
+  "concerns": [
+    { "task": "T005", "note": "Plan referenced _actions.css which does not exist; spinner placed in _buttons.css to match the Button component." },
+    { "task": "T008", "note": "Legacy fallback footer branch (vs.footer empty) still hides on isRunning — left as-is since SDD specs always populate vs.footer." }
+  ],
+  "approach": "Replace the footer's hide-while-running behavior with a content-aware Generating state, driven by a filesystem artifact check the provider passes to the webview.",
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 8,
+      "scenarios": 5,
+      "key_finding": "Footer next-step button advances optimistically — handleApprove (messageHandlers.ts) calls completeStep+startStep then dispatches the CLI before the artifact exists; the current design hides the footer during in-flight rather than disabling it. File watchers (fileWatchers.ts) already refresh the viewer on *.md create/change, so completion can be detected without new polling."
+    },
+    "plan": {
+      "approach_summary": "Replace the footer's hide-while-running behavior with a content-aware Generating state, driven by a filesystem artifact check the provider passes to the webview.",
+      "files_planned": 10,
+      "risks": [
+        "Re-introducing file-existence as a completion signal partially reverses spec-060 — scope it to the button render state only, not the canonical badge/status derivation.",
+        "Recovery-timeout window: too short strands fast machines, too long hides silent AI failures — generous default plus the manual button covers the gap."
+      ],
+      "principles_concerns": 0,
+      "domain_concerns": 0,
+      "significance_score": 1
+    }
+  },
+  "updated": "2026-05-21",
+  "selectedAt": "2026-05-21T12:30:39Z",
+  "specName": "Step Button Loading State",
+  "branch": "main",
+  "workingBranch": "fix/step-button-loading-state",
+  "type": "fix",
+  "createdAt": "2026-05-21T12:30:39Z",
+  "transitions": [
+    {
+      "step": "specify",
+      "substep": "parsing",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-05-21T12:30:39Z"
+    },
+    {
+      "step": "specify",
+      "substep": "exploring",
+      "from": "parsing",
+      "by": "sdd",
+      "at": "2026-05-21T12:30:42Z"
+    },
+    {
+      "step": "specify",
+      "substep": "detecting",
+      "from": "exploring",
+      "by": "sdd",
+      "at": "2026-05-21T12:31:30Z"
+    },
+    {
+      "step": "specify",
+      "substep": "writing-spec",
+      "from": "detecting",
+      "by": "sdd",
+      "at": "2026-05-21T12:31:35Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": "writing-spec",
+      "by": "sdd",
+      "at": "2026-05-21T12:32:10Z"
+    },
+    {
+      "step": "specify",
+      "substep": "auto-enabled",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-05-21T12:32:15Z"
+    },
+    {
+      "step": "plan",
+      "substep": "loading",
+      "from": "auto-enabled",
+      "by": "sdd",
+      "at": "2026-05-21T12:42:30Z"
+    },
+    {
+      "step": "plan",
+      "substep": "writing-plan",
+      "from": "loading",
+      "by": "sdd",
+      "at": "2026-05-21T12:42:35Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": "writing-plan",
+      "by": "sdd",
+      "at": "2026-05-21T12:44:00Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "loading",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-05-21T12:44:20Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "writing-tasks",
+      "from": "loading",
+      "by": "sdd",
+      "at": "2026-05-21T12:44:25Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": "writing-tasks",
+      "by": "sdd",
+      "at": "2026-05-21T12:45:30Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-05-21T12:46:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": "branch-created",
+      "from": "phase1",
+      "by": "sdd",
+      "at": "2026-05-21T12:46:05Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T001-T005",
+      "from": "branch-created",
+      "by": "sdd",
+      "at": "2026-05-21T12:49:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T006-T007",
+      "from": "T001-T005",
+      "by": "sdd",
+      "at": "2026-05-21T12:51:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T008",
+      "from": "T006-T007",
+      "by": "sdd",
+      "at": "2026-05-21T12:53:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T009-T011",
+      "from": "T008",
+      "by": "sdd",
+      "at": "2026-05-21T12:55:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": "hooks",
+      "from": "T009-T011",
+      "by": "sdd",
+      "at": "2026-05-21T12:55:30Z"
+    },
+    {
+      "step": "implement",
+      "substep": "code-review",
+      "from": "hooks",
+      "by": "sdd",
+      "at": "2026-05-21T12:57:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": "cp1-stories",
+      "from": "code-review",
+      "by": "sdd",
+      "at": "2026-05-21T13:02:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": "commit-review",
+      "from": "cp1-stories",
+      "by": "sdd",
+      "at": "2026-05-21T13:03:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": "cp3-folded-fix",
+      "from": "commit-review",
+      "by": "sdd",
+      "at": "2026-05-21T13:08:00Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": "commit-review",
+      "by": "sdd",
+      "at": "2026-05-21T13:09:00Z"
+    },
+    {
+      "step": "done",
+      "substep": "pr-opened",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-05-21T13:10:00Z"
+    },
+    {
+      "step": "done",
+      "substep": "auto-disabled",
+      "from": "pr-opened",
+      "by": "sdd",
+      "at": "2026-05-21T13:10:30Z"
+    }
+  ],
+  "status": "draft",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-05-21T12:42:11.649Z",
+      "completedAt": "2026-05-21T12:43:48.591Z"
+    },
+    "plan": {
+      "startedAt": "2026-05-21T12:43:48.591Z",
+      "completedAt": "2026-05-21T12:45:22.101Z"
+    },
+    "tasks": {
+      "startedAt": "2026-05-21T12:45:22.101Z",
+      "completedAt": "2026-05-21T12:48:48.180Z"
+    },
+    "implement": {
+      "startedAt": "2026-05-21T12:48:48.180Z",
+      "completedAt": null
+    }
+  }
+}

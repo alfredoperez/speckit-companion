@@ -42,7 +42,10 @@ export function generateHtml(
     currentFilePath?: string | null,
     currentStep?: string | null,
     stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>,
-    activityPanelMode: 'off' | 'beta' | 'on' = 'beta'
+    activityPanelMode: 'off' | 'beta' | 'on' = 'beta',
+    runningStepArtifactReady?: boolean,
+    runningStepStartedAt?: string | null,
+    runningStepLabel?: string | null
 ): string {
     // Get URIs for resources
     const styleUri = webview.asWebviewUri(
@@ -122,6 +125,9 @@ export function generateHtml(
         filePath: currentFilePath ?? null,
         docTypeLabel: getDocTypeLabel(currentStep ?? currentDocType),
         activityPanelMode,
+        runningStepArtifactReady,
+        runningStepStartedAt: runningStepStartedAt ?? null,
+        runningStepLabel: runningStepLabel ?? null,
     };
 
     return `<!DOCTYPE html>

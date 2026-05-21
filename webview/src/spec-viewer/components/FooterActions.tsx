@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import type { VSCodeApi, ViewerToExtensionMessage, SerializedFooterAction } from '../types';
 import { navState, viewerState } from '../signals';
 import { findActiveDoc } from '../scratchpad';
@@ -14,6 +14,11 @@ const SCOPE_SUFFIX: Record<'spec' | 'step', string> = {
     step: 'Affects this step',
 };
 
+// How long to show "Generating…" before falling back to an enabled footer so
+// the UI never strands. Generous — the manual "Mark step complete" button
+// covers faster recovery.
+const RECOVERY_TIMEOUT_MS = 10 * 60 * 1000;
+
 function withScopeSuffix(a: SerializedFooterAction): string {
     return `${a.tooltip} (${SCOPE_SUFFIX[a.scope]})`;
 }
@@ -25,22 +30,53 @@ export interface FooterActionsProps {
 export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
     const ns = navState.value;
     const vs = viewerState.value;
+
+    // All hooks must run before the early `if (!ns)` return below, so they read
+    // navState defensively (it can be momentarily null before the first update).
     const [regenerateToastActive, setRegenerateToastActive] = useState(false);
+    const [, forceTick] = useState(0);
+
+    // A step is "running" when activeStep is set AND its stepHistory entry has
+    // startedAt with no completedAt. Requiring startedAt avoids false positives
+    // on terminal-archived specs whose entry is missing entirely (which
+    // previously disabled Reactivate).
+    const runningStep = ns?.activeStep ?? null;
+    const runningEntry = runningStep ? ns?.stepHistory?.[runningStep] : null;
+    const isRunning = !!(runningEntry?.startedAt && !runningEntry.completedAt);
+
+    // A running step stays "generating" until its artifact is detected on disk;
+    // after RECOVERY_TIMEOUT_MS the footer drops back to its enabled buttons so
+    // the UI never strands.
+    const artifactReady = ns?.runningStepArtifactReady ?? false;
+    const startedAtMs = ns?.runningStepStartedAt ? Date.parse(ns.runningStepStartedAt) : NaN;
+    const timedOut = !Number.isNaN(startedAtMs) && Date.now() - startedAtMs > RECOVERY_TIMEOUT_MS;
+    const isGenerating = isRunning && !artifactReady && !timedOut;
+
+    // Re-render once the recovery window elapses, even with no navState update.
+    useEffect(() => {
+        if (!isGenerating || Number.isNaN(startedAtMs)) return;
+        const remaining = startedAtMs + RECOVERY_TIMEOUT_MS - Date.now();
+        if (remaining <= 0) return;
+        const t = setTimeout(() => forceTick(v => v + 1), remaining);
+        return () => clearTimeout(t);
+    }, [isGenerating, startedAtMs]);
+
+    // Archive/Complete/Reactivate require a two-click confirm.
+    const archiveConfirm = useInlineConfirm(
+        () => vscode.postMessage({ type: 'archiveSpec' })
+    );
+    const completeConfirm = useInlineConfirm(
+        () => vscode.postMessage({ type: 'completeSpec' })
+    );
+    const reactivateConfirm = useInlineConfirm(
+        () => vscode.postMessage({ type: 'reactivateSpec' })
+    );
 
     if (!ns) return null;
 
     const send = (msg: ViewerToExtensionMessage) => () => vscode.postMessage(msg);
 
-    // A step is "running" when activeStep is set AND its stepHistory entry
-    // has startedAt with no completedAt. Requiring startedAt prevents
-    // false positives on terminal-archived specs where the entry is
-    // missing entirely (which previously disabled Reactivate).
-    const runningStep = ns.activeStep ?? null;
-    const runningEntry = runningStep ? ns.stepHistory?.[runningStep] : null;
-    const isRunning = !!(runningEntry?.startedAt && !runningEntry.completedAt);
-
-    // R024/R030: Regenerate queues behind a 5s undo toast. Never shown
-    // while another step is already running (the button stays disabled).
+    // Regenerate queues behind a 5s undo toast; never shown while a step runs.
     const onRegenerateClick = () => {
         if (isRunning) return;
         setRegenerateToastActive(true);
@@ -52,17 +88,6 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
     const regenerateUndo = () => {
         setRegenerateToastActive(false);
     };
-
-    // R026: Archive/Complete/Reactivate require a two-click confirm.
-    const archiveConfirm = useInlineConfirm(
-        () => vscode.postMessage({ type: 'archiveSpec' })
-    );
-    const completeConfirm = useInlineConfirm(
-        () => vscode.postMessage({ type: 'completeSpec' })
-    );
-    const reactivateConfirm = useInlineConfirm(
-        () => vscode.postMessage({ type: 'reactivateSpec' })
-    );
 
     // Scratchpad view: read-only history of inline-comment batches. The only
     // footer affordance is Edit, which opens the file in the standard editor
@@ -86,6 +111,32 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
         );
     }
 
+    // While a step is generating, replace the forward button with a disabled
+    // "Generating <step>…" spinner plus a manual completion fallback. Applies to
+    // every step transition.
+    if (isGenerating && runningStep) {
+        return (
+            <footer class="actions">
+                <Toast id="action-toast" />
+                <div class="actions-left"></div>
+                <div class="actions-right">
+                    <Button
+                        label={`Generating ${ns.runningStepLabel ?? 'step'}…`}
+                        variant="primary"
+                        loading
+                        title="The AI is generating this step — the button re-enables once the artifact is ready"
+                    />
+                    <Button
+                        label="Mark step complete"
+                        variant="secondary"
+                        title="Manually mark this step complete if auto-detection doesn't fire"
+                        onClick={send({ type: 'markStepComplete' })}
+                    />
+                </div>
+            </footer>
+        );
+    }
+
     const status = vs?.status || ns.footerState?.specStatus || ns.specStatus || initialSpecStatus;
     const isTasksDone = status === 'tasks-done';
     const isCompleted = status === 'completed';
@@ -103,9 +154,10 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
         const sendFooter = (id: string) => () =>
             vscode.postMessage({ type: 'footerAction', id });
 
-        // Hide instead of disable while the AI is mid-step. The sidebar's
-        // per-row Archive remains as an escape hatch.
-        const visible = isRunning ? [] : vs.footer;
+        // The generating state is handled by the early return above. Reaching
+        // here means the step is idle, ready, or past the recovery timeout — so
+        // the footer's forward/lifecycle buttons are shown enabled.
+        const visible = vs.footer;
 
         // Route each action to the left or right region:
         //   Left  = Regenerate (leftmost) followed by the optional-command
@@ -125,6 +177,15 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
         ]);
         const leftActions = visible.filter(a => LEFT_IDS.has(a.id));
         const rightActions = visible.filter(a => RIGHT_IDS.has(a.id));
+
+        // Once the spec is at the closure gate (Mark Completed / Reactivate are
+        // offered), the optional refinement commands (Clarify / Checklist /
+        // Analyze) no longer make sense — there's nothing left to refine. Gate
+        // on the footer's actual closure actions rather than the status string,
+        // which can lag behind (e.g. provider specStatus vs canonical status).
+        const specClosureReady = visible.some(
+            a => a.id === 'complete' || a.id === 'reactivate'
+        );
 
         const renderAction = (a: typeof vs.footer[number]) => {
             const isPrimary = a.id === 'approve' || a.id === 'complete' || a.id === 'reactivate';
@@ -146,7 +207,7 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
                 <Toast id="action-toast" />
                 <div class="actions-left">
                     {leftActions.map(renderAction)}
-                    {isActive && enhancementButtons.map((btn) => (
+                    {isActive && !specClosureReady && enhancementButtons.map((btn) => (
                         <Button
                             key={btn.command}
                             label={btn.label}
@@ -193,9 +254,10 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
                 ))}
             </div>
             <div class="actions-right">
-                {/* Hide all step/closure controls during an in-flight step.
-                    Reactivate stays visible on terminal states because
-                    isRunning is now correctly false there. */}
+                {/* Legacy no-viewerState fallback: hides step/closure controls
+                    while a step is in flight (the catalog path above uses the
+                    richer Generating state instead). Reactivate stays visible on
+                    terminal states because isRunning is false there. */}
                 {isArchived || isCompleted ? (
                     <Button
                         label={reactivateConfirm.label ?? 'Reactivate'}

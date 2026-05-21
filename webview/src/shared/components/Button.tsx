@@ -7,13 +7,16 @@ export interface ButtonProps extends Omit<JSX.HTMLAttributes<HTMLButtonElement>,
     variant?: ButtonVariant;
     icon?: string;
     disabled?: boolean;
+    /** Spec 099: render a spinner and force the button disabled (e.g. "Generating…"). */
+    loading?: boolean;
 }
 
-export function Button({ label, variant = 'secondary', icon, class: cls, ...rest }: ButtonProps) {
-    const className = [variant, cls].filter(Boolean).join(' ');
+export function Button({ label, variant = 'secondary', icon, loading, disabled, class: cls, ...rest }: ButtonProps) {
+    const className = [variant, loading && 'is-loading', cls].filter(Boolean).join(' ');
     return (
-        <button class={className} {...rest}>
-            {icon && <span class="icon">{icon}</span>}
+        <button class={className} disabled={disabled || loading} aria-busy={loading} {...rest}>
+            {loading && <span class="btn-spinner" aria-hidden="true" />}
+            {!loading && icon && <span class="icon">{icon}</span>}
             {label}
         </button>
     );

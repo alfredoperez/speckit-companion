@@ -99,15 +99,20 @@ const REFINE_ACTION: FooterEntry = {
 
 const withRefine = (footer: FooterEntry[]): FooterEntry[] => [REFINE_ACTION, ...footer];
 
-// Helper to mark a story as in-flight on a given step. Sets the
-// stepHistory entry so the renderer's isRunning check fires and
-// hides the footer buttons (the catalog still emits them; the
-// hide is at the render layer).
+// Helper to mark a story as in-flight on a given step. The renderer shows the
+// disabled "Generating <step>…" footer while the step's artifact is not yet
+// ready. `runningStepStartedAt` is stamped "now" so the recovery timeout has
+// not elapsed and `runningStepArtifactReady` is false, so isGenerating fires.
+// `runningStepLabel` mirrors what the provider ships via getDocTypeLabel.
+const STEP_LABELS: Record<string, string> = { spec: 'Spec', plan: 'Plan', tasks: 'Tasks' };
 const inFlightNavState = (specStatus: string, step: string) =>
     mockNavState({
         specStatus,
         activeStep: step,
-        stepHistory: { [step]: { startedAt: '2026-05-08T00:00:00Z', completedAt: null } },
+        runningStepArtifactReady: false,
+        runningStepStartedAt: new Date().toISOString(),
+        runningStepLabel: STEP_LABELS[step] ?? step,
+        stepHistory: { [step]: { startedAt: new Date().toISOString(), completedAt: null } },
     });
 
 export const Specifying: Story = {
@@ -222,6 +227,25 @@ export const Implemented: Story = {
     },
 };
 
+export const ImplementedOptionalCommandsHidden: Story = {
+    name: 'Implemented — optional commands suppressed',
+    render: () => {
+        // Optional refinement commands are defined, but the spec is at the
+        // closure gate (footer has `complete`), so Clarify/Checklist/Analyze
+        // must NOT render — there's nothing left to refine.
+        navState.value = mockNavState({
+            specStatus: 'implemented',
+            activeStep: 'tasks',
+            enhancementButtons: [
+                { label: 'Checklist', command: '/speckit.checklist', icon: '⚡', tooltip: 'Generate a checklist' },
+                { label: 'Analyze', command: '/speckit.analyze', icon: '⚡', tooltip: 'Analyze the spec' },
+            ],
+        });
+        viewerState.value = baseViewerState('implemented', 'tasks', finalApprovalFooter);
+        return <FooterActions initialSpecStatus="implemented" />;
+    },
+};
+
 export const Completed: Story = {
     name: 'Completed',
     render: () => {
@@ -242,6 +266,63 @@ export const Archived: Story = {
             { id: 'reactivate', label: 'Reactivate', scope: 'spec', tooltip: 'Reactivate archived spec' },
         ]);
         return <FooterActions initialSpecStatus="archived" />;
+    },
+};
+
+// ── Generating state (spec 099) ─────────────────────────────
+// The forward button is disabled and reads "Generating <step>…" with a
+// spinner while the running step's artifact is not yet on disk, plus a
+// manual "Mark step complete" fallback. Once the artifact lands (or the
+// recovery timeout elapses) the normal footer returns.
+
+export const GeneratingTasks: Story = {
+    name: 'Generating — Tasks',
+    render: () => {
+        navState.value = inFlightNavState('tasking', 'tasks');
+        viewerState.value = baseViewerState('tasking', 'tasks', pauseFooter('Implement'));
+        return <FooterActions initialSpecStatus="tasking" />;
+    },
+};
+
+export const GeneratingPlan: Story = {
+    name: 'Generating — Plan',
+    render: () => {
+        navState.value = inFlightNavState('planning', 'plan');
+        viewerState.value = baseViewerState('planning', 'plan', pauseFooter('Tasks'));
+        return <FooterActions initialSpecStatus="planning" />;
+    },
+};
+
+export const GeneratingArtifactReady: Story = {
+    name: 'Generating — artifact ready (re-enabled)',
+    render: () => {
+        // Running, but the artifact is now detected → normal forward footer.
+        navState.value = mockNavState({
+            specStatus: 'tasking',
+            activeStep: 'tasks',
+            runningStepArtifactReady: true,
+            runningStepStartedAt: new Date().toISOString(),
+            stepHistory: { tasks: { startedAt: new Date().toISOString(), completedAt: null } },
+        });
+        viewerState.value = baseViewerState('tasking', 'tasks', pauseFooter('Implement'));
+        return <FooterActions initialSpecStatus="tasking" />;
+    },
+};
+
+export const GeneratingTimedOut: Story = {
+    name: 'Generating — recovery timeout',
+    render: () => {
+        // Running, artifact never appeared, but the 10-min window elapsed →
+        // footer falls back to the enabled buttons so it never strands.
+        navState.value = mockNavState({
+            specStatus: 'tasking',
+            activeStep: 'tasks',
+            runningStepArtifactReady: false,
+            runningStepStartedAt: '2026-05-08T00:00:00Z',
+            stepHistory: { tasks: { startedAt: '2026-05-08T00:00:00Z', completedAt: null } },
+        });
+        viewerState.value = baseViewerState('tasking', 'tasks', pauseFooter('Implement'));
+        return <FooterActions initialSpecStatus="tasking" />;
     },
 };
 

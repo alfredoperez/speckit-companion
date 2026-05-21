@@ -110,14 +110,32 @@
 > `completedAt` is set — at `implemented` the spec-scope
 > `Mark Completed` is the right surface, not `Approve`.
 >
-> **Hide-during-in-flight**: While a step is mid-generation
-> (`startedAt` set, no `completedAt`), the renderer in
-> `webview/src/spec-viewer/components/FooterActions.tsx` filters
-> out *every* footer entry instead of rendering disabled buttons.
-> The catalog still emits the catalog-correct array — the hide is
-> at the render layer. The header status badge plus the active
-> step's pulse are the "AI is working" cues; the sidebar's per-row
-> Archive remains as an escape hatch.
+> **Generating-during-in-flight (spec 099)**: While a step is
+> mid-generation, the footer's forward button is **disabled and
+> labeled `Generating <step>…` with a spinner** rather than the
+> footer being hidden. The renderer in
+> `webview/src/spec-viewer/components/FooterActions.tsx` shows this
+> state while the running step (`startedAt` set, no `completedAt`)
+> has **not** yet produced its artifact. Completion is content-aware:
+> the provider calls `hasNonTrivialArtifact()`
+> (`src/features/spec-viewer/stepArtifact.ts`) — `<step>.md` must
+> exist with a real heading or ≥40 non-whitespace chars after
+> frontmatter is stripped — and ships `runningStepArtifactReady`,
+> `runningStepStartedAt`, and `runningStepLabel` on **both** the
+> initial HTML navState (the `*.md` file-watcher refresh path) and
+> the `contentUpdated` message (the tab-switch path), so the state is
+> consistent however the viewer last refreshed. The existing `*.md`
+> watcher triggers the refresh, so no new polling is added (the
+> `implement` step has no single artifact and is treated ready at
+> 100% task completion).
+>
+> Two escape hatches keep the button from stranding: a **"Mark step
+> complete"** secondary button (posts `markStepComplete`, which
+> calls `completeStep` for the running step) and a **10-minute
+> recovery timeout** after which the footer falls back to its normal
+> enabled buttons. The header status badge and the active step's
+> pulse remain the ambient "AI is working" cues; the sidebar's
+> per-row Archive remains as an escape hatch.
 >
 > **Step-tab in-flight pill size**: The active step's
 > `.step-status` badge stays at the same 16×16 size as the
