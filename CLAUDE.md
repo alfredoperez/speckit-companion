@@ -178,6 +178,17 @@ Do NOT modify `.claude/**` or `.specify/**` to implement extension
 features. If the feature needs the AI to do something, have the extension
 embed the instruction in the prompt it dispatches.
 
+**Exception — committed spec-kit scaffolding for IDE Chat testing.** The
+`.specify/`, `.cursor/`, `.windsurf/`, `.agents/`, `.gemini/`, `.qwen/`, and
+`.github/{agents,prompts}/speckit.*` directories are checked in as
+**manual-testing fixtures** — they're the output of `specify init --ai <agent>`
+for each host editor, so the IDE Chat provider can be exercised against real
+`/speckit.*` commands in Copilot / Cursor / Windsurf / Antigravity. The
+extension still does **not** read or depend on these at runtime (it only
+dispatches command text; the host chat resolves them), and they are not shipped
+in the `.vsix`. Don't delete them as an "isolation violation" — they're test
+setup, not extension behavior.
+
 ## Important Notes
 
 1. **File Operations**: Use `vscode.Uri` and workspace-relative paths
