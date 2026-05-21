@@ -31,6 +31,17 @@
     color: var(--text-secondary);
 }
 
+/* Row-mode scenario context shown in the header */
+.editor-context-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-right: 8px;
+}
+
+.editor-context-text {
+    font-style: italic;
+}
+
 /* Body - the existing textarea */
 .editor-body {
     padding: var(--space-2) var(--space-3);

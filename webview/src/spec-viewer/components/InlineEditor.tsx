@@ -41,11 +41,13 @@ export function InlineEditor(props: InlineEditorProps) {
     const card = (
         <div class="inline-editor">
             <div class="editor-header">
-                {mode === 'row' && scenarioContent ? (
-                    <>
-                        <span class="editor-context-label">Scenario {lineNum}:</span>
-                        <span class="editor-context-text">{scenarioContent}</span>
-                    </>
+                {mode === 'row' ? (
+                    scenarioContent && (
+                        <>
+                            <span class="editor-context-label">Scenario {lineNum}:</span>
+                            <span class="editor-context-text">{scenarioContent}</span>
+                        </>
+                    )
                 ) : (
                     <span class="editor-header-target">Commenting on line {lineNum}</span>
                 )}

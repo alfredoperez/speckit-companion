@@ -343,23 +343,6 @@
     border-left: 3px solid var(--accent);
 }
 
-/* Editor context showing the scenario content */
-.editor-context {
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-    padding-bottom: 8px;
-}
-
-.editor-context-label {
-    font-weight: 600;
-    color: var(--text-secondary);
-    margin-right: 8px;
-}
-
-.editor-context-text {
-    font-style: italic;
-}
-
 /* Comment row for scenario table */
 .comment-row {
     background: transparent;
