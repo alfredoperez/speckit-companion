@@ -45,6 +45,7 @@ import { writeSpecContext } from "../specs/specContextWriter";
 import { backfillMinimalContext } from "../specs/specContextBackfill";
 import { reconcileAndPersist } from "../specs/specContextReconciler";
 import { deriveViewerState, isStepCompleted } from "./stateDerivation";
+import { hasNonTrivialArtifact } from "./stepArtifact";
 import { StepCompletionNotifier, NotifierContext } from "./stepCompletionNotifier";
 import { StepName, STEP_NAMES, ViewerState as CoreViewerState } from "../../core/types/specContext";
 import {
@@ -859,16 +860,31 @@ export class SpecViewerProvider {
       instance.lastFeatureCtx = featureCtx ?? null;
 
       // Derive the running step (startedAt set, no completedAt) for the nav bar.
-      const runningStep = (() => {
+      const runningRaw = (() => {
         const hist = featureCtx?.stepHistory;
         if (!hist) return null;
         for (const [step, entry] of Object.entries(hist)) {
           if (entry?.startedAt && !entry?.completedAt) {
-            return mapSddStepToTab(step) || step;
+            return { step, startedAt: entry.startedAt ?? null };
           }
         }
         return null;
       })();
+      const runningStep = runningRaw
+        ? mapSddStepToTab(runningRaw.step) || runningRaw.step
+        : null;
+
+      // Spec 099: content-aware completion for the footer's Generating→ready
+      // transition. The implement step has no single artifact — treat it ready
+      // when all tasks are checked. Scope is the button render state only.
+      const runningStepStartedAt = runningRaw?.startedAt ?? null;
+      let runningStepArtifactReady: boolean | undefined;
+      if (runningRaw) {
+        runningStepArtifactReady =
+          runningRaw.step === "implement"
+            ? taskCompletionPercent >= 100
+            : await hasNonTrivialArtifact(specDirectory, runningRaw.step);
+      }
 
       const navState: NavState = {
         coreDocs,
@@ -888,6 +904,8 @@ export class SpecViewerProvider {
         specStatus,
         currentTask: featureCtx?.currentTask ?? null,
         activeStep: runningStep,
+        runningStepArtifactReady,
+        runningStepStartedAt,
         stepHistory: mapStepHistoryKeys(featureCtx?.stepHistory),
         badgeText: computeBadgeText(featureCtx),
         createdDate: computeCreatedDate(featureCtx?.stepHistory),

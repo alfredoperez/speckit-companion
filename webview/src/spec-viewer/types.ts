@@ -85,6 +85,10 @@ export interface NavState {
     specStatus?: string;
     currentTask?: string | null;
     activeStep?: string | null;
+    /** Spec 099: running step's artifact exists with non-trivial content. */
+    runningStepArtifactReady?: boolean;
+    /** Spec 099: `startedAt` of the running step, for footer timeout recovery. */
+    runningStepStartedAt?: string | null;
     stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>;
     badgeText?: string | null;
     createdDate?: string | null;
@@ -216,6 +220,8 @@ export type ViewerToExtensionMessage =
     | { type: 'approve' }
     | { type: 'clarify'; command?: string }
     | { type: 'footerAction'; id: string }
+    // Spec 099: manual completion fallback for the running step
+    | { type: 'markStepComplete' }
     // Lifecycle actions
     | { type: 'completeSpec' }
     | { type: 'archiveSpec' }

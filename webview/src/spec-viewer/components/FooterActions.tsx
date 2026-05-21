@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import type { VSCodeApi, ViewerToExtensionMessage, SerializedFooterAction } from '../types';
 import { navState, viewerState } from '../signals';
 import { findActiveDoc } from '../scratchpad';
@@ -13,6 +13,23 @@ const SCOPE_SUFFIX: Record<'spec' | 'step', string> = {
     spec: 'Affects whole spec',
     step: 'Affects this step',
 };
+
+// Spec 099: how long to show "Generating…" before falling back to an enabled
+// footer so the UI never strands. Generous — the manual "Mark step complete"
+// button covers faster recovery.
+const RECOVERY_TIMEOUT_MS = 10 * 60 * 1000;
+
+const GENERATING_LABELS: Record<string, string> = {
+    spec: 'Spec',
+    specify: 'Spec',
+    plan: 'Plan',
+    tasks: 'Tasks',
+    implement: 'Implementation',
+};
+
+function generatingLabel(step: string): string {
+    return GENERATING_LABELS[step] ?? step.charAt(0).toUpperCase() + step.slice(1);
+}
 
 function withScopeSuffix(a: SerializedFooterAction): string {
     return `${a.tooltip} (${SCOPE_SUFFIX[a.scope]})`;
@@ -38,6 +55,24 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
     const runningStep = ns.activeStep ?? null;
     const runningEntry = runningStep ? ns.stepHistory?.[runningStep] : null;
     const isRunning = !!(runningEntry?.startedAt && !runningEntry.completedAt);
+
+    // Spec 099: a running step is "generating" until its artifact is detected on
+    // disk (R002/R003). After RECOVERY_TIMEOUT_MS we drop back to the normal
+    // (enabled) footer so the UI never strands (R005).
+    const artifactReady = ns.runningStepArtifactReady ?? false;
+    const startedAtMs = ns.runningStepStartedAt ? Date.parse(ns.runningStepStartedAt) : NaN;
+    const timedOut = !Number.isNaN(startedAtMs) && Date.now() - startedAtMs > RECOVERY_TIMEOUT_MS;
+    const isGenerating = isRunning && !artifactReady && !timedOut;
+
+    // Re-render once the recovery window elapses, even with no navState update.
+    const [, forceTick] = useState(0);
+    useEffect(() => {
+        if (!isGenerating || Number.isNaN(startedAtMs)) return;
+        const remaining = startedAtMs + RECOVERY_TIMEOUT_MS - Date.now();
+        if (remaining <= 0) return;
+        const t = setTimeout(() => forceTick(v => v + 1), remaining);
+        return () => clearTimeout(t);
+    }, [isGenerating, startedAtMs]);
 
     // R024/R030: Regenerate queues behind a 5s undo toast. Never shown
     // while another step is already running (the button stays disabled).
@@ -86,6 +121,32 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
         );
     }
 
+    // Spec 099: while a step is generating, replace the forward button with a
+    // disabled "Generating <step>…" spinner plus a manual completion fallback.
+    // Applies to every step transition (R001/R004/R006).
+    if (isGenerating && runningStep) {
+        return (
+            <footer class="actions">
+                <Toast id="action-toast" />
+                <div class="actions-left"></div>
+                <div class="actions-right">
+                    <Button
+                        label={`Generating ${generatingLabel(runningStep)}…`}
+                        variant="primary"
+                        loading
+                        title="The AI is generating this step — the button re-enables once the artifact is ready"
+                    />
+                    <Button
+                        label="Mark step complete"
+                        variant="secondary"
+                        title="Manually mark this step complete if auto-detection doesn't fire"
+                        onClick={send({ type: 'markStepComplete' })}
+                    />
+                </div>
+            </footer>
+        );
+    }
+
     const status = vs?.status || ns.footerState?.specStatus || ns.specStatus || initialSpecStatus;
     const isTasksDone = status === 'tasks-done';
     const isCompleted = status === 'completed';
@@ -103,9 +164,10 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
         const sendFooter = (id: string) => () =>
             vscode.postMessage({ type: 'footerAction', id });
 
-        // Hide instead of disable while the AI is mid-step. The sidebar's
-        // per-row Archive remains as an escape hatch.
-        const visible = isRunning ? [] : vs.footer;
+        // Spec 099: the generating state is handled by the early return above.
+        // Reaching here means the step is idle, ready, or past the recovery
+        // timeout — so the footer's forward/lifecycle buttons are shown enabled.
+        const visible = vs.footer;
 
         // Route each action to the left or right region:
         //   Left  = Regenerate (leftmost) followed by the optional-command
@@ -125,6 +187,15 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
         ]);
         const leftActions = visible.filter(a => LEFT_IDS.has(a.id));
         const rightActions = visible.filter(a => RIGHT_IDS.has(a.id));
+
+        // Once the spec is at the closure gate (Mark Completed / Reactivate are
+        // offered), the optional refinement commands (Clarify / Checklist /
+        // Analyze) no longer make sense — there's nothing left to refine. Gate
+        // on the footer's actual closure actions rather than the status string,
+        // which can lag behind (e.g. provider specStatus vs canonical status).
+        const specClosureReady = visible.some(
+            a => a.id === 'complete' || a.id === 'reactivate'
+        );
 
         const renderAction = (a: typeof vs.footer[number]) => {
             const isPrimary = a.id === 'approve' || a.id === 'complete' || a.id === 'reactivate';
@@ -146,7 +217,7 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
                 <Toast id="action-toast" />
                 <div class="actions-left">
                     {leftActions.map(renderAction)}
-                    {isActive && enhancementButtons.map((btn) => (
+                    {isActive && !specClosureReady && enhancementButtons.map((btn) => (
                         <Button
                             key={btn.command}
                             label={btn.label}

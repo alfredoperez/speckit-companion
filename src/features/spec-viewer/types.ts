@@ -261,6 +261,14 @@ export interface NavState {
     currentTask?: string | null;
     /** Active SDD step being worked on (mapped to tab name: spec/plan/tasks) */
     activeStep?: string | null;
+    /**
+     * Spec 099: whether the running step's artifact exists on disk with
+     * non-trivial content. Drives the footer's Generating→ready transition.
+     * Undefined when no step is running.
+     */
+    runningStepArtifactReady?: boolean;
+    /** Spec 099: `startedAt` of the running step, for the footer's timeout recovery. */
+    runningStepStartedAt?: string | null;
     /** Step history for determining completed steps */
     stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>;
     /** Badge text for the metadata bar */
@@ -368,6 +376,9 @@ export type ViewerToExtensionMessage =
       }
     | {
           type: 'approve';
+      }
+    | {
+          type: 'markStepComplete';
       }
     | {
           type: 'clarify';
