@@ -5,8 +5,10 @@
   "progress": null,
   "next": "done",
   "checkpointStatus": { "commit": true, "pr": true },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/163",
+  "prNumber": 163,
   "updated": "2026-05-21",
-  "last_action": "Review feedback (T009–T010): hide optional buttons at the ready-to-complete gate and move Regenerate leftmost in FooterActions.tsx; compile + webpack clean, 551 tests pass.",
+  "last_action": "PR #163 opened — feat(spec-viewer): surface optional speckit commands as per-tab buttons",
   "files_modified": [
     "src/features/spec-viewer/optionalCommands.ts",
     "src/features/spec-viewer/specViewerProvider.ts",
@@ -219,6 +221,13 @@
       "from": { "step": "implement", "substep": "code-review" },
       "by": "sdd",
       "at": "2026-05-21T12:06:54Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": { "step": "done", "substep": null },
+      "by": "sdd",
+      "at": "2026-05-21T12:08:45Z"
     }
   ],
   "status": "completed",
