@@ -146,3 +146,60 @@ export function splitContextPreamble(prompt: string): { preamble: string | null;
         command: prompt.slice(end).trim(),
     };
 }
+
+/**
+ * Read a specify temp markdown file and return the feature description, dropping
+ * the bookkeeping the extension appends below it (`## Post-Specification`).
+ * Returns null when the file can't be read or is empty. Shared by providers that
+ * inline the description into a prefilled command instead of passing the temp
+ * path a human-facing surface can't open (IDE chat, Claude panel).
+ */
+export async function readSpecDescription(filePath: string): Promise<string | null> {
+    try {
+        const data = await vscode.workspace.fs.readFile(vscode.Uri.file(filePath));
+        const text = Buffer.from(data).toString('utf-8');
+        const marker = text.indexOf('## Post-Specification');
+        const body = (marker === -1 ? text : text.slice(0, marker)).trim();
+        return body || null;
+    } catch {
+        return null;
+    }
+}
+
+/** The spec name from a path: the last segment, or its parent when it's a doc file. */
+export function specNameFromPath(p: string): string {
+    const segments = p.split(/[/\\]/).filter(Boolean);
+    let name = segments.pop() ?? p;
+    if (/\.md$/i.test(name) && segments.length > 0) {
+        name = segments.pop()!;
+    }
+    return name;
+}
+
+/**
+ * Clean the argument of an already-verb-formatted `/speckit.* <arg>` command for
+ * dispatch to a surface that prefills text a human reads (IDE chat, Claude panel):
+ * - free-text / multi-token / non-path args are kept as-is;
+ * - `specify <temp.md>` (create-new-spec writes the description into a temp md the
+ *   surface can't open) is inlined to `specify <description>`;
+ * - any other spec-dir path arg is shortened to just the spec name.
+ *
+ * The command verb is left untouched — callers apply dot/dash formatting first.
+ */
+export async function cleanCommandArg(command: string): Promise<string> {
+    const trimmed = command.trim();
+    const sp = trimmed.indexOf(' ');
+    if (sp === -1) return trimmed;
+    const cmd = trimmed.slice(0, sp);
+    const arg = trimmed.slice(sp + 1).trim();
+    if (!arg) return cmd;
+
+    if (/\s/.test(arg)) return `${cmd} ${arg}`;     // free-text / multi-token argument
+    if (!/[/\\]/.test(arg)) return `${cmd} ${arg}`; // not a path
+
+    if (/[.-]specify$/.test(cmd) && /\.md$/i.test(arg)) {
+        const description = await readSpecDescription(arg);
+        if (description) return `${cmd} ${description}`;
+    }
+    return `${cmd} ${specNameFromPath(arg)}`;
+}

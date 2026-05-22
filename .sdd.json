@@ -6,7 +6,8 @@
   "hooks": {
     "pre:code-review": [
       { "skill": "/install-local" },
-      { "skill": "/code-review" }
+      { "skill": "/code-review" },
+      { "prompt": "REVIEW MODE — make NO edits. Run a code-simplifier pass on the changed files ({files}). Propose only conservative, behavior-preserving simplifications for clarity, consistency, and maintainability — for each: file:line, current shape, simpler shape, one-line rationale. Return a concise ranked list; if a file is already simple, say so.", "blocking": false }
     ],
     "pre:commit": [
       { "shell": "git reset HEAD -- package.json package-lock.json 2>/dev/null || true", "blocking": false },

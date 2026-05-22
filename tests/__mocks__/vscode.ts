@@ -71,6 +71,12 @@ export class Uri {
         return new Uri(path);
     }
 
+    static parse(value: string): Uri {
+        // The mock keeps the parsed value verbatim so toString() round-trips it
+        // (real vscode.Uri.parse preserves scheme/authority/query).
+        return new Uri(value);
+    }
+
     static joinPath(base: Uri, ...pathSegments: string[]): Uri {
         const joined = [base.fsPath, ...pathSegments].join('/');
         return new Uri(joined);
@@ -97,7 +103,9 @@ export const workspace = {
         stat: jest.fn().mockRejectedValue(new Error('not found')),
         readFile: jest.fn().mockResolvedValue(new Uint8Array()),
         writeFile: jest.fn().mockResolvedValue(undefined),
+        createDirectory: jest.fn().mockResolvedValue(undefined),
     },
+    workspaceFolders: undefined as any,
     findFiles: jest.fn().mockResolvedValue([]),
     getConfiguration: jest.fn().mockReturnValue({
         get: jest.fn().mockReturnValue(['specs']),
