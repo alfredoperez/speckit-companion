@@ -30,7 +30,7 @@
   "branch": "main",
   "workingBranch": "feat/activity-view-overhaul",
   "type": "feat",
-  "auto": true,
+  "auto": false,
   "createdAt": "2026-05-22T02:26:12.386Z",
   "loadedDomains": [],
   "transitions": [
@@ -241,6 +241,16 @@
       },
       "by": "sdd",
       "at": "2026-05-22T11:50:10.432Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "done",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-22T11:50:33.190Z"
     }
   ],
   "status": "completed",
@@ -377,7 +387,7 @@
       "note": "R005 not enforced at the extension writer (would drop legitimate start/complete boundaries \u2014 broke 2 append-only tests). Visible redundant-row symptom handled at derivation/view layer (R010)."
     }
   ],
-  "drainedSeq": 11,
+  "drainedSeq": 12,
   "decisions": [
     "R005 writer-side de-dup REVERTED: appendTransition records every legitimate lifecycle boundary (start/complete can share step+substep+from); the real redundant phase1xN repeats are SDD-skill-authored (written directly to JSON, never via appendTransition) and out of scope. R005's visible intent is delivered via R010 \u2014 dedupeConsecutive in stepHistoryDerivation + dedupeEvents in PhasesCard.",
     "task_summaries declared as Record<string,unknown> (not TaskSummary) to match the reader's normalize output; the strongly-typed form stays on ViewerState.taskSummaries."
