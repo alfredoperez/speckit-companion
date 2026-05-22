@@ -19,6 +19,7 @@ import {
     TaskSummary,
     ConcernEntry,
     CheckpointStatus,
+    ReviewComment,
 } from '../../core/types/specContext';
 import { getFooterActions } from './footerActions';
 import { deriveStepHistory } from '../specs/stepHistoryDerivation';
@@ -64,6 +65,41 @@ function pickConcerns(ctx: SpecContext): ConcernEntry[] | undefined {
             if (typeof e.note === 'string') {
                 out.push({ task: typeof e.task === 'string' ? e.task : undefined, note: e.note });
             }
+        }
+    }
+    return out.length > 0 ? out : undefined;
+}
+
+function pickReviewComments(ctx: SpecContext): ReviewComment[] | undefined {
+    const v = (ctx as Record<string, unknown>)['reviewComments'];
+    if (!Array.isArray(v) || v.length === 0) return undefined;
+    const out: ReviewComment[] = [];
+    for (const entry of v) {
+        if (!entry || typeof entry !== 'object') continue;
+        const e = entry as Record<string, unknown>;
+        const anchor = e.anchor as Record<string, unknown> | undefined;
+        if (
+            typeof e.id === 'string' &&
+            (e.doc === 'spec' || e.doc === 'plan' || e.doc === 'tasks') &&
+            typeof e.comment === 'string' &&
+            (e.status === 'pending' || e.status === 'applied') &&
+            typeof e.createdAt === 'string' &&
+            anchor && typeof anchor === 'object' &&
+            typeof anchor.blockText === 'string' &&
+            typeof anchor.line === 'number'
+        ) {
+            out.push({
+                id: e.id,
+                doc: e.doc,
+                anchor: {
+                    heading: typeof anchor.heading === 'string' ? anchor.heading : null,
+                    blockText: anchor.blockText,
+                    line: anchor.line,
+                },
+                comment: e.comment,
+                status: e.status,
+                createdAt: e.createdAt,
+            });
         }
     }
     return out.length > 0 ? out : undefined;
@@ -193,5 +229,6 @@ export function deriveViewerState(
         prNumber: pickNumber(ctx, 'prNumber'),
         checkpointStatus: pickCheckpointStatus(ctx),
         stepSummaries: pickRecord<Record<string, unknown>>(ctx, 'step_summaries'),
+        reviewComments: pickReviewComments(ctx),
     };
 }

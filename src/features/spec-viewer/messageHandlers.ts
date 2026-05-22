@@ -11,7 +11,15 @@ import {
     DocumentType,
 } from './types';
 import { SPEC_CONTEXT_FILENAME, readSpecContext } from '../specs/specContextReader';
-import { extractBlock } from './extractBlock';
+import { updateSpecContext } from '../specs/specContextWriter';
+import {
+    buildReviewComment,
+    addComment as addCommentToCtx,
+    removeComment as removeCommentFromCtx,
+    markApplied,
+    pendingForDoc,
+} from './reviewComments';
+import type { CoreDocumentType } from './types';
 import { ConfigKeys, SpecStatuses, FooterActionIds } from '../../core/constants';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import type { CustomCommandConfig } from '../../core/types/config';
@@ -20,7 +28,7 @@ import { getFeatureWorkflow, getWorkflowCommands } from '../workflows';
 import { isOptionalCommand } from './optionalCommands';
 import { setStatus, reactivate, startStep, completeStep } from '../specs/stepLifecycle';
 import { findRunningStep } from './stateDerivation';
-import type { StepName } from '../../core/types/specContext';
+import type { StepName, SpecContext } from '../../core/types/specContext';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { buildPrompt, buildLifecyclePrompt } from '../../ai-providers/promptBuilder';
 
@@ -94,8 +102,14 @@ export function createMessageHandlers(
             case 'toggleCheckbox':
                 await handleToggleCheckbox(specDirectory, message.lineNum, message.checked, deps);
                 break;
-            case 'submitRefinements':
-                await handleSubmitRefinements(specDirectory, message.refinements, deps);
+            case 'addComment':
+                await handleAddComment(specDirectory, message.id, message.doc, message.lineNum, message.lineContent, message.comment, deps);
+                break;
+            case 'removeComment':
+                await handleRemoveComment(specDirectory, message.id, deps);
+                break;
+            case 'runDocRefinement':
+                await dispatchDocRefinement(specDirectory, message.doc, deps);
                 break;
             case 'completeSpec':
                 await handleLifecycleAction(specDirectory, SpecStatuses.COMPLETED, deps);
@@ -612,35 +626,62 @@ async function handleOpenFile(
 }
 
 /**
- * Dispatch inline-comment batches as a direct-edit prompt to the AI and
- * append the same batch to the matching scratchpad file as history.
- *
- * Never invoke a per-step slash command (e.g. /speckit.plan) — those re-run
- * setup scripts that overwrite the source from a template (issue #153).
+ * Per-spec-dir write queue. `updateSpecContext` is read-modify-write with no
+ * locking, so two comment mutations firing in quick succession (the webview
+ * posts them fire-and-forget) could both read the same baseline and the second
+ * write would clobber the first. Chaining per directory serializes them.
  */
-async function handleSubmitRefinements(
+const commentWriteQueues = new Map<string, Promise<unknown>>();
+
+/**
+ * Persist a review-comment mutation through `specContextWriter` (the only
+ * sanctioned writer) and push the refreshed viewerState to the webview so the
+ * inline cards and the Activity comment list stay in sync. Comment writes never
+ * touch `transitions`, so the writer's append-only guard passes untouched.
+ */
+async function persistCommentMutation(
     specDirectory: string,
-    refinements: Array<{ lineNum: number; lineContent: string; comment: string }>,
-    deps: MessageHandlerDependencies
+    mutate: (ctx: SpecContext) => SpecContext,
+    deps: MessageHandlerDependencies,
+): Promise<void> {
+    const run = async () => {
+        const current = await readSpecContext(specDirectory);
+        if (!current) {
+            deps.outputChannel.appendLine('[SpecViewer] No .spec-context.json — skipping comment persist');
+            return;
+        }
+        await updateSpecContext(specDirectory, mutate, current);
+        await deps.refreshContextIfDisplaying(path.join(specDirectory, SPEC_CONTEXT_FILENAME));
+    };
+    const prev = commentWriteQueues.get(specDirectory) ?? Promise.resolve();
+    const next = prev.then(run, run);
+    commentWriteQueues.set(specDirectory, next);
+    try {
+        await next;
+    } finally {
+        if (commentWriteQueues.get(specDirectory) === next) {
+            commentWriteQueues.delete(specDirectory);
+        }
+    }
+}
+
+/**
+ * Persist a newly added inline comment. The anchor records the nearest heading
+ * and surrounding block (read best-effort from the live source) so the comment
+ * can be re-anchored on reopen even after the source drifts.
+ */
+async function handleAddComment(
+    specDirectory: string,
+    id: string,
+    doc: CoreDocumentType,
+    lineNum: number,
+    lineContent: string,
+    comment: string,
+    deps: MessageHandlerDependencies,
 ): Promise<void> {
     const instance = deps.getInstance(specDirectory);
-    if (!instance) return;
-
-    const docType = instance.state.currentDocument;
-    const targetPath = instance.state.changeRoot || specDirectory;
-
-    // Read the source markdown so each refinement can be enriched with its
-    // surrounding block (paragraph or list item) and nearest preceding heading.
-    // Falls back to the passed-in single line if the source can't be read.
-    const sourceDoc = instance.state.availableDocuments.find(
-        d => d.isCore && d.type === docType,
-    );
-    // Derive the AI-prompt target filename from the resolved source doc so
-    // workflows with non-matching step / file names (SDD's `specify` step →
-    // `spec.md`) target the correct file. Fall back to `${docType}.md` only
-    // when no source doc could be resolved.
-    const filename = sourceDoc?.fileName ?? `${docType}.md`;
     let sourceLines: string[] | null = null;
+    const sourceDoc = instance?.state.availableDocuments.find(d => d.isCore && d.type === doc);
     if (sourceDoc) {
         try {
             const data = await vscode.workspace.fs.readFile(vscode.Uri.file(sourceDoc.filePath));
@@ -649,115 +690,63 @@ async function handleSubmitRefinements(
             sourceLines = null;
         }
     }
+    const rc = buildReviewComment(doc, lineNum, lineContent, sourceLines, comment, id);
+    await persistCommentMutation(specDirectory, ctx => addCommentToCtx(ctx, rc), deps);
+    deps.outputChannel.appendLine(`[SpecViewer] Persisted comment ${id} on ${doc}:${lineNum}`);
+}
 
-    interface Enriched {
-        lineNum: number;
-        comment: string;
-        heading: string | null;
-        startLine: number;
-        endLine: number;
-        block: string;
+/** Persist removal of a comment. */
+async function handleRemoveComment(
+    specDirectory: string,
+    id: string,
+    deps: MessageHandlerDependencies,
+): Promise<void> {
+    await persistCommentMutation(specDirectory, ctx => removeCommentFromCtx(ctx, id), deps);
+    deps.outputChannel.appendLine(`[SpecViewer] Removed comment ${id}`);
+}
+
+/**
+ * Dispatch a document's pending comments to the AI as a direct-edit prompt,
+ * then mark them `applied` (kept as history). Used by both the inline Refine
+ * button and the Activity per-document Run refinement action.
+ *
+ * Never invoke a per-step slash command (e.g. /speckit.plan) — those re-run
+ * setup scripts that overwrite the source from a template (issue #153).
+ */
+async function dispatchDocRefinement(
+    specDirectory: string,
+    doc: CoreDocumentType,
+    deps: MessageHandlerDependencies,
+): Promise<void> {
+    const instance = deps.getInstance(specDirectory);
+    if (!instance) return;
+    const ctx = await readSpecContext(specDirectory);
+    if (!ctx) return;
+
+    const pending = pendingForDoc(ctx, doc);
+    if (pending.length === 0) {
+        deps.outputChannel.appendLine(`[SpecViewer] No pending comments for ${doc} — nothing to refine`);
+        return;
     }
-    const enriched: Enriched[] = refinements.map(r => {
-        if (sourceLines) {
-            const block = extractBlock(sourceLines, r.lineNum);
-            if (block) {
-                return {
-                    lineNum: r.lineNum,
-                    comment: r.comment,
-                    heading: block.heading,
-                    startLine: block.startLine,
-                    endLine: block.endLine,
-                    block: block.text,
-                };
-            }
-        }
-        return {
-            lineNum: r.lineNum,
-            comment: r.comment,
-            heading: null,
-            startLine: r.lineNum,
-            endLine: r.lineNum,
-            block: r.lineContent,
-        };
-    });
+
+    // Resolve the AI-prompt target filename from the source doc so workflows
+    // with non-matching step / file names (SDD's `specify` step → `spec.md`)
+    // target the correct file. Fall back to `${doc}.md` when unresolved.
+    const sourceDoc = instance.state.availableDocuments.find(d => d.isCore && d.type === doc);
+    const filename = sourceDoc?.fileName ?? `${doc}.md`;
+    const targetPath = instance.state.changeRoot || specDirectory;
 
     const blockquote = (text: string) =>
         text.split('\n').map(l => `> ${l}`).join('\n');
-
-    const formatRefinement = (r: Enriched, mode: 'prompt' | 'scratchpad'): string => {
-        if (mode === 'prompt') {
-            const range = r.startLine === r.endLine
-                ? `Line ${r.lineNum}`
-                : `Line ${r.lineNum} (block lines ${r.startLine}–${r.endLine})`;
-            const where = r.heading ? `${range} in section "${r.heading}"` : range;
-            const indented = blockquote(r.block).replace(/^/gm, '  ');
-            return `- ${where}: ${r.comment}\n${indented}`;
-        }
-        const label = r.heading
-            ? `Line ${r.lineNum} · ${r.heading}`
-            : `Line ${r.lineNum}`;
-        return [
-            `### ${label}`,
-            '',
-            '**Original**',
-            '',
-            blockquote(r.block),
-            '',
-            '**Comment**',
-            '',
-            r.comment,
-        ].join('\n');
-    };
-
-    const promptRefinementText = enriched
-        .map(r => formatRefinement(r, 'prompt'))
+    const promptRefinementText = pending
+        .map(c => {
+            const where = c.anchor.heading
+                ? `Line ${c.anchor.line} in section "${c.anchor.heading}"`
+                : `Line ${c.anchor.line}`;
+            const indented = blockquote(c.anchor.blockText).replace(/^/gm, '  ');
+            return `- ${where}: ${c.comment}\n${indented}`;
+        })
         .join('\n\n');
-    const scratchpadRefinementText = enriched
-        .map(r => formatRefinement(r, 'scratchpad'))
-        .join('\n\n');
-
-    // Persist this batch to the matching scratchpad file. Synthesis emits one
-    // scratchpad entry per existing core source doc, so when one matches the
-    // current docType we append; otherwise we skip persistence and just
-    // dispatch the AI prompt.
-    const scratchpad = instance.state.availableDocuments.find(
-        d => d.isScratchpad && d.scratchpadFor === docType,
-    );
-    if (scratchpad) {
-        let existing = '';
-        let wasFirstWrite = false;
-        try {
-            const data = await vscode.workspace.fs.readFile(vscode.Uri.file(scratchpad.filePath));
-            existing = Buffer.from(data).toString('utf-8');
-        } catch {
-            wasFirstWrite = true;
-        }
-        try {
-            const stamp = new Date().toISOString().slice(0, 16).replace('T', ' ');
-            const heading = `## Refinement batch · ${stamp} UTC`;
-            // Newest batch on top — reads like a review feed. Earlier history
-            // sits below a horizontal rule.
-            const trimmedExisting = existing.replace(/^\s+|\s+$/g, '');
-            const next = trimmedExisting
-                ? `${heading}\n\n${scratchpadRefinementText}\n\n---\n\n${trimmedExisting}\n`
-                : `${heading}\n\n${scratchpadRefinementText}\n`;
-            await vscode.workspace.fs.writeFile(
-                vscode.Uri.file(scratchpad.filePath),
-                Buffer.from(next, 'utf-8'),
-            );
-            deps.outputChannel.appendLine(
-                `[SpecViewer] Appended ${refinements.length} refinement(s) to ${scratchpad.fileName}`,
-            );
-            // First write needs an explicit re-scan so the chip appears
-            // without waiting on the file watcher.
-            if (wasFirstWrite) {
-                await deps.updateContent(specDirectory, instance.state.currentDocument);
-            }
-        } catch (error) {
-            deps.outputChannel.appendLine(`[SpecViewer] Error appending to scratchpad: ${error}`);
-        }
-    }
 
     const prompt = [
         `Edit ${targetPath}/${filename} in place to apply ONLY these line-specific refinements.`,
@@ -769,7 +758,12 @@ async function handleSubmitRefinements(
         promptRefinementText,
     ].join('\n');
 
-    deps.outputChannel.appendLine(`[SpecViewer] Submitting ${refinements.length} refinements for ${docType} (direct edit)`);
+    deps.outputChannel.appendLine(`[SpecViewer] Dispatching ${pending.length} refinement(s) for ${doc} (direct edit)`);
     await deps.executeInTerminal(prompt);
+
+    // Mark the dispatched comments applied — kept in .spec-context.json as
+    // history (no separate file). The viewer refreshes to show the new status.
+    const ids = pending.map(c => c.id);
+    await persistCommentMutation(specDirectory, c => markApplied(c, ids), deps);
 }
 

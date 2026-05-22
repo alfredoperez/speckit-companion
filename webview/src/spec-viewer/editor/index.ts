@@ -12,8 +12,11 @@ export {
     addRefinementForRow,
     updateRefineButton,
     submitAllRefinements,
-    clearAllRefinements
+    clearAllRefinements,
+    addRestoredRefinement
 } from './refinements';
+
+export { restoreComments } from './restoreComments';
 
 export {
     detectLineType,

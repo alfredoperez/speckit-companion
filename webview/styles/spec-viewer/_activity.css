@@ -509,3 +509,88 @@
     border: 1px solid color-mix(in srgb, var(--warning) 50%, transparent);
     line-height: 1.2;
 }
+
+/* ── Review comments card ─────────────────────────────────────── */
+.comments-doc-group {
+    margin-bottom: 12px;
+}
+
+.comments-doc-group:last-child {
+    margin-bottom: 0;
+}
+
+.comments-doc-group__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.comments-doc-group__label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+}
+
+.comments-run-btn {
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    color: var(--accent, #4a9eff);
+    background: color-mix(in srgb, var(--accent, #4a9eff) 14%, transparent);
+    transition: background var(--transition-fast);
+}
+
+.comments-run-btn:hover {
+    background: color-mix(in srgb, var(--accent, #4a9eff) 26%, transparent);
+}
+
+.comments-list .comment-item {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.comment-status {
+    flex: 0 0 auto;
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 1px 6px;
+    border-radius: 999px;
+    line-height: 1.4;
+}
+
+.comment-status--pending {
+    color: var(--warning);
+    background: color-mix(in srgb, var(--warning) 16%, transparent);
+}
+
+.comment-status--applied {
+    color: var(--text-secondary);
+    background: var(--bg-hover);
+}
+
+.comment-jump {
+    flex: 0 0 auto;
+    border: none;
+    cursor: pointer;
+    font-family: var(--vscode-editor-font-family, monospace);
+    font-size: 0.68rem;
+    color: var(--accent, #4a9eff);
+    background: transparent;
+    padding: 0;
+    text-decoration: underline;
+}
+
+.comment-text {
+    flex: 1 1 auto;
+    min-width: 0;
+}

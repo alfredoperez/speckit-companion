@@ -17,8 +17,7 @@ export interface VSCodeApi {
 // ============================================
 
 export type CoreDocumentType = 'spec' | 'plan' | 'tasks';
-export type ScratchpadDocumentType = 'spec-extra' | 'plan-extra' | 'tasks-extra';
-export type DocumentType = CoreDocumentType | ScratchpadDocumentType | string;
+export type DocumentType = CoreDocumentType | string;
 
 export interface SpecDocument {
     type: DocumentType;
@@ -29,10 +28,6 @@ export interface SpecDocument {
     isCore: boolean;
     category?: 'core' | 'related';
     parentStep?: string;
-    /** True when this entry represents a *-extra.md scratchpad. */
-    isScratchpad?: boolean;
-    /** Source doc type this scratchpad pairs with. */
-    scratchpadFor?: DocumentType;
 }
 
 /**
@@ -179,6 +174,28 @@ export interface CheckpointStatus {
     pr?: boolean;
 }
 
+// ============================================
+// Persisted review comments
+// ============================================
+
+export type ReviewCommentStatus = 'pending' | 'applied';
+
+export interface ReviewCommentAnchor {
+    heading: string | null;
+    blockText: string;
+    line: number;
+}
+
+/** A persisted inline review comment (mirrors the extension `ReviewComment`). */
+export interface ReviewComment {
+    id: string;
+    doc: CoreDocumentType;
+    anchor: ReviewCommentAnchor;
+    comment: string;
+    status: ReviewCommentStatus;
+    createdAt: string;
+}
+
 export interface ViewerState {
     status: string;
     activeStep: string;
@@ -199,6 +216,8 @@ export interface ViewerState {
     prNumber?: number;
     checkpointStatus?: CheckpointStatus;
     stepSummaries?: Record<string, Record<string, unknown>>;
+    /** Persisted inline review comments, for restore + the Activity list. */
+    reviewComments?: ReviewComment[];
 }
 
 // ============================================
@@ -230,8 +249,11 @@ export type ViewerToExtensionMessage =
     | { type: 'reactivateSpec' }
     // Stepper navigation
     | { type: 'stepperClick'; phase: string }
-    // Batch refinements submission (GitHub-style review)
-    | { type: 'submitRefinements'; refinements: Array<{ lineNum: number; lineContent: string; comment: string }> }
+    // Persisted review comments — written to .spec-context.json on each mutation
+    | { type: 'addComment'; id: string; doc: CoreDocumentType; lineNum: number; lineContent: string; comment: string }
+    | { type: 'removeComment'; id: string }
+    // Run refinement for one document's pending comments (from the Activity list)
+    | { type: 'runDocRefinement'; doc: CoreDocumentType }
     // File reference click
     | { type: 'openFile'; filename: string }
     // Webview render-time error (reported by error boundaries)

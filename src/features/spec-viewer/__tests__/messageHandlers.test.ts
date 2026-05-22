@@ -28,10 +28,22 @@ jest.mock('../../workflows', () => ({
     getWorkflowCommands: jest.fn().mockReturnValue([]),
 }));
 
+// Mock the spec-context reader/writer so review-comment persistence can be
+// asserted without touching the filesystem. SPEC_CONTEXT_FILENAME stays real.
+jest.mock('../../specs/specContextReader', () => ({
+    ...jest.requireActual('../../specs/specContextReader'),
+    readSpecContext: jest.fn(),
+}));
+jest.mock('../../specs/specContextWriter', () => ({
+    updateSpecContext: jest.fn(),
+}));
+
 import { setStatus, reactivate } from '../../specs/stepLifecycle';
 import { updateStepProgress } from '../../specs/specContextManager';
 import { NotificationUtils } from '../../../core/utils/notificationUtils';
 import { getFeatureWorkflow, getWorkflowCommands } from '../../workflows';
+import { readSpecContext } from '../../specs/specContextReader';
+import { updateSpecContext } from '../../specs/specContextWriter';
 
 const SPEC_DIR = '/workspace/specs/my-feature';
 
@@ -367,221 +379,162 @@ describe('messageHandlers - stepperClick', () => {
     });
 });
 
-describe('messageHandlers - submitRefinements', () => {
+describe('messageHandlers - persisted review comments', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
-    function dispatchRefinements(
-        currentDocument: 'spec' | 'plan' | 'tasks',
-        availableDocuments: Array<Record<string, unknown>> = [],
-    ) {
+    function baseCtx(reviewComments: any[] = []): any {
+        return {
+            workflow: 'sdd',
+            specName: 'my-feature',
+            branch: 'main',
+            currentStep: 'specify',
+            status: 'specified',
+            stepHistory: {},
+            transitions: [],
+            reviewComments,
+        };
+    }
+
+    /** Wire updateSpecContext to apply the mutate fn and capture the result. */
+    function captureWrite(): { get: () => any } {
+        const box: { value: any } = { value: undefined };
+        (updateSpecContext as jest.Mock).mockImplementation(
+            async (_dir: string, mutate: (c: any) => any, fallback: any) => {
+                box.value = mutate(fallback);
+                return box.value;
+            },
+        );
+        return { get: () => box.value };
+    }
+
+    function comment(over: Partial<any> = {}): any {
+        return {
+            id: 'c1',
+            doc: 'spec',
+            anchor: { heading: null, blockText: 'block', line: 1 },
+            comment: 'note',
+            status: 'pending',
+            createdAt: '2026-05-21T00:00:00.000Z',
+            ...over,
+        };
+    }
+
+    it('persists an added comment as pending and preserves other context fields', async () => {
+        (readSpecContext as jest.Mock).mockResolvedValue(baseCtx([]));
+        const written = captureWrite();
+        (vscode.workspace.fs.readFile as jest.Mock).mockResolvedValue(
+            Buffer.from('## Requirements\nsome text'),
+        );
+
         const deps = createMockDeps({
             getInstance: jest.fn().mockReturnValue({
                 state: {
-                    specDirectory: SPEC_DIR,
-                    specName: 'my-feature',
-                    currentDocument,
-                    availableDocuments,
+                    currentDocument: 'spec',
+                    availableDocuments: [
+                        { isCore: true, type: 'spec', filePath: `${SPEC_DIR}/spec.md`, fileName: 'spec.md' },
+                    ],
                 },
                 debounceTimer: undefined,
             }),
         });
         const handler = createMessageHandlers(SPEC_DIR, deps);
 
-        const refinements = [
-            { lineNum: 5, lineContent: 'first line content', comment: 'tighten wording' },
-            { lineNum: 12, lineContent: 'second line content', comment: 'add detail' },
-        ];
+        await handler({
+            type: 'addComment', id: 'c9', doc: 'spec', lineNum: 2,
+            lineContent: 'some text', comment: 'tighten wording',
+        } as any);
 
-        return { deps, handler, refinements };
-    }
+        expect(updateSpecContext).toHaveBeenCalledTimes(1);
+        const ctx = written.get();
+        expect(ctx.reviewComments).toHaveLength(1);
+        expect(ctx.reviewComments[0]).toMatchObject({
+            id: 'c9', doc: 'spec', comment: 'tighten wording', status: 'pending',
+        });
+        // Anchor captured the nearest heading from the live source.
+        expect(ctx.reviewComments[0].anchor.heading).toBe('Requirements');
+        // Untouched fields preserved; transitions never mutated by comment writes.
+        expect(ctx.specName).toBe('my-feature');
+        expect(ctx.transitions).toEqual([]);
+        expect(deps.refreshContextIfDisplaying).toHaveBeenCalled();
+    });
 
-    it('does not invoke a slash command (avoids running setup-plan.sh)', async () => {
-        const { deps, handler, refinements } = dispatchRefinements('plan');
+    it('persists a comment removal', async () => {
+        (readSpecContext as jest.Mock).mockResolvedValue(baseCtx([comment({ id: 'c1' })]));
+        const written = captureWrite();
 
-        await handler({ type: 'submitRefinements', refinements } as any);
+        const deps = createMockDeps();
+        const handler = createMessageHandlers(SPEC_DIR, deps);
 
+        await handler({ type: 'removeComment', id: 'c1' } as any);
+
+        expect(written.get().reviewComments).toHaveLength(0);
+    });
+
+    it('dispatches a doc\'s pending comments to the AI and marks them applied', async () => {
+        const ctx = baseCtx([
+            comment({ id: 'c1', doc: 'spec', anchor: { heading: 'Requirements', blockText: 'Some text', line: 5 }, comment: 'tighten wording' }),
+            comment({ id: 'c2', doc: 'spec', anchor: { heading: null, blockText: 'Other', line: 12 }, comment: 'add detail' }),
+            comment({ id: 'c3', doc: 'plan', anchor: { heading: null, blockText: 'p', line: 1 }, comment: 'plan note' }),
+        ]);
+        (readSpecContext as jest.Mock).mockResolvedValue(ctx);
+        const written = captureWrite();
+
+        const deps = createMockDeps({
+            getInstance: jest.fn().mockReturnValue({
+                state: {
+                    currentDocument: 'spec',
+                    availableDocuments: [
+                        { isCore: true, type: 'spec', filePath: `${SPEC_DIR}/spec.md`, fileName: 'spec.md' },
+                    ],
+                },
+                debounceTimer: undefined,
+            }),
+        });
+        const handler = createMessageHandlers(SPEC_DIR, deps);
+
+        await handler({ type: 'runDocRefinement', doc: 'spec' } as any);
+
+        // AI dispatch — direct-edit prompt, no slash command, doc's comments only.
         expect(deps.executeInTerminal).toHaveBeenCalledTimes(1);
         const prompt = (deps.executeInTerminal as jest.Mock).mock.calls[0][0] as string;
         expect(prompt.startsWith('/')).toBe(false);
-        expect(prompt).not.toMatch(/\/speckit\./);
-    });
-
-    it('includes guardrails forbidding template regen and setup scripts', async () => {
-        const { deps, handler, refinements } = dispatchRefinements('plan');
-
-        await handler({ type: 'submitRefinements', refinements } as any);
-
-        const prompt = (deps.executeInTerminal as jest.Mock).mock.calls[0][0] as string;
-        expect(prompt).toContain('DO NOT regenerate');
-        expect(prompt).toContain('DO NOT run any setup script');
-        expect(prompt).toContain('DO NOT replace the file');
-    });
-
-    it('targets the correct doc filename and includes the user comments', async () => {
-        const { deps, handler, refinements } = dispatchRefinements('plan');
-
-        await handler({ type: 'submitRefinements', refinements } as any);
-
-        const prompt = (deps.executeInTerminal as jest.Mock).mock.calls[0][0] as string;
-        expect(prompt).toContain(`${SPEC_DIR}/plan.md`);
+        expect(prompt).toContain(`${SPEC_DIR}/spec.md`);
         expect(prompt).toContain('Line 5');
-        expect(prompt).toContain('Line 12');
+        expect(prompt).toContain('Requirements');
         expect(prompt).toContain('tighten wording');
         expect(prompt).toContain('add detail');
-    });
+        expect(prompt).not.toMatch(/plan note/);
+        expect(prompt).toContain('DO NOT regenerate');
+        expect(prompt).toContain('DO NOT run any setup script');
 
-    it('uses the same direct-edit path for spec and tasks', async () => {
-        for (const doc of ['spec', 'tasks'] as const) {
-            const { deps, handler, refinements } = dispatchRefinements(doc);
-
-            await handler({ type: 'submitRefinements', refinements } as any);
-
-            const prompt = (deps.executeInTerminal as jest.Mock).mock.calls[0][0] as string;
-            expect(prompt.startsWith('/')).toBe(false);
-            expect(prompt).toContain(`${SPEC_DIR}/${doc}.md`);
-            expect(prompt).toContain('DO NOT regenerate');
-        }
-    });
-
-    it('appends the batch to the matching scratchpad file when one exists', async () => {
-        const scratchpad = {
-            type: 'spec-extra',
-            label: 'Spec Notes',
-            fileName: 'spec-extra.md',
-            filePath: `${SPEC_DIR}/spec-extra.md`,
-            exists: false,
-            isCore: false,
-            category: 'related',
-            parentStep: 'spec',
-            isScratchpad: true,
-            scratchpadFor: 'spec',
-        };
-        (vscode.workspace.fs.stat as jest.Mock).mockRejectedValue(new Error('not found'));
-        (vscode.workspace.fs.writeFile as jest.Mock).mockResolvedValue(undefined);
-
-        const { deps, handler, refinements } = dispatchRefinements('spec', [scratchpad]);
-
-        await handler({ type: 'submitRefinements', refinements } as any);
-
-        expect(vscode.workspace.fs.writeFile).toHaveBeenCalledTimes(1);
-        const [, data] = (vscode.workspace.fs.writeFile as jest.Mock).mock.calls[0];
-        const written = new TextDecoder().decode(data as Uint8Array);
-        expect(written).toContain('tighten wording');
-        expect(written).toContain('add detail');
-        // Batch is h2, entries are h3, labels make role unambiguous.
-        expect(written).toContain('## Refinement batch');
-        expect(written).toContain('### Line 5');
-        expect(written).toContain('### Line 12');
-        expect(written).toContain('**Original**');
-        expect(written).toContain('**Comment**');
-
-        // AI dispatch still happens — persistence is layered on, not replacing.
-        expect(deps.executeInTerminal).toHaveBeenCalledTimes(1);
-    });
-
-    it('skips scratchpad append when no matching scratchpad exists in the doc set', async () => {
-        const { deps, handler, refinements } = dispatchRefinements('spec', []);
-
-        await handler({ type: 'submitRefinements', refinements } as any);
-
+        // No `<doc>-extra.md` is ever written.
         expect(vscode.workspace.fs.writeFile).not.toHaveBeenCalled();
-        // AI dispatch still happens.
-        expect(deps.executeInTerminal).toHaveBeenCalledTimes(1);
+
+        // The dispatched (spec) comments flip to applied; plan stays pending.
+        const status = Object.fromEntries(
+            written.get().reviewComments.map((c: any) => [c.id, c.status]),
+        );
+        expect(status).toEqual({ c1: 'applied', c2: 'applied', c3: 'pending' });
     });
 
-    it('enriches each refinement with its surrounding block + section heading from the source', async () => {
-        // line numbers (1-based):
-        // 1: "# Spec"
-        // 2: ""
-        // 3: "## Requirements"
-        // 4: ""
-        // 5: "Some paragraph text"
-        // 6: "that wraps onto a second line"
-        // 7: "and a third."
-        // 8: ""
-        // 9: "- **FR-001**: System MUST persist"
-        //10: "  the chosen theme across sessions."
-        //11: "- **FR-002**: Honor OS theme."
-        const sourceMd = [
-            '# Spec',
-            '',
-            '## Requirements',
-            '',
-            'Some paragraph text',
-            'that wraps onto a second line',
-            'and a third.',
-            '',
-            '- **FR-001**: System MUST persist',
-            '  the chosen theme across sessions.',
-            '- **FR-002**: Honor OS theme.',
-        ].join('\n');
+    it('does nothing when a doc has no pending comments', async () => {
+        (readSpecContext as jest.Mock).mockResolvedValue(
+            baseCtx([comment({ id: 'c1', doc: 'spec', status: 'applied' })]),
+        );
 
-        const sourceDoc = {
-            type: 'spec',
-            label: 'Spec',
-            fileName: 'spec.md',
-            filePath: `${SPEC_DIR}/spec.md`,
-            exists: true,
-            isCore: true,
-            category: 'core',
-        };
-        const scratchpad = {
-            type: 'spec-extra',
-            label: 'Spec Notes',
-            fileName: 'spec-extra.md',
-            filePath: `${SPEC_DIR}/spec-extra.md`,
-            exists: false,
-            isCore: false,
-            category: 'related',
-            parentStep: 'spec',
-            isScratchpad: true,
-            scratchpadFor: 'spec',
-        };
-
-        (vscode.workspace.fs.stat as jest.Mock).mockImplementation(async (u: any) => {
-            const p = u?.fsPath ?? u?.path ?? '';
-            if (p === `${SPEC_DIR}/spec.md`) return { type: vscode.FileType.File };
-            throw new Error('not found');
+        const deps = createMockDeps({
+            getInstance: jest.fn().mockReturnValue({
+                state: { currentDocument: 'spec', availableDocuments: [] },
+                debounceTimer: undefined,
+            }),
         });
-        (vscode.workspace.fs.readFile as jest.Mock).mockImplementation(async (u: any) => {
-            const p = u?.fsPath ?? u?.path ?? '';
-            if (p === `${SPEC_DIR}/spec.md`) return Buffer.from(sourceMd);
-            return Buffer.from('');
-        });
-        (vscode.workspace.fs.writeFile as jest.Mock).mockResolvedValue(undefined);
+        const handler = createMessageHandlers(SPEC_DIR, deps);
 
-        const { deps, handler } = dispatchRefinements('spec', [sourceDoc, scratchpad]);
-        const refinements = [
-            { lineNum: 6, lineContent: 'that wraps onto a second line', comment: 'tighten this paragraph' },
-            { lineNum: 9, lineContent: '- **FR-001**: System MUST persist', comment: 'scope unclear' },
-        ];
+        await handler({ type: 'runDocRefinement', doc: 'spec' } as any);
 
-        await handler({ type: 'submitRefinements', refinements } as any);
-
-        const prompt = (deps.executeInTerminal as jest.Mock).mock.calls[0][0] as string;
-
-        // Exact line numbers preserved for the AI.
-        expect(prompt).toContain('Line 6');
-        expect(prompt).toContain('Line 9');
-        // Section heading attached.
-        expect(prompt).toContain('Requirements');
-        // Full paragraph block (all three lines) for line 6.
-        expect(prompt).toContain('Some paragraph text');
-        expect(prompt).toContain('and a third.');
-        // FR-001 list item + its continuation captured (but FR-002 NOT).
-        expect(prompt).toContain('the chosen theme across sessions');
-        expect(prompt).not.toMatch(/FR-002/);
-
-        // Scratchpad gets the same enrichment, in the labeled-sections shape.
-        const [, data] = (vscode.workspace.fs.writeFile as jest.Mock).mock.calls[0];
-        const written = new TextDecoder().decode(data as Uint8Array);
-        expect(written).toContain('### Line 6 · Requirements');
-        expect(written).toContain('### Line 9 · Requirements');
-        expect(written).toContain('**Original**');
-        expect(written).toContain('**Comment**');
-        expect(written).toContain('Some paragraph text');
-        expect(written).toContain('the chosen theme across sessions');
+        expect(deps.executeInTerminal).not.toHaveBeenCalled();
+        expect(updateSpecContext).not.toHaveBeenCalled();
     });
 });

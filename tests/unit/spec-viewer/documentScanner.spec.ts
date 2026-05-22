@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { scanDocuments } from '../../../src/features/spec-viewer/documentScanner';
-import type { SpecDocument } from '../../../src/features/spec-viewer/types';
 
 const SPEC_DIR = '/specs/096-scratchpad';
 
@@ -34,16 +33,12 @@ function installFs(fake: FakeFs): void {
 
 const outputChannel = { appendLine: jest.fn() } as unknown as vscode.OutputChannel;
 
-function scratchpads(docs: SpecDocument[]): SpecDocument[] {
-    return docs.filter(d => d.isScratchpad);
-}
-
 beforeEach(() => {
     jest.clearAllMocks();
 });
 
-describe('documentScanner scratchpad synthesis', () => {
-    it('synthesizes one scratchpad per existing core source doc', async () => {
+describe('documentScanner — scratchpad path removed', () => {
+    it('does not synthesize any "Notes" / *-extra docs for core source docs', async () => {
         installFs({
             existing: new Set([
                 `${SPEC_DIR}/spec.md`,
@@ -61,41 +56,19 @@ describe('documentScanner scratchpad synthesis', () => {
         });
 
         const docs = await scanDocuments(SPEC_DIR, outputChannel);
-        const pads = scratchpads(docs);
 
-        expect(pads.map(d => d.type).sort()).toEqual([
-            'plan-extra',
-            'spec-extra',
-            'tasks-extra',
+        // No synthesized scratchpad/Notes docs.
+        expect(docs.some(d => /-extra\.md$/.test(d.fileName))).toBe(false);
+        expect(docs.some(d => /Notes$/.test(d.label))).toBe(false);
+        // Only the three core docs remain.
+        expect(docs.map(d => d.fileName).sort()).toEqual([
+            'plan.md',
+            'spec.md',
+            'tasks.md',
         ]);
-        const spec = pads.find(d => d.type === 'spec-extra')!;
-        expect(spec).toMatchObject({
-            isScratchpad: true,
-            scratchpadFor: 'spec',
-            parentStep: 'spec',
-            isCore: false,
-            category: 'related',
-            fileName: 'spec-extra.md',
-            exists: false,
-        });
     });
 
-    it('does not synthesize a scratchpad when the source doc is absent', async () => {
-        installFs({
-            existing: new Set([`${SPEC_DIR}/spec.md`]),
-            dirEntries: {
-                [SPEC_DIR]: [['spec.md', vscode.FileType.File]],
-            },
-            contents: {},
-        });
-
-        const docs = await scanDocuments(SPEC_DIR, outputChannel);
-        const pads = scratchpads(docs);
-
-        expect(pads.map(d => d.type)).toEqual(['spec-extra']);
-    });
-
-    it('surfaces an on-disk *-extra.md exactly once (de-dupe)', async () => {
+    it('filters out legacy on-disk *-extra.md files (not surfaced as a doc)', async () => {
         installFs({
             existing: new Set([
                 `${SPEC_DIR}/spec.md`,
@@ -107,17 +80,11 @@ describe('documentScanner scratchpad synthesis', () => {
                     ['spec-extra.md', vscode.FileType.File],
                 ],
             },
-            contents: { [`${SPEC_DIR}/spec-extra.md`]: 'some notes' },
+            contents: { [`${SPEC_DIR}/spec-extra.md`]: 'legacy notes' },
         });
 
         const docs = await scanDocuments(SPEC_DIR, outputChannel);
-        const extras = docs.filter(d => d.fileName === 'spec-extra.md');
 
-        expect(extras).toHaveLength(1);
-        expect(extras[0]).toMatchObject({
-            type: 'spec-extra',
-            isScratchpad: true,
-            exists: true,
-        });
+        expect(docs.some(d => d.fileName === 'spec-extra.md')).toBe(false);
     });
 });

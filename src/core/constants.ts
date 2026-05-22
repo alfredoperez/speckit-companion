@@ -222,20 +222,6 @@ export const FileNames = {
 } as const;
 
 /**
- * Per-document scratchpad ("extra") file names, keyed by source document base.
- * A scratchpad pairs one-to-one with its core source doc and holds freeform
- * refinement notes; its base name is `<source-base>-extra`.
- */
-export const ScratchpadFiles = {
-    spec: 'spec-extra.md',
-    plan: 'plan-extra.md',
-    tasks: 'tasks-extra.md',
-} as const;
-
-/** Suffix appended to a source document's base name to form its scratchpad. */
-export const SCRATCHPAD_SUFFIX = '-extra';
-
-/**
  * Workflow step identifiers and their config key variants
  */
 export const WorkflowSteps = {

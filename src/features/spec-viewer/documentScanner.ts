@@ -13,20 +13,13 @@ import {
 } from './types';
 import { fileNameToDocType, fileNameToDisplayName } from './utils';
 import type { WorkflowStepConfig } from '../workflows/types';
-import { ScratchpadFiles, SCRATCHPAD_SUFFIX } from '../../core/constants';
 
 /**
- * Map a source document file name → its scratchpad base key.
- * Only the three core source documents participate in scratchpads.
+ * Legacy per-document scratchpad files (`*-extra.md`). Review comments now live
+ * in `.spec-context.json`, so these are no longer synthesized as "Notes" docs;
+ * any that linger on disk from older versions are filtered out of the scan.
  */
-const SCRATCHPAD_SOURCE_FILES: Record<string, keyof typeof ScratchpadFiles> = {
-    'spec.md': 'spec',
-    'plan.md': 'plan',
-    'tasks.md': 'tasks',
-};
-
-/** Set of scratchpad file names, used to de-dupe the generic related scan. */
-const SCRATCHPAD_FILE_NAMES: ReadonlySet<string> = new Set(Object.values(ScratchpadFiles));
+const LEGACY_SCRATCHPAD_RE = /-extra\.md$/;
 
 /**
  * Check if a file exists
@@ -248,9 +241,9 @@ export async function scanDocuments(
                     continue;
                 }
 
-                // Skip scratchpad files — they are synthesized below (gated on
-                // source existence) so an on-disk *-extra.md is not double-listed.
-                if (SCRATCHPAD_FILE_NAMES.has(fileName) && !relativePath.includes('/')) {
+                // Skip legacy `*-extra.md` scratchpad files — review comments
+                // now persist in `.spec-context.json`; these are not surfaced.
+                if (LEGACY_SCRATCHPAD_RE.test(fileName) && !relativePath.includes('/')) {
                     continue;
                 }
 
@@ -279,31 +272,6 @@ export async function scanDocuments(
     await scanRelatedDocs(specDirectory);
     if (changeRoot && changeRoot !== specDirectory) {
         await scanRelatedDocs(changeRoot);
-    }
-
-    // Synthesize one scratchpad ("extra") doc per existing core source doc
-    // (spec/plan/tasks only). The scratchpad file itself may be absent —
-    // `exists` reflects on-disk state and gates chip visibility downstream.
-    for (const source of documents.filter(d => d.isCore && d.exists)) {
-        const base = SCRATCHPAD_SOURCE_FILES[path.basename(source.fileName)];
-        if (!base) continue;
-
-        const scratchpadFileName = ScratchpadFiles[base];
-        const filePath = path.join(path.dirname(source.filePath), scratchpadFileName);
-        const exists = await fileExists(filePath);
-
-        documents.push({
-            type: `${base}${SCRATCHPAD_SUFFIX}`,
-            label: `${source.label} Notes`,
-            fileName: scratchpadFileName,
-            filePath,
-            exists,
-            isCore: false,
-            category: 'related',
-            parentStep: source.type,
-            isScratchpad: true,
-            scratchpadFor: source.type,
-        });
     }
 
     // Assign parentStep to orphan related docs (no parentStep yet)

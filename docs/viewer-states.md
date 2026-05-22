@@ -228,9 +228,15 @@ The "Next Step" button shows only when:
 - Label shows the next step name: "Plan", "Tasks", or "Implement"
 
 The source-tab **Refine** button (`✨ Refine (N)`) still appears dynamically
-when pending inline comments are collected. Submitting it (a) dispatches a
-direct-edit prompt to the AI for the source document and (b) appends the same
-batch to the matching scratchpad file as a timestamped history block.
+when pending inline comments are collected. Each comment is persisted to
+`.spec-context.json` the moment it is added/removed (message types
+`addComment` / `removeComment`, routed through
+`specContextWriter`). Clicking Refine sends `runDocRefinement` for the current
+doc, which (a) dispatches a direct-edit prompt to the AI built from that
+document's pending comments and (b) marks those comments `applied` in
+`.spec-context.json` (kept as history — no `<doc>-extra.md` files are written).
+On reopen, pending comments are re-rendered inline via best-effort re-anchoring
+(stored line → block text → nearest heading).
 
 ### Optional command buttons (per tab)
 
@@ -254,24 +260,22 @@ sit alongside any user-defined enhancement buttons for the active tab.
 - Source: `src/features/spec-viewer/optionalCommands.ts` (table + helpers),
   wired in `resolveEnhancementButtons` (render) and `handleClarify` (dispatch).
 
-### Scratchpad footer (overrides the matrix above)
+### Review comments (Activity panel)
 
-When the active document is a **scratchpad** (`*-extra.md`, `isScratchpad: true`)
-the footer is replaced by a dedicated, read-only set — gated entirely on the
-active doc, independent of spec status:
+The per-document `*-extra.md` scratchpad files and their read-only "Notes"
+sub-tab have been **removed**. Review comments now persist in
+`.spec-context.json` (`reviewComments[]`) and surface in two places:
 
-| Active doc | Left side | Right side |
-|------------|-----------|------------|
-| scratchpad (file exists) | — | Edit |
+- **Inline** — the always-on primary path: the line-hover `+`, comment card,
+  and dialog, restored on reopen.
+- **Activity panel → *Review comments* card** — a consolidated cross-document
+  list. Each entry shows a `pending` / `applied` status badge, a jump-to-line
+  control, and each document offers a **Run refinement** button (dispatches
+  `runDocRefinement` for that doc). The card hides itself when there are no
+  comments, like every other Activity card.
 
-- **Edit** reuses the standard `editDocument` affordance to open the scratchpad
-  in VS Code's text editor for manual cleanup.
-- A scratchpad chip only appears in the children rail once its `*-extra.md`
-  file exists on disk — there is no manual create flow, and therefore no
-  "file absent" state to render here. The file is created as a side effect of
-  the source-tab batch Refine when it appends the first batch.
-- There is no scratchpad-tab Refine button or `applyScratchpad` message; the
-  AI dispatch path is exclusively the source-tab batch Refine described above.
+When the Activity panel is toggled off there is no cross-document list, but
+inline comments still work and still persist.
 
 ---
 
