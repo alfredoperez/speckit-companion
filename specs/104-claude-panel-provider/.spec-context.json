@@ -277,6 +277,16 @@
       },
       "by": "sdd",
       "at": "2026-05-22T21:11:55.508Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "done",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-22T22:03:53.095Z"
     }
   ],
   "task_summaries": {
@@ -330,7 +340,7 @@
       "concerns": []
     }
   },
-  "last_action": "PR #171 opened \u2014 feat(ai-providers): add Claude in VS Code panel provider",
+  "last_action": "Post-ship: removed the press-Enter notification per user \u2014 panel opening with the command prefilled is signal enough (R003 revised)",
   "files_modified": [
     "src/ai-providers/promptBuilder.ts",
     "src/ai-providers/ideChatProvider.ts",
@@ -341,9 +351,10 @@
     "tests/__mocks__/vscode.ts",
     ".sdd.json",
     "src/core/constants.ts",
-    "package.json"
+    "package.json",
+    "specs/104-claude-panel-provider/spec.md"
   ],
-  "drainedSeq": 16,
+  "drainedSeq": 17,
   "decisions": [
     "Code-review fixes: Promise.all the independent cleanCommandArg+writePromptFile awaits; log (not silently drop) the preamble when no workspace folder; added @-mention and no-folder tests",
     "Kept specNameFromPath/readSpecDescription as faithful local extractions rather than reaching into FileSystemUtils/extractSpecNameFromPath (avoid cross-module risk)",

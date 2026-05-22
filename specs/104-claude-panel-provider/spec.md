@@ -10,7 +10,7 @@ Add a new `speckit.aiProvider` value, `claude-panel`, that dispatches SpecKit st
 
 - **R001** (MUST): A new `claude-panel` provider is wired end to end — `AIProviders` constant, `PROVIDER_PATHS` entry mirroring `claude` (same `.claude/` config, dash command format), factory constructor, `index.ts` export, and `package.json` `speckit.aiProvider` `enum` + `enumDescriptions`. Selecting it via `speckit.aiProvider` routes every SpecKit dispatch (create, specify, plan, tasks, implement, slash commands) to the panel.
 - **R002** (MUST): `ClaudePanelProvider` opens the Claude Code panel through the URI handler (using `vscode.env.uriScheme` so it works in Insiders/forks) with the command prefilled into the input box. `isInstalled()` returns true only when `vscode.extensions.getExtension('anthropic.claude-code')` is present.
-- **R003** (MUST): After dispatch, an obvious notification states the command was **prefilled and needs a manual Enter** (the panel cannot auto-submit) and names the command verb so the pending action is clear.
+- **R003** (MUST): The command is **prefilled** into the panel input; the user presses Enter to run it (the panel cannot auto-submit). No extra notification is shown — the panel opening with the command prefilled is the signal.
 - **R004** (MUST): The prefilled command text is cleaned up before dispatch — the new-spec description is inlined from the temp `spec.md` (reusing the `ideChatProvider.readSpecDescription` pattern) rather than passing an absolute temp path, and spec-directory arguments are shortened to just the spec name instead of absolute paths like `…/globalStorage/…/spec.md`.
 - **R005** (MUST): The `.spec-context.json` bookkeeping preamble is handled deliberately — either dropped (as `ide-chat` does) or carried via an `@`-mention of a workspace prompt file. The choice is made only **after** confirming whether an `@`-mention inside a prefilled prompt actually attaches the file as context versus landing as literal text.
 - **R006** (MUST): `getAIProvider()` resolves through the factory on every call (no singleton frozen at activation), so changing `speckit.aiProvider` takes effect without a window reload and every call site (spec editor, spec viewer, steering, workflow editor) resolves the same provider. This is shippable independently of the panel feature.
@@ -23,8 +23,8 @@ Add a new `speckit.aiProvider` value, `claude-panel`, that dispatches SpecKit st
 
 ### Dispatch to an installed panel
 
-**When** `speckit.aiProvider` is `claude-panel`, the Claude Code extension is installed, and the user triggers a SpecKit step (e.g. Tasks)
-**Then** the Claude Code panel opens with the `/speckit-tasks <spec-name>` command prefilled, and a notification tells the user to press Enter to run it.
+**When** `speckit.aiProvider` is `claude-vscode`, the Claude Code extension is installed, and the user triggers a SpecKit step (e.g. Tasks)
+**Then** the Claude Code panel opens with the `/speckit-tasks <spec-name>` command prefilled, ready for the user to press Enter.
 
 ### Panel not installed
 

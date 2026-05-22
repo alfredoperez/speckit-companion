@@ -66,14 +66,6 @@ describe('ClaudePanelProvider', () => {
             expect(uri).not.toContain('spec.md');
         });
 
-        it('shows a press-Enter notification naming the command verb', async () => {
-            await provider.executeSlashCommand('/speckit-implement');
-
-            expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(
-                expect.stringContaining('/speckit-implement')
-            );
-        });
-
         it('warns and does not open the panel when the extension is not installed', async () => {
             (vscode.extensions.getExtension as jest.Mock).mockReturnValue(undefined);
 

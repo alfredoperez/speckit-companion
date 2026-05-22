@@ -166,7 +166,7 @@ spawning the `claude` CLI in a terminal — for users who live in the panel rath
 than a terminal. It shares the same `.claude/` setup as the terminal `claude`
 provider (steering, agents, hooks, MCP). The extension opens the panel via Claude
 Code's URI handler and **prefills** the command; the Claude Code panel exposes no
-programmatic submit, so a notification prompts you to **press Enter** to run it.
+programmatic submit, so you **press Enter** to run it.
 Requires the [Claude Code extension](https://marketplace.visualstudio.com/items?itemName=anthropic.claude-code);
 if it isn't installed, the provider suggests switching to terminal `claude`.
 

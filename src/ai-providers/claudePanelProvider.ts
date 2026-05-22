@@ -82,9 +82,8 @@ export class ClaudePanelProvider implements IAIProvider {
 
     /**
      * Core dispatch: open the Claude Code panel via the URI handler with the
-     * prompt pre-filled, then surface an obvious "press Enter" notification (the
-     * panel exposes no programmatic submit). Never throws — returns false on any
-     * failure.
+     * prompt pre-filled. The panel exposes no programmatic submit, so the user
+     * presses Enter to run it. Never throws — returns false on any failure.
      */
     private async dispatchToPanel(prompt: string): Promise<boolean> {
         try {
@@ -126,25 +125,12 @@ export class ClaudePanelProvider implements IAIProvider {
                 return false;
             }
 
-            this.notifyPressEnter(cmdText);
             return true;
         } catch (error) {
             this.outputChannel.appendLine(`[ClaudePanelProvider] ERROR dispatching to panel: ${error}`);
             vscode.window.showWarningMessage(`Couldn't open the Claude Code panel: ${error}`);
             return false;
         }
-    }
-
-    /**
-     * Make it obvious the command was only PREFILLED and needs a manual Enter
-     * (the Claude Code panel exposes no programmatic submit). Names the command
-     * verb so the pending action is clear.
-     */
-    private notifyPressEnter(cmdText: string): void {
-        const verb = cmdText.split(/\s+/)[0] || 'the command';
-        vscode.window.showInformationMessage(
-            `▶ Claude Code panel is ready — press Enter to run ${verb}. (The panel can't auto-submit.)`
-        );
     }
 
     /**
