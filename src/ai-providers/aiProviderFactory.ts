@@ -6,6 +6,7 @@ import { CopilotCliProvider } from './copilotCliProvider';
 import { CodexCliProvider } from './codexCliProvider';
 import { QwenCliProvider } from './qwenCliProvider';
 import { OpenCodeProvider } from './openCodeProvider';
+import { IdeChatProvider } from './ideChatProvider';
 import { AIProviders } from '../core/constants';
 
 type ProviderConstructor = (
@@ -20,6 +21,7 @@ const PROVIDER_CONSTRUCTORS: Record<AIProviderType, ProviderConstructor> = {
     [AIProviders.CODEX]: (ctx, out) => new CodexCliProvider(ctx, out),
     [AIProviders.QWEN]: (ctx, out) => new QwenCliProvider(ctx, out),
     [AIProviders.OPENCODE]: (ctx, out) => new OpenCodeProvider(ctx, out),
+    [AIProviders.IDE_CHAT]: (ctx, out) => new IdeChatProvider(ctx, out),
 };
 
 /**

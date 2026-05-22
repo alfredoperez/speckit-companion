@@ -178,6 +178,17 @@ Do NOT modify `.claude/**` or `.specify/**` to implement extension
 features. If the feature needs the AI to do something, have the extension
 embed the instruction in the prompt it dispatches.
 
+**Exception — committed spec-kit scaffolding for IDE Chat testing.** The
+`.specify/`, `.cursor/`, `.windsurf/`, `.agents/`, `.gemini/`, `.qwen/`, and
+`.github/{agents,prompts}/speckit.*` directories are checked in as
+**manual-testing fixtures** — they're the output of `specify init --ai <agent>`
+for each host editor, so the IDE Chat provider can be exercised against real
+`/speckit.*` commands in Copilot / Cursor / Windsurf / Antigravity. The
+extension still does **not** read or depend on these at runtime (it only
+dispatches command text; the host chat resolves them), and they are not shipped
+in the `.vsix`. Don't delete them as an "isolation violation" — they're test
+setup, not extension behavior.
+
 ## Important Notes
 
 1. **File Operations**: Use `vscode.Uri` and workspace-relative paths
@@ -196,6 +207,23 @@ npm run test:watch    # Watch mode
 - **BDD style**: Use `describe`/`it` blocks that describe behavior, not implementation
 - **VS Code mock**: Extension-side tests use `tests/__mocks__/vscode.ts` (mapped via `jest.config.js` `moduleNameMapper`). Add mock APIs there as needed.
 - **Config**: Jest uses `ts-jest` with `tsconfig.test.json`
+
+### Demo testing specs (fixed baseline — never commit local edits)
+
+`specs/_demo-specified/`, `specs/_demo-planned/`, and `specs/_demo-tasked/` are
+**committed manual-testing fixtures**, each pinned to one viewer state:
+
+| Dir | State | Files present | Footer button it surfaces |
+|-----|-------|---------------|---------------------------|
+| `_demo-specified` | `specified` | `spec.md` | **Plan** |
+| `_demo-planned` | `planned` | `spec.md`, `plan.md` | **Tasks** |
+| `_demo-tasked` | `ready-to-implement` | `spec.md`, `plan.md`, `tasks.md` | **Implement** |
+
+They exist so the viewer can be opened against a known state during development.
+**Do NOT commit local changes to these three dirs** — when exercising them you
+will mutate `.spec-context.json`/files; never `git add` those changes. To restore
+the baseline after playing around: `git restore specs/_demo-specified specs/_demo-planned specs/_demo-tasked`
+(or `git checkout -- …`). Other `specs/_*/` dirs remain gitignored (local-only).
 
 ## Tech Stack
 

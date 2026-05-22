@@ -20,7 +20,7 @@ The spec workspace for developers running AI agents through Spec-Driven Developm
 
 **Review AI-generated specs the way you review code.** Add inline comments on specific lines, refine requirements, and catch a vague requirement before the AI turns it into 200 lines of wrong code. Every comment you submit is also captured as a markdown entry in a per-document scratchpad, so the history is durable across sessions.
 
-**Plug any AI assistant into any spec-driven workflow.** Six providers ship today (Claude Code, Gemini, GitHub Copilot, Codex, Qwen, OpenCode), and the workflow engine accepts custom phases, commands, and sub-documents. Drop in [Agent Teams Lite](https://github.com/Gentleman-Programming/agent-teams-lite), your own SDD process, or anything that takes commands and produces markdown.
+**Plug any AI assistant into any spec-driven workflow.** Seven providers ship today (Claude Code, Gemini, GitHub Copilot, Codex, Qwen, OpenCode, IDE Chat), and the workflow engine accepts custom phases, commands, and sub-documents. Drop in [Agent Teams Lite](https://github.com/Gentleman-Programming/agent-teams-lite), your own SDD process, or anything that takes commands and produces markdown.
 
 **Spec-driven phases without leaving VS Code.** Each feature flows through Specify, Plan, Tasks, Done, with progress tracking, sticky headers, and a structured viewer built for long specs.
 
@@ -137,16 +137,27 @@ Compare the file lists side by side to see the contrast between the full and min
 
 ## Supported AI Providers
 
-| Feature | Claude Code | GitHub Copilot CLI | Gemini CLI | Codex CLI | Qwen Code | OpenCode |
-|---------|-------------|-------------------|------------|-----------|-----------|----------|
-| **Steering File** | CLAUDE.md | .github/copilot-instructions.md | GEMINI.md | AGENTS.md | QWEN.md | AGENTS.md |
-| **Steering Path** | .claude/steering/ | .github/instructions/*.instructions.md | Hierarchical GEMINI.md | Hierarchical AGENTS.md | .qwen/steering/ | Hierarchical AGENTS.md |
-| **Agents** | .claude/agents/*.md | .github/agents/*.agent.md | Limited support | Hierarchical AGENTS.md | Not supported | .opencode/agent/*.md |
-| **Hooks** | .claude/settings.json | Not supported | Not supported | Not supported | Not supported | Not supported |
-| **MCP Servers** | .claude/settings.json | ~/.copilot/mcp-config.json | ~/.gemini/settings.json | ~/.codex/config.toml | ~/.qwen/settings.json | ~/.opencode/opencode.jsonc |
-| **CLI Command** | `claude` | `ghcs` / `gh copilot` | `gemini` | `codex` | `qwen` | `opencode` |
+| Feature | Claude Code | GitHub Copilot CLI | Gemini CLI | Codex CLI | Qwen Code | OpenCode | IDE Chat |
+|---------|-------------|-------------------|------------|-----------|-----------|----------|----------|
+| **Steering File** | CLAUDE.md | .github/copilot-instructions.md | GEMINI.md | AGENTS.md | QWEN.md | AGENTS.md | Not supported |
+| **Steering Path** | .claude/steering/ | .github/instructions/*.instructions.md | Hierarchical GEMINI.md | Hierarchical AGENTS.md | .qwen/steering/ | Hierarchical AGENTS.md | Not supported |
+| **Agents** | .claude/agents/*.md | .github/agents/*.agent.md | Limited support | Hierarchical AGENTS.md | Not supported | .opencode/agent/*.md | Not supported |
+| **Hooks** | .claude/settings.json | Not supported | Not supported | Not supported | Not supported | Not supported | Not supported |
+| **MCP Servers** | .claude/settings.json | ~/.copilot/mcp-config.json | ~/.gemini/settings.json | ~/.codex/config.toml | ~/.qwen/settings.json | ~/.opencode/opencode.jsonc | Not supported |
+| **CLI Command** | `claude` | `ghcs` / `gh copilot` | `gemini` | `codex` | `qwen` | `opencode` | Built-in editor chat (Copilot / Composer / Cascade) |
 
 Configure your preferred provider: **Settings > speckit.aiProvider**
+
+### IDE Chat
+
+`IDE Chat` is not a CLI — instead of spawning a terminal, it routes the assembled
+prompt to your editor's built-in AI chat (GitHub Copilot in VS Code, Composer in
+Cursor, Cascade in Windsurf), detected automatically. Because the chat must
+recognize the `/speckit.*` commands, **spec-kit must be initialized for the host
+editor** (run **SpecKit: Initialize Workspace**, i.e. `specify init`). When the
+workspace is initialized, IDE Chat auto-submits the prompt; when it isn't, it
+prefills the chat and shows a warning instead of sending a command the chat can't
+run. This is one-way dispatch — it does not read responses back or sync status.
 
 ## Configuration
 

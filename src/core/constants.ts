@@ -269,6 +269,7 @@ export const AIProviders = {
     CODEX: 'codex',
     QWEN: 'qwen',
     OPENCODE: 'opencode',
+    IDE_CHAT: 'ide-chat',
 } as const;
 
 /**
