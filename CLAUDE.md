@@ -210,19 +210,19 @@ npm run test:watch    # Watch mode
 
 ### Demo testing specs (fixed baseline — never commit local edits)
 
-`specs/_demo-specified/`, `specs/_demo-planned/`, and `specs/_demo-tasked/` are
-**committed manual-testing fixtures**, each pinned to one viewer state:
+`specs/_00_demo-specified/`, `specs/_01_demo-planned/`, and `specs/_02_demo-tasked/`
+are **committed manual-testing fixtures**, each pinned to one viewer state:
 
 | Dir | State | Files present | Footer button it surfaces |
 |-----|-------|---------------|---------------------------|
-| `_demo-specified` | `specified` | `spec.md` | **Plan** |
-| `_demo-planned` | `planned` | `spec.md`, `plan.md` | **Tasks** |
-| `_demo-tasked` | `ready-to-implement` | `spec.md`, `plan.md`, `tasks.md` | **Implement** |
+| `_00_demo-specified` | `specified` | `spec.md` | **Plan** |
+| `_01_demo-planned` | `planned` | `spec.md`, `plan.md` | **Tasks** |
+| `_02_demo-tasked` | `ready-to-implement` | `spec.md`, `plan.md`, `tasks.md` | **Implement** |
 
 They exist so the viewer can be opened against a known state during development.
 **Do NOT commit local changes to these three dirs** — when exercising them you
 will mutate `.spec-context.json`/files; never `git add` those changes. To restore
-the baseline after playing around: `git restore specs/_demo-specified specs/_demo-planned specs/_demo-tasked`
+the baseline after playing around: `git restore specs/_00_demo-specified specs/_01_demo-planned specs/_02_demo-tasked`
 (or `git checkout -- …`). Other `specs/_*/` dirs remain gitignored (local-only).
 
 ## Tech Stack
