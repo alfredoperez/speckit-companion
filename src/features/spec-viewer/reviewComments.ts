@@ -4,7 +4,7 @@
  * Comments live on `.spec-context.json` under `reviewComments` (replacing the
  * old per-doc `<doc>-extra.md` scratchpad files). These functions build a
  * `ReviewComment` from a click + source lines (anchoring via `extractBlock`)
- * and apply add/edit/remove/mark-applied mutations to a `SpecContext`. They are
+ * and apply add/remove/mark-applied mutations to a `SpecContext`. They are
  * deliberately side-effect free — the message handler wraps them in
  * `updateSpecContext` so the only writer remains `specContextWriter`.
  */
@@ -16,16 +16,12 @@ import type {
 } from '../../core/types/specContext';
 import { extractBlock } from './extractBlock';
 
-/** Generate a stable-ish id without external deps. */
-export function newCommentId(): string {
-    return `rc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
 /**
  * Build a `ReviewComment` for a click on `lineNum` (1-based). When `sourceLines`
  * is available the anchor records the nearest heading + block text so the
  * viewer can re-anchor after the source drifts; otherwise it falls back to the
- * single line text.
+ * single line text. `id` is generated webview-side so the inline card and the
+ * persisted record share it.
  */
 export function buildReviewComment(
     doc: ReviewCommentDoc,
@@ -33,7 +29,7 @@ export function buildReviewComment(
     lineContent: string,
     sourceLines: string[] | null,
     comment: string,
-    id: string = newCommentId(),
+    id: string,
 ): ReviewComment {
     let heading: string | null = null;
     let blockText = lineContent;
