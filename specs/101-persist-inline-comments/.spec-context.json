@@ -237,9 +237,19 @@
       },
       "by": "sdd",
       "at": "2026-05-22T02:17:56.663Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "done",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-22T02:19:06.695Z"
     }
   ],
-  "drainedSeq": 12,
+  "drainedSeq": 13,
   "task_summaries": {
     "T001": {
       "status": "DONE",
@@ -366,7 +376,7 @@
       "concerns": []
     }
   },
-  "last_action": "T009-T013 complete \u2014 Activity card, scratchpad removal, wiring, tests, docs",
+  "last_action": "PR #168 opened \u2014 feat(spec-viewer): persist inline review comments + Activity review",
   "files_modified": [
     "src/core/types/specContext.ts",
     "src/core/types/spec-context.schema.json",
@@ -425,5 +435,7 @@
   "checkpointStatus": {
     "commit": true,
     "pr": true
-  }
+  },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/168",
+  "prNumber": 168
 }
