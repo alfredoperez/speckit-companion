@@ -106,6 +106,29 @@ export function preprocessUserStories(markdown: string): string {
 }
 
 /**
+ * Strip a leading YAML frontmatter block (`---` … `---`) from the document.
+ * spec-kit prepends a block like `---\ndescription: "…"\n---` to generated
+ * spec/plan/tasks files. The renderer has no frontmatter handling, so the
+ * delimiters render as `<hr>` and the keys leak as a paragraph. Only a block at
+ * the very start (after optional blank lines) is removed, so a `---` used later
+ * in the body as a thematic break still renders as a horizontal rule. See #158.
+ */
+export function stripFrontmatter(markdown: string): string {
+    return markdown.replace(/^\s*---[ \t]*\n[\s\S]*?\n---[ \t]*(?:\n|$)/, '');
+}
+
+/**
+ * Strip spec-kit's tasks.md "## Format:" legend — the boilerplate block that
+ * explains the `[ID] [P?] [Story] Description` task notation (what `[P]` and
+ * `[Story]` mean, "include file paths", etc.). It's authoring scaffolding, not
+ * content for the reader. Removes the heading and the lines that follow it up to
+ * the next heading (or end of document). See #158.
+ */
+export function stripTaskFormatLegend(markdown: string): string {
+    return markdown.replace(/^##[ \t]+Format:.*(?:\n(?!#{1,6}[ \t]).*)*\n?/m, '');
+}
+
+/**
  * Preprocess HTML comments into collapsible "Template Instructions" blocks
  * Empty comments are removed entirely.
  */

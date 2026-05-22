@@ -8,7 +8,9 @@ import {
     preprocessSpecMetadata,
     preprocessUserStories,
     preprocessCallouts,
-    preprocessHtmlComments
+    preprocessHtmlComments,
+    stripFrontmatter,
+    stripTaskFormatLegend
 } from './preprocessors';
 import { parseAcceptanceScenarios } from './scenarios';
 
@@ -121,6 +123,20 @@ function renderTable(rows: string[]): string {
  * Parse and render markdown content to HTML
  */
 export function renderMarkdown(markdown: string): string {
+    // Normalize line endings (CRLF / lone CR → LF) before anything else. The
+    // block-level regexes below are $-anchored and JS '.' does not match '\r',
+    // so a CRLF document (Windows / git autocrlf checkout) leaves a trailing
+    // '\r' on every line, failing every heading/list/rule match and rendering
+    // the whole document as raw paragraphs. See issue #158.
+    markdown = markdown.replace(/\r\n?/g, '\n');
+
+    // Strip spec-kit's leading YAML frontmatter so it doesn't leak as an <hr> +
+    // paragraph. Runs after newline normalization so it only deals with '\n'.
+    markdown = stripFrontmatter(markdown);
+
+    // Strip spec-kit's tasks.md "## Format:" notation legend (author scaffolding).
+    markdown = stripTaskFormatLegend(markdown);
+
     // Preprocess special patterns before main rendering
     markdown = preprocessHtmlComments(markdown);
     markdown = preprocessSpecMetadata(markdown, hasSpecContext);
