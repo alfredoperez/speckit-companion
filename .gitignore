@@ -26,3 +26,9 @@ storybook-static/
 # Local-only demo spec dirs (underscore-prefixed under specs/)
 specs/_*/
 
+# Committed demo testing fixtures (one per viewer state) — tracked at a fixed
+# baseline so the viewer can be opened against known states. See CLAUDE.md.
+!specs/_00_demo-specified/
+!specs/_01_demo-planned/
+!specs/_02_demo-tasked/
+
