@@ -418,7 +418,11 @@ export function isProviderConfigured(): boolean {
  */
 export function getConfiguredProviderType(): AIProviderType {
     const config = vscode.workspace.getConfiguration('speckit');
-    return config.get<AIProviderType>('aiProvider', AIProviders.CLAUDE);
+    const configured = config.get<AIProviderType>('aiProvider', AIProviders.CLAUDE);
+    // Guard against a stale or typo'd value (e.g. a renamed provider id left in
+    // settings): an unknown key would make PROVIDER_PATHS[type] undefined and
+    // throw at every call site. Fall back to the default provider instead.
+    return configured in PROVIDER_PATHS ? configured : AIProviders.CLAUDE;
 }
 
 /**

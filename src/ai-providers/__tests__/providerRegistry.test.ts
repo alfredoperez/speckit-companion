@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { AIProviderFactory } from '../aiProviderFactory';
-import { PROVIDER_PATHS } from '../aiProvider';
+import { PROVIDER_PATHS, getConfiguredProviderType } from '../aiProvider';
 import { getPermissionFlagForProvider } from '../permissionValidation';
 import { AIProviders } from '../../core/constants';
 
@@ -11,6 +11,14 @@ describe('Provider registry', () => {
                 if (key === 'permissionMode') return value;
                 return defaultValue;
             }),
+        });
+    }
+
+    function mockConfiguredProvider(value: string) {
+        (vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
+            get: jest.fn((key: string, defaultValue?: unknown) =>
+                key === 'aiProvider' ? value : defaultValue
+            ),
         });
     }
 
@@ -49,6 +57,18 @@ describe('Provider registry', () => {
         it('returns Claude bypass flag in auto-approve mode', () => {
             mockPermissionMode('auto-approve');
             expect(getPermissionFlagForProvider(AIProviders.CLAUDE)).toBe('--permission-mode bypassPermissions ');
+        });
+    });
+
+    describe('getConfiguredProviderType', () => {
+        it('returns the configured provider when it is a known key', () => {
+            mockConfiguredProvider(AIProviders.CLAUDE_VSCODE);
+            expect(getConfiguredProviderType()).toBe(AIProviders.CLAUDE_VSCODE);
+        });
+
+        it('falls back to Claude for a stale or unknown provider value', () => {
+            mockConfiguredProvider('claude-panel'); // renamed away — must not crash
+            expect(getConfiguredProviderType()).toBe(AIProviders.CLAUDE);
         });
     });
 });

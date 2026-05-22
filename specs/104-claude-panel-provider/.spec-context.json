@@ -287,6 +287,16 @@
       },
       "by": "sdd",
       "at": "2026-05-22T22:03:53.095Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "done",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-22T23:20:25.946Z"
     }
   ],
   "task_summaries": {
@@ -340,7 +350,7 @@
       "concerns": []
     }
   },
-  "last_action": "Post-ship: removed the press-Enter notification per user \u2014 panel opening with the command prefilled is signal enough (R003 revised)",
+  "last_action": "Hotfix: getConfiguredProviderType now falls back to claude for unknown/stale aiProvider values (the claude-panel->claude-vscode rename crashed activation for settings still holding the old value)",
   "files_modified": [
     "src/ai-providers/promptBuilder.ts",
     "src/ai-providers/ideChatProvider.ts",
@@ -352,9 +362,11 @@
     ".sdd.json",
     "src/core/constants.ts",
     "package.json",
-    "specs/104-claude-panel-provider/spec.md"
+    "specs/104-claude-panel-provider/spec.md",
+    "src/ai-providers/aiProvider.ts",
+    "src/ai-providers/__tests__/providerRegistry.test.ts"
   ],
-  "drainedSeq": 17,
+  "drainedSeq": 18,
   "decisions": [
     "Code-review fixes: Promise.all the independent cleanCommandArg+writePromptFile awaits; log (not silently drop) the preamble when no workspace folder; added @-mention and no-folder tests",
     "Kept specNameFromPath/readSpecDescription as faithful local extractions rather than reaching into FileSystemUtils/extractSpecNameFromPath (avoid cross-module risk)",
@@ -368,5 +380,11 @@
     "pr": true
   },
   "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/171",
-  "prNumber": 171
+  "prNumber": 171,
+  "concerns": [
+    {
+      "task": "post-ship",
+      "note": "Renaming a provider id is breaking for any settings holding the old value; mitigated centrally by validating the configured id against PROVIDER_PATHS"
+    }
+  ]
 }
