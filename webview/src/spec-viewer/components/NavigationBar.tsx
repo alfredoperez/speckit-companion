@@ -117,7 +117,7 @@ export function NavigationBar() {
                     </button>
                 )}
             </div>
-            {showChildrenRow && (
+            {showChildrenRow && !activityActive && (
                 <div class="step-children" aria-label={`${parentStepDoc.label} files`}>
                     <div class="step-children-tabs">
                         <button

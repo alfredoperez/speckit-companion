@@ -1,6 +1,12 @@
 import type { ViewerState, Transition } from '../../types';
 import { mergeStepEvents, buildTransitionIndex, TimelineEventModel } from '../../timelineEvents';
-import { formatDuration, formatRelativeTime } from '../../relativeTime';
+import {
+    formatElapsed,
+    formatStepOffset,
+    formatAbsolute,
+    activeDurationMs,
+    IDLE_GAP_CAP_MS,
+} from '../../relativeTime';
 
 const STEP_ORDER = ['specify', 'clarify', 'plan', 'tasks', 'analyze', 'implement'];
 const KNOWN_ACTORS = new Set(['extension', 'cli', 'sdd', 'ai', 'user']);
@@ -49,57 +55,147 @@ function buildGroups(stepHistory: ViewerState['stepHistory'], transitions: Trans
     return groups;
 }
 
+/**
+ * Collapse consecutive events that share the same name — the SDD implement loop
+ * writes the same substep (e.g. `phase1`) several times in a row. Keeps the
+ * first of each run so its real `startedAt` is preserved; distinct substeps are
+ * untouched.
+ */
+function dedupeEvents(events: TimelineEventModel[]): TimelineEventModel[] {
+    const out: TimelineEventModel[] = [];
+    for (const e of events) {
+        const prev = out[out.length - 1];
+        if (prev && prev.name === e.name) continue;
+        out.push(e);
+    }
+    return out;
+}
+
+/**
+ * All recorded activity timestamps for a step, in no particular order:
+ * the step start, every event boundary, and the completion (when present).
+ * Feeds `activeDurationMs`, which sorts them and sums the gaps with long idle
+ * pauses capped — so "elapsed" reflects working time, not wall-clock.
+ */
+function activityPoints(group: StepGroup): string[] {
+    const pts = [group.startedAt];
+    for (const e of group.events) {
+        pts.push(e.startedAt);
+        if (e.completedAt) pts.push(e.completedAt);
+    }
+    if (group.completedAt) pts.push(group.completedAt);
+    return pts;
+}
+
 export function PhasesCard({ state }: PhasesCardProps) {
     const groups = buildGroups(state.stepHistory ?? {}, state.transitions ?? []);
     if (groups.length === 0) return null;
 
+    // Overall: the whole-spec start (absolute), end (absolute or in-flight), and
+    // total *active* time — the sum of each step's active time, so idle pauses
+    // between transitions never count as elapsed work.
+    const overallStart = groups[0].startedAt;
+    const lastGroup = groups[groups.length - 1];
+    const overallEnd = lastGroup.completedAt;
+    const overallInFlight = overallEnd === null;
+    const overallActiveMs = groups.reduce(
+        (sum, g) => sum + activeDurationMs(activityPoints(g)),
+        0
+    );
+
+    // Per-step start dates are noise on a single-day spec; show a step's start
+    // date only when it began on a different calendar day than the spec start
+    // (i.e. a multi-day spec).
+    const specStartDay = new Date(overallStart).toDateString();
+
+    // Author only at spec start: the first transition's actor.
+    const firstTransition = (state.transitions ?? [])[0];
+    const startAuthor =
+        firstTransition?.by && KNOWN_ACTORS.has(firstTransition.by) ? firstTransition.by : null;
+
     return (
         <section class="activity-card activity-card--phases">
-            <header class="activity-card__title">Phases</header>
+            <header class="activity-card__title">
+                Phases
+                {startAuthor && (
+                    <span class={`activity-actor-badge is-${startAuthor}`}>{startAuthor}</span>
+                )}
+            </header>
             <div class="activity-card__body">
-                {groups.map(group => {
-                    const inFlight = group.completedAt === null;
-                    const duration = formatDuration(group.startedAt, group.completedAt);
-                    const age = formatRelativeTime(group.startedAt);
-                    return (
-                        <div
-                            key={group.step}
-                            class={`phases-step${inFlight ? ' is-in-flight' : ''}`}
-                            data-step={group.step}
-                        >
-                            <h4 class="phases-step__heading">
-                                <span class="phases-step__name">{group.step}</span>
-                                <span class="phases-step__meta">
-                                    <span class="phases-step__duration">
-                                        {inFlight ? `${duration} so far` : duration}
-                                    </span>
-                                    <span class="phases-step__age">{age}</span>
-                                </span>
-                            </h4>
-                            {group.events.length === 0 ? (
-                                <div class="phases-event phases-event--empty">no substeps recorded</div>
-                            ) : (
-                                group.events.map((event, i) => {
-                                    const actor = event.by && KNOWN_ACTORS.has(event.by) ? event.by : null;
-                                    return (
-                                        <div
-                                            key={`${event.name}-${i}`}
-                                            class="phases-event"
-                                            title={`event recorded at ${event.startedAt}`}
-                                        >
-                                            <span class="phases-event__name">{event.name}</span>
-                                            {actor && (
-                                                <span class={`activity-actor-badge is-${actor}`}>
-                                                    {event.by}
+                <div class="phases-overall">
+                    <div class="phases-overall__stat">
+                        <span class="phases-overall__label">Started</span>
+                        <span class="phases-overall__value">{formatAbsolute(overallStart)}</span>
+                    </div>
+                    <div class="phases-overall__stat">
+                        <span class="phases-overall__label">Total</span>
+                        <span class="phases-overall__value">
+                            {formatElapsed(overallActiveMs)} active
+                        </span>
+                    </div>
+                    <div class="phases-overall__stat">
+                        <span class="phases-overall__label">Ended</span>
+                        <span class="phases-overall__value">
+                            {overallInFlight ? 'in progress' : formatAbsolute(overallEnd as string)}
+                        </span>
+                    </div>
+                </div>
+                <div class="phases-track">
+                    {groups.map(group => {
+                        const inFlight = group.completedAt === null;
+                        // Elapsed = active time (idle gaps capped), not wall-clock.
+                        const duration = formatElapsed(activeDurationMs(activityPoints(group)));
+                        const showStepDate =
+                            new Date(group.startedAt).toDateString() !== specStartDay;
+                        const events = dedupeEvents(group.events);
+                        return (
+                            <div
+                                key={group.step}
+                                class={`phases-step${inFlight ? ' is-in-flight' : ''}`}
+                                data-step={group.step}
+                            >
+                                <h4 class="phases-step__heading">
+                                    <span class="phases-step__name">{group.step}</span>
+                                    <span class="phases-step__time">{duration}</span>
+                                </h4>
+                                {/* start date only on a multi-day spec */}
+                                {showStepDate && (
+                                    <div class="phases-step__sub">
+                                        <span class="phases-step__date">
+                                            {formatAbsolute(group.startedAt)}
+                                        </span>
+                                    </div>
+                                )}
+                                {events.length === 0 ? (
+                                    <div class="phases-event phases-event--empty">no substeps recorded</div>
+                                ) : (
+                                    events.map((event, i) => {
+                                        // Per-substep time: active duration for tracked
+                                        // substeps (idle gap to the next event capped),
+                                        // otherwise the offset from the step start.
+                                        const subTime = event.completedAt
+                                            ? formatElapsed(
+                                                  Math.min(
+                                                      new Date(event.completedAt).getTime() -
+                                                          new Date(event.startedAt).getTime(),
+                                                      IDLE_GAP_CAP_MS
+                                                  )
+                                              )
+                                            : formatStepOffset(group.startedAt, event.startedAt);
+                                        return (
+                                            <div key={`${event.name}-${i}`} class="phases-event">
+                                                <span class="phases-event__name">{event.name}</span>
+                                                <span class="phases-event__time">
+                                                    {subTime}
                                                 </span>
-                                            )}
-                                        </div>
-                                    );
-                                })
-                            )}
-                        </div>
-                    );
-                })}
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
         </section>
     );

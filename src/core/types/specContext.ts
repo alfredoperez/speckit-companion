@@ -123,6 +123,18 @@ export interface SpecContext {
     transitions: Transition[];
     /** Persisted inline review comments (replaces `<doc>-extra.md`). */
     reviewComments?: ReviewComment[];
+    // Skill-authored (SDD/SpecKit) fields, viewer-relevant — declared optional;
+    // other unknown fields remain tolerated via the index signature.
+    /** Last action one-liner written by the implement skill. */
+    last_action?: string;
+    /**
+     * Per-task summaries (skill-authored). Loosely typed at the raw on-disk
+     * layer because writers emit varied shapes; the reader normalizes them and
+     * the viewer exposes the strongly-typed form via `ViewerState.taskSummaries`.
+     */
+    task_summaries?: Record<string, unknown>;
+    /** Per-step summaries (specify/plan/etc., skill-authored). */
+    step_summaries?: Record<string, Record<string, unknown>>;
     // Unknown / legacy fields tolerated and preserved.
     [key: string]: unknown;
 }

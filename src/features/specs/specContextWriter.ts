@@ -90,6 +90,13 @@ function assertAppendOnly(prev: Transition[], next: Transition[]): void {
 // ---------- Pure draft mutators (used by skills / callers to build ctx) ----------
 
 export function appendTransition(ctx: SpecContext, t: Transition): SpecContext {
+    // Plain append — the writer records every lifecycle boundary (step-started,
+    // step-completed, substep) faithfully. Redundant *display* rows (the
+    // SDD-implement loop's repeated `phase1`, which is written directly to the
+    // JSON by the skill and never flows through here) are collapsed downstream:
+    // `dedupeConsecutive` in stepHistoryDerivation feeds the viewer, and
+    // PhasesCard de-dups rows. De-duping here would wrongly drop legitimate
+    // start/complete boundaries that can share (step, substep, from).
     const next = {
         ...ctx,
         transitions: [...ctx.transitions, t],

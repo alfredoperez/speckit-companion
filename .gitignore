@@ -6,6 +6,10 @@ out/
 *.log
 .DS_Store
 .env
+
+# SDD implement write-ahead journal — transient, materialized into .spec-context.json
+.spec-context.events.jsonl
+.spec-context.events.lock
 .env.local
 .vscode/*
 !.vscode/extensions.json

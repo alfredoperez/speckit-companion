@@ -156,49 +156,92 @@
    Phases card
    ============================================ */
 
-.phases-step {
-    position: relative;
-    padding-left: var(--space-5);
-    margin-bottom: var(--space-3);
+/* Overall span header: started · total · ended */
+.phases-overall {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-5);
+    padding-bottom: var(--space-3);
+    margin-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border);
 }
 
-.phases-step:last-child {
-    margin-bottom: 0;
+.phases-overall__stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.phases-overall__label {
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.phases-overall__value {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Horizontal timeline: phases laid out as a row of segments */
+.phases-track {
+    display: flex;
+    gap: var(--space-3);
+    overflow-x: auto;
+    padding-bottom: var(--space-2);
+}
+
+.phases-step {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 9.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
 }
 
 .phases-step::before {
     content: '';
     position: absolute;
-    left: 7px;
-    top: 22px;
-    bottom: 0;
-    width: 2px;
-    background: var(--border);
+    inset-inline: 0;
+    top: 0;
+    height: 3px;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    background: var(--success);
+}
+
+.phases-step.is-in-flight::before {
+    background: var(--accent);
 }
 
 .phases-step__heading {
     display: flex;
     align-items: baseline;
+    justify-content: space-between;
     gap: var(--space-3);
-    font-size: var(--text-sm);
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0 0 var(--space-2) calc(var(--space-5) * -1);
-    padding-left: var(--space-5);
-    text-transform: capitalize;
+    margin: 0;
     position: relative;
+    padding-left: 16px;
 }
 
 .phases-step__heading::before {
     content: '';
     position: absolute;
-    left: 2px;
-    top: 0.5em;
-    width: 12px;
-    height: 12px;
+    left: 0;
+    top: 0.4em;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
     background: var(--success);
-    box-shadow: 0 0 0 3px var(--bg-secondary);
+    box-shadow: 0 0 0 3px var(--bg-elevated);
 }
 
 .phases-step.is-in-flight .phases-step__heading::before {
@@ -207,40 +250,47 @@
 }
 
 @keyframes phases-pulse {
-    0%, 100% { box-shadow: 0 0 0 3px var(--bg-secondary), 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); }
-    50%      { box-shadow: 0 0 0 3px var(--bg-secondary), 0 0 0 6px color-mix(in srgb, var(--accent) 0%, transparent); }
+    0%, 100% { box-shadow: 0 0 0 3px var(--bg-elevated), 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); }
+    50%      { box-shadow: 0 0 0 3px var(--bg-elevated), 0 0 0 6px color-mix(in srgb, var(--accent) 0%, transparent); }
 }
 
 .phases-step__name {
+    font-size: var(--text-sm);
     font-weight: 700;
+    color: var(--text-primary);
+    text-transform: capitalize;
 }
 
-.phases-step__meta {
-    display: inline-flex;
-    align-items: baseline;
+/* Active time, right-aligned next to the step name */
+.phases-step__time {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.phases-step.is-in-flight .phases-step__time {
+    color: var(--accent);
+}
+
+/* Muted subline under the name (multi-day start date); aligns past the dot */
+.phases-step__sub {
+    display: flex;
+    flex-wrap: wrap;
     gap: var(--space-2);
-    font-size: 0.78rem;
-    font-weight: 500;
-    text-transform: none;
+    margin: 2px 0 var(--space-1, 4px) 16px;
+    font-size: 0.7rem;
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
 }
 
-.phases-step__meta > span + span::before {
-    content: '·';
-    margin-right: var(--space-2);
-    color: var(--text-muted);
-}
-
-.phases-step__duration {
-    color: var(--text-secondary);
-}
-
 .phases-event {
     display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    padding: 3px 0;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: 2px 0;
     font-size: var(--text-sm);
     color: var(--text-body);
 }
@@ -248,15 +298,24 @@
 .phases-event--empty {
     color: var(--text-muted);
     font-style: italic;
-    font-size: 0.78rem;
+    font-size: 0.74rem;
 }
 
 .phases-event__name {
     color: var(--text-primary);
     font-weight: 500;
     font-family: var(--font-mono);
-    font-size: 0.85em;
-    min-width: 7em;
+    font-size: 0.82em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.phases-event__time {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
 /* ============================================

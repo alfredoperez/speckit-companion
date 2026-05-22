@@ -34,7 +34,10 @@
     "reviewComments": {
       "type": "array",
       "items": { "$ref": "#/$defs/reviewComment" }
-    }
+    },
+    "last_action": { "type": "string" },
+    "task_summaries": { "type": "object" },
+    "step_summaries": { "type": "object" }
   },
   "$defs": {
     "reviewComment": {
@@ -97,7 +100,7 @@
             "substep": { "type": ["string", "null"] }
           }
         },
-        "by": { "type": "string", "enum": ["extension", "user", "cli"] },
+        "by": { "type": "string", "enum": ["extension", "user", "cli", "sdd", "ai"] },
         "at": { "type": "string", "format": "date-time" }
       }
     }

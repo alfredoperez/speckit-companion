@@ -217,8 +217,10 @@ export function deriveViewerState(
         footer: getFooterActions(ctx, activeStep, workflowSteps),
         transitions: ctx.transitions ?? [],
         // Derive stepHistory from the reliable transitions[] sequence rather
-        // than trusting the on-disk stepHistory (AI-typed, unreliable).
-        stepHistory: deriveStepHistory(ctx.transitions ?? [], ctx.currentStep),
+        // than trusting the on-disk stepHistory (AI-typed, unreliable). Pass
+        // status so the terminal step finalizes (completed/archived) instead of
+        // reading as in-flight forever.
+        stepHistory: deriveStepHistory(ctx.transitions ?? [], ctx.currentStep, ctx.status),
         approach: pickString(ctx, 'approach'),
         lastAction: pickString(ctx, 'last_action'),
         taskSummaries: pickRecord<TaskSummary>(ctx, 'task_summaries'),

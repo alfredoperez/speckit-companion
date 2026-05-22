@@ -96,4 +96,88 @@ describe('deriveStepHistory', () => {
         // Order in the output respects first-appearance: specify, plan
         expect(Object.keys(out)).toEqual(['specify', 'plan']);
     });
+
+    describe('terminal finalize', () => {
+        it("finalizes the last current step's completedAt to its own last transition when status is 'completed'", () => {
+            const transitions = [
+                tx({ step: 'specify',   at: '2026-04-29T00:00:00Z' }),
+                tx({ step: 'implement', at: '2026-04-29T00:05:00Z' }),
+                tx({ step: 'implement', substep: 'run-tests', by: 'sdd', at: '2026-04-29T00:06:00Z' }),
+            ];
+            const out = deriveStepHistory(transitions, 'implement', 'completed');
+            expect(out.implement.completedAt).toBe('2026-04-29T00:06:00Z');
+        });
+
+        it("finalizes the last current step's completedAt when status is 'archived'", () => {
+            const transitions = [
+                tx({ step: 'specify',   at: '2026-04-29T00:00:00Z' }),
+                tx({ step: 'implement', at: '2026-04-29T00:05:00Z' }),
+                tx({ step: 'implement', substep: 'run-tests', by: 'sdd', at: '2026-04-29T00:06:00Z' }),
+            ];
+            const out = deriveStepHistory(transitions, 'implement', 'archived');
+            expect(out.implement.completedAt).toBe('2026-04-29T00:06:00Z');
+        });
+
+        it('leaves the last current step in flight (completedAt null) for a non-terminal status', () => {
+            const transitions = [
+                tx({ step: 'specify',   at: '2026-04-29T00:00:00Z' }),
+                tx({ step: 'implement', at: '2026-04-29T00:05:00Z' }),
+            ];
+            const out = deriveStepHistory(transitions, 'implement', 'implementing');
+            expect(out.implement.completedAt).toBeNull();
+        });
+
+        it('leaves the last current step in flight (completedAt null) when status is omitted', () => {
+            const transitions = [
+                tx({ step: 'specify',   at: '2026-04-29T00:00:00Z' }),
+                tx({ step: 'implement', at: '2026-04-29T00:05:00Z' }),
+            ];
+            const out = deriveStepHistory(transitions, 'implement');
+            expect(out.implement.completedAt).toBeNull();
+        });
+    });
+
+    describe('collapses consecutive identical (step, substep) transitions', () => {
+        it('produces the same result feeding a duplicate adjacent transition as feeding one', () => {
+            const single = [
+                tx({ step: 'specify', at: '2026-04-29T00:00:00Z' }),
+                tx({ step: 'plan',    at: '2026-04-29T00:01:00Z' }),
+            ];
+            const withDuplicate = [
+                tx({ step: 'specify', at: '2026-04-29T00:00:00Z' }),
+                tx({ step: 'specify', at: '2026-04-29T00:00:30Z' }), // exact (step, substep) dup
+                tx({ step: 'plan',    at: '2026-04-29T00:01:00Z' }),
+            ];
+            const a = deriveStepHistory(single, 'plan');
+            const b = deriveStepHistory(withDuplicate, 'plan');
+            expect(b).toEqual(a);
+            // The dropped duplicate's `at` must not become startedAt.
+            expect(b.specify.startedAt).toBe('2026-04-29T00:00:00Z');
+        });
+
+        it('preserves a distinct substep on the same step (not collapsed)', () => {
+            const transitions = [
+                tx({ step: 'specify', at: '2026-04-29T00:00:00Z' }),
+                tx({ step: 'specify', substep: 'outline',  by: 'sdd', at: '2026-04-29T00:00:05Z' }),
+                tx({ step: 'specify', substep: 'validate', by: 'sdd', at: '2026-04-29T00:00:10Z' }),
+                tx({ step: 'plan',    at: '2026-04-29T00:01:00Z' }),
+            ];
+            const out = deriveStepHistory(transitions, 'plan');
+            expect(out.specify.substeps).toHaveLength(2);
+            expect(out.specify.substeps!.map(s => s.name)).toEqual(['outline', 'validate']);
+        });
+    });
+
+    describe('non-zero duration', () => {
+        it('produces completedAt distinct from startedAt when transitions have distinct timestamps', () => {
+            const transitions = [
+                tx({ step: 'specify', at: '2026-04-29T00:00:00Z' }),
+                tx({ step: 'plan',    at: '2026-04-29T00:10:00Z' }),
+            ];
+            const out = deriveStepHistory(transitions, 'plan');
+            expect(out.specify.startedAt).toBe('2026-04-29T00:00:00Z');
+            expect(out.specify.completedAt).toBe('2026-04-29T00:10:00Z');
+            expect(out.specify.completedAt).not.toBe(out.specify.startedAt);
+        });
+    });
 });

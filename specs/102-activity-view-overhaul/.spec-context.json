@@ -1,0 +1,379 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "updated": "2026-05-22",
+  "approach": "Fix phase timing in the derivation/reconciler/writer (viewer derives stepHistory from transitions, not disk), re-render PhasesCard to expose timing it already has with a horizontal impeccable layout, hide the Activity sub-nav, and declare three skill-authored schema fields.",
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 16,
+      "scenarios": 7,
+      "key_finding": "stepHistory is DERIVED from transitions[] by stepHistoryDerivation.ts (on-disk stepHistory is ignored), so timing fixes belong in the derivation + reconciler + lifecycle finalize, not in trusting AI-written stepHistory."
+    },
+    "plan": {
+      "approach_summary": "Fix phase timing in the derivation/reconciler/writer (viewer derives stepHistory from transitions, not disk), re-render PhasesCard to expose timing it already has with a horizontal impeccable layout, hide the Activity sub-nav, and declare three skill-authored schema fields.",
+      "files_planned": 9,
+      "risks": [
+        "R004 phase1 advancement is SDD-skill (SKILL.md, out of scope); visible symptom fixed via view-layer de-dup (R010) + writer guard (R005)",
+        "Legacy backfill from git/mtime is approximate; mitigated by filling only missing values, never overwriting real timestamps, idempotent"
+      ],
+      "principles_concerns": 0,
+      "domain_concerns": 0,
+      "significance_score": 1
+    }
+  },
+  "selectedAt": "2026-05-22T02:26:12.386Z",
+  "specName": "Activity View Overhaul",
+  "branch": "main",
+  "workingBranch": "feat/activity-view-overhaul",
+  "type": "feat",
+  "auto": true,
+  "createdAt": "2026-05-22T02:26:12.386Z",
+  "loadedDomains": [],
+  "transitions": [
+    {
+      "step": "specify",
+      "substep": "parsing",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-05-22T02:26:12.386Z"
+    },
+    {
+      "step": "specify",
+      "substep": "exploring",
+      "from": "specify",
+      "by": "sdd",
+      "at": "2026-05-22T02:26:30.000Z"
+    },
+    {
+      "step": "specify",
+      "substep": "detecting",
+      "from": "specify",
+      "by": "sdd",
+      "at": "2026-05-22T02:27:10.000Z"
+    },
+    {
+      "step": "specify",
+      "substep": "writing-spec",
+      "from": "specify",
+      "by": "sdd",
+      "at": "2026-05-22T02:27:20.000Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": "writing-spec"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T02:28:00.000Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-22T02:28:10.000Z"
+    },
+    {
+      "step": "plan",
+      "substep": "loading",
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-22T02:30:00.000Z"
+    },
+    {
+      "step": "plan",
+      "substep": "writing-plan",
+      "from": {
+        "step": "plan",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T02:33:00.000Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "loading",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-22T02:40:00.000Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "writing-tasks",
+      "from": {
+        "step": "tasks",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T02:40:20.000Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": "writing-tasks"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T02:42:00.000Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-22T02:41:44.314Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T02:43:24.644Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T02:45:12.369Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T02:45:12.369Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T02:45:12.369Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T02:53:12.867Z"
+    },
+    {
+      "step": "implement",
+      "substep": "hooks",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T02:53:20.877Z"
+    },
+    {
+      "step": "implement",
+      "substep": "code-review",
+      "from": {
+        "step": "implement",
+        "substep": "hooks"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T02:58:34.821Z"
+    },
+    {
+      "step": "implement",
+      "substep": "commit-review",
+      "from": {
+        "step": "implement",
+        "substep": "code-review"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T11:09:59.779Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": "commit-review"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T11:48:41.663Z"
+    }
+  ],
+  "status": "completed",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-05-22T02:26:40.560Z",
+      "completedAt": "2026-05-22T02:39:06.144Z"
+    },
+    "plan": {
+      "startedAt": "2026-05-22T02:39:06.144Z",
+      "completedAt": "2026-05-22T02:40:39.828Z"
+    },
+    "tasks": {
+      "startedAt": "2026-05-22T02:40:39.828Z",
+      "completedAt": "2026-05-22T02:45:01.812Z"
+    },
+    "implement": {
+      "startedAt": "2026-05-22T02:45:01.812Z",
+      "completedAt": null
+    }
+  },
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "appendTransition drops a consecutive identical (step,substep) write",
+      "files": [
+        "src/features/specs/specContextWriter.ts"
+      ],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "deriveStepHistory: optional status param finalizes terminal step's completedAt + collapses consecutive identical transitions",
+      "files": [
+        "src/features/specs/stepHistoryDerivation.ts"
+      ],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "reconciler backfill uses real timestamps (file mtime / last transition at), never synthetic now; idempotent",
+      "files": [
+        "src/features/specs/specContextReconciler.ts"
+      ],
+      "concerns": [
+        "preceding-step backfill still shares one real timestamp per run (no per-step source); stops synthetic pollution but doesn't reconstruct distinct per-step durations"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "declared last_action/task_summaries/step_summaries optional in type+schema; extended transition by enum to include sdd,ai",
+      "files": [
+        "src/core/types/specContext.ts",
+        "src/core/types/spec-context.schema.json"
+      ],
+      "concerns": []
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "NavigationBar hides .step-children sub-nav row while Activity is active",
+      "files": [
+        "webview/src/spec-viewer/components/NavigationBar.tsx"
+      ],
+      "concerns": []
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "deriveViewerState passes ctx.status into deriveStepHistory so terminal step finalizes",
+      "files": [
+        "src/features/spec-viewer/stateDerivation.ts"
+      ],
+      "concerns": []
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "PhasesCard: overall header (started/total/ended), per-substep timing, consecutive-row de-dup, author badge only at spec start, in-flight-only ago, horizontal track; added formatAbsolute helper",
+      "files": [
+        "webview/src/spec-viewer/components/cards/PhasesCard.tsx",
+        "webview/src/spec-viewer/relativeTime.ts"
+      ],
+      "concerns": []
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "_activity.css: horizontal phases-track, overall header band, status top-bar, per-substep time row, age style",
+      "files": [
+        "webview/styles/spec-viewer/_activity.css"
+      ],
+      "concerns": []
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "added 17 unit tests (derivation terminal-finalize+collapse, reconciler idempotent/real-timestamp, appendTransition append semantics)",
+      "files": [
+        "src/features/specs/__tests__/stepHistoryDerivation.test.ts",
+        "src/features/specs/__tests__/specContextReconciler.test.ts",
+        "src/features/specs/__tests__/specContextWriter.test.ts"
+      ],
+      "concerns": []
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "added 6 PhasesCard stories: overall header, per-substep timing, dup-row collapse, author-at-start, in-flight ago, terminal-finalized",
+      "files": [
+        "webview/src/spec-viewer/components/cards/PhasesCard.stories.tsx"
+      ],
+      "concerns": []
+    }
+  },
+  "last_action": "Phase 1 complete (T001-T010). Silent fixes: loosened task_summaries type, reverted appendTransition de-dup (kept derivation+view dedup), updated 3 reconciler tests + writer test. compile + webpack + 601 jest tests all green.",
+  "files_modified": [
+    "src/features/specs/specContextWriter.ts",
+    "src/features/specs/stepHistoryDerivation.ts",
+    "src/features/specs/specContextReconciler.ts",
+    "src/core/types/specContext.ts",
+    "src/core/types/spec-context.schema.json",
+    "webview/src/spec-viewer/components/NavigationBar.tsx",
+    "src/features/spec-viewer/stateDerivation.ts",
+    "webview/src/spec-viewer/components/cards/PhasesCard.tsx",
+    "webview/src/spec-viewer/relativeTime.ts",
+    "webview/styles/spec-viewer/_activity.css",
+    "src/features/specs/__tests__/stepHistoryDerivation.test.ts",
+    "src/features/specs/__tests__/specContextReconciler.test.ts",
+    "src/features/specs/__tests__/specContextWriter.test.ts",
+    "webview/src/spec-viewer/components/cards/PhasesCard.stories.tsx"
+  ],
+  "concerns": [
+    {
+      "task": "T003",
+      "note": "preceding-step backfill shares one real timestamp per run; real (not synthetic) but not distinct per-step durations"
+    },
+    {
+      "task": "T001",
+      "note": "R005 not enforced at the extension writer (would drop legitimate start/complete boundaries \u2014 broke 2 append-only tests). Visible redundant-row symptom handled at derivation/view layer (R010)."
+    }
+  ],
+  "drainedSeq": 10,
+  "decisions": [
+    "R005 writer-side de-dup REVERTED: appendTransition records every legitimate lifecycle boundary (start/complete can share step+substep+from); the real redundant phase1xN repeats are SDD-skill-authored (written directly to JSON, never via appendTransition) and out of scope. R005's visible intent is delivered via R010 \u2014 dedupeConsecutive in stepHistoryDerivation + dedupeEvents in PhasesCard.",
+    "task_summaries declared as Record<string,unknown> (not TaskSummary) to match the reader's normalize output; the strongly-typed form stays on ViewerState.taskSummaries."
+  ],
+  "checkpointStatus": {
+    "commit": true,
+    "pr": true
+  }
+}

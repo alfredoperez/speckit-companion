@@ -1,6 +1,54 @@
-import { formatRelativeTime, formatDuration, formatStepOffset } from '../relativeTime';
+import {
+    formatRelativeTime,
+    formatDuration,
+    formatStepOffset,
+    formatElapsed,
+    activeDurationMs,
+    IDLE_GAP_CAP_MS,
+} from '../relativeTime';
 
 const NOW = new Date('2026-04-29T12:00:00Z');
+
+describe('formatElapsed', () => {
+    it('buckets sub-second to "<1s" and clamps negatives', () => {
+        expect(formatElapsed(0)).toBe('<1s');
+        expect(formatElapsed(-5000)).toBe('<1s');
+    });
+    it('formats minutes and seconds', () => {
+        expect(formatElapsed(100 * 1000)).toBe('1m 40s');
+        expect(formatElapsed(5 * 60 * 1000)).toBe('5m');
+    });
+    it('formats hours and days', () => {
+        expect(formatElapsed(90 * 60 * 1000)).toBe('1h 30m');
+        expect(formatElapsed(25 * 60 * 60 * 1000)).toBe('1d 1h');
+    });
+    it('returns "unknown" for NaN', () => {
+        expect(formatElapsed(NaN)).toBe('unknown');
+    });
+});
+
+describe('activeDurationMs', () => {
+    const t = (ms: number) => new Date(NOW.getTime() + ms).toISOString();
+
+    it('sums consecutive gaps when all are under the cap', () => {
+        // 0 → +1m → +3m  ⇒ 1m + 2m = 3m
+        expect(activeDurationMs([t(0), t(60_000), t(180_000)])).toBe(180_000);
+    });
+
+    it('caps a long idle gap at the threshold', () => {
+        // 0 → +2m (kept) → +8h (capped to 5m)  ⇒ 2m + 5m = 7m
+        const ms = activeDurationMs([t(0), t(120_000), t(8 * 60 * 60 * 1000)]);
+        expect(ms).toBe(120_000 + IDLE_GAP_CAP_MS);
+    });
+
+    it('is order-independent (sorts first) and ignores invalid timestamps', () => {
+        expect(activeDurationMs([t(180_000), t(0), 'nonsense', t(60_000)])).toBe(180_000);
+    });
+
+    it('returns 0 for a single point', () => {
+        expect(activeDurationMs([t(0)])).toBe(0);
+    });
+});
 
 function past(ms: number): string {
     return new Date(NOW.getTime() - ms).toISOString();

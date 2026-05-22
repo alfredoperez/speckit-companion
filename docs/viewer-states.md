@@ -449,7 +449,7 @@ stateDiagram-v2
 | Card | Source fields |
 |------|---------------|
 | Approach | `approach`, `last_action`, `status`, `prUrl`/`prNumber`, `checkpointStatus.{commit, pr}` |
-| Phases | `stepHistory` (step-level `startedAt`/`completedAt`) + `transitions` for substep names + actor (`by`) |
+| Phases | `stepHistory` (step-level `startedAt`/`completedAt`) + `transitions` for substep names; renders an overall started/ended/total header, per-step duration, and per-substep timing. Author (`by`) badge shows once at spec start |
 | Tasks | `task_summaries.T###` — `status`, `did`, `files`, per-task `concerns` |
 | Decisions | `decisions[]` |
 | Concerns | `concerns[]` (`{ task?, note }`) |
@@ -464,26 +464,47 @@ stateDiagram-v2
 | `"on"` | visible | `Activity` (no pill) |
 
 **stepHistory is derived, not read from disk.** The extension owns this
-field. `deriveStepHistory(transitions, currentStep)` in
+field. `deriveStepHistory(transitions, currentStep, status)` in
 `src/features/specs/stepHistoryDerivation.ts` rebuilds it on every read by
 walking `transitions[]`: each step's `startedAt` is its first transition,
 `completedAt` is the first transition of the next step (a real boundary
-when `by: "extension"`). The AI is told (via `promptBuilder.ts`) not to
-write this field; whatever it ships on disk gets ignored.
+when `by: "extension"`). Two correctness rules: (1) consecutive identical
+`(step, substep, from)` transitions are collapsed before grouping, so a
+substep written several times in a row (e.g. the SDD implement loop's
+repeated `phase1`) does not distort durations or produce duplicate rows;
+(2) when `status ∈ {completed, archived}` the terminal step's `completedAt`
+is finalized to its last transition's `at` instead of reading as in-flight
+forever. The AI is told (via `promptBuilder.ts`) not to write this field;
+whatever it ships on disk gets ignored.
 
-Substep timestamps inside a phase are still derived from AI-typed
-`transitions[].at` values (when `by ∈ {sdd, ai}`), so the Phases card
-deliberately renders substeps as ordered name + actor only — no `+offset`
-or per-substep duration. The step-level duration shown in the heading is
-the only timing signal in the panel, and it's reliable when the boundary
-transitions were extension-written.
+**Phases card timing.** The card surfaces all the timing it derives:
+- An **overall header** — spec-wide *started* (first group's `startedAt`),
+  *ended* (last group's `completedAt`, or *in progress*), and *total*.
+- **Active time per step** in each step heading. Elapsed is computed as the
+  sum of gaps between recorded activity timestamps, with any gap longer than
+  `IDLE_GAP_CAP_MS` (5 min) capped — so idle pauses (including an overnight gap
+  *between* substeps) don't count as work. The overall **Total** is the sum of
+  per-step active time.
+- **Per-substep timing** on each substep row — for a tracked substep, its
+  active duration (gap to the next event, idle-capped); otherwise the offset
+  from the step start (`+5s`, `+1m 30s`).
+- **The in-flight step pulses** (animated dot + accent-colored time); there is
+  no separate "last active" line (staleness is surfaced by the StaleBanner).
+- **Per-step start dates** appear only on a multi-day spec — a step shows its
+  absolute start date when it began on a different calendar day than the spec
+  start; single-day specs show no per-step dates (the whole-spec *Started* is
+  always in the header).
+- The **author (`by`) badge** appears once, on the spec-start transition —
+  not on every per-substep row (it's uniform within a phase, so repeating
+  it is noise).
 
-**Optional: real substep timestamps via shell hook.** Users can opt into
-real substep timing by adding a `pre:task` / step-boundary hook to their
-`.sdd.json` that runs `date -u +"%Y-%m-%dT%H:%M:%SZ"` and appends a
-transition. The extension prompts (since v0.15.6) tell skills to use this
-exact command for every transition `at` field, so well-behaved skills
-already produce real timestamps without the hook.
+Substep `at` values are still AI-typed when `by ∈ {sdd, ai}`, so absolute
+substep times are best-effort; the offsets/durations are displayed as a
+relative read of those values rather than authoritative wall-clock timing.
+For legacy specs with no transition timing, a one-time reconciler backfill
+(`specContextReconciler.ts`) fills missing `completedAt` from the spec's
+artifact-file mtimes (real, not synthesized) — see
+[spec-context-schema.md](./spec-context-schema.md).
 
 **Live updates**: when `.spec-context.json` changes on disk, the existing
 watcher invokes `specViewerProvider.refreshContextIfDisplaying`, which
@@ -493,7 +514,10 @@ from the new state without a reload.
 **Toggle mechanics**: clicking `Activity` flips the `activityVisible` signal.
 The markdown pane stays mounted (hidden via the `hidden` attribute) so
 toggling back is instant. `<ActivityPanel />` mounts lazily on first reveal
-so initial spec render is never blocked.
+so initial spec render is never blocked. While Activity is shown, the
+sub-document sub-navigation row in `NavigationBar` is suppressed (Activity
+has no sub-documents); switching back to a content tab restores that tab's
+sub-nav.
 
 ---
 

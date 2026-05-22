@@ -46,6 +46,18 @@ These fields are written by SDD skills during execution. The extension reads the
 | `decisions` | `array` | Non-trivial decisions made during implementation |
 | `concerns` | `array` | Flagged issues from implementation |
 
+The three viewer-relevant skill-authored fields — `last_action`, `task_summaries`,
+`step_summaries` — are formally **declared** (optional) in the canonical
+`SpecContext` type and `spec-context.schema.json`; remaining skill fields stay
+tolerated via `additionalProperties: true`. The transition `by` enum accepts
+`extension | user | cli | sdd | ai` (the values skills actually author).
+
+**Timing backfill.** `stepHistory` is derived from `transitions[]` at read time
+(the on-disk copy is ignored). For legacy specs that predate transition logging,
+`specContextReconciler.ts` fills missing step `completedAt` from the most recent
+spec/plan/tasks artifact mtime (a real timestamp), never a synthesized
+"written now" value — and only when transitions don't already supply one.
+
 ## Example
 
 ```json
