@@ -4,7 +4,7 @@
   "currentTask": null,
   "progress": null,
   "next": "done",
-  "auto": true,
+  "auto": false,
   "updated": "2026-05-22",
   "selectedAt": "2026-05-22T16:05:11Z",
   "specName": "Claude Code Panel Provider",
@@ -257,6 +257,26 @@
       },
       "by": "sdd",
       "at": "2026-05-22T21:10:43.018Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "done",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-22T21:11:30.063Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "done",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-22T21:11:55.508Z"
     }
   ],
   "task_summaries": {
@@ -310,7 +330,7 @@
       "concerns": []
     }
   },
-  "last_action": "Renamed provider per user: display 'Claude in VS Code', setting value 'claude-vscode', constant AIProviders.CLAUDE_VSCODE (was claude-panel / 'Claude Code (Panel)'). Unreleased, so no migration.",
+  "last_action": "PR #171 opened \u2014 feat(ai-providers): add Claude in VS Code panel provider",
   "files_modified": [
     "src/ai-providers/promptBuilder.ts",
     "src/ai-providers/ideChatProvider.ts",
@@ -323,7 +343,7 @@
     "src/core/constants.ts",
     "package.json"
   ],
-  "drainedSeq": 14,
+  "drainedSeq": 16,
   "decisions": [
     "Code-review fixes: Promise.all the independent cleanCommandArg+writePromptFile awaits; log (not silently drop) the preamble when no workspace folder; added @-mention and no-folder tests",
     "Kept specNameFromPath/readSpecDescription as faithful local extractions rather than reaching into FileSystemUtils/extractSpecNameFromPath (avoid cross-module risk)",
@@ -335,5 +355,7 @@
   "checkpointStatus": {
     "commit": true,
     "pr": true
-  }
+  },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/171",
+  "prNumber": 171
 }
