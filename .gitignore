@@ -32,4 +32,6 @@ specs/_*/
 !specs/_demo-specified/
 !specs/_demo-planned/
 !specs/_demo-tasked/
-
+!specs/_00_demo-specified/
+!specs/_01_demo-planned/
+!specs/_02_demo-tasked/
