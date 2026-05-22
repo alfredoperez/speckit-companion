@@ -76,6 +76,37 @@ export interface Transition {
     at: string;
 }
 
+/** Document a review comment is anchored to. */
+export type ReviewCommentDoc = 'spec' | 'plan' | 'tasks';
+
+/** Lifecycle of a persisted review comment. */
+export type ReviewCommentStatus = 'pending' | 'applied';
+
+/**
+ * Where a review comment is anchored in its source document. `line` is the
+ * 1-based line at creation time; `blockText`/`heading` let the viewer
+ * re-anchor (best-effort) when the source drifts. See extractBlock.ts.
+ */
+export interface ReviewCommentAnchor {
+    heading: string | null;
+    blockText: string;
+    line: number;
+}
+
+/**
+ * A persisted inline review comment. Stored on `.spec-context.json` under
+ * `reviewComments` so an in-progress review survives tab close / reopen and
+ * is committable. Replaces the per-doc `<doc>-extra.md` scratchpad files.
+ */
+export interface ReviewComment {
+    id: string;
+    doc: ReviewCommentDoc;
+    anchor: ReviewCommentAnchor;
+    comment: string;
+    status: ReviewCommentStatus;
+    createdAt: string;
+}
+
 /**
  * Canonical `.spec-context.json` document. Unknown top-level fields MUST be
  * preserved across writes (FR-013).
@@ -90,6 +121,8 @@ export interface SpecContext {
     status: Status;
     stepHistory: Record<string, StepHistoryEntry>;
     transitions: Transition[];
+    /** Persisted inline review comments (replaces `<doc>-extra.md`). */
+    reviewComments?: ReviewComment[];
     // Unknown / legacy fields tolerated and preserved.
     [key: string]: unknown;
 }
@@ -150,6 +183,8 @@ export interface ViewerState {
     prNumber?: number;
     checkpointStatus?: CheckpointStatus;
     stepSummaries?: Record<string, Record<string, unknown>>;
+    /** Persisted inline review comments, surfaced for restore + Activity. */
+    reviewComments?: ReviewComment[];
 }
 
 /** Canonical list of substep names used by Companion prompts. */

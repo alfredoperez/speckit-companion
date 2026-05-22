@@ -20,15 +20,10 @@ export type CoreDocumentType = 'spec' | 'plan' | 'tasks';
 export type WorkflowDocumentType = string;
 
 /**
- * Scratchpad ("extra") document types, paired one-to-one with a core source doc.
- */
-export type ScratchpadDocumentType = 'spec-extra' | 'plan-extra' | 'tasks-extra';
-
-/**
  * Extended to include related and workflow documents
  * Related docs are identified by their filename
  */
-export type DocumentType = CoreDocumentType | ScratchpadDocumentType | WorkflowDocumentType;
+export type DocumentType = CoreDocumentType | WorkflowDocumentType;
 
 // ============================================
 // Phase Types (for stepper)
@@ -113,12 +108,6 @@ export interface SpecDocument {
 
     /** Parent workflow step name (e.g., 'specify') when discovered via subDir */
     parentStep?: string;
-
-    /** True when this entry represents a *-extra.md scratchpad. */
-    isScratchpad?: boolean;
-
-    /** Source doc type this scratchpad pairs with (e.g. 'spec', 'plan', 'tasks'). */
-    scratchpadFor?: DocumentType;
 }
 
 /**
@@ -394,9 +383,23 @@ export type ViewerToExtensionMessage =
           type: 'stepperClick';
           phase: string;
       }
+    // Persisted review comments — written to .spec-context.json on each mutation
     | {
-          type: 'submitRefinements';
-          refinements: Array<{ lineNum: number; lineContent: string; comment: string }>;
+          type: 'addComment';
+          id: string;
+          doc: CoreDocumentType;
+          lineNum: number;
+          lineContent: string;
+          comment: string;
+      }
+    | {
+          type: 'removeComment';
+          id: string;
+      }
+    // Run refinement for one document's pending comments (inline button + Activity)
+    | {
+          type: 'runDocRefinement';
+          doc: CoreDocumentType;
       }
     // Lifecycle actions
     | {

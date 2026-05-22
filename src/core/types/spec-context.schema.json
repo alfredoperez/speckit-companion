@@ -30,9 +30,33 @@
     "transitions": {
       "type": "array",
       "items": { "$ref": "#/$defs/transition" }
+    },
+    "reviewComments": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/reviewComment" }
     }
   },
   "$defs": {
+    "reviewComment": {
+      "type": "object",
+      "required": ["id", "doc", "anchor", "comment", "status", "createdAt"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "doc": { "type": "string", "enum": ["spec", "plan", "tasks"] },
+        "anchor": {
+          "type": "object",
+          "required": ["heading", "blockText", "line"],
+          "properties": {
+            "heading": { "type": ["string", "null"] },
+            "blockText": { "type": "string" },
+            "line": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "comment": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "applied"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
     "stepHistoryEntry": {
       "type": "object",
       "required": ["startedAt", "completedAt"],

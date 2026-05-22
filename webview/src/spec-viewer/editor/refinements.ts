@@ -4,9 +4,10 @@
  */
 
 import { render, h } from 'preact';
-import type { Refinement, VSCodeApi } from '../types';
+import type { Refinement, ReviewComment, VSCodeApi } from '../types';
 import { pendingRefinements } from '../signals';
 import { detectLineType } from './lineActions';
+import { currentDoc } from './currentDoc';
 import { InlineComment } from '../components/InlineComment';
 
 declare const vscode: VSCodeApi;
@@ -23,6 +24,7 @@ export function addRefinement(lineNum: number, comment: string, lineEl: HTMLElem
     pendingRefinements.value = [...pendingRefinements.value, refinement];
     renderComment(lineEl, refinement, 'line');
     updateRefineButton();
+    persistAdd(id, lineNum, lineContent, comment);
 }
 
 export function addRefinementForRow(rowNum: number, comment: string, scenarioContent: string, rowEl: HTMLElement): void {
@@ -34,6 +36,39 @@ export function addRefinementForRow(rowNum: number, comment: string, scenarioCon
 
     pendingRefinements.value = [...pendingRefinements.value, refinement];
     renderComment(rowEl, refinement, 'row');
+    updateRefineButton();
+    persistAdd(id, rowNum, scenarioContent, comment);
+}
+
+/** Persist a newly added comment to `.spec-context.json` (via the extension). */
+function persistAdd(id: string, lineNum: number, lineContent: string, comment: string): void {
+    const doc = currentDoc();
+    if (!doc) return;
+    vscode.postMessage({ type: 'addComment', id, doc, lineNum, lineContent, comment });
+}
+
+/**
+ * Mount a persisted comment that was restored from `.spec-context.json` onto an
+ * already-anchored line element. Unlike `addRefinement`, this does NOT persist
+ * (the comment already exists on disk) and reuses the stored id so later
+ * remove/edit map back to the same record. Idempotent per id.
+ */
+export function addRestoredRefinement(comment: ReviewComment, lineEl: HTMLElement): void {
+    if (commentContainers.has(comment.id)) return;
+    const lineContent = lineEl.querySelector('.line-content')?.textContent?.trim()
+        || comment.anchor.blockText.split('\n')[0]
+        || '';
+    const refinement: Refinement = {
+        id: comment.id,
+        lineNum: comment.anchor.line,
+        lineContent,
+        comment: comment.comment,
+        lineType: detectLineType(lineEl),
+    };
+    if (!pendingRefinements.value.some(r => r.id === comment.id)) {
+        pendingRefinements.value = [...pendingRefinements.value, refinement];
+    }
+    renderComment(lineEl, refinement, 'line');
     updateRefineButton();
 }
 
@@ -86,6 +121,9 @@ export function removeRefinement(refId: string, targetEl?: HTMLElement): void {
     }
 
     updateRefineButton();
+
+    // Persist the removal so it survives reopen.
+    vscode.postMessage({ type: 'removeComment', id: refId });
 }
 
 export function updateRefineButton(): void {
@@ -113,12 +151,15 @@ export function submitAllRefinements(): void {
     const refinements = pendingRefinements.value;
     if (refinements.length === 0) return;
 
-    vscode.postMessage({
-        type: 'submitRefinements',
-        refinements: refinements.map(r => ({
-            lineNum: r.lineNum, lineContent: r.lineContent, comment: r.comment
-        }))
-    });
+    const doc = currentDoc();
+    if (!doc) return;
+
+    // Comments are already persisted (on add); the extension reads the doc's
+    // pending comments from `.spec-context.json`, dispatches them to the AI,
+    // and marks them `applied` (kept as history — no `<doc>-extra.md`). Clear
+    // the in-memory cards for this submitted batch; the applied comments live
+    // on in the Activity list and re-restore on reopen.
+    vscode.postMessage({ type: 'runDocRefinement', doc });
 
     clearAllRefinements();
 }

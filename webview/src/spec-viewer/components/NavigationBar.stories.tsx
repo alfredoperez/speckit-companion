@@ -1,23 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/preact';
-import type { SpecDocument } from '../types';
 import { navState } from '../signals';
 import { NavigationBar } from './NavigationBar';
 import { mockDoc, mockNavState, mockRelatedDoc, stalePlan } from './__stories__/mockData';
-
-function scratchpadDoc(base: 'spec' | 'plan' | 'tasks'): SpecDocument {
-    return {
-        type: `${base}-extra`,
-        label: `${base[0].toUpperCase()}${base.slice(1)} Notes`,
-        fileName: `${base}-extra.md`,
-        filePath: `/workspace/specs/my-feature/${base}-extra.md`,
-        exists: true,
-        isCore: false,
-        category: 'related',
-        parentStep: base,
-        isScratchpad: true,
-        scratchpadFor: base,
-    };
-}
 
 const meta: Meta<typeof NavigationBar> = {
     title: 'Viewer/NavigationBar',
@@ -153,24 +137,3 @@ export const SpecWithoutChildren: Story = {
     },
 };
 
-// ── Scratchpad sub-tab (FR-005 distinction) ───────────────────────────
-// The "Spec Notes" chip is rendered distinct from the source chip (dashed
-// italic). It only appears once `spec-extra.md` exists on disk; the file
-// is created as a side effect of submitting inline-comment batches via
-// the source-tab Refine button.
-
-export const SpecWithScratchpad: Story = {
-    render: () => {
-        navState.value = mockNavState({
-            coreDocs: [
-                mockDoc('spec', true, 'Specification'),
-                mockDoc('plan', true, 'Plan'),
-                mockDoc('tasks', true, 'Tasks'),
-            ],
-            relatedDocs: [scratchpadDoc('spec')],
-            currentDoc: 'spec',
-            workflowPhase: 'spec',
-        });
-        return <NavigationBar />;
-    },
-};

@@ -5,7 +5,8 @@ import { SpecHeader } from './components/SpecHeader';
 import { FooterActions } from './components/FooterActions';
 import { ActivityPanel } from './components/ActivityPanel';
 import { ActivityErrorBoundary } from './components/ActivityErrorBoundary';
-import { markdownHtml, navState, activityVisible } from './signals';
+import { markdownHtml, navState, activityVisible, viewerState } from './signals';
+import { restoreComments, clearAllRefinements } from './editor';
 
 export interface AppProps {
     specStatus: string;
@@ -16,6 +17,7 @@ export function App({ specStatus }: AppProps) {
     const html = markdownHtml.value;
     const ns = navState.value;
     const showActivity = activityVisible.value;
+    const reviewComments = viewerState.value?.reviewComments;
     const [hasMountedActivity, setHasMountedActivity] = useState(false);
     useEffect(() => {
         if (showActivity) setHasMountedActivity(true);
@@ -28,6 +30,20 @@ export function App({ specStatus }: AppProps) {
             contentRef.current.dispatchEvent(new CustomEvent('content-rendered'));
         }
     }, [html]);
+
+    // Restore persisted review comments inline. A doc switch / reload replaces
+    // innerHTML, so clear stale in-memory mounts first, then re-anchor. The
+    // second effect catches the viewerState that lands after the first paint
+    // and any live add/remove/refine updates (restoreComments is idempotent).
+    useEffect(() => {
+        if (html && contentRef.current) {
+            clearAllRefinements();
+            restoreComments();
+        }
+    }, [html]);
+    useEffect(() => {
+        if (html && contentRef.current) restoreComments();
+    }, [reviewComments]);
 
     // Mirror spec-context presence onto <body> so CSS can hide the first H1
     // even though .spec-header is no longer a sibling of #markdown-content.

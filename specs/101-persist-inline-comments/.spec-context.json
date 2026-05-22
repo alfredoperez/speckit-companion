@@ -1,0 +1,429 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "updated": "2026-05-21",
+  "selectedAt": "2026-05-22T01:29:24Z",
+  "specName": "Persist inline review comments + Activity view",
+  "branch": "main",
+  "workingBranch": "feat/persist-inline-comments",
+  "type": "feat",
+  "createdAt": "2026-05-22T01:29:24Z",
+  "auto": true,
+  "loadedDomains": [],
+  "approach": "Move review-comment state to a persisted reviewComments array on .spec-context.json, with persist-on-mutate messages, restore-on-open re-anchoring, and an Activity CommentsCard; remove the -extra.md scratchpad path.",
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 10,
+      "scenarios": 6,
+      "key_finding": "Inline comments live only in the in-memory `pendingRefinements` Preact signal and persist to per-doc `<doc>-extra.md` only on Refine; `extractBlock` already yields a nearest-heading+block anchor, and SpecContext tolerates new fields via `[key: string]: unknown` (writes go through specContextWriter)."
+    },
+    "plan": {
+      "approach_summary": "Move review-comment state to a persisted reviewComments array on .spec-context.json, with persist-on-mutate messages, restore-on-open re-anchoring, and an Activity CommentsCard; remove the -extra.md scratchpad path.",
+      "files_planned": 20,
+      "risks": [
+        "Re-anchoring false matches on identical blocks \u2014 anchor on stored line, then block text, then heading (best-effort per R003)",
+        "Removing ScratchpadFiles/isScratchpad touches several consumers \u2014 land type removal with its consumers so the build stays green"
+      ],
+      "principles_concerns": 0,
+      "domain_concerns": 0,
+      "significance_score": 1
+    }
+  },
+  "transitions": [
+    {
+      "step": "specify",
+      "substep": "parsing",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-05-22T01:29:24Z"
+    },
+    {
+      "step": "specify",
+      "substep": "exploring",
+      "from": "parsing",
+      "by": "sdd",
+      "at": "2026-05-22T01:29:30Z"
+    },
+    {
+      "step": "specify",
+      "substep": "detecting",
+      "from": "exploring",
+      "by": "sdd",
+      "at": "2026-05-22T01:30:00Z"
+    },
+    {
+      "step": "specify",
+      "substep": "writing-spec",
+      "from": "detecting",
+      "by": "sdd",
+      "at": "2026-05-22T01:30:10Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": "writing-spec",
+      "by": "sdd",
+      "at": "2026-05-22T01:30:20Z"
+    },
+    {
+      "step": "specify",
+      "substep": "auto-enabled",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-05-22T01:30:30Z"
+    },
+    {
+      "step": "plan",
+      "substep": "loading",
+      "from": "specify",
+      "by": "sdd",
+      "at": "2026-05-22T01:31:00Z"
+    },
+    {
+      "step": "plan",
+      "substep": "writing-plan",
+      "from": "loading",
+      "by": "sdd",
+      "at": "2026-05-22T01:31:10Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": "writing-plan",
+      "by": "sdd",
+      "at": "2026-05-22T01:31:30Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "loading",
+      "from": "plan",
+      "by": "sdd",
+      "at": "2026-05-22T01:32:00Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "writing-tasks",
+      "from": "loading",
+      "by": "sdd",
+      "at": "2026-05-22T01:32:10Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": "writing-tasks",
+      "by": "sdd",
+      "at": "2026-05-22T01:32:30Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-22T01:38:11.017Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T01:38:11.041Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T01:40:29.557Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T01:40:29.581Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T01:45:39.228Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T01:45:39.251Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T01:45:39.275Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T01:56:07.403Z"
+    },
+    {
+      "step": "implement",
+      "substep": "hooks",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T01:56:17.420Z"
+    },
+    {
+      "step": "implement",
+      "substep": "code-review",
+      "from": {
+        "step": "implement",
+        "substep": "hooks"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T02:06:20.547Z"
+    },
+    {
+      "step": "implement",
+      "substep": "commit-review",
+      "from": {
+        "step": "implement",
+        "substep": "code-review"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T02:17:17.949Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": "commit-review"
+      },
+      "by": "sdd",
+      "at": "2026-05-22T02:17:56.663Z"
+    }
+  ],
+  "drainedSeq": 12,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added ReviewComment interface + reviewComments field to SpecContext and ViewerState",
+      "files": [
+        "src/core/types/specContext.ts"
+      ],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added optional reviewComments array + reviewComment $def to the JSON schema",
+      "files": [
+        "src/core/types/spec-context.schema.json"
+      ],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Created reviewComments.ts: buildReviewComment + add/edit/remove/markApplied/pendingForDoc helpers",
+      "files": [
+        "src/features/spec-viewer/reviewComments.ts"
+      ],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added pickReviewComments and passed reviewComments through to ViewerState",
+      "files": [
+        "src/features/spec-viewer/stateDerivation.ts"
+      ],
+      "concerns": []
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added webview ReviewComment type, ViewerState.reviewComments, and add/edit/remove/runDocRefinement messages",
+      "files": [
+        "webview/src/spec-viewer/types.ts"
+      ],
+      "concerns": []
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added addComment/editComment/removeComment/runDocRefinement handlers via specContextWriter; replaced scratchpad-writing handleSubmitRefinements with dispatchDocRefinement that marks comments applied",
+      "files": [
+        "src/features/spec-viewer/messageHandlers.ts",
+        "src/features/spec-viewer/types.ts",
+        "webview/src/spec-viewer/types.ts"
+      ],
+      "concerns": []
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "refinements.ts posts addComment/removeComment on mutation and runDocRefinement on submit; added addRestoredRefinement",
+      "files": [
+        "webview/src/spec-viewer/editor/refinements.ts"
+      ],
+      "concerns": []
+    },
+    "T008": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Created restoreComments.ts: re-anchor pending comments by stored line/block/heading, never drop",
+      "files": [
+        "webview/src/spec-viewer/editor/restoreComments.ts"
+      ],
+      "concerns": [
+        "Inline restore covers .line comments only; scenario-row comments remain Activity-only. Applied comments are history-only inline (shown in Activity)."
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Created CommentsCard (grouped-by-doc list, status badge, jump-to-line, per-doc Run refinement) + CSS",
+      "files": [
+        "webview/src/spec-viewer/components/cards/CommentsCard.tsx",
+        "webview/styles/spec-viewer/_activity.css"
+      ],
+      "concerns": []
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Removed ScratchpadFiles/SCRATCHPAD_SUFFIX, scratchpad synthesis, isScratchpad/scratchpadFor, ScratchpadDocumentType; deleted scratchpad.ts; legacy *-extra.md filtered out",
+      "files": [
+        "src/core/constants.ts",
+        "src/features/spec-viewer/documentScanner.ts",
+        "src/features/spec-viewer/types.ts",
+        "webview/src/spec-viewer/types.ts",
+        "webview/src/spec-viewer/components/FooterActions.tsx",
+        "webview/src/spec-viewer/components/NavigationBar.tsx",
+        "webview/src/spec-viewer/scratchpad.ts",
+        "webview/src/spec-viewer/components/NavigationBar.stories.tsx",
+        "webview/src/spec-viewer/components/FooterActions.stories.tsx"
+      ],
+      "concerns": []
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Wired CommentsCard into ActivityPanel + hasAnyData; App calls restoreComments after render and on doc switch",
+      "files": [
+        "webview/src/spec-viewer/components/ActivityPanel.tsx",
+        "webview/src/spec-viewer/App.tsx",
+        "webview/src/spec-viewer/editor/index.ts"
+      ],
+      "concerns": []
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Rewrote messageHandlers + documentScanner specs for new behavior; extracted pure reanchor.ts and added re-anchor tests; 587 tests pass",
+      "files": [
+        "src/features/spec-viewer/__tests__/messageHandlers.test.ts",
+        "tests/unit/spec-viewer/documentScanner.spec.ts",
+        "webview/src/spec-viewer/editor/reanchor.ts",
+        "webview/src/spec-viewer/editor/restoreComments.test.ts",
+        "webview/src/spec-viewer/editor/restoreComments.ts"
+      ],
+      "concerns": []
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Updated README (inline comments persist+restore, Activity review card, scratchpad removal) and docs/viewer-states.md",
+      "files": [
+        "README.md",
+        "docs/viewer-states.md"
+      ],
+      "concerns": []
+    }
+  },
+  "last_action": "T009-T013 complete \u2014 Activity card, scratchpad removal, wiring, tests, docs",
+  "files_modified": [
+    "src/core/types/specContext.ts",
+    "src/core/types/spec-context.schema.json",
+    "src/features/spec-viewer/reviewComments.ts",
+    "src/features/spec-viewer/stateDerivation.ts",
+    "webview/src/spec-viewer/types.ts",
+    "src/features/spec-viewer/messageHandlers.ts",
+    "src/features/spec-viewer/types.ts",
+    "webview/src/spec-viewer/editor/refinements.ts",
+    "webview/src/spec-viewer/editor/restoreComments.ts",
+    "webview/src/spec-viewer/components/cards/CommentsCard.tsx",
+    "webview/styles/spec-viewer/_activity.css",
+    "src/core/constants.ts",
+    "src/features/spec-viewer/documentScanner.ts",
+    "webview/src/spec-viewer/components/FooterActions.tsx",
+    "webview/src/spec-viewer/components/NavigationBar.tsx",
+    "webview/src/spec-viewer/components/ActivityPanel.tsx",
+    "webview/src/spec-viewer/App.tsx",
+    "webview/src/spec-viewer/editor/index.ts",
+    "webview/src/spec-viewer/editor/reanchor.ts",
+    "webview/src/spec-viewer/editor/restoreComments.test.ts",
+    "src/features/spec-viewer/__tests__/messageHandlers.test.ts",
+    "tests/unit/spec-viewer/documentScanner.spec.ts",
+    "README.md",
+    "docs/viewer-states.md"
+  ],
+  "concerns": [
+    {
+      "task": "T008",
+      "note": "Inline restore covers .line comments only; scenario-row comments remain Activity-only; applied comments are history-only inline"
+    },
+    {
+      "task": "T007",
+      "note": "submitAllRefinements clears inline cards on dispatch (cards are transient); persistence + applied-history satisfy resumability"
+    }
+  ],
+  "status": "completed",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-05-22T01:49:40.224Z",
+      "completedAt": "2026-05-22T01:49:40.224Z"
+    },
+    "plan": {
+      "startedAt": "2026-05-22T01:49:40.224Z",
+      "completedAt": "2026-05-22T01:49:40.224Z"
+    },
+    "tasks": {
+      "startedAt": "2026-05-22T01:49:40.224Z",
+      "completedAt": "2026-05-22T01:49:40.224Z"
+    },
+    "implement": {
+      "startedAt": "2026-05-22T01:49:40.224Z",
+      "completedAt": null
+    }
+  },
+  "checkpointStatus": {
+    "commit": true,
+    "pr": true
+  }
+}
