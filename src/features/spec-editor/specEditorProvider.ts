@@ -8,9 +8,10 @@ import type {
     AttachedImage,
     WorkflowDefinition
 } from './types';
-import { normalizeWorkflowConfig, resolveStepCommand } from '../workflows';
+import { normalizeWorkflowConfig, resolveStepCommand, isWorkflowSupportedForProvider } from '../workflows';
+import type { WorkflowConfig } from '../workflows';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
-import { AIProviders, WorkflowSteps } from '../../core/constants';
+import { AIProviders, WorkflowSteps, ConfigKeys } from '../../core/constants';
 
 /**
  * Generates a random nonce for CSP
@@ -52,17 +53,11 @@ export class SpecEditorProvider {
      * Get available workflows from settings
      */
     private getWorkflows(): WorkflowDefinition[] {
-        const config = vscode.workspace.getConfiguration('speckit');
-        const customWorkflows = config.get<Array<{
-            name: string;
-            displayName?: string;
-            description?: string;
-            'step-specify'?: string;
-            'step-plan'?: string;
-            'step-implement'?: string;
-        }>>('customWorkflows', []);
+        const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
+        const customWorkflows = config.get<WorkflowConfig[]>('customWorkflows', []);
+        const activeProvider = getConfiguredProviderType();
 
-        // Always include default workflow
+        // Always include default workflow (no provider declaration → never filtered)
         const workflows: WorkflowDefinition[] = [
             {
                 name: 'speckit',
@@ -72,10 +67,11 @@ export class SpecEditorProvider {
             }
         ];
 
-        // Add custom workflows
+        // Add custom workflows the active provider supports
         for (const wf of customWorkflows) {
-            if (wf.name && wf.name !== 'speckit' && wf.name !== 'default') {
-                const normalized = normalizeWorkflowConfig(wf as any);
+            if (wf.name && wf.name !== 'speckit' && wf.name !== 'default'
+                && isWorkflowSupportedForProvider(wf, activeProvider)) {
+                const normalized = normalizeWorkflowConfig(wf);
                 workflows.push({
                     name: wf.name,
                     displayName: wf.displayName || wf.name,
@@ -83,9 +79,9 @@ export class SpecEditorProvider {
                     stepSpecify: `/${formatCommandForProvider(resolveStepCommand(normalized, WorkflowSteps.SPECIFY))}`,
                     stepPlan: formatCommandForProvider(wf[WorkflowSteps.CONFIG_PLAN] || (normalized.steps?.find(s => s.name === WorkflowSteps.PLAN)?.command) || 'speckit.plan'),
                     stepImplement: formatCommandForProvider(wf[WorkflowSteps.CONFIG_IMPLEMENT] || (normalized.steps?.find(s => s.name === WorkflowSteps.IMPLEMENT)?.command) || 'speckit.implement'),
-                    specifyCommands: ((wf as any).commands || [])
-                        .filter((c: any) => c.step === WorkflowSteps.SPECIFY)
-                        .map((c: any) => ({ name: c.name, title: c.title || c.name, command: c.command, tooltip: c.tooltip })),
+                    specifyCommands: (wf.commands || [])
+                        .filter(c => c.step === WorkflowSteps.SPECIFY)
+                        .map(c => ({ name: c.name, title: c.title || c.name, command: c.command, tooltip: c.tooltip })),
                 });
             }
         }

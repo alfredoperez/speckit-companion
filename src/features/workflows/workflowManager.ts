@@ -18,7 +18,8 @@ import {
     WORKFLOW_NAME_PATTERN,
     FEATURE_CONTEXT_FILE,
 } from './types';
-import { ConfigKeys, WorkflowSteps } from '../../core/constants';
+import { ConfigKeys, WorkflowSteps, AIProviders } from '../../core/constants';
+import { getConfiguredProviderType, AIProviderType } from '../../ai-providers/aiProvider';
 
 /**
  * Legacy alias — existing .spec-context.json files may use "default".
@@ -87,6 +88,25 @@ export function normalizeWorkflowConfig(config: WorkflowConfig): WorkflowConfig 
 }
 
 /**
+ * Whether a workflow should be surfaced for the given AI provider.
+ *
+ * A workflow with no `supportedAiProviders` (undefined or empty array) is
+ * supported everywhere. Otherwise it is supported only when `providerType`
+ * appears in the list — comparison is case-sensitive against the canonical
+ * provider ids in `AIProviders`.
+ */
+export function isWorkflowSupportedForProvider(
+    config: WorkflowConfig,
+    providerType: AIProviderType
+): boolean {
+    const supported = config.supportedAiProviders;
+    if (!supported || supported.length === 0) {
+        return true;
+    }
+    return supported.includes(providerType);
+}
+
+/**
  * Validate a workflow configuration
  * @param config Workflow configuration to validate
  * @returns Validation result with errors and warnings
@@ -146,6 +166,24 @@ export function validateWorkflow(config: WorkflowConfig): ValidationResult {
         }
     }
 
+    // Validate supportedAiProviders
+    if (config.supportedAiProviders !== undefined) {
+        if (!Array.isArray(config.supportedAiProviders)) {
+            errors.push('supportedAiProviders must be an array of provider ids');
+        } else {
+            const knownProviders = Object.values(AIProviders) as string[];
+            for (const provider of config.supportedAiProviders) {
+                if (typeof provider !== 'string') {
+                    errors.push('supportedAiProviders entries must be strings');
+                } else if (!knownProviders.includes(provider)) {
+                    warnings.push(
+                        `Unknown AI provider "${provider}" in supportedAiProviders — workflow will be hidden for every provider until corrected`
+                    );
+                }
+            }
+        }
+    }
+
     return {
         valid: errors.length === 0,
         errors,
@@ -160,7 +198,10 @@ export function validateWorkflow(config: WorkflowConfig): ValidationResult {
 export function getWorkflows(outputChannel?: vscode.OutputChannel): WorkflowConfig[] {
     const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
     const customWorkflows = config.get<WorkflowConfig[]>('customWorkflows', []);
+    const activeProvider = getConfiguredProviderType();
 
+    // The default workflow has no provider declaration, so it is never filtered —
+    // at least one workflow is always available.
     const validWorkflows: WorkflowConfig[] = [DEFAULT_WORKFLOW];
     const seenNames = new Set<string>(['speckit', LEGACY_DEFAULT_NAME]);
 
@@ -171,6 +212,13 @@ export function getWorkflows(outputChannel?: vscode.OutputChannel): WorkflowConf
             if (seenNames.has(workflow.name)) {
                 outputChannel?.appendLine(
                     `[Workflows] Duplicate workflow name "${workflow.name}" - skipping duplicate`
+                );
+                continue;
+            }
+            // Hide workflows the active provider can't run
+            if (!isWorkflowSupportedForProvider(workflow, activeProvider)) {
+                outputChannel?.appendLine(
+                    `[Workflows] Workflow "${workflow.name}" not supported by provider "${activeProvider}" - hiding`
                 );
                 continue;
             }

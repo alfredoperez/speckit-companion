@@ -38,6 +38,7 @@ export {
     resolveStepCommand,
     validateWorkflowsOnActivation,
     registerWorkflowConfigChangeListener,
+    isWorkflowSupportedForProvider,
 } from './workflowManager';
 
 // Workflow Selector

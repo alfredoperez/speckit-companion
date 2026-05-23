@@ -359,6 +359,33 @@ Workflows can define `commands`: extra action buttons that appear next to the pr
 
 Commands with `step: "specify"` appear as secondary buttons next to Submit in the spec creation dialog. Multiple commands per step are supported.
 
+#### Provider Compatibility
+
+A workflow can declare which AI providers it supports with `supportedAiProviders`. When set, the workflow is **hidden entirely** unless the active `speckit.aiProvider` is in the list — it disappears from the workflow picker, the spec editor, and every step/footer action. Omit the field (or use an empty array) to support all providers.
+
+```json
+{
+  "speckit.customWorkflows": [
+    {
+      "name": "sdd",
+      "displayName": "SDD Workflow",
+      "supportedAiProviders": ["claude"],
+      "steps": [
+        { "name": "specify", "label": "Specify", "command": "sdd.specify", "file": "spec.md" }
+      ]
+    }
+  ]
+}
+```
+
+The SDD workflow is implemented as Claude Code skills (`/sdd:*`), so declaring it `["claude"]` keeps it from appearing — as a dead, unrunnable path — under GitHub Copilot, Gemini, Qwen, or Codex.
+
+| Property | Required | Description |
+|----------|----------|-------------|
+| `supportedAiProviders` | No | Array of provider ids the workflow supports: `claude`, `gemini`, `copilot`, `codex`, `qwen`, `opencode`, `ide-chat`, `claude-vscode`. Omit or leave empty for all providers. An unknown id matches no real provider, hiding the workflow everywhere. |
+
+The built-in default workflow has no declaration and is always available, so at least one workflow is always selectable regardless of provider.
+
 #### Steps with sub-files
 
 Steps can declare child documents that appear as expandable items in the sidebar:
