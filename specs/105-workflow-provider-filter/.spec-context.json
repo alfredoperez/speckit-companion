@@ -1,0 +1,379 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "updated": "2026-05-23",
+  "selectedAt": "2026-05-23T12:47:35.625Z",
+  "specName": "Provider-Aware Workflow Filtering",
+  "branch": "feat/claude-panel-provider",
+  "workingBranch": "feat/105-workflow-provider-filter",
+  "type": "feat",
+  "auto": false,
+  "createdAt": "2026-05-23T12:47:35.625Z",
+  "loadedDomains": [],
+  "approach": "Add an optional supportedAiProviders field to WorkflowConfig and a shared isWorkflowSupportedForProvider predicate that both workflow-listing paths use to filter custom workflows by the active provider; the default speckit workflow is never filtered.",
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 7,
+      "scenarios": 5,
+      "key_finding": "Workflows are surfaced by two independent getWorkflows() functions (workflowManager.ts + specEditorProvider.ts), both reading speckit.customWorkflows; SDD is a user-installed custom workflow, not a code-level built-in, so the filter must live in both paths against getConfiguredProviderType()."
+    },
+    "plan": {
+      "approach_summary": "Add an optional supportedAiProviders field to WorkflowConfig and a shared isWorkflowSupportedForProvider predicate that both workflow-listing paths use to filter custom workflows by the active provider; the default speckit workflow is never filtered.",
+      "files_planned": 6,
+      "risks": [
+        "Importing getConfiguredProviderType into workflowManager.ts could create a circular import; aiProvider.ts imports only constants so it should be safe, otherwise read the config inline."
+      ],
+      "principles_concerns": 0,
+      "domain_concerns": 0,
+      "significance_score": 0
+    }
+  },
+  "transitions": [
+    {
+      "step": "specify",
+      "substep": "parsing",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-05-23T12:47:35.625Z"
+    },
+    {
+      "step": "specify",
+      "substep": "exploring",
+      "from": {
+        "step": "specify",
+        "substep": "parsing"
+      },
+      "by": "sdd",
+      "at": "2026-05-23T12:47:35.640Z"
+    },
+    {
+      "step": "specify",
+      "substep": "detecting",
+      "from": {
+        "step": "specify",
+        "substep": "exploring"
+      },
+      "by": "sdd",
+      "at": "2026-05-23T12:47:35.655Z"
+    },
+    {
+      "step": "specify",
+      "substep": "writing-spec",
+      "from": {
+        "step": "specify",
+        "substep": "detecting"
+      },
+      "by": "sdd",
+      "at": "2026-05-23T12:47:35.670Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": "writing-spec"
+      },
+      "by": "sdd",
+      "at": "2026-05-23T12:47:35.684Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-23T12:48:21.015Z"
+    },
+    {
+      "step": "plan",
+      "substep": "loading",
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-23T12:49:54.653Z"
+    },
+    {
+      "step": "plan",
+      "substep": "writing-plan",
+      "from": {
+        "step": "plan",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-05-23T12:49:54.667Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": "writing-plan"
+      },
+      "by": "sdd",
+      "at": "2026-05-23T12:49:54.683Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "loading",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-23T12:50:18.851Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "writing-tasks",
+      "from": {
+        "step": "tasks",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-05-23T12:50:18.865Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": "writing-tasks"
+      },
+      "by": "sdd",
+      "at": "2026-05-23T12:50:18.881Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-23T12:53:21.552Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-23T12:59:24.484Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-23T12:59:24.528Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-23T12:59:24.571Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-23T12:59:24.612Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-23T12:59:24.653Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-23T12:59:24.695Z"
+    },
+    {
+      "step": "implement",
+      "substep": "hooks",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-23T13:00:27.419Z"
+    },
+    {
+      "step": "implement",
+      "substep": "code-review",
+      "from": {
+        "step": "implement",
+        "substep": "hooks"
+      },
+      "by": "sdd",
+      "at": "2026-05-23T13:07:54.248Z"
+    },
+    {
+      "step": "implement",
+      "substep": "commit-review",
+      "from": {
+        "step": "implement",
+        "substep": "code-review"
+      },
+      "by": "sdd",
+      "at": "2026-05-23T13:14:23.500Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": "commit-review"
+      },
+      "by": "sdd",
+      "at": "2026-05-23T13:14:53.780Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "done",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-23T13:26:00.923Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "done",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-23T13:26:35.185Z"
+    }
+  ],
+  "status": "completed",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-05-23T12:50:18.881Z",
+      "completedAt": "2026-05-23T12:50:18.881Z"
+    },
+    "plan": {
+      "startedAt": "2026-05-23T12:50:18.881Z",
+      "completedAt": "2026-05-23T12:50:18.881Z"
+    },
+    "tasks": {
+      "startedAt": "2026-05-23T12:50:18.881Z",
+      "completedAt": "2026-05-23T12:59:24.695Z"
+    },
+    "implement": {
+      "startedAt": "2026-05-23T12:59:24.695Z",
+      "completedAt": null
+    }
+  },
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added optional supportedAiProviders field to WorkflowConfig",
+      "files": [
+        "src/features/workflows/types.ts"
+      ],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added isWorkflowSupportedForProvider predicate, provider filter in getWorkflows, and validation; compile confirms no circular import",
+      "files": [
+        "src/features/workflows/workflowManager.ts"
+      ],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added supportedAiProviders to customWorkflows settings schema (additionalProperties:false required it)",
+      "files": [
+        "package.json"
+      ],
+      "concerns": [
+        "package.json also carries an unrelated version bump (0.18.8) and an orphaned claude-vscode enum line from spec 104 \u2014 must not be committed under this PR"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Documented supportedAiProviders in README Custom Workflows (new Provider Compatibility subsection + property table + behavior note)",
+      "files": [
+        "README.md"
+      ],
+      "concerns": []
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Filtered spec-editor webview workflow list by active provider (inline type + isWorkflowSupportedForProvider); also added barrel export",
+      "files": [
+        "src/features/spec-editor/specEditorProvider.ts",
+        "src/features/workflows/index.ts"
+      ],
+      "concerns": []
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added 14 tests (predicate, provider-aware getWorkflows, validation); all 18 pass",
+      "files": [
+        "src/features/workflows/__tests__/workflowManager.test.ts"
+      ],
+      "concerns": []
+    }
+  },
+  "last_action": "PR #172 opened \u2014 feat(workflows): hide workflows unsupported by the active AI provider",
+  "files_modified": [
+    "src/features/workflows/types.ts",
+    "src/features/workflows/workflowManager.ts",
+    "package.json",
+    "README.md",
+    "src/features/spec-editor/specEditorProvider.ts",
+    "src/features/workflows/index.ts",
+    "src/features/workflows/__tests__/workflowManager.test.ts"
+  ],
+  "concerns": [
+    {
+      "task": "T003",
+      "note": "package.json working tree has a version bump and spec-104 claude-vscode enum leftover; stage only the schema addition at commit"
+    }
+  ],
+  "drainedSeq": 12,
+  "checkpointStatus": {
+    "commit": true,
+    "pr": true
+  },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/172",
+  "prNumber": 172
+}

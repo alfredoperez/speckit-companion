@@ -73,6 +73,12 @@ export interface WorkflowConfig {
     checkpoints?: CheckpointConfig[];
     /** Custom command buttons shown next to step actions */
     commands?: WorkflowCommandConfig[];
+    /**
+     * AI provider ids this workflow supports (e.g. `["claude"]`).
+     * Omitted or empty = supported by all providers. When non-empty, the
+     * workflow is only surfaced while the active provider id is in the list.
+     */
+    supportedAiProviders?: string[];
 }
 
 /**

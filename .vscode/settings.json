@@ -11,6 +11,7 @@
       "name": "sdd",
       "displayName": "SDD",
       "description": "Streamlined Spec-Driven Development Workflow",
+      "supportedAiProviders": ["claude", "claude-vscode"],
       "steps": [
         {
           "name": "specify",

@@ -18,12 +18,16 @@ import {
     WORKFLOW_NAME_PATTERN,
     FEATURE_CONTEXT_FILE,
 } from './types';
-import { ConfigKeys, WorkflowSteps } from '../../core/constants';
+import { ConfigKeys, WorkflowSteps, AIProviders } from '../../core/constants';
+import { getConfiguredProviderType, AIProviderType } from '../../ai-providers/aiProvider';
 
 /**
  * Legacy alias — existing .spec-context.json files may use "default".
  */
 const LEGACY_DEFAULT_NAME = 'default';
+
+/** Canonical provider ids — used to validate workflow `supportedAiProviders` entries. */
+const KNOWN_PROVIDERS = Object.values(AIProviders) as string[];
 
 /**
  * Default workflow configuration (always available)
@@ -87,6 +91,25 @@ export function normalizeWorkflowConfig(config: WorkflowConfig): WorkflowConfig 
 }
 
 /**
+ * Whether a workflow should be surfaced for the given AI provider.
+ *
+ * A workflow with no `supportedAiProviders` (undefined or empty array) is
+ * supported everywhere. Otherwise it is supported only when `providerType`
+ * appears in the list — comparison is case-sensitive against the canonical
+ * provider ids in `AIProviders`.
+ */
+export function isWorkflowSupportedForProvider(
+    config: WorkflowConfig,
+    providerType: AIProviderType
+): boolean {
+    const supported = config.supportedAiProviders;
+    if (!supported || supported.length === 0) {
+        return true;
+    }
+    return supported.includes(providerType);
+}
+
+/**
  * Validate a workflow configuration
  * @param config Workflow configuration to validate
  * @returns Validation result with errors and warnings
@@ -146,6 +169,23 @@ export function validateWorkflow(config: WorkflowConfig): ValidationResult {
         }
     }
 
+    // Validate supportedAiProviders
+    if (config.supportedAiProviders !== undefined) {
+        if (!Array.isArray(config.supportedAiProviders)) {
+            errors.push('supportedAiProviders must be an array of provider ids');
+        } else {
+            for (const provider of config.supportedAiProviders) {
+                if (typeof provider !== 'string') {
+                    errors.push('supportedAiProviders entries must be strings');
+                } else if (!KNOWN_PROVIDERS.includes(provider)) {
+                    warnings.push(
+                        `Unknown AI provider "${provider}" in supportedAiProviders — this id will never match any provider and is ignored`
+                    );
+                }
+            }
+        }
+    }
+
     return {
         valid: errors.length === 0,
         errors,
@@ -157,35 +197,64 @@ export function validateWorkflow(config: WorkflowConfig): ValidationResult {
  * Get all configured workflows including the default
  * @returns Array of workflow configurations
  */
-export function getWorkflows(outputChannel?: vscode.OutputChannel): WorkflowConfig[] {
+/**
+ * Build the validated, de-duplicated workflow list (default + custom workflows).
+ * When `filterByProvider` is true, workflows the active provider can't run are
+ * hidden — for SELECTION surfaces (picker, spec-editor). Resolution of an
+ * already-chosen workflow (`getWorkflow`) must NOT filter, otherwise an existing
+ * spec would lose its real steps when viewed under a different provider.
+ */
+function buildWorkflows(filterByProvider: boolean, outputChannel?: vscode.OutputChannel): WorkflowConfig[] {
     const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
     const customWorkflows = config.get<WorkflowConfig[]>('customWorkflows', []);
+    const activeProvider = getConfiguredProviderType();
 
+    // The default workflow has no provider declaration, so it is never filtered —
+    // at least one workflow is always available.
     const validWorkflows: WorkflowConfig[] = [DEFAULT_WORKFLOW];
     const seenNames = new Set<string>(['speckit', LEGACY_DEFAULT_NAME]);
 
     for (const workflow of customWorkflows) {
         const result = validateWorkflow(workflow);
-        if (result.valid) {
-            // Check for duplicates
-            if (seenNames.has(workflow.name)) {
-                outputChannel?.appendLine(
-                    `[Workflows] Duplicate workflow name "${workflow.name}" - skipping duplicate`
-                );
-                continue;
-            }
-            seenNames.add(workflow.name);
-            validWorkflows.push(normalizeWorkflowConfig(workflow));
-        } else {
-            // Log validation errors
-            const errorMsg = result.errors.join('; ');
+        if (!result.valid) {
             outputChannel?.appendLine(
-                `[Workflows] Invalid workflow "${workflow.name || 'unnamed'}": ${errorMsg}`
+                `[Workflows] Invalid workflow "${workflow.name || 'unnamed'}": ${result.errors.join('; ')}`
             );
+            continue;
         }
+        if (seenNames.has(workflow.name)) {
+            outputChannel?.appendLine(
+                `[Workflows] Duplicate workflow name "${workflow.name}" - skipping duplicate`
+            );
+            continue;
+        }
+        if (filterByProvider && !isWorkflowSupportedForProvider(workflow, activeProvider)) {
+            outputChannel?.appendLine(
+                `[Workflows] Workflow "${workflow.name}" not supported by provider "${activeProvider}" - hiding`
+            );
+            continue;
+        }
+        seenNames.add(workflow.name);
+        validWorkflows.push(normalizeWorkflowConfig(workflow));
     }
 
     return validWorkflows;
+}
+
+/**
+ * Workflows for SELECTION surfaces — filtered to those the active provider can run.
+ */
+export function getWorkflows(outputChannel?: vscode.OutputChannel): WorkflowConfig[] {
+    return buildWorkflows(true, outputChannel);
+}
+
+/**
+ * All configured workflows regardless of the active provider. Used to RESOLVE an
+ * already-selected workflow (e.g. an existing spec's stored workflow) so it keeps
+ * its real steps even when the active provider couldn't newly select it.
+ */
+export function getAllWorkflows(): WorkflowConfig[] {
+    return buildWorkflows(false);
 }
 
 /**
@@ -196,7 +265,9 @@ export function getWorkflows(outputChannel?: vscode.OutputChannel): WorkflowConf
 export function getWorkflow(name: string): WorkflowConfig | undefined {
     // Treat legacy "default" as "speckit"
     const resolvedName = name === LEGACY_DEFAULT_NAME ? 'speckit' : name;
-    const workflows = getWorkflows();
+    // Resolve against the unfiltered set: a spec that already selected this
+    // workflow must keep its steps even if the active provider can't select it.
+    const workflows = getAllWorkflows();
     return workflows.find(w => w.name === resolvedName);
 }
 

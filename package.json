@@ -983,6 +983,23 @@
                     },
                     "additionalProperties": false
                   }
+                },
+                "supportedAiProviders": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "claude",
+                      "gemini",
+                      "copilot",
+                      "codex",
+                      "qwen",
+                      "opencode",
+                      "ide-chat",
+                      "claude-vscode"
+                    ]
+                  },
+                  "description": "AI provider ids this workflow supports. Omit or leave empty to support all providers. When set, the workflow is hidden unless the active speckit.aiProvider is in this list (e.g. [\"claude\"] for a Claude-only workflow like SDD)."
                 }
               },
               "additionalProperties": false
