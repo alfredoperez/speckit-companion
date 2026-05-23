@@ -86,7 +86,10 @@ export class SpecEditorProvider {
             }
         }
 
-        // Cache workflows for lookup
+        // Cache workflows for lookup. Rebuilt on every panel open; correctness
+        // across an aiProvider change relies on that change forcing a window
+        // reload (see extension.ts) which disposes this provider. If live
+        // provider switching is ever added, rebuild this on panel reveal too.
         this.workflows.clear();
         for (const wf of workflows) {
             this.workflows.set(wf.name, wf);

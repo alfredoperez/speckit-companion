@@ -9,6 +9,7 @@ const mockGetConfig = jest.fn();
 import {
     getWorkflowCommands,
     getWorkflows,
+    getWorkflow,
     isWorkflowSupportedForProvider,
     validateWorkflow,
 } from '../workflowManager';
@@ -185,5 +186,22 @@ describe('validateWorkflow supportedAiProviders', () => {
         const result = validateWorkflow({ name: 'sdd', supportedAiProviders: ['bogus'] });
         expect(result.valid).toBe(true);
         expect(result.warnings.some(w => w.includes('bogus'))).toBe(true);
+    });
+});
+
+describe('getWorkflow resolves regardless of active provider', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it('still resolves a claude-only workflow under a non-claude provider', () => {
+        // The picker hides it (getWorkflows filters), but an existing spec that
+        // already selected it must keep its real steps.
+        mockConfig('ide-chat', [
+            { name: 'sdd', supportedAiProviders: ['claude'], steps: [{ name: 'specify', command: 'sdd:specify' }] },
+        ]);
+
+        expect(getWorkflows().map(w => w.name)).not.toContain('sdd'); // hidden from selection
+        expect(getWorkflow('sdd')?.name).toBe('sdd');                  // but still resolvable
     });
 });
