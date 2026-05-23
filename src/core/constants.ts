@@ -256,6 +256,7 @@ export const AIProviders = {
     QWEN: 'qwen',
     OPENCODE: 'opencode',
     IDE_CHAT: 'ide-chat',
+    CLAUDE_VSCODE: 'claude-vscode',
 } as const;
 
 /**

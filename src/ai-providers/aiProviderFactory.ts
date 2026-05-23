@@ -7,6 +7,7 @@ import { CodexCliProvider } from './codexCliProvider';
 import { QwenCliProvider } from './qwenCliProvider';
 import { OpenCodeProvider } from './openCodeProvider';
 import { IdeChatProvider } from './ideChatProvider';
+import { ClaudePanelProvider } from './claudePanelProvider';
 import { AIProviders } from '../core/constants';
 
 type ProviderConstructor = (
@@ -22,6 +23,7 @@ const PROVIDER_CONSTRUCTORS: Record<AIProviderType, ProviderConstructor> = {
     [AIProviders.QWEN]: (ctx, out) => new QwenCliProvider(ctx, out),
     [AIProviders.OPENCODE]: (ctx, out) => new OpenCodeProvider(ctx, out),
     [AIProviders.IDE_CHAT]: (ctx, out) => new IdeChatProvider(ctx, out),
+    [AIProviders.CLAUDE_VSCODE]: (ctx, out) => new ClaudePanelProvider(ctx, out),
 };
 
 /**

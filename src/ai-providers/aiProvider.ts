@@ -349,6 +349,30 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         supportsInteractivePermissions: true,
         autoApproveFlag: '',
     },
+    // Claude in VS Code dispatches to the Claude Code GUI panel via the
+    // extension's URI handler instead of spawning the CLI in a terminal. It
+    // shares the same `.claude/` workspace setup as the terminal Claude provider
+    // (steering, agents, skills, dash-form commands resolved from
+    // `.claude/commands/`), so those fields mirror CLAUDE.
+    [AIProviders.CLAUDE_VSCODE]: {
+        steeringFile: 'CLAUDE.md',
+        globalSteeringFile: '.claude/CLAUDE.md',
+        steeringDir: '.claude/steering',
+        steeringPattern: '*.md',
+        agentsDir: '.claude/agents',
+        agentsPattern: '*.md',
+        skillsDir: '.claude/skills',
+        skillsPattern: '*/SKILL.md',
+        mcpConfigPath: '.claude/settings.json',
+        configDir: '.claude',
+        supportsHooks: true,
+        displayName: 'Claude in VS Code',
+        commandFormat: 'dash',
+        quickPickIcon: '$(window)',
+        quickPickDescription: 'Open the Claude Code GUI panel and prefill the command (no terminal)',
+        supportsInteractivePermissions: true,
+        autoApproveFlag: '',
+    },
 };
 
 /**
@@ -394,7 +418,11 @@ export function isProviderConfigured(): boolean {
  */
 export function getConfiguredProviderType(): AIProviderType {
     const config = vscode.workspace.getConfiguration('speckit');
-    return config.get<AIProviderType>('aiProvider', AIProviders.CLAUDE);
+    const configured = config.get<AIProviderType>('aiProvider', AIProviders.CLAUDE);
+    // Guard against a stale or typo'd value (e.g. a renamed provider id left in
+    // settings): an unknown key would make PROVIDER_PATHS[type] undefined and
+    // throw at every call site. Fall back to the default provider instead.
+    return configured in PROVIDER_PATHS ? configured : AIProviders.CLAUDE;
 }
 
 /**

@@ -26,9 +26,21 @@ import { ConfigManager } from './core/utils/configManager';
 import { openSpecFile } from './core/utils/fileOpener';
 
 let aiProvider: IAIProvider;
+let extensionContext: vscode.ExtensionContext;
 export let outputChannel: vscode.OutputChannel;
 
+/**
+ * Resolve the AI provider for the *current* `speckit.aiProvider` setting.
+ * Goes through the factory (which caches by type) rather than returning a
+ * singleton frozen at activation, so changing the provider takes effect without
+ * a window reload and every call site resolves the same provider (the spec
+ * editor already resolved fresh; the viewer used the stale singleton, which is
+ * why a switched provider only applied to some actions).
+ */
 export function getAIProvider(): IAIProvider {
+    if (extensionContext) {
+        return AIProviderFactory.getProvider(extensionContext, outputChannel);
+    }
     return aiProvider;
 }
 
@@ -36,6 +48,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // Create output channel for debugging
     outputChannel = vscode.window.createOutputChannel('SpecKit Companion');
     context.subscriptions.push(outputChannel);
+    extensionContext = context;
     setLifecycleOutputChannel(outputChannel);
     context.subscriptions.push(registerTerminalStepTracker(context));
 

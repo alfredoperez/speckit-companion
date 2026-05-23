@@ -20,7 +20,7 @@ The spec workspace for developers running AI agents through Spec-Driven Developm
 
 **Review AI-generated specs the way you review code.** Add inline comments on specific lines, refine requirements, and catch a vague requirement before the AI turns it into 200 lines of wrong code. Every comment you submit is also captured as a markdown entry in a per-document scratchpad, so the history is durable across sessions.
 
-**Plug any AI assistant into any spec-driven workflow.** Seven providers ship today (Claude Code, Gemini, GitHub Copilot, Codex, Qwen, OpenCode, IDE Chat), and the workflow engine accepts custom phases, commands, and sub-documents. Drop in [Agent Teams Lite](https://github.com/Gentleman-Programming/agent-teams-lite), your own SDD process, or anything that takes commands and produces markdown.
+**Plug any AI assistant into any spec-driven workflow.** Eight providers ship today (Claude Code, Gemini, GitHub Copilot, Codex, Qwen, OpenCode, IDE Chat, Claude in VS Code), and the workflow engine accepts custom phases, commands, and sub-documents. Drop in [Agent Teams Lite](https://github.com/Gentleman-Programming/agent-teams-lite), your own SDD process, or anything that takes commands and produces markdown.
 
 **Spec-driven phases without leaving VS Code.** Each feature flows through Specify, Plan, Tasks, Done, with progress tracking, sticky headers, and a structured viewer built for long specs.
 
@@ -137,14 +137,14 @@ Compare the file lists side by side to see the contrast between the full and min
 
 ## Supported AI Providers
 
-| Feature | Claude Code | GitHub Copilot CLI | Gemini CLI | Codex CLI | Qwen Code | OpenCode | IDE Chat |
-|---------|-------------|-------------------|------------|-----------|-----------|----------|----------|
-| **Steering File** | CLAUDE.md | .github/copilot-instructions.md | GEMINI.md | AGENTS.md | QWEN.md | AGENTS.md | Not supported |
-| **Steering Path** | .claude/steering/ | .github/instructions/*.instructions.md | Hierarchical GEMINI.md | Hierarchical AGENTS.md | .qwen/steering/ | Hierarchical AGENTS.md | Not supported |
-| **Agents** | .claude/agents/*.md | .github/agents/*.agent.md | Limited support | Hierarchical AGENTS.md | Not supported | .opencode/agent/*.md | Not supported |
-| **Hooks** | .claude/settings.json | Not supported | Not supported | Not supported | Not supported | Not supported | Not supported |
-| **MCP Servers** | .claude/settings.json | ~/.copilot/mcp-config.json | ~/.gemini/settings.json | ~/.codex/config.toml | ~/.qwen/settings.json | ~/.opencode/opencode.jsonc | Not supported |
-| **CLI Command** | `claude` | `ghcs` / `gh copilot` | `gemini` | `codex` | `qwen` | `opencode` | Built-in editor chat (Copilot / Composer / Cascade) |
+| Feature | Claude Code | GitHub Copilot CLI | Gemini CLI | Codex CLI | Qwen Code | OpenCode | IDE Chat | Claude in VS Code |
+|---------|-------------|-------------------|------------|-----------|-----------|----------|----------|-------------------|
+| **Steering File** | CLAUDE.md | .github/copilot-instructions.md | GEMINI.md | AGENTS.md | QWEN.md | AGENTS.md | Not supported | CLAUDE.md |
+| **Steering Path** | .claude/steering/ | .github/instructions/*.instructions.md | Hierarchical GEMINI.md | Hierarchical AGENTS.md | .qwen/steering/ | Hierarchical AGENTS.md | Not supported | .claude/steering/ |
+| **Agents** | .claude/agents/*.md | .github/agents/*.agent.md | Limited support | Hierarchical AGENTS.md | Not supported | .opencode/agent/*.md | Not supported | .claude/agents/*.md |
+| **Hooks** | .claude/settings.json | Not supported | Not supported | Not supported | Not supported | Not supported | Not supported | .claude/settings.json |
+| **MCP Servers** | .claude/settings.json | ~/.copilot/mcp-config.json | ~/.gemini/settings.json | ~/.codex/config.toml | ~/.qwen/settings.json | ~/.opencode/opencode.jsonc | Not supported | .claude/settings.json |
+| **CLI Command** | `claude` | `ghcs` / `gh copilot` | `gemini` | `codex` | `qwen` | `opencode` | Built-in editor chat (Copilot / Composer / Cascade) | Claude Code GUI panel (no terminal) |
 
 Configure your preferred provider: **Settings > speckit.aiProvider**
 
@@ -158,6 +158,17 @@ editor** (run **SpecKit: Initialize Workspace**, i.e. `specify init`). When the
 workspace is initialized, IDE Chat auto-submits the prompt; when it isn't, it
 prefills the chat and shows a warning instead of sending a command the chat can't
 run. This is one-way dispatch — it does not read responses back or sync status.
+
+### Claude in VS Code
+
+`Claude in VS Code` dispatches to the **Claude Code GUI panel** instead of
+spawning the `claude` CLI in a terminal — for users who live in the panel rather
+than a terminal. It shares the same `.claude/` setup as the terminal `claude`
+provider (steering, agents, hooks, MCP). The extension opens the panel via Claude
+Code's URI handler and **prefills** the command; the Claude Code panel exposes no
+programmatic submit, so you **press Enter** to run it.
+Requires the [Claude Code extension](https://marketplace.visualstudio.com/items?itemName=anthropic.claude-code);
+if it isn't installed, the provider suggests switching to terminal `claude`.
 
 ## Configuration
 

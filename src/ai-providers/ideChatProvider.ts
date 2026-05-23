@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { AIProviders, Commands } from '../core/constants';
 import { SpecKitDetector } from '../speckit/detector';
 import { IAIProvider, AIExecutionResult } from './aiProvider';
-import { splitContextPreamble } from './promptBuilder';
+import { splitContextPreamble, cleanCommandArg } from './promptBuilder';
 
 /**
  * Host editors that expose a built-in AI chat we can dispatch to.
@@ -136,20 +136,14 @@ export class IdeChatProvider implements IAIProvider {
      *   absolute path).
      */
     private async buildChatQuery(prompt: string, host: HostIde): Promise<string> {
-        const trimmed = splitContextPreamble(prompt).command.trim();
-        const sp = trimmed.indexOf(' ');
-        if (sp === -1) return this.formatCommandForHost(trimmed, host);
-        const cmd = this.formatCommandForHost(trimmed.slice(0, sp), host);
-        const arg = trimmed.slice(sp + 1).trim();
-
-        if (/\s/.test(arg)) return `${cmd} ${arg}`;     // free-text / multi-token argument
-        if (!/[/\\]/.test(arg)) return `${cmd} ${arg}`; // not a path
-
-        if (/[.-]specify$/.test(cmd) && /\.md$/i.test(arg)) {
-            const description = await this.readSpecDescription(arg);
-            if (description) return `${cmd} ${description}`;
-        }
-        return `${cmd} ${this.specNameFromPath(arg)}`;
+        // Shared helper cleans the arg (description inlining, spec-dir shortening);
+        // then format the verb for the host. The verb has no spaces, so formatting
+        // before vs. after arg cleanup is equivalent — doing it after avoids a
+        // second split.
+        const cleaned = await cleanCommandArg(splitContextPreamble(prompt).command);
+        const sp = cleaned.indexOf(' ');
+        if (sp === -1) return this.formatCommandForHost(cleaned, host);
+        return `${this.formatCommandForHost(cleaned.slice(0, sp), host)}${cleaned.slice(sp)}`;
     }
 
     /**
@@ -161,29 +155,6 @@ export class IdeChatProvider implements IAIProvider {
     private formatCommandForHost(cmd: string, host: HostIde): string {
         if (!HOST_PROFILES[host].dashCommands) return cmd;
         return cmd.replace(/^(\/?)speckit\./, '$1speckit-');
-    }
-
-    /** The spec name from a path: the last segment, or its parent when it's a doc file. */
-    private specNameFromPath(p: string): string {
-        const segments = p.split(/[/\\]/).filter(Boolean);
-        let name = segments.pop() ?? p;
-        if (/\.md$/i.test(name) && segments.length > 0) {
-            name = segments.pop()!;
-        }
-        return name;
-    }
-
-    /** Read a specify temp markdown file and return the feature description (sans bookkeeping). */
-    private async readSpecDescription(filePath: string): Promise<string | null> {
-        try {
-            const data = await vscode.workspace.fs.readFile(vscode.Uri.file(filePath));
-            const text = Buffer.from(data).toString('utf-8');
-            const marker = text.indexOf('## Post-Specification');
-            const body = (marker === -1 ? text : text.slice(0, marker)).trim();
-            return body || null;
-        } catch {
-            return null;
-        }
     }
 
     /** Warn that the host chat won't recognize `/speckit.*` until spec-kit is set up. */
