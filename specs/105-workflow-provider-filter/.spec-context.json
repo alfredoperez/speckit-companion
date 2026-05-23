@@ -10,7 +10,7 @@
   "branch": "feat/claude-panel-provider",
   "workingBranch": "feat/105-workflow-provider-filter",
   "type": "feat",
-  "auto": true,
+  "auto": false,
   "createdAt": "2026-05-23T12:47:35.625Z",
   "loadedDomains": [],
   "approach": "Add an optional supportedAiProviders field to WorkflowConfig and a shared isWorkflowSupportedForProvider predicate that both workflow-listing paths use to filter custom workflows by the active provider; the default speckit workflow is never filtered.",
@@ -259,6 +259,26 @@
       },
       "by": "sdd",
       "at": "2026-05-23T13:14:53.780Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "done",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-23T13:26:00.923Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "done",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-23T13:26:35.185Z"
     }
   ],
   "status": "completed",
@@ -333,7 +353,7 @@
       "concerns": []
     }
   },
-  "last_action": "T006 done \u2014 18/18 tests pass",
+  "last_action": "PR #172 opened \u2014 feat(workflows): hide workflows unsupported by the active AI provider",
   "files_modified": [
     "src/features/workflows/types.ts",
     "src/features/workflows/workflowManager.ts",
@@ -349,9 +369,11 @@
       "note": "package.json working tree has a version bump and spec-104 claude-vscode enum leftover; stage only the schema addition at commit"
     }
   ],
-  "drainedSeq": 11,
+  "drainedSeq": 12,
   "checkpointStatus": {
     "commit": true,
     "pr": true
-  }
+  },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/172",
+  "prNumber": 172
 }
