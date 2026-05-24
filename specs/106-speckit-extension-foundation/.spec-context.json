@@ -240,6 +240,16 @@
       },
       "by": "sdd",
       "at": "2026-05-24T23:03:42.603Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "done",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-24T23:04:31.846Z"
     }
   ],
   "task_summaries": {
@@ -294,7 +304,7 @@
       ]
     }
   },
-  "last_action": "Code review: hardened write-context.py (4 fixes), installed 0.18.1 locally",
+  "last_action": "PR #173 opened \u2014 feat(speckit-extension): add foundation + after_specify state-write hook",
   "files_modified": [
     "speckit-extension/scripts/write-context.py",
     "src/core/types/spec-context.schema.json",
@@ -303,7 +313,7 @@
     ".specify/extensions.yml",
     "speckit-extension/README.md"
   ],
-  "drainedSeq": 8,
+  "drainedSeq": 9,
   "concerns": [
     {
       "task": "T006",
@@ -324,5 +334,7 @@
   "checkpointStatus": {
     "commit": true,
     "pr": true
-  }
+  },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/173",
+  "prNumber": 173
 }
