@@ -1,0 +1,36 @@
+schema_version: "1.0"
+
+extension:
+  id: companion
+  name: "SpecKit Companion"
+  version: "0.1.0"
+  description: "Captures spec-kit lifecycle activity into .spec-context.json so the SpecKit Companion GUI lights up on your existing spec-kit flow"
+  author: alfredoperez
+  repository: https://github.com/alfredoperez/speckit-companion
+  license: MIT
+
+requires:
+  # Floor for the workflow `integration: auto` path the later phases ride.
+  # Confirm/raise once the exact spec-kit release that wired after_specify /
+  # after_plan hooks is verified against the installed CLI (see README).
+  speckit_version: ">=0.8.5"
+  tools:
+    - name: python3
+      required: false
+
+provides:
+  commands:
+    - name: speckit.companion.capture
+      file: commands/speckit.companion.capture.md
+      description: "Capture the current spec-kit step into .spec-context.json for the Companion GUI"
+
+hooks:
+  after_specify:
+    command: speckit.companion.capture
+    optional: false
+    description: "Record specify completion (currentStep=specify, status=specified) into .spec-context.json"
+
+tags:
+  - "spec-driven-development"
+  - "tracking"
+  - "companion"

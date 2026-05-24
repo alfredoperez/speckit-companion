@@ -1,0 +1,328 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "updated": "2026-05-24",
+  "selectedAt": "2026-05-24T21:48:33.000Z",
+  "specName": "SpecKit Companion spec-kit Extension \u2014 Foundation & State-Write Spike",
+  "branch": "main",
+  "workingBranch": "feat/speckit-extension-foundation",
+  "type": "feat",
+  "auto": false,
+  "createdAt": "2026-05-24T21:48:33.000Z",
+  "loadedDomains": [],
+  "status": "completed",
+  "approach": "Add a new top-level speckit-extension/ mirroring spec-kit's bundled git extension (extension.yml -> capture command-markdown -> write-context.py) with a single after_specify hook; the writer resolves the active feature dir via spec-kit's precedence and does a crash-safe read-merge-write of canonical .spec-context.json, with the only GUI-side change being adding 'implemented' to the schema status enum.",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-05-24T21:48:33.000Z",
+      "completedAt": "2026-05-24T21:48:33.000Z"
+    },
+    "plan": {
+      "startedAt": "2026-05-24T21:52:00.000Z",
+      "completedAt": "2026-05-24T21:52:00.000Z"
+    },
+    "tasks": {
+      "startedAt": "2026-05-24T21:54:00.000Z",
+      "completedAt": "2026-05-24T21:54:00.000Z"
+    },
+    "implement": {
+      "startedAt": "2026-05-24T22:21:15.492Z",
+      "completedAt": null
+    }
+  },
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 15,
+      "scenarios": 5,
+      "key_finding": "The canonical schema already lives in-repo at src/core/types/spec-context.schema.json and already covers everything an after_specify writer emits (currentStep:specify, status:specified, transitions[].by:extension, stepHistory); the only real drift is the JSON schema's status enum missing 'implemented' that the TS Status type already has. The bundled git extension at .specify/extensions/git/ is the exact hook -> command-markdown -> script pattern to mirror, and .sdd.json sets branchStage:implement so branching stays deferred."
+    },
+    "plan": {
+      "approach_summary": "Add a new top-level speckit-extension/ mirroring spec-kit's bundled git extension (extension.yml -> capture command-markdown -> write-context.py) with a single after_specify hook; the writer resolves the active feature dir via spec-kit's precedence and does a crash-safe read-merge-write of canonical .spec-context.json, with the only GUI-side change being adding 'implemented' to the schema status enum.",
+      "files_planned": 6,
+      "risks": [
+        "Exact after_specify version floor unconfirmed; declare >=0.8.5 conservatively and confirm against installed spec-kit.",
+        "Hooks are agent-mediated (prompt-driven) so after_specify may not fire; optional:false maximizes auto-run and the spike observes actual behavior.",
+        "Stale .specify/feature.json could point at the wrong dir; resolution precedence puts explicit --feature-dir/env ahead of feature.json."
+      ],
+      "principles_concerns": 0,
+      "domain_concerns": 0,
+      "significance_score": 2
+    }
+  },
+  "transitions": [
+    {
+      "step": "specify",
+      "substep": "parsing",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-05-24T21:48:33.000Z"
+    },
+    {
+      "step": "specify",
+      "substep": "exploring",
+      "from": {
+        "step": "specify",
+        "substep": "parsing"
+      },
+      "by": "sdd",
+      "at": "2026-05-24T21:48:34.000Z"
+    },
+    {
+      "step": "specify",
+      "substep": "detecting",
+      "from": {
+        "step": "specify",
+        "substep": "exploring"
+      },
+      "by": "sdd",
+      "at": "2026-05-24T21:48:35.000Z"
+    },
+    {
+      "step": "specify",
+      "substep": "writing-spec",
+      "from": {
+        "step": "specify",
+        "substep": "detecting"
+      },
+      "by": "sdd",
+      "at": "2026-05-24T21:48:36.000Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": "writing-spec"
+      },
+      "by": "sdd",
+      "at": "2026-05-24T21:48:37.000Z"
+    },
+    {
+      "step": "plan",
+      "substep": "loading",
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-24T21:51:00.000Z"
+    },
+    {
+      "step": "plan",
+      "substep": "writing-plan",
+      "from": {
+        "step": "plan",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-05-24T21:51:30.000Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": "writing-plan"
+      },
+      "by": "sdd",
+      "at": "2026-05-24T21:52:00.000Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "loading",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-24T21:53:30.000Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "writing-tasks",
+      "from": {
+        "step": "tasks",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-05-24T21:53:45.000Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": "writing-tasks"
+      },
+      "by": "sdd",
+      "at": "2026-05-24T21:54:00.000Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-24T22:19:53.444Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-24T22:21:15.492Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-24T22:21:53.134Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-24T22:22:56.832Z"
+    },
+    {
+      "step": "implement",
+      "substep": "hooks",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-24T22:23:13.600Z"
+    },
+    {
+      "step": "implement",
+      "substep": "code-review",
+      "from": {
+        "step": "implement",
+        "substep": "hooks"
+      },
+      "by": "sdd",
+      "at": "2026-05-24T22:32:51.682Z"
+    },
+    {
+      "step": "implement",
+      "substep": "commit-review",
+      "from": {
+        "step": "implement",
+        "substep": "code-review"
+      },
+      "by": "sdd",
+      "at": "2026-05-24T23:00:08.552Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": "commit-review"
+      },
+      "by": "sdd",
+      "at": "2026-05-24T23:03:42.603Z"
+    }
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Created stdlib write-context.py: spec-kit feature-dir precedence, read-merge preserving unknown keys, append-only transitions, atomic temp+replace; probe test (create+append+unknown-key) passes",
+      "files": [
+        "speckit-extension/scripts/write-context.py"
+      ],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added 'implemented' to status enum in spec-context.schema.json to match TS Status type",
+      "files": [
+        "src/core/types/spec-context.schema.json"
+      ],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Created extension.yml manifest (id companion, one after_specify hook, python3 optional tool, >=0.8.5 floor) mirroring the bundled git extension",
+      "files": [
+        "speckit-extension/extension.yml"
+      ],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Created speckit.companion.capture.md command-markdown (run-this-script pattern, graceful python3 degradation) with flags matching write-context.py CLI",
+      "files": [
+        "speckit-extension/commands/speckit.companion.capture.md"
+      ],
+      "concerns": []
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Registered companion in .specify/extensions.yml: added to installed and appended to after_specify alongside git; git entries untouched",
+      "files": [
+        ".specify/extensions.yml"
+      ],
+      "concerns": []
+    },
+    "T006": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Wrote speckit-extension/README.md (overview, version-floor caveat, install/--ai-skills note, reproducible proof). Proof A (script+feature.json resolution) verified deterministically; Proof B (live /speckit.specify hook + GUI render) documented as pending manual confirmation",
+      "files": [
+        "speckit-extension/README.md"
+      ],
+      "concerns": [
+        "Proof B (agent auto-fires after_specify + GUI visually renders specify/specified) requires an interactive VS Code session; verified the script/resolution/write half deterministically but not the live agent-mediated hook + GUI"
+      ]
+    }
+  },
+  "last_action": "Code review: hardened write-context.py (4 fixes), installed 0.18.1 locally",
+  "files_modified": [
+    "speckit-extension/scripts/write-context.py",
+    "src/core/types/spec-context.schema.json",
+    "speckit-extension/extension.yml",
+    "speckit-extension/commands/speckit.companion.capture.md",
+    ".specify/extensions.yml",
+    "speckit-extension/README.md"
+  ],
+  "drainedSeq": 8,
+  "concerns": [
+    {
+      "task": "T006",
+      "note": "Live GUI proof (proof B) pending manual confirmation in an interactive VS Code session; hooks are agent-mediated so auto-fire is the behavior to observe"
+    },
+    {
+      "task": "T001",
+      "note": "Resolution divergences from spec-kit's bash resolver left as documented risks (not bugs): int()-normalized variable-width prefix matching (97 vs 097), feature.json ranked before git branch (by design per R007/ADR since our branch is non-numeric), and non-prefixed-branch resolves to no-op. Acceptable for best-effort capture; revisit if misresolution observed."
+    },
+    {
+      "task": "T006",
+      "note": "Live GUI proof (proof B) still pending manual confirmation in an interactive VS Code session."
+    }
+  ],
+  "decisions": [
+    "write-context.py: added monotonic guard so a hook never regresses a shipped/completed spec; normalized non-canonical prior from.step (e.g. legacy 'done') to null per schema; made all writes best-effort (bad step + OSError warn and exit 0, orphan .tmp cleaned up); guarded malformed transitions[-1]"
+  ],
+  "checkpointStatus": {
+    "commit": true,
+    "pr": true
+  }
+}
