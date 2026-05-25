@@ -4,7 +4,7 @@ Optional workflow enhancements for the [SpecKit Companion](https://github.com/al
 
 This directory is the spec-kit-catalog half of the SpecKit Companion monorepo; it lives beside the VS Code extension (`src/`, `webview/`) and is published/installed independently. It does **not** read or depend on the GUI at runtime — it only writes the canonical `.spec-context.json` the GUI already consumes.
 
-> **Status: foundation spike (v1, one hook).** This ships the de-risking slice from spec `106-speckit-extension-foundation`: a single `after_specify` hook that writes `.spec-context.json`. The other lifecycle hooks, the derive-from-files fallback, and the `status`/`resume` commands are deferred to later steps.
+> **Status:** v1 foundation shipped & proven — a single `after_specify` hook that writes `.spec-context.json` (spec `106-speckit-extension-foundation`). The other lifecycle hooks, the derive-from-files fallback, and the `status`/`resume` commands are later steps. See **[ROADMAP.md](./ROADMAP.md)** for the full 8-step plan and per-step status.
 
 ## What's here
 
@@ -120,7 +120,6 @@ Expected: a valid canonical `.spec-context.json` with `currentStep: "specify"`, 
 6. Open the SpecKit Companion sidebar/viewer — the new spec should render at the **specify** step with **specified** status, with no GUI code change.
 7. Clean up: delete the throwaway spec dir; optionally `specify extension remove companion`.
 
-### Observed result
+### Status
 
-- **A (script + resolution):** ✅ Verified — the writer creates/updates a canonical `.spec-context.json` with the expected values; append-only transitions and unknown-key preservation confirmed by the spec's probe test.
-- **B (live hook + GUI):** ⏳ Pending manual confirmation in an interactive VS Code session (records whether the agent auto-fires the `after_specify` prompt — hooks are agent-mediated, so this is the behavior the spike exists to observe).
+Per-step progress lives in **[ROADMAP.md](./ROADMAP.md)**. Step 1 (this) is **shipped and proven** — the `after_specify` hook auto-fires (`optional: false`) and writes a canonical `.spec-context.json`, verified end-to-end on a real `/speckit.specify` run.
