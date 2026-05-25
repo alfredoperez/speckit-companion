@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-05-25
+
+### Documentation
+
+- **Fix broken Marketplace screenshots**: The "lean image set" refactor renamed/deleted screenshots while README image URLs stayed pinned to the `main` branch, so the published Marketplace listing resolved several images to files that no longer existed (404). Republishing carries the corrected README (all referenced images exist on `main`), and a new stable-filename policy (documented in `CLAUDE.md` and `docs/screenshots/CAPTURE.md`) prevents recurrence — screenshots are now overwritten in place, never renamed.
+- **Fix heading/caption mismatch**: the `Visual Workflow Editor` feature heading sat above a spec-viewer screenshot; renamed to `Visual Spec Viewer` so heading, alt text, and caption agree.
+- **Marketplace-safe links**: converted in-page anchor links (`#configuration`, `#activity-panel`) to absolute GitHub anchors, since same-page anchors don't navigate on the VS Code Marketplace.
+- Added `docs/readme-content-review.md` — an audit of where the README carries too much implementation detail (for a future trim).
+
 ## [0.19.0] - 2026-05-25
 
 ### New Features

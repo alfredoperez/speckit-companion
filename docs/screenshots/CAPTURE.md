@@ -7,6 +7,13 @@ zoom, same widths, cropped tight, no decoration.
 Follow this whenever a screenshot is retaken so the README never drifts into a
 mismatched collage again.
 
+> **Filenames are stable — overwrite, never rename or delete.** README image URLs
+> are absolute and pinned to `main` (`raw.githubusercontent.com/.../main/docs/screenshots/<file>`).
+> The Marketplace serves the last *published* README but resolves those URLs against
+> the *current* `main`, so renaming/deleting a referenced file retroactively 404s the
+> live listing. Re-shoot into the existing filename (`hero.jpg`, `viewer.png`,
+> `comments.png`, `create-spec.png`, `activity.png`).
+
 ## Environment (set once, identically for every shot)
 
 | Setting | Value | Why |

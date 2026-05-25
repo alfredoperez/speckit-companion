@@ -11,9 +11,9 @@ The spec workspace for developers running AI agents through Spec-Driven Developm
 
 ## Recently Shipped
 
+- **v0.20.0** Marketplace screenshot fix (stable-filename policy), heading/caption correction, Marketplace-safe anchor links
 - **v0.19.0** Claude in VS Code provider (drive specs from the Claude Code panel), provider-aware workflow filtering, refreshed README screenshots
 - **v0.18.0** IDE Chat provider, optional SpecKit commands as per-tab buttons, activity view & PHASES timeline overhaul, Windows/CRLF rendering fix
-- **v0.17.0** Inline comment composer as a single GitHub-style card, per-document review-comment scratchpads
 - [Full changelog →](./CHANGELOG.md)
 
 ## Why it exists
@@ -26,9 +26,9 @@ The spec workspace for developers running AI agents through Spec-Driven Developm
 
 ## Features
 
-### Visual Workflow Editor
+### Visual Spec Viewer
 
-Guide your features through structured phases with a dedicated editor that renders markdown specs, shows phase progress, and provides one-click actions for each step. Mermaid diagrams render inline with zoom controls for navigating complex diagrams. After each action, a toast confirms the result and the viewer auto-advances to the next phase.
+Guide your features through structured phases with a dedicated viewer that renders markdown specs, shows phase progress, and provides one-click actions for each step. Mermaid diagrams render inline with zoom controls for navigating complex diagrams. After each action, a toast confirms the result and the viewer auto-advances to the next phase.
 
 ![Spec viewer](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/viewer.png)
 *The spec viewer. Step tabs, sub-document chips, an inline diagram, and a footer button that advances Specify → Plan → Tasks → Done. Markdown stays in your repo, never on a server.*
@@ -73,7 +73,7 @@ The spec viewer is built for fast scanning of long-form specs:
 - **Table of contents**: sticky outline column on the left of the content area. Defaults to h2-only (so phase-heavy `tasks.md` reads as a clean ~7-entry list); a small `+` toggle expands h3 subsections when needed. Auto-hides on narrow panes.
 - **Quiet content**: when the structured header has the metadata, in-content duplicates (the `Input:` block, repeated branch chips, literal `Slug:`/`Date:` paragraphs) are suppressed so the body is just the spec content.
 - **Diagrams**: wide mermaid diagrams scroll horizontally inside the prose column instead of bleeding past it. Each diagram has its own `−` / Reset / `+` zoom controls.
-- **Activity panel**: an `Activity` toggle swaps the markdown pane for a card-stack overview of everything `.spec-context.json` carries. See [Activity Panel](#activity-panel) below.
+- **Activity panel**: an `Activity` toggle swaps the markdown pane for a card-stack overview of everything `.spec-context.json` carries. See [Activity Panel](https://github.com/alfredoperez/speckit-companion#activity-panel) below.
 - **Quiet, intentional footer**: the footer surfaces only what fits the moment — `Regenerate` plus a forward button labelled with the next phase (`Plan` / `Tasks` / `Implement` / `Complete`). While a step generates, that button is disabled and reads `Generating <step>…` until the artifact actually lands on disk, so the footer never advances ahead of the work. `Archive` and `Mark Completed` appear only once the spec is closure-eligible (`ready-to-implement` and beyond). See [`docs/viewer-states.md`](./docs/viewer-states.md) for the full footer state matrix.
 - **Optional SpecKit commands per tab**: SpecKit's three refinement commands surface as one-click footer buttons where each is most useful — **Clarify** on Spec, **Checklist** on Plan, **Analyze** on Tasks. No configuration required; a custom command with the same id wins. They disappear once the spec reaches the closure gate.
 
@@ -95,7 +95,7 @@ Each card hides itself when its data is missing, so a lean speckit-style spec co
 
 SpecKit Companion isn't tied to a single methodology. Swap out the default phases for any SDD workflow such as [Agent Teams Lite](https://github.com/Gentleman-Programming/agent-teams-lite), your own team's process, or anything that uses commands and produces markdown files. Define custom steps, labels, output files, and sub-documents. Add custom commands that appear as action buttons in specific phases (e.g., Verify, Archive, Commit, Create PR).
 
-The sidebar, progress tracking, and workflow editor all adapt automatically to your custom workflow. [See Configuration below.](#configuration)
+The sidebar, progress tracking, and workflow editor all adapt automatically to your custom workflow. [See Configuration below.](https://github.com/alfredoperez/speckit-companion#configuration)
 
 ### Sidebar at a Glance
 

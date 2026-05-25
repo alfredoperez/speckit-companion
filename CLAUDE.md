@@ -149,6 +149,7 @@ sidebar reference linked from the README).
 5. Verify `package.json` `contributes.configuration["speckit.aiProvider"].enum` matches the README provider matrix (count + names).
 6. Verify `package.json` `engines.vscode` matches the README "VS Code" badge.
 7. Re-render any screenshot whose UI changed in this release and refresh its caption if the value prop shifted.
+   - **Keep screenshot filenames stable — overwrite in place, never rename or delete.** README image URLs are absolute and pinned to the `main` branch (`raw.githubusercontent.com/.../main/docs/screenshots/<file>`). The Marketplace serves the *last published* README but resolves those URLs against the *current* `main`, so renaming or deleting a referenced screenshot retroactively 404s the published listing (this is what broke the v0.18.0 listing after the "lean image set" refactor). Re-shoot into the existing filename instead.
 
 When in doubt, look at how an existing feature is documented and follow the
 same pattern.
