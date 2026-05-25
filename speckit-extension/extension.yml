@@ -4,7 +4,7 @@ extension:
   id: companion
   name: "SpecKit Companion"
   version: "0.1.0"
-  description: "Captures spec-kit lifecycle activity into .spec-context.json so the SpecKit Companion GUI lights up on your existing spec-kit flow"
+  description: "Optional workflow enhancements for SpecKit Companion — surfaces live spec-driven progress in the VS Code companion and layers on SDD's pipeline, living specs, and auto-mode"
   author: alfredoperez
   repository: https://github.com/alfredoperez/speckit-companion
   license: MIT
