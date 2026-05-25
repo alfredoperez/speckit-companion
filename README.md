@@ -18,7 +18,7 @@ The spec workspace for developers running AI agents through Spec-Driven Developm
 
 ## Why it exists
 
-**Review AI-generated specs the way you review code.** Add inline comments on specific lines, refine requirements, and catch a vague requirement before the AI turns it into 200 lines of wrong code. Every comment you submit is also captured as a markdown entry in a per-document scratchpad, so the history is durable across sessions.
+**Review AI-generated specs the way you review code.** Add inline comments on specific lines, refine requirements, and catch a vague requirement before the AI turns it into 200 lines of wrong code. Every comment persists to the spec's `.spec-context.json` the moment you add it, so an in-progress review is durable across sessions and committable to source control.
 
 **Plug any AI assistant into any spec-driven workflow.** Eight providers ship today (Claude Code, Gemini, GitHub Copilot, Codex, Qwen, OpenCode, IDE Chat, Claude in VS Code), and the workflow engine accepts custom phases, commands, and sub-documents. Drop in [Agent Teams Lite](https://github.com/Gentleman-Programming/agent-teams-lite), your own SDD process, or anything that takes commands and produces markdown.
 
@@ -30,14 +30,14 @@ The spec workspace for developers running AI agents through Spec-Driven Developm
 
 Guide your features through structured phases with a dedicated editor that renders markdown specs, shows phase progress, and provides one-click actions for each step. Mermaid diagrams render inline with zoom controls for navigating complex diagrams. After each action, a toast confirms the result and the viewer auto-advances to the next phase.
 
-![Workflow Editor](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/workflow-spec.png)
-*Workflow editor. One click moves a feature from Specify to Plan to Tasks to Done. Markdown stays in your repo, never on a server.*
+![Spec viewer](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/viewer.png)
+*The spec viewer. Step tabs, sub-document chips, an inline diagram, and a footer button that advances Specify → Plan → Tasks → Done. Markdown stays in your repo, never on a server.*
 
 ### Inline Review Comments
 
 Review spec documents with inline comments. Add feedback directly on specific lines, refine requirements, and collaborate on specs before implementation begins. Each comment is **persisted to the spec's `.spec-context.json` the moment you add or remove it** — not only when you refine — so an in-progress review survives closing the tab, is committable, and can be picked up later (next session, another machine, or another reviewer after a pull). When you click the **Refine** button, that document's pending comments are dispatched to the AI for a direct, in-place edit of the source and then marked *applied* (kept as history — no separate files).
 
-![Inline Comments](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/inline-comment-dialog.png)
+![Inline Comments](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/comments.png)
 *Inline review comments. Catch a vague requirement on line 12 before the AI turns it into 200 lines of wrong code.*
 
 ### Persistent, Resumable Comments
@@ -55,22 +55,12 @@ Create new specs with a dedicated dialog. Write a detailed description, select y
 
 ### Spec-Driven Phases
 
-Each feature flows through four phases:
+Each feature flows through four phases, each a one-click footer action in the viewer above:
 
-**Specify**: Define requirements with user stories and acceptance scenarios.
-
-![Spec Phase](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/specify-spec.png)
-*Specify phase. User stories, acceptance scenarios, and edge cases captured before any code is written.*
-
-**Plan**: Create the technical design with research, data models, and implementation strategy.
-
-![Plan Phase](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/workflow-plan.png)
-*Plan phase. Architecture, data models, and research grouped under a single step with sub-document chips.*
-
-**Tasks**: Generate an implementation checklist with progress tracking and parallel execution markers.
-
-![Tasks Phase](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/workflow-tasks.png)
-*Tasks phase. Generated checklist with parallel-execution markers and live progress.*
+- **Specify** — define requirements with user stories and acceptance scenarios before any code is written.
+- **Plan** — create the technical design: architecture, data models, and research, grouped under one step with sub-document chips.
+- **Tasks** — generate an implementation checklist with parallel-execution markers and live progress.
+- **Done** — mark the spec complete (or archive it) once implementation lands.
 
 ### Reading Specs
 
@@ -83,9 +73,23 @@ The spec viewer is built for fast scanning of long-form specs:
 - **Table of contents**: sticky outline column on the left of the content area. Defaults to h2-only (so phase-heavy `tasks.md` reads as a clean ~7-entry list); a small `+` toggle expands h3 subsections when needed. Auto-hides on narrow panes.
 - **Quiet content**: when the structured header has the metadata, in-content duplicates (the `Input:` block, repeated branch chips, literal `Slug:`/`Date:` paragraphs) are suppressed so the body is just the spec content.
 - **Diagrams**: wide mermaid diagrams scroll horizontally inside the prose column instead of bleeding past it. Each diagram has its own `−` / Reset / `+` zoom controls.
-- **Activity panel**: an `Activity` toggle on the right side of the navigation bar swaps the markdown pane for a card-stack overview of everything `.spec-context.json` carries — *Approach* (one-line strategy + status pill + PR link + commit/PR checkpoints + last action), *Phases* (a horizontal timeline with an overall *started · total · ended* header, per-step duration, and per-substep timing; the author badge shows once at spec start), *Tasks* (per-`T###` status, summary, file chips, inline concerns), *Decisions*, *Concerns*, *Review comments* (every persisted comment grouped by document with a pending/applied status badge, jump-to-line, and a per-document **Run refinement** button), and *Files touched* (clickable). Each card hides itself when its data is missing, so a lean speckit-style spec collapses to just *Phases*. Visibility is gated by the `speckit.viewer.activityPanel` setting — `"off"` (hide toggle), `"beta"` (default; toggle shows a *beta* pill), `"on"` (toggle without the pill). The Phases card derives all timing from the transition log and reports **active time** — gaps longer than a few minutes between recorded activity are treated as idle and capped, so an overnight pause doesn't inflate a step's elapsed time. Completed phases show real durations, the terminal phase finalizes (no longer reads as in-flight forever), the in-flight step pulses, per-step start dates appear only on multi-day specs, and repeated substeps (e.g. the implement loop's `phase1`) collapse to one row. While Activity is open, the stale sub-document sub-navigation row is hidden.
-- **Quiet, intentional footer**: the viewer footer surfaces only what fits the current moment. When a step is idle it shows `Regenerate` and a forward button labelled with the next phase (`Plan` / `Tasks` / `Implement` / `Complete`). **While a step is generating, the forward button is disabled and reads `Generating <step>…` with a spinner** — it only re-enables to the next phase once that step's artifact actually lands on disk (a content check, not just the click), so the footer never advances ahead of the work. A `Mark step complete` button and a recovery timeout keep it from getting stuck if auto-detection never fires. `Archive` and `Mark Completed` only appear once the spec reaches a closure-eligible stage (`ready-to-implement` and beyond), and the SDD `Auto` button has moved to the **Create New Spec** form (next to `Submit`) so it's the explicit first-time choice rather than a viewer-side surprise. The `Edit Source` button is gone too — use the sidebar's inline `Open Source File` action instead. See [`docs/viewer-states.md`](./docs/viewer-states.md) for the full footer state matrix.
-- **Optional SpecKit commands per tab**: SpecKit's three optional refinement commands surface as one-click footer buttons on the tab where each is most useful — **Clarify** on the Spec tab, **Checklist** on the Plan tab, and **Analyze** on the Tasks tab (right before implementing). They require no configuration, sit alongside any custom-command buttons you've defined, and run the same command you'd get from the Command Palette. A custom command with the same id takes precedence so your overrides always win. Once the spec reaches the closure gate (the footer is offering **Mark Completed** / **Reactivate**), these refinement buttons disappear — there's nothing left to refine.
+- **Activity panel**: an `Activity` toggle swaps the markdown pane for a card-stack overview of everything `.spec-context.json` carries. See [Activity Panel](#activity-panel) below.
+- **Quiet, intentional footer**: the footer surfaces only what fits the moment — `Regenerate` plus a forward button labelled with the next phase (`Plan` / `Tasks` / `Implement` / `Complete`). While a step generates, that button is disabled and reads `Generating <step>…` until the artifact actually lands on disk, so the footer never advances ahead of the work. `Archive` and `Mark Completed` appear only once the spec is closure-eligible (`ready-to-implement` and beyond). See [`docs/viewer-states.md`](./docs/viewer-states.md) for the full footer state matrix.
+- **Optional SpecKit commands per tab**: SpecKit's three refinement commands surface as one-click footer buttons where each is most useful — **Clarify** on Spec, **Checklist** on Plan, **Analyze** on Tasks. No configuration required; a custom command with the same id wins. They disappear once the spec reaches the closure gate.
+
+### Activity Panel
+
+Toggle **Activity** in the viewer's nav bar to swap the markdown pane for a card-stack overview of everything `.spec-context.json` carries:
+
+- **Approach** — one-line strategy, status pill, PR link, and commit/PR checkpoints.
+- **Phases** — a horizontal timeline reporting **active time** per step and substep (idle gaps are capped, so an overnight pause doesn't inflate a step); the in-flight step pulses and the terminal phase finalizes.
+- **Tasks** — per-`T###` status, summary, file chips, and inline concerns.
+- **Decisions**, **Concerns**, **Review comments** (every persisted comment grouped by document, with jump-to-line and a per-document **Run refinement** button), and **Files touched** (clickable).
+
+Each card hides itself when its data is missing, so a lean speckit-style spec collapses to just *Phases*. Visibility is gated by `speckit.viewer.activityPanel` — `"off"`, `"beta"` (default; toggle shows a *beta* pill), or `"on"`.
+
+![Activity Panel](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/activity.png)
+*Activity panel. The Phases timeline plus Approach, Tasks, and Review-comments cards — one overview of everything the spec's context file tracks.*
 
 ### Custom Workflows & Commands
 
@@ -101,10 +105,7 @@ Specs are grouped into three collapsible sections, each with a count in the head
 
 When a step command is running, the spec shows a spinner and a live elapsed timer; a step-complete notification fires when it finishes (toggle via `speckit.notifications.stepComplete`).
 
-For the full reference (lifecycle button matrix, badge tier mapping, transition logging, all icon meanings), see [`docs/sidebar.md`](./docs/sidebar.md).
-
-![Sidebar Overview](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/sidebar-overview.png)
-*Sidebar at a glance. Active, Completed, and Archived spec groups with counts; steering, agents, skills, and hooks one click away.*
+The sidebar is visible alongside the viewer in the screenshot above. For the full reference (lifecycle button matrix, badge tier mapping, transition logging, all icon meanings), see [`docs/sidebar.md`](./docs/sidebar.md).
 
 ### Offline-First UI
 
