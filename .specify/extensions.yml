@@ -96,7 +96,8 @@ hooks:
     enabled: true
     optional: false
     prompt: Execute speckit.companion.capture?
-    description: Record specify completion into .spec-context.json for the Companion GUI
+    description: Record specify completion (currentStep=specify, status=specified)
+      into .spec-context.json
     condition: null
   after_clarify:
   - extension: git

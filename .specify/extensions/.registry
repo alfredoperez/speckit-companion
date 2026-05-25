@@ -53,6 +53,41 @@
       },
       "registered_skills": [],
       "installed_at": "2026-05-21T18:09:23.850204+00:00"
+    },
+    "companion": {
+      "version": "0.1.0",
+      "source": "local",
+      "manifest_hash": "sha256:827c7a27b9fd6693d4a5cc9a0b43492964001a60ef631d656d5b1ac96a16eba1",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "agy": [
+          "speckit.companion.capture"
+        ],
+        "claude": [
+          "speckit.companion.capture"
+        ],
+        "codex": [
+          "speckit.companion.capture"
+        ],
+        "copilot": [
+          "speckit.companion.capture"
+        ],
+        "cursor-agent": [
+          "speckit.companion.capture"
+        ],
+        "gemini": [
+          "speckit.companion.capture"
+        ],
+        "qwen": [
+          "speckit.companion.capture"
+        ],
+        "windsurf": [
+          "speckit.companion.capture"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-05-25T13:25:56.875312+00:00"
     }
   }
 }
