@@ -20,7 +20,7 @@
         "draft", "specifying", "specified",
         "planning", "planned",
         "tasking", "ready-to-implement",
-        "implementing", "completed", "archived"
+        "implementing", "implemented", "completed", "archived"
       ]
     },
     "stepHistory": {

@@ -1,4 +1,5 @@
-installed: []
+installed:
+- companion
 settings:
   auto_execute_hooks: true
 hooks:
@@ -89,6 +90,14 @@ hooks:
     optional: true
     prompt: Commit specification changes?
     description: Auto-commit after specification
+    condition: null
+  - extension: companion
+    command: speckit.companion.capture
+    enabled: true
+    optional: false
+    prompt: Execute speckit.companion.capture?
+    description: Record specify completion (currentStep=specify, status=specified)
+      into .spec-context.json
     condition: null
   after_clarify:
   - extension: git

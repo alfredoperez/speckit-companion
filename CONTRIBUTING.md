@@ -4,6 +4,8 @@ Thanks for considering a contribution. This guide tells you how to get the exten
 
 If you only have five minutes, skim **Quick Start** and the **README docs map** sections — those two cover 80% of what reviewers care about.
 
+> **Two extensions live in this repo.** This guide is for the **VS Code extension** (the GUI — `src/`, `webview/`, `package.json`). The **spec-kit extension** (`speckit-extension/`, `id: companion`) is a separate, independently-versioned product with its own dev loop, changelog, and version — if you're working on it, follow **[speckit-extension/docs/contributing.md](speckit-extension/docs/contributing.md)** instead.
+
 ---
 
 ## Quick Start
