@@ -43,7 +43,13 @@ export function addRefinementForRow(rowNum: number, comment: string, scenarioCon
 /** Persist a newly added comment to `.spec-context.json` (via the extension). */
 function persistAdd(id: string, lineNum: number, lineContent: string, comment: string): void {
     const doc = currentDoc();
-    if (!doc) return;
+    if (!doc) {
+        // Surface the drop instead of silently swallowing it — Spec A widened
+        // persistence to any DocumentType, so reaching here means navState
+        // arrived without a currentDoc at all.
+        console.warn('[speckit] persistAdd dropped: currentDoc() returned null', { id, lineNum });
+        return;
+    }
     vscode.postMessage({ type: 'addComment', id, doc, lineNum, lineContent, comment });
 }
 

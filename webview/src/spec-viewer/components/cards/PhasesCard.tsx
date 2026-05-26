@@ -97,7 +97,8 @@ export function PhasesCard({ state }: PhasesCardProps) {
     const overallStart = groups[0].startedAt;
     const lastGroup = groups[groups.length - 1];
     const overallEnd = lastGroup.completedAt;
-    const overallInFlight = overallEnd === null;
+    const TERMINAL_STATUSES = new Set(['completed', 'archived']);
+    const overallInFlight = overallEnd === null || !TERMINAL_STATUSES.has(state.status ?? '');
     const overallActiveMs = groups.reduce(
         (sum, g) => sum + activeDurationMs(activityPoints(g)),
         0

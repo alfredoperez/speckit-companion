@@ -68,6 +68,13 @@ export {
 /**
  * Map stepHistory keys from step names to tab names so navState lookups
  * (e.g., `stepHistory[activeStep]`) use consistent keys.
+ *
+ * `mapSddStepToTab` collapses both `tasks` and `implement` onto the `tasks`
+ * tab key (Implement has no dedicated tab). Iterating in insertion order
+ * means the in-flight `implement` entry, written after `tasks` completes,
+ * would overwrite the completed `tasks` entry — leaving the Tasks tab
+ * rendering as "still running" with the implement step's elapsed time.
+ * Preserve a completed entry when a later step aliases onto the same key.
  */
 function mapStepHistoryKeys(
   stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>
@@ -76,6 +83,7 @@ function mapStepHistoryKeys(
   const out: Record<string, { startedAt?: string; completedAt?: string | null }> = {};
   for (const [step, entry] of Object.entries(stepHistory)) {
     const tabName = mapSddStepToTab(step) || step;
+    if (out[tabName]?.completedAt) continue;
     out[tabName] = entry;
   }
   return out;

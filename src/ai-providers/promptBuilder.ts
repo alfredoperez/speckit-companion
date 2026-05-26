@@ -72,15 +72,16 @@ function renderPreamble(step: PromptStep, specDir: string): string {
         '',
         STATUS_LIFECYCLE,
         '',
-        `1. Pre-step: set currentStep = "${step}" and the matching in-progress status. Append a transition { step: "${step}", substep: null, from, by: "ai", at: <real timestamp> }.`,
+        `1. Pre-step: set currentStep = "${step}" and the matching in-progress status. Append a transition { step: "${step}", substep: null, from, by: "extension", at: <real timestamp> }.`,
         `1.5. When advancing from a previous step: flip the previous step\'s status to its completed form before writing the new step.`,
         '',
         `Canonical substeps for ${step}: ${substeps}. For each substep boundary append a transition with that substep name (and a real timestamp) — do NOT write substep entries inside stepHistory.`,
         '',
-        `MUST DO BEFORE ENDING — both required:`,
+        `MUST DO BEFORE ENDING — all three required:`,
         `  (a) Flip status to "${completedStatus}".`,
-        `  (b) Print "${donePhrase}" as the final terminal line.`,
-        `Skipping either leaves the viewer badge stuck on the in-progress form.`,
+        `  (b) Append a completion transition { step: "${step}", substep: null, from: { step: "${step}", substep: null }, by: "extension", at: <real timestamp> }. This is what clears the "in-flight" ring on the ${step} tab.`,
+        `  (c) Print "${donePhrase}" as the final terminal line.`,
+        `Skipping (a) leaves the badge stuck on the in-progress form; skipping (b) leaves the step timer running indefinitely; skipping (c) hides the completion from the activity log.`,
         '',
         SHARED_RULES,
         '',
@@ -89,22 +90,68 @@ function renderPreamble(step: PromptStep, specDir: string): string {
     ].join('\n');
 }
 
-function renderLifecyclePreamble(specDir: string): string {
-    const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
+function renderLifecycleBody(target: string): string {
     return [
-        MARKER_OPEN,
         `Throughout this run, keep ${target} up to date as you move through steps:`,
         '',
         STATUS_LIFECYCLE,
         '',
         'For EACH step you work on (specify, plan, tasks, implement):',
-        '1. Before starting: set currentStep = "<step>" and status = in-progress form.',
-        '2. After completing: flip status = completed form.',
-        '3. Append a transition entry for each step change AND each substep boundary, using a real timestamp.',
+        '1. Before starting: set currentStep = "<step>" and status = in-progress form. Append a transition { step: "<step>", substep: null, from, by: "extension", at: <real timestamp> }.',
+        '2. After completing: flip status = completed form. Append a completion transition { step: "<step>", substep: null, from: { step: "<step>", substep: null }, by: "extension", at: <real timestamp> } — this is what clears the in-flight ring on the tab.',
+        '3. Append a transition entry for each substep boundary too, using a real timestamp.',
         '',
         SHARED_RULES,
         '',
         'Invariants: preserve unknown fields; transitions is append-only.',
+    ].join('\n');
+}
+
+function renderLifecyclePreamble(specDir: string): string {
+    const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
+    return [
+        MARKER_OPEN,
+        renderLifecycleBody(target),
+        MARKER_CLOSE,
+    ].join('\n');
+}
+
+function renderSpecifyCreationLifecyclePreamble(
+    workflowName: string,
+    specDir: string | null
+): string {
+    const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
+    return [
+        MARKER_OPEN,
+        `On first creation, write ${target} with these top-level fields (the file does not yet exist):`,
+        '',
+        '```json',
+        '{',
+        `  "workflow": "${workflowName}",`,
+        '  "specName": "<human-readable name derived from the spec directory slug, e.g. 108-my-feature → My Feature>",',
+        '  "branch": "<output of: git rev-parse --abbrev-ref HEAD>",',
+        '  "selectedAt": "<real ISO timestamp, see TIMESTAMPS rule below>",',
+        '  "currentStep": "specify",',
+        '  "status": "specifying",',
+        '  "stepHistory": {},',
+        '  "transitions": [',
+        '    {',
+        '      "step": "specify",',
+        '      "substep": null,',
+        '      "from": { "step": null, "substep": null },',
+        '      "by": "extension",',
+        '      "at": "<real ISO timestamp>"',
+        '    }',
+        '  ]',
+        '}',
+        '```',
+        '',
+        'Notes on the initial write:',
+        '- `stepHistory` is READ-ONLY at this layer — the extension derives it from `transitions[]`. Leave it as `{}` (do not populate startedAt/completedAt entries).',
+        '- The seed transition is attributed to `"extension"` because this lifecycle was initiated by the SpecKit Companion extension dispatching the command, even though you are the one transcribing.',
+        '- Only update the `.spec-context.json` for the spec being created. Do NOT touch other spec dirs.',
+        '',
+        renderLifecycleBody(target),
         MARKER_CLOSE,
     ].join('\n');
 }
@@ -125,6 +172,24 @@ export function buildLifecyclePrompt(command: string, specDir?: string | null): 
     if (!isContextInstructionsEnabled()) return command;
     const preamble = renderLifecyclePreamble(specDir ?? '');
     return `${preamble}\n\n${command}`;
+}
+
+/**
+ * Build the preamble for the spec editor's "Create" dispatch. The spec dir
+ * does not yet exist, so the preamble includes both the initial-creation
+ * fields and the lifecycle "throughout this run, for EACH step…" body —
+ * the latter survives in CLI chat history when the user keeps typing
+ * follow-up commands in the same terminal session.
+ *
+ * Returns just the preamble (no command wrapper) because the spec editor
+ * appends it to a temp markdown file separately from the dispatched command.
+ */
+export function buildSpecifyCreationPreamble(
+    workflowName: string,
+    specDir?: string | null
+): string {
+    if (!isContextInstructionsEnabled()) return '';
+    return renderSpecifyCreationLifecyclePreamble(workflowName, specDir ?? null);
 }
 
 /**

@@ -189,7 +189,7 @@ export interface ReviewCommentAnchor {
 /** A persisted inline review comment (mirrors the extension `ReviewComment`). */
 export interface ReviewComment {
     id: string;
-    doc: CoreDocumentType;
+    doc: DocumentType;
     anchor: ReviewCommentAnchor;
     comment: string;
     status: ReviewCommentStatus;
@@ -250,10 +250,10 @@ export type ViewerToExtensionMessage =
     // Stepper navigation
     | { type: 'stepperClick'; phase: string }
     // Persisted review comments — written to .spec-context.json on each mutation
-    | { type: 'addComment'; id: string; doc: CoreDocumentType; lineNum: number; lineContent: string; comment: string }
+    | { type: 'addComment'; id: string; doc: DocumentType; lineNum: number; lineContent: string; comment: string }
     | { type: 'removeComment'; id: string }
     // Run refinement for one document's pending comments (from the Activity list)
-    | { type: 'runDocRefinement'; doc: CoreDocumentType }
+    | { type: 'runDocRefinement'; doc: DocumentType }
     // File reference click
     | { type: 'openFile'; filename: string }
     // Webview render-time error (reported by error boundaries)

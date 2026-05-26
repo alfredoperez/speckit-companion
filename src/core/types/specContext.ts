@@ -66,7 +66,7 @@ export interface TransitionFrom {
     substep: string | null;
 }
 
-export type TransitionBy = 'extension' | 'user' | 'cli' | 'sdd' | 'ai';
+export type TransitionBy = 'extension' | 'user' | 'cli' | 'sdd' | 'sdd-skill' | 'ai';
 
 export interface Transition {
     step: StepName;
@@ -76,8 +76,13 @@ export interface Transition {
     at: string;
 }
 
-/** Document a review comment is anchored to. */
-export type ReviewCommentDoc = 'spec' | 'plan' | 'tasks';
+/**
+ * Document a review comment is anchored to. Was previously restricted to the
+ * three core docs (`spec`/`plan`/`tasks`); now accepts any document type
+ * string the viewer exposes (e.g. `data-model`, `research`,
+ * `checklists/requirements`) so comments persist on non-core docs too.
+ */
+export type ReviewCommentDoc = string;
 
 /** Lifecycle of a persisted review comment. */
 export type ReviewCommentStatus = 'pending' | 'applied';

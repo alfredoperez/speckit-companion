@@ -1,4 +1,4 @@
-import type { CoreDocumentType, ReviewComment, ViewerState, VSCodeApi } from '../../types';
+import type { DocumentType, ReviewComment, ViewerState, VSCodeApi } from '../../types';
 
 declare const vscode: VSCodeApi;
 
@@ -6,12 +6,25 @@ export interface CommentsCardProps {
     state: ViewerState;
 }
 
-const DOC_LABELS: Record<CoreDocumentType, string> = {
-    spec: 'Spec',
-    plan: 'Plan',
-    tasks: 'Tasks',
-};
-const DOC_ORDER: CoreDocumentType[] = ['spec', 'plan', 'tasks'];
+const CORE_DOC_ORDER = ['spec', 'plan', 'tasks'];
+
+function docLabel(doc: DocumentType): string {
+    if (doc === 'spec') return 'Spec';
+    if (doc === 'plan') return 'Plan';
+    if (doc === 'tasks') return 'Tasks';
+    // Humanize non-core doc identifiers: 'data-model' → 'Data Model',
+    // 'checklists/requirements' → 'Checklists / Requirements'.
+    return doc
+        .split('/')
+        .map(seg => seg.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))
+        .join(' / ');
+}
+
+function sortDocs(docs: string[]): string[] {
+    const core = CORE_DOC_ORDER.filter(d => docs.includes(d));
+    const rest = docs.filter(d => !CORE_DOC_ORDER.includes(d)).sort();
+    return [...core, ...rest];
+}
 
 /**
  * Activity-panel consolidated review list. Groups every persisted comment by
@@ -23,8 +36,11 @@ export function CommentsCard({ state }: CommentsCardProps) {
     const items = state.reviewComments;
     if (!items || items.length === 0) return null;
 
-    const byDoc: Record<CoreDocumentType, ReviewComment[]> = { spec: [], plan: [], tasks: [] };
-    for (const c of items) byDoc[c.doc].push(c);
+    const byDoc: Record<string, ReviewComment[]> = {};
+    for (const c of items) {
+        if (!byDoc[c.doc]) byDoc[c.doc] = [];
+        byDoc[c.doc].push(c);
+    }
 
     const jump = (c: ReviewComment) => {
         vscode.postMessage({ type: 'switchDocument', documentType: c.doc });
@@ -32,7 +48,7 @@ export function CommentsCard({ state }: CommentsCardProps) {
         const el = document.querySelector(`.line[data-line="${c.anchor.line}"]`);
         el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
-    const runDoc = (doc: CoreDocumentType) => {
+    const runDoc = (doc: DocumentType) => {
         vscode.postMessage({ type: 'runDocRefinement', doc });
     };
 
@@ -42,13 +58,13 @@ export function CommentsCard({ state }: CommentsCardProps) {
                 Review comments <span class="activity-card__count">({items.length})</span>
             </header>
             <div class="activity-card__body">
-                {DOC_ORDER.filter(doc => byDoc[doc].length > 0).map(doc => {
+                {sortDocs(Object.keys(byDoc)).map(doc => {
                     const docComments = byDoc[doc];
                     const pending = docComments.filter(c => c.status === 'pending').length;
                     return (
                         <div class="comments-doc-group" key={doc}>
                             <div class="comments-doc-group__header">
-                                <span class="comments-doc-group__label">{DOC_LABELS[doc]}</span>
+                                <span class="comments-doc-group__label">{docLabel(doc)}</span>
                                 {pending > 0 && (
                                     <button
                                         class="comments-run-btn"

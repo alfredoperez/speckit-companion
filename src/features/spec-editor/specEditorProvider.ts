@@ -11,6 +11,7 @@ import type {
 import { normalizeWorkflowConfig, resolveStepCommand, isWorkflowSupportedForProvider } from '../workflows';
 import type { WorkflowConfig } from '../workflows';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
+import { buildSpecifyCreationPreamble } from '../../ai-providers/promptBuilder';
 import { AIProviders, WorkflowSteps, ConfigKeys } from '../../core/constants';
 
 /**
@@ -258,40 +259,13 @@ export class SpecEditorProvider {
             // Use custom command if provided, otherwise workflow's specify command
             const command = customCommand ? `/${customCommand}` : workflow.stepSpecify;
 
-            // Append the .spec-context.json instructions to the temp markdown
-            // file so the AI reads them, without polluting the visible terminal
-            // with the full instruction block.
-            const specContextInstruction = [
-                '## Post-Specification: Update .spec-context.json',
-                '',
-                'After writing the spec file, create or update `.spec-context.json` in the same feature directory with:',
-                '',
-                '```json',
-                '{',
-                `  "workflow": "${workflowName}",`,
-                '  "selectedAt": "<current ISO timestamp>",',
-                '  "currentStep": "specify",',
-                '  "status": "active",',
-                '  "specName": "<human-readable name derived from directory slug, e.g. 046-my-feature → My Feature>",',
-                '  "branch": "<current git branch name from git rev-parse --abbrev-ref HEAD>",',
-                '  "stepHistory": {',
-                '    "specify": {',
-                '      "startedAt": "<current ISO timestamp>"',
-                '    }',
-                '  }',
-                '}',
-                '```',
-                '',
-                'If the file already exists, merge these fields into the existing content.',
-                'Replace `<current ISO timestamp>` with the actual current time in ISO 8601 format.',
-                '',
-                'IMPORTANT: Only update the `.spec-context.json` for the spec being created or edited. Do NOT modify `.spec-context.json` files in other spec directories.',
-            ].join('\n');
-
-            await this.tempFileManager.appendToMarkdownFile(
-                tempFileSet.markdownFilePath,
-                specContextInstruction
-            );
+            const specContextInstruction = buildSpecifyCreationPreamble(workflowName, null);
+            if (specContextInstruction) {
+                await this.tempFileManager.appendToMarkdownFile(
+                    tempFileSet.markdownFilePath,
+                    specContextInstruction
+                );
+            }
 
             const prompt = `${command} ${tempFileSet.markdownFilePath}`;
             this.outputChannel.appendLine(`[SpecEditor] Using command: ${command} (temp file: ${tempFileSet.markdownFilePath})`);

@@ -17,7 +17,7 @@ import {
     WorkflowConfig,
 } from '../workflows';
 import { updateStepProgress, readSpecContextSync } from './specContextManager';
-import { startStep, setStatus, reactivate } from './stepLifecycle';
+import { startStep, completeStep, setStatus, reactivate } from './stepLifecycle';
 import { updateSelectionContextKeys } from './selectionContextKeys';
 import { track as trackTerminal } from './terminalStepTracker';
 import type { StepName } from '../../core/types/specContext';
@@ -580,6 +580,25 @@ async function executeWorkflowStep(
     }
 
     if (LIFECYCLE_STEPS.has(step)) {
+        // Complete-on-advance: terminal-close completion only fires when the
+        // step is run via an actual terminal. IDE Chat (Copilot/Cursor)
+        // returns no terminal handle, so `trackTerminal` no-ops and the
+        // prior step's `completedAt` stays null forever. Emit completion
+        // here whenever the user advances to a different lifecycle step.
+        try {
+            const prevCtx = readSpecContextSync(targetDir);
+            const prev = prevCtx?.currentStep;
+            if (
+                prev &&
+                prev !== step &&
+                LIFECYCLE_STEPS.has(prev) &&
+                !prevCtx?.stepHistory?.[prev]?.completedAt
+            ) {
+                await completeStep(targetDir, prev as StepName, 'extension');
+            }
+        } catch (err) {
+            outputChannel.appendLine(`[SpecKit] Complete-on-advance check failed: ${err}`);
+        }
         await startStep(targetDir, step as StepName, 'extension');
     }
     const wrapped = buildPrompt({

@@ -1,11 +1,18 @@
-import type { CoreDocumentType } from '../types';
-import { navState } from '../signals';
+import { navState } from "../signals";
+import type { DocumentType } from "../types";
 
 /**
- * The core document currently being viewed, or null when viewing a related /
- * non-core doc (inline comments only apply to spec/plan/tasks).
+ * The document currently being viewed, or null when nothing is selected.
+ *
+ * The SDD workflow uses step name `specify` for what is, in storage, the
+ * `spec` document — alias it so comments persist under a single canonical
+ * key. All other doc identifiers (core or non-core) pass through verbatim
+ * so persistence works on `data-model`, `research`,
+ * `checklists/requirements`, etc.
  */
-export function currentDoc(): CoreDocumentType | null {
-    const d = navState.value?.currentDoc;
-    return d === 'spec' || d === 'plan' || d === 'tasks' ? d : null;
+export function currentDoc(): DocumentType | null {
+  const d = navState.value?.currentDoc;
+  if (!d) return null;
+  if (d === "specify") return "spec";
+  return d;
 }
