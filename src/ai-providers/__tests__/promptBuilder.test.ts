@@ -94,11 +94,11 @@ describe('buildPrompt', () => {
         });
     });
 
-    it('preamble stays under ~2400 chars per step', () => {
+    it('preamble stays under ~2600 chars per step', () => {
         mockConfig(true);
         for (const step of ['specify', 'plan', 'tasks', 'implement'] as const) {
             const out = buildPrompt({ command: 'x', step, specDir: 'specs/001-demo' });
-            expect(out.length).toBeLessThan(2400);
+            expect(out.length).toBeLessThan(2600);
         }
     });
 
@@ -107,6 +107,28 @@ describe('buildPrompt', () => {
         const out = buildPrompt({ command: 'x', step: 'specify', specDir: 'specs/001-demo' });
         expect(out).toContain('Canonical statuses:');
         expect(out).toContain('ready-to-implement');
+    });
+
+    it('instructs the model to advance currentStep to the next step on completion', () => {
+        mockConfig(true);
+        const cases: Array<{ step: 'specify' | 'plan' | 'tasks'; next: string }> = [
+            { step: 'specify', next: 'plan' },
+            { step: 'plan', next: 'tasks' },
+            { step: 'tasks', next: 'implement' },
+        ];
+        for (const { step, next } of cases) {
+            const out = buildPrompt({ command: 'x', step, specDir: 'specs/001-demo' });
+            expect(out).toContain(`Set currentStep to "${next}"`);
+            expect(out).toContain('specify → plan → tasks → implement');
+        }
+    });
+
+    it('instructs the model NOT to advance currentStep after the implement step', () => {
+        mockConfig(true);
+        const out = buildPrompt({ command: 'x', step: 'implement', specDir: 'specs/001-demo' });
+        expect(out).toContain('Leave currentStep on "implement"');
+        expect(out).toContain('terminal step');
+        expect(out).not.toContain('Set currentStep to "');
     });
 });
 
@@ -137,6 +159,13 @@ describe('buildLifecyclePrompt', () => {
         mockConfig(false);
         const cmd = '/sdd:auto "specs/001"';
         expect(buildLifecyclePrompt(cmd, 'specs/001')).toBe(cmd);
+    });
+
+    it('instructs the model to advance currentStep across the canonical sequence', () => {
+        mockConfig(true);
+        const out = buildLifecyclePrompt('/sdd:auto "specs/001"', 'specs/001');
+        expect(out).toContain('set currentStep to the next step in the canonical sequence specify → plan → tasks → implement');
+        expect(out).toContain('After implement, leave currentStep on "implement"');
     });
 });
 
@@ -179,6 +208,13 @@ describe('buildSpecifyCreationPreamble', () => {
         const out = buildSpecifyCreationPreamble('speckit', null);
         expect(out).toContain('For EACH step you work on');
         expect(out).toContain('specify, plan, tasks, implement');
+    });
+
+    it('carries the advance-currentStep rule into the seeded creation preamble', () => {
+        mockConfig(true);
+        const out = buildSpecifyCreationPreamble('speckit', null);
+        expect(out).toContain('set currentStep to the next step in the canonical sequence specify → plan → tasks → implement');
+        expect(out).toContain('After implement, leave currentStep on "implement"');
     });
 
     it('includes the date -u timestamp rule from SHARED_RULES', () => {
