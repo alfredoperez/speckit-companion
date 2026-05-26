@@ -1,0 +1,190 @@
+{
+  "workflow": "speckit",
+  "selectedAt": "2026-05-26T00:00:00.000Z",
+  "currentStep": "implement",
+  "status": "implementing",
+  "specName": "Fix Inline Comment Persistence",
+  "branch": "107-fix-inline-comment-persistence",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-05-26T00:00:00.000Z",
+      "completedAt": "2026-05-26T13:43:22.171Z"
+    },
+    "plan": {
+      "startedAt": "2026-05-26T13:43:22.174Z",
+      "completedAt": "2026-05-26T13:57:15.609Z"
+    },
+    "tasks": {
+      "startedAt": "2026-05-26T13:57:15.609Z",
+      "completedAt": "2026-05-26T14:10:25.311Z"
+    },
+    "implement": {
+      "startedAt": "2026-05-26T14:10:25.313Z",
+      "completedAt": null
+    }
+  },
+  "transitions": [
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": null,
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-26T00:00:00.000Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-26T13:43:22.171Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-26T13:43:22.174Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-26T13:57:15.609Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-26T13:59:21.727Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-26T13:59:21.728Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-26T14:10:25.311Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-26T14:10:25.313Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-26T14:11:35.023Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-26T14:14:47.350Z"
+    }
+  ],
+  "reviewComments": [
+    {
+      "id": "ref-1779804900894-4p0gd",
+      "doc": "plan",
+      "anchor": {
+        "heading": "Technical Context",
+        "blockText": "**Language/Version**: TypeScript 5.3+ (ES2022, strict mode)\n**Primary Dependencies**: VS Code Extension API (`@types/vscode ^1.84.0`), Preact (webview signals)\n**Storage**: File-based — `reviewComments[]` field in `.spec-context.json` per spec directory\n**Testing**: Jest + ts-jest (`npm test`). BDD `describe`/`it` style; VS Code mocked via `tests/__mocks__/vscode.ts`\n**Target Platform**: VS Code extension (Node.js extension host + browser webview context)\n**Project Type**: Single VS Code extension with a split extension/webview build\n**Performance Goals**: N/A (two-line logic fix, no new I/O)\n**Constraints**: Must not change `ReviewCommentDoc` type or `.spec-context.json` schema\n**Scale/Scope**: 2 files changed, ≤ 10 lines total",
+        "line": 18
+      },
+      "comment": "here is comment",
+      "status": "pending",
+      "createdAt": "2026-05-26T14:15:00.897Z"
+    },
+    {
+      "id": "ref-1779805178058-7x4ee",
+      "doc": "spec",
+      "anchor": {
+        "heading": "User Story 1 - Comments on spec.md Persist and Restore (Priority: P1)",
+        "blockText": "",
+        "line": 14
+      },
+      "comment": "test",
+      "status": "pending",
+      "createdAt": "2026-05-26T14:19:38.061Z"
+    },
+    {
+      "id": "ref-1779805199388-f2a99",
+      "doc": "plan",
+      "anchor": {
+        "heading": "Technical Context",
+        "blockText": "**Language/Version**: TypeScript 5.3+ (ES2022, strict mode)\n**Primary Dependencies**: VS Code Extension API (`@types/vscode ^1.84.0`), Preact (webview signals)\n**Storage**: File-based — `reviewComments[]` field in `.spec-context.json` per spec directory\n**Testing**: Jest + ts-jest (`npm test`). BDD `describe`/`it` style; VS Code mocked via `tests/__mocks__/vscode.ts`\n**Target Platform**: VS Code extension (Node.js extension host + browser webview context)\n**Project Type**: Single VS Code extension with a split extension/webview build\n**Performance Goals**: N/A (two-line logic fix, no new I/O)\n**Constraints**: Must not change `ReviewCommentDoc` type or `.spec-context.json` schema\n**Scale/Scope**: 2 files changed, ≤ 10 lines total",
+        "line": 23
+      },
+      "comment": "test",
+      "status": "pending",
+      "createdAt": "2026-05-26T14:19:59.390Z"
+    },
+    {
+      "id": "ref-1779805524121-adkaa",
+      "doc": "spec",
+      "anchor": {
+        "heading": "User Story 1 - Comments on spec.md Persist and Restore (Priority: P1)",
+        "blockText": "### User Story 2 - Consistent Behavior Across All Document Types (Priority: P2)",
+        "line": 25
+      },
+      "comment": "test 2",
+      "status": "pending",
+      "createdAt": "2026-05-26T14:25:24.124Z"
+    },
+    {
+      "id": "ref-1779805873061-9vets",
+      "doc": "spec",
+      "anchor": {
+        "heading": null,
+        "blockText": "# Feature Specification: Fix Inline Comment Persistence for spec.md",
+        "line": 1
+      },
+      "comment": "test 10",
+      "status": "pending",
+      "createdAt": "2026-05-26T14:31:13.066Z"
+    }
+  ]
+}

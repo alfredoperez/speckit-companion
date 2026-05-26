@@ -335,8 +335,8 @@ export function renderMarkdown(markdown: string): string {
                 const taskIdExtract = taskText.match(/<strong>(T\d+)<\/strong>/i);
                 const taskId = taskIdExtract ? taskIdExtract[1] : null;
 
-                // Build classes
-                const classes = ['task-item'];
+                // Build classes — include 'line' so hover/comment affordances activate
+                const classes = ['task-item', 'line'];
                 if (checked) classes.push('checked');
                 if (taskId && taskId === currentTaskId) classes.push('in-progress');
 
@@ -346,13 +346,14 @@ export function renderMarkdown(markdown: string): string {
                 // Extract user story ID for tooltip
                 const usMatch = taskText.match(/^(T\d+\s*\[US\d+\])\s*(.+)$/i) || taskText.match(/<strong>(T\d+)<\/strong>\s*(.*)/i);
 
-                if (usMatch && taskText.match(/\[US\d+\]/)) {
-                    const usId = usMatch[1];
-                    const cleanText = usMatch[2];
-                    html += `<li ${classAttr} title="${usId}" data-line="${sourceLineNum}"${dataTaskAttr}><input type="checkbox" ${checked} data-line="${sourceLineNum}"><span class="task-text">${cleanText}</span></li>\n`;
-                } else {
-                    html += `<li ${classAttr} data-line="${sourceLineNum}"${dataTaskAttr}><input type="checkbox" ${checked} data-line="${sourceLineNum}"><span class="task-text">${taskText}</span></li>\n`;
-                }
+                const innerText = (usMatch && taskText.match(/\[US\d+\]/)) ? usMatch[2] : taskText;
+                const titleAttr = (usMatch && taskText.match(/\[US\d+\]/)) ? ` title="${usMatch[1]}"` : '';
+                html += `<li ${classAttr}${titleAttr} data-line="${sourceLineNum}"${dataTaskAttr}>` +
+                    `<button class="line-add-btn" data-line="${sourceLineNum}" title="Add comment">${COMMENT_ICON_SVG}</button>` +
+                    `<input type="checkbox" ${checked} data-line="${sourceLineNum}">` +
+                    `<span class="task-text line-content">${innerText}</span>` +
+                    `<div class="line-comment-slot"></div>` +
+                    `</li>\n`;
             } else {
                 // Wrap regular list items with line actions for commenting
                 html += `<li class="line" data-line="${sourceLineNum}">

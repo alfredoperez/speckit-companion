@@ -58,9 +58,11 @@
 
 #markdown-content li.task-item {
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-start;
     gap: var(--space-2);
     padding: var(--space-1) 0;
+    padding-right: 24px;  /* room for absolute-positioned + button */
     margin: 0;
     background: transparent;
     border: none;
@@ -69,6 +71,20 @@
     font-size: inherit;
     line-height: 1.5;
     cursor: help;
+    position: relative;  /* anchor .line-add-btn (absolute, right:0) */
+}
+
+/* Comment slot inside a task line wraps to its own row, aligned under task text */
+#markdown-content li.task-item .line-comment-slot {
+    flex-basis: 100%;
+    margin-left: calc(16px + var(--space-2));  /* checkbox width + gap */
+    margin-top: var(--space-1);
+}
+
+/* Task text inside a task line — keep it flexing alongside the checkbox */
+#markdown-content li.task-item .task-text {
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 #markdown-content li.task-item:hover {
