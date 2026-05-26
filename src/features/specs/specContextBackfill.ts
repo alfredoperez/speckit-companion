@@ -22,7 +22,6 @@ export function backfillMinimalContext(input: BackfillInput): SpecContext {
         selectedAt: input.selectedAt ?? new Date().toISOString(),
         currentStep: 'specify',
         status: 'draft',
-        stepHistory: {},
-        transitions: [],
+        history: [],
     };
 }

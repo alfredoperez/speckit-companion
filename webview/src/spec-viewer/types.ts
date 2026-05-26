@@ -131,18 +131,23 @@ export interface SerializedFooterAction {
     tooltip: string;
 }
 
-export interface TransitionFrom {
+export interface HistoryEntryFrom {
     step: string | null;
     substep: string | null;
 }
 
-export interface Transition {
+export interface HistoryEntry {
     step: string;
     substep: string | null;
-    from: TransitionFrom;
+    from: HistoryEntryFrom;
     by: string;
     at: string;
 }
+
+/** @deprecated Renamed to `HistoryEntryFrom`. */
+export type TransitionFrom = HistoryEntryFrom;
+/** @deprecated Renamed to `HistoryEntry`. */
+export type Transition = HistoryEntry;
 
 export interface SubstepEntry {
     name: string;
@@ -204,7 +209,7 @@ export interface ViewerState {
     highlights: string[];
     activeSubstep: { step: string; name: string } | null;
     footer: SerializedFooterAction[];
-    transitions: Transition[];
+    history: HistoryEntry[];
     stepHistory: Record<string, StepHistoryEntry>;
     approach?: string;
     lastAction?: string;

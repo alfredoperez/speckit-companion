@@ -31,9 +31,9 @@ describe('buildPrompt', () => {
             }
         });
 
-        it('instructs the model not to write stepHistory and to use real timestamps', () => {
+        it('warns against writing the deprecated stepHistory/transitions fields, and requires real timestamps', () => {
             const out = buildPrompt({ command: 'x', step: 'plan', specDir: 'specs/001-demo' });
-            expect(out).toContain('stepHistory is READ-ONLY');
+            expect(out).toContain('Do NOT write `stepHistory` or `transitions`');
             expect(out).toContain('date -u +"%Y-%m-%dT%H:%M:%SZ"');
         });
 
@@ -94,12 +94,23 @@ describe('buildPrompt', () => {
         });
     });
 
-    it('preamble stays under ~2600 chars per step', () => {
+    it('preamble stays under ~5500 chars per step (schema-inclusive budget)', () => {
+        // After embedding the JSON Schema contract, preambles run ~4.5k chars.
+        // Bound kept generous-but-finite to catch unintentional bloat.
         mockConfig(true);
         for (const step of ['specify', 'plan', 'tasks', 'implement'] as const) {
             const out = buildPrompt({ command: 'x', step, specDir: 'specs/001-demo' });
-            expect(out.length).toBeLessThan(2600);
+            expect(out.length).toBeLessThan(5500);
         }
+    });
+
+    it('embeds a JSON Schema for .spec-context.json', () => {
+        mockConfig(true);
+        const out = buildPrompt({ command: 'x', step: 'plan', specDir: 'specs/001-demo' });
+        expect(out).toContain('```jsonschema');
+        expect(out).toContain('"required": ["workflow", "specName", "currentStep", "status", "history"]');
+        expect(out).toContain('`history` is APPEND-ONLY');
+        expect(out).toContain('last `history[]` entry');
     });
 
     it('preamble includes canonical status lifecycle', () => {
@@ -109,7 +120,7 @@ describe('buildPrompt', () => {
         expect(out).toContain('ready-to-implement');
     });
 
-    it('instructs the model to advance currentStep to the next step on completion', () => {
+    it('instructs the model to atomically advance currentStep + append a history entry on completion', () => {
         mockConfig(true);
         const cases: Array<{ step: 'specify' | 'plan' | 'tasks'; next: string }> = [
             { step: 'specify', next: 'plan' },
@@ -118,8 +129,11 @@ describe('buildPrompt', () => {
         ];
         for (const { step, next } of cases) {
             const out = buildPrompt({ command: 'x', step, specDir: 'specs/001-demo' });
-            expect(out).toContain(`Set currentStep to "${next}"`);
-            expect(out).toContain('specify → plan → tasks → implement');
+            expect(out).toContain(`set currentStep to "${next}"`);
+            // Atomic-write requirement: the start-entry must accompany the currentStep flip.
+            expect(out).toContain('ATOMICALLY (in the same write');
+            expect(out).toContain('append a start history entry');
+            expect(out).toContain(`step: "${next}"`);
         }
     });
 
@@ -128,7 +142,7 @@ describe('buildPrompt', () => {
         const out = buildPrompt({ command: 'x', step: 'implement', specDir: 'specs/001-demo' });
         expect(out).toContain('Leave currentStep on "implement"');
         expect(out).toContain('terminal step');
-        expect(out).not.toContain('Set currentStep to "');
+        expect(out).not.toContain('ATOMICALLY (in the same write');
     });
 });
 
@@ -195,12 +209,15 @@ describe('buildSpecifyCreationPreamble', () => {
         expect(out).toContain('"workflow": "sdd"');
     });
 
-    it('seeds a transition attributed to "extension"', () => {
+    it('seeds a history entry attributed to "extension"', () => {
         mockConfig(true);
         const out = buildSpecifyCreationPreamble('speckit', null);
         expect(out).toContain('"step": "specify"');
         expect(out).toContain('"by": "extension"');
         expect(out).toContain('"from": { "step": null, "substep": null }');
+        // The seed must go into `history`, not the deprecated `transitions` field.
+        expect(out).toContain('"history": [');
+        expect(out).not.toContain('"transitions": [');
     });
 
     it('includes lifecycle framing so chat history carries rules forward', () => {
@@ -210,11 +227,13 @@ describe('buildSpecifyCreationPreamble', () => {
         expect(out).toContain('specify, plan, tasks, implement');
     });
 
-    it('carries the advance-currentStep rule into the seeded creation preamble', () => {
+    it('carries the atomic-advance rule into the seeded creation preamble', () => {
         mockConfig(true);
         const out = buildSpecifyCreationPreamble('speckit', null);
         expect(out).toContain('set currentStep to the next step in the canonical sequence specify → plan → tasks → implement');
         expect(out).toContain('After implement, leave currentStep on "implement"');
+        // Atomic-write requirement carries forward to the lifecycle body too.
+        expect(out).toContain('ATOMICALLY (same write as the completion entry)');
     });
 
     it('includes the date -u timestamp rule from SHARED_RULES', () => {
@@ -223,11 +242,12 @@ describe('buildSpecifyCreationPreamble', () => {
         expect(out).toContain('date -u +"%Y-%m-%dT%H:%M:%SZ"');
     });
 
-    it('reminds that stepHistory is read-only', () => {
+    it('warns against writing deprecated stepHistory/transitions and seeds only history', () => {
         mockConfig(true);
         const out = buildSpecifyCreationPreamble('speckit', null);
-        expect(out).toContain('stepHistory is READ-ONLY');
-        expect(out).toContain('"stepHistory": {},');
+        expect(out).toContain('Do NOT write `stepHistory` or `transitions`');
+        expect(out).not.toContain('"stepHistory": {}');
+        expect(out).not.toContain('"transitions": [');
     });
 
     it('uses <specDir> placeholder when dir is unknown', () => {

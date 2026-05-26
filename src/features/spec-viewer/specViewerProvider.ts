@@ -42,12 +42,13 @@ import { deriveChangeRoot } from "../../core/specDirectoryResolver";
 import { deriveSpecName } from "../specs/specContextManager";
 import { readSpecContext } from "../specs/specContextReader";
 import { writeSpecContext } from "../specs/specContextWriter";
+import { deriveStepHistory } from "../specs/stepHistoryDerivation";
 import { backfillMinimalContext } from "../specs/specContextBackfill";
 import { reconcileAndPersist } from "../specs/specContextReconciler";
 import { deriveViewerState, isStepCompleted, findRunningStep } from "./stateDerivation";
 import { hasNonTrivialArtifact } from "./stepArtifact";
 import { StepCompletionNotifier, NotifierContext } from "./stepCompletionNotifier";
-import { StepName, STEP_NAMES, ViewerState as CoreViewerState } from "../../core/types/specContext";
+import { StepName, STEP_NAMES, Status, ViewerState as CoreViewerState } from "../../core/types/specContext";
 import {
   DEFAULT_WORKFLOW,
   getFeatureWorkflow,
@@ -56,7 +57,7 @@ import {
   getWorkflowCommands,
   normalizeWorkflowConfig,
 } from "../workflows";
-import type { WorkflowStepConfig } from "../workflows/types";
+import type { FeatureWorkflowContext, WorkflowStepConfig } from "../workflows/types";
 
 // Re-export utility functions for external use
 export {
@@ -141,7 +142,7 @@ interface PanelInstance {
   panel: vscode.WebviewPanel;
   state: SpecViewerState;
   debounceTimer: NodeJS.Timeout | undefined;
-  lastFeatureCtx?: NotifierContext | null;
+  lastFeatureCtx?: FeatureWorkflowContext | null;
 }
 
 /**
@@ -305,7 +306,7 @@ export class SpecViewerProvider {
     try {
       let specCtx = await readSpecContext(specDir);
       if (!specCtx) return;
-      specCtx = await reconcileAndPersist(specDir, specCtx);
+      specCtx = await reconcileAndPersist(specDir, specCtx, (m) => this.outputChannel.appendLine(m));
 
       const active: StepName = STEP_NAMES.includes(specCtx.currentStep as StepName)
         ? (specCtx.currentStep as StepName)
@@ -558,9 +559,18 @@ export class SpecViewerProvider {
         }
       }
 
-      // Calculate phases — reuse stepHistory from the single featureCtx read (US2).
-      const stepBadges = featureCtx?.stepHistory
-        ? deriveStepBadgesWithAlias(featureCtx.stepHistory, featureCtx.currentStep)
+      // Derive per-step timing once from history[] for everything that needs it.
+      const derivedStepHistory = featureCtx
+        ? deriveStepHistory(
+            (featureCtx.history ?? []) as any,
+            featureCtx.currentStep as StepName | undefined,
+            featureCtx.status as Status | undefined,
+          )
+        : undefined;
+
+      // Calculate phases — reuse derivedStepHistory for badges.
+      const stepBadges = derivedStepHistory && featureCtx?.currentStep
+        ? deriveStepBadgesWithAlias(derivedStepHistory, featureCtx.currentStep)
         : undefined;
       const phases = calculatePhases(
         documents,
@@ -609,14 +619,14 @@ export class SpecViewerProvider {
       // Compute staleness for workflow documents
       const stalenessMap = await computeStaleness(documents);
 
-      // Compute context-driven dates
-      const createdDate = computeCreatedDate(featureCtx?.stepHistory);
-      const lastUpdatedDate = computeLastUpdatedDate(featureCtx?.stepHistory);
+      // Compute context-driven dates from the derived per-step history.
+      const createdDate = computeCreatedDate(derivedStepHistory);
+      const lastUpdatedDate = computeLastUpdatedDate(derivedStepHistory);
 
       // Running-step info so the footer's Generating state survives a full
       // HTML refresh (e.g. the *.md file watcher), not just message updates.
       const runInfo = await this.deriveRunningStepInfo(
-        featureCtx?.stepHistory,
+        derivedStepHistory,
         specDirectory,
         taskCompletionPercent,
       );
@@ -636,14 +646,14 @@ export class SpecViewerProvider {
         enhancementButtons,
         stalenessMap,
         runInfo.tab,
-        computeBadgeText(featureCtx),
+        computeBadgeText(featureCtx, derivedStepHistory),
         createdDate,
         lastUpdatedDate,
         featureCtx?.specName ?? deriveSpecName(specDirectory),
         featureCtx?.workingBranch ?? featureCtx?.branch ?? null,
         doc?.filePath ?? null,
         featureCtx?.currentStep ?? doc?.type ?? null,
-        mapStepHistoryKeys(featureCtx?.stepHistory),
+        mapStepHistoryKeys(derivedStepHistory),
         this.readActivityPanelMode(),
         runInfo.artifactReady,
         runInfo.startedAt,
@@ -905,17 +915,36 @@ export class SpecViewerProvider {
       // Compute staleness for workflow documents
       const stalenessMap = await computeStaleness(instance.state.availableDocuments);
 
+      // Per-step timing is derived from history[] in-memory (the on-disk
+      // file no longer carries stepHistory). Compute once and reuse for the
+      // notifier, the running-step probe, and the nav bar.
+      const derivedStepHistory = featureCtx
+        ? deriveStepHistory(
+            (featureCtx.history ?? []) as any,
+            featureCtx.currentStep as StepName | undefined,
+            featureCtx.status as Status | undefined,
+          )
+        : undefined;
+      const notifierCtx: NotifierContext | null = derivedStepHistory
+        ? { stepHistory: derivedStepHistory }
+        : null;
+      const prevDerived = instance.lastFeatureCtx
+        ? deriveStepHistory(
+            (instance.lastFeatureCtx.history ?? []) as any,
+            instance.lastFeatureCtx.currentStep as StepName | undefined,
+            instance.lastFeatureCtx.status as Status | undefined,
+          )
+        : undefined;
+      const prevNotifierCtx: NotifierContext | null = prevDerived
+        ? { stepHistory: prevDerived }
+        : null;
       // Fire step-complete notifications on live completedAt transitions (R004–R006).
-      this.stepCompletionNotifier.observe(
-        specDirectory,
-        instance.lastFeatureCtx ?? null,
-        featureCtx ?? null,
-      );
+      this.stepCompletionNotifier.observe(specDirectory, prevNotifierCtx, notifierCtx);
       instance.lastFeatureCtx = featureCtx ?? null;
 
       // Running-step info for the nav bar + footer Generating state (spec 099).
       const runInfo = await this.deriveRunningStepInfo(
-        featureCtx?.stepHistory,
+        derivedStepHistory,
         specDirectory,
         taskCompletionPercent,
       );
@@ -941,10 +970,10 @@ export class SpecViewerProvider {
         runningStepArtifactReady: runInfo.artifactReady,
         runningStepStartedAt: runInfo.startedAt,
         runningStepLabel: runInfo.label,
-        stepHistory: mapStepHistoryKeys(featureCtx?.stepHistory),
-        badgeText: computeBadgeText(featureCtx),
-        createdDate: computeCreatedDate(featureCtx?.stepHistory),
-        lastUpdatedDate: computeLastUpdatedDate(featureCtx?.stepHistory),
+        stepHistory: mapStepHistoryKeys(derivedStepHistory),
+        badgeText: computeBadgeText(featureCtx, derivedStepHistory),
+        createdDate: computeCreatedDate(derivedStepHistory),
+        lastUpdatedDate: computeLastUpdatedDate(derivedStepHistory),
         specContextName: featureCtx?.specName ?? deriveSpecName(specDirectory),
         branch: featureCtx?.workingBranch ?? featureCtx?.branch ?? null,
         currentStep: featureCtx?.currentStep ?? documentType ?? null,
@@ -968,7 +997,7 @@ export class SpecViewerProvider {
       try {
         let specCtx = await readSpecContext(specDirectory);
         if (specCtx) {
-          specCtx = await reconcileAndPersist(specDirectory, specCtx);
+          specCtx = await reconcileAndPersist(specDirectory, specCtx, (m) => this.outputChannel.appendLine(m));
           const active: StepName = (STEP_NAMES.includes(specCtx.currentStep as StepName)
             ? (specCtx.currentStep as StepName)
             : 'specify');

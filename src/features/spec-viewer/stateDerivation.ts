@@ -1,18 +1,21 @@
 /**
  * Pure derivation from `SpecContext` → `ViewerState`.
  *
- * Never touches the filesystem. `deriveStepBadges` uses only `stepHistory`.
- * `pulse` is null when `status` ∈ {completed, archived}.
+ * Never touches the filesystem. Per-step timing (`stepHistory`) is derived
+ * in-memory from the canonical `history[]` log — the on-disk file no longer
+ * carries a `stepHistory` field. `pulse` is null when
+ * `status` ∈ {completed, archived}.
  *
  * **Inferred completion**: a step is treated as completed when it precedes
- * `currentStep` in `STEP_NAMES` ordering, even if it has no `stepHistory`
- * entry at all (common with external SDD skills that advance `currentStep`
- * without populating per-step history).
+ * `currentStep` in `STEP_NAMES` ordering, even if it has no history entry
+ * at all (common with external SDD skills that advance `currentStep`
+ * without writing per-step entries).
  */
 
 import {
     SpecContext,
     StepName,
+    StepHistoryEntry,
     StepBadgeState,
     STEP_NAMES,
     ViewerState,
@@ -20,11 +23,13 @@ import {
     ConcernEntry,
     CheckpointStatus,
     ReviewComment,
-    Transition,
+    HistoryEntry,
 } from '../../core/types/specContext';
 import { getFooterActions } from './footerActions';
 import { deriveStepHistory } from '../specs/stepHistoryDerivation';
 import type { WorkflowStepConfig } from '../workflows/types';
+
+type DerivedHistory = Record<string, StepHistoryEntry>;
 
 /**
  * Pull a tolerated extra field from `SpecContext` (it has a permissive
@@ -141,14 +146,15 @@ export function isStepCompleted(
 }
 
 export function deriveStepBadges(
-    ctx: SpecContext
+    ctx: SpecContext,
+    stepHistory: DerivedHistory = deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status)
 ): Record<string, StepBadgeState> {
     const out: Record<string, StepBadgeState> = {};
     for (const step of STEP_NAMES) {
-        if (isStepCompleted(step, ctx.currentStep, ctx.stepHistory)) {
+        if (isStepCompleted(step, ctx.currentStep, stepHistory)) {
             out[step] = 'completed';
         } else {
-            const entry = ctx.stepHistory[step];
+            const entry = stepHistory[step];
             out[step] = entry?.startedAt ? 'in-progress' : 'not-started';
         }
     }
@@ -173,28 +179,35 @@ export function findRunningStep(
     return null;
 }
 
-export function derivePulse(ctx: SpecContext): StepName | null {
+export function derivePulse(
+    ctx: SpecContext,
+    stepHistory: DerivedHistory = deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status)
+): StepName | null {
     if (ctx.status === 'completed' || ctx.status === 'archived') {
         return null;
     }
     for (const step of STEP_NAMES) {
-        const entry = ctx.stepHistory[step];
-        if (entry?.startedAt && !isStepCompleted(step, ctx.currentStep, ctx.stepHistory)) {
+        const entry = stepHistory[step];
+        if (entry?.startedAt && !isStepCompleted(step, ctx.currentStep, stepHistory)) {
             return step;
         }
     }
     return null;
 }
 
-export function deriveHighlights(ctx: SpecContext): StepName[] {
-    return STEP_NAMES.filter(s => isStepCompleted(s, ctx.currentStep, ctx.stepHistory));
+export function deriveHighlights(
+    ctx: SpecContext,
+    stepHistory: DerivedHistory = deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status)
+): StepName[] {
+    return STEP_NAMES.filter(s => isStepCompleted(s, ctx.currentStep, stepHistory));
 }
 
 export function deriveActiveSubstep(
-    ctx: SpecContext
+    ctx: SpecContext,
+    stepHistory: DerivedHistory = deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status)
 ): ViewerState['activeSubstep'] {
     for (const step of STEP_NAMES) {
-        const entry = ctx.stepHistory[step];
+        const entry = stepHistory[step];
         const active = entry?.substeps?.find(s => !s.completedAt);
         if (active) return { step, name: active.name };
     }
@@ -204,16 +217,16 @@ export function deriveActiveSubstep(
 }
 
 /**
- * Relabel transitions authored by the SDD plugin's *skills* (templates that
- * seed `.spec-context.json` on first write, or `sdd:specify`/`sdd:init`
+ * Relabel history entries authored by the SDD plugin's *skills* (templates
+ * that seed `.spec-context.json` on first write, or `sdd:specify`/`sdd:init`
  * skill output) so they don't masquerade as the user invoking `/sdd:*`
- * commands. When the active workflow is not `sdd` itself, a transition
- * stamped `by: 'sdd'` was almost certainly written by an SDD skill on the
- * user's behalf, not by a deliberate `/sdd:*` invocation. Display-only —
- * the on-disk value is untouched. See plan: Spec C.
+ * commands. When the active workflow is not `sdd` itself, an entry stamped
+ * `by: 'sdd'` was almost certainly written by an SDD skill on the user's
+ * behalf, not by a deliberate `/sdd:*` invocation. Display-only — the
+ * on-disk value is untouched. See plan: Spec C.
  */
-function normalizeTransitionAttribution(ctx: SpecContext): Transition[] {
-    const raw = ctx.transitions ?? [];
+function normalizeHistoryAttribution(ctx: SpecContext): HistoryEntry[] {
+    const raw = ctx.history ?? [];
     if (ctx.workflow === 'sdd') return raw;
     return raw.map(t => (t.by === 'sdd' ? { ...t, by: 'sdd-skill' as const } : t));
 }
@@ -223,20 +236,19 @@ export function deriveViewerState(
     activeStep: StepName = ctx.currentStep,
     workflowSteps?: WorkflowStepConfig[]
 ): ViewerState {
+    // Derive stepHistory once from the canonical history[] sequence and reuse
+    // it across all the per-step derivations below.
+    const stepHistory = deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status);
     return {
         status: ctx.status,
         activeStep,
-        steps: deriveStepBadges(ctx),
-        pulse: derivePulse(ctx),
-        highlights: deriveHighlights(ctx),
-        activeSubstep: deriveActiveSubstep(ctx),
+        steps: deriveStepBadges(ctx, stepHistory),
+        pulse: derivePulse(ctx, stepHistory),
+        highlights: deriveHighlights(ctx, stepHistory),
+        activeSubstep: deriveActiveSubstep(ctx, stepHistory),
         footer: getFooterActions(ctx, activeStep, workflowSteps),
-        transitions: normalizeTransitionAttribution(ctx),
-        // Derive stepHistory from the reliable transitions[] sequence rather
-        // than trusting the on-disk stepHistory (AI-typed, unreliable). Pass
-        // status so the terminal step finalizes (completed/archived) instead of
-        // reading as in-flight forever.
-        stepHistory: deriveStepHistory(ctx.transitions ?? [], ctx.currentStep, ctx.status),
+        history: normalizeHistoryAttribution(ctx),
+        stepHistory,
         approach: pickString(ctx, 'approach'),
         lastAction: pickString(ctx, 'last_action'),
         taskSummaries: pickRecord<TaskSummary>(ctx, 'task_summaries'),

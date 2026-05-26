@@ -44,8 +44,7 @@ function buildFallback(specDir: string, step: StepName): SpecContext {
         branch: '',
         currentStep: step,
         status: 'draft',
-        stepHistory: {},
-        transitions: [],
+        history: [],
     };
 }
 

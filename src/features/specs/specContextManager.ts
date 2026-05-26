@@ -1,3 +1,15 @@
+/**
+ * Compatibility shim around the canonical `specContextWriter` for callers
+ * that still use the legacy `FeatureWorkflowContext` shape. All writes go
+ * through `writeSpecContext` so the canonical `history[]` field stays the
+ * single source of truth — never re-emit the deprecated `transitions[]` or
+ * persisted `stepHistory{}`.
+ *
+ * Reads return raw on-disk data (so callers that depend on legacy fields —
+ * e.g., the sidebar's quick stepHistory lookup — keep working until they're
+ * migrated to derive timing from `history[]` themselves).
+ */
+
 import * as fs from 'fs';
 import * as path from 'path';
 import {
@@ -8,7 +20,18 @@ import {
 } from '../workflows/types';
 import { SpecStatuses } from '../../core/constants';
 import { formatDocName } from '../workflow-editor/workflow/specInfoParser';
-import { buildTransitionEntry } from './transitionLogger';
+import {
+    HistoryEntry,
+    HistoryEntryFrom,
+    StepName,
+    STEP_NAMES,
+} from '../../core/types/specContext';
+import {
+    setStepStarted as canonicalSetStepStarted,
+    setStepCompleted as canonicalSetStepCompleted,
+    updateSpecContext as canonicalUpdateSpecContext,
+} from './specContextWriter';
+import { normalizeSpecContext } from './specContextReader';
 
 /**
  * Try reading a JSON file, return parsed content or undefined.
@@ -35,7 +58,10 @@ async function tryReadJson(filePath: string): Promise<Record<string, unknown> | 
 }
 
 /**
- * Read .spec-context.json from a spec directory.
+ * Read .spec-context.json from a spec directory. Returns the raw on-disk
+ * shape (for legacy callers); fields like `transitions` may be absent for
+ * files written by the canonical writer — use `history` instead when
+ * available.
  */
 export async function readSpecContext(specDir: string): Promise<FeatureWorkflowContext | undefined> {
     const data = await tryReadJson(path.join(specDir, FEATURE_CONTEXT_FILE));
@@ -56,60 +82,85 @@ export function readSpecContextSync(specDir: string): FeatureWorkflowContext | u
     return undefined;
 }
 
+function isStepName(value: string | undefined): value is StepName {
+    return !!value && (STEP_NAMES as readonly string[]).includes(value);
+}
+
 /**
  * Update .spec-context.json with a partial update (read-then-merge).
+ *
+ * Routes through the canonical writer so `history[]` is the only persisted
+ * lifecycle log. Step/substep changes are translated into a canonical
+ * history entry; other partial fields are applied verbatim.
  */
 export async function updateSpecContext(
     specDir: string,
     partial: Partial<FeatureWorkflowContext>
 ): Promise<void> {
-    const contextPath = path.join(specDir, FEATURE_CONTEXT_FILE);
-
-    let existing: Record<string, unknown> = {};
-    let fileExists = false;
-
-    try {
-        const content = await fs.promises.readFile(contextPath, 'utf-8');
-        existing = JSON.parse(content);
-        fileExists = true;
-    } catch {
-        // No existing file, start fresh
-    }
-
-    // Detect step/substep changes and append transition entry
     const newStep = partial.currentStep;
-    const newSubstep = (partial as Record<string, unknown>).substep as string | null | undefined;
+    const newSubstep = (partial as Record<string, unknown>).substep as
+        | string
+        | null
+        | undefined;
     const hasStepChange = newStep !== undefined || newSubstep !== undefined;
 
-    if (hasStepChange) {
-        const oldStep = existing.currentStep as string | undefined;
-        const oldSubstep = (existing as Record<string, unknown>).substep as string | null | undefined;
-        const stepChanged = newStep !== undefined && newStep !== oldStep;
-        const substepChanged = newSubstep !== undefined && newSubstep !== oldSubstep;
+    await canonicalUpdateSpecContext(
+        specDir,
+        (ctx) => {
+            // Apply all non-history fields straight from the partial.
+            const next = { ...ctx } as Record<string, unknown>;
+            for (const [k, v] of Object.entries(partial)) {
+                if (k === 'transitions' || k === 'stepHistory') continue; // legacy fields, never write
+                next[k] = v;
+            }
 
-        if (stepChanged || substepChanged) {
-            const from = fileExists
-                ? { step: oldStep || null, substep: oldSubstep ?? null }
-                : null;
+            // If the caller is signalling a step/substep change, append the
+            // matching canonical history entry. The canonical writer
+            // enforces append-only on `history`.
+            if (hasStepChange) {
+                const oldStep = (ctx as Record<string, unknown>).currentStep as
+                    | string
+                    | undefined;
+                const oldSubstep = (ctx as Record<string, unknown>).substep as
+                    | string
+                    | null
+                    | undefined;
+                const stepChanged = newStep !== undefined && newStep !== oldStep;
+                const substepChanged =
+                    newSubstep !== undefined && newSubstep !== oldSubstep;
+                if (stepChanged || substepChanged) {
+                    const from: HistoryEntryFrom = {
+                        step: (oldStep ?? null) as StepName | null,
+                        substep: oldSubstep ?? null,
+                    };
+                    const resolvedStep = (newStep ?? oldStep ?? '') as string;
+                    const resolvedSubstep =
+                        newSubstep !== undefined ? newSubstep : (oldSubstep ?? null);
+                    if (isStepName(resolvedStep)) {
+                        const entry: HistoryEntry = {
+                            step: resolvedStep,
+                            substep: resolvedSubstep,
+                            from,
+                            by: 'extension',
+                            at: new Date().toISOString(),
+                        };
+                        next.history = [...(ctx.history ?? []), entry];
+                    }
+                }
+            }
 
-            const entry = buildTransitionEntry(
-                from,
-                newStep ?? oldStep ?? '',
-                newSubstep !== undefined ? newSubstep : (oldSubstep ?? null),
-                'extension'
-            );
-
-            const existingTransitions = (existing.transitions as TransitionEntry[] | undefined) || [];
-            existing.transitions = [...existingTransitions, entry];
-        }
-    }
-
-    const merged: Record<string, unknown> = { ...existing, ...partial };
-    // Preserve transitions from existing (append-only)
-    if (existing.transitions) {
-        merged.transitions = existing.transitions;
-    }
-    await fs.promises.writeFile(contextPath, JSON.stringify(merged, null, 2), 'utf-8');
+            return next as typeof ctx;
+        },
+        // Fallback: brand-new spec context. The canonical writer reads
+        // FILE then merges; if file is absent it uses this.
+        normalizeSpecContext({
+            specName: '',
+            branch: '',
+            currentStep: 'specify',
+            status: 'draft',
+            history: [],
+        }),
+    );
 }
 
 /**
@@ -124,44 +175,87 @@ export function deriveSpecName(specDir: string): string {
 
 /**
  * Update step progress when user clicks a step command.
- * Sets currentStep, adds stepHistory entry, completes previous step.
- * Also populates specName if missing.
+ *
+ * For lifecycle steps (specify / plan / tasks / implement), the canonical
+ * `setStepStarted` in `specContextWriter` already handles the
+ * complete-on-advance + start atomically — this function is now a thin
+ * wrapper that also fills `specName` when missing. For non-lifecycle
+ * (custom workflow) steps, falls back to `updateSpecContext` so callers
+ * can still record arbitrary step names without breaking the canonical
+ * history shape.
  */
 export async function updateStepProgress(
     specDir: string,
     stepName: string,
-    workflowStepNames: string[]
+    _workflowStepNames: string[]
 ): Promise<void> {
-    const context = await readSpecContext(specDir) || {} as FeatureWorkflowContext;
-    const now = new Date().toISOString();
+    const isLifecycle = isStepName(stepName);
+    const ctx = await readSpecContext(specDir);
+    const specName = ctx?.specName || deriveSpecName(specDir);
 
-    const stepHistory = context.stepHistory || {};
-
-    // Complete the previous currentStep if it exists and is different
-    if (context.currentStep && context.currentStep !== stepName) {
-        const prevEntry = stepHistory[context.currentStep];
-        if (prevEntry && !prevEntry.completedAt) {
-            prevEntry.completedAt = now;
-        }
+    if (isLifecycle) {
+        // Complete any in-flight prior lifecycle step + start the new one,
+        // atomically, via the canonical writer. Idempotent: re-advancing
+        // to the step that's already current is a no-op (matches the
+        // legacy `if (!stepHistory[stepName])` behavior).
+        await canonicalUpdateSpecContext(
+            specDir,
+            (c) => {
+                let next = { ...c, specName };
+                const prevStep = c.currentStep;
+                if (prevStep === stepName && stepHasBeenStarted(c.history ?? [], stepName as StepName)) {
+                    // Already on this step AND it has at least one start-entry —
+                    // re-advance is a no-op (matches the legacy idempotent
+                    // `if (!stepHistory[stepName])` behavior).
+                    return next;
+                }
+                if (
+                    isStepName(prevStep) &&
+                    prevStep !== stepName &&
+                    !lastEntryIsCompletionFor(c.history ?? [], prevStep)
+                ) {
+                    next = canonicalSetStepCompleted(next, prevStep, 'extension');
+                }
+                next = canonicalSetStepStarted(next, stepName as StepName, 'extension');
+                return next;
+            },
+            normalizeSpecContext({
+                specName,
+                branch: '',
+                currentStep: 'specify',
+                status: 'draft',
+                history: [],
+            }),
+        );
+        return;
     }
 
-    // Start the new step if not already started
-    if (!stepHistory[stepName]) {
-        stepHistory[stepName] = { startedAt: now, completedAt: null };
-    }
-
-    // Set status to active if not already set
-    const status = context.status || SpecStatuses.ACTIVE;
-
-    // Populate specName if not already set
-    const specName = context.specName || deriveSpecName(specDir);
-
+    // Non-lifecycle (custom) step — record via the generic partial path.
     await updateSpecContext(specDir, {
         currentStep: stepName,
-        stepHistory,
-        status,
+        status: ctx?.status || SpecStatuses.ACTIVE,
         specName,
     });
+}
+
+function lastEntryIsCompletionFor(history: HistoryEntry[], step: StepName): boolean {
+    for (let i = history.length - 1; i >= 0; i--) {
+        const e = history[i];
+        if (e.step !== step) continue;
+        return e.from?.step === step && e.substep == null;
+    }
+    return false;
+}
+
+/** True iff `history` contains any *start* entry for `step` (not a completion). */
+function stepHasBeenStarted(history: HistoryEntry[], step: StepName): boolean {
+    for (const e of history) {
+        if (e.step !== step) continue;
+        if (e.substep != null) continue;
+        // start: from.step !== step (either a different prior step, or null).
+        if (e.from?.step !== step) return true;
+    }
+    return false;
 }
 
 /**
@@ -173,3 +267,6 @@ export async function setSpecStatus(
 ): Promise<void> {
     await updateSpecContext(specDir, { status });
 }
+
+// Re-export so callers can still import the legacy type if they need it.
+export type { TransitionEntry };

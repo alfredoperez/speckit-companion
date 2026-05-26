@@ -1,5 +1,5 @@
-import type { ViewerState, Transition } from '../../types';
-import { mergeStepEvents, buildTransitionIndex, TimelineEventModel } from '../../timelineEvents';
+import type { ViewerState, HistoryEntry } from '../../types';
+import { mergeStepEvents, buildHistoryIndex, TimelineEventModel } from '../../timelineEvents';
 import {
     formatElapsed,
     formatStepOffset,
@@ -22,8 +22,8 @@ export interface PhasesCardProps {
     state: ViewerState;
 }
 
-function buildGroups(stepHistory: ViewerState['stepHistory'], transitions: Transition[]): StepGroup[] {
-    const transitionIndex = buildTransitionIndex(transitions);
+function buildGroups(stepHistory: ViewerState['stepHistory'], history: HistoryEntry[]): StepGroup[] {
+    const historyIndex = buildHistoryIndex(history);
     const groups: StepGroup[] = [];
     const seen = new Set<string>();
 
@@ -35,12 +35,12 @@ function buildGroups(stepHistory: ViewerState['stepHistory'], transitions: Trans
             step,
             startedAt: entry.startedAt,
             completedAt: entry.completedAt ?? null,
-            events: mergeStepEvents(step, entry, transitions, transitionIndex),
+            events: mergeStepEvents(step, entry, history, historyIndex),
         });
     }
 
-    // Specs that have transitions for steps that never made it into stepHistory.
-    for (const t of transitions) {
+    // Specs that have history entries for steps that never made it into stepHistory.
+    for (const t of history) {
         if (seen.has(t.step)) continue;
         if (!t.substep) continue;
         seen.add(t.step);
@@ -48,7 +48,7 @@ function buildGroups(stepHistory: ViewerState['stepHistory'], transitions: Trans
             step: t.step,
             startedAt: t.at,
             completedAt: null,
-            events: mergeStepEvents(t.step, undefined, transitions, transitionIndex),
+            events: mergeStepEvents(t.step, undefined, history, historyIndex),
         });
     }
 
@@ -88,7 +88,7 @@ function activityPoints(group: StepGroup): string[] {
 }
 
 export function PhasesCard({ state }: PhasesCardProps) {
-    const groups = buildGroups(state.stepHistory ?? {}, state.transitions ?? []);
+    const groups = buildGroups(state.stepHistory ?? {}, state.history ?? []);
     if (groups.length === 0) return null;
 
     // Overall: the whole-spec start (absolute), end (absolute or in-flight), and
@@ -109,10 +109,10 @@ export function PhasesCard({ state }: PhasesCardProps) {
     // (i.e. a multi-day spec).
     const specStartDay = new Date(overallStart).toDateString();
 
-    // Author only at spec start: the first transition's actor.
-    const firstTransition = (state.transitions ?? [])[0];
+    // Author only at spec start: the first history entry's actor.
+    const firstEntry = (state.history ?? [])[0];
     const startAuthor =
-        firstTransition?.by && KNOWN_ACTORS.has(firstTransition.by) ? firstTransition.by : null;
+        firstEntry?.by && KNOWN_ACTORS.has(firstEntry.by) ? firstEntry.by : null;
 
     return (
         <section class="activity-card activity-card--phases">

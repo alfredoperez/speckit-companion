@@ -15,7 +15,7 @@ function hasAnyData(state: ViewerState): boolean {
     if (state.concerns && state.concerns.length > 0) return true;
     if (state.filesModified && state.filesModified.length > 0) return true;
     if (state.reviewComments && state.reviewComments.length > 0) return true;
-    if (state.transitions && state.transitions.length > 0) return true;
+    if (state.history && state.history.length > 0) return true;
     if (state.stepHistory && Object.keys(state.stepHistory).length > 0) return true;
     return false;
 }

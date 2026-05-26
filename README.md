@@ -488,14 +488,17 @@ existence is never used to infer step completion.
   "branch": "060-spec-context-tracking",
   "currentStep": "specify | clarify | plan | tasks | analyze | implement",
   "status": "draft | specifying | specified | planning | planned | tasking | ready-to-implement | implementing | completed | archived",
-  "stepHistory": {
-    "specify": { "startedAt": "ISO", "completedAt": "ISO|null", "substeps": [ { "name": "validate-checklist", "startedAt": "ISO", "completedAt": "ISO|null" } ] }
-  },
-  "transitions": [
+  "history": [
     { "step": "specify", "substep": null, "from": { "step": null, "substep": null }, "by": "extension", "at": "ISO" }
   ]
 }
 ```
+
+`history[]` is the single append-only source of truth for step
+boundaries. Per-step timing (start / completion / substeps) is derived
+in-memory by the viewer; it is **not** persisted. Files written by older
+versions that still carry `stepHistory` or `transitions` are accepted on
+read and migrated on the next write.
 
 The full JSON Schema lives at
 `src/core/types/spec-context.schema.json` and
@@ -503,21 +506,26 @@ The full JSON Schema lives at
 
 ### Extension-side lifecycle writes
 
-The extension itself records `stepHistory[step].startedAt` /
-`completedAt` and the canonical `status` whenever a step is dispatched
-(via the SpecKit commands or the viewer's next-step / Regenerate
-buttons — the next-step button is labelled with the upcoming phase
-name, e.g. `Plan`, `Tasks`, `Implement`, or `Complete` on the final
-step), and when a spawned terminal closes, independent of AI cooperation. Spec
-status changes (`Mark as Completed`, `Archive`, `Reactivate`) write the
-canonical status and append a transition entry, no longer relying on the
-legacy `setSpecStatus` path. Write failures log to the SpecKit output
-channel without blocking dispatch.
+The extension appends a `history[]` entry — start or completion — and
+flips the canonical `status` whenever a step is dispatched (via the
+SpecKit commands or the viewer's next-step / Regenerate buttons — the
+next-step button is labelled with the upcoming phase name, e.g. `Plan`,
+`Tasks`, `Implement`, or `Complete` on the final step), and when a
+spawned terminal closes, independent of AI cooperation. Spec status
+changes (`Mark as Completed`, `Archive`, `Reactivate`) write the
+canonical status and append a history entry. Write failures log to the
+SpecKit output channel without blocking dispatch.
+
+Advancing `currentStep` is atomic: setting it to a new step always
+appends the matching start-entry in the same write. `currentStep` ahead
+of `history[]` is the failure mode that makes the viewer show a fake
+"Generating <step>…" with no actual progress.
 
 ### Invariants
 
 - Unknown top-level fields are preserved across writes.
-- `transitions` is append-only. Never rewrite prior entries.
+- `history` is append-only. Never rewrite prior entries.
+- The last `history[]` entry's `step` matches `currentStep`.
 - When the viewer opens a spec with no context file, it writes a minimal
   `draft` document; no step is marked completed from file presence alone.
 

@@ -163,8 +163,8 @@ export interface FeatureWorkflowContext {
     task_summaries?: Record<string, unknown>;
     step_summaries?: Record<string, unknown>;
     files_modified?: string[];
-    /** Append-only log of workflow step transitions */
-    transitions?: TransitionEntry[];
+    /** Append-only log of workflow step boundaries. */
+    history?: TransitionEntry[];
 }
 
 /**

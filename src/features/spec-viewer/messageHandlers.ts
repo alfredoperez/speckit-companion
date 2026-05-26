@@ -40,6 +40,7 @@ import {
   removeComment as removeCommentFromCtx,
 } from "./reviewComments";
 import { findRunningStep } from "./stateDerivation";
+import { deriveStepHistory } from "../specs/stepHistoryDerivation";
 import type { CoreDocumentType } from "./types";
 import type { ReviewCommentDoc } from "../../core/types/specContext";
 import {
@@ -421,7 +422,10 @@ async function handleMarkStepComplete(
   if (!instance) return;
 
   const ctx = await readSpecContext(specDirectory);
-  const running = findRunningStep(ctx?.stepHistory)?.step ?? null;
+  const derived = ctx
+    ? deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status)
+    : undefined;
+  const running = findRunningStep(derived)?.step ?? null;
 
   if (!running || !isLifecycleStep(running)) {
     deps.outputChannel.appendLine(

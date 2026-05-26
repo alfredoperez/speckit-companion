@@ -248,13 +248,22 @@ export function canonicalStatusLabel(status?: string | null): string | null {
  * Compute a human-readable badge text from spec-context fields.
  * When progress is non-null (in-progress work), appends "..." suffix.
  */
-export function computeBadgeText(ctx?: {
-    currentStep?: string | null;
-    progress?: string | null;
-    currentTask?: string | null;
-    status?: string;
-    stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>;
-} | null): string | null {
+export function computeBadgeText(
+    ctx?: {
+        currentStep?: string | null;
+        progress?: string | null;
+        currentTask?: string | null;
+        status?: string;
+        stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>;
+    } | null,
+    /**
+     * Optional pre-derived stepHistory (built from `history[]` by the
+     * viewer). When provided, takes precedence over the on-disk
+     * `ctx.stepHistory`, which is no longer populated by the canonical
+     * writer. Falls back to `ctx.stepHistory` for legacy contexts.
+     */
+    derivedStepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>,
+): string | null {
     if (!ctx) return null;
 
     // US1: canonical status labels take precedence when status is the new vocab.
@@ -265,7 +274,8 @@ export function computeBadgeText(ctx?: {
     if (ctx.status === SpecStatuses.ARCHIVED) return 'ARCHIVED';
 
     const inProgress = ctx.progress != null;
-    const stepCompleted = ctx.currentStep && ctx.stepHistory?.[ctx.currentStep]?.completedAt;
+    const effectiveStepHistory = derivedStepHistory ?? ctx.stepHistory;
+    const stepCompleted = ctx.currentStep && effectiveStepHistory?.[ctx.currentStep]?.completedAt;
 
     // Show next action based on current step
     if (ctx.currentStep === WorkflowSteps.IMPLEMENT && ctx.currentTask) return `IMPLEMENTING ${ctx.currentTask}${inProgress ? '...' : ''}`;

@@ -20,7 +20,7 @@ import { updateStepProgress, readSpecContextSync } from './specContextManager';
 import { startStep, completeStep, setStatus, reactivate } from './stepLifecycle';
 import { updateSelectionContextKeys } from './selectionContextKeys';
 import { track as trackTerminal } from './terminalStepTracker';
-import type { StepName } from '../../core/types/specContext';
+import type { HistoryEntry, StepName } from '../../core/types/specContext';
 import { SpecsFilterState } from './specsFilterState';
 import { SpecsSortState } from './specsSortState';
 import { ALL_SORT_MODES, DEFAULT_SORT_MODE, SortMode } from './specsSortMode';
@@ -40,6 +40,24 @@ const LIFECYCLE_STEPS: ReadonlySet<string> = new Set([
     'clarify',
     'analyze',
 ]);
+
+/**
+ * Walk `history` from newest to oldest and report whether the most recent
+ * entry for `step` is a completion (self-loop `from.step === step`,
+ * `substep == null`). Used by the complete-on-advance guard to skip
+ * emitting a redundant completion when the prior step is already done.
+ */
+function lastEntryIsCompletionFor(
+    history: HistoryEntry[],
+    step: StepName | string
+): boolean {
+    for (let i = history.length - 1; i >= 0; i--) {
+        const e = history[i];
+        if (e.step !== step) continue;
+        return e.from?.step === step && e.substep == null;
+    }
+    return false;
+}
 
 /**
  * Register SpecKit workflow commands (create, specify, plan, tasks, etc.)
@@ -588,11 +606,18 @@ async function executeWorkflowStep(
         try {
             const prevCtx = readSpecContextSync(targetDir);
             const prev = prevCtx?.currentStep;
+            // Derive per-step timing from history[] (the canonical log) — the
+            // on-disk `stepHistory` is no longer populated by the new writer,
+            // so reading it would make this guard fail-open and emit redundant
+            // completion entries on every advance.
+            const prevHistory = (prevCtx?.history ?? []) as HistoryEntry[];
+            const prevStepDone =
+                prev != null && lastEntryIsCompletionFor(prevHistory, prev as StepName);
             if (
                 prev &&
                 prev !== step &&
                 LIFECYCLE_STEPS.has(prev) &&
-                !prevCtx?.stepHistory?.[prev]?.completedAt
+                !prevStepDone
             ) {
                 await completeStep(targetDir, prev as StepName, 'extension');
             }

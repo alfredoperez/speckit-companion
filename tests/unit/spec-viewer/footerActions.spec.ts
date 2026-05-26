@@ -4,7 +4,10 @@ import {
     withScopeSuffix,
     FOOTER_ACTIONS,
 } from '../../../src/features/spec-viewer/footerActions';
-import { SpecContext } from '../../../src/core/types/specContext';
+import {
+    SpecContext,
+    StepHistoryEntry,
+} from '../../../src/core/types/specContext';
 import type { WorkflowStepConfig } from '../../../src/features/workflows/types';
 import {
     SpecStatuses,
@@ -20,6 +23,8 @@ const SDD_STEPS: WorkflowStepConfig[] = [
     { name: 'implement', label: 'Implement', command: 'sdd:implement', actionOnly: true },
 ];
 
+type SH = Record<string, StepHistoryEntry>;
+
 function baseCtx(overrides: Partial<SpecContext> = {}): SpecContext {
     return {
         workflow: Workflows.SPECKIT_COMPANION,
@@ -27,8 +32,7 @@ function baseCtx(overrides: Partial<SpecContext> = {}): SpecContext {
         branch: 'main',
         currentStep: WorkflowSteps.SPECIFY,
         status: 'draft',
-        stepHistory: {},
-        transitions: [],
+        history: [],
         ...overrides,
     };
 }
@@ -55,10 +59,9 @@ describe('getFooterActions (US6 — scope + visibility)', () => {
     });
 
     it('Regenerate visible once step has been started', () => {
-        const ctx = baseCtx({
-            stepHistory: { plan: { startedAt: 'a', completedAt: null } },
-        });
-        const actions = getFooterActions(ctx, WorkflowSteps.PLAN);
+        const ctx = baseCtx();
+        const sh: SH = { plan: { startedAt: 'a', completedAt: null } };
+        const actions = getFooterActions(ctx, WorkflowSteps.PLAN, undefined, sh);
         expect(actions.find(a => a.id === FooterActionIds.REGENERATE)).toBeDefined();
     });
 
@@ -73,13 +76,13 @@ describe('getFooterActions (US6 — scope + visibility)', () => {
         const ctx = baseCtx({
             status: SpecStatuses.COMPLETED,
             currentStep: WorkflowSteps.TASKS,
-            stepHistory: {
-                specify: { startedAt: 'a', completedAt: 'b' },
-                plan: { startedAt: 'a', completedAt: 'b' },
-                tasks: { startedAt: 'a', completedAt: null },
-            },
         });
-        const actions = getFooterActions(ctx, WorkflowSteps.TASKS);
+        const sh: SH = {
+            specify: { startedAt: 'a', completedAt: 'b' },
+            plan: { startedAt: 'a', completedAt: 'b' },
+            tasks: { startedAt: 'a', completedAt: null },
+        };
+        const actions = getFooterActions(ctx, WorkflowSteps.TASKS, undefined, sh);
         const ids = actions.map(a => a.id);
         expect(ids).not.toContain(FooterActionIds.REGENERATE);
         expect(ids).not.toContain(FooterActionIds.APPROVE);
@@ -91,9 +94,9 @@ describe('getFooterActions (US6 — scope + visibility)', () => {
         const ctx = baseCtx({
             status: SpecStatuses.ARCHIVED,
             currentStep: WorkflowSteps.TASKS,
-            stepHistory: { tasks: { startedAt: 'a', completedAt: null } },
         });
-        const actions = getFooterActions(ctx, WorkflowSteps.TASKS);
+        const sh: SH = { tasks: { startedAt: 'a', completedAt: null } };
+        const actions = getFooterActions(ctx, WorkflowSteps.TASKS, undefined, sh);
         const ids = actions.map(a => a.id);
         expect(ids).not.toContain(FooterActionIds.REGENERATE);
         expect(ids).not.toContain(FooterActionIds.APPROVE);
@@ -102,9 +105,6 @@ describe('getFooterActions (US6 — scope + visibility)', () => {
 });
 
 describe('isSpecDone gate — Archive / Mark Completed visibility', () => {
-    // Below the closure-eligible threshold: Archive and Mark Completed
-    // must stay hidden so the footer stays focused on the forward
-    // action while the AI is still building.
     const NOT_DONE_STATUSES: SpecContext['status'][] = [
         'draft',
         'specifying',
@@ -134,32 +134,21 @@ describe('isSpecDone gate — Archive / Mark Completed visibility', () => {
             workflow: Workflows.SDD,
             status: 'implemented',
             currentStep: WorkflowSteps.IMPLEMENT,
-            stepHistory: {
-                implement: { startedAt: 'a', completedAt: 'b' },
-            },
         });
-        const ids = getFooterActions(ctx, WorkflowSteps.IMPLEMENT).map(a => a.id);
+        const sh: SH = { implement: { startedAt: 'a', completedAt: 'b' } };
+        const ids = getFooterActions(ctx, WorkflowSteps.IMPLEMENT, undefined, sh).map(a => a.id);
         expect(ids).toContain(FooterActionIds.ARCHIVE);
         expect(ids).toContain(FooterActionIds.COMPLETE);
     });
 
     it("shows Archive, Mark Completed, and Regenerate when status='implemented'", () => {
-        // After the AI finishes the implement step, status moves to
-        // 'implemented' (not directly to 'completed'). The user sees:
-        // - Archive / Mark Completed (closure-eligible),
-        // - Regenerate (still useful — user can ask the AI to redo the
-        //   implementation if they don't like it),
-        // - Approve is hidden because the step is completed (no further
-        //   step to advance to in the workflow).
         const ctx = baseCtx({
             workflow: Workflows.SDD,
             status: 'implemented',
             currentStep: WorkflowSteps.IMPLEMENT,
-            stepHistory: {
-                implement: { startedAt: 'a', completedAt: 'b' },
-            },
         });
-        const ids = getFooterActions(ctx, WorkflowSteps.IMPLEMENT).map(a => a.id);
+        const sh: SH = { implement: { startedAt: 'a', completedAt: 'b' } };
+        const ids = getFooterActions(ctx, WorkflowSteps.IMPLEMENT, undefined, sh).map(a => a.id);
         expect(ids).toContain(FooterActionIds.ARCHIVE);
         expect(ids).toContain(FooterActionIds.COMPLETE);
         expect(ids).toContain(FooterActionIds.REGENERATE);
@@ -174,7 +163,6 @@ describe('isSpecDone gate — Archive / Mark Completed visibility', () => {
         });
         const ids = getFooterActions(ctx, WorkflowSteps.IMPLEMENT).map(a => a.id);
         expect(ids).toContain(FooterActionIds.ARCHIVE);
-        // Mark Completed hides because the spec is already terminal-completed.
         expect(ids).not.toContain(FooterActionIds.COMPLETE);
     });
 
@@ -190,18 +178,14 @@ describe('isSpecDone gate — Archive / Mark Completed visibility', () => {
 });
 
 describe('Approve advance button across the lifecycle', () => {
-    // After spec 094 second pass: the Approve action stays visible at
-    // the "step done, next step not started" pauses so the user can
-    // dispatch the next phase from the viewer footer.
-
     it("stays visible at status='specified' so user can click Plan", () => {
         const ctx = baseCtx({
             workflow: Workflows.SDD,
             status: 'specified',
             currentStep: WorkflowSteps.SPECIFY,
-            stepHistory: { specify: { startedAt: 'a', completedAt: 'b' } },
         });
-        const actions = getFooterActions(ctx, WorkflowSteps.SPECIFY, SDD_STEPS);
+        const sh: SH = { specify: { startedAt: 'a', completedAt: 'b' } };
+        const actions = getFooterActions(ctx, WorkflowSteps.SPECIFY, SDD_STEPS, sh);
         const approve = actions.find(a => a.id === FooterActionIds.APPROVE);
         expect(approve).toBeDefined();
         expect(approve!.label).toBe('Plan');
@@ -212,12 +196,12 @@ describe('Approve advance button across the lifecycle', () => {
             workflow: Workflows.SDD,
             status: 'planned',
             currentStep: WorkflowSteps.PLAN,
-            stepHistory: {
-                specify: { startedAt: 'a', completedAt: 'b' },
-                plan: { startedAt: 'c', completedAt: 'd' },
-            },
         });
-        const actions = getFooterActions(ctx, WorkflowSteps.PLAN, SDD_STEPS);
+        const sh: SH = {
+            specify: { startedAt: 'a', completedAt: 'b' },
+            plan: { startedAt: 'c', completedAt: 'd' },
+        };
+        const actions = getFooterActions(ctx, WorkflowSteps.PLAN, SDD_STEPS, sh);
         const approve = actions.find(a => a.id === FooterActionIds.APPROVE);
         expect(approve).toBeDefined();
         expect(approve!.label).toBe('Tasks');
@@ -228,30 +212,26 @@ describe('Approve advance button across the lifecycle', () => {
             workflow: Workflows.SDD,
             status: 'ready-to-implement',
             currentStep: WorkflowSteps.TASKS,
-            stepHistory: {
-                specify: { startedAt: 'a', completedAt: 'b' },
-                plan: { startedAt: 'c', completedAt: 'd' },
-                tasks: { startedAt: 'e', completedAt: 'f' },
-            },
         });
-        const actions = getFooterActions(ctx, WorkflowSteps.TASKS, SDD_STEPS);
+        const sh: SH = {
+            specify: { startedAt: 'a', completedAt: 'b' },
+            plan: { startedAt: 'c', completedAt: 'd' },
+            tasks: { startedAt: 'e', completedAt: 'f' },
+        };
+        const actions = getFooterActions(ctx, WorkflowSteps.TASKS, SDD_STEPS, sh);
         const approve = actions.find(a => a.id === FooterActionIds.APPROVE);
         expect(approve).toBeDefined();
         expect(approve!.label).toBe('Implement');
     });
 
     it("hides at status='implemented' (last step done, no later step exists)", () => {
-        // Implement is the final step; there's no later step to advance
-        // to. Mark Completed is the right surface here, not Approve.
         const ctx = baseCtx({
             workflow: Workflows.SDD,
             status: 'implemented',
             currentStep: WorkflowSteps.IMPLEMENT,
-            stepHistory: {
-                implement: { startedAt: 'a', completedAt: 'b' },
-            },
         });
-        const ids = getFooterActions(ctx, WorkflowSteps.IMPLEMENT, SDD_STEPS).map(a => a.id);
+        const sh: SH = { implement: { startedAt: 'a', completedAt: 'b' } };
+        const ids = getFooterActions(ctx, WorkflowSteps.IMPLEMENT, SDD_STEPS, sh).map(a => a.id);
         expect(ids).not.toContain(FooterActionIds.APPROVE);
     });
 
@@ -260,29 +240,25 @@ describe('Approve advance button across the lifecycle', () => {
             workflow: Workflows.SDD,
             status: 'planning',
             currentStep: WorkflowSteps.PLAN,
-            stepHistory: {
-                specify: { startedAt: 'a', completedAt: 'b' },
-                plan: { startedAt: 'c', completedAt: null },
-            },
         });
-        // Viewing the SPECIFY tab while the workflow has moved into PLAN.
-        const ids = getFooterActions(ctx, WorkflowSteps.SPECIFY, SDD_STEPS).map(a => a.id);
+        const sh: SH = {
+            specify: { startedAt: 'a', completedAt: 'b' },
+            plan: { startedAt: 'c', completedAt: null },
+        };
+        const ids = getFooterActions(ctx, WorkflowSteps.SPECIFY, SDD_STEPS, sh).map(a => a.id);
         expect(ids).not.toContain(FooterActionIds.APPROVE);
     });
 });
 
 describe('In-flight footer (the screenshot scenario)', () => {
     it('reproduces the user-reported screenshot: only Regenerate + dynamic Approve', () => {
-        // After /sdd:specify runs: status=specifying, specify.startedAt set,
-        // completedAt=null. Footer must NOT show Edit Source (removed
-        // entirely), Archive, Mark Completed, Auto, or Start.
         const ctx = baseCtx({
             workflow: Workflows.SDD,
             status: 'specifying',
             currentStep: WorkflowSteps.SPECIFY,
-            stepHistory: { specify: { startedAt: 'a', completedAt: null } },
         });
-        const ids = getFooterActions(ctx, WorkflowSteps.SPECIFY, SDD_STEPS).map(a => a.id);
+        const sh: SH = { specify: { startedAt: 'a', completedAt: null } };
+        const ids = getFooterActions(ctx, WorkflowSteps.SPECIFY, SDD_STEPS, sh).map(a => a.id);
         expect(ids).not.toContain(FooterActionIds.ARCHIVE);
         expect(ids).not.toContain(FooterActionIds.COMPLETE);
         expect(ids).not.toContain(FooterActionIds.START);
@@ -296,22 +272,18 @@ describe('In-flight footer (the screenshot scenario)', () => {
             workflow: Workflows.SDD,
             status: 'planning',
             currentStep: WorkflowSteps.PLAN,
-            stepHistory: {
-                specify: { startedAt: 'a', completedAt: 'b' },
-                plan: { startedAt: 'c', completedAt: null },
-            },
         });
-        const actions = getFooterActions(ctx, WorkflowSteps.PLAN, SDD_STEPS);
+        const sh: SH = {
+            specify: { startedAt: 'a', completedAt: 'b' },
+            plan: { startedAt: 'c', completedAt: null },
+        };
+        const actions = getFooterActions(ctx, WorkflowSteps.PLAN, SDD_STEPS, sh);
         const approve = actions.find(a => a.id === FooterActionIds.APPROVE);
         expect(approve!.label).toBe('Tasks');
         expect(actions.map(a => a.id)).not.toContain(FooterActionIds.ARCHIVE);
     });
 
     it('pure draft (no startedAt) renders no buttons at all', () => {
-        // The viewer never realistically opens at status=draft with empty
-        // stepHistory, but if it did the footer would be empty: Edit Source
-        // is gone, Start/Auto are removed, Archive/Mark Completed are gated
-        // out, Regenerate needs startedAt, Approve needs startedAt too.
         const ctx = baseCtx({ workflow: Workflows.SDD, status: 'draft' });
         const ids = getFooterActions(ctx, WorkflowSteps.SPECIFY).map(a => a.id);
         expect(ids).toEqual([]);
@@ -353,9 +325,9 @@ describe('getFooterActions Approve label is dynamic', () => {
             workflow: Workflows.SDD,
             status: 'specifying',
             currentStep: WorkflowSteps.SPECIFY,
-            stepHistory: { specify: { startedAt: 'a', completedAt: null } },
         });
-        const actions = getFooterActions(ctx, WorkflowSteps.SPECIFY, SDD_STEPS);
+        const sh: SH = { specify: { startedAt: 'a', completedAt: null } };
+        const actions = getFooterActions(ctx, WorkflowSteps.SPECIFY, SDD_STEPS, sh);
         const approve = actions.find(a => a.id === FooterActionIds.APPROVE);
         expect(approve).toBeDefined();
         expect(approve!.label).toBe('Plan');
@@ -366,9 +338,9 @@ describe('getFooterActions Approve label is dynamic', () => {
             workflow: Workflows.SDD,
             status: 'specifying',
             currentStep: WorkflowSteps.SPECIFY,
-            stepHistory: { specify: { startedAt: 'a', completedAt: null } },
         });
-        const actions = getFooterActions(ctx, WorkflowSteps.SPECIFY);
+        const sh: SH = { specify: { startedAt: 'a', completedAt: null } };
+        const actions = getFooterActions(ctx, WorkflowSteps.SPECIFY, undefined, sh);
         const approve = actions.find(a => a.id === FooterActionIds.APPROVE);
         expect(approve!.label).toBe('Approve');
     });

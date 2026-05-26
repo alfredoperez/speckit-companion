@@ -4,7 +4,7 @@
  */
 
 import { signal } from '@preact/signals';
-import type { NavState, Refinement, DocumentType, ViewerState, Transition } from './types';
+import type { NavState, Refinement, DocumentType, ViewerState, HistoryEntry } from './types';
 
 /** Navigation state from extension messages */
 export const navState = signal<NavState | null>(null);
@@ -30,5 +30,5 @@ export const markdownHtml = signal('');
 /** Whether the activity panel is visible (toggled from the nav bar). */
 export const activityVisible = signal(false);
 
-/** Transitions array mirrored from viewerState for the timeline panel. */
-export const transitions = signal<Transition[]>([]);
+/** History array mirrored from viewerState for the timeline panel. */
+export const historyEntries = signal<HistoryEntry[]>([]);

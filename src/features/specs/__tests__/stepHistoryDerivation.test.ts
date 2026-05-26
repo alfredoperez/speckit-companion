@@ -180,4 +180,76 @@ describe('deriveStepHistory', () => {
             expect(out.specify.completedAt).not.toBe(out.specify.startedAt);
         });
     });
+
+    // Regression: review finding #3. setStepStarted writes from.step=null when
+    // ctx.currentStep === step (fresh buildFallback or a Regenerate), so the
+    // lastOwnIsCompletion check can't misfire on a start entry. The writer
+    // contract — start entries never have from.step === step — must hold.
+    describe('regression: start entries never look like completions', () => {
+        it('does NOT mark a step as completed when its lone entry has from.step=null', () => {
+            // Shape produced by setStepStarted on a fresh spec where currentStep
+            // already equals the step being started.
+            const transitions = [
+                tx({
+                    step: 'specify',
+                    substep: null,
+                    from: { step: null, substep: null },
+                    at: '2026-04-29T00:00:00Z',
+                }),
+            ];
+            const out = deriveStepHistory(transitions, 'specify');
+            expect(out.specify.startedAt).toBe('2026-04-29T00:00:00Z');
+            // The step is in flight — no completion entry yet.
+            expect(out.specify.completedAt).toBeNull();
+        });
+
+        it('DOES mark a step as completed when a self-loop entry (from.step === step) is appended', () => {
+            // Shape produced by setStepCompleted.
+            const transitions = [
+                tx({
+                    step: 'specify',
+                    substep: null,
+                    from: { step: null, substep: null },
+                    at: '2026-04-29T00:00:00Z',
+                }),
+                tx({
+                    step: 'specify',
+                    substep: null,
+                    from: { step: 'specify', substep: null },
+                    at: '2026-04-29T00:05:00Z',
+                }),
+            ];
+            const out = deriveStepHistory(transitions, 'specify');
+            expect(out.specify.startedAt).toBe('2026-04-29T00:00:00Z');
+            expect(out.specify.completedAt).toBe('2026-04-29T00:05:00Z');
+        });
+    });
+
+    // Regression: review finding #7. The new writer emits separate start + complete
+    // history entries per substep; buildSubsteps must fold the pair into one
+    // SubstepEntry, not render two rows.
+    describe('regression: substep start+complete pairs fold into one row', () => {
+        it('does not duplicate the substep when both start and completion entries are present', () => {
+            const transitions = [
+                tx({ step: 'specify', at: '2026-04-29T00:00:00Z' }),
+                tx({
+                    step: 'specify',
+                    substep: 'outline',
+                    from: { step: 'specify', substep: null },
+                    at: '2026-04-29T00:01:00Z',
+                }),
+                tx({
+                    step: 'specify',
+                    substep: 'outline',
+                    from: { step: 'specify', substep: 'outline' },
+                    at: '2026-04-29T00:02:00Z',
+                }),
+            ];
+            const out = deriveStepHistory(transitions, 'specify');
+            expect(out.specify.substeps).toHaveLength(1);
+            expect(out.specify.substeps![0].name).toBe('outline');
+            expect(out.specify.substeps![0].startedAt).toBe('2026-04-29T00:01:00Z');
+            expect(out.specify.substeps![0].completedAt).toBe('2026-04-29T00:02:00Z');
+        });
+    });
 });
