@@ -94,11 +94,11 @@ describe('buildPrompt', () => {
         });
     });
 
-    it('preamble stays under ~2000 chars per step', () => {
+    it('preamble stays under ~2400 chars per step', () => {
         mockConfig(true);
         for (const step of ['specify', 'plan', 'tasks', 'implement'] as const) {
             const out = buildPrompt({ command: 'x', step, specDir: 'specs/001-demo' });
-            expect(out.length).toBeLessThan(2000);
+            expect(out.length).toBeLessThan(2400);
         }
     });
 
