@@ -61,11 +61,25 @@ const DONE_PHRASE_BY_STEP: Record<PromptStep, string> = {
     implement: 'Done implementing',
 };
 
+const NEXT_STEP_BY_STEP: Record<PromptStep, PromptStep | null> = {
+    specify: 'plan',
+    plan: 'tasks',
+    tasks: 'implement',
+    implement: null,
+};
+
 function renderPreamble(step: PromptStep, specDir: string): string {
     const substeps = CANONICAL_SUBSTEPS[step].join(', ');
     const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
     const completedStatus = COMPLETED_STATUS_BY_STEP[step];
     const donePhrase = DONE_PHRASE_BY_STEP[step];
+    const nextStep = NEXT_STEP_BY_STEP[step];
+    const advanceClause = nextStep
+        ? `  (d) Set currentStep to "${nextStep}" (canonical: specify → plan → tasks → implement).`
+        : `  (d) Leave currentStep on "${step}" — this is the terminal step; do not advance further.`;
+    const advanceFailureNote = nextStep
+        ? `; skipping (d) pins currentStep on "${step}" and the PhasesCard reads "in progress" forever`
+        : '';
     return [
         MARKER_OPEN,
         `Before and after this step runs, update ${target}:`,
@@ -77,11 +91,12 @@ function renderPreamble(step: PromptStep, specDir: string): string {
         '',
         `Canonical substeps for ${step}: ${substeps}. For each substep boundary append a transition with that substep name (and a real timestamp) — do NOT write substep entries inside stepHistory.`,
         '',
-        `MUST DO BEFORE ENDING — all three required:`,
+        `MUST DO BEFORE ENDING — all four required:`,
         `  (a) Flip status to "${completedStatus}".`,
         `  (b) Append a completion transition { step: "${step}", substep: null, from: { step: "${step}", substep: null }, by: "extension", at: <real timestamp> }. This is what clears the "in-flight" ring on the ${step} tab.`,
         `  (c) Print "${donePhrase}" as the final terminal line.`,
-        `Skipping (a) leaves the badge stuck on the in-progress form; skipping (b) leaves the step timer running indefinitely; skipping (c) hides the completion from the activity log.`,
+        advanceClause,
+        `Skipping (a) leaves the badge stuck on the in-progress form; skipping (b) leaves the step timer running indefinitely; skipping (c) hides the completion from the activity log${advanceFailureNote}.`,
         '',
         SHARED_RULES,
         '',
@@ -100,6 +115,7 @@ function renderLifecycleBody(target: string): string {
         '1. Before starting: set currentStep = "<step>" and status = in-progress form. Append a transition { step: "<step>", substep: null, from, by: "extension", at: <real timestamp> }.',
         '2. After completing: flip status = completed form. Append a completion transition { step: "<step>", substep: null, from: { step: "<step>", substep: null }, by: "extension", at: <real timestamp> } — this is what clears the in-flight ring on the tab.',
         '3. Append a transition entry for each substep boundary too, using a real timestamp.',
+        '4. After completing a step, also set currentStep to the next step in the canonical sequence specify → plan → tasks → implement. After implement, leave currentStep on "implement" — it is terminal.',
         '',
         SHARED_RULES,
         '',
