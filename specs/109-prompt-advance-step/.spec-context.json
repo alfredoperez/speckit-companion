@@ -187,6 +187,16 @@
       },
       "by": "sdd",
       "at": "2026-05-26T18:29:57.200Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "done",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-26T18:31:19.795Z"
     }
   ],
   "status": "completed",
@@ -235,12 +245,12 @@
       ]
     }
   },
-  "last_action": "T006 done \u2014 all tests pass after preamble-length budget bump.",
+  "last_action": "PR #177 opened \u2014 fix(ai-providers): advance currentStep on step completion so phases progress",
   "files_modified": [
     "src/ai-providers/promptBuilder.ts",
     "src/ai-providers/__tests__/promptBuilder.test.ts"
   ],
-  "drainedSeq": 12,
+  "drainedSeq": 13,
   "concerns": [
     {
       "task": "T006",
@@ -250,5 +260,7 @@
   "checkpointStatus": {
     "commit": true,
     "pr": true
-  }
+  },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/177",
+  "prNumber": 177
 }
