@@ -66,7 +66,7 @@ export interface TransitionFrom {
     substep: string | null;
 }
 
-export type TransitionBy = 'extension' | 'user' | 'cli' | 'sdd' | 'ai';
+export type TransitionBy = 'extension' | 'user' | 'cli' | 'sdd' | 'sdd-skill' | 'ai';
 
 export interface Transition {
     step: StepName;

@@ -20,6 +20,7 @@ import {
     ConcernEntry,
     CheckpointStatus,
     ReviewComment,
+    Transition,
 } from '../../core/types/specContext';
 import { getFooterActions } from './footerActions';
 import { deriveStepHistory } from '../specs/stepHistoryDerivation';
@@ -202,6 +203,21 @@ export function deriveActiveSubstep(
     return null;
 }
 
+/**
+ * Relabel transitions authored by the SDD plugin's *skills* (templates that
+ * seed `.spec-context.json` on first write, or `sdd:specify`/`sdd:init`
+ * skill output) so they don't masquerade as the user invoking `/sdd:*`
+ * commands. When the active workflow is not `sdd` itself, a transition
+ * stamped `by: 'sdd'` was almost certainly written by an SDD skill on the
+ * user's behalf, not by a deliberate `/sdd:*` invocation. Display-only —
+ * the on-disk value is untouched. See plan: Spec C.
+ */
+function normalizeTransitionAttribution(ctx: SpecContext): Transition[] {
+    const raw = ctx.transitions ?? [];
+    if (ctx.workflow === 'sdd') return raw;
+    return raw.map(t => (t.by === 'sdd' ? { ...t, by: 'sdd-skill' as const } : t));
+}
+
 export function deriveViewerState(
     ctx: SpecContext,
     activeStep: StepName = ctx.currentStep,
@@ -215,7 +231,7 @@ export function deriveViewerState(
         highlights: deriveHighlights(ctx),
         activeSubstep: deriveActiveSubstep(ctx),
         footer: getFooterActions(ctx, activeStep, workflowSteps),
-        transitions: ctx.transitions ?? [],
+        transitions: normalizeTransitionAttribution(ctx),
         // Derive stepHistory from the reliable transitions[] sequence rather
         // than trusting the on-disk stepHistory (AI-typed, unreliable). Pass
         // status so the terminal step finalizes (completed/archived) instead of
