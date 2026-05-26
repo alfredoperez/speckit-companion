@@ -223,7 +223,7 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         mcpConfigPath: '.claude/settings.json',
         configDir: '.claude',
         supportsHooks: true,
-        displayName: 'Claude',
+        displayName: 'Claude Code',
         commandFormat: 'dash',
         quickPickIcon: '$(hubot)',
         quickPickDescription: 'Full feature support: steering, agents, hooks, and MCP',
@@ -242,7 +242,7 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         mcpConfigPath: '.gemini/settings.json',
         configDir: '.gemini',
         supportsHooks: false,
-        displayName: 'Gemini',
+        displayName: 'Gemini CLI',
         commandFormat: 'dot',
         quickPickIcon: '$(sparkle)',
         quickPickDescription: 'Steering and MCP support (no agents or hooks)',
@@ -261,7 +261,7 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         mcpConfigPath: '.copilot/mcp-config.json',
         configDir: '.github',
         supportsHooks: false,
-        displayName: 'Copilot',
+        displayName: 'GitHub Copilot CLI',
         commandFormat: 'dot',
         quickPickIcon: '$(github)',
         quickPickDescription: 'Steering, agents, and MCP support (no hooks)',
@@ -280,7 +280,7 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         mcpConfigPath: '~/.codex/config.toml', // Note: home directory, TOML format
         configDir: '.codex',
         supportsHooks: false,
-        displayName: 'Codex',
+        displayName: 'Codex CLI',
         commandFormat: 'dash',
         quickPickIcon: '$(terminal)',
         quickPickDescription: 'Steering, skills, and MCP support',
@@ -299,7 +299,7 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         mcpConfigPath: '.qwen/settings.json',
         configDir: '.qwen',
         supportsHooks: false,
-        displayName: 'Qwen',
+        displayName: 'Qwen Code',
         commandFormat: 'dot',
         quickPickIcon: '$(hubot)',
         quickPickDescription: 'Steering and MCP support (no agents or hooks)',
@@ -366,7 +366,7 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         mcpConfigPath: '.claude/settings.json',
         configDir: '.claude',
         supportsHooks: true,
-        displayName: 'Claude in VS Code',
+        displayName: 'Claude Code (VS Code)',
         commandFormat: 'dash',
         quickPickIcon: '$(window)',
         quickPickDescription: 'Open the Claude Code GUI panel and prefill the command (no terminal)',
@@ -442,7 +442,7 @@ export async function promptForProviderSelection(): Promise<AIProviderType | und
     const items = (Object.keys(PROVIDER_PATHS) as AIProviderType[]).map(type => {
         const p = PROVIDER_PATHS[type];
         return {
-            label: `${p.quickPickIcon} ${p.displayName}`,
+            label: `${p.quickPickIcon} ${getProviderDisplayName(type)}`,
             description: p.quickPickDescription,
             value: type,
         };
@@ -471,4 +471,22 @@ export async function promptForProviderSelection(): Promise<AIProviderType | und
 export function getProviderPaths(providerType?: AIProviderType): ProviderPaths {
     const type = providerType ?? getConfiguredProviderType();
     return PROVIDER_PATHS[type];
+}
+
+/**
+ * Returns the human-readable display name for the given provider type.
+ * For IDE_CHAT, resolves the host editor at call-time and returns
+ * "GitHub Copilot", "Cursor Chat", "Windsurf Chat", or "IDE Chat" as fallback.
+ * All other providers return their static PROVIDER_PATHS displayName.
+ */
+export function getProviderDisplayName(type: AIProviderType): string {
+    if (type === AIProviders.IDE_CHAT) {
+        const scheme = (vscode.env.uriScheme || '').toLowerCase();
+        const appName = (vscode.env.appName || '').toLowerCase();
+        if (scheme === 'cursor' || appName.includes('cursor')) { return 'Cursor Chat'; }
+        if (scheme === 'windsurf' || appName.includes('windsurf')) { return 'Windsurf Chat'; }
+        if (scheme === 'vscode' || scheme === 'vscode-insiders' || appName.includes('visual studio code')) { return 'GitHub Copilot'; }
+        return 'IDE Chat';
+    }
+    return PROVIDER_PATHS[type].displayName;
 }

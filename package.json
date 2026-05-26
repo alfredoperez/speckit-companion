@@ -691,9 +691,19 @@
               "opencode",
               "ide-chat"
             ],
+            "enumItemLabels": [
+              "Claude Code",
+              "Claude Code (VS Code)",
+              "Gemini CLI",
+              "GitHub Copilot CLI",
+              "Codex CLI",
+              "Qwen Code",
+              "OpenCode",
+              "IDE Chat (Copilot · Cursor · Windsurf)"
+            ],
             "enumDescriptions": [
               "Claude Code - Full feature support (steering, agents, skills, hooks)",
-              "Claude in VS Code - Opens the Claude Code panel (anthropic.claude-code) and pre-fills the prompt (press Enter to send)",
+              "Claude Code (VS Code) - Opens the Claude Code panel (anthropic.claude-code) and pre-fills the prompt (press Enter to send)",
               "Gemini CLI - Steering support",
               "GitHub Copilot CLI - Steering and agents support",
               "Codex CLI - Steering and skills support",

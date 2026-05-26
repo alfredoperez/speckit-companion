@@ -47,6 +47,34 @@ const HOST_PROFILES: Record<HostIde, HostProfile> = {
     unknown: { label: 'Unknown editor', chatCommands: [BASE_CHAT_OPEN], dashCommands: false, clipboardFallback: false },
 };
 
+const IDE_DISPLAY_NAMES: Record<HostIde, string> = {
+    vscode: 'GitHub Copilot',
+    cursor: 'Cursor Chat',
+    windsurf: 'Windsurf Chat',
+    antigravity: 'IDE Chat',
+    unknown: 'IDE Chat',
+};
+
+/**
+ * Returns the human-readable display name for the host IDE's chat product.
+ * Used by getProviderDisplayName() in aiProvider.ts and detectHostIde() below.
+ */
+export function getIdeChatDisplayName(): string {
+    const scheme = (vscode.env.uriScheme || '').toLowerCase();
+    const appName = (vscode.env.appName || '').toLowerCase();
+    let host: HostIde = 'unknown';
+    if (scheme === 'cursor' || appName.includes('cursor')) {
+        host = 'cursor';
+    } else if (scheme === 'windsurf' || appName.includes('windsurf')) {
+        host = 'windsurf';
+    } else if (scheme === 'antigravity' || scheme === 'agy' || appName.includes('antigravity')) {
+        host = 'antigravity';
+    } else if (scheme === 'vscode' || scheme === 'vscode-insiders' || appName.includes('visual studio code')) {
+        host = 'vscode';
+    }
+    return IDE_DISPLAY_NAMES[host];
+}
+
 /** Common tail for the no-chat-target warnings — keeps the guidance identical. */
 const SWITCH_TO_CLI_HINT =
     'Switch `speckit.aiProvider` to a CLI provider (e.g. Claude, Gemini) to run this command.';
@@ -94,7 +122,6 @@ export class IdeChatProvider implements IAIProvider {
         // inherited base chat command before giving up.
         return 'unknown';
     }
-
     /**
      * Resolve the first candidate chat command that is actually registered in
      * the running editor. Returns `undefined` when none are available so the

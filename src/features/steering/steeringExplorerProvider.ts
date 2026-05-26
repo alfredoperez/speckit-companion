@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 import { SteeringManager } from './steeringManager';
-import { getConfiguredProviderType, getProviderPaths, AIProviderType } from '../../ai-providers/aiProvider';
+import { getConfiguredProviderType, getProviderPaths, getProviderDisplayName, AIProviderType } from '../../ai-providers/aiProvider';
 import { SpecKitFilesResult, SPECKIT_PATHS } from './types';
 import { BaseTreeDataProvider } from '../../core/providers';
 import { AgentManager, AgentInfo } from '../agents/agentManager';
@@ -175,7 +175,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
 
             // AI Provider section — CLAUDE.md, agents, skills, settings under provider name
             items.push(new SteeringItem(
-                providerPaths.displayName,
+                getProviderDisplayName(getConfiguredProviderType()),
                 vscode.TreeItemCollapsibleState.Collapsed,
                 TreeItemContext.providerHeader,
                 '',
