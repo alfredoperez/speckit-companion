@@ -34,7 +34,7 @@
  */
 
 import {
-    Transition,
+    HistoryEntry,
     StepHistoryEntry,
     SubstepEntry,
     StepName,
@@ -44,7 +44,7 @@ import { SpecStatuses } from '../../core/constants';
 
 interface RawStep {
     step: string;
-    transitions: Transition[];
+    transitions: HistoryEntry[];
     /** Index of the first transition for the *next* step, or -1 if this is the last seen step. */
     nextStepFirstIdx: number;
 }
@@ -59,8 +59,8 @@ interface RawStep {
  * first of each run is kept (preserving its real `at`), later duplicates are
  * dropped so durations/substep lists aren't distorted.
  */
-function dedupeConsecutive(transitions: Transition[]): Transition[] {
-    const out: Transition[] = [];
+function dedupeConsecutive(transitions: HistoryEntry[]): HistoryEntry[] {
+    const out: HistoryEntry[] = [];
     for (const t of transitions) {
         const prev = out[out.length - 1];
         const sameStep = prev !== undefined && prev.step === t.step;
@@ -73,7 +73,7 @@ function dedupeConsecutive(transitions: Transition[]): Transition[] {
     return out;
 }
 
-function groupStepsInOrder(transitions: Transition[]): RawStep[] {
+function groupStepsInOrder(transitions: HistoryEntry[]): RawStep[] {
     const out: RawStep[] = [];
     const seen = new Map<string, RawStep>();
     for (let i = 0; i < transitions.length; i++) {
@@ -104,23 +104,45 @@ function groupStepsInOrder(transitions: Transition[]): RawStep[] {
     return out;
 }
 
-function buildSubsteps(stepTxs: Transition[], fallbackEnd: string | null): SubstepEntry[] {
+/**
+ * Build substep rows. Substep entries come in two shapes per the writers:
+ *   - start:      `{ substep: 'X', from: { substep: null } }`
+ *   - completion: `{ substep: 'X', from: { substep: 'X'  } }`  // self-loop
+ * Pair a start with its matching completion (same substep name, completion
+ * shape) when adjacent. Without a paired completion, fall through to
+ * "started, ended at next substep's start" so legacy entries that only
+ * record substep boundaries still render correctly.
+ */
+function buildSubsteps(stepTxs: HistoryEntry[], fallbackEnd: string | null): SubstepEntry[] {
     const subs = stepTxs.filter(t => t.substep !== null && t.substep !== undefined);
     const out: SubstepEntry[] = [];
     for (let i = 0; i < subs.length; i++) {
         const s = subs[i];
+        // A completion entry has `from.substep === substep`. A start has
+        // `from.substep == null` (or a different name). Skip completion
+        // entries here — they're consumed by the preceding start, not
+        // rendered as their own row.
+        const isCompletion = s.from?.substep === s.substep;
+        if (isCompletion) continue;
+
         const next = subs[i + 1];
+        const nextIsMatchingCompletion =
+            next && next.substep === s.substep && next.from?.substep === s.substep;
         out.push({
             name: s.substep as string,
             startedAt: s.at,
-            completedAt: next ? next.at : fallbackEnd,
+            completedAt: nextIsMatchingCompletion
+                ? next.at
+                : next
+                    ? next.at  // legacy: next substep's start ends this one
+                    : fallbackEnd,
         });
     }
     return out;
 }
 
 export function deriveStepHistory(
-    transitions: Transition[],
+    transitions: HistoryEntry[],
     currentStep?: StepName,
     status?: Status
 ): Record<string, StepHistoryEntry> {
@@ -140,11 +162,23 @@ export function deriveStepHistory(
         const startedAt = g.transitions[0].at;
 
         let completedAt: string | null = null;
+        // A "completion" entry is one whose `from.step` matches its own
+        // `step` — that's how setStepCompleted writes the close-boundary.
+        // If the most recent entry for this step is a completion, the step
+        // is done even if currentStep is still pointed at it.
+        const lastOwn = g.transitions[g.transitions.length - 1];
+        const lastOwnIsCompletion = lastOwn?.from?.step === g.step && lastOwn?.substep == null;
+
         if (g.nextStepFirstIdx !== -1) {
             // A later step exists in transitions — that step's first transition
             // is this step's real boundary. Index refers to the de-duplicated
             // array that `groupStepsInOrder` walked.
             completedAt = deduped[g.nextStepFirstIdx].at;
+        } else if (lastOwnIsCompletion) {
+            // No later step yet, but this step has a real completion entry —
+            // honor it (covers `setStepCompleted` calls before the user has
+            // clicked the next-phase button).
+            completedAt = lastOwn.at;
         } else if (isLastSeen && isCurrent && isTerminal) {
             // Most recently seen step, currentStep matches, AND the spec is in
             // a terminal status → finalize to this step's last real transition

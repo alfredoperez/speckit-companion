@@ -49,32 +49,53 @@ export const STATUSES: Status[] = [
     'archived',
 ];
 
+/**
+ * Per-substep timing entry. Derived in-memory by the viewer from
+ * `history[]`; not persisted on disk.
+ */
 export interface SubstepEntry {
     name: string;
     startedAt: string;
     completedAt: string | null;
 }
 
+/**
+ * Per-step timing entry. Derived in-memory by the viewer from `history[]`;
+ * not persisted on disk. (See `ViewerState.stepHistory`.)
+ */
 export interface StepHistoryEntry {
     startedAt: string;
     completedAt: string | null;
     substeps?: SubstepEntry[];
 }
 
-export interface TransitionFrom {
+export interface HistoryEntryFrom {
     step: StepName | null;
     substep: string | null;
 }
 
-export type TransitionBy = 'extension' | 'user' | 'cli' | 'sdd' | 'sdd-skill' | 'ai';
+export type HistoryEntryBy = 'extension' | 'user' | 'cli' | 'sdd' | 'sdd-skill' | 'ai';
 
-export interface Transition {
+/**
+ * A single entry in the append-only `history[]` log. Replaces the previous
+ * `transitions[]` field — the on-disk source of truth for the spec's
+ * lifecycle. Per-step timing (`stepHistory`) is derived from this in-memory
+ * by the viewer; it is not persisted.
+ */
+export interface HistoryEntry {
     step: StepName;
     substep: string | null;
-    from: TransitionFrom;
-    by: TransitionBy;
+    from: HistoryEntryFrom;
+    by: HistoryEntryBy;
     at: string;
 }
+
+// Type-only aliases retained so call sites that import `Transition` keep
+// compiling. The on-disk field is `history` only — these are pure imports.
+export type Transition = HistoryEntry;
+export type TransitionFrom = HistoryEntryFrom;
+export type TransitionBy = HistoryEntryBy;
+
 
 /**
  * Document a review comment is anchored to. Was previously restricted to the
@@ -124,8 +145,7 @@ export interface SpecContext {
     selectedAt?: string;
     currentStep: StepName;
     status: Status;
-    stepHistory: Record<string, StepHistoryEntry>;
-    transitions: Transition[];
+    history: HistoryEntry[];
     /** Persisted inline review comments (replaces `<doc>-extra.md`). */
     reviewComments?: ReviewComment[];
     // Skill-authored (SDD/SpecKit) fields, viewer-relevant — declared optional;
@@ -150,8 +170,18 @@ export type StepBadgeState = 'not-started' | 'in-progress' | 'completed';
 /** Scope of a footer action */
 export type FooterScope = 'spec' | 'step';
 
-/** Visibility predicate for a footer action */
-export type FooterVisibleWhen = (ctx: SpecContext, step: StepName) => boolean;
+/**
+ * Visibility predicate for a footer action.
+ *
+ * `stepHistory` is the in-memory derived view (from `ctx.history`) — passed
+ * in so each predicate doesn't redo the derivation. Optional for callers
+ * that don't need per-step timing.
+ */
+export type FooterVisibleWhen = (
+    ctx: SpecContext,
+    step: StepName,
+    stepHistory: Record<string, StepHistoryEntry>
+) => boolean;
 
 export interface FooterAction {
     id: string;
@@ -187,7 +217,7 @@ export interface ViewerState {
     highlights: StepName[];
     activeSubstep: { step: StepName; name: string } | null;
     footer: FooterAction[];
-    transitions: Transition[];
+    history: HistoryEntry[];
     stepHistory: Record<string, StepHistoryEntry>;
     /** Activity panel — passthroughs from `.spec-context.json`. */
     approach?: string;

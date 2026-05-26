@@ -1,18 +1,18 @@
 /**
- * Merge `stepHistory.substeps` (carries duration) with non-null transition
+ * Merge `stepHistory.substeps` (carries duration) with non-null history
  * substeps (carries actor) into a single chronological event list per step.
  *
  * - Tracked events come from `stepHistory[step].substeps[]`. They have a
  *   `startedAt` and `completedAt` so we can render a duration.
- * - Logged-only events come from transitions whose `substep` is non-null and
- *   whose name isn't already in the tracked set. They only carry an `at`
+ * - Logged-only events come from history entries whose `substep` is non-null
+ *   and whose name isn't already in the tracked set. They only carry an `at`
  *   timestamp; render as a single moment.
  *
  * Every event also gets an optional `by` actor, looked up from the matching
- * transition by `(step, substep-name)`.
+ * history entry by `(step, substep-name)`.
  */
 
-import type { Transition, StepHistoryEntry, SubstepEntry } from './types';
+import type { HistoryEntry, StepHistoryEntry, SubstepEntry } from './types';
 
 export type TimelineEventSource = 'tracked' | 'logged';
 
@@ -43,32 +43,35 @@ export interface TimelineEventModel {
     by?: string;
 }
 
-export function buildTransitionIndex(
-    transitions: Transition[]
-): Map<string, Transition> {
-    const map = new Map<string, Transition>();
-    for (const t of transitions) {
+export function buildHistoryIndex(
+    history: HistoryEntry[]
+): Map<string, HistoryEntry> {
+    const map = new Map<string, HistoryEntry>();
+    for (const t of history) {
         if (!t.substep) continue;
         const key = `${t.step}:${t.substep}`;
-        // Last write wins — most recent transition for the same (step, substep)
+        // Last write wins — most recent entry for the same (step, substep)
         // pair carries the freshest actor info.
         map.set(key, t);
     }
     return map;
 }
 
+/** @deprecated Renamed to `buildHistoryIndex`. */
+export const buildTransitionIndex = buildHistoryIndex;
+
 export function mergeStepEvents(
     step: string,
-    history: StepHistoryEntry | undefined,
-    transitions: Transition[],
-    transitionIndex: Map<string, Transition> = buildTransitionIndex(transitions),
+    stepEntry: StepHistoryEntry | undefined,
+    history: HistoryEntry[],
+    historyIndex: Map<string, HistoryEntry> = buildHistoryIndex(history),
 ): TimelineEventModel[] {
     const out: TimelineEventModel[] = [];
     const trackedNames = new Set<string>();
 
-    for (const sub of normalizeSubsteps(history?.substeps)) {
+    for (const sub of normalizeSubsteps(stepEntry?.substeps)) {
         trackedNames.add(sub.name);
-        const tx = transitionIndex.get(`${step}:${sub.name}`);
+        const tx = historyIndex.get(`${step}:${sub.name}`);
         out.push({
             name: sub.name,
             startedAt: sub.startedAt,
@@ -78,10 +81,13 @@ export function mergeStepEvents(
         });
     }
 
-    for (const tx of transitions) {
+    for (const tx of history) {
         if (tx.step !== step) continue;
         if (!tx.substep) continue;
         if (trackedNames.has(tx.substep)) continue;
+        // A completion entry's `from.substep === substep` (self-loop). Skip;
+        // the start entry already produced the row.
+        if (tx.from?.substep === tx.substep) continue;
         out.push({
             name: tx.substep,
             startedAt: tx.at,

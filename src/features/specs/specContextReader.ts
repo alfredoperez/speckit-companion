@@ -10,6 +10,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import {
+    HistoryEntry,
     SpecContext,
     Status,
     StepName,
@@ -62,20 +63,25 @@ export function readSpecContextSync(specDir: string): SpecContext | null {
  *   - Files that only contain `{ status: "completed" }` (spec 055, 058 cases).
  *   - Old `status` values `"active" | "tasks-done"` — mapped to `"implementing"`
  *     so downstream derivation remains correct.
- *   - Missing `stepHistory`/`transitions` — defaulted to empty containers.
+ *   - Missing `history` — defaulted to empty array.
+ *   - Legacy `transitions` field — coerced into `history`.
+ *   - Legacy `stepHistory` field — ignored (viewer derives it from `history`);
+ *     dropped from the in-memory object so it doesn't get re-written.
  */
 export function normalizeSpecContext(raw: Record<string, unknown>): SpecContext {
-    const stepHistory =
-        raw.stepHistory && typeof raw.stepHistory === 'object'
-            ? (raw.stepHistory as SpecContext['stepHistory'])
-            : {};
-    const transitions = Array.isArray(raw.transitions)
-        ? (raw.transitions as SpecContext['transitions'])
-        : [];
+    // Prefer the canonical `history` field; fall back to legacy `transitions`
+    // so files written by older versions still load.
+    const history: HistoryEntry[] = Array.isArray(raw.history)
+        ? (raw.history as HistoryEntry[])
+        : Array.isArray(raw.transitions)
+            ? (raw.transitions as HistoryEntry[])
+            : [];
 
-    const status = coerceStatus(raw.status, stepHistory);
-    const currentStep = coerceCurrentStep(raw.currentStep, stepHistory);
+    const status = coerceStatus(raw.status, history);
+    const currentStep = coerceCurrentStep(raw.currentStep, history);
 
+    // Spread `raw` first to retain unknown fields, then strip the legacy
+    // names so they don't end up in the in-memory canonical shape.
     const out: SpecContext = {
         ...(raw as object),
         workflow: typeof raw.workflow === 'string' && raw.workflow.length > 0
@@ -88,9 +94,10 @@ export function normalizeSpecContext(raw: Record<string, unknown>): SpecContext 
             : (raw.workingBranch === null ? null : undefined),
         currentStep,
         status,
-        stepHistory,
-        transitions,
+        history,
     };
+    delete (out as Record<string, unknown>).stepHistory;
+    delete (out as Record<string, unknown>).transitions;
 
     const normalizedTaskSummaries = normalizeTaskSummaries(raw.task_summaries);
     if (normalizedTaskSummaries) {
@@ -167,10 +174,7 @@ function applyCoercion(target: Record<string, unknown>, key: string, result: Coe
     target[key] = result.value;
 }
 
-function coerceStatus(
-    value: unknown,
-    stepHistory: SpecContext['stepHistory']
-): Status {
+function coerceStatus(value: unknown, history: HistoryEntry[]): Status {
     if (typeof value === 'string' && (STATUSES as string[]).includes(value)) {
         return value as Status;
     }
@@ -178,27 +182,30 @@ function coerceStatus(
     if (value === 'active') return 'implementing';
     if (value === 'tasks-done') return 'ready-to-implement';
     // If there's no status, infer `draft` unless history suggests otherwise.
-    if (stepHistory && Object.keys(stepHistory).length > 0) {
+    if (history.length > 0) {
         return 'implementing';
     }
     return 'draft';
 }
 
-function coerceCurrentStep(
-    value: unknown,
-    stepHistory: SpecContext['stepHistory']
-): StepName {
+function coerceCurrentStep(value: unknown, history: HistoryEntry[]): StepName {
     if (typeof value === 'string' && (STEP_NAMES as string[]).includes(value)) {
         return value as StepName;
     }
-    // Pick the latest step with startedAt, else 'specify'.
+    // Pick the step with the latest `at` timestamp (chronology, not array
+    // order). AI-written history can be appended out of wall-clock order
+    // when the model backdates a substep boundary; sort by `at` so the
+    // recovered currentStep matches what most recently happened.
     let best: StepName = 'specify';
     let bestTime = '';
-    for (const step of STEP_NAMES) {
-        const entry = stepHistory[step];
-        if (entry?.startedAt && entry.startedAt > bestTime) {
-            best = step;
-            bestTime = entry.startedAt;
+    for (const entry of history) {
+        const step = entry?.step;
+        const at = entry?.at;
+        if (!step || !at) continue;
+        if (!(STEP_NAMES as string[]).includes(step)) continue;
+        if (at > bestTime) {
+            best = step as StepName;
+            bestTime = at;
         }
     }
     return best;
@@ -234,11 +241,10 @@ export function validateSpecContext(ctx: unknown): { valid: boolean; errors: str
     if (!(STEP_NAMES as string[]).includes(r.currentStep as string)) {
         errors.push(`invalid currentStep: ${r.currentStep}`);
     }
-    if (!r.stepHistory || typeof r.stepHistory !== 'object') {
-        errors.push('missing/invalid stepHistory');
-    }
-    if (!Array.isArray(r.transitions)) {
-        errors.push('missing/invalid transitions');
+    // Accept either `history` (canonical) or legacy `transitions` so older
+    // files still validate at read time; the writer migrates them.
+    if (!Array.isArray(r.history) && !Array.isArray(r.transitions)) {
+        errors.push('missing/invalid history');
     }
     return { valid: errors.length === 0, errors };
 }

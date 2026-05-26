@@ -17,9 +17,18 @@
  *     `Submit`), not in the post-creation viewer footer.
  */
 
-import { FooterAction, SpecContext, StepName, STEP_NAMES } from '../../core/types/specContext';
+import {
+    FooterAction,
+    SpecContext,
+    StepHistoryEntry,
+    StepName,
+    STEP_NAMES,
+} from '../../core/types/specContext';
 import { SpecStatuses, FooterActionIds } from '../../core/constants';
+import { deriveStepHistory } from '../specs/stepHistoryDerivation';
 import type { WorkflowStepConfig } from '../workflows/types';
+
+type DerivedHistory = Record<string, StepHistoryEntry>;
 
 const SCOPE_SUFFIX: Record<'spec' | 'step', string> = {
     spec: 'Affects whole spec',
@@ -65,14 +74,18 @@ function isSpecDone(ctx: SpecContext): boolean {
  * final step (`implement`) has its `completedAt` — at that point the
  * spec-scope `Mark Completed` is the right surface, not Approve.
  */
-function shouldShowApprove(ctx: SpecContext, step: StepName): boolean {
-    const entry = ctx.stepHistory[step];
+function shouldShowApprove(
+    _ctx: SpecContext,
+    step: StepName,
+    stepHistory: DerivedHistory
+): boolean {
+    const entry = stepHistory[step];
     if (!entry?.startedAt) return false;
     const idx = STEP_NAMES.indexOf(step);
     if (idx < 0) return false;
     // Any later step started → workflow has moved past this tab.
     for (let i = idx + 1; i < STEP_NAMES.length; i++) {
-        if (ctx.stepHistory[STEP_NAMES[i]]?.startedAt) return false;
+        if (stepHistory[STEP_NAMES[i]]?.startedAt) return false;
     }
     // Step in flight → always show.
     if (!entry.completedAt) return true;
@@ -130,9 +143,9 @@ export const FOOTER_ACTIONS: FooterAction[] = [
         label: 'Regenerate',
         scope: 'step',
         tooltip: 'Re-run only the current step',
-        visibleWhen: (ctx, step) => {
+        visibleWhen: (ctx, step, stepHistory) => {
             if (isTerminal(ctx.status)) return false;
-            const entry = ctx.stepHistory[step];
+            const entry = stepHistory[step];
             return !!entry?.startedAt;
         },
     },
@@ -141,9 +154,9 @@ export const FOOTER_ACTIONS: FooterAction[] = [
         label: 'Approve',
         scope: 'step',
         tooltip: 'Approve this step and continue',
-        visibleWhen: (ctx, step) => {
+        visibleWhen: (ctx, step, stepHistory) => {
             if (isTerminal(ctx.status)) return false;
-            return shouldShowApprove(ctx, step);
+            return shouldShowApprove(ctx, step, stepHistory);
         },
     },
 ];
@@ -151,9 +164,10 @@ export const FOOTER_ACTIONS: FooterAction[] = [
 export function getFooterActions(
     ctx: SpecContext,
     step: StepName,
-    workflowSteps?: WorkflowStepConfig[]
+    workflowSteps?: WorkflowStepConfig[],
+    stepHistory: DerivedHistory = deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status)
 ): FooterAction[] {
-    const visible = FOOTER_ACTIONS.filter(a => a.visibleWhen(ctx, step));
+    const visible = FOOTER_ACTIONS.filter(a => a.visibleWhen(ctx, step, stepHistory));
     return visible.map(a =>
         a.id === FooterActionIds.APPROVE
             ? { ...a, label: getApproveLabel(step, workflowSteps) }

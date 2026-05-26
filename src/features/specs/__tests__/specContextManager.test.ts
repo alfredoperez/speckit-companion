@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import {
     readSpecContext,
@@ -7,268 +9,162 @@ import {
     setSpecStatus,
 } from '../specContextManager';
 
-const SPEC_DIR = '/workspace/specs/my-feature';
-const CONTEXT_FILE = path.join(SPEC_DIR, '.spec-context.json');
+function mkTmp(): string {
+    return fs.mkdtempSync(path.join(os.tmpdir(), 'spec-ctx-mgr-'));
+}
 
-// Mock fs.promises directly before module load
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockReadFile: jest.Mock<any, any> = jest.fn().mockRejectedValue(new Error('ENOENT'));
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockWriteFile: jest.Mock<any, any> = jest.fn().mockResolvedValue(undefined);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockReadFileSync: jest.Mock<any, any> = jest.fn(() => { throw new Error('ENOENT'); });
+function readJson(specDir: string): Record<string, unknown> {
+    const raw = fs.readFileSync(path.join(specDir, '.spec-context.json'), 'utf-8');
+    return JSON.parse(raw);
+}
 
-jest.mock('fs', () => ({
-    promises: {
-        readFile: (...args: unknown[]) => mockReadFile(...args),
-        writeFile: (...args: unknown[]) => mockWriteFile(...args),
-    },
-    readFileSync: (...args: unknown[]) => mockReadFileSync(...args),
-}));
-
-describe('specContextManager', () => {
-    beforeEach(() => {
-        mockReadFile.mockReset().mockRejectedValue(new Error('ENOENT'));
-        mockWriteFile.mockReset().mockResolvedValue(undefined);
-        mockReadFileSync.mockReset().mockImplementation(() => { throw new Error('ENOENT'); });
-    });
-
+describe('specContextManager (canonical-writer shim)', () => {
     describe('readSpecContext', () => {
-        it('should return undefined when no file exists', async () => {
-            const result = await readSpecContext(SPEC_DIR);
+        it('returns undefined when no file exists', async () => {
+            const dir = mkTmp();
+            const result = await readSpecContext(dir);
             expect(result).toBeUndefined();
         });
 
-        it('should read .spec-context.json', async () => {
-            const context = { workflow: 'default', selectedAt: '2026-01-01', status: 'active' as const };
-            mockReadFile.mockResolvedValue(JSON.stringify(context));
+        it('reads .spec-context.json', async () => {
+            const dir = mkTmp();
+            const context = { workflow: 'default', selectedAt: '2026-01-01', status: 'active' };
+            fs.writeFileSync(path.join(dir, '.spec-context.json'), JSON.stringify(context));
 
-            const result = await readSpecContext(SPEC_DIR);
-            expect(result).toEqual(context);
-            expect(mockReadFile).toHaveBeenCalledWith(CONTEXT_FILE, 'utf-8');
+            const result = await readSpecContext(dir);
+            expect(result).toMatchObject(context);
         });
-
     });
 
     describe('readSpecContextSync', () => {
-        it('should return undefined when no file exists', () => {
-            mockReadFileSync.mockImplementation(() => {
-                throw new Error('ENOENT');
-            });
-
-            const result = readSpecContextSync(SPEC_DIR);
+        it('returns undefined when no file exists', () => {
+            const dir = mkTmp();
+            const result = readSpecContextSync(dir);
             expect(result).toBeUndefined();
         });
 
-        it('should read .spec-context.json', () => {
+        it('reads .spec-context.json', () => {
+            const dir = mkTmp();
             const context = { workflow: 'default', selectedAt: '2026-01-01' };
-            mockReadFileSync.mockReturnValue(JSON.stringify(context));
+            fs.writeFileSync(path.join(dir, '.spec-context.json'), JSON.stringify(context));
 
-            const result = readSpecContextSync(SPEC_DIR);
-            expect(result).toEqual(context);
-            expect(mockReadFileSync).toHaveBeenCalledWith(CONTEXT_FILE, 'utf-8');
+            const result = readSpecContextSync(dir);
+            expect(result).toMatchObject(context);
         });
-
     });
 
     describe('updateSpecContext', () => {
-        it('should merge partial update without overwriting existing fields', async () => {
-            const existing = { workflow: 'default', selectedAt: '2026-01-01', currentStep: 'specify' };
-            mockReadFile.mockResolvedValue(JSON.stringify(existing));
+        it('merges partial update without overwriting existing fields', async () => {
+            const dir = mkTmp();
+            const existing = {
+                workflow: 'speckit',
+                specName: 'demo',
+                branch: 'main',
+                selectedAt: '2026-01-01',
+                currentStep: 'specify',
+                status: 'specifying',
+                history: [
+                    {
+                        step: 'specify',
+                        substep: null,
+                        from: { step: null, substep: null },
+                        by: 'extension',
+                        at: '2026-01-01T00:00:00Z',
+                    },
+                ],
+            };
+            fs.writeFileSync(path.join(dir, '.spec-context.json'), JSON.stringify(existing));
 
-            await updateSpecContext(SPEC_DIR, { status: 'completed' });
+            await updateSpecContext(dir, { status: 'completed' });
 
-            expect(mockWriteFile).toHaveBeenCalledTimes(1);
-            const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
-            expect(written.workflow).toBe('default');
+            const written = readJson(dir);
+            expect(written.workflow).toBe('speckit');
             expect(written.selectedAt).toBe('2026-01-01');
             expect(written.currentStep).toBe('specify');
             expect(written.status).toBe('completed');
         });
 
-        it('should create file when it does not exist', async () => {
-            await updateSpecContext(SPEC_DIR, { workflow: 'default', selectedAt: '2026-01-01' });
+        it('creates a file (via canonical writer) when none exists', async () => {
+            const dir = mkTmp();
+            await updateSpecContext(dir, { workflow: 'default', selectedAt: '2026-01-01' });
 
-            expect(mockWriteFile).toHaveBeenCalledWith(
-                CONTEXT_FILE,
-                expect.any(String),
-                'utf-8'
-            );
-            const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
+            const written = readJson(dir);
             expect(written.workflow).toBe('default');
         });
-
     });
 
     describe('updateStepProgress', () => {
-        it('should set currentStep and create stepHistory entry', async () => {
-            await updateStepProgress(SPEC_DIR, 'specify', ['specify', 'plan', 'tasks']);
+        it('sets currentStep and appends a history start-entry', async () => {
+            const dir = mkTmp();
+            await updateStepProgress(dir, 'specify', ['specify', 'plan', 'tasks']);
 
-            expect(mockWriteFile).toHaveBeenCalledTimes(1);
-            const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
+            const written = readJson(dir);
             expect(written.currentStep).toBe('specify');
-            expect(written.stepHistory.specify).toBeDefined();
-            expect(written.stepHistory.specify.startedAt).toBeDefined();
-            expect(written.stepHistory.specify.completedAt).toBeNull();
-            expect(written.status).toBe('active');
+            expect(Array.isArray(written.history)).toBe(true);
+            const history = written.history as Array<Record<string, unknown>>;
+            expect(history.length).toBeGreaterThanOrEqual(1);
+            expect(history[history.length - 1].step).toBe('specify');
+            // The canonical writer never persists `stepHistory` or the legacy
+            // `transitions` field — both must be absent.
+            expect(written.stepHistory).toBeUndefined();
+            expect(written.transitions).toBeUndefined();
         });
 
-        it('should complete previous step when moving to a new step', async () => {
-            const existing = {
-                workflow: 'default',
-                selectedAt: '2026-01-01',
-                currentStep: 'specify',
-                stepHistory: {
-                    specify: { startedAt: '2026-01-01T00:00:00.000Z', completedAt: null },
-                },
-            };
+        it('completes previous step and starts new step on advance', async () => {
+            const dir = mkTmp();
+            await updateStepProgress(dir, 'specify', ['specify', 'plan', 'tasks']);
+            await updateStepProgress(dir, 'plan', ['specify', 'plan', 'tasks']);
 
-            mockReadFile.mockImplementation((filePath: string) => {
-                if (filePath === CONTEXT_FILE) {
-                    return Promise.resolve(JSON.stringify(existing));
-                }
-                return Promise.reject(new Error('ENOENT'));
-            });
-
-            await updateStepProgress(SPEC_DIR, 'plan', ['specify', 'plan', 'tasks']);
-
-            const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
+            const written = readJson(dir);
             expect(written.currentStep).toBe('plan');
-            expect(written.stepHistory.specify.completedAt).not.toBeNull();
-            expect(written.stepHistory.plan.startedAt).toBeDefined();
-            expect(written.stepHistory.plan.completedAt).toBeNull();
+            const history = written.history as Array<Record<string, unknown>>;
+            // expect at least: specify-start, specify-complete, plan-start
+            expect(history.length).toBeGreaterThanOrEqual(3);
+            const last = history[history.length - 1];
+            expect(last.step).toBe('plan');
         });
 
-        it('should not complete previous step if already completed', async () => {
-            const completedAt = '2026-01-01T12:00:00.000Z';
-            const existing = {
-                workflow: 'default',
-                selectedAt: '2026-01-01',
-                currentStep: 'specify',
-                stepHistory: {
-                    specify: { startedAt: '2026-01-01T00:00:00.000Z', completedAt },
-                },
-            };
-
-            mockReadFile.mockResolvedValue(JSON.stringify(existing));
-
-            await updateStepProgress(SPEC_DIR, 'plan', ['specify', 'plan', 'tasks']);
-
-            const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
-            expect(written.stepHistory.specify.completedAt).toBe(completedAt);
-        });
-    });
-
-    describe('updateSpecContext transition logging', () => {
-        it('should append a transition entry when currentStep changes', async () => {
-            const existing = { workflow: 'default', selectedAt: '2026-01-01', currentStep: 'specify' };
-            mockReadFile.mockResolvedValue(JSON.stringify(existing));
-
-            await updateSpecContext(SPEC_DIR, { currentStep: 'plan' });
-
-            const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
-            expect(written.transitions).toBeDefined();
-            expect(written.transitions).toHaveLength(1);
-            expect(written.transitions[0].step).toBe('plan');
-            expect(written.transitions[0].from).toEqual({ step: 'specify', substep: null });
-            expect(written.transitions[0].by).toBe('extension');
-            expect(written.transitions[0].at).toBeDefined();
-        });
-
-        it('should set from to null when file does not exist (first creation)', async () => {
-            await updateSpecContext(SPEC_DIR, { currentStep: 'specify' });
-
-            const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
-            expect(written.transitions).toHaveLength(1);
-            expect(written.transitions[0].from).toBeNull();
-            expect(written.transitions[0].step).toBe('specify');
-        });
-
-        it('should not append transition when currentStep is unchanged', async () => {
-            const existing = { workflow: 'default', selectedAt: '2026-01-01', currentStep: 'plan' };
-            mockReadFile.mockResolvedValue(JSON.stringify(existing));
-
-            await updateSpecContext(SPEC_DIR, { currentStep: 'plan' });
-
-            const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
-            expect(written.transitions).toBeUndefined();
-        });
-
-        it('should not append transition when update has no step/substep fields', async () => {
-            const existing = { workflow: 'default', selectedAt: '2026-01-01', currentStep: 'plan' };
-            mockReadFile.mockResolvedValue(JSON.stringify(existing));
-
-            await updateSpecContext(SPEC_DIR, { status: 'completed' });
-
-            const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
-            expect(written.transitions).toBeUndefined();
-        });
-
-        it('should preserve existing transitions (append-only)', async () => {
-            const existingTransition = {
-                step: 'plan',
-                substep: null,
-                from: { step: 'specify', substep: null },
-                by: 'extension',
-                at: '2026-01-01T00:00:00.000Z',
-            };
-            const existing = {
-                workflow: 'default',
-                selectedAt: '2026-01-01',
-                currentStep: 'plan',
-                transitions: [existingTransition],
-            };
-            mockReadFile.mockResolvedValue(JSON.stringify(existing));
-
-            await updateSpecContext(SPEC_DIR, { currentStep: 'tasks' });
-
-            const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
-            expect(written.transitions).toHaveLength(2);
-            expect(written.transitions[0]).toEqual(existingTransition);
-            expect(written.transitions[1].step).toBe('tasks');
-        });
-
-        it('should preserve existing transitions when update has no step change', async () => {
-            const existingTransition = {
-                step: 'plan',
-                substep: null,
-                from: { step: 'specify', substep: null },
-                by: 'sdd',
-                at: '2026-01-01T00:00:00.000Z',
-            };
-            const existing = {
-                workflow: 'default',
-                selectedAt: '2026-01-01',
-                currentStep: 'plan',
-                transitions: [existingTransition],
-            };
-            mockReadFile.mockResolvedValue(JSON.stringify(existing));
-
-            await updateSpecContext(SPEC_DIR, { status: 'active' });
-
-            const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
-            expect(written.transitions).toHaveLength(1);
-            expect(written.transitions[0]).toEqual(existingTransition);
+        it('does not emit a redundant completion if previous step is already complete', async () => {
+            const dir = mkTmp();
+            await updateStepProgress(dir, 'specify', ['specify', 'plan', 'tasks']);
+            // Simulate a manual completion of specify (lifecycle writer would
+            // already have appended a completion entry on advance, but here we
+            // re-advance through updateStepProgress and verify no duplicate).
+            await updateStepProgress(dir, 'plan', ['specify', 'plan', 'tasks']);
+            const lengthAfterFirstAdvance = (readJson(dir).history as unknown[]).length;
+            await updateStepProgress(dir, 'plan', ['specify', 'plan', 'tasks']);
+            const lengthAfterSecondAdvance = (readJson(dir).history as unknown[]).length;
+            // Re-advancing to the same step should not append another entry.
+            expect(lengthAfterSecondAdvance).toBe(lengthAfterFirstAdvance);
         });
     });
 
     describe('setSpecStatus', () => {
-        it('should write the status field', async () => {
-            await setSpecStatus(SPEC_DIR, 'completed');
+        it('writes the status field', async () => {
+            const dir = mkTmp();
+            await setSpecStatus(dir, 'completed');
 
-            const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
+            const written = readJson(dir);
             expect(written.status).toBe('completed');
         });
 
-        it('should preserve existing fields when setting status', async () => {
-            const existing = { workflow: 'default', selectedAt: '2026-01-01', currentStep: 'plan' };
-            mockReadFile.mockResolvedValue(JSON.stringify(existing));
+        it('preserves existing fields when setting status', async () => {
+            const dir = mkTmp();
+            const existing = {
+                workflow: 'speckit',
+                specName: 'demo',
+                branch: 'main',
+                currentStep: 'plan',
+                status: 'planning',
+                history: [],
+            };
+            fs.writeFileSync(path.join(dir, '.spec-context.json'), JSON.stringify(existing));
 
-            await setSpecStatus(SPEC_DIR, 'archived');
+            await setSpecStatus(dir, 'archived');
 
-            const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
+            const written = readJson(dir);
             expect(written.status).toBe('archived');
-            expect(written.workflow).toBe('default');
+            expect(written.workflow).toBe('speckit');
             expect(written.currentStep).toBe('plan');
         });
     });

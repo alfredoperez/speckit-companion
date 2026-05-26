@@ -79,11 +79,14 @@ function setupClaudeDirectoryWatcher(
             const data = JSON.parse(Buffer.from(content).toString('utf-8'));
             const specDir = uri.fsPath.replace(/[/\\].spec-context\.json$/, '');
 
+            // Canonical writer emits `history[]`; legacy files may still
+            // carry `transitions[]`. Prefer history; fall back to transitions
+            // so external-transition logs survive both schema generations.
             const logMessage = detectExternalTransition(
                 specDir,
                 data.currentStep,
                 data.substep ?? null,
-                data.transitions as TransitionEntry[] | undefined
+                (data.history ?? data.transitions) as TransitionEntry[] | undefined,
             );
 
             if (logMessage) {

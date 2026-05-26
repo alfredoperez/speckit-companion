@@ -55,16 +55,16 @@ The spec viewer footer shows lifecycle buttons based on the spec's current statu
 
 The lifecycle flow is **Active → Completed → Archived**, with **Reactivate** available on Completed and Archived specs to return them to Active.
 
-## Transition logging
+## History logging
 
-Every workflow step change is automatically recorded in the `transitions` array inside `.spec-context.json`. Each entry captures the previous step, new step, source (`extension` or `sdd`), and timestamp. External changes (for example, from SDD tools) are detected via file watcher and logged to the SpecKit output channel.
+Every workflow step change is automatically recorded in the `history` array inside `.spec-context.json`. Each entry captures the previous step, new step, source (`extension` or `sdd`), and timestamp. External changes (for example, from SDD tools) are detected via file watcher and logged to the SpecKit output channel.
 
 ## Badge and dates
 
 Both badge text and dates are derived from `.spec-context.json` (the single source of truth for workflow state):
 
 - The **badge** in the metadata bar shows the current workflow state (e.g., `SPECIFYING`, `PLANNING`, `IMPLEMENTING`, `COMPLETED`). Hidden when no context exists.
-- **Created** and **Last Updated** dates are derived from `stepHistory` timestamps. Gracefully omitted when context is missing or incomplete.
+- **Created** and **Last Updated** dates are derived from `history[]` timestamps (via the viewer's in-memory per-step timing). Gracefully omitted when context is missing or incomplete.
 - Specs with only a `.spec-context.json` (no markdown files yet) still appear in the explorer, so SDD in-progress specs are always visible.
 
 ## Header badge color tiers (since v0.13.0)

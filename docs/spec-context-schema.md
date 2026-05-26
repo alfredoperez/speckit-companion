@@ -2,7 +2,7 @@
 
 Each spec directory contains a `.spec-context.json` file that tracks workflow state. This is the single source of truth for where a spec is in its lifecycle.
 
-**Type**: `FeatureWorkflowContext` in `src/features/workflows/types.ts`
+**Type**: `SpecContext` in `src/core/types/specContext.ts` (and the parallel `FeatureWorkflowContext` in `src/features/workflows/types.ts`).
 
 ## Fields
 
@@ -10,7 +10,9 @@ Each spec directory contains a `.spec-context.json` file that tracks workflow st
 
 | Field | Type | Description |
 |---|---|---|
-| `workflow` | `string` | Workflow name (e.g., `"sdd"`) |
+| `workflow` | `string` | Workflow name (e.g., `"sdd"`, `"speckit"`) |
+| `specName` | `string` | Human-readable name derived from directory slug |
+| `branch` | `string` | Git branch associated with this spec |
 | `selectedAt` | `string` | ISO timestamp when workflow was selected |
 
 ### Step tracking
@@ -18,23 +20,32 @@ Each spec directory contains a `.spec-context.json` file that tracks workflow st
 | Field | Type | Description |
 |---|---|---|
 | `currentStep` | `string` | Active workflow step (e.g., `"specify"`, `"plan"`, `"tasks"`, `"implement"`) |
+| `status` | `string` | Canonical lifecycle status (see vocabulary below) |
 | `progress` | `string \| null` | In-progress indicator set by SDD skills (e.g., `"exploring"`, `"phase1"`). When non-null, badge text appends `"..."` |
 | `currentTask` | `string \| null` | Current task being executed (e.g., `"T001"`) |
-| `stepHistory` | `Record<string, StepHistoryEntry>` | Map of step name to `{ startedAt, completedAt }` timestamps |
+| `history` | `HistoryEntry[]` | Append-only log of step boundaries (start / completion / substep) |
+
+`HistoryEntry`:
+```ts
+{
+  step: 'specify' | 'clarify' | 'plan' | 'tasks' | 'analyze' | 'implement',
+  substep: string | null,
+  from: { step: string | null, substep: string | null },
+  by: 'extension' | 'user' | 'cli' | 'sdd' | 'sdd-skill' | 'ai',
+  at: string  // ISO timestamp
+}
+```
 
 ### Metadata
 
 | Field | Type | Description |
 |---|---|---|
-| `status` | `"active" \| "completed" \| "archived"` | Spec lifecycle status for sidebar grouping |
-| `specName` | `string` | Human-readable name derived from directory slug |
-| `branch` | `string` | Git branch associated with this spec |
 | `createdAt` | `string` | ISO timestamp when spec was first created |
 | `checkpointStatus` | `Record<CheckpointId, CheckpointStatus>` | Checkpoint states (`commit`, `pr`) |
 
 ### SDD-enriched (optional)
 
-These fields are written by SDD skills during execution. The extension reads them but does not write them.
+Skill-authored fields. The extension reads them but does not write them.
 
 | Field | Type | Description |
 |---|---|---|
@@ -46,54 +57,81 @@ These fields are written by SDD skills during execution. The extension reads the
 | `decisions` | `array` | Non-trivial decisions made during implementation |
 | `concerns` | `array` | Flagged issues from implementation |
 
-The three viewer-relevant skill-authored fields — `last_action`, `task_summaries`,
-`step_summaries` — are formally **declared** (optional) in the canonical
-`SpecContext` type and `spec-context.schema.json`; remaining skill fields stay
-tolerated via `additionalProperties: true`. The transition `by` enum accepts
-`extension | user | cli | sdd | ai` (the values skills actually author).
+The three viewer-relevant skill-authored fields — `last_action`,
+`task_summaries`, `step_summaries` — are formally **declared** (optional) in
+the canonical `SpecContext` type and `spec-context.schema.json`; remaining
+skill fields stay tolerated via `additionalProperties: true`.
 
-**Timing backfill.** `stepHistory` is derived from `transitions[]` at read time
-(the on-disk copy is ignored). For legacy specs that predate transition logging,
-`specContextReconciler.ts` fills missing step `completedAt` from the most recent
-spec/plan/tasks artifact mtime (a real timestamp), never a synthesized
-"written now" value — and only when transitions don't already supply one.
+### Derived in-memory (never persisted)
+
+The viewer computes per-step timing from `history[]` on every render:
+
+```ts
+stepHistory: Record<string, {
+  startedAt: string,
+  completedAt: string | null,
+  substeps?: { name, startedAt, completedAt }[]
+}>
+```
+
+This is what badges, the running-step pulse, the activity timeline, and
+elapsed-timer notifications consume. It is **not** written to disk.
 
 ## Example
 
 ```json
 {
   "workflow": "sdd",
-  "selectedAt": "2026-04-05T22:00:00.000Z",
-  "currentStep": "implement",
-  "progress": "phase1",
-  "currentTask": "T003",
-  "status": "active",
   "specName": "My Feature",
   "branch": "feat/my-feature",
-  "stepHistory": {
-    "specify": { "startedAt": "...", "completedAt": "..." },
-    "plan": { "startedAt": "...", "completedAt": "..." },
-    "tasks": { "startedAt": "...", "completedAt": "..." },
-    "implement": { "startedAt": "...", "completedAt": null }
-  },
-  "approach": "Add migration layer and fix race condition",
+  "selectedAt": "2026-04-05T22:00:00.000Z",
+  "currentStep": "implement",
+  "status": "implementing",
+  "progress": "phase1",
   "currentTask": "T003",
+  "history": [
+    { "step": "specify",   "substep": null, "from": { "step": null,      "substep": null }, "by": "extension", "at": "2026-04-05T22:00:01Z" },
+    { "step": "specify",   "substep": null, "from": { "step": "specify", "substep": null }, "by": "extension", "at": "2026-04-05T22:05:12Z" },
+    { "step": "plan",      "substep": null, "from": { "step": "specify", "substep": null }, "by": "extension", "at": "2026-04-05T22:05:12Z" },
+    { "step": "plan",      "substep": null, "from": { "step": "plan",    "substep": null }, "by": "extension", "at": "2026-04-05T22:11:34Z" },
+    { "step": "tasks",     "substep": null, "from": { "step": "plan",    "substep": null }, "by": "extension", "at": "2026-04-05T22:11:34Z" },
+    { "step": "tasks",     "substep": null, "from": { "step": "tasks",   "substep": null }, "by": "extension", "at": "2026-04-05T22:18:02Z" },
+    { "step": "implement", "substep": null, "from": { "step": "tasks",   "substep": null }, "by": "extension", "at": "2026-04-05T22:18:02Z" }
+  ],
+  "approach": "Add migration layer and fix race condition",
   "task_summaries": {
-    "T001": { "status": "DONE", "did": "...", "files": [...], "concerns": [] }
+    "T001": { "status": "DONE", "did": "...", "files": [], "concerns": [] }
   }
 }
 ```
 
-## Removed fields
+## Invariants
 
-The following fields were removed and should **not** be written by the extension:
+- `history` is APPEND-ONLY. Never reorder, never delete, never edit prior entries.
+- The last `history[]` entry's `step` MUST equal `currentStep`. Advancing
+  `currentStep` requires appending the matching start-entry in the same
+  write. `currentStep` ahead of `history` is the failure mode that makes
+  the viewer show a phantom "Generating <step>…" indefinitely.
+- `status` matches the lifecycle stage of `currentStep` (in-progress form
+  while a step is mid-flight, completed form once its completion entry is
+  appended).
+- Unknown top-level fields are preserved across writes.
+
+## Removed / renamed fields
+
+The following fields were removed from the persisted shape:
 
 | Old field | Replacement |
 |---|---|
+| `transitions` | Renamed to `history` |
+| `stepHistory` | Derived in-memory from `history[]`; no longer persisted |
 | `step` | `currentStep` |
 | `substep` | `progress` |
 | `task` | `currentTask` |
 | `next` | Derived from `currentStep` + workflow step array at read time |
-| `updated` | Derived from latest `stepHistory` timestamp |
+| `updated` | Derived from latest `history[]` `at` |
 
-> **Note:** `next` and `updated` are still written by SDD skills for CLI workflow use (resume/auto-advance and status display). The extension should ignore these fields — they are SDD-specific and not part of the SpecKit schema.
+Files written by older versions that still carry `stepHistory` or
+`transitions` are accepted on read and migrated on the next write.
+
+> **Note:** `next` and `updated` are still written by SDD skills for CLI workflow use (resume/auto-advance and status display). The extension ignores these fields — they are SDD-specific and not part of the SpecKit schema.

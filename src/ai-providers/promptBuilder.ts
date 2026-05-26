@@ -26,6 +26,59 @@ function isContextInstructionsEnabled(): boolean {
     }
 }
 
+/**
+ * Compact JSON Schema for `.spec-context.json`. Embedded at the top of every
+ * preamble so the AI has a precise contract — not prose — for the canonical
+ * shape. Kept terse to control token cost; the invariants beyond JSON Schema
+ * (atomic writes, `history` ↔ `currentStep` consistency) live below it.
+ */
+const SPEC_CONTEXT_SCHEMA = [
+    '```jsonschema',
+    '{',
+    '  "type": "object",',
+    '  "required": ["workflow", "specName", "currentStep", "status", "history"],',
+    '  "additionalProperties": true,',
+    '  "properties": {',
+    '    "workflow":    { "enum": ["speckit", "sdd"] },',
+    '    "specName":    { "type": "string" },',
+    '    "branch":      { "type": "string" },',
+    '    "selectedAt":  { "type": "string", "format": "date-time" },',
+    '    "currentStep": { "enum": ["specify","clarify","plan","tasks","analyze","implement"] },',
+    '    "status":      { "enum": ["draft","specifying","specified","planning","planned",',
+    '                              "tasking","ready-to-implement","implementing","implemented",',
+    '                              "completed","archived"] },',
+    '    "history": {',
+    '      "type": "array",',
+    '      "items": {',
+    '        "type": "object",',
+    '        "required": ["step","substep","from","by","at"],',
+    '        "properties": {',
+    '          "step":    { "$ref": "#/properties/currentStep" },',
+    '          "substep": { "type": ["string","null"] },',
+    '          "from":    { "type": "object",',
+    '                       "properties": { "step":    { "type": ["string","null"] },',
+    '                                       "substep": { "type": ["string","null"] } } },',
+    '          "by":      { "enum": ["extension","sdd-skill","user","ai"] },',
+    '          "at":      { "type": "string", "format": "date-time" }',
+    '        }',
+    '      }',
+    '    }',
+    '  }',
+    '}',
+    '```',
+    '',
+    'Invariants beyond JSON Schema:',
+    '- `history` is APPEND-ONLY. Never reorder, never delete, never edit prior entries.',
+    '- The last `history[]` entry\'s `step` MUST equal `currentStep`. If you change',
+    '  `currentStep`, append a matching history entry in the SAME write. `currentStep`',
+    '  ahead of `history` is an invalid state — the viewer reads it as a fake',
+    '  "Generating <step>…" indefinitely.',
+    '- `status` MUST match the lifecycle stage of `currentStep` (see the status table',
+    '  below).',
+    '- Do NOT write `stepHistory` or `transitions` — both are deprecated. `stepHistory`',
+    '  is derived in-memory by the viewer; `transitions` was renamed to `history`.',
+].join('\n');
+
 const STATUS_LIFECYCLE = [
     'Canonical statuses: draft → specifying → specified → planning → planned → tasking → ready-to-implement → implementing → completed.',
     'When starting a step: set status to the in-progress form (specifying, planning, tasking, implementing).',
@@ -33,12 +86,9 @@ const STATUS_LIFECYCLE = [
 ].join('\n');
 
 const SHARED_RULES = [
-    'TIMESTAMPS: never type one. For each transition `at`, run',
+    'TIMESTAMPS: never type one. For each history `at`, run',
     '    date -u +"%Y-%m-%dT%H:%M:%SZ"',
     'and paste the output. Hand-typed times round to :00 and the viewer treats them as unreliable.',
-    '',
-    'stepHistory is READ-ONLY. The extension derives it from transitions[] and overwrites whatever',
-    'is on disk. Do not write substep startedAt/completedAt entries.',
     '',
     'TASK SUMMARIES (implement only): append task_summaries.<TaskID> = { status, did, files, concerns }.',
     'status is "DONE" or "DONE_WITH_CONCERNS"; did is one sentence; files is string[]; concerns is string[].',
@@ -75,51 +125,62 @@ function renderPreamble(step: PromptStep, specDir: string): string {
     const donePhrase = DONE_PHRASE_BY_STEP[step];
     const nextStep = NEXT_STEP_BY_STEP[step];
     const advanceClause = nextStep
-        ? `  (d) Set currentStep to "${nextStep}" (canonical: specify → plan → tasks → implement).`
+        ? [
+            `  (d) ATOMICALLY (in the same write as (a) and (b)) set currentStep to "${nextStep}"`,
+            `      AND append a start history entry { step: "${nextStep}", substep: null,`,
+            `      from: { step: "${step}", substep: null }, by: "extension", at: <real timestamp> }.`,
+            `      The entry is what makes the advance visible — currentStep ahead of history`,
+            `      is the exact failure mode that makes the viewer show "Generating ${nextStep}…"`,
+            `      forever with no real progress.`,
+        ].join('\n')
         : `  (d) Leave currentStep on "${step}" — this is the terminal step; do not advance further.`;
     const advanceFailureNote = nextStep
-        ? `; skipping (d) pins currentStep on "${step}" and the PhasesCard reads "in progress" forever`
+        ? `; skipping (d), or doing (d) but forgetting the start-entry, leaves currentStep ahead of history and the PhasesCard shows a phantom "Generating ${nextStep}…"`
         : '';
     return [
         MARKER_OPEN,
-        `Before and after this step runs, update ${target}:`,
+        `Before and after this step runs, update ${target}. Schema:`,
+        '',
+        SPEC_CONTEXT_SCHEMA,
         '',
         STATUS_LIFECYCLE,
         '',
-        `1. Pre-step: set currentStep = "${step}" and the matching in-progress status. Append a transition { step: "${step}", substep: null, from, by: "extension", at: <real timestamp> }.`,
-        `1.5. When advancing from a previous step: flip the previous step\'s status to its completed form before writing the new step.`,
+        `1. Pre-step: set currentStep = "${step}" and the matching in-progress status. Append a history entry { step: "${step}", substep: null, from, by: "extension", at: <real timestamp> }.`,
+        `1.5. When advancing from a previous step: flip the previous step's status to its completed form before writing the new step.`,
         '',
-        `Canonical substeps for ${step}: ${substeps}. For each substep boundary append a transition with that substep name (and a real timestamp) — do NOT write substep entries inside stepHistory.`,
+        `Canonical substeps for ${step}: ${substeps}. For each substep boundary append a history entry with that substep name (and a real timestamp).`,
         '',
         `MUST DO BEFORE ENDING — all four required:`,
         `  (a) Flip status to "${completedStatus}".`,
-        `  (b) Append a completion transition { step: "${step}", substep: null, from: { step: "${step}", substep: null }, by: "extension", at: <real timestamp> }. This is what clears the "in-flight" ring on the ${step} tab.`,
+        `  (b) Append a completion history entry { step: "${step}", substep: null, from: { step: "${step}", substep: null }, by: "extension", at: <real timestamp> }. This is what clears the "in-flight" ring on the ${step} tab.`,
         `  (c) Print "${donePhrase}" as the final terminal line.`,
         advanceClause,
         `Skipping (a) leaves the badge stuck on the in-progress form; skipping (b) leaves the step timer running indefinitely; skipping (c) hides the completion from the activity log${advanceFailureNote}.`,
         '',
         SHARED_RULES,
         '',
-        'Invariants: preserve unknown fields; transitions is append-only.',
+        'Invariants: preserve unknown fields; history is append-only.',
         MARKER_CLOSE,
     ].join('\n');
 }
 
 function renderLifecycleBody(target: string): string {
     return [
-        `Throughout this run, keep ${target} up to date as you move through steps:`,
+        `Throughout this run, keep ${target} up to date as you move through steps. Schema:`,
+        '',
+        SPEC_CONTEXT_SCHEMA,
         '',
         STATUS_LIFECYCLE,
         '',
         'For EACH step you work on (specify, plan, tasks, implement):',
-        '1. Before starting: set currentStep = "<step>" and status = in-progress form. Append a transition { step: "<step>", substep: null, from, by: "extension", at: <real timestamp> }.',
-        '2. After completing: flip status = completed form. Append a completion transition { step: "<step>", substep: null, from: { step: "<step>", substep: null }, by: "extension", at: <real timestamp> } — this is what clears the in-flight ring on the tab.',
-        '3. Append a transition entry for each substep boundary too, using a real timestamp.',
-        '4. After completing a step, also set currentStep to the next step in the canonical sequence specify → plan → tasks → implement. After implement, leave currentStep on "implement" — it is terminal.',
+        '1. Before starting: set currentStep = "<step>" and status = in-progress form. Append a history entry { step: "<step>", substep: null, from, by: "extension", at: <real timestamp> }.',
+        '2. After completing: flip status = completed form. Append a completion history entry { step: "<step>", substep: null, from: { step: "<step>", substep: null }, by: "extension", at: <real timestamp> } — this is what clears the in-flight ring on the tab.',
+        '3. Append a history entry for each substep boundary too, using a real timestamp.',
+        '4. After completing a step, ATOMICALLY (same write as the completion entry) advance to the next step: set currentStep to the next step in the canonical sequence specify → plan → tasks → implement AND append a start history entry { step: "<next>", substep: null, from: { step: "<this>", substep: null }, by: "extension", at: <real timestamp> }. After implement, leave currentStep on "implement" — it is terminal. currentStep ahead of history is an invalid state.',
         '',
         SHARED_RULES,
         '',
-        'Invariants: preserve unknown fields; transitions is append-only.',
+        'Invariants: preserve unknown fields; history is append-only.',
     ].join('\n');
 }
 
@@ -149,8 +210,7 @@ function renderSpecifyCreationLifecyclePreamble(
         '  "selectedAt": "<real ISO timestamp, see TIMESTAMPS rule below>",',
         '  "currentStep": "specify",',
         '  "status": "specifying",',
-        '  "stepHistory": {},',
-        '  "transitions": [',
+        '  "history": [',
         '    {',
         '      "step": "specify",',
         '      "substep": null,',
@@ -163,8 +223,8 @@ function renderSpecifyCreationLifecyclePreamble(
         '```',
         '',
         'Notes on the initial write:',
-        '- `stepHistory` is READ-ONLY at this layer — the extension derives it from `transitions[]`. Leave it as `{}` (do not populate startedAt/completedAt entries).',
-        '- The seed transition is attributed to `"extension"` because this lifecycle was initiated by the SpecKit Companion extension dispatching the command, even though you are the one transcribing.',
+        '- Do NOT write `stepHistory` or `transitions` — both are deprecated. The viewer derives per-step timing in-memory from `history[]`.',
+        '- The seed history entry is attributed to `"extension"` because this lifecycle was initiated by the SpecKit Companion extension dispatching the command, even though you are the one transcribing.',
         '- Only update the `.spec-context.json` for the spec being created. Do NOT touch other spec dirs.',
         '',
         renderLifecycleBody(target),

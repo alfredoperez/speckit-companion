@@ -4,7 +4,7 @@
   "title": "SpecContext",
   "type": "object",
   "additionalProperties": true,
-  "required": ["workflow", "specName", "branch", "currentStep", "status", "stepHistory", "transitions"],
+  "required": ["workflow", "specName", "branch", "currentStep", "status", "history"],
   "properties": {
     "workflow": { "type": "string", "minLength": 1 },
     "specName": { "type": "string", "minLength": 1 },
@@ -23,13 +23,9 @@
         "implementing", "implemented", "completed", "archived"
       ]
     },
-    "stepHistory": {
-      "type": "object",
-      "additionalProperties": { "$ref": "#/$defs/stepHistoryEntry" }
-    },
-    "transitions": {
+    "history": {
       "type": "array",
-      "items": { "$ref": "#/$defs/transition" }
+      "items": { "$ref": "#/$defs/historyEntry" }
     },
     "reviewComments": {
       "type": "array",
@@ -60,27 +56,7 @@
         "createdAt": { "type": "string", "format": "date-time" }
       }
     },
-    "stepHistoryEntry": {
-      "type": "object",
-      "required": ["startedAt", "completedAt"],
-      "properties": {
-        "startedAt": { "type": "string", "format": "date-time" },
-        "completedAt": { "type": ["string", "null"], "format": "date-time" },
-        "substeps": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": ["name", "startedAt", "completedAt"],
-            "properties": {
-              "name": { "type": "string" },
-              "startedAt": { "type": "string", "format": "date-time" },
-              "completedAt": { "type": ["string", "null"], "format": "date-time" }
-            }
-          }
-        }
-      }
-    },
-    "transition": {
+    "historyEntry": {
       "type": "object",
       "required": ["step", "substep", "from", "by", "at"],
       "properties": {
@@ -100,7 +76,7 @@
             "substep": { "type": ["string", "null"] }
           }
         },
-        "by": { "type": "string", "enum": ["extension", "user", "cli", "sdd", "ai"] },
+        "by": { "type": "string", "enum": ["extension", "user", "cli", "sdd", "sdd-skill", "ai"] },
         "at": { "type": "string", "format": "date-time" }
       }
     }

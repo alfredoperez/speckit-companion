@@ -1,22 +1,14 @@
 import * as vscode from 'vscode';
-import { StepCompletionNotifier } from '../stepCompletionNotifier';
-import { SpecContext, StepHistoryEntry } from '../../../core/types/specContext';
+import { StepCompletionNotifier, NotifierContext } from '../stepCompletionNotifier';
+import { StepHistoryEntry } from '../../../core/types/specContext';
 
 jest.mock('vscode');
 
 const SPEC_DIR = '/workspace/specs/074-elapsed-timer-notification';
 const OTHER_SPEC_DIR = '/workspace/specs/099-other';
 
-function ctx(history: Record<string, StepHistoryEntry>): SpecContext {
-    return {
-        workflow: 'sdd',
-        specName: 'Test',
-        branch: 'main',
-        currentStep: 'specify',
-        status: 'specifying',
-        stepHistory: history,
-        transitions: [],
-    };
+function ctx(history: Record<string, StepHistoryEntry>): NotifierContext {
+    return { stepHistory: history };
 }
 
 function entry(startedAt: string, completedAt: string | null = null): StepHistoryEntry {

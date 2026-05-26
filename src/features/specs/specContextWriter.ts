@@ -4,20 +4,21 @@
  * Guarantees:
  * - Read-modify-write to preserve unknown top-level fields (FR-013).
  * - Atomic rename (temp-file + rename) on POSIX + Windows.
- * - Append-only `transitions` array (FR-005, FR-012): helpers refuse to
+ * - Append-only `history` array (FR-005, FR-012): helpers refuse to
  *   rewrite existing entries.
+ *
+ * `stepHistory` is NOT persisted: the viewer derives per-step timing from
+ * `history[]` on every render. See ViewerState.stepHistory.
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
 import {
+    HistoryEntry,
+    HistoryEntryBy,
+    HistoryEntryFrom,
     SpecContext,
-    StepHistoryEntry,
     StepName,
-    SubstepEntry,
-    Transition,
-    TransitionBy,
-    TransitionFrom,
 } from '../../core/types/specContext';
 import { SPEC_CONTEXT_FILENAME, normalizeSpecContext } from './specContextReader';
 
@@ -37,13 +38,27 @@ export async function writeSpecContext(
     }
 
     if (existing) {
-        assertAppendOnly(
-            (existing.transitions as Transition[] | undefined) ?? [],
-            ctx.transitions
-        );
+        // The canonical log lives under `history`, but legacy files may only
+        // carry the old `transitions` field. Treat whichever is present as
+        // the prior log for append-only checking, so a buggy mutator can't
+        // silently drop legacy entries on the migration write.
+        const priorLog =
+            (existing.history as HistoryEntry[] | undefined) ??
+            (existing.transitions as HistoryEntry[] | undefined) ??
+            [];
+        assertAppendOnly(priorLog, ctx.history);
     }
 
-    const merged: Record<string, unknown> = { ...(existing ?? {}), ...ctx };
+    // Strip legacy `stepHistory` / `transitions` fields if present — `history`
+    // is the only persisted record, and the writer never re-emits the old
+    // names so files migrate themselves on the next write.
+    const cleanedExisting: Record<string, unknown> = { ...(existing ?? {}) };
+    delete cleanedExisting.stepHistory;
+    delete cleanedExisting.transitions;
+
+    const merged: Record<string, unknown> = { ...cleanedExisting, ...ctx };
+    delete merged.stepHistory;
+    delete merged.transitions;
     const json = JSON.stringify(merged, null, 2);
 
     await atomicWrite(target, json);
@@ -74,14 +89,14 @@ async function atomicWrite(target: string, content: string): Promise<void> {
     }
 }
 
-function assertAppendOnly(prev: Transition[], next: Transition[]): void {
+function assertAppendOnly(prev: HistoryEntry[], next: HistoryEntry[]): void {
     if (next.length < prev.length) {
-        throw new Error('transitions is append-only; cannot shrink');
+        throw new Error('history is append-only; cannot shrink');
     }
     for (let i = 0; i < prev.length; i++) {
         if (JSON.stringify(prev[i]) !== JSON.stringify(next[i])) {
             throw new Error(
-                `transitions is append-only; entry at index ${i} was modified`
+                `history is append-only; entry at index ${i} was modified`
             );
         }
     }
@@ -89,7 +104,7 @@ function assertAppendOnly(prev: Transition[], next: Transition[]): void {
 
 // ---------- Pure draft mutators (used by skills / callers to build ctx) ----------
 
-export function appendTransition(ctx: SpecContext, t: Transition): SpecContext {
+export function appendHistory(ctx: SpecContext, t: HistoryEntry): SpecContext {
     // Plain append — the writer records every lifecycle boundary (step-started,
     // step-completed, substep) faithfully. Redundant *display* rows (the
     // SDD-implement loop's repeated `phase1`, which is written directly to the
@@ -97,59 +112,53 @@ export function appendTransition(ctx: SpecContext, t: Transition): SpecContext {
     // `dedupeConsecutive` in stepHistoryDerivation feeds the viewer, and
     // PhasesCard de-dups rows. De-duping here would wrongly drop legitimate
     // start/complete boundaries that can share (step, substep, from).
-    const next = {
+    return {
         ...ctx,
-        transitions: [...ctx.transitions, t],
+        history: [...ctx.history, t],
     };
-    return next;
 }
 
 export function setStepStarted(
     ctx: SpecContext,
     step: StepName,
-    by: TransitionBy,
+    by: HistoryEntryBy,
     at: string = new Date().toISOString()
 ): SpecContext {
-    const prevStep: StepName | null = ctx.currentStep ?? null;
-    const prevEntry = ctx.stepHistory[step];
-    const entry: StepHistoryEntry = {
-        startedAt: at,
-        completedAt: null,
-        substeps: prevEntry?.substeps,
-    };
-    const from: TransitionFrom = { step: prevStep, substep: null };
-    const transition: Transition = { step, substep: null, from, by, at };
-    return appendTransition(
+    // Disambiguate start vs completion entries by their `from.step` shape:
+    //   - completion: from.step === step  (setStepCompleted, below)
+    //   - start:      from.step !== step  (either the prior step, or null on
+    //                 the very first start / a restart of the current step).
+    // If ctx.currentStep already equals `step` (fresh spec from buildFallback,
+    // or a Regenerate that restarts the same step), set from.step = null so
+    // the derivation's `lastOwnIsCompletion` check can't misfire on it.
+    const prevStep: StepName | null =
+        ctx.currentStep && ctx.currentStep !== step ? ctx.currentStep : null;
+    const from: HistoryEntryFrom = { step: prevStep, substep: null };
+    const entry: HistoryEntry = { step, substep: null, from, by, at };
+    return appendHistory(
         {
             ...ctx,
             currentStep: step,
             status: deriveInProgressStatus(step),
-            stepHistory: { ...ctx.stepHistory, [step]: entry },
         },
-        transition
+        entry
     );
 }
 
 export function setStepCompleted(
     ctx: SpecContext,
     step: StepName,
-    by: TransitionBy,
+    by: HistoryEntryBy,
     at: string = new Date().toISOString()
 ): SpecContext {
-    const existing = ctx.stepHistory[step] ?? { startedAt: at, completedAt: null };
-    const entry: StepHistoryEntry = {
-        ...existing,
-        completedAt: at,
-    };
-    const from: TransitionFrom = { step, substep: null };
-    const transition: Transition = { step, substep: null, from, by, at };
-    return appendTransition(
+    const from: HistoryEntryFrom = { step, substep: null };
+    const entry: HistoryEntry = { step, substep: null, from, by, at };
+    return appendHistory(
         {
             ...ctx,
             status: deriveCompletedStatus(step),
-            stepHistory: { ...ctx.stepHistory, [step]: entry },
         },
-        transition
+        entry
     );
 }
 
@@ -157,42 +166,28 @@ export function setSubstepStarted(
     ctx: SpecContext,
     step: StepName,
     substep: string,
-    by: TransitionBy,
+    by: HistoryEntryBy,
     at: string = new Date().toISOString()
 ): SpecContext {
-    const entry =
-        ctx.stepHistory[step] ?? { startedAt: at, completedAt: null, substeps: [] };
-    const substeps = entry.substeps ? [...entry.substeps] : [];
-    substeps.push({ name: substep, startedAt: at, completedAt: null });
-    const updated: StepHistoryEntry = { ...entry, substeps };
-    const from: TransitionFrom = { step, substep: null };
-    const transition: Transition = { step, substep, from, by, at };
-    return appendTransition(
-        { ...ctx, stepHistory: { ...ctx.stepHistory, [step]: updated } },
-        transition
-    );
+    const from: HistoryEntryFrom = { step, substep: null };
+    const entry: HistoryEntry = { step, substep, from, by, at };
+    return appendHistory(ctx, entry);
 }
 
 export function setSubstepCompleted(
     ctx: SpecContext,
     step: StepName,
     substep: string,
-    by: TransitionBy,
+    by: HistoryEntryBy,
     at: string = new Date().toISOString()
 ): SpecContext {
-    const entry = ctx.stepHistory[step];
-    if (!entry || !entry.substeps) return ctx;
-    const substeps: SubstepEntry[] = entry.substeps.map(s =>
-        s.name === substep && !s.completedAt ? { ...s, completedAt: at } : s
-    );
-    const updated: StepHistoryEntry = { ...entry, substeps };
-    const from: TransitionFrom = { step, substep };
-    const transition: Transition = { step, substep, from, by, at };
-    return appendTransition(
-        { ...ctx, stepHistory: { ...ctx.stepHistory, [step]: updated } },
-        transition
-    );
+    const from: HistoryEntryFrom = { step, substep };
+    const entry: HistoryEntry = { step, substep, from, by, at };
+    return appendHistory(ctx, entry);
 }
+
+/** @deprecated Renamed to `appendHistory`. */
+export const appendTransition = appendHistory;
 
 // `clarify` is a sub-phase of specify → reuses `specifying`.
 // `analyze` is a sub-phase of tasks  → reuses `tasking`.

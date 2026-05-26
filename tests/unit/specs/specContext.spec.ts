@@ -3,7 +3,7 @@ import * as os from 'os';
 import * as path from 'path';
 import {
     writeSpecContext,
-    appendTransition,
+    appendHistory,
     setStepStarted,
     setStepCompleted,
     setSubstepStarted,
@@ -14,7 +14,7 @@ import {
     normalizeSpecContext,
 } from '../../../src/features/specs/specContextReader';
 import { backfillMinimalContext } from '../../../src/features/specs/specContextBackfill';
-import { SpecContext, Transition } from '../../../src/core/types/specContext';
+import { HistoryEntry, SpecContext } from '../../../src/core/types/specContext';
 
 function mkTmp(): string {
     return fs.mkdtempSync(path.join(os.tmpdir(), 'spec-context-'));
@@ -43,35 +43,35 @@ describe('writeSpecContext (US3 — unknown-field preservation & append-only)', 
         expect(raw.extraField).toEqual({ foo: 'bar' });
     });
 
-    it('rejects shrinking the transitions array (FR-005)', async () => {
+    it('rejects shrinking the history array (FR-005)', async () => {
         const dir = mkTmp();
         const ctx = setStepStarted(fresh(), 'specify', 'extension');
         await writeSpecContext(dir, ctx);
-        const shrunk: SpecContext = { ...ctx, transitions: [] };
+        const shrunk: SpecContext = { ...ctx, history: [] };
         await expect(writeSpecContext(dir, shrunk)).rejects.toThrow(/append-only/);
     });
 
-    it('rejects modifying an existing transition entry (FR-012)', async () => {
+    it('rejects modifying an existing history entry (FR-012)', async () => {
         const dir = mkTmp();
         const ctx = setStepStarted(fresh(), 'specify', 'extension');
         await writeSpecContext(dir, ctx);
         const modified: SpecContext = {
             ...ctx,
-            transitions: ctx.transitions.map((t, i) =>
-                i === 0 ? ({ ...t, by: 'user' } as Transition) : t
+            history: ctx.history.map((t, i) =>
+                i === 0 ? ({ ...t, by: 'user' } as HistoryEntry) : t
             ),
         };
         await expect(writeSpecContext(dir, modified)).rejects.toThrow(/append-only/);
     });
 
-    it('allows appending new transitions', async () => {
+    it('allows appending new history entries', async () => {
         const dir = mkTmp();
         const ctx = setStepStarted(fresh(), 'specify', 'extension');
         await writeSpecContext(dir, ctx);
         const next = setStepCompleted(ctx, 'specify', 'extension');
         await writeSpecContext(dir, next);
         const loaded = await readSpecContext(dir);
-        expect(loaded!.transitions.length).toBeGreaterThanOrEqual(2);
+        expect(loaded!.history.length).toBeGreaterThanOrEqual(2);
     });
 });
 
@@ -79,9 +79,24 @@ describe('normalizeSpecContext (US3 — legacy shape migration)', () => {
     it('coerces `{ status: "completed" }` into canonical empty-history shape', () => {
         const out = normalizeSpecContext({ status: 'completed' });
         expect(out.status).toBe('completed');
-        expect(out.stepHistory).toEqual({});
-        expect(out.transitions).toEqual([]);
+        expect(out.history).toEqual([]);
         expect(out.currentStep).toBe('specify');
+        // stepHistory is no longer persisted; the normalized object drops it.
+        expect((out as Record<string, unknown>).stepHistory).toBeUndefined();
+    });
+
+    it('coerces legacy `transitions` field into `history`', () => {
+        const out = normalizeSpecContext({
+            status: 'specifying',
+            currentStep: 'specify',
+            transitions: [
+                { step: 'specify', substep: null, from: { step: null, substep: null }, by: 'extension', at: '2026-04-01' },
+            ],
+        });
+        expect(out.history).toHaveLength(1);
+        expect(out.history[0].step).toBe('specify');
+        // The legacy field name is dropped from the in-memory canonical shape.
+        expect((out as Record<string, unknown>).transitions).toBeUndefined();
     });
 
     it('coerces legacy status="active" → implementing', () => {
@@ -114,20 +129,23 @@ describe('status state machine — implement → implemented (final approval gat
 });
 
 describe('substep helpers (US4)', () => {
-    it('setSubstepStarted appends substep + non-null-substep transition', () => {
+    it('setSubstepStarted appends a substep-tagged entry to history', () => {
         const ctx = setStepStarted(fresh(), 'specify', 'extension');
         const next = setSubstepStarted(ctx, 'specify', 'validate-checklist', 'extension');
-        expect(next.stepHistory.specify!.substeps).toHaveLength(1);
-        expect(next.stepHistory.specify!.substeps![0].name).toBe('validate-checklist');
-        const last = next.transitions[next.transitions.length - 1];
+        const last = next.history[next.history.length - 1];
         expect(last.substep).toBe('validate-checklist');
+        expect(last.step).toBe('specify');
     });
 
-    it('setSubstepCompleted marks completedAt on matching substep', () => {
+    it('setSubstepCompleted appends a completion entry whose `from.substep` matches', () => {
         let ctx = setStepStarted(fresh(), 'specify', 'extension');
         ctx = setSubstepStarted(ctx, 'specify', 'validate-checklist', 'extension');
+        const before = ctx.history.length;
         ctx = setSubstepCompleted(ctx, 'specify', 'validate-checklist', 'extension');
-        expect(ctx.stepHistory.specify!.substeps![0].completedAt).toBeTruthy();
+        expect(ctx.history.length).toBe(before + 1);
+        const last = ctx.history[ctx.history.length - 1];
+        expect(last.substep).toBe('validate-checklist');
+        expect(last.from.substep).toBe('validate-checklist');
     });
 });
 
@@ -140,23 +158,22 @@ describe('backfillMinimalContext (FR-011)', () => {
         });
         expect(ctx.status).toBe('draft');
         expect(ctx.currentStep).toBe('specify');
-        expect(ctx.stepHistory).toEqual({});
-        expect(ctx.transitions).toEqual([]);
+        expect(ctx.history).toEqual([]);
     });
 });
 
-describe('appendTransition', () => {
-    it('returns a new object with the transition at the end', () => {
+describe('appendHistory', () => {
+    it('returns a new object with the entry at the end', () => {
         const ctx = fresh();
-        const t: Transition = {
+        const t: HistoryEntry = {
             step: 'specify',
             substep: null,
             from: { step: null, substep: null },
             by: 'extension',
             at: '2026-04-01T00:00:00Z',
         };
-        const next = appendTransition(ctx, t);
-        expect(next.transitions).toHaveLength(1);
-        expect(ctx.transitions).toHaveLength(0); // immutable
+        const next = appendHistory(ctx, t);
+        expect(next.history).toHaveLength(1);
+        expect(ctx.history).toHaveLength(0); // immutable
     });
 });

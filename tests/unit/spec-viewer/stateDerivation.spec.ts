@@ -6,7 +6,10 @@ import {
     deriveActiveSubstep,
     isStepCompleted,
 } from '../../../src/features/spec-viewer/stateDerivation';
-import { SpecContext } from '../../../src/core/types/specContext';
+import {
+    SpecContext,
+    StepHistoryEntry,
+} from '../../../src/core/types/specContext';
 
 function baseCtx(overrides: Partial<SpecContext> = {}): SpecContext {
     return {
@@ -15,11 +18,16 @@ function baseCtx(overrides: Partial<SpecContext> = {}): SpecContext {
         branch: 'main',
         currentStep: 'specify',
         status: 'draft',
-        stepHistory: {},
-        transitions: [],
+        history: [],
         ...overrides,
     };
 }
+
+// Helper: build a `stepHistory` map for tests that exercise the derived-shape
+// code paths directly. (`stepHistory` is no longer on disk; the viewer
+// derives it from `history[]` — but the derivation functions all accept it as
+// an optional explicit argument so tests can drive them deterministically.)
+type SH = Record<string, StepHistoryEntry>;
 
 describe('deriveViewerState (US1 — single status passthrough)', () => {
     it('returns ctx.status unchanged regardless of active step', () => {
@@ -34,12 +42,16 @@ describe('deriveViewerState (US1 — single status passthrough)', () => {
         const ctx = baseCtx({
             status: 'completed',
             currentStep: 'implement',
-            stepHistory: {
-                specify: { startedAt: 't1', completedAt: 't2' },
-                plan: { startedAt: 't3', completedAt: 't4' },
-                tasks: { startedAt: 't5', completedAt: 't6' },
-                implement: { startedAt: 't7', completedAt: 't8' },
-            },
+            history: [
+                { step: 'specify',   substep: null, from: { step: null, substep: null }, by: 'extension', at: 't1' },
+                { step: 'specify',   substep: null, from: { step: 'specify', substep: null }, by: 'extension', at: 't2' },
+                { step: 'plan',      substep: null, from: { step: 'specify', substep: null }, by: 'extension', at: 't3' },
+                { step: 'plan',      substep: null, from: { step: 'plan', substep: null }, by: 'extension', at: 't4' },
+                { step: 'tasks',     substep: null, from: { step: 'plan', substep: null }, by: 'extension', at: 't5' },
+                { step: 'tasks',     substep: null, from: { step: 'tasks', substep: null }, by: 'extension', at: 't6' },
+                { step: 'implement', substep: null, from: { step: 'tasks', substep: null }, by: 'extension', at: 't7' },
+                { step: 'implement', substep: null, from: { step: 'implement', substep: null }, by: 'extension', at: 't8' },
+            ],
         });
         const v = deriveViewerState(ctx);
         expect(v.pulse).toBeNull();
@@ -56,28 +68,21 @@ describe('deriveViewerState (US1 — single status passthrough)', () => {
 });
 
 describe('deriveStepBadges (US2 — history-driven, no file existence)', () => {
-    it('plan with no stepHistory entry → not-started even if file-existence logic would say otherwise', () => {
+    it('plan with no history → not-started', () => {
         const ctx = baseCtx();
         expect(deriveStepBadges(ctx).plan).toBe('not-started');
     });
 
     it('startedAt set + completedAt null on currentStep → in-progress', () => {
-        const ctx = baseCtx({
-            currentStep: 'plan',
-            stepHistory: {
-                plan: { startedAt: '2026-04-01T00:00:00Z', completedAt: null },
-            },
-        });
-        expect(deriveStepBadges(ctx).plan).toBe('in-progress');
+        const ctx = baseCtx({ currentStep: 'plan' });
+        const sh: SH = { plan: { startedAt: '2026-04-01T00:00:00Z', completedAt: null } };
+        expect(deriveStepBadges(ctx, sh).plan).toBe('in-progress');
     });
 
     it('both startedAt and completedAt → completed', () => {
-        const ctx = baseCtx({
-            stepHistory: {
-                plan: { startedAt: 'a', completedAt: 'b' },
-            },
-        });
-        expect(deriveStepBadges(ctx).plan).toBe('completed');
+        const ctx = baseCtx();
+        const sh: SH = { plan: { startedAt: 'a', completedAt: 'b' } };
+        expect(deriveStepBadges(ctx, sh).plan).toBe('completed');
     });
 });
 
@@ -93,42 +98,38 @@ describe('derivePulse / deriveHighlights (US5)', () => {
     });
 
     it('pulse equals the step with startedAt set and completedAt null', () => {
-        const ctx = baseCtx({
-            status: 'planning',
-            stepHistory: {
-                specify: { startedAt: 'a', completedAt: 'b' },
-                plan: { startedAt: 'c', completedAt: null },
-            },
-        });
-        expect(derivePulse(ctx)).toBe('plan');
+        const ctx = baseCtx({ status: 'planning', currentStep: 'plan' });
+        const sh: SH = {
+            specify: { startedAt: 'a', completedAt: 'b' },
+            plan: { startedAt: 'c', completedAt: null },
+        };
+        expect(derivePulse(ctx, sh)).toBe('plan');
     });
 
     it('highlights contains only steps with completedAt set', () => {
-        const ctx = baseCtx({
-            stepHistory: {
-                specify: { startedAt: 'a', completedAt: 'b' },
-                plan: { startedAt: 'c', completedAt: null },
-            },
-        });
-        expect(deriveHighlights(ctx)).toEqual(['specify']);
+        const ctx = baseCtx();
+        const sh: SH = {
+            specify: { startedAt: 'a', completedAt: 'b' },
+            plan: { startedAt: 'c', completedAt: null },
+        };
+        expect(deriveHighlights(ctx, sh)).toEqual(['specify']);
     });
 });
 
 describe('deriveActiveSubstep (US4)', () => {
     it('surfaces first in-progress substep', () => {
-        const ctx = baseCtx({
-            stepHistory: {
-                specify: {
-                    startedAt: 'a',
-                    completedAt: null,
-                    substeps: [
-                        { name: 'outline', startedAt: 'a', completedAt: 'a2' },
-                        { name: 'validate-checklist', startedAt: 'b', completedAt: null },
-                    ],
-                },
+        const ctx = baseCtx();
+        const sh: SH = {
+            specify: {
+                startedAt: 'a',
+                completedAt: null,
+                substeps: [
+                    { name: 'outline', startedAt: 'a', completedAt: 'a2' },
+                    { name: 'validate-checklist', startedAt: 'b', completedAt: null },
+                ],
             },
-        });
-        expect(deriveActiveSubstep(ctx)).toEqual({
+        };
+        expect(deriveActiveSubstep(ctx, sh)).toEqual({
             step: 'specify',
             name: 'validate-checklist',
         });
@@ -177,16 +178,14 @@ describe('isStepCompleted — inferred completion from step ordering', () => {
 
 describe('deriveStepBadges — inferred completion', () => {
     it('currentStep=implement, all steps startedAt only → specify/plan/tasks completed, implement in-progress', () => {
-        const ctx = baseCtx({
-            currentStep: 'implement',
-            stepHistory: {
-                specify: { startedAt: 't1', completedAt: null },
-                plan: { startedAt: 't2', completedAt: null },
-                tasks: { startedAt: 't3', completedAt: null },
-                implement: { startedAt: 't4', completedAt: null },
-            },
-        });
-        const badges = deriveStepBadges(ctx);
+        const ctx = baseCtx({ currentStep: 'implement' });
+        const sh: SH = {
+            specify: { startedAt: 't1', completedAt: null },
+            plan: { startedAt: 't2', completedAt: null },
+            tasks: { startedAt: 't3', completedAt: null },
+            implement: { startedAt: 't4', completedAt: null },
+        };
+        const badges = deriveStepBadges(ctx, sh);
         expect(badges.specify).toBe('completed');
         expect(badges.plan).toBe('completed');
         expect(badges.tasks).toBe('completed');
@@ -194,15 +193,13 @@ describe('deriveStepBadges — inferred completion', () => {
     });
 
     it('currentStep=tasks, specify and plan startedAt only → both completed', () => {
-        const ctx = baseCtx({
-            currentStep: 'tasks',
-            stepHistory: {
-                specify: { startedAt: 't1', completedAt: null },
-                plan: { startedAt: 't2', completedAt: null },
-                tasks: { startedAt: 't3', completedAt: null },
-            },
-        });
-        const badges = deriveStepBadges(ctx);
+        const ctx = baseCtx({ currentStep: 'tasks' });
+        const sh: SH = {
+            specify: { startedAt: 't1', completedAt: null },
+            plan: { startedAt: 't2', completedAt: null },
+            tasks: { startedAt: 't3', completedAt: null },
+        };
+        const badges = deriveStepBadges(ctx, sh);
         expect(badges.specify).toBe('completed');
         expect(badges.plan).toBe('completed');
         expect(badges.tasks).toBe('in-progress');
@@ -214,29 +211,27 @@ describe('derivePulse — inferred completion suppresses pulse on past steps', (
         const ctx = baseCtx({
             status: 'implementing',
             currentStep: 'implement',
-            stepHistory: {
-                specify: { startedAt: 'a', completedAt: null },
-                plan: { startedAt: 'b', completedAt: null },
-                tasks: { startedAt: 'c', completedAt: null },
-                implement: { startedAt: 'd', completedAt: null },
-            },
         });
-        expect(derivePulse(ctx)).toBe('implement');
+        const sh: SH = {
+            specify: { startedAt: 'a', completedAt: null },
+            plan: { startedAt: 'b', completedAt: null },
+            tasks: { startedAt: 'c', completedAt: null },
+            implement: { startedAt: 'd', completedAt: null },
+        };
+        expect(derivePulse(ctx, sh)).toBe('implement');
     });
 });
 
 describe('deriveHighlights — includes inferred-completed steps', () => {
     it('highlights steps before currentStep even without completedAt', () => {
-        const ctx = baseCtx({
-            currentStep: 'implement',
-            stepHistory: {
-                specify: { startedAt: 'a', completedAt: null },
-                plan: { startedAt: 'b', completedAt: null },
-                tasks: { startedAt: 'c', completedAt: null },
-                implement: { startedAt: 'd', completedAt: null },
-            },
-        });
-        const highlights = deriveHighlights(ctx);
+        const ctx = baseCtx({ currentStep: 'implement' });
+        const sh: SH = {
+            specify: { startedAt: 'a', completedAt: null },
+            plan: { startedAt: 'b', completedAt: null },
+            tasks: { startedAt: 'c', completedAt: null },
+            implement: { startedAt: 'd', completedAt: null },
+        };
+        const highlights = deriveHighlights(ctx, sh);
         expect(highlights).toContain('specify');
         expect(highlights).toContain('plan');
         expect(highlights).toContain('tasks');
