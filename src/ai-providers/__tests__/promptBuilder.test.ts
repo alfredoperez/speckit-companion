@@ -120,29 +120,34 @@ describe('buildPrompt', () => {
         expect(out).toContain('ready-to-implement');
     });
 
-    it('instructs the model to atomically advance currentStep + append a history entry on completion', () => {
+    it('instructs the model to LEAVE currentStep on the current step (per-step commands do not advance)', () => {
+        // Per-step preambles (one call to /speckit.<step>) finish when the
+        // step is done. The AI must NOT preemptively advance currentStep or
+        // append a start-entry for the next step — that's the user's click
+        // (or the extension's startStep) to make. Doing so creates the
+        // phantom "Generating <next>…" state the schema cleanup exists to
+        // prevent.
         mockConfig(true);
-        const cases: Array<{ step: 'specify' | 'plan' | 'tasks'; next: string }> = [
-            { step: 'specify', next: 'plan' },
-            { step: 'plan', next: 'tasks' },
-            { step: 'tasks', next: 'implement' },
-        ];
-        for (const { step, next } of cases) {
+        for (const step of ['specify', 'plan', 'tasks', 'implement'] as const) {
             const out = buildPrompt({ command: 'x', step, specDir: 'specs/001-demo' });
-            expect(out).toContain(`set currentStep to "${next}"`);
-            // Atomic-write requirement: the start-entry must accompany the currentStep flip.
-            expect(out).toContain('ATOMICALLY (in the same write');
-            expect(out).toContain('append a start history entry');
-            expect(out).toContain(`step: "${next}"`);
+            expect(out).toContain(`Leave currentStep on "${step}"`);
+            expect(out).not.toContain('ATOMICALLY (in the same write');
+            expect(out).not.toContain('append a start history entry');
         }
     });
 
-    it('instructs the model NOT to advance currentStep after the implement step', () => {
+    // F8 regression: the implement step finishes at status="implemented",
+    // NOT "completed". The user owns the final closure click. The preamble
+    // must not instruct Copilot to write "completed" (the previous
+    // misconfiguration that bypassed the Mark-Completed gate).
+    it('instructs the implement step to finish at status="implemented", not "completed"', () => {
         mockConfig(true);
         const out = buildPrompt({ command: 'x', step: 'implement', specDir: 'specs/001-demo' });
-        expect(out).toContain('Leave currentStep on "implement"');
-        expect(out).toContain('terminal step');
-        expect(out).not.toContain('ATOMICALLY (in the same write');
+        expect(out).toContain('Flip status to "implemented"');
+        expect(out).not.toContain('Flip status to "completed"');
+        // And the prose explicitly explains why.
+        expect(out).toContain('the implement step completes at "implemented"');
+        expect(out).toContain("user's final approval gate");
     });
 });
 
@@ -175,11 +180,20 @@ describe('buildLifecyclePrompt', () => {
         expect(buildLifecyclePrompt(cmd, 'specs/001')).toBe(cmd);
     });
 
-    it('instructs the model to advance currentStep across the canonical sequence', () => {
+    it('does NOT instruct preemptive advance — start-entry coincides with the AI actually starting that step', () => {
+        // The old (item 4) rule told the AI to atomically append the next
+        // step's start-entry at the *completion* of the previous step. That
+        // produces a phantom "Generating <next>…" state when the AI doesn't
+        // actually continue (e.g. spec-editor "Create" dispatch is one-shot).
+        // The new rule: the start-entry must coincide with the AI actually
+        // beginning that step (item 1), not with finishing the previous one.
         mockConfig(true);
         const out = buildLifecyclePrompt('/sdd:auto "specs/001"', 'specs/001');
-        expect(out).toContain('set currentStep to the next step in the canonical sequence specify → plan → tasks → implement');
-        expect(out).toContain('After implement, leave currentStep on "implement"');
+        expect(out).not.toContain('ATOMICALLY (same write as the completion entry)');
+        expect(out).not.toContain('set currentStep to the next step in the canonical sequence');
+        // And it explicitly warns against the phantom state.
+        expect(out).toContain('Do NOT preemptively write a start-entry for the next step');
+        expect(out).toContain('phantom "Generating <next>…" state');
     });
 });
 
@@ -227,13 +241,18 @@ describe('buildSpecifyCreationPreamble', () => {
         expect(out).toContain('specify, plan, tasks, implement');
     });
 
-    it('carries the atomic-advance rule into the seeded creation preamble', () => {
+    it('does NOT carry an atomic-advance rule (start-entry coincides with the AI starting the next step)', () => {
+        // Regression: previously this preamble told the AI to atomically
+        // append the next step's start-entry on completion of the current
+        // step. For the spec-editor's "Create" dispatch — which is
+        // single-step — that produced a phantom plan-start entry the
+        // moment specify finished. The lifecycle body must instead tie
+        // start-entries to actually-starting the next step.
         mockConfig(true);
         const out = buildSpecifyCreationPreamble('speckit', null);
-        expect(out).toContain('set currentStep to the next step in the canonical sequence specify → plan → tasks → implement');
-        expect(out).toContain('After implement, leave currentStep on "implement"');
-        // Atomic-write requirement carries forward to the lifecycle body too.
-        expect(out).toContain('ATOMICALLY (same write as the completion entry)');
+        expect(out).not.toContain('ATOMICALLY (same write as the completion entry)');
+        expect(out).not.toContain('set currentStep to the next step in the canonical sequence');
+        expect(out).toContain('Do NOT preemptively write a start-entry for the next step');
     });
 
     it('includes the date -u timestamp rule from SHARED_RULES', () => {

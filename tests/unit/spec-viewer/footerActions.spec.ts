@@ -248,6 +248,22 @@ describe('Approve advance button across the lifecycle', () => {
         const ids = getFooterActions(ctx, WorkflowSteps.SPECIFY, SDD_STEPS, sh).map(a => a.id);
         expect(ids).not.toContain(FooterActionIds.APPROVE);
     });
+
+    // F5 regression: the implement step never shows an Approve action. The
+    // closure surface for implement is `Mark Completed` (status === 'implemented'
+    // or 'completed'). Letting Approve also surface produced a phantom
+    // "Complete" button the moment Copilot ticked all task checkboxes — before
+    // status had actually flipped to `implemented`.
+    it("never shows Approve on the implement step, even while in-flight", () => {
+        const ctx = baseCtx({
+            workflow: Workflows.SDD,
+            status: 'implementing',
+            currentStep: WorkflowSteps.IMPLEMENT,
+        });
+        const sh: SH = { implement: { startedAt: 'a', completedAt: null } };
+        const ids = getFooterActions(ctx, WorkflowSteps.IMPLEMENT, SDD_STEPS, sh).map(a => a.id);
+        expect(ids).not.toContain(FooterActionIds.APPROVE);
+    });
 });
 
 describe('In-flight footer (the screenshot scenario)', () => {

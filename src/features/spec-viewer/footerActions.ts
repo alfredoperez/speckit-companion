@@ -79,6 +79,14 @@ function shouldShowApprove(
     step: StepName,
     stepHistory: DerivedHistory
 ): boolean {
+    // F5: Approve never surfaces for the implement step. The implement
+    // closure is owned by `Mark Completed` (gated on
+    // `isSpecDone(ctx)` → `status === 'implemented' || 'completed'`).
+    // Letting Approve also surface produced a duplicate "Complete" button
+    // that leaked through the moment Copilot ticked every checkbox in
+    // tasks.md (artifactReady=true) before status had actually flipped to
+    // `implemented`. One closure surface only.
+    if (step === 'implement') return false;
     const entry = stepHistory[step];
     if (!entry?.startedAt) return false;
     const idx = STEP_NAMES.indexOf(step);

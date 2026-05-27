@@ -67,18 +67,55 @@ export function reconcile(ctx: SpecContext): SpecContext | null {
     // Repair non-canonical status. With history-only, "completed" is decided
     // by whether the last history entry for currentStep was a completion
     // (`from.step === currentStep`).
-    if (!(STATUSES as string[]).includes(ctx.status)) {
-        const completed = isLastEntryACompletionFor(ctx.history, ctx.currentStep);
+    if (!(STATUSES as string[]).includes(result.status)) {
+        const completed = isLastEntryACompletionFor(result.history, result.currentStep);
         result = {
             ...result,
             status: completed
-                ? deriveCompletedStatus(ctx.currentStep)
-                : deriveStatusFromCurrentStep(ctx.currentStep),
+                ? deriveCompletedStatus(result.currentStep)
+                : deriveStatusFromCurrentStep(result.currentStep),
         };
         changed = true;
     }
 
+    // Roll back currentStep when it disagrees with `status`.
+    //
+    // Failure mode: the old preamble (d) instruction told the AI to
+    // atomically advance currentStep + append a start-entry on completion.
+    // Single-step commands (e.g. /speckit.specify) wrote `currentStep: plan,
+    // status: specified, history: […, plan-start]` — a phantom "Generating
+    // Plan…" state with no AI actually planning. The preamble is fixed in
+    // v0.21.0, but files already on disk need recovery: trust `status`
+    // (which the AI generally gets right for the step it just completed)
+    // and roll `currentStep` back to whatever step that completed status
+    // belongs to.
+    const owner = stepOwningCompletedStatus(result.status);
+    if (owner && owner !== result.currentStep) {
+        result = { ...result, currentStep: owner };
+        changed = true;
+    }
+
     return changed ? result : null;
+}
+
+/**
+ * Reverse map: which step "owns" each completed-form status? E.g. `specified`
+ * → `specify`, `planned` → `plan`. Returns `null` for in-progress or terminal
+ * statuses (no rollback signal).
+ */
+function stepOwningCompletedStatus(status: SpecContext['status']): StepName | null {
+    switch (status) {
+        case 'specified':
+            return 'specify';
+        case 'planned':
+            return 'plan';
+        case 'ready-to-implement':
+            return 'tasks';
+        case 'implemented':
+            return 'implement';
+        default:
+            return null;
+    }
 }
 
 /**

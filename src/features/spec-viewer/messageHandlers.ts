@@ -21,8 +21,10 @@ import { NotificationUtils } from "../../core/utils/notificationUtils";
 import {
   SPEC_CONTEXT_FILENAME,
   readSpecContext,
+  readSpecContextSync,
 } from "../specs/specContextReader";
 import { updateSpecContext } from "../specs/specContextWriter";
+import { lastEntryIsCompletionFor } from "../specs/historyHelpers";
 import {
   completeStep,
   reactivate,
@@ -379,8 +381,24 @@ async function handleApprove(
   }
 
   // Mark the currently-viewed step as completed (independent of AI cooperation).
+  // Guard: if Copilot (or any prior writer) already appended a completion
+  // entry for this step, do NOT add a second one — that's the duplicate
+  // `<step>-complete` we kept seeing in history on every phase button click.
   if (isLifecycleStep(docType)) {
-    await completeStep(specDirectory, docType as StepName, "extension");
+    const ctx = readSpecContextSync(specDirectory);
+    const alreadyComplete = ctx
+      ? lastEntryIsCompletionFor(ctx.history ?? [], docType as StepName)
+      : false;
+    if (alreadyComplete) {
+      deps.outputChannel.appendLine(
+        `[handleApprove] SKIPPED completeStep("${docType}") — already completed in history (no duplicate)`,
+      );
+    } else {
+      deps.outputChannel.appendLine(
+        `[handleApprove] firing completeStep("${docType}") — no completion entry yet`,
+      );
+      await completeStep(specDirectory, docType as StepName, "extension");
+    }
   }
 
   if (currentIndex >= 0 && currentIndex < navSteps.length - 1) {

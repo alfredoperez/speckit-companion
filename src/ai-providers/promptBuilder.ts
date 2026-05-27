@@ -80,9 +80,17 @@ const SPEC_CONTEXT_SCHEMA = [
 ].join('\n');
 
 const STATUS_LIFECYCLE = [
-    'Canonical statuses: draft → specifying → specified → planning → planned → tasking → ready-to-implement → implementing → completed.',
+    'Canonical statuses: draft → specifying → specified → planning → planned → tasking → ready-to-implement → implementing → implemented → completed.',
     'When starting a step: set status to the in-progress form (specifying, planning, tasking, implementing).',
-    'When completing a step: set status to the completed form (specified, planned, ready-to-implement, completed).',
+    'When completing a step: set status to the completed form (specified, planned, ready-to-implement, implemented).',
+    '',
+    'IMPORTANT — the implement step completes at "implemented", NOT "completed".',
+    '"completed" is the user\'s final approval gate (their Mark-Completed click in the',
+    'viewer). When you finish the implement step, set status to "implemented" even if',
+    'manual verification steps remain (running tests, eyeballing UI, smoke-checking',
+    'in a browser) — those belong to the user, not you. Do not skip writing the',
+    'implement-completion history entry just because you can\'t personally verify a',
+    'manual check; write it as soon as your AI-side work is done.',
 ].join('\n');
 
 const SHARED_RULES = [
@@ -101,7 +109,11 @@ const COMPLETED_STATUS_BY_STEP: Record<PromptStep, string> = {
     specify: 'specified',
     plan: 'planned',
     tasks: 'ready-to-implement',
-    implement: 'completed',
+    // F8: implement ends at `implemented` (NOT `completed`). The final
+    // `completed` status is the user's explicit Mark-Completed click in
+    // the viewer — keeps closure under the user's control even when
+    // manual verification steps remain (build/test/eyeball UI).
+    implement: 'implemented',
 };
 
 const DONE_PHRASE_BY_STEP: Record<PromptStep, string> = {
@@ -111,32 +123,11 @@ const DONE_PHRASE_BY_STEP: Record<PromptStep, string> = {
     implement: 'Done implementing',
 };
 
-const NEXT_STEP_BY_STEP: Record<PromptStep, PromptStep | null> = {
-    specify: 'plan',
-    plan: 'tasks',
-    tasks: 'implement',
-    implement: null,
-};
-
 function renderPreamble(step: PromptStep, specDir: string): string {
     const substeps = CANONICAL_SUBSTEPS[step].join(', ');
     const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
     const completedStatus = COMPLETED_STATUS_BY_STEP[step];
     const donePhrase = DONE_PHRASE_BY_STEP[step];
-    const nextStep = NEXT_STEP_BY_STEP[step];
-    const advanceClause = nextStep
-        ? [
-            `  (d) ATOMICALLY (in the same write as (a) and (b)) set currentStep to "${nextStep}"`,
-            `      AND append a start history entry { step: "${nextStep}", substep: null,`,
-            `      from: { step: "${step}", substep: null }, by: "extension", at: <real timestamp> }.`,
-            `      The entry is what makes the advance visible — currentStep ahead of history`,
-            `      is the exact failure mode that makes the viewer show "Generating ${nextStep}…"`,
-            `      forever with no real progress.`,
-        ].join('\n')
-        : `  (d) Leave currentStep on "${step}" — this is the terminal step; do not advance further.`;
-    const advanceFailureNote = nextStep
-        ? `; skipping (d), or doing (d) but forgetting the start-entry, leaves currentStep ahead of history and the PhasesCard shows a phantom "Generating ${nextStep}…"`
-        : '';
     return [
         MARKER_OPEN,
         `Before and after this step runs, update ${target}. Schema:`,
@@ -150,12 +141,14 @@ function renderPreamble(step: PromptStep, specDir: string): string {
         '',
         `Canonical substeps for ${step}: ${substeps}. For each substep boundary append a history entry with that substep name (and a real timestamp).`,
         '',
-        `MUST DO BEFORE ENDING — all four required:`,
+        `MUST DO BEFORE ENDING — all three required:`,
         `  (a) Flip status to "${completedStatus}".`,
         `  (b) Append a completion history entry { step: "${step}", substep: null, from: { step: "${step}", substep: null }, by: "extension", at: <real timestamp> }. This is what clears the "in-flight" ring on the ${step} tab.`,
         `  (c) Print "${donePhrase}" as the final terminal line.`,
-        advanceClause,
-        `Skipping (a) leaves the badge stuck on the in-progress form; skipping (b) leaves the step timer running indefinitely; skipping (c) hides the completion from the activity log${advanceFailureNote}.`,
+        '',
+        `Leave currentStep on "${step}". This command is single-step — you are done after (a)(b)(c). The user clicks the next-phase button (or the extension dispatches a fresh /speckit.<next> command) to advance; that path appends the next start-entry. Writing a start-entry for the next step here is a lie that makes the viewer render a phantom "Generating <next>…" indefinitely.`,
+        '',
+        `Skipping (a) leaves the badge stuck on the in-progress form; skipping (b) leaves the step timer running indefinitely; skipping (c) hides the completion from the activity log.`,
         '',
         SHARED_RULES,
         '',
@@ -173,10 +166,13 @@ function renderLifecycleBody(target: string): string {
         STATUS_LIFECYCLE,
         '',
         'For EACH step you work on (specify, plan, tasks, implement):',
-        '1. Before starting: set currentStep = "<step>" and status = in-progress form. Append a history entry { step: "<step>", substep: null, from, by: "extension", at: <real timestamp> }.',
-        '2. After completing: flip status = completed form. Append a completion history entry { step: "<step>", substep: null, from: { step: "<step>", substep: null }, by: "extension", at: <real timestamp> } — this is what clears the in-flight ring on the tab.',
+        '1. When you START a step: set currentStep = "<step>" and status = in-progress form. Append a history entry { step: "<step>", substep: null, from, by: "extension", at: <real timestamp> }.',
+        '2. When you FINISH that step: flip status = completed form. Append a completion history entry { step: "<step>", substep: null, from: { step: "<step>", substep: null }, by: "extension", at: <real timestamp> } — this is what clears the in-flight ring on the tab.',
         '3. Append a history entry for each substep boundary too, using a real timestamp.',
-        '4. After completing a step, ATOMICALLY (same write as the completion entry) advance to the next step: set currentStep to the next step in the canonical sequence specify → plan → tasks → implement AND append a start history entry { step: "<next>", substep: null, from: { step: "<this>", substep: null }, by: "extension", at: <real timestamp> }. After implement, leave currentStep on "implement" — it is terminal. currentStep ahead of history is an invalid state.',
+        '',
+        'Do NOT preemptively write a start-entry for the next step at completion time. The start-entry must coincide with you actually beginning that step (item 1 above), not with you finishing the previous one. Writing { step: "<next>", from: { step: "<this>" } } as part of the completion write produces a phantom "Generating <next>…" state in the viewer when in fact no one is generating anything.',
+        '',
+        'If this run is single-step (you finish after one /speckit.<step> command), stop after item 2 and leave currentStep on "<step>". The user clicks the next-phase button (or a fresh /speckit.<next> command runs) to actually advance — that path appends the next start-entry.',
         '',
         SHARED_RULES,
         '',

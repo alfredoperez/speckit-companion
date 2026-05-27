@@ -228,6 +228,15 @@ export class IdeChatProvider implements IAIProvider {
             this.outputChannel.appendLine(
                 `[IdeChatProvider] Host: ${profile.label} — dispatching via "${command}" (spec-kit ready: ${ready})`
             );
+            // Debug aid: log the *first line* of what we send to the host
+            // chat. IDE Chat strips preambles, so for /speckit.* commands we
+            // expect a tiny payload (`/speckit.<step> <path>`). If this grows
+            // unexpectedly large, the preamble started leaking into the
+            // dispatch and the AI is going to follow it (don't want).
+            const firstLine = chatQuery.split('\n', 1)[0];
+            this.outputChannel.appendLine(
+                `[IdeChatProvider] dispatch payload: ${chatQuery.length} chars — "${firstLine}"`
+            );
 
             if (!ready) {
                 void this.warnSpecKitNotReady(host);
