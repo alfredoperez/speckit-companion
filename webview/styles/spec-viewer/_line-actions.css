@@ -8,63 +8,63 @@
    ============================================ */
 
 .line {
-    position: relative;
-    padding: 2px 0;  /* Minimal vertical padding */
-    margin-left: 0;  /* No left margin - button now on right */
-    border-radius: var(--radius-sm);
-    transition: all var(--transition-fast);
-    min-height: 24px;
+  position: relative;
+  padding: 2px 0; /* Minimal vertical padding */
+  margin-left: 0; /* No left margin - button now on right */
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  min-height: 24px;
 }
 
 .line.empty {
-    padding: 2px 8px;
-    min-height: 8px;
-    pointer-events: none;
+  padding: 2px 8px;
+  min-height: 8px;
+  pointer-events: none;
 }
 
 .line:hover {
-    background: var(--bg-hover);
+  background: var(--bg-hover);
 }
 
 .line.empty:hover {
-    background: transparent;
+  background: transparent;
 }
 
 /* Line with active editor - no background change */
 .line.editing {
-    background: transparent;
+  background: transparent;
 }
 
 /* Prevent hover changes while editing */
 .line.editing:hover {
-    background: transparent;
+  background: transparent;
 }
 
 /* Line with refinement comment - no border, comment card below is sufficient indicator */
 .line.has-refinement {
-    /* Border removed - rely on the inline comment card for indication */
+  /* Border removed - rely on the inline comment card for indication */
 }
 
 .line-content {
-    color: var(--text-secondary);
-    line-height: 1.6;
+  color: var(--text-secondary);
+  line-height: 1.6;
 }
 
 .line-content strong {
-    color: var(--header-title);
-    font-weight: 600;
+  color: var(--header-title);
+  font-weight: 600;
 }
 
 /* Line content that wraps p tags - high specificity to override #markdown-content p */
 #markdown-content .line .line-content p,
 #markdown-content .line-content p,
 .line-content p {
-    margin: 0;
+  margin: 0;
 }
 
 /* Override any paragraph margin inside line wrappers */
 .line p {
-    margin: 0;
+  margin: 0;
 }
 
 /* ============================================
@@ -72,53 +72,53 @@
    ============================================ */
 
 .line-add-btn {
-    position: absolute;
-    left: auto;  /* Unset left positioning */
-    right: 0;  /* Position on right side */
-    top: 2px;  /* Align to top */
-    width: 18px;
-    height: 18px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--success);
-    background: var(--success);
-    color: white;
-    opacity: 0;
-    transition: all var(--transition-fast);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 5;
+  position: absolute;
+  left: auto; /* Unset left positioning */
+  right: 0; /* Position on right side */
+  top: 2px; /* Align to top */
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--success);
+  background: var(--success);
+  color: white;
+  opacity: 0;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
 }
 
 .line-add-btn svg {
-    width: 12px;
-    height: 12px;
-    flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
 }
 
 .line:hover .line-add-btn {
-    opacity: 1;
+  opacity: 1;
 }
 
 /* Hide button when editor is open */
 .line.editing .line-add-btn {
-    display: none;
+  display: none;
 }
 
 .line-add-btn:hover {
-    background: color-mix(in srgb, var(--success) 85%, white);
-    border-color: color-mix(in srgb, var(--success) 85%, white);
-    transform: scale(1.1);
+  background: color-mix(in srgb, var(--success) 85%, white);
+  border-color: color-mix(in srgb, var(--success) 85%, white);
+  transform: scale(1.1);
 }
 
 .line-add-btn:active {
-    transform: scale(0.95);
+  transform: scale(0.95);
 }
 
 /* Hide + button on empty lines */
 .line.empty .line-add-btn {
-    display: none;
+  display: none;
 }
 
 /* ============================================
@@ -126,43 +126,48 @@
    ============================================ */
 
 li.line {
-    position: relative;
-    padding-top: 0;
-    padding-bottom: 0;
-    padding-right: 0;  /* No extra padding */
-    margin: 0;
-    min-height: unset;
-    list-style-position: outside;
+  position: relative;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-right: 0; /* No extra padding */
+  margin: 0;
+  min-height: unset;
+  list-style-position: outside;
 }
 
 li.line:hover {
-    background: var(--bg-hover);
-    border-radius: var(--radius-sm);
+  background: var(--bg-hover);
+  border-radius: var(--radius-sm);
 }
 
 li.line .line-content {
-    display: inline;
+  display: inline;
 }
 
 li.line .line-add-btn {
-    left: auto;  /* Unset left positioning */
-    right: 0;  /* Position on right side */
-    top: 4px;
+  left: auto; /* Unset left positioning */
+  right: 0; /* Position on right side */
+  top: 4px;
 }
 
 li.line .line-comment-slot {
-    margin-top: var(--space-2);
+  margin-top: var(--space-2);
 }
 
 /* Comment slot container */
 .line-comment-slot {
-    margin-top: 0;
+  margin-top: 0;
+}
+
+/* Suppress empty slot — no height or gap contribution when no comment is present */
+.line-comment-slot:empty {
+  display: none;
 }
 
 /* Full-width inline editor */
 .line .line-comment-slot .inline-editor {
-    margin-left: 0;
-    width: 100%;
+  margin-left: 0;
+  width: 100%;
 }
 
 /* ============================================
@@ -170,27 +175,29 @@ li.line .line-comment-slot {
    ============================================ */
 
 .line-actions {
-    display: none;  /* Hidden - replaced by + button */
+  display: none; /* Hidden - replaced by + button */
 }
 
 /* Inline edit input (legacy) */
 .inline-edit-input {
-    width: 100%;
-    padding: 6px 10px;
-    background: var(--bg-primary);
-    border: 1px solid var(--accent);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-    font-size: inherit;
-    font-family: inherit;
-    line-height: inherit;
-    outline: none;
-    box-shadow: 0 0 0 2px var(--accent-subtle);
+  width: 100%;
+  padding: 6px 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: inherit;
+  font-family: inherit;
+  line-height: inherit;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-subtle);
 }
 
 .inline-edit-input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px var(--accent-subtle), var(--accent-glow);
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 2px var(--accent-subtle),
+    var(--accent-glow);
 }
 
 /* ============================================
@@ -202,7 +209,7 @@ body[data-spec-status="completed"] .line-add-btn,
 body[data-spec-status="completed"] .row-add-btn,
 body[data-spec-status="archived"] .line-add-btn,
 body[data-spec-status="archived"] .row-add-btn {
-    display: none !important;
+  display: none !important;
 }
 
 /* Disable hover backgrounds when spec is completed or archived */
@@ -210,5 +217,5 @@ body[data-spec-status="completed"] .line:hover,
 body[data-spec-status="completed"] li.line:hover,
 body[data-spec-status="archived"] .line:hover,
 body[data-spec-status="archived"] li.line:hover {
-    background: transparent;
+  background: transparent;
 }
