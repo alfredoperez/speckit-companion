@@ -370,28 +370,31 @@ async function handleApprove(
   const instance = deps.getInstance(specDirectory);
   if (!instance) return;
 
-  const docType = instance.state.currentDocument;
+  const ctx = readSpecContextSync(specDirectory);
   const steps = await deps.resolveWorkflowSteps(specDirectory);
-  // Filter out actionOnly steps for navigation purposes
   const navSteps = steps.filter((s) => !s.actionOnly);
-  let currentIndex = navSteps.findIndex((s) => s.name === docType);
+
+  // Dispatch routes off ctx.currentStep so a past stepper tab can't
+  // misdirect the action. Fall back to docType only when currentStep
+  // isn't a navStep (e.g. the actionOnly implement step).
+  let currentIndex = ctx?.currentStep
+    ? navSteps.findIndex((s) => s.name === ctx.currentStep)
+    : -1;
   if (currentIndex < 0) {
-    // Viewing a related doc — resolve parent step
-    const relatedDoc = instance.state.availableDocuments.find(
-      (d) => d.type === docType && d.category === "related",
-    );
-    if (relatedDoc?.parentStep) {
-      currentIndex = navSteps.findIndex(
-        (s) => s.name === relatedDoc.parentStep,
+    const docType = instance.state.currentDocument;
+    currentIndex = navSteps.findIndex((s) => s.name === docType);
+    if (currentIndex < 0) {
+      const relatedDoc = instance.state.availableDocuments.find(
+        (d) => d.type === docType && d.category === "related",
       );
+      if (relatedDoc?.parentStep) {
+        currentIndex = navSteps.findIndex(
+          (s) => s.name === relatedDoc.parentStep,
+        );
+      }
     }
   }
 
-  // Mark the spec's actual current step as completed. Target is
-  // `ctx.currentStep` (not `docType`) so clicking Approve while viewing
-  // a child doc still records the right completion. Skip if the AI
-  // already wrote one — avoids duplicate completion entries.
-  const ctx = readSpecContextSync(specDirectory);
   const targetStep = ctx?.currentStep;
   if (targetStep && isLifecycleStep(targetStep)) {
     const alreadyComplete = lastEntryIsCompletionFor(

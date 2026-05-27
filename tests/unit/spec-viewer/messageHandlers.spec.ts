@@ -1,7 +1,5 @@
 /**
- * Unit tests for messageHandlers — T005
- * Verifies that handleAddComment resolves sourceDoc via fileName fallback
- * when availableDocuments has type='specify' instead of type='spec'.
+ * Unit tests for messageHandlers.
  */
 
 import * as vscode from "vscode";
@@ -9,23 +7,54 @@ import type { MessageHandlerDependencies } from "../../../src/features/spec-view
 import { createMessageHandlers } from "../../../src/features/spec-viewer/messageHandlers";
 import type { SpecViewerState } from "../../../src/features/spec-viewer/types";
 
-// Mock heavy dependencies that write to disk
+const mockCtx: { currentStep: string } = { currentStep: "specify" };
+
 jest.mock("../../../src/features/specs/specContextReader", () => ({
   SPEC_CONTEXT_FILENAME: ".spec-context.json",
-  readSpecContext: jest.fn().mockResolvedValue({
+  readSpecContext: jest.fn().mockImplementation(async () => ({
     workflow: "speckit-companion",
     specName: "test",
     branch: "main",
-    currentStep: "specify",
+    currentStep: mockCtx.currentStep,
     status: "draft",
     stepHistory: {},
     transitions: [],
+    history: [],
     reviewComments: [],
-  }),
+  })),
+  readSpecContextSync: jest.fn().mockImplementation(() => ({
+    workflow: "speckit-companion",
+    specName: "test",
+    branch: "main",
+    currentStep: mockCtx.currentStep,
+    status: "draft",
+    history: [],
+    reviewComments: [],
+  })),
 }));
 
 jest.mock("../../../src/features/specs/specContextWriter", () => ({
   updateSpecContext: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock("../../../src/features/specs/stepLifecycle", () => ({
+  completeStep: jest.fn().mockResolvedValue(undefined),
+  startStep: jest.fn().mockResolvedValue(undefined),
+  reactivate: jest.fn().mockResolvedValue(undefined),
+  setStatus: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock("../../../src/features/specs/historyHelpers", () => ({
+  lastEntryIsCompletionFor: jest.fn().mockReturnValue(false),
+}));
+
+jest.mock("../../../src/ai-providers/aiProvider", () => ({
+  formatCommandForProvider: (cmd: string) => cmd,
+}));
+
+jest.mock("../../../src/ai-providers/promptBuilder", () => ({
+  buildPrompt: (opts: { command: string }) => opts.command,
+  buildLifecyclePrompt: (opts: { command: string }) => opts.command,
 }));
 
 const SPEC_DIR = "/tmp/test-spec";
@@ -49,10 +78,13 @@ function makeSpecDocument(
 
 function makeDeps(
   availableDocuments: ReturnType<typeof makeSpecDocument>[],
+  overrides: Partial<MessageHandlerDependencies> = {},
+  stateOverrides: Partial<SpecViewerState> = {},
 ): MessageHandlerDependencies {
   const state: Partial<SpecViewerState> = {
     availableDocuments: availableDocuments as any,
     changeRoot: null,
+    ...stateOverrides,
   };
   return {
     getInstance: () => ({
@@ -66,8 +98,21 @@ function makeDeps(
     executeInTerminal: jest.fn().mockResolvedValue(undefined),
     outputChannel: { appendLine: jest.fn() } as any,
     context: {} as any,
+    ...overrides,
   };
 }
+
+const lifecycleSteps = [
+  { name: "specify", label: "Specify", command: "speckit.specify" },
+  { name: "plan", label: "Plan", command: "speckit.plan" },
+  { name: "tasks", label: "Tasks", command: "speckit.tasks" },
+  {
+    name: "implement",
+    label: "Implement",
+    command: "speckit.implement",
+    actionOnly: true,
+  },
+];
 
 describe("handleAddComment — sourceDoc resolution (T005)", () => {
   const readFileMock = vscode.workspace.fs.readFile as jest.Mock;
@@ -143,5 +188,49 @@ describe("handleAddComment — sourceDoc resolution (T005)", () => {
 
     // Assert: readFile NOT called — no sourceDoc resolved
     expect(readFileMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("handleApprove dispatch routing", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("dispatches /speckit.implement when ctx.currentStep is 'tasks' even if user is viewing the Specification tab", async () => {
+    mockCtx.currentStep = "tasks";
+    const docs = [makeSpecDocument("specify", "spec.md", SPEC_FILE_PATH, true)];
+    const deps = makeDeps(
+      docs,
+      {
+        resolveWorkflowSteps: jest.fn().mockResolvedValue(lifecycleSteps),
+      },
+      { currentDocument: "specify" as any },
+    );
+    const handler = createMessageHandlers(SPEC_DIR, deps);
+
+    await handler({ type: "approve" } as any);
+
+    const prompt = (deps.executeInTerminal as jest.Mock).mock.calls[0]?.[0];
+    expect(prompt).toContain("/speckit.implement");
+    expect(prompt).not.toContain("/speckit.plan");
+    expect(prompt).not.toContain("/speckit.tasks");
+  });
+
+  it("dispatches /speckit.implement when ctx.currentStep is 'tasks' and the user is viewing the Tasks tab (no regression)", async () => {
+    mockCtx.currentStep = "tasks";
+    const docs = [makeSpecDocument("tasks", "tasks.md", `${SPEC_DIR}/tasks.md`, true)];
+    const deps = makeDeps(
+      docs,
+      {
+        resolveWorkflowSteps: jest.fn().mockResolvedValue(lifecycleSteps),
+      },
+      { currentDocument: "tasks" as any },
+    );
+    const handler = createMessageHandlers(SPEC_DIR, deps);
+
+    await handler({ type: "approve" } as any);
+
+    const prompt = (deps.executeInTerminal as jest.Mock).mock.calls[0]?.[0];
+    expect(prompt).toContain("/speckit.implement");
   });
 });
