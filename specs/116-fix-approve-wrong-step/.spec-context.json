@@ -240,6 +240,16 @@
       },
       "by": "sdd",
       "at": "2026-05-27T20:25:39.3NZ"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "done",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-27T20:26:21.3NZ"
     }
   ],
   "task_summaries": {
@@ -268,16 +278,18 @@
       "concerns": []
     }
   },
-  "last_action": "CP2 passed \u2014 680 tests green",
+  "last_action": "PR #186 opened \u2014 fix(spec-viewer): approve dispatches off ctx.currentStep, not docType (116)",
   "files_modified": [
     "CLAUDE.md",
     "src/features/spec-viewer/messageHandlers.ts",
     "tests/unit/spec-viewer/messageHandlers.spec.ts"
   ],
-  "drainedSeq": 7,
+  "drainedSeq": 8,
   "updated": "2026-05-27",
   "checkpointStatus": {
     "commit": true,
     "pr": true
-  }
+  },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/186",
+  "prNumber": 186
 }
