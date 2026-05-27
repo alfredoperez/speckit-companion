@@ -3,6 +3,18 @@
  * Handles inline markdown elements like bold, italic, code, links
  */
 
+const KNOWN_EXTENSIONS = new Set<string>([
+    '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
+    '.md', '.json', '.jsonc',
+    '.css', '.scss',
+    '.html', '.htm',
+    '.yml', '.yaml',
+    '.py', '.sh', '.bash', '.zsh',
+    '.toml', '.lock', '.txt',
+    '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico',
+    '.vsix',
+]);
+
 /**
  * Escape HTML entities
  */
@@ -41,10 +53,12 @@ export function parseInline(text: string): string {
         .replace(/>/g, '&gt;')
         // Stash inline code
         .replace(/`([^`]+)`/g, (_match, code) => {
-            const filenamePattern = /[^\s/\\]+\.[a-zA-Z][a-zA-Z0-9]+$/;
-            if (filenamePattern.test(code)) {
+            const lastSlash = Math.max(code.lastIndexOf('/'), code.lastIndexOf('\\'));
+            const basename = lastSlash >= 0 ? code.slice(lastSlash + 1) : code;
+            const extMatch = basename.match(/\.[a-zA-Z0-9]+$/);
+            const ext = extMatch ? extMatch[0].toLowerCase() : '';
+            if (ext && KNOWN_EXTENSIONS.has(ext)) {
                 const hasDir = code.includes('/');
-                const basename = hasDir ? code.slice(code.lastIndexOf('/') + 1) : code;
                 const titleAttr = hasDir ? ` title="${code}"` : '';
                 codeSpans.push(`<button class="file-ref" data-filename="${code}"${titleAttr}><code>${basename}</code></button>`);
             } else {

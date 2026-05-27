@@ -109,6 +109,58 @@ describe('parseInline', () => {
             expect(result).toContain('<code>foobar</code>');
             expect(result).not.toContain('file-ref');
         });
+
+        it('renders a dotted property accessor as plain <code>, not a button', () => {
+            // Arrange
+            const input = '`ctx.currentStep`';
+
+            // Act
+            const result = parseInline(input);
+
+            // Assert
+            expect(result).toContain('<code>ctx.currentStep</code>');
+            expect(result).not.toContain('file-ref');
+            expect(result).not.toContain('<button');
+        });
+
+        it('renders a process.env reference as plain <code>, not a button', () => {
+            // Arrange
+            const input = '`process.env`';
+
+            // Act
+            const result = parseInline(input);
+
+            // Assert
+            expect(result).toContain('<code>process.env</code>');
+            expect(result).not.toContain('file-ref');
+            expect(result).not.toContain('<button');
+        });
+
+        it('renders a multi-segment property chain as plain <code>, not a button', () => {
+            // Arrange
+            const input = '`instance.panel.visible`';
+
+            // Act
+            const result = parseInline(input);
+
+            // Assert
+            expect(result).toContain('<code>instance.panel.visible</code>');
+            expect(result).not.toContain('file-ref');
+            expect(result).not.toContain('<button');
+        });
+
+        it('renders an unknown extension as plain <code>, not a button', () => {
+            // Arrange
+            const input = '`weird.xyz`';
+
+            // Act
+            const result = parseInline(input);
+
+            // Assert
+            expect(result).toContain('<code>weird.xyz</code>');
+            expect(result).not.toContain('file-ref');
+            expect(result).not.toContain('<button');
+        });
     });
 
     // -------------------------------------------------------------------------
