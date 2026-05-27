@@ -1,0 +1,111 @@
+{
+  "workflow": "sdd",
+  "specName": "Fix Inline-Code Misdetected as File-Ref",
+  "branch": "main",
+  "selectedAt": "2026-05-27T21:11:00.089Z",
+  "currentStep": "implement",
+  "status": "implemented",
+  "approach": "Replace the loose filename heuristic in parseInline's backtick handler with an allow-list match on known file extensions.",
+  "step_summaries": {
+    "plan": {
+      "approach_summary": "Replace the loose filename heuristic in parseInline's backtick handler with an allow-list match on known file extensions.",
+      "files_planned": 2,
+      "risks": [
+        "Allow-list omits an extension that appears in real specs (e.g. .toml, .svg): user-visible regression where a real filename renders as plain <code>. Mitigation: the R002 list already covers every extension currently appearing in specs/** and the repo source tree; widening it is a one-line edit."
+      ],
+      "principles_concerns": 0,
+      "domain_concerns": 0,
+      "significance_score": 0
+    },
+    "tasks": {
+      "tasks_total": 2,
+      "parallel_groups": 1
+    }
+  },
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Replaced the loose filename regex in parseInline with a KNOWN_EXTENSIONS allow-list gate; basename/path/title emission unchanged.",
+      "files": ["webview/src/spec-viewer/markdown/inline.ts"]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added four negative-case tests covering ctx.currentStep, process.env, instance.panel.visible, and weird.xyz; all assert plain <code> and no file-ref/button.",
+      "files": ["webview/src/spec-viewer/markdown/inline.test.ts"]
+    }
+  },
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": null,
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-27T21:11:00.089Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-05-27T21:11:39Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-27T21:27:51.988Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-05-27T21:29:23Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-27T21:42:54Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-05-27T21:43:13Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-27T21:44:03.661Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-05-27T21:45:53Z"
+    }
+  ]
+}
