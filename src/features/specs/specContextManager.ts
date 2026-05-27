@@ -140,6 +140,7 @@ export async function updateSpecContext(
                         const entry: HistoryEntry = {
                             step: resolvedStep,
                             substep: resolvedSubstep,
+                            kind: 'start',
                             from,
                             by: 'extension',
                             at: new Date().toISOString(),
@@ -242,7 +243,7 @@ function lastEntryIsCompletionFor(history: HistoryEntry[], step: StepName): bool
     for (let i = history.length - 1; i >= 0; i--) {
         const e = history[i];
         if (e.step !== step) continue;
-        return e.from?.step === step && e.substep == null;
+        return e.kind === 'complete' && e.substep == null;
     }
     return false;
 }
@@ -252,8 +253,7 @@ function stepHasBeenStarted(history: HistoryEntry[], step: StepName): boolean {
     for (const e of history) {
         if (e.step !== step) continue;
         if (e.substep != null) continue;
-        // start: from.step !== step (either a different prior step, or null).
-        if (e.from?.step !== step) return true;
+        if (e.kind === 'start') return true;
     }
     return false;
 }

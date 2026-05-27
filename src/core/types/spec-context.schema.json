@@ -58,13 +58,14 @@
     },
     "historyEntry": {
       "type": "object",
-      "required": ["step", "substep", "from", "by", "at"],
+      "required": ["step", "substep", "kind", "by", "at"],
       "properties": {
         "step": {
           "type": "string",
           "enum": ["specify", "clarify", "plan", "tasks", "analyze", "implement"]
         },
         "substep": { "type": ["string", "null"] },
+        "kind": { "type": "string", "enum": ["start", "complete"] },
         "from": {
           "type": "object",
           "required": ["step", "substep"],

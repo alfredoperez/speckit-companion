@@ -16,6 +16,7 @@ function makeContext(overrides: Partial<SpecContext> = {}): SpecContext {
 const h = (overrides: Partial<HistoryEntry> = {}): HistoryEntry => ({
     step: 'specify',
     substep: null,
+    kind: 'start',
     from: { step: null, substep: null },
     by: 'extension',
     at: '2026-04-29T00:00:00Z',

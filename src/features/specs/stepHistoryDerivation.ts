@@ -65,9 +65,10 @@ function dedupeConsecutive(transitions: HistoryEntry[]): HistoryEntry[] {
         const prev = out[out.length - 1];
         const sameStep = prev !== undefined && prev.step === t.step;
         const sameSubstep = (prev?.substep ?? null) === (t.substep ?? null);
+        const sameKind = (prev?.kind ?? null) === (t.kind ?? null);
         const sameFromStep = (prev?.from?.step ?? null) === (t.from?.step ?? null);
         const sameFromSubstep = (prev?.from?.substep ?? null) === (t.from?.substep ?? null);
-        if (sameStep && sameSubstep && sameFromStep && sameFromSubstep) continue;
+        if (sameStep && sameSubstep && sameKind && sameFromStep && sameFromSubstep) continue;
         out.push(t);
     }
     return out;
@@ -122,12 +123,12 @@ function buildSubsteps(stepTxs: HistoryEntry[], fallbackEnd: string | null): Sub
         // `from.substep == null` (or a different name). Skip completion
         // entries here — they're consumed by the preceding start, not
         // rendered as their own row.
-        const isCompletion = s.from?.substep === s.substep;
+        const isCompletion = s.kind === 'complete';
         if (isCompletion) continue;
 
         const next = subs[i + 1];
         const nextIsMatchingCompletion =
-            next && next.substep === s.substep && next.from?.substep === s.substep;
+            next && next.substep === s.substep && next.kind === 'complete';
         out.push({
             name: s.substep as string,
             startedAt: s.at,
@@ -167,7 +168,7 @@ export function deriveStepHistory(
         // If the most recent entry for this step is a completion, the step
         // is done even if currentStep is still pointed at it.
         const lastOwn = g.transitions[g.transitions.length - 1];
-        const lastOwnIsCompletion = lastOwn?.from?.step === g.step && lastOwn?.substep == null;
+        const lastOwnIsCompletion = lastOwn?.kind === 'complete' && lastOwn?.substep == null;
 
         if (g.nextStepFirstIdx !== -1) {
             // A later step exists in transitions — that step's first transition

@@ -11,6 +11,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {
     HistoryEntry,
+    HistoryEntryKind,
     SpecContext,
     Status,
     StepName,
@@ -71,11 +72,13 @@ export function readSpecContextSync(specDir: string): SpecContext | null {
 export function normalizeSpecContext(raw: Record<string, unknown>): SpecContext {
     // Prefer the canonical `history` field; fall back to legacy `transitions`
     // so files written by older versions still load.
-    const history: HistoryEntry[] = Array.isArray(raw.history)
-        ? (raw.history as HistoryEntry[])
-        : Array.isArray(raw.transitions)
-            ? (raw.transitions as HistoryEntry[])
-            : [];
+    const history: HistoryEntry[] = normalizeHistoryKind(
+        Array.isArray(raw.history)
+            ? (raw.history as HistoryEntry[])
+            : Array.isArray(raw.transitions)
+                ? (raw.transitions as HistoryEntry[])
+                : []
+    );
 
     const status = coerceStatus(raw.status, history);
     const currentStep = coerceCurrentStep(raw.currentStep, history);
@@ -172,6 +175,28 @@ function applyCoercion(target: Record<string, unknown>, key: string, result: Coe
         return;
     }
     target[key] = result.value;
+}
+
+/**
+ * Back-fill `kind` on legacy history entries that pre-date the explicit field.
+ * Rule:
+ *   - If `kind` is already set → pass through unchanged.
+ *   - Step entry (`substep == null`): self-loop (`from.step === step`) → `complete`; else → `start`.
+ *   - Substep entry (`substep != null`): self-loop (`from.substep === substep`) → `complete`; else → `start`.
+ *   - Complete entries: strip `from` so the schema invariant holds.
+ *   - Malformed entries (no matching rule) → `start` (safe fallback).
+ */
+function normalizeHistoryKind(entries: HistoryEntry[]): HistoryEntry[] {
+    return entries.map(e => {
+        if (e.kind) return e;
+        let kind: HistoryEntryKind;
+        if (e.substep == null) {
+            kind = e.from?.step === e.step ? 'complete' : 'start';
+        } else {
+            kind = e.from?.substep === e.substep ? 'complete' : 'start';
+        }
+        return { ...e, kind };
+    });
 }
 
 function coerceStatus(value: unknown, history: HistoryEntry[]): Status {

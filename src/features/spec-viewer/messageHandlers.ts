@@ -389,14 +389,7 @@ async function handleApprove(
     const alreadyComplete = ctx
       ? lastEntryIsCompletionFor(ctx.history ?? [], docType as StepName)
       : false;
-    if (alreadyComplete) {
-      deps.outputChannel.appendLine(
-        `[handleApprove] SKIPPED completeStep("${docType}") — already completed in history (no duplicate)`,
-      );
-    } else {
-      deps.outputChannel.appendLine(
-        `[handleApprove] firing completeStep("${docType}") — no completion entry yet`,
-      );
+    if (!alreadyComplete) {
       await completeStep(specDirectory, docType as StepName, "extension");
     }
   }

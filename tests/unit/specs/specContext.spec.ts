@@ -137,7 +137,7 @@ describe('substep helpers (US4)', () => {
         expect(last.step).toBe('specify');
     });
 
-    it('setSubstepCompleted appends a completion entry whose `from.substep` matches', () => {
+    it('setSubstepCompleted appends a completion entry with kind:complete and no from field', () => {
         let ctx = setStepStarted(fresh(), 'specify', 'extension');
         ctx = setSubstepStarted(ctx, 'specify', 'validate-checklist', 'extension');
         const before = ctx.history.length;
@@ -145,7 +145,8 @@ describe('substep helpers (US4)', () => {
         expect(ctx.history.length).toBe(before + 1);
         const last = ctx.history[ctx.history.length - 1];
         expect(last.substep).toBe('validate-checklist');
-        expect(last.from.substep).toBe('validate-checklist');
+        expect(last.kind).toBe('complete');
+        expect(last.from).toBeUndefined();
     });
 });
 
@@ -162,12 +163,57 @@ describe('backfillMinimalContext (FR-011)', () => {
     });
 });
 
+describe('normalizeSpecContext — kind back-fill (legacy history entries)', () => {
+    it('self-loop step entry → kind:complete, from preserved', () => {
+        const out = normalizeSpecContext({
+            status: 'specified', currentStep: 'specify',
+            transitions: [
+                { step: 'specify', substep: null, from: { step: 'specify', substep: null }, by: 'extension', at: '2026-04-01T00:01:00Z' },
+            ],
+        });
+        expect(out.history[0].kind).toBe('complete');
+        expect(out.history[0].from).toBeDefined();
+    });
+
+    it('non-self-loop step entry → kind:start, from preserved', () => {
+        const out = normalizeSpecContext({
+            status: 'specifying', currentStep: 'specify',
+            transitions: [
+                { step: 'specify', substep: null, from: { step: null, substep: null }, by: 'extension', at: '2026-04-01T00:00:00Z' },
+            ],
+        });
+        expect(out.history[0].kind).toBe('start');
+        expect(out.history[0].from).toBeDefined();
+    });
+
+    it('malformed entry (no substep, no from) → kind:start fallback', () => {
+        const out = normalizeSpecContext({
+            status: 'specifying', currentStep: 'specify',
+            transitions: [
+                { step: 'specify', substep: null, by: 'extension', at: '2026-04-01T00:00:00Z' },
+            ],
+        });
+        expect(out.history[0].kind).toBe('start');
+    });
+
+    it('entry already carrying kind → passed through unchanged', () => {
+        const out = normalizeSpecContext({
+            status: 'specifying', currentStep: 'specify',
+            history: [
+                { step: 'specify', substep: null, kind: 'start', from: { step: null, substep: null }, by: 'extension', at: '2026-04-01T00:00:00Z' },
+            ],
+        });
+        expect(out.history[0].kind).toBe('start');
+    });
+});
+
 describe('appendHistory', () => {
     it('returns a new object with the entry at the end', () => {
         const ctx = fresh();
         const t: HistoryEntry = {
             step: 'specify',
             substep: null,
+            kind: 'start',
             from: { step: null, substep: null },
             by: 'extension',
             at: '2026-04-01T00:00:00Z',

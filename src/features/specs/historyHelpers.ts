@@ -11,9 +11,7 @@ import type { HistoryEntry, StepName } from '../../core/types/specContext';
 /**
  * Walk `history` from newest to oldest and report whether the most recent
  * entry for `step` is a completion. Completion entries are written by
- * `setStepCompleted`: same step, substep null, with `from.step === step`
- * (the self-loop disambiguator vs. a start entry whose `from.step` is the
- * previous step or null).
+ * `setStepCompleted` with `kind: "complete"`.
  *
  * Used by:
  *   - `specCommands.executeWorkflowStep` (complete-on-advance guard)
@@ -27,7 +25,7 @@ export function lastEntryIsCompletionFor(
     for (let i = history.length - 1; i >= 0; i--) {
         const e = history[i];
         if (e.step !== step) continue;
-        return e.from?.step === step && e.substep == null;
+        return e.kind === 'complete' && e.substep == null;
     }
     return false;
 }

@@ -53,17 +53,11 @@ export async function startStep(
     step: StepName,
     by: TransitionBy
 ): Promise<void> {
-    outputChannel?.appendLine(
-        `[stepLifecycle] startStep("${step}", by="${by}") spec="${path.basename(specDir)}"`
-    );
     try {
-        const next = await updateSpecContext(
+        await updateSpecContext(
             specDir,
             ctx => setStepStarted(ctx, step, by),
             buildFallback(specDir, step)
-        );
-        outputChannel?.appendLine(
-            `[stepLifecycle] startStep done — currentStep="${next.currentStep}" status="${next.status}" history.length=${next.history?.length ?? 0}`
         );
     } catch (err) {
         logError(`startStep(${path.basename(specDir)}, ${step})`, err);
@@ -75,17 +69,11 @@ export async function completeStep(
     step: StepName,
     by: TransitionBy
 ): Promise<void> {
-    outputChannel?.appendLine(
-        `[stepLifecycle] completeStep("${step}", by="${by}") spec="${path.basename(specDir)}"`
-    );
     try {
-        const next = await updateSpecContext(
+        await updateSpecContext(
             specDir,
             ctx => setStepCompleted(ctx, step, by),
             buildFallback(specDir, step)
-        );
-        outputChannel?.appendLine(
-            `[stepLifecycle] completeStep done — currentStep="${next.currentStep}" status="${next.status}" history.length=${next.history?.length ?? 0}`
         );
     } catch (err) {
         logError(`completeStep(${path.basename(specDir)}, ${step})`, err);
@@ -125,7 +113,7 @@ export async function setStatus(
                     {
                         step: ctx.currentStep,
                         substep: null,
-                        from: { step: ctx.currentStep, substep: null },
+                        kind: 'complete',
                         by,
                         at,
                     }
@@ -155,7 +143,7 @@ export async function reactivate(
                     {
                         step: ctx.currentStep,
                         substep: null,
-                        from: { step: ctx.currentStep, substep: null },
+                        kind: 'complete',
                         by,
                         at,
                     }

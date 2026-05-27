@@ -11,6 +11,6 @@
     }
   },
   "transitions": [
-    { "step": "specify", "substep": null, "from": { "step": null, "substep": null }, "by": "extension", "at": "2026-03-25T12:00:00.000Z" }
+    { "step": "specify", "substep": null, "kind": "start", "from": { "step": null, "substep": null }, "by": "extension", "at": "2026-03-25T12:00:00.000Z" }
   ]
 }

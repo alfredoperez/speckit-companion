@@ -76,16 +76,23 @@ export interface HistoryEntryFrom {
 
 export type HistoryEntryBy = 'extension' | 'user' | 'cli' | 'sdd' | 'sdd-skill' | 'ai';
 
+/** Discriminates between a step/substep start and a step/substep completion. */
+export type HistoryEntryKind = 'start' | 'complete';
+
 /**
  * A single entry in the append-only `history[]` log. Replaces the previous
  * `transitions[]` field — the on-disk source of truth for the spec's
  * lifecycle. Per-step timing (`stepHistory`) is derived from this in-memory
  * by the viewer; it is not persisted.
+ *
+ * `kind` explicitly tags the entry as a start or completion event.
+ * `from` is only present on `start` entries (absent on `complete` entries).
  */
 export interface HistoryEntry {
     step: StepName;
     substep: string | null;
-    from: HistoryEntryFrom;
+    kind: HistoryEntryKind;
+    from?: HistoryEntryFrom;
     by: HistoryEntryBy;
     at: string;
 }

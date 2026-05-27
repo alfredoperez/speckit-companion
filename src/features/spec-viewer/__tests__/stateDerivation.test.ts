@@ -69,7 +69,7 @@ describe('deriveStepBadges', () => {
             currentStep: 'tasks',
             status: 'tasking',
             history: [
-                { step: 'tasks', substep: null, from: { step: 'plan', substep: null }, by: 'extension', at: '2026-01-01T00:00:00Z' },
+                { step: 'tasks', substep: null, kind: 'start', from: { step: 'plan', substep: null }, by: 'extension', at: '2026-01-01T00:00:00Z' },
             ],
         });
         const badges = deriveStepBadges(ctx);
@@ -81,12 +81,12 @@ describe('deriveStepBadges', () => {
             currentStep: 'tasks',
             status: 'ready-to-implement',
             history: [
-                { step: 'specify', substep: null, from: { step: null, substep: null }, by: 'extension', at: '2026-01-01' },
-                { step: 'specify', substep: null, from: { step: 'specify', substep: null }, by: 'extension', at: '2026-01-02' },
-                { step: 'plan',    substep: null, from: { step: 'specify', substep: null }, by: 'extension', at: '2026-01-02' },
-                { step: 'plan',    substep: null, from: { step: 'plan', substep: null },    by: 'extension', at: '2026-01-03' },
-                { step: 'tasks',   substep: null, from: { step: 'plan', substep: null },    by: 'extension', at: '2026-01-03' },
-                { step: 'tasks',   substep: null, from: { step: 'tasks', substep: null },   by: 'extension', at: '2026-01-04' },
+                { step: 'specify', substep: null, kind: 'start',    from: { step: null, substep: null },    by: 'extension', at: '2026-01-01' },
+                { step: 'specify', substep: null, kind: 'complete',                                         by: 'extension', at: '2026-01-02' },
+                { step: 'plan',    substep: null, kind: 'start',    from: { step: 'specify', substep: null }, by: 'extension', at: '2026-01-02' },
+                { step: 'plan',    substep: null, kind: 'complete',                                          by: 'extension', at: '2026-01-03' },
+                { step: 'tasks',   substep: null, kind: 'start',    from: { step: 'plan', substep: null },   by: 'extension', at: '2026-01-03' },
+                { step: 'tasks',   substep: null, kind: 'complete',                                          by: 'extension', at: '2026-01-04' },
             ],
         });
         // Status non-terminal: 'tasks' is currentStep, last entry is its completion,
@@ -110,7 +110,7 @@ describe('derivePulse', () => {
             currentStep: 'plan',
             status: 'planning',
             history: [
-                { step: 'plan', substep: null, from: { step: 'specify', substep: null }, by: 'extension', at: '2026-01-01T00:00:00Z' },
+                { step: 'plan', substep: null, kind: 'start', from: { step: 'specify', substep: null }, by: 'extension', at: '2026-01-01T00:00:00Z' },
             ],
         });
         expect(derivePulse(ctx)).toBe('plan');
@@ -152,8 +152,8 @@ describe('deriveActiveSubstep', () => {
             currentStep: 'specify',
             status: 'specifying',
             history: [
-                { step: 'specify', substep: null, from: { step: null, substep: null }, by: 'extension', at: '2026-01-01T00:00:00Z' },
-                { step: 'specify', substep: 'writing-spec', from: { step: 'specify', substep: null }, by: 'extension', at: '2026-01-01T01:00:00Z' },
+                { step: 'specify', substep: null,              kind: 'start', from: { step: null, substep: null },    by: 'extension', at: '2026-01-01T00:00:00Z' },
+                { step: 'specify', substep: 'writing-spec', kind: 'start', from: { step: 'specify', substep: null }, by: 'extension', at: '2026-01-01T01:00:00Z' },
             ],
             progress: 'exploring',
         } as Partial<SpecContext> as SpecContext);
@@ -169,7 +169,7 @@ describe('deriveViewerState', () => {
             currentStep: 'tasks',
             status: 'implementing', // coerced from "active"
             history: [
-                { step: 'specify', substep: null, from: { step: null, substep: null }, by: 'sdd', at: '2026-01-01T00:00:00Z' },
+                { step: 'specify', substep: null, kind: 'start', from: { step: null, substep: null }, by: 'sdd', at: '2026-01-01T00:00:00Z' },
             ],
         });
         const state = deriveViewerState(ctx);

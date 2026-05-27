@@ -1,4 +1,4 @@
-import { appendHistory } from '../specContextWriter';
+import { appendHistory, setStepStarted, setStepCompleted, setSubstepStarted, setSubstepCompleted } from '../specContextWriter';
 import type { HistoryEntry, SpecContext } from '../../../core/types/specContext';
 
 function makeContext(overrides: Partial<SpecContext> = {}): SpecContext {
@@ -16,6 +16,7 @@ function makeContext(overrides: Partial<SpecContext> = {}): SpecContext {
 const entry = (overrides: Partial<HistoryEntry> = {}): HistoryEntry => ({
     step: 'specify',
     substep: null,
+    kind: 'start',
     from: { step: null, substep: null },
     by: 'extension',
     at: '2026-04-29T00:00:00Z',
@@ -58,5 +59,59 @@ describe('appendHistory', () => {
 
         expect(result.history).toHaveLength(1);
         expect(result.history[0]).toEqual(first);
+    });
+});
+
+describe('setStepStarted', () => {
+    it('emits kind:start on the history entry', () => {
+        const ctx = makeContext({ currentStep: 'specify', status: 'specified' });
+        const result = setStepStarted(ctx, 'plan', 'extension', '2026-04-29T01:00:00Z');
+        const e = result.history[0];
+        expect(e.kind).toBe('start');
+        expect(e.step).toBe('plan');
+        expect(e.substep).toBeNull();
+        expect(e.from?.step).toBe('specify');
+    });
+
+    it('sets from.step to null when restarting the same step', () => {
+        const ctx = makeContext({ currentStep: 'specify', status: 'specifying' });
+        const result = setStepStarted(ctx, 'specify', 'extension', '2026-04-29T01:00:00Z');
+        const e = result.history[0];
+        expect(e.kind).toBe('start');
+        expect(e.from?.step).toBeNull();
+    });
+});
+
+describe('setStepCompleted', () => {
+    it('emits kind:complete with no from field', () => {
+        const ctx = makeContext({ currentStep: 'specify', status: 'specifying' });
+        const result = setStepCompleted(ctx, 'specify', 'extension', '2026-04-29T01:00:00Z');
+        const e = result.history[0];
+        expect(e.kind).toBe('complete');
+        expect(e.step).toBe('specify');
+        expect(e.substep).toBeNull();
+        expect(e.from).toBeUndefined();
+    });
+});
+
+describe('setSubstepStarted', () => {
+    it('emits kind:start with substep name and from pointing at the step', () => {
+        const ctx = makeContext({ currentStep: 'specify', status: 'specifying' });
+        const result = setSubstepStarted(ctx, 'specify', 'outline', 'extension', '2026-04-29T01:00:00Z');
+        const e = result.history[0];
+        expect(e.kind).toBe('start');
+        expect(e.substep).toBe('outline');
+        expect(e.from?.substep).toBeNull();
+    });
+});
+
+describe('setSubstepCompleted', () => {
+    it('emits kind:complete with substep name and no from field', () => {
+        const ctx = makeContext({ currentStep: 'specify', status: 'specifying' });
+        const result = setSubstepCompleted(ctx, 'specify', 'outline', 'extension', '2026-04-29T01:00:00Z');
+        const e = result.history[0];
+        expect(e.kind).toBe('complete');
+        expect(e.substep).toBe('outline');
+        expect(e.from).toBeUndefined();
     });
 });

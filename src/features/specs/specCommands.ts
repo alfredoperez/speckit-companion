@@ -605,19 +605,11 @@ async function executeWorkflowStep(
                 LIFECYCLE_STEPS.has(prev) &&
                 !prevStepDone
             ) {
-                outputChannel.appendLine(
-                    `[advance] complete-on-advance firing for prev="${prev}" (no completion entry on disk yet)`,
-                );
                 await completeStep(targetDir, prev as StepName, 'extension');
-            } else if (prev && prev !== step && prevStepDone) {
-                outputChannel.appendLine(
-                    `[advance] complete-on-advance SKIPPED for prev="${prev}" — completion entry already in history (no duplicate)`,
-                );
             }
         } catch (err) {
             outputChannel.appendLine(`[SpecKit] Complete-on-advance check failed: ${err}`);
         }
-        outputChannel.appendLine(`[advance] calling startStep("${step}")`);
         await startStep(targetDir, step as StepName, 'extension');
     }
     const wrapped = buildPrompt({

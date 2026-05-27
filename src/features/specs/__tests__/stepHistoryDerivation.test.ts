@@ -4,6 +4,7 @@ import type { Transition } from '../../../core/types/specContext';
 const tx = (overrides: Partial<Transition>): Transition => ({
     step: 'specify',
     substep: null,
+    kind: 'start',
     from: { step: null, substep: null },
     by: 'extension',
     at: '2026-04-29T00:00:00Z',
@@ -181,18 +182,48 @@ describe('deriveStepHistory', () => {
         });
     });
 
-    // Regression: review finding #3. setStepStarted writes from.step=null when
-    // ctx.currentStep === step (fresh buildFallback or a Regenerate), so the
-    // lastOwnIsCompletion check can't misfire on a start entry. The writer
-    // contract — start entries never have from.step === step — must hold.
+    // T011: new-shape kind-based tests
+    describe('kind:complete marks a step as done (new canonical shape)', () => {
+        it('step is in-flight when only kind:start entry exists', () => {
+            const transitions = [
+                tx({ step: 'specify', substep: null, kind: 'start', at: '2026-04-29T00:00:00Z' }),
+            ];
+            const out = deriveStepHistory(transitions, 'specify');
+            expect(out.specify.completedAt).toBeNull();
+        });
+
+        it('step is completed when kind:complete entry (no from) is appended', () => {
+            const transitions = [
+                tx({ step: 'specify', substep: null, kind: 'start',    at: '2026-04-29T00:00:00Z' }),
+                tx({ step: 'specify', substep: null, kind: 'complete', from: undefined, at: '2026-04-29T00:05:00Z' }),
+            ];
+            const out = deriveStepHistory(transitions, 'specify');
+            expect(out.specify.completedAt).toBe('2026-04-29T00:05:00Z');
+        });
+
+        it('substep pair (start + kind:complete) folds into one row', () => {
+            const transitions = [
+                tx({ step: 'specify', substep: null,      kind: 'start',    at: '2026-04-29T00:00:00Z' }),
+                tx({ step: 'specify', substep: 'outline', kind: 'start',    from: { step: 'specify', substep: null }, at: '2026-04-29T00:01:00Z' }),
+                tx({ step: 'specify', substep: 'outline', kind: 'complete', from: undefined, at: '2026-04-29T00:02:00Z' }),
+            ];
+            const out = deriveStepHistory(transitions, 'specify');
+            expect(out.specify.substeps).toHaveLength(1);
+            expect(out.specify.substeps![0].name).toBe('outline');
+            expect(out.specify.substeps![0].startedAt).toBe('2026-04-29T00:01:00Z');
+            expect(out.specify.substeps![0].completedAt).toBe('2026-04-29T00:02:00Z');
+        });
+    });
+
+    // Regression: review finding #3. setStepStarted writes kind:start entries;
+    // only kind:complete entries should trigger completedAt.
     describe('regression: start entries never look like completions', () => {
-        it('does NOT mark a step as completed when its lone entry has from.step=null', () => {
-            // Shape produced by setStepStarted on a fresh spec where currentStep
-            // already equals the step being started.
+        it('does NOT mark a step as completed when its lone entry has kind:start', () => {
             const transitions = [
                 tx({
                     step: 'specify',
                     substep: null,
+                    kind: 'start',
                     from: { step: null, substep: null },
                     at: '2026-04-29T00:00:00Z',
                 }),
@@ -203,19 +234,20 @@ describe('deriveStepHistory', () => {
             expect(out.specify.completedAt).toBeNull();
         });
 
-        it('DOES mark a step as completed when a self-loop entry (from.step === step) is appended', () => {
-            // Shape produced by setStepCompleted.
+        it('DOES mark a step as completed when a kind:complete entry is appended', () => {
             const transitions = [
                 tx({
                     step: 'specify',
                     substep: null,
+                    kind: 'start',
                     from: { step: null, substep: null },
                     at: '2026-04-29T00:00:00Z',
                 }),
                 tx({
                     step: 'specify',
                     substep: null,
-                    from: { step: 'specify', substep: null },
+                    kind: 'complete',
+                    from: undefined,
                     at: '2026-04-29T00:05:00Z',
                 }),
             ];
@@ -235,13 +267,15 @@ describe('deriveStepHistory', () => {
                 tx({
                     step: 'specify',
                     substep: 'outline',
+                    kind: 'start',
                     from: { step: 'specify', substep: null },
                     at: '2026-04-29T00:01:00Z',
                 }),
                 tx({
                     step: 'specify',
                     substep: 'outline',
-                    from: { step: 'specify', substep: 'outline' },
+                    kind: 'complete',
+                    from: undefined,
                     at: '2026-04-29T00:02:00Z',
                 }),
             ];

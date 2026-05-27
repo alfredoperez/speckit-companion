@@ -43,14 +43,14 @@ describe('deriveViewerState (US1 — single status passthrough)', () => {
             status: 'completed',
             currentStep: 'implement',
             history: [
-                { step: 'specify',   substep: null, from: { step: null, substep: null }, by: 'extension', at: 't1' },
-                { step: 'specify',   substep: null, from: { step: 'specify', substep: null }, by: 'extension', at: 't2' },
-                { step: 'plan',      substep: null, from: { step: 'specify', substep: null }, by: 'extension', at: 't3' },
-                { step: 'plan',      substep: null, from: { step: 'plan', substep: null }, by: 'extension', at: 't4' },
-                { step: 'tasks',     substep: null, from: { step: 'plan', substep: null }, by: 'extension', at: 't5' },
-                { step: 'tasks',     substep: null, from: { step: 'tasks', substep: null }, by: 'extension', at: 't6' },
-                { step: 'implement', substep: null, from: { step: 'tasks', substep: null }, by: 'extension', at: 't7' },
-                { step: 'implement', substep: null, from: { step: 'implement', substep: null }, by: 'extension', at: 't8' },
+                { step: 'specify',   substep: null, kind: 'start',    from: { step: null, substep: null },        by: 'extension', at: 't1' },
+                { step: 'specify',   substep: null, kind: 'complete',                                             by: 'extension', at: 't2' },
+                { step: 'plan',      substep: null, kind: 'start',    from: { step: 'specify', substep: null },   by: 'extension', at: 't3' },
+                { step: 'plan',      substep: null, kind: 'complete',                                             by: 'extension', at: 't4' },
+                { step: 'tasks',     substep: null, kind: 'start',    from: { step: 'plan', substep: null },      by: 'extension', at: 't5' },
+                { step: 'tasks',     substep: null, kind: 'complete',                                             by: 'extension', at: 't6' },
+                { step: 'implement', substep: null, kind: 'start',    from: { step: 'tasks', substep: null },     by: 'extension', at: 't7' },
+                { step: 'implement', substep: null, kind: 'complete',                                             by: 'extension', at: 't8' },
             ],
         });
         const v = deriveViewerState(ctx);

@@ -17,6 +17,7 @@ import {
     HistoryEntry,
     HistoryEntryBy,
     HistoryEntryFrom,
+    HistoryEntryKind,
     SpecContext,
     StepName,
 } from '../../core/types/specContext';
@@ -42,10 +43,9 @@ export async function writeSpecContext(
         // carry the old `transitions` field. Treat whichever is present as
         // the prior log for append-only checking, so a buggy mutator can't
         // silently drop legacy entries on the migration write.
-        const priorLog =
-            (existing.history as HistoryEntry[] | undefined) ??
-            (existing.transitions as HistoryEntry[] | undefined) ??
-            [];
+        // Normalize the prior log (e.g. back-fill `kind`) so the comparison
+        // is apples-to-apples against the already-normalized in-memory ctx.
+        const priorLog = normalizeSpecContext(existing).history;
         assertAppendOnly(priorLog, ctx.history);
     }
 
@@ -124,17 +124,13 @@ export function setStepStarted(
     by: HistoryEntryBy,
     at: string = new Date().toISOString()
 ): SpecContext {
-    // Disambiguate start vs completion entries by their `from.step` shape:
-    //   - completion: from.step === step  (setStepCompleted, below)
-    //   - start:      from.step !== step  (either the prior step, or null on
-    //                 the very first start / a restart of the current step).
     // If ctx.currentStep already equals `step` (fresh spec from buildFallback,
     // or a Regenerate that restarts the same step), set from.step = null so
-    // the derivation's `lastOwnIsCompletion` check can't misfire on it.
+    // the derivation's lastOwnIsCompletion check can't misfire on it.
     const prevStep: StepName | null =
         ctx.currentStep && ctx.currentStep !== step ? ctx.currentStep : null;
     const from: HistoryEntryFrom = { step: prevStep, substep: null };
-    const entry: HistoryEntry = { step, substep: null, from, by, at };
+    const entry: HistoryEntry = { step, substep: null, kind: 'start', from, by, at };
     return appendHistory(
         {
             ...ctx,
@@ -151,8 +147,7 @@ export function setStepCompleted(
     by: HistoryEntryBy,
     at: string = new Date().toISOString()
 ): SpecContext {
-    const from: HistoryEntryFrom = { step, substep: null };
-    const entry: HistoryEntry = { step, substep: null, from, by, at };
+    const entry: HistoryEntry = { step, substep: null, kind: 'complete', by, at };
     return appendHistory(
         {
             ...ctx,
@@ -170,7 +165,7 @@ export function setSubstepStarted(
     at: string = new Date().toISOString()
 ): SpecContext {
     const from: HistoryEntryFrom = { step, substep: null };
-    const entry: HistoryEntry = { step, substep, from, by, at };
+    const entry: HistoryEntry = { step, substep, kind: 'start', from, by, at };
     return appendHistory(ctx, entry);
 }
 
@@ -181,8 +176,7 @@ export function setSubstepCompleted(
     by: HistoryEntryBy,
     at: string = new Date().toISOString()
 ): SpecContext {
-    const from: HistoryEntryFrom = { step, substep };
-    const entry: HistoryEntry = { step, substep, from, by, at };
+    const entry: HistoryEntry = { step, substep, kind: 'complete', by, at };
     return appendHistory(ctx, entry);
 }
 
