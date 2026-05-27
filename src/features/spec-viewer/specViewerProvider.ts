@@ -327,9 +327,20 @@ export class SpecViewerProvider {
       // applies the viewerState fields when content is empty/unchanged. To
       // avoid clobbering the markdown, only post viewerState via the
       // viewerStateUpdated channel (the webview's index.tsx handles it).
+      const derivedStepHistory = deriveStepHistory(
+        (specCtx.history ?? []) as any,
+        active,
+        specCtx.status as Status | undefined,
+      );
+      const navStatePartial = {
+        stepHistory: mapStepHistoryKeys(derivedStepHistory),
+        currentStep: specCtx.currentStep,
+        badgeText: computeBadgeText(specCtx, derivedStepHistory),
+      };
       instance.panel.webview.postMessage({
         type: 'viewerStateUpdated',
         viewerState,
+        navState: navStatePartial,
       });
     } catch (error) {
       this.outputChannel.appendLine(

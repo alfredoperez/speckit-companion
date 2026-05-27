@@ -83,6 +83,9 @@ function handleMessage(event: MessageEvent): void {
         case 'viewerStateUpdated':
             viewerState.value = message.viewerState;
             historyEntries.value = message.viewerState.history ?? [];
+            if (message.navState) {
+                navState.value = { ...navState.value, ...message.navState };
+            }
             break;
 
         case 'documentsUpdated':

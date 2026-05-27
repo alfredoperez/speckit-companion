@@ -4,7 +4,7 @@
   "branch": "fix/spec-context-drift-recovery",
   "selectedAt": "2026-05-26T22:02:41Z",
   "currentStep": "implement",
-  "status": "implementing",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
@@ -95,6 +95,13 @@
       },
       "by": "extension",
       "at": "2026-05-27T01:20:26.204Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "user",
+      "at": "2026-05-27T14:31:49Z"
     }
   ],
   "reviewComments": [

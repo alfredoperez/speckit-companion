@@ -24,8 +24,8 @@
       "approach_summary": "Add an IdeChatProvider implementing IAIProvider that routes the assembled prompt to the host editor's built-in chat via a verified VS Code command instead of spawning a terminal.",
       "files_planned": 8,
       "risks": [
-        "Undocumented Cursor/Windsurf chat command IDs and argument shapes \u2014 mitigated by getCommands(true) verification and trying the inherited workbench.action.chat.open first, with R005 fallback",
-        "PROVIDER_PATHS has no natural shape for a CLI-less provider \u2014 entry carries only QuickPick metadata + empty steering/agents/skills, so steering-sync treats IDE Chat as a no-op surface"
+        "Undocumented Cursor/Windsurf chat command IDs and argument shapes — mitigated by getCommands(true) verification and trying the inherited workbench.action.chat.open first, with R005 fallback",
+        "PROVIDER_PATHS has no natural shape for a CLI-less provider — entry carries only QuickPick metadata + empty steering/agents/skills, so steering-sync treats IDE Chat as a no-op surface"
       ],
       "principles_concerns": 0,
       "domain_concerns": 0,
@@ -236,7 +236,7 @@
       "at": "2026-05-21T15:30:46.286Z"
     }
   ],
-  "status": "ready-to-implement",
+  "status": "completed",
   "stepHistory": {
     "specify": {
       "startedAt": "2026-05-21T15:03:36.591Z",
@@ -322,7 +322,7 @@
       "concerns": []
     }
   },
-  "last_action": "T004-T008 complete in parallel \u2014 factory, barrel export, package.json enum, tests (14 passing), and README docs",
+  "last_action": "T004-T008 complete in parallel — factory, barrel export, package.json enum, tests (14 passing), and README docs",
   "files_modified": [
     "src/core/constants.ts",
     "src/ai-providers/aiProvider.ts",
@@ -334,5 +334,14 @@
     "tests/__mocks__/vscode.ts",
     "README.md"
   ],
-  "drainedSeq": 7
+  "drainedSeq": 7,
+  "history": [
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "user",
+      "at": "2026-05-27T14:31:49Z"
+    }
+  ]
 }

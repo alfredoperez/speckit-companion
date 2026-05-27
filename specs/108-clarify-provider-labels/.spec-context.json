@@ -4,7 +4,7 @@
   "branch": "107-fix-inline-comment-persistence",
   "selectedAt": "2026-05-26T16:57:33Z",
   "currentStep": "implement",
-  "status": "implementing",
+  "status": "completed",
   "stepHistory": {
     "specify": {
       "startedAt": "2026-05-26T16:57:33Z",
@@ -103,6 +103,15 @@
       },
       "by": "extension",
       "at": "2026-05-26T17:21:31.467Z"
+    }
+  ],
+  "history": [
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "user",
+      "at": "2026-05-27T14:31:49Z"
     }
   ]
 }

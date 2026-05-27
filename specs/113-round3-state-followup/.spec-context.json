@@ -1,9 +1,9 @@
 {
   "workflow": "speckit",
-  "specName": "History Entry Kind",
-  "branch": "fix/spec-context-state-progression",
-  "selectedAt": "2026-05-27T00:00:00.000Z",
-  "currentStep": "plan",
+  "specName": "Round3 State Followup",
+  "branch": "fix/round-3-state-cleanup-v2",
+  "selectedAt": "2026-05-27T13:56:53.459Z",
+  "currentStep": "implement",
   "status": "completed",
   "history": [
     {
@@ -15,57 +15,71 @@
         "substep": null
       },
       "by": "extension",
-      "at": "2026-05-27T00:00:00.000Z"
+      "at": "2026-05-27T13:56:53.459Z"
     },
     {
       "step": "specify",
       "substep": null,
-      "from": {
-        "step": "specify",
-        "substep": null
-      },
-      "by": "extension",
-      "at": "2026-05-27T11:14:17.195Z"
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-05-27T13:59:46Z"
     },
     {
       "step": "plan",
       "substep": null,
+      "kind": "start",
       "from": {
         "step": "specify",
         "substep": null
       },
       "by": "extension",
-      "at": "2026-05-27T11:14:17.197Z"
+      "at": "2026-05-27T14:01:14.289Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-05-27T14:07:31Z"
     },
     {
       "step": "tasks",
       "substep": null,
+      "kind": "start",
       "from": {
         "step": "plan",
         "substep": null
       },
       "by": "extension",
-      "at": "2026-05-27T11:22:37.355Z"
+      "at": "2026-05-27T14:09:42.815Z"
     },
     {
       "step": "tasks",
       "substep": null,
       "kind": "complete",
       "by": "ai",
-      "at": "2026-05-27T11:24:26Z"
+      "at": "2026-05-27T14:11:03Z"
     },
     {
-      "step": "plan",
+      "step": "implement",
       "substep": null,
+      "kind": "start",
       "from": {
         "step": "tasks",
         "substep": null
       },
       "by": "extension",
-      "at": "2026-05-27T11:26:00.505Z"
+      "at": "2026-05-27T14:18:52.348Z"
     },
     {
-      "step": "plan",
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-05-27T14:24:20Z"
+    },
+    {
+      "step": "implement",
       "substep": null,
       "kind": "complete",
       "by": "user",

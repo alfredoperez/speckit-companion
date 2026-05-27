@@ -2,7 +2,7 @@
   "workflow": "speckit",
   "selectedAt": "2026-05-26T00:00:00.000Z",
   "currentStep": "implement",
-  "status": "implementing",
+  "status": "completed",
   "specName": "Fix Inline Comment Persistence",
   "branch": "107-fix-inline-comment-persistence",
   "stepHistory": {
@@ -233,6 +233,15 @@
       "comment": "test 45",
       "status": "pending",
       "createdAt": "2026-05-26T15:28:26.666Z"
+    }
+  ],
+  "history": [
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "user",
+      "at": "2026-05-27T14:31:49Z"
     }
   ]
 }

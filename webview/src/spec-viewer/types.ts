@@ -274,7 +274,7 @@ export type ExtensionToViewerMessage =
     | { type: 'error'; message: string; recoverable: boolean }
     | { type: 'fileDeleted'; filePath: string }
     | { type: 'navStateUpdated'; navState: NavState }
-    | { type: 'viewerStateUpdated'; viewerState: ViewerState }
+    | { type: 'viewerStateUpdated'; viewerState: ViewerState; navState?: Partial<NavState> }
     | { type: 'actionToast'; message: string };
 
 // ============================================
