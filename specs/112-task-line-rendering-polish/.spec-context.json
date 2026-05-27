@@ -1,0 +1,157 @@
+{
+  "workflow": "speckit",
+  "specName": "Task-Line Rendering Polish",
+  "branch": "fix/round-3-state-cleanup",
+  "selectedAt": "2026-05-27T12:34:20.765Z",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": null,
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-27T12:34:20.765Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-05-27T12:38:08Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-27T12:39:58.616Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-05-27T12:45:01Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-27T12:48:50.351Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-05-27T12:50:58Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": null,
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-27T12:54:09.712Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-05-27T12:54:22.529Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-27T12:54:22.533Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-05-27T12:58:03Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-05-27T13:40:25.561Z"
+    }
+  ],
+  "reviewComments": [
+    {
+      "id": "ref-1779887268172-2xugy",
+      "doc": "plan",
+      "anchor": {
+        "heading": "Summary",
+        "blockText": "2. **Issue B — Hover content shift**: The `:hover` rule on `li.task-item` applies `padding: var(--space-1) var(--space-2)` which is a four-side shorthand, replacing the idle state's `padding-right: 24px` (reserved for the absolutely-positioned `+` button) with the much smaller `var(--space-2)` (8 px). The resulting right-padding reduction narrows the text column, reflowing wrapping text. Fix: explicitly carry `padding-right: 24px` into the hover rule.",
+        "line": 12
+      },
+      "comment": "test",
+      "status": "pending",
+      "createdAt": "2026-05-27T13:07:48.178Z"
+    },
+    {
+      "id": "ref-1779887292624-gzjb4",
+      "doc": "research",
+      "anchor": {
+        "heading": "Root Cause",
+        "blockText": "```\nRow 1: [checkbox] [task-text — first line…]\nRow 2:            […continuation of task text]   ← only on wrapping tasks\nRow 3: [line-comment-slot (empty)]               ← always present, full-width\n```",
+        "line": 17
+      },
+      "comment": "test",
+      "status": "pending",
+      "createdAt": "2026-05-27T13:08:12.627Z"
+    },
+    {
+      "id": "ref-1779887303362-c9mjy",
+      "doc": "checklists/requirements",
+      "anchor": {
+        "heading": "Specification Quality Checklist: Task-Line Rendering Polish",
+        "blockText": "",
+        "line": 6
+      },
+      "comment": "test 2",
+      "status": "pending",
+      "createdAt": "2026-05-27T13:08:23.363Z"
+    },
+    {
+      "id": "ref-1779887313880-1t0b7",
+      "doc": "quickstart",
+      "anchor": {
+        "heading": "Prerequisites",
+        "blockText": "- Storybook available via `npm run storybook` (check `package.json` for exact script)",
+        "line": 11
+      },
+      "comment": "test 23",
+      "status": "pending",
+      "createdAt": "2026-05-27T13:08:33.883Z"
+    }
+  ]
+}
