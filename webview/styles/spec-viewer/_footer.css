@@ -102,6 +102,32 @@
     box-shadow: none;
 }
 
+/* In-flight status chip — non-clickable accent-tinted pill that signals
+   "the AI is generating this step." Matches the .activity-status-pill idiom
+   used elsewhere so the live cue reads consistently. */
+.actions .footer-generating-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    user-select: none;
+    pointer-events: none;
+    flex-shrink: 0;
+}
+
+.actions .footer-generating-chip .btn-spinner {
+    width: 11px;
+    height: 11px;
+    border-width: 2px;
+}
+
 /* ============================================
    Action Toast (floating)
    ============================================ */

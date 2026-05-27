@@ -88,27 +88,32 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
         setRegenerateToastActive(false);
     };
 
-    // While a step is generating, replace the forward button with a disabled
-    // "Generating <step>…" spinner plus a manual completion fallback. Applies to
-    // every step transition.
+    // While a step is generating, render the live status as a non-clickable
+    // chip on the right and demote the manual override to a secondary action
+    // on the left. The two affordances communicate "one thing is happening,
+    // one thing is a fallback override."
     if (isGenerating && runningStep) {
         return (
             <footer class="actions">
                 <Toast id="action-toast" />
-                <div class="actions-left"></div>
-                <div class="actions-right">
-                    <Button
-                        label={`Generating ${ns.runningStepLabel ?? 'step'}…`}
-                        variant="primary"
-                        loading
-                        title="The AI is generating this step — the button re-enables once the artifact is ready"
-                    />
+                <div class="actions-left">
                     <Button
                         label="Mark step complete"
                         variant="secondary"
                         title="Manually mark this step complete if auto-detection doesn't fire"
                         onClick={send({ type: 'markStepComplete' })}
                     />
+                </div>
+                <div class="actions-right">
+                    <span
+                        class="footer-generating-chip is-running"
+                        role="status"
+                        aria-live="polite"
+                        title="The AI is generating this step — this status updates once the artifact is ready"
+                    >
+                        <span class="btn-spinner" aria-hidden="true" />
+                        Generating {ns.runningStepLabel ?? 'step'}…
+                    </span>
                 </div>
             </footer>
         );
