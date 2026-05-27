@@ -4,7 +4,9 @@
   "branch": "main",
   "selectedAt": "2026-05-27T21:11:00.089Z",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/187",
+  "prNumber": 187,
   "approach": "Replace the loose filename heuristic in parseInline's backtick handler with an allow-list match on known file extensions.",
   "step_summaries": {
     "plan": {
