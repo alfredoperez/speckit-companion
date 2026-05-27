@@ -606,7 +606,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 this.context,
                 specName,
                 step.name,
-                createOpenCommand(resolvedFilePath, `Open ${label}`),
+                status === 'empty' ? undefined : createOpenCommand(resolvedFilePath, `Open ${label}`),
                 relativeFilePath,
                 specPath,
                 status,

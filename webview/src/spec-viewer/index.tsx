@@ -84,7 +84,7 @@ function handleMessage(event: MessageEvent): void {
             viewerState.value = message.viewerState;
             historyEntries.value = message.viewerState.history ?? [];
             if (message.navState) {
-                navState.value = { ...navState.value, ...message.navState };
+                navState.value = { ...navState.value, ...message.navState } as NavState;
             }
             break;
 
