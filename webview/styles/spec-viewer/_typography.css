@@ -13,7 +13,7 @@
     font-weight: 700;
     line-height: var(--leading-tight);
     letter-spacing: -0.02em;
-    margin: 0 0 var(--space-4) 0;
+    margin: 0 0 var(--space-5) 0;
     color: var(--header-title);
 }
 
@@ -22,7 +22,7 @@
     font-weight: 600;
     line-height: var(--leading-snug);
     letter-spacing: -0.01em;
-    margin: 20px 0 8px 0;
+    margin: 24px 0 16px 0;
     color: var(--header-section);
 }
 
@@ -30,7 +30,7 @@
     font-size: 1rem;
     font-weight: 600;
     line-height: 1.4;
-    margin: 14px 0 6px 0;
+    margin: 18px 0 10px 0;
     color: var(--header-subsection);
 }
 

@@ -9,7 +9,7 @@
 
 #markdown-content {
     font-family: var(--font-family);
-    font-size: var(--font-size);
+    font-size: calc(var(--font-size) + 1px);
     line-height: var(--leading-loose);
     color: var(--text-body);
     max-width: 72ch;

@@ -61,7 +61,7 @@
   flex-wrap: wrap;
   align-items: flex-start;
   gap: var(--space-2);
-  padding: var(--space-1) 0;
+  padding: 2px 0;
   padding-right: 24px; /* room for absolute-positioned + button */
   margin: 0;
   background: transparent;
@@ -80,16 +80,25 @@
   margin-left: calc(16px + var(--space-2)); /* checkbox width + gap */
 }
 
-/* Task text inside a task line — keep it flexing alongside the checkbox */
+/* Collapse empty slot — prevents a phantom flex row on wrapping tasks (spec 112) */
+#markdown-content li.task-item .line-comment-slot:empty {
+  display: none;
+}
+
+/* Task text inside a task line — keep it flexing alongside the checkbox.
+   Tighter line-height than the surrounding prose so a wrapping task doesn't
+   visually bloat into a pseudo-paragraph (spec 112). */
 #markdown-content li.task-item .task-text {
   flex: 1 1 auto;
   min-width: 0;
+  line-height: 1.4;
 }
 
 #markdown-content li.task-item:hover {
   background: var(--bg-hover);
   margin: 0 calc(-1 * var(--space-2));
-  padding: var(--space-1) var(--space-2);
+  padding: 2px var(--space-2);
+  padding-right: 24px; /* restore + button slot — shorthand above clobbers it (spec 112) */
   border-radius: var(--radius-sm);
 }
 
