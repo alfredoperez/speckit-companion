@@ -299,16 +299,21 @@ export async function getFeatureWorkflow(
 
     for (const dir of dirsToCheck) {
         const contextPath = path.join(dir, FEATURE_CONTEXT_FILE);
+        let content: string;
         try {
-            const content = await fs.promises.readFile(contextPath, 'utf-8');
-            const context = JSON.parse(content) as FeatureWorkflowContext;
-
+            content = await fs.promises.readFile(contextPath, 'utf-8');
+        } catch (err) {
+            if ((err as NodeJS.ErrnoException)?.code === 'ENOENT') continue;
+            throw err;
+        }
+        try {
             // Return context even if workflow name is unrecognized —
             // callers can fall back to the default workflow for display
             // without overwriting the user's context data.
-            return context;
-        } catch {
-            // File doesn't exist or is invalid, try next
+            return JSON.parse(content) as FeatureWorkflowContext;
+        } catch (err) {
+            const reason = err instanceof Error ? err.message : String(err);
+            throw new Error(`spec-context.json exists but is invalid JSON (${contextPath}): ${reason}`);
         }
     }
 
@@ -326,17 +331,37 @@ export async function saveFeatureWorkflow(
 ): Promise<void> {
     const contextPath = path.join(featureDir, FEATURE_CONTEXT_FILE);
 
-    let context: FeatureWorkflowContext;
+    // Read-modify-write that distinguishes ENOENT (legitimate first write —
+    // emit minimal context) from any other failure (refuse to write so a
+    // transient read error can't wipe lifecycle history).
+    let content: string | null = null;
     try {
-        const content = await fs.promises.readFile(contextPath, 'utf-8');
-        const existing = JSON.parse(content);
+        content = await fs.promises.readFile(contextPath, 'utf-8');
+    } catch (err) {
+        if ((err as NodeJS.ErrnoException)?.code !== 'ENOENT') {
+            throw new Error(
+                `refusing to save workflow selection: existing ${FEATURE_CONTEXT_FILE} at ${contextPath} is unreadable (${(err as Error)?.message ?? err}).`,
+            );
+        }
+    }
+
+    let context: FeatureWorkflowContext;
+    if (content === null) {
         context = {
-            ...existing,
             workflow: workflowName,
             selectedAt: new Date().toISOString(),
         };
-    } catch {
+    } else {
+        let existing: Record<string, unknown>;
+        try {
+            existing = JSON.parse(content);
+        } catch (err) {
+            throw new Error(
+                `refusing to save workflow selection: existing ${FEATURE_CONTEXT_FILE} at ${contextPath} is not valid JSON (${(err as Error)?.message ?? err}).`,
+            );
+        }
         context = {
+            ...(existing as unknown as FeatureWorkflowContext),
             workflow: workflowName,
             selectedAt: new Date().toISOString(),
         };

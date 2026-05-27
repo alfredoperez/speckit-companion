@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **`.spec-context.json` wipe on tab click**: a transient read failure (concurrent CLI write → partial JSON → `JSON.parse` throws) used to be conflated with "file doesn't exist" at every layer — `readSpecContext`, `getFeatureWorkflow`, and `writeSpecContext` all silently treated read errors as `null`. The spec viewer's `ensureSpecContext` would then write a fresh `backfillMinimalContext` (raw-basename `specName`, empty `history`, `status: 'draft'`) over the real file, destroying lifecycle history. Fixed across the stack: the readers now return `null` only for `ENOENT` and throw on parse/IO errors; `writeSpecContext` stat-guards the target and refuses to write when an existing file is present-but-unreadable; the spec viewer's `updateContent` only calls `ensureSpecContext` on the first open of a panel (subsequent tab clicks are strictly read-only); `saveFeatureWorkflow` only emits a minimal context on `ENOENT`. New regression tests (`specContextWipeGuard.test.ts`) pin the on-disk file-unchanged invariant.
+
 ### Changed
 
 - **Spec viewer in-flight footer** (spec 115): `Generating <Step>…` is no longer rendered as a disabled primary button — it's now a non-clickable accent-tinted status chip (pill + spinner) on the **right** with `role="status"` / `aria-live="polite"`. The `Mark step complete` manual override moves to the **left** styled as a quiet secondary action, communicating "one thing is happening, one thing is a fallback override." Applies uniformly to specify / plan / tasks / implement. No behavior change to the override click handler; approve / inline-comment / post-completion footer modes are unchanged.

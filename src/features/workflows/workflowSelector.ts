@@ -32,8 +32,15 @@ export async function selectWorkflow(featureDir: string): Promise<WorkflowConfig
         return workflows[0];
     }
 
-    // Check if feature already has a workflow selected
-    const existingContext = await getFeatureWorkflow(featureDir);
+    // Check if feature already has a workflow selected. Tolerate transient
+    // read failures (treat as "no existing selection") so the user can still
+    // pick a workflow rather than seeing a crash.
+    let existingContext: Awaited<ReturnType<typeof getFeatureWorkflow>>;
+    try {
+        existingContext = await getFeatureWorkflow(featureDir);
+    } catch {
+        existingContext = undefined;
+    }
     if (existingContext) {
         const existingWorkflow = getWorkflow(existingContext.workflow);
         if (existingWorkflow) {
@@ -136,8 +143,17 @@ function buildWorkflowDetail(workflow: WorkflowConfig): string {
  * Returns the workflow config without any side effects (no disk writes).
  */
 async function resolveDefaultWorkflow(featureDir: string, outputChannel?: vscode.OutputChannel): Promise<WorkflowConfig | undefined> {
-    // Check if feature has existing workflow
-    const existingContext = await getFeatureWorkflow(featureDir);
+    // Check if feature has existing workflow. Same tolerance for transient
+    // read failures as the interactive picker above.
+    let existingContext: Awaited<ReturnType<typeof getFeatureWorkflow>>;
+    try {
+        existingContext = await getFeatureWorkflow(featureDir);
+    } catch (err) {
+        outputChannel?.appendLine(
+            `[workflowSelector] resolveDefaultWorkflow: getFeatureWorkflow failed — ${err instanceof Error ? err.message : String(err)}`,
+        );
+        existingContext = undefined;
+    }
     if (existingContext) {
         const workflow = getWorkflow(existingContext.workflow);
         if (workflow) {

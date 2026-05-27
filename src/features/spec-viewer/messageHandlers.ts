@@ -32,7 +32,7 @@ import {
   startStep,
 } from "../specs/stepLifecycle";
 import { getFeatureWorkflow, getWorkflowCommands } from "../workflows";
-import type { WorkflowStepConfig } from "../workflows/types";
+import type { FeatureWorkflowContext, WorkflowStepConfig } from "../workflows/types";
 import { isOptionalCommand } from "./optionalCommands";
 import {
   addComment as addCommentToCtx,
@@ -444,7 +444,14 @@ async function handleMarkStepComplete(
   const instance = deps.getInstance(specDirectory);
   if (!instance) return;
 
-  const ctx = await readSpecContext(specDirectory);
+  let ctx: SpecContext | null = null;
+  try {
+    ctx = await readSpecContext(specDirectory);
+  } catch (err) {
+    deps.outputChannel.appendLine(
+      `[SpecViewer] markStepComplete: readSpecContext failed — ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
   const derived = ctx
     ? deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status)
     : undefined;
@@ -571,11 +578,20 @@ async function handleClarify(
     return;
   }
 
-  // Fall back to workflow commands
-  const featureCtx = await getFeatureWorkflow(
-    specDirectory,
-    instance.state.changeRoot,
-  );
+  // Fall back to workflow commands. Tolerate transient read failures —
+  // the dispatch should not crash if .spec-context.json is briefly
+  // unreadable (e.g., mid-write by the AI CLI).
+  let featureCtx: FeatureWorkflowContext | undefined;
+  try {
+    featureCtx = await getFeatureWorkflow(
+      specDirectory,
+      instance.state.changeRoot,
+    );
+  } catch (err) {
+    deps.outputChannel.appendLine(
+      `[SpecViewer] dispatchDocRefinement: getFeatureWorkflow failed — ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
   if (featureCtx?.workflow) {
     for (const wfCmd of getWorkflowCommands(featureCtx.workflow)) {
       if (!wfCmd.command) continue;
@@ -809,7 +825,17 @@ async function persistCommentMutation(
   deps: MessageHandlerDependencies,
 ): Promise<void> {
   const run = async () => {
-    const current = await readSpecContext(specDirectory);
+    let current: SpecContext | null = null;
+    try {
+      current = await readSpecContext(specDirectory);
+    } catch (err) {
+      // Refuse to persist when the existing context is unreadable —
+      // doing so would risk overwriting a real file with the fallback.
+      deps.outputChannel.appendLine(
+        `[SpecViewer] Skipping comment persist — readSpecContext failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      return;
+    }
     if (!current) {
       deps.outputChannel.appendLine(
         "[SpecViewer] No .spec-context.json — skipping comment persist",
@@ -909,7 +935,15 @@ async function dispatchDocRefinement(
 ): Promise<void> {
   const instance = deps.getInstance(specDirectory);
   if (!instance) return;
-  const ctx = await readSpecContext(specDirectory);
+  let ctx: SpecContext | null = null;
+  try {
+    ctx = await readSpecContext(specDirectory);
+  } catch (err) {
+    deps.outputChannel.appendLine(
+      `[SpecViewer] dispatchDocRefinement(comments): readSpecContext failed — ${err instanceof Error ? err.message : String(err)}`,
+    );
+    return;
+  }
   if (!ctx) return;
 
   const pending = pendingForDoc(ctx, doc);

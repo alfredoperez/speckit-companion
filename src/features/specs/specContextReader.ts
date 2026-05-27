@@ -30,31 +30,55 @@ export function getSpecContextSchema(): unknown {
 }
 
 /**
- * Read `.spec-context.json` from a spec directory (or null if absent/invalid).
+ * Read `.spec-context.json` from a spec directory.
+ *
+ * Returns `null` ONLY when the file genuinely does not exist (ENOENT). Any
+ * other failure (EACCES, EBUSY, invalid JSON, encoding error) throws — the
+ * caller MUST distinguish "no file" from "could not read", otherwise a
+ * transient read failure during a concurrent write would let a downstream
+ * "ensure" path silently clobber the real file.
  */
 export async function readSpecContext(specDir: string): Promise<SpecContext | null> {
     const p = path.join(specDir, SPEC_CONTEXT_FILENAME);
+    let raw: string;
     try {
-        const raw = await fs.promises.readFile(p, 'utf-8');
-        const parsed = JSON.parse(raw) as Record<string, unknown>;
-        return normalizeSpecContext(parsed);
-    } catch {
-        return null;
+        raw = await fs.promises.readFile(p, 'utf-8');
+    } catch (err) {
+        if (isEnoent(err)) return null;
+        throw err;
     }
+    return parseAndNormalize(raw, p);
 }
 
 /**
- * Synchronous variant for tree-provider usage.
+ * Synchronous variant for tree-provider usage. Same ENOENT-vs-other contract
+ * as the async reader.
  */
 export function readSpecContextSync(specDir: string): SpecContext | null {
     const p = path.join(specDir, SPEC_CONTEXT_FILENAME);
+    let raw: string;
     try {
-        const raw = fs.readFileSync(p, 'utf-8');
-        const parsed = JSON.parse(raw) as Record<string, unknown>;
-        return normalizeSpecContext(parsed);
-    } catch {
-        return null;
+        raw = fs.readFileSync(p, 'utf-8');
+    } catch (err) {
+        if (isEnoent(err)) return null;
+        throw err;
     }
+    return parseAndNormalize(raw, p);
+}
+
+function isEnoent(err: unknown): boolean {
+    return !!err && typeof err === 'object' && (err as NodeJS.ErrnoException).code === 'ENOENT';
+}
+
+function parseAndNormalize(raw: string, filePath: string): SpecContext {
+    let parsed: Record<string, unknown>;
+    try {
+        parsed = JSON.parse(raw) as Record<string, unknown>;
+    } catch (err) {
+        const reason = err instanceof Error ? err.message : String(err);
+        throw new Error(`spec-context.json exists but is invalid JSON (${filePath}): ${reason}`);
+    }
+    return normalizeSpecContext(parsed);
 }
 
 /**

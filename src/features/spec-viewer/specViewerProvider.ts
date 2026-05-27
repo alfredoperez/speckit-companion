@@ -113,13 +113,31 @@ function deriveStepBadgesWithAlias(
  * Create a minimal `.spec-context.json` when none exists (FR-011).
  * Marks only what can be verified: workflow, branch, specName, status=draft.
  * Never reads step files to infer completion.
- * Returns the (newly created or already existing) context.
+ *
+ * On a READ failure (file exists but is mid-write / corrupt / unreadable),
+ * returns an in-memory backfill WITHOUT touching disk — clobbering a real
+ * file because we couldn't parse it would destroy lifecycle history.
  */
 async function ensureSpecContext(
   specDirectory: string,
-  workflowName?: string
+  workflowName?: string,
+  outputChannel?: vscode.OutputChannel,
 ): Promise<ReturnType<typeof readSpecContext> extends Promise<infer T> ? T : never> {
-  const existing = await readSpecContext(specDirectory);
+  let existing: Awaited<ReturnType<typeof readSpecContext>>;
+  try {
+    existing = await readSpecContext(specDirectory);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    outputChannel?.appendLine(
+      `[SpecViewer] readSpecContext failed for ${specDirectory}: ${msg} — rendering with in-memory backfill, NOT writing.`,
+    );
+    const specName = path.basename(specDirectory);
+    return backfillMinimalContext({
+      workflow: workflowName || 'speckit-companion',
+      specName,
+      branch: specName,
+    });
+  }
   if (existing) return existing;
   const specName = path.basename(specDirectory);
   const ctx = backfillMinimalContext({
@@ -129,8 +147,11 @@ async function ensureSpecContext(
   });
   try {
     await writeSpecContext(specDirectory, ctx);
-  } catch {
-    // Non-fatal: viewer still renders.
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    outputChannel?.appendLine(
+      `[SpecViewer] writeSpecContext failed for ${specDirectory}: ${msg}`,
+    );
   }
   return ctx;
 }
@@ -143,6 +164,11 @@ interface PanelInstance {
   state: SpecViewerState;
   debounceTimer: NodeJS.Timeout | undefined;
   lastFeatureCtx?: FeatureWorkflowContext | null;
+  // True after the first updateContent run for this panel. Gates the
+  // ensureSpecContext write so tab clicks never (re)create the file —
+  // first-open may write a backfill if the file is missing; every
+  // subsequent navigation is strictly read-only.
+  firstOpenComplete: boolean;
 }
 
 /**
@@ -419,6 +445,7 @@ export class SpecViewerProvider {
       panel,
       state: initialState,
       debounceTimer: undefined,
+      firstOpenComplete: false,
     };
 
     // Store in map
@@ -494,13 +521,33 @@ export class SpecViewerProvider {
       const specName = path.basename(specDirectory);
 
       // Single context read: determine spec status + drive stepHistory badges.
-      let featureCtx = await getFeatureWorkflow(specDirectory, changeRoot);
-      if (!featureCtx) {
+      // Tolerate getFeatureWorkflow throws (post-Fix-2 it raises on
+      // parse/IO errors instead of silently returning undefined) — a
+      // transient read failure must not crash a tab click.
+      let featureCtx: FeatureWorkflowContext | undefined;
+      try {
+        featureCtx = await getFeatureWorkflow(specDirectory, changeRoot);
+      } catch (err) {
+        this.outputChannel.appendLine(
+          `[SpecViewer] getFeatureWorkflow failed for ${specDirectory}: ${err instanceof Error ? err.message : String(err)} — rendering without context.`,
+        );
+        featureCtx = undefined;
+      }
+      // First-open only: create the context file if missing. Subsequent
+      // tab clicks are strictly read-only — never re-trigger ensureSpecContext
+      // because a transient read failure mid-write could otherwise wipe
+      // real lifecycle history.
+      if (!featureCtx && !instance.firstOpenComplete) {
         const workflowName =
           (await resolveWorkflow(specDirectory))?.name ?? DEFAULT_WORKFLOW.name;
-        await ensureSpecContext(specDirectory, workflowName);
-        featureCtx = await getFeatureWorkflow(specDirectory, changeRoot);
+        await ensureSpecContext(specDirectory, workflowName, this.outputChannel);
+        try {
+          featureCtx = await getFeatureWorkflow(specDirectory, changeRoot);
+        } catch {
+          featureCtx = undefined;
+        }
       }
+      instance.firstOpenComplete = true;
 
       // Find the requested document (or fallback to first available)
       let doc = documents.find(d => d.type === documentType);
@@ -906,9 +953,18 @@ export class SpecViewerProvider {
         }
       }
 
-      // Determine spec status for lifecycle buttons
+      // Determine spec status for lifecycle buttons. Tolerate transient
+      // read failures so a render pass during a concurrent CLI write
+      // degrades to "active" rather than crashing the whole update.
       const changeRoot = instance.state.changeRoot;
-      const featureCtx = await getFeatureWorkflow(specDirectory, changeRoot);
+      let featureCtx: FeatureWorkflowContext | undefined;
+      try {
+        featureCtx = await getFeatureWorkflow(specDirectory, changeRoot);
+      } catch (err) {
+        this.outputChannel.appendLine(
+          `[SpecViewer] sendContentUpdateMessage: getFeatureWorkflow failed — ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
       let specStatus: string;
       if (featureCtx?.status === SpecStatuses.ARCHIVED || featureCtx?.currentStep === SpecStatuses.ARCHIVED) {
         specStatus = SpecStatuses.ARCHIVED;

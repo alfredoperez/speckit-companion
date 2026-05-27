@@ -30,12 +30,39 @@ export async function writeSpecContext(
     const target = path.join(specDir, SPEC_CONTEXT_FILENAME);
 
     // Read existing for unknown-field preservation + append-only enforcement.
+    //
+    // Belt-and-suspenders: distinguish "file genuinely missing" (ENOENT on
+    // stat) from "file present but read/parse failed". The former is a
+    // legitimate first-write; the latter would be a silent clobber of real
+    // lifecycle history, so we refuse to write at all and let the caller
+    // surface the error.
     let existing: Record<string, unknown> | null = null;
+    let fileExists = true;
     try {
-        const raw = await fs.promises.readFile(target, 'utf-8');
-        existing = JSON.parse(raw);
-    } catch {
-        existing = null;
+        await fs.promises.stat(target);
+    } catch (err) {
+        if ((err as NodeJS.ErrnoException)?.code === 'ENOENT') {
+            fileExists = false;
+        } else {
+            throw err;
+        }
+    }
+    if (fileExists) {
+        let raw: string;
+        try {
+            raw = await fs.promises.readFile(target, 'utf-8');
+        } catch (err) {
+            throw new Error(
+                `refusing to write spec-context.json: existing file at ${target} is unreadable (${(err as Error)?.message ?? err}). Aborting to avoid clobbering lifecycle history.`,
+            );
+        }
+        try {
+            existing = JSON.parse(raw);
+        } catch (err) {
+            throw new Error(
+                `refusing to write spec-context.json: existing file at ${target} is not valid JSON (${(err as Error)?.message ?? err}). Aborting to avoid clobbering lifecycle history.`,
+            );
+        }
     }
 
     if (existing) {
