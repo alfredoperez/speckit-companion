@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **Spec viewer in-flight footer** (spec 115): `Generating <Step>…` is no longer rendered as a disabled primary button — it's now a non-clickable accent-tinted status chip (pill + spinner) on the **right** with `role="status"` / `aria-live="polite"`. The `Mark step complete` manual override moves to the **left** styled as a quiet secondary action, communicating "one thing is happening, one thing is a fallback override." Applies uniformly to specify / plan / tasks / implement. No behavior change to the override click handler; approve / inline-comment / post-completion footer modes are unchanged.
+
 ## [0.21.0] - 2026-05-27
 
 ### Added

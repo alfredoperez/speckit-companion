@@ -1,0 +1,23 @@
+{
+  "workflow": "sdd",
+  "specName": "checklists",
+  "branch": "checklists",
+  "selectedAt": "2026-05-27T15:59:36.803Z",
+  "currentStep": "specify",
+  "status": "draft",
+  "history": [],
+  "reviewComments": [
+    {
+      "id": "ref-1779897581734-2j3yp",
+      "doc": "requirements",
+      "anchor": {
+        "heading": "Content Quality",
+        "blockText": "- [x] No implementation details (languages, frameworks, APIs)",
+        "line": 9
+      },
+      "comment": "test 2",
+      "status": "pending",
+      "createdAt": "2026-05-27T15:59:41.737Z"
+    }
+  ]
+}

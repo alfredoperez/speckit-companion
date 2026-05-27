@@ -254,5 +254,5 @@ the baseline after playing around: `git restore specs/_00_demo-specified specs/_
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/097-inline-comment-composer/plan.md`
+`specs/115-footer-generating-status/plan.md`
 <!-- SPECKIT END -->

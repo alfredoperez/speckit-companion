@@ -110,10 +110,16 @@
 > `completedAt` is set — at `implemented` the spec-scope
 > `Mark Completed` is the right surface, not `Approve`.
 >
-> **Generating-during-in-flight (spec 099)**: While a step is
-> mid-generation, the footer's forward button is **disabled and
-> labeled `Generating <step>…` with a spinner** rather than the
-> footer being hidden. The renderer in
+> **Generating-during-in-flight (spec 099, restyled in spec 115)**:
+> While a step is mid-generation, the footer renders **two
+> non-competing affordances**: a non-clickable accent-tinted
+> `Generating <step>…` status chip (`<span
+> class="footer-generating-chip">` + spinner) on the **right**, and
+> the secondary `Mark step complete` override button on the
+> **left**. The status chip is not a button — it has
+> `pointer-events: none`, `role="status"`, and `aria-live="polite"`,
+> so it cannot be clicked or focused and is announced as ambient
+> live status rather than an interactive control. The renderer in
 > `webview/src/spec-viewer/components/FooterActions.tsx` shows this
 > state while the running step (`startedAt` set, no `completedAt`)
 > has **not** yet produced its artifact. Completion is content-aware:
@@ -129,10 +135,10 @@
 > `implement` step has no single artifact and is treated ready at
 > 100% task completion).
 >
-> Two escape hatches keep the button from stranding: a **"Mark step
-> complete"** secondary button (posts `markStepComplete`, which
+> Two escape hatches keep the footer from stranding: the left-side
+> `Mark step complete` override (posts `markStepComplete`, which
 > calls `completeStep` for the running step) and a **10-minute
-> recovery timeout** after which the footer falls back to its normal
+> recovery timeout** after which the footer reverts to its normal
 > enabled buttons. The header status badge and the active step's
 > pulse remain the ambient "AI is working" cues; the sidebar's
 > per-row Archive remains as an escape hatch.

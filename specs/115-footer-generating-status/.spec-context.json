@@ -1,0 +1,162 @@
+{
+  "workflow": "speckit",
+  "specName": "Footer Generating Status",
+  "branch": "115-footer-generating-status",
+  "selectedAt": "2026-05-27T15:55:50.348Z",
+  "currentStep": "implement",
+  "status": "implemented",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": null,
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-27T15:55:50.348Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-05-27T15:58:20Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-27T15:59:48.283Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-05-27T16:02:37Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-27T16:08:09.986Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-05-27T16:09:29Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-27T17:13:21.268Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-05-27T17:14:22Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "ai",
+      "at": "2026-05-27T17:17:12Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-05-27T17:20:54Z"
+    }
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added .footer-generating-chip CSS — accent-tinted pill with pointer-events:none and a sized .btn-spinner child.",
+      "files": ["webview/styles/spec-viewer/_footer.css"]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Restructured the isGenerating early-return: Mark step complete moved to actions-left as a secondary Button; live indicator is now a non-clickable <span class=\"footer-generating-chip\"> with role=status and a btn-spinner.",
+      "files": ["webview/src/spec-viewer/components/FooterActions.tsx"]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Audited GeneratingPlan / GeneratingTasks / GeneratingArtifactReady / GeneratingTimedOut stories — navState shapes still trigger the branch and pick up the new layout automatically; refreshed two doc comments to describe the chip + secondary layout.",
+      "files": ["webview/src/spec-viewer/components/FooterActions.stories.tsx"]
+    },
+    "T004": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Implementation supports all five edge cases per code review, but Extension-Development-Host visual verification (rapid step transitions, long-running implement, approve/inline-comment modes unchanged, status-detection failure, narrow widths) is a user-side manual gate.",
+      "files": [],
+      "concerns": [
+        "Manual visual verification in the Extension Development Host (SC-001..SC-004) is the user's responsibility — install-local + step-dispatch each of specify/plan/tasks/implement and confirm the chip + left-secondary layout, plus narrow-viewer behavior."
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Updated the Generating-during-in-flight callout in docs/viewer-states.md to describe the chip (right) + secondary override (left) layout and its a11y attributes.",
+      "files": ["docs/viewer-states.md"]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added an [Unreleased] / Changed CHANGELOG entry summarizing the visual-hierarchy fix for the in-flight footer.",
+      "files": ["CHANGELOG.md"]
+    }
+  },
+  "updated": "2026-05-27",
+  "reviewComments": [
+    {
+      "id": "ref-1779897599663-b413c",
+      "doc": "spec",
+      "anchor": {
+        "heading": "Feature Specification: Footer \"Generating…\" as status, \"Mark step complete\" as secondary",
+        "blockText": "",
+        "line": 7
+      },
+      "comment": "test spec",
+      "status": "pending",
+      "createdAt": "2026-05-27T15:59:59.664Z"
+    },
+    {
+      "id": "ref-1779897611656-ifx14",
+      "doc": "checklists/requirements",
+      "anchor": {
+        "heading": "Content Quality",
+        "blockText": "- [x] All mandatory sections completed",
+        "line": 12
+      },
+      "comment": "test reqs",
+      "status": "pending",
+      "createdAt": "2026-05-27T16:00:11.657Z"
+    }
+  ]
+}

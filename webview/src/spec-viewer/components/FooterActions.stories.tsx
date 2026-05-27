@@ -98,11 +98,13 @@ const REFINE_ACTION: FooterEntry = {
 
 const withRefine = (footer: FooterEntry[]): FooterEntry[] => [REFINE_ACTION, ...footer];
 
-// Helper to mark a story as in-flight on a given step. The renderer shows the
-// disabled "Generating <step>…" footer while the step's artifact is not yet
-// ready. `runningStepStartedAt` is stamped "now" so the recovery timeout has
-// not elapsed and `runningStepArtifactReady` is false, so isGenerating fires.
-// `runningStepLabel` mirrors what the provider ships via getDocTypeLabel.
+// Helper to mark a story as in-flight on a given step. The renderer shows a
+// non-clickable "Generating <step>…" status chip on the right and the
+// secondary "Mark step complete" override on the left while the step's
+// artifact is not yet ready. `runningStepStartedAt` is stamped "now" so the
+// recovery timeout has not elapsed and `runningStepArtifactReady` is false,
+// so isGenerating fires. `runningStepLabel` mirrors what the provider ships
+// via getDocTypeLabel.
 const STEP_LABELS: Record<string, string> = { spec: 'Spec', plan: 'Plan', tasks: 'Tasks' };
 const inFlightNavState = (specStatus: string, step: string) =>
     mockNavState({
@@ -268,11 +270,12 @@ export const Archived: Story = {
     },
 };
 
-// ── Generating state (spec 099) ─────────────────────────────
-// The forward button is disabled and reads "Generating <step>…" with a
-// spinner while the running step's artifact is not yet on disk, plus a
-// manual "Mark step complete" fallback. Once the artifact lands (or the
-// recovery timeout elapses) the normal footer returns.
+// ── Generating state (spec 099 → restyled in spec 115) ─────────────────
+// The right side shows a non-clickable "Generating <step>…" status chip
+// (pill + spinner) while the running step's artifact is not yet on disk;
+// the left side shows the secondary "Mark step complete" override. Once
+// the artifact lands (or the recovery timeout elapses) the normal footer
+// returns.
 
 export const GeneratingTasks: Story = {
     name: 'Generating — Tasks',
