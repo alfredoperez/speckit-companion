@@ -327,16 +327,23 @@ async function handleRegenerate(
   const instance = deps.getInstance(specDirectory);
   if (!instance) return;
 
-  const docType = instance.state.currentDocument;
+  // Regenerate targets the spec's actual current step, not the viewed
+  // tab. Clicking regenerate while on a child doc (data-model.md,
+  // research.md) would otherwise no-op or write a start entry for the
+  // wrong step.
+  const ctx = readSpecContextSync(specDirectory);
+  const targetStepName = ctx?.currentStep;
   const steps = await deps.resolveWorkflowSteps(specDirectory);
-  const currentStep = steps.find((s) => s.name === docType);
+  const stepDef = targetStepName
+    ? steps.find((s) => s.name === targetStepName)
+    : undefined;
 
-  if (currentStep) {
-    if (isLifecycleStep(docType)) {
-      await startStep(specDirectory, docType as StepName, "extension");
+  if (stepDef && targetStepName) {
+    if (isLifecycleStep(targetStepName)) {
+      await startStep(specDirectory, targetStepName, "extension");
     }
     await deps.updateContent(specDirectory, instance.state.currentDocument);
-    await executeStepInTerminal(currentStep, specDirectory, deps);
+    await executeStepInTerminal(stepDef, specDirectory, deps);
   }
 }
 
@@ -380,17 +387,19 @@ async function handleApprove(
     }
   }
 
-  // Mark the currently-viewed step as completed (independent of AI cooperation).
-  // Guard: if Copilot (or any prior writer) already appended a completion
-  // entry for this step, do NOT add a second one — that's the duplicate
-  // `<step>-complete` we kept seeing in history on every phase button click.
-  if (isLifecycleStep(docType)) {
-    const ctx = readSpecContextSync(specDirectory);
-    const alreadyComplete = ctx
-      ? lastEntryIsCompletionFor(ctx.history ?? [], docType as StepName)
-      : false;
+  // Mark the spec's actual current step as completed. Target is
+  // `ctx.currentStep` (not `docType`) so clicking Approve while viewing
+  // a child doc still records the right completion. Skip if the AI
+  // already wrote one — avoids duplicate completion entries.
+  const ctx = readSpecContextSync(specDirectory);
+  const targetStep = ctx?.currentStep;
+  if (targetStep && isLifecycleStep(targetStep)) {
+    const alreadyComplete = lastEntryIsCompletionFor(
+      ctx?.history ?? [],
+      targetStep,
+    );
     if (!alreadyComplete) {
-      await completeStep(specDirectory, docType as StepName, "extension");
+      await completeStep(specDirectory, targetStep, "extension");
     }
   }
 

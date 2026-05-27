@@ -10,13 +10,14 @@ import type { HistoryEntry, StepName } from '../../core/types/specContext';
 
 /**
  * Walk `history` from newest to oldest and report whether the most recent
- * entry for `step` is a completion. Completion entries are written by
- * `setStepCompleted` with `kind: "complete"`.
+ * entry for `step` is a completion.
  *
- * Used by:
- *   - `specCommands.executeWorkflowStep` (complete-on-advance guard)
- *   - `messageHandlers.handleApprove` (skip the duplicate completion when
- *     Copilot has already written one per the preamble)
+ * Accepts both the current kind-based shape and the legacy self-loop
+ * (`from.step === step` with no `kind`) so callers that bypass
+ * `normalizeSpecContext` (unit tests, in-memory paths) still classify
+ * correctly. Misclassifying a legacy completion as "not yet complete"
+ * triggers the duplicate-write path the writer's append-only check
+ * is designed to reject.
  */
 export function lastEntryIsCompletionFor(
     history: HistoryEntry[],
@@ -25,7 +26,10 @@ export function lastEntryIsCompletionFor(
     for (let i = history.length - 1; i >= 0; i--) {
         const e = history[i];
         if (e.step !== step) continue;
-        return e.kind === 'complete' && e.substep == null;
+        if (e.substep != null) return false;
+        if (e.kind === 'complete') return true;
+        if (e.kind == null && e.from?.step === step) return true;
+        return false;
     }
     return false;
 }

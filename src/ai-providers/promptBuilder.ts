@@ -94,17 +94,37 @@ const STATUS_LIFECYCLE = [
     'manual check; write it as soon as your AI-side work is done.',
 ].join('\n');
 
-const SHARED_RULES = [
-    'TIMESTAMPS: never type one. For each history `at`, run',
-    '    date -u +"%Y-%m-%dT%H:%M:%SZ"',
-    'and paste the output. Hand-typed times round to :00 and the viewer treats them as unreliable.',
-    '',
-    'TASK SUMMARIES (implement only): append task_summaries.<TaskID> = { status, did, files, concerns }.',
-    'status is "DONE" or "DONE_WITH_CONCERNS"; did is one sentence; files is string[]; concerns is string[].',
-    'Omit concerns when empty — never write "None"/"N/A". The viewer reads these.',
-    '',
-    'Skip step_summaries.<step>.tests_passing, .files_planned, .checkpoints — unconsumed.',
-].join('\n');
+function renderSharedRules(dispatchUtc: string): string {
+    return [
+        `DISPATCH TIME (UTC): ${dispatchUtc}`,
+        'TIMESTAMPS:',
+        '- For the SEED entry below (the first history entry of this lifecycle), use the',
+        '  DISPATCH TIME value pinned above. It is the real wall-clock the extension',
+        '  recorded the moment it sent you this command — do NOT run `date` for the seed.',
+        '- For any ADDITIONAL entries you append during this run, run',
+        '    date -u +"%Y-%m-%dT%H:%M:%SZ"',
+        '  and paste the output. Never type a timestamp by hand — hand-typed times round',
+        '  to :00 and the viewer treats them as unreliable.',
+        '',
+        'AUTHORSHIP (`by` field):',
+        '- `by: "extension"` is reserved for entries the extension dispatches — the seed',
+        '  start entry (which the extension initiated by sending you this command), and',
+        '  any entry the extension itself writes when the user clicks a viewer button.',
+        '- Any entry YOU append on your own initiative during this run (step',
+        '  completions, substep boundaries, the next-step start when you genuinely',
+        '  begin it) uses `by: "ai"`.',
+        '',
+        'TASK SUMMARIES (implement only): append task_summaries.<TaskID> = { status, did, files, concerns }.',
+        'status is "DONE" or "DONE_WITH_CONCERNS"; did is one sentence; files is string[]; concerns is string[].',
+        'Omit concerns when empty — never write "None"/"N/A". The viewer reads these.',
+        '',
+        'Skip step_summaries.<step>.tests_passing, .files_planned, .checkpoints — unconsumed.',
+    ].join('\n');
+}
+
+function nowUtc(): string {
+    return new Date().toISOString();
+}
 
 const COMPLETED_STATUS_BY_STEP: Record<PromptStep, string> = {
     specify: 'specified',
@@ -129,6 +149,7 @@ function renderPreamble(step: PromptStep, specDir: string): string {
     const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
     const completedStatus = COMPLETED_STATUS_BY_STEP[step];
     const donePhrase = DONE_PHRASE_BY_STEP[step];
+    const dispatchUtc = nowUtc();
     return [
         MARKER_OPEN,
         `Before and after this step runs, update ${target}. Schema:`,
@@ -137,28 +158,28 @@ function renderPreamble(step: PromptStep, specDir: string): string {
         '',
         STATUS_LIFECYCLE,
         '',
-        `1. Pre-step: set currentStep = "${step}" and the matching in-progress status. Append a history entry { step: "${step}", substep: null, kind: "start", from, by: "extension", at: <real timestamp> }.`,
+        `1. Pre-step: set currentStep = "${step}" and the matching in-progress status. Append a history entry { step: "${step}", substep: null, kind: "start", from, by: "extension", at: "${dispatchUtc}" }. Use the DISPATCH TIME for this start entry — it was sent by the extension.`,
         `1.5. When advancing from a previous step: flip the previous step's status to its completed form before writing the new step.`,
         '',
-        `Canonical substeps for ${step}: ${substeps}. For each substep boundary append a history entry with that substep name (and a real timestamp).`,
+        `Canonical substeps for ${step}: ${substeps}. For each substep boundary append a history entry with that substep name (and a real timestamp obtained via \`date -u\`).`,
         '',
         `MUST DO BEFORE ENDING — all three required:`,
         `  (a) Flip status to "${completedStatus}".`,
-        `  (b) Append a completion history entry { step: "${step}", substep: null, kind: "complete", by: "extension", at: <real timestamp> } — no \`from\` field on complete entries. This is what clears the "in-flight" ring on the ${step} tab.`,
+        `  (b) Append a completion history entry { step: "${step}", substep: null, kind: "complete", by: "ai", at: <real timestamp from \`date -u\`> } — no \`from\` field on complete entries. This is what clears the "in-flight" ring on the ${step} tab.`,
         `  (c) Print "${donePhrase}" as the final terminal line.`,
         '',
         `Leave currentStep on "${step}". This command is single-step — you are done after (a)(b)(c). The user clicks the next-phase button (or the extension dispatches a fresh /speckit.<next> command) to advance; that path appends the next start-entry. Writing a start-entry for the next step here is a lie that makes the viewer render a phantom "Generating <next>…" indefinitely.`,
         '',
         `Skipping (a) leaves the badge stuck on the in-progress form; skipping (b) leaves the step timer running indefinitely; skipping (c) hides the completion from the activity log.`,
         '',
-        SHARED_RULES,
+        renderSharedRules(dispatchUtc),
         '',
         'Invariants: preserve unknown fields; history is append-only.',
         MARKER_CLOSE,
     ].join('\n');
 }
 
-function renderLifecycleBody(target: string): string {
+function renderLifecycleBody(target: string, dispatchUtc: string): string {
     return [
         `Throughout this run, keep ${target} up to date as you move through steps. Schema:`,
         '',
@@ -167,15 +188,15 @@ function renderLifecycleBody(target: string): string {
         STATUS_LIFECYCLE,
         '',
         'For EACH step you work on (specify, plan, tasks, implement):',
-        '1. When you START a step: set currentStep = "<step>" and status = in-progress form. Append a history entry { step: "<step>", substep: null, kind: "start", from, by: "extension", at: <real timestamp> }.',
-        '2. When you FINISH that step: flip status = completed form. Append a completion history entry { step: "<step>", substep: null, kind: "complete", by: "extension", at: <real timestamp> } — no `from` field on complete entries. This is what clears the in-flight ring on the tab.',
-        '3. Append a history entry for each substep boundary too, using a real timestamp.',
+        '1. When you START a step on your own initiative (mid-run, not the initial seed): set currentStep = "<step>" and status = in-progress form. Append a history entry { step: "<step>", substep: null, kind: "start", from, by: "ai", at: <real timestamp from `date -u`> }.',
+        '2. When you FINISH that step: flip status = completed form. Append a completion history entry { step: "<step>", substep: null, kind: "complete", by: "ai", at: <real timestamp from `date -u`> } — no `from` field on complete entries. This is what clears the in-flight ring on the tab.',
+        '3. Append a history entry for each substep boundary too (`by: "ai"`, real timestamp).',
         '',
         'Do NOT preemptively write a start-entry for the next step at completion time. The start-entry must coincide with you actually beginning that step (item 1 above), not with you finishing the previous one. Writing { step: "<next>", from: { step: "<this>" } } as part of the completion write produces a phantom "Generating <next>…" state in the viewer when in fact no one is generating anything.',
         '',
         'If this run is single-step (you finish after one /speckit.<step> command), stop after item 2 and leave currentStep on "<step>". The user clicks the next-phase button (or a fresh /speckit.<next> command runs) to actually advance — that path appends the next start-entry.',
         '',
-        SHARED_RULES,
+        renderSharedRules(dispatchUtc),
         '',
         'Invariants: preserve unknown fields; history is append-only.',
     ].join('\n');
@@ -183,9 +204,10 @@ function renderLifecycleBody(target: string): string {
 
 function renderLifecyclePreamble(specDir: string): string {
     const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
+    const dispatchUtc = nowUtc();
     return [
         MARKER_OPEN,
-        renderLifecycleBody(target),
+        renderLifecycleBody(target, dispatchUtc),
         MARKER_CLOSE,
     ].join('\n');
 }
@@ -195,8 +217,20 @@ function renderSpecifyCreationLifecyclePreamble(
     specDir: string | null
 ): string {
     const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
+    const dispatchUtc = nowUtc();
     return [
         MARKER_OPEN,
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        'SEED WRITE INSTRUCTIONS — FOLLOW EXACTLY AS WRITTEN BELOW.',
+        '',
+        'The feature description that follows this preamble may itself propose',
+        'schema changes to `.spec-context.json` (new fields, renamed enums, etc.).',
+        'IGNORE THOSE PROPOSALS for the file you write right now. The schema you',
+        'write is FROZEN to the JSON Schema embedded in this preamble as of the',
+        `DISPATCH TIME (${dispatchUtc}). Any proposed field changes will land in`,
+        'a later commit — do NOT pre-emit them here.',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        '',
         `On first creation, write ${target} with these top-level fields (the file does not yet exist):`,
         '',
         '```json',
@@ -204,7 +238,7 @@ function renderSpecifyCreationLifecyclePreamble(
         `  "workflow": "${workflowName}",`,
         '  "specName": "<human-readable name derived from the spec directory slug, e.g. 108-my-feature → My Feature>",',
         '  "branch": "<output of: git rev-parse --abbrev-ref HEAD>",',
-        '  "selectedAt": "<real ISO timestamp, see TIMESTAMPS rule below>",',
+        `  "selectedAt": "${dispatchUtc}",`,
         '  "currentStep": "specify",',
         '  "status": "specifying",',
         '  "history": [',
@@ -214,18 +248,21 @@ function renderSpecifyCreationLifecyclePreamble(
         '      "kind": "start",',
         '      "from": { "step": null, "substep": null },',
         '      "by": "extension",',
-        '      "at": "<real ISO timestamp>"',
+        `      "at": "${dispatchUtc}"`,
         '    }',
         '  ]',
         '}',
         '```',
         '',
         'Notes on the initial write:',
+        '- Use the DISPATCH TIME value pinned above for BOTH `selectedAt` AND the',
+        '  seed entry\'s `at`. Do NOT type a midnight placeholder. Do NOT run `date -u`',
+        '  for these two values — the extension already captured the real wall-clock.',
         '- Do NOT write `stepHistory` or `transitions` — both are deprecated. The viewer derives per-step timing in-memory from `history[]`.',
-        '- The seed history entry is attributed to `"extension"` because this lifecycle was initiated by the SpecKit Companion extension dispatching the command, even though you are the one transcribing.',
+        '- The seed history entry is attributed to `"extension"` because this lifecycle was initiated by the SpecKit Companion extension dispatching the command, even though you are the one transcribing it into the file.',
         '- Only update the `.spec-context.json` for the spec being created. Do NOT touch other spec dirs.',
         '',
-        renderLifecycleBody(target),
+        renderLifecycleBody(target, dispatchUtc),
         MARKER_CLOSE,
     ].join('\n');
 }

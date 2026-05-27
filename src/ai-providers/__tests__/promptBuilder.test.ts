@@ -94,13 +94,14 @@ describe('buildPrompt', () => {
         });
     });
 
-    it('preamble stays under ~5500 chars per step (schema-inclusive budget)', () => {
-        // After embedding the JSON Schema contract, preambles run ~4.5k chars.
-        // Bound kept generous-but-finite to catch unintentional bloat.
+    it('preamble stays under ~6500 chars per step (schema-inclusive budget)', () => {
+        // After embedding the JSON Schema contract + authorship/dispatch-time rules
+        // (round 3, F10/F14), preambles run ~6k chars. Bound kept generous-but-finite
+        // to catch unintentional bloat.
         mockConfig(true);
         for (const step of ['specify', 'plan', 'tasks', 'implement'] as const) {
             const out = buildPrompt({ command: 'x', step, specDir: 'specs/001-demo' });
-            expect(out.length).toBeLessThan(5500);
+            expect(out.length).toBeLessThan(6500);
         }
     });
 

@@ -75,18 +75,19 @@ function isSpecDone(ctx: SpecContext): boolean {
  * spec-scope `Mark Completed` is the right surface, not Approve.
  */
 function shouldShowApprove(
-    _ctx: SpecContext,
+    ctx: SpecContext,
     step: StepName,
     stepHistory: DerivedHistory
 ): boolean {
-    // F5: Approve never surfaces for the implement step. The implement
-    // closure is owned by `Mark Completed` (gated on
-    // `isSpecDone(ctx)` → `status === 'implemented' || 'completed'`).
-    // Letting Approve also surface produced a duplicate "Complete" button
-    // that leaked through the moment Copilot ticked every checkbox in
-    // tasks.md (artifactReady=true) before status had actually flipped to
-    // `implemented`. One closure surface only.
+    // Implement step closure is owned by `Mark Completed` (gated on
+    // `isSpecDone(ctx)`). Approve here would surface a duplicate
+    // "Complete" button the moment every task box gets ticked, before
+    // status actually flips to `implemented`.
     if (step === 'implement') return false;
+    // Approve must target the spec's actual current step. When the user
+    // navigates backward via the stepper, dispatching the next step from
+    // a past tab would re-run already-completed phases.
+    if (step !== ctx.currentStep) return false;
     const entry = stepHistory[step];
     if (!entry?.startedAt) return false;
     const idx = STEP_NAMES.indexOf(step);
