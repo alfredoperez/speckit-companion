@@ -4,7 +4,7 @@
   "branch": "115-footer-generating-status",
   "selectedAt": "2026-05-27T15:55:50.348Z",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
@@ -95,23 +95,36 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-05-27T17:20:54Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-05-28T13:53:10.295Z"
     }
   ],
   "task_summaries": {
     "T001": {
       "status": "DONE",
       "did": "Added .footer-generating-chip CSS — accent-tinted pill with pointer-events:none and a sized .btn-spinner child.",
-      "files": ["webview/styles/spec-viewer/_footer.css"]
+      "files": [
+        "webview/styles/spec-viewer/_footer.css"
+      ]
     },
     "T002": {
       "status": "DONE",
       "did": "Restructured the isGenerating early-return: Mark step complete moved to actions-left as a secondary Button; live indicator is now a non-clickable <span class=\"footer-generating-chip\"> with role=status and a btn-spinner.",
-      "files": ["webview/src/spec-viewer/components/FooterActions.tsx"]
+      "files": [
+        "webview/src/spec-viewer/components/FooterActions.tsx"
+      ]
     },
     "T003": {
       "status": "DONE",
       "did": "Audited GeneratingPlan / GeneratingTasks / GeneratingArtifactReady / GeneratingTimedOut stories — navState shapes still trigger the branch and pick up the new layout automatically; refreshed two doc comments to describe the chip + secondary layout.",
-      "files": ["webview/src/spec-viewer/components/FooterActions.stories.tsx"]
+      "files": [
+        "webview/src/spec-viewer/components/FooterActions.stories.tsx"
+      ]
     },
     "T004": {
       "status": "DONE_WITH_CONCERNS",
@@ -124,12 +137,16 @@
     "T005": {
       "status": "DONE",
       "did": "Updated the Generating-during-in-flight callout in docs/viewer-states.md to describe the chip (right) + secondary override (left) layout and its a11y attributes.",
-      "files": ["docs/viewer-states.md"]
+      "files": [
+        "docs/viewer-states.md"
+      ]
     },
     "T006": {
       "status": "DONE",
       "did": "Added an [Unreleased] / Changed CHANGELOG entry summarizing the visual-hierarchy fix for the in-flight footer.",
-      "files": ["CHANGELOG.md"]
+      "files": [
+        "CHANGELOG.md"
+      ]
     }
   },
   "updated": "2026-05-27",

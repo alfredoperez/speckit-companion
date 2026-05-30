@@ -1,6 +1,6 @@
 {
   "workflow": "sdd",
-  "currentStep": "done",
+  "currentStep": "implement",
   "currentTask": null,
   "progress": null,
   "next": "done",
@@ -17,189 +17,10 @@
       "complexity": "minimal",
       "requirements": 4,
       "scenarios": 3,
-      "key_finding": "promptBuilder.ts already centralizes preamble rendering through renderPreamble + renderLifecycleBody, and has COMPLETED_STATUS_BY_STEP / DONE_PHRASE_BY_STEP step-keyed maps \u2014 the next-step map fits the same pattern."
+      "key_finding": "promptBuilder.ts already centralizes preamble rendering through renderPreamble + renderLifecycleBody, and has COMPLETED_STATUS_BY_STEP / DONE_PHRASE_BY_STEP step-keyed maps — the next-step map fits the same pattern."
     }
   },
-  "transitions": [
-    {
-      "step": "specify",
-      "substep": "parsing",
-      "from": null,
-      "by": "sdd",
-      "at": "2026-05-26T18:02:36Z"
-    },
-    {
-      "step": "specify",
-      "substep": "exploring",
-      "from": {
-        "step": "specify",
-        "substep": "parsing"
-      },
-      "by": "sdd",
-      "at": "2026-05-26T18:02:50Z"
-    },
-    {
-      "step": "specify",
-      "substep": "detecting",
-      "from": {
-        "step": "specify",
-        "substep": "exploring"
-      },
-      "by": "sdd",
-      "at": "2026-05-26T18:03:05Z"
-    },
-    {
-      "step": "specify",
-      "substep": "writing-spec",
-      "from": {
-        "step": "specify",
-        "substep": "detecting"
-      },
-      "by": "sdd",
-      "at": "2026-05-26T18:03:15Z"
-    },
-    {
-      "step": "tasks",
-      "substep": null,
-      "from": {
-        "step": "specify",
-        "substep": "writing-spec"
-      },
-      "by": "sdd",
-      "at": "2026-05-26T18:03:39Z"
-    },
-    {
-      "step": "implement",
-      "substep": "phase1",
-      "from": {
-        "step": "tasks",
-        "substep": null
-      },
-      "by": "sdd",
-      "at": "2026-05-26T18:04:50.965Z"
-    },
-    {
-      "step": "implement",
-      "substep": "phase1",
-      "from": {
-        "step": "implement",
-        "substep": "phase1"
-      },
-      "by": "sdd",
-      "at": "2026-05-26T18:05:30.511Z"
-    },
-    {
-      "step": "implement",
-      "substep": "phase1",
-      "from": {
-        "step": "implement",
-        "substep": "phase1"
-      },
-      "by": "sdd",
-      "at": "2026-05-26T18:06:27.000Z"
-    },
-    {
-      "step": "implement",
-      "substep": "phase1",
-      "from": {
-        "step": "implement",
-        "substep": "phase1"
-      },
-      "by": "sdd",
-      "at": "2026-05-26T18:06:27.368Z"
-    },
-    {
-      "step": "implement",
-      "substep": "phase1",
-      "from": {
-        "step": "implement",
-        "substep": "phase1"
-      },
-      "by": "sdd",
-      "at": "2026-05-26T18:08:35.000Z"
-    },
-    {
-      "step": "implement",
-      "substep": "phase1",
-      "from": {
-        "step": "implement",
-        "substep": "phase1"
-      },
-      "by": "sdd",
-      "at": "2026-05-26T18:08:35.100Z"
-    },
-    {
-      "step": "implement",
-      "substep": "phase1",
-      "from": {
-        "step": "implement",
-        "substep": "phase1"
-      },
-      "by": "sdd",
-      "at": "2026-05-26T18:08:35.277Z"
-    },
-    {
-      "step": "implement",
-      "substep": "hooks",
-      "from": {
-        "step": "implement",
-        "substep": "phase1"
-      },
-      "by": "sdd",
-      "at": "2026-05-26T18:08:36.000Z"
-    },
-    {
-      "step": "implement",
-      "substep": "code-review",
-      "from": {
-        "step": "implement",
-        "substep": "hooks"
-      },
-      "by": "sdd",
-      "at": "2026-05-26T18:16:52.373Z"
-    },
-    {
-      "step": "implement",
-      "substep": "test-results",
-      "from": {
-        "step": "implement",
-        "substep": "code-review"
-      },
-      "by": "sdd",
-      "at": "2026-05-26T18:24:19.708Z"
-    },
-    {
-      "step": "implement",
-      "substep": "commit-review",
-      "from": {
-        "step": "implement",
-        "substep": "test-results"
-      },
-      "by": "sdd",
-      "at": "2026-05-26T18:25:03.393Z"
-    },
-    {
-      "step": "done",
-      "substep": null,
-      "from": {
-        "step": "implement",
-        "substep": "commit-review"
-      },
-      "by": "sdd",
-      "at": "2026-05-26T18:29:57.200Z"
-    },
-    {
-      "step": "done",
-      "substep": null,
-      "from": {
-        "step": "done",
-        "substep": null
-      },
-      "by": "sdd",
-      "at": "2026-05-26T18:31:19.795Z"
-    }
-  ],
-  "status": "completed",
+  "status": "implementing",
   "task_summaries": {
     "T001": {
       "status": "DONE",
@@ -245,7 +66,7 @@
       ]
     }
   },
-  "last_action": "PR #177 opened \u2014 fix(ai-providers): advance currentStep on step completion so phases progress",
+  "last_action": "PR #177 opened — fix(ai-providers): advance currentStep on step completion so phases progress",
   "files_modified": [
     "src/ai-providers/promptBuilder.ts",
     "src/ai-providers/__tests__/promptBuilder.test.ts"
@@ -262,5 +83,209 @@
     "pr": true
   },
   "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/177",
-  "prNumber": 177
+  "prNumber": 177,
+  "history": [
+    {
+      "step": "specify",
+      "substep": "parsing",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-05-26T18:02:36Z",
+      "kind": "start"
+    },
+    {
+      "step": "specify",
+      "substep": "exploring",
+      "from": {
+        "step": "specify",
+        "substep": "parsing"
+      },
+      "by": "sdd",
+      "at": "2026-05-26T18:02:50Z",
+      "kind": "start"
+    },
+    {
+      "step": "specify",
+      "substep": "detecting",
+      "from": {
+        "step": "specify",
+        "substep": "exploring"
+      },
+      "by": "sdd",
+      "at": "2026-05-26T18:03:05Z",
+      "kind": "start"
+    },
+    {
+      "step": "specify",
+      "substep": "writing-spec",
+      "from": {
+        "step": "specify",
+        "substep": "detecting"
+      },
+      "by": "sdd",
+      "at": "2026-05-26T18:03:15Z",
+      "kind": "start"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": "writing-spec"
+      },
+      "by": "sdd",
+      "at": "2026-05-26T18:03:39Z",
+      "kind": "start"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-26T18:04:50.965Z",
+      "kind": "start"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-26T18:05:30.511Z",
+      "kind": "complete"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-26T18:06:27.000Z",
+      "kind": "complete"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-26T18:06:27.368Z",
+      "kind": "complete"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-26T18:08:35.000Z",
+      "kind": "complete"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-26T18:08:35.100Z",
+      "kind": "complete"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-26T18:08:35.277Z",
+      "kind": "complete"
+    },
+    {
+      "step": "implement",
+      "substep": "hooks",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-26T18:08:36.000Z",
+      "kind": "start"
+    },
+    {
+      "step": "implement",
+      "substep": "code-review",
+      "from": {
+        "step": "implement",
+        "substep": "hooks"
+      },
+      "by": "sdd",
+      "at": "2026-05-26T18:16:52.373Z",
+      "kind": "start"
+    },
+    {
+      "step": "implement",
+      "substep": "test-results",
+      "from": {
+        "step": "implement",
+        "substep": "code-review"
+      },
+      "by": "sdd",
+      "at": "2026-05-26T18:24:19.708Z",
+      "kind": "start"
+    },
+    {
+      "step": "implement",
+      "substep": "commit-review",
+      "from": {
+        "step": "implement",
+        "substep": "test-results"
+      },
+      "by": "sdd",
+      "at": "2026-05-26T18:25:03.393Z",
+      "kind": "start"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": "commit-review"
+      },
+      "by": "sdd",
+      "at": "2026-05-26T18:29:57.200Z",
+      "kind": "start"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "done",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-26T18:31:19.795Z",
+      "kind": "complete"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-05-28T13:53:05.883Z"
+    }
+  ]
 }
