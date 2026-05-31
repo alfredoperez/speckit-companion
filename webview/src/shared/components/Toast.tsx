@@ -2,6 +2,20 @@ export interface ToastProps {
     id?: string;
 }
 
+/**
+ * Toast — small status-bar message that fades in then out.
+ *
+ * Why this stays imperative (Phase 19 closed without rewrite): the round-4
+ * audit flagged `showToast` as "imperative DOM mutation; replace with a
+ * context-driven queue." Investigation showed exactly one production
+ * caller (`index.tsx` shows the action toast on extension messages); the
+ * stacking-queue requirement was speculative. The imperative version
+ * handles `.visible` / `.hiding` / `animationend` cleanup with care that's
+ * non-trivial to match declaratively. Until a second caller needs
+ * stacking, the working imperative API stays. The stylistic inconsistency
+ * (imperative in a mostly-declarative webview) is documented here so it
+ * doesn't keep showing up in audits.
+ */
 export function Toast({ id }: ToastProps) {
     return <div class="action-toast" id={id} />;
 }
