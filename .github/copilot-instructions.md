@@ -2,6 +2,6 @@
 
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/113-round3-state-followup/plan.md`
+`specs/120-reorder-sidebar-icons/plan.md`
 
 <!-- SPECKIT END -->

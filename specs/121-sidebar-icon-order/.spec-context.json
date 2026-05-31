@@ -1,0 +1,104 @@
+{
+  "workflow": "sdd",
+  "specName": "Sidebar Icon Order",
+  "branch": "120-reorder-sidebar-icons",
+  "selectedAt": "2026-05-28T14:54:48.205Z",
+  "currentStep": "implement",
+  "status": "implemented",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Verified speckit.create is pinned to navigation@0 in the explorer title bar — already correct, no change needed.",
+      "files": ["package.json"]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Confirmed no speckit.refresh contribution exists in the explorer view/title menu (only speckit.steering.refresh on the steering view).",
+      "files": ["package.json"]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Sidebar reference doc title-bar action list reads Create → Filter → (Clear Filter) → Sort → Collapse/Expand with no Refresh mention.",
+      "files": ["docs/sidebar.md"]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Audited README — Sidebar at a Glance has no Specs-view refresh mention; only hit is unrelated 'refreshed screenshots' changelog line.",
+      "files": ["README.md"]
+    }
+  },
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": null,
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-28T14:54:48.205Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-05-28T14:57:42Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "ai",
+      "at": "2026-05-28T14:57:42Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-05-28T14:57:42Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "ai",
+      "at": "2026-05-28T14:57:42Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-05-28T14:57:42Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-05-30T23:43:59.489Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-05-30T23:46:01Z"
+    }
+  ]
+}

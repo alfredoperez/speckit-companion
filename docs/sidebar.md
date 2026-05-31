@@ -10,7 +10,7 @@ Specs are grouped into three collapsible sections based on their status (stored 
 - **Completed** — Specs marked as done, collapsed by default.
 - **Archived** — Specs moved to archive, collapsed by default.
 
-The Specs view title bar exposes a **collapse/expand all** toggle (alongside the `+` and refresh buttons) that flips every spec in place between expanded and collapsed. The icon swaps to reflect the next action; state is in-memory only and is not persisted across sessions.
+The Specs view title bar exposes **Filter**, **Sort**, a **collapse/expand all** toggle, and **Create New Spec** (rightmost). A **clear filter** icon appears only while a filter is active. The collapse/expand icon swaps to reflect the next action; state is in-memory only and is not persisted across sessions.
 
 ## Filter and sort
 
