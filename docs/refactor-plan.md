@@ -27,6 +27,22 @@
 | 5a | FooterActions split + Jest+Preact test infrastructure | ✅ | `e6c9b5c` |
 | 5b | Deleted orphan `modal.ts` + hardcoded refine HTML | ✅ | `5582da0` |
 
+## Patterns-review polish (post-Phase-5b)
+
+A clear-mind patterns review after Phase 5b surfaced a 7-item polish list. Outcomes:
+
+| Item | Outcome |
+|---|---|
+| Wrap ActivityPanel cards in `<Card>` | **Deferred.** Adds `.card` classes alongside existing `.activity-card` rules; CSS cascade interaction needs visual verification. |
+| Replace ActivityPanel empty `<div>` with `<EmptyState>` | **Deferred.** `.activity-empty` has a dashed border that `.empty-state` doesn't — replacement is a visible visual change. |
+| Migrate `title=""` attrs to `<Tooltip>` | **Deferred.** Wrapping in an extra `<span>` can shift inline layouts subtly. |
+| Add stories for Card / Tooltip / EmptyState / UndoToast / GeneratingFooter / CatalogFooter | ✅ Shipped — four primitive stories added (commit `7c0d6af`). GeneratingFooter / CatalogFooter still test-only. |
+| Wrap `phaseCalculation.ts` in a typed inputs interface | **Skipped — and that's right.** Functions are already pure with clean signatures; boxing args would be ceremony. The honest pattern application was adding Jest coverage (27 new tests; commit `3765d39`). |
+| Delete `utils.ts` re-export shim | ✅ Shipped — documentScanner imports directly from `core/utils/fileNaming` now (commit `5dbd279`). |
+| Strip Phase-N references from inline comments | ✅ Shipped — semantic descriptions instead of phase numbers (commit `5dbd279`). |
+
+The deferred items aren't impossible — they need a session with the viewer rendered to confirm the CSS / DOM layout doesn't shift. They're the same shape as the original Phase 5c/5d deferral.
+
 ## Outcomes for the originally-deferred phases
 
 After the user pushed to "just tackle them," each of the four deferrals was investigated:
