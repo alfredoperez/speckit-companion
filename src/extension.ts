@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { CONTEXT_KEYS, setContextKey } from './core/utils/contextKeys';
 
 // AI Providers
 import { IAIProvider, AIProviderFactory, isProviderConfigured, promptForProviderSelection, validatePermissionMode } from './ai-providers';
@@ -145,7 +146,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Seed the collapse/expand toggle icon state to match the provider default
     // (expandAllSpecs=true → next click collapses → show collapse-all icon).
-    vscode.commands.executeCommand('setContext', 'speckit.specs.allCollapsed', false);
+    void setContextKey(CONTEXT_KEYS.specsAllCollapsed, false);
 
     context.subscriptions.push(
         vscode.window.registerTreeDataProvider(Views.settings, overviewProvider),

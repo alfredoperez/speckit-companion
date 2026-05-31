@@ -23,6 +23,7 @@ import { fuzzyMatch } from './fuzzyMatch';
 import { SpecsSortState } from './specsSortState';
 import { comparators, DEFAULT_SORT_MODE } from './specsSortMode';
 import { fileNameToDisplayName } from '../../core/utils/fileNaming';
+import { CONTEXT_KEYS, setContextKey } from '../../core/utils/contextKeys';
 
 export interface SpecInfo {
     name: string;
@@ -194,10 +195,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 && filteredActive.length === 0
                 && filteredCompleted.length === 0
                 && filteredArchived.length === 0;
-            try {
-                const p = vscode.commands.executeCommand('setContext', 'speckit.specs.noFilterMatch', noFilterMatch);
-                Promise.resolve(p).catch(() => { /* fire-and-forget */ });
-            } catch { /* fire-and-forget */ }
+            void setContextKey(CONTEXT_KEYS.specsNoFilterMatch, noFilterMatch);
 
             // Dispatch on the active sort mode. Default ('number') preserves
             // the historical numeric-prefix-desc ordering so nothing changes

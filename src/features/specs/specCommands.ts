@@ -26,6 +26,7 @@ import { SpecsFilterState } from './specsFilterState';
 import { SpecsSortState } from './specsSortState';
 import { ALL_SORT_MODES, DEFAULT_SORT_MODE, SortMode } from './specsSortMode';
 import { loadCustomCommands, NormalizedCustomCommand } from './customCommandConfig';
+import { CONTEXT_KEYS, setContextKey } from '../../core/utils/contextKeys';
 
 function toWorkspaceRelative(absOrRel: string): string {
     const ws = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -96,11 +97,7 @@ export function registerSpecKitCommands(
     // ids so their expansion state is untouched by the toggle.
     const toggleCollapseAllHandler = async () => {
         specExplorer.expandAllSpecs = !specExplorer.expandAllSpecs;
-        await vscode.commands.executeCommand(
-            'setContext',
-            'speckit.specs.allCollapsed',
-            !specExplorer.expandAllSpecs
-        );
+        await setContextKey(CONTEXT_KEYS.specsAllCollapsed, !specExplorer.expandAllSpecs);
         specExplorer.refresh();
     };
     context.subscriptions.push(

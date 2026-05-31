@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { ConfigKeys } from '../../core/constants';
-
-const FILTER_ACTIVE_CONTEXT_KEY = 'speckit.specs.filterActive';
+import { CONTEXT_KEYS, setContextKey } from '../../core/utils/contextKeys';
 
 /**
  * Tracks the current specs-tree filter query and persists it to workspace state.
@@ -24,18 +23,18 @@ export class SpecsFilterState {
             return;
         }
         await this.context.workspaceState.update(ConfigKeys.workspaceState.specsFilterQuery, trimmed);
-        await vscode.commands.executeCommand('setContext', FILTER_ACTIVE_CONTEXT_KEY, true);
+        await setContextKey(CONTEXT_KEYS.specsFilterActive, true);
         this.onChange();
     }
 
     async clear(): Promise<void> {
         await this.context.workspaceState.update(ConfigKeys.workspaceState.specsFilterQuery, undefined);
-        await vscode.commands.executeCommand('setContext', FILTER_ACTIVE_CONTEXT_KEY, false);
+        await setContextKey(CONTEXT_KEYS.specsFilterActive, false);
         this.onChange();
     }
 
     async initialize(): Promise<void> {
         const active = this.getQuery().length > 0;
-        await vscode.commands.executeCommand('setContext', FILTER_ACTIVE_CONTEXT_KEY, active);
+        await setContextKey(CONTEXT_KEYS.specsFilterActive, active);
     }
 }
