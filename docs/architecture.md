@@ -27,7 +27,7 @@ The provider abstraction layer. `src/ai-providers/aiProvider.ts` defines the `IA
 
 Eight providers ship today, in three shapes:
 
-- **Terminal CLI providers** — spawn a `vscode.window.createTerminal()`, write a temp prompt file, `sendText` the invocation, schedule cleanup. Implementations: `claudeCodeProvider.ts`, `geminiCliProvider.ts`, `copilotCliProvider.ts`, `codexCliProvider.ts`, `qwenCliProvider.ts`, `openCodeProvider.ts`. These six are near-duplicates today; the structural-cleanup refactor (`docs/refactor-plan.md` Phase 1) collapses them onto a shared `CliTerminalProvider` base.
+- **Terminal CLI providers** — spawn a `vscode.window.createTerminal()`, write a temp prompt file, `sendText` the invocation, schedule cleanup. The shared workflow lives in `cliTerminalProvider.ts` (abstract base). Concrete subclasses: `claudeCodeProvider.ts`, `copilotCliProvider.ts`, `codexCliProvider.ts`, `qwenCliProvider.ts`, `openCodeProvider.ts`. The base owns ensure-installed → temp-file → terminal → sendText → cleanup; subclasses supply a `prepareDispatch()` hook returning the command line and temp-file list. `geminiCliProvider.ts` stays outside this hierarchy — its CLI runs interactively and the prompt is delivered via post-init `sendText`, not a prompt-file dispatch.
 - **IDE-chat provider** — `ideChatProvider.ts` routes the assembled prompt into the host editor's built-in chat surface (Copilot in VS Code, Composer in Cursor, Cascade in Windsurf) instead of spawning a terminal. The host editor resolves `/speckit.*` slash commands itself.
 - **Claude-in-VS-Code panel** — `claudePanelProvider.ts` drives the Claude Code GUI panel through the editor's command surface, bypassing the terminal entirely.
 
