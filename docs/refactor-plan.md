@@ -1,7 +1,46 @@
 # Structural Refactor Plan
 
-> **Status:** Phases 0–4 shipped on branch `refactor/structural-cleanup` (commits `6a8f40e`, `c4fd5dc`, `3d7c544`, `38911cf`, `e610043`). Phases 5 and 6 deferred — they require visual verification of the spec viewer with real spec content, which can't be done safely from an autonomous session. Phase 8 closeout completed.
+> **Status (final pass):** 15 phases shipped on branch `refactor/structural-cleanup`. The remaining 4 phases (19 Toast queue, 21 Badge consolidation, 5c InlineEditor wrappers, 5d MarkdownContent) touch live UI behaviour where Jest tests can't catch visual regressions and Storybook is not in `npm test`. They're deferred to a session with visual verification available. The Jest+Preact test infrastructure landed in Phase 5a means future webview component changes have a regression net — the cost of deferring is one-time, not compounding.
 > Origin: thermo-nuclear code quality review (2026-05). One commit per phase on one branch.
+
+## Shipped phases (final)
+
+| # | Phase | Status | Commit |
+|---|---|---|---|
+| 0 | Docs match reality + `check-docs.ts` prevention test | ✅ | `6a8f40e` |
+| 1 | `CliTerminalProvider` base class | ✅ | `c4fd5dc` |
+| 2 | `ProviderRegistry` validation at module load | ✅ | `3d7c544` |
+| 3 | `PanelStateComputer` pure derivation extract | ✅ | `38911cf` |
+| 4 | Typed dispatch map + CommentMutationQueue | ✅ | `e610043` |
+| 9 | Break specs↔spec-viewer coupling | ✅ | `d0acb2f` |
+| 10 | `TypedDispatcher` → `core/utils/` + `customCommandConfig` extract | ✅ | `81498a7` |
+| 11 | Documented `specContextManager.ts` as compatibility shim | ✅ | `6122db1` |
+| 12 | `PanelRegistry` extracted from `specViewerProvider` | ✅ | `59c1cd3` |
+| 13 | `useDispatch()` hook (webview reusability) | ✅ | `267e2f2` |
+| 14 | `ContextKeyManager` consolidating 10 setContext writers | ✅ | `2d837de` |
+| 15 | Canonical `getSpecStatus()` + `isTerminalStatus()` | ✅ | `be68533` |
+| 16 | `SpecsSidebarState` facade + missed `sortActive` key | ✅ | `90928bc` |
+| 17 | Webview state-init guard + `lastFeatureCtx` invalidation | ✅ | `117b20b` |
+| 18 | Button `destructive` variant + StaleBanner migration | ✅ | `5a6ad4f` |
+| 20 | `Card` + `Tooltip` + `EmptyState` shared primitives | ✅ | `7e5522d` |
+| 22 | Component-library catalogue + JSDoc polish | ✅ | `8c0f8df` |
+| 5a | FooterActions split + Jest+Preact test infrastructure | ✅ | `e6c9b5c` |
+| 5b | Deleted orphan `modal.ts` + hardcoded refine HTML | ✅ | `5582da0` |
+
+## Deferred — needs visual verification
+
+| # | Phase | Why deferred |
+|---|---|---|
+| 19 | Toast queue (context-based, supports stacking) | Behavioural change to the existing `showToast(id, msg, ms)` API. The current single-instance toast IS reachable by the live UI; replacing the imperative API with a context-driven queue requires confirming toast behaviour on every callsite (FooterActions regen toast, action toast, etc.). No Jest assertion can catch timing/animation glitches. |
+| 21 | Badge consolidation — replace `.activity-status-pill`, `.activity-actor-badge`, `.task-row__status` raw spans with `<Badge>` | Each CSS-only badge has its own pixel-tuned styling. Replacing with `<Badge>` keeps the colour right but the surrounding layout (padding, font weight, hover) may shift subtly. Storybook covers each variant; converting needs a human reviewing the Activity panel side-by-side. |
+| 5c | Declarative `<InlineEditor>` / `<InlineComment>` wrappers; delete manual `render(h(…), container)` in `editor/inlineEditor.ts` + `editor/refinements.ts` | The most complex flow in the webview. Mounting + state interaction + restoration on remount. High visual-regression risk; needs Extension Development Host open + real spec content to verify. |
+| 5d | `<MarkdownContent>` wrapping `renderer.ts` with post-effects in `useEffect` | Touches highlighting/mermaid/TOC ordering. Timing-sensitive. The current `<div dangerouslySetInnerHTML>` works; restructuring it without breaking visual hierarchy needs human + screenshot diff. |
+
+The audit findings remain valid; nothing in the deferral list is wrong about its diagnosis. The honest decision is that landing those without visual verification would violate "report outcomes faithfully" — invisible regressions in the most-visible UI is a worse outcome than deferring with a clear path.
+
+## What good looks like after the deferred phases land
+
+A session with Extension Development Host alongside the Storybook (or a Chromatic-style visual-regression CI) lands Phases 19 → 21 → 5c → 5d in that order. Each can use the test infrastructure from Phase 5a as a baseline; the visual verification is the additional guard for what Jest can't see. Total ~2 working days after that session opens.
 
 ## Why this exists
 
