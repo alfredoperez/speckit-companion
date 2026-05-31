@@ -1,0 +1,131 @@
+/**
+ * Docs consistency check — the prevention layer for the structural-cleanup refactor.
+ *
+ * Runs as part of `npm test`. Fails loud when documentation drifts from reality
+ * along the dimensions that historically rot:
+ *   - provider count in prose vs. package.json enum
+ *   - provider files added without a mention in architecture.md
+ *   - .ts/.tsx paths in docs that no longer exist on disk
+ *
+ * If you're updating docs to add a new file, the test will pass once the path
+ * is real. If you're deleting a file, the test will fail until you remove its
+ * doc mention. That's the point.
+ */
+
+import * as fs from 'fs';
+import * as path from 'path';
+
+const REPO_ROOT = path.resolve(__dirname, '..', '..');
+const read = (rel: string) => fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
+const exists = (rel: string) => fs.existsSync(path.join(REPO_ROOT, rel));
+
+describe('docs consistency', () => {
+  describe('provider count', () => {
+    const enumValues: string[] = (() => {
+      const pkg = JSON.parse(read('package.json'));
+      // `contributes.configuration` may be either an object or an array of objects
+      // depending on how VS Code's manifest is structured. Merge `properties` across
+      // entries so the lookup is shape-independent.
+      const cfg = pkg.contributes.configuration;
+      const properties = Array.isArray(cfg)
+        ? Object.assign({}, ...cfg.map((c: { properties?: object }) => c.properties ?? {}))
+        : (cfg.properties ?? {});
+      return properties['speckit.aiProvider'].enum;
+    })();
+
+    it('package.json enum, README matrix, and architecture.md prose agree', () => {
+      const count = enumValues.length;
+
+      const readme = read('README.md');
+      const matrixHeader = readme.match(/^\| Feature \|([^\n]+)\|$/m);
+      expect(matrixHeader).not.toBeNull();
+      const matrixColumns = matrixHeader![1].split('|').map((s) => s.trim()).filter(Boolean);
+      expect(matrixColumns).toHaveLength(count);
+
+      const arch = read('docs/architecture.md');
+      // The architecture doc must claim a provider count that matches the enum.
+      // We accept any English digit phrasing ("8 supported providers", "eight providers ship", etc.).
+      const wordForCount: Record<number, string> = {
+        5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine', 10: 'ten',
+      };
+      const expectedWord = wordForCount[count];
+      const hasNumeric = new RegExp(`\\b${count}\\b[^.\\n]*provider`, 'i').test(arch);
+      const hasWord = expectedWord
+        ? new RegExp(`\\b${expectedWord}\\b[^.\\n]*provider`, 'i').test(arch)
+        : false;
+      expect(hasNumeric || hasWord).toBe(true);
+    });
+
+    it('every enum id has a corresponding *Provider.ts or named integration file', () => {
+      // Map enum ids to expected source files. "ide-chat" → ideChatProvider; "claude-vscode" → claudePanelProvider.
+      const idToFile: Record<string, string> = {
+        claude: 'claudeCodeProvider.ts',
+        'claude-vscode': 'claudePanelProvider.ts',
+        gemini: 'geminiCliProvider.ts',
+        copilot: 'copilotCliProvider.ts',
+        codex: 'codexCliProvider.ts',
+        qwen: 'qwenCliProvider.ts',
+        opencode: 'openCodeProvider.ts',
+        'ide-chat': 'ideChatProvider.ts',
+      };
+      for (const id of enumValues) {
+        const file = idToFile[id];
+        expect(file).toBeDefined();
+        expect(exists(`src/ai-providers/${file}`)).toBe(true);
+      }
+    });
+  });
+
+  describe('provider file inventory', () => {
+    it('every *Provider.ts under src/ai-providers/ is named in architecture.md', () => {
+      const arch = read('docs/architecture.md');
+      const dir = path.join(REPO_ROOT, 'src/ai-providers');
+      const providerFiles = fs
+        .readdirSync(dir)
+        .filter((f) => /Provider\.ts$/.test(f));
+      expect(providerFiles.length).toBeGreaterThan(0);
+      const missing = providerFiles.filter((f) => !arch.includes(f));
+      expect(missing).toEqual([]);
+    });
+  });
+
+  describe('paths referenced in docs exist on disk', () => {
+    const DOCS = [
+      'docs/architecture.md',
+      'docs/how-it-works.md',
+      'CLAUDE.md',
+    ];
+
+    // Extract paths from backticked spans that look like real source paths.
+    // We're strict: must contain a slash and end in .ts/.tsx/.css/.json/.md.
+    const PATH_RE = /`([a-zA-Z0-9_./-]+\/[a-zA-Z0-9_.-]+\.(?:ts|tsx|css|json|md))`/g;
+
+    // Paths we know are intentional non-existent references (examples in prose,
+    // legacy names quoted for historical context). Keep this list short and reviewed.
+    const KNOWN_EXCEPTIONS = new Set<string>([
+      // example template strings; add only with justification
+    ]);
+
+    for (const doc of DOCS) {
+      it(`${doc} → every backticked path resolves`, () => {
+        const content = read(doc);
+        const refs = new Set<string>();
+        let m: RegExpExecArray | null;
+        while ((m = PATH_RE.exec(content)) !== null) {
+          const candidate = m[1];
+          // Only check repo-relative paths (skip URLs and absolute-looking ones).
+          if (candidate.startsWith('http') || candidate.startsWith('/')) continue;
+          if (KNOWN_EXCEPTIONS.has(candidate)) continue;
+          refs.add(candidate);
+        }
+        const missing = [...refs].filter((p) => !exists(p));
+        // Diagnostic message names the offenders so the failure is actionable.
+        if (missing.length > 0) {
+          throw new Error(
+            `${doc} references paths that don't exist:\n  - ${missing.join('\n  - ')}`,
+          );
+        }
+      });
+    }
+  });
+});

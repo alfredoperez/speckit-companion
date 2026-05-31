@@ -1,10 +1,10 @@
 # How This Works
 
-A comprehensive guide to the SpecKit Companion VS Code extension architecture.
+A narrative walk-through of how the extension fits together. For the canonical structural overview (responsibilities, boundaries, layer split), see [`docs/architecture.md`](./architecture.md). For the on-disk schema of `.spec-context.json`, see [`docs/spec-context-schema.md`](./spec-context-schema.md). The README "Supported AI Providers" matrix is the source of truth for the provider list — this document and `architecture.md` are checked against it on every `npm test`.
 
 ## Overview
 
-SpecKit Companion is a VS Code extension that enhances AI CLI tools (Claude Code, Gemini CLI, GitHub Copilot CLI, Codex CLI, Qwen CLI) with structured spec-driven development features. It provides visual management of specs (requirements, design, tasks) and steering documents.
+SpecKit Companion is a VS Code extension that gives spec-driven development a visual home. It plugs into multiple AI assistants — terminal CLIs (Claude Code, Gemini CLI, GitHub Copilot CLI, Codex CLI, Qwen Code, OpenCode), the host editor's built-in chat (IDE Chat), and the Claude Code GUI panel — and dispatches step actions to whichever provider the user has selected.
 
 ### Architecture Diagram
 
@@ -18,10 +18,13 @@ graph TB
 
     subgraph Providers["AI Provider Layer (Factory Pattern)"]
         Claude[Claude Code]
+        ClaudeVS[Claude in VS Code]
         Gemini[Gemini CLI]
         Copilot[Copilot CLI]
         Codex[Codex CLI]
-        Qwen[Qwen CLI]
+        Qwen[Qwen Code]
+        OpenCode[OpenCode]
+        IDEChat[IDE Chat]
     end
 
     subgraph Managers["Feature Managers (Business Logic)"]
@@ -53,88 +56,13 @@ graph TB
 
 ### Supported AI Providers
 
-| Provider | Steering | Agents | Skills | Hooks | MCP |
-|----------|----------|--------|--------|-------|-----|
-| Claude Code | Full | Full | Full | Full | Full |
-| GitHub Copilot CLI | Full | Full | - | - | Full |
-| Gemini CLI | Full | Limited | - | - | Full |
-| Codex CLI | Full | - | - | - | - |
-| Qwen CLI | Full | - | - | - | - |
+The README's "Supported AI Providers" matrix is the source of truth — see [README.md#supported-ai-providers](../README.md#supported-ai-providers). Eight providers ship today: Claude Code, Claude in VS Code, Gemini CLI, GitHub Copilot CLI, Codex CLI, Qwen Code, OpenCode, IDE Chat.
 
 ---
 
 ## Project Structure
 
-```
-src/
-├── extension.ts              # Entry point, command registration
-├── ai-providers/             # AI provider abstraction layer
-│   ├── aiProvider.ts         # Interface & provider paths config
-│   ├── aiProviderFactory.ts  # Factory pattern implementation
-│   ├── claudeCodeProvider.ts # Claude Code implementation
-│   ├── geminiCliProvider.ts  # Gemini CLI implementation
-│   ├── copilotCliProvider.ts # GitHub Copilot CLI implementation
-│   ├── codexCliProvider.ts   # Codex CLI implementation
-│   ├── qwenCliProvider.ts    # Qwen CLI implementation
-│   └── index.ts
-├── core/                     # Core utilities & infrastructure
-│   ├── constants.ts          # Commands, ConfigKeys, Views, Timing
-│   ├── types.ts              # Message types (Extension <-> Webview)
-│   ├── fileWatchers.ts       # File system monitoring with debouncing
-│   ├── specDirectoryResolver.ts # Resolves spec directory paths
-│   ├── errors/               # Error handling utilities
-│   │   └── index.ts          # SpecKitError, handleError()
-│   ├── managers/             # Base classes for managers
-│   │   └── BaseManager.ts    # Common manager functionality
-│   ├── providers/            # Base classes for tree providers
-│   │   └── BaseTreeDataProvider.ts  # Abstract base for all tree views
-│   ├── types/                # Shared type definitions
-│   │   └── config.ts         # ClaudeConfig, HookInfo, etc.
-│   └── utils/
-│       ├── configManager.ts  # Settings management (singleton)
-│       ├── fileSystemUtils.ts # File system helpers
-│       ├── notificationUtils.ts
-│       ├── fileOpener.ts
-│       └── sanitize.ts
-├── features/                 # Feature modules (independent)
-│   ├── agents/               # Agent discovery and initialization
-│   ├── permission/           # Claude permission management
-│   ├── settings/             # Overview/settings provider
-│   ├── skills/               # Skill management (Claude only)
-│   ├── spec-editor/          # Spec editor webview
-│   ├── spec-viewer/          # Spec viewer webview (modular)
-│   ├── specs/                # Spec explorer and commands
-│   ├── steering/             # Steering document management
-│   ├── workflow-editor/      # Custom markdown editor webview
-│   └── workflows/            # Workflow management and execution
-└── speckit/                  # SpecKit CLI integration
-    ├── detector.ts           # CLI installation detection
-    ├── cliCommands.ts        # CLI commands (install, init)
-    ├── updateChecker.ts      # Version update detection
-    ├── taskProgressService.ts # Tasks.md completion tracking
-    └── utilityCommands.ts    # Utility CLI commands
-
-webview/                      # Webview UIs (browser context)
-├── src/
-│   ├── spec-viewer/          # Spec viewer webview
-│   │   ├── index.ts, actions.ts, elements.ts, navigation.ts
-│   │   ├── state.ts, types.ts, highlighting.ts, modal.ts
-│   │   ├── markdown/         # Rendering pipeline
-│   │   └── editor/           # Inline editing
-│   ├── spec-editor/          # Spec editor webview
-│   │   └── index.ts, types.ts
-│   ├── markdown/             # Shared markdown utilities
-│   ├── render/               # Shared render utilities
-│   ├── ui/                   # Shared UI components
-│   ├── types.ts
-│   └── workflow.ts           # Workflow editor webview
-└── styles/
-    ├── spec-viewer/          # 16 CSS partials + index.css
-    ├── spec-editor.css
-    ├── spec-markdown.css
-    ├── spec-viewer.css
-    └── workflow.css
-```
+See [`docs/architecture.md`](./architecture.md) for the current responsibility-led structural overview. Verbatim file trees are intentionally not duplicated here — they drift the moment a file is renamed. The on-disk layout is always one `ls` away.
 
 ---
 
@@ -231,14 +159,14 @@ Managers encapsulate business logic:
 - Data transformation
 - State management
 
-**Example:** `SteeringManager` (`steering/steeringManager.ts`)
+**Example:** `SteeringManager` (`src/features/steering/steeringManager.ts`)
 - `createCustomDocument()`: Creates steering files
 - `deleteDocument()`: Removes files and updates references
 - `getSteeringFiles()`: Returns list of steering documents
 
 #### Provider Pattern (TreeDataProvider)
 
-All tree views extend `BaseTreeDataProvider<T>` (`core/providers/BaseTreeDataProvider.ts`):
+All tree views extend `BaseTreeDataProvider<T>` (`src/core/providers/BaseTreeDataProvider.ts`):
 
 | View ID | Provider | Purpose |
 |---------|----------|---------|
@@ -317,7 +245,7 @@ sequenceDiagram
 The extension has three webview UIs: the **Workflow Editor** (`webview/src/workflow.ts`), the **Spec Viewer** (`webview/src/spec-viewer/`), and the **Spec Editor** (`webview/src/spec-editor/`). All use the same message-passing pattern between extension and browser context.
 
 **Files (Workflow Editor example):**
-- `src/features/workflow-editor/workflowEditorProvider.ts`
+- `src/features/workflow-editor/workflowEditorCommands.ts`
 - `webview/src/workflow.ts`
 - `src/core/types.ts`
 
@@ -393,7 +321,7 @@ const debouncedRefresh = (event: string, uri: vscode.Uri) => {
 
 ## Key Components Reference
 
-### Constants (`core/constants.ts`)
+### Constants (`src/core/constants.ts`)
 
 | Constant | Purpose |
 |----------|---------|
@@ -504,7 +432,7 @@ export class FeatureExplorerProvider implements vscode.TreeDataProvider<FeatureI
 
 ### Adding a New Command
 
-1. **Add to constants** (`core/constants.ts`):
+1. **Add to constants** (`src/core/constants.ts`):
 ```typescript
 export const Commands = {
     // ...
@@ -536,14 +464,14 @@ context.subscriptions.push(
 
 ### Adding Webview Functionality
 
-1. **Define message type** (`core/types.ts`):
+1. **Define message type** (`src/core/types.ts`):
 ```typescript
 export type WebviewToExtensionMessage =
     // ...existing
     | { type: 'myNewAction'; data: string };
 ```
 
-2. **Handle in provider** (`workflowEditorProvider.ts`):
+2. **Handle in commands** (`src/features/workflow-editor/workflowEditorCommands.ts`):
 ```typescript
 case 'myNewAction':
     await this.actionHandlers.myNewAction(document, message.data);

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a VSCode extension called "SpecKit Companion" that enhances AI CLI tools (Claude Code, Gemini CLI, GitHub Copilot CLI, Codex CLI, Qwen CLI) with structured spec-driven development features. The extension provides visual management of specs (requirements, design, tasks) and steering documents.
+This is a VSCode extension called "SpecKit Companion" that enhances AI assistants (terminal CLIs, the host editor's built-in chat, and the Claude Code GUI panel) with structured spec-driven development features. The full provider list is the README "Supported AI Providers" matrix — see [`README.md`](./README.md#supported-ai-providers). The extension provides visual management of specs (requirements, design, tasks) and steering documents.
 
 ## Development Commands
 
