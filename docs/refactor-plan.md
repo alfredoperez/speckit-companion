@@ -209,14 +209,63 @@ Round 3 reduces all three numbers. With one `getSpecStatus()` and one `ContextKe
 
 ## Updated full plan ordering
 
-Backend first (lowest risk, lays groundwork), then state handling (consolidations), then the webview migration (safety net first):
+Backend first (lowest risk, lays groundwork), then state handling, then **component library** (builds the primitives the webview migration will use), then the webview migration (with safety net first):
 
 ```
 9  → 10 → 11 → 12       (backend architecture)
 14 → 15 → 16 → 17       (state handling)
-5a → 5b → 5c → 5d       (webview migration, with 5a as the test safety net)
+18 → 19 → 20 → 21 → 22  (component library — see Round 4 below)
+5a → 5b → 5c → 5d       (webview migration, with 5a as the test safety net,
+                          and 5b reusing the <Modal> primitive from Phase 20)
 13                       (useDispatch hook)
 ```
 
-Each block can stop independently. Backend block ships ~2d in. State block ships ~3.5d in. Webview block ships ~6d in.
+Each block can stop independently. Backend block ships ~2d in. State block ships ~3.5d in. Component library block ships ~5d in. Webview block ships ~7d in.
 
+
+---
+
+# Round 4 — Component Library
+
+A library audit asked one question: *"Does this repo have an easy-to-use and extendable component library?"* The honest answer is **partial**. The foundations are good (Button + UndoToast + useInlineConfirm hook, plus a comprehensive token system in `tokens.css`), but the layer is undermined by:
+
+- **19+ raw `<button>` elements** scattered across components (StaleBanner, CommentsCard, InlineComment, FilesCard, TasksCard, CreateSpecMock) — each reinventing its own styling.
+- **No destructive variant** on Button — delete actions use raw buttons because there is no red/danger variant to reach for.
+- **Toast is imperative single-instance** — `showToast(id, msg, ms)` mutates the DOM directly; a second toast cancels the first; FooterActions has manual state-tracking just to prevent stacking.
+- **No `<Modal>` primitive** — `RefineModal` is vanilla DOM with `getElementById` + `.style.display`. (Phase 5b extracts this; consume the shared primitive from Phase 20 rather than building a one-off.)
+- **No `<Card>` primitive** — 7 ActivityPanel cards independently reinvent the header/body/footer layout.
+- **No `<Tooltip>` / `<EmptyState>` / `<Spinner>` primitives** — `title="…"` attrs and ad-hoc divs everywhere.
+- **Badge component exists but is bypassed** — CSS-only badges (`.activity-status-pill`, `.activity-actor-badge`, `.task-row__status`) reimplement what `<Badge>` already does.
+
+Audit verdict: *"This is a library of files I extracted, not a coherent design system."*
+
+## Why this comes BEFORE the webview migration
+
+Phase 5b extracts `<RefineModal>` from `modal.ts`. Phase 5c extracts `<InlineEditor>` / `<InlineComment>` wrappers. If we run those before adding `<Modal>` / `<Card>` / `<Tooltip>` primitives, each one becomes a feature-specific one-off and we have to consolidate again later. The right order is: primitives first, then migration consumes them.
+
+## Plan (Round 4 phases)
+
+| # | Phase | Effort | Risk |
+|---|---|---|---|
+| 18 | Button: add `destructive` variant + replace 19+ raw `<button>` elements | 0.5d | low |
+| 19 | Toast queue — context-based, supports stacking; refactor 5 callsites | 0.5d | low-medium |
+| 20 | Extract `<Card>` + `<Tooltip>` + `<EmptyState>` shared primitives | 0.5d | low |
+| 21 | Badge consolidation — replace `.activity-status-pill` & siblings with `<Badge>` | 2h | very low |
+| 22 | Input variant clarification + JSDoc + complete story coverage | 2h | very low |
+
+**Total Round-4 estimate:** ~2 working days. All low-risk because shared primitives are additive — the existing imperative paths keep working until each callsite migrates.
+
+## What good looks like after Round 4
+
+- Every interactive element is a shared component. No raw `<button>` in the webview. No inline `<div class="card">`. No `title="…"` attrs.
+- `webview/src/shared/components/` lists the design system: Button, Input, Badge, Card, Modal, Toast, Tooltip, EmptyState, Spinner, UndoToast.
+- Every primitive has a `.stories.tsx` covering default + variants + edge cases. New contributors can see what variants exist at a glance.
+- Adding a new variant is one TS file + one CSS rule + one story. Adding a new primitive is ~50 LOC.
+- Phase 5b/5c/5d webview migration can declaratively compose `<Modal>` + `<Button>` + `<Input>` instead of building one-offs.
+
+## What we are NOT doing in Round 4
+
+- ❌ CSS modules / styled-components / runtime CSS-in-JS. The token-driven CSS approach works; convert that contract on a future framework swap, not now.
+- ❌ A standalone npm-published design system. This is internal-only.
+- ❌ Theming beyond what `tokens.css` already does (VS Code theme variables are already wired in).
+- ❌ Renaming existing components for "consistency." Button stays Button.
