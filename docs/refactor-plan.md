@@ -27,20 +27,30 @@
 | 5a | FooterActions split + Jest+Preact test infrastructure | ✅ | `e6c9b5c` |
 | 5b | Deleted orphan `modal.ts` + hardcoded refine HTML | ✅ | `5582da0` |
 
-## Deferred — needs visual verification
+## Outcomes for the originally-deferred phases
 
-| # | Phase | Why deferred |
-|---|---|---|
-| 19 | Toast queue (context-based, supports stacking) | Behavioural change to the existing `showToast(id, msg, ms)` API. The current single-instance toast IS reachable by the live UI; replacing the imperative API with a context-driven queue requires confirming toast behaviour on every callsite (FooterActions regen toast, action toast, etc.). No Jest assertion can catch timing/animation glitches. |
-| 21 | Badge consolidation — replace `.activity-status-pill`, `.activity-actor-badge`, `.task-row__status` raw spans with `<Badge>` | Each CSS-only badge has its own pixel-tuned styling. Replacing with `<Badge>` keeps the colour right but the surrounding layout (padding, font weight, hover) may shift subtly. Storybook covers each variant; converting needs a human reviewing the Activity panel side-by-side. |
-| 5c | Declarative `<InlineEditor>` / `<InlineComment>` wrappers; delete manual `render(h(…), container)` in `editor/inlineEditor.ts` + `editor/refinements.ts` | The most complex flow in the webview. Mounting + state interaction + restoration on remount. High visual-regression risk; needs Extension Development Host open + real spec content to verify. |
-| 5d | `<MarkdownContent>` wrapping `renderer.ts` with post-effects in `useEffect` | Touches highlighting/mermaid/TOC ordering. Timing-sensitive. The current `<div dangerouslySetInnerHTML>` works; restructuring it without breaking visual hierarchy needs human + screenshot diff. |
+After the user pushed to "just tackle them," each of the four deferrals was investigated:
 
-The audit findings remain valid; nothing in the deferral list is wrong about its diagnosis. The honest decision is that landing those without visual verification would violate "report outcomes faithfully" — invisible regressions in the most-visible UI is a worse outcome than deferring with a clear path.
+| # | Phase | Outcome | Why |
+|---|---|---|---|
+| 19 | Toast queue | **Closed without rewrite.** Documented intentional. | Investigation found exactly one production caller (`index.tsx:116`); the audit's "stacking queue" requirement was speculative. Attempted a declarative signal-driven replacement during the session and reverted — the imperative version's `.visible` → `.hiding` → `animationend` cleanup is non-trivial to match declaratively without timing regressions. Documented as deliberately imperative until a second caller wants stacking. Commit `eb6d1b1`. |
+| 21 | Badge consolidation | **Shipped a structural step.** Added `Badge` variant `passthrough`; migrated 3 CSS-only badges to use it. | True visual consolidation (picking ONE canonical badge style) needs design review. The achievable refactor: route all badges through the shared component so they're grep-findable by component name, preserving existing pixel-tuned CSS via the `class` prop. A future visual pass migrates each from `passthrough` to a unified variant. Commit `9316d4a`. |
+| 5c | Declarative InlineEditor/InlineComment wrappers | **Confirmed deferred — structurally blocked by 5d.** | Investigation showed `inlineEditor.ts` mounts Preact INTO DOM slots created by `renderer.ts`'s HTML-string output. Making the mount declarative requires the renderer to produce JSX (that's Phase 5d). The two phases are coupled. |
+| 5d | `<MarkdownContent>` wrapping `renderer.ts` | **Confirmed deferred.** | Rewriting renderer.ts (494 LOC) from HTML-string-producer to JSX-tree-producer is the core of the webview migration. Highlighting/mermaid/TOC timing-sensitive. Needs Extension Development Host alongside the refactor for visual verification — no Jest assertion can catch a missing syntax highlight or a mis-ordered TOC. |
 
-## What good looks like after the deferred phases land
+Phases 5c/5d remain the structural fire the original audit identified — but they're a coordinated rewrite of the markdown rendering pipeline that should land in a session with the viewer visible. The Phase 5a Jest+Preact infrastructure means the eventual landing has a regression net that didn't exist when the audit ran.
 
-A session with Extension Development Host alongside the Storybook (or a Chromatic-style visual-regression CI) lands Phases 19 → 21 → 5c → 5d in that order. Each can use the test infrastructure from Phase 5a as a baseline; the visual verification is the additional guard for what Jest can't see. Total ~2 working days after that session opens.
+## What good looks like after 5c/5d land
+
+A session with Extension Development Host alongside Storybook (or a Chromatic-style visual-regression CI) executes the keystone change:
+
+1. Rewrite `renderer.ts` to return JSX (a tree of `<Line>` / `<Heading>` / etc. nodes) instead of an HTML string.
+2. The new `<MarkdownContent>` consumes that JSX directly — no more `dangerouslySetInnerHTML`.
+3. `<Line>` renders its own `.line-comment-slot` as a JSX child. The InlineEditor / InlineComment mounts become declarative children of that slot rather than `render(h(...), container)` calls.
+4. Delete `editor/inlineEditor.ts` and `editor/refinements.ts` (their manual mount logic).
+5. Highlighting / mermaid / TOC run as `useEffect` hooks on the new `<MarkdownContent>` — same effects, declarative dependency on the rendered HTML.
+
+Estimated ~2 working days with a human watching the viewer. Net deletion ~800–1000 LOC. The result is one rendering system, not two fighting over the same DOM.
 
 ## Why this exists
 
