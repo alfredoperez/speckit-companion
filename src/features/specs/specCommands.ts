@@ -3,7 +3,7 @@ import * as path from 'path';
 import { getAIProvider } from '../../extension';
 import { SpecExplorerProvider, SpecInfo, isSpecLifecycleItem } from './specExplorerProvider';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
-import type { CustomCommandConfig, SpecTreeItem } from '../../core/types/config';
+import type { SpecTreeItem } from '../../core/types/config';
 import { Commands, ConfigKeys, SpecStatuses, WorkflowSteps } from '../../core/constants';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { buildPrompt } from '../../ai-providers/promptBuilder';
@@ -25,6 +25,7 @@ import type { HistoryEntry, StepName } from '../../core/types/specContext';
 import { SpecsFilterState } from './specsFilterState';
 import { SpecsSortState } from './specsSortState';
 import { ALL_SORT_MODES, DEFAULT_SORT_MODE, SortMode } from './specsSortMode';
+import { loadCustomCommands, NormalizedCustomCommand } from './customCommandConfig';
 
 function toWorkspaceRelative(absOrRel: string): string {
     const ws = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -449,13 +450,9 @@ export function registerSpecKitCommands(
     }
 }
 
-type NormalizedCustomCommand = {
-    label: string;
-    description: string;
-    command: string;
-    requiresSpecDir: boolean;
-    autoExecute: boolean;
-};
+// `NormalizedCustomCommand` type and the loadCustomCommands /
+// normalizeCustomCommand / buildCustomCommand helpers moved to
+// `./customCommandConfig.ts` in Phase 10.
 
 /**
  * Default workflow step names that are always registered as VS Code commands
@@ -733,81 +730,6 @@ function registerCustomCommand(
             );
         })
     );
-}
-
-function loadCustomCommands(): NormalizedCustomCommand[] {
-    const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
-    const rawCommands = config.get<Array<CustomCommandConfig | string>>(
-        'customCommands',
-        []
-    );
-
-    const normalized = rawCommands
-        .map(entry => normalizeCustomCommand(entry))
-        .filter((entry): entry is NormalizedCustomCommand => entry !== null);
-
-    return normalized;
-}
-
-function normalizeCustomCommand(entry: CustomCommandConfig | string): NormalizedCustomCommand | null {
-    if (typeof entry === 'string') {
-        const trimmed = entry.trim();
-        if (!trimmed) {
-            return null;
-        }
-        return buildCustomCommand({
-            name: trimmed
-        });
-    }
-
-    const name = entry.name?.trim();
-    const title = entry.title?.trim();
-    const command = entry.command?.trim();
-
-    if (!name && !command) {
-        return null;
-    }
-
-    return buildCustomCommand({
-        name,
-        title,
-        command,
-        requiresSpecDir: entry.requiresSpecDir,
-        autoExecute: entry.autoExecute
-    });
-}
-
-function buildCustomCommand(config: {
-    name?: string;
-    title?: string;
-    command?: string;
-    requiresSpecDir?: boolean;
-    autoExecute?: boolean;
-}): NormalizedCustomCommand | null {
-    const rawCommand = config.command?.length ? config.command : config.name;
-    if (!rawCommand) {
-        return null;
-    }
-
-    let commandText = rawCommand.trim();
-    if (!commandText.startsWith('/')) {
-        if (commandText.startsWith('speckit.')) {
-            commandText = `/${commandText}`;
-        } else {
-            commandText = `/speckit.${commandText}`;
-        }
-    }
-
-    const label = config.title || config.name || commandText;
-    const description = commandText;
-
-    return {
-        label,
-        description,
-        command: commandText,
-        requiresSpecDir: config.requiresSpecDir ?? true,
-        autoExecute: config.autoExecute ?? true
-    };
 }
 
 /**

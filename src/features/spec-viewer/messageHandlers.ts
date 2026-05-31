@@ -18,6 +18,7 @@ import {
 import type { CustomCommandConfig } from "../../core/types/config";
 import type { SpecContext, StepName } from "../../core/types/specContext";
 import { NotificationUtils } from "../../core/utils/notificationUtils";
+import { createDispatcher, DispatcherMap } from "../../core/utils/dispatcher";
 import {
   SPEC_CONTEXT_FILENAME,
   readSpecContext,
@@ -78,18 +79,11 @@ export interface MessageHandlerDependencies {
 }
 
 /**
- * Adapter from one webview message variant to its handler.
- *
- * The map below is constrained by `{ [K in ViewerType]: Handler<K> }`, so
- * TypeScript fails the build if a new message type is added without an
- * adapter. Inside each adapter, `msg` is narrowed to the specific variant
- * (no manual casts).
+ * The handler map is built on top of the generic `createDispatcher` utility
+ * in `core/utils/dispatcher.ts` — same pattern (exhaustive `{ [K in U['type']]: Handler<K> }`
+ * over a discriminated union), just lifted so workflow-editor and future
+ * webview surfaces can reuse it without re-deriving the type plumbing.
  */
-type Handler<K extends ViewerToExtensionMessage["type"]> = (
-  msg: Extract<ViewerToExtensionMessage, { type: K }>,
-  specDirectory: string,
-  deps: MessageHandlerDependencies,
-) => Promise<void>;
 
 /**
  * Footer-action sub-dispatch. Same shape as the top-level map: every
@@ -112,9 +106,9 @@ const FOOTER_ACTION_HANDLERS: Record<
  * Build the per-message dispatch map for a panel. Each entry is a thin
  * adapter that unpacks the typed message payload and invokes the handler.
  * Adding a new message type fails the build until an adapter is added —
- * which is the whole point of the typed `Handler<K>` indexing.
+ * that's the whole point of `DispatcherMap`'s indexed-access type.
  */
-function buildHandlerMap(): { [K in ViewerToExtensionMessage["type"]]: Handler<K> } {
+function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, MessageHandlerDependencies]> {
   return {
     switchDocument: (msg, dir, deps) => handleSwitchDocument(dir, msg.documentType, deps),
     editDocument: (_msg, dir, deps) => handleEditDocument(dir, deps),
@@ -169,17 +163,10 @@ export function createMessageHandlers(
   specDirectory: string,
   deps: MessageHandlerDependencies,
 ) {
-  const handlers = buildHandlerMap();
+  const dispatch = createDispatcher(buildHandlerMap());
   return async (message: ViewerToExtensionMessage) => {
     deps.outputChannel.appendLine(`[SpecViewer] Received message: ${message.type}`);
-    // Cast through the union: the handler's exact variant is guaranteed by
-    // the `{ [K in ...]: Handler<K> }` type but TS can't narrow on a lookup.
-    const handler = handlers[message.type] as (
-      m: ViewerToExtensionMessage,
-      d: string,
-      x: MessageHandlerDependencies,
-    ) => Promise<void>;
-    await handler(message, specDirectory, deps);
+    await dispatch(message, specDirectory, deps);
   };
 }
 
