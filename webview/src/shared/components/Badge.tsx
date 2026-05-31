@@ -6,14 +6,14 @@
  *                     via the `.spec-badge--<status>` modifier class.
  *   - `stale`       — staleness indicator on out-of-date sub-specs.
  *   - `passthrough` — render as a plain `<span>` carrying only the caller's
- *                     `class` prop. Used by the Phase 21 consolidation
- *                     sweep that wraps CSS-only badges (`.activity-status-pill`,
+ *                     `class` prop. Used by the consolidation sweep that
+ *                     wraps CSS-only badges (`.activity-status-pill`,
  *                     `.activity-actor-badge`, `.task-row__status`) so they
  *                     funnel through this component for grep-ability while
  *                     keeping their existing pixel-tuned styling intact.
  *
  * Round-4 audit flagged CSS-only badge reimplementations that bypass this
- * component. Phase 21 routes those through the `passthrough` variant — a
+ * component. The `passthrough` variant routes those through Badge — a
  * future visual-design pass can unify the look by migrating each from
  * `passthrough` to `status` (or a new variant) when the styling is ready.
  */

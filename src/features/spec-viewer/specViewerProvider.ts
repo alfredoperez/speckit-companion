@@ -76,7 +76,7 @@ export {
 
 // `mapStepHistoryKeys` and `deriveStepBadgesWithAlias` previously lived
 // here; they were structurally identical to the helpers in
-// `./panelStateComputer.ts` and were extracted there in Phase 3 so all
+// `./panelStateComputer.ts` and were extracted there so all
 // three render paths (full render, tab click, viewer-state refresh) share
 // one implementation.
 
@@ -128,7 +128,7 @@ async function ensureSpecContext(
 }
 
 // `PanelInstance` interface and the Map ownership moved to
-// `./panelRegistry.ts` in Phase 12. The provider now uses
+// `./panelRegistry.ts`. The provider now uses
 // `this.panels.get(...)` etc. as methods on the registry rather than
 // raw Map operations, and lifecycle behaviour (debounce-timer cleanup
 // on delete) lives in the registry.

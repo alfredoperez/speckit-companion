@@ -5,7 +5,7 @@
  * viewer (`features/spec-viewer/documentScanner`). Lives in `core/utils/`
  * rather than under either feature so the sidebar doesn't have to import
  * from `spec-viewer/` just to label a tree node — that was the layer
- * violation Phase 9 broke.
+ * violation the structural-cleanup refactor broke.
  */
 
 /**

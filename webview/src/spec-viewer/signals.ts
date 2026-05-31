@@ -18,10 +18,9 @@ export const pendingRefinements = signal<Refinement[]>([]);
 /** Currently active inline editor element */
 export const activeEditor = signal<HTMLElement | null>(null);
 
-// `refineLineNum` and `refineContent` signals removed in Phase 5b — the
-// hardcoded refine-modal HTML + modal.ts that wrote them is gone. The
-// active refine flow uses `ui/refinePopover.ts` which manages its own
-// state directly.
+// The active refine flow uses `ui/refinePopover.ts` which manages its
+// own state directly — there's no global signal for the in-flight
+// refine line because nothing else needs to read it.
 
 /** Rendered markdown HTML (set imperatively, read by App) */
 export const markdownHtml = signal('');

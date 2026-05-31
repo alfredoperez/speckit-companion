@@ -6,9 +6,9 @@
  * or a `CustomCommandConfig` object — into a single `NormalizedCustomCommand`
  * shape that the registration code can iterate.
  *
- * Lived inline in `specCommands.ts` until Phase 10; extracted here so the
- * 834-LOC file becomes more navigable and the normalisation logic is
- * unit-testable without touching the command-registration plumbing.
+ * Lived inline in `specCommands.ts` originally; extracted here so the
+ * registration file stays focused on command wiring and the normalisation
+ * logic is unit-testable without touching the registration plumbing.
  */
 
 import * as vscode from 'vscode';

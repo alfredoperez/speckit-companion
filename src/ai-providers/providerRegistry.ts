@@ -8,7 +8,7 @@
  *   - an `autoApproveFlag` that drops its trailing space, silently
  *     concatenating into the next CLI argument (this is the historical
  *     failure mode behind the `feedback_provider_rename_breaks_settings`
- *     memory — see refactor-plan.md Phase 2)
+ *     memory — see docs/refactor-plan.md)
  *   - an empty `displayName` that produces a blank QuickPick row
  *   - a malformed `quickPickIcon` that renders no icon
  *

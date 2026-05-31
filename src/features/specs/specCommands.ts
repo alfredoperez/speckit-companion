@@ -449,7 +449,7 @@ export function registerSpecKitCommands(
 
 // `NormalizedCustomCommand` type and the loadCustomCommands /
 // normalizeCustomCommand / buildCustomCommand helpers moved to
-// `./customCommandConfig.ts` in Phase 10.
+// `./customCommandConfig.ts`.
 
 /**
  * Default workflow step names that are always registered as VS Code commands

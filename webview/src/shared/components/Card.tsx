@@ -3,7 +3,7 @@ import type { ComponentChildren, JSX } from 'preact';
 /**
  * Card primitive — the container shape every ActivityPanel card was
  * independently reinventing via `.activity-card` + custom header/body
- * markup. Phase 20 lifted it here so the structure is one place.
+ * markup. Lifted here so the structure is one place.
  *
  * Slots:
  *   - `title`    — header text (rendered as `<h3 class="card-title">`)

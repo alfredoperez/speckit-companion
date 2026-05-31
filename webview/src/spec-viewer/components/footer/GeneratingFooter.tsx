@@ -19,9 +19,9 @@ export interface GeneratingFooterProps {
  * the left exposes a manual override ("Mark step complete") as a
  * fallback for when auto-detection misses.
  *
- * Extracted from FooterActions in Phase 5a so the dispatch logic in
- * the parent stays focused on choosing-the-branch, and each branch
- * has its own unit-testable surface.
+ * Extracted from FooterActions so the dispatch logic in the parent
+ * stays focused on choosing-the-branch, and each branch has its own
+ * unit-testable surface.
  */
 export function GeneratingFooter({ ns }: GeneratingFooterProps) {
     const send = (msg: ViewerToExtensionMessage) => () => vscode.postMessage(msg);

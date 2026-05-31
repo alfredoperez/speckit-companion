@@ -21,13 +21,10 @@ export function generateNonce(): string {
     return text;
 }
 
-// `fileNameToDisplayName` and `fileNameToDocType` moved to
-// `src/core/utils/fileNaming.ts` in Phase 9 — they're neither sidebar nor
-// viewer specific. Re-exported here for backward compatibility with
-// `documentScanner` and other viewer callers; also imported so that
-// `getDocumentTypeFromPath` below can use them locally.
-import { fileNameToDisplayName, fileNameToDocType } from '../../core/utils/fileNaming';
-export { fileNameToDisplayName, fileNameToDocType };
+// `fileNameToDisplayName` / `fileNameToDocType` live in `core/utils/fileNaming.ts`.
+// Imported locally so `getDocumentTypeFromPath` below can use them; not
+// re-exported (callers import from `core/utils/fileNaming` directly).
+import { fileNameToDocType } from '../../core/utils/fileNaming';
 
 /**
  * Check if a file path is a spec document

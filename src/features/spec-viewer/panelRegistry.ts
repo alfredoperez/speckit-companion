@@ -1,7 +1,7 @@
 /**
  * Panel registry — owns the per-spec-directory `PanelInstance` lifecycle.
  *
- * Lifted out of `specViewerProvider.ts` in Phase 12 so the provider stays
+ * Lifted out of `specViewerProvider.ts` so the provider stays
  * focused on orchestration (read documents, compute derived state, render
  * HTML, route messages) and the lifecycle plumbing (Map ownership, debounce
  * timers, first-open gating) lives in one place.

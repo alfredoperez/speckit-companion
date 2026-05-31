@@ -36,7 +36,7 @@ export interface CatalogFooterProps {
  * (Regenerate + enhancement commands) and a right region (lifecycle +
  * forward motion: Refine / Approve / Reactivate / Archive / Mark Completed).
  *
- * Extracted from FooterActions in Phase 5a.
+ * Extracted from FooterActions for symmetry with GeneratingFooter.
  */
 export function CatalogFooter({ vs, isActive, enhancementButtons }: CatalogFooterProps) {
     const send = (msg: ViewerToExtensionMessage) => () => vscode.postMessage(msg);

@@ -9,8 +9,8 @@ import { navState, markdownHtml, viewerState, historyEntries } from './signals';
 import { renderMarkdown, setCurrentTask, setHasSpecContext } from './markdown';
 import { applyHighlighting, initializeMermaid } from './highlighting';
 import { setupLineActions } from './editor';
-// Phase 5b: `setupRefineModal`/`modal.ts` deleted (orphan since the
-// dynamic refinePopover took over). No replacement import needed.
+// `setupRefineModal`/`modal.ts` were deleted (orphan since the dynamic
+// `ui/refinePopover.ts` took over the refine flow).
 import { setupCheckboxToggle, setupFileRefClickHandler } from './actions';
 import { showToast } from '../shared/components/Toast';
 import { App } from './App';

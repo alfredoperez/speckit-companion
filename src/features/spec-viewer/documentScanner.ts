@@ -11,7 +11,7 @@ import {
     CORE_DOCUMENT_FILES,
     CORE_DOCUMENT_LABELS
 } from './types';
-import { fileNameToDocType, fileNameToDisplayName } from './utils';
+import { fileNameToDocType, fileNameToDisplayName } from '../../core/utils/fileNaming';
 import type { WorkflowStepConfig } from '../workflows/types';
 
 /**

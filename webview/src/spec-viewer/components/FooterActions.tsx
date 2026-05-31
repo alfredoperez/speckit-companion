@@ -15,8 +15,8 @@ declare const vscode: VSCodeApi;
 // covers faster recovery.
 const RECOVERY_TIMEOUT_MS = 10 * 60 * 1000;
 
-// `SCOPE_SUFFIX` / `withScopeSuffix` lived inline until Phase 5a; they
-// moved into CatalogFooter (the only path that uses them).
+// `SCOPE_SUFFIX` / `withScopeSuffix` live in CatalogFooter (the only path
+// that uses them).
 
 export interface FooterActionsProps {
     initialSpecStatus: string;

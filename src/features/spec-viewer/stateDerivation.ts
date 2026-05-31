@@ -121,10 +121,10 @@ function pickCheckpointStatus(ctx: SpecContext): CheckpointStatus | undefined {
     return out.commit !== undefined || out.pr !== undefined ? out : undefined;
 }
 
-// `isStepCompleted` moved to `src/features/specs/stepHistoryDerivation.ts`
-// in Phase 9 so the sidebar (`specExplorerProvider`) doesn't have to
-// import from the viewer module. Re-exported here for backward
-// compatibility with the test suite and any external callers.
+// `isStepCompleted` lives in `src/features/specs/stepHistoryDerivation.ts`
+// (the canonical home for spec-state queries — the sidebar imports from
+// there too). Re-exported here for backward compatibility with the test
+// suite and any external callers.
 import { isStepCompleted, isTerminalStatus } from '../specs/stepHistoryDerivation';
 export { isStepCompleted };
 
