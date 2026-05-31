@@ -125,7 +125,7 @@ function pickCheckpointStatus(ctx: SpecContext): CheckpointStatus | undefined {
 // in Phase 9 so the sidebar (`specExplorerProvider`) doesn't have to
 // import from the viewer module. Re-exported here for backward
 // compatibility with the test suite and any external callers.
-import { isStepCompleted } from '../specs/stepHistoryDerivation';
+import { isStepCompleted, isTerminalStatus } from '../specs/stepHistoryDerivation';
 export { isStepCompleted };
 
 export function deriveStepBadges(
@@ -166,7 +166,7 @@ export function derivePulse(
     ctx: SpecContext,
     stepHistory: DerivedHistory = deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status)
 ): StepName | null {
-    if (ctx.status === 'completed' || ctx.status === 'archived') {
+    if (isTerminalStatus(ctx.status)) {
         return null;
     }
     for (const step of STEP_NAMES) {

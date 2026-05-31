@@ -39,7 +39,7 @@ import {
 } from "./phaseCalculation";
 import { isStepCompleted } from "./stateDerivation";
 import type { FeatureWorkflowContext } from "../workflows/types";
-import { deriveStepHistory } from "../specs/stepHistoryDerivation";
+import { deriveStepHistory, getSpecStatus } from "../specs/stepHistoryDerivation";
 import { StepName, Status } from "../../core/types/specContext";
 import type { PhaseInfo } from "./types";
 
@@ -212,26 +212,16 @@ export function computePanelDerivedState(
 // ─── Helpers (also exported for tests) ──────────────────────────────────────
 
 /**
- * Spec status derivation. The provider's two render paths each carried a
- * copy of this 4-branch ladder; they now share this one. Priority:
- *
- *   archived (status or currentStep) → completed → tasks-done (100%) → active
+ * Spec status derivation — re-exported from the canonical home in
+ * `features/specs/stepHistoryDerivation.ts` under the original name
+ * `resolveSpecStatus` for back-compat with this module's call sites and
+ * tests. New callers should import `getSpecStatus` from `specs/` directly.
  */
 export function resolveSpecStatus(
     featureCtx: FeatureWorkflowContext | undefined,
     taskCompletionPercent: number,
 ): SpecStatus {
-    if (featureCtx?.status === SpecStatuses.ARCHIVED
-        || featureCtx?.currentStep === SpecStatuses.ARCHIVED) {
-        return SpecStatuses.ARCHIVED;
-    }
-    if (featureCtx?.status === SpecStatuses.COMPLETED) {
-        return SpecStatuses.COMPLETED;
-    }
-    if (taskCompletionPercent === 100) {
-        return SpecStatuses.TASKS_DONE;
-    }
-    return SpecStatuses.ACTIVE;
+    return getSpecStatus(featureCtx, taskCompletionPercent) as SpecStatus;
 }
 
 /**

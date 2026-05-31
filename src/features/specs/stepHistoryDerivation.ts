@@ -44,6 +44,49 @@ import {
 import { SpecStatuses } from '../../core/constants';
 
 /**
+ * Canonical spec-status derivation. Single entry point for "given a context
+ * + task completion %, what is the effective spec status?"
+ *
+ * Priority ladder (first match wins):
+ *   1. archived (status field OR legacy currentStep === 'archived')
+ *   2. completed (status field)
+ *   3. tasks-done (taskCompletionPercent === 100)
+ *   4. active (default)
+ *
+ * Lives here in `features/specs/` next to `isStepCompleted` because it's
+ * a pure status query, not a viewer concern. Both `panelStateComputer` and
+ * any other surface that needs the derived status import from this module.
+ *
+ * Accepts the loose `{ status?, currentStep? }` shape so callers using the
+ * legacy `FeatureWorkflowContext` and the canonical `SpecContext` can both
+ * pass without converting.
+ */
+export function getSpecStatus(
+    ctx: { status?: string; currentStep?: string } | undefined,
+    taskCompletionPercent: number,
+): typeof SpecStatuses[keyof typeof SpecStatuses] {
+    if (ctx?.status === SpecStatuses.ARCHIVED || ctx?.currentStep === SpecStatuses.ARCHIVED) {
+        return SpecStatuses.ARCHIVED;
+    }
+    if (ctx?.status === SpecStatuses.COMPLETED) {
+        return SpecStatuses.COMPLETED;
+    }
+    if (taskCompletionPercent === 100) {
+        return SpecStatuses.TASKS_DONE;
+    }
+    return SpecStatuses.ACTIVE;
+}
+
+/**
+ * Terminal statuses — the spec is done, no further workflow steps apply.
+ * Captures the recurring `status === COMPLETED || status === ARCHIVED`
+ * pattern at every call site that asks "is this spec closed?"
+ */
+export function isTerminalStatus(status: string | undefined | null): boolean {
+    return status === SpecStatuses.COMPLETED || status === SpecStatuses.ARCHIVED;
+}
+
+/**
  * Determine whether a step should be treated as completed.
  *
  * Pure query over `stepHistory` + the current step. A step is completed when:
@@ -180,7 +223,7 @@ export function deriveStepHistory(
     if (!transitions || transitions.length === 0) return out;
 
     const deduped = dedupeConsecutive(transitions);
-    const isTerminal = status === SpecStatuses.COMPLETED || status === SpecStatuses.ARCHIVED;
+    const isTerminal = isTerminalStatus(status);
 
     const groups = groupStepsInOrder(deduped);
 
