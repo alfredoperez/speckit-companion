@@ -168,3 +168,55 @@ Two patterns are duplicated and worth lifting:
 
 Round 1 was "delete the obvious sprawl." Round 2 is "shape what's left for the long run." Different mindset, smaller diffs, more architectural and less mechanical.
 
+---
+
+# Round 3 — State Handling
+
+A focused state audit ran after the round-2 architecture review surfaced three concrete issues. State is mostly fine — derived values are computed not stored, spec context has a single canonical writer, the webview signal store is small — but four real fragilities remain.
+
+## What the state audit found
+
+🚨 **Context-key sprawl.** Eight context keys (`speckit.specs.filterActive`, `speckit.specs.noFilterMatch`, `speckit.specs.allCollapsed`, etc.) are written from **16 scattered call sites** with no coordination, no error handling on `setContext` failures, and no reset mechanism. Some get stuck — `allCollapsed` is set once at activation and never updated when the user expands. Two writers (filter state + tree provider) can race on the same key with no protection. This is the kind of bug surface that produces "menu item is greyed out and I don't know why" issues.
+
+🚨 **Spec status is derived in three shapes.** Direct reads of `ctx.status`, ad-hoc `status === 'completed' || status === 'archived'` checks across `specExplorerProvider` and `stateDerivation`, and the `resolveSpecStatus()` priority ladder added in Phase 3. Callers have to know which branch to use. A new status (Phase-X "blocked") would need 6+ files touched and it's not obvious which.
+
+🟡 **Webview signal/message ordering.** `viewerStateUpdated` does `{ ...navState.value, ...message.navState }` — if the message arrives before the initial `contentUpdated`, the spread is over `null` and the partial update is lost. `historyEntries` signal is stale until the next extension message arrives; the merge is shallow. Defensive null-checks downstream paper over it most of the time, but the gap is real.
+
+🟡 **`lastFeatureCtx` cache never invalidated.** Used by the step-completion notifier to detect transitions. Survives file deletion and read failures. After a transient read fail, the notifier can fire on bogus deltas.
+
+🟢 Most state is fine: spec context has a single sanctioned writer, derived values are computed not stored, `PanelInstance` is a clean single-owner map, signals are well-scoped.
+
+## Plan (Round 3 phases)
+
+| # | Phase | Effort | Risk |
+|---|---|---|---|
+| 14 | `ContextKeyManager` class — consolidate the 16 `setContext` writers | 4h | low |
+| 15 | Single `getSpecStatus()` entry point — replace ad-hoc status checks | 3h | low |
+| 16 | `SpecsSidebarState` class — unify filter + sort + collapse + their context keys | 0.5d | low |
+| 17 | Webview state-init fix + `lastFeatureCtx` invalidation guards | 2h | low |
+
+**Total Round-3 estimate:** ~1.5 working days. All low-risk because each phase consolidates already-working logic behind one entry point — no new behaviour, easier to verify than the webview migration.
+
+## Why this matters for "ease of update"
+
+The state audit ran three friction tests — what would it take to add a `blocked` status, a new sidebar filter mode, or a new field on `.spec-context.json`? Findings:
+
+- **Add a status**: 6–8 files. Findable via grep, but several touch-points are non-obvious (resolveSpecStatus priority ladder, lifecycle handler, partition in tree provider).
+- **Add a filter field**: 2–3 files. Reasonable, but the fuzzy-match indirection isn't obvious.
+- **Add a `.spec-context.json` field**: 3–6 files. Backfill + derivation + webview integration are three separate touch-points.
+
+Round 3 reduces all three numbers. With one `getSpecStatus()` and one `ContextKeyManager`, adding a status becomes "extend the union + add one handler" — every other call site picks it up for free.
+
+## Updated full plan ordering
+
+Backend first (lowest risk, lays groundwork), then state handling (consolidations), then the webview migration (safety net first):
+
+```
+9  → 10 → 11 → 12       (backend architecture)
+14 → 15 → 16 → 17       (state handling)
+5a → 5b → 5c → 5d       (webview migration, with 5a as the test safety net)
+13                       (useDispatch hook)
+```
+
+Each block can stop independently. Backend block ships ~2d in. State block ships ~3.5d in. Webview block ships ~6d in.
+
