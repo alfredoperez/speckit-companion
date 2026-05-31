@@ -30,6 +30,7 @@ export const CONTEXT_KEYS = {
     specsAllCollapsed: 'speckit.specs.allCollapsed',
     specsFilterActive: 'speckit.specs.filterActive',
     specsNoFilterMatch: 'speckit.specs.noFilterMatch',
+    specsSortActive: 'speckit.specs.sortActive',
     specsSelectionCount: 'speckit.specs.selection.count',
     specsSelectionMixed: 'speckit.specs.selection.mixed',
 } as const;
@@ -84,6 +85,7 @@ export async function resetAllContextKeys(logger?: ContextKeyLogger): Promise<vo
         setContextKey(CONTEXT_KEYS.specsAllCollapsed, false, logger),
         setContextKey(CONTEXT_KEYS.specsFilterActive, false, logger),
         setContextKey(CONTEXT_KEYS.specsNoFilterMatch, false, logger),
+        setContextKey(CONTEXT_KEYS.specsSortActive, false, logger),
         setContextKey(CONTEXT_KEYS.specsSelectionCount, 0, logger),
         setContextKey(CONTEXT_KEYS.specsSelectionMixed, false, logger),
     ]);

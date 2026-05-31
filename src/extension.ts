@@ -6,7 +6,7 @@ import { IAIProvider, AIProviderFactory, isProviderConfigured, promptForProvider
 
 // Features
 import { SteeringManager, SteeringExplorerProvider, registerSteeringCommands } from './features/steering';
-import { SpecExplorerProvider, registerSpecKitCommands, updateSelectionContextKeys, SpecsFilterState, SpecsSortState } from './features/specs';
+import { SpecExplorerProvider, registerSpecKitCommands, updateSelectionContextKeys, createSpecsSidebarState } from './features/specs';
 import { register as registerTerminalStepTracker } from './features/specs/terminalStepTracker';
 import { setLifecycleOutputChannel } from './features/specs/stepLifecycle';
 import { OverviewProvider } from './features/settings';
@@ -123,15 +123,13 @@ export async function activate(context: vscode.ExtensionContext) {
     // `specExplorer` (declared next), resolved lazily at invocation time.
     const overviewProvider = new OverviewProvider(context);
     let specExplorer!: SpecExplorerProvider;
-    const specsFilterState = new SpecsFilterState(context, () => specExplorer.refresh());
-    const specsSortState = new SpecsSortState(context, () => specExplorer.refresh());
-    specExplorer = new SpecExplorerProvider(context, outputChannel, specsFilterState, specsSortState);
+    const sidebarState = createSpecsSidebarState(context, () => specExplorer.refresh());
+    specExplorer = new SpecExplorerProvider(context, outputChannel, sidebarState.filter, sidebarState.sort);
     const steeringExplorer = new SteeringExplorerProvider(context);
 
-    // Sync the filterActive / sortActive context keys to any persisted state
-    // so title-bar menu visibility matches reality on activation.
-    specsFilterState.initialize().then(undefined, () => { /* no-op */ });
-    specsSortState.initialize().then(undefined, () => { /* no-op */ });
+    // Restore filter/sort from workspace state and sync the matching context
+    // keys so title-bar menu visibility matches reality on activation.
+    sidebarState.initialize().then(undefined, () => { /* no-op */ });
 
     // Set managers
     steeringExplorer.setSteeringManager(steeringManager);

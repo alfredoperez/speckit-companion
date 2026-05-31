@@ -1,8 +1,7 @@
 import * as vscode from 'vscode';
 import { ConfigKeys } from '../../core/constants';
 import { ALL_SORT_MODES, DEFAULT_SORT_MODE, SortMode } from './specsSortMode';
-
-const SORT_ACTIVE_CONTEXT_KEY = 'speckit.specs.sortActive';
+import { CONTEXT_KEYS, setContextKey } from '../../core/utils/contextKeys';
 
 /**
  * Tracks the current specs-tree sort mode and persists it to workspace state.
@@ -14,7 +13,7 @@ const SORT_ACTIVE_CONTEXT_KEY = 'speckit.specs.sortActive';
 export class SpecsSortState {
     constructor(
         private readonly context: vscode.ExtensionContext,
-        private readonly onChange: () => void
+        private readonly onChange: () => void,
     ) {}
 
     getMode(): SortMode {
@@ -29,19 +28,19 @@ export class SpecsSortState {
             return;
         }
         await this.context.workspaceState.update(ConfigKeys.workspaceState.specsSortMode, coerced);
-        await vscode.commands.executeCommand('setContext', SORT_ACTIVE_CONTEXT_KEY, true);
+        await setContextKey(CONTEXT_KEYS.specsSortActive, true);
         this.onChange();
     }
 
     async clear(): Promise<void> {
         await this.context.workspaceState.update(ConfigKeys.workspaceState.specsSortMode, undefined);
-        await vscode.commands.executeCommand('setContext', SORT_ACTIVE_CONTEXT_KEY, false);
+        await setContextKey(CONTEXT_KEYS.specsSortActive, false);
         this.onChange();
     }
 
     async initialize(): Promise<void> {
         const active = this.getMode() !== DEFAULT_SORT_MODE;
-        await vscode.commands.executeCommand('setContext', SORT_ACTIVE_CONTEXT_KEY, active);
+        await setContextKey(CONTEXT_KEYS.specsSortActive, active);
     }
 
     private coerce(raw: string | undefined): SortMode {
