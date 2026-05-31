@@ -99,3 +99,72 @@ Phase 0 is done when:
 - Branch: `refactor/structural-cleanup` (off `main`, not stacked on any feature branch).
 - One commit per phase. Reviewers read it commit-by-commit.
 - This document is updated as phases complete.
+
+---
+
+# Round 2 — Reusability, Architecture, and Safe Phase 5/6 Landing
+
+After Phases 0–4 shipped, a second-pass review of the now-cleaner codebase surfaced different findings — fewer god-files, more "what's the right shape for the next thing." The user's framing: *reusable, easy to update, well-architected*. Two parallel agents (backend + webview) reviewed independently; their findings converged on the plan below.
+
+## What the round-2 review found
+
+**Backend (`src/`):** the big-file watchlist is mostly resolved. The biggest remaining wins are **architectural boundaries**, not file sizes:
+
+- 🚨 `specs/` and `spec-viewer/` have **bidirectional imports**. `specExplorerProvider.ts` reaches into `spec-viewer/stateDerivation.ts` for `isStepCompleted`. That's a layer violation — the sidebar shouldn't depend on the viewer. Move `isStepCompleted` (and a couple of sibling pure queries) into `specs/`, make the import one-way.
+- 🟡 `specCommands.ts` (834 LOC) still has a 15-function closure sharing `specExplorer`/`filterState`/`sortState`. Extract a `specCommandRegistry.ts` that owns the registration loop; keep `specCommands.ts` as the dispatcher entry point. Bonus: lift the typed-dispatch pattern out of `messageHandlers.ts` into `core/utils/dispatcher.ts` so workflow-editor + future surfaces can reuse it.
+- 🟡 `specViewerProvider.ts` is at ~970 LOC after Phase 3. Extract `panelLifecycle.ts` (the `Map<specDir, PanelInstance>` + debounce + dispose dance) — shrinks the provider to orchestration only, makes panel state unit-testable.
+- 🟡 The `.spec-context.json` layer has five files (`specContextReader`, `Writer`, `Manager`, `Backfill`, `Reconciler`). Check if `specContextManager.ts` (272 LOC, marked "legacy" in architecture.md) is still imported by anything. If only legacy callers remain, delete it.
+- 🟢 `messageHandlers.ts` (994 LOC) and `CommentMutationQueue` — leave alone. Density is real logic, not flab.
+
+**Webview (`webview/`):** the agent found the **keystone**: ship Phase 6 *first*, with Jest tests added at the same time. That gives every subsequent imperative-layer kill a regression guard. Sequence becomes 4 small safe PRs instead of one risky mega-PR.
+
+## Plan
+
+| # | Phase | LOC Δ (est.) | Risk | Effort | Depends on |
+|---|---|---|---|---|---|
+| 9 | Break specs↔spec-viewer coupling (move `isStepCompleted` and pure queries into `specs/`) | small | low | 2h | none |
+| 10 | Extract `specCommandRegistry.ts` + lift `TypedDispatcher` to `core/utils/` | −250 | low | 0.5d | none |
+| 11 | Investigate & maybe delete `specContextManager.ts` | −272 (if removable) | very low | 30min | none |
+| 12 | Extract `panelLifecycle.ts` from `specViewerProvider.ts` | −200 | medium | 0.5d | none |
+| 5a | **Split `FooterActions.tsx` + add Jest test (the safety net)** | small | medium | 4h | none |
+| 5b | Replace `modal.ts` with signal-driven `<RefineModal>` | −69 | low | 2h | 5a |
+| 5c | Wrap `InlineEditor` + `InlineComment` in declarative components; delete imperative `render(h(…))` mounts in `editor/inlineEditor.ts` and `editor/refinements.ts` | −250 | medium | 4-5h | 5a |
+| 5d | Migrate `renderer.ts` post-effects to `<MarkdownContent>` component | small | medium-high | 3-4h | 5a, 5b, 5c |
+| 13 | Add `useDispatch()` hook centralizing the 41 `vscode.postMessage` callsites | small | low | 1h | 5a |
+
+**Total Round-2 estimate:** ~3 working days. Each phase is an independently shippable commit.
+
+## Why Phase 5a (FooterActions + Jest) is the keystone
+
+`FooterActions.tsx` has 18 Storybook stories but **zero Jest coverage**. Storybook isn't run in `npm test`. Without a Jest baseline:
+- Splitting the component is invisible-regression risky.
+- Every subsequent webview change (RefineModal, InlineEditor wrappers, MarkdownContent) inherits the same gap.
+
+With Phase 5a done — component split into `<GeneratingFooter>` / `<CatalogFooter>` / `<LegacyFooter>` + a 3-suite Jest test using `preact-render-to-string` — every Phase 5b/5c/5d change has a regression guard. This is what makes 5b–5d safe to ship without manual visual verification of every state.
+
+## Reusability extracts to land
+
+Two patterns are duplicated and worth lifting:
+
+- **`TypedDispatcher<MsgUnion>` utility** in `core/utils/dispatcher.ts`. `messageHandlers.ts` already proves the pattern; `workflow-editor`'s action handlers and `spec-editor`'s message routing both have the same shape. One canonical helper, three users.
+- **`useDispatch()` hook** in `webview/src/shared/hooks/`. Wraps `vscode.postMessage` with typed args. 41 callsites today; with the hook, components stop touching the global `vscode` handle directly. Easier to mock in tests, easier to add cross-cutting concerns (logging, debouncing) later.
+
+## What we're explicitly NOT doing
+
+- ❌ Generalizing `CommentMutationQueue` to a generic `SerialQueue` in `core/`. One-off until a second use case appears.
+- ❌ Deleting `BaseManager` / `BaseTreeDataProvider`. They're thin but harmless; deleting saves nothing.
+- ❌ Refactoring `messageHandlers.ts` further. Phase 4 already made it as good as it needs to be.
+- ❌ Converting `actions.ts` / `toc.ts` / `highlighting.ts` to components. They're idempotent side-effect utilities; declarative-ifying them adds complexity without value.
+- ❌ Adopting CSS modules wholesale. Current feature-prefix scheme is working; convert only on new components.
+
+## Stop conditions (round 2)
+
+- After Phase 9–12 (backend) → architectural coupling resolved, providers consistent. ~2d invested in round 2.
+- After Phase 5a → safety net in place. Can stop here if energy runs out without leaving things broken.
+- After Phase 5b–5d → webview migration done. The imperative layer is gone, signals are the sole source of truth.
+- After Phase 13 → reusability extracts landed.
+
+## What changes in this round vs. round 1
+
+Round 1 was "delete the obvious sprawl." Round 2 is "shape what's left for the long run." Different mindset, smaller diffs, more architectural and less mechanical.
+
