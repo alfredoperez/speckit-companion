@@ -1,26 +1,22 @@
 import { useState, useEffect } from 'preact/hooks';
-import type { VSCodeApi, ViewerToExtensionMessage, SerializedFooterAction } from '../types';
+import type { VSCodeApi, ViewerToExtensionMessage } from '../types';
 import { navState, viewerState } from '../signals';
 import { Button } from '../../shared/components/Button';
 import { Toast } from '../../shared/components/Toast';
 import { UndoToast } from '../../shared/components/UndoToast';
 import { useInlineConfirm } from '../../shared/hooks/useInlineConfirm';
+import { GeneratingFooter } from './footer/GeneratingFooter';
+import { CatalogFooter } from './footer/CatalogFooter';
 
 declare const vscode: VSCodeApi;
-
-const SCOPE_SUFFIX: Record<'spec' | 'step', string> = {
-    spec: 'Affects whole spec',
-    step: 'Affects this step',
-};
 
 // How long to show "Generating…" before falling back to an enabled footer so
 // the UI never strands. Generous — the manual "Mark step complete" button
 // covers faster recovery.
 const RECOVERY_TIMEOUT_MS = 10 * 60 * 1000;
 
-function withScopeSuffix(a: SerializedFooterAction): string {
-    return `${a.tooltip} (${SCOPE_SUFFIX[a.scope]})`;
-}
+// `SCOPE_SUFFIX` / `withScopeSuffix` lived inline until Phase 5a; they
+// moved into CatalogFooter (the only path that uses them).
 
 export interface FooterActionsProps {
     initialSpecStatus: string;
@@ -93,30 +89,7 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
     // on the left. The two affordances communicate "one thing is happening,
     // one thing is a fallback override."
     if (isGenerating && runningStep) {
-        return (
-            <footer class="actions">
-                <Toast id="action-toast" />
-                <div class="actions-left">
-                    <Button
-                        label="Mark step complete"
-                        variant="secondary"
-                        title="Manually mark this step complete if auto-detection doesn't fire"
-                        onClick={send({ type: 'markStepComplete' })}
-                    />
-                </div>
-                <div class="actions-right">
-                    <span
-                        class="footer-generating-chip is-running"
-                        role="status"
-                        aria-live="polite"
-                        title="The AI is generating this step — this status updates once the artifact is ready"
-                    >
-                        <span class="btn-spinner" aria-hidden="true" />
-                        Generating {ns.runningStepLabel ?? 'step'}…
-                    </span>
-                </div>
-            </footer>
-        );
+        return <GeneratingFooter ns={ns} />;
     }
 
     const status = vs?.status || ns.footerState?.specStatus || ns.specStatus || initialSpecStatus;
@@ -131,80 +104,10 @@ export function FooterActions({ initialSpecStatus }: FooterActionsProps) {
 
     const enhancementButtons = ns.footerState?.enhancementButtons ?? ns.enhancementButtons ?? [];
 
-    // If viewerState.footer is populated, drive lifecycle/step buttons from it.
+    // If viewerState.footer is populated, drive lifecycle/step buttons from
+    // it. Delegates to CatalogFooter; the dispatch logic lives in one place.
     if (vs && Array.isArray(vs.footer) && vs.footer.length > 0) {
-        const sendFooter = (id: string) => () =>
-            vscode.postMessage({ type: 'footerAction', id });
-
-        // The generating state is handled by the early return above. Reaching
-        // here means the step is idle, ready, or past the recovery timeout — so
-        // the footer's forward/lifecycle buttons are shown enabled.
-        const visible = vs.footer;
-
-        // Route each action to the left or right region:
-        //   Left  = Regenerate (leftmost) followed by the optional-command
-        //           enhancement buttons — the "redo / refine this step" tools.
-        //   Right = lifecycle + forward motion (Refine, Approve, Reactivate,
-        //           Archive, Mark Completed). Closure controls live on the
-        //           right next to the next-step button so the user's eye
-        //           lands on "what do I do next" in one place.
-        const LEFT_IDS = new Set(['regenerate']);
-        const RIGHT_IDS = new Set([
-            'refine',
-            'approve',
-            'reactivate',
-            'archive',
-            'complete',
-            'start',
-        ]);
-        const leftActions = visible.filter(a => LEFT_IDS.has(a.id));
-        const rightActions = visible.filter(a => RIGHT_IDS.has(a.id));
-
-        // Once the spec is at the closure gate (Mark Completed / Reactivate are
-        // offered), the optional refinement commands (Clarify / Checklist /
-        // Analyze) no longer make sense — there's nothing left to refine. Gate
-        // on the footer's actual closure actions rather than the status string,
-        // which can lag behind (e.g. provider specStatus vs canonical status).
-        const specClosureReady = visible.some(
-            a => a.id === 'complete' || a.id === 'reactivate'
-        );
-
-        const renderAction = (a: typeof vs.footer[number]) => {
-            const isPrimary = a.id === 'approve' || a.id === 'complete' || a.id === 'reactivate';
-            const isRefine = a.id === 'refine';
-            const baseTitle = withScopeSuffix(a);
-            return (
-                <Button
-                    key={a.id}
-                    label={a.label}
-                    variant={isRefine ? 'enhancement' : (isPrimary ? 'primary' : 'secondary')}
-                    title={baseTitle}
-                    onClick={sendFooter(a.id)}
-                />
-            );
-        };
-
-        return (
-            <footer class="actions">
-                <Toast id="action-toast" />
-                <div class="actions-left">
-                    {leftActions.map(renderAction)}
-                    {isActive && !specClosureReady && enhancementButtons.map((btn) => (
-                        <Button
-                            key={btn.command}
-                            label={btn.label}
-                            variant="enhancement"
-                            icon={btn.icon}
-                            title={btn.tooltip || btn.label}
-                            onClick={send({ type: 'clarify', command: btn.command })}
-                        />
-                    ))}
-                </div>
-                <div class="actions-right">
-                    {rightActions.map(renderAction)}
-                </div>
-            </footer>
-        );
+        return <CatalogFooter vs={vs} isActive={isActive} enhancementButtons={enhancementButtons} />;
     }
 
     // Legacy fallback: only show Archive once the spec is at a closure-eligible

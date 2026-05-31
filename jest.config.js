@@ -4,8 +4,8 @@ module.exports = {
   testEnvironment: 'node',
   roots: ['<rootDir>/src', '<rootDir>/webview/src', '<rootDir>/tests'],
   testMatch: [
-    '**/tests/**/*.test.[jt]s',
-    '**/?(*.)+(spec|test).[jt]s'
+    '**/tests/**/*.test.[jt]s?(x)',
+    '**/?(*.)+(spec|test).[jt]s?(x)'
   ],
   collectCoverageFrom: [
     'src/**/*.ts',
@@ -18,10 +18,17 @@ module.exports = {
   coverageReporters: ['text', 'lcov', 'html'],
   moduleNameMapper: {
     // Handle VS Code module
-    'vscode': '<rootDir>/tests/__mocks__/vscode.ts'
+    'vscode': '<rootDir>/tests/__mocks__/vscode.ts',
+    // Preact ships ESM-only via the "import" condition, which Jest in
+    // CommonJS mode can't load. Force the CJS entry for tests.
+    '^preact$': '<rootDir>/node_modules/preact/dist/preact.js',
+    '^preact/hooks$': '<rootDir>/node_modules/preact/hooks/dist/hooks.js',
+    '^preact/jsx-runtime$': '<rootDir>/node_modules/preact/jsx-runtime/dist/jsxRuntime.js',
+    '^@preact/signals$': '<rootDir>/node_modules/@preact/signals/dist/signals.js',
+    '^@preact/signals-core$': '<rootDir>/node_modules/@preact/signals-core/dist/signals-core.js'
   },
   transform: {
-    '^.+\\.ts$': ['ts-jest', {
+    '^.+\\.tsx?$': ['ts-jest', {
       tsconfig: 'tsconfig.test.json'
     }]
   },

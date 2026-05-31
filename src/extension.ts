@@ -172,7 +172,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // Register all commands
     registerCliCommands(context, specKitDetector);
     registerSteeringCommands(context, steeringManager, steeringExplorer, outputChannel);
-    registerSpecKitCommands(context, specExplorer, outputChannel, specsTreeView, specsFilterState, specsSortState);
+    registerSpecKitCommands(context, specExplorer, outputChannel, specsTreeView, sidebarState.filter, sidebarState.sort);
     registerUtilityCommands(context, updateChecker, outputChannel);
 
     // Spec viewer needs to exist before setupFileWatchers so the .spec-context.json
