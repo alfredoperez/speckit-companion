@@ -1,5 +1,6 @@
 import type { ViewerState, VSCodeApi, TaskSummary } from '../../types';
 import { toStringArray } from './toStringArray';
+import { Badge } from '../../../shared/components/Badge';
 
 declare const vscode: VSCodeApi;
 
@@ -52,9 +53,11 @@ export function TasksCard({ state }: TasksCardProps) {
                         <article key={id} class="task-row">
                             <div class="task-row__head">
                                 <span class="task-row__id">{id}</span>
-                                <span class={`task-row__status ${statusClass(t.status)}`}>
-                                    {statusLabel(t.status)}
-                                </span>
+                                <Badge
+                                    variant="passthrough"
+                                    text={statusLabel(t.status)}
+                                    class={`task-row__status ${statusClass(t.status)}`}
+                                />
                                 <span class="task-row__did" title={truncated ? did : undefined}>
                                     {display}
                                 </span>
