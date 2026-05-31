@@ -16,13 +16,13 @@ import {
 import { resolveSpecDirectories, hasDuplicateNames, deriveChangeRoot, type SpecDirectoryInfo } from '../../core/specDirectoryResolver';
 import { SpecStatuses, WorkflowSteps } from '../../core/constants';
 import { readSpecContextSync } from './specContextManager';
-import { isStepCompleted } from '../spec-viewer/stateDerivation';
+import { isStepCompleted } from './stepHistoryDerivation';
 import { StepName, STEP_NAMES } from '../../core/types/specContext';
 import { SpecsFilterState } from './specsFilterState';
 import { fuzzyMatch } from './fuzzyMatch';
 import { SpecsSortState } from './specsSortState';
 import { comparators, DEFAULT_SORT_MODE } from './specsSortMode';
-import { fileNameToDisplayName } from '../spec-viewer/utils';
+import { fileNameToDisplayName } from '../../core/utils/fileNaming';
 
 export interface SpecInfo {
     name: string;

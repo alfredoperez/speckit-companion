@@ -121,29 +121,12 @@ function pickCheckpointStatus(ctx: SpecContext): CheckpointStatus | undefined {
     return out.commit !== undefined || out.pr !== undefined ? out : undefined;
 }
 
-/**
- * Determine whether a step should be treated as completed.
- *
- * A step is completed if:
- * 1. It has explicit `completedAt`, OR
- * 2. Its index in STEP_NAMES is before `currentStep`
- *    (the workflow moved past it — inferred completion).
- */
-export function isStepCompleted(
-    step: StepName,
-    currentStep: StepName,
-    stepHistory: Record<string, { startedAt?: string; completedAt?: string | null }>
-): boolean {
-    const entry = stepHistory[step];
-    if (entry?.completedAt) return true;
-    const stepIdx = STEP_NAMES.indexOf(step);
-    const currentIdx = STEP_NAMES.indexOf(currentStep);
-    // Inferred completion: the workflow moved past this step.
-    if (stepIdx >= 0 && currentIdx >= 0 && stepIdx < currentIdx) return true;
-    // No history entry and not before currentStep → not completed.
-    if (!entry?.startedAt) return false;
-    return false;
-}
+// `isStepCompleted` moved to `src/features/specs/stepHistoryDerivation.ts`
+// in Phase 9 so the sidebar (`specExplorerProvider`) doesn't have to
+// import from the viewer module. Re-exported here for backward
+// compatibility with the test suite and any external callers.
+import { isStepCompleted } from '../specs/stepHistoryDerivation';
+export { isStepCompleted };
 
 export function deriveStepBadges(
     ctx: SpecContext,

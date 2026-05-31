@@ -21,23 +21,13 @@ export function generateNonce(): string {
     return text;
 }
 
-/**
- * Convert filename to display name (e.g., "research.md" -> "Research")
- */
-export function fileNameToDisplayName(fileName: string): string {
-    const baseName = fileName.replace(/\.md$/i, '');
-    // Convert kebab-case or snake_case to Title Case
-    return baseName
-        .replace(/[-_]/g, ' ')
-        .replace(/\b\w/g, char => char.toUpperCase());
-}
-
-/**
- * Convert filename to document type (e.g., "research.md" -> "research")
- */
-export function fileNameToDocType(fileName: string): string {
-    return fileName.replace(/\.md$/i, '').toLowerCase();
-}
+// `fileNameToDisplayName` and `fileNameToDocType` moved to
+// `src/core/utils/fileNaming.ts` in Phase 9 — they're neither sidebar nor
+// viewer specific. Re-exported here for backward compatibility with
+// `documentScanner` and other viewer callers; also imported so that
+// `getDocumentTypeFromPath` below can use them locally.
+import { fileNameToDisplayName, fileNameToDocType } from '../../core/utils/fileNaming';
+export { fileNameToDisplayName, fileNameToDocType };
 
 /**
  * Check if a file path is a spec document

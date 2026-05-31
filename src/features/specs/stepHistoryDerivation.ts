@@ -36,11 +36,40 @@
 import {
     HistoryEntry,
     StepHistoryEntry,
-    SubstepEntry,
+    STEP_NAMES,
     StepName,
     Status,
+    SubstepEntry,
 } from '../../core/types/specContext';
 import { SpecStatuses } from '../../core/constants';
+
+/**
+ * Determine whether a step should be treated as completed.
+ *
+ * Pure query over `stepHistory` + the current step. A step is completed when:
+ *   1. Its history entry has an explicit `completedAt`, OR
+ *   2. Its position in `STEP_NAMES` is *before* `currentStep` (the workflow
+ *      moved past it — inferred completion, used when the AI-written history
+ *      missed a `completedAt`).
+ *
+ * Lives here in `features/specs/` rather than in `spec-viewer/` because the
+ * sidebar query (specExplorerProvider) needs it and the sidebar shouldn't
+ * depend on the viewer module. The viewer also reads this function — both
+ * import from `specs/` now.
+ */
+export function isStepCompleted(
+    step: StepName,
+    currentStep: StepName,
+    stepHistory: Record<string, { startedAt?: string; completedAt?: string | null }>,
+): boolean {
+    const entry = stepHistory[step];
+    if (entry?.completedAt) return true;
+    const stepIdx = STEP_NAMES.indexOf(step);
+    const currentIdx = STEP_NAMES.indexOf(currentStep);
+    if (stepIdx >= 0 && currentIdx >= 0 && stepIdx < currentIdx) return true;
+    if (!entry?.startedAt) return false;
+    return false;
+}
 
 interface RawStep {
     step: string;
