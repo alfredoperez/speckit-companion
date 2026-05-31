@@ -16,6 +16,7 @@ import {
   resolveDisplayDocument,
   resolveTabClickDocument,
 } from "./panelStateComputer";
+import { PanelInstance, PanelRegistry } from "./panelRegistry";
 import { getAIProvider } from "../../extension";
 import {
   calculatePhases,
@@ -126,28 +127,19 @@ async function ensureSpecContext(
   return ctx;
 }
 
-/**
- * Panel instance data for multi-panel support
- */
-interface PanelInstance {
-  panel: vscode.WebviewPanel;
-  state: SpecViewerState;
-  debounceTimer: NodeJS.Timeout | undefined;
-  lastFeatureCtx?: FeatureWorkflowContext | null;
-  // True after the first updateContent run for this panel. Gates the
-  // ensureSpecContext write so tab clicks never (re)create the file —
-  // first-open may write a backfill if the file is missing; every
-  // subsequent navigation is strictly read-only.
-  firstOpenComplete: boolean;
-}
+// `PanelInstance` interface and the Map ownership moved to
+// `./panelRegistry.ts` in Phase 12. The provider now uses
+// `this.panels.get(...)` etc. as methods on the registry rather than
+// raw Map operations, and lifecycle behaviour (debounce-timer cleanup
+// on delete) lives in the registry.
 
 /**
  * Provides the spec viewer webview panel for viewing spec documents.
  * Supports multiple panels - one per spec directory.
  */
 export class SpecViewerProvider {
-  /** Map of spec directory to panel instance */
-  private panels: Map<string, PanelInstance> = new Map();
+  /** Per-spec-directory panel instances; debounce-timer cleanup lives in the registry's `delete`. */
+  private readonly panels = new PanelRegistry();
 
   /** Fires VS Code + OS notifications when a dispatched step completes. */
   private readonly stepCompletionNotifier = new StepCompletionNotifier();
@@ -426,10 +418,8 @@ export class SpecViewerProvider {
       this.outputChannel.appendLine(
         `[SpecViewer] Panel disposed for ${specDirectory}`,
       );
-      if (instance.debounceTimer) {
-        clearTimeout(instance.debounceTimer);
-      }
       this.stepCompletionNotifier.forget(specDirectory);
+      // PanelRegistry.delete clears any pending debounceTimer for us.
       this.panels.delete(specDirectory);
     });
 
