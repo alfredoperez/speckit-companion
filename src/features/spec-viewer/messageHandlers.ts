@@ -78,158 +78,108 @@ export interface MessageHandlerDependencies {
 }
 
 /**
- * Create message handlers for a spec directory
+ * Adapter from one webview message variant to its handler.
+ *
+ * The map below is constrained by `{ [K in ViewerType]: Handler<K> }`, so
+ * TypeScript fails the build if a new message type is added without an
+ * adapter. Inside each adapter, `msg` is narrowed to the specific variant
+ * (no manual casts).
+ */
+type Handler<K extends ViewerToExtensionMessage["type"]> = (
+  msg: Extract<ViewerToExtensionMessage, { type: K }>,
+  specDirectory: string,
+  deps: MessageHandlerDependencies,
+) => Promise<void>;
+
+/**
+ * Footer-action sub-dispatch. Same shape as the top-level map: every
+ * `FooterActionIds.*` either maps to a handler or it's an unknown id.
+ */
+const FOOTER_ACTION_HANDLERS: Record<
+  string,
+  (specDirectory: string, deps: MessageHandlerDependencies) => Promise<void>
+> = {
+  [FooterActionIds.ARCHIVE]: (dir, deps) => handleLifecycleAction(dir, SpecStatuses.ARCHIVED, deps),
+  [FooterActionIds.REACTIVATE]: (dir, deps) => handleLifecycleAction(dir, SpecStatuses.ACTIVE, deps),
+  [FooterActionIds.COMPLETE]: (dir, deps) => handleLifecycleAction(dir, SpecStatuses.COMPLETED, deps),
+  [FooterActionIds.REGENERATE]: (dir, deps) => handleRegenerate(dir, deps),
+  [FooterActionIds.APPROVE]: (dir, deps) => handleApprove(dir, deps),
+  [FooterActionIds.START]: (dir, deps) => handleApprove(dir, deps),
+  [FooterActionIds.SDD_AUTO]: (dir, deps) => handleClarify(dir, deps, "/sdd:auto"),
+};
+
+/**
+ * Build the per-message dispatch map for a panel. Each entry is a thin
+ * adapter that unpacks the typed message payload and invokes the handler.
+ * Adding a new message type fails the build until an adapter is added —
+ * which is the whole point of the typed `Handler<K>` indexing.
+ */
+function buildHandlerMap(): { [K in ViewerToExtensionMessage["type"]]: Handler<K> } {
+  return {
+    switchDocument: (msg, dir, deps) => handleSwitchDocument(dir, msg.documentType, deps),
+    editDocument: (_msg, dir, deps) => handleEditDocument(dir, deps),
+    editSource: (_msg, dir, deps) => handleEditDocument(dir, deps),
+    refreshContent: (_msg, dir, deps) => handleRefresh(dir, deps),
+    ready: async (_msg, dir, deps) => {
+      deps.outputChannel.appendLine("[SpecViewer] Webview ready");
+      // Push viewerState (incl. transitions) — initial HTML hydrates navState
+      // and markdown, but viewerState only flows via message.
+      await deps.refreshContextIfDisplaying(path.join(dir, SPEC_CONTEXT_FILENAME));
+    },
+    stepperClick: (msg, dir, deps) => handleStepperClick(dir, msg.phase, deps),
+    regenerate: (_msg, dir, deps) => handleRegenerate(dir, deps),
+    approve: (_msg, dir, deps) => handleApprove(dir, deps),
+    markStepComplete: (_msg, dir, deps) => handleMarkStepComplete(dir, deps),
+    clarify: (msg, dir, deps) => handleClarify(dir, deps, msg.command),
+    refineLine: (msg, dir, deps) => handleRefineLine(dir, msg.lineNum, msg.content, msg.instruction, deps),
+    editLine: (msg, dir, deps) => handleEditLine(dir, msg.lineNum, msg.newText, deps),
+    removeLine: (msg, dir, deps) => handleRemoveLine(dir, msg.lineNum, deps),
+    toggleCheckbox: (msg, dir, deps) => handleToggleCheckbox(dir, msg.lineNum, msg.checked, deps),
+    addComment: (msg, dir, deps) =>
+      handleAddComment(dir, msg.id, msg.doc, msg.lineNum, msg.lineContent, msg.comment, deps),
+    removeComment: (msg, dir, deps) => handleRemoveComment(dir, msg.id, deps),
+    runDocRefinement: (msg, dir, deps) => dispatchDocRefinement(dir, msg.doc, deps),
+    completeSpec: (_msg, dir, deps) => handleLifecycleAction(dir, SpecStatuses.COMPLETED, deps),
+    archiveSpec: (_msg, dir, deps) => handleLifecycleAction(dir, SpecStatuses.ARCHIVED, deps),
+    reactivateSpec: (_msg, dir, deps) => handleLifecycleAction(dir, SpecStatuses.ACTIVE, deps),
+    openFile: (msg, _dir, deps) => handleOpenFile(msg.filename, deps),
+    webviewError: async (msg, _dir, deps) => {
+      deps.outputChannel.appendLine(
+        `[SpecViewer] Webview error (${msg.source}): ${msg.message}` +
+          (msg.stack ? `\n${msg.stack}` : ""),
+      );
+    },
+    footerAction: async (msg, dir, deps) => {
+      const fn = FOOTER_ACTION_HANDLERS[msg.id];
+      if (fn) await fn(dir, deps);
+      else deps.outputChannel.appendLine(`[SpecViewer] Unknown footerAction id: ${msg.id}`);
+    },
+  };
+}
+
+/**
+ * Create message handlers for a spec directory.
+ *
+ * The previous implementation was a 140-line switch ladder with manual
+ * field extraction at every case. It's now a typed dispatch map (see
+ * `buildHandlerMap`) — TypeScript verifies exhaustiveness at compile time
+ * and a single 3-line dispatcher routes every variant to its adapter.
  */
 export function createMessageHandlers(
   specDirectory: string,
   deps: MessageHandlerDependencies,
 ) {
+  const handlers = buildHandlerMap();
   return async (message: ViewerToExtensionMessage) => {
-    deps.outputChannel.appendLine(
-      `[SpecViewer] Received message: ${message.type}`,
-    );
-
-    switch (message.type) {
-      case "switchDocument":
-        await handleSwitchDocument(specDirectory, message.documentType, deps);
-        break;
-      case "editDocument":
-      case "editSource":
-        await handleEditDocument(specDirectory, deps);
-        break;
-      case "refreshContent":
-        await handleRefresh(specDirectory, deps);
-        break;
-      case "ready":
-        deps.outputChannel.appendLine("[SpecViewer] Webview ready");
-        // Push viewerState (incl. transitions) — initial HTML hydrates
-        // navState and markdown, but viewerState only flows via message.
-        await deps.refreshContextIfDisplaying(
-          path.join(specDirectory, SPEC_CONTEXT_FILENAME),
-        );
-        break;
-      case "stepperClick":
-        await handleStepperClick(specDirectory, message.phase, deps);
-        break;
-      case "regenerate":
-        await handleRegenerate(specDirectory, deps);
-        break;
-      case "approve":
-        await handleApprove(specDirectory, deps);
-        break;
-      case "markStepComplete":
-        await handleMarkStepComplete(specDirectory, deps);
-        break;
-      case "clarify":
-        await handleClarify(specDirectory, deps, message.command);
-        break;
-      case "refineLine":
-        await handleRefineLine(
-          specDirectory,
-          message.lineNum,
-          message.content,
-          message.instruction,
-          deps,
-        );
-        break;
-      case "editLine":
-        await handleEditLine(
-          specDirectory,
-          message.lineNum,
-          message.newText,
-          deps,
-        );
-        break;
-      case "removeLine":
-        await handleRemoveLine(specDirectory, message.lineNum, deps);
-        break;
-      case "toggleCheckbox":
-        await handleToggleCheckbox(
-          specDirectory,
-          message.lineNum,
-          message.checked,
-          deps,
-        );
-        break;
-      case "addComment":
-        await handleAddComment(
-          specDirectory,
-          message.id,
-          message.doc,
-          message.lineNum,
-          message.lineContent,
-          message.comment,
-          deps,
-        );
-        break;
-      case "removeComment":
-        await handleRemoveComment(specDirectory, message.id, deps);
-        break;
-      case "runDocRefinement":
-        await dispatchDocRefinement(specDirectory, message.doc, deps);
-        break;
-      case "completeSpec":
-        await handleLifecycleAction(
-          specDirectory,
-          SpecStatuses.COMPLETED,
-          deps,
-        );
-        break;
-      case "archiveSpec":
-        await handleLifecycleAction(specDirectory, SpecStatuses.ARCHIVED, deps);
-        break;
-      case "reactivateSpec":
-        await handleLifecycleAction(specDirectory, SpecStatuses.ACTIVE, deps);
-        break;
-      case "openFile":
-        await handleOpenFile(message.filename, deps);
-        break;
-      case "webviewError":
-        deps.outputChannel.appendLine(
-          `[SpecViewer] Webview error (${message.source}): ${message.message}` +
-            (message.stack ? `\n${message.stack}` : ""),
-        );
-        break;
-      case "footerAction":
-        switch (message.id) {
-          case FooterActionIds.ARCHIVE:
-            await handleLifecycleAction(
-              specDirectory,
-              SpecStatuses.ARCHIVED,
-              deps,
-            );
-            break;
-          case FooterActionIds.REACTIVATE:
-            await handleLifecycleAction(
-              specDirectory,
-              SpecStatuses.ACTIVE,
-              deps,
-            );
-            break;
-          case FooterActionIds.COMPLETE:
-            await handleLifecycleAction(
-              specDirectory,
-              SpecStatuses.COMPLETED,
-              deps,
-            );
-            break;
-          case FooterActionIds.REGENERATE:
-            await handleRegenerate(specDirectory, deps);
-            break;
-          case FooterActionIds.APPROVE:
-          case FooterActionIds.START:
-            await handleApprove(specDirectory, deps);
-            break;
-          case FooterActionIds.SDD_AUTO:
-            await handleClarify(specDirectory, deps, "/sdd:auto");
-            break;
-          default:
-            deps.outputChannel.appendLine(
-              `[SpecViewer] Unknown footerAction id: ${message.id}`,
-            );
-        }
-        break;
-    }
+    deps.outputChannel.appendLine(`[SpecViewer] Received message: ${message.type}`);
+    // Cast through the union: the handler's exact variant is guaranteed by
+    // the `{ [K in ...]: Handler<K> }` type but TS can't narrow on a lookup.
+    const handler = handlers[message.type] as (
+      m: ViewerToExtensionMessage,
+      d: string,
+      x: MessageHandlerDependencies,
+    ) => Promise<void>;
+    await handler(message, specDirectory, deps);
   };
 }
 
@@ -532,6 +482,64 @@ async function handleLifecycleAction(
 /**
  * Handle clarify/enhancement button - executes the matching customCommand in the AI terminal
  */
+/**
+ * A normalised enhancement command pulled from either `customCommands`
+ * (settings) or `getWorkflowCommands` (workflow YAML). Both sources used to
+ * be walked through near-identical for-loops with the same matcher and the
+ * same dispatch builder — now they unify behind this shape.
+ */
+interface EnhancementCommand {
+  command: string;
+  step?: string;
+  title?: string;
+  name?: string;
+}
+
+function customCommandsFromConfig(): EnhancementCommand[] {
+  const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
+  const raw = config.get<Array<CustomCommandConfig | string>>("customCommands", []);
+  const out: EnhancementCommand[] = [];
+  for (const entry of raw) {
+    if (typeof entry === "string") continue;
+    const command = entry.command || (entry.name ? `/speckit.${entry.name}` : undefined);
+    if (!command) continue;
+    out.push({ command, step: entry.step, title: entry.title, name: entry.name });
+  }
+  return out;
+}
+
+/**
+ * Test whether a candidate command matches the current dispatch intent.
+ * When the user clicked a specific button (`buttonCommand` set), the
+ * candidate's command must match exactly. When the dispatch is implicit
+ * ("clarify the current step"), match by step with `"all"` as wildcard.
+ */
+function matchesCommand(
+  candidate: EnhancementCommand,
+  buttonCommand: string | undefined,
+  docType: string,
+): boolean {
+  if (buttonCommand) return candidate.command === buttonCommand;
+  const step = candidate.step || "all";
+  return step === docType || step === "all";
+}
+
+async function dispatchEnhancement(
+  command: EnhancementCommand,
+  source: "enhancement" | "workflow",
+  targetPath: string,
+  deps: MessageHandlerDependencies,
+): Promise<void> {
+  const label = command.title || command.name || "Enhancement";
+  const rawPrompt = `${command.command} "${targetPath}"`;
+  const isMultiStep = command.command.includes(":auto");
+  const prompt = isMultiStep ? buildLifecyclePrompt(rawPrompt, targetPath) : rawPrompt;
+  deps.outputChannel.appendLine(
+    `[SpecViewer] Executing ${source} command "${label}": ${rawPrompt}`,
+  );
+  await deps.executeInTerminal(prompt);
+}
+
 async function handleClarify(
   specDirectory: string,
   deps: MessageHandlerDependencies,
@@ -541,88 +549,47 @@ async function handleClarify(
   if (!instance) return;
 
   const docType = instance.state.currentDocument;
+  const targetPath = instance.state.changeRoot || specDirectory;
 
-  const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
-  const rawCommands = config.get<Array<CustomCommandConfig | string>>(
-    "customCommands",
-    [],
-  );
-
-  // Find the matching command - prefer exact match from button, fall back to first match for step
-  for (const entry of rawCommands) {
-    if (typeof entry === "string") continue;
-
-    const command =
-      entry.command || (entry.name ? `/speckit.${entry.name}` : undefined);
-    if (!command) continue;
-
-    // If button sent a specific command, match it; otherwise match by step
-    if (buttonCommand) {
-      if (command !== buttonCommand) continue;
-    } else {
-      const step = entry.step || "all";
-      if (step !== docType && step !== "all") continue;
+  // Source 1: custom commands from settings.
+  for (const cmd of customCommandsFromConfig()) {
+    if (matchesCommand(cmd, buttonCommand, docType)) {
+      await dispatchEnhancement(cmd, "enhancement", targetPath, deps);
+      return;
     }
-
-    const targetPath = instance.state.changeRoot || specDirectory;
-    const label = entry.title || entry.name || "Enhancement";
-    const rawPrompt = `${command} "${targetPath}"`;
-    const isMultiStep = command.includes(":auto");
-    const prompt = isMultiStep
-      ? buildLifecyclePrompt(rawPrompt, targetPath)
-      : rawPrompt;
-    deps.outputChannel.appendLine(
-      `[SpecViewer] Executing enhancement command "${label}": ${rawPrompt}`,
-    );
-    await deps.executeInTerminal(prompt);
-    return;
   }
 
-  // Fall back to workflow commands. Tolerate transient read failures —
+  // Source 2: workflow-defined commands. Tolerate transient read failures —
   // the dispatch should not crash if .spec-context.json is briefly
   // unreadable (e.g., mid-write by the AI CLI).
   let featureCtx: FeatureWorkflowContext | undefined;
   try {
-    featureCtx = await getFeatureWorkflow(
-      specDirectory,
-      instance.state.changeRoot,
-    );
+    featureCtx = await getFeatureWorkflow(specDirectory, instance.state.changeRoot);
   } catch (err) {
     deps.outputChannel.appendLine(
-      `[SpecViewer] dispatchDocRefinement: getFeatureWorkflow failed — ${err instanceof Error ? err.message : String(err)}`,
+      `[SpecViewer] handleClarify: getFeatureWorkflow failed — ${err instanceof Error ? err.message : String(err)}`,
     );
   }
   if (featureCtx?.workflow) {
     for (const wfCmd of getWorkflowCommands(featureCtx.workflow)) {
       if (!wfCmd.command) continue;
-
-      if (buttonCommand) {
-        if (wfCmd.command !== buttonCommand) continue;
-      } else {
-        const step = wfCmd.step || "all";
-        if (step !== docType && step !== "all") continue;
+      const cmd: EnhancementCommand = {
+        command: wfCmd.command,
+        step: wfCmd.step,
+        title: wfCmd.title,
+        name: wfCmd.name,
+      };
+      if (matchesCommand(cmd, buttonCommand, docType)) {
+        await dispatchEnhancement(cmd, "workflow", targetPath, deps);
+        return;
       }
-
-      const targetPath = instance.state.changeRoot || specDirectory;
-      const label = wfCmd.title || wfCmd.name || "Enhancement";
-      const rawPrompt = `${wfCmd.command} "${targetPath}"`;
-      const isMultiStep = wfCmd.command.includes(":auto");
-      const prompt = isMultiStep
-        ? buildLifecyclePrompt(rawPrompt, targetPath)
-        : rawPrompt;
-      deps.outputChannel.appendLine(
-        `[SpecViewer] Executing workflow command "${label}": ${rawPrompt}`,
-      );
-      await deps.executeInTerminal(prompt);
-      return;
     }
   }
 
-  // Built-in optional SpecKit commands (clarify/checklist/analyze): dispatch
-  // through the registered VS Code command so provider formatting and step
-  // tracking match invoking it from the Command Palette.
+  // Source 3: built-in optional SpecKit commands (clarify/checklist/analyze).
+  // Dispatch through the registered VS Code command so provider formatting
+  // and step tracking match invoking it from the Command Palette.
   if (buttonCommand && isOptionalCommand(buttonCommand)) {
-    const targetPath = instance.state.changeRoot || specDirectory;
     deps.outputChannel.appendLine(
       `[SpecViewer] Executing optional command "${buttonCommand}" for: ${targetPath}`,
     );
@@ -811,7 +778,43 @@ async function handleOpenFile(
  * posts them fire-and-forget) could both read the same baseline and the second
  * write would clobber the first. Chaining per directory serializes them.
  */
-const commentWriteQueues = new Map<string, Promise<unknown>>();
+// `commentWriteQueues` was lifted into the `CommentMutationQueue` class
+// below; the bare-Map pattern is gone.
+
+/**
+ * Per-spec serial queue for review-comment mutations.
+ *
+ * Each spec directory's mutations chain through one Promise — concurrent
+ * `addComment` / `removeComment` from the webview can't interleave reads
+ * and writes against the same `.spec-context.json`. The previous shape was
+ * a module-scope `Map<string, Promise<unknown>>` mutated in passing from
+ * inside an async function with a manual `finally` cleanup. That worked
+ * but was load-bearing module state pretending to be a variable.
+ *
+ * This class owns the same semantics but the lifecycle is explicit: each
+ * call returns its run-promise, the map cleans itself once that promise
+ * settles, and there is no exported handle for anything else to mutate.
+ */
+class CommentMutationQueue {
+  private readonly queues = new Map<string, Promise<unknown>>();
+
+  async enqueue(specDirectory: string, run: () => Promise<void>): Promise<void> {
+    const prev = this.queues.get(specDirectory) ?? Promise.resolve();
+    // .then(run, run) — chain even if a prior mutation rejected, so one
+    // failed write doesn't permanently deadlock the spec's queue.
+    const next = prev.then(run, run);
+    this.queues.set(specDirectory, next);
+    try {
+      await next;
+    } finally {
+      if (this.queues.get(specDirectory) === next) {
+        this.queues.delete(specDirectory);
+      }
+    }
+  }
+}
+
+const commentQueue = new CommentMutationQueue();
 
 /**
  * Persist a review-comment mutation through `specContextWriter` (the only
@@ -824,7 +827,7 @@ async function persistCommentMutation(
   mutate: (ctx: SpecContext) => SpecContext,
   deps: MessageHandlerDependencies,
 ): Promise<void> {
-  const run = async () => {
+  await commentQueue.enqueue(specDirectory, async () => {
     let current: SpecContext | null = null;
     try {
       current = await readSpecContext(specDirectory);
@@ -846,17 +849,7 @@ async function persistCommentMutation(
     await deps.refreshContextIfDisplaying(
       path.join(specDirectory, SPEC_CONTEXT_FILENAME),
     );
-  };
-  const prev = commentWriteQueues.get(specDirectory) ?? Promise.resolve();
-  const next = prev.then(run, run);
-  commentWriteQueues.set(specDirectory, next);
-  try {
-    await next;
-  } finally {
-    if (commentWriteQueues.get(specDirectory) === next) {
-      commentWriteQueues.delete(specDirectory);
-    }
-  }
+  });
 }
 
 /**
