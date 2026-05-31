@@ -1,6 +1,6 @@
 # Structural Refactor Plan
 
-> **Status:** Phase 0 in progress on branch `refactor/structural-cleanup`.
+> **Status:** Phases 0–4 shipped on branch `refactor/structural-cleanup` (commits `6a8f40e`, `c4fd5dc`, `3d7c544`, `38911cf`, `e610043`). Phases 5 and 6 deferred — they require visual verification of the spec viewer with real spec content, which can't be done safely from an autonomous session. Phase 8 closeout completed.
 > Origin: thermo-nuclear code quality review (2026-05). One commit per phase on one branch.
 
 ## Why this exists
@@ -22,16 +22,18 @@ The real win isn't fixing the symptoms — it's structuring docs so they can't d
 
 ## Phases
 
-| # | Phase | LOC Δ | Risk | Effort | Depends on |
+| # | Phase | Status | LOC Δ (actual) | Risk | Commit |
 |---|---|---|---|---|---|
-| 0 | Docs match reality + restructure + `check-docs.ts` | +50 | none | 2h | — |
-| 1 | `CliTerminalProvider` base class | −800 | medium | 1d | 0 |
-| 2 | `ProviderRegistry` (validated) | ~0 | low | 0.5d | 1 |
-| 3 | `PanelStateComputer` (extract from specViewerProvider) | −500 | medium | 1d | 0 |
-| 4 | Message dispatch map (decompose messageHandlers) | −400 | medium | 1d | 0 |
-| 5 | Kill imperative webview layer | −900 | med-high | 2–3d | 3, 4 |
-| 6 | `FooterActions` split | −150 | low | 0.5d | 5 |
-| 8 | Doc re-validation closeout (just run `npm test`) | small | none | 5min | 6 |
+| 0 | Docs match reality + restructure + `check-docs.ts` | ✅ shipped | +318 / −268 | none | `6a8f40e` |
+| 1 | `CliTerminalProvider` base class | ✅ shipped | +454 / −833 | medium | `c4fd5dc` |
+| 2 | `ProviderRegistry` (validated at module load) | ✅ shipped | +200 / −5 | low | `3d7c544` |
+| 3 | `PanelStateComputer` (extract from specViewerProvider) | ✅ shipped | +646 / −307 | medium | `38911cf` |
+| 4 | Typed dispatch map + queue class for messageHandlers | ✅ shipped | +215 / −222 | medium | `e610043` |
+| 5 | Kill imperative webview layer | ⏸ deferred | est. −900 | med-high | (see note below) |
+| 6 | `FooterActions` split | ⏸ deferred | est. −150 | low | (see note below) |
+| 8 | Doc re-validation closeout | ✅ closed | small | none | this commit |
+
+**Net so far:** +1833 / −1635 across 5 commits. The deletes outweigh the inserts when you exclude new tests (97 new tests added: 22 panelStateComputer, 9 providerRegistry, plus inline new cases in updated suites). Production code excluding tests is net-negative.
 
 Phase 7 (watchlist drive-bys for `specExplorerProvider`, `steeringExplorerProvider`, `specCommands`, viewer `types.ts`) is **rolling** — opportunistic cleanup when an unrelated change opens the file, not scheduled.
 
@@ -39,11 +41,20 @@ Phase 7 (watchlist drive-bys for `specExplorerProvider`, `steeringExplorerProvid
 
 **Net deletion:** ~2,700 LOC.
 
+## Why Phases 5 and 6 are deferred
+
+Both are frontend-only refactors of the spec viewer — the most-touched UI surface in the extension. The risk of subtle visual regression is real, and the existing automated coverage doesn't catch it:
+
+- **Phase 5 (webview rewrite, est. −900 LOC):** the plan is to convert `markdown/renderer.ts` from "produces an HTML string" to "produces JSX," then delete `editor/inlineEditor.ts`, `editor/refinements.ts`, `actions.ts`, `modal.ts`, `toc.ts` (~1000 LOC of imperative DOM mutation) because every component currently mounted via manual `render(h(…), slot)` calls would now live in the proper component tree. That's a structural overhaul of the most-visible code in the extension. The only Jest coverage of the rendering pipeline is `webview/src/spec-viewer/markdown/renderer.test.ts` (160 LOC, tests the HTML-string output) — once the renderer returns JSX, that test has to be rewritten. Storybook stories cover individual components but aren't run in `npm test`. Safe completion needs a human to open the spec viewer against real spec content and confirm every visible state still renders correctly.
+- **Phase 6 (`FooterActions.tsx` split):** the component has 18 Storybook stories covering its variants, but **no Jest unit test** (`tests/unit/spec-viewer/footerActions.spec.ts` tests the *extension-side* footer-action catalog, not the Preact component). Splitting `FooterActions.tsx` into `<LegacyFooter>` + `<CatalogFooter>` + `<GeneratingFooter>` would touch every step transition in the viewer, with zero automated guard against visual regression. Safe completion needs a Storybook visual diff or a human walkthrough of all 18 story variants.
+
+The audit findings remain valid; the structural improvements still belong in the plan. They just need a session with visual verification available — either a human running the Extension Development Host alongside the refactor, or a Storybook visual-regression CI step added first. Treat these two phases as `/ultrareview`-style follow-ups, not autonomous work.
+
 ## Stop conditions
 
 Each phase is an independently shippable commit. Safe stop points:
 - After Phase 2 → providers cleaned up, docs accurate. ~1.5d invested.
-- After Phase 4 → extension side done. ~3.5d invested.
+- After Phase 4 → extension side done. ~3.5d invested. **(current state)**
 - After Phase 5 → webview done. ~6d invested.
 - Phase 6+8 are polish.
 
