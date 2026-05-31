@@ -9,7 +9,8 @@ import { navState, markdownHtml, viewerState, historyEntries } from './signals';
 import { renderMarkdown, setCurrentTask, setHasSpecContext } from './markdown';
 import { applyHighlighting, initializeMermaid } from './highlighting';
 import { setupLineActions } from './editor';
-import { setupRefineModal } from './modal';
+// Phase 5b: `setupRefineModal`/`modal.ts` deleted (orphan since the
+// dynamic refinePopover took over). No replacement import needed.
 import { setupCheckboxToggle, setupFileRefClickHandler } from './actions';
 import { showToast } from '../shared/components/Toast';
 import { App } from './App';
@@ -162,7 +163,6 @@ function init(): void {
         render(<App specStatus={specStatus} />, appRoot);
     }
 
-    setupRefineModal();
     setupLineActions();
     setupCheckboxToggle();
     setupFileRefClickHandler();
