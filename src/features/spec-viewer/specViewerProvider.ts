@@ -48,7 +48,7 @@ import { ConfigKeys, SpecStatuses, WorkflowSteps } from "../../core/constants";
 import type { CustomCommandConfig } from "../../core/types/config";
 import { deriveChangeRoot } from "../../core/specDirectoryResolver";
 import { deriveSpecName } from "../specs/specContextManager";
-import { readSpecContext } from "../specs/specContextReader";
+import { readSpecContext, SPEC_CONTEXT_FILENAME } from "../specs/specContextReader";
 import { writeSpecContext } from "../specs/specContextWriter";
 import { deriveStepHistory } from "../specs/stepHistoryDerivation";
 import { backfillMinimalContext } from "../specs/specContextBackfill";
@@ -351,6 +351,14 @@ export class SpecViewerProvider {
     const documentType = getDocumentTypeFromPath(filePath);
 
     this.outputChannel.appendLine(`[SpecViewer] File deleted: ${filePath}`);
+
+    // If `.spec-context.json` was the deleted file, invalidate the cached
+    // `lastFeatureCtx` so the step-completion notifier doesn't fire on a
+    // stale "previous" context when the file is recreated. Without this,
+    // a delete-then-recreate sequence could surface a bogus delta.
+    if (filePath.endsWith(SPEC_CONTEXT_FILENAME)) {
+      instance.lastFeatureCtx = null;
+    }
 
     // If the current document was deleted, show error message
     if (documentType === instance.state.currentDocument) {

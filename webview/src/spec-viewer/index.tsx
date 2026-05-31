@@ -84,7 +84,15 @@ function handleMessage(event: MessageEvent): void {
             viewerState.value = message.viewerState;
             historyEntries.value = message.viewerState.history ?? [];
             if (message.navState) {
-                navState.value = { ...navState.value, ...message.navState } as NavState;
+                // Defensive merge: if `viewerStateUpdated` arrives before the
+                // initial `contentUpdated`, navState.value is still null and a
+                // naive spread would discard the partial update. Drop the
+                // merge when there's nothing to merge against — components
+                // can survive missing fields, but they can't survive losing
+                // the only state they've ever been shown.
+                navState.value = (navState.value
+                    ? { ...navState.value, ...message.navState }
+                    : message.navState) as NavState;
             }
             break;
 
