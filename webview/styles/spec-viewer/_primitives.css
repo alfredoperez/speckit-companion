@@ -1,0 +1,85 @@
+/**
+ * Shared-component primitive styles.
+ *
+ * Phase 20 added <Card>, <Tooltip>, <EmptyState> to webview/src/shared/components/.
+ * Their default styling lives here so consuming features inherit the
+ * design-system look without each card-using component re-rolling its own.
+ *
+ * Tokens come from tokens.css — no hardcoded values.
+ */
+
+/* ─── Card ──────────────────────────────────────────────────────────── */
+
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-elevated);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+}
+
+.card-title {
+    margin: 0;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: 0.02em;
+}
+
+.card-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.card-body {
+    color: var(--text-primary);
+}
+
+/* ─── EmptyState ────────────────────────────────────────────────────── */
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-6) var(--space-3);
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.empty-state-icon {
+    font-size: var(--text-2xl, 24px);
+    opacity: 0.7;
+}
+
+.empty-state-label {
+    font-size: var(--text-base);
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.empty-state-description {
+    font-size: var(--text-sm);
+    max-width: 32ch;
+    line-height: 1.4;
+}
+
+.empty-state-action {
+    margin-top: var(--space-2);
+}
+
+/* ─── Tooltip ───────────────────────────────────────────────────────── */
+
+/* Tooltip currently uses the native `title` attribute, so no CSS is
+   required for the default behaviour. When a future iteration adopts a
+   real positioned tooltip primitive, its CSS rules will live here. */
