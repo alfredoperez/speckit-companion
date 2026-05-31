@@ -4,6 +4,7 @@ import { AIProviders, Timing } from '../core/constants';
 import { waitForShellReady } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { detectShell, formatPromptFileSubstitution, Shell } from '../core/utils/shellDetection';
+import { validateProviderRegistry } from './providerRegistry';
 
 const CMD_LINE_MAX = 8000;
 
@@ -207,10 +208,11 @@ export interface ProviderPaths {
     autoApproveFlag: string;
 }
 
-/**
- * Provider paths configuration for each provider type
- */
-export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
+// Validated at module load via `validateProviderRegistry` (see below). The
+// raw literal is named `_PROVIDER_PATHS_RAW` so that the exported binding
+// users import is always the post-validation object — there is no path that
+// reads the unvalidated form.
+const _PROVIDER_PATHS_RAW: Record<AIProviderType, ProviderPaths> = {
     [AIProviders.CLAUDE]: {
         steeringFile: 'CLAUDE.md',
         globalSteeringFile: '.claude/CLAUDE.md',
@@ -374,6 +376,16 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> = {
         autoApproveFlag: '',
     },
 };
+
+/**
+ * Validated provider paths. Each entry is checked at module load by
+ * `validateProviderRegistry` — invalid configs (typo'd commandFormat,
+ * autoApproveFlag without trailing space, malformed codicon, empty
+ * displayName, steeringDir without steeringPattern) throw `ProviderRegistryError`
+ * here, on activation, with the offending field named.
+ */
+export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> =
+    validateProviderRegistry(_PROVIDER_PATHS_RAW);
 
 /**
  * Format a speckit command for the given provider.

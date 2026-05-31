@@ -31,7 +31,7 @@ Eight providers ship today, in three shapes:
 - **IDE-chat provider** — `ideChatProvider.ts` routes the assembled prompt into the host editor's built-in chat surface (Copilot in VS Code, Composer in Cursor, Cascade in Windsurf) instead of spawning a terminal. The host editor resolves `/speckit.*` slash commands itself.
 - **Claude-in-VS-Code panel** — `claudePanelProvider.ts` drives the Claude Code GUI panel through the editor's command surface, bypassing the terminal entirely.
 
-Shared helpers live alongside the providers: `promptBuilder.ts` assembles the canonical prompt, `permissionValidation.ts` checks auto-approve flag shape, `initOptions.ts` handles workspace-initialization checks, `codexCommandBuilder.ts` handles Codex's `.codex/prompts/` template branch.
+Shared helpers live alongside the providers: `promptBuilder.ts` assembles the canonical prompt, `permissionValidation.ts` checks auto-approve flag shape, `initOptions.ts` handles workspace-initialization checks, `codexCommandBuilder.ts` handles Codex's `.codex/prompts/` template branch. `providerRegistry.ts` is the runtime validation layer for the `PROVIDER_PATHS` blob — each entry is checked at module load so a typo'd `commandFormat`, an `autoApproveFlag` missing its trailing space, or a malformed codicon throws on activation rather than misbehaving at first dispatch.
 
 ### `src/core/`
 
