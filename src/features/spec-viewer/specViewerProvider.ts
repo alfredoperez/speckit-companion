@@ -10,6 +10,13 @@ import { scanDocuments } from "./documentScanner";
 import { generateHtml } from "./html";
 import { createMessageHandlers } from "./messageHandlers";
 import { computeStaleness } from "./staleness";
+import {
+  computePanelDerivedState,
+  mapStepHistoryToTabKeys,
+  resolveDisplayDocument,
+  resolveTabClickDocument,
+} from "./panelStateComputer";
+import { PanelInstance, PanelRegistry } from "./panelRegistry";
 import { getAIProvider } from "../../extension";
 import {
   calculatePhases,
@@ -31,6 +38,7 @@ import {
   EnhancementButton,
   ExtensionToViewerMessage,
   NavState,
+  SpecDocument,
   SpecStatus,
   SpecViewerState,
 } from "./types";
@@ -40,7 +48,7 @@ import { ConfigKeys, SpecStatuses, WorkflowSteps } from "../../core/constants";
 import type { CustomCommandConfig } from "../../core/types/config";
 import { deriveChangeRoot } from "../../core/specDirectoryResolver";
 import { deriveSpecName } from "../specs/specContextManager";
-import { readSpecContext } from "../specs/specContextReader";
+import { readSpecContext, SPEC_CONTEXT_FILENAME } from "../specs/specContextReader";
 import { writeSpecContext } from "../specs/specContextWriter";
 import { deriveStepHistory } from "../specs/stepHistoryDerivation";
 import { backfillMinimalContext } from "../specs/specContextBackfill";
@@ -66,48 +74,11 @@ export {
   isSpecDocument,
 } from "./utils";
 
-/**
- * Map stepHistory keys from step names to tab names so navState lookups
- * (e.g., `stepHistory[activeStep]`) use consistent keys.
- *
- * `mapSddStepToTab` collapses both `tasks` and `implement` onto the `tasks`
- * tab key (Implement has no dedicated tab). Iterating in insertion order
- * means the in-flight `implement` entry, written after `tasks` completes,
- * would overwrite the completed `tasks` entry — leaving the Tasks tab
- * rendering as "still running" with the implement step's elapsed time.
- * Preserve a completed entry when a later step aliases onto the same key.
- */
-function mapStepHistoryKeys(
-  stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>
-): Record<string, { startedAt?: string; completedAt?: string | null }> | undefined {
-  if (!stepHistory) return undefined;
-  const out: Record<string, { startedAt?: string; completedAt?: string | null }> = {};
-  for (const [step, entry] of Object.entries(stepHistory)) {
-    const tabName = mapSddStepToTab(step) || step;
-    if (out[tabName]?.completedAt) continue;
-    out[tabName] = entry;
-  }
-  return out;
-}
-
-/**
- * Map stepHistory → per-step badge state; alias `specify` → `spec` for
- * compatibility with the 4-phase fallback stepper.
- */
-function deriveStepBadgesWithAlias(
-  stepHistory: Record<string, { startedAt?: string; completedAt?: string | null }>,
-  currentStep?: string
-): Record<string, 'not-started' | 'in-progress' | 'completed'> {
-  const out: Record<string, 'not-started' | 'in-progress' | 'completed'> = {};
-  const cs = (currentStep ?? 'specify') as StepName;
-  for (const [step, entry] of Object.entries(stepHistory)) {
-    if (!entry?.startedAt) out[step] = 'not-started';
-    else if (isStepCompleted(step as StepName, cs, stepHistory)) out[step] = 'completed';
-    else out[step] = 'in-progress';
-  }
-  if (out['specify'] && !out['spec']) out['spec'] = out['specify'];
-  return out;
-}
+// `mapStepHistoryKeys` and `deriveStepBadgesWithAlias` previously lived
+// here; they were structurally identical to the helpers in
+// `./panelStateComputer.ts` and were extracted there so all
+// three render paths (full render, tab click, viewer-state refresh) share
+// one implementation.
 
 /**
  * Create a minimal `.spec-context.json` when none exists (FR-011).
@@ -156,28 +127,19 @@ async function ensureSpecContext(
   return ctx;
 }
 
-/**
- * Panel instance data for multi-panel support
- */
-interface PanelInstance {
-  panel: vscode.WebviewPanel;
-  state: SpecViewerState;
-  debounceTimer: NodeJS.Timeout | undefined;
-  lastFeatureCtx?: FeatureWorkflowContext | null;
-  // True after the first updateContent run for this panel. Gates the
-  // ensureSpecContext write so tab clicks never (re)create the file —
-  // first-open may write a backfill if the file is missing; every
-  // subsequent navigation is strictly read-only.
-  firstOpenComplete: boolean;
-}
+// `PanelInstance` interface and the Map ownership moved to
+// `./panelRegistry.ts`. The provider now uses
+// `this.panels.get(...)` etc. as methods on the registry rather than
+// raw Map operations, and lifecycle behaviour (debounce-timer cleanup
+// on delete) lives in the registry.
 
 /**
  * Provides the spec viewer webview panel for viewing spec documents.
  * Supports multiple panels - one per spec directory.
  */
 export class SpecViewerProvider {
-  /** Map of spec directory to panel instance */
-  private panels: Map<string, PanelInstance> = new Map();
+  /** Per-spec-directory panel instances; debounce-timer cleanup lives in the registry's `delete`. */
+  private readonly panels = new PanelRegistry();
 
   /** Fires VS Code + OS notifications when a dispatched step completes. */
   private readonly stepCompletionNotifier = new StepCompletionNotifier();
@@ -359,7 +321,7 @@ export class SpecViewerProvider {
         specCtx.status as Status | undefined,
       );
       const navStatePartial = {
-        stepHistory: mapStepHistoryKeys(derivedStepHistory),
+        stepHistory: mapStepHistoryToTabKeys(derivedStepHistory),
         currentStep: specCtx.currentStep,
         badgeText: computeBadgeText(specCtx, derivedStepHistory),
       };
@@ -389,6 +351,14 @@ export class SpecViewerProvider {
     const documentType = getDocumentTypeFromPath(filePath);
 
     this.outputChannel.appendLine(`[SpecViewer] File deleted: ${filePath}`);
+
+    // If `.spec-context.json` was the deleted file, invalidate the cached
+    // `lastFeatureCtx` so the step-completion notifier doesn't fire on a
+    // stale "previous" context when the file is recreated. Without this,
+    // a delete-then-recreate sequence could surface a bogus delta.
+    if (filePath.endsWith(SPEC_CONTEXT_FILENAME)) {
+      instance.lastFeatureCtx = null;
+    }
 
     // If the current document was deleted, show error message
     if (documentType === instance.state.currentDocument) {
@@ -456,10 +426,8 @@ export class SpecViewerProvider {
       this.outputChannel.appendLine(
         `[SpecViewer] Panel disposed for ${specDirectory}`,
       );
-      if (instance.debounceTimer) {
-        clearTimeout(instance.debounceTimer);
-      }
       this.stepCompletionNotifier.forget(specDirectory);
+      // PanelRegistry.delete clears any pending debounceTimer for us.
       this.panels.delete(specDirectory);
     });
 
@@ -549,101 +517,26 @@ export class SpecViewerProvider {
       }
       instance.firstOpenComplete = true;
 
-      // Find the requested document (or fallback to first available)
-      let doc = documents.find(d => d.type === documentType);
-      if (!doc) {
-        // Type name mismatch (e.g. "spec" vs "specify") — try matching by file name
-        const requestedFile = `${documentType}.md`;
-        doc = documents.find(d => d.isCore && d.fileName === requestedFile);
-      }
-      if (!doc) {
-        // Try to find first existing core document
-        doc = documents.find(d => d.isCore && d.exists);
-      }
-      if (!doc) {
-        doc = documents[0]; // Fallback to first document
-      }
+      // Resolve which document to display (cascading fallback)
+      const doc = resolveDisplayDocument(documents, documentType);
 
-      // If the core doc doesn't exist but sub-specs do, redirect to the first sub-spec
-      if (doc && !doc.exists && doc.isCore) {
-        const firstSubSpec = documents.find(
-          d => d.parentStep === doc!.type && d.exists,
-        );
-        if (firstSubSpec) {
-          doc = firstSubSpec;
-        }
-      }
+      // Read content + tasks.md (I/O)
+      const { content, emptyMessage } = await this.readDocumentContent(doc);
+      const tasksContent = await this.readTasksContent(doc, documents, content);
 
-      // Read content
-      let content = "";
-      let emptyMessage = "";
-
-      if (doc?.exists) {
-        try {
-          const uri = vscode.Uri.file(doc.filePath);
-          const data = await vscode.workspace.fs.readFile(uri);
-          content = Buffer.from(data).toString("utf-8");
-        } catch (error) {
-          this.outputChannel.appendLine(
-            `[SpecViewer] Error reading ${doc.filePath}: ${error}`,
-          );
-          emptyMessage = `Error reading file: ${error}`;
-        }
-      } else {
-        // Get empty state message
-        if (doc?.type in EMPTY_STATE_MESSAGES) {
-          emptyMessage = EMPTY_STATE_MESSAGES[doc.type as CoreDocumentType];
-        } else {
-          emptyMessage = DEFAULT_EMPTY_MESSAGE;
-        }
-      }
-
-      // Always try to read tasks.md for completion status
-      let tasksContent = "";
-      if (doc?.type === CORE_DOCUMENTS.TASKS) {
-        tasksContent = content;
-      } else {
-        const tasksDoc = documents.find(d => d.type === CORE_DOCUMENTS.TASKS);
-        if (tasksDoc && tasksDoc.exists) {
-          try {
-            const uri = vscode.Uri.file(tasksDoc.filePath);
-            const data = await vscode.workspace.fs.readFile(uri);
-            tasksContent = Buffer.from(data).toString("utf-8");
-          } catch (error) {
-            this.outputChannel.appendLine(
-              `[SpecViewer] Error reading tasks.md for completion: ${error}`,
-            );
-          }
-        }
-      }
-
-      // Derive per-step timing once from history[] for everything that needs it.
-      const derivedStepHistory = featureCtx
-        ? deriveStepHistory(
-            (featureCtx.history ?? []) as any,
-            featureCtx.currentStep as StepName | undefined,
-            featureCtx.status as Status | undefined,
-          )
-        : undefined;
-
-      // Calculate phases — reuse derivedStepHistory for badges.
-      const stepBadges = derivedStepHistory && featureCtx?.currentStep
-        ? deriveStepBadgesWithAlias(derivedStepHistory, featureCtx.currentStep)
-        : undefined;
-      const phases = calculatePhases(
-        documents,
+      // Resolve enhancement buttons (vscode config + workflow defaults)
+      const enhancementButtons = this.resolveEnhancementButtons(
         doc?.type || CORE_DOCUMENTS.SPEC,
-        tasksContent,
-        undefined,
-        stepBadges,
-      );
-      const currentPhase = getPhaseNumber(doc?.type || CORE_DOCUMENTS.SPEC);
-      const taskCompletionPercent = calculateTaskCompletion(
-        tasksContent,
-        CORE_DOCUMENTS.TASKS,
+        featureCtx?.workflow,
       );
 
-      // Update state
+      // Pure derivation: stepHistory, phases, status, badges, dates, footer
+      const derived = computePanelDerivedState(
+        { documents, doc, tasksContent, featureCtx },
+        enhancementButtons,
+      );
+
+      // Update state (I/O + cache)
       instance.state = {
         specName,
         specDirectory,
@@ -651,42 +544,21 @@ export class SpecViewerProvider {
         currentDocument: doc?.type || CORE_DOCUMENTS.SPEC,
         availableDocuments: documents,
         lastUpdated: Date.now(),
-        phases,
-        currentPhase,
-        taskCompletionPercent,
+        phases: derived.phases,
+        currentPhase: derived.currentPhase,
+        taskCompletionPercent: derived.taskCompletionPercent,
       };
 
-      // Update panel title
       const docLabel = doc?.label || "Spec";
       instance.panel.title = `Spec: ${specName} - ${docLabel}`;
 
-      let specStatus: SpecStatus;
-      if (featureCtx?.status === SpecStatuses.ARCHIVED || featureCtx?.currentStep === SpecStatuses.ARCHIVED) {
-        specStatus = SpecStatuses.ARCHIVED;
-      } else if (featureCtx?.status === SpecStatuses.COMPLETED) {
-        specStatus = SpecStatuses.COMPLETED;
-      } else if (taskCompletionPercent === 100) {
-        specStatus = SpecStatuses.TASKS_DONE;
-      } else {
-        specStatus = SpecStatuses.ACTIVE;
-      }
-
-      // Resolve enhancement buttons from customCommands and workflow commands
-      const enhancementButtons = this.resolveEnhancementButtons(doc?.type || CORE_DOCUMENTS.SPEC, featureCtx?.workflow);
-
-      // Compute staleness for workflow documents
+      // Staleness and running-step are still I/O (filesystem probes); compute
+      // here after derived state is known so taskCompletionPercent feeds them.
       const stalenessMap = await computeStaleness(documents);
-
-      // Compute context-driven dates from the derived per-step history.
-      const createdDate = computeCreatedDate(derivedStepHistory);
-      const lastUpdatedDate = computeLastUpdatedDate(derivedStepHistory);
-
-      // Running-step info so the footer's Generating state survives a full
-      // HTML refresh (e.g. the *.md file watcher), not just message updates.
       const runInfo = await this.deriveRunningStepInfo(
-        derivedStepHistory,
+        derived.derivedStepHistory,
         specDirectory,
-        taskCompletionPercent,
+        derived.taskCompletionPercent,
       );
 
       // Generate and set HTML
@@ -698,20 +570,20 @@ export class SpecViewerProvider {
         documents,
         doc?.type || CORE_DOCUMENTS.SPEC,
         specName,
-        phases,
-        taskCompletionPercent,
-        specStatus,
+        derived.phases,
+        derived.taskCompletionPercent,
+        derived.specStatus,
         enhancementButtons,
         stalenessMap,
         runInfo.tab,
-        computeBadgeText(featureCtx, derivedStepHistory),
-        createdDate,
-        lastUpdatedDate,
+        derived.badgeText,
+        derived.createdDate,
+        derived.lastUpdatedDate,
         featureCtx?.specName ?? deriveSpecName(specDirectory),
         featureCtx?.workingBranch ?? featureCtx?.branch ?? null,
         doc?.filePath ?? null,
         featureCtx?.currentStep ?? doc?.type ?? null,
-        mapStepHistoryKeys(derivedStepHistory),
+        derived.stepHistoryByTab,
         this.readActivityPanelMode(),
         runInfo.artifactReady,
         runInfo.startedAt,
@@ -832,6 +704,60 @@ export class SpecViewerProvider {
   }
 
   /**
+   * Read the content of the active document. Returns the file content (or
+   * an empty string) plus an `emptyMessage` that's only populated when the
+   * doc is missing or unreadable. Centralising this here means
+   * `updateContent` and `sendContentUpdateMessage` no longer carry copies
+   * of the same try/catch + empty-state ladder.
+   */
+  private async readDocumentContent(
+    doc: SpecDocument | undefined,
+  ): Promise<{ content: string; emptyMessage: string }> {
+    if (doc?.exists) {
+      try {
+        const uri = vscode.Uri.file(doc.filePath);
+        const data = await vscode.workspace.fs.readFile(uri);
+        return { content: Buffer.from(data).toString("utf-8"), emptyMessage: "" };
+      } catch (error) {
+        this.outputChannel.appendLine(
+          `[SpecViewer] Error reading ${doc.filePath}: ${error}`,
+        );
+        return { content: "", emptyMessage: `Error reading file: ${error}` };
+      }
+    }
+    const emptyMessage =
+      doc?.type && doc.type in EMPTY_STATE_MESSAGES
+        ? EMPTY_STATE_MESSAGES[doc.type as CoreDocumentType]
+        : DEFAULT_EMPTY_MESSAGE;
+    return { content: "", emptyMessage };
+  }
+
+  /**
+   * Read `tasks.md` content for completion-percentage computation. When the
+   * active doc IS tasks.md, reuse the already-loaded content rather than
+   * hitting disk a second time.
+   */
+  private async readTasksContent(
+    activeDoc: SpecDocument | undefined,
+    documents: SpecDocument[],
+    activeContent: string,
+  ): Promise<string> {
+    if (activeDoc?.type === CORE_DOCUMENTS.TASKS) return activeContent;
+    const tasksDoc = documents.find(d => d.type === CORE_DOCUMENTS.TASKS);
+    if (!tasksDoc || !tasksDoc.exists) return "";
+    try {
+      const uri = vscode.Uri.file(tasksDoc.filePath);
+      const data = await vscode.workspace.fs.readFile(uri);
+      return Buffer.from(data).toString("utf-8");
+    } catch (error) {
+      this.outputChannel.appendLine(
+        `[SpecViewer] Error reading tasks.md for completion: ${error}`,
+      );
+      return "";
+    }
+  }
+
+  /**
    * Post message to webview
    */
   private postMessage(
@@ -854,108 +780,23 @@ export class SpecViewerProvider {
     if (!instance) return;
 
     try {
-      // Find the requested document
-      let doc = instance.state.availableDocuments.find(
-        d => d.type === documentType,
-      );
-      if (!doc) {
+      // Tab-click resolution: honour the user's pick; only redirect when
+      // the chosen core doc doesn't exist but a sub-spec under it does.
+      const resolved = resolveTabClickDocument(instance.state.availableDocuments, documentType);
+      if (!resolved) {
         this.outputChannel.appendLine(
           `[SpecViewer] Document not found: ${documentType}`,
         );
         return;
       }
+      const doc = resolved;
+      if (resolved.type !== documentType) documentType = resolved.type;
 
-      // If the core doc doesn't exist but sub-specs do, redirect to the first sub-spec
-      if (!doc.exists && doc.isCore) {
-        const firstSubSpec = instance.state.availableDocuments.find(
-          d => d.parentStep === documentType && d.exists,
-        );
-        if (firstSubSpec) {
-          doc = firstSubSpec;
-          documentType = firstSubSpec.type;
-        }
-      }
+      const { content } = await this.readDocumentContent(doc);
+      const tasksContent = await this.readTasksContent(doc, instance.state.availableDocuments, content);
 
-      // Read content
-      let content = "";
-      if (doc.exists) {
-        try {
-          const uri = vscode.Uri.file(doc.filePath);
-          const data = await vscode.workspace.fs.readFile(uri);
-          content = Buffer.from(data).toString("utf-8");
-        } catch (error) {
-          this.outputChannel.appendLine(
-            `[SpecViewer] Error reading ${doc.filePath}: ${error}`,
-          );
-        }
-      }
-
-      // Always try to read tasks.md for completion status
-      let tasksContent = "";
-      if (documentType === CORE_DOCUMENTS.TASKS) {
-        tasksContent = content;
-      } else {
-        const tasksDoc = instance.state.availableDocuments.find(
-          d => d.type === CORE_DOCUMENTS.TASKS,
-        );
-        if (tasksDoc && tasksDoc.exists) {
-          try {
-            const uri = vscode.Uri.file(tasksDoc.filePath);
-            const data = await vscode.workspace.fs.readFile(uri);
-            tasksContent = Buffer.from(data).toString("utf-8");
-          } catch (error) {
-            this.outputChannel.appendLine(
-              `[SpecViewer] Error reading tasks.md for completion: ${error}`,
-            );
-          }
-        }
-      }
-
-      // Calculate task completion for tasks doc
-      const taskCompletionPercent = calculateTaskCompletion(
-        tasksContent,
-        CORE_DOCUMENTS.TASKS,
-      );
-
-      // Build navigation state
-      const coreDocs = instance.state.availableDocuments.filter(
-        d => d.category === "core",
-      );
-      const relatedDocs = instance.state.availableDocuments.filter(
-        d => d.category === "related",
-      );
-      const coreDocTypes = coreDocs.map(d => d.type);
-      const isViewingRelatedDoc = !coreDocTypes.includes(documentType);
-      const workflowPhase = calculateWorkflowPhase(coreDocs);
-
-      // Calculate footer state (same logic as generator.ts)
-      let showApproveButton = false;
-      let approveText = "";
-
-      let currentIndex = coreDocs.findIndex(d => d.type === documentType);
-      if (currentIndex < 0 && isViewingRelatedDoc) {
-        const parentStep = relatedDocs.find(d => d.type === documentType)?.parentStep;
-        if (parentStep) {
-          currentIndex = coreDocs.findIndex(d => d.type === parentStep);
-        }
-      }
-      if (currentIndex >= 0 && currentIndex < coreDocs.length - 1) {
-        const nextDoc = coreDocs[currentIndex + 1];
-        if (!nextDoc.exists) {
-          showApproveButton = true;
-          approveText = nextDoc.label;
-        }
-      } else if (currentIndex === coreDocs.length - 1) {
-        // Last step: show implement button if not complete
-        if (taskCompletionPercent < 100) {
-          showApproveButton = true;
-          approveText = "Implement";
-        }
-      }
-
-      // Determine spec status for lifecycle buttons. Tolerate transient
-      // read failures so a render pass during a concurrent CLI write
-      // degrades to "active" rather than crashing the whole update.
+      // Tolerate transient read failures so a render pass during a concurrent
+      // CLI write degrades to "active" rather than crashing the whole update.
       const changeRoot = instance.state.changeRoot;
       let featureCtx: FeatureWorkflowContext | undefined;
       try {
@@ -965,35 +806,20 @@ export class SpecViewerProvider {
           `[SpecViewer] sendContentUpdateMessage: getFeatureWorkflow failed — ${err instanceof Error ? err.message : String(err)}`,
         );
       }
-      let specStatus: string;
-      if (featureCtx?.status === SpecStatuses.ARCHIVED || featureCtx?.currentStep === SpecStatuses.ARCHIVED) {
-        specStatus = SpecStatuses.ARCHIVED;
-      } else if (featureCtx?.status === SpecStatuses.COMPLETED) {
-        specStatus = SpecStatuses.COMPLETED;
-      } else if (taskCompletionPercent === 100) {
-        specStatus = SpecStatuses.TASKS_DONE;
-      } else {
-        specStatus = SpecStatuses.ACTIVE;
-      }
 
-      // Resolve enhancement buttons from customCommands and workflow commands
       const enhancementButtons = this.resolveEnhancementButtons(documentType, featureCtx?.workflow);
 
-      // Compute staleness for workflow documents
+      const derived = computePanelDerivedState(
+        { documents: instance.state.availableDocuments, doc, tasksContent, featureCtx },
+        enhancementButtons,
+      );
+
+      // Compute staleness and run-step (I/O), and fire step-complete
+      // notifications based on transitions in derivedStepHistory.
       const stalenessMap = await computeStaleness(instance.state.availableDocuments);
 
-      // Per-step timing is derived from history[] in-memory (the on-disk
-      // file no longer carries stepHistory). Compute once and reuse for the
-      // notifier, the running-step probe, and the nav bar.
-      const derivedStepHistory = featureCtx
-        ? deriveStepHistory(
-            (featureCtx.history ?? []) as any,
-            featureCtx.currentStep as StepName | undefined,
-            featureCtx.status as Status | undefined,
-          )
-        : undefined;
-      const notifierCtx: NotifierContext | null = derivedStepHistory
-        ? { stepHistory: derivedStepHistory }
+      const notifierCtx: NotifierContext | null = derived.derivedStepHistory
+        ? { stepHistory: derived.derivedStepHistory }
         : null;
       const prevDerived = instance.lastFeatureCtx
         ? deriveStepHistory(
@@ -1005,42 +831,40 @@ export class SpecViewerProvider {
       const prevNotifierCtx: NotifierContext | null = prevDerived
         ? { stepHistory: prevDerived }
         : null;
-      // Fire step-complete notifications on live completedAt transitions (R004–R006).
       this.stepCompletionNotifier.observe(specDirectory, prevNotifierCtx, notifierCtx);
       instance.lastFeatureCtx = featureCtx ?? null;
 
-      // Running-step info for the nav bar + footer Generating state (spec 099).
       const runInfo = await this.deriveRunningStepInfo(
-        derivedStepHistory,
+        derived.derivedStepHistory,
         specDirectory,
-        taskCompletionPercent,
+        derived.taskCompletionPercent,
       );
 
       const navState: NavState = {
-        coreDocs,
-        relatedDocs,
+        coreDocs: derived.coreDocs,
+        relatedDocs: derived.relatedDocs,
         currentDoc: documentType,
-        workflowPhase,
-        taskCompletionPercent,
-        isViewingRelatedDoc,
+        workflowPhase: derived.workflowPhase,
+        taskCompletionPercent: derived.taskCompletionPercent,
+        isViewingRelatedDoc: derived.isViewingRelatedDoc,
         footerState: {
-          showApproveButton,
-          approveText,
+          showApproveButton: derived.footer.showApproveButton,
+          approveText: derived.footer.approveText,
           enhancementButtons,
-          specStatus,
+          specStatus: derived.specStatus,
         },
         enhancementButtons,
         stalenessMap,
-        specStatus,
+        specStatus: derived.specStatus,
         currentTask: featureCtx?.currentTask ?? null,
         activeStep: runInfo.tab,
         runningStepArtifactReady: runInfo.artifactReady,
         runningStepStartedAt: runInfo.startedAt,
         runningStepLabel: runInfo.label,
-        stepHistory: mapStepHistoryKeys(derivedStepHistory),
-        badgeText: computeBadgeText(featureCtx, derivedStepHistory),
-        createdDate: computeCreatedDate(derivedStepHistory),
-        lastUpdatedDate: computeLastUpdatedDate(derivedStepHistory),
+        stepHistory: derived.stepHistoryByTab,
+        badgeText: derived.badgeText,
+        createdDate: derived.createdDate,
+        lastUpdatedDate: derived.lastUpdatedDate,
         specContextName: featureCtx?.specName ?? deriveSpecName(specDirectory),
         branch: featureCtx?.workingBranch ?? featureCtx?.branch ?? null,
         currentStep: featureCtx?.currentStep ?? documentType ?? null,
@@ -1049,12 +873,10 @@ export class SpecViewerProvider {
         activityPanelMode: this.readActivityPanelMode(),
       };
 
-      // Update internal state
       instance.state.currentDocument = documentType;
-      instance.state.taskCompletionPercent = taskCompletionPercent;
+      instance.state.taskCompletionPercent = derived.taskCompletionPercent;
       instance.state.currentPhase = getPhaseNumber(documentType);
 
-      // Update panel title
       const docLabel = doc.label || "Spec";
       instance.panel.title = `Spec: ${instance.state.specName} - ${docLabel}`;
 

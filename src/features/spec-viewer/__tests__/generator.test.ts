@@ -56,11 +56,15 @@ describe('generateHtml — shell structure', () => {
         expect(html).toContain('data-raw=');
     });
 
-    it('should contain refine modal elements', () => {
+    it('does NOT render the legacy refine-modal HTML (Phase 5b removed it)', () => {
+        // The hardcoded refine-modal block and its companion `modal.ts`
+        // were orphaned by the dynamic `ui/refinePopover.ts` flow and
+        // deleted in Phase 5b. The viewer must no longer emit the legacy
+        // shell so the live popover is the only refine surface.
         const html = renderHtml({ docs: [coreDoc('spec', true)] });
-        expect(html).toContain('id="refine-backdrop"');
-        expect(html).toContain('id="refine-popover"');
-        expect(html).toContain('id="refine-input"');
+        expect(html).not.toContain('id="refine-backdrop"');
+        expect(html).not.toContain('id="refine-popover"');
+        expect(html).not.toContain('id="refine-input"');
     });
 
     it('should not render a completion-badge in any status', () => {

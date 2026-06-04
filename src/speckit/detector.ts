@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { CONTEXT_KEYS, setContextKey } from '../core/utils/contextKeys';
 
 const execAsync = promisify(exec);
 
@@ -49,7 +50,7 @@ export class SpecKitDetector {
             const { stdout } = await execAsync(whichCmd);
             this._isInstalled = true;
             this.log(`SpecKit CLI found at: ${stdout.trim()}`);
-            await vscode.commands.executeCommand('setContext', 'speckit.cliInstalled', true);
+            await setContextKey(CONTEXT_KEYS.cliInstalled, true);
             return true;
         } catch {
             // Fallback: try running specify with --help (exits with 0)
@@ -57,12 +58,12 @@ export class SpecKitDetector {
                 await execAsync('specify --help');
                 this._isInstalled = true;
                 this.log('SpecKit CLI found (via --help)');
-                await vscode.commands.executeCommand('setContext', 'speckit.cliInstalled', true);
+                await setContextKey(CONTEXT_KEYS.cliInstalled, true);
                 return true;
             } catch {
                 this._isInstalled = false;
                 this.log('SpecKit CLI not found');
-                await vscode.commands.executeCommand('setContext', 'speckit.cliInstalled', false);
+                await setContextKey(CONTEXT_KEYS.cliInstalled, false);
                 return false;
             }
         }
@@ -76,7 +77,7 @@ export class SpecKitDetector {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         if (!workspaceFolder) {
             this._isInitialized = false;
-            await vscode.commands.executeCommand('setContext', 'speckit.detected', false);
+            await setContextKey(CONTEXT_KEYS.detected, false);
             return false;
         }
 
@@ -104,7 +105,7 @@ export class SpecKitDetector {
         }
 
         // Update context for welcome view
-        await vscode.commands.executeCommand('setContext', 'speckit.detected', this._isInitialized);
+        await setContextKey(CONTEXT_KEYS.detected, this._isInitialized);
         this.log(`Workspace initialized: ${this._isInitialized}`);
 
         return this._isInitialized;
@@ -134,7 +135,7 @@ export class SpecKitDetector {
             const hasPlaceholders = /\[PROJECT_NAME\]|\[PRINCIPLE_\d+_NAME\]|\[PLACEHOLDER\]/.test(content);
             this._constitutionNeedsSetup = hasPlaceholders;
             this.log(`Constitution needs setup: ${hasPlaceholders}`);
-            await vscode.commands.executeCommand('setContext', 'speckit.constitutionNeedsSetup', hasPlaceholders);
+            await setContextKey(CONTEXT_KEYS.constitutionNeedsSetup, hasPlaceholders);
             return hasPlaceholders;
         } catch (error) {
             this.log(`Error reading constitution: ${error}`);

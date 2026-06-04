@@ -3,3 +3,4 @@ export * from './specCommands';
 export * from './selectionContextKeys';
 export * from './specsFilterState';
 export * from './specsSortState';
+export * from './specsSidebarState';

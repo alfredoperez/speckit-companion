@@ -138,6 +138,9 @@ Compare the file lists side by side to see the contrast between the full and min
 
 ## Supported AI Providers
 
+<!-- Column count must match the `speckit.aiProvider` enum length in package.json.
+     The docs-consistency test in tests/integration/docs-consistency.test.ts enforces this on every `npm test`. -->
+
 | Feature | Claude Code | GitHub Copilot CLI | Gemini CLI | Codex CLI | Qwen Code | OpenCode | IDE Chat | Claude in VS Code |
 |---------|-------------|-------------------|------------|-----------|-----------|----------|----------|-------------------|
 | **Steering File** | CLAUDE.md | .github/copilot-instructions.md | GEMINI.md | AGENTS.md | QWEN.md | AGENTS.md | Not supported | CLAUDE.md |

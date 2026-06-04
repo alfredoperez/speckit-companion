@@ -1,11 +1,12 @@
 import * as vscode from 'vscode';
+import { CONTEXT_KEYS, setContextKey } from './core/utils/contextKeys';
 
 // AI Providers
 import { IAIProvider, AIProviderFactory, isProviderConfigured, promptForProviderSelection, validatePermissionMode } from './ai-providers';
 
 // Features
 import { SteeringManager, SteeringExplorerProvider, registerSteeringCommands } from './features/steering';
-import { SpecExplorerProvider, registerSpecKitCommands, updateSelectionContextKeys, SpecsFilterState, SpecsSortState } from './features/specs';
+import { SpecExplorerProvider, registerSpecKitCommands, updateSelectionContextKeys, createSpecsSidebarState } from './features/specs';
 import { register as registerTerminalStepTracker } from './features/specs/terminalStepTracker';
 import { setLifecycleOutputChannel } from './features/specs/stepLifecycle';
 import { OverviewProvider } from './features/settings';
@@ -122,15 +123,13 @@ export async function activate(context: vscode.ExtensionContext) {
     // `specExplorer` (declared next), resolved lazily at invocation time.
     const overviewProvider = new OverviewProvider(context);
     let specExplorer!: SpecExplorerProvider;
-    const specsFilterState = new SpecsFilterState(context, () => specExplorer.refresh());
-    const specsSortState = new SpecsSortState(context, () => specExplorer.refresh());
-    specExplorer = new SpecExplorerProvider(context, outputChannel, specsFilterState, specsSortState);
+    const sidebarState = createSpecsSidebarState(context, () => specExplorer.refresh());
+    specExplorer = new SpecExplorerProvider(context, outputChannel, sidebarState.filter, sidebarState.sort);
     const steeringExplorer = new SteeringExplorerProvider(context);
 
-    // Sync the filterActive / sortActive context keys to any persisted state
-    // so title-bar menu visibility matches reality on activation.
-    specsFilterState.initialize().then(undefined, () => { /* no-op */ });
-    specsSortState.initialize().then(undefined, () => { /* no-op */ });
+    // Restore filter/sort from workspace state and sync the matching context
+    // keys so title-bar menu visibility matches reality on activation.
+    sidebarState.initialize().then(undefined, () => { /* no-op */ });
 
     // Set managers
     steeringExplorer.setSteeringManager(steeringManager);
@@ -145,7 +144,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Seed the collapse/expand toggle icon state to match the provider default
     // (expandAllSpecs=true → next click collapses → show collapse-all icon).
-    vscode.commands.executeCommand('setContext', 'speckit.specs.allCollapsed', false);
+    void setContextKey(CONTEXT_KEYS.specsAllCollapsed, false);
 
     context.subscriptions.push(
         vscode.window.registerTreeDataProvider(Views.settings, overviewProvider),
@@ -173,7 +172,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // Register all commands
     registerCliCommands(context, specKitDetector);
     registerSteeringCommands(context, steeringManager, steeringExplorer, outputChannel);
-    registerSpecKitCommands(context, specExplorer, outputChannel, specsTreeView, specsFilterState, specsSortState);
+    registerSpecKitCommands(context, specExplorer, outputChannel, specsTreeView, sidebarState.filter, sidebarState.sort);
     registerUtilityCommands(context, updateChecker, outputChannel);
 
     // Spec viewer needs to exist before setupFileWatchers so the .spec-context.json

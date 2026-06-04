@@ -1,212 +1,110 @@
 # Architecture
 
-## Overview
+SpecKit Companion is a VS Code extension that gives spec-driven development a visual home: a sidebar for browsing specs, a custom editor for reading and editing them inline, and a unified dispatch layer that routes step actions ("specify", "plan", "tasks", "implement") to whichever AI provider the user has configured.
 
-SpecKit Companion is a VS Code extension that provides a visual interface for spec-driven development with Claude Code and GitHub SpecKit.
+> This document describes **responsibilities** and **boundaries**, not file-by-file inventories. File names rot the moment someone adds or renames a module — `ls src/` and the test `tests/integration/docs-consistency.test.ts` are the live source of truth. The test fails on every `npm test` if a path mentioned here disappears or a new `*Provider.ts` is added without a doc mention.
 
-## Directory Structure
+## High-level layout
 
-```
-src/
-├── extension.ts                # Main entry point, activation, command registration
-├── ai-providers/               # AI provider integrations
-│   ├── aiProvider.ts           # Base provider interface and PROVIDER_PATHS config
-│   ├── aiProviderFactory.ts    # Factory for creating provider instances
-│   ├── claudeCodeProvider.ts   # Claude Code integration
-│   ├── copilotCliProvider.ts   # GitHub Copilot CLI integration
-│   ├── geminiCliProvider.ts    # Gemini CLI integration
-│   ├── codexCliProvider.ts     # Codex CLI integration
-│   ├── qwenCliProvider.ts      # Qwen CLI integration
-│   └── index.ts
-├── core/                       # Core utilities and shared infrastructure
-│   ├── constants.ts
-│   ├── types.ts
-│   ├── fileWatchers.ts         # Watches .claude/ for changes (debounced 1s)
-│   ├── specDirectoryResolver.ts
-│   ├── index.ts
-│   ├── errors/                 # Error types (index.ts)
-│   ├── managers/               # BaseManager.ts, index.ts
-│   ├── providers/              # BaseTreeDataProvider.ts, index.ts
-│   ├── types/                  # config.ts
-│   └── utils/                  # configManager, fileOpener, fileSystemUtils,
-│                               # notificationUtils, sanitize, pathUtils,
-│                               # installUtils, tempFileUtils, terminalUtils, index.ts
-├── features/                   # Feature-specific modules
-│   ├── agents/                 # agentManager.ts, index.ts
-│   ├── permission/             # Permission caching and config reading (index.ts)
-│   ├── settings/               # overviewProvider.ts, index.ts
-│   ├── skills/                 # skillManager.ts, index.ts
-│   ├── spec-editor/            # specEditorProvider.ts, specDraftManager.ts,
-│   │                           # specEditorCommands.ts, tempFileManager.ts, types.ts, index.ts
-│   ├── spec-viewer/            # specViewerProvider.ts, specViewerCommands.ts,
-│   │                           # messageHandlers.ts, documentScanner.ts,
-│   │                           # extractBlock.ts (walks source markdown for
-│   │                           #   the block + section anchoring inline-
-│   │                           #   comment batches into the scratchpad),
-│   │                           # phaseCalculation.ts, staleness.ts,
-│   │                           # stateDerivation.ts (060: ctx → ViewerState),
-│   │                           # footerActions.ts (060: scope + visibility),
-│   │                           # types.ts, utils.ts, html/, __tests__/
-│   ├── specs/                  # specExplorerProvider.ts, specCommands.ts,
-│   │                           # specContextManager.ts (legacy),
-│   │                           # specContextReader.ts, specContextWriter.ts,
-│   │                           # specContextBackfill.ts (060 canonical),
-│   │                           # specContextReconciler.ts (one-time file repair),
-│   │                           # specsFilterState.ts (075 fuzzy filter),
-│   │                           # fuzzyMatch.ts (075 in-repo matcher),
-│   │                           # index.ts, __tests__/
-│   ├── steering/               # steeringExplorerProvider.ts, steeringManager.ts,
-│   │                           # steeringCommands.ts, types.ts, index.ts
-│   ├── workflow-editor/        # workflowEditorProvider.ts, workflowEditorCommands.ts,
-│   │                           # workflow/, index.ts
-│   └── workflows/              # workflowManager.ts, workflowSelector.ts,
-│                               # checkpointHandler.ts, types.ts, index.ts
-└── speckit/                    # SpecKit CLI integration
-    ├── detector.ts             # CLI detection (checks `specify` in PATH)
-    ├── cliCommands.ts          # CLI command execution
-    ├── updateChecker.ts
-    ├── taskProgressService.ts
-    ├── utilityCommands.ts
-    └── index.ts
+The extension splits into three runtime layers and one configuration surface:
 
-webview/
-├── src/                        # TypeScript source (browser context)
-│   ├── spec-viewer/            # Spec viewer webview
-│   │   ├── index.ts
-│   │   ├── actions.ts
-│   │   ├── elements.ts
-│   │   ├── highlighting.ts
-│   │   ├── modal.ts
-│   │   ├── navigation.ts
-│   │   ├── scratchpad.ts       # Pure helper: which doc is currently active
-│   │   │                       # in nav state? Used by FooterActions to
-│   │   │                       # branch to the scratchpad-tab footer.
-│   │   ├── state.ts
-│   │   ├── toc.ts              # Builds a sticky table-of-contents sidebar from rendered H2/H3 headings;
-│   │   │                       # tracks the active heading via IntersectionObserver and toggles a
-│   │   │                       # width-threshold class via ResizeObserver on the scroll container.
-│   │   ├── types.ts
-│   │   ├── markdown/           # Rendering pipeline (renderer, preprocessors, scenarios)
-│   │   └── editor/             # Inline editing (inlineEditor, refinements, lineActions)
-│   ├── spec-editor/            # Spec editor webview (index.ts, types.ts)
-│   ├── markdown/               # Shared markdown utilities (classifier.ts, parser.ts, index.ts)
-│   ├── render/                 # Shared render utilities
-│   │   ├── blockRenderer.ts
-│   │   ├── contentRenderer.ts
-│   │   ├── lineRenderer.ts
-│   │   └── index.ts
-│   ├── ui/                     # Shared UI components (index.ts, inlineEdit.ts, phaseUI.ts, refinePopover.ts)
-│   ├── types.ts
-│   └── workflow.ts             # Workflow editor webview
-└── styles/                     # CSS stylesheets
-    ├── spec-viewer/            # Modular CSS partials + index.css
-    │                           #   _toc.css — Sticky outline column inside `.content-area`;
-    │                           #             hidden when the pane is narrow.
-    ├── spec-editor.css
-    ├── spec-markdown.css
-    ├── spec-viewer.css
-    └── workflow.css
+- **Extension host** (`src/`) — Node.js code that owns tree views, custom editors, file watchers, terminal dispatch, and the `.spec-context.json` lifecycle.
+- **Webview** (`webview/src/`) — sandboxed-browser Preact code that renders the spec viewer and the spec/workflow editors. It receives state from the extension via `postMessage` and never touches the filesystem itself.
+- **Static assets** (`assets/`, `webview/styles/`) — icons and CSS partials.
+- **Manifest** (`package.json`) — declarative contributions (views, commands, menus, configuration enums).
 
-assets/                         # Static assets
-└── icons/                      # Extension icons (SVG)
-```
+## Extension host (`src/`)
 
-## Key Components
+The host code organises around four directories, each with a single responsibility.
 
-### Extension Host (Node.js)
+### `src/extension.ts`
 
-**Tree View Providers** — Registered in `package.json`, implement `vscode.TreeDataProvider`:
-- `SpecExplorerProvider` (`speckit.views.explorer`): Shows specs from `specs/` directory
-- `SteeringExplorerProvider` (`speckit.views.steering`): Shows steering documents
-- `OverviewProvider` (`speckit.views.settings`): Settings and overview panel
+Entry point. Registers tree-data providers, custom editors, file watchers, and commands during `activate()`. Owns the `ExtensionContext.subscriptions` lifecycle. Calls into feature modules for everything beyond wiring.
 
-**Webview Providers** — Implement `vscode.WebviewViewProvider` or `vscode.CustomTextEditorProvider`:
-- `SpecViewerProvider`: Renders spec files with phase stepper, badges, and action buttons
-- `SpecEditorProvider`: Draft editing for spec files
-- `WorkflowEditorProvider`: Custom editor for workflow configuration files
+### `src/ai-providers/`
 
-**File Watchers** — Monitor file system for changes:
-- `.claude/` directory changes trigger tree view refreshes (via `core/fileWatchers.ts`, 1-second debounce)
-- Configured spec directories (e.g. `specs/`) also trigger refreshes (via the watcher block in `features/specs/specCommands.ts`, 300 ms debounce so interactive edits feel instant)
-- Both paths coalesce bursts of writes into a single refresh to prevent tree flicker
-- `SpecExplorerProvider.refresh()` fires `onDidChangeTreeData` exactly once per call (no loading-state double-fire), which preserves the user's expanded nodes across background file events
+The provider abstraction layer. `src/ai-providers/aiProvider.ts` defines the `IAIProvider` interface plus the `PROVIDER_PATHS` configuration record (steering file, agents dir, MCP config, command format) for each supported provider. `src/ai-providers/aiProviderFactory.ts` constructs the right concrete provider for the active `speckit.aiProvider` setting, with a fallback path for renamed enum values (see the [feedback_provider_rename_breaks_settings memory] for why this fallback exists).
 
-**Commands** — Registered in `package.json`, handled per feature module:
-- Pattern: `speckit.{feature}.{action}` (e.g., `speckit.specs.create`, `speckit.specs.plan`)
+Eight providers ship today, in three shapes:
 
-**AI Providers** — 5 supported providers via `ai-providers/`:
-1. Claude Code (`claudeCodeProvider.ts`)
-2. GitHub Copilot CLI (`copilotCliProvider.ts`)
-3. Gemini CLI (`geminiCliProvider.ts`)
-4. Codex CLI (`codexCliProvider.ts`)
-5. Qwen CLI (`qwenCliProvider.ts`)
+- **Terminal CLI providers** — spawn a `vscode.window.createTerminal()`, write a temp prompt file, `sendText` the invocation, schedule cleanup. The shared workflow lives in `cliTerminalProvider.ts` (abstract base). Concrete subclasses: `claudeCodeProvider.ts`, `copilotCliProvider.ts`, `codexCliProvider.ts`, `qwenCliProvider.ts`, `openCodeProvider.ts`. The base owns ensure-installed → temp-file → terminal → sendText → cleanup; subclasses supply a `prepareDispatch()` hook returning the command line and temp-file list. `geminiCliProvider.ts` stays outside this hierarchy — its CLI runs interactively and the prompt is delivered via post-init `sendText`, not a prompt-file dispatch.
+- **IDE-chat provider** — `ideChatProvider.ts` routes the assembled prompt into the host editor's built-in chat surface (Copilot in VS Code, Composer in Cursor, Cascade in Windsurf) instead of spawning a terminal. The host editor resolves `/speckit.*` slash commands itself.
+- **Claude-in-VS-Code panel** — `claudePanelProvider.ts` drives the Claude Code GUI panel through the editor's command surface, bypassing the terminal entirely.
 
-**Feature Modules** — 10 modules under `features/`:
-`agents`, `permission`, `settings`, `skills`, `spec-editor`, `spec-viewer`, `specs`, `steering`, `workflow-editor`, `workflows`
+Shared helpers live alongside the providers: `promptBuilder.ts` assembles the canonical prompt, `permissionValidation.ts` checks auto-approve flag shape, `initOptions.ts` handles workspace-initialization checks, `codexCommandBuilder.ts` handles Codex's `.codex/prompts/` template branch. `providerRegistry.ts` is the runtime validation layer for the `PROVIDER_PATHS` blob — each entry is checked at module load so a typo'd `commandFormat`, an `autoApproveFlag` missing its trailing space, or a malformed codicon throws on activation rather than misbehaving at first dispatch.
 
-### Webview (Browser)
+### `src/core/`
 
-The spec viewer column is structured `compact-nav` → `spec-header` (lifted out of the scroll region so it stays pinned) → `content-area` (a flex row holding `aside.spec-toc` and `#markdown-content`). The TOC is hidden via a `content-area--narrow` class when the scroll container drops below `--toc-min-width`.
+Cross-cutting infrastructure. Watches the filesystem (`src/core/fileWatchers.ts`, 1-second debounce on `.claude/` changes), resolves the user's spec directory list (`src/core/specDirectoryResolver.ts`), and exposes the canonical constants table (`src/core/constants.ts`) and shared types (`src/core/types.ts`). Sub-directories `core/errors/`, `core/managers/`, `core/providers/` hold base classes (`src/core/providers/BaseTreeDataProvider.ts` is the parent for all sidebar providers); `core/utils/` holds the small-helper grab-bag (config reading, file opening, sanitization, terminal helpers).
 
-The spec viewer and workflow editor run in VS Code webviews (sandboxed browser):
+### `src/features/`
+
+Each subdirectory is one user-facing capability, structured around a *manager* (owns file I/O and business logic) and a *provider* (owns the VS Code API surface — tree view, webview, custom editor). Commands are registered per feature.
+
+The two most active features:
+
+- **`features/specs/`** — the spec sidebar (`specExplorerProvider.ts`), the command pack (`src/features/specs/specCommands.ts`: create, mark-complete, archive, sort, filter, etc.), the `.spec-context.json` read/write split (`specContextReader.ts` / `specContextWriter.ts`, with `specContextBackfill.ts` and `specContextReconciler.ts` handling migration, and `specContextManager.ts` as a documented compatibility shim returning the legacy `FeatureWorkflowContext` shape for callers that haven't migrated to the canonical `SpecContext` type yet), step lifecycle (`stepLifecycle.ts`, `stepHistoryDerivation.ts`), the sidebar filter/sort state (`specsFilterState.ts`, `specsSortState.ts`, `fuzzyMatch.ts`), and the custom-command config normaliser (`customCommandConfig.ts`).
+- **`features/spec-viewer/`** — the custom-editor surface (`specViewerProvider.ts`), the webview message router (`messageHandlers.ts`), the pure derivation pipeline (`panelStateComputer.ts` — extracted in Phase 3 to share between the full-render and tab-click paths), the panel-instance registry (`panelRegistry.ts` — Phase 12, owns the `Map<specDir, PanelInstance>` plus debounce-timer cleanup so the provider deals with a typed API not raw Map ops), and the helpers around them (`stateDerivation.ts`, `phaseCalculation.ts`, `staleness.ts`, `footerActions.ts`, `documentScanner.ts`). `messageHandlers.ts` was restructured in Phase 4: the 140-line switch is now a typed dispatch map built on the generic `createDispatcher` utility in `src/core/utils/dispatcher.ts` (Phase 10), the three duplicate command-resolution loops in `handleClarify` collapsed behind a shared `matchesCommand` + `dispatchEnhancement` pair, and the module-scope `commentWriteQueues` Map became an encapsulated `CommentMutationQueue` class. `specViewerProvider.ts` dropped from 1110 LOC (pre-refactor) to ~920 LOC after Phases 3 and 12.
+
+Other feature folders: `features/spec-editor/` (draft editor + temp-file lifecycle), `features/steering/` (project + user steering docs), `features/agents/`, `features/skills/`, `features/permission/`, `features/workflows/`, `features/workflow-editor/`, `features/settings/`. Each follows the same manager + provider + commands pattern.
+
+### `src/speckit/`
+
+The SpecKit CLI integration. Detects `specify` on PATH, runs `specify init`, polls task progress, and surfaces utility commands.
+
+## Webview (`webview/src/`)
+
+The webview is in a partial Preact migration. Components live under `webview/src/spec-viewer/components/` (`App.tsx`, `FooterActions.tsx`, `NavigationBar.tsx`, `StepTab.tsx`, the `cards/` subtree, etc.) with module-scoped signals in `webview/src/spec-viewer/signals.ts` carrying the shared state (`navState`, `viewerState`, `activityVisible`). Stories sit alongside their components as `*.stories.tsx` and are the visual baseline.
+
+The migration is **not complete**. A parallel imperative pipeline still owns markdown rendering: `webview/src/spec-viewer/markdown/renderer.ts` produces an HTML string that the App component injects via `dangerouslySetInnerHTML`, then imperative helpers (`webview/src/spec-viewer/editor/inlineEditor.ts`, `webview/src/spec-viewer/editor/refinements.ts`, `webview/src/spec-viewer/actions.ts`, `webview/src/spec-viewer/toc.ts` (the orphan `modal.ts` was deleted in Phase 5b — its modal was unreached after the dynamic `webview/src/ui/refinePopover.ts` took over the refine flow)) manually mount components into slots the string left behind. This hybrid is the subject of refactor Phase 5 — the goal is to make `renderMarkdown()` return JSX directly and delete the imperative helpers.
+
+Shared webview surfaces:
+
+- `webview/src/markdown/` — markdown classification + parsing utilities shared across viewer and editor.
+- `webview/src/render/` — block/line/content renderers used by the imperative pipeline (will shrink with Phase 5).
+- `webview/src/ui/` — small composable UI primitives (inline-edit input, phase pill, refine popover).
+- `webview/src/spec-editor/` — the draft editor entry (`index.ts`) plus its Storybook mock (`CreateSpecMock.tsx`).
+- `webview/src/workflow.ts` — the workflow editor webview.
+- `webview/src/shared/` — reusable components (`UndoToast.tsx`) and hooks (`useInlineConfirm.ts`).
+
+Stylesheets live in `webview/styles/`, with the spec viewer's CSS broken into modular partials under `webview/styles/spec-viewer/`.
+
+## Data flow
 
 ```
-Extension Host                    Webview
+Extension host                    Webview
      │                               │
-     │  ──── documentChanged ────>   │  (file content)
-     │  <──── editSource ────────    │  (user clicks button)
-     │  <──── removeLine ────────    │  (user removes line)
-     │  <──── refineLine ────────    │  (user refines with AI)
+     │  ──── contentUpdated ────>    │  (file + nav state)
+     │  <──── switchDocument ────    │  (tab click)
+     │  <──── editLine ──────────    │  (inline edit)
+     │  <──── refineLine ────────    │  (AI refine)
+     │  <──── commentAdd/remove ─    │  (review comment)
      │                               │
 ```
 
-Message routing is handled in `messageHandlers.ts` (spec-viewer) and the workflow editor's action handlers.
+Spec context (`.spec-context.json`) is the canonical store. The host owns all writes; the webview reads derived state via the message channel. When a user advances a step, the host updates context, fires a refresh, and the sidebar re-renders. See `docs/spec-context-schema.md` for the schema.
 
-## Data Flow
+## Configuration
 
-### Spec File Opened
-1. VS Code opens `.md` file in `specs/` directory
-2. `SpecViewerProvider.resolveCustomTextEditor()` called
-3. HTML generated with phase stepper, badges, content area
-4. Webview receives content, renders with action buttons
+User-visible settings are declared in `package.json` under `contributes.configuration`. The most relevant ones:
 
-### User Clicks "Refine"
-1. Webview posts `refineLine` message with line number and instruction
-2. Extension receives message in `messageHandlers.ts`
-3. Launches AI provider CLI with refinement prompt
-4. File updates → `onDidChangeTextDocument` fires
-5. Extension sends `documentChanged` to webview
-6. Webview re-renders content
+- `speckit.aiProvider` — selects the active provider. Its enum is the canonical provider list; the README "Supported AI Providers" matrix and this document's prose are checked against it on every `npm test`.
+- `speckit.specDirectories` — list of directories the spec sidebar reads from.
+- Per-provider path overrides (`speckit.geminiPath`, `speckit.copilotPath`, etc.) and timing knobs (`speckit.geminiInitDelay`).
 
-## SpecKit CLI Integration
+User data is stored under the workspace `.claude/` and `specs/` directories, plus the user's home `~/.claude/`. None of these are shipped in the `.vsix`; the extension only reads them at runtime.
 
-The extension calls the SpecKit CLI (`specify`) for:
-- `specify init` - Initialize workspace
-- Slash commands via AI CLI: `/speckit.specify`, `/speckit.plan`, etc.
+## Extension points
 
-CLI detection: Checks if `specify` command exists in PATH (`speckit/detector.ts`).
+- **Adding a provider**: implement `IAIProvider`, register in `aiProviderFactory.ts`, add a `PROVIDER_PATHS` entry, add the enum value to `package.json`, add a column to the README matrix, name the new `*Provider.ts` file at least once in this document. The docs-consistency test (`tests/integration/docs-consistency.test.ts`) enforces the last three.
+- **Adding a feature module**: create `src/features/<name>/` with a manager + provider + commands; register in `extension.ts`.
+- **Adding a tree view**: extend `BaseTreeDataProvider`, declare under `contributes.views` in `package.json`, activate in `extension.ts`.
+- **Adding a webview surface**: create a Preact entry under `webview/src/`, add styles under `webview/styles/`, wire message handlers in the feature's `messageHandlers.ts`. New components must ship with a `*.stories.tsx`.
 
-### Provider-Specific Command Formats
+## Related documents
 
-Different AI CLIs use different naming conventions for SpecKit commands:
-
-| Format | Providers | Example |
-|--------|-----------|---------|
-| Dot (`speckit.specify`) | Copilot, Gemini, Qwen | `/speckit.specify` |
-| Dash (`speckit-specify`) | Claude, Codex | `/speckit-specify` |
-
-This is configured via the `commandFormat` field in `PROVIDER_PATHS` (`src/ai-providers/aiProvider.ts`). To change a provider's format, edit that single field. The `formatCommandForProvider()` helper converts the canonical dot format to the provider-specific format at send-time, keeping workflow configs provider-agnostic.
-
-## State Management
-
-- **In-memory**: Tree view data, webview state
-- **File-based**: `specs/*/`, `.claude/settings/speckit-settings.json`, `.spec-context.json` per spec directory
-- **VS Code**: Extension context for subscriptions, globalState for persistence, workspaceState for per-workspace UI state (e.g. `speckit.specs.filter.query` from 075)
-- **Context keys**: `speckit.specs.filterActive` (075) toggles the clear-filter title-bar action; `speckit.specs.noFilterMatch` (075) drives the empty-result `viewsWelcome` entry; `speckit.specs.allCollapsed` (068) swaps the collapse/expand icon
-
-## Extension Points for Contributors
-
-- **Add an AI provider**: Implement the provider interface in `src/ai-providers/`, register in `aiProviderFactory.ts`, add to `PROVIDER_PATHS` in `aiProvider.ts`
-- **Add a feature module**: Create a directory under `src/features/` following the Manager/Provider/Commands pattern; register commands in `extension.ts`
-- **Add a tree view**: Extend `BaseTreeDataProvider`, register in `package.json` under `contributes.views`, activate in `extension.ts`
-- **Add a webview**: Create entry under `webview/src/`, add styles under `webview/styles/`, wire up message handlers in the feature's `messageHandlers.ts`
+- `docs/refactor-plan.md` — the structural-cleanup plan, including the prevention strategy this doc participates in.
+- `docs/spec-context-schema.md` — the on-disk schema for `.spec-context.json`.
+- `docs/viewer-states.md` — the full state machine for the spec viewer.
+- `docs/sidebar.md` — long-form sidebar reference.
+- `docs/how-it-works.md` — narrative walk-through that complements this structural overview.

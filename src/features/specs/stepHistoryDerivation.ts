@@ -36,11 +36,83 @@
 import {
     HistoryEntry,
     StepHistoryEntry,
-    SubstepEntry,
+    STEP_NAMES,
     StepName,
     Status,
+    SubstepEntry,
 } from '../../core/types/specContext';
 import { SpecStatuses } from '../../core/constants';
+
+/**
+ * Canonical spec-status derivation. Single entry point for "given a context
+ * + task completion %, what is the effective spec status?"
+ *
+ * Priority ladder (first match wins):
+ *   1. archived (status field OR legacy currentStep === 'archived')
+ *   2. completed (status field)
+ *   3. tasks-done (taskCompletionPercent === 100)
+ *   4. active (default)
+ *
+ * Lives here in `features/specs/` next to `isStepCompleted` because it's
+ * a pure status query, not a viewer concern. Both `panelStateComputer` and
+ * any other surface that needs the derived status import from this module.
+ *
+ * Accepts the loose `{ status?, currentStep? }` shape so callers using the
+ * legacy `FeatureWorkflowContext` and the canonical `SpecContext` can both
+ * pass without converting.
+ */
+export function getSpecStatus(
+    ctx: { status?: string; currentStep?: string } | undefined,
+    taskCompletionPercent: number,
+): typeof SpecStatuses[keyof typeof SpecStatuses] {
+    if (ctx?.status === SpecStatuses.ARCHIVED || ctx?.currentStep === SpecStatuses.ARCHIVED) {
+        return SpecStatuses.ARCHIVED;
+    }
+    if (ctx?.status === SpecStatuses.COMPLETED) {
+        return SpecStatuses.COMPLETED;
+    }
+    if (taskCompletionPercent === 100) {
+        return SpecStatuses.TASKS_DONE;
+    }
+    return SpecStatuses.ACTIVE;
+}
+
+/**
+ * Terminal statuses — the spec is done, no further workflow steps apply.
+ * Captures the recurring `status === COMPLETED || status === ARCHIVED`
+ * pattern at every call site that asks "is this spec closed?"
+ */
+export function isTerminalStatus(status: string | undefined | null): boolean {
+    return status === SpecStatuses.COMPLETED || status === SpecStatuses.ARCHIVED;
+}
+
+/**
+ * Determine whether a step should be treated as completed.
+ *
+ * Pure query over `stepHistory` + the current step. A step is completed when:
+ *   1. Its history entry has an explicit `completedAt`, OR
+ *   2. Its position in `STEP_NAMES` is *before* `currentStep` (the workflow
+ *      moved past it — inferred completion, used when the AI-written history
+ *      missed a `completedAt`).
+ *
+ * Lives here in `features/specs/` rather than in `spec-viewer/` because the
+ * sidebar query (specExplorerProvider) needs it and the sidebar shouldn't
+ * depend on the viewer module. The viewer also reads this function — both
+ * import from `specs/` now.
+ */
+export function isStepCompleted(
+    step: StepName,
+    currentStep: StepName,
+    stepHistory: Record<string, { startedAt?: string; completedAt?: string | null }>,
+): boolean {
+    const entry = stepHistory[step];
+    if (entry?.completedAt) return true;
+    const stepIdx = STEP_NAMES.indexOf(step);
+    const currentIdx = STEP_NAMES.indexOf(currentStep);
+    if (stepIdx >= 0 && currentIdx >= 0 && stepIdx < currentIdx) return true;
+    if (!entry?.startedAt) return false;
+    return false;
+}
 
 interface RawStep {
     step: string;
@@ -151,7 +223,7 @@ export function deriveStepHistory(
     if (!transitions || transitions.length === 0) return out;
 
     const deduped = dedupeConsecutive(transitions);
-    const isTerminal = status === SpecStatuses.COMPLETED || status === SpecStatuses.ARCHIVED;
+    const isTerminal = isTerminalStatus(status);
 
     const groups = groupStepsInOrder(deduped);
 

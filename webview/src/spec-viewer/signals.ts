@@ -18,11 +18,9 @@ export const pendingRefinements = signal<Refinement[]>([]);
 /** Currently active inline editor element */
 export const activeEditor = signal<HTMLElement | null>(null);
 
-/** Current line being refined (modal) */
-export const refineLineNum = signal<number | null>(null);
-
-/** Current content being refined (modal) */
-export const refineContent = signal('');
+// The active refine flow uses `ui/refinePopover.ts` which manages its
+// own state directly — there's no global signal for the in-flight
+// refine line because nothing else needs to read it.
 
 /** Rendered markdown HTML (set imperatively, read by App) */
 export const markdownHtml = signal('');

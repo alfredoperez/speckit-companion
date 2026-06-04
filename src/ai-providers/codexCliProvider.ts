@@ -1,66 +1,79 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import { ConfigManager } from '../core/utils/configManager';
-import { AIProviders, Timing } from '../core/constants';
-import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
+import { AIProviders } from '../core/constants';
 import { createTempFile } from '../core/utils/tempFileUtils';
-import { ensureCliInstalled } from '../core/utils/installUtils';
-import { IAIProvider, AIExecutionResult } from './aiProvider';
-import { getPermissionFlagForProvider } from './permissionValidation';
+import { CliTerminalProvider, DispatchContext, DispatchPlan } from './cliTerminalProvider';
 import { readInitOptions } from './initOptions';
 import { buildCodexExecCommand } from './codexCommandBuilder';
 
-const execAsync = promisify(exec);
-
-export class CodexCliProvider implements IAIProvider {
+/**
+ * Codex CLI provider — `<script> codex exec - < <tmp>`.
+ *
+ * Two divergences from the default `CliTerminalProvider` dispatch:
+ *
+ *   1. The command line is built by `buildCodexExecCommand`, not the shared
+ *      `buildPromptDispatchCommand`. Codex streams the prompt into `codex
+ *      exec -` via a shell pipe, with an optional pre-script wrapper read
+ *      from `initOptions`.
+ *   2. When the prompt is a known SpecKit slash command (e.g.
+ *      `/speckit.specify`), the prompt body is the *template* from
+ *      `.codex/prompts/<name>.md` with `$ARGUMENTS` substituted in Node —
+ *      not the slash text itself. Unknown commands fall back to a short
+ *      instructional wrapper.
+ *
+ * Everything else (install check, terminal lifecycle, cleanup) is inherited.
+ */
+export class CodexCliProvider extends CliTerminalProvider {
     public readonly name = 'Codex CLI';
     public readonly type = AIProviders.CODEX;
 
-    private context: vscode.ExtensionContext;
-    private outputChannel: vscode.OutputChannel;
-    private configManager: ConfigManager;
+    protected readonly cliBinary = 'codex';
+    protected readonly cliPathSettingKey = null;
+    protected readonly installHint = {
+        displayName: 'Codex CLI',
+        installCommand: 'npm install -g @openai/codex',
+    };
+    protected readonly defaultTerminalTitle = 'SpecKit - Codex CLI';
+    protected readonly headlessTerminalName = 'Codex CLI Background';
+    protected readonly logPrefix = 'Codex';
 
-    constructor(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel) {
-        this.context = context;
-        this.outputChannel = outputChannel;
+    protected async prepareDispatch(ctx: Omit<DispatchContext, 'cliPath' | 'permissionFlag'>): Promise<DispatchPlan> {
+        // Slash-command path: try to resolve a SpecKit skill template, else
+        // wrap the slash in a short instructional fallback. Other modes pass
+        // the prompt straight through to template resolution (no-op when the
+        // prompt isn't a slash command).
+        const rawPrompt = ctx.slashCommand
+            ? ctx.slashCommand
+            : ctx.prompt;
+        const fallback = ctx.slashCommand
+            ? `Run the following SpecKit command: ${ctx.slashCommand}`
+            : ctx.prompt;
+        const resolvedPrompt = this.resolvePromptText(rawPrompt, fallback);
 
-        this.configManager = ConfigManager.getInstance();
-        this.configManager.loadSettings();
+        const filePrefix =
+            ctx.mode === 'headless' ? 'background-prompt'
+            : ctx.mode === 'slash' ? 'slash-prompt'
+            : 'prompt';
+
+        // Codex needs LF line endings regardless of the host shell — normalize
+        // before the temp file lands on disk.
+        const normalized = resolvedPrompt.replace(/\r\n/g, '\n');
+        const tempFilePath = await createTempFile(this.context, normalized, filePrefix, true);
+
+        const { script } = readInitOptions(this.outputChannel);
+        const commandLine = buildCodexExecCommand({
+            script,
+            promptFilePath: tempFilePath,
+            permissionFlag: this.getPermissionFlag(),
+        });
+        this.outputChannel.appendLine(`[codex] script=${script} (init-options)`);
+
+        return { commandLine, tempFiles: [tempFilePath] };
     }
 
-    getPermissionFlag(): string {
-        return getPermissionFlagForProvider(this.type);
-    }
+    // ─── Codex-specific skill-template resolution ─────────────────────────
 
-    /**
-     * Check if Codex CLI is installed
-     */
-    async isInstalled(): Promise<boolean> {
-        try {
-            await execAsync('codex --version');
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    /**
-     * Create a temporary file with content. Normalizes CRLF → LF so that
-     * downstream consumers (especially `codex exec -` on Windows) always
-     * receive unix line endings regardless of the workspace's shell family.
-     */
-    private async createPromptFile(content: string, prefix: string = 'prompt'): Promise<string> {
-        const normalized = content.replace(/\r\n/g, '\n');
-        return createTempFile(this.context, normalized, prefix, true);
-    }
-
-    /**
-     * Parse a slash command into skill name and arguments
-     * Only parses the first line - refinement context may follow on subsequent lines
-     */
     private parseSlashCommand(prompt: string): { skillName: string; args: string } | null {
         const firstLine = prompt.split('\n')[0].trim();
         const match = firstLine.match(/^\/(speckit[.\-]\w+)\s*(.*)$/);
@@ -68,10 +81,6 @@ export class CodexCliProvider implements IAIProvider {
         return { skillName: match[1], args: match[2]?.trim() || '' };
     }
 
-    /**
-     * Resolve a skill name to an absolute prompt file path under
-     * `.codex/prompts/`, or `null` if no matching file exists.
-     */
     private getPromptFileAbsolutePath(skillName: string): string | null {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         if (!workspaceFolder) return null;
@@ -80,12 +89,6 @@ export class CodexCliProvider implements IAIProvider {
         return fs.existsSync(promptPath) ? promptPath : null;
     }
 
-    /**
-     * Resolve the final prompt text that should be written to a temp file and
-     * streamed into `codex exec`. For known SpecKit skills, read the prompt
-     * file and substitute `$ARGUMENTS` in Node (no shell escaping hazards). For
-     * other prompts, return `fallback` unchanged.
-     */
     private resolvePromptText(rawPrompt: string, fallback: string): string {
         const parsed = this.parseSlashCommand(rawPrompt.trim());
         if (!parsed) return fallback;
@@ -99,162 +102,6 @@ export class CodexCliProvider implements IAIProvider {
         } catch (e) {
             this.outputChannel.appendLine(`[Codex] Failed to read skill prompt ${promptFilePath}: ${e}. Falling back.`);
             return fallback;
-        }
-    }
-
-    /**
-     * Schedule a temp-file cleanup after the standard delay.
-     */
-    private scheduleCleanup(tempFilePath: string): void {
-        setTimeout(async () => {
-            try {
-                await fs.promises.unlink(tempFilePath);
-                this.outputChannel.appendLine(`[Codex] Cleaned up prompt file: ${tempFilePath}`);
-            } catch (e) {
-                this.outputChannel.appendLine(`[Codex] Failed to cleanup temp file: ${e}`);
-            }
-        }, Timing.tempFileCleanupDelay);
-    }
-
-    /**
-     * Check if Codex CLI is installed and show helpful error if not
-     */
-    private async ensureInstalled(): Promise<void> {
-        await ensureCliInstalled(
-            'Codex CLI',
-            'npm install -g @openai/codex',
-            'codex --version',
-            this.outputChannel
-        );
-    }
-
-    /**
-     * Execute a prompt in a visible terminal (split view).
-     * Always writes the resolved prompt to a temp file and streams it into
-     * `codex exec -` via a shell-native pipe (no `<` redirection).
-     */
-    async executeInTerminal(prompt: string, title: string = 'SpecKit - Codex CLI'): Promise<vscode.Terminal> {
-        try {
-            await this.ensureInstalled();
-
-            const resolvedPrompt = this.resolvePromptText(prompt, prompt);
-            const tempFilePath = await this.createPromptFile(resolvedPrompt, 'prompt');
-            const { script } = readInitOptions(this.outputChannel);
-            const command = buildCodexExecCommand({
-                script,
-                promptFilePath: tempFilePath,
-                permissionFlag: this.getPermissionFlag(),
-            });
-
-            this.outputChannel.appendLine(`[codex] script=${script} (init-options)`);
-
-            const terminal = vscode.window.createTerminal({
-                name: title,
-                cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
-                location: {
-                    viewColumn: vscode.ViewColumn.Two
-                }
-            });
-
-            terminal.show();
-
-            await waitForShellReady(terminal);
-            terminal.sendText(command, true);
-
-            this.scheduleCleanup(tempFilePath);
-
-            return terminal;
-
-        } catch (error) {
-            this.outputChannel.appendLine(`[Codex] ERROR: Failed to send to Codex CLI: ${error}`);
-            vscode.window.showErrorMessage(`Failed to run Codex CLI: ${error}`);
-            throw error;
-        }
-    }
-
-    /**
-     * Execute a prompt in headless/background mode.
-     * Same pipeline as `executeInTerminal`: resolve → temp file → pipe.
-     */
-    async executeHeadless(prompt: string): Promise<AIExecutionResult> {
-        await this.ensureInstalled();
-
-        this.outputChannel.appendLine(`[CodexCliProvider] Invoking Codex CLI in headless mode`);
-
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        const cwd = workspaceFolder?.uri.fsPath;
-
-        const resolvedPrompt = this.resolvePromptText(prompt, prompt);
-        const tempFilePath = await this.createPromptFile(resolvedPrompt, 'background-prompt');
-        const { script } = readInitOptions(this.outputChannel);
-        const commandLine = buildCodexExecCommand({
-            script,
-            promptFilePath: tempFilePath,
-            permissionFlag: this.getPermissionFlag(),
-        });
-
-        this.outputChannel.appendLine(`[codex] script=${script} (init-options)`);
-
-        return executeCommandInHiddenTerminal({
-            commandLine,
-            cwd,
-            terminalName: 'Codex CLI Background',
-            outputChannel: this.outputChannel,
-            logPrefix: 'Codex',
-            tempFilePath,
-            logCommandOnFailure: true
-        });
-    }
-
-    /**
-     * Execute a slash command in terminal.
-     * Known SpecKit skills resolve their prompt file in Node; other commands
-     * fall back to a short instructional wrapper. Either way the final text
-     * is written to a temp file and streamed via `buildCodexExecCommand`.
-     *
-     * @param command - The slash command to execute (e.g., "/speckit.specify specs/012-feature")
-     * @param title - Terminal title
-     * @param autoExecute - If false, shows command but waits for user to press Enter (default: true)
-     */
-    async executeSlashCommand(command: string, title: string = 'SpecKit - Codex CLI', autoExecute: boolean = true): Promise<vscode.Terminal> {
-        try {
-            await this.ensureInstalled();
-
-            const slashCommand = command.startsWith('/') ? command : `/${command}`;
-            const fallback = `Run the following SpecKit command: ${slashCommand}`;
-            const resolvedPrompt = this.resolvePromptText(slashCommand, fallback);
-
-            const tempFilePath = await this.createPromptFile(resolvedPrompt, 'slash-prompt');
-            const { script } = readInitOptions(this.outputChannel);
-            const terminalCommand = buildCodexExecCommand({
-                script,
-                promptFilePath: tempFilePath,
-                permissionFlag: this.getPermissionFlag(),
-            });
-
-            this.outputChannel.appendLine(`[codex] script=${script} (init-options)`);
-
-            const terminal = vscode.window.createTerminal({
-                name: title,
-                cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
-                location: {
-                    viewColumn: vscode.ViewColumn.Two
-                }
-            });
-
-            terminal.show();
-
-            await waitForShellReady(terminal);
-            terminal.sendText(terminalCommand, autoExecute);
-
-            this.scheduleCleanup(tempFilePath);
-
-            return terminal;
-
-        } catch (error) {
-            this.outputChannel.appendLine(`[Codex] ERROR: Failed to execute slash command: ${error}`);
-            vscode.window.showErrorMessage(`Failed to run Codex CLI: ${error}`);
-            throw error;
         }
     }
 }

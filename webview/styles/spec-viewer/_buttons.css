@@ -7,7 +7,8 @@
 button.primary,
 button.secondary,
 button.ghost,
-button.enhancement {
+button.enhancement,
+button.destructive {
     padding: 6px 14px;
     border-radius: var(--radius-sm);
     cursor: pointer;
@@ -69,6 +70,24 @@ button.enhancement {
     border: 1px solid var(--border);
     color: var(--text-primary);
     font-weight: 500;
+}
+
+/* Destructive variant — danger/delete affordance. Use with useInlineConfirm
+   for the two-click confirm pattern when the operation can't be undone. */
+button.destructive {
+    background: transparent;
+    border: 1px solid var(--error, var(--border));
+    color: var(--error, var(--text-primary));
+}
+
+button.destructive:hover {
+    background: var(--error, var(--bg-hover));
+    color: white;
+}
+
+button.destructive:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 button.enhancement .icon {

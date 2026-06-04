@@ -1,6 +1,16 @@
 import type { JSX } from 'preact';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'enhancement';
+/**
+ * Visual + semantic variant. `destructive` is the danger/delete affordance
+ * (red border + error color). Pair with `useInlineConfirm` for the
+ * two-click confirm pattern when the destruction is irreversible.
+ */
+export type ButtonVariant =
+    | 'primary'
+    | 'secondary'
+    | 'ghost'
+    | 'enhancement'
+    | 'destructive';
 
 export interface ButtonProps extends Omit<JSX.HTMLAttributes<HTMLButtonElement>, 'icon'> {
     label: string;

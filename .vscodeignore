@@ -1,5 +1,10 @@
 .vscode/**
 .vscode-test/**
+.venv/**
+.uv-cache/**
+__pycache__/**
+**/__pycache__/**
+*.pyc
 src/**
 !src/resources/**
 .gitignore

@@ -1,14 +1,12 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import { ConfigManager } from '../core/utils/configManager';
-import { AIProviders, Timing } from '../core/constants';
-import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
+import { AIProviders } from '../core/constants';
+import { waitForShellReady } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
-import { IAIProvider, AIExecutionResult, dispatchSlashCommandViaTempFile, buildPromptDispatchCommand } from './aiProvider';
-import { splitContextPreamble } from './promptBuilder';
+import { dispatchSlashCommandViaTempFile, buildPromptDispatchCommand, AIExecutionResult } from './aiProvider';
+import { CliTerminalProvider, DispatchContext, DispatchPlan } from './cliTerminalProvider';
 import { detectShell, formatPromptFileSubstitution, Shell } from '../core/utils/shellDetection';
+import { splitContextPreamble } from './promptBuilder';
 import { getPermissionFlagForProvider } from './permissionValidation';
 
 function buildSystemPromptFlag(shell: Shell, systemPromptFilePath: string | null): string {
@@ -20,133 +18,45 @@ function buildSystemPromptFlag(shell: Shell, systemPromptFilePath: string | null
     return `--append-system-prompt "${formatPromptFileSubstitution(shell, systemPromptFilePath)}" `;
 }
 
-const execAsync = promisify(exec);
-
-export class ClaudeCodeProvider implements IAIProvider {
+/**
+ * Claude Code provider.
+ *
+ * Two divergences from the default `CliTerminalProvider` dispatch:
+ *
+ *   1. The prompt may carry a speckit-companion context-update *preamble*
+ *      (see `splitContextPreamble`). When present, it's hoisted out of the
+ *      user message and passed to `claude --append-system-prompt <file>` so
+ *      it doesn't pollute the terminal scrollback or confuse slash-command
+ *      routing. That requires a second temp file alongside the user prompt.
+ *   2. `executeSlashCommand` uses `dispatchSlashCommandViaTempFile` — Claude
+ *      keeps the slash command on the command line and passes only the args
+ *      via `$(cat <file>)`. The base class's generic flow would send the
+ *      whole slash text as a prompt, which doesn't match how Claude resolves
+ *      `/speckit-*` commands.
+ *
+ * Everything else (install check, terminal lifecycle, cleanup) is inherited.
+ */
+export class ClaudeCodeProvider extends CliTerminalProvider {
     public readonly name = 'Claude Code';
     public readonly type = AIProviders.CLAUDE;
 
-    private context: vscode.ExtensionContext;
-    private outputChannel: vscode.OutputChannel;
-    private configManager: ConfigManager;
+    protected readonly cliBinary = 'claude';
+    protected readonly cliPathSettingKey = null;
+    // Claude is so commonly pre-installed that the install-hint path adds
+    // noise — keep it null. (The base class skips the check when this is null.)
+    protected readonly installHint = null;
+    protected readonly defaultTerminalTitle = 'SpecKit - Claude Code';
+    protected readonly headlessTerminalName = 'Claude Code Background';
+    protected readonly logPrefix = 'ClaudeCodeProvider';
 
-    constructor(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel) {
-        this.context = context;
-        this.outputChannel = outputChannel;
+    protected async prepareDispatch(ctx: Omit<DispatchContext, 'cliPath' | 'permissionFlag'>): Promise<DispatchPlan> {
+        const { preamble, command } = splitContextPreamble(ctx.prompt);
+        const filePrefix = ctx.mode === 'headless' ? 'background-prompt' : 'prompt';
+        const systemPrefix = ctx.mode === 'headless' ? 'background-system-prompt' : 'system-prompt';
 
-        this.configManager = ConfigManager.getInstance();
-        this.configManager.loadSettings();
-    }
-
-    /**
-     * Check if Claude Code CLI is installed
-     */
-    async isInstalled(): Promise<boolean> {
-        try {
-            await execAsync('claude --version');
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    getPermissionFlag(): string {
-        return getPermissionFlagForProvider(this.type);
-    }
-
-    /**
-     * Create a temporary file with content
-     */
-    private async createPromptFile(content: string, prefix: string = 'prompt'): Promise<string> {
-        return createTempFile(this.context, content, prefix, true);
-    }
-
-    /**
-     * Split a prompt that contains the speckit-companion context-update preamble
-     * into a system-level preamble (passed via --append-system-prompt) and a
-     * clean user message (typically just a slash command). Keeping the preamble
-     * out of the user message lets Claude CLI route slash commands correctly
-     * and keeps the terminal view focused on what the user actually invoked.
-     */
-    private splitPreambleFromPrompt(prompt: string): { systemPrompt: string | null; userPrompt: string } {
-        const { preamble, command } = splitContextPreamble(prompt);
-        return { systemPrompt: preamble, userPrompt: command };
-    }
-
-    /**
-     * Execute a prompt in a visible terminal (split view)
-     */
-    async executeInTerminal(prompt: string, title: string = 'SpecKit - Claude Code'): Promise<vscode.Terminal> {
-        try {
-            const { systemPrompt, userPrompt } = this.splitPreambleFromPrompt(prompt);
-
-            const promptFilePath = await this.createPromptFile(userPrompt, 'prompt');
-            const systemPromptFilePath = systemPrompt
-                ? await this.createPromptFile(systemPrompt, 'system-prompt')
-                : null;
-
-            const permissionFlag = this.getPermissionFlag();
-            const shell = detectShell();
-            const command = buildPromptDispatchCommand({
-                cliInvocation: 'claude',
-                flags: `${buildSystemPromptFlag(shell, systemPromptFilePath)}${permissionFlag}`,
-                promptFilePath,
-                promptText: userPrompt,
-                shell,
-            });
-
-            const terminal = vscode.window.createTerminal({
-                name: title,
-                cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
-                location: {
-                    viewColumn: vscode.ViewColumn.Two
-                }
-            });
-
-            terminal.show();
-
-            await waitForShellReady(terminal);
-            terminal.sendText(command, true);
-
-            // Clean up temp files after delay
-            setTimeout(async () => {
-                for (const path of [promptFilePath, systemPromptFilePath]) {
-                    if (!path) continue;
-                    try {
-                        await fs.promises.unlink(path);
-                        this.outputChannel.appendLine(`Cleaned up prompt file: ${path}`);
-                    } catch (e) {
-                        this.outputChannel.appendLine(`Failed to cleanup temp file: ${e}`);
-                    }
-                }
-            }, Timing.tempFileCleanupDelay);
-
-            return terminal;
-
-        } catch (error) {
-            this.outputChannel.appendLine(`ERROR: Failed to send to Claude Code: ${error}`);
-            vscode.window.showErrorMessage(`Failed to run Claude Code: ${error}`);
-            throw error;
-        }
-    }
-
-    /**
-     * Execute a prompt in headless/background mode
-     */
-    async executeHeadless(prompt: string): Promise<AIExecutionResult> {
-        this.outputChannel.appendLine(`[ClaudeCodeProvider] Invoking Claude Code in headless mode`);
-        this.outputChannel.appendLine(`========================================`);
-        this.outputChannel.appendLine(prompt);
-        this.outputChannel.appendLine(`========================================`);
-
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        const cwd = workspaceFolder?.uri.fsPath;
-
-        const { systemPrompt, userPrompt } = this.splitPreambleFromPrompt(prompt);
-
-        const promptFilePath = await this.createPromptFile(userPrompt, 'background-prompt');
-        const systemPromptFilePath = systemPrompt
-            ? await this.createPromptFile(systemPrompt, 'background-system-prompt')
+        const promptFilePath = await createTempFile(this.context, command, filePrefix, true);
+        const systemPromptFilePath = preamble
+            ? await createTempFile(this.context, preamble, systemPrefix, true)
             : null;
 
         const permissionFlag = this.getPermissionFlag();
@@ -155,38 +65,24 @@ export class ClaudeCodeProvider implements IAIProvider {
             cliInvocation: 'claude',
             flags: `${buildSystemPromptFlag(shell, systemPromptFilePath)}${permissionFlag}`,
             promptFilePath,
-            promptText: userPrompt,
+            promptText: command,
             shell,
         });
 
-        return executeCommandInHiddenTerminal({
-            commandLine,
-            cwd,
-            terminalName: 'Claude Code Background',
-            outputChannel: this.outputChannel,
-            logPrefix: 'Claude',
-            tempFilePath: promptFilePath,
-            cleanupFn: systemPromptFilePath
-                ? async () => {
-                    try {
-                        await fs.promises.unlink(systemPromptFilePath);
-                        this.outputChannel.appendLine(`Cleaned up system prompt file: ${systemPromptFilePath}`);
-                    } catch (e) {
-                        this.outputChannel.appendLine(`Failed to cleanup system prompt file: ${e}`);
-                    }
-                }
-                : undefined,
-            logCommandOnFailure: true
-        });
+        const tempFiles = systemPromptFilePath ? [promptFilePath, systemPromptFilePath] : [promptFilePath];
+        return { commandLine, tempFiles };
     }
 
     /**
-     * Execute a slash command in terminal
-     * @param command - The slash command to execute
-     * @param title - Terminal title
-     * @param autoExecute - If false, shows command but waits for user to press Enter (default: true)
+     * Claude resolves `/speckit-*` slash commands itself when they sit on the
+     * command line. The base class would otherwise treat the slash text as a
+     * regular prompt body, which short-circuits Claude's command resolution.
      */
-    async executeSlashCommand(command: string, title: string = 'SpecKit - Claude Code', autoExecute: boolean = true): Promise<vscode.Terminal> {
+    async executeSlashCommand(
+        command: string,
+        title: string = 'SpecKit - Claude Code',
+        autoExecute: boolean = true,
+    ): Promise<vscode.Terminal> {
         try {
             const slashCommand = command.startsWith('/') ? command : `/${command}`;
             const firstSpace = slashCommand.indexOf(' ');
@@ -199,11 +95,8 @@ export class ClaudeCodeProvider implements IAIProvider {
             const terminal = vscode.window.createTerminal({
                 name: title,
                 cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
-                location: {
-                    viewColumn: vscode.ViewColumn.Two
-                }
+                location: { viewColumn: vscode.ViewColumn.Two },
             });
-
             terminal.show();
 
             await dispatchSlashCommandViaTempFile({
@@ -218,7 +111,6 @@ export class ClaudeCodeProvider implements IAIProvider {
             });
 
             return terminal;
-
         } catch (error) {
             this.outputChannel.appendLine(`ERROR: Failed to execute slash command: ${error}`);
             vscode.window.showErrorMessage(`Failed to run Claude Code: ${error}`);
@@ -230,42 +122,38 @@ export class ClaudeCodeProvider implements IAIProvider {
     async invokeClaudeSplitView(prompt: string, title?: string): Promise<vscode.Terminal> {
         return this.executeInTerminal(prompt, title);
     }
-
     async invokeClaudeHeadless(prompt: string): Promise<AIExecutionResult> {
         return this.executeHeadless(prompt);
     }
 
     /**
-     * Rename a terminal
+     * Rename a terminal. Kept here (rather than on the base) because no other
+     * provider exposes a rename surface and the call is Claude-specific in
+     * existing callers.
      */
     async renameTerminal(terminal: vscode.Terminal, newName: string): Promise<void> {
         terminal.show();
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         this.outputChannel.appendLine(`[ClaudeCodeProvider] ${terminal.name} Terminal renamed to: ${newName}`);
-        await vscode.commands.executeCommand('workbench.action.terminal.renameWithArg', {
-            name: newName
-        });
+        await vscode.commands.executeCommand('workbench.action.terminal.renameWithArg', { name: newName });
     }
 
     /**
-     * Create permission setup terminal
+     * Open a one-shot permission-setup terminal. Static helper that
+     * sidesteps the dispatch flow because there is no prompt — the user just
+     * needs to see the Claude CLI's interactive permission prompt.
      */
     static async createPermissionTerminal(): Promise<vscode.Terminal> {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         const terminal = vscode.window.createTerminal({
             name: 'Claude Code - Permission Setup',
             cwd: workspaceFolder,
-            location: { viewColumn: vscode.ViewColumn.Two }
+            location: { viewColumn: vscode.ViewColumn.Two },
         });
-
         terminal.show();
         await waitForShellReady(terminal);
         const permissionFlag = getPermissionFlagForProvider(AIProviders.CLAUDE);
-        terminal.sendText(
-            `claude ${permissionFlag}`.trim(),
-            true
-        );
-
+        terminal.sendText(`claude ${permissionFlag}`.trim(), true);
         return terminal;
     }
 }

@@ -3,6 +3,7 @@ import * as path from 'path';
 import { readSpecContextSync } from './specContextManager';
 import { SpecStatuses } from '../../core/constants';
 import { isSpecLifecycleItem } from './specExplorerProvider';
+import { CONTEXT_KEYS, setContextKey } from '../../core/utils/contextKeys';
 
 // Menu visibility is driven by per-item viewItem (see SpecItem.contextValue in specExplorerProvider.ts);
 // this module now writes only count/mixed for any UI that still depends on them.
@@ -30,6 +31,6 @@ export function updateSelectionContextKeys(selection: readonly SelectableSpecIte
     const groupCount = (someCompleted ? 1 : 0) + (someArchived ? 1 : 0) + (someActive ? 1 : 0);
     const mixed = count > 1 && groupCount > 1;
 
-    vscode.commands.executeCommand('setContext', 'speckit.specs.selection.count', count);
-    vscode.commands.executeCommand('setContext', 'speckit.specs.selection.mixed', mixed);
+    void setContextKey(CONTEXT_KEYS.specsSelectionCount, count);
+    void setContextKey(CONTEXT_KEYS.specsSelectionMixed, mixed);
 }

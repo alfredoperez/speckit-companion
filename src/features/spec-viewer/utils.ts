@@ -21,23 +21,10 @@ export function generateNonce(): string {
     return text;
 }
 
-/**
- * Convert filename to display name (e.g., "research.md" -> "Research")
- */
-export function fileNameToDisplayName(fileName: string): string {
-    const baseName = fileName.replace(/\.md$/i, '');
-    // Convert kebab-case or snake_case to Title Case
-    return baseName
-        .replace(/[-_]/g, ' ')
-        .replace(/\b\w/g, char => char.toUpperCase());
-}
-
-/**
- * Convert filename to document type (e.g., "research.md" -> "research")
- */
-export function fileNameToDocType(fileName: string): string {
-    return fileName.replace(/\.md$/i, '').toLowerCase();
-}
+// `fileNameToDocType` lives in `core/utils/fileNaming.ts`.
+// Imported locally so `getDocumentTypeFromPath` below can use them; not
+// re-exported (callers import from `core/utils/fileNaming` directly).
+import { fileNameToDocType } from '../../core/utils/fileNaming';
 
 /**
  * Check if a file path is a spec document

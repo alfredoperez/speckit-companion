@@ -9,7 +9,8 @@ import { navState, markdownHtml, viewerState, historyEntries } from './signals';
 import { renderMarkdown, setCurrentTask, setHasSpecContext } from './markdown';
 import { applyHighlighting, initializeMermaid } from './highlighting';
 import { setupLineActions } from './editor';
-import { setupRefineModal } from './modal';
+// `setupRefineModal`/`modal.ts` were deleted (orphan since the dynamic
+// `ui/refinePopover.ts` took over the refine flow).
 import { setupCheckboxToggle, setupFileRefClickHandler } from './actions';
 import { showToast } from '../shared/components/Toast';
 import { App } from './App';
@@ -84,7 +85,19 @@ function handleMessage(event: MessageEvent): void {
             viewerState.value = message.viewerState;
             historyEntries.value = message.viewerState.history ?? [];
             if (message.navState) {
-                navState.value = { ...navState.value, ...message.navState } as NavState;
+                // Merge only when we already have a full NavState to merge
+                // INTO. `viewerStateUpdated` carries a 3-field partial
+                // (stepHistory, currentStep, badgeText) — taking it as a
+                // full NavState when value is null would hand components an
+                // object missing every required field (coreDocs, footerState,
+                // etc.). Drop the partial in that case; the next
+                // `contentUpdated` will hydrate from a full payload and a
+                // subsequent viewerStateUpdated will then merge correctly.
+                if (navState.value) {
+                    navState.value = { ...navState.value, ...message.navState } as NavState;
+                } else {
+                    console.warn('[SpecViewer] viewerStateUpdated arrived before initial navState; partial dropped');
+                }
             }
             break;
 
@@ -154,7 +167,6 @@ function init(): void {
         render(<App specStatus={specStatus} />, appRoot);
     }
 
-    setupRefineModal();
     setupLineActions();
     setupCheckboxToggle();
     setupFileRefClickHandler();

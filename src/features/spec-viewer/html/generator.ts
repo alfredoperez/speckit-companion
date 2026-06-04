@@ -166,20 +166,6 @@ export function generateHtml(
         <div class="loading-spinner"></div>
     </div>
 
-    <div class="refine-backdrop" id="refine-backdrop" style="display: none;"></div>
-    <div class="refine-popover" id="refine-popover" style="display: none;">
-        <div class="refine-popover-header">Refine this line</div>
-        <div class="original-value-reference" id="refine-original">
-            <span class="original-value-label">Original</span>
-            <span id="refine-original-text"></span>
-        </div>
-        <input type="text" class="refine-input" id="refine-input" placeholder="Describe how to improve this line...">
-        <div class="refine-popover-actions">
-            <button class="refine-cancel" id="refine-cancel">Cancel</button>
-            <button class="refine-submit" id="refine-submit">Refine</button>
-        </div>
-    </div>
-
     <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js" nonce="${nonce}"></script>
     <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/typescript.min.js" nonce="${nonce}"></script>
     <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/bash.min.js" nonce="${nonce}"></script>

@@ -1,5 +1,6 @@
 import type { ViewerState, HistoryEntry } from '../../types';
 import { mergeStepEvents, buildHistoryIndex, TimelineEventModel } from '../../timelineEvents';
+import { Badge } from '../../../shared/components/Badge';
 import {
     formatElapsed,
     formatStepOffset,
@@ -119,7 +120,11 @@ export function PhasesCard({ state }: PhasesCardProps) {
             <header class="activity-card__title">
                 Phases
                 {startAuthor && (
-                    <span class={`activity-actor-badge is-${startAuthor}`}>{startAuthor}</span>
+                    <Badge
+                        variant="passthrough"
+                        text={startAuthor}
+                        class={`activity-actor-badge is-${startAuthor}`}
+                    />
                 )}
             </header>
             <div class="activity-card__body">

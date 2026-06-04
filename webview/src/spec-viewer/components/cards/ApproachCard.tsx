@@ -1,4 +1,5 @@
 import type { ViewerState } from '../../types';
+import { Badge } from '../../../shared/components/Badge';
 
 export interface ApproachCardProps {
     state: ViewerState;
@@ -17,7 +18,11 @@ export function ApproachCard({ state }: ApproachCardProps) {
                 {approach && <p class="activity-approach__text">{approach}</p>}
                 <div class="activity-approach__meta">
                     {status && (
-                        <span class={`activity-status-pill is-${status}`}>{status}</span>
+                        <Badge
+                            variant="passthrough"
+                            text={status}
+                            class={`activity-status-pill is-${status}`}
+                        />
                     )}
                     {checkpointStatus?.commit && (
                         <span class="activity-checkpoint" title="Commit landed">✓ committed</span>
