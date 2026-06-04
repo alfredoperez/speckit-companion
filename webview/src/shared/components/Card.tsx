@@ -11,7 +11,7 @@ import type { ComponentChildren, JSX } from 'preact';
  *   - `children` — body content (the existing card-body markup)
  *
  * The component intentionally doesn't impose padding or border colors —
- * those live in `_card.css` (additive partial added in this phase) and
+ * those live in `_primitives.css` (additive partial added in this phase) and
  * cards inherit the existing `.activity-card` look for visual continuity.
  */
 export interface CardProps extends Omit<JSX.HTMLAttributes<HTMLElement>, 'title'> {

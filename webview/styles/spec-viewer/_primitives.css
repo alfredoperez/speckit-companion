@@ -58,7 +58,7 @@
 }
 
 .empty-state-icon {
-    font-size: var(--text-2xl, 24px);
+    font-size: var(--text-2xl);
     opacity: 0.7;
 }
 

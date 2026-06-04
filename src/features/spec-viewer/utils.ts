@@ -21,7 +21,7 @@ export function generateNonce(): string {
     return text;
 }
 
-// `fileNameToDisplayName` / `fileNameToDocType` live in `core/utils/fileNaming.ts`.
+// `fileNameToDocType` lives in `core/utils/fileNaming.ts`.
 // Imported locally so `getDocumentTypeFromPath` below can use them; not
 // re-exported (callers import from `core/utils/fileNaming` directly).
 import { fileNameToDocType } from '../../core/utils/fileNaming';
