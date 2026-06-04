@@ -104,9 +104,12 @@ export interface PanelStateInputs {
     documents: SpecDocument[];
     /** The document the viewer will render (output of `resolveDisplayDocument` or `resolveTabClickDocument`). */
     doc: SpecDocument | undefined;
-    /** Contents of the active document. Used as `tasksContent` when the active doc IS `tasks.md`. */
-    content: string;
-    /** Contents of `tasks.md` (may be empty string). Used to compute completion %. */
+    /**
+     * Contents of `tasks.md` (may be empty string). Used to compute
+     * completion %. When the active doc IS `tasks.md`, callers should
+     * substitute the active content here — that decision lives upstream in
+     * `specViewerProvider.readTasksContent` so this module stays pure.
+     */
     tasksContent: string;
     /** Parsed `.spec-context.json` (undefined when the file is missing/unreadable). */
     featureCtx: FeatureWorkflowContext | undefined;
@@ -252,20 +255,48 @@ export function computeApproveFooter(
 /**
  * Map stepHistory keys from step names to tab names. `mapSddStepToTab`
  * collapses `tasks` and `implement` onto the `tasks` tab key (Implement has
- * no dedicated tab). When a later step aliases onto the same key, preserve
- * the earlier *completed* entry rather than overwriting it with the
- * in-flight successor — otherwise the Tasks tab renders as "still running"
- * with the implement step's elapsed time.
+ * no dedicated tab). When a later step aliases onto the same key, the
+ * resolution prefers (1) the entry whose own step name equals the tab key
+ * (e.g. `tasks` wins over `implement` for the `tasks` tab), then (2) a
+ * completed entry over an in-flight one, then (3) earlier `startedAt` over
+ * later. Without this priority, a producer that emits `implement` before
+ * `tasks` (or with later `startedAt`) would shadow `tasks`' real duration on
+ * the Tasks tab — order-dependence we don't want to rely on.
  */
 export function mapStepHistoryToTabKeys(
     stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>,
 ): Record<string, { startedAt?: string; completedAt?: string | null }> | undefined {
     if (!stepHistory) return undefined;
     const out: Record<string, { startedAt?: string; completedAt?: string | null }> = {};
+    const winningStep: Record<string, string> = {};
+
     for (const [step, entry] of Object.entries(stepHistory)) {
         const tabName = mapSddStepToTab(step) || step;
-        if (out[tabName]?.completedAt) continue;
-        out[tabName] = entry;
+        const incumbent = out[tabName];
+        if (!incumbent) {
+            out[tabName] = entry;
+            winningStep[tabName] = step;
+            continue;
+        }
+        // 1. The entry whose step name equals the tab name wins.
+        if (step === tabName) {
+            out[tabName] = entry;
+            winningStep[tabName] = step;
+            continue;
+        }
+        if (winningStep[tabName] === tabName) continue;
+        // 2. Completed entries beat in-flight ones.
+        if (entry.completedAt && !incumbent.completedAt) {
+            out[tabName] = entry;
+            winningStep[tabName] = step;
+            continue;
+        }
+        if (!entry.completedAt && incumbent.completedAt) continue;
+        // 3. Earlier startedAt wins (preserves the historical first run).
+        if (entry.startedAt && incumbent.startedAt && entry.startedAt < incumbent.startedAt) {
+            out[tabName] = entry;
+            winningStep[tabName] = step;
+        }
     }
     return out;
 }

@@ -532,7 +532,7 @@ export class SpecViewerProvider {
 
       // Pure derivation: stepHistory, phases, status, badges, dates, footer
       const derived = computePanelDerivedState(
-        { documents, doc, content, tasksContent, featureCtx },
+        { documents, doc, tasksContent, featureCtx },
         enhancementButtons,
       );
 
@@ -810,7 +810,7 @@ export class SpecViewerProvider {
       const enhancementButtons = this.resolveEnhancementButtons(documentType, featureCtx?.workflow);
 
       const derived = computePanelDerivedState(
-        { documents: instance.state.availableDocuments, doc, content, tasksContent, featureCtx },
+        { documents: instance.state.availableDocuments, doc, tasksContent, featureCtx },
         enhancementButtons,
       );
 

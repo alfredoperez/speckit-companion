@@ -61,12 +61,21 @@ export function createDispatcher<
     Args extends readonly unknown[],
 >(
     handlers: DispatcherMap<U, Args>,
+    options: { onUnhandled?: (message: U) => void } = {},
 ): (message: U, ...args: Args) => Promise<void> {
     return async (message: U, ...args: Args) => {
-        const handler = handlers[message.type as U['type']] as (
-            m: U,
-            ...rest: Args
-        ) => Promise<void>;
+        const handler = handlers[message.type as U['type']] as
+            | ((m: U, ...rest: Args) => Promise<void>)
+            | undefined;
+        if (!handler) {
+            // Unknown / forward-compat message variant. The DispatcherMap
+            // type prevents this at compile time, but a version-skewed
+            // webview bundle (e.g. mid install-local hot-swap) can send an
+            // unknown type. Drop it silently like the pre-dispatcher switch
+            // ladder did, with an optional hook for the caller to log.
+            options.onUnhandled?.(message);
+            return;
+        }
         await handler(message, ...args);
     };
 }

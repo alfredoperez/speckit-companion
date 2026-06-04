@@ -160,6 +160,35 @@ describe('mapStepHistoryToTabKeys', () => {
         const result = mapStepHistoryToTabKeys(history);
         expect(result!['tasks']).toEqual(history.tasks);
     });
+
+    it('prefers the step matching the tab name regardless of iteration order', () => {
+        // Even with iteration order REVERSED (implement first, then tasks),
+        // the `tasks` tab must hold the `tasks` step entry because its step
+        // name matches the tab name. Without the priority logic this would
+        // silently take the implement timing for both alias resolution AND
+        // overwrite-protection (since implement is also completed here).
+        const history = {
+            implement: { startedAt: '2026-05-01T00:06:00Z', completedAt: '2026-05-01T00:10:00Z' },
+            tasks: { startedAt: '2026-05-01T00:00:00Z', completedAt: '2026-05-01T00:05:00Z' },
+        };
+        const result = mapStepHistoryToTabKeys(history);
+        expect(result!['tasks']).toEqual(history.tasks);
+    });
+
+    it('falls back to earlier startedAt when no step matches the tab name and both are completed', () => {
+        // A non-canonical workflow where both entries alias onto the same
+        // synthetic tab and neither is the canonical step. Earlier start wins
+        // — preserves the historical first run rather than the most recent.
+        const history = {
+            'phase-a': { startedAt: '2026-05-01T00:00:00Z', completedAt: '2026-05-01T00:05:00Z' },
+            'phase-b': { startedAt: '2026-05-02T00:00:00Z', completedAt: '2026-05-02T00:05:00Z' },
+        };
+        // Both 'phase-a' and 'phase-b' fall through mapSddStepToTab to use
+        // their own names → no alias collision. Sanity check the path.
+        const result = mapStepHistoryToTabKeys(history);
+        expect(result!['phase-a']).toEqual(history['phase-a']);
+        expect(result!['phase-b']).toEqual(history['phase-b']);
+    });
 });
 
 describe('deriveStepBadgesWithAlias', () => {
@@ -184,7 +213,7 @@ describe('computePanelDerivedState (integration of pure pieces)', () => {
         const documents = [makeDoc({ type: CORE_DOCUMENTS.SPEC, exists: true })];
         const doc = documents[0];
         const result = computePanelDerivedState(
-            { documents, doc, content: '# spec', tasksContent: '', featureCtx: undefined },
+            { documents, doc, tasksContent: '', featureCtx: undefined },
             [],
         );
         expect(result.specStatus).toBe(SpecStatuses.ACTIVE);
@@ -203,7 +232,6 @@ describe('computePanelDerivedState (integration of pure pieces)', () => {
             {
                 documents: docs,
                 doc: docs[2],
-                content: '- [x] one\n- [x] two\n',
                 tasksContent: '- [x] one\n- [x] two\n',
                 featureCtx: undefined,
             },

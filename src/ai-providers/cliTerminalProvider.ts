@@ -138,7 +138,7 @@ export abstract class CliTerminalProvider implements IAIProvider {
         const permissionFlag = this.getPermissionFlag();
         const promptText = this.preprocessPrompt(ctx);
         const filePrefix = ctx.mode === 'headless' ? 'background-prompt' : 'prompt';
-        const tempFilePath = await createTempFile(this.context, promptText, filePrefix, true);
+        const tempFilePath = await createTempFile(this.context, promptText, filePrefix, this.convertTempFilePathForWSL);
 
         const commandLine = buildPromptDispatchCommand({
             cliInvocation: cliPath,
@@ -149,6 +149,15 @@ export abstract class CliTerminalProvider implements IAIProvider {
 
         return { commandLine, tempFiles: [tempFilePath] };
     }
+
+    /**
+     * Whether to convert the temp prompt-file path to WSL form before handing
+     * it to the CLI. Defaults to `true` — the right behavior for CLIs invoked
+     * via WSL (most of them). Override to `false` for CLIs that run natively
+     * on Windows (notably the `gh copilot` extension) where WSL-style paths
+     * like `/mnt/c/…` are unreadable.
+     */
+    protected readonly convertTempFilePathForWSL: boolean = true;
 
     /**
      * Override to transform the prompt before it hits the temp file. Default
@@ -220,6 +229,14 @@ export abstract class CliTerminalProvider implements IAIProvider {
     private async runHeadless(ctx: Omit<DispatchContext, 'cliPath' | 'permissionFlag'>): Promise<AIExecutionResult> {
         await this.ensureInstalled();
         this.outputChannel.appendLine(`[${this.logPrefix}] Invoking ${this.name} in headless mode`);
+        // Echo the prompt body to the output channel — temp files get
+        // unlinked after `Timing.tempFileCleanupDelay`, so without this echo
+        // there is no post-hoc way to inspect what was sent when debugging
+        // "background dispatch did the wrong thing." The pre-refactor
+        // executeHeadless on each provider had this exact pattern.
+        this.outputChannel.appendLine(`========================================`);
+        this.outputChannel.appendLine(ctx.prompt);
+        this.outputChannel.appendLine(`========================================`);
 
         const plan = await this.prepareDispatch(ctx);
 

@@ -22,6 +22,10 @@ export class CopilotCliProvider extends CliTerminalProvider {
     protected readonly defaultTerminalTitle = 'SpecKit - Copilot';
     protected readonly headlessTerminalName = 'Copilot CLI Background';
     protected readonly logPrefix = 'CopilotCliProvider';
+    // The `gh copilot` extension runs natively on Windows even when invoked
+    // from a WSL-style shell. Translating the temp-file path to `/mnt/c/...`
+    // would hand it a form it can't open. Stay on the native path.
+    protected readonly convertTempFilePathForWSL = false;
 
     protected preprocessPrompt(ctx: Omit<DispatchContext, 'cliPath' | 'permissionFlag'>): string {
         return ctx.prompt.startsWith('/') ? ctx.prompt.substring(1) : ctx.prompt;

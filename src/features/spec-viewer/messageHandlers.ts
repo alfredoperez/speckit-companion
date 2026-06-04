@@ -163,7 +163,16 @@ export function createMessageHandlers(
   specDirectory: string,
   deps: MessageHandlerDependencies,
 ) {
-  const dispatch = createDispatcher(buildHandlerMap());
+  const dispatch = createDispatcher(buildHandlerMap(), {
+    onUnhandled: (msg) => {
+      // Version-skewed webview (e.g. mid install-local hot-swap) sent a
+      // type this extension build doesn't know. Log and drop — silently
+      // matches the pre-dispatcher switch ladder's default-fall-through.
+      deps.outputChannel.appendLine(
+        `[SpecViewer] Unhandled message type: ${(msg as { type: string }).type} — dropped`,
+      );
+    },
+  });
   return async (message: ViewerToExtensionMessage) => {
     deps.outputChannel.appendLine(`[SpecViewer] Received message: ${message.type}`);
     await dispatch(message, specDirectory, deps);

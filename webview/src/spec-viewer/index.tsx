@@ -85,15 +85,19 @@ function handleMessage(event: MessageEvent): void {
             viewerState.value = message.viewerState;
             historyEntries.value = message.viewerState.history ?? [];
             if (message.navState) {
-                // Defensive merge: if `viewerStateUpdated` arrives before the
-                // initial `contentUpdated`, navState.value is still null and a
-                // naive spread would discard the partial update. Drop the
-                // merge when there's nothing to merge against — components
-                // can survive missing fields, but they can't survive losing
-                // the only state they've ever been shown.
-                navState.value = (navState.value
-                    ? { ...navState.value, ...message.navState }
-                    : message.navState) as NavState;
+                // Merge only when we already have a full NavState to merge
+                // INTO. `viewerStateUpdated` carries a 3-field partial
+                // (stepHistory, currentStep, badgeText) — taking it as a
+                // full NavState when value is null would hand components an
+                // object missing every required field (coreDocs, footerState,
+                // etc.). Drop the partial in that case; the next
+                // `contentUpdated` will hydrate from a full payload and a
+                // subsequent viewerStateUpdated will then merge correctly.
+                if (navState.value) {
+                    navState.value = { ...navState.value, ...message.navState } as NavState;
+                } else {
+                    console.warn('[SpecViewer] viewerStateUpdated arrived before initial navState; partial dropped');
+                }
             }
             break;
 
