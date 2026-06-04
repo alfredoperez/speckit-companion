@@ -5,7 +5,7 @@
  * Their default styling lives here so consuming features inherit the
  * design-system look without each card-using component re-rolling its own.
  *
- * Tokens come from tokens.css — no hardcoded values.
+ * Tokens come from tokens.css — avoid hardcoded colors so primitives stay theme-aware.
  */
 
 /* ─── Card ──────────────────────────────────────────────────────────── */
