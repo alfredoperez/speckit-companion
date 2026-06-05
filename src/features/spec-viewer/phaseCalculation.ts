@@ -137,9 +137,9 @@ export function calculateWorkflowPhase(coreDocs: SpecDocument[]): string {
 }
 
 /**
- * Map SDD step field to tab name
+ * Map a workflow step name to its viewer tab name.
  */
-export function mapSddStepToTab(step?: string | null): string | null {
+export function mapStepToTab(step?: string | null): string | null {
     if (!step) return null;
     switch (step) {
         case WorkflowSteps.SPECIFY: return CORE_DOCUMENTS.SPEC;

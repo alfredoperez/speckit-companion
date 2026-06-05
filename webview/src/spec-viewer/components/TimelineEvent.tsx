@@ -1,7 +1,7 @@
 import type { TimelineEventModel } from '../timelineEvents';
 import { formatDuration, formatStepOffset } from '../relativeTime';
 
-const KNOWN_ACTORS = new Set(['extension', 'cli', 'sdd', 'ai', 'user']);
+const KNOWN_ACTORS = new Set(['extension', 'cli', 'ai', 'user']);
 
 export interface TimelineEventProps {
     event: TimelineEventModel;

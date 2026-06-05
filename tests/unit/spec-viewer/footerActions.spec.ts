@@ -16,11 +16,11 @@ import {
     WorkflowSteps,
 } from '../../../src/core/constants';
 
-const SDD_STEPS: WorkflowStepConfig[] = [
-    { name: 'specify', label: 'Specification', command: 'sdd:specify', file: 'spec.md' },
-    { name: 'plan', label: 'Plan', command: 'sdd:plan', file: 'plan.md' },
-    { name: 'tasks', label: 'Tasks', command: 'sdd:tasks', file: 'tasks.md' },
-    { name: 'implement', label: 'Implement', command: 'sdd:implement', actionOnly: true },
+const WORKFLOW_STEPS: WorkflowStepConfig[] = [
+    { name: 'specify', label: 'Specification', command: 'myflow:specify', file: 'spec.md' },
+    { name: 'plan', label: 'Plan', command: 'myflow:plan', file: 'plan.md' },
+    { name: 'tasks', label: 'Tasks', command: 'myflow:tasks', file: 'tasks.md' },
+    { name: 'implement', label: 'Implement', command: 'myflow:implement', actionOnly: true },
 ];
 
 type SH = Record<string, StepHistoryEntry>;
@@ -46,10 +46,9 @@ describe('getFooterActions (US6 — scope + visibility)', () => {
         }
     });
 
-    it('Start and SDD Auto are no longer part of the footer catalog', () => {
+    it('Start is no longer part of the footer catalog', () => {
         const ids = FOOTER_ACTIONS.map(a => a.id);
         expect(ids).not.toContain(FooterActionIds.START);
-        expect(ids).not.toContain(FooterActionIds.SDD_AUTO);
     });
 
     it('Regenerate hidden when step has no startedAt (acceptance 4)', () => {
@@ -119,7 +118,7 @@ describe('isSpecDone gate — Archive / Mark Completed visibility', () => {
     for (const status of NOT_DONE_STATUSES) {
         it(`hides Archive and Mark Completed when status='${status}'`, () => {
             const ctx = baseCtx({
-                workflow: Workflows.SDD,
+                workflow: 'my-workflow',
                 status,
                 currentStep: WorkflowSteps.SPECIFY,
             });
@@ -131,7 +130,7 @@ describe('isSpecDone gate — Archive / Mark Completed visibility', () => {
 
     it("shows Archive and Mark Completed when status='implemented' (final approval gate)", () => {
         const ctx = baseCtx({
-            workflow: Workflows.SDD,
+            workflow: 'my-workflow',
             status: 'implemented',
             currentStep: WorkflowSteps.IMPLEMENT,
         });
@@ -143,7 +142,7 @@ describe('isSpecDone gate — Archive / Mark Completed visibility', () => {
 
     it("shows Archive, Mark Completed, and Regenerate when status='implemented'", () => {
         const ctx = baseCtx({
-            workflow: Workflows.SDD,
+            workflow: 'my-workflow',
             status: 'implemented',
             currentStep: WorkflowSteps.IMPLEMENT,
         });
@@ -157,7 +156,7 @@ describe('isSpecDone gate — Archive / Mark Completed visibility', () => {
 
     it("shows Archive but hides Mark Completed when status='completed' (terminal)", () => {
         const ctx = baseCtx({
-            workflow: Workflows.SDD,
+            workflow: 'my-workflow',
             status: SpecStatuses.COMPLETED,
             currentStep: WorkflowSteps.IMPLEMENT,
         });
@@ -168,7 +167,7 @@ describe('isSpecDone gate — Archive / Mark Completed visibility', () => {
 
     it('keeps Archive hidden when archived (already in terminal-archived)', () => {
         const ctx = baseCtx({
-            workflow: Workflows.SDD,
+            workflow: 'my-workflow',
             status: SpecStatuses.ARCHIVED,
             currentStep: WorkflowSteps.IMPLEMENT,
         });
@@ -180,12 +179,12 @@ describe('isSpecDone gate — Archive / Mark Completed visibility', () => {
 describe('Approve advance button across the lifecycle', () => {
     it("stays visible at status='specified' so user can click Plan", () => {
         const ctx = baseCtx({
-            workflow: Workflows.SDD,
+            workflow: 'my-workflow',
             status: 'specified',
             currentStep: WorkflowSteps.SPECIFY,
         });
         const sh: SH = { specify: { startedAt: 'a', completedAt: 'b' } };
-        const actions = getFooterActions(ctx, WorkflowSteps.SPECIFY, SDD_STEPS, sh);
+        const actions = getFooterActions(ctx, WorkflowSteps.SPECIFY, WORKFLOW_STEPS, sh);
         const approve = actions.find(a => a.id === FooterActionIds.APPROVE);
         expect(approve).toBeDefined();
         expect(approve!.label).toBe('Plan');
@@ -193,7 +192,7 @@ describe('Approve advance button across the lifecycle', () => {
 
     it("stays visible at status='planned' so user can click Tasks", () => {
         const ctx = baseCtx({
-            workflow: Workflows.SDD,
+            workflow: 'my-workflow',
             status: 'planned',
             currentStep: WorkflowSteps.PLAN,
         });
@@ -201,7 +200,7 @@ describe('Approve advance button across the lifecycle', () => {
             specify: { startedAt: 'a', completedAt: 'b' },
             plan: { startedAt: 'c', completedAt: 'd' },
         };
-        const actions = getFooterActions(ctx, WorkflowSteps.PLAN, SDD_STEPS, sh);
+        const actions = getFooterActions(ctx, WorkflowSteps.PLAN, WORKFLOW_STEPS, sh);
         const approve = actions.find(a => a.id === FooterActionIds.APPROVE);
         expect(approve).toBeDefined();
         expect(approve!.label).toBe('Tasks');
@@ -209,7 +208,7 @@ describe('Approve advance button across the lifecycle', () => {
 
     it("stays visible at status='ready-to-implement' so user can click Implement", () => {
         const ctx = baseCtx({
-            workflow: Workflows.SDD,
+            workflow: 'my-workflow',
             status: 'ready-to-implement',
             currentStep: WorkflowSteps.TASKS,
         });
@@ -218,7 +217,7 @@ describe('Approve advance button across the lifecycle', () => {
             plan: { startedAt: 'c', completedAt: 'd' },
             tasks: { startedAt: 'e', completedAt: 'f' },
         };
-        const actions = getFooterActions(ctx, WorkflowSteps.TASKS, SDD_STEPS, sh);
+        const actions = getFooterActions(ctx, WorkflowSteps.TASKS, WORKFLOW_STEPS, sh);
         const approve = actions.find(a => a.id === FooterActionIds.APPROVE);
         expect(approve).toBeDefined();
         expect(approve!.label).toBe('Implement');
@@ -226,18 +225,18 @@ describe('Approve advance button across the lifecycle', () => {
 
     it("hides at status='implemented' (last step done, no later step exists)", () => {
         const ctx = baseCtx({
-            workflow: Workflows.SDD,
+            workflow: 'my-workflow',
             status: 'implemented',
             currentStep: WorkflowSteps.IMPLEMENT,
         });
         const sh: SH = { implement: { startedAt: 'a', completedAt: 'b' } };
-        const ids = getFooterActions(ctx, WorkflowSteps.IMPLEMENT, SDD_STEPS, sh).map(a => a.id);
+        const ids = getFooterActions(ctx, WorkflowSteps.IMPLEMENT, WORKFLOW_STEPS, sh).map(a => a.id);
         expect(ids).not.toContain(FooterActionIds.APPROVE);
     });
 
     it('hides on the specify tab once a later step has started', () => {
         const ctx = baseCtx({
-            workflow: Workflows.SDD,
+            workflow: 'my-workflow',
             status: 'planning',
             currentStep: WorkflowSteps.PLAN,
         });
@@ -245,7 +244,7 @@ describe('Approve advance button across the lifecycle', () => {
             specify: { startedAt: 'a', completedAt: 'b' },
             plan: { startedAt: 'c', completedAt: null },
         };
-        const ids = getFooterActions(ctx, WorkflowSteps.SPECIFY, SDD_STEPS, sh).map(a => a.id);
+        const ids = getFooterActions(ctx, WorkflowSteps.SPECIFY, WORKFLOW_STEPS, sh).map(a => a.id);
         expect(ids).not.toContain(FooterActionIds.APPROVE);
     });
 
@@ -256,12 +255,12 @@ describe('Approve advance button across the lifecycle', () => {
     // status had actually flipped to `implemented`.
     it("never shows Approve on the implement step, even while in-flight", () => {
         const ctx = baseCtx({
-            workflow: Workflows.SDD,
+            workflow: 'my-workflow',
             status: 'implementing',
             currentStep: WorkflowSteps.IMPLEMENT,
         });
         const sh: SH = { implement: { startedAt: 'a', completedAt: null } };
-        const ids = getFooterActions(ctx, WorkflowSteps.IMPLEMENT, SDD_STEPS, sh).map(a => a.id);
+        const ids = getFooterActions(ctx, WorkflowSteps.IMPLEMENT, WORKFLOW_STEPS, sh).map(a => a.id);
         expect(ids).not.toContain(FooterActionIds.APPROVE);
     });
 });
@@ -269,23 +268,22 @@ describe('Approve advance button across the lifecycle', () => {
 describe('In-flight footer (the screenshot scenario)', () => {
     it('reproduces the user-reported screenshot: only Regenerate + dynamic Approve', () => {
         const ctx = baseCtx({
-            workflow: Workflows.SDD,
+            workflow: 'my-workflow',
             status: 'specifying',
             currentStep: WorkflowSteps.SPECIFY,
         });
         const sh: SH = { specify: { startedAt: 'a', completedAt: null } };
-        const ids = getFooterActions(ctx, WorkflowSteps.SPECIFY, SDD_STEPS, sh).map(a => a.id);
+        const ids = getFooterActions(ctx, WorkflowSteps.SPECIFY, WORKFLOW_STEPS, sh).map(a => a.id);
         expect(ids).not.toContain(FooterActionIds.ARCHIVE);
         expect(ids).not.toContain(FooterActionIds.COMPLETE);
         expect(ids).not.toContain(FooterActionIds.START);
-        expect(ids).not.toContain(FooterActionIds.SDD_AUTO);
         expect(ids).toContain(FooterActionIds.REGENERATE);
         expect(ids).toContain(FooterActionIds.APPROVE);
     });
 
     it('on plan tab while planning: Regenerate + Approve labelled "Tasks"', () => {
         const ctx = baseCtx({
-            workflow: Workflows.SDD,
+            workflow: 'my-workflow',
             status: 'planning',
             currentStep: WorkflowSteps.PLAN,
         });
@@ -293,14 +291,14 @@ describe('In-flight footer (the screenshot scenario)', () => {
             specify: { startedAt: 'a', completedAt: 'b' },
             plan: { startedAt: 'c', completedAt: null },
         };
-        const actions = getFooterActions(ctx, WorkflowSteps.PLAN, SDD_STEPS, sh);
+        const actions = getFooterActions(ctx, WorkflowSteps.PLAN, WORKFLOW_STEPS, sh);
         const approve = actions.find(a => a.id === FooterActionIds.APPROVE);
         expect(approve!.label).toBe('Tasks');
         expect(actions.map(a => a.id)).not.toContain(FooterActionIds.ARCHIVE);
     });
 
     it('pure draft (no startedAt) renders no buttons at all', () => {
-        const ctx = baseCtx({ workflow: Workflows.SDD, status: 'draft' });
+        const ctx = baseCtx({ workflow: 'my-workflow', status: 'draft' });
         const ids = getFooterActions(ctx, WorkflowSteps.SPECIFY).map(a => a.id);
         expect(ids).toEqual([]);
     });
@@ -308,13 +306,13 @@ describe('In-flight footer (the screenshot scenario)', () => {
 
 describe('getApproveLabel', () => {
     it('returns next step label when one exists', () => {
-        expect(getApproveLabel('specify', SDD_STEPS)).toBe('Plan');
-        expect(getApproveLabel('plan', SDD_STEPS)).toBe('Tasks');
-        expect(getApproveLabel('tasks', SDD_STEPS)).toBe('Implement');
+        expect(getApproveLabel('specify', WORKFLOW_STEPS)).toBe('Plan');
+        expect(getApproveLabel('plan', WORKFLOW_STEPS)).toBe('Tasks');
+        expect(getApproveLabel('tasks', WORKFLOW_STEPS)).toBe('Implement');
     });
 
     it('returns "Complete" for the final step', () => {
-        expect(getApproveLabel('implement', SDD_STEPS)).toBe('Complete');
+        expect(getApproveLabel('implement', WORKFLOW_STEPS)).toBe('Complete');
     });
 
     it('falls back to "Approve" when no workflow steps provided', () => {
@@ -323,7 +321,7 @@ describe('getApproveLabel', () => {
     });
 
     it('falls back to "Approve" when current step is not in workflow', () => {
-        expect(getApproveLabel('clarify', SDD_STEPS)).toBe('Approve');
+        expect(getApproveLabel('clarify', WORKFLOW_STEPS)).toBe('Approve');
     });
 
     it('uses capitalized step name when label is missing', () => {
@@ -338,12 +336,12 @@ describe('getApproveLabel', () => {
 describe('getFooterActions Approve label is dynamic', () => {
     it('relabels Approve to next step name when workflow steps are passed', () => {
         const ctx = baseCtx({
-            workflow: Workflows.SDD,
+            workflow: 'my-workflow',
             status: 'specifying',
             currentStep: WorkflowSteps.SPECIFY,
         });
         const sh: SH = { specify: { startedAt: 'a', completedAt: null } };
-        const actions = getFooterActions(ctx, WorkflowSteps.SPECIFY, SDD_STEPS, sh);
+        const actions = getFooterActions(ctx, WorkflowSteps.SPECIFY, WORKFLOW_STEPS, sh);
         const approve = actions.find(a => a.id === FooterActionIds.APPROVE);
         expect(approve).toBeDefined();
         expect(approve!.label).toBe('Plan');
@@ -351,7 +349,7 @@ describe('getFooterActions Approve label is dynamic', () => {
 
     it('keeps default "Approve" label when no workflow steps are passed', () => {
         const ctx = baseCtx({
-            workflow: Workflows.SDD,
+            workflow: 'my-workflow',
             status: 'specifying',
             currentStep: WorkflowSteps.SPECIFY,
         });

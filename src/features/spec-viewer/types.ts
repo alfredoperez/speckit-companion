@@ -237,7 +237,7 @@ export interface NavState {
     specStatus?: string;
     /** Current task ID from spec-context (for in-progress badge) */
     currentTask?: string | null;
-    /** Active SDD step being worked on (mapped to tab name: spec/plan/tasks) — drives step-tab in-flight visuals */
+    /** Active workflow step being worked on (mapped to tab name: spec/plan/tasks) — drives step-tab in-flight visuals */
     activeStep?: string | null;
     /** Step history for determining completed steps */
     stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>;
@@ -251,7 +251,7 @@ export interface NavState {
     specContextName?: string | null;
     /** Git branch name from spec-context.json (workingBranch with fallback to branch) */
     branch?: string | null;
-    /** SDD currentStep from spec-context.json — drives implement-phase pill on the last step tab */
+    /** currentStep from spec-context.json — drives implement-phase pill on the last step tab */
     currentStep?: string | null;
     /** Current document file path */
     filePath?: string | null;

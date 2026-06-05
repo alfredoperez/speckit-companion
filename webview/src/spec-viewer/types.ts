@@ -145,7 +145,7 @@ export interface SubstepEntry {
 export interface StepHistoryEntry {
     startedAt: string;
     completedAt: string | null;
-    /** Array on SDD specs, Record on speckit specs — normalize at consumer. */
+    /** Array form on some specs, Record form on others — normalize at consumer. */
     substeps?: SubstepEntry[] | Record<string, { startedAt: string; completedAt: string | null }>;
 }
 

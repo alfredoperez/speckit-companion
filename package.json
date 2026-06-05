@@ -939,7 +939,7 @@
                       },
                       "command": {
                         "type": "string",
-                        "description": "Command to execute (e.g., '/sdd:auto')"
+                        "description": "Command to execute (e.g., '/myflow:auto')"
                       },
                       "step": {
                         "type": "string",
@@ -1017,7 +1017,7 @@
                       "claude-vscode"
                     ]
                   },
-                  "description": "AI provider ids this workflow supports. Omit or leave empty to support all providers. When set, the workflow is hidden unless the active speckit.aiProvider is in this list (e.g. [\"claude\"] for a Claude-only workflow like SDD)."
+                  "description": "AI provider ids this workflow supports. Omit or leave empty to support all providers. When set, the workflow is hidden unless the active speckit.aiProvider is in this list (e.g. [\"claude\"] for a Claude-only workflow)."
                 }
               },
               "additionalProperties": false

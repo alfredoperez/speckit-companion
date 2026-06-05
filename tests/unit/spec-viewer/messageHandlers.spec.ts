@@ -125,7 +125,7 @@ describe("handleAddComment — sourceDoc resolution (T005)", () => {
   });
 
   it('resolves sourceDoc via fileName when availableDocuments has type="specify" and doc="spec"', async () => {
-    // Arrange: SDD workflow — spec doc has type='specify', not 'spec'
+    // Arrange: workflow where the spec doc has type='specify', not 'spec'
     const docs = [makeSpecDocument("specify", "spec.md", SPEC_FILE_PATH, true)];
     const deps = makeDeps(docs);
     const handler = createMessageHandlers(SPEC_DIR, deps);

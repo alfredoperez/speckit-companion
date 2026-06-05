@@ -38,23 +38,23 @@ describe('getWorkflowCommands', () => {
 
     it('should return commands array from a custom workflow', () => {
         const commands = [
-            { name: 'auto', title: 'Auto Mode', command: '/sdd:auto', step: 'specify' },
+            { name: 'auto', title: 'Auto Mode', command: '/my-custom-flow:auto', step: 'specify' },
         ];
         mockGetConfig.mockReturnValue([
-            { name: 'sdd', steps: [{ name: 'specify', command: 'sdd.specify' }], commands },
+            { name: 'my-custom-flow', steps: [{ name: 'specify', command: 'my-custom-flow.specify' }], commands },
         ]);
 
-        const result = getWorkflowCommands('sdd');
+        const result = getWorkflowCommands('my-custom-flow');
 
         expect(result).toEqual(commands);
     });
 
     it('should return empty array when workflow has no commands', () => {
         mockGetConfig.mockReturnValue([
-            { name: 'sdd', steps: [{ name: 'specify', command: 'sdd.specify' }] },
+            { name: 'my-custom-flow', steps: [{ name: 'specify', command: 'my-custom-flow.specify' }] },
         ]);
 
-        const result = getWorkflowCommands('sdd');
+        const result = getWorkflowCommands('my-custom-flow');
 
         expect(result).toEqual([]);
     });
@@ -86,13 +86,13 @@ describe('isWorkflowSupportedForProvider', () => {
     });
 
     it('supports only the declared providers', () => {
-        const wf = { name: 'sdd', supportedAiProviders: ['claude'] };
+        const wf = { name: 'my-custom-flow', supportedAiProviders: ['claude'] };
         expect(isWorkflowSupportedForProvider(wf, 'claude')).toBe(true);
         expect(isWorkflowSupportedForProvider(wf, 'copilot')).toBe(false);
     });
 
     it('treats claude and claude-vscode as distinct ids', () => {
-        const wf = { name: 'sdd', supportedAiProviders: ['claude'] };
+        const wf = { name: 'my-custom-flow', supportedAiProviders: ['claude'] };
         expect(isWorkflowSupportedForProvider(wf, 'claude-vscode')).toBe(false);
     });
 
@@ -109,22 +109,22 @@ describe('getWorkflows provider filtering', () => {
 
     it('hides a claude-only workflow under a non-claude provider', () => {
         mockConfig('copilot', [
-            { name: 'sdd', supportedAiProviders: ['claude'], steps: [{ name: 'specify', command: 'sdd.specify' }] },
+            { name: 'my-custom-flow', supportedAiProviders: ['claude'], steps: [{ name: 'specify', command: 'my-custom-flow.specify' }] },
         ]);
 
         const names = getWorkflows().map(w => w.name);
 
-        expect(names).not.toContain('sdd');
+        expect(names).not.toContain('my-custom-flow');
     });
 
     it('shows a claude-only workflow under claude', () => {
         mockConfig('claude', [
-            { name: 'sdd', supportedAiProviders: ['claude'], steps: [{ name: 'specify', command: 'sdd.specify' }] },
+            { name: 'my-custom-flow', supportedAiProviders: ['claude'], steps: [{ name: 'specify', command: 'my-custom-flow.specify' }] },
         ]);
 
         const names = getWorkflows().map(w => w.name);
 
-        expect(names).toContain('sdd');
+        expect(names).toContain('my-custom-flow');
     });
 
     it('shows workflows with no declaration under any provider', () => {
@@ -149,13 +149,13 @@ describe('getWorkflows provider filtering', () => {
 
     it('always includes the default speckit workflow even when nothing else matches', () => {
         mockConfig('codex', [
-            { name: 'sdd', supportedAiProviders: ['claude'], steps: [{ name: 'specify', command: 'sdd.specify' }] },
+            { name: 'my-custom-flow', supportedAiProviders: ['claude'], steps: [{ name: 'specify', command: 'my-custom-flow.specify' }] },
         ]);
 
         const names = getWorkflows().map(w => w.name);
 
         expect(names).toContain('speckit');
-        expect(names).not.toContain('sdd');
+        expect(names).not.toContain('my-custom-flow');
     });
 
     it('hides a workflow whose only declared provider id is unknown', () => {
@@ -171,19 +171,19 @@ describe('getWorkflows provider filtering', () => {
 
 describe('validateWorkflow supportedAiProviders', () => {
     it('accepts a valid array of known provider ids', () => {
-        const result = validateWorkflow({ name: 'sdd', supportedAiProviders: ['claude', 'claude-vscode'] });
+        const result = validateWorkflow({ name: 'my-custom-flow', supportedAiProviders: ['claude', 'claude-vscode'] });
         expect(result.valid).toBe(true);
         expect(result.warnings).toHaveLength(0);
     });
 
     it('errors when supportedAiProviders is not an array', () => {
-        const result = validateWorkflow({ name: 'sdd', supportedAiProviders: 'claude' as unknown as string[] });
+        const result = validateWorkflow({ name: 'my-custom-flow', supportedAiProviders: 'claude' as unknown as string[] });
         expect(result.valid).toBe(false);
         expect(result.errors.some(e => e.includes('supportedAiProviders'))).toBe(true);
     });
 
     it('warns but stays valid on an unknown provider id', () => {
-        const result = validateWorkflow({ name: 'sdd', supportedAiProviders: ['bogus'] });
+        const result = validateWorkflow({ name: 'my-custom-flow', supportedAiProviders: ['bogus'] });
         expect(result.valid).toBe(true);
         expect(result.warnings.some(w => w.includes('bogus'))).toBe(true);
     });
@@ -198,10 +198,10 @@ describe('getWorkflow resolves regardless of active provider', () => {
         // The picker hides it (getWorkflows filters), but an existing spec that
         // already selected it must keep its real steps.
         mockConfig('ide-chat', [
-            { name: 'sdd', supportedAiProviders: ['claude'], steps: [{ name: 'specify', command: 'sdd:specify' }] },
+            { name: 'my-custom-flow', supportedAiProviders: ['claude'], steps: [{ name: 'specify', command: 'my-custom-flow:specify' }] },
         ]);
 
-        expect(getWorkflows().map(w => w.name)).not.toContain('sdd'); // hidden from selection
-        expect(getWorkflow('sdd')?.name).toBe('sdd');                  // but still resolvable
+        expect(getWorkflows().map(w => w.name)).not.toContain('my-custom-flow'); // hidden from selection
+        expect(getWorkflow('my-custom-flow')?.name).toBe('my-custom-flow');       // but still resolvable
     });
 });

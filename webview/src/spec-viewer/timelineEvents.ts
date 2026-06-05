@@ -18,8 +18,8 @@ export type TimelineEventSource = 'tracked' | 'logged';
 
 /**
  * Substeps land on disk in two shapes:
- *   - SDD: `Array<{name, startedAt, completedAt}>`
- *   - speckit: `Record<name, {startedAt, completedAt}>`
+ *   - array form: `Array<{name, startedAt, completedAt}>`
+ *   - record form: `Record<name, {startedAt, completedAt}>`
  *
  * Normalize both into the array form so consumers don't branch.
  */

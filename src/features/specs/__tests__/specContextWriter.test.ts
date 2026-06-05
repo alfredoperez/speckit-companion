@@ -3,7 +3,7 @@ import type { HistoryEntry, SpecContext } from '../../../core/types/specContext'
 
 function makeContext(overrides: Partial<SpecContext> = {}): SpecContext {
     return {
-        workflow: 'sdd',
+        workflow: 'speckit',
         specName: 'test',
         branch: 'main',
         currentStep: 'specify',
@@ -43,7 +43,7 @@ describe('appendHistory', () => {
     it('appends an entry with a distinct substep on the same step', () => {
         const last = entry({ step: 'specify', substep: null });
         const ctx = makeContext({ history: [last] });
-        const next = entry({ step: 'specify', substep: 'outline', by: 'sdd', at: '2026-04-29T00:00:05Z' });
+        const next = entry({ step: 'specify', substep: 'outline', by: 'cli', at: '2026-04-29T00:00:05Z' });
 
         const result = appendHistory(ctx, next);
 

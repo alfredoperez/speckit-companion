@@ -26,7 +26,7 @@ describe("currentDoc()", () => {
     expect(currentDoc()).toBe("spec");
   });
 
-  it('returns "spec" when navState.currentDoc is "specify" (SDD workflow alias)', () => {
+  it('returns "spec" when navState.currentDoc is "specify" (workflow step alias)', () => {
     setCurrentDoc("specify");
     expect(currentDoc()).toBe("spec");
   });

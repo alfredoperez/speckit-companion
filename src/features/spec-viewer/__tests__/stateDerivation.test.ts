@@ -15,7 +15,7 @@ jest.mock('../footerActions', () => ({
 
 function makeContext(overrides: Partial<SpecContext> = {}): SpecContext {
     return {
-        workflow: 'sdd',
+        workflow: 'speckit',
         specName: 'test',
         branch: 'main',
         currentStep: 'specify',
@@ -162,14 +162,14 @@ describe('deriveActiveSubstep', () => {
 });
 
 describe('deriveViewerState', () => {
-    it('produces correct state for SDD auto incomplete history', () => {
-        // Simulates what SDD auto leaves behind: specify was started but its
+    it('produces correct state for auto incomplete history', () => {
+        // Simulates what auto leaves behind: specify was started but its
         // completion was never appended; currentStep advanced to "tasks".
         const ctx = makeContext({
             currentStep: 'tasks',
             status: 'implementing', // coerced from "active"
             history: [
-                { step: 'specify', substep: null, kind: 'start', from: { step: null, substep: null }, by: 'sdd', at: '2026-01-01T00:00:00Z' },
+                { step: 'specify', substep: null, kind: 'start', from: { step: null, substep: null }, by: 'cli', at: '2026-01-01T00:00:00Z' },
             ],
         });
         const state = deriveViewerState(ctx);

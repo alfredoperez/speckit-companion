@@ -34,8 +34,8 @@ const baseState = (overrides: Partial<ViewerState>): ViewerState => ({
 });
 
 // ── Specify just started, in flight ──────────────────────────
-// Mirrors the ngx-dev-toolbar screenshot moment: /sdd:specify is
-// running; specify has startedAt, no completedAt; substeps are
+// Mirrors the ngx-dev-toolbar screenshot moment: the specify step
+// is running; specify has startedAt, no completedAt; substeps are
 // streaming in. Duration shows "so far" because the step is live.
 
 export const SpecifyInFlight: Story = {
@@ -49,9 +49,9 @@ export const SpecifyInFlight: Story = {
                     specify: { startedAt: iso(45_000), completedAt: null },
                 },
                 transitions: [
-                    { step: 'specify', substep: 'parsing', from: null, by: 'sdd', at: iso(44_000) },
-                    { step: 'specify', substep: 'exploring', from: { step: 'specify', substep: 'parsing' }, by: 'sdd', at: iso(40_000) },
-                    { step: 'specify', substep: 'writing-spec', from: { step: 'specify', substep: 'exploring' }, by: 'sdd', at: iso(15_000) },
+                    { step: 'specify', substep: 'parsing', from: null, by: 'cli', at: iso(44_000) },
+                    { step: 'specify', substep: 'exploring', from: { step: 'specify', substep: 'parsing' }, by: 'cli', at: iso(40_000) },
+                    { step: 'specify', substep: 'writing-spec', from: { step: 'specify', substep: 'exploring' }, by: 'cli', at: iso(15_000) },
                 ],
             })}
         />
@@ -75,9 +75,9 @@ export const PlanInFlight: Story = {
                     plan: { startedAt: iso(120_000), completedAt: null },
                 },
                 transitions: [
-                    { step: 'specify', substep: 'writing-spec', from: null, by: 'sdd', at: iso(800_000) },
-                    { step: 'plan', substep: 'research', from: { step: 'specify', substep: null }, by: 'sdd', at: iso(110_000) },
-                    { step: 'plan', substep: 'design', from: { step: 'plan', substep: 'research' }, by: 'sdd', at: iso(60_000) },
+                    { step: 'specify', substep: 'writing-spec', from: null, by: 'cli', at: iso(800_000) },
+                    { step: 'plan', substep: 'research', from: { step: 'specify', substep: null }, by: 'cli', at: iso(110_000) },
+                    { step: 'plan', substep: 'design', from: { step: 'plan', substep: 'research' }, by: 'cli', at: iso(60_000) },
                 ],
             })}
         />
@@ -103,11 +103,11 @@ export const FullPipelineImplementInFlight: Story = {
                     implement: { startedAt: iso(900_000), completedAt: null },
                 },
                 transitions: [
-                    { step: 'specify', substep: 'writing-spec', from: null, by: 'sdd', at: iso(3_500_000) },
-                    { step: 'plan', substep: 'design', from: { step: 'specify', substep: null }, by: 'sdd', at: iso(3_000_000) },
-                    { step: 'tasks', substep: null, from: { step: 'plan', substep: null }, by: 'sdd', at: iso(2_600_000) },
-                    { step: 'implement', substep: 'phase1', from: { step: 'tasks', substep: null }, by: 'sdd', at: iso(800_000) },
-                    { step: 'implement', substep: 'code-review', from: { step: 'implement', substep: 'phase1' }, by: 'sdd', at: iso(300_000) },
+                    { step: 'specify', substep: 'writing-spec', from: null, by: 'cli', at: iso(3_500_000) },
+                    { step: 'plan', substep: 'design', from: { step: 'specify', substep: null }, by: 'cli', at: iso(3_000_000) },
+                    { step: 'tasks', substep: null, from: { step: 'plan', substep: null }, by: 'cli', at: iso(2_600_000) },
+                    { step: 'implement', substep: 'phase1', from: { step: 'tasks', substep: null }, by: 'cli', at: iso(800_000) },
+                    { step: 'implement', substep: 'code-review', from: { step: 'implement', substep: 'phase1' }, by: 'cli', at: iso(300_000) },
                 ],
             })}
         />
@@ -158,10 +158,10 @@ export const OverallHeaderSpan: Story = {
                     implement: { startedAt: iso(8_400_000), completedAt: iso(3_600_000) },
                 },
                 transitions: [
-                    { step: 'specify', substep: 'writing-spec', from: null, by: 'sdd', at: iso(10_700_000) },
-                    { step: 'plan', substep: 'design', from: { step: 'specify', substep: null }, by: 'sdd', at: iso(10_000_000) },
-                    { step: 'tasks', substep: 'breakdown', from: { step: 'plan', substep: null }, by: 'sdd', at: iso(8_800_000) },
-                    { step: 'implement', substep: 'phase1', from: { step: 'tasks', substep: null }, by: 'sdd', at: iso(8_200_000) },
+                    { step: 'specify', substep: 'writing-spec', from: null, by: 'cli', at: iso(10_700_000) },
+                    { step: 'plan', substep: 'design', from: { step: 'specify', substep: null }, by: 'cli', at: iso(10_000_000) },
+                    { step: 'tasks', substep: 'breakdown', from: { step: 'plan', substep: null }, by: 'cli', at: iso(8_800_000) },
+                    { step: 'implement', substep: 'phase1', from: { step: 'tasks', substep: null }, by: 'cli', at: iso(8_200_000) },
                 ],
             })}
         />
@@ -193,9 +193,9 @@ export const PerSubstepTiming: Story = {
                     },
                 },
                 transitions: [
-                    { step: 'plan', substep: 'research', from: null, by: 'sdd', at: iso(590_000) },
-                    { step: 'plan', substep: 'design', from: { step: 'plan', substep: 'research' }, by: 'sdd', at: iso(450_000) },
-                    { step: 'plan', substep: 'data-model', from: { step: 'plan', substep: 'design' }, by: 'sdd', at: iso(240_000) },
+                    { step: 'plan', substep: 'research', from: null, by: 'cli', at: iso(590_000) },
+                    { step: 'plan', substep: 'design', from: { step: 'plan', substep: 'research' }, by: 'cli', at: iso(450_000) },
+                    { step: 'plan', substep: 'data-model', from: { step: 'plan', substep: 'design' }, by: 'cli', at: iso(240_000) },
                 ],
             })}
         />
@@ -220,11 +220,11 @@ export const DuplicateRowCollapse: Story = {
                     implement: { startedAt: iso(600_000), completedAt: null },
                 },
                 transitions: [
-                    { step: 'implement', substep: 'phase1', from: null, by: 'sdd', at: iso(590_000) },
-                    { step: 'implement', substep: 'phase1', from: { step: 'implement', substep: 'phase1' }, by: 'sdd', at: iso(540_000) },
-                    { step: 'implement', substep: 'phase1', from: { step: 'implement', substep: 'phase1' }, by: 'sdd', at: iso(480_000) },
-                    { step: 'implement', substep: 'phase1', from: { step: 'implement', substep: 'phase1' }, by: 'sdd', at: iso(420_000) },
-                    { step: 'implement', substep: 'code-review', from: { step: 'implement', substep: 'phase1' }, by: 'sdd', at: iso(120_000) },
+                    { step: 'implement', substep: 'phase1', from: null, by: 'cli', at: iso(590_000) },
+                    { step: 'implement', substep: 'phase1', from: { step: 'implement', substep: 'phase1' }, by: 'cli', at: iso(540_000) },
+                    { step: 'implement', substep: 'phase1', from: { step: 'implement', substep: 'phase1' }, by: 'cli', at: iso(480_000) },
+                    { step: 'implement', substep: 'phase1', from: { step: 'implement', substep: 'phase1' }, by: 'cli', at: iso(420_000) },
+                    { step: 'implement', substep: 'code-review', from: { step: 'implement', substep: 'phase1' }, by: 'cli', at: iso(120_000) },
                 ],
             })}
         />
@@ -232,7 +232,7 @@ export const DuplicateRowCollapse: Story = {
 };
 
 // ── Author-at-start ───────────────────────────────────
-// Multiple substeps authored by the same actor (`sdd`). The actor
+// Multiple substeps authored by the same actor (`cli`). The actor
 // badge must appear exactly once — in the card header, driven by
 // the first transition's `by` — and NOT repeated per substep row.
 
@@ -255,9 +255,9 @@ export const AuthorAtStartOnly: Story = {
                     },
                 },
                 transitions: [
-                    { step: 'specify', substep: 'parsing', from: null, by: 'sdd', at: iso(290_000) },
-                    { step: 'specify', substep: 'exploring', from: { step: 'specify', substep: 'parsing' }, by: 'sdd', at: iso(250_000) },
-                    { step: 'specify', substep: 'writing-spec', from: { step: 'specify', substep: 'exploring' }, by: 'sdd', at: iso(120_000) },
+                    { step: 'specify', substep: 'parsing', from: null, by: 'cli', at: iso(290_000) },
+                    { step: 'specify', substep: 'exploring', from: { step: 'specify', substep: 'parsing' }, by: 'cli', at: iso(250_000) },
+                    { step: 'specify', substep: 'writing-spec', from: { step: 'specify', substep: 'exploring' }, by: 'cli', at: iso(120_000) },
                 ],
             })}
         />
@@ -283,10 +283,10 @@ export const InFlightAgo: Story = {
                     implement: { startedAt: iso(600_000), completedAt: null },
                 },
                 transitions: [
-                    { step: 'specify', substep: 'writing-spec', from: null, by: 'sdd', at: iso(7_100_000) },
-                    { step: 'plan', substep: 'design', from: { step: 'specify', substep: null }, by: 'sdd', at: iso(6_800_000) },
-                    { step: 'tasks', substep: 'breakdown', from: { step: 'plan', substep: null }, by: 'sdd', at: iso(6_200_000) },
-                    { step: 'implement', substep: 'phase1', from: { step: 'tasks', substep: null }, by: 'sdd', at: iso(500_000) },
+                    { step: 'specify', substep: 'writing-spec', from: null, by: 'cli', at: iso(7_100_000) },
+                    { step: 'plan', substep: 'design', from: { step: 'specify', substep: null }, by: 'cli', at: iso(6_800_000) },
+                    { step: 'tasks', substep: 'breakdown', from: { step: 'plan', substep: null }, by: 'cli', at: iso(6_200_000) },
+                    { step: 'implement', substep: 'phase1', from: { step: 'tasks', substep: null }, by: 'cli', at: iso(500_000) },
                 ],
             })}
         />
@@ -313,9 +313,9 @@ export const TerminalFinalized: Story = {
                     implement: { startedAt: iso(7_800_000), completedAt: iso(120_000) },
                 },
                 transitions: [
-                    { step: 'specify', substep: 'writing-spec', from: null, by: 'sdd', at: iso(8_900_000) },
-                    { step: 'implement', substep: 'phase1', from: { step: 'tasks', substep: null }, by: 'sdd', at: iso(7_700_000) },
-                    { step: 'implement', substep: 'code-review', from: { step: 'implement', substep: 'phase1' }, by: 'sdd', at: iso(600_000) },
+                    { step: 'specify', substep: 'writing-spec', from: null, by: 'cli', at: iso(8_900_000) },
+                    { step: 'implement', substep: 'phase1', from: { step: 'tasks', substep: null }, by: 'cli', at: iso(7_700_000) },
+                    { step: 'implement', substep: 'code-review', from: { step: 'implement', substep: 'phase1' }, by: 'cli', at: iso(600_000) },
                 ],
             })}
         />

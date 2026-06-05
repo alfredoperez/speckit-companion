@@ -24,7 +24,7 @@ import {
   calculateTaskCompletion,
   calculateWorkflowPhase,
   getPhaseNumber,
-  mapSddStepToTab,
+  mapStepToTab,
   computeCreatedDate,
   computeLastUpdatedDate,
   getDocTypeLabel,
@@ -616,7 +616,7 @@ export class SpecViewerProvider {
       for (const wfCmd of getWorkflowCommands(workflowName)) {
         if (!wfCmd.command) continue;
         const rawStep = wfCmd.step || "all";
-        const step = rawStep === "all" ? "all" : (mapSddStepToTab(rawStep) || rawStep);
+        const step = rawStep === "all" ? "all" : (mapStepToTab(rawStep) || rawStep);
         if (step !== docType && step !== "all") continue;
         if (seenCommands.has(wfCmd.command)) continue;
 
@@ -668,7 +668,7 @@ export class SpecViewerProvider {
         ? taskCompletionPercent === 100
         : await hasNonTrivialArtifact(specDirectory, running.step);
     return {
-      tab: mapSddStepToTab(running.step) || running.step,
+      tab: mapStepToTab(running.step) || running.step,
       artifactReady,
       startedAt: running.startedAt,
       label: getDocTypeLabel(running.step),

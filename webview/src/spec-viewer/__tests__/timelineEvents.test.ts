@@ -55,28 +55,28 @@ describe('mergeStepEvents', () => {
     it('attaches the actor from a matching transition', () => {
         const transitions = [
             tx({ step: 'plan', substep: 'research', by: 'ai' }),
-            tx({ step: 'plan', substep: 'design',   by: 'sdd' }),
+            tx({ step: 'plan', substep: 'design',   by: 'cli' }),
         ];
         const events = mergeStepEvents('plan', history, transitions);
         expect(events[0].by).toBe('ai');
-        expect(events[1].by).toBe('sdd');
+        expect(events[1].by).toBe('cli');
     });
 
     it('emits logged-only events for transitions not present in substeps[]', () => {
         const transitions = [
-            tx({ step: 'specify', substep: 'parsing',   by: 'sdd', at: '2026-04-29T00:00:00Z' }),
-            tx({ step: 'specify', substep: 'exploring', by: 'sdd', at: '2026-04-29T00:00:05Z' }),
+            tx({ step: 'specify', substep: 'parsing',   by: 'cli', at: '2026-04-29T00:00:00Z' }),
+            tx({ step: 'specify', substep: 'exploring', by: 'cli', at: '2026-04-29T00:00:05Z' }),
         ];
         const events = mergeStepEvents('specify', undefined, transitions);
         expect(events).toHaveLength(2);
-        expect(events[0]).toMatchObject({ name: 'parsing',   source: 'logged', by: 'sdd', completedAt: null });
-        expect(events[1]).toMatchObject({ name: 'exploring', source: 'logged', by: 'sdd' });
+        expect(events[0]).toMatchObject({ name: 'parsing',   source: 'logged', by: 'cli', completedAt: null });
+        expect(events[1]).toMatchObject({ name: 'exploring', source: 'logged', by: 'cli' });
     });
 
     it('drops null-substep transitions (boundary markers)', () => {
         const transitions = [
             tx({ step: 'specify', substep: null, by: 'extension' }),
-            tx({ step: 'specify', substep: 'parsing', by: 'sdd' }),
+            tx({ step: 'specify', substep: 'parsing', by: 'cli' }),
         ];
         const events = mergeStepEvents('specify', undefined, transitions);
         expect(events).toHaveLength(1);

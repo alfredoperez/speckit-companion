@@ -34,7 +34,7 @@ describe('spec-context workflow integration (SC-001, US3)', () => {
         expect(validateSpecContext(backfilled).valid).toBe(true);
     });
 
-    it('validates SDD-Fast fixture 056', () => {
+    it('validates fixture 056', () => {
         const ctx = normalizeSpecContext(loadFixture('056.json') as Record<string, unknown>);
         expect(validateSpecContext(ctx).valid).toBe(true);
         expect(ctx.status).toBe('specifying');

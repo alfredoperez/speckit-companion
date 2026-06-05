@@ -273,24 +273,6 @@ By default, specs live in `specs/`. You can configure multiple directories or us
 
 Simple names (e.g., `specs`) list their children as specs. Patterns with wildcards treat each match as a spec folder.
 
-### SDD Branch Auto-Creation
-
-When you use SDD-style workflows, the extension can auto-create a feature branch at a chosen phase. Configure via `.sdd.json` at the workspace root:
-
-```json
-{
-  "branchStage": "implement",
-  "branchNameFormat": "{type}/{slug}"
-}
-```
-
-| Field | Values | Description |
-|-------|--------|-------------|
-| `branchStage` | `"specify"` \| `"implement"` | Phase at which the feature branch is created. Use `specify` to branch as soon as the spec exists; use `implement` to branch only when implementation begins. |
-| `branchNameFormat` | template string | Pattern for the branch name. Supported placeholders: `{type}` (workflow step name), `{slug}` (spec slug). Example: `feat/{slug}` or `{type}/{slug}`. |
-
-The active feature branch is recorded in `.spec-context.json` as `workingBranch`; the original `branch` field stays as the immutable audit value.
-
 ### Custom Workflows
 
 Define alternative workflows with custom steps, output files, and sub-documents. Any SDD methodology that uses commands and produces markdown files can be plugged into SpecKit Companion.
@@ -332,19 +314,19 @@ Notice how custom workflows, spec directories, and custom commands work together
 {
   "speckit.customWorkflows": [
     {
-      "name": "sdd",
-      "displayName": "SDD Workflow",
+      "name": "my-workflow",
+      "displayName": "My Workflow",
       "steps": [
-        { "name": "specify",   "label": "Specify",   "command": "sdd.specify",   "file": "spec.md" },
-        { "name": "plan",      "label": "Plan",      "command": "sdd.plan",      "file": "plan.md" },
-        { "name": "tasks",     "label": "Tasks",     "command": "sdd.tasks",     "file": "tasks.md" },
-        { "name": "implement", "label": "Implement", "command": "sdd.implement", "actionOnly": true }
+        { "name": "specify",   "label": "Specify",   "command": "myflow.specify",   "file": "spec.md" },
+        { "name": "plan",      "label": "Plan",      "command": "myflow.plan",      "file": "plan.md" },
+        { "name": "tasks",     "label": "Tasks",     "command": "myflow.tasks",     "file": "tasks.md" },
+        { "name": "implement", "label": "Implement", "command": "myflow.implement", "actionOnly": true }
       ],
       "commands": [
         {
           "name": "auto",
           "title": "Auto Mode",
-          "command": "sdd:auto",
+          "command": "myflow:auto",
           "step": "specify",
           "tooltip": "Goes through the whole specification in auto mode"
         }
@@ -364,7 +346,7 @@ Workflows can define `commands`: extra action buttons that appear next to the pr
     {
       "name": "auto",
       "title": "Auto Mode",
-      "command": "sdd:auto",
+      "command": "myflow:auto",
       "step": "specify",
       "tooltip": "Runs the full pipeline automatically"
     }
@@ -375,7 +357,7 @@ Workflows can define `commands`: extra action buttons that appear next to the pr
 | Property | Required | Description |
 |----------|----------|-------------|
 | `name` | Yes | Unique command identifier |
-| `command` | Yes | Command to execute (e.g., `"sdd:auto"`: no leading slash needed) |
+| `command` | Yes | Command to execute (e.g., `"myflow:auto"`: no leading slash needed) |
 | `step` | Yes | Which workflow step to show this button on (e.g., `"specify"`) |
 | `title` | No | Button label (defaults to `name`) |
 | `tooltip` | No | Hover text for the button |
@@ -390,18 +372,18 @@ A workflow can declare which AI providers it supports with `supportedAiProviders
 {
   "speckit.customWorkflows": [
     {
-      "name": "sdd",
-      "displayName": "SDD Workflow",
+      "name": "my-workflow",
+      "displayName": "My Workflow",
       "supportedAiProviders": ["claude"],
       "steps": [
-        { "name": "specify", "label": "Specify", "command": "sdd.specify", "file": "spec.md" }
+        { "name": "specify", "label": "Specify", "command": "myflow.specify", "file": "spec.md" }
       ]
     }
   ]
 }
 ```
 
-The SDD workflow is implemented as Claude Code skills (`/sdd:*`), so declaring it `["claude"]` keeps it from appearing — as a dead, unrunnable path — under GitHub Copilot, Gemini, Qwen, or Codex.
+A workflow whose commands are implemented as Claude Code skills (e.g. `/myflow:*`) can declare `["claude"]` to keep it from appearing — as a dead, unrunnable path — under GitHub Copilot, Gemini, Qwen, or Codex.
 
 | Property | Required | Description |
 |----------|----------|-------------|
@@ -440,7 +422,7 @@ This scans `plan/` for `.md` files and shows them as children of the Plan step. 
 | Property | Required | Description |
 |----------|----------|-------------|
 | `name` | Yes | Step identifier (e.g., `"specify"`, `"design"`) |
-| `command` | Yes | Slash command to execute (e.g., `"sdd.specify"`) |
+| `command` | Yes | Slash command to execute (e.g., `"myflow.specify"`) |
 | `label` | No | Display name in sidebar (defaults to capitalized `name`) |
 | `file` | No | Output file for this step (defaults to `{name}.md`) |
 | `actionOnly` | No | When `true`, the step has no output file and is hidden from the document tree (e.g., an "Implement" step that just runs a command) |
@@ -505,7 +487,7 @@ existence is never used to infer step completion.
 
 ```json
 {
-  "workflow": "speckit-companion | sdd | sdd-fast | speckit-terminal",
+  "workflow": "speckit-companion | speckit-terminal | <custom>",
   "specName": "060-spec-context-tracking",
   "branch": "060-spec-context-tracking",
   "currentStep": "specify | clarify | plan | tasks | analyze | implement",

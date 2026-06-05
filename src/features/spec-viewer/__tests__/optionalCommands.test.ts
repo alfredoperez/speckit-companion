@@ -49,7 +49,7 @@ describe('optionalCommands - isOptionalCommand', () => {
 
     it('is false for non-optional commands', () => {
         expect(isOptionalCommand('speckit.specify')).toBe(false);
-        expect(isOptionalCommand('/sdd:auto')).toBe(false);
+        expect(isOptionalCommand('/speckit.implement')).toBe(false);
         expect(isOptionalCommand('')).toBe(false);
     });
 });

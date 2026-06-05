@@ -10,7 +10,7 @@ Each spec directory contains a `.spec-context.json` file that tracks workflow st
 
 | Field | Type | Description |
 |---|---|---|
-| `workflow` | `string` | Workflow name (e.g., `"sdd"`, `"speckit"`) |
+| `workflow` | `string` | Workflow name (e.g., `"speckit-companion"`, `"speckit"`) |
 | `specName` | `string` | Human-readable name derived from directory slug |
 | `branch` | `string` | Git branch associated with this spec |
 | `selectedAt` | `string` | ISO timestamp when workflow was selected |
@@ -21,7 +21,7 @@ Each spec directory contains a `.spec-context.json` file that tracks workflow st
 |---|---|---|
 | `currentStep` | `string` | Active workflow step (e.g., `"specify"`, `"plan"`, `"tasks"`, `"implement"`) |
 | `status` | `string` | Canonical lifecycle status (see vocabulary below) |
-| `progress` | `string \| null` | In-progress indicator set by SDD skills (e.g., `"exploring"`, `"phase1"`). When non-null, badge text appends `"..."` |
+| `progress` | `string \| null` | In-progress indicator set by external skills (e.g., `"exploring"`, `"phase1"`). When non-null, badge text appends `"..."` |
 | `currentTask` | `string \| null` | Current task being executed (e.g., `"T001"`) |
 | `history` | `HistoryEntry[]` | Append-only log of step boundaries (start / completion / substep) |
 
@@ -31,7 +31,7 @@ Each spec directory contains a `.spec-context.json` file that tracks workflow st
   step: 'specify' | 'clarify' | 'plan' | 'tasks' | 'analyze' | 'implement',
   substep: string | null,
   from: { step: string | null, substep: string | null },
-  by: 'extension' | 'user' | 'cli' | 'sdd' | 'sdd-skill' | 'ai',
+  by: 'extension' | 'user' | 'cli' | 'ai',
   at: string  // ISO timestamp
 }
 ```
@@ -43,7 +43,7 @@ Each spec directory contains a `.spec-context.json` file that tracks workflow st
 | `createdAt` | `string` | ISO timestamp when spec was first created |
 | `checkpointStatus` | `Record<CheckpointId, CheckpointStatus>` | Checkpoint states (`commit`, `pr`) |
 
-### SDD-enriched (optional)
+### Skill-enriched (optional)
 
 Skill-authored fields. The extension reads them but does not write them.
 
@@ -81,7 +81,7 @@ elapsed-timer notifications consume. It is **not** written to disk.
 
 ```json
 {
-  "workflow": "sdd",
+  "workflow": "speckit-companion",
   "specName": "My Feature",
   "branch": "feat/my-feature",
   "selectedAt": "2026-04-05T22:00:00.000Z",
@@ -134,4 +134,4 @@ The following fields were removed from the persisted shape:
 Files written by older versions that still carry `stepHistory` or
 `transitions` are accepted on read and migrated on the next write.
 
-> **Note:** `next` and `updated` are still written by SDD skills for CLI workflow use (resume/auto-advance and status display). The extension ignores these fields — they are SDD-specific and not part of the SpecKit schema.
+> **Note:** `next` and `updated` are still written by external CLI skills for workflow use (resume/auto-advance and status display). The extension ignores these fields — they are skill-specific and not part of the SpecKit schema.

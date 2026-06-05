@@ -28,11 +28,11 @@ describe('transitionLogger', () => {
 
         it('should include substep when provided', () => {
             const from = { step: 'specify', substep: 'draft' };
-            const entry = buildTransitionEntry(from, 'specify', 'review', 'sdd');
+            const entry = buildTransitionEntry(from, 'specify', 'review', 'cli');
 
             expect(entry.from!.substep).toBe('draft');
             expect(entry.substep).toBe('review');
-            expect(entry.by).toBe('sdd');
+            expect(entry.by).toBe('cli');
         });
     });
 
@@ -129,12 +129,12 @@ describe('transitionLogger', () => {
                 step: 'plan',
                 substep: null,
                 from: { step: 'specify', substep: null },
-                by: 'sdd',
+                by: 'cli',
                 at: new Date().toISOString(),
             }];
 
             const result = detectExternalTransition(specDir, 'plan', null, transitions);
-            expect(result).toBe('[SpecKit] Transition detected: specify -> plan (by: sdd)');
+            expect(result).toBe('[SpecKit] Transition detected: specify -> plan (by: cli)');
         });
 
         it('should update cache after detection', () => {
@@ -144,7 +144,7 @@ describe('transitionLogger', () => {
                 step: 'plan',
                 substep: null,
                 from: { step: 'specify', substep: null },
-                by: 'sdd',
+                by: 'cli',
                 at: new Date().toISOString(),
             }];
 
@@ -159,12 +159,12 @@ describe('transitionLogger', () => {
                 step: 'specify',
                 substep: 'review',
                 from: { step: 'specify', substep: 'draft' },
-                by: 'sdd',
+                by: 'cli',
                 at: new Date().toISOString(),
             }];
 
             const result = detectExternalTransition(specDir, 'specify', 'review', transitions);
-            expect(result).toBe('[SpecKit] Transition detected: specify -> specify (by: sdd)');
+            expect(result).toBe('[SpecKit] Transition detected: specify -> specify (by: cli)');
         });
 
         it('should handle cached step being undefined', () => {
@@ -174,12 +174,12 @@ describe('transitionLogger', () => {
                 step: 'specify',
                 substep: null,
                 from: null,
-                by: 'sdd',
+                by: 'cli',
                 at: new Date().toISOString(),
             }];
 
             const result = detectExternalTransition(specDir, 'specify', null, transitions);
-            expect(result).toBe('[SpecKit] Transition detected: (none) -> specify (by: sdd)');
+            expect(result).toBe('[SpecKit] Transition detected: (none) -> specify (by: cli)');
         });
     });
 });

@@ -265,18 +265,13 @@ export const AIProviders = {
  */
 export const Workflows = {
     SPECKIT_COMPANION: 'speckit-companion',
-    SDD: 'sdd',
-    SDD_FAST: 'sdd-fast',
 } as const;
 
 /**
  * Workflows that include explicit approval gates between steps.
  * Used to decide whether step-scoped Approve / Start buttons are surfaced.
  */
-export const APPROVAL_GATED_WORKFLOWS: readonly string[] = [
-    Workflows.SDD,
-    Workflows.SDD_FAST,
-];
+export const APPROVAL_GATED_WORKFLOWS: readonly string[] = [];
 
 /**
  * Footer action identifiers — referenced by getFooterActions and tests.
@@ -289,7 +284,6 @@ export const FooterActionIds = {
     START: 'start',
     REGENERATE: 'regenerate',
     APPROVE: 'approve',
-    SDD_AUTO: 'sdd-auto',
 } as const;
 
 /**

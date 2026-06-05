@@ -183,7 +183,7 @@ describe('mapStepHistoryToTabKeys', () => {
             'phase-a': { startedAt: '2026-05-01T00:00:00Z', completedAt: '2026-05-01T00:05:00Z' },
             'phase-b': { startedAt: '2026-05-02T00:00:00Z', completedAt: '2026-05-02T00:05:00Z' },
         };
-        // Both 'phase-a' and 'phase-b' fall through mapSddStepToTab to use
+        // Both 'phase-a' and 'phase-b' fall through mapStepToTab to use
         // their own names → no alias collision. Sanity check the path.
         const result = mapStepHistoryToTabKeys(history);
         expect(result!['phase-a']).toEqual(history['phase-a']);

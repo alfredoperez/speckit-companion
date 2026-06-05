@@ -7,7 +7,7 @@ jest.mock('../footerActions', () => ({
 
 function makeContext(overrides: Partial<SpecContext> = {}): SpecContext {
     return {
-        workflow: 'sdd',
+        workflow: 'speckit',
         specName: 'test',
         branch: 'main',
         currentStep: 'specify',
