@@ -335,7 +335,7 @@ const debouncedRefresh = (event: string, uri: vscode.Uri) => {
 ### Configuration Keys
 
 ```typescript
-speckit.aiProvider                    // 'claude' | 'gemini' | 'copilot' | 'codex' | 'qwen'
+speckit.aiProvider                    // 'claude' | 'claude-vscode' | 'gemini' | 'copilot' | 'codex' | 'qwen' | 'opencode' | 'ide-chat'
 speckit.claudePath                    // Custom Claude CLI path
 speckit.geminiPath                    // Custom Gemini CLI path
 speckit.copilotPath                   // Custom Copilot CLI path
