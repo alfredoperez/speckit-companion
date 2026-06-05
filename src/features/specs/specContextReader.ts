@@ -21,6 +21,21 @@ import {
 
 export const SPEC_CONTEXT_FILENAME = '.spec-context.json';
 
+/**
+ * Thrown when `.spec-context.json` exists but is not parseable JSON. Lets
+ * callers distinguish a corrupt file (recoverable via reset) from a missing
+ * one (ENOENT → null) or other read failures, without sniffing message text.
+ */
+export class SpecContextParseError extends Error {
+    constructor(
+        readonly filePath: string,
+        readonly reason: string,
+    ) {
+        super(`spec-context.json exists but is invalid JSON (${filePath}): ${reason}`);
+        this.name = 'SpecContextParseError';
+    }
+}
+
 /** Load canonical schema (bundled via raw require). */
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const SPEC_CONTEXT_SCHEMA = require('../../core/types/spec-context.schema.json');
@@ -76,7 +91,7 @@ function parseAndNormalize(raw: string, filePath: string): SpecContext {
         parsed = JSON.parse(raw) as Record<string, unknown>;
     } catch (err) {
         const reason = err instanceof Error ? err.message : String(err);
-        throw new Error(`spec-context.json exists but is invalid JSON (${filePath}): ${reason}`);
+        throw new SpecContextParseError(filePath, reason);
     }
     return normalizeSpecContext(parsed);
 }
