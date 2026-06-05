@@ -13,7 +13,7 @@
   "workingBranch": "refactor/remove-cli-path-settings",
   "type": "refactor",
   "createdAt": "2026-06-05T21:30:55Z",
-  "auto": true,
+  "auto": false,
   "loadedDomains": [],
   "approach": "Remove the path-override config surface and collapse every provider onto its bare CLI binary name by dropping the cliPathSettingKey abstraction.",
   "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/200",
