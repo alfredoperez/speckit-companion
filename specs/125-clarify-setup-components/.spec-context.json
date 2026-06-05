@@ -11,7 +11,9 @@
   "workingBranch": "docs/clarify-setup-components",
   "loadedDomains": [],
   "files_modified": ["README.md"],
-  "last_action": "Implemented README 'Setup & Components' section; all tests pass and tsc compiles clean.",
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/198",
+  "prNumber": 198,
+  "last_action": "PR #198 opened — docs: clarify required components and extension-vs-CLI relationship.",
   "task_summaries": {
     "T001": { "status": "DONE", "did": "Added '## Setup & Components' section after Getting Started with a 4-row Required/Optional component table.", "files": ["README.md"] },
     "T002": { "status": "DONE", "did": "Wrote extension-dispatch-vs-terminal and shared-files ownership prose; linked the providers section and docs/how-it-works.md.", "files": ["README.md"] },
