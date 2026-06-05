@@ -346,7 +346,7 @@ Workflows can define `commands`: extra action buttons that appear next to the pr
     {
       "name": "auto",
       "title": "Auto Mode",
-      "command": "myflow:auto",
+      "command": "/myflow:auto",
       "step": "specify",
       "tooltip": "Runs the full pipeline automatically"
     }
@@ -357,7 +357,7 @@ Workflows can define `commands`: extra action buttons that appear next to the pr
 | Property | Required | Description |
 |----------|----------|-------------|
 | `name` | Yes | Unique command identifier |
-| `command` | Yes | Command to execute (e.g., `"myflow:auto"`: no leading slash needed) |
+| `command` | Yes | Command to execute verbatim (e.g., `"/myflow:auto"`; include the leading `/` for slash-command providers) |
 | `step` | Yes | Which workflow step to show this button on (e.g., `"specify"`) |
 | `title` | No | Button label (defaults to `name`) |
 | `tooltip` | No | Hover text for the button |
