@@ -32,7 +32,7 @@ export function FooterActions(_props: FooterActionsProps) {
     const artifactReady = vs?.runningStepArtifactReady ?? false;
     const startedAtMs = startedAt ? Date.parse(startedAt) : NaN;
     const timedOut = !Number.isNaN(startedAtMs) && Date.now() - startedAtMs > RECOVERY_TIMEOUT_MS;
-    const isGenerating = !!startedAt && !artifactReady && !timedOut;
+    const isGenerating = !!startedAt && !Number.isNaN(startedAtMs) && !artifactReady && !timedOut;
 
     // Re-render once the recovery window elapses, even with no new viewerState.
     useEffect(() => {

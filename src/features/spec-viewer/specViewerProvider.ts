@@ -14,6 +14,7 @@ import {
   computePanelDerivedState,
   resolveDisplayDocument,
   resolveTabClickDocument,
+  resolveSpecStatus,
   type PanelDerivedState,
 } from "./panelStateComputer";
 import { PanelInstance, PanelRegistry } from "./panelRegistry";
@@ -285,8 +286,9 @@ export class SpecViewerProvider {
    * `navState` to the open viewer (markdown untouched). Fires on every
    * `.spec-context.json` change — post-action and external (FR-007). Uses the
    * same shared payload builder as the tab-switch path so the footer never
-   * mixes a fresh viewerState with a stale partial navState. No-op when no
-   * panel is open.
+   * mixes a fresh viewerState with a stale partial navState, but skips
+   * document-content, tasks.md, and staleness reads (none are used by
+   * `viewerStateUpdated`). No-op when no panel is open.
    */
   public async refreshContextIfDisplaying(specContextPath: string): Promise<void> {
     const specDir = path.dirname(specContextPath);
@@ -294,7 +296,9 @@ export class SpecViewerProvider {
     if (!instance) return;
 
     try {
-      const built = await this.buildViewerPayload(specDir, instance.state.currentDocument);
+      const built = await this.buildViewerPayload(specDir, instance.state.currentDocument, {
+        skipContentAndStaleness: true,
+      });
       if (!built || !built.viewerState) return;
       instance.panel.webview.postMessage({
         type: 'viewerStateUpdated',
@@ -811,6 +815,17 @@ export class SpecViewerProvider {
   private async buildViewerPayload(
     specDirectory: string,
     documentType: DocumentType,
+    options?: {
+      /**
+       * When true, skips reading document content, `tasks.md`, and
+       * recomputing the staleness map. Use for `viewerStateUpdated` refreshes
+       * triggered by `.spec-context.json` changes: the message doesn't carry
+       * `content`, so the extra disk I/O is unnecessary and increases the risk
+       * of transient failures. Cached `taskCompletionPercent` and `specStatus`
+       * are reused to keep navState self-consistent.
+       */
+      skipContentAndStaleness?: boolean;
+    },
   ): Promise<{
     doc: SpecDocument;
     content: string;
@@ -831,8 +846,15 @@ export class SpecViewerProvider {
     }
     const resolvedType = doc.type;
 
-    const { content } = await this.readDocumentContent(doc);
-    const tasksContent = await this.readTasksContent(doc, instance.state.availableDocuments, content);
+    // Skip document + tasks reads for context-only refreshes (viewerStateUpdated).
+    // These refreshes don't send content to the webview, so the I/O is wasted work
+    // that adds latency and transient-failure surface area.
+    let content = "";
+    let tasksContent = "";
+    if (!options?.skipContentAndStaleness) {
+      ({ content } = await this.readDocumentContent(doc));
+      tasksContent = await this.readTasksContent(doc, instance.state.availableDocuments, content);
+    }
 
     // Tolerate transient read failures so a render pass during a concurrent
     // CLI write degrades gracefully rather than crashing the whole update.
@@ -853,11 +875,26 @@ export class SpecViewerProvider {
       enhancementButtons,
     );
 
-    const stalenessMap = await computeStaleness(instance.state.availableDocuments);
+    // For context-only refreshes, reuse the cached task-completion percent and
+    // re-derive specStatus from it so navState stays self-consistent without
+    // re-reading tasks.md.
+    const effectiveTaskPct = options?.skipContentAndStaleness
+      ? instance.state.taskCompletionPercent
+      : derived.taskCompletionPercent;
+    const effectiveSpecStatus = options?.skipContentAndStaleness
+      ? resolveSpecStatus(featureCtx, effectiveTaskPct)
+      : derived.specStatus;
+
+    // Skip staleness recompute for context-only refreshes; the UI only updates
+    // staleness indicators on full content refreshes (tab switches, file saves).
+    const stalenessMap = options?.skipContentAndStaleness
+      ? {}
+      : await computeStaleness(instance.state.availableDocuments);
+
     const runInfo = await this.deriveRunningStepInfo(
       derived.derivedStepHistory,
       specDirectory,
-      derived.taskCompletionPercent,
+      effectiveTaskPct,
     );
 
     const navState: NavState = {
@@ -865,11 +902,11 @@ export class SpecViewerProvider {
       relatedDocs: derived.relatedDocs,
       currentDoc: resolvedType,
       workflowPhase: derived.workflowPhase,
-      taskCompletionPercent: derived.taskCompletionPercent,
+      taskCompletionPercent: effectiveTaskPct,
       isViewingRelatedDoc: derived.isViewingRelatedDoc,
       enhancementButtons,
       stalenessMap,
-      specStatus: derived.specStatus,
+      specStatus: effectiveSpecStatus,
       currentTask: featureCtx?.currentTask ?? null,
       activeStep: runInfo.tab,
       stepHistory: derived.stepHistoryByTab,
