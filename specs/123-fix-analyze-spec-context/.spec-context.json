@@ -1,6 +1,6 @@
 {
-  "workflow": "sdd",
-  "currentStep": "done",
+  "workflow": "speckit",
+  "currentStep": "implement",
   "currentTask": null,
   "progress": null,
   "next": "done",
@@ -75,20 +75,19 @@
   },
   "checkpointStatus": { "commit": true, "pr": true },
   "last_action": "All 4 tasks complete, 790/790 tests pass — ready to commit",
-  "transitions": [
-    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-06-05T17:09:26Z" },
-    { "step": "specify", "substep": "exploring", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-06-05T17:10:00Z" },
-    { "step": "specify", "substep": "detecting", "from": { "step": "specify", "substep": "exploring" }, "by": "sdd", "at": "2026-06-05T17:11:00Z" },
-    { "step": "specify", "substep": "writing-spec", "from": { "step": "specify", "substep": "detecting" }, "by": "sdd", "at": "2026-06-05T17:11:30Z" },
-    { "step": "specify", "substep": null, "from": { "step": "specify", "substep": "writing-spec" }, "by": "sdd", "at": "2026-06-05T17:12:30Z" },
-    { "step": "plan", "substep": "loading", "from": { "step": "specify", "substep": null }, "by": "sdd", "at": "2026-06-05T17:13:00Z" },
-    { "step": "plan", "substep": "writing-plan", "from": { "step": "plan", "substep": "loading" }, "by": "sdd", "at": "2026-06-05T17:13:30Z" },
-    { "step": "plan", "substep": null, "from": { "step": "plan", "substep": "writing-plan" }, "by": "sdd", "at": "2026-06-05T17:14:00Z" },
-    { "step": "tasks", "substep": "loading", "from": { "step": "plan", "substep": null }, "by": "sdd", "at": "2026-06-05T17:14:30Z" },
-    { "step": "tasks", "substep": "writing-tasks", "from": { "step": "tasks", "substep": "loading" }, "by": "sdd", "at": "2026-06-05T17:15:00Z" },
-    { "step": "tasks", "substep": null, "from": { "step": "tasks", "substep": "writing-tasks" }, "by": "sdd", "at": "2026-06-05T17:15:30Z" },
-    { "step": "implement", "substep": "phase1", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-06-05T17:31:00Z" },
-    { "step": "implement", "substep": null, "from": { "step": "implement", "substep": "phase1" }, "by": "sdd", "at": "2026-06-05T17:40:00Z" },
-    { "step": "done", "substep": null, "from": { "step": "implement", "substep": null }, "by": "sdd", "at": "2026-06-05T17:40:30Z" }
+  "history": [
+    { "step": "specify", "substep": "parsing", "kind": "start", "from": null, "by": "sdd", "at": "2026-06-05T17:09:26Z" },
+    { "step": "specify", "substep": "exploring", "kind": "start", "from": { "step": "specify", "substep": "parsing" }, "by": "sdd", "at": "2026-06-05T17:10:00Z" },
+    { "step": "specify", "substep": "detecting", "kind": "start", "from": { "step": "specify", "substep": "exploring" }, "by": "sdd", "at": "2026-06-05T17:11:00Z" },
+    { "step": "specify", "substep": "writing-spec", "kind": "start", "from": { "step": "specify", "substep": "detecting" }, "by": "sdd", "at": "2026-06-05T17:11:30Z" },
+    { "step": "specify", "substep": null, "kind": "complete", "by": "sdd", "at": "2026-06-05T17:12:30Z" },
+    { "step": "plan", "substep": "loading", "kind": "start", "from": { "step": "specify", "substep": null }, "by": "sdd", "at": "2026-06-05T17:13:00Z" },
+    { "step": "plan", "substep": "writing-plan", "kind": "start", "from": { "step": "plan", "substep": "loading" }, "by": "sdd", "at": "2026-06-05T17:13:30Z" },
+    { "step": "plan", "substep": null, "kind": "complete", "by": "sdd", "at": "2026-06-05T17:14:00Z" },
+    { "step": "tasks", "substep": "loading", "kind": "start", "from": { "step": "plan", "substep": null }, "by": "sdd", "at": "2026-06-05T17:14:30Z" },
+    { "step": "tasks", "substep": "writing-tasks", "kind": "start", "from": { "step": "tasks", "substep": "loading" }, "by": "sdd", "at": "2026-06-05T17:15:00Z" },
+    { "step": "tasks", "substep": null, "kind": "complete", "by": "sdd", "at": "2026-06-05T17:15:30Z" },
+    { "step": "implement", "substep": "phase1", "kind": "start", "from": { "step": "tasks", "substep": null }, "by": "sdd", "at": "2026-06-05T17:31:00Z" },
+    { "step": "implement", "substep": null, "kind": "complete", "by": "sdd", "at": "2026-06-05T17:40:00Z" }
   ]
 }
