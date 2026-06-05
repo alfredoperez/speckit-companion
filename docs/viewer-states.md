@@ -126,14 +126,15 @@
 > the provider calls `hasNonTrivialArtifact()`
 > (`src/features/spec-viewer/stepArtifact.ts`) — `<step>.md` must
 > exist with a real heading or ≥40 non-whitespace chars after
-> frontmatter is stripped — and ships `runningStepArtifactReady`,
-> `runningStepStartedAt`, and `runningStepLabel` on **both** the
-> initial HTML navState (the `*.md` file-watcher refresh path) and
-> the `contentUpdated` message (the tab-switch path), so the state is
-> consistent however the viewer last refreshed. The existing `*.md`
-> watcher triggers the refresh, so no new polling is added (the
-> `implement` step has no single artifact and is treated ready at
-> 100% task completion).
+> frontmatter is stripped. The result is injected into
+> `deriveViewerState`, which carries `runningStepArtifactReady`,
+> `runningStepStartedAt`, and `runningStepLabel` on **`viewerState`**
+> (the footer's sole input). Both refresh messages — `contentUpdated`
+> (tab switch) and `viewerStateUpdated` (`.spec-context.json` change) —
+> ship a complete `viewerState`, so the state is consistent however the
+> viewer last refreshed. The existing watchers trigger the refresh, so
+> no new polling is added (the `implement` step has no single artifact
+> and is treated ready at 100% task completion).
 >
 > Two escape hatches keep the footer from stranding: the left-side
 > `Mark step complete` override (posts `markStepComplete`, which
@@ -201,37 +202,40 @@ flowchart TD
 
 ## Footer Buttons
 
-```mermaid
-flowchart LR
-    subgraph active
-        A_L1["Edit Source"] ~~~ A_L2["🗄 Archive"]
-        A_L2 ~~~ A_R1["Regenerate"]
-        A_R1 ~~~ A_R2["Next Step ➜"]
-    end
-    subgraph tasks-done
-        T_L1["Edit Source"] ~~~ T_L2["🗄 Archive"]
-        T_L2 ~~~ T_R["✅ Complete"]
-    end
-    subgraph completed
-        C_L1["Edit Source"] ~~~ C_L2["🗄 Archive"]
-        C_L2 ~~~ C_R["🔄 Reactivate"]
-    end
-    subgraph archived
-        AR_L["Edit Source"] ~~~ AR_R["🔄 Reactivate"]
-    end
-```
+**Single source of truth.** The footer is a pure function of one `ViewerState`
+snapshot derived solely from `.spec-context.json` (`deriveViewerState` →
+`getFooterActions`). The webview footer reads **only** `viewerState` for every
+decision — status, the button catalog (`viewerState.footer`), the
+generating/run-step gate (`runningStepArtifactReady`, `runningStepStartedAt`,
+`runningStepLabel`), the recovery-timeout anchor, and button labels. It does
+**not** read `navState` for any of these (the lone `navState` read is the
+workflow-derived `enhancementButtons`, which can never hide a lifecycle button).
+There are exactly two render shapes: the normal `CatalogFooter` and the
+`GeneratingFooter` overlay — no legacy fallback branch and no multi-source
+status chain. Because every refresh path ships a **complete** `viewerState`
+(via one shared payload builder), the same true state always yields the same
+button set (determinism by construction).
 
-| Status | Left side | Right side |
-|--------|-----------|------------|
-| **active** | Edit Source, Archive | Regenerate, *Next Step* (if applicable) |
-| **tasks-done** | Edit Source, Archive | **Complete** (primary) |
-| **completed** | Edit Source, Archive | Reactivate |
-| **archived** | Edit Source | Reactivate |
+Zones: **Left** = `regenerate`. **Right** = `refine`, `approve`, `reactivate`,
+`archive`, `complete`. The matrix below is the authoritative mapping and matches
+`specs/124-fix-footer-button-visibility/contracts/footer-button-matrix.md`.
 
-The "Next Step" button shows only when:
-- Status is `active`
-- The next core document doesn't exist yet
-- Label shows the next step name: "Plan", "Tasks", or "Implement"
+| Status | Left | Right | Notes |
+|--------|------|-------|-------|
+| `specifying` / `planning` / `tasking` / `implementing` | Mark step complete | Generating chip | Generating overlay while the running step's artifact is not yet ready (and the recovery window has not elapsed) |
+| `specified` | Regenerate | Approve → **Plan** | forward action present |
+| `planned` | Regenerate | Approve → **Tasks** | |
+| `ready-to-implement` | Regenerate | Approve → **Implement** | |
+| `implemented` | Regenerate | **Mark Completed**, **Archive** | Approve hidden; closure controls appear |
+| `completed` | — | **Reactivate**, **Archive** | terminal; Regenerate hidden |
+| `archived` | — | **Reactivate** | terminal; Archive hidden |
+
+The `Approve` label resolves to the next workflow step (`getApproveLabel`); it is
+hidden on the final `implement` step and whenever a past tab is viewed (the
+footer always reflects the true workflow stage, not the viewed tab). Once the
+running step's artifact lands (or the 10-minute recovery timeout elapses), the
+`GeneratingFooter` reverts to the normal `CatalogFooter` buttons — it never
+leaves the action bar empty.
 
 The source-tab **Refine** button (`✨ Refine (N)`) still appears dynamically
 when pending inline comments are collected. Each comment is persisted to
@@ -571,9 +575,15 @@ sequenceDiagram
     WV->>WV: CSS renders badge, tab states
 
     Note over WV: On tab switch
-    Ext->>WV: contentUpdated message + navState
-    WV->>WV: updateNavState() applies tab classes
+    Ext->>WV: contentUpdated (complete navState + viewerState)
+    Note over WV: On .spec-context.json change (post-action / external)
+    Ext->>WV: viewerStateUpdated (complete navState + viewerState)
+    WV->>WV: footer re-renders from viewerState only; tabs from the refreshed navState
 ```
+
+Both refresh messages are built by one shared payload builder
+(`buildViewerPayload`) so their shapes cannot drift, and neither ever ships a
+footer-relevant field as a partial merged onto a stale snapshot.
 
 ---
 
@@ -581,12 +591,15 @@ sequenceDiagram
 
 | File | Responsibility |
 |------|---------------|
-| `src/features/spec-viewer/specViewerProvider.ts` | Status computation, data flow to webview |
-| `src/features/spec-viewer/html/generator.ts` | Footer button HTML, badge attribute |
-| `src/features/spec-viewer/phaseCalculation.ts` | `computeBadgeText()`, `computeCreatedDate()`, `computeLastUpdatedDate()`, `mapSddStepToTab()` |
+| `src/features/spec-viewer/specViewerProvider.ts` | Status computation, `buildViewerPayload` (shared complete-payload builder), data flow to webview |
+| `src/features/spec-viewer/stateDerivation.ts` | `deriveViewerState()` — footer catalog + run-step/generating fields |
+| `src/features/spec-viewer/footerActions.ts` | Footer action catalog + visibility rules (the deterministic oracle) |
+| `src/features/spec-viewer/html/generator.ts` | Initial HTML shell, badge attribute, initial navState |
+| `src/features/spec-viewer/phaseCalculation.ts` | `computeBadgeText()`, `computeCreatedDate()`, `computeLastUpdatedDate()`, `mapSddStepToTab()`, `getDocTypeLabel()` |
 | `src/features/spec-viewer/messageHandlers.ts` | Lifecycle action handlers (complete/archive/reactivate) |
 | `src/features/spec-viewer/types.ts` | `SpecStatus` type, message types |
-| `webview/src/spec-viewer/navigation.ts` | Tab class application logic |
+| `webview/src/spec-viewer/components/FooterActions.tsx` | Single-source footer (CatalogFooter vs GeneratingFooter) |
+| `webview/src/spec-viewer/components/StepTab.tsx` | Step-tab class derivation |
 | `webview/src/spec-viewer/actions.ts` | Checkbox toggle + percentage update |
 | `webview/styles/spec-viewer/_navigation.css` | Tab visual states |
 | `webview/styles/spec-viewer/_footer.css` | Button styles |

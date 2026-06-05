@@ -41,12 +41,6 @@ export function mockNavState(overrides: Partial<NavState> = {}): NavState {
         workflowPhase: 'spec',
         taskCompletionPercent: 0,
         isViewingRelatedDoc: false,
-        footerState: {
-            showApproveButton: false,
-            approveText: '',
-            enhancementButtons: [],
-            specStatus: 'active',
-        },
         specStatus: 'active',
         activeStep: null,
         stepHistory: undefined,

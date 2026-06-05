@@ -84,20 +84,16 @@ function handleMessage(event: MessageEvent): void {
         case 'viewerStateUpdated':
             viewerState.value = message.viewerState;
             historyEntries.value = message.viewerState.history ?? [];
+            // `viewerStateUpdated` now carries a COMPLETE navState (same shared
+            // builder as `contentUpdated`), so it fully replaces the prior
+            // snapshot — no merge, and no early-arrival race (it can stand alone
+            // before the first contentUpdated).
             if (message.navState) {
-                // Merge only when we already have a full NavState to merge
-                // INTO. `viewerStateUpdated` carries a 3-field partial
-                // (stepHistory, currentStep, badgeText) — taking it as a
-                // full NavState when value is null would hand components an
-                // object missing every required field (coreDocs, footerState,
-                // etc.). Drop the partial in that case; the next
-                // `contentUpdated` will hydrate from a full payload and a
-                // subsequent viewerStateUpdated will then merge correctly.
-                if (navState.value) {
-                    navState.value = { ...navState.value, ...message.navState } as NavState;
-                } else {
-                    console.warn('[SpecViewer] viewerStateUpdated arrived before initial navState; partial dropped');
+                navState.value = message.navState;
+                if (message.navState.currentTask !== undefined) {
+                    setCurrentTask(message.navState.currentTask);
                 }
+                setHasSpecContext(!!(message.navState.specContextName || message.navState.badgeText));
             }
             break;
 

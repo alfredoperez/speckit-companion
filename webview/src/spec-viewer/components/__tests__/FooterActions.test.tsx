@@ -1,28 +1,43 @@
 /**
  * @jest-environment jsdom
  *
- * FooterActions branch-dispatch test — the safety net for Phases 5b/5c/5d.
+ * FooterActions single-source test.
  *
- * The component has three render paths (Generating, Catalog, Legacy). Each
- * was a wholesale return statement inside one 288-LOC component; Phase 5a
- * lifted the first two into dedicated sub-components (`GeneratingFooter`,
- * `CatalogFooter`) and kept the legacy fallback inline. This test pins the
- * dispatch behaviour: given known signal states, the correct branch
- * renders. Subsequent webview migrations (modal, inline-editor wrappers,
- * markdown content) can land knowing this baseline catches regressions
- * here even when other components change.
+ * The footer is a pure function of one `viewerState` snapshot. There are
+ * exactly two render shapes — `CatalogFooter` and `GeneratingFooter` — and
+ * both derive from `viewerState`. A stale/partial `navState` can never hide a
+ * still-valid lifecycle button. This test pins that contract: the generating
+ * gate, the button catalog, and the generating→catalog revert all key off
+ * `viewerState` alone.
  */
 
 import { render } from 'preact';
 import { FooterActions } from '../FooterActions';
 import { navState, viewerState } from '../../signals';
+import type { ViewerState } from '../../types';
 
-// `<Toast>` uses a `vscode.postMessage` reference via the global declared
-// at the module level. Stub it so the rendered tree doesn't reach for an
-// undefined handle when components mount.
+// `<Toast>` reaches for a `vscode.postMessage` global at mount.
 (globalThis as { vscode?: { postMessage: (m: unknown) => void } }).vscode = {
     postMessage: () => undefined,
 };
+
+function vs(overrides: Partial<ViewerState>): ViewerState {
+    return {
+        status: 'specified',
+        activeStep: 'specify',
+        steps: {},
+        pulse: null,
+        highlights: [],
+        activeSubstep: null,
+        footer: [],
+        history: [],
+        stepHistory: {},
+        runningStepArtifactReady: false,
+        runningStepStartedAt: null,
+        runningStepLabel: null,
+        ...overrides,
+    };
+}
 
 function renderInto(): HTMLDivElement {
     const container = document.createElement('div');
@@ -36,30 +51,30 @@ function cleanup(container: HTMLDivElement) {
     container.remove();
 }
 
-describe('FooterActions branch dispatch', () => {
+const labels = (c: HTMLElement) =>
+    Array.from(c.querySelectorAll('button')).map((b) => b.textContent?.trim());
+
+describe('FooterActions — single source (viewerState)', () => {
     afterEach(() => {
         navState.value = null;
         viewerState.value = null;
     });
 
-    it('renders GeneratingFooter when a step has startedAt without completedAt and the artifact is not ready', () => {
-        navState.value = {
-            // The component only touches a handful of fields for the
-            // generating-branch decision; the cast is intentional so the test
-            // stays focused on the dispatch surface rather than fixture noise.
+    it('renders GeneratingFooter when a step is in flight and the artifact is not ready', () => {
+        viewerState.value = vs({
+            status: 'planning',
             activeStep: 'plan',
-            stepHistory: { plan: { startedAt: new Date().toISOString(), completedAt: null } },
-            runningStepArtifactReady: false,
             runningStepStartedAt: new Date().toISOString(),
+            runningStepArtifactReady: false,
             runningStepLabel: 'Plan',
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any;
+            footer: [{ id: 'approve', label: 'Tasks', scope: 'step', tooltip: 'continue' }],
+        });
 
         const container = renderInto();
         try {
             const chip = container.querySelector('.footer-generating-chip');
             expect(chip).not.toBeNull();
-            expect(chip!.textContent).toContain('Generating');
+            expect(chip!.textContent).toContain('Generating Plan');
             // CatalogFooter buttons MUST NOT be present in this branch.
             expect(container.querySelector('.actions-right button')).toBeNull();
         } finally {
@@ -67,60 +82,105 @@ describe('FooterActions branch dispatch', () => {
         }
     });
 
-    it('renders CatalogFooter when viewerState.footer is populated and no step is generating', () => {
-        navState.value = {
-            activeStep: null,
-            stepHistory: {},
-            runningStepArtifactReady: false,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any;
-        viewerState.value = {
-            status: 'active',
+    it('renders CatalogFooter from viewerState.footer when no step is generating', () => {
+        viewerState.value = vs({
+            status: 'specified',
             footer: [
-                { id: 'approve', label: 'Plan', scope: 'step', tooltip: 'Advance to plan' },
-                { id: 'archive', label: 'Archive', scope: 'spec', tooltip: 'Archive this spec' },
+                { id: 'regenerate', label: 'Regenerate', scope: 'step', tooltip: 're-run' },
+                { id: 'approve', label: 'Plan', scope: 'step', tooltip: 'continue' },
             ],
-            history: [],
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any;
+        });
 
         const container = renderInto();
         try {
-            // Generating chip should NOT appear.
             expect(container.querySelector('.footer-generating-chip')).toBeNull();
-            // Catalog actions render as <Button> with the action label.
-            const buttonLabels = Array.from(container.querySelectorAll('button')).map((b) => b.textContent?.trim());
-            expect(buttonLabels).toEqual(expect.arrayContaining(['Plan', 'Archive']));
+            expect(labels(container)).toEqual(expect.arrayContaining(['Regenerate', 'Plan']));
         } finally {
             cleanup(container);
         }
     });
 
-    it('renders the legacy fallback when no viewerState.footer is present and no step is generating', () => {
+    it('a stale/partial navState cannot hide a still-valid viewerState button', () => {
+        // navState carries an in-flight `activeStep`/`stepHistory` from a prior
+        // snapshot — under the old multi-source footer this could short-circuit
+        // into GeneratingFooter and hide the forward action. With single-source
+        // it is ignored entirely.
         navState.value = {
-            activeStep: null,
-            stepHistory: {},
-            runningStepArtifactReady: false,
-            footerState: {
-                showApproveButton: true,
-                approveText: 'Plan',
-                enhancementButtons: [],
-                specStatus: 'active',
-            },
+            activeStep: 'plan',
+            stepHistory: { plan: { startedAt: new Date().toISOString(), completedAt: null } },
             enhancementButtons: [],
-            specStatus: 'active',
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
-        viewerState.value = null;
+        viewerState.value = vs({
+            status: 'specified',
+            runningStepStartedAt: null, // truth: nothing is generating
+            footer: [
+                { id: 'regenerate', label: 'Regenerate', scope: 'step', tooltip: 're-run' },
+                { id: 'approve', label: 'Plan', scope: 'step', tooltip: 'continue' },
+            ],
+        });
 
         const container = renderInto();
         try {
-            // The legacy path renders Regenerate + Approve buttons when the
-            // spec is active and showApproveButton is true.
-            const buttonLabels = Array.from(container.querySelectorAll('button')).map((b) => b.textContent?.trim());
-            expect(buttonLabels).toEqual(expect.arrayContaining(['Regenerate', 'Plan']));
-            // And the generating chip must not be present.
             expect(container.querySelector('.footer-generating-chip')).toBeNull();
+            expect(labels(container)).toEqual(expect.arrayContaining(['Regenerate', 'Plan']));
+        } finally {
+            cleanup(container);
+        }
+    });
+
+    it('reverts from GeneratingFooter to CatalogFooter when the artifact becomes ready', () => {
+        viewerState.value = vs({
+            status: 'tasking',
+            activeStep: 'tasks',
+            runningStepStartedAt: new Date().toISOString(),
+            runningStepArtifactReady: true, // artifact landed → no overlay
+            runningStepLabel: 'Tasks',
+            footer: [
+                { id: 'regenerate', label: 'Regenerate', scope: 'step', tooltip: 're-run' },
+                { id: 'approve', label: 'Implement', scope: 'step', tooltip: 'continue' },
+            ],
+        });
+
+        const container = renderInto();
+        try {
+            expect(container.querySelector('.footer-generating-chip')).toBeNull();
+            expect(labels(container)).toEqual(expect.arrayContaining(['Regenerate', 'Implement']));
+        } finally {
+            cleanup(container);
+        }
+    });
+
+    it('reverts to CatalogFooter when the recovery timeout has elapsed', () => {
+        viewerState.value = vs({
+            status: 'tasking',
+            activeStep: 'tasks',
+            runningStepStartedAt: '2026-01-01T00:00:00Z', // long past the 10-min window
+            runningStepArtifactReady: false,
+            runningStepLabel: 'Tasks',
+            footer: [
+                { id: 'regenerate', label: 'Regenerate', scope: 'step', tooltip: 're-run' },
+                { id: 'approve', label: 'Implement', scope: 'step', tooltip: 'continue' },
+            ],
+        });
+
+        const container = renderInto();
+        try {
+            expect(container.querySelector('.footer-generating-chip')).toBeNull();
+            expect(labels(container)).toEqual(expect.arrayContaining(['Regenerate', 'Implement']));
+        } finally {
+            cleanup(container);
+        }
+    });
+
+    it('renders nothing until viewerState arrives (no contradictory buttons)', () => {
+        viewerState.value = null;
+        navState.value = { enhancementButtons: [] } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+        const container = renderInto();
+        try {
+            expect(container.querySelector('footer')).toBeNull();
+            expect(container.querySelector('button')).toBeNull();
         } finally {
             cleanup(container);
         }

@@ -42,10 +42,7 @@ export function generateHtml(
     currentFilePath?: string | null,
     currentStep?: string | null,
     stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>,
-    activityPanelMode: 'off' | 'beta' | 'on' = 'beta',
-    runningStepArtifactReady?: boolean,
-    runningStepStartedAt?: string | null,
-    runningStepLabel?: string | null
+    activityPanelMode: 'off' | 'beta' | 'on' = 'beta'
 ): string {
     // Get URIs for resources
     const styleUri = webview.asWebviewUri(
@@ -75,29 +72,6 @@ export function generateHtml(
     const isViewingRelatedDoc = !coreDocTypes.includes(currentDocType);
     const workflowPhase = calculateWorkflowPhase(coreDocs);
 
-    // CTA button logic
-    let showApproveButton = false;
-    let approveText = '';
-    if (specStatus === SpecStatuses.ACTIVE) {
-        let currentIndex = coreDocs.findIndex(d => d.type === currentDocType);
-        if (currentIndex < 0 && isViewingRelatedDoc) {
-            const parentStep = relatedDocs.find(d => d.type === currentDocType)?.parentStep;
-            if (parentStep) {
-                currentIndex = coreDocs.findIndex(d => d.type === parentStep);
-            }
-        }
-        if (currentIndex >= 0 && currentIndex < coreDocs.length - 1) {
-            const nextDoc = coreDocs[currentIndex + 1];
-            if (!nextDoc.exists) {
-                showApproveButton = true;
-                approveText = nextDoc.label;
-            }
-        } else if (currentIndex === coreDocs.length - 1) {
-            showApproveButton = true;
-            approveText = 'Implement';
-        }
-    }
-
     const initialNavState: NavState = {
         coreDocs,
         relatedDocs,
@@ -105,12 +79,6 @@ export function generateHtml(
         workflowPhase,
         taskCompletionPercent,
         isViewingRelatedDoc,
-        footerState: {
-            showApproveButton,
-            approveText,
-            enhancementButtons,
-            specStatus,
-        },
         enhancementButtons,
         stalenessMap,
         specStatus,
@@ -125,9 +93,6 @@ export function generateHtml(
         filePath: currentFilePath ?? null,
         docTypeLabel: getDocTypeLabel(currentStep ?? currentDocType),
         activityPanelMode,
-        runningStepArtifactReady,
-        runningStepStartedAt: runningStepStartedAt ?? null,
-        runningStepLabel: runningStepLabel ?? null,
     };
 
     return `<!DOCTYPE html>

@@ -55,17 +55,11 @@ export interface StalenessInfo {
 export type StalenessMap = Record<DocumentType, StalenessInfo>;
 
 /**
- * Footer button state for message-based updates
- */
-export interface FooterState {
-    showApproveButton: boolean;
-    approveText: string;
-    enhancementButtons?: EnhancementButton[];
-    specStatus?: string;
-}
-
-/**
- * Navigation state for message-based updates
+ * Navigation state for message-based updates.
+ *
+ * Footer-relevant duplicates (`footerState`, `runningStep*`) were removed: the
+ * footer now derives entirely from `ViewerState`. `NavState` carries only
+ * navigation/document concerns plus the workflow-derived `enhancementButtons`.
  */
 export interface NavState {
     coreDocs: SpecDocument[];
@@ -74,18 +68,11 @@ export interface NavState {
     workflowPhase: string;
     taskCompletionPercent: number;
     isViewingRelatedDoc: boolean;
-    footerState?: FooterState;
     enhancementButtons?: EnhancementButton[];
     stalenessMap?: StalenessMap;
     specStatus?: string;
     currentTask?: string | null;
     activeStep?: string | null;
-    /** Spec 099: running step's artifact exists with non-trivial content. */
-    runningStepArtifactReady?: boolean;
-    /** Spec 099: `startedAt` of the running step, for footer timeout recovery. */
-    runningStepStartedAt?: string | null;
-    /** Spec 099: human label of the running step (e.g. "Tasks", "Implementation"). */
-    runningStepLabel?: string | null;
     stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>;
     badgeText?: string | null;
     createdDate?: string | null;
@@ -211,6 +198,12 @@ export interface ViewerState {
     footer: SerializedFooterAction[];
     history: HistoryEntry[];
     stepHistory: Record<string, StepHistoryEntry>;
+    /** Whether the running step's artifact is ready (100% tasks for implement). Drives the footer's Generating→ready transition. */
+    runningStepArtifactReady: boolean;
+    /** `startedAt` of the running step, anchoring the recovery-timeout window. `null` when no step is in flight. */
+    runningStepStartedAt: string | null;
+    /** Human label of the running step (e.g. "Plan"). `null` when no step is in flight. */
+    runningStepLabel: string | null;
     approach?: string;
     lastAction?: string;
     taskSummaries?: Record<string, TaskSummary>;
@@ -274,7 +267,7 @@ export type ExtensionToViewerMessage =
     | { type: 'error'; message: string; recoverable: boolean }
     | { type: 'fileDeleted'; filePath: string }
     | { type: 'navStateUpdated'; navState: NavState }
-    | { type: 'viewerStateUpdated'; viewerState: ViewerState; navState?: Partial<NavState> }
+    | { type: 'viewerStateUpdated'; viewerState: ViewerState; navState?: NavState }
     | { type: 'actionToast'; message: string };
 
 // ============================================

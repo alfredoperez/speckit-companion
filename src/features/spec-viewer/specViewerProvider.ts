@@ -12,9 +12,9 @@ import { createMessageHandlers } from "./messageHandlers";
 import { computeStaleness } from "./staleness";
 import {
   computePanelDerivedState,
-  mapStepHistoryToTabKeys,
   resolveDisplayDocument,
   resolveTabClickDocument,
+  type PanelDerivedState,
 } from "./panelStateComputer";
 import { PanelInstance, PanelRegistry } from "./panelRegistry";
 import { getAIProvider } from "../../extension";
@@ -24,7 +24,6 @@ import {
   calculateWorkflowPhase,
   getPhaseNumber,
   mapSddStepToTab,
-  computeBadgeText,
   computeCreatedDate,
   computeLastUpdatedDate,
   getDocTypeLabel,
@@ -282,9 +281,12 @@ export class SpecViewerProvider {
   }
 
   /**
-   * Re-read `.spec-context.json` and re-post `viewerState` (including
-   * `transitions`) to the open viewer for the spec containing this context
-   * file. Markdown is not touched. No-op when no panel is open.
+   * Re-read `.spec-context.json` and re-post a COMPLETE `viewerState` +
+   * `navState` to the open viewer (markdown untouched). Fires on every
+   * `.spec-context.json` change — post-action and external (FR-007). Uses the
+   * same shared payload builder as the tab-switch path so the footer never
+   * mixes a fresh viewerState with a stale partial navState. No-op when no
+   * panel is open.
    */
   public async refreshContextIfDisplaying(specContextPath: string): Promise<void> {
     const specDir = path.dirname(specContextPath);
@@ -292,43 +294,12 @@ export class SpecViewerProvider {
     if (!instance) return;
 
     try {
-      let specCtx = await readSpecContext(specDir);
-      if (!specCtx) return;
-      specCtx = await reconcileAndPersist(specDir, specCtx, (m) => this.outputChannel.appendLine(m));
-
-      const active: StepName = STEP_NAMES.includes(specCtx.currentStep as StepName)
-        ? (specCtx.currentStep as StepName)
-        : 'specify';
-      const wfSteps = (getWorkflow(specCtx.workflow) || DEFAULT_WORKFLOW).steps;
-      const derived = deriveViewerState(specCtx, active, wfSteps);
-      const viewerState: CoreViewerState = {
-        ...derived,
-        footer: derived.footer.map(a => ({
-          id: a.id,
-          label: a.label,
-          scope: a.scope,
-          tooltip: a.tooltip,
-        })) as CoreViewerState['footer'],
-      };
-
-      // Send a contentUpdated message with empty content — the webview only
-      // applies the viewerState fields when content is empty/unchanged. To
-      // avoid clobbering the markdown, only post viewerState via the
-      // viewerStateUpdated channel (the webview's index.tsx handles it).
-      const derivedStepHistory = deriveStepHistory(
-        (specCtx.history ?? []) as any,
-        active,
-        specCtx.status as Status | undefined,
-      );
-      const navStatePartial = {
-        stepHistory: mapStepHistoryToTabKeys(derivedStepHistory),
-        currentStep: specCtx.currentStep,
-        badgeText: computeBadgeText(specCtx, derivedStepHistory),
-      };
+      const built = await this.buildViewerPayload(specDir, instance.state.currentDocument);
+      if (!built || !built.viewerState) return;
       instance.panel.webview.postMessage({
         type: 'viewerStateUpdated',
-        viewerState,
-        navState: navStatePartial,
+        viewerState: built.viewerState,
+        navState: built.navState,
       });
     } catch (error) {
       this.outputChannel.appendLine(
@@ -585,9 +556,6 @@ export class SpecViewerProvider {
         featureCtx?.currentStep ?? doc?.type ?? null,
         derived.stepHistoryByTab,
         this.readActivityPanelMode(),
-        runInfo.artifactReady,
-        runInfo.startedAt,
-        runInfo.label,
       );
 
       this.outputChannel.appendLine(
@@ -780,44 +748,13 @@ export class SpecViewerProvider {
     if (!instance) return;
 
     try {
-      // Tab-click resolution: honour the user's pick; only redirect when
-      // the chosen core doc doesn't exist but a sub-spec under it does.
-      const resolved = resolveTabClickDocument(instance.state.availableDocuments, documentType);
-      if (!resolved) {
-        this.outputChannel.appendLine(
-          `[SpecViewer] Document not found: ${documentType}`,
-        );
-        return;
-      }
-      const doc = resolved;
-      if (resolved.type !== documentType) documentType = resolved.type;
+      const built = await this.buildViewerPayload(specDirectory, documentType);
+      if (!built) return;
+      const { doc, content, navState, viewerState, featureCtx, derived } = built;
+      const resolvedType = doc.type;
 
-      const { content } = await this.readDocumentContent(doc);
-      const tasksContent = await this.readTasksContent(doc, instance.state.availableDocuments, content);
-
-      // Tolerate transient read failures so a render pass during a concurrent
-      // CLI write degrades to "active" rather than crashing the whole update.
-      const changeRoot = instance.state.changeRoot;
-      let featureCtx: FeatureWorkflowContext | undefined;
-      try {
-        featureCtx = await getFeatureWorkflow(specDirectory, changeRoot);
-      } catch (err) {
-        this.outputChannel.appendLine(
-          `[SpecViewer] sendContentUpdateMessage: getFeatureWorkflow failed — ${err instanceof Error ? err.message : String(err)}`,
-        );
-      }
-
-      const enhancementButtons = this.resolveEnhancementButtons(documentType, featureCtx?.workflow);
-
-      const derived = computePanelDerivedState(
-        { documents: instance.state.availableDocuments, doc, tasksContent, featureCtx },
-        enhancementButtons,
-      );
-
-      // Compute staleness and run-step (I/O), and fire step-complete
-      // notifications based on transitions in derivedStepHistory.
-      const stalenessMap = await computeStaleness(instance.state.availableDocuments);
-
+      // Fire step-complete notifications based on transitions in
+      // derivedStepHistory (content-update path only).
       const notifierCtx: NotifierContext | null = derived.derivedStepHistory
         ? { stepHistory: derived.derivedStepHistory }
         : null;
@@ -834,99 +771,147 @@ export class SpecViewerProvider {
       this.stepCompletionNotifier.observe(specDirectory, prevNotifierCtx, notifierCtx);
       instance.lastFeatureCtx = featureCtx ?? null;
 
-      const runInfo = await this.deriveRunningStepInfo(
-        derived.derivedStepHistory,
-        specDirectory,
-        derived.taskCompletionPercent,
-      );
-
-      const navState: NavState = {
-        coreDocs: derived.coreDocs,
-        relatedDocs: derived.relatedDocs,
-        currentDoc: documentType,
-        workflowPhase: derived.workflowPhase,
-        taskCompletionPercent: derived.taskCompletionPercent,
-        isViewingRelatedDoc: derived.isViewingRelatedDoc,
-        footerState: {
-          showApproveButton: derived.footer.showApproveButton,
-          approveText: derived.footer.approveText,
-          enhancementButtons,
-          specStatus: derived.specStatus,
-        },
-        enhancementButtons,
-        stalenessMap,
-        specStatus: derived.specStatus,
-        currentTask: featureCtx?.currentTask ?? null,
-        activeStep: runInfo.tab,
-        runningStepArtifactReady: runInfo.artifactReady,
-        runningStepStartedAt: runInfo.startedAt,
-        runningStepLabel: runInfo.label,
-        stepHistory: derived.stepHistoryByTab,
-        badgeText: derived.badgeText,
-        createdDate: derived.createdDate,
-        lastUpdatedDate: derived.lastUpdatedDate,
-        specContextName: featureCtx?.specName ?? deriveSpecName(specDirectory),
-        branch: featureCtx?.workingBranch ?? featureCtx?.branch ?? null,
-        currentStep: featureCtx?.currentStep ?? documentType ?? null,
-        filePath: doc?.filePath ?? null,
-        docTypeLabel: getDocTypeLabel(featureCtx?.currentStep ?? documentType),
-        activityPanelMode: this.readActivityPanelMode(),
-      };
-
-      instance.state.currentDocument = documentType;
+      instance.state.currentDocument = resolvedType;
       instance.state.taskCompletionPercent = derived.taskCompletionPercent;
-      instance.state.currentPhase = getPhaseNumber(documentType);
+      instance.state.currentPhase = getPhaseNumber(resolvedType);
 
       const docLabel = doc.label || "Spec";
       instance.panel.title = `Spec: ${instance.state.specName} - ${docLabel}`;
-
-      // Derive ViewerState from the canonical .spec-context.json (if present),
-      // serializing footer to strip function fields.
-      let viewerState: CoreViewerState | undefined;
-      try {
-        let specCtx = await readSpecContext(specDirectory);
-        if (specCtx) {
-          specCtx = await reconcileAndPersist(specDirectory, specCtx, (m) => this.outputChannel.appendLine(m));
-          const active: StepName = (STEP_NAMES.includes(specCtx.currentStep as StepName)
-            ? (specCtx.currentStep as StepName)
-            : 'specify');
-          const wfSteps = (getWorkflow(specCtx.workflow) || DEFAULT_WORKFLOW).steps;
-          const derived = deriveViewerState(specCtx, active, wfSteps);
-          viewerState = {
-            ...derived,
-            footer: derived.footer.map(a => ({
-              id: a.id,
-              label: a.label,
-              scope: a.scope,
-              tooltip: a.tooltip,
-              // visibleWhen stripped at serialization boundary
-            })) as CoreViewerState['footer'],
-          };
-        }
-      } catch (error) {
-        this.outputChannel.appendLine(
-          `[SpecViewer] deriveViewerState failed: ${error}`,
-        );
-      }
 
       // Send content via message (no full HTML regeneration)
       const encodedContent = Buffer.from(content).toString("base64");
       this.postMessage(specDirectory, {
         type: "contentUpdated",
         content: encodedContent,
-        documentType,
+        documentType: resolvedType,
         specName: instance.state.specName,
         navState,
         viewerState,
       });
 
       this.outputChannel.appendLine(
-        `[SpecViewer] Sent content update: ${instance.state.specName}/${documentType}`,
+        `[SpecViewer] Sent content update: ${instance.state.specName}/${resolvedType}`,
       );
     } catch (error) {
       this.outputChannel.appendLine(
         `[SpecViewer] Error sending content update: ${error}`,
       );
     }
+  }
+
+  /**
+   * Build the COMPLETE webview payload (full `navState` + serialized
+   * `viewerState`) for a spec directory + document. Both refresh paths —
+   * `sendContentUpdateMessage` (contentUpdated) and `refreshContextIfDisplaying`
+   * (viewerStateUpdated) — go through this single builder so their shapes can
+   * never drift: the footer reads `viewerState` only, and no footer-affecting
+   * message is ever a partial merged onto a stale snapshot (INV-3). Returns
+   * `null` when the requested document can't be resolved.
+   */
+  private async buildViewerPayload(
+    specDirectory: string,
+    documentType: DocumentType,
+  ): Promise<{
+    doc: SpecDocument;
+    content: string;
+    navState: NavState;
+    viewerState: CoreViewerState | undefined;
+    featureCtx: FeatureWorkflowContext | undefined;
+    derived: PanelDerivedState;
+  } | null> {
+    const instance = this.panels.get(specDirectory);
+    if (!instance) return null;
+
+    // Tab-click resolution: honour the user's pick; only redirect when the
+    // chosen core doc doesn't exist but a sub-spec under it does.
+    const doc = resolveTabClickDocument(instance.state.availableDocuments, documentType);
+    if (!doc) {
+      this.outputChannel.appendLine(`[SpecViewer] Document not found: ${documentType}`);
+      return null;
+    }
+    const resolvedType = doc.type;
+
+    const { content } = await this.readDocumentContent(doc);
+    const tasksContent = await this.readTasksContent(doc, instance.state.availableDocuments, content);
+
+    // Tolerate transient read failures so a render pass during a concurrent
+    // CLI write degrades gracefully rather than crashing the whole update.
+    const changeRoot = instance.state.changeRoot;
+    let featureCtx: FeatureWorkflowContext | undefined;
+    try {
+      featureCtx = await getFeatureWorkflow(specDirectory, changeRoot);
+    } catch (err) {
+      this.outputChannel.appendLine(
+        `[SpecViewer] buildViewerPayload: getFeatureWorkflow failed — ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+
+    const enhancementButtons = this.resolveEnhancementButtons(resolvedType, featureCtx?.workflow);
+
+    const derived = computePanelDerivedState(
+      { documents: instance.state.availableDocuments, doc, tasksContent, featureCtx },
+      enhancementButtons,
+    );
+
+    const stalenessMap = await computeStaleness(instance.state.availableDocuments);
+    const runInfo = await this.deriveRunningStepInfo(
+      derived.derivedStepHistory,
+      specDirectory,
+      derived.taskCompletionPercent,
+    );
+
+    const navState: NavState = {
+      coreDocs: derived.coreDocs,
+      relatedDocs: derived.relatedDocs,
+      currentDoc: resolvedType,
+      workflowPhase: derived.workflowPhase,
+      taskCompletionPercent: derived.taskCompletionPercent,
+      isViewingRelatedDoc: derived.isViewingRelatedDoc,
+      enhancementButtons,
+      stalenessMap,
+      specStatus: derived.specStatus,
+      currentTask: featureCtx?.currentTask ?? null,
+      activeStep: runInfo.tab,
+      stepHistory: derived.stepHistoryByTab,
+      badgeText: derived.badgeText,
+      createdDate: derived.createdDate,
+      lastUpdatedDate: derived.lastUpdatedDate,
+      specContextName: featureCtx?.specName ?? deriveSpecName(specDirectory),
+      branch: featureCtx?.workingBranch ?? featureCtx?.branch ?? null,
+      currentStep: featureCtx?.currentStep ?? resolvedType ?? null,
+      filePath: doc?.filePath ?? null,
+      docTypeLabel: getDocTypeLabel(featureCtx?.currentStep ?? resolvedType),
+      activityPanelMode: this.readActivityPanelMode(),
+    };
+
+    // Derive ViewerState from the canonical .spec-context.json — the footer's
+    // sole input. The run-step artifact-ready flag is the only I/O-derived
+    // field, computed above and injected into the otherwise-pure derivation.
+    let viewerState: CoreViewerState | undefined;
+    try {
+      let specCtx = await readSpecContext(specDirectory);
+      if (specCtx) {
+        specCtx = await reconcileAndPersist(specDirectory, specCtx, (m) => this.outputChannel.appendLine(m));
+        const active: StepName = STEP_NAMES.includes(specCtx.currentStep as StepName)
+          ? (specCtx.currentStep as StepName)
+          : 'specify';
+        const wfSteps = (getWorkflow(specCtx.workflow) || DEFAULT_WORKFLOW).steps;
+        const derivedVs = deriveViewerState(specCtx, active, wfSteps, runInfo.artifactReady ?? false);
+        viewerState = {
+          ...derivedVs,
+          footer: derivedVs.footer.map(a => ({
+            id: a.id,
+            label: a.label,
+            scope: a.scope,
+            tooltip: a.tooltip,
+            // visibleWhen stripped at serialization boundary
+          })) as CoreViewerState['footer'],
+        };
+      }
+    } catch (error) {
+      this.outputChannel.appendLine(`[SpecViewer] deriveViewerState failed: ${error}`);
+    }
+
+    return { doc, content, navState, viewerState, featureCtx, derived };
   }
 }

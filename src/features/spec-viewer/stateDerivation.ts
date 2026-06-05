@@ -26,6 +26,7 @@ import {
     HistoryEntry,
 } from '../../core/types/specContext';
 import { getFooterActions } from './footerActions';
+import { getDocTypeLabel } from './phaseCalculation';
 import { deriveStepHistory } from '../specs/stepHistoryDerivation';
 import type { WorkflowStepConfig } from '../workflows/types';
 
@@ -217,11 +218,16 @@ function normalizeHistoryAttribution(ctx: SpecContext): HistoryEntry[] {
 export function deriveViewerState(
     ctx: SpecContext,
     activeStep: StepName = ctx.currentStep,
-    workflowSteps?: WorkflowStepConfig[]
+    workflowSteps?: WorkflowStepConfig[],
+    runningStepArtifactReady = false
 ): ViewerState {
     // Derive stepHistory once from the canonical history[] sequence and reuse
     // it across all the per-step derivations below.
     const stepHistory = deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status);
+    // The run-step/generating fields the footer reads. `artifactReady` needs a
+    // filesystem probe, which this pure function can't do — the provider passes
+    // it in; pure callers default it to false.
+    const running = findRunningStep(stepHistory);
     return {
         status: ctx.status,
         activeStep,
@@ -232,6 +238,9 @@ export function deriveViewerState(
         footer: getFooterActions(ctx, activeStep, workflowSteps),
         history: normalizeHistoryAttribution(ctx),
         stepHistory,
+        runningStepArtifactReady: running ? runningStepArtifactReady : false,
+        runningStepStartedAt: running?.startedAt ?? null,
+        runningStepLabel: running ? getDocTypeLabel(running.step) : null,
         approach: pickString(ctx, 'approach'),
         lastAction: pickString(ctx, 'last_action'),
         taskSummaries: pickRecord<TaskSummary>(ctx, 'task_summaries'),
