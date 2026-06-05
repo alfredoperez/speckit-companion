@@ -350,8 +350,9 @@ speckit.views.settings.visible        // boolean
 
 | Constant | Value | Purpose |
 |----------|-------|---------|
-| `terminalVenvActivationDelay` | 800 | Wait for venv activation |
+| `shellReadyTimeoutMs` | 5000 | Wait for shell integration readiness |
 | `tempFileCleanupDelay` | 30000 | Clean prompt temp files |
+| `terminalDisposeDelay` | 1000 | Delay terminal disposal after execution |
 | `fileWatcherDebounce` | 1000 | Batch file change events |
 
 ---

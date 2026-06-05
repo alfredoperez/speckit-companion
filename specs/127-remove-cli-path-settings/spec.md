@@ -4,12 +4,12 @@
 
 ## Summary
 
-The extension exposes five per-CLI executable-path override settings (`speckit.claudePath`, `speckit.geminiPath`, `speckit.copilotPath`, `speckit.qwenPath`, `speckit.opencodePath`) plus a `speckit.geminiInitDelay` timing knob. These are rarely-needed power-user tuning options that clutter the configuration surface — and `claudePath` is already dead config (defined in `package.json` but never read, since the Claude provider declares `cliPathSettingKey = null`). This change removes the path overrides so every provider simply invokes its CLI by bare binary name from `PATH` (already the default fallback in `getCliPath()`), and removes the adjacent `geminiInitDelay` knob.
+The extension exposed five per-CLI executable-path override settings (`speckit.claudePath`, `speckit.geminiPath`, `speckit.copilotPath`, `speckit.qwenPath`, `speckit.opencodePath`) plus a `speckit.geminiInitDelay` timing knob. These were rarely-needed power-user tuning options that cluttered the configuration surface — and `claudePath` was already dead config (defined in `package.json` but never read). This change removes the path overrides so every provider simply invokes its CLI by bare binary name from `PATH`, and removes the adjacent `geminiInitDelay` knob.
 
 ## Requirements
 
 - **R001** (MUST): Remove the `speckit.claudePath`, `speckit.geminiPath`, `speckit.copilotPath`, `speckit.qwenPath`, and `speckit.opencodePath` configuration properties from `package.json` `contributes.configuration`.
-- **R002** (MUST): Every CLI provider resolves its executable to the bare binary name (`claude`, `gemini`, `copilot`, `qwen`, `opencode`) — i.e. `cliPathSettingKey` becomes `null` for all providers and the per-provider `getCliPath` override in `geminiCliProvider.ts` is dropped in favor of the bare binary.
+- **R002** (MUST): Every CLI provider resolves its executable to the bare binary name (`claude`, `gemini`, `copilot`, `qwen`, `opencode`) by removing per-provider path-setting lookups and removing the `getCliPath` override in `geminiCliProvider.ts`.
 - **R003** (MUST): Remove the now-unused path keys (`claudePath`, `qwenPath`) from `ConfigKeys` in `src/core/constants.ts`, plus any other now-orphaned path key references.
 - **R004** (SHOULD): Remove the `speckit.geminiInitDelay` setting and its `Timing.geminiInitDelay` default + read site, hard-coding the existing 8000ms default in the Gemini provider.
 - **R005** (MUST): Extension activation and provider dispatch continue to work with no path settings present — no crash, no broken command, providers invoke their binary from `PATH`.

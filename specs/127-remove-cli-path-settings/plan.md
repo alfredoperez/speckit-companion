@@ -11,7 +11,7 @@ Delete the path-override config surface and collapse every provider onto its bar
 ```mermaid
 graph LR
   A[package.json config] -->|removed| X[gone]
-  B[cliPathSettingKey field] -->|removed| C[getCliPath returns cliBinary]
+  B[cliPathSettingKey + getCliPath] -->|removed| C[dispatch uses cliBinary directly]
   C --> D[provider invokes bare binary on PATH]
 ```
 
