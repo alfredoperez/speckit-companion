@@ -23,6 +23,7 @@ export const Commands = {
     upgradeCli: 'speckit.upgradeCli',
     upgradeProject: 'speckit.upgradeProject',
     upgradeAll: 'speckit.upgradeAll',
+    upgrade: 'speckit.upgrade',
     checkForUpdates: 'speckit.checkForUpdates',
     steering: {
         create: 'speckit.steering.create',
@@ -57,7 +58,6 @@ export const Commands = {
  */
 export const ConfigKeys = {
     namespace: 'speckit',
-    workflowEditorEnabled: 'speckit.workflowEditor.enabled',
     claudePath: 'speckit.claudePath',
     aiProvider: 'speckit.aiProvider',
     claudePermissionMode: 'speckit.claudePermissionMode',

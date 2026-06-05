@@ -79,4 +79,65 @@ describe('SpecKitDetector', () => {
             expect(a).toBe(b);
         });
     });
+
+    describe('upgrade dispatch (--ai agent resolution)', () => {
+        const getConfig = vscode.workspace.getConfiguration as jest.Mock;
+
+        function mockProvider(value: string | undefined): void {
+            getConfig.mockReturnValue({ get: jest.fn().mockReturnValue(value) });
+        }
+
+        function lastSentText(): string {
+            const results = mockWindow.createTerminal.mock.results;
+            const terminal = results[results.length - 1].value;
+            const calls = terminal.sendText.mock.calls;
+            return calls[calls.length - 1][0];
+        }
+
+        beforeEach(() => {
+            (vscode.workspace as any).workspaceFolders = [{ uri: { fsPath: '/tmp/ws' } }];
+        });
+
+        afterEach(() => {
+            (vscode.workspace as any).workspaceFolders = undefined;
+        });
+
+        describe('upgradeProject', () => {
+            it('dispatches the configured non-Claude agent, never claude-code (US1)', async () => {
+                mockProvider('codex');
+                await SpecKitDetector.getInstance().upgradeProject();
+                const sent = lastSentText();
+                expect(sent).toContain('--ai codex');
+                expect(sent).not.toContain('claude-code');
+            });
+
+            it('dispatches --ai claude for the default provider (US2)', async () => {
+                mockProvider('claude');
+                await SpecKitDetector.getInstance().upgradeProject();
+                const sent = lastSentText();
+                expect(sent).toContain('--ai claude');
+                expect(sent).not.toContain('claude-code');
+            });
+        });
+
+        describe('upgradeAll', () => {
+            it('dispatches --ai claude for the default provider, never claude-code (US2)', async () => {
+                mockProvider('claude');
+                await SpecKitDetector.getInstance().upgradeAll();
+                const sent = lastSentText();
+                expect(sent).toContain('--ai claude');
+                expect(sent).not.toContain('claude-code');
+            });
+        });
+
+        it('both upgrade paths emit the same --ai value for the same provider (FR-006)', async () => {
+            mockProvider('claude');
+            await SpecKitDetector.getInstance().upgradeProject();
+            const projectAgent = lastSentText().match(/--ai (\S+)/)?.[1];
+            await SpecKitDetector.getInstance().upgradeAll();
+            const allAgent = lastSentText().match(/--ai (\S+)/)?.[1];
+            expect(projectAgent).toBe('claude');
+            expect(allAgent).toBe('claude');
+        });
+    });
 });

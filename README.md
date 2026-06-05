@@ -105,6 +105,8 @@ Specs are grouped into three collapsible sections, each with a count in the head
 
 When a step command is running, the spec shows a spinner and a live elapsed timer; a step-complete notification fires when it finishes (toggle via `speckit.notifications.stepComplete`).
 
+The spec-kit upgrade commands are consolidated behind a single **Upgrade…** icon in the Specs view title bar. Clicking it opens a picker with **Upgrade All**, **Upgrade Project**, and **Upgrade CLI** — each upgrades for your configured AI provider. All three remain available individually from the Command Palette.
+
 The sidebar is visible alongside the viewer in the screenshot above. For the full reference (lifecycle button matrix, badge tier mapping, transition logging, all icon meanings), see [`docs/sidebar.md`](./docs/sidebar.md).
 
 ### Offline-First UI

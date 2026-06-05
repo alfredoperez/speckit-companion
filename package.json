@@ -360,6 +360,12 @@
         "icon": "$(sync)"
       },
       {
+        "command": "speckit.upgrade",
+        "title": "Upgrade…",
+        "category": "SpecKit",
+        "icon": "$(cloud-download)"
+      },
+      {
         "command": "speckit.workflowEditor.editSource",
         "title": "Edit Source",
         "category": "SpecKit",
@@ -480,6 +486,11 @@
         {
           "command": "speckit.steering.refresh",
           "when": "view == speckit.views.steering",
+          "group": "navigation@2"
+        },
+        {
+          "command": "speckit.upgrade",
+          "when": "view == speckit.views.explorer && (speckit.detected || speckit.cliInstalled)",
           "group": "navigation@2"
         }
       ],

@@ -27,6 +27,32 @@ export function registerCliCommands(
 
         vscode.commands.registerCommand('speckit.upgradeAll', async () => {
             await specKitDetector.upgradeAll();
+        }),
+
+        vscode.commands.registerCommand('speckit.upgrade', async () => {
+            const pick = await vscode.window.showQuickPick(
+                [
+                    {
+                        label: '$(sync) Upgrade All',
+                        description: "Refresh the spec-kit CLI and this project's scaffolding",
+                        commandId: 'speckit.upgradeAll',
+                    },
+                    {
+                        label: '$(refresh) Upgrade Project',
+                        description: "Refresh this workspace's scaffolding for your AI provider",
+                        commandId: 'speckit.upgradeProject',
+                    },
+                    {
+                        label: '$(cloud-download) Upgrade CLI',
+                        description: 'Install the latest spec-kit CLI globally',
+                        commandId: 'speckit.upgradeCli',
+                    },
+                ],
+                { title: 'SpecKit: Upgrade', placeHolder: 'Choose what to upgrade' }
+            );
+            if (pick) {
+                await vscode.commands.executeCommand(pick.commandId);
+            }
         })
     );
 }
