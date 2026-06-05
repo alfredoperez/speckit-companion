@@ -99,7 +99,6 @@ const FOOTER_ACTION_HANDLERS: Record<
   [FooterActionIds.REGENERATE]: (dir, deps) => handleRegenerate(dir, deps),
   [FooterActionIds.APPROVE]: (dir, deps) => handleApprove(dir, deps),
   [FooterActionIds.START]: (dir, deps) => handleApprove(dir, deps),
-  [FooterActionIds.SDD_AUTO]: (dir, deps) => handleClarify(dir, deps, "/sdd:auto"),
 };
 
 /**
@@ -944,7 +943,7 @@ async function dispatchDocRefinement(
   }
 
   // Resolve the AI-prompt target filename from the source doc so workflows
-  // with non-matching step / file names (SDD's `specify` step → `spec.md`)
+  // with non-matching step / file names (a `specify` step → `spec.md`)
   // or non-core docs (e.g. `data-model`, `checklists/requirements`) target
   // the correct file. Fall back to `${doc}.md` when unresolved.
   const sourceDoc = instance.state.availableDocuments.find(

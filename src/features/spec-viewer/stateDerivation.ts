@@ -8,7 +8,7 @@
  *
  * **Inferred completion**: a step is treated as completed when it precedes
  * `currentStep` in `STEP_NAMES` ordering, even if it has no history entry
- * at all (common with external SDD skills that advance `currentStep`
+ * at all (common with external skills that advance `currentStep`
  * without writing per-step entries).
  */
 
@@ -23,7 +23,6 @@ import {
     ConcernEntry,
     CheckpointStatus,
     ReviewComment,
-    HistoryEntry,
 } from '../../core/types/specContext';
 import { getFooterActions } from './footerActions';
 import { getDocTypeLabel } from './phaseCalculation';
@@ -200,21 +199,6 @@ export function deriveActiveSubstep(
     return null;
 }
 
-/**
- * Relabel history entries authored by the SDD plugin's *skills* (templates
- * that seed `.spec-context.json` on first write, or `sdd:specify`/`sdd:init`
- * skill output) so they don't masquerade as the user invoking `/sdd:*`
- * commands. When the active workflow is not `sdd` itself, an entry stamped
- * `by: 'sdd'` was almost certainly written by an SDD skill on the user's
- * behalf, not by a deliberate `/sdd:*` invocation. Display-only — the
- * on-disk value is untouched. See plan: Spec C.
- */
-function normalizeHistoryAttribution(ctx: SpecContext): HistoryEntry[] {
-    const raw = ctx.history ?? [];
-    if (ctx.workflow === 'sdd') return raw;
-    return raw.map(t => (t.by === 'sdd' ? { ...t, by: 'sdd-skill' as const } : t));
-}
-
 export function deriveViewerState(
     ctx: SpecContext,
     activeStep: StepName = ctx.currentStep,
@@ -236,7 +220,7 @@ export function deriveViewerState(
         highlights: deriveHighlights(ctx, stepHistory),
         activeSubstep: deriveActiveSubstep(ctx, stepHistory),
         footer: getFooterActions(ctx, activeStep, workflowSteps),
-        history: normalizeHistoryAttribution(ctx),
+        history: ctx.history ?? [],
         stepHistory,
         runningStepArtifactReady: running ? runningStepArtifactReady : false,
         runningStepStartedAt: running?.startedAt ?? null,

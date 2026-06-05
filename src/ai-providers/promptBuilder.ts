@@ -39,7 +39,7 @@ const SPEC_CONTEXT_SCHEMA = [
     '  "required": ["workflow", "specName", "currentStep", "status", "history"],',
     '  "additionalProperties": true,',
     '  "properties": {',
-    '    "workflow":    { "enum": ["speckit", "sdd"] },',
+    '    "workflow":    { "type": "string" },',
     '    "specName":    { "type": "string" },',
     '    "branch":      { "type": "string" },',
     '    "selectedAt":  { "type": "string", "format": "date-time" },',
@@ -59,7 +59,7 @@ const SPEC_CONTEXT_SCHEMA = [
     '          "from":    { "type": "object",',
     '                       "properties": { "step":    { "type": ["string","null"] },',
     '                                       "substep": { "type": ["string","null"] } } },',
-    '          "by":      { "enum": ["extension","sdd-skill","user","ai"] },',
+    '          "by":      { "enum": ["extension","user","cli","ai"] },',
     '          "at":      { "type": "string", "format": "date-time" }',
     '        }',
     '      }',
@@ -274,7 +274,7 @@ export function buildPrompt(options: BuildPromptOptions): string {
 }
 
 /**
- * Build a prompt for multi-step commands (e.g., sdd-auto) that covers
+ * Build a prompt for multi-step commands that covers
  * the entire step lifecycle rather than a single step.
  */
 export function buildLifecyclePrompt(command: string, specDir?: string | null): string {

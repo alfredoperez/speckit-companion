@@ -8,7 +8,7 @@
  *   - Viewer/Transitions/CreateSpec (the lifecycle "phase zero" entry).
  *
  * Auto Mode lives here, next to Submit — by design it is the canonical
- * first-time entry point for the SDD pipeline, NOT a viewer-footer button.
+ * first-time entry point for the spec pipeline, NOT a viewer-footer button.
  */
 
 export interface CreateSpecMockProps {
@@ -89,7 +89,7 @@ export function CreateSpecMock({ initialContent = '', submitting = false }: Crea
                             justify-content: space-between;
                         "
                     >
-                        SDD
+                        SpecKit
                         <span style="opacity: 0.5;">▾</span>
                     </button>
                 </div>
@@ -164,7 +164,7 @@ export function CreateSpecMock({ initialContent = '', submitting = false }: Crea
                 <div style="display: flex; gap: 10px;">
                     <button
                         type="button"
-                        title="Run the full SDD pipeline automatically (specify → plan → tasks → implement)"
+                        title="Run the full spec pipeline automatically (specify → plan → tasks → implement)"
                         style="
                             background: var(--vscode-button-secondaryBackground, #1f1828);
                             color: var(--vscode-button-secondaryForeground, #ddd);

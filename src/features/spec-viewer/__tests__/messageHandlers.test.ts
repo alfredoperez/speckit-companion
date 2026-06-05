@@ -245,19 +245,19 @@ describe('messageHandlers - clarify (workflow commands)', () => {
             return defaultValue;
         });
 
-        (getFeatureWorkflow as jest.Mock).mockResolvedValue({ workflow: 'sdd' });
+        (getFeatureWorkflow as jest.Mock).mockResolvedValue({ workflow: 'speckit' });
         (getWorkflowCommands as jest.Mock).mockReturnValue([
-            { name: 'auto', title: 'Auto Mode', command: '/sdd:auto', step: 'spec' },
+            { name: 'implement', title: 'Implement', command: '/speckit.implement', step: 'spec' },
         ]);
 
         const deps = createMockDeps();
         const handler = createMessageHandlers(SPEC_DIR, deps);
 
-        await handler({ type: 'clarify', command: '/sdd:auto' } as any);
+        await handler({ type: 'clarify', command: '/speckit.implement' } as any);
 
-        expect(getWorkflowCommands).toHaveBeenCalledWith('sdd');
+        expect(getWorkflowCommands).toHaveBeenCalledWith('speckit');
         expect(deps.executeInTerminal).toHaveBeenCalledWith(
-            expect.stringContaining('/sdd:auto')
+            expect.stringContaining('/speckit.implement')
         );
     });
 
@@ -268,9 +268,9 @@ describe('messageHandlers - clarify (workflow commands)', () => {
             return defaultValue;
         });
 
-        (getFeatureWorkflow as jest.Mock).mockResolvedValue({ workflow: 'sdd' });
+        (getFeatureWorkflow as jest.Mock).mockResolvedValue({ workflow: 'speckit' });
         (getWorkflowCommands as jest.Mock).mockReturnValue([
-            { name: 'auto', title: 'Auto Mode', command: '/sdd:auto', step: 'plan' },
+            { name: 'implement', title: 'Implement', command: '/speckit.implement', step: 'plan' },
         ]);
 
         const deps = createMockDeps({
@@ -294,9 +294,9 @@ describe('messageHandlers - clarify (workflow commands)', () => {
             return defaultValue;
         });
 
-        (getFeatureWorkflow as jest.Mock).mockResolvedValue({ workflow: 'sdd' });
+        (getFeatureWorkflow as jest.Mock).mockResolvedValue({ workflow: 'speckit' });
         (getWorkflowCommands as jest.Mock).mockReturnValue([
-            { name: 'auto', title: 'Auto Mode', command: '/sdd:auto', step: 'all' },
+            { name: 'implement', title: 'Implement', command: '/speckit.implement', step: 'all' },
         ]);
 
         const deps = createMockDeps();
@@ -305,7 +305,7 @@ describe('messageHandlers - clarify (workflow commands)', () => {
         await handler({ type: 'clarify' } as any);
 
         expect(deps.executeInTerminal).toHaveBeenCalledWith(
-            expect.stringContaining('/sdd:auto')
+            expect.stringContaining('/speckit.implement')
         );
     });
 });
@@ -386,7 +386,7 @@ describe('messageHandlers - persisted review comments', () => {
 
     function baseCtx(reviewComments: any[] = []): any {
         return {
-            workflow: 'sdd',
+            workflow: 'speckit',
             specName: 'my-feature',
             branch: 'main',
             currentStep: 'specify',

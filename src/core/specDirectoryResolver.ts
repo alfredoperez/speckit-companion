@@ -160,7 +160,7 @@ async function expandGlobPattern(workspaceRoot: string, pattern: string): Promis
         }
     }
 
-    // Also look for directories with .spec-context.json (SDD in-progress specs)
+    // Also look for directories with .spec-context.json (in-progress specs)
     const contextFilePattern = new vscode.RelativePattern(workspaceRoot, `${pattern}/.spec-context.json`);
     const contextFiles = await vscode.workspace.findFiles(contextFilePattern, '**/node_modules/**');
     for (const file of contextFiles) {

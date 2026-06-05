@@ -133,8 +133,8 @@ function assertAppendOnly(prev: HistoryEntry[], next: HistoryEntry[]): void {
 
 export function appendHistory(ctx: SpecContext, t: HistoryEntry): SpecContext {
     // Plain append — the writer records every lifecycle boundary (step-started,
-    // step-completed, substep) faithfully. Redundant *display* rows (the
-    // SDD-implement loop's repeated `phase1`, which is written directly to the
+    // step-completed, substep) faithfully. Redundant *display* rows (an
+    // implement loop's repeated `phase1`, which is written directly to the
     // JSON by the skill and never flows through here) are collapsed downstream:
     // `dedupeConsecutive` in stepHistoryDerivation feeds the viewer, and
     // PhasesCard de-dups rows. De-duping here would wrongly drop legitimate

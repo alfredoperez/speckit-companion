@@ -10,11 +10,8 @@
  *   they only surface once the spec has reached the closure-eligible
  *   stages (`ready-to-implement` / `implementing` / `completed`). The
  *   user never sees them while a step is mid-generation.
- * - The legacy `Start` and `SDD_AUTO` actions have been removed:
- *   - `Start` is structurally unreachable — the viewer only opens
- *     after a step has been initiated.
- *   - Auto belongs in the Create-New-Spec UI (`Auto Mode` next to
- *     `Submit`), not in the post-creation viewer footer.
+ * - The legacy `Start` action is structurally unreachable — the viewer
+ *   only opens after a step has been initiated.
  */
 
 import {

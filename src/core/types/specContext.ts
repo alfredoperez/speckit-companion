@@ -74,7 +74,7 @@ export interface HistoryEntryFrom {
     substep: string | null;
 }
 
-export type HistoryEntryBy = 'extension' | 'user' | 'cli' | 'sdd' | 'sdd-skill' | 'ai';
+export type HistoryEntryBy = 'extension' | 'user' | 'cli' | 'ai';
 
 /** Discriminates between a step/substep start and a step/substep completion. */
 export type HistoryEntryKind = 'start' | 'complete';
@@ -155,7 +155,7 @@ export interface SpecContext {
     history: HistoryEntry[];
     /** Persisted inline review comments (replaces `<doc>-extra.md`). */
     reviewComments?: ReviewComment[];
-    // Skill-authored (SDD/SpecKit) fields, viewer-relevant — declared optional;
+    // Skill-authored fields, viewer-relevant — declared optional;
     // other unknown fields remain tolerated via the index signature.
     /** Last action one-liner written by the implement skill. */
     last_action?: string;

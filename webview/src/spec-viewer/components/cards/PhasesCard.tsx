@@ -10,7 +10,7 @@ import {
 } from '../../relativeTime';
 
 const STEP_ORDER = ['specify', 'clarify', 'plan', 'tasks', 'analyze', 'implement'];
-const KNOWN_ACTORS = new Set(['extension', 'cli', 'sdd', 'ai', 'user']);
+const KNOWN_ACTORS = new Set(['extension', 'cli', 'ai', 'user']);
 
 interface StepGroup {
     step: string;
@@ -57,7 +57,7 @@ function buildGroups(stepHistory: ViewerState['stepHistory'], history: HistoryEn
 }
 
 /**
- * Collapse consecutive events that share the same name — the SDD implement loop
+ * Collapse consecutive events that share the same name — an implement loop
  * writes the same substep (e.g. `phase1`) several times in a row. Keeps the
  * first of each run so its real `startedAt` is preserved; distinct substeps are
  * untouched.

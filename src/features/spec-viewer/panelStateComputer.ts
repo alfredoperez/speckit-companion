@@ -35,7 +35,7 @@ import {
     computeCreatedDate,
     computeLastUpdatedDate,
     getPhaseNumber,
-    mapSddStepToTab,
+    mapStepToTab,
 } from "./phaseCalculation";
 import { isStepCompleted } from "./stateDerivation";
 import type { FeatureWorkflowContext } from "../workflows/types";
@@ -253,7 +253,7 @@ export function computeApproveFooter(
 }
 
 /**
- * Map stepHistory keys from step names to tab names. `mapSddStepToTab`
+ * Map stepHistory keys from step names to tab names. `mapStepToTab`
  * collapses `tasks` and `implement` onto the `tasks` tab key (Implement has
  * no dedicated tab). When a later step aliases onto the same key, the
  * resolution prefers (1) the entry whose own step name equals the tab key
@@ -271,7 +271,7 @@ export function mapStepHistoryToTabKeys(
     const winningStep: Record<string, string> = {};
 
     for (const [step, entry] of Object.entries(stepHistory)) {
-        const tabName = mapSddStepToTab(step) || step;
+        const tabName = mapStepToTab(step) || step;
         const incumbent = out[tabName];
         if (!incumbent) {
             out[tabName] = entry;

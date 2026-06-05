@@ -62,9 +62,9 @@
 > row in the sidebar tree as the inline `Open Source File` action
 > (`speckit.openSpecSource`, `$(go-to-file)` icon).
 >
-> **Auto moved to the Create New Spec form**: SDD `Auto` is no longer
+> **Auto moved to the Create New Spec form**: `Auto` is no longer
 > a viewer footer button. It is the canonical first-time entry point
-> for the SDD pipeline and lives in the spec-editor webview as the
+> for the spec pipeline and lives in the spec-editor webview as the
 > `Auto Mode` button next to `Submit`. By the time the spec viewer
 > opens, the user has already chosen between Submit and Auto Mode.
 >
@@ -480,7 +480,7 @@ walking `transitions[]`: each step's `startedAt` is its first transition,
 `completedAt` is the first transition of the next step (a real boundary
 when `by: "extension"`). Two correctness rules: (1) consecutive identical
 `(step, substep, from)` transitions are collapsed before grouping, so a
-substep written several times in a row (e.g. the SDD implement loop's
+substep written several times in a row (e.g. an implement loop's
 repeated `phase1`) does not distort durations or produce duplicate rows;
 (2) when `status ∈ {completed, archived}` the terminal step's `completedAt`
 is finalized to its last transition's `at` instead of reading as in-flight
@@ -508,7 +508,7 @@ whatever it ships on disk gets ignored.
   not on every per-substep row (it's uniform within a phase, so repeating
   it is noise).
 
-Substep `at` values are still AI-typed when `by ∈ {sdd, ai}`, so absolute
+Substep `at` values are still AI-typed when `by ∈ {cli, ai}`, so absolute
 substep times are best-effort; the offsets/durations are displayed as a
 relative read of those values rather than authoritative wall-clock timing.
 For legacy specs with no transition timing, a one-time reconciler backfill
@@ -595,7 +595,7 @@ footer-relevant field as a partial merged onto a stale snapshot.
 | `src/features/spec-viewer/stateDerivation.ts` | `deriveViewerState()` — footer catalog + run-step/generating fields |
 | `src/features/spec-viewer/footerActions.ts` | Footer action catalog + visibility rules (the deterministic oracle) |
 | `src/features/spec-viewer/html/generator.ts` | Initial HTML shell, badge attribute, initial navState |
-| `src/features/spec-viewer/phaseCalculation.ts` | `computeBadgeText()`, `computeCreatedDate()`, `computeLastUpdatedDate()`, `mapSddStepToTab()`, `getDocTypeLabel()` |
+| `src/features/spec-viewer/phaseCalculation.ts` | `computeBadgeText()`, `computeCreatedDate()`, `computeLastUpdatedDate()`, `mapStepToTab()`, `getDocTypeLabel()` |
 | `src/features/spec-viewer/messageHandlers.ts` | Lifecycle action handlers (complete/archive/reactivate) |
 | `src/features/spec-viewer/types.ts` | `SpecStatus` type, message types |
 | `webview/src/spec-viewer/components/FooterActions.tsx` | Single-source footer (CatalogFooter vs GeneratingFooter) |

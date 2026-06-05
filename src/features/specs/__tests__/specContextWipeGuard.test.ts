@@ -139,11 +139,11 @@ describe('saveFeatureWorkflow — ENOENT vs. other failures', () => {
     it('creates a minimal context when the file is missing (ENOENT)', async () => {
         const dir = makeTmpDir();
         try {
-            await saveFeatureWorkflow(dir, 'sdd');
+            await saveFeatureWorkflow(dir, 'speckit');
             const onDisk = JSON.parse(
                 fs.readFileSync(path.join(dir, FEATURE_CONTEXT_FILE), 'utf-8'),
             );
-            expect(onDisk.workflow).toBe('sdd');
+            expect(onDisk.workflow).toBe('speckit');
             expect(typeof onDisk.selectedAt).toBe('string');
         } finally {
             fs.rmSync(dir, { recursive: true, force: true });
@@ -157,10 +157,10 @@ describe('saveFeatureWorkflow — ENOENT vs. other failures', () => {
             const before = makeCtx();
             fs.writeFileSync(target, JSON.stringify(before, null, 2), 'utf-8');
 
-            await saveFeatureWorkflow(dir, 'sdd');
+            await saveFeatureWorkflow(dir, 'speckit');
 
             const after = JSON.parse(fs.readFileSync(target, 'utf-8'));
-            expect(after.workflow).toBe('sdd');
+            expect(after.workflow).toBe('speckit');
             expect(after.specName).toBe('Real Spec');
             expect(after.history).toHaveLength(2);
             expect(after.currentStep).toBe('implement');
@@ -177,7 +177,7 @@ describe('saveFeatureWorkflow — ENOENT vs. other failures', () => {
             fs.writeFileSync(target, '{ partia');
             const original = fs.readFileSync(target, 'utf-8');
 
-            await expect(saveFeatureWorkflow(dir, 'sdd')).rejects.toThrow(
+            await expect(saveFeatureWorkflow(dir, 'speckit')).rejects.toThrow(
                 /not valid JSON|unreadable/,
             );
             expect(fs.readFileSync(target, 'utf-8')).toBe(original);

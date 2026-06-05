@@ -139,6 +139,12 @@ describe('buildPrompt', () => {
         expect(out).toContain('"required": ["workflow", "specName", "currentStep", "status", "history"]');
         expect(out).toContain('`history` is APPEND-ONLY');
         expect(out).toContain('last `history[]` entry');
+        // workflow is now an open string type, no longer an enum of speckit/sdd.
+        expect(out).toContain('"workflow":    { "type": "string" }');
+        expect(out).not.toContain('"enum": ["speckit", "sdd"]');
+        // history `by` enum dropped the sdd-skill author; it's now extension/user/cli/ai.
+        expect(out).toContain('"by":      { "enum": ["extension","user","cli","ai"] }');
+        expect(out).not.toContain('sdd-skill');
     });
 
     it('preamble includes canonical status lifecycle', () => {
@@ -194,17 +200,17 @@ describe('buildLifecyclePrompt', () => {
 
     it('wraps command with lifecycle preamble', () => {
         mockConfig(true);
-        const out = buildLifecyclePrompt('/sdd:auto "specs/001"', 'specs/001');
+        const out = buildLifecyclePrompt('/speckit.implement "specs/001"', 'specs/001');
         expect(out).toContain('<!-- speckit-companion:context-update -->');
         expect(out).toContain('keep');
         expect(out).toContain('specs/001/.spec-context.json');
         expect(out).toContain('Canonical statuses:');
-        expect(out).toContain('/sdd:auto "specs/001"');
+        expect(out).toContain('/speckit.implement "specs/001"');
     });
 
     it('returns raw command when disabled', () => {
         mockConfig(false);
-        const cmd = '/sdd:auto "specs/001"';
+        const cmd = '/speckit.implement "specs/001"';
         expect(buildLifecyclePrompt(cmd, 'specs/001')).toBe(cmd);
     });
 
@@ -216,7 +222,7 @@ describe('buildLifecyclePrompt', () => {
         // The new rule: the start-entry must coincide with the AI actually
         // beginning that step (item 1), not with finishing the previous one.
         mockConfig(true);
-        const out = buildLifecyclePrompt('/sdd:auto "specs/001"', 'specs/001');
+        const out = buildLifecyclePrompt('/speckit.implement "specs/001"', 'specs/001');
         expect(out).not.toContain('ATOMICALLY (same write as the completion entry)');
         expect(out).not.toContain('set currentStep to the next step in the canonical sequence');
         // And it explicitly warns against the phantom state.
@@ -247,8 +253,8 @@ describe('buildSpecifyCreationPreamble', () => {
 
     it('includes the workflow name passed in', () => {
         mockConfig(true);
-        const out = buildSpecifyCreationPreamble('sdd', null);
-        expect(out).toContain('"workflow": "sdd"');
+        const out = buildSpecifyCreationPreamble('custom-flow', null);
+        expect(out).toContain('"workflow": "custom-flow"');
     });
 
     it('seeds a history entry attributed to "extension"', () => {

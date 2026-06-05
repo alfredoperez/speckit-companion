@@ -39,7 +39,7 @@ export interface WorkflowStepConfig {
     name: string;
     /** Display label (e.g., "Specify", "Plan"). Defaults to capitalized name */
     label?: string;
-    /** Command to execute for this step (e.g., "speckit.specify", "sdd.plan") */
+    /** Command to execute for this step (e.g., "speckit.specify") */
     command: string;
     /** Primary output file (e.g., "spec.md"). Defaults to `{name}.md` */
     file?: string;
@@ -89,7 +89,7 @@ export interface WorkflowCommandConfig {
     name: string;
     /** Button label */
     title?: string;
-    /** Command to execute (e.g., '/sdd:auto') */
+    /** Command to execute (e.g., '/speckit.specify') */
     command: string;
     /** Which workflow step this command is associated with */
     step: string;
@@ -112,7 +112,7 @@ export interface TransitionEntry {
     step: string;
     substep: string | null;
     from: TransitionFrom | null;
-    by: 'extension' | 'sdd' | string;
+    by: 'extension' | string;
     at: string;
 }
 
@@ -133,7 +133,7 @@ export interface StepHistoryEntry {
  * Feature workflow context persisted in .spec-context.json
  *
  * Extension-managed fields: workflow, selectedAt, currentStep, status, stepHistory, checkpointStatus
- * SDD-enriched fields (optional): step, substep, task, next, updated, approach, last_action,
+ * Skill-enriched fields (optional): step, substep, task, next, updated, approach, last_action,
  *   task_summaries, step_summaries, files_modified
  */
 export interface FeatureWorkflowContext {
@@ -148,9 +148,9 @@ export interface FeatureWorkflowContext {
     checkpointStatus?: Record<CheckpointId, CheckpointStatus>;
     /** Human-readable spec name derived from directory slug */
     specName?: string;
-    /** Git branch name associated with this spec (audit trail — branch when /sdd:specify ran) */
+    /** Git branch name associated with this spec (audit trail — branch when the spec was created) */
     branch?: string;
-    /** Active feature branch where implementation runs (set by /sdd:implement when branchStage matches) */
+    /** Active feature branch where implementation runs (set when branchStage matches) */
     workingBranch?: string | null;
     /** In-progress indicator (e.g., "exploring", "phase1") */
     progress?: string | null;

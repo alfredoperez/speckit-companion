@@ -1,5 +1,5 @@
 {
-  "workflow": "sdd-fast",
+  "workflow": "speckit-companion",
   "specName": "056-fix-list-spacing",
   "branch": "056-fix-list-spacing",
   "currentStep": "specify",

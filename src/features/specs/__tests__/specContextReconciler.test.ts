@@ -3,7 +3,7 @@ import type { HistoryEntry, SpecContext } from '../../../core/types/specContext'
 
 function makeContext(overrides: Partial<SpecContext> = {}): SpecContext {
     return {
-        workflow: 'sdd',
+        workflow: 'speckit',
         specName: 'test',
         branch: 'main',
         currentStep: 'specify',

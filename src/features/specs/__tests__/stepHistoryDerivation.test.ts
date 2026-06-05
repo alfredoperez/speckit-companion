@@ -31,7 +31,7 @@ describe('deriveStepHistory', () => {
     it('sets completedAt to the first transition of the next step', () => {
         const transitions = [
             tx({ step: 'specify', at: '2026-04-29T00:00:00Z' }),
-            tx({ step: 'specify', substep: 'parsing', by: 'sdd', at: '2026-04-29T00:00:05Z' }),
+            tx({ step: 'specify', substep: 'parsing', by: 'cli', at: '2026-04-29T00:00:05Z' }),
             tx({ step: 'plan',    at: '2026-04-29T00:01:00Z' }),
         ];
         const out = deriveStepHistory(transitions, 'plan');
@@ -51,7 +51,7 @@ describe('deriveStepHistory', () => {
         // currentStep is undefined and no later step exists — best we have.
         const transitions = [
             tx({ step: 'specify', at: '2026-04-29T00:00:00Z' }),
-            tx({ step: 'specify', substep: 'parsing', by: 'sdd', at: '2026-04-29T00:00:05Z' }),
+            tx({ step: 'specify', substep: 'parsing', by: 'cli', at: '2026-04-29T00:00:05Z' }),
         ];
         const out = deriveStepHistory(transitions);
         expect(out.specify.completedAt).toBe('2026-04-29T00:00:05Z');
@@ -60,9 +60,9 @@ describe('deriveStepHistory', () => {
     it('builds substeps from non-null transitions, with completedAt = next substep at', () => {
         const transitions = [
             tx({ step: 'specify', at: '2026-04-29T00:00:00Z' }),
-            tx({ step: 'specify', substep: 'parsing',   by: 'sdd', at: '2026-04-29T00:00:05Z' }),
-            tx({ step: 'specify', substep: 'exploring', by: 'sdd', at: '2026-04-29T00:00:10Z' }),
-            tx({ step: 'specify', substep: 'detecting', by: 'sdd', at: '2026-04-29T00:00:15Z' }),
+            tx({ step: 'specify', substep: 'parsing',   by: 'cli', at: '2026-04-29T00:00:05Z' }),
+            tx({ step: 'specify', substep: 'exploring', by: 'cli', at: '2026-04-29T00:00:10Z' }),
+            tx({ step: 'specify', substep: 'detecting', by: 'cli', at: '2026-04-29T00:00:15Z' }),
             tx({ step: 'plan', at: '2026-04-29T00:01:00Z' }),
         ];
         const out = deriveStepHistory(transitions, 'plan');
@@ -89,7 +89,7 @@ describe('deriveStepHistory', () => {
         const transitions = [
             tx({ step: 'specify', at: '2026-04-29T00:00:00Z' }),
             tx({ step: 'plan',    at: '2026-04-29T00:01:00Z' }),
-            tx({ step: 'specify', substep: 'rewriting', by: 'sdd', at: '2026-04-29T00:02:00Z' }),
+            tx({ step: 'specify', substep: 'rewriting', by: 'cli', at: '2026-04-29T00:02:00Z' }),
         ];
         const out = deriveStepHistory(transitions, 'specify');
         // specify is current and gets completedAt: null when it's the most-recently-seen
@@ -103,7 +103,7 @@ describe('deriveStepHistory', () => {
             const transitions = [
                 tx({ step: 'specify',   at: '2026-04-29T00:00:00Z' }),
                 tx({ step: 'implement', at: '2026-04-29T00:05:00Z' }),
-                tx({ step: 'implement', substep: 'run-tests', by: 'sdd', at: '2026-04-29T00:06:00Z' }),
+                tx({ step: 'implement', substep: 'run-tests', by: 'cli', at: '2026-04-29T00:06:00Z' }),
             ];
             const out = deriveStepHistory(transitions, 'implement', 'completed');
             expect(out.implement.completedAt).toBe('2026-04-29T00:06:00Z');
@@ -113,7 +113,7 @@ describe('deriveStepHistory', () => {
             const transitions = [
                 tx({ step: 'specify',   at: '2026-04-29T00:00:00Z' }),
                 tx({ step: 'implement', at: '2026-04-29T00:05:00Z' }),
-                tx({ step: 'implement', substep: 'run-tests', by: 'sdd', at: '2026-04-29T00:06:00Z' }),
+                tx({ step: 'implement', substep: 'run-tests', by: 'cli', at: '2026-04-29T00:06:00Z' }),
             ];
             const out = deriveStepHistory(transitions, 'implement', 'archived');
             expect(out.implement.completedAt).toBe('2026-04-29T00:06:00Z');
@@ -159,8 +159,8 @@ describe('deriveStepHistory', () => {
         it('preserves a distinct substep on the same step (not collapsed)', () => {
             const transitions = [
                 tx({ step: 'specify', at: '2026-04-29T00:00:00Z' }),
-                tx({ step: 'specify', substep: 'outline',  by: 'sdd', at: '2026-04-29T00:00:05Z' }),
-                tx({ step: 'specify', substep: 'validate', by: 'sdd', at: '2026-04-29T00:00:10Z' }),
+                tx({ step: 'specify', substep: 'outline',  by: 'cli', at: '2026-04-29T00:00:05Z' }),
+                tx({ step: 'specify', substep: 'validate', by: 'cli', at: '2026-04-29T00:00:10Z' }),
                 tx({ step: 'plan',    at: '2026-04-29T00:01:00Z' }),
             ];
             const out = deriveStepHistory(transitions, 'plan');

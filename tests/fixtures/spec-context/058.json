@@ -1,5 +1,5 @@
 {
-  "workflow": "sdd",
+  "workflow": "speckit-companion",
   "specName": "058-floating-toast",
   "branch": "058-floating-toast",
   "currentStep": "tasks",

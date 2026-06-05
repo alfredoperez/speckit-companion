@@ -18,7 +18,7 @@ import {
     computeLastUpdatedDate,
     getDocTypeLabel,
     getPhaseNumber,
-    mapSddStepToTab,
+    mapStepToTab,
 } from '../phaseCalculation';
 import { CORE_DOCUMENTS, SpecDocument } from '../types';
 import { WorkflowSteps } from '../../../core/constants';
@@ -104,18 +104,18 @@ describe('calculateWorkflowPhase', () => {
     });
 });
 
-describe('mapSddStepToTab', () => {
+describe('mapStepToTab', () => {
     it('collapses tasks and implement onto the tasks tab', () => {
         // Single-tab-for-two-steps aliasing — the same invariant that
         // mapStepHistoryToTabKeys relies on. Pin it here.
-        expect(mapSddStepToTab(WorkflowSteps.TASKS)).toBe(CORE_DOCUMENTS.TASKS);
-        expect(mapSddStepToTab(WorkflowSteps.IMPLEMENT)).toBe(CORE_DOCUMENTS.TASKS);
+        expect(mapStepToTab(WorkflowSteps.TASKS)).toBe(CORE_DOCUMENTS.TASKS);
+        expect(mapStepToTab(WorkflowSteps.IMPLEMENT)).toBe(CORE_DOCUMENTS.TASKS);
     });
 
     it('returns null for nullish / unknown steps', () => {
-        expect(mapSddStepToTab(null)).toBeNull();
-        expect(mapSddStepToTab(undefined)).toBeNull();
-        expect(mapSddStepToTab('unknown')).toBeNull();
+        expect(mapStepToTab(null)).toBeNull();
+        expect(mapStepToTab(undefined)).toBeNull();
+        expect(mapStepToTab('unknown')).toBeNull();
     });
 });
 
