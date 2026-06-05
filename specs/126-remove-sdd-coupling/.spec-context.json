@@ -11,7 +11,7 @@
   "workingBranch": "refactor/remove-sdd-coupling",
   "type": "refactor",
   "createdAt": "2026-06-05T20:03:11Z",
-  "auto": true,
+  "auto": false,
   "loadedDomains": [],
   "approach": "Strip SDD as a built-in methodology; rename the misnamed-but-generic mapSddStepToTab rather than delete it; full strip, no back-compat shim.",
   "step_summaries": {
@@ -199,6 +199,16 @@
       },
       "by": "sdd",
       "at": "2026-06-05T21:00:10.262Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "done",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-06-05T21:01:19.686Z"
     }
   ],
   "task_summaries": {
@@ -320,7 +330,7 @@
       ]
     }
   },
-  "last_action": "All Phase 1 tasks complete \u2014 compile clean, 810/810 tests pass, grep audit clean",
+  "last_action": "PR #199 opened \u2014 refactor: remove SDD-specific coupling from the extension",
   "files_modified": [
     "src/core/constants.ts",
     "src/core/types/specContext.ts",
@@ -368,7 +378,7 @@
     "tests/unit/spec-viewer/messageHandlers.spec.ts",
     "tests/unit/spec-viewer/currentDoc.spec.ts"
   ],
-  "drainedSeq": 8,
+  "drainedSeq": 9,
   "concerns": [
     {
       "task": "T012",
@@ -379,5 +389,7 @@
   "checkpointStatus": {
     "commit": true,
     "pr": true
-  }
+  },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/199",
+  "prNumber": 199
 }
