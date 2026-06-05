@@ -16,7 +16,9 @@
   "auto": true,
   "loadedDomains": [],
   "approach": "Remove the path-override config surface and collapse every provider onto its bare CLI binary name by dropping the cliPathSettingKey abstraction.",
-  "last_action": "Phase 1 complete — 10 tasks done, compile + 810 tests pass, sweep clean",
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/200",
+  "prNumber": 200,
+  "last_action": "PR #200 opened — refactor(ai-providers): remove CLI path override settings",
   "files_modified": [
     "src/ai-providers/cliTerminalProvider.ts",
     "src/ai-providers/geminiCliProvider.ts",
