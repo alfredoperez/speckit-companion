@@ -6,7 +6,9 @@
   "next": "done",
   "status": "completed",
   "checkpointStatus": { "commit": true, "pr": true },
-  "last_action": "T001–T004 complete — typed parse error, reset module + tests, viewer toast/reset wiring; compile + 813 tests green",
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/201",
+  "prNumber": 201,
+  "last_action": "PR #201 opened — feat(spec-viewer): surface malformed spec-context with reset action",
   "files_modified": [
     "src/features/specs/specContextReader.ts",
     "src/features/specs/specContextReset.ts",
