@@ -226,6 +226,12 @@ export interface ViewerState {
     footer: FooterAction[];
     history: HistoryEntry[];
     stepHistory: Record<string, StepHistoryEntry>;
+    /** Whether the running step's artifact exists on disk with non-trivial content (100% tasks for implement). Drives the footer's Generating→ready transition. */
+    runningStepArtifactReady: boolean;
+    /** `startedAt` of the running step, anchoring the footer's recovery-timeout window. `null` when no step is in flight. */
+    runningStepStartedAt: string | null;
+    /** Human label of the running step (e.g. "Plan", "Implementation"). `null` when no step is in flight. */
+    runningStepLabel: string | null;
     /** Activity panel — passthroughs from `.spec-context.json`. */
     approach?: string;
     lastAction?: string;

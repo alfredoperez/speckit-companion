@@ -209,21 +209,12 @@ export type StalenessMap = Record<DocumentType, StalenessInfo>;
 // ============================================
 
 /**
- * Footer button state for message-based updates
- */
-export interface FooterState {
-    /** Whether to show the approve/next-step button */
-    showApproveButton: boolean;
-    /** Text for the approve button */
-    approveText: string;
-    /** Enhancement buttons config */
-    enhancementButtons?: EnhancementButton[];
-    /** Spec status for lifecycle button visibility */
-    specStatus?: string;
-}
-
-/**
- * Navigation state for message-based updates
+ * Navigation state for message-based updates.
+ *
+ * Footer-relevant duplicates (`footerState`, `runningStep*`) were removed: the
+ * footer now derives entirely from the serialized `ViewerState`. `NavState`
+ * carries only navigation/document concerns plus the workflow-derived
+ * `enhancementButtons`.
  */
 export interface NavState {
     /** Core documents with existence state */
@@ -238,28 +229,16 @@ export interface NavState {
     taskCompletionPercent: number;
     /** Whether viewing a related doc */
     isViewingRelatedDoc: boolean;
-    /** Footer button state for dynamic updates */
-    footerState?: FooterState;
     /** Enhancement buttons config */
     enhancementButtons?: EnhancementButton[];
     /** Staleness state for each core document */
     stalenessMap?: StalenessMap;
-    /** Spec status for lifecycle button visibility */
+    /** Spec status (read by the header badge fallback; not a footer input) */
     specStatus?: string;
     /** Current task ID from spec-context (for in-progress badge) */
     currentTask?: string | null;
-    /** Active SDD step being worked on (mapped to tab name: spec/plan/tasks) */
+    /** Active SDD step being worked on (mapped to tab name: spec/plan/tasks) — drives step-tab in-flight visuals */
     activeStep?: string | null;
-    /**
-     * Spec 099: whether the running step's artifact exists on disk with
-     * non-trivial content. Drives the footer's Generating→ready transition.
-     * Undefined when no step is running.
-     */
-    runningStepArtifactReady?: boolean;
-    /** Spec 099: `startedAt` of the running step, for the footer's timeout recovery. */
-    runningStepStartedAt?: string | null;
-    /** Spec 099: human label of the running step (e.g. "Tasks", "Implementation"). */
-    runningStepLabel?: string | null;
     /** Step history for determining completed steps */
     stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>;
     /** Badge text for the metadata bar */
@@ -312,6 +291,13 @@ export type ExtensionToViewerMessage =
       }
     | {
           type: 'navStateUpdated';
+          navState: NavState;
+      }
+    | {
+          type: 'viewerStateUpdated';
+          /** Complete derived ViewerState — the footer's sole input. */
+          viewerState: import('../../core/types/specContext').ViewerState;
+          /** Complete NavState — never a partial; carries nav-only fields (enhancementButtons, docs, dates) so no footer-affecting message is partial. */
           navState: NavState;
       }
     | {

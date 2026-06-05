@@ -1,0 +1,248 @@
+{
+  "workflow": "speckit",
+  "specName": "Fix Footer Button Visibility",
+  "branch": "124-fix-footer-button-visibility",
+  "selectedAt": "2026-06-05T17:54:56.690Z",
+  "currentStep": "implement",
+  "status": "implemented",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": null,
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-05T17:54:56.690Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-05T18:00:24.786Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-05T18:00:24.789Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "start",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "ai",
+      "at": "2026-06-05T18:07:25Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "start",
+      "from": {
+        "step": "plan",
+        "substep": "research"
+      },
+      "by": "ai",
+      "at": "2026-06-05T18:09:14Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-05T18:11:03Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-05T18:15:24.651Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-05T18:19:36Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-05T18:20:53.769Z"
+    },
+    {
+      "step": "implement",
+      "substep": "run-tests",
+      "kind": "start",
+      "from": {
+        "step": "implement",
+        "substep": null
+      },
+      "by": "ai",
+      "at": "2026-06-05T18:48:54Z"
+    },
+    {
+      "step": "implement",
+      "substep": "run-tests",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-05T18:49:37Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-05T18:49:45Z"
+    }
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Encoded the footer-button-matrix oracle as a typed, reusable fixture (rows + zone partitions) for the determinism tests.",
+      "files": ["src/features/spec-viewer/__tests__/footerMatrix.fixtures.ts"]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added runningStepArtifactReady/runningStepStartedAt/runningStepLabel to the core ViewerState interface.",
+      "files": ["src/core/types/specContext.ts"]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added the viewerStateUpdated message (complete viewerState + complete NavState) to the extension ExtensionToViewerMessage union.",
+      "files": ["src/features/spec-viewer/types.ts"]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Mirrored the new ViewerState fields in the webview types and made viewerStateUpdated.navState a complete (non-partial) NavState.",
+      "files": ["webview/src/spec-viewer/types.ts"]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Populated the run-step/generating fields in deriveViewerState (startedAt/label from the running step; artifact-ready injected by the provider since the pure function can't probe disk).",
+      "files": ["src/features/spec-viewer/stateDerivation.ts"]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Extracted one shared buildViewerPayload builder; both sendContentUpdateMessage and refreshContextIfDisplaying now emit a COMPLETE viewerState + navState (no more 3-field partial).",
+      "files": ["src/features/spec-viewer/specViewerProvider.ts"]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Replaced the 4-source status fallback chain with status = viewerState.status only.",
+      "files": ["webview/src/spec-viewer/components/FooterActions.tsx"]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Deleted the legacy navState.footerState render branch so exactly two shapes remain (CatalogFooter, GeneratingFooter).",
+      "files": ["webview/src/spec-viewer/components/FooterActions.tsx"]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Computed the generating/run-step gate from viewerState and removed all navState footer-decision reads (only enhancementButtons remain, the documented carve-out).",
+      "files": ["webview/src/spec-viewer/components/FooterActions.tsx"]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Sourced GeneratingFooter's running-step label from viewerState instead of navState.",
+      "files": ["webview/src/spec-viewer/components/footer/GeneratingFooter.tsx"]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Confirmed the viewerState signal is the footer's sole reactive input; the footer no longer depends on the navState signal for any decision.",
+      "files": ["webview/src/spec-viewer/signals.ts", "webview/src/spec-viewer/components/FooterActions.tsx"]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "viewerStateUpdated now fully replaces navState (complete payload), closing the early-arrival race and the stale/partial read.",
+      "files": ["webview/src/spec-viewer/index.tsx"]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Added footer determinism tests (idempotence, state-preserving re-derivation, viewed-tab independence, external-change re-derivation, implemented gate).",
+      "files": ["src/features/spec-viewer/__tests__/footerActions.test.ts"]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Rewrote the webview FooterActions test for the single-source model (stale navState can't hide a button; generating reverts on artifact-ready and on timeout).",
+      "files": ["webview/src/spec-viewer/components/__tests__/FooterActions.test.tsx"]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Verified the serialized approve label resolves to the next step at each pause stage and is hidden on implement; no gating change was needed.",
+      "files": ["src/features/spec-viewer/stateDerivation.ts", "src/features/spec-viewer/footerActions.ts"]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Verified the closure controls surface per matrix (Mark Completed+Archive at implemented, Reactivate+Archive at completed, Reactivate at archived) via the oracle test rows.",
+      "files": ["src/features/spec-viewer/footerActions.ts", "src/features/spec-viewer/__tests__/footerMatrix.test.ts"]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Added pause-stage oracle tests asserting the derived footer equals the matrix Left+Right set for each canonical pause status.",
+      "files": ["src/features/spec-viewer/__tests__/footerMatrix.test.ts"]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Confirmed step-tab class derivation reads from the refreshed viewerState/navState snapshot; the complete-payload refresh keeps tabs in sync (no stale read).",
+      "files": ["webview/src/spec-viewer/components/StepTab.tsx", "webview/src/spec-viewer/components/NavigationBar.tsx"]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Verified a workflow-advancing action updates the step-tab indicator without a reopen — it rides the same complete-payload refresh, with no tab-only state path.",
+      "files": ["webview/src/spec-viewer/components/StepTab.tsx"]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Added step-tab sync tests (enabled/checkmark match true per-step state; indicator updates after an advancing action).",
+      "files": ["webview/src/spec-viewer/components/__tests__/StepTab.test.tsx"],
+      "concerns": ["Plan named webview/src/spec-viewer/navigation.ts, which doesn't exist; tab-class derivation lives in StepTab.tsx, so the tests live there instead."]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Updated docs/viewer-states.md to the single-source (viewerState-only) footer model and replaced the stale legacy matrix with the canonical contract matrix.",
+      "files": ["docs/viewer-states.md"]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Rewrote FooterActions.stories.tsx and mockData to drive only viewerState; removed the legacy-fallback story variants and added the generating/artifact-ready/timeout states.",
+      "files": ["webview/src/spec-viewer/components/FooterActions.stories.tsx", "webview/src/spec-viewer/components/__stories__/mockData.ts"]
+    },
+    "T023": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Removed the dead footer duplicates (footerState interface, runningStep* fields) from NavState and the initial-HTML generator + generateHtml signature.",
+      "files": ["webview/src/spec-viewer/types.ts", "src/features/spec-viewer/types.ts", "src/features/spec-viewer/html/generator.ts", "src/features/spec-viewer/specViewerProvider.ts"],
+      "concerns": ["Kept NavState.activeStep (read by StepTab/NavigationBar for in-flight visuals) and NavState.specStatus (header badge fallback) — these are not footer-only, so removing them was out of scope."]
+    },
+    "T024": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Ran npm run compile + compile-web + jest — all green (810 tests, 68 suites); demo fixtures left untouched.",
+      "files": [],
+      "concerns": ["The manual issue #193 repro in quickstart.md (driving the live VS Code viewer) is a user-side step I cannot perform headlessly."]
+    }
+  },
+  "updated": "2026-06-05"
+}
