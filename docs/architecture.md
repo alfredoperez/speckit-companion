@@ -90,7 +90,8 @@ User-visible settings are declared in `package.json` under `contributes.configur
 
 - `speckit.aiProvider` — selects the active provider. Its enum is the canonical provider list; the README "Supported AI Providers" matrix and this document's prose are checked against it on every `npm test`.
 - `speckit.specDirectories` — list of directories the spec sidebar reads from.
-- Per-provider path overrides (`speckit.geminiPath`, `speckit.copilotPath`, etc.) and timing knobs (`speckit.geminiInitDelay`).
+
+Each CLI provider invokes its binary by bare name from `PATH` (`claude`, `gemini`, `copilot`, `qwen`, `opencode`); there are no per-provider path-override settings.
 
 User data is stored under the workspace `.claude/` and `specs/` directories, plus the user's home `~/.claude/`. None of these are shipped in the `.vsix`; the extension only reads them at runtime.
 

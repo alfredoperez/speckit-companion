@@ -66,10 +66,8 @@ export abstract class CliTerminalProvider implements IAIProvider {
     public abstract readonly name: string;
     public abstract readonly type: AIProviderType;
 
-    /** The bare CLI binary name used for install verification and the default `cliPath`. */
+    /** The bare CLI binary name used for install verification and dispatch. */
     protected abstract readonly cliBinary: string;
-    /** Settings key for an optional user-supplied path override. `null` if the binary name is the only path. */
-    protected abstract readonly cliPathSettingKey: string | null;
     /** `displayName` shown when the CLI isn't found, plus the install command to suggest. `null` skips the install check entirely. */
     protected abstract readonly installHint: { displayName: string; installCommand: string } | null;
     /** Default title for the visible terminal. */
@@ -134,7 +132,7 @@ export abstract class CliTerminalProvider implements IAIProvider {
      * this entirely.
      */
     protected async prepareDispatch(ctx: Omit<DispatchContext, 'cliPath' | 'permissionFlag'>): Promise<DispatchPlan> {
-        const cliPath = this.getCliPath();
+        const cliPath = this.cliBinary;
         const permissionFlag = this.getPermissionFlag();
         const promptText = this.preprocessPrompt(ctx);
         const filePrefix = ctx.mode === 'headless' ? 'background-prompt' : 'prompt';
@@ -174,15 +172,6 @@ export abstract class CliTerminalProvider implements IAIProvider {
      */
     protected cliPromptFlag(): string {
         return '-p ';
-    }
-
-    /**
-     * Resolve the active CLI path (settings override → default to `cliBinary`).
-     */
-    protected getCliPath(): string {
-        if (!this.cliPathSettingKey) return this.cliBinary;
-        const cfg = vscode.workspace.getConfiguration('speckit');
-        return cfg.get<string>(this.cliPathSettingKey, this.cliBinary);
     }
 
     // ─── Shared workflow ────────────────────────────────────────────────────

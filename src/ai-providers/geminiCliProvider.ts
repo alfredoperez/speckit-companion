@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
-import { AIProviders, Timing } from '../core/constants';
+import { AIProviders } from '../core/constants';
 import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { ensureCliInstalled } from '../core/utils/installUtils';
@@ -47,21 +47,8 @@ export class GeminiCliProvider implements IAIProvider {
         }
     }
 
-    /**
-     * Get the CLI command path
-     */
-    private getCliPath(): string {
-        const config = vscode.workspace.getConfiguration('speckit');
-        return config.get<string>('geminiPath', 'gemini');
-    }
-
-    /**
-     * Get the Gemini CLI initialization delay from settings
-     */
-    private getInitDelay(): number {
-        const config = vscode.workspace.getConfiguration('speckit');
-        return config.get<number>('geminiInitDelay', Timing.geminiInitDelay);
-    }
+    /** Delay before sending the prompt to the interactive Gemini CLI. */
+    private static readonly INIT_DELAY_MS = 8000;
 
     /**
      * Check if Gemini CLI is installed and show helpful error if not
@@ -82,7 +69,6 @@ export class GeminiCliProvider implements IAIProvider {
     async executeInTerminal(prompt: string, title: string = 'SpecKit - Gemini'): Promise<vscode.Terminal> {
         try {
             await this.ensureInstalled();
-            const cliPath = this.getCliPath();
 
             const terminal = vscode.window.createTerminal({
                 name: title,
@@ -94,11 +80,11 @@ export class GeminiCliProvider implements IAIProvider {
 
             terminal.show();
 
-            const initDelay = this.getInitDelay();
+            const initDelay = GeminiCliProvider.INIT_DELAY_MS;
 
             // Wait for shell to be ready, then start Gemini in interactive mode
             await waitForShellReady(terminal);
-            terminal.sendText(cliPath, true);
+            terminal.sendText('gemini', true);
 
             // After Gemini initializes, send the prompt then Enter separately
             setTimeout(() => {
@@ -132,10 +118,9 @@ export class GeminiCliProvider implements IAIProvider {
 
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         const cwd = workspaceFolder?.uri.fsPath;
-        const cliPath = this.getCliPath();
 
         const promptFilePath = await createTempFile(this.context, prompt, 'background-prompt', false);
-        const commandLine = `cat "${promptFilePath}" | ${cliPath}`;
+        const commandLine = `cat "${promptFilePath}" | gemini`;
 
         return executeCommandInHiddenTerminal({
             commandLine,

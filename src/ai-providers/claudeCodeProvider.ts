@@ -41,7 +41,6 @@ export class ClaudeCodeProvider extends CliTerminalProvider {
     public readonly type = AIProviders.CLAUDE;
 
     protected readonly cliBinary = 'claude';
-    protected readonly cliPathSettingKey = null;
     // Claude is so commonly pre-installed that the install-hint path adds
     // noise — keep it null. (The base class skips the check when this is null.)
     protected readonly installHint = null;

@@ -1,0 +1,81 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "status": "completed",
+  "checkpointStatus": { "commit": true, "pr": true },
+  "updated": "2026-06-05",
+  "selectedAt": "2026-06-05T21:30:55Z",
+  "specName": "Remove CLI Path Override Settings",
+  "branch": "main",
+  "workingBranch": "refactor/remove-cli-path-settings",
+  "type": "refactor",
+  "createdAt": "2026-06-05T21:30:55Z",
+  "auto": true,
+  "loadedDomains": [],
+  "approach": "Remove the path-override config surface and collapse every provider onto its bare CLI binary name by dropping the cliPathSettingKey abstraction.",
+  "last_action": "Phase 1 complete — 10 tasks done, compile + 810 tests pass, sweep clean",
+  "files_modified": [
+    "src/ai-providers/cliTerminalProvider.ts",
+    "src/ai-providers/geminiCliProvider.ts",
+    "src/ai-providers/copilotCliProvider.ts",
+    "src/ai-providers/qwenCliProvider.ts",
+    "src/ai-providers/openCodeProvider.ts",
+    "src/ai-providers/claudeCodeProvider.ts",
+    "src/ai-providers/codexCliProvider.ts",
+    "src/core/constants.ts",
+    "package.json",
+    "docs/how-it-works.md",
+    "docs/architecture.md",
+    "docs/providers/qwen-setup.md"
+  ],
+  "task_summaries": {
+    "T001": { "status": "DONE", "did": "Removed cliPathSettingKey field + getCliPath() from base provider; prepareDispatch uses this.cliBinary", "files": ["src/ai-providers/cliTerminalProvider.ts"], "concerns": [] },
+    "T002": { "status": "DONE", "did": "Removed cliPathSettingKey='copilotPath' from Copilot provider", "files": ["src/ai-providers/copilotCliProvider.ts"], "concerns": [] },
+    "T003": { "status": "DONE", "did": "Removed cliPathSettingKey='qwenPath' from Qwen provider", "files": ["src/ai-providers/qwenCliProvider.ts"], "concerns": [] },
+    "T004": { "status": "DONE", "did": "Removed cliPathSettingKey='opencodePath' from OpenCode provider", "files": ["src/ai-providers/openCodeProvider.ts"], "concerns": [] },
+    "T005": { "status": "DONE", "did": "Removed cliPathSettingKey=null from Claude provider", "files": ["src/ai-providers/claudeCodeProvider.ts"], "concerns": [] },
+    "T006": { "status": "DONE", "did": "Removed cliPathSettingKey=null from Codex provider", "files": ["src/ai-providers/codexCliProvider.ts"], "concerns": [] },
+    "T007": { "status": "DONE", "did": "Dropped getCliPath + geminiInitDelay reads in Gemini provider; bare 'gemini' binary + hard-coded 8000ms INIT_DELAY_MS", "files": ["src/ai-providers/geminiCliProvider.ts"], "concerns": [] },
+    "T008": { "status": "DONE", "did": "Removed claudePath, geminiPath, copilotPath, qwenPath, opencodePath, geminiInitDelay properties from package.json contributes.configuration", "files": ["package.json"], "concerns": [] },
+    "T009": { "status": "DONE", "did": "Removed claudePath/qwenPath/geminiInitDelay from ConfigKeys and geminiInitDelay from Timing in constants.ts", "files": ["src/core/constants.ts"], "concerns": [] },
+    "T010": { "status": "DONE", "did": "Swept src/webview/tests for stragglers (clean), compile passed, 810 tests passed; README has no doc section for these settings", "files": [], "concerns": [] }
+  },
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 6,
+      "scenarios": 3,
+      "key_finding": "claudePath is dead config (never read; Claude provider uses cliPathSettingKey=null); getCliPath() already falls back to the bare binary name, so removing path settings makes every provider invoke its CLI from PATH"
+    },
+    "plan": {
+      "approach_summary": "Remove the path-override config surface and collapse every provider onto its bare CLI binary name by dropping the cliPathSettingKey abstraction.",
+      "files_planned": 8,
+      "risks": ["A test or provider file may reference cliPathSettingKey/getCliPath beyond the listed files — the compile step catches stragglers"],
+      "principles_concerns": 0,
+      "domain_concerns": 0,
+      "significance_score": 0
+    }
+  },
+  "transitions": [
+    { "step": "specify", "substep": "parsing", "from": null, "by": "sdd", "at": "2026-06-05T21:30:55Z" },
+    { "step": "specify", "substep": "exploring", "from": "parsing", "by": "sdd", "at": "2026-06-05T21:31:10Z" },
+    { "step": "specify", "substep": "detecting", "from": "exploring", "by": "sdd", "at": "2026-06-05T21:31:40Z" },
+    { "step": "specify", "substep": "writing-spec", "from": "detecting", "by": "sdd", "at": "2026-06-05T21:32:00Z" },
+    { "step": "specify", "substep": null, "from": "writing-spec", "by": "sdd", "at": "2026-06-05T21:32:30Z" },
+    { "step": "specify", "substep": "auto-marked", "from": null, "by": "sdd", "at": "2026-06-05T21:32:45Z" },
+    { "step": "plan", "substep": "loading", "from": "specify", "by": "sdd", "at": "2026-06-05T21:33:30Z" },
+    { "step": "plan", "substep": "writing-plan", "from": "loading", "by": "sdd", "at": "2026-06-05T21:33:50Z" },
+    { "step": "plan", "substep": null, "from": "writing-plan", "by": "sdd", "at": "2026-06-05T21:34:10Z" },
+    { "step": "tasks", "substep": "loading", "from": "plan", "by": "sdd", "at": "2026-06-05T21:34:40Z" },
+    { "step": "tasks", "substep": "writing-tasks", "from": "loading", "by": "sdd", "at": "2026-06-05T21:35:00Z" },
+    { "step": "tasks", "substep": null, "from": "writing-tasks", "by": "sdd", "at": "2026-06-05T21:35:20Z" },
+    { "step": "implement", "substep": "phase1", "from": "tasks", "by": "sdd", "at": "2026-06-05T21:36:00Z" },
+    { "step": "implement", "substep": "hooks", "from": "phase1", "by": "sdd", "at": "2026-06-05T21:40:00Z" },
+    { "step": "implement", "substep": "code-review", "from": "hooks", "by": "sdd", "at": "2026-06-05T21:40:30Z" },
+    { "step": "implement", "substep": "commit-review", "from": "code-review", "by": "sdd", "at": "2026-06-05T21:45:00Z" },
+    { "step": "done", "substep": null, "from": "commit-review", "by": "sdd", "at": "2026-06-05T21:45:30Z" }
+  ]
+}

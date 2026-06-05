@@ -58,12 +58,9 @@ export const Commands = {
  */
 export const ConfigKeys = {
     namespace: 'speckit',
-    claudePath: 'speckit.claudePath',
     aiProvider: 'speckit.aiProvider',
     claudePermissionMode: 'speckit.claudePermissionMode',
-    geminiInitDelay: 'speckit.geminiInitDelay',
     customCommands: 'speckit.customCommands',
-    qwenPath: 'speckit.qwenPath',
     qwenYoloMode: 'speckit.qwenYoloMode',
     specDirectories: 'speckit.specDirectories',
     customWorkflows: 'speckit.customWorkflows',
@@ -117,8 +114,6 @@ export const Timing = {
     terminalDisposeDelay: 1000,
     /** Debounce delay for file watcher refresh */
     fileWatcherDebounce: 1000,
-    /** Delay for Gemini CLI to initialize before sending prompt (configurable via settings) */
-    geminiInitDelay: 8000,
 } as const;
 
 /**
