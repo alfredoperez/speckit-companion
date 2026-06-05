@@ -14,7 +14,6 @@ export class QwenCliProvider extends CliTerminalProvider {
     public readonly type = AIProviders.QWEN;
 
     protected readonly cliBinary = 'qwen';
-    protected readonly cliPathSettingKey = 'qwenPath';
     protected readonly installHint = {
         displayName: 'Qwen Code CLI',
         installCommand: 'npm install -g @qwen-code/qwen-code@latest',

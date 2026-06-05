@@ -677,13 +677,6 @@
             "order": 0,
             "description": "Show a notification when a dispatched spec step completes."
           },
-          "speckit.claudePath": {
-            "type": "string",
-            "default": "claude",
-            "scope": "machine",
-            "order": 1,
-            "description": "Path to Claude Code CLI executable"
-          },
           "speckit.aiProvider": {
             "type": "string",
             "default": "claude",
@@ -752,43 +745,6 @@
             "scope": "machine",
             "order": 3,
             "description": "Controls how the AI CLI handles permission prompts. 'interactive' is honored only by providers whose CLI supports interactive prompting (Claude, Gemini, Codex, Qwen, OpenCode). Copilot's CLI cannot surface prompts in -p mode and is auto-switched to auto-approve at dispatch time, regardless of this setting — dismissing the startup warning will not re-enable interactive mode for Copilot."
-          },
-          "speckit.geminiPath": {
-            "type": "string",
-            "default": "gemini",
-            "scope": "machine",
-            "order": 3,
-            "description": "Path to Gemini CLI executable"
-          },
-          "speckit.copilotPath": {
-            "type": "string",
-            "default": "copilot",
-            "scope": "machine",
-            "order": 4,
-            "description": "Path to GitHub Copilot CLI executable"
-          },
-          "speckit.geminiInitDelay": {
-            "type": "number",
-            "default": 8000,
-            "minimum": 3000,
-            "maximum": 30000,
-            "scope": "machine",
-            "order": 5,
-            "description": "Delay in milliseconds before sending prompt to Gemini CLI (allows time for initialization)"
-          },
-          "speckit.qwenPath": {
-            "type": "string",
-            "default": "qwen",
-            "scope": "machine",
-            "order": 6,
-            "description": "Path to Qwen Code CLI executable"
-          },
-          "speckit.opencodePath": {
-            "type": "string",
-            "default": "opencode",
-            "scope": "machine",
-            "order": 7,
-            "description": "Path to OpenCode CLI executable"
           },
           "speckit.specDirectories": {
             "type": "array",

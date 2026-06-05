@@ -14,7 +14,6 @@ export class CopilotCliProvider extends CliTerminalProvider {
     public readonly type = AIProviders.COPILOT;
 
     protected readonly cliBinary = CLIDefaults.copilot;
-    protected readonly cliPathSettingKey = 'copilotPath';
     protected readonly installHint = {
         displayName: 'GitHub Copilot CLI',
         installCommand: 'gh extension install github/gh-copilot',

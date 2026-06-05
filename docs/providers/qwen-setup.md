@@ -69,15 +69,15 @@ Open VS Code Settings (`Cmd/Ctrl + ,`) and search for **SpecKit AI Provider**, t
 
 | Setting | Default | Description |
 |---|---|---|
-| `speckit.qwenPath` | `"qwen"` | Path to the Qwen Code CLI executable. Change this if `qwen` is not on your `PATH`. |
 | `speckit.qwenYoloMode` | `false` | Enable `--yolo` mode to auto-approve all Qwen actions without prompts. |
+
+The extension invokes the `qwen` binary from your `PATH`; make sure `qwen` is on it (see Troubleshooting below).
 
 Example `settings.json`:
 
 ```json
 {
   "speckit.aiProvider": "qwen",
-  "speckit.qwenPath": "qwen",
   "speckit.qwenYoloMode": false
 }
 ```
@@ -116,7 +116,7 @@ The **Steering** panel in SpecKit will show the global and project `QWEN.md` fil
 
 - Make sure the npm global bin directory is on your `PATH`.
 - Run `npm bin -g` to find the directory and add it to your shell profile.
-- Or set `speckit.qwenPath` to the absolute path of the `qwen` binary.
+- The extension calls `qwen` by bare name, so it must be resolvable on the `PATH` of the shell VS Code launches.
 
 ### Authentication errors
 

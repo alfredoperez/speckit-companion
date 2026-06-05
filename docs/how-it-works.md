@@ -336,11 +336,6 @@ const debouncedRefresh = (event: string, uri: vscode.Uri) => {
 
 ```typescript
 speckit.aiProvider                    // 'claude' | 'claude-vscode' | 'gemini' | 'copilot' | 'codex' | 'qwen' | 'opencode' | 'ide-chat'
-speckit.claudePath                    // Custom Claude CLI path
-speckit.geminiPath                    // Custom Gemini CLI path
-speckit.copilotPath                   // Custom Copilot CLI path
-speckit.qwenPath                      // Custom Qwen CLI path
-speckit.geminiInitDelay               // Gemini startup delay (ms)
 speckit.permissionMode                // Permission bypass mode
 speckit.specDirectories               // Additional spec directories
 speckit.customCommands                // Custom command definitions
@@ -355,10 +350,10 @@ speckit.views.settings.visible        // boolean
 
 | Constant | Value | Purpose |
 |----------|-------|---------|
-| `terminalVenvActivationDelay` | 800 | Wait for venv activation |
+| `shellReadyTimeoutMs` | 5000 | Wait for shell integration readiness |
 | `tempFileCleanupDelay` | 30000 | Clean prompt temp files |
+| `terminalDisposeDelay` | 1000 | Delay terminal disposal after execution |
 | `fileWatcherDebounce` | 1000 | Batch file change events |
-| `geminiInitDelay` | 8000 | Gemini CLI startup time |
 
 ---
 

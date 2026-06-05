@@ -29,7 +29,6 @@ export class CodexCliProvider extends CliTerminalProvider {
     public readonly type = AIProviders.CODEX;
 
     protected readonly cliBinary = 'codex';
-    protected readonly cliPathSettingKey = null;
     protected readonly installHint = {
         displayName: 'Codex CLI',
         installCommand: 'npm install -g @openai/codex',
