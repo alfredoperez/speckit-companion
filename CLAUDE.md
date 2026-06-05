@@ -238,5 +238,5 @@ They exist so the viewer can be opened against a known state during development.
 - 044-context-driven-badges: Added TypeScript 5.3+ (ES2022 target, strict mode) + VS Code Extension API (`@types/vscode ^1.84.0`)
 
 <!-- SPECKIT START -->
-For additional context about technologies to be used, project structure, shell commands, and other important information, read the current plan: `specs/115-footer-generating-status/plan.md`
+For additional context about technologies to be used, project structure, shell commands, and other important information, read the current plan: `specs/122-fix-upgrade-ai-agent/plan.md`
 <!-- SPECKIT END -->

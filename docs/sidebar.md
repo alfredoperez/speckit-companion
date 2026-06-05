@@ -10,7 +10,7 @@ Specs are grouped into three collapsible sections based on their status (stored 
 - **Completed** — Specs marked as done, collapsed by default.
 - **Archived** — Specs moved to archive, collapsed by default.
 
-The Specs view title bar exposes **Filter**, **Sort**, a **collapse/expand all** toggle, and **Create New Spec** (rightmost). A **clear filter** icon appears only while a filter is active. The collapse/expand icon swaps to reflect the next action; state is in-memory only and is not persisted across sessions.
+The Specs view title bar exposes **Filter**, **Sort**, an **Upgrade…** picker, a **collapse/expand all** toggle, and **Create New Spec** (rightmost). A **clear filter** icon appears only while a filter is active. The collapse/expand icon swaps to reflect the next action; state is in-memory only and is not persisted across sessions. The spec-kit upgrade commands are consolidated behind a single icon — see [Maintenance actions](#maintenance-actions) below.
 
 ## Filter and sort
 
@@ -25,6 +25,16 @@ The Specs view title bar exposes **Filter**, **Sort**, a **collapse/expand all**
 - **Status** (by workflow step)
 
 Ties fall back to numeric prefix then name so output is deterministic. The chosen mode is persisted to workspace state; group order (Active → Completed → Archived) is fixed.
+
+## Maintenance actions
+
+The spec-kit upgrade commands are consolidated behind a single **Upgrade…** icon (`$(cloud-download)`) in the Specs view title bar. Clicking it opens a picker with three options. **Upgrade All** and **Upgrade Project** resolve the `--ai` agent from your configured `speckit.aiProvider` (see [`docs/how-it-works.md`](how-it-works.md)) and re-scaffold with `specify init --here --force`; **Upgrade CLI** only upgrades the globally installed spec-kit CLI.
+
+- **Upgrade All** (`speckit.upgradeAll`) — upgrades the spec-kit CLI, then re-scaffolds the project. The "just do it" choice.
+- **Upgrade Project** (`speckit.upgradeProject`) — re-runs `specify init` in place to refresh this workspace's scaffolding only.
+- **Upgrade CLI** (`speckit.upgradeCli`) — upgrades only the globally installed spec-kit CLI.
+
+The icon is visible when either spec-kit is detected in the workspace or the CLI is installed. All three individual commands remain available from the Command Palette under `SpecKit: Upgrade …`.
 
 ## Right-click and multi-select
 

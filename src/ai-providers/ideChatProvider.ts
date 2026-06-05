@@ -9,7 +9,7 @@ import { splitContextPreamble, cleanCommandArg } from './promptBuilder';
  * `unknown` means the editor was not recognized — we still try the inherited
  * base chat command before giving up.
  */
-type HostIde = 'vscode' | 'cursor' | 'windsurf' | 'antigravity' | 'unknown';
+export type HostIde = 'vscode' | 'cursor' | 'windsurf' | 'antigravity' | 'unknown';
 
 /** Inherited VS Code chat-open command — present in most forks. */
 const BASE_CHAT_OPEN = 'workbench.action.chat.open';
@@ -75,6 +75,33 @@ export function getIdeChatDisplayName(): string {
     return IDE_DISPLAY_NAMES[host];
 }
 
+/**
+ * Detect the host editor from stable `vscode.env` signals. `uriScheme` is the
+ * most reliable (forks set their own), with `appName` as a fallback. Shared by
+ * the IDE-Chat dispatch path and the spec-kit agent resolver so host detection
+ * lives in one place.
+ */
+export function detectHostIde(): HostIde {
+    const scheme = (vscode.env.uriScheme || '').toLowerCase();
+    const appName = (vscode.env.appName || '').toLowerCase();
+
+    if (scheme === 'cursor' || appName.includes('cursor')) {
+        return 'cursor';
+    }
+    if (scheme === 'windsurf' || appName.includes('windsurf')) {
+        return 'windsurf';
+    }
+    if (scheme === 'antigravity' || scheme === 'agy' || appName.includes('antigravity')) {
+        return 'antigravity';
+    }
+    if (scheme === 'vscode' || scheme === 'vscode-insiders' || appName.includes('visual studio code')) {
+        return 'vscode';
+    }
+    // An unrecognized fork falls through to 'unknown', which still tries the
+    // inherited base chat command before giving up.
+    return 'unknown';
+}
+
 /** Common tail for the no-chat-target warnings — keeps the guidance identical. */
 const SWITCH_TO_CLI_HINT =
     'Switch `speckit.aiProvider` to a CLI provider (e.g. Claude, Gemini) to run this command.';
@@ -98,29 +125,8 @@ export class IdeChatProvider implements IAIProvider {
         this.outputChannel = outputChannel;
     }
 
-    /**
-     * Detect the host editor from stable `vscode.env` signals. `uriScheme` is
-     * the most reliable (forks set their own), with `appName` as a fallback.
-     */
     detectHostIde(): HostIde {
-        const scheme = (vscode.env.uriScheme || '').toLowerCase();
-        const appName = (vscode.env.appName || '').toLowerCase();
-
-        if (scheme === 'cursor' || appName.includes('cursor')) {
-            return 'cursor';
-        }
-        if (scheme === 'windsurf' || appName.includes('windsurf')) {
-            return 'windsurf';
-        }
-        if (scheme === 'antigravity' || scheme === 'agy' || appName.includes('antigravity')) {
-            return 'antigravity';
-        }
-        if (scheme === 'vscode' || scheme === 'vscode-insiders' || appName.includes('visual studio code')) {
-            return 'vscode';
-        }
-        // An unrecognized fork falls through to 'unknown', which still tries the
-        // inherited base chat command before giving up.
-        return 'unknown';
+        return detectHostIde();
     }
     /**
      * Resolve the first candidate chat command that is actually registered in

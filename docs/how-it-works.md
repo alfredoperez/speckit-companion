@@ -335,8 +335,7 @@ const debouncedRefresh = (event: string, uri: vscode.Uri) => {
 ### Configuration Keys
 
 ```typescript
-speckit.aiProvider                    // 'claude' | 'gemini' | 'copilot' | 'codex' | 'qwen'
-speckit.workflowEditor.enabled        // boolean
+speckit.aiProvider                    // 'claude' | 'claude-vscode' | 'gemini' | 'copilot' | 'codex' | 'qwen' | 'opencode' | 'ide-chat'
 speckit.claudePath                    // Custom Claude CLI path
 speckit.geminiPath                    // Custom Gemini CLI path
 speckit.copilotPath                   // Custom Copilot CLI path
@@ -593,8 +592,7 @@ All extension logging goes to the "SpecKit Companion" output channel:
 
 1. **Tree view not updating**: Check file watcher debounce (1 second delay)
 2. **Provider not configured**: Check `speckit.aiProvider` setting
-3. **Workflow editor not showing**: Check `speckit.workflowEditor.enabled`
-4. **Permission flow triggered**: Claude Code only, check bypass mode
+3. **Permission flow triggered**: Claude Code only, check bypass mode
 
 ### Extension Development
 

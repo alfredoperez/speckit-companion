@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { CONTEXT_KEYS, setContextKey } from '../core/utils/contextKeys';
+import { getConfiguredSpecKitAgent } from './specKitAgent';
 
 const execAsync = promisify(exec);
 
@@ -232,7 +233,7 @@ export class SpecKitDetector {
 
         const terminal = vscode.window.createTerminal('Upgrade SpecKit Project');
         terminal.show();
-        terminal.sendText(`cd "${workspaceFolder.uri.fsPath}" && specify init --here --force --ai claude-code`);
+        terminal.sendText(`cd "${workspaceFolder.uri.fsPath}" && specify init --here --force --ai ${getConfiguredSpecKitAgent()}`);
 
         const selection = await vscode.window.showInformationMessage(
             'Upgrading project files... Reload window after upgrade completes.',
@@ -257,7 +258,7 @@ export class SpecKitDetector {
         const terminal = vscode.window.createTerminal('Upgrade SpecKit (All)');
         terminal.show();
         terminal.sendText('uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git && ' +
-            `cd "${workspaceFolder.uri.fsPath}" && specify init --here --force --ai claude-code`);
+            `cd "${workspaceFolder.uri.fsPath}" && specify init --here --force --ai ${getConfiguredSpecKitAgent()}`);
 
         const selection = await vscode.window.showInformationMessage(
             'Upgrading SpecKit CLI and project files... Reload window after upgrade completes.',
