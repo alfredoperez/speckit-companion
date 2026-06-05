@@ -116,8 +116,10 @@ function nowUtc(): string {
 
 const COMPLETED_STATUS_BY_STEP: Record<PromptStep, string> = {
     specify: 'specified',
+    clarify: 'specified',
     plan: 'planned',
     tasks: 'ready-to-implement',
+    analyze: 'ready-to-implement',
     // F8: implement ends at `implemented` (NOT `completed`). The final
     // `completed` status is the user's explicit Mark-Completed click in
     // the viewer — keeps closure under the user's control even when
@@ -127,13 +129,18 @@ const COMPLETED_STATUS_BY_STEP: Record<PromptStep, string> = {
 
 const DONE_PHRASE_BY_STEP: Record<PromptStep, string> = {
     specify: 'Done specifying',
+    clarify: 'Done clarifying',
     plan: 'Done planning',
     tasks: 'Done creating tasks',
+    analyze: 'Done analyzing',
     implement: 'Done implementing',
 };
 
 function renderPreamble(step: PromptStep, specDir: string): string {
-    const substeps = CANONICAL_SUBSTEPS[step].join(', ');
+    const substepsList = CANONICAL_SUBSTEPS[step];
+    const substepsLine = substepsList.length === 0
+        ? `Canonical substeps for ${step}: none — single-pass step.`
+        : `Canonical substeps for ${step}: ${substepsList.join(', ')}. For each substep boundary append a history entry with that substep name (and a real timestamp obtained via \`date -u\`).`;
     const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
     const completedStatus = COMPLETED_STATUS_BY_STEP[step];
     const donePhrase = DONE_PHRASE_BY_STEP[step];
@@ -149,7 +156,7 @@ function renderPreamble(step: PromptStep, specDir: string): string {
         `1. Pre-step: set currentStep = "${step}" and the matching in-progress status. Append a history entry { step: "${step}", substep: null, kind: "start", from, by: "extension", at: "${dispatchUtc}" }. Use the DISPATCH TIME for this start entry — it was sent by the extension.`,
         `1.5. When advancing from a previous step: flip the previous step's status to its completed form before writing the new step.`,
         '',
-        `Canonical substeps for ${step}: ${substeps}. For each substep boundary append a history entry with that substep name (and a real timestamp obtained via \`date -u\`).`,
+        substepsLine,
         '',
         '╔══════════════════════════════════════════════════════════════════╗',
         '║  MANDATORY FINAL WRITE — DO THIS BEFORE YOUR TURN ENDS          ║',
