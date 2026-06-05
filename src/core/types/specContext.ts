@@ -244,7 +244,9 @@ export interface ViewerState {
 /** Canonical list of substep names used by Companion prompts. */
 export const CANONICAL_SUBSTEPS = {
     specify: ['outline', 'validate-checklist'],
+    clarify: [],
     plan: ['research', 'design'],
     tasks: ['generate'],
+    analyze: [],
     implement: ['run-tests'],
 } as const;

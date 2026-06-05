@@ -18,7 +18,7 @@ describe('buildPrompt', () => {
         beforeEach(() => mockConfig(true));
 
         it('wraps command with preamble for each known step', () => {
-            for (const step of ['specify', 'plan', 'tasks', 'implement'] as const) {
+            for (const step of ['specify', 'clarify', 'plan', 'tasks', 'analyze', 'implement'] as const) {
                 const out = buildPrompt({
                     command: '/speckit.' + step + ' specs/001-demo',
                     step,
@@ -28,6 +28,33 @@ describe('buildPrompt', () => {
                 expect(out).toContain('<!-- /speckit-companion:context-update -->');
                 expect(out).toContain(`currentStep = "${step}"`);
                 expect(out.endsWith('/speckit.' + step + ' specs/001-demo')).toBe(true);
+            }
+        });
+
+        it('emits analyze preamble that finishes at ready-to-implement (sub-phase of tasks, must not regress)', () => {
+            const out = buildPrompt({
+                command: '/speckit.analyze specs/001-demo',
+                step: 'analyze',
+                specDir: 'specs/001-demo',
+            });
+            expect(out).toContain('Flip status to "ready-to-implement"');
+            expect(out).toContain('Done analyzing');
+        });
+
+        it('emits clarify preamble that finishes at specified (sub-phase of specify)', () => {
+            const out = buildPrompt({
+                command: '/speckit.clarify specs/001-demo',
+                step: 'clarify',
+                specDir: 'specs/001-demo',
+            });
+            expect(out).toContain('Flip status to "specified"');
+            expect(out).toContain('Done clarifying');
+        });
+
+        it('renders an empty-substep line for single-pass steps (analyze, clarify)', () => {
+            for (const step of ['analyze', 'clarify'] as const) {
+                const out = buildPrompt({ command: 'x', step, specDir: 'specs/001-demo' });
+                expect(out).toContain(`Canonical substeps for ${step}: none — single-pass step.`);
             }
         });
 
@@ -99,7 +126,7 @@ describe('buildPrompt', () => {
         // (round 3, F10/F14), preambles run ~6k chars. Bound kept generous-but-finite
         // to catch unintentional bloat.
         mockConfig(true);
-        for (const step of ['specify', 'plan', 'tasks', 'implement'] as const) {
+        for (const step of ['specify', 'clarify', 'plan', 'tasks', 'analyze', 'implement'] as const) {
             const out = buildPrompt({ command: 'x', step, specDir: 'specs/001-demo' });
             expect(out.length).toBeLessThan(6500);
         }
@@ -129,7 +156,7 @@ describe('buildPrompt', () => {
         // phantom "Generating <next>…" state the schema cleanup exists to
         // prevent.
         mockConfig(true);
-        for (const step of ['specify', 'plan', 'tasks', 'implement'] as const) {
+        for (const step of ['specify', 'clarify', 'plan', 'tasks', 'analyze', 'implement'] as const) {
             const out = buildPrompt({ command: 'x', step, specDir: 'specs/001-demo' });
             expect(out).toContain(`Leave currentStep on "${step}"`);
             expect(out).not.toContain('ATOMICALLY (in the same write');
