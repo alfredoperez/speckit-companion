@@ -54,28 +54,28 @@ describe('resetMalformedContext', () => {
             fs.writeFileSync(target, BROKEN);
 
             // Pre-seed every timestamp-shaped backup name so the first choice collides.
-            const realToISOString = Date.prototype.toISOString;
             const fixed = '2026-06-05T22:30:00.000Z';
-            jest.spyOn(Date.prototype, 'toISOString').mockReturnValue(fixed);
-            const stamp = fixed.replace(/[:.]/g, '-');
-            const firstChoice = path.join(dir, `${SPEC_CONTEXT_FILENAME}.bak-${stamp}`);
-            fs.writeFileSync(firstChoice, 'PRIOR BACKUP — must not be overwritten');
+            const toISOStringSpy = jest.spyOn(Date.prototype, 'toISOString').mockReturnValue(fixed);
+            try {
+                const stamp = fixed.replace(/[:.]/g, '-');
+                const firstChoice = path.join(dir, `${SPEC_CONTEXT_FILENAME}.bak-${stamp}`);
+                fs.writeFileSync(firstChoice, 'PRIOR BACKUP — must not be overwritten');
 
-            const backupPath = await resetMalformedContext(dir, {
-                workflow: 'sdd',
-                specName: 'x',
-                branch: 'x',
-            });
+                const backupPath = await resetMalformedContext(dir, {
+                    workflow: 'sdd',
+                    specName: 'x',
+                    branch: 'x',
+                });
 
-            // The prior backup is untouched and a distinct name was chosen.
-            expect(backupPath).not.toBe(firstChoice);
-            expect(fs.readFileSync(firstChoice, 'utf-8')).toBe(
-                'PRIOR BACKUP — must not be overwritten',
-            );
-            expect(fs.readFileSync(backupPath, 'utf-8')).toBe(BROKEN);
-
-            (Date.prototype.toISOString as jest.Mock).mockRestore?.();
-            Date.prototype.toISOString = realToISOString;
+                // The prior backup is untouched and a distinct name was chosen.
+                expect(backupPath).not.toBe(firstChoice);
+                expect(fs.readFileSync(firstChoice, 'utf-8')).toBe(
+                    'PRIOR BACKUP — must not be overwritten',
+                );
+                expect(fs.readFileSync(backupPath, 'utf-8')).toBe(BROKEN);
+            } finally {
+                toISOStringSpy.mockRestore();
+            }
         } finally {
             fs.rmSync(dir, { recursive: true, force: true });
         }
