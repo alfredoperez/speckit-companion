@@ -48,10 +48,11 @@ import { ConfigKeys, SpecStatuses, WorkflowSteps } from "../../core/constants";
 import type { CustomCommandConfig } from "../../core/types/config";
 import { deriveChangeRoot } from "../../core/specDirectoryResolver";
 import { deriveSpecName } from "../specs/specContextManager";
-import { readSpecContext, SPEC_CONTEXT_FILENAME } from "../specs/specContextReader";
+import { readSpecContext, SPEC_CONTEXT_FILENAME, SpecContextParseError } from "../specs/specContextReader";
 import { writeSpecContext } from "../specs/specContextWriter";
 import { deriveStepHistory } from "../specs/stepHistoryDerivation";
 import { backfillMinimalContext } from "../specs/specContextBackfill";
+import { resetMalformedContext } from "../specs/specContextReset";
 import { reconcileAndPersist } from "../specs/specContextReconciler";
 import { deriveViewerState, isStepCompleted, findRunningStep } from "./stateDerivation";
 import { hasNonTrivialArtifact } from "./stepArtifact";
@@ -93,6 +94,7 @@ async function ensureSpecContext(
   specDirectory: string,
   workflowName?: string,
   outputChannel?: vscode.OutputChannel,
+  onParseError?: (detail: { filePath: string; reason: string }) => void,
 ): Promise<ReturnType<typeof readSpecContext> extends Promise<infer T> ? T : never> {
   let existing: Awaited<ReturnType<typeof readSpecContext>>;
   try {
@@ -102,6 +104,9 @@ async function ensureSpecContext(
     outputChannel?.appendLine(
       `[SpecViewer] readSpecContext failed for ${specDirectory}: ${msg} — rendering with in-memory backfill, NOT writing.`,
     );
+    if (err instanceof SpecContextParseError) {
+      onParseError?.({ filePath: err.filePath, reason: err.reason });
+    }
     const specName = path.basename(specDirectory);
     return backfillMinimalContext({
       workflow: workflowName || 'speckit-companion',
@@ -313,6 +318,39 @@ export class SpecViewerProvider {
   }
 
   /**
+   * Surface a malformed `.spec-context.json` to the user and offer a one-click
+   * reset. Non-blocking: the viewer has already rendered the read-only backfill;
+   * dismissing the toast leaves the broken file untouched on disk.
+   */
+  private async promptResetMalformedContext(
+    specDirectory: string,
+    workflowName: string,
+    detail: { filePath: string; reason: string },
+  ): Promise<void> {
+    const choice = await vscode.window.showErrorMessage(
+      `Spec context is corrupt and could not be read: ${detail.reason} (${detail.filePath}). Reset backs the file up first.`,
+      'Reset context',
+    );
+    if (choice !== 'Reset context') return;
+    try {
+      const specName = path.basename(specDirectory);
+      const backupPath = await resetMalformedContext(
+        specDirectory,
+        { workflow: workflowName, specName, branch: specName },
+        this.outputChannel,
+      );
+      vscode.window.showInformationMessage(
+        `Spec context reset — original backed up to ${path.basename(backupPath)}.`,
+      );
+      await this.refreshContextIfDisplaying(path.join(specDirectory, SPEC_CONTEXT_FILENAME));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.outputChannel.appendLine(`[SpecViewer] resetMalformedContext failed: ${msg}`);
+      vscode.window.showErrorMessage(`Failed to reset spec context: ${msg}`);
+    }
+  }
+
+  /**
    * Handle file deletion
    */
   public handleFileDeleted(filePath: string): void {
@@ -483,7 +521,9 @@ export class SpecViewerProvider {
       if (!featureCtx && !instance.firstOpenComplete) {
         const workflowName =
           (await resolveWorkflow(specDirectory))?.name ?? DEFAULT_WORKFLOW.name;
-        await ensureSpecContext(specDirectory, workflowName, this.outputChannel);
+        await ensureSpecContext(specDirectory, workflowName, this.outputChannel, detail =>
+          void this.promptResetMalformedContext(specDirectory, workflowName, detail),
+        );
         try {
           featureCtx = await getFeatureWorkflow(specDirectory, changeRoot);
         } catch {

@@ -542,6 +542,10 @@ Legacy shapes (`status: "active"`, `status: "tasks-done"`, or files that
 only contain `{ status: "completed" }`) are coerced by
 `normalizeSpecContext` at read time.
 
+### Recovering a malformed context file
+
+A `.spec-context.json` that is *syntactically* broken — a truncated write, a hand edit, or merge-conflict markers — cannot be parsed, so the viewer falls back to a read-only, draft-state render of the spec. Instead of failing silently, it surfaces an error notification naming the JSON parse error and the offending file path, with a **Reset context** action. Choosing **Reset context** moves the broken file aside to a timestamped backup (`.spec-context.json.bak-<timestamp>`) and writes a fresh minimal skeleton in its place, then reloads the viewer. The original bytes are never overwritten in place — they survive in the backup so you can salvage lifecycle history by hand. Dismissing the notification leaves the broken file untouched; reopening the spec re-offers the reset. (This covers JSON-syntax failures only — a file that parses but is semantically off is tolerated and coerced as above.)
+
 ## Development
 
 ### Setup

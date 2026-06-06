@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **Recovery for a malformed `.spec-context.json`** (#144): when a spec's context file exists but is not parseable JSON (truncated write, hand edit, merge-conflict markers), the viewer now surfaces an error notification naming the JSON parse error and the offending file path — instead of silently falling back to a read-only draft render. The notification offers a **Reset context** action that moves the broken file aside to a timestamped backup (`.spec-context.json.bak-<timestamp>`) and writes a fresh minimal skeleton in its place, then reloads the viewer. The original bytes are never overwritten in place (they survive in the backup); dismissing the notification leaves the broken file untouched and reopening the spec re-offers the reset. The reader now throws a typed `SpecContextParseError` (carrying `filePath` + `reason`) so the corrupt-file case is distinguished from a missing file without sniffing message text. JSON-syntax failures only — semantically-off-but-parseable files are still tolerated and coerced.
+
 ### Fixed
 
 - **`analyze` and `clarify` left viewer stuck on "needs regeneration"** (#194): `buildPrompt` short-circuited for these two steps because `CANONICAL_SUBSTEPS` only listed `specify` / `plan` / `tasks` / `implement` — so the bookkeeping preamble was never injected and the AI had no instruction to flip status or append a completion history entry. Added `analyze` and `clarify` to the substep table (single-pass — empty arrays), wired their completed status (`ready-to-implement` / `specified`) and done phrase, and guarded the substep-line renderer for empty arrays. Works in isolation: no edits to `.specify/extensions.yml` or user-local skill files required.
