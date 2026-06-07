@@ -207,6 +207,16 @@
       },
       "by": "sdd",
       "at": "2026-06-07T21:57:21.208Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "done",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-06-07T21:58:09.780Z"
     }
   ],
   "step_summaries": {
@@ -310,7 +320,7 @@
       "concerns": []
     }
   },
-  "last_action": "CP3 approved \u2014 committing",
+  "last_action": "PR #203 opened \u2014 feat(speckit-extension): add full lifecycle capture + derive-from-files fallback",
   "files_modified": [
     "speckit-extension/scripts/write-context.py",
     "speckit-extension/scripts/derive-from-files.py",
@@ -330,7 +340,7 @@
     ".specify/extensions/companion/commands/speckit.companion.capture-implement.md",
     "speckit-extension/tests/test_context.py"
   ],
-  "drainedSeq": 11,
+  "drainedSeq": 12,
   "concerns": [
     {
       "task": "CP1-review",
@@ -349,5 +359,7 @@
   "checkpointStatus": {
     "commit": true,
     "pr": true
-  }
+  },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/203",
+  "prNumber": 203
 }
