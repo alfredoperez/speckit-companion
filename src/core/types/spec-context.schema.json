@@ -77,7 +77,7 @@
             "substep": { "type": ["string", "null"] }
           }
         },
-        "by": { "type": "string", "enum": ["extension", "user", "cli", "ai"] },
+        "by": { "type": "string", "enum": ["extension", "user", "cli", "ai", "derive"] },
         "at": { "type": "string", "format": "date-time" }
       }
     }

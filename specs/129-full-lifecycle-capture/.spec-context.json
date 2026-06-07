@@ -1,0 +1,365 @@
+{
+  "workflow": "sdd",
+  "currentStep": "done",
+  "currentTask": null,
+  "progress": null,
+  "next": "done",
+  "approach": "Extend the proven step-1 hook chain to after_plan/after_tasks/after_implement with thin per-step capture commands reusing write-context.py, add batch per-task journaling on after_implement, and a stdlib derive-from-files.py fallback.",
+  "updated": "2026-06-07",
+  "selectedAt": "2026-06-07T16:29:34-0500",
+  "specName": "Full Lifecycle Capture",
+  "branch": "main",
+  "workingBranch": "feat/full-lifecycle-capture",
+  "type": "feat",
+  "createdAt": "2026-06-07T16:29:34-0500",
+  "loadedDomains": [],
+  "transitions": [
+    {
+      "step": "specify",
+      "substep": "parsing",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-06-07T16:29:34-0500"
+    },
+    {
+      "step": "specify",
+      "substep": "exploring",
+      "from": "parsing",
+      "by": "sdd",
+      "at": "2026-06-07T16:29:34-0500"
+    },
+    {
+      "step": "specify",
+      "substep": "loading-context",
+      "from": "exploring",
+      "by": "sdd",
+      "at": "2026-06-07T16:29:34-0500"
+    },
+    {
+      "step": "specify",
+      "substep": "detecting",
+      "from": "loading-context",
+      "by": "sdd",
+      "at": "2026-06-07T16:29:34-0500"
+    },
+    {
+      "step": "specify",
+      "substep": "writing-spec",
+      "from": "detecting",
+      "by": "sdd",
+      "at": "2026-06-07T16:29:34-0500"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": "writing-spec",
+      "by": "sdd",
+      "at": "2026-06-07T16:29:34-0500"
+    },
+    {
+      "step": "plan",
+      "substep": "loading",
+      "from": "specify",
+      "by": "sdd",
+      "at": "2026-06-07T16:29:34-0500"
+    },
+    {
+      "step": "plan",
+      "substep": "writing-plan",
+      "from": "loading",
+      "by": "sdd",
+      "at": "2026-06-07T16:29:34-0500"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": "writing-plan",
+      "by": "sdd",
+      "at": "2026-06-07T16:29:34-0500"
+    },
+    {
+      "step": "tasks",
+      "substep": "loading",
+      "from": "plan",
+      "by": "sdd",
+      "at": "2026-06-07T16:29:34-0500"
+    },
+    {
+      "step": "tasks",
+      "substep": "writing-tasks",
+      "from": "loading",
+      "by": "sdd",
+      "at": "2026-06-07T16:29:34-0500"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": "writing-tasks",
+      "by": "sdd",
+      "at": "2026-06-07T16:29:34-0500"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-06-07T21:40:05.459Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-06-07T21:40:05.485Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-06-07T21:42:15.788Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-06-07T21:44:44.824Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-06-07T21:45:38.493Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-06-07T21:46:31.852Z"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-06-07T21:47:28.557Z"
+    },
+    {
+      "step": "implement",
+      "substep": "hooks",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-06-07T21:48:01.898Z"
+    },
+    {
+      "step": "implement",
+      "substep": "code-review",
+      "from": {
+        "step": "implement",
+        "substep": "hooks"
+      },
+      "by": "sdd",
+      "at": "2026-06-07T21:55:39.685Z"
+    },
+    {
+      "step": "implement",
+      "substep": "commit-review",
+      "from": {
+        "step": "implement",
+        "substep": "code-review"
+      },
+      "by": "sdd",
+      "at": "2026-06-07T21:56:29.631Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": "commit-review"
+      },
+      "by": "sdd",
+      "at": "2026-06-07T21:57:21.208Z"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "done",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-06-07T21:58:09.780Z"
+    }
+  ],
+  "step_summaries": {
+    "specify": {
+      "complexity": "normal",
+      "requirements": 15,
+      "scenarios": 5,
+      "key_finding": "write-context.py is already a generic step/status writer with all guarantees; lifecycle expansion is mostly hook registration in extension.yml/.specify fixtures plus a sibling derive-from-files.py reusing its resolution + no-backward-clobber guard."
+    },
+    "plan": {
+      "approach_summary": "Extend the proven step-1 hook chain to after_plan/after_tasks/after_implement with thin per-step capture commands reusing write-context.py, add batch per-task journaling on after_implement, and a stdlib derive-from-files.py fallback.",
+      "files_planned": 15,
+      "risks": [
+        "Per-task journaling rides the single after_implement hook (companion owns no implement loop until step 4) \u2014 mitigate with idempotent skip-already-journaled writes.",
+        "speckit-extension/ and the installed .specify/extensions/companion/ copy must stay byte-identical \u2014 update both together."
+      ],
+      "principles_concerns": 0,
+      "domain_concerns": 0,
+      "significance_score": 1
+    }
+  },
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Refactored write-context.py: extracted read/write/prior helpers and added sync_tasks task-sync mode with --tasks-file flag (idempotent per-task transitions).",
+      "files": [
+        "speckit-extension/scripts/write-context.py"
+      ],
+      "concerns": []
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "New stdlib derive-from-files.py importing write-context.py helpers; infers step/status from artifacts + per-task transitions; no-backward-clobber + by:derive.",
+      "files": [
+        "speckit-extension/scripts/derive-from-files.py"
+      ],
+      "concerns": []
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Three per-step capture command-markdowns (capture-plan/tasks/implement) mirroring capture.md; implement uses --tasks-file task-sync.",
+      "files": [
+        "speckit-extension/commands/speckit.companion.capture-plan.md",
+        "speckit-extension/commands/speckit.companion.capture-tasks.md",
+        "speckit-extension/commands/speckit.companion.capture-implement.md"
+      ],
+      "concerns": []
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Documented 3 new hooks/commands + --tasks-file flag + derive-from-files fallback section in commands.md.",
+      "files": [
+        "speckit-extension/docs/commands.md"
+      ],
+      "concerns": []
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Flipped ROADMAP step 2 to Shipped with a what-shipped subsection; added CHANGELOG 0.2.0 entry.",
+      "files": [
+        "speckit-extension/ROADMAP.md",
+        "speckit-extension/CHANGELOG.md"
+      ],
+      "concerns": []
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Registered 3 new provides.commands + after_plan/after_tasks/after_implement hooks (optional:false) in extension.yml; after_specify intact.",
+      "files": [
+        "speckit-extension/extension.yml"
+      ],
+      "concerns": []
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Added companion entries (optional:false) under after_plan/after_tasks/after_implement in .specify/extensions.yml; git entries intact.",
+      "files": [
+        ".specify/extensions.yml"
+      ],
+      "concerns": []
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Mirrored extension.yml, write-context.py, derive-from-files.py, and 3 capture command-markdowns into .specify/extensions/companion/ \u2014 verified byte-identical via diff.",
+      "files": [
+        ".specify/extensions/companion/extension.yml",
+        ".specify/extensions/companion/scripts/write-context.py",
+        ".specify/extensions/companion/scripts/derive-from-files.py",
+        ".specify/extensions/companion/commands/speckit.companion.capture-plan.md",
+        ".specify/extensions/companion/commands/speckit.companion.capture-tasks.md",
+        ".specify/extensions/companion/commands/speckit.companion.capture-implement.md"
+      ],
+      "concerns": []
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "stdlib unittest suite (10 tests): append-only, no-backward-clobber, unknown-key preservation, per-task idempotency/completion, and derive round-trip. All passing.",
+      "files": [
+        "speckit-extension/tests/test_context.py"
+      ],
+      "concerns": []
+    }
+  },
+  "last_action": "PR #203 opened \u2014 feat(speckit-extension): add full lifecycle capture + derive-from-files fallback",
+  "files_modified": [
+    "speckit-extension/scripts/write-context.py",
+    "speckit-extension/scripts/derive-from-files.py",
+    "speckit-extension/commands/speckit.companion.capture-plan.md",
+    "speckit-extension/commands/speckit.companion.capture-tasks.md",
+    "speckit-extension/commands/speckit.companion.capture-implement.md",
+    "speckit-extension/docs/commands.md",
+    "speckit-extension/ROADMAP.md",
+    "speckit-extension/CHANGELOG.md",
+    "speckit-extension/extension.yml",
+    ".specify/extensions.yml",
+    ".specify/extensions/companion/extension.yml",
+    ".specify/extensions/companion/scripts/write-context.py",
+    ".specify/extensions/companion/scripts/derive-from-files.py",
+    ".specify/extensions/companion/commands/speckit.companion.capture-plan.md",
+    ".specify/extensions/companion/commands/speckit.companion.capture-tasks.md",
+    ".specify/extensions/companion/commands/speckit.companion.capture-implement.md",
+    "speckit-extension/tests/test_context.py"
+  ],
+  "drainedSeq": 12,
+  "concerns": [
+    {
+      "task": "CP1-review",
+      "note": "Per-task journaling originally wrote substep:null transitions whose from.step==='implement' \u2014 the GUI reader (normalizeHistoryKind) would read those as a step-completion and mark Implement COMPLETED while still in flight, and dedupeConsecutive would collapse them. Fixed: per-task entries are now substeps (substep=task id)."
+    },
+    {
+      "task": "CP1-review",
+      "note": "sync_tasks/derive double-journaled a task id duplicated within tasks.md, and all_done used list-length not distinct-id coverage. Fixed with order-preserving distinct dedup + set-coverage all_done."
+    },
+    {
+      "task": "CP1-review",
+      "note": "--tasks-file without --status defaulted to 'specified' (incoherent for the implement step). Fixed: task-sync defaults terminal status to 'implemented'."
+    }
+  ],
+  "status": "completed",
+  "checkpointStatus": {
+    "commit": true,
+    "pr": true
+  },
+  "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/203",
+  "prNumber": 203
+}

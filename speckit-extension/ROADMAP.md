@@ -9,7 +9,7 @@ Design sources: `sdd` repo → `specs/024-speckit-extension-foundation/spec.md` 
 | # | Step | Scope | Status |
 |---|------|-------|--------|
 | 1 | **Foundation + `after_specify` spike** | one hook → `write-context.py` → `.spec-context.json`; minimal canonical-schema alignment | ✅ **Shipped & proven** ([PR #173](https://github.com/alfredoperez/speckit-companion/pull/173)) |
-| 2 | Full lifecycle capture + fallback | `after_plan`/`after_tasks`/`after_implement` hooks; derive-from-files when a hook didn't fire | ◻ Planned |
+| 2 | Full lifecycle capture + fallback | `after_plan`/`after_tasks`/`after_implement` hooks; derive-from-files when a hook didn't fire | ✅ Shipped |
 | 3 | `status` + `resume` commands | pipeline view (`--json`) + next-step detection — **completes v1** | ◻ Planned |
 | 4 | Own pipeline commands + `sdd-lean` preset | namespaced `/speckit.companion.*` + a files/deps template pack | ◻ Planned |
 | 5 | Complexity detector + fast path | right-size small changes (spec+plan+tasks in one pass) | ◻ Planned |
@@ -27,5 +27,12 @@ The whole migration rested on one unproven, agent-mediated chain: *user runs a s
 - **B — live hook + GUI:** ✅ Verified 2026-05-25. One real `/speckit.specify` **auto-fired** the `after_specify` companion hook (`optional: false` → no nudge) → `write-context.py` → `specs/<NNN>-<slug>/.spec-context.json` at `currentStep: specify` / `status: specified` with a `by: extension` transition. The artifact carried `workflow: "speckit"`, proving it works on a **plain spec-kit flow** with no SDD present.
 
 The reproducible proof procedure lives in the [README](./README.md#end-to-end-proof-the-de-risk).
+
+## Step 2 — what shipped
+
+- **Three new lifecycle hooks** — `after_plan`, `after_tasks`, and `after_implement` (all `optional: false`, auto-running), each backed by a per-step capture command (`speckit.companion.capture-plan` / `-tasks` / `-implement`) that reuses `write-context.py`.
+- **Per-task journaling** on `after_implement` via the writer's new `--tasks-file` task-sync mode — appends one idempotent transition per completed `- [x] **T###**` marker, recording `implementing` until every task is checked, then `implemented`.
+- **`derive-from-files.py`** — a new stdlib-only fallback that reconstructs `.spec-context.json` from on-disk artifacts + git when a hook never fired, honoring the same no-backward-clobber guard and emitting the same canonical schema.
+- **Regression coverage** — a stdlib `unittest` suite (append-only transitions, no-backward-clobber, unknown-key preservation, derive round-trip).
 
 > The build-in-public devlog for each step is the "My SDD" Build Log series.

@@ -115,6 +115,14 @@ hooks:
     prompt: Commit plan changes?
     description: Auto-commit after implementation planning
     condition: null
+  - extension: companion
+    command: speckit.companion.capture-plan
+    enabled: true
+    optional: false
+    prompt: Execute speckit.companion.capture-plan?
+    description: Record plan completion (currentStep=plan, status=planned) into
+      .spec-context.json
+    condition: null
   after_tasks:
   - extension: git
     command: speckit.git.commit
@@ -123,6 +131,14 @@ hooks:
     prompt: Commit task changes?
     description: Auto-commit after task generation
     condition: null
+  - extension: companion
+    command: speckit.companion.capture-tasks
+    enabled: true
+    optional: false
+    prompt: Execute speckit.companion.capture-tasks?
+    description: Record tasks completion (currentStep=tasks, status=ready-to-implement)
+      into .spec-context.json
+    condition: null
   after_implement:
   - extension: git
     command: speckit.git.commit
@@ -130,6 +146,14 @@ hooks:
     optional: true
     prompt: Commit implementation changes?
     description: Auto-commit after implementation
+    condition: null
+  - extension: companion
+    command: speckit.companion.capture-implement
+    enabled: true
+    optional: false
+    prompt: Execute speckit.companion.capture-implement?
+    description: Per-task journaling on implement (currentStep=implement; status=implemented
+      when all tasks checked) into .spec-context.json
     condition: null
   after_checklist:
   - extension: git
