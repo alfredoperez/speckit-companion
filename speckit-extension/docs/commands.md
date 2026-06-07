@@ -65,6 +65,8 @@ python3 speckit-extension/scripts/write-context.py --step tasks --status ready-t
 
 Runs after `/speckit.implement` in task-sync mode: it appends one transition per completed `- [x] **T###**` marker in `tasks.md`. Idempotent — re-running adds only newly-checked markers; status stays `implementing` until all markers are checked, then becomes `implemented`.
 
+**Live per-task cadence vs. this backstop.** When `speckit.aiContextInstructions` is on (default), the implement-step preamble the GUI prepends instructs the AI to journal each task *as it finishes it* — a `history[]` entry `{ step: "implement", substep: "<TaskID>", task: "<TaskID>", kind: "start", by: "ai", at: <real `date -u`> }` — so the activity log reflects real per-task timing instead of one end-of-run burst. Because those live entries carry the `task` id, this hook dedupes against them and becomes a no-op backstop, only journaling tasks the AI missed (or all of them when the preamble is disabled).
+
 **What the agent runs:**
 
 ```bash
@@ -86,3 +88,23 @@ python3 speckit-extension/scripts/derive-from-files.py --feature-dir specs/<NNN>
 ```
 
 See [how-it-works.md](./how-it-works.md) for what the writer guarantees (atomic, append-only, no-regress) and the canonical schema.
+
+## Read commands: status & resume
+
+Two user-invokable commands turn the captured state into something actionable. Both are **read-only** with respect to `.spec-context.json` (resume writes state only indirectly, via the `after_*` hook of the command it dispatches). Both run `speckit-extension/scripts/status-context.py`, which reads the canonical state — or derives it from on-disk files when the state file is missing/malformed (`source: derived`) — and emits a human summary plus a final machine line `RESOLUTION: { … }`.
+
+### `speckit.companion.status`
+
+Prints the active spec's current step, status, recorded `decisions[]`, and the next action/command. Falls back to file-derivation when no state file exists.
+
+```bash
+python3 speckit-extension/scripts/status-context.py
+# or target an explicit dir:
+python3 speckit-extension/scripts/status-context.py --feature-dir specs/<NNN>-<slug>
+```
+
+### `speckit.companion.resume`
+
+Resolves the next step from the same script, then dispatches the next `/speckit.*` command with the recorded `decisions[]` in scope. Inside the implement step it continues at the next unchecked task. On a terminal state (`implemented`/`completed`/`archived`) it reports "Pipeline complete" and dispatches nothing. Resume dispatches the **already-installed** `/speckit.*` commands — it does not require a `specify workflow resume` CLI subcommand, so it works on the stock spec-kit version.
+
+The next-action mapping: `specify/specified → /speckit.plan`, `plan/planned → /speckit.tasks`, `tasks/ready-to-implement → /speckit.implement`, `implement/implementing → /speckit.implement` (at the next unchecked task). In-progress statuses re-dispatch the current step.

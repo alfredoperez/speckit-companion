@@ -106,6 +106,27 @@ class LifecycleCaptureTests(unittest.TestCase):
         second = [t.get("task") for t in _ctx(self.fd)["history"] if t.get("task")]
         self.assertEqual(second, first)
 
+    def test_hook_skips_tasks_already_journaled_live_by_ai(self) -> None:
+        # When the implement preamble made the AI journal a task live (by:ai,
+        # carrying `task`), the end-of-step hook must treat it as a no-op
+        # backstop — dedupe on the task id, not re-add it.
+        target = self.fd / ".spec-context.json"
+        wc.update_context(self.fd, "implement", "implementing", "extension")
+        ctx = _ctx(self.fd)
+        ctx["history"].append({
+            "step": "implement", "substep": "T001", "task": "T001",
+            "kind": "start", "by": "ai", "at": "2026-06-07T10:00:00.000Z",
+        })
+        target.write_text(json.dumps(ctx))
+        tasks_md = self.fd / "tasks.md"
+        tasks_md.write_text(_tasks("- [x] **T001** a", "- [x] **T002** b"))
+        wc.sync_tasks(self.fd, tasks_md, "implemented", "extension")
+        journaled = [t for t in _ctx(self.fd)["history"] if t.get("task") == "T001"]
+        self.assertEqual(len(journaled), 1, "hook must not duplicate the AI's live T001 entry")
+        self.assertEqual(journaled[0]["by"], "ai")
+        all_tasks = [t.get("task") for t in _ctx(self.fd)["history"] if t.get("task")]
+        self.assertEqual(all_tasks, ["T001", "T002"])
+
     def test_per_task_completes_when_all_checked(self) -> None:
         tasks_md = self.fd / "tasks.md"
         tasks_md.write_text(_tasks("- [x] **T001** a", "- [x] **T002** b"))
@@ -200,6 +221,95 @@ class DeriveRoundTripTests(unittest.TestCase):
         result = derive_mod.derive(self.fd)
         self.assertIsNone(result)
         self.assertEqual(_ctx(self.fd), before)
+
+
+status_mod = importlib.import_module("status-context")
+
+
+class StatusResolveTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.fd = Path(self._tmp.name) / "specs" / "_zzz-test"
+        self.fd.mkdir(parents=True)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_reads_recorded_state_and_decisions(self) -> None:
+        (self.fd / "spec.md").write_text("# Spec\n")
+        wc.update_context(self.fd, "plan", "planned", "extension")
+        ctx = _ctx(self.fd)
+        ctx["decisions"] = ["Use the existing dispatch path", "No new schema field"]
+        (self.fd / ".spec-context.json").write_text(json.dumps(ctx))
+        res = status_mod.resolve(self.fd)
+        self.assertEqual(res["source"], "state")
+        self.assertEqual(res["currentStep"], "plan")
+        self.assertEqual(res["nextCommand"], "/speckit.tasks")
+        self.assertEqual(res["decisions"], ["Use the existing dispatch path", "No new schema field"])
+
+    def test_next_step_rows(self) -> None:
+        rows = {
+            ("specify", "specified"): "/speckit.plan",
+            ("plan", "planned"): "/speckit.tasks",
+            ("tasks", "ready-to-implement"): "/speckit.implement",
+        }
+        for (step, status), expected in rows.items():
+            wc.update_context(self.fd, step, status, "extension")
+            res = status_mod.resolve(self.fd)
+            self.assertEqual(res["nextCommand"], expected, f"{step}/{status}")
+            self.assertFalse(res["complete"], f"{step}/{status}")
+            (self.fd / ".spec-context.json").unlink()
+
+    def test_in_progress_finishes_current_step(self) -> None:
+        (self.fd / "spec.md").write_text("# Spec\n")
+        wc.update_context(self.fd, "plan", "planning", "extension")
+        res = status_mod.resolve(self.fd)
+        self.assertEqual(res["nextStep"], "plan")
+        self.assertEqual(res["nextCommand"], "/speckit.plan")
+        self.assertFalse(res["complete"])
+
+    def test_derive_fallback_when_state_missing(self) -> None:
+        (self.fd / "spec.md").write_text("# Spec\n")
+        (self.fd / "plan.md").write_text("# Plan\n")
+        res = status_mod.resolve(self.fd)
+        self.assertEqual(res["source"], "derived")
+        self.assertEqual(res["currentStep"], "plan")
+        self.assertEqual(res["nextCommand"], "/speckit.tasks")
+
+    def test_tasks_step_next_unchecked_task(self) -> None:
+        (self.fd / "tasks.md").write_text(
+            _tasks("- [x] **T001** a", "- [ ] **T002** b", "- [ ] **T003** c")
+        )
+        wc.update_context(self.fd, "implement", "implementing", "extension")
+        res = status_mod.resolve(self.fd)
+        self.assertEqual(res["nextTask"], "T002")
+        self.assertEqual(res["nextCommand"], "/speckit.implement")
+        self.assertFalse(res["complete"])
+
+    def test_implement_all_done_is_complete(self) -> None:
+        (self.fd / "tasks.md").write_text(_tasks("- [x] **T001** a", "- [x] **T002** b"))
+        wc.update_context(self.fd, "implement", "implementing", "extension")
+        res = status_mod.resolve(self.fd)
+        self.assertTrue(res["complete"])
+        self.assertIsNone(res["nextCommand"])
+        self.assertIsNone(res["nextTask"])
+
+    def test_terminal_status_is_complete(self) -> None:
+        for status in ("implemented", "completed", "archived"):
+            wc.update_context(self.fd, "tasks", "ready-to-implement", "extension")
+            ctx = _ctx(self.fd)
+            ctx["status"] = status
+            (self.fd / ".spec-context.json").write_text(json.dumps(ctx))
+            res = status_mod.resolve(self.fd)
+            self.assertTrue(res["complete"], status)
+            self.assertEqual(res["nextActionLabel"], "Pipeline complete", status)
+            (self.fd / ".spec-context.json").unlink()
+
+    def test_no_files_is_empty(self) -> None:
+        res = status_mod.resolve(self.fd)
+        self.assertTrue(res["empty"])
+        self.assertEqual(res["source"], "derived")
+        self.assertIsNone(res["currentStep"])
 
 
 if __name__ == "__main__":

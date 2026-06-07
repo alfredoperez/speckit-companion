@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Added
+- Live per-task journaling on implement: the GUI's implement-step preamble now drives one live `history[]` entry per task (`substep`/`task` = task id, `by: "ai"`, real `date -u` timestamp) so per-task timing is real, not an end-of-run burst. `write-context.py --tasks-file` (the `after_implement` hook) dedupes on the `task` id and becomes a no-op backstop — covered by a new regression test.
+- Status + Resume (Step 3 of the v1 plan): two user-invokable read commands. `speckit.companion.status` prints the active spec's current step, status, recorded decisions, and next action. `speckit.companion.resume` resolves the next step and dispatches the next `/speckit.*` command with decisions in scope — continuing at the next unchecked task inside the implement step, and reporting "Pipeline complete" on terminal states.
+- New `status-context.py` (stdlib-only) read/resolve script: reads `.spec-context.json`, or derives state from on-disk files when it is missing/malformed (`source: derived`), and emits a `ResumeResolution` (human summary + machine `RESOLUTION:` JSON line). Reuses `write-context.py` / `derive-from-files.py` for resolution and inference.
+- Resume dispatches the already-installed `/speckit.*` commands and does not require a `specify workflow resume` CLI subcommand, so it works on the stock spec-kit version.
+- Extended the `unittest` suite with resolver cases (state read, derive fallback, every next-step row, terminal/complete, tasks-step next-task, no-files empty).
+
 ## [0.2.0] - 2026-06-07
 
 Full lifecycle capture + derive-from-files fallback — Step 2 of the v1 plan. See [ROADMAP.md](./ROADMAP.md).

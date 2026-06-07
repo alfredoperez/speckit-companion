@@ -240,6 +240,12 @@
         "icon": "$(debug-restart)"
       },
       {
+        "command": "speckit.specs.resume",
+        "title": "Resume",
+        "category": "SpecKit",
+        "icon": "$(play)"
+      },
+      {
         "command": "speckit.group.markAllCompleted",
         "title": "Mark all as Completed",
         "category": "SpecKit",
@@ -506,6 +512,11 @@
           "group": "7_modification"
         },
         {
+          "command": "speckit.specs.resume",
+          "when": "view == speckit.views.explorer && (viewItem == spec-active || viewItem == spec-tasks-done)",
+          "group": "inline"
+        },
+        {
           "command": "speckit.markCompleted",
           "when": "view == speckit.views.explorer && (viewItem == spec-active || viewItem == spec-tasks-done)",
           "group": "7_modification"
@@ -648,6 +659,10 @@
         },
         {
           "command": "speckit.specs.copyName",
+          "when": "false"
+        },
+        {
+          "command": "speckit.specs.resume",
           "when": "false"
         }
       ]

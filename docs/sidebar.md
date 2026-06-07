@@ -36,6 +36,14 @@ The spec-kit upgrade commands are consolidated behind a single **Upgrade…** ic
 
 The icon is visible when either spec-kit is detected in the workspace or the CLI is installed. All three individual commands remain available from the Command Palette under `SpecKit: Upgrade …`.
 
+## Resume (inline action)
+
+Active specs show an inline **Resume** action (`$(play)`) on hover. Clicking it dispatches `/speckit.companion.resume` for that spec: the pipeline continues from the recorded step — with prior decisions in scope — and the next `/speckit.*` command is dispatched to your configured AI provider. Inside the implement step it continues at the next unchecked task. Resume appears only on active specs (active / tasks-done), not on completed or archived ones, mirroring the lifecycle. Once the dispatched step's capture hook writes state, the sidebar updates the row's step, badge, and last-transition line without a manual refresh.
+
+## Step and last-transition on the row
+
+Each spec row's description shows its **current step** and a one-line **last transition** (e.g. `plan — Plan started · 2h ago`), derived from the canonical append-only `history[]`. Relative time is measured from the most recent history entry, not from when the step started. Hovering shows the same in the tooltip alongside the status. Duplicate-named specs show their parent directory in the description instead, to disambiguate.
+
 ## Right-click and multi-select
 
 Right-click a spec to access **Mark as Completed**, **Archive**, **Reactivate**, **Delete**, **Reveal in File Explorer** (opens the spec's folder in Finder, File Explorer, or the default file manager), **Copy Path**, and **Copy Name**. Menu items reflect the spec's lifecycle group — e.g., "Reactivate" appears only on completed or archived specs, "Mark as Completed" only on active ones.

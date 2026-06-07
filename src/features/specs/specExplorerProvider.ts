@@ -17,6 +17,7 @@ import { resolveSpecDirectories, hasDuplicateNames, deriveChangeRoot, type SpecD
 import { SpecStatuses, WorkflowSteps } from '../../core/constants';
 import { readSpecContextSync } from './specContextManager';
 import { isStepCompleted } from './stepHistoryDerivation';
+import { deriveLastTransition } from './lastTransition';
 import { StepName, STEP_NAMES } from '../../core/types/specContext';
 import { SpecsFilterState } from './specsFilterState';
 import { fuzzyMatch } from './fuzzyMatch';
@@ -668,7 +669,28 @@ class SpecItem extends vscode.TreeItem {
             } else {
                 this.iconPath = new vscode.ThemeIcon('beaker');
             }
-            this.tooltip = `SpecKit Spec: ${label}`;
+            // Surface current step + last transition on the row so the canonical
+            // state is visible without opening the spec. Duplicate-name specs
+            // override description with their parent dir (set by the caller).
+            const lastTransition = deriveLastTransition(specContext);
+            const descParts: string[] = [];
+            if (specContext?.currentStep) {
+                descParts.push(String(specContext.currentStep));
+            }
+            if (lastTransition) {
+                descParts.push(`${lastTransition.label} · ${lastTransition.relative}`);
+            }
+            if (descParts.length > 0) {
+                this.description = descParts.join(' — ');
+            }
+            const tooltipParts = [`SpecKit Spec: ${label}`];
+            if (specContext?.status) {
+                tooltipParts.push(`Status: ${specContext.status}`);
+            }
+            if (lastTransition) {
+                tooltipParts.push(`Last: ${lastTransition.label} (${lastTransition.relative})`);
+            }
+            this.tooltip = tooltipParts.join(' — ');
         } else if (contextValue === 'spec-document') {
             const statusLabel = status === 'complete' ? 'Complete' : status === 'partial' ? 'In Progress' : 'Not Started';
             this.tooltip = `${documentType}: ${specName}/${label} — ${statusLabel}`;

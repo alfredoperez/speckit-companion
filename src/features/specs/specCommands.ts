@@ -254,6 +254,22 @@ export function registerSpecKitCommands(
         })
     );
 
+    // Resume the pipeline from the sidebar — dispatch /speckit.companion.resume
+    // for the spec, which resolves the next step and continues with recorded
+    // decisions in scope. Provider-agnostic via executeSlashCommand.
+    context.subscriptions.push(
+        vscode.commands.registerCommand('speckit.specs.resume', async (item: SpecTreeItem) => {
+            if (!item) return;
+            const relativePath = item.specPath || `specs/${item.label}`;
+            outputChannel.appendLine(`[SpecKit] Resume triggered for: ${relativePath}`);
+            await getAIProvider().executeSlashCommand(
+                `/speckit.companion.resume ${relativePath}`,
+                'SpecKit - Resume',
+                true
+            );
+        })
+    );
+
     // Open source file from sidebar inline action
     context.subscriptions.push(
         vscode.commands.registerCommand('speckit.openSpecSource', async (item: vscode.TreeItem & { fileUri?: vscode.Uri }) => {
