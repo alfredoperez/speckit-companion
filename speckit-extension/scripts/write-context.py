@@ -7,7 +7,9 @@ own precedence, then does a crash-safe read-merge-write of the Companion's
 canonical .spec-context.json:
 
   - preserves every existing/unknown top-level key (read-then-merge)
-  - appends to `transitions` (append-only; never rewritten or shrunk)
+  - appends to the canonical `history[]` (append-only; never rewritten or
+    shrunk), migrating a legacy `transitions[]` array forward so the extension
+    and the VS Code GUI write the same single field
   - writes atomically (temp file + os.replace)
   - emits Companion-canonical values; never the legacy `currentStep: "done"`
 
@@ -198,20 +200,33 @@ def atomic_write(target: Path, ctx: dict) -> None:
         raise
 
 
-def prior_from(transitions: list) -> dict | None:
-    """`from` = prior {step, substep}, or null when there is no prior entry.
+def canonical_log(ctx: dict) -> list:
+    """The append-only lifecycle log. Canonical field is `history`; an older
+    file may still carry the legacy `transitions` name — migrate it forward so
+    both the extension and the VS Code GUI write the same single array."""
+    log = ctx.get("history")
+    if isinstance(log, list):
+        return log
+    legacy = ctx.get("transitions")
+    if isinstance(legacy, list):
+        return legacy
+    return []
 
-    Guards a malformed last entry and normalizes a non-canonical prior step
-    (e.g. legacy "done") to null, which the schema's `from.step` enum permits.
-    """
-    if transitions and isinstance(transitions[-1], dict):
-        last = transitions[-1]
-        prior_step = last.get("step")
-        return {
-            "step": prior_step if prior_step in CANONICAL_STEPS else None,
-            "substep": last.get("substep"),
-        }
-    return None
+
+def commit_log(ctx: dict, log: list) -> None:
+    """Persist the log under the canonical `history` key and drop the legacy
+    `transitions` / derived `stepHistory` keys (the GUI derives stepHistory)."""
+    ctx["history"] = log
+    ctx.pop("transitions", None)
+    ctx.pop("stepHistory", None)
+
+
+def step_from(prev_current: object, step: str) -> dict:
+    """`from` for a step `start` entry — the prior step, or null when there is
+    none or it equals `step` (mirrors the GUI's setStepStarted, which nulls a
+    self-origin so the reader can't misread it as a step completion)."""
+    prior = prev_current if (prev_current in CANONICAL_STEPS and prev_current != step) else None
+    return {"step": prior, "substep": None}
 
 
 def fill_required(ctx: dict, feature_dir: Path, branch: str) -> None:
@@ -270,34 +285,23 @@ def update_context(feature_dir: Path, step: str, status: str, by: str) -> Path |
         )
         return None
 
-    transitions = ctx.get("transitions")
-    if not isinstance(transitions, list):
-        transitions = []
-
-    prior = prior_from(transitions)
+    log = canonical_log(ctx)
+    from_ = step_from(ctx.get("currentStep"), step)
     fill_required(ctx, feature_dir, branch)
 
     ctx["currentStep"] = step
     ctx["status"] = status
     ctx["updated"] = _today()
 
-    step_history = ctx.get("stepHistory")
-    if not isinstance(step_history, dict):
-        step_history = {}
-    entry = step_history.get(step) if isinstance(step_history.get(step), dict) else {}
-    entry.setdefault("startedAt", now)
-    entry["completedAt"] = now
-    step_history[step] = entry
-    ctx["stepHistory"] = step_history
-
-    transitions.append({
+    log.append({
         "step": step,
         "substep": None,
-        "from": prior,
+        "kind": "start",
+        "from": from_,
         "by": by,
         "at": now,
     })
-    ctx["transitions"] = transitions
+    commit_log(ctx, log)
 
     atomic_write(target, ctx)
     return target
@@ -333,11 +337,8 @@ def sync_tasks(feature_dir: Path, tasks_md: Path, final_status: str, by: str) ->
     distinct_all = list(dict.fromkeys(all_ids))
     distinct_done = list(dict.fromkeys(done_ids))
 
-    transitions = ctx.get("transitions")
-    if not isinstance(transitions, list):
-        transitions = []
-
-    already = _journaled_tasks(transitions)
+    log = canonical_log(ctx)
+    already = _journaled_tasks(log)
     fresh = [tid for tid in distinct_done if tid not in already]
 
     fill_required(ctx, feature_dir, branch)
@@ -349,25 +350,26 @@ def sync_tasks(feature_dir: Path, tasks_md: Path, final_status: str, by: str) ->
     pending = [tid for tid in distinct_all if tid not in distinct_done]
     ctx["currentTask"] = (pending[0] if pending else (distinct_done[-1] if distinct_done else None))
 
-    # Per-task entries are substeps of implement (substep = task id). This keeps
-    # the reader from mistaking them for a step-completion boundary (which is a
-    # substep==null self-loop) and keeps dedupeConsecutive from collapsing them.
+    # Per-task entries are substeps of implement (substep = task id, kind=start).
+    # A substep entry can never be read as a step-completion boundary (which is a
+    # substep==null self-loop), and distinct substep names keep dedupeConsecutive
+    # from collapsing them.
     for tid in fresh:
-        prior = prior_from(transitions)
-        transitions.append({
+        log.append({
             "step": "implement",
             "substep": tid,
             "task": tid,
-            "from": prior,
+            "kind": "start",
+            "from": {"step": "implement", "substep": None},
             "by": by,
             "at": _now_iso(),
         })
-    ctx["transitions"] = transitions
+    commit_log(ctx, log)
 
     atomic_write(target, ctx)
     print(
-        f"[companion] Synced {len(fresh)} new task transition(s) "
-        f"({len(done_ids)}/{len(all_ids)} complete) into {target}.",
+        f"[companion] Synced {len(fresh)} new task event(s) "
+        f"({len(distinct_done)}/{len(distinct_all)} complete) into {target}.",
         file=sys.stderr,
     )
     return target

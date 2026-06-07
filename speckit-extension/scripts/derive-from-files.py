@@ -34,7 +34,10 @@ def _infer(feature_dir: Path) -> tuple[str, str] | None:
 
     if tasks_md.is_file():
         all_ids, done_ids = wc.parse_task_markers(tasks_md)
-        if all_ids and len(done_ids) == len(all_ids):
+        # Distinct-id + set-coverage, matching write-context.py sync_tasks, so a
+        # duplicated marker id can't make derive and task-sync disagree on "done".
+        distinct_all = set(all_ids)
+        if distinct_all and set(done_ids) >= distinct_all:
             return "implement", "implemented"
         return "tasks", "ready-to-implement"
     if plan_md.is_file():
@@ -69,30 +72,19 @@ def derive(feature_dir: Path, by: str = "derive") -> Path | None:
     now = wc._now_iso()
     branch = wc._git_branch(wc._repo_root()) or "main"
 
-    transitions = ctx.get("transitions")
-    if not isinstance(transitions, list):
-        transitions = []
-
-    prior = wc.prior_from(transitions)
+    log = wc.canonical_log(ctx)
+    from_ = wc.step_from(ctx.get("currentStep"), step)
     wc.fill_required(ctx, feature_dir, branch)
 
     ctx["currentStep"] = step
     ctx["status"] = status
     ctx["updated"] = wc._today()
 
-    step_history = ctx.get("stepHistory")
-    if not isinstance(step_history, dict):
-        step_history = {}
-    entry = step_history.get(step) if isinstance(step_history.get(step), dict) else {}
-    entry.setdefault("startedAt", now)
-    entry["completedAt"] = now
-    step_history[step] = entry
-    ctx["stepHistory"] = step_history
-
-    transitions.append({
+    log.append({
         "step": step,
         "substep": None,
-        "from": prior,
+        "kind": "start",
+        "from": from_,
         "by": by,
         "at": now,
     })
@@ -101,24 +93,25 @@ def derive(feature_dir: Path, by: str = "derive") -> Path | None:
         all_ids, done_ids = wc.parse_task_markers(feature_dir / "tasks.md")
         distinct_all = list(dict.fromkeys(all_ids))
         distinct_done = list(dict.fromkeys(done_ids))
-        already = wc._journaled_tasks(transitions)
-        # Per-task entries are substeps of implement (substep = task id) so the
-        # reader never reads them as a step-completion boundary.
+        already = wc._journaled_tasks(log)
+        # Per-task entries are substeps of implement (substep = task id, kind=start)
+        # so the reader never reads them as a step-completion boundary.
         for tid in distinct_done:
             if tid in already:
                 continue
-            transitions.append({
+            log.append({
                 "step": "implement",
                 "substep": tid,
                 "task": tid,
-                "from": wc.prior_from(transitions),
+                "kind": "start",
+                "from": {"step": "implement", "substep": None},
                 "by": by,
                 "at": wc._now_iso(),
             })
         pending = [tid for tid in distinct_all if tid not in distinct_done]
         ctx["currentTask"] = (pending[0] if pending else (distinct_done[-1] if distinct_done else None))
 
-    ctx["transitions"] = transitions
+    wc.commit_log(ctx, log)
 
     wc.atomic_write(target, ctx)
     print(

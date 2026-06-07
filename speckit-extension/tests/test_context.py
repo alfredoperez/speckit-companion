@@ -42,14 +42,39 @@ class LifecycleCaptureTests(unittest.TestCase):
     def tearDown(self) -> None:
         self._tmp.cleanup()
 
-    def test_transitions_are_append_only(self) -> None:
+    def test_history_is_append_only(self) -> None:
         wc.update_context(self.fd, "specify", "specified", "extension")
-        n1 = len(_ctx(self.fd)["transitions"])
+        n1 = len(_ctx(self.fd)["history"])
         wc.update_context(self.fd, "plan", "planned", "extension")
-        t2 = _ctx(self.fd)["transitions"]
-        self.assertGreater(len(t2), n1)
-        self.assertEqual(t2[-1]["step"], "plan")
-        self.assertEqual(t2[-1]["from"], {"step": "specify", "substep": None})
+        h2 = _ctx(self.fd)["history"]
+        self.assertGreater(len(h2), n1)
+        self.assertEqual(h2[-1]["step"], "plan")
+        self.assertEqual(h2[-1]["kind"], "start")
+        self.assertEqual(h2[-1]["from"], {"step": "specify", "substep": None})
+
+    def test_writes_canonical_history_not_legacy_keys(self) -> None:
+        wc.update_context(self.fd, "specify", "specified", "extension")
+        ctx = _ctx(self.fd)
+        self.assertIn("history", ctx)
+        self.assertNotIn("transitions", ctx)
+        self.assertNotIn("stepHistory", ctx)
+
+    def test_legacy_transitions_migrated_into_history(self) -> None:
+        # A file written by an older extension carried `transitions[]`; the next
+        # write must fold it into `history[]` and drop the legacy key so the GUI
+        # (which prefers history) and the extension share one array.
+        target = self.fd / ".spec-context.json"
+        target.write_text(json.dumps({
+            "workflow": "speckit", "specName": "x", "branch": "main",
+            "currentStep": "specify", "status": "specified",
+            "transitions": [{"step": "specify", "substep": None, "from": None,
+                             "by": "extension", "at": "2026-01-01T00:00:00.000Z"}],
+        }))
+        wc.update_context(self.fd, "plan", "planned", "extension")
+        ctx = _ctx(self.fd)
+        self.assertNotIn("transitions", ctx)
+        steps = [e["step"] for e in ctx["history"]]
+        self.assertEqual(steps, ["specify", "plan"])  # prior entry preserved + new one
 
     def test_no_backward_clobber(self) -> None:
         wc.update_context(self.fd, "implement", "implemented", "extension")
@@ -73,12 +98,12 @@ class LifecycleCaptureTests(unittest.TestCase):
         )
         tasks_md = self.fd / "tasks.md"
         wc.sync_tasks(self.fd, tasks_md, "implemented", "extension")
-        first = [t.get("task") for t in _ctx(self.fd)["transitions"] if t.get("task")]
+        first = [t.get("task") for t in _ctx(self.fd)["history"] if t.get("task")]
         self.assertEqual(first, ["T001", "T002"])
         self.assertEqual(_ctx(self.fd)["status"], "implementing")
         self.assertEqual(_ctx(self.fd)["currentTask"], "T003")
         wc.sync_tasks(self.fd, tasks_md, "implemented", "extension")
-        second = [t.get("task") for t in _ctx(self.fd)["transitions"] if t.get("task")]
+        second = [t.get("task") for t in _ctx(self.fd)["history"] if t.get("task")]
         self.assertEqual(second, first)
 
     def test_per_task_completes_when_all_checked(self) -> None:
@@ -94,7 +119,7 @@ class LifecycleCaptureTests(unittest.TestCase):
         tasks_md = self.fd / "tasks.md"
         tasks_md.write_text(_tasks("- [x] **T001** a", "- [x] **T002** b", "- [ ] **T003** c"))
         wc.sync_tasks(self.fd, tasks_md, "implemented", "extension")
-        for t in _ctx(self.fd)["transitions"]:
+        for t in _ctx(self.fd)["history"]:
             if t.get("task"):
                 self.assertEqual(t["substep"], t["task"])
                 self.assertIsNotNone(t["substep"])
@@ -103,7 +128,7 @@ class LifecycleCaptureTests(unittest.TestCase):
         tasks_md = self.fd / "tasks.md"
         tasks_md.write_text(_tasks("- [x] **T001** a", "- [x] **T001** a (re-listed)"))
         wc.sync_tasks(self.fd, tasks_md, "implemented", "extension")
-        tasks = [t.get("task") for t in _ctx(self.fd)["transitions"] if t.get("task")]
+        tasks = [t.get("task") for t in _ctx(self.fd)["history"] if t.get("task")]
         self.assertEqual(tasks, ["T001"])
 
 
@@ -133,9 +158,22 @@ class DeriveRoundTripTests(unittest.TestCase):
         ctx = _ctx(self.fd)
         self.assertEqual(ctx["currentStep"], "implement")
         self.assertEqual(ctx["status"], "implemented")
-        tasks = [t.get("task") for t in ctx["transitions"] if t.get("task")]
+        tasks = [t.get("task") for t in ctx["history"] if t.get("task")]
         self.assertEqual(tasks, ["T001", "T002"])
-        self.assertTrue(any(t.get("by") == "derive" for t in ctx["transitions"]))
+        self.assertTrue(any(t.get("by") == "derive" for t in ctx["history"]))
+
+    def test_derive_distinct_id_coverage_matches_sync(self) -> None:
+        # A duplicated checked id + a genuinely pending id is NOT done — derive
+        # must use the same distinct-id coverage as sync_tasks.
+        (self.fd / "spec.md").write_text("# Spec\n")
+        (self.fd / "plan.md").write_text("# Plan\n")
+        (self.fd / "tasks.md").write_text(
+            _tasks("- [x] **T001** a", "- [x] **T001** a (dup)", "- [ ] **T002** b")
+        )
+        derive_mod.derive(self.fd)
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["currentStep"], "tasks")
+        self.assertEqual(ctx["status"], "ready-to-implement")
 
     def test_derive_spec_only(self) -> None:
         (self.fd / "spec.md").write_text("# Spec\n")

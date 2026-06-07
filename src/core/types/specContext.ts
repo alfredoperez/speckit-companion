@@ -74,7 +74,7 @@ export interface HistoryEntryFrom {
     substep: string | null;
 }
 
-export type HistoryEntryBy = 'extension' | 'user' | 'cli' | 'ai';
+export type HistoryEntryBy = 'extension' | 'user' | 'cli' | 'ai' | 'derive';
 
 /** Discriminates between a step/substep start and a step/substep completion. */
 export type HistoryEntryKind = 'start' | 'complete';

@@ -14,9 +14,12 @@ Full lifecycle capture + derive-from-files fallback — Step 2 of the v1 plan. S
 
 ### Added
 - Full lifecycle capture: new `after_plan`, `after_tasks`, and `after_implement` lifecycle hooks (all auto-running, `optional: false`), each backed by a per-step capture command (`speckit.companion.capture-plan` / `-tasks` / `-implement`) that reuses `write-context.py`.
-- Per-task journaling: `write-context.py` gains a `--tasks-file` task-sync mode that appends one idempotent transition per completed `- [x] **T###**` marker; records `implementing` until all tasks are checked, then `implemented`.
+- Per-task journaling: `write-context.py` gains a `--tasks-file` task-sync mode that appends one idempotent `history[]` entry per completed `- [x] **T###**` marker (as an implement substep, so the viewer never reads it as a step completion); records `implementing` until all tasks are checked, then `implemented`.
 - New `derive-from-files.py` (stdlib-only) reconstructs `.spec-context.json` from on-disk artifacts + git when a hook never fired, honoring the same no-backward-clobber guard and emitting the same canonical schema (`by: "derive"`).
-- Added a stdlib `unittest` regression suite (append-only transitions, no-backward-clobber, unknown-key preservation, derive round-trip).
+- Added a stdlib `unittest` regression suite (append-only history, no-backward-clobber, unknown-key preservation, per-task idempotency/substep shape, legacy-`transitions`→`history` migration, derive round-trip).
+
+### Changed
+- The writer now appends to the canonical `history[]` field (with explicit `kind`) instead of the legacy `transitions[]`, and drops the derived `stepHistory` key — matching exactly what the VS Code GUI writes/reads. A pre-existing `transitions[]` array is migrated forward into `history[]` on the next write, so the extension and the GUI never deviate on field name.
 
 ## [0.1.0] - 2026-05-25
 
