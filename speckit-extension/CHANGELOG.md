@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-07
+
+Full lifecycle capture + derive-from-files fallback — Step 2 of the v1 plan. See [ROADMAP.md](./ROADMAP.md).
+
+### Added
+- Full lifecycle capture: new `after_plan`, `after_tasks`, and `after_implement` lifecycle hooks (all auto-running, `optional: false`), each backed by a per-step capture command (`speckit.companion.capture-plan` / `-tasks` / `-implement`) that reuses `write-context.py`.
+- Per-task journaling: `write-context.py` gains a `--tasks-file` task-sync mode that appends one idempotent transition per completed `- [x] **T###**` marker; records `implementing` until all tasks are checked, then `implemented`.
+- New `derive-from-files.py` (stdlib-only) reconstructs `.spec-context.json` from on-disk artifacts + git when a hook never fired, honoring the same no-backward-clobber guard and emitting the same canonical schema (`by: "derive"`).
+- Added a stdlib `unittest` regression suite (append-only transitions, no-backward-clobber, unknown-key preservation, derive round-trip).
+
 ## [0.1.0] - 2026-05-25
 
 Foundation + state-write spike — the v1 first slice (PR #173). See [ROADMAP.md](./ROADMAP.md).

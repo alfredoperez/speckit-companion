@@ -172,21 +172,93 @@ def _is_more_advanced(ctx: dict, step: str) -> bool:
     return cur in STEP_ORDER and STEP_ORDER[cur] > STEP_ORDER[step]
 
 
-def update_context(feature_dir: Path, step: str, status: str, by: str) -> Path | None:
-    target = feature_dir / ".spec-context.json"
-    now = _now_iso()
-    root = _repo_root()
-    branch = _git_branch(root) or "main"
-
+def read_ctx(target: Path) -> dict:
+    """Read the existing context, tolerating absence or corruption."""
     if target.is_file():
         try:
             ctx = json.loads(target.read_text(encoding="utf-8"))
-            if not isinstance(ctx, dict):
-                ctx = {}
+            if isinstance(ctx, dict):
+                return ctx
         except (json.JSONDecodeError, OSError):
-            ctx = {}
-    else:
-        ctx = {}
+            pass
+    return {}
+
+
+def atomic_write(target: Path, ctx: dict) -> None:
+    """Crash-safe write: serialize to a temp file, then rename over the target."""
+    tmp = target.with_suffix(target.suffix + ".tmp")
+    try:
+        tmp.write_text(json.dumps(ctx, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        os.replace(tmp, target)
+    except OSError:
+        try:
+            tmp.unlink(missing_ok=True)  # don't litter on a failed write
+        except OSError:
+            pass
+        raise
+
+
+def prior_from(transitions: list) -> dict | None:
+    """`from` = prior {step, substep}, or null when there is no prior entry.
+
+    Guards a malformed last entry and normalizes a non-canonical prior step
+    (e.g. legacy "done") to null, which the schema's `from.step` enum permits.
+    """
+    if transitions and isinstance(transitions[-1], dict):
+        last = transitions[-1]
+        prior_step = last.get("step")
+        return {
+            "step": prior_step if prior_step in CANONICAL_STEPS else None,
+            "substep": last.get("substep"),
+        }
+    return None
+
+
+def fill_required(ctx: dict, feature_dir: Path, branch: str) -> None:
+    """Set required keys only when missing (read-then-merge preserves the rest)."""
+    ctx.setdefault("workflow", "speckit")
+    ctx.setdefault("specName", _spec_name(feature_dir))
+    ctx.setdefault("branch", branch)
+
+
+COMPLETED_TASK_RE = re.compile(r"^\s*[-*]\s*\[[xX]\]\s*\*\*(T\d+)")
+PENDING_TASK_RE = re.compile(r"^\s*[-*]\s*\[\s\]\s*\*\*(T\d+)")
+
+
+def parse_task_markers(tasks_md: Path) -> tuple[list[str], list[str]]:
+    """Return (all_task_ids, completed_task_ids) in document order from tasks.md."""
+    all_ids: list[str] = []
+    done_ids: list[str] = []
+    try:
+        for line in tasks_md.read_text(encoding="utf-8").splitlines():
+            m = COMPLETED_TASK_RE.match(line)
+            if m:
+                all_ids.append(m.group(1))
+                done_ids.append(m.group(1))
+                continue
+            m = PENDING_TASK_RE.match(line)
+            if m:
+                all_ids.append(m.group(1))
+    except OSError:
+        pass
+    return all_ids, done_ids
+
+
+def _journaled_tasks(transitions: list) -> set[str]:
+    """Task ids already recorded as per-task transitions (idempotency key)."""
+    return {
+        t["task"]
+        for t in transitions
+        if isinstance(t, dict) and isinstance(t.get("task"), str)
+    }
+
+
+def update_context(feature_dir: Path, step: str, status: str, by: str) -> Path | None:
+    target = feature_dir / ".spec-context.json"
+    now = _now_iso()
+    branch = _git_branch(_repo_root()) or "main"
+
+    ctx = read_ctx(target)
 
     # Never drag a more-advanced (e.g. shipped) spec backward. Leave it fully
     # intact — this is the bug the schema reconciliation exists to prevent.
@@ -202,23 +274,8 @@ def update_context(feature_dir: Path, step: str, status: str, by: str) -> Path |
     if not isinstance(transitions, list):
         transitions = []
 
-    # `from` = prior {step, substep}, or null on first write. Guard against a
-    # malformed last entry and normalize a non-canonical prior step (e.g. legacy
-    # "done") to null, which the schema's `from.step` enum permits.
-    if transitions and isinstance(transitions[-1], dict):
-        last = transitions[-1]
-        prior_step = last.get("step")
-        prior = {
-            "step": prior_step if prior_step in CANONICAL_STEPS else None,
-            "substep": last.get("substep"),
-        }
-    else:
-        prior = None
-
-    # Required-set defaults only when missing (read-then-merge preserves the rest).
-    ctx.setdefault("workflow", "speckit")
-    ctx.setdefault("specName", _spec_name(feature_dir))
-    ctx.setdefault("branch", branch)
+    prior = prior_from(transitions)
+    fill_required(ctx, feature_dir, branch)
 
     ctx["currentStep"] = step
     ctx["status"] = status
@@ -242,16 +299,77 @@ def update_context(feature_dir: Path, step: str, status: str, by: str) -> Path |
     })
     ctx["transitions"] = transitions
 
-    tmp = target.with_suffix(target.suffix + ".tmp")
-    try:
-        tmp.write_text(json.dumps(ctx, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        os.replace(tmp, target)
-    except OSError:
-        try:
-            tmp.unlink(missing_ok=True)  # don't litter on a failed write
-        except OSError:
-            pass
-        raise
+    atomic_write(target, ctx)
+    return target
+
+
+def sync_tasks(feature_dir: Path, tasks_md: Path, final_status: str, by: str) -> Path | None:
+    """Per-task journaling for the implement step.
+
+    Reads completed task markers in tasks.md and appends one transition per
+    newly-completed task (idempotent — task ids already journaled are skipped).
+    Sets currentStep=implement, currentTask to the last completed (or next
+    pending) task, and status to `final_status` once every marker is checked,
+    else "implementing". Honors the same no-backward-clobber guard.
+    """
+    target = feature_dir / ".spec-context.json"
+    branch = _git_branch(_repo_root()) or "main"
+    ctx = read_ctx(target)
+
+    if ctx and _is_more_advanced(ctx, "implement"):
+        print(
+            f"[companion] {target} already at currentStep={ctx.get('currentStep')} / "
+            f"status={ctx.get('status')}; not regressing to implement.",
+            file=sys.stderr,
+        )
+        return None
+
+    all_ids, done_ids = parse_task_markers(tasks_md)
+    if not all_ids:
+        print(f"[companion] No task markers found in {tasks_md}; nothing to sync.", file=sys.stderr)
+        return None
+
+    # Distinct, order-preserving — a marker id repeated in tasks.md is one task.
+    distinct_all = list(dict.fromkeys(all_ids))
+    distinct_done = list(dict.fromkeys(done_ids))
+
+    transitions = ctx.get("transitions")
+    if not isinstance(transitions, list):
+        transitions = []
+
+    already = _journaled_tasks(transitions)
+    fresh = [tid for tid in distinct_done if tid not in already]
+
+    fill_required(ctx, feature_dir, branch)
+    ctx["currentStep"] = "implement"
+    all_done = bool(distinct_all) and set(distinct_done) >= set(distinct_all)
+    ctx["status"] = final_status if all_done else "implementing"
+    ctx["updated"] = _today()
+
+    pending = [tid for tid in distinct_all if tid not in distinct_done]
+    ctx["currentTask"] = (pending[0] if pending else (distinct_done[-1] if distinct_done else None))
+
+    # Per-task entries are substeps of implement (substep = task id). This keeps
+    # the reader from mistaking them for a step-completion boundary (which is a
+    # substep==null self-loop) and keeps dedupeConsecutive from collapsing them.
+    for tid in fresh:
+        prior = prior_from(transitions)
+        transitions.append({
+            "step": "implement",
+            "substep": tid,
+            "task": tid,
+            "from": prior,
+            "by": by,
+            "at": _now_iso(),
+        })
+    ctx["transitions"] = transitions
+
+    atomic_write(target, ctx)
+    print(
+        f"[companion] Synced {len(fresh)} new task transition(s) "
+        f"({len(done_ids)}/{len(all_ids)} complete) into {target}.",
+        file=sys.stderr,
+    )
     return target
 
 
@@ -261,11 +379,16 @@ def main() -> int:
     parser.add_argument("--status", default="specified")
     parser.add_argument("--by", default="extension")
     parser.add_argument("--feature-dir", default=None)
+    parser.add_argument(
+        "--tasks-file", default=None,
+        help="Per-task journaling: append a transition per completed marker in this tasks.md.",
+    )
     args = parser.parse_args()
 
     # Best-effort guard: a non-canonical step is a no-op, never a host failure.
-    # Terminal state belongs in `status`, not `currentStep`.
-    if args.step == "done" or args.step not in CANONICAL_STEPS:
+    # Terminal state belongs in `status`, not `currentStep`. Skipped in task-sync
+    # mode, which always operates on the implement step.
+    if not args.tasks_file and (args.step == "done" or args.step not in CANONICAL_STEPS):
         print(
             f"[companion] Skipping: '{args.step}' is not a canonical currentStep "
             f"({', '.join(sorted(CANONICAL_STEPS))}).",
@@ -286,12 +409,21 @@ def main() -> int:
 
     # Never let a bookkeeping write fail the host spec-kit command.
     try:
-        target = update_context(feature_dir, args.step, args.status, args.by)
+        if args.tasks_file:
+            tasks_md = Path(args.tasks_file)
+            if not tasks_md.is_absolute():
+                tasks_md = root / tasks_md
+            # Task-sync operates on the implement step; the global --status default
+            # ("specified") would be an incoherent terminal status here.
+            final_status = args.status if args.status != parser.get_default("status") else "implemented"
+            target = sync_tasks(feature_dir, tasks_md, final_status, args.by)
+        else:
+            target = update_context(feature_dir, args.step, args.status, args.by)
     except Exception as exc:  # noqa: BLE001 - best-effort, swallow + report
         print(f"[companion] Warning: skipped .spec-context.json write: {exc}", file=sys.stderr)
         return 0
 
-    if target is not None:
+    if target is not None and not args.tasks_file:
         print(f"[companion] Updated {target} (currentStep={args.step}, status={args.status}, by={args.by})")
     return 0
 

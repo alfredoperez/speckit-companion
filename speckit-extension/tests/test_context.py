@@ -1,0 +1,168 @@
+#!/usr/bin/env python3
+"""Regression tests for the companion lifecycle capture + derive fallback.
+
+Stdlib `unittest` only — run with:
+
+    python3 -m unittest discover speckit-extension/tests
+
+Covers the write contract the GUI depends on: append-only transitions,
+no-backward-clobber, unknown-key preservation, per-task idempotency, and a
+derive-from-files round-trip.
+"""
+
+from __future__ import annotations
+
+import importlib
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
+sys.path.insert(0, str(SCRIPTS))
+wc = importlib.import_module("write-context")
+derive_mod = importlib.import_module("derive-from-files")
+
+
+def _ctx(feature_dir: Path) -> dict:
+    return json.loads((feature_dir / ".spec-context.json").read_text())
+
+
+def _tasks(*lines: str) -> str:
+    return "\n".join(lines) + "\n"
+
+
+class LifecycleCaptureTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.fd = Path(self._tmp.name) / "specs" / "_zzz-test"
+        self.fd.mkdir(parents=True)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_transitions_are_append_only(self) -> None:
+        wc.update_context(self.fd, "specify", "specified", "extension")
+        n1 = len(_ctx(self.fd)["transitions"])
+        wc.update_context(self.fd, "plan", "planned", "extension")
+        t2 = _ctx(self.fd)["transitions"]
+        self.assertGreater(len(t2), n1)
+        self.assertEqual(t2[-1]["step"], "plan")
+        self.assertEqual(t2[-1]["from"], {"step": "specify", "substep": None})
+
+    def test_no_backward_clobber(self) -> None:
+        wc.update_context(self.fd, "implement", "implemented", "extension")
+        before = _ctx(self.fd)
+        result = wc.update_context(self.fd, "specify", "specified", "extension")
+        self.assertIsNone(result)
+        self.assertEqual(_ctx(self.fd), before)
+
+    def test_unknown_keys_preserved(self) -> None:
+        wc.update_context(self.fd, "specify", "specified", "extension")
+        target = self.fd / ".spec-context.json"
+        ctx = _ctx(self.fd)
+        ctx["reviewComments"] = [{"id": "rc1", "comment": "keep me"}]
+        target.write_text(json.dumps(ctx))
+        wc.update_context(self.fd, "plan", "planned", "extension")
+        self.assertEqual(_ctx(self.fd)["reviewComments"], [{"id": "rc1", "comment": "keep me"}])
+
+    def test_per_task_idempotency(self) -> None:
+        (self.fd / "tasks.md").write_text(
+            _tasks("- [x] **T001** a", "- [x] **T002** b", "- [ ] **T003** c")
+        )
+        tasks_md = self.fd / "tasks.md"
+        wc.sync_tasks(self.fd, tasks_md, "implemented", "extension")
+        first = [t.get("task") for t in _ctx(self.fd)["transitions"] if t.get("task")]
+        self.assertEqual(first, ["T001", "T002"])
+        self.assertEqual(_ctx(self.fd)["status"], "implementing")
+        self.assertEqual(_ctx(self.fd)["currentTask"], "T003")
+        wc.sync_tasks(self.fd, tasks_md, "implemented", "extension")
+        second = [t.get("task") for t in _ctx(self.fd)["transitions"] if t.get("task")]
+        self.assertEqual(second, first)
+
+    def test_per_task_completes_when_all_checked(self) -> None:
+        tasks_md = self.fd / "tasks.md"
+        tasks_md.write_text(_tasks("- [x] **T001** a", "- [x] **T002** b"))
+        wc.sync_tasks(self.fd, tasks_md, "implemented", "extension")
+        self.assertEqual(_ctx(self.fd)["status"], "implemented")
+
+    def test_per_task_entries_are_substeps_not_step_completions(self) -> None:
+        # A substep==null transition whose from.step==step reads as a step
+        # COMPLETION in the viewer — per-task entries must never look like that,
+        # or the implement step renders done while still in flight.
+        tasks_md = self.fd / "tasks.md"
+        tasks_md.write_text(_tasks("- [x] **T001** a", "- [x] **T002** b", "- [ ] **T003** c"))
+        wc.sync_tasks(self.fd, tasks_md, "implemented", "extension")
+        for t in _ctx(self.fd)["transitions"]:
+            if t.get("task"):
+                self.assertEqual(t["substep"], t["task"])
+                self.assertIsNotNone(t["substep"])
+
+    def test_duplicate_marker_id_yields_one_transition(self) -> None:
+        tasks_md = self.fd / "tasks.md"
+        tasks_md.write_text(_tasks("- [x] **T001** a", "- [x] **T001** a (re-listed)"))
+        wc.sync_tasks(self.fd, tasks_md, "implemented", "extension")
+        tasks = [t.get("task") for t in _ctx(self.fd)["transitions"] if t.get("task")]
+        self.assertEqual(tasks, ["T001"])
+
+
+class DeriveRoundTripTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.fd = Path(self._tmp.name) / "specs" / "_zzz-derive"
+        self.fd.mkdir(parents=True)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_derive_partial_tasks(self) -> None:
+        (self.fd / "spec.md").write_text("# Spec\n")
+        (self.fd / "plan.md").write_text("# Plan\n")
+        (self.fd / "tasks.md").write_text(_tasks("- [x] **T001** a", "- [ ] **T002** b"))
+        derive_mod.derive(self.fd)
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["currentStep"], "tasks")
+        self.assertEqual(ctx["status"], "ready-to-implement")
+
+    def test_derive_all_tasks_done(self) -> None:
+        (self.fd / "spec.md").write_text("# Spec\n")
+        (self.fd / "plan.md").write_text("# Plan\n")
+        (self.fd / "tasks.md").write_text(_tasks("- [x] **T001** a", "- [x] **T002** b"))
+        derive_mod.derive(self.fd)
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["currentStep"], "implement")
+        self.assertEqual(ctx["status"], "implemented")
+        tasks = [t.get("task") for t in ctx["transitions"] if t.get("task")]
+        self.assertEqual(tasks, ["T001", "T002"])
+        self.assertTrue(any(t.get("by") == "derive" for t in ctx["transitions"]))
+
+    def test_derive_spec_only(self) -> None:
+        (self.fd / "spec.md").write_text("# Spec\n")
+        derive_mod.derive(self.fd)
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["currentStep"], "specify")
+        self.assertEqual(ctx["status"], "specified")
+
+    def test_derive_round_trip_after_deleting_state(self) -> None:
+        (self.fd / "spec.md").write_text("# Spec\n")
+        (self.fd / "plan.md").write_text("# Plan\n")
+        (self.fd / "tasks.md").write_text(_tasks("- [x] **T001** a", "- [x] **T002** b"))
+        wc.sync_tasks(self.fd, self.fd / "tasks.md", "implemented", "extension")
+        (self.fd / ".spec-context.json").unlink()
+        derive_mod.derive(self.fd)
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["currentStep"], "implement")
+        self.assertEqual(ctx["status"], "implemented")
+
+    def test_derive_does_not_regress_terminal(self) -> None:
+        (self.fd / "spec.md").write_text("# Spec\n")
+        wc.update_context(self.fd, "implement", "implemented", "extension")
+        before = _ctx(self.fd)
+        result = derive_mod.derive(self.fd)
+        self.assertIsNone(result)
+        self.assertEqual(_ctx(self.fd), before)
+
+
+if __name__ == "__main__":
+    unittest.main()
