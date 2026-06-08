@@ -3,10 +3,11 @@ schema_version: "1.0"
 extension:
   id: companion
   name: "SpecKit Companion"
-  version: "0.1.0"
-  description: "Optional workflow enhancements for SpecKit Companion — surfaces live spec-driven progress in the VS Code companion and layers on SDD's pipeline, living specs, and auto-mode"
+  version: "0.2.0"
+  description: "Live spec-driven progress for SpecKit Companion — lifecycle capture, status, and resume."
   author: alfredoperez
   repository: https://github.com/alfredoperez/speckit-companion
+  homepage: https://github.com/alfredoperez/speckit-companion/tree/main/speckit-extension
   license: MIT
 
 requires:
