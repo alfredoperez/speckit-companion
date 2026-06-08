@@ -85,6 +85,30 @@ describe('buildPrompt', () => {
             expect(out).toContain('never write "None"/"N/A"');
         });
 
+        it('instructs per-task journaling for the implement step (real cadence, not one burst)', () => {
+            const out = buildPrompt({
+                command: '/speckit.implement x',
+                step: 'implement',
+                specDir: 'specs/001-demo',
+            });
+            expect(out).toContain('PER-TASK JOURNALING (implement)');
+            // entry carries both substep and task so the end-of-step hook dedups it
+            expect(out).toContain('"substep": "<TaskID>", "task": "<TaskID>"');
+            expect(out).toContain('Do NOT batch them at the end');
+        });
+
+        it('does NOT add per-task journaling to non-implement steps', () => {
+            for (const step of ['specify', 'plan', 'tasks', 'analyze'] as const) {
+                const out = buildPrompt({ command: 'x', step, specDir: 'specs/001-demo' });
+                expect(out).not.toContain('PER-TASK JOURNALING');
+            }
+        });
+
+        it('includes per-task journaling in the multi-step lifecycle prompt', () => {
+            const out = buildLifecyclePrompt('/sdd:auto x', 'specs/001-demo');
+            expect(out).toContain('PER-TASK JOURNALING (implement)');
+        });
+
         it('returns raw command when step is unknown', () => {
             const out = buildPrompt({
                 command: '/speckit.unknown',

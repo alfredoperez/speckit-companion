@@ -32,6 +32,12 @@ provides:
     - name: speckit.companion.capture-implement
       file: commands/speckit.companion.capture-implement.md
       description: "Capture per-task implement progress (currentStep=implement) into .spec-context.json"
+    - name: speckit.companion.status
+      file: commands/speckit.companion.status.md
+      description: "Report the active spec's current step, status, decisions, and next action from .spec-context.json"
+    - name: speckit.companion.resume
+      file: commands/speckit.companion.resume.md
+      description: "Resume the pipeline from the recorded step with decisions in scope, dispatching the next command"
 
 hooks:
   after_specify:

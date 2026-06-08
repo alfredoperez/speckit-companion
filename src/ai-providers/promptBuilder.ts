@@ -136,6 +136,17 @@ const DONE_PHRASE_BY_STEP: Record<PromptStep, string> = {
     implement: 'Done implementing',
 };
 
+// Implement journals per task, not just at step end. The end-of-step extension
+// hook (`write-context.py --tasks-file`) reconciles anything missed, deduped on
+// the `task` id — so live entries that carry `task` make that sync a no-op
+// backstop. Writing them as each task finishes is what gives the activity log
+// real per-task timing instead of one end-of-run burst.
+const PER_TASK_JOURNALING = [
+    'PER-TASK JOURNALING (implement): as you finish each task in tasks.md — at the moment you mark its `- [x] **<TaskID>**` — append a history entry',
+    '    { "step": "implement", "substep": "<TaskID>", "task": "<TaskID>", "kind": "start", "by": "ai", "at": <date -u output> }',
+    'in that SAME write. One entry per task, stamped via `date -u` when you actually complete it. Do NOT batch them at the end — the per-task timing is the point. Include the `task` field so the end-of-step extension hook treats already-journaled tasks as a no-op (it dedupes on `task`).',
+].join('\n');
+
 function renderPreamble(step: PromptStep, specDir: string): string {
     const substepsList = CANONICAL_SUBSTEPS[step];
     const substepsLine = substepsList.length === 0
@@ -157,6 +168,7 @@ function renderPreamble(step: PromptStep, specDir: string): string {
         `1.5. When advancing from a previous step: flip the previous step's status to its completed form before writing the new step.`,
         '',
         substepsLine,
+        ...(step === 'implement' ? ['', PER_TASK_JOURNALING] : []),
         '',
         '╔══════════════════════════════════════════════════════════════════╗',
         '║  MANDATORY FINAL WRITE — DO THIS BEFORE YOUR TURN ENDS          ║',
@@ -189,6 +201,8 @@ function renderLifecycleBody(target: string, dispatchUtc: string): string {
         '1. When you START a step on your own initiative (mid-run, not the initial seed): set currentStep = "<step>" and status = in-progress form. Append a history entry { step: "<step>", substep: null, kind: "start", from, by: "ai", at: <real timestamp from `date -u`> }.',
         '2. When you FINISH that step: flip status = completed form. Append a completion history entry { step: "<step>", substep: null, kind: "complete", by: "ai", at: <real timestamp from `date -u`> } — no `from` field on complete entries. This is what clears the in-flight ring on the tab.',
         '3. Append a history entry for each substep boundary too (`by: "ai"`, real timestamp).',
+        '',
+        PER_TASK_JOURNALING,
         '',
         'Do NOT preemptively write a start-entry for the next step at completion time. The start-entry must coincide with you actually beginning that step (item 1 above), not with you finishing the previous one. Writing { step: "<next>", from: { step: "<this>" } } as part of the completion write produces a phantom "Generating <next>…" state in the viewer when in fact no one is generating anything.',
         '',
