@@ -21,7 +21,7 @@ implement step it continues at the next unchecked task.
 1. Resolve the next action from the repository root:
 
    ```bash
-   python3 speckit-extension/scripts/status-context.py
+   python3 .specify/extensions/companion/scripts/status-context.py
    ```
 
    (Pass `--feature-dir specs/<NNN>-<slug>` when you already know it.) The script

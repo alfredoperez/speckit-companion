@@ -18,7 +18,7 @@ Summarize the active feature's position in the spec-driven pipeline so you can s
 Run the resolver from the repository root:
 
 ```bash
-python3 speckit-extension/scripts/status-context.py
+python3 .specify/extensions/companion/scripts/status-context.py
 ```
 
 The script resolves the active feature directory on its own, in this order:
@@ -28,7 +28,7 @@ The script resolves the active feature directory on its own, in this order:
 Pass the directory explicitly when you already know it:
 
 ```bash
-python3 speckit-extension/scripts/status-context.py --feature-dir specs/<NNN>-<slug>
+python3 .specify/extensions/companion/scripts/status-context.py --feature-dir specs/<NNN>-<slug>
 ```
 
 The script reads `.spec-context.json`. When that file is missing or malformed, it

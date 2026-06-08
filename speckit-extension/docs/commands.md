@@ -26,7 +26,7 @@ The first command. It carries no business logic itself — it resolves the activ
 **What the agent runs:**
 
 ```bash
-python3 speckit-extension/scripts/write-context.py --step specify --status specified --by extension
+python3 .specify/extensions/companion/scripts/write-context.py --step specify --status specified --by extension
 ```
 
 **Flags** (`scripts/write-context.py`):
@@ -48,7 +48,7 @@ Runs after `/speckit.plan`. Resolves the active feature and records plan complet
 **What the agent runs:**
 
 ```bash
-python3 speckit-extension/scripts/write-context.py --step plan --status planned --by extension
+python3 .specify/extensions/companion/scripts/write-context.py --step plan --status planned --by extension
 ```
 
 ## `speckit.companion.capture-tasks`
@@ -58,7 +58,7 @@ Runs after `/speckit.tasks`. Resolves the active feature and records tasks compl
 **What the agent runs:**
 
 ```bash
-python3 speckit-extension/scripts/write-context.py --step tasks --status ready-to-implement --by extension
+python3 .specify/extensions/companion/scripts/write-context.py --step tasks --status ready-to-implement --by extension
 ```
 
 ## `speckit.companion.capture-implement`
@@ -70,37 +70,37 @@ Runs after `/speckit.implement` in task-sync mode: it appends one transition per
 **What the agent runs:**
 
 ```bash
-python3 speckit-extension/scripts/write-context.py --step implement --status implemented --by extension --tasks-file specs/<NNN>-<slug>/tasks.md
+python3 .specify/extensions/companion/scripts/write-context.py --step implement --status implemented --by extension --tasks-file specs/<NNN>-<slug>/tasks.md
 ```
 
 ## Derive-from-files fallback
 
-`speckit-extension/scripts/derive-from-files.py` reconstructs `.spec-context.json` from on-disk artifacts when a hook never fired. Stdlib-only; reuses `write-context.py`'s feature-dir resolution and its no-backward-clobber guard, so it never drags an already-advanced or terminal spec backward. It writes the same canonical schema, tagged `by: "derive"`.
+`.specify/extensions/companion/scripts/derive-from-files.py` reconstructs `.spec-context.json` from on-disk artifacts when a hook never fired. Stdlib-only; reuses `write-context.py`'s feature-dir resolution and its no-backward-clobber guard, so it never drags an already-advanced or terminal spec backward. It writes the same canonical schema, tagged `by: "derive"`.
 
 It infers the lifecycle from what's present: `spec.md` → `specify`/`specified`, `plan.md` → `plan`/`planned`, `tasks.md` → `tasks`/`ready-to-implement`, and all task markers checked → `implement`/`implemented`, plus git as a signal.
 
 **Invocation:**
 
 ```bash
-python3 speckit-extension/scripts/derive-from-files.py
+python3 .specify/extensions/companion/scripts/derive-from-files.py
 # or target an explicit dir:
-python3 speckit-extension/scripts/derive-from-files.py --feature-dir specs/<NNN>-<slug>
+python3 .specify/extensions/companion/scripts/derive-from-files.py --feature-dir specs/<NNN>-<slug>
 ```
 
 See [how-it-works.md](./how-it-works.md) for what the writer guarantees (atomic, append-only, no-regress) and the canonical schema.
 
 ## Read commands: status & resume
 
-Two user-invokable commands turn the captured state into something actionable. Both are **read-only** with respect to `.spec-context.json` (resume writes state only indirectly, via the `after_*` hook of the command it dispatches). Both run `speckit-extension/scripts/status-context.py`, which reads the canonical state — or derives it from on-disk files when the state file is missing/malformed (`source: derived`) — and emits a human summary plus a final machine line `RESOLUTION: { … }`.
+Two user-invokable commands turn the captured state into something actionable. Both are **read-only** with respect to `.spec-context.json` (resume writes state only indirectly, via the `after_*` hook of the command it dispatches). Both run `.specify/extensions/companion/scripts/status-context.py`, which reads the canonical state — or derives it from on-disk files when the state file is missing/malformed (`source: derived`) — and emits a human summary plus a final machine line `RESOLUTION: { … }`.
 
 ### `speckit.companion.status`
 
 Prints the active spec's current step, status, recorded `decisions[]`, and the next action/command. Falls back to file-derivation when no state file exists.
 
 ```bash
-python3 speckit-extension/scripts/status-context.py
+python3 .specify/extensions/companion/scripts/status-context.py
 # or target an explicit dir:
-python3 speckit-extension/scripts/status-context.py --feature-dir specs/<NNN>-<slug>
+python3 .specify/extensions/companion/scripts/status-context.py --feature-dir specs/<NNN>-<slug>
 ```
 
 ### `speckit.companion.resume`
