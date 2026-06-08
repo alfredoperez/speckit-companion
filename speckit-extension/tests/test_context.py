@@ -237,6 +237,7 @@ class StatusResolveTests(unittest.TestCase):
 
     def test_reads_recorded_state_and_decisions(self) -> None:
         (self.fd / "spec.md").write_text("# Spec\n")
+        (self.fd / "plan.md").write_text("# Plan\n")  # artifacts agree with recorded plan/planned
         wc.update_context(self.fd, "plan", "planned", "extension")
         ctx = _ctx(self.fd)
         ctx["decisions"] = ["Use the existing dispatch path", "No new schema field"]
@@ -262,8 +263,10 @@ class StatusResolveTests(unittest.TestCase):
 
     def test_in_progress_finishes_current_step(self) -> None:
         (self.fd / "spec.md").write_text("# Spec\n")
+        (self.fd / "plan.md").write_text("# Plan\n")  # artifact present so FR-011 keeps the in-progress plan state
         wc.update_context(self.fd, "plan", "planning", "extension")
         res = status_mod.resolve(self.fd)
+        self.assertEqual(res["source"], "state")
         self.assertEqual(res["nextStep"], "plan")
         self.assertEqual(res["nextCommand"], "/speckit.plan")
         self.assertFalse(res["complete"])
@@ -310,6 +313,46 @@ class StatusResolveTests(unittest.TestCase):
         self.assertTrue(res["empty"])
         self.assertEqual(res["source"], "derived")
         self.assertIsNone(res["currentStep"])
+
+    def test_fr011_prefers_disk_when_recorded_is_behind(self) -> None:
+        # State says plan/planned, but tasks.md exists on disk — prefer disk.
+        (self.fd / "spec.md").write_text("# Spec\n")
+        (self.fd / "plan.md").write_text("# Plan\n")
+        (self.fd / "tasks.md").write_text(_tasks("- [ ] **T001** a"))
+        wc.update_context(self.fd, "plan", "planned", "extension")
+        res = status_mod.resolve(self.fd)
+        self.assertEqual(res["source"], "derived")
+        self.assertEqual(res["currentStep"], "tasks")
+        self.assertEqual(res["nextCommand"], "/speckit.implement")
+
+    def test_fr011_prefers_disk_when_recorded_artifact_missing(self) -> None:
+        # State says plan/planned, but plan.md is absent — recorded is impossible.
+        (self.fd / "spec.md").write_text("# Spec\n")
+        wc.update_context(self.fd, "plan", "planned", "extension")
+        res = status_mod.resolve(self.fd)
+        self.assertEqual(res["source"], "derived")
+        self.assertEqual(res["currentStep"], "specify")
+        self.assertEqual(res["nextCommand"], "/speckit.plan")
+
+    def test_fr011_keeps_recorded_when_artifacts_agree(self) -> None:
+        (self.fd / "spec.md").write_text("# Spec\n")
+        (self.fd / "plan.md").write_text("# Plan\n")
+        wc.update_context(self.fd, "plan", "planned", "extension")
+        res = status_mod.resolve(self.fd)
+        self.assertEqual(res["source"], "state")
+        self.assertEqual(res["currentStep"], "plan")
+
+    def test_fr011_keeps_in_progress_implement_over_tasks_artifact(self) -> None:
+        # implement/implementing against a partial tasks.md must NOT downgrade —
+        # disk can't see in-progress work.
+        (self.fd / "spec.md").write_text("# Spec\n")
+        (self.fd / "plan.md").write_text("# Plan\n")
+        (self.fd / "tasks.md").write_text(_tasks("- [x] **T001** a", "- [ ] **T002** b"))
+        wc.update_context(self.fd, "implement", "implementing", "extension")
+        res = status_mod.resolve(self.fd)
+        self.assertEqual(res["source"], "state")
+        self.assertEqual(res["currentStep"], "implement")
+        self.assertEqual(res["nextTask"], "T002")
 
 
 if __name__ == "__main__":

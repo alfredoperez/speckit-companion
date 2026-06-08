@@ -46,5 +46,5 @@ The script is best-effort and never fails the host command:
 
 On success the script prints the path it updated and the values written, e.g.:
 `[companion] Updated specs/<NNN>-<slug>/.spec-context.json (currentStep=plan, status=planned, by=extension)`.
-The write is atomic (temp file + rename) and appends to `transitions` without
-rewriting existing history.
+The write is atomic (temp file + rename) and appends to the canonical `history[]` without
+rewriting existing entries.

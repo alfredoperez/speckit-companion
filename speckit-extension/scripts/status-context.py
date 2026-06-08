@@ -61,6 +61,28 @@ NEXT_LABEL = {
 
 TERMINAL_STATUSES = {"implemented", "completed", "archived"}
 
+# Pipeline ordering + the artifact each step requires on disk. Used to reconcile
+# recorded state against on-disk evidence (FR-011).
+PIPELINE_ORDER = {"specify": 0, "clarify": 0, "plan": 1, "tasks": 2, "analyze": 2, "implement": 3}
+REQUIRED_FILE = {
+    "specify": "spec.md", "clarify": "spec.md", "plan": "plan.md",
+    "tasks": "tasks.md", "analyze": "tasks.md", "implement": "tasks.md",
+}
+
+
+def _should_prefer_disk(feature_dir: Path, rec_step: str, disk_step: str) -> bool:
+    """FR-011: trust on-disk artifacts over recorded state when they disagree —
+    when the recorded step claims an artifact that doesn't exist, or disk shows a
+    later artifact than recorded. Recorded is kept when it's merely further along
+    a step whose artifact is present (e.g. implementing against an existing
+    tasks.md), since disk can't see in-progress work."""
+    if rec_step not in PIPELINE_ORDER:
+        return True
+    req = REQUIRED_FILE.get(rec_step)
+    if req and not (feature_dir / req).is_file():
+        return True
+    return PIPELINE_ORDER.get(disk_step, -1) > PIPELINE_ORDER[rec_step]
+
 
 def _decisions(ctx: dict) -> list[str]:
     """The top-level `decisions[]` passthrough (surfaced as ViewerState.decisions)."""
@@ -106,6 +128,13 @@ def resolve(feature_dir: Path) -> dict:
             }
         step, status = inferred
         ctx = {**ctx, "currentStep": step, "status": status}
+    else:
+        # FR-011: recorded state present — prefer on-disk evidence when the
+        # recorded position contradicts what the artifacts show.
+        disk = dff._infer(feature_dir)
+        if disk is not None and _should_prefer_disk(feature_dir, ctx["currentStep"], disk[0]):
+            ctx = {**ctx, "currentStep": disk[0], "status": disk[1]}
+            source = "derived"
 
     current_step = ctx.get("currentStep")
     status = ctx.get("status")
