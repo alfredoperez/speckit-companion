@@ -7,6 +7,12 @@ import { QwenCliProvider } from '../qwenCliProvider';
 import { CopilotCliProvider } from '../copilotCliProvider';
 import { AIProviderType } from '../aiProvider';
 import { AIProviders } from '../../core/constants';
+import { inlineSpecifyTempPath } from '../promptBuilder';
+import { createTempFile } from '../../core/utils/tempFileUtils';
+
+jest.mock('../../core/utils/tempFileUtils', () => ({
+    createTempFile: jest.fn().mockResolvedValue('/tmp/p.md'),
+}));
 
 /** Reaches the protected dispatch primitives a provider feeds the base class. */
 type DispatchInternals = CliTerminalProvider & {
@@ -73,5 +79,61 @@ describe('OpenCode dispatch uses the `run` subcommand', () => {
                 'copilot --yolo -p "$(cat "/tmp/p.md")"'
             );
         });
+    });
+});
+
+describe('OpenCode inlines a `specify <temp.md>` dispatch (issue #207)', () => {
+    beforeEach(() => mockAutoApproveMode());
+
+    describe('inlineSpecifyTempPath', () => {
+        it('replaces the path arg with the full file body, bookkeeping included', async () => {
+            const body = 'Build a login form.\n\n## Post-Specification\nrun the capture hook';
+            (vscode.workspace.fs.readFile as jest.Mock).mockResolvedValueOnce(Buffer.from(body));
+
+            // Path has a space ("Application Support") — the whole arg is the path.
+            const out = await inlineSpecifyTempPath(
+                '/speckit.specify /Users/x/Application Support/Code/spec.md'
+            );
+
+            expect(out).toBe(`/speckit.specify\n\n${body}`);
+            // NOT stripped at the marker the way cleanCommandArg strips it.
+            expect(out).toContain('## Post-Specification');
+        });
+
+        it('leaves a free-text specify prompt unchanged', async () => {
+            expect(await inlineSpecifyTempPath('/speckit.specify add user auth'))
+                .toBe('/speckit.specify add user auth');
+        });
+
+        it('leaves non-specify commands unchanged', async () => {
+            expect(await inlineSpecifyTempPath('/speckit.plan /Users/x/spec.md'))
+                .toBe('/speckit.plan /Users/x/spec.md');
+        });
+
+        it('returns the prompt unchanged when the file cannot be read', async () => {
+            (vscode.workspace.fs.readFile as jest.Mock).mockRejectedValueOnce(new Error('nope'));
+            expect(await inlineSpecifyTempPath('/speckit.specify /tmp/missing.md'))
+                .toBe('/speckit.specify /tmp/missing.md');
+        });
+    });
+
+    it('prepareDispatch writes the inlined spec — no external path — into the dispatched temp file', async () => {
+        const body = 'Authored spec body.';
+        (vscode.workspace.fs.readFile as jest.Mock).mockResolvedValueOnce(Buffer.from(body));
+        const opencode = makeProvider(OpenCodeProvider);
+
+        const plan = await (opencode as unknown as {
+            prepareDispatch(ctx: unknown): Promise<{ commandLine: string }>;
+        }).prepareDispatch({
+            mode: 'terminal',
+            prompt: '/speckit.specify /Users/x/Application Support/Code/spec.md',
+            slashCommand: null,
+        });
+
+        const writtenPrompt = (createTempFile as jest.Mock).mock.calls.at(-1)?.[1];
+        expect(writtenPrompt).toBe(`/speckit.specify\n\n${body}`);
+        expect(writtenPrompt).not.toContain('Application Support');
+        expect(plan.commandLine).toContain('opencode run "');
+        expect(plan.commandLine).toContain('/tmp/p.md');
     });
 });
