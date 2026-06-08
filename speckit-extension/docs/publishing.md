@@ -56,7 +56,7 @@ commands:
   - speckit.companion.capture-implement# after_implement hook (per-task journaling)
   - speckit.companion.status           # report step/status/decisions/next action
   - speckit.companion.resume           # resume the pipeline from the recorded step
-download_url: https://github.com/alfredoperez/speckit-companion/releases/download/speckit-ext-v0.2.0/companion-0.2.0.tar.gz
+download_url: https://github.com/alfredoperez/speckit-companion/releases/download/speckit-ext-v0.2.0/companion-0.2.0.zip
 ```
 
 ### What this release delivers (for the submission body)
