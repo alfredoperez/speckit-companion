@@ -12,6 +12,8 @@ description: Review code, update docs, and package a new version (project)
 
 ## Your task
 
+> **Scope: the VS Code extension only.** For the **spec-kit extension** (`speckit-extension/`) use `/publish-speckit-ext` — it has its own README/CHANGELOG/`extension.yml` version and a `speckit-ext-v*` tag.
+
 Help the user prepare and package a new version of the extension.
 
 **Note:** Arguments passed to this command are optional context/description (e.g., "refactoring and cleanup"). They are NOT the commit message or version number - those will be determined during the process.

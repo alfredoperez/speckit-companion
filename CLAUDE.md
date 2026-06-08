@@ -120,6 +120,18 @@ When modifying the sidebar (filter, sort, lifecycle buttons, badge tiers, tree i
 
 When modifying a webview component (`webview/src/spec-viewer/components/`, `webview/src/spec-editor/`, etc.) that has a sibling `.stories.tsx` file, update the stories in the same change to cover the new state/variant. Storybook is the visual baseline for these components — stale stories are worse than missing stories because they lie. If a component changes materially and no `.stories.tsx` exists, add one in the same PR.
 
+### Two extensions, two sets of docs (critical)
+
+This repo ships **two independently-versioned extensions**, each with its **own** README, CHANGELOG, version, release flow, and tag namespace. Do not conflate them:
+
+| | VS Code extension | spec-kit extension (`id: companion`) |
+|---|---|---|
+| README / CHANGELOG | root `README.md` / `CHANGELOG.md` | `speckit-extension/README.md` / `speckit-extension/CHANGELOG.md` |
+| Version | `package.json` `version` | `speckit-extension/extension.yml` `extension.version` |
+| Release | `/publish` or `/ship` → **`v*`** tag → `release.yml` → Marketplace/OpenVSX | `/publish-speckit-ext` → **`speckit-ext-v*`** tag → GitHub release → spec-kit catalog (`speckit-extension/docs/publishing.md`) |
+
+A change under `speckit-extension/` updates **its** README/CHANGELOG/version, **never** the root ones (and vice-versa). The two changelogs may both describe a feature that spans the GUI and the spec-kit side (e.g. status/resume) — each from its own half; that overlap is expected. **Never edit `.specify/extensions/companion/CHANGELOG.md`** — it's a generated copy of the source, gitignored, and overwritten on every install.
+
 ### Feature → README section map
 
 | Change you made | README section to update |
@@ -135,8 +147,11 @@ When modifying a webview component (`webview/src/spec-viewer/components/`, `webv
 | New webview UI element (header, badge, tab, etc.) | "Reading Specs" subsection in README + retake associated screenshot |
 | Modified webview component with a sibling `.stories.tsx` | Update the stories to exercise the new state/variant; if there is no story file for a non-trivial component being modified, add one |
 | Bug fix that changes documented behavior | The README section that documented the broken behavior |
+| Change under `speckit-extension/` (commands, scripts, hooks, manifest) | `speckit-extension/README.md` + `speckit-extension/CHANGELOG.md` + `extension.yml` `version` — **not** the root README/CHANGELOG/`package.json`. Release with `/publish-speckit-ext`. A new command must be added to `extension.yml` `provides.commands` or the installer skips it. |
 
 ### Per-release checklist (run before tagging a version)
+
+> This checklist is for the **VS Code extension** (`/publish`/`/ship`, `v*` tag). The **spec-kit extension** has its own flow — see `/publish-speckit-ext` and `speckit-extension/docs/publishing.md` (prefixed `speckit-ext-v*` tag, `.zip` archive, catalog issue).
 
 1. Run `git diff $(git describe --tags --abbrev=0)..HEAD -- README.md` to see what was already updated since the last tag.
 2. Cross-check `CHANGELOG.md` entries since the last release against the map above.

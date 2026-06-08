@@ -17,9 +17,22 @@ v0.2.0                  ❌  matches v* → would publish the WRONG thing to the
 2. **Update** `speckit-extension/CHANGELOG.md` — new dated section; keep prior versions.
 3. **Verify** the pre-submit checklist below.
 4. **Commit** to `main` (e.g. `chore(speckit-ext): release v0.2.0`).
-5. **Create a GitHub release** with a **prefixed tag** (`speckit-ext-v0.2.0`) and attach a source archive of `speckit-extension/` (or use the auto-generated repo tarball URL as the download URL).
-6. **Submit to the catalog** — file an **issue** on github/spec-kit using the **Extension Submission** template (NOT a PR). Maintainers verify metadata + URL reachability and add the entry to `extensions/catalog.community.json`. Review is 3–7 business days.
-7. **For later updates** — repeat, and file a new submission issue noting it's an update.
+5. **Build the archive** — a **`.zip`** (the installer rejects `.tar.gz` with `BadZipFile`) with a **single top-level dir** `companion-<X.Y.Z>/` holding `extension.yml` at its root. The repo source-archive does **not** work, because the extension lives in a subdir (`extension.yml` wouldn't be at the archive root):
+   ```bash
+   V=0.2.0
+   rm -rf /tmp/cb && mkdir -p /tmp/cb/companion-$V
+   ( cd speckit-extension && tar cf - --exclude=tests --exclude=assets . ) | ( cd /tmp/cb/companion-$V && tar xf - )
+   ( cd /tmp/cb && zip -rq companion-$V.zip companion-$V )
+   ```
+6. **Create the GitHub release** with a **prefixed tag** (`speckit-ext-v0.2.0`) and attach the zip:
+   ```bash
+   gh release create speckit-ext-v$V /tmp/cb/companion-$V.zip --title "..." --notes-file <CHANGELOG [X.Y.Z]> --target main
+   ```
+7. **Verify the deployed install** in a scratch dir (simulate a user): `mkdir -p /tmp/v/.specify/extensions && cd /tmp/v && yes | specify extension add companion --from <release-zip-url> --force` → `specify extension list` shows the version + all commands. Note: the **`companion` name arg is required**, the URL must be **HTTPS**, and a raw-URL install shows a one-time "untrusted source" prompt. If a prior local install left inconsistent emission dirs, nuke all `speckit-companion-*` / `speckit.companion.*` artifacts first.
+8. **Submit to the catalog** — file an **issue** on github/spec-kit using the **Extension Submission** template (NOT a PR). Maintainers verify metadata + URL reachability and add the entry to `extensions/catalog.community.json`. Review is 3–7 business days. Only then does the by-name `specify extension add companion` resolve.
+9. **For later updates** — repeat, and file a new submission issue noting it's an update.
+
+The whole flow is automated by the `/publish-speckit-ext` skill.
 
 ## Pre-submit checklist (mapped to the guide)
 
