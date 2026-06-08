@@ -1,0 +1,169 @@
+{
+  "workflow": "speckit",
+  "specName": "Fix Opencode Prompt Flag",
+  "branch": "131-fix-opencode-prompt-flag",
+  "selectedAt": "2026-06-08T02:09:08.437Z",
+  "currentStep": "implement",
+  "status": "implemented",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": null,
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-08T02:09:08.437Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": null,
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-08T02:11:27.359Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-08T02:18:35.964Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-08T02:18:35.966Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-08T02:25:10Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-08T02:25:10Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-08T02:25:10Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-08T02:32:06.704Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-08T02:34:11Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-08T02:34:11Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-08T11:25:08.033Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T001",
+      "task": "T001",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-08T11:28:56Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T002",
+      "task": "T002",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-08T11:28:56Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T003",
+      "task": "T003",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-08T11:28:56Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T004",
+      "task": "T004",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-08T11:29:35Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-08T11:29:35Z"
+    }
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added the failing-first regression test asserting OpenCode dispatches `opencode run \"…\"` (no `-p`) while Qwen/Copilot keep their `-p ` prompt flag.",
+      "files": ["src/ai-providers/__tests__/openCodeDispatch.test.ts"]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Overrode `cliPromptFlag()` to return `'run '` in OpenCodeProvider and corrected its class doc comment to the `opencode run` form.",
+      "files": ["src/ai-providers/openCodeProvider.ts"]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Corrected the base-class `cliPromptFlag()` doc comment to drop OpenCode from the `-p ` default note and explain OpenCode's positional `run ` override.",
+      "files": ["src/ai-providers/cliTerminalProvider.ts"]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Ran the full Jest suite — 72 suites / 833 tests pass, including openCodeDispatch and the promptCommand/provider-registry regression guards.",
+      "files": []
+    }
+  },
+  "updated": "2026-06-08"
+}

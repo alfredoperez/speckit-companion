@@ -242,6 +242,11 @@ export class SpecEditorProvider {
                         'GitHub Copilot CLI has limited image support. Images will be included as file references but may not be processed.'
                     );
                     this.outputChannel.appendLine('[SpecEditor] Warning: Copilot has limited image support');
+                } else if (providerType === AIProviders.OPENCODE) {
+                    vscode.window.showWarningMessage(
+                        'OpenCode blocks reads outside the project directory, so attached images cannot be read. The spec text is still sent.'
+                    );
+                    this.outputChannel.appendLine('[SpecEditor] Warning: OpenCode cannot read external image files');
                 }
             }
 

@@ -391,3 +391,36 @@ export async function cleanCommandArg(command: string): Promise<string> {
     }
     return `${cmd} ${specNameFromPath(arg)}`;
 }
+
+/**
+ * Inline a `/speckit.* specify <temp.md>` dispatch so the agent never has to
+ * read the file: replace the path argument with the *full* file contents
+ * (description + the appended capture bookkeeping), newline-separated. Unlike
+ * `cleanCommandArg` — which strips bookkeeping for human-facing chat surfaces —
+ * this preserves everything a terminal agent would have read from the file.
+ *
+ * For sandboxed CLIs (OpenCode) that refuse to read paths outside the project
+ * directory, where the spec-editor stages its temp file. The path may contain
+ * spaces (e.g. macOS `Application Support`), so the whole argument is treated
+ * as the path and the read itself is the validation. Any prompt that isn't a
+ * `specify` command pointing at a readable `.md` path is returned unchanged.
+ */
+export async function inlineSpecifyTempPath(prompt: string): Promise<string> {
+    const { preamble, command } = splitContextPreamble(prompt);
+    const trimmed = command.trim();
+    const sp = trimmed.indexOf(' ');
+    if (sp === -1) return prompt;
+    const cmd = trimmed.slice(0, sp);
+    const arg = trimmed.slice(sp + 1).trim();
+    if (!/[.-]specify$/.test(cmd) || !/\.md$/i.test(arg) || !/[/\\]/.test(arg)) return prompt;
+
+    try {
+        const data = await vscode.workspace.fs.readFile(vscode.Uri.file(arg));
+        const body = Buffer.from(data).toString('utf-8').trim();
+        if (!body) return prompt;
+        const inlined = `${cmd}\n\n${body}`;
+        return preamble ? `${preamble}\n\n${inlined}` : inlined;
+    } catch {
+        return prompt;
+    }
+}
