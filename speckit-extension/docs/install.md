@@ -40,12 +40,25 @@ specify extension add companion --ai-skills
 
 If you're stuck on the stock PyPI build and can't reinstall, replicate what the CLI does by hand: copy `speckit-extension/` → `.specify/extensions/companion/`, add a `companion` entry to `.specify/extensions/.registry`, and emit a `.claude/skills/speckit-companion-capture/SKILL.md` mirroring `.claude/skills/speckit-git-commit/SKILL.md`. This is a stopgap — the supported path is the source install above.
 
+## Template profiles (presets)
+
+The extension also ships two presets that reshape the spec-kit pipeline: `companion-standard` (stock commands + timing) and `companion-lean` (trimmed — no user stories, files/dependencies tasks). They are a separate spec-kit concept from the extension, installed with `specify preset` (see [`presets/companion-standard/README.md`](../presets/companion-standard/README.md) and [`presets/companion-lean/README.md`](../presets/companion-lean/README.md), and the full reference in [`../../docs/template-profiles.md`](../../docs/template-profiles.md)).
+
+```bash
+specify preset add --dev ./speckit-extension/presets/companion-standard   # local/dev install
+specify preset resolve speckit.specify                                    # winning layer = companion-standard
+specify preset remove companion-standard                                  # turn off (remove, not disable)
+```
+
+Prefer the `speckit.companion.templateProfile` VS Code setting (`standard` | `lean` | `off`, default `standard`) — it reconciles the two presets (mutually exclusive) and writes `.specify/companion.yml`. Override per spec from the spec's right-click menu (**Template Profile → Standard / Lean**); the four opt-in `/speckit.companion.*` commands are the per-spec lean path.
+
 ## Verify
 
 ```bash
 specify extension list        # companion present
+specify preset list           # companion-standard / companion-lean (if installed)
 ```
 
-Then run a real `/speckit.specify` and confirm `specs/<NNN>-<slug>/.spec-context.json` is written — see [how-it-works.md](./how-it-works.md#end-to-end-proof) for the full check.
+Then run a real `/speckit.specify` and confirm `specs/<NNN>-<slug>/.spec-context.json` is written — see [how-it-works.md](./how-it-works.md#end-to-end-proof) for the full check. With `companion-lean` active, confirm the produced `spec.md` has no user-story section.
 
 > The capture hook invokes the script at its **installed** path, `.specify/extensions/companion/scripts/write-context.py` (mirroring the `git` extension's `.specify/extensions/git/scripts/…` convention) — not the source-repo `speckit-extension/scripts/…`. That's why it runs cleanly on any install. If you ever see `No such file or directory` for `speckit-extension/scripts/…`, the command-markdown drifted back to the dev-source path.

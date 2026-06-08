@@ -94,7 +94,10 @@ describe('buildPrompt', () => {
             expect(out).toContain('PER-TASK JOURNALING (implement)');
             // entry carries both substep and task so the end-of-step hook dedups it
             expect(out).toContain('"substep": "<TaskID>", "task": "<TaskID>"');
-            expect(out).toContain('Do NOT batch them at the end');
+            // emits BOTH a start and a complete per task (real start→complete cadence)
+            expect(out).toContain('"kind": "start"');
+            expect(out).toContain('"kind": "complete"');
+            expect(out).toContain('do NOT batch at the end');
         });
 
         it('does NOT add per-task journaling to non-implement steps', () => {

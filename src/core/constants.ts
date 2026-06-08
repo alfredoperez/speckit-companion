@@ -65,6 +65,7 @@ export const ConfigKeys = {
     specDirectories: 'speckit.specDirectories',
     customWorkflows: 'speckit.customWorkflows',
     defaultWorkflow: 'speckit.defaultWorkflow',
+    templateProfile: 'speckit.companion.templateProfile',
     views: {
         specsVisible: 'speckit.views.specs.visible',
         steeringVisible: 'speckit.views.steering.visible',

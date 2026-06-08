@@ -54,8 +54,15 @@ Four capture commands run automatically as lifecycle hooks; two are yours to run
 | `speckit.companion.capture-implement` | `after_implement` hook | Per-task journaling on implement (`implemented` when all tasks checked) |
 | `/speckit.companion.status` | you | Print the current step, status, recorded decisions, and the next action |
 | `/speckit.companion.resume` | you | Continue the pipeline from the recorded step — carries decisions into scope and dispatches the next `/speckit.*` command (at the next unchecked task inside implement) |
+| `/speckit.companion.specify` · `.plan` · `.tasks` · `.implement` | you | Opt-in lean pipeline — emit the lean shape (no user stories, lean plan, files/dependencies tasks) for one spec, regardless of the project's profile |
 
 Full reference: [docs/commands.md](./docs/commands.md).
+
+## Template profiles
+
+The extension ships two selectable presets that reshape the spec-kit pipeline: **`companion-standard`** (the stock commands, unchanged, with better timing baked in) and **`companion-lean`** (the same commands trimmed — no user-story section, lean plan, files/dependencies tasks). Both override the 7 pipeline commands (`specify`, `clarify`, `plan`, `tasks`, `analyze`, `implement`, `constitution`); `checklist` and `taskstoissues` stay on stock.
+
+Pick a project default with the `speckit.companion.templateProfile` VS Code setting (`standard` | `lean` | `off`), which reconciles the two presets so only one is installed. Override per spec from the spec's right-click menu. The four opt-in `/speckit.companion.*` commands above are the per-spec lean path; a `scripts/check-shape-parity.py` guard keeps them in lockstep with the `companion-lean` bodies, and asserts every body carries the shared timing partial. Full reference: [`../docs/template-profiles.md`](../docs/template-profiles.md).
 
 ## Installation
 

@@ -450,9 +450,35 @@
         "command": "speckit.specs.copyName",
         "title": "Copy Name",
         "category": "SpecKit"
+      },
+      {
+        "command": "speckit.specs.setProfileStandard",
+        "title": "Standard",
+        "category": "SpecKit"
+      },
+      {
+        "command": "speckit.specs.setProfileLean",
+        "title": "Lean",
+        "category": "SpecKit"
+      }
+    ],
+    "submenus": [
+      {
+        "id": "speckit.specs.profile",
+        "label": "Template Profile"
       }
     ],
     "menus": {
+      "speckit.specs.profile": [
+        {
+          "command": "speckit.specs.setProfileStandard",
+          "group": "profile@1"
+        },
+        {
+          "command": "speckit.specs.setProfileLean",
+          "group": "profile@2"
+        }
+      ],
       "view/title": [
         {
           "command": "speckit.create",
@@ -501,6 +527,11 @@
         }
       ],
       "view/item/context": [
+        {
+          "submenu": "speckit.specs.profile",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|completed|archived)$/",
+          "group": "7_modification@5"
+        },
         {
           "command": "speckit.delete",
           "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|completed|archived)$/",
@@ -1021,6 +1052,22 @@
             ],
             "scope": "window",
             "description": "Per-spec Activity panel in the spec viewer — a chronological timeline of transitions, decisions, files modified, and step history derived from .spec-context.json."
+          },
+          "speckit.companion.templateProfile": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "lean",
+              "off"
+            ],
+            "enumDescriptions": [
+              "Stock spec-kit commands, unchanged, with better timing capture (default; closest to upstream).",
+              "Trimmed commands — no user stories, files/dependencies tasks, smaller spec folder — plus timing.",
+              "Plain stock spec-kit; no Companion preset installed."
+            ],
+            "default": "standard",
+            "scope": "window",
+            "description": "Project default for the spec-kit pipeline shape. Selecting a profile reconciles the companion-standard / companion-lean presets (mutually exclusive) and writes .specify/companion.yml. Override per-spec from the spec's right-click menu (Profile → Standard/Lean)."
           }
         }
       }

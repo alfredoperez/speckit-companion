@@ -112,7 +112,11 @@ User data stored in workspace `.claude/` directory:
 
 When adding, changing, or removing a user-facing feature, update README.md. The README is the single source of truth for configuration, workflows, and features. Use the map below to find the right section.
 
+**Docs are part of the change, not a follow-up.** Any time you touch behavior, configuration, commands, the pipeline, or architecture, update the matching doc in the *same* change — before the work counts as done. Before finishing, scan the map below and the long-form references (`docs/*.md`, the two READMEs, the relevant CHANGELOG); if the change lands in an area that has a dedicated doc, updating that doc is required, not optional. A behavior change without its doc update is an incomplete change.
+
 When modifying spec viewer statuses, badges, buttons, or step tab behavior, also update `docs/viewer-states.md` (full state machine: status lifecycle, footer button matrix, badge text logic, step tab visual states, data flow).
+
+When modifying the companion template profiles — the `companion-standard` / `companion-lean` presets, their command bodies, the shared timing partial, the `speckit.companion.templateProfile` setting, the per-spec profile control, or the preset reconciler — also update `docs/template-profiles.md` (the living reference for the two profiles, the commands-vs-templates mechanism, the per-file lean treatment, the timing partial, and the selection model).
 
 When modifying the project structure, adding/removing modules, or changing the architecture, also update `docs/architecture.md`.
 
@@ -253,5 +257,5 @@ They exist so the viewer can be opened against a known state during development.
 - 044-context-driven-badges: Added TypeScript 5.3+ (ES2022 target, strict mode) + VS Code Extension API (`@types/vscode ^1.84.0`)
 
 <!-- SPECKIT START -->
-For additional context about technologies to be used, project structure, shell commands, and other important information, read the current plan: `specs/131-fix-opencode-prompt-flag/plan.md`
+For additional context about technologies to be used, project structure, shell commands, and other important information, read the current plan: `specs/132-sdd-lean-pipeline/plan.md`
 <!-- SPECKIT END -->

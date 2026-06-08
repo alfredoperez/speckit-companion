@@ -160,6 +160,13 @@ export interface SpecContext {
     /** Last action one-liner written by the implement skill. */
     last_action?: string;
     /**
+     * Per-spec template profile override, chosen at the specify step. When `lean`,
+     * the GUI dispatches the `/speckit.companion.*` (lean) pipeline commands for
+     * this spec instead of the stock ones. Absent → use the project default
+     * (`speckit.companion.templateProfile`).
+     */
+    profile?: 'standard' | 'lean';
+    /**
      * Per-task summaries (skill-authored). Loosely typed at the raw on-disk
      * layer because writers emit varied shapes; the reader normalizes them and
      * the viewer exposes the strongly-typed form via `ViewerState.taskSummaries`.

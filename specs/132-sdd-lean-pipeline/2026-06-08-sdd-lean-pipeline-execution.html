@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pipeline + the sdd-lean Preset — Execution &amp; Test Plan</title>
+<style>
+  :root{
+    --bg:#0a0b0d; --panel:#15161b; --panel-2:#1c1d24; --mock-bg:#06080a;
+    --band-green:#003c33; --band-navy:#071829;
+    --ink:#f3f4f6; --ink-2:#cdd2da; --muted:#93939f; --line:#2a2b33; --chip:#1f2129;
+    --coral:#ff7759; --coral-soft:#ffad9b; --blue:#4c6ee6;
+    --ok:#3ecf8e; --warn:#e0a52e; --info:#4c6ee6; --crit:#ff7759;
+    --font-display:'Space Grotesk','Inter',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+    --font-body:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    --font-mono:'SF Mono',ui-monospace,SFMono-Regular,'JetBrains Mono',Menlo,Consolas,monospace;
+    --r-xs:6px; --r-sm:8px; --r-md:16px; --r-lg:22px; --r-pill:999px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 var(--font-body);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:48px 24px 96px}
+
+  h1{font:500 34px/1.05 var(--font-display);letter-spacing:-.6px;margin:0 0 8px}
+  h2{font:500 22px/1.15 var(--font-display);letter-spacing:-.3px;margin:0 0 12px}
+  h3{font:600 16px/1.25 var(--font-display);letter-spacing:-.1px;margin:0 0 6px}
+  h4{font:600 14px/1.3 var(--font-body);margin:0 0 4px}
+  p{margin:0 0 12px;color:var(--ink-2)}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font:400 12.5px var(--font-mono);background:var(--chip);padding:1px 6px;border-radius:var(--r-xs);color:var(--ink)}
+
+  .sub{color:var(--muted);font-size:15px;margin:0 0 14px}
+  .meta{display:flex;gap:14px;flex-wrap:wrap;align-items:center;color:var(--muted);font-size:13px;margin-bottom:8px}
+  .eyebrow{font:600 12px/1.2 var(--font-mono);text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin:40px 0 12px}
+  .eyebrow.lead{color:var(--coral)}
+  .lbl{font:700 11px/1.3 var(--font-mono);text-transform:uppercase;letter-spacing:.5px}
+
+  section{margin-top:8px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-md);padding:18px 20px;margin-bottom:14px}
+  .card.nested{background:var(--panel-2)}
+  .card-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+  .card-head h3{margin:0}
+  .card-meta{margin-top:10px;font-size:12.5px;color:var(--muted)}
+  .card-meta b{color:var(--ink-2);font-weight:600}
+  .grid{display:grid;gap:14px}
+  .cols-2{grid-template-columns:repeat(2,1fr)}
+  .cols-3{grid-template-columns:repeat(3,1fr)}
+
+  .callout{background:linear-gradient(180deg,rgba(76,110,230,.12),rgba(76,110,230,.03));border:1px solid rgba(76,110,230,.35);border-radius:var(--r-lg);padding:18px 22px;margin:8px 0 18px}
+  .callout b{color:var(--ink)}
+
+  .badge{display:inline-block;font:700 11px/1 var(--font-mono);text-transform:uppercase;letter-spacing:.5px;padding:4px 10px;border-radius:var(--r-pill)}
+  .is-shipped{color:var(--ok);background:rgba(62,207,142,.14)}
+  .is-planned{color:var(--warn);background:rgba(224,165,46,.14)}
+  .is-info{color:var(--info);background:rgba(76,110,230,.14)}
+  .is-crit{color:var(--crit);background:rgba(255,119,89,.14)}
+
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .side{border-radius:var(--r-md);padding:14px 16px;font-size:14px}
+  .side.a{background:rgba(255,119,89,.07);border:1px solid rgba(255,119,89,.25)}
+  .side.b{background:rgba(62,207,142,.07);border:1px solid rgba(62,207,142,.25)}
+  .side .lbl{margin-bottom:6px;display:block}
+  .side.a .lbl{color:var(--coral)}
+  .side.b .lbl{color:var(--ok)}
+  .side ul{margin:0;padding-left:18px;color:var(--ink-2)}
+  .side li{margin:3px 0}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:4px 0}
+  th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font:700 11px/1.3 var(--font-mono);text-transform:uppercase;letter-spacing:.6px}
+  td.a{color:var(--muted)} td.b{color:var(--ok)}
+
+  .decisions{margin:4px 0}
+  .dec{display:flex;gap:14px;align-items:flex-start;padding:13px 0;border-bottom:1px solid var(--line)}
+  .dec:last-child{border-bottom:0}
+  .num{flex:0 0 30px;height:30px;border-radius:var(--r-sm);background:var(--chip);color:var(--coral);display:flex;align-items:center;justify-content:center;font:700 13px var(--font-mono)}
+  .dec .body{flex:1}
+  .dec h4{color:var(--ink)}
+  .dec p{margin:4px 0 0;color:var(--muted);font-size:13px}
+
+  ol.steps{counter-reset:s;list-style:none;margin:0;padding:0}
+  ol.steps li{counter-increment:s;position:relative;padding:12px 0 12px 40px;border-bottom:1px solid var(--line);font-size:14px;color:var(--ink-2)}
+  ol.steps li:last-child{border-bottom:0}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:10px;width:26px;height:26px;border-radius:var(--r-sm);background:var(--chip);color:var(--coral);font:700 12px var(--font-mono);display:flex;align-items:center;justify-content:center}
+  ol.steps b{color:var(--ink)}
+
+  .flow{display:flex;gap:12px;flex-wrap:wrap}
+  .flow .step{flex:1;min-width:150px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px}
+  .flow .step .k{font:700 11px var(--font-mono);text-transform:uppercase;letter-spacing:.6px;color:var(--coral)}
+  .flow .step p{margin:6px 0 0;font-size:13px;color:var(--muted)}
+
+  .mock{background:var(--mock-bg);border:1px solid var(--line);border-radius:var(--r-md);padding:18px 20px;font:12.5px/1.7 var(--font-mono);white-space:pre-wrap;color:var(--ink-2);overflow-x:auto}
+  .mock .u{color:var(--ink)} .mock .s{color:var(--muted)} .mock .a{color:var(--ok)} .mock .d{color:var(--blue)} .mock .c{color:var(--coral)}
+
+  .band{background:var(--band-green);border-radius:var(--r-lg);padding:28px 28px;margin:24px 0;color:#eafff6}
+  .band.navy{background:var(--band-navy);color:#e7f0fb}
+  .band h2,.band h3{color:#fff}
+  .band p{color:#cdeee3}
+  .band.navy p{color:#cdddf0}
+
+  .reject{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 16px;margin-bottom:8px;font-size:13.5px}
+  .reject b{color:var(--ink)}
+
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted)}
+  .legend .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+
+  .tag{display:inline-block;font:600 12px var(--font-body);color:var(--coral);border:1px solid var(--coral-soft);border-radius:var(--r-pill);padding:3px 12px;margin:0 4px 4px 0}
+
+  @media (max-width:760px){
+    .wrap{padding:32px 16px 64px}
+    .cols-2,.cols-3,.pair{grid-template-columns:1fr}
+    h1{font-size:28px}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="meta">
+        <span>2026-06-08</span> ·
+        <span class="badge is-shipped">code complete</span>
+        <span class="badge is-planned">3 manual E2E</span>
+        <span>spec 132 · branch <code>132-sdd-lean-pipeline</code></span>
+      </div>
+      <h1>Pipeline + the sdd-lean Preset</h1>
+      <p class="sub">Execution &amp; test plan — bringing the SDD-lean document shape into spec-kit, ready for review before commit/PR.</p>
+    </header>
+
+    <div class="callout"><b>The shape, without the ceremony.</b> A native spec-kit preset reshapes the stock pipeline to the SDD-lean shape — specs with <b>no user-story section</b>, lean plans, and tasks on a <b>files/dependencies</b> axis — and four opt-in <code>/speckit.companion.*</code> commands give the same shape on demand. 23 of 26 tasks done; every automated check is green; the 3 that remain are live spec-kit runs only a human can drive.</div>
+
+    <div class="eyebrow lead">How it works · two levers</div>
+    <section>
+      <div class="flow">
+        <div class="step">
+          <div class="k">Lever 1 · preset</div>
+          <p><code>sdd-lean</code> <code>replaces:</code> the four core commands. Once installed, <b>stock</b> <code>/speckit.specify|plan|tasks|implement</code> emit the lean shape. On by default.</p>
+        </div>
+        <div class="step">
+          <div class="k">Lever 2 · opt-in</div>
+          <p><code>/speckit.companion.specify|plan|tasks|implement</code> emit the same shape regardless of preset state. Shared bodies, kept identical by a drift guard.</p>
+        </div>
+        <div class="step">
+          <div class="k">Control · toggle</div>
+          <p><code>speckit.features.sddLean</code> (default on) reconciles the preset; persisted to <code>.specify/sdd.config.yml</code> as the source of truth.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="eyebrow">Stock vs SDD-lean</div>
+    <section>
+      <div class="pair">
+        <div class="side a">
+          <span class="lbl">Stock spec-kit spec.md</span>
+          <ul>
+            <li>User Stories (P1/P2/P3) with priorities</li>
+            <li>Acceptance-scenario tables per story</li>
+            <li>Tasks grouped under each user story</li>
+            <li>Multi-phase plan scaffolding</li>
+          </ul>
+        </div>
+        <div class="side b">
+          <span class="lbl">SDD-lean spec.md</span>
+          <ul>
+            <li>Overview · Functional Requirements</li>
+            <li>Success Criteria · Assumptions — no stories</li>
+            <li>Tasks on a files/dependencies axis</li>
+            <li>Lean plan: summary, context, approach</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <div class="eyebrow">Decisions baked in · research corrections</div>
+    <section>
+      <div class="decisions">
+        <div class="dec"><div class="num">1</div><div class="body"><h4>Use the native preset engine — don't build one</h4><p>spec-kit already ships a preset subsystem with a resolution stack (project → presets → extensions → core), priority ordering, and composition. We ride it.</p></div></div>
+        <div class="dec"><div class="num">2</div><div class="body"><h4><code>specify preset add</code>, not <code>preset use</code></h4><p>The backlog's command string didn't exist. Real verbs: <code>add</code> / <code>enable</code> / <code>disable</code> / <code>set-priority</code> / <code>remove</code> / <code>resolve</code>.</p></div></div>
+        <div class="dec"><div class="num">3</div><div class="body"><h4>Reshape via command overrides, not raw templates</h4><p>Core commands embed their own structure, so only a <code>replaces:</code>-command override actually changes what stock <code>/speckit.specify</code> emits. (The shipped <code>lean</code> preset proves the pattern — but it keeps user stories, so <code>sdd-lean</code> is distinct.)</p></div></div>
+        <div class="dec"><div class="num">4</div><div class="body"><h4>Off = <code>remove</code>, never just <code>disable</code></h4><p>Command overrides register into agent dirs at install time; <code>disable</code> only skips runtime file resolution. Only <code>remove</code> restores the stock commands — so the toggle's off-path maps to <code>remove</code>.</p></div></div>
+        <div class="dec"><div class="num">5</div><div class="body"><h4>Dual-extension split, isolation preserved</h4><p>Preset + commands live under <code>speckit-extension/</code> (own README/CHANGELOG/version). Only the VS Code setting touches root <code>package.json</code> + <code>src/</code>. The <code>.vsix</code> ships nothing from <code>.specify/</code>.</p></div></div>
+      </div>
+    </section>
+
+    <div class="eyebrow">What changed · the changeset</div>
+    <section>
+      <div class="grid cols-2">
+        <div class="card">
+          <div class="card-head"><h3>The preset</h3><span class="badge is-shipped">done</span></div>
+          <p><code>speckit-extension/presets/sdd-lean/</code> — <code>preset.yml</code> (4 <code>replace</code> overrides) + 4 command bodies + <code>README.md</code>.</p>
+          <div class="card-meta">US1 · primary lever</div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Namespaced commands</h3><span class="badge is-shipped">done</span></div>
+          <p>4 × <code>speckit.companion.{specify,plan,tasks,implement}.md</code> + <code>extension.yml</code> <code>provides.commands</code> wiring.</p>
+          <div class="card-meta">US2 · opt-in path</div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Drift guard</h3><span class="badge is-shipped">passing</span></div>
+          <p><code>scripts/check-shape-parity.py</code> — fails if a namespaced body ever diverges from its preset counterpart (SC-003).</p>
+          <div class="card-meta">4 bodies locked</div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>VS Code toggle</h3><span class="badge is-shipped">done</span><span class="badge is-shipped">13 tests</span></div>
+          <p><code>sddLeanReconciler.ts</code> (+ tests), <code>speckit.features.sddLean</code> setting, <code>extension.ts</code> listener, <code>ConfigKeys</code>.</p>
+          <div class="card-meta">US3 · on→add/enable · off→remove</div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Scaffolding default</h3><span class="badge is-shipped">done</span></div>
+          <p><code>.specify/sdd.config.yml</code> → <code>features.sddLean: true</code> for Companion-managed projects (opt-out).</p>
+          <div class="card-meta">FR-008</div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Docs + spec artifacts</h3><span class="badge is-shipped">done</span></div>
+          <p>Root README + CHANGELOG; speckit-extension README + CHANGELOG + install.md. Full spec/plan/research/data-model/contracts/quickstart/tasks.</p>
+          <div class="card-meta">dual-extension changelogs</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="eyebrow">Verified · automated, all green</div>
+    <section>
+      <div class="mock"><span class="s"># tsc — typecheck</span>
+$ npx tsc -p ./ --noEmit
+<span class="a">✓ clean — 0 errors</span>
+
+<span class="s"># jest — reconciler + docs-consistency</span>
+$ npx jest src/features/settings tests/integration/docs-consistency.test.ts
+<span class="a">Test Suites: 2 passed · Tests: 19 passed</span>
+
+<span class="s"># drift guard — namespaced bodies vs preset</span>
+$ python3 speckit-extension/scripts/check-shape-parity.py
+<span class="a">[shape-parity] OK — 4 command bodies match the sdd-lean preset</span>
+
+<span class="s"># preset manifest — structural validation</span>
+<span class="a">preset bundle complete: 6 files present · 4 command overrides</span></div>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--ok)"></span>green / done</span>
+        <span><span class="dot" style="background:var(--warn)"></span>manual / planned</span>
+        <span><span class="dot" style="background:var(--crit)"></span>must-not-regress</span>
+      </div>
+    </section>
+
+    <div class="eyebrow lead">Test runbook · the 3 remaining manual E2E</div>
+    <section>
+      <div class="card nested">
+        <h4>Prerequisite</h4>
+        <p style="margin:0">A GitHub-source spec-kit CLI (<code>specify preset --help</code> works) in a project initialized with <code>specify init</code>. Full steps live in <code>specs/132-sdd-lean-pipeline/quickstart.md</code>.</p>
+      </div>
+      <ol class="steps">
+        <li><b>Install (T-setup).</b> <code>specify extension add ./speckit-extension --dev</code>, then <code>specify preset add --dev ./speckit-extension/presets/sdd-lean</code>. Expect <code>specify preset list</code> to show <b>sdd-lean</b> enabled and <code>specify preset resolve speckit.specify</code> → <b>sdd-lean</b>.</li>
+        <li><b>Preset path · US1 / SC-001 (T008).</b> Run stock <code>/speckit.specify "Add a thing"</code> → <code>spec.md</code> has <b>no user-story section</b>. Spot-check <code>/speckit.plan</code> (lean) and <code>/speckit.tasks</code> (files/deps axis).</li>
+        <li><b>Opt-in path · US2 / SC-003 (T014).</b> <code>specify preset disable sdd-lean</code>, then <code>/speckit.companion.specify "Add a thing"</code> → same lean shape; its section headings <b>match</b> the preset-path output.</li>
+        <li><b>Toggle off · FR-007 / SC-004.</b> <code>specify preset remove sdd-lean</code> (or set <code>speckit.features.sddLean</code> false in VS Code) → stock <code>/speckit.specify</code> returns the stock template <b>with</b> a user-story section, no residual lean sections.</li>
+        <li><b>Composition · SC-005 (T025).</b> Add a 2nd preset that also replaces <code>speckit.specify</code>, <code>specify preset set-priority sdd-lean 5</code>, then <code>specify preset resolve speckit.specify</code> → <b>sdd-lean wins</b> deterministically across repeated runs.</li>
+      </ol>
+    </section>
+
+    <div class="eyebrow">Read before you commit</div>
+    <section>
+      <div class="reject"><b>No version bump.</b> <code>extension.yml</code> / badges untouched — version + release happen at publish (<code>/publish-speckit-ext</code>), not in the feature change. Changes sit under each <code>[Unreleased]</code>.</div>
+      <div class="reject"><b>Install-state from disk, not CLI text.</b> The reconciler checks the on-disk preset dir rather than parsing human-text <code>specify preset list</code> (no <code>--json</code>) — deterministic, and consistent with the rest of the extension.</div>
+      <div class="reject"><b>Known seam — catalog add.</b> Toggle-on issues catalog-form <code>specify preset add sdd-lean</code>, but the preset isn't published to a catalog yet → the runtime add path only works post-publish; today the <code>--dev</code> scaffolding seeds it. Noted in research R6 — natural step-4 follow-up.</div>
+    </section>
+
+    <div class="band navy">
+      <h3>What's next</h3>
+      <p style="margin:0">Run the 3-step manual E2E above to close T008 / T014 / T025 → then commit on <code>132-sdd-lean-pipeline</code> and open the PR (spec artifacts + <code>.spec-context.json</code> included). Version bump + catalog publish ride the separate <code>/publish-speckit-ext</code> flow. Complexity branching, drift, and auto-mode stay deferred to steps 5–7.</p>
+    </div>
+
+  </div>
+</body>
+</html>

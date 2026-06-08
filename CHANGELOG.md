@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **Template profiles** (#132): new `speckit.companion.templateProfile` setting (`standard` | `lean` | `off`, default `standard`) selects the spec-kit pipeline shape. `standard` = stock commands with better timing capture; `lean` = trimmed commands (no user-story section, files/dependencies tasks, smaller spec folder); `off` = plain stock spec-kit. Selecting a profile reconciles the two `companion-standard` / `companion-lean` presets (mutually exclusive — switching removes the other) and persists to `.specify/companion.yml` as the source of truth. A per-spec override is available from the spec's right-click menu (**Template Profile → Standard / Lean**), recorded in `.spec-context.json`; the viewer then dispatches the lean `/speckit.companion.*` commands for that spec. Both profiles bake timing instructions into every command body (fixing duplicate-start and burst-stamped substeps in the captured durations). The presets and the opt-in `/speckit.companion.*` commands ship with the spec-kit extension; see `docs/template-profiles.md`.
+
 ## [0.22.0] - 2026-06-07
 
 ### Added

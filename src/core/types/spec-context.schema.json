@@ -32,6 +32,7 @@
       "items": { "$ref": "#/$defs/reviewComment" }
     },
     "last_action": { "type": "string" },
+    "profile": { "type": "string", "enum": ["standard", "lean"] },
     "task_summaries": { "type": "object" },
     "step_summaries": { "type": "object" }
   },

@@ -127,6 +127,22 @@ export async function setStatus(
     }
 }
 
+/** Set the per-spec template profile (metadata only — no history transition). */
+export async function setProfile(
+    specDir: string,
+    profile: 'standard' | 'lean'
+): Promise<void> {
+    try {
+        await updateSpecContext(
+            specDir,
+            ctx => ({ ...ctx, profile }),
+            buildFallback(specDir, 'specify')
+        );
+    } catch (err) {
+        logError(`setProfile(${path.basename(specDir)}, ${profile})`, err);
+    }
+}
+
 /** Reactivate: derive in-progress status from `currentStep`. */
 export async function reactivate(
     specDir: string,
