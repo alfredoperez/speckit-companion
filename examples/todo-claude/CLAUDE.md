@@ -1,54 +1,47 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for AI assistants working in this example app (the SpecKit Companion bench target).
 
 ## Development Commands
 
 ```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Type-check and build for production
-npm run build
-
-# Preview production build
-npm run preview
+npm install        # install dependencies
+npm run dev        # Vite dev server
+npm run build      # type-check (tsc) + production build (vite)
+npm test           # Vitest (app tests in src/ + bench oracle in bench/)
+npm run preview    # preview the production build
 ```
+
+## What this is
+
+A small but **layered, routed, tested** React + TypeScript + Vite todo app. It is intentionally realistic so spec-driven features have real surface to attach to. Keep it that way: follow the existing structure and conventions below when implementing a feature.
 
 ## Architecture
 
-This is a minimal React + TypeScript + Vite todo application used as a test bed for spec-driven development workflows with SpecKit Companion.
-
-### Stack
-- React 18 with functional components and hooks
-- TypeScript with strict mode enabled
-- Vite for bundling and dev server
-
-### Code Structure
-
 ```
 src/
-├── App.tsx           # Root component, manages todo state
-├── types.ts          # Todo interface definition
-├── main.tsx          # React entry point
-└── components/
-    ├── AddTodo.tsx   # Form for creating todos
-    ├── TodoItem.tsx  # Individual todo display
-    └── TodoList.tsx  # Todo collection renderer
+├── main.tsx              # entry — <BrowserRouter><App/></BrowserRouter>
+├── App.tsx               # <TodosProvider> + layout + <Routes>
+├── types.ts              # domain types (Todo, …)
+├── lib/
+│   └── storage.ts        # load/save helpers — ALL persistence goes through here
+├── store/
+│   └── todos.tsx         # TodosProvider (reducer + context) + useTodos() hook; persists to localStorage
+├── components/           # presentational, prop-driven (Header, AddTodo, TodoItem, TodoList)
+└── pages/                # one component per route (TodosPage, AboutPage)
 ```
 
-### State Management
+Routes: `/` → `TodosPage`, `/about` → `AboutPage`. The app title is the `<h1>` in `Header.tsx` (and `<title>` in `index.html`).
 
-All state lives in `App.tsx` using `useState`. Todo operations (add, toggle, delete) are defined there and passed down as props.
+## Conventions (follow these when adding a feature)
 
-### Planned Features
+- **State** lives in a store under `src/store/` (reducer + context, exposed via a `useXxx()` hook). New cross-component state → a new store slice in the same shape as `todos.tsx`, wrapped in `App.tsx`. Don't scatter `useState` across components for shared data.
+- **Persistence** always goes through `src/lib/storage.ts` (`load`/`save`) with a string key. A store persists via a `useEffect` that saves on change and seeds its reducer with `load(...)`.
+- **A new feature area** = a new `pages/` component + a `<Route>` in `App.tsx` + a nav `<Link>` in `Header.tsx` (+ a store slice if it owns data).
+- **Components** stay presentational and prop-driven; pages wire them to the store.
+- **Test ids**: when a spec asks for specific `data-testid` values, use them verbatim — the bench grades on them.
+- **Tests**: co-locate as `*.test.tsx` next to the code (see `src/App.test.tsx`, `src/lib/storage.test.ts`). Render router-dependent components inside `<MemoryRouter>`.
 
-Three features are designed to be implemented via specs in `.specify/specs/`:
-- **due-dates/**: Date picker, overdue indicators, sort by due date
-- **categories/**: Category management and filtering
-- **priority-levels/**: Low/Medium/High priorities with color coding
+## Bench
 
-When implementing a feature, check its `requirements.md` in the corresponding spec folder for acceptance criteria.
+This app doubles as the lean-vs-standard bench target. See `bench/README.md`. Don't edit `bench/stats.jsonl` or `bench/REPORT.md` (generated).
