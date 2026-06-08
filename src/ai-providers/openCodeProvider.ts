@@ -2,10 +2,12 @@ import { AIProviders } from '../core/constants';
 import { CliTerminalProvider } from './cliTerminalProvider';
 
 /**
- * OpenCode CLI provider — `opencode -p "$(cat <tmp>)"`.
+ * OpenCode CLI provider — `opencode run "$(cat <tmp>)"`.
  *
- * Identical shape to Qwen: default dispatch pattern, no prompt preprocessing,
- * no extra temp files. Slash commands pass through as prompts.
+ * Default dispatch pattern with no prompt preprocessing and no extra temp
+ * files. OpenCode takes the message positionally on its `run` subcommand —
+ * `-p` is its `--password` flag, so the default `-p ` prompt flag makes it
+ * print help instead of acting on the prompt. Slash commands pass through.
  */
 export class OpenCodeProvider extends CliTerminalProvider {
     public readonly name = 'OpenCode';
@@ -19,4 +21,8 @@ export class OpenCodeProvider extends CliTerminalProvider {
     protected readonly defaultTerminalTitle = 'SpecKit - OpenCode';
     protected readonly headlessTerminalName = 'OpenCode Background';
     protected readonly logPrefix = 'OpenCode';
+
+    protected cliPromptFlag(): string {
+        return 'run ';
+    }
 }

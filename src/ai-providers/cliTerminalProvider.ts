@@ -167,8 +167,10 @@ export abstract class CliTerminalProvider implements IAIProvider {
 
     /**
      * The prompt-input flag inserted between permissionFlag and the
-     * `"$(cat …)"` substitution. Default is `-p ` which fits Copilot, Qwen,
-     * OpenCode. Override to return `` if the CLI takes the prompt positionally.
+     * `"$(cat …)"` substitution. Default is `-p `, which fits Copilot and
+     * Qwen. Override for CLIs that take the prompt differently — OpenCode
+     * returns `run ` so the message is passed positionally to its `run`
+     * subcommand.
      */
     protected cliPromptFlag(): string {
         return '-p ';
