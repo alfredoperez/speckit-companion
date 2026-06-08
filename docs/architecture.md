@@ -84,6 +84,8 @@ Extension host                    Webview
 
 Spec context (`.spec-context.json`) is the canonical store. The host owns all writes; the webview reads derived state via the message channel. When a user advances a step, the host updates context, fires a refresh, and the sidebar re-renders. See `docs/spec-context-schema.md` for the schema.
 
+Capture into `history[]` comes from two surfaces: **deterministic** writes (GUI buttons via `stepLifecycle.ts`, and in-command hook scripts → `write-context.py`, both `by:extension`) and **best-effort** AI journaling (the timing partial, `by:ai`). The split — and why timing fidelity is exact for the former and coarse for the latter — is documented in `docs/capture-and-timing.md`.
+
 ## Configuration
 
 User-visible settings are declared in `package.json` under `contributes.configuration`. The most relevant ones:
@@ -109,3 +111,4 @@ User data is stored under the workspace `.claude/` and `specs/` directories, plu
 - `docs/viewer-states.md` — the full state machine for the spec viewer.
 - `docs/sidebar.md` — long-form sidebar reference.
 - `docs/how-it-works.md` — narrative walk-through that complements this structural overview.
+- `docs/capture-and-timing.md` — how `.spec-context.json` gets written (deterministic hooks vs best-effort AI journaling), the preset/command-override mechanism, install paths, and what the eval asserts.
