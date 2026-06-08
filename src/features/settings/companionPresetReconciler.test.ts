@@ -83,6 +83,12 @@ describe('companionPresetReconciler', () => {
             expect(readTemplateProfile(root)).toBeUndefined();
         });
 
+        it('returns undefined for a value that is not a known profile', () => {
+            fs.mkdirSync(path.dirname(configPath()), { recursive: true });
+            fs.writeFileSync(configPath(), 'templateProfile: foo\n', 'utf8');
+            expect(readTemplateProfile(root)).toBeUndefined();
+        });
+
         it('preserves sibling keys already in the file', () => {
             fs.mkdirSync(path.dirname(configPath()), { recursive: true });
             fs.writeFileSync(configPath(), 'somethingElse: keep-me\nnested:\n  a: 1\n', 'utf8');
@@ -150,6 +156,22 @@ describe('companionPresetReconciler', () => {
                 },
             });
             // the remove was attempted and failed; the add must NOT run
+            expect(calls).toEqual(['specify preset remove companion-lean']);
+        });
+
+        it('skips ENABLE of the target when a preceding remove fails (target already installed)', async () => {
+            install('companion-standard'); // target installed → would be enabled
+            install('companion-lean');     // non-target installed → removed first
+            const calls: string[] = [];
+            await reconcileCompanionPreset(root, 'standard', {
+                run: async c => {
+                    calls.push(c);
+                    if (c.includes('remove')) {
+                        throw new Error('remove failed');
+                    }
+                },
+            });
+            // remove failed → the enable is skipped, so we don't leave both active
             expect(calls).toEqual(['specify preset remove companion-lean']);
         });
     });

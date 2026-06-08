@@ -21,7 +21,14 @@ const LEAN_COMMAND_BY_STOCK: Record<string, string> = {
  * when the spec isn't lean or the command has no lean twin.
  */
 export function resolveProfileCommand(command: string, specDirectory: string): string {
-    const profile = readSpecContextSync(specDirectory)?.profile;
+    let profile: string | undefined;
+    try {
+        profile = readSpecContextSync(specDirectory)?.profile;
+    } catch {
+        // A corrupt/unreadable .spec-context.json must not break dispatch —
+        // fall back to the stock command rather than throwing on every path.
+        return command;
+    }
     if (profile === 'lean' && LEAN_COMMAND_BY_STOCK[command]) {
         return LEAN_COMMAND_BY_STOCK[command];
     }

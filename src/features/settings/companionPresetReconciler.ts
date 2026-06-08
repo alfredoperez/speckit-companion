@@ -70,15 +70,26 @@ function installedMap(workspaceRoot: string): Record<string, boolean> {
     return map;
 }
 
-/** Read templateProfile from .specify/companion.yml; undefined when absent. */
+const VALID_PROFILES: readonly TemplateProfile[] = ['standard', 'lean', 'off'];
+
+function isTemplateProfile(v: unknown): v is TemplateProfile {
+    return typeof v === 'string' && (VALID_PROFILES as readonly string[]).includes(v);
+}
+
+/**
+ * Read templateProfile from .specify/companion.yml; undefined when absent, unreadable,
+ * or set to a value that isn't a known profile (a hand-edited `templateProfile: foo`
+ * must not flow downstream as a TemplateProfile).
+ */
 export function readTemplateProfile(workspaceRoot: string): TemplateProfile | undefined {
     const p = path.join(workspaceRoot, CONFIG_REL);
     if (!fs.existsSync(p)) {
         return undefined;
     }
     try {
-        const doc = yaml.load(fs.readFileSync(p, 'utf8')) as { templateProfile?: TemplateProfile } | null;
-        return doc?.templateProfile;
+        const doc = yaml.load(fs.readFileSync(p, 'utf8')) as { templateProfile?: unknown } | null;
+        const value = doc?.templateProfile;
+        return isTemplateProfile(value) ? value : undefined;
     } catch {
         return undefined;
     }
@@ -130,14 +141,15 @@ export async function reconcileCompanionPreset(
         log(`[companion] profile "${profile}" already reconciled — no preset action`);
         return ops;
     }
-    // Removes run before the add. If a remove fails, skip the add rather than
-    // half-applying the switch — registering both presets is the exact state
-    // mutual exclusivity exists to prevent. The next reconcile retries.
+    // Removes run before the target op. If a remove fails, skip the target's
+    // activation (whether that's `add` or `enable`) rather than half-applying the
+    // switch — activating the target while the other preset survives is the exact
+    // both-active state mutual exclusivity exists to prevent. The next reconcile retries.
     let removeFailed = false;
     for (const op of ops) {
         const cmd = presetCommandFor(op);
-        if (op.action === 'add' && removeFailed) {
-            log(`[companion] skipping "${cmd}" — a preceding remove failed; not registering both presets`);
+        if ((op.action === 'add' || op.action === 'enable') && removeFailed) {
+            log(`[companion] skipping "${cmd}" — a preceding remove failed; not activating both presets`);
             continue;
         }
         log(`[companion] profile "${profile}" → ${cmd}`);
