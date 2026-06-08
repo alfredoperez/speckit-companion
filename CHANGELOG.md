@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-06-07
+
 ### Added
 
 - **Live per-task journaling on implement** (#130): the implement-step context preamble now instructs the AI to append a `history[]` entry as it finishes *each* task (`substep`/`task` = the task id, `by: "ai"`, real `date -u` timestamp), so the activity log shows real per-task timing instead of one end-of-run burst from the `after_implement` hook. The live entries carry the `task` id, so the hook's `--tasks-file` sync dedupes against them and becomes a no-op backstop (it still journals everything when the preamble is disabled). Applies to single-step `/speckit.implement` and multi-step/auto lifecycle runs.

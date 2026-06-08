@@ -11,9 +11,9 @@ The spec workspace for developers running AI agents through Spec-Driven Developm
 
 ## Recently Shipped
 
+- **v0.22.0** Status + Resume — each active spec row shows its current step and last transition with an inline **Resume** action that continues the pipeline from where it stopped; live per-task journaling on implement (real per-task timing, not one end-of-run burst); malformed-`.spec-context.json` recovery with a reset action
 - **v0.21.0** Spec-context `history[]` schema migration with explicit `kind` field, end-to-end state-machine correctness fixes (15 findings, F1–F16), brand-name provider labels, wrapping task-line rendering polish, inline-comment persistence across all docs, install-pipeline reliability (tsc chained in prepublish)
 - **v0.20.0** Marketplace screenshot fix (stable-filename policy), heading/caption correction, Marketplace-safe anchor links
-- **v0.19.0** Claude in VS Code provider (drive specs from the Claude Code panel), provider-aware workflow filtering, refreshed README screenshots
 - [Full changelog →](./CHANGELOG.md)
 
 ## Why it exists
