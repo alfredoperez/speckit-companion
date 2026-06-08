@@ -5,8 +5,9 @@ import { inlineSpecifyTempPath } from './promptBuilder';
 /**
  * OpenCode CLI provider — `opencode run "$(cat <tmp>)"`.
  *
- * Default dispatch pattern with no prompt preprocessing and no extra temp
- * files. OpenCode takes the message positionally on its `run` subcommand —
+ * Uses the default dispatch pattern (no extra temp files) but preprocesses the
+ * prompt — see `prepareDispatch()` below, which inlines any `specify <temp.md>`
+ * path. OpenCode takes the message positionally on its `run` subcommand —
  * `-p` is its `--password` flag, so the default `-p ` prompt flag makes it
  * print help instead of acting on the prompt. Slash commands pass through.
  *
