@@ -29,6 +29,13 @@ v0.2.0                  ❌  matches v* → would publish the WRONG thing to the
    gh release create speckit-ext-v$V /tmp/cb/companion-$V.zip --title "..." --notes-file <CHANGELOG [X.Y.Z]> --target main
    ```
 7. **Verify the deployed install** in a scratch dir (simulate a user): `mkdir -p /tmp/v/.specify/extensions && cd /tmp/v && yes | specify extension add companion --from <release-zip-url> --force` → `specify extension list` shows the version + all commands. Note: the **`companion` name arg is required**, the URL must be **HTTPS**, and a raw-URL install shows a one-time "untrusted source" prompt. If a prior local install left inconsistent emission dirs, nuke all `speckit-companion-*` / `speckit.companion.*` artifacts first.
+
+   **What a real install looks like** (so the output below isn't mistaken for an error):
+
+   - **Untrusted-source prompt** — installing from a raw release URL (not yet catalog-listed) shows a one-time `⚠ Untrusted Source` box with the URL and `Continue with installation? [y/N]:`. Answer `y` (or pipe `yes |`). This is expected until the catalog lists `companion`.
+   - **Already-installed guard** — if a prior `companion` is present, the install aborts with `Extension 'companion' is already installed. … retry with --force`. Either `specify extension remove companion` first (config is backed up to `.specify/extensions/.backup/companion/`) or re-run with `--force`.
+   - **Stale/corrupted leftover** — `specify extension list` may show an old `✗ companion (v0.1.0) … ⚠️ Corrupted extension, Commands: 0`. Remove it (`yes | specify extension remove companion`) before installing the current release; the fresh install reports `✓ Extension installed successfully! SpecKit Companion (v0.2.0)` with all 6 commands.
+   - **"Configuration may be required" footer** — a successful install ends with `⚠ Configuration may be required / Check: .specify/extensions/companion/`. This is **informational, not a failure** — it points at the installed extension dir; no manual config step is needed for companion.
 8. **Submit to the catalog** — file an **issue** on github/spec-kit using the **Extension Submission** template (NOT a PR). Maintainers verify metadata + URL reachability and add the entry to `extensions/catalog.community.json`. Review is 3–7 business days. Only then does the by-name `specify extension add companion` resolve.
 9. **For later updates** — repeat, and file a new submission issue noting it's an update.
 

@@ -49,6 +49,7 @@ Release the **spec-kit extension** (`speckit-extension/`, `id: companion`) so pe
    specify extension list   # → SpecKit Companion (vX.Y.Z), all commands listed
    ```
    - If a prior local install left **inconsistent emission dirs** (`.{claude,cursor,agents}/skills/speckit-companion-*`, `.{gemini,qwen}/commands/speckit.companion.*`, etc.), the install can throw `FileNotFoundError`. Nuke all companion emission artifacts first, then retry.
+   - **Expected non-error output** (don't flag these as failures): a raw-URL install shows a one-time `⚠ Untrusted Source` prompt; a pre-existing install aborts with `already installed … retry with --force` (remove first or use `--force`); a stale `✗ companion (v0.1.0) ⚠️ Corrupted extension` must be removed before installing; and a clean install ends with an **informational** `⚠ Configuration may be required / Check: .specify/extensions/companion/` — no manual config is actually needed.
 8. **Confirm** the prefixed tag did **not** trigger `release.yml`: `gh run list --workflow=release.yml --limit 2` (no new run).
 9. **Report** the release URL + the install command. Remind that the by-name catalog install (`specify extension add companion`) needs the **Extension Submission issue** on github/spec-kit (see `publishing.md`) — that step is the user's call.
 
