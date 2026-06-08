@@ -27,6 +27,9 @@ CANONICAL_STATUSES = [
     "ready-to-implement", "implementing", "implemented", "completed", "archived",
 ]
 VALID_BY = {"extension", "user", "cli", "ai", "derive"}
+# Writers that read the real clock at write time → held to ms-precision + monotonic.
+# `ai` is excluded: it journals best-effort with second-precision `date -u`.
+DETERMINISTIC_BY = {"extension", "derive", "cli", "user"}
 VALID_KIND = {"start", "complete"}
 COMPLETED_TASK_RE = re.compile(r"^\s*[-*]\s*\[[xX]\]\s*\*\*(T\d+)")
 ALL_TASK_RE = re.compile(r"^\s*[-*]\s*\[[ xX]\]\s*\*\*(T\d+)")
@@ -134,11 +137,16 @@ def run_checks(spec_dir: Path) -> Report:
             bad.append(f"#{i} bad at={e.get('at')}")
     r.add(not bad, "entries-well-formed", "all valid" if not bad else "; ".join(bad[:5]))
 
-    # monotonic timestamps
-    times = [_parse_at(e.get("at")) for e in history if _parse_at(e.get("at"))]
-    mono = all(times[i] <= times[i + 1] for i in range(len(times) - 1)) if len(times) > 1 else True
-    r.add(mono, "timestamps-monotonic",
-          "non-decreasing" if mono else "out-of-order timestamps found")
+    # monotonic timestamps — strict only for DETERMINISTIC writes (extension/derive/
+    # cli/user), which read the real clock in order. AI-journaled entries may burst
+    # (the AI batches `date -u`); that coarseness is graded by task-cadence, not failed.
+    det_times = [_parse_at(e.get("at")) for e in history
+                 if e.get("by") in DETERMINISTIC_BY and _parse_at(e.get("at"))]
+    det_mono = all(det_times[i] <= det_times[i + 1] for i in range(len(det_times) - 1)) \
+        if len(det_times) > 1 else True
+    r.add(det_mono, "timestamps-monotonic",
+          "deterministic writes non-decreasing" if det_mono
+          else "deterministic writes out of order (capture bug)")
 
     # authorship breakdown (info)
     by_counts: dict[str, int] = {}
@@ -153,12 +161,15 @@ def run_checks(spec_dir: Path) -> Report:
     steps_seen = [s for s in CANONICAL_STEPS if any(e.get("step") == s for e in history)]
     r.add(None, "lifecycle-coverage", " → ".join(steps_seen) or "none")
 
-    # timestamp realness (backfill heuristic)
-    if history:
-        handtyped = sum(1 for e in history if _looks_handtyped(e.get("at", "")))
+    # timestamp realness (backfill heuristic) — only DETERMINISTIC writes are held to
+    # ms-precision. `by:ai` entries legitimately carry second precision (the timing
+    # partial stamps with `date -u +%SZ`), so whole-second is NOT a backfill signal there.
+    det_entries = [e for e in history if e.get("by") in DETERMINISTIC_BY]
+    if det_entries:
+        handtyped = sum(1 for e in det_entries if _looks_handtyped(e.get("at", "")))
         r.add(handtyped == 0, "timestamps-real",
-              f"{handtyped}/{len(history)} look hand-typed (round ms) — "
-              f"{'all real' if handtyped == 0 else 'capture may be backfilled, not live'}")
+              f"{handtyped}/{len(det_entries)} deterministic writes look hand-typed (round ms) — "
+              f"{'all real' if handtyped == 0 else 'a hook write may be backfilled'}")
 
     # per-task journaling + cross-check vs tasks.md
     task_entries = [e for e in history if isinstance(e.get("task"), str)]
@@ -182,15 +193,17 @@ def run_checks(spec_dir: Path) -> Report:
             r.add(not missing, "per-task-matches-tasksmd",
                   f"tasks.md done={len(distinct_done)}, journaled={len(journaled)}"
                   + (f", MISSING {missing}" if missing else ""))
-        # No-op-backstop invariant: live AI per-task journaling + the
-        # after_implement hook must not BOTH record the same task. The hook
-        # dedupes on the task id, so each id appears at most once.
+        # No-op-backstop invariant: a task carries one `start` + one `complete`
+        # (the per-task journaling model), so dedup is checked per (task, kind) —
+        # only a repeated (task, kind) means the after_implement hook re-added an
+        # already-journaled entry. (Counting bare task ids would false-fail the
+        # intended start+complete pair.)
         if task_entries:
-            counts = Counter(e.get("task") for e in task_entries)
-            dupes = {t: n for t, n in counts.items() if n > 1}
+            counts = Counter((e.get("task"), e.get("kind")) for e in task_entries)
+            dupes = {f"{t}:{k}": n for (t, k), n in counts.items() if n > 1}
             r.add(not dupes, "per-task-no-duplicates",
-                  "each task journaled once" if not dupes
-                  else f"DUPLICATED task ids (hook didn't dedupe live entries): {dupes}")
+                  "each task has ≤1 start + ≤1 complete" if not dupes
+                  else f"DUPLICATED task/kind (hook re-added a live entry): {dupes}")
 
     # timing breakdown (info)
     _timing(r, history)

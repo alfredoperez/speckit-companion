@@ -44,11 +44,11 @@ Render a verdict table (PASS / PARTIAL / FAIL + one-line evidence):
 |---|------------|
 | A1 | Each lifecycle step the user ran produced a capture (`after_specify/plan/tasks/implement` → a `history[]` entry). |
 | A2 | Writes use canonical `history[]` with explicit `kind` — no legacy `transitions[]`/`stepHistory`. |
-| A3 | Timing is real: ms-precision, monotonic, distinct per step (not backfilled in one burst). |
+| A3 | Timing is real **for deterministic writes** (`by:extension`/`derive`/`cli`/`user`): ms-precision and monotonic (`timestamps-real`/`timestamps-monotonic` check these only). `by:ai` entries carry second precision (`date -u +%SZ`) and may burst — that's graded by `task-cadence`, not failed. See `docs/capture-and-timing.md`. |
 | A4 | `/speckit.implement` journaled per-task progress as implement **substeps** (`substep == task id`), matching `tasks.md` completed markers. |
 | A5 | No-backward-clobber held — no step regressed; an advanced/terminal spec was never dragged back. |
 | A6 | (On demand) `derive-from-files.py` reconstructs the same state from artifacts when a hook didn't fire. Test: back up `.spec-context.json`, delete it, run `python3 speckit-extension/scripts/derive-from-files.py --feature-dir specs/<NNN>-<slug>`, diff, restore. |
-| A7 | Per-task journaling is **deduped** — each task id appears at most once across `history[]` (`per-task-no-duplicates`). Live AI entries (`by: ai`, real `date -u` timing) are the cadence source; the `after_implement` hook is a no-op backstop that must not re-add an already-journaled task. Real per-task cadence requires `task-cadence` source `live (by:ai)` with non-zero gaps; a `hook burst` source means the AI didn't journal live and the hook backstopped (correct final state, coarse timing — not a defect). |
+| A7 | Per-task journaling is **deduped** — each task carries one `start` + one `complete`, so dedup is checked per `(task, kind)` (`per-task-no-duplicates`); a repeated `(task, kind)` means the `after_implement` hook re-added an already-journaled entry. Live AI entries (`by: ai`, real `date -u` timing) are the cadence source. Real per-task cadence requires `task-cadence` source `live (by:ai)` with non-zero gaps; a `hook burst` source means the AI didn't journal live and the hook backstopped (correct final state, coarse timing — not a defect). |
 
 End with a one-paragraph plain verdict: did the extension work, and where reality diverged from the assumptions.
 

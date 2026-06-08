@@ -120,6 +120,8 @@ When modifying the companion template profiles — the `companion-standard` / `c
 
 When modifying the project structure, adding/removing modules, or changing the architecture, also update `docs/architecture.md`.
 
+When modifying how `.spec-context.json` gets captured — the lifecycle hooks, `write-context.py`, the timing partial (`speckit-extension/presets/_shared/timing-partial.md` / `promptBuilder.ts`), the preset command-override mechanism, `derive-from-files.py`, or the eval (`check_capture.py`) — also update `docs/capture-and-timing.md` (the deterministic-vs-best-effort capture model, the reliability principle, install paths, known timing gaps, and what the eval asserts). Don't re-derive this flow from the code each time; this doc is the map.
+
 When modifying the sidebar (filter, sort, lifecycle buttons, badge tiers, tree icons, transition logging), also update `docs/sidebar.md` (the long-form sidebar reference linked from the README).
 
 When modifying a webview component (`webview/src/spec-viewer/components/`, `webview/src/spec-editor/`, etc.) that has a sibling `.stories.tsx` file, update the stories in the same change to cover the new state/variant. Storybook is the visual baseline for these components — stale stories are worse than missing stories because they lie. If a component changes materially and no `.stories.tsx` exists, add one in the same PR.
