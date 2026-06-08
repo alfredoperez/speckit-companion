@@ -18,6 +18,7 @@ import datetime as dt
 import json
 import re
 import sys
+from collections import Counter
 from pathlib import Path
 
 CANONICAL_STEPS = ["specify", "clarify", "plan", "tasks", "analyze", "implement"]
@@ -25,7 +26,7 @@ CANONICAL_STATUSES = [
     "draft", "specifying", "specified", "planning", "planned", "tasking",
     "ready-to-implement", "implementing", "implemented", "completed", "archived",
 ]
-VALID_BY = {"extension", "user", "cli", "ai", "derive", "sdd"}
+VALID_BY = {"extension", "user", "cli", "ai", "derive"}
 VALID_KIND = {"start", "complete"}
 COMPLETED_TASK_RE = re.compile(r"^\s*[-*]\s*\[[xX]\]\s*\*\*(T\d+)")
 ALL_TASK_RE = re.compile(r"^\s*[-*]\s*\[[ xX]\]\s*\*\*(T\d+)")
@@ -111,10 +112,10 @@ def run_checks(spec_dir: Path) -> Report:
     status = ctx.get("status")
     r.add(status in CANONICAL_STATUSES, "status-valid", f"status={status}")
 
-    # last entry's step matches currentStep (unless terminal currentStep=done).
+    # last entry's step matches currentStep (terminal statuses may sit past it).
     if history:
         last_step = history[-1].get("step")
-        ok = last_step == cur or cur in (None, "done") or ctx.get("status") in ("completed", "archived")
+        ok = last_step == cur or ctx.get("status") in ("completed", "archived")
         r.add(ok, "last-entry-matches-currentStep",
               f"last history step={last_step}, currentStep={cur}")
 
@@ -155,7 +156,6 @@ def run_checks(spec_dir: Path) -> Report:
     # timestamp realness (backfill heuristic)
     if history:
         handtyped = sum(1 for e in history if _looks_handtyped(e.get("at", "")))
-        ratio = handtyped / len(history)
         r.add(handtyped == 0, "timestamps-real",
               f"{handtyped}/{len(history)} look hand-typed (round ms) — "
               f"{'all real' if handtyped == 0 else 'capture may be backfilled, not live'}")
@@ -182,6 +182,15 @@ def run_checks(spec_dir: Path) -> Report:
             r.add(not missing, "per-task-matches-tasksmd",
                   f"tasks.md done={len(distinct_done)}, journaled={len(journaled)}"
                   + (f", MISSING {missing}" if missing else ""))
+        # No-op-backstop invariant: live AI per-task journaling + the
+        # after_implement hook must not BOTH record the same task. The hook
+        # dedupes on the task id, so each id appears at most once.
+        if task_entries:
+            counts = Counter(e.get("task") for e in task_entries)
+            dupes = {t: n for t, n in counts.items() if n > 1}
+            r.add(not dupes, "per-task-no-duplicates",
+                  "each task journaled once" if not dupes
+                  else f"DUPLICATED task ids (hook didn't dedupe live entries): {dupes}")
 
     # timing breakdown (info)
     _timing(r, history)
@@ -204,14 +213,23 @@ def _timing(r: Report, history: list) -> None:
             gap = (firsts[i][1] - firsts[i - 1][1]).total_seconds()
             parts.append(f"{firsts[i-1][0]}→{firsts[i][0]} {_fmt(gap)}")
         r.add(None, "step-timing", " | ".join(parts))
-    # Per-task cadence within implement.
-    task_times = [(e.get("task"), _parse_at(e.get("at"))) for e in history
-                  if isinstance(e.get("task"), str) and _parse_at(e.get("at"))]
-    if len(task_times) >= 2:
-        gaps = [(task_times[i][1] - task_times[i - 1][1]).total_seconds()
+    # Per-task cadence within implement. Report the authorship source so a
+    # hook-driven single-shot sync (by:extension, expected 0ms burst) isn't
+    # misread as broken cadence — real per-task timing comes from live AI
+    # journaling (by:ai), where non-zero gaps are the signal.
+    task_evts = [e for e in history
+                 if isinstance(e.get("task"), str) and _parse_at(e.get("at"))]
+    if len(task_evts) >= 2:
+        task_times = [_parse_at(e["at"]) for e in task_evts]
+        gaps = [(task_times[i] - task_times[i - 1]).total_seconds()
                 for i in range(1, len(task_times))]
+        ai = sum(1 for e in task_evts if e.get("by") == "ai")
+        ext = sum(1 for e in task_evts if e.get("by") == "extension")
+        source = ("live (by:ai) — real cadence" if ai and not ext
+                  else "hook burst (by:extension) — cadence not a signal" if ext and not ai
+                  else f"mixed (ai={ai}, extension={ext})")
         r.add(None, "task-cadence",
-              f"{len(task_times)} tasks; gaps {', '.join(_fmt(g) for g in gaps)}")
+              f"{len(task_evts)} tasks; source={source}; gaps {', '.join(_fmt(g) for g in gaps)}")
 
 
 def _fmt(seconds: float) -> str:

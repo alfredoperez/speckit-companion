@@ -33,11 +33,6 @@ storybook-static/
 # Transient prompt artifact written by the SpecKit Companion extension at dispatch
 .claude/speckit-companion-prompt.md
 
-# Local dev-install artifacts from `specify extension add ./speckit-extension --dev`
-# (machine-specific symlinks + caches; the source of truth is speckit-extension/)
-.specify/extensions/**/.specify-dev/
-.specify/extensions/.cache/
-
 # Local-only demo spec dirs (underscore-prefixed under specs/)
 specs/_*/
 

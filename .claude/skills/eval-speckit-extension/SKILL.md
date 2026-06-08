@@ -32,9 +32,9 @@ Read the PASS/FAIL/INFO rows and the timing breakdown. (`--json` for machine out
 The checker can't know what the user *did*. Reconstruct it from this conversation and reconcile against the capture:
 
 - List every `/speckit.specify|plan|tasks|implement` (or `/sdd:*`) the user ran this session, with rough timestamps.
-- For each, confirm a matching `history[]` entry exists with the expected `step`/`status` and `by: "extension"` (hook fired) — or `by: "sdd"`/`"ai"` if SDD-authored, `by: "derive"` if reconstructed.
+- For each, confirm a matching `history[]` entry exists with the expected `step`/`status` and `by: "extension"` (hook fired) — or `by: "ai"` if the AI appended it, `by: "derive"` if reconstructed. (The canonical `by` vocabulary is `extension`/`user`/`cli`/`ai`/`derive`.)
 - **Timing reality:** does each capture's `at` land *just after* the command ran (live hook), or are timestamps clustered/round (backfilled)? The `timestamps-real` check flags round-ms; you add the "fired at the right moment" judgement.
-- **Task execution:** if `/speckit.implement` ran, confirm per-task substep entries appear and their cadence (`task-cadence`) reflects real work, not one burst.
+- **Task execution:** if `/speckit.implement` ran, confirm per-task substep entries appear. Read `task-cadence`'s **source**: `live (by:ai)` means the AI journaled each task as it finished — non-zero gaps are the real-cadence signal; `hook burst (by:extension)` means the single end-of-step hook synced them — 0ms gaps are *expected* there and not a defect (the AI didn't journal live, so the hook backstopped). Only a *mixed* or duplicated picture is a smell.
 
 ### 4. Score the assumptions
 
@@ -48,6 +48,7 @@ Render a verdict table (PASS / PARTIAL / FAIL + one-line evidence):
 | A4 | `/speckit.implement` journaled per-task progress as implement **substeps** (`substep == task id`), matching `tasks.md` completed markers. |
 | A5 | No-backward-clobber held — no step regressed; an advanced/terminal spec was never dragged back. |
 | A6 | (On demand) `derive-from-files.py` reconstructs the same state from artifacts when a hook didn't fire. Test: back up `.spec-context.json`, delete it, run `python3 speckit-extension/scripts/derive-from-files.py --feature-dir specs/<NNN>-<slug>`, diff, restore. |
+| A7 | Per-task journaling is **deduped** — each task id appears at most once across `history[]` (`per-task-no-duplicates`). Live AI entries (`by: ai`, real `date -u` timing) are the cadence source; the `after_implement` hook is a no-op backstop that must not re-add an already-journaled task. Real per-task cadence requires `task-cadence` source `live (by:ai)` with non-zero gaps; a `hook burst` source means the AI didn't journal live and the hook backstopped (correct final state, coarse timing — not a defect). |
 
 End with a one-paragraph plain verdict: did the extension work, and where reality diverged from the assumptions.
 
