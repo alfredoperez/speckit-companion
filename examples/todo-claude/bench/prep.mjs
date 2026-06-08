@@ -1,5 +1,5 @@
 // bench/prep.mjs — arm a lean-vs-standard bench run.
-//   node bench/prep.mjs --size <small|medium|complex> --mode <lean|standard>
+//   node bench/prep.mjs --size <easy|medium|hard> --mode <lean|standard>
 // Sets the sandbox mode, snapshots a baseline so finish can attribute the run,
 // and prints the prompt to paste + the exact pipeline commands for the mode.
 import { writeFileSync, readFileSync } from 'node:fs'

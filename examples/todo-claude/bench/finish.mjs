@@ -3,7 +3,7 @@
 // Reads timing from the run's .spec-context.json, runs build + the size's
 // acceptance suite, diffs the implementation vs the prep baseline, appends a
 // row to stats.jsonl, and re-renders REPORT.md.
-import { existsSync, appendFileSync, writeFileSync, readFileSync } from 'node:fs'
+import { existsSync, appendFileSync, writeFileSync, readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { execFileSync } from 'node:child_process'
 import {
@@ -114,6 +114,9 @@ function buildPasses() {
   }
 }
 function runAcceptance(size) {
+  // Clear any prior report so a vitest crash (config error, missing deps) can't
+  // leave a stale .last-vitest.json that we'd misread as this run's result.
+  rmSync(VITEST_OUT, { force: true })
   try {
     execFileSync(
       'npm',

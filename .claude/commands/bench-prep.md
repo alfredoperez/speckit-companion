@@ -9,9 +9,9 @@ Arm a bench run so the next manual spec-kit pipeline pass (run by hand in VS Cod
 
 ### 1. Resolve size + mode
 
-Read them from `$ARGUMENTS` (e.g. `small lean`, or `--size medium --mode standard`).
+Read them from `$ARGUMENTS` (e.g. `easy lean`, or `--size medium --mode standard`).
 
-- **size** ∈ `small` | `medium` | `complex`
+- **size** ∈ `easy` | `medium` | `hard`
 - **mode** ∈ `lean` | `standard`
 
 If either is missing or ambiguous, ask with **AskUserQuestion** (one question for size, one for mode) before continuing. Do not guess.
