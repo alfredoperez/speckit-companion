@@ -87,11 +87,9 @@ const STATUS_LIFECYCLE = [
     '',
     'IMPORTANT — the implement step completes at "implemented", NOT "completed".',
     '"completed" is the user\'s final approval gate (their Mark-Completed click in the',
-    'viewer). When you finish the implement step, set status to "implemented" even if',
-    'manual verification steps remain (running tests, eyeballing UI, smoke-checking',
-    'in a browser) — those belong to the user, not you. Do not skip writing the',
-    'implement-completion history entry just because you can\'t personally verify a',
-    'manual check; write it as soon as your AI-side work is done.',
+    'viewer) — the AI never writes "completed". The implement step itself is closed by',
+    'the extension\'s end-of-step hook, which sets "implemented" and journals each task;',
+    'you do not flip the implement status or write its completion entry yourself.',
 ].join('\n');
 
 function renderSharedRules(dispatchUtc: string): string {
@@ -136,17 +134,44 @@ const DONE_PHRASE_BY_STEP: Record<PromptStep, string> = {
     implement: 'Done implementing',
 };
 
-// Implement journals per task, not just at step end. The end-of-step extension
-// hook (`write-context.py --tasks-file`) reconciles anything missed, deduped on
-// the `task` id — so live entries that carry `task` make that sync a no-op
-// backstop. Writing them as each task finishes is what gives the activity log
-// real per-task timing instead of one end-of-run burst.
-const PER_TASK_JOURNALING = [
-    'PER-TASK JOURNALING (implement): as you finish each task in tasks.md — at the moment you mark its `- [x] **<TaskID>**` — append BOTH a start and a complete for it, each with its own fresh `date -u`:',
-    '    { "step": "implement", "substep": "<TaskID>", "task": "<TaskID>", "kind": "start", "by": "ai", "at": <date -u output> }',
-    '    { "step": "implement", "substep": "<TaskID>", "task": "<TaskID>", "kind": "complete", "by": "ai", "at": <date -u output> }',
-    'One fresh `date -u` per task — do NOT reuse a value across tasks, do NOT batch at the end. The per-task start→complete cadence is the point. The `task` field lets the end-of-step extension hook treat already-journaled tasks as a no-op (it dedupes on `task`).',
-].join('\n');
+// Which steps the AI self-closes by hand. specify and implement are excluded:
+// the extension records those deterministically (specify from its own command's
+// `--kind complete` call; implement from the end-of-step `write-context.py
+// --tasks-file` hook, which also journals every task). An AI-authored complete
+// there would duplicate the script's, and an early `status: implemented` would
+// trip the hook's no-backward-clobber guard and suppress the per-task journal.
+const AI_SELF_CLOSE_STEPS: ReadonlySet<PromptStep> = new Set([
+    'clarify', 'plan', 'tasks', 'analyze',
+]);
+
+function renderClosingInstruction(
+    step: PromptStep, completedStatus: string, donePhrase: string
+): string[] {
+    if (AI_SELF_CLOSE_STEPS.has(step)) {
+        return [
+            '╔══════════════════════════════════════════════════════════════════╗',
+            '║  MANDATORY FINAL WRITE — DO THIS BEFORE YOUR TURN ENDS          ║',
+            `║  □ Flip status to "${completedStatus}"`.padEnd(67) + '║',
+            '║  □ Append { step, substep: null, kind: "complete", by: "ai",   ║',
+            '║      at: <date -u output> } — no "from" field on complete       ║',
+            `║  □ Print "${donePhrase}" as the final terminal line`.padEnd(67) + '║',
+            '╚══════════════════════════════════════════════════════════════════╝',
+            '',
+            'Skipping (a) leaves the badge stuck on the in-progress form; skipping (b) leaves the step timer running indefinitely; skipping (c) hides the completion from the activity log.',
+        ];
+    }
+    // specify + implement: the extension/hook closes the step deterministically.
+    const recorder = step === 'implement'
+        ? 'the end-of-step hook records every task and closes the implement step'
+        : 'the specify command records its own completion';
+    return [
+        `DONE: do NOT flip the status yourself and do NOT append a "complete" entry for ${step} — ${recorder} with a real script timestamp; a hand-written "ai" complete would duplicate it.`,
+        ...(step === 'implement'
+            ? ['Do NOT journal per-task timing either. Just mark each task `- [x] **<TaskID>**` in tasks.md and append task_summaries.<TaskID> as you finish it — the hook stamps each task\'s start+complete.']
+            : []),
+        `Print "${donePhrase}" as the final terminal line.`,
+    ];
+}
 
 function renderPreamble(step: PromptStep, specDir: string): string {
     const substepsList = CANONICAL_SUBSTEPS[step];
@@ -169,19 +194,10 @@ function renderPreamble(step: PromptStep, specDir: string): string {
         `1.5. When advancing from a previous step: flip the previous step's status to its completed form before writing the new step.`,
         '',
         substepsLine,
-        ...(step === 'implement' ? ['', PER_TASK_JOURNALING] : []),
         '',
-        '╔══════════════════════════════════════════════════════════════════╗',
-        '║  MANDATORY FINAL WRITE — DO THIS BEFORE YOUR TURN ENDS          ║',
-        `║  □ Flip status to "${completedStatus}"`.padEnd(67) + '║',
-        '║  □ Append { step, substep: null, kind: "complete", by: "ai",   ║',
-        '║      at: <date -u output> } — no "from" field on complete       ║',
-        `║  □ Print "${donePhrase}" as the final terminal line`.padEnd(67) + '║',
-        '╚══════════════════════════════════════════════════════════════════╝',
+        ...renderClosingInstruction(step, completedStatus, donePhrase),
         '',
-        `Leave currentStep on "${step}". This command is single-step — you are done after the box above. The user clicks the next-phase button (or the extension dispatches a fresh /speckit.<next> command) to advance; that path appends the next start-entry. Writing a start-entry for the next step here is a lie that makes the viewer render a phantom "Generating <next>…" indefinitely.`,
-        '',
-        `Skipping (a) leaves the badge stuck on the in-progress form; skipping (b) leaves the step timer running indefinitely; skipping (c) hides the completion from the activity log.`,
+        `Leave currentStep on "${step}". This command is single-step — you are done after the instruction above. The user clicks the next-phase button (or the extension dispatches a fresh /speckit.<next> command) to advance; that path appends the next start-entry. Writing a start-entry for the next step here is a lie that makes the viewer render a phantom "Generating <next>…" indefinitely.`,
         '',
         renderSharedRules(dispatchUtc),
         '',
@@ -200,10 +216,10 @@ function renderLifecycleBody(target: string, dispatchUtc: string): string {
         '',
         'For EACH step you work on (specify, plan, tasks, implement):',
         '1. When you START a step on your own initiative (mid-run, not the initial seed): set currentStep = "<step>" and status = in-progress form. Append a history entry { step: "<step>", substep: null, kind: "start", from, by: "ai", at: <real timestamp from `date -u`> }.',
-        '2. When you FINISH that step: flip status = completed form. Append a completion history entry { step: "<step>", substep: null, kind: "complete", by: "ai", at: <real timestamp from `date -u`> } — no `from` field on complete entries. This is what clears the in-flight ring on the tab.',
+        '2. When you FINISH a **plan, tasks, clarify, or analyze** step: flip status = completed form and append { step: "<step>", substep: null, kind: "complete", by: "ai", at: <real timestamp from `date -u`> } — no `from` on completes. This clears the in-flight ring on the tab. Do NOT self-close **specify** or **implement**: the extension closes specify from its own command and the end-of-step hook closes implement, each with a real script timestamp — an `ai` complete there would duplicate it.',
         '3. Append a history entry for each substep boundary too (`by: "ai"`, real timestamp).',
         '',
-        PER_TASK_JOURNALING,
+        'Implement: do NOT journal per-task timing. Mark each task `- [x] **<TaskID>**` in tasks.md and append task_summaries.<TaskID> as you finish it; the end-of-step hook stamps every task\'s start+complete and closes the step.',
         '',
         'Do NOT preemptively write a start-entry for the next step at completion time. The start-entry must coincide with you actually beginning that step (item 1 above), not with you finishing the previous one. Writing { step: "<next>", from: { step: "<this>" } } as part of the completion write produces a phantom "Generating <next>…" state in the viewer when in fact no one is generating anything.',
         '',

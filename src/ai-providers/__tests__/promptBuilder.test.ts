@@ -85,31 +85,39 @@ describe('buildPrompt', () => {
             expect(out).toContain('never write "None"/"N/A"');
         });
 
-        it('instructs per-task journaling for the implement step (real cadence, not one burst)', () => {
+        it('tells implement NOT to journal timing — the end-of-step hook owns it', () => {
             const out = buildPrompt({
                 command: '/speckit.implement x',
                 step: 'implement',
                 specDir: 'specs/001-demo',
             });
-            expect(out).toContain('PER-TASK JOURNALING (implement)');
-            // entry carries both substep and task so the end-of-step hook dedups it
-            expect(out).toContain('"substep": "<TaskID>", "task": "<TaskID>"');
-            // emits BOTH a start and a complete per task (real start→complete cadence)
-            expect(out).toContain('"kind": "start"');
-            expect(out).toContain('"kind": "complete"');
-            expect(out).toContain('do NOT batch at the end');
+            // The AI no longer hand-authors per-task JSON (that bursts); it just
+            // marks tasks done + writes summaries and lets the hook stamp timing.
+            expect(out).not.toContain('PER-TASK JOURNALING');
+            expect(out).toContain('Do NOT journal per-task timing');
+            expect(out).toContain('task_summaries');
+            // implement does not self-close — the hook closes it.
+            expect(out).not.toContain('Flip status to "implemented"');
+            expect(out).toContain('do NOT append a "complete" entry for implement');
         });
 
-        it('does NOT add per-task journaling to non-implement steps', () => {
-            for (const step of ['specify', 'plan', 'tasks', 'analyze'] as const) {
+        it('never adds per-task journaling to any step', () => {
+            for (const step of ['specify', 'plan', 'tasks', 'analyze', 'implement'] as const) {
                 const out = buildPrompt({ command: 'x', step, specDir: 'specs/001-demo' });
                 expect(out).not.toContain('PER-TASK JOURNALING');
             }
         });
 
-        it('includes per-task journaling in the multi-step lifecycle prompt', () => {
+        it('the multi-step lifecycle prompt defers per-task timing to the hook', () => {
             const out = buildLifecyclePrompt('/sdd:auto x', 'specs/001-demo');
-            expect(out).toContain('PER-TASK JOURNALING (implement)');
+            expect(out).not.toContain('PER-TASK JOURNALING');
+            expect(out).toContain('do NOT journal per-task timing');
+        });
+
+        it('specify does not self-close in the preamble — its command records completion', () => {
+            const out = buildPrompt({ command: 'x', step: 'specify', specDir: 'specs/001-demo' });
+            expect(out).not.toContain('Flip status to "specified"');
+            expect(out).toContain('do NOT append a "complete" entry for specify');
         });
 
         it('returns raw command when step is unknown', () => {
@@ -201,12 +209,13 @@ describe('buildPrompt', () => {
     // NOT "completed". The user owns the final closure click. The preamble
     // must not instruct Copilot to write "completed" (the previous
     // misconfiguration that bypassed the Mark-Completed gate).
-    it('instructs the implement step to finish at status="implemented", not "completed"', () => {
+    it('keeps the implement step at "implemented", never "completed" (F8), and lets the hook close it', () => {
         mockConfig(true);
         const out = buildPrompt({ command: 'x', step: 'implement', specDir: 'specs/001-demo' });
-        expect(out).toContain('Flip status to "implemented"');
+        // The AI no longer flips implement status — the end-of-step hook does.
+        expect(out).not.toContain('Flip status to "implemented"');
         expect(out).not.toContain('Flip status to "completed"');
-        // And the prose explicitly explains why.
+        // The implemented-vs-completed distinction stays in the status lifecycle.
         expect(out).toContain('the implement step completes at "implemented"');
         expect(out).toContain("user's final approval gate");
     });

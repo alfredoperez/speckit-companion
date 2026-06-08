@@ -268,7 +268,38 @@ def _journaled_tasks(transitions: list) -> set[str]:
     }
 
 
-def update_context(feature_dir: Path, step: str, status: str, by: str) -> Path | None:
+def _has_step_start(log: list, step: str) -> bool:
+    """True if a step-level (substep None) `start` for `step` already exists. A
+    step is started once; this collapses every redundant start — the GUI's
+    startStep, the body's own start call, and the after_specify hook-start that
+    lands AFTER the body already self-closed specify (which the old
+    last-entry-only dedup missed, since the preceding entry was the complete)."""
+    return any(
+        isinstance(e, dict)
+        and e.get("step") == step
+        and e.get("substep") is None
+        and e.get("kind") == "start"
+        for e in log
+    )
+
+
+def _has_complete(log: list, step: str, task: object = None) -> bool:
+    """True if a `complete` for (step, task) already exists. task=None matches the
+    step-level complete (substep None); a task id matches that per-task complete.
+    Makes script-driven completes idempotent — it absorbs the GUI's guarded
+    completeStep, re-runs, and the per-task backstop double-writing a task."""
+    return any(
+        isinstance(e, dict)
+        and e.get("step") == step
+        and e.get("kind") == "complete"
+        and e.get("substep") == task
+        for e in log
+    )
+
+
+def update_context(
+    feature_dir: Path, step: str, status: str, by: str, kind: str = "start"
+) -> Path | None:
     target = feature_dir / ".spec-context.json"
     now = _now_iso()
     branch = _git_branch(_repo_root()) or "main"
@@ -286,33 +317,38 @@ def update_context(feature_dir: Path, step: str, status: str, by: str) -> Path |
         return None
 
     log = canonical_log(ctx)
-    from_ = step_from(ctx.get("currentStep"), step)
+    prev_current = ctx.get("currentStep")
     fill_required(ctx, feature_dir, branch)
 
     ctx["currentStep"] = step
     ctx["status"] = status
     ctx["updated"] = _today()
 
-    # Dedupe a duplicate same-step start: if the latest history entry is already a
-    # `start` for this step (substep None) with no intervening complete, the step is
-    # still open — a second fresh start-from-null just inflates history and corrupts
-    # duration math (e.g. the GUI's startStep + the after_specify hook both firing).
-    last = log[-1] if log else None
-    dup_start = (
-        isinstance(last, dict)
-        and last.get("step") == step
-        and last.get("substep") is None
-        and last.get("kind") == "start"
-    )
-    if not dup_start:
-        log.append({
-            "step": step,
-            "substep": None,
-            "kind": "start",
-            "from": from_,
-            "by": by,
-            "at": now,
-        })
+    if kind == "complete":
+        # Deterministic self-close. Idempotent: skip if the step is already closed,
+        # so the body's `--kind complete` and the GUI's guarded completeStep (or a
+        # re-run) never produce two completes. No `from` on a complete.
+        if not _has_complete(log, step, None):
+            log.append({
+                "step": step,
+                "substep": None,
+                "kind": "complete",
+                "by": by,
+                "at": now,
+            })
+    else:
+        # A step is started once. Skip a redundant start if this step already has a
+        # step-level start anywhere in the log — this collapses the GUI startStep +
+        # the body start + the late after_specify hook-start into one entry.
+        if not _has_step_start(log, step):
+            log.append({
+                "step": step,
+                "substep": None,
+                "kind": "start",
+                "from": step_from(prev_current, step),
+                "by": by,
+                "at": now,
+            })
     commit_log(ctx, log)
 
     atomic_write(target, ctx)
@@ -362,10 +398,11 @@ def sync_tasks(feature_dir: Path, tasks_md: Path, final_status: str, by: str) ->
     pending = [tid for tid in distinct_all if tid not in distinct_done]
     ctx["currentTask"] = (pending[0] if pending else (distinct_done[-1] if distinct_done else None))
 
-    # Per-task entries are substeps of implement (substep = task id, kind=start).
-    # A substep entry can never be read as a step-completion boundary (which is a
-    # substep==null self-loop), and distinct substep names keep dedupeConsecutive
-    # from collapsing them.
+    # Per-task entries are substeps of implement (substep = task id). Each fresh
+    # task gets a start AND a complete, each stamped with the script's own real
+    # clock — deterministic capture that doesn't depend on the AI journaling live.
+    # (Per-task stamps land at end-of-step, so they share a tight window rather
+    # than reflecting live cadence — the accepted trade for reliability.)
     for tid in fresh:
         log.append({
             "step": "implement",
@@ -373,6 +410,26 @@ def sync_tasks(feature_dir: Path, tasks_md: Path, final_status: str, by: str) ->
             "task": tid,
             "kind": "start",
             "from": {"step": "implement", "substep": None},
+            "by": by,
+            "at": _now_iso(),
+        })
+        log.append({
+            "step": "implement",
+            "substep": tid,
+            "task": tid,
+            "kind": "complete",
+            "by": by,
+            "at": _now_iso(),
+        })
+
+    # Close the implement step itself once every marker is checked off — the hook
+    # owns the implement self-close (the AI is told not to write it), so its end is
+    # a real script timestamp, not the next step's start.
+    if all_done and not _has_complete(log, "implement", None):
+        log.append({
+            "step": "implement",
+            "substep": None,
+            "kind": "complete",
             "by": by,
             "at": _now_iso(),
         })
@@ -392,6 +449,7 @@ def main() -> int:
     parser.add_argument("--step", default="specify")
     parser.add_argument("--status", default="specified")
     parser.add_argument("--by", default="extension")
+    parser.add_argument("--kind", default="start", choices=["start", "complete"])
     parser.add_argument("--feature-dir", default=None)
     parser.add_argument(
         "--tasks-file", default=None,
@@ -432,13 +490,13 @@ def main() -> int:
             final_status = args.status if args.status != parser.get_default("status") else "implemented"
             target = sync_tasks(feature_dir, tasks_md, final_status, args.by)
         else:
-            target = update_context(feature_dir, args.step, args.status, args.by)
+            target = update_context(feature_dir, args.step, args.status, args.by, args.kind)
     except Exception as exc:  # noqa: BLE001 - best-effort, swallow + report
         print(f"[companion] Warning: skipped .spec-context.json write: {exc}", file=sys.stderr)
         return 0
 
     if target is not None and not args.tasks_file:
-        print(f"[companion] Updated {target} (currentStep={args.step}, status={args.status}, by={args.by})")
+        print(f"[companion] Updated {target} (currentStep={args.step}, status={args.status}, kind={args.kind}, by={args.by})")
     return 0
 
 

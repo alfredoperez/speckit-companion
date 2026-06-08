@@ -91,6 +91,8 @@ export type HistoryEntryKind = 'start' | 'complete';
 export interface HistoryEntry {
     step: StepName;
     substep: string | null;
+    /** Present only on implement per-task entries; equals the task id (`substep`). */
+    task?: string;
     kind: HistoryEntryKind;
     from?: HistoryEntryFrom;
     by: HistoryEntryBy;

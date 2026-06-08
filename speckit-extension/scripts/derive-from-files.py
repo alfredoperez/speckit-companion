@@ -94,8 +94,9 @@ def derive(feature_dir: Path, by: str = "derive") -> Path | None:
         distinct_all = list(dict.fromkeys(all_ids))
         distinct_done = list(dict.fromkeys(done_ids))
         already = wc._journaled_tasks(log)
-        # Per-task entries are substeps of implement (substep = task id, kind=start)
-        # so the reader never reads them as a step-completion boundary.
+        # Per-task entries are substeps of implement (substep = task id) — a paired
+        # start+complete, matching write-context.py sync_tasks so a derived spec and
+        # a hook-captured one have the same shape.
         for tid in distinct_done:
             if tid in already:
                 continue
@@ -108,8 +109,26 @@ def derive(feature_dir: Path, by: str = "derive") -> Path | None:
                 "by": by,
                 "at": wc._now_iso(),
             })
+            log.append({
+                "step": "implement",
+                "substep": tid,
+                "task": tid,
+                "kind": "complete",
+                "by": by,
+                "at": wc._now_iso(),
+            })
         pending = [tid for tid in distinct_all if tid not in distinct_done]
         ctx["currentTask"] = (pending[0] if pending else (distinct_done[-1] if distinct_done else None))
+        # Close the implement step itself once every marker is checked off.
+        all_done = bool(distinct_all) and set(distinct_done) >= set(distinct_all)
+        if all_done and not wc._has_complete(log, "implement", None):
+            log.append({
+                "step": "implement",
+                "substep": None,
+                "kind": "complete",
+                "by": by,
+                "at": wc._now_iso(),
+            })
 
     wc.commit_log(ctx, log)
 
