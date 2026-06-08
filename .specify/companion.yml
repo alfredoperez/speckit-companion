@@ -1,0 +1,9 @@
+# SpecKit Companion project config.
+# templateProfile selects the spec-kit pipeline shape:
+#   standard - stock commands + better timing (default; closest to upstream)
+#   lean     - trimmed commands (no user stories, files/deps tasks) + timing
+#   off       - plain stock spec-kit, no Companion preset
+# Mirrors the `speckit.companion.templateProfile` VS Code setting; this file is
+# the persisted source of truth. The setting reconciles the companion-standard /
+# companion-lean presets so only one is ever installed.
+templateProfile: standard

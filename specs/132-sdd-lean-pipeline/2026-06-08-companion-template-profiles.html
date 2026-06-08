@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Companion Template Profiles — section-by-section</title>
+<style>
+  :root{
+    --bg:#0a1929; --panel:#0e2438; --panel-2:#0c1d30; --mock-bg:#06121f;
+    --ink:#dcefff; --ink-2:#aecbe8; --muted:#7193b3; --line:#16395a; --grid:rgba(77,208,225,.04);
+    --accent:#4dd0e1; --accent-2:#5b9dff;
+    --ok:#5ad1a8; --warn:#ffd277; --del:#ff8a80; --chip:#0e2740;
+    --fh:'Space Grotesk','Inter',ui-sans-serif,system-ui,sans-serif;
+    --fb:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    --fm:ui-monospace,'SF Mono','JetBrains Mono',Menlo,Consolas,monospace;
+    --r:5px; --r-lg:10px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 var(--fb);-webkit-font-smoothing:antialiased;
+    background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:30px 30px}
+  .wrap{max-width:940px;margin:0 auto;padding:52px 24px 110px}
+  h1{font:600 34px/1.08 var(--fh);letter-spacing:-.5px;margin:0 0 10px}
+  h3{font:600 15px/1.3 var(--fh);margin:0}
+  p{margin:0 0 14px;color:var(--ink-2)}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px dashed rgba(77,208,225,.4)}
+  code{font:400 12px var(--fm);background:var(--chip);padding:1.5px 6px;border-radius:var(--r);color:var(--ink);border:1px solid var(--line)}
+  b{color:var(--ink)}
+
+  .sub{color:var(--muted);font-size:15.5px;margin:0 0 16px;max-width:66ch}
+  .meta{display:flex;gap:12px;flex-wrap:wrap;align-items:center;color:var(--muted);font:12px/1 var(--fm);letter-spacing:.4px;margin-bottom:12px}
+  .badge{display:inline-block;font:700 10.5px/1 var(--fm);text-transform:uppercase;letter-spacing:.6px;padding:5px 10px;border-radius:var(--r)}
+  .b-info{color:var(--accent-2);background:rgba(91,157,255,.12);border:1px solid rgba(91,157,255,.4)}
+  .b-cond{color:var(--warn);background:rgba(255,210,119,.1);border:1px solid rgba(255,210,119,.4)}
+
+  .eyebrow{font:700 11px/1.2 var(--fm);text-transform:uppercase;letter-spacing:1.8px;color:var(--accent);margin:52px 0 16px;display:flex;align-items:center;gap:9px}
+  .eyebrow::before{content:"//";opacity:.7}
+  .eyebrow.lead{color:var(--warn)} .eyebrow.lead::before{content:"★"}
+
+  .callout{background:var(--panel);border:1px dashed var(--accent);border-radius:var(--r-lg);padding:16px 20px;margin:8px 0 16px}
+  .callout.warn{border-color:var(--warn)} .callout b{color:var(--ink)}
+
+  /* ---- per-command comparison card (the hero) ---- */
+  .cmp{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:20px 22px;margin-bottom:18px}
+  .cmp-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+  .cmp-head .cmd{font:700 15px var(--fm);color:var(--accent)}
+  .cmp-head .arrow{color:var(--muted)}
+  .cmp-head .file{font:600 13px var(--fm);color:var(--ink-2)}
+  .std{font-size:13.5px;color:var(--ink-2);margin:8px 0 16px;padding:9px 12px;background:rgba(90,209,168,.07);border-left:3px solid var(--ok);border-radius:0 var(--r) var(--r) 0}
+  .std b{color:var(--ok)}
+  .lean-h{font:700 10.5px var(--fm);text-transform:uppercase;letter-spacing:1px;color:var(--accent-2);margin:0 0 4px}
+  .secrow{display:grid;grid-template-columns:230px 1fr;gap:14px;align-items:baseline;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .secrow:last-child{border-bottom:0}
+  .secname{font-size:13.5px;color:var(--ink)}
+  .secname .meta-s{display:block;font:11.5px/1.4 var(--fb);color:var(--muted);margin-top:1px}
+  .secnote{font-size:13.5px;color:var(--ink-2);display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+  .tag{font:700 9.5px var(--fm);text-transform:uppercase;letter-spacing:.6px;padding:3px 8px;border-radius:var(--r);white-space:nowrap;flex:0 0 auto}
+  .t-keep{color:var(--ok);border:1px solid rgba(90,209,168,.5)}
+  .t-remove{color:var(--del);border:1px solid rgba(255,138,128,.5)}
+  .t-replace{color:var(--accent);border:1px dashed rgba(77,208,225,.6)}
+  .t-move{color:var(--warn);border:1px solid rgba(255,210,119,.5)}
+  .t-trim{color:var(--accent-2);border:1px solid rgba(91,157,255,.5)}
+  .t-new{color:var(--ok);border:1px dashed rgba(90,209,168,.6)}
+
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin:6px 0 4px;font:11.5px var(--fm);color:var(--muted)}
+  .legend span b{color:var(--ink-2);font-weight:600}
+
+  /* ---- compact secondary blocks ---- */
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:4px 0}
+  th,td{text-align:left;vertical-align:top;padding:9px 11px;border-bottom:1px dashed var(--line)}
+  th{color:var(--accent);font:700 10.5px var(--fm);text-transform:uppercase;letter-spacing:.7px;border-bottom:1px solid var(--line)}
+  tr:last-child td{border-bottom:0}
+  td.mut{color:var(--muted)} .add{color:var(--ok);font-weight:600} .del{color:var(--del);font-weight:600} .warnc{color:var(--warn);font-weight:600}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:4px}
+  .side{border-radius:var(--r-lg);padding:14px 16px;font-size:13.5px}
+  .side.a{background:rgba(91,157,255,.06);border:1px solid rgba(91,157,255,.3)}
+  .side.b{background:rgba(90,209,168,.06);border:1px dashed rgba(90,209,168,.45)}
+  .side .lbl{font:700 11px var(--fm);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;display:block}
+  .side.a .lbl{color:var(--accent-2)} .side.b .lbl{color:var(--ok)}
+  .side ul{margin:0;padding-left:18px;color:var(--ink-2)} .side li{margin:3px 0}
+  .grid{display:grid;gap:12px} .cols-3{grid-template-columns:repeat(3,1fr)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 16px}
+  .card h3{font-size:14px;margin-bottom:4px} .card p{font-size:12.5px;color:var(--muted);margin:0}
+  .mock{background:var(--mock-bg);border:1px dashed var(--line);border-radius:var(--r-lg);padding:15px 18px;font:12.5px/1.7 var(--fm);white-space:pre-wrap;color:var(--ink-2);overflow-x:auto}
+  .mock .k{color:var(--accent)} .mock .s{color:var(--muted)} .mock .a{color:var(--ok)}
+  ol.steps{counter-reset:s;list-style:none;margin:0;padding:0}
+  ol.steps li{counter-increment:s;position:relative;padding:10px 0 10px 36px;border-bottom:1px dashed var(--line);font-size:13.5px;color:var(--ink-2)}
+  ol.steps li:last-child{border-bottom:0}
+  ol.steps li::before{content:counter(s,decimal-leading-zero);position:absolute;left:0;top:9px;color:var(--accent);font:700 11px var(--fm)}
+  .reject{background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--del);border-radius:var(--r);padding:10px 15px;margin-bottom:8px;font-size:13px}
+  .band{background:var(--panel);border:1px solid var(--accent);border-left:4px solid var(--accent);border-radius:var(--r-lg);padding:22px 24px;margin:26px 0 0}
+  .band h3{font-size:17px;margin-bottom:8px} .band p{color:var(--ink-2);margin:0}
+  .card-meta{margin-top:10px;font-size:12px;color:var(--muted)}
+  @media (max-width:680px){.wrap{padding:34px 16px 70px}.secrow{grid-template-columns:1fr;gap:3px}.cols-3,.pair{grid-template-columns:1fr}h1{font-size:27px}}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="meta"><span>2026-06-08</span><span>·</span><span class="badge b-keep">shipped</span><span class="badge b-keep">854 tests green</span><span class="badge b-info">review-fixed</span></div>
+      <h1>Companion Template Profiles</h1>
+      <p class="sub">Two profiles for the spec-kit pipeline. <b>Standard</b> = the stock commands, unchanged, with better timing. <b>Lean</b> = the same commands with specific sections trimmed or replaced. Here's exactly what changes, command by command, section by section.</p>
+    </header>
+
+    <div class="eyebrow">Overview</div>
+    <section>
+      <p style="font-size:14.5px">SpecKit Companion runs the spec-kit pipeline in <b>two profiles</b> (plus off). Pick a default for the project, and flip a single spec to lean from its right-click menu.</p>
+      <div class="pair">
+        <div class="side a"><span class="lbl">standard — default</span><ul><li>Stock commands — <b>same sections, same files</b></li><li>Nothing reshaped; only better timing added</li><li>Closest to upstream spec-kit</li></ul></div>
+        <div class="side b"><span class="lbl">lean — opt in</span><ul><li>Same commands, <b>trimmed</b> — no user stories, files/deps tasks</li><li>Smaller spec folder (3 files vs 8)</li><li>Modifies the <b>command bodies</b>; document templates left stock</li></ul></div>
+      </div>
+      <p style="font-size:13.5px;margin-top:10px"><code>off</code> = plain stock spec-kit, no overrides at all.</p>
+    </section>
+
+    <div class="callout"><b>Shipped.</b> The lean column below is what each section becomes; standard never changes a section (stock output verbatim + timing). Built end-to-end — 854 tests pass, three review agents run, their two real findings fixed (shared lean-dispatch across all paths; activation-time preset reconcile).</div>
+
+    <div class="legend" style="margin-bottom:8px">
+      <span><b style="color:var(--ok)">KEPT</b> as-is</span>
+      <span><b style="color:var(--del)">REMOVED</b></span>
+      <span><b style="color:var(--accent)">REPLACED</b> by a leaner section</span>
+      <span><b style="color:var(--warn)">MOVED</b> to another file</span>
+      <span><b style="color:var(--accent-2)">TRIMMED</b></span>
+      <span><b style="color:var(--ok)">NEW</b></span>
+    </div>
+
+    <div class="eyebrow lead">Section-by-section · each command</div>
+
+    <!-- SPECIFY -->
+    <div class="cmp">
+      <div class="cmp-head"><span class="cmd">specify</span><span class="arrow">→</span><span class="file">spec.md</span></div>
+      <div class="std"><b>Standard:</b> all stock sections verbatim (User Scenarios, Requirements, Success Criteria…) + timing.</div>
+      <div class="lean-h">Lean</div>
+      <div class="secrow"><div class="secname">User Scenarios &amp; Testing<span class="meta-s">user stories P1/P2/P3, acceptance tables, edge cases</span></div><div class="secnote"><span class="tag t-replace">replaced</span> by a 1–3 line <b>Overview</b> of intent; edge cases fold into requirements</div></div>
+      <div class="secrow"><div class="secname">Functional Requirements<span class="meta-s">FR-001…</span></div><div class="secnote"><span class="tag t-keep">kept</span> testable FR list stays</div></div>
+      <div class="secrow"><div class="secname">Key Entities<span class="meta-s">data shapes</span></div><div class="secnote"><span class="tag t-move">moved</span> to <code>data-model.md</code> — only when the feature has entities</div></div>
+      <div class="secrow"><div class="secname">Success Criteria<span class="meta-s">SC-001…</span></div><div class="secnote"><span class="tag t-keep">kept</span></div></div>
+      <div class="secrow"><div class="secname">Assumptions</div><div class="secnote"><span class="tag t-keep">kept</span></div></div>
+    </div>
+
+    <!-- CLARIFY -->
+    <div class="cmp">
+      <div class="cmp-head"><span class="cmd">clarify</span><span class="arrow">→</span><span class="file">edits spec.md</span></div>
+      <div class="std"><b>Standard:</b> the full clarify flow verbatim + timing.</div>
+      <div class="lean-h">Lean</div>
+      <div class="secrow"><div class="secname">Question round<span class="meta-s">up to 5 Qs + full taxonomy scan</span></div><div class="secnote"><span class="tag t-trim">trimmed</span> to ≤3 targeted questions, only where no reasonable default exists</div></div>
+      <div class="secrow"><div class="secname">Encode answers</div><div class="secnote"><span class="tag t-keep">kept</span> written back into spec.md inline</div></div>
+    </div>
+
+    <!-- PLAN -->
+    <div class="cmp">
+      <div class="cmp-head"><span class="cmd">plan</span><span class="arrow">→</span><span class="file">plan.md (+ side files)</span></div>
+      <div class="std"><b>Standard:</b> Summary, Technical Context, Constitution Check, full Project Structure + Complexity + the Phase-0/1 side files (research, data-model, contracts, quickstart) + timing.</div>
+      <div class="lean-h">Lean</div>
+      <div class="secrow"><div class="secname">Summary</div><div class="secnote"><span class="tag t-keep">kept</span></div></div>
+      <div class="secrow"><div class="secname">Technical Context</div><div class="secnote"><span class="tag t-keep">kept</span></div></div>
+      <div class="secrow"><div class="secname">Constitution Check</div><div class="secnote"><span class="tag t-keep">kept</span> short — only if the constitution defines gates</div></div>
+      <div class="secrow"><div class="secname">Project Structure<span class="meta-s">dual-option doc + source trees</span></div><div class="secnote"><span class="tag t-replace">replaced</span> by a lean <b>Approach &amp; Structure</b> (real files/deps, in order)</div></div>
+      <div class="secrow"><div class="secname">Complexity Tracking</div><div class="secnote"><span class="tag t-remove">removed</span> unless there's a real violation to justify</div></div>
+      <div class="secrow"><div class="secname">Out of Scope</div><div class="secnote"><span class="tag t-new">new</span> explicit non-goals</div></div>
+      <div class="secrow"><div class="secname">Side files<span class="meta-s">research / data-model / contracts / quickstart</span></div><div class="secnote"><span class="tag t-move">folded / conditional</span> research → into plan; data-model + contracts only when relevant; quickstart dropped</div></div>
+    </div>
+
+    <!-- TASKS -->
+    <div class="cmp">
+      <div class="cmp-head"><span class="cmd">tasks</span><span class="arrow">→</span><span class="file">tasks.md</span></div>
+      <div class="std"><b>Standard:</b> Setup, Foundational, per-user-story phases, Polish, Dependencies, Implementation Strategy + timing.</div>
+      <div class="lean-h">Lean</div>
+      <div class="secrow"><div class="secname">Setup / Foundational</div><div class="secnote"><span class="tag t-keep">kept</span></div></div>
+      <div class="secrow"><div class="secname">User-story phases<span class="meta-s">Phase 3/4/5 grouped by US1/US2/US3, [US#] labels, per-story tests</span></div><div class="secnote"><span class="tag t-replace">replaced</span> by <b>Core work organized by files/dependencies</b> (one task per file/module)</div></div>
+      <div class="secrow"><div class="secname">Polish</div><div class="secnote"><span class="tag t-keep">kept</span></div></div>
+      <div class="secrow"><div class="secname">Dependencies + Parallel notes</div><div class="secnote"><span class="tag t-keep">kept</span> strict <code>[Tn] [P?] + path</code> format stays</div></div>
+      <div class="secrow"><div class="secname">Implementation Strategy<span class="meta-s">MVP / Incremental / Team narratives</span></div><div class="secnote"><span class="tag t-remove">removed</span></div></div>
+    </div>
+
+    <!-- ANALYZE -->
+    <div class="cmp">
+      <div class="cmp-head"><span class="cmd">analyze</span><span class="arrow">→</span><span class="file">report only (no file)</span></div>
+      <div class="std"><b>Standard:</b> the full cross-artifact consistency analysis + timing.</div>
+      <div class="lean-h">Lean</div>
+      <div class="secrow"><div class="secname">Consistency matrix<span class="meta-s">full spec/plan/tasks + story-coverage cross-check</span></div><div class="secnote"><span class="tag t-trim">trimmed</span> to a lightweight, non-destructive consistency pass; report-only</div></div>
+    </div>
+
+    <!-- IMPLEMENT -->
+    <div class="cmp">
+      <div class="cmp-head"><span class="cmd">implement</span><span class="arrow">→</span><span class="file">edits tasks.md</span></div>
+      <div class="std"><b>Standard:</b> the full implement flow verbatim + timing.</div>
+      <div class="lean-h">Lean</div>
+      <div class="secrow"><div class="secname">TDD framing + ignore-file detection + checklist gate</div><div class="secnote"><span class="tag t-trim">trimmed</span> drops the long preamble</div></div>
+      <div class="secrow"><div class="secname">Execution<span class="meta-s">dependency order, [P], mark [X], halt-on-fail, validate vs FR/SC</span></div><div class="secnote"><span class="tag t-keep">kept</span> + the per-task timing (start &amp; complete) is the point</div></div>
+    </div>
+
+    <!-- CONSTITUTION -->
+    <div class="cmp">
+      <div class="cmp-head"><span class="cmd">constitution</span><span class="arrow">→</span><span class="file">.specify/memory/constitution.md</span></div>
+      <div class="std"><b>Standard:</b> principles + governance + the full template-propagation + Sync-Impact ceremony + timing.</div>
+      <div class="lean-h">Lean</div>
+      <div class="secrow"><div class="secname">Principles + governance</div><div class="secnote"><span class="tag t-keep">kept</span> + semver bump + writes the file</div></div>
+      <div class="secrow"><div class="secname">Template-propagation checklist + Sync-Impact Report</div><div class="secnote"><span class="tag t-remove">removed</span></div></div>
+    </div>
+
+    <p class="card-meta" style="margin-top:14px"><code>checklist</code> and <code>taskstoissues</code> are left on stock spec-kit — neither profile overrides them.</p>
+
+    <!-- ============ FILE SUMMARY ============ -->
+    <div class="eyebrow">The result · files in a spec folder</div>
+    <section>
+      <div class="pair">
+        <div class="side a"><span class="lbl">standard · 8 files</span><ul><li>spec.md + checklists/requirements.md</li><li>plan.md + research.md + data-model.md</li><li>contracts/* + quickstart.md</li><li>tasks.md</li></ul></div>
+        <div class="side b"><span class="lbl">lean · 3 (+2 conditional)</span><ul><li>spec.md · plan.md · tasks.md</li><li>+ data-model.md <em>(if entities)</em></li><li>+ contracts/ <em>(if it exposes an interface)</em></li><li>research → folded into plan.md</li></ul></div>
+      </div>
+      <p class="card-meta">The whole file delta is in <code>plan</code> (4 side files) and <code>specify</code> (the requirements checklist). Standard always keeps all of them.</p>
+    </section>
+
+    <!-- ============ SELECTION ============ -->
+    <div class="eyebrow">Choosing a profile · two levels</div>
+    <section>
+      <div class="grid cols-3" style="grid-template-columns:1fr 1fr">
+        <div class="card"><h3 style="color:var(--accent)">1 · Project default</h3><p>One setting picks the default for the whole project. Mutually exclusive — choosing one removes the other preset.</p></div>
+        <div class="card"><h3 style="color:var(--accent)">2 · Per-spec override</h3><p>A spec's <b>right-click menu → Template Profile → Standard / Lean</b> overrides the default for that one spec, records <code>profile</code> in its <code>.spec-context.json</code>, and the GUI dispatches the matching commands through plan → tasks → implement (across every dispatch path — footer, palette, sidebar).</p></div>
+      </div>
+      <div class="mock" style="margin-top:8px"><span class="s"># 1 — project default (the preset; reshapes stock commands)</span>
+<span class="k">speckit.companion.templateProfile</span> = <span class="a">"standard"</span> | <span class="a">"lean"</span> | <span class="a">"off"</span>   <span class="s">→ .specify/companion.yml</span>
+
+<span class="s"># 2 — per-spec override, set from the spec's right-click menu</span>
+.spec-context.json → <span class="k">"profile"</span>: <span class="a">"lean"</span>   <span class="s">→ this spec's plan/tasks/implement follow it</span></div>
+      <p class="card-meta">Mechanism: the project default rides the spec-kit <b>preset</b> (reconciled on activation and on change); the per-spec lean path rides the <b>namespaced</b> <code>/speckit.companion.*</code> commands, resolved by one shared helper across the footer / palette / sidebar so every path honors it. <code>off</code> uses neither.</p>
+    </section>
+
+    <!-- ============ WHY NO LEAN TEMPLATES ============ -->
+    <div class="eyebrow">Why the shape lives in commands, not templates</div>
+    <section>
+      <p style="font-size:13.5px">Lean modifies the <b>command bodies</b>, not the document templates — on purpose. spec-kit only resolves a preset's template override when a setup script runs the resolver, so a lean <code>spec-template.md</code> would <b>silently do nothing for <code>specify</code></b> (the agent copies the core template directly), while working for <code>plan</code>/<code>tasks</code>. Command overrides apply to every command uniformly, so the shape goes there. Trade-off: in lean mode the on-disk <code>spec-template.md</code> still looks stock — but lean never reads it. <span style="color:var(--muted)">Captured in <code>docs/template-profiles.md</code>.</span></p>
+    </section>
+
+    <!-- ============ TIMING ============ -->
+    <div class="eyebrow">Better timing · both profiles</div>
+    <section>
+      <p style="font-size:13.5px">Both profiles bake the same timing rules into every command body, so durations stay honest for any dispatcher (not just the GUI). Fixes three logged bugs:</p>
+      <div class="grid cols-3">
+        <div class="card"><h3>Self-close</h3><p>Each step writes its own <code>complete</code> when its work ends — specify no longer borrows plan's start as its end.</p></div>
+        <div class="card"><h3>No duplicate start</h3><p>A repeated same-step start is deduped at write time instead of doubling the journal.</p></div>
+        <div class="card"><h3>Live cadence</h3><p>One fresh <code>date -u</code> per substep/task + a per-task complete — no end-of-run burst with 0ms gaps.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ NAMING (compact) ============ -->
+    <div class="eyebrow">Renamed · no "sdd" in the extension</div>
+    <section>
+      <table>
+        <thead><tr><th>before</th><th>after</th></tr></thead>
+        <tbody>
+          <tr><td class="del"><code>sdd-lean</code> preset</td><td class="add"><code>companion-standard</code> + <code>companion-lean</code></td></tr>
+          <tr><td class="del"><code>speckit.features.sddLean</code></td><td class="add"><code>speckit.companion.templateProfile</code></td></tr>
+          <tr><td class="del"><code>.specify/sdd.config.yml</code></td><td class="add"><code>.specify/companion.yml</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============ VERIFY / RISKS ============ -->
+    <div class="eyebrow">Verify before commit</div>
+    <section>
+      <ol class="steps">
+        <li><b>tsc</b> clean + <b>grep -ri sdd</b> → no hits (rename completeness).</li>
+        <li><b>jest</b> — profile-switch reconciler (removes-other), config round-trip, CLI-failure-no-throw.</li>
+        <li><b>drift guard</b> — namespaced commands ≡ lean bodies; every body carries the timing partial.</li>
+        <li><b>Manual E2E</b> — install standard → run a small spec → check <code>.spec-context.json</code> (real specify end, no dup start, per-task gaps). Switch standard → lean → off.</li>
+      </ol>
+      <div style="margin-top:14px">
+        <div class="reject"><b>14 hand-maintained bodies</b> (7 commands × 2 profiles) — standard is a verbatim stock copy + one shared timing partial; a parity check locks it.</div>
+        <div class="reject"><b>Catalog seam</b> — the runtime toggle's <code>preset add</code> needs the preset published; until then it applies via <code>--dev</code>. <code>off</code> is the escape hatch.</div>
+      </div>
+    </section>
+
+    <div class="band">
+      <h3>Shipped</h3>
+      <p>Built end-to-end: 2 profiles × 7 command bodies + the shared timing partial, the tri-state profile reconciler (+ tests), the per-spec right-click control wired across every dispatch path, the timing write-side fixes, and the full de-sdd rename. 854 tests pass · tsc clean · drift guard green. Three review agents ran; their two real findings (half-wired dispatch, missing activation reconcile) are fixed. Canonical reference: <code>docs/template-profiles.md</code>.</p>
+    </div>
+
+  </div>
+</body>
+</html>

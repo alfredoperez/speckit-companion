@@ -142,9 +142,10 @@ const DONE_PHRASE_BY_STEP: Record<PromptStep, string> = {
 // backstop. Writing them as each task finishes is what gives the activity log
 // real per-task timing instead of one end-of-run burst.
 const PER_TASK_JOURNALING = [
-    'PER-TASK JOURNALING (implement): as you finish each task in tasks.md — at the moment you mark its `- [x] **<TaskID>**` — append a history entry',
+    'PER-TASK JOURNALING (implement): as you finish each task in tasks.md — at the moment you mark its `- [x] **<TaskID>**` — append BOTH a start and a complete for it, each with its own fresh `date -u`:',
     '    { "step": "implement", "substep": "<TaskID>", "task": "<TaskID>", "kind": "start", "by": "ai", "at": <date -u output> }',
-    'in that SAME write. One entry per task, stamped via `date -u` when you actually complete it. Do NOT batch them at the end — the per-task timing is the point. Include the `task` field so the end-of-step extension hook treats already-journaled tasks as a no-op (it dedupes on `task`).',
+    '    { "step": "implement", "substep": "<TaskID>", "task": "<TaskID>", "kind": "complete", "by": "ai", "at": <date -u output> }',
+    'One fresh `date -u` per task — do NOT reuse a value across tasks, do NOT batch at the end. The per-task start→complete cadence is the point. The `task` field lets the end-of-step extension hook treat already-journaled tasks as a no-op (it dedupes on `task`).',
 ].join('\n');
 
 function renderPreamble(step: PromptStep, specDir: string): string {

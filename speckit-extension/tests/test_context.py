@@ -52,6 +52,22 @@ class LifecycleCaptureTests(unittest.TestCase):
         self.assertEqual(h2[-1]["kind"], "start")
         self.assertEqual(h2[-1]["from"], {"step": "specify", "substep": None})
 
+    def test_duplicate_same_step_start_is_deduped(self) -> None:
+        # GUI startStep + the after_specify hook both firing must not append two
+        # specify starts — the second collapses (Issue 2: duplicate start).
+        wc.update_context(self.fd, "specify", "specified", "extension")
+        wc.update_context(self.fd, "specify", "specified", "extension")
+        starts = [h for h in _ctx(self.fd)["history"] if h["step"] == "specify" and h["kind"] == "start"]
+        self.assertEqual(len(starts), 1)
+
+    def test_next_step_start_still_appends_after_a_deduped_start(self) -> None:
+        wc.update_context(self.fd, "specify", "specified", "extension")
+        wc.update_context(self.fd, "specify", "specified", "extension")  # deduped
+        wc.update_context(self.fd, "plan", "planned", "extension")
+        h = _ctx(self.fd)["history"]
+        self.assertEqual(h[-1]["step"], "plan")
+        self.assertEqual(h[-1]["from"], {"step": "specify", "substep": None})
+
     def test_writes_canonical_history_not_legacy_keys(self) -> None:
         wc.update_context(self.fd, "specify", "specified", "extension")
         ctx = _ctx(self.fd)

@@ -1,0 +1,54 @@
+{
+  "workflow": "speckit",
+  "specName": "Pipeline + the sdd-lean Preset",
+  "branch": "132-sdd-lean-pipeline",
+  "currentStep": "implement",
+  "status": "implementing",
+  "updated": "2026-06-08",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": null,
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-08T13:27:30.661Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-08T13:38:45.881Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-08T13:44:22.268Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-08T14:46:39.270Z"
+    }
+  ]
+}

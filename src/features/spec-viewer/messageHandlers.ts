@@ -25,6 +25,7 @@ import {
   readSpecContextSync,
 } from "../specs/specContextReader";
 import { updateSpecContext } from "../specs/specContextWriter";
+import { resolveProfileCommand } from "../specs/profileDispatch";
 import { lastEntryIsCompletionFor } from "../specs/historyHelpers";
 import {
   completeStep,
@@ -429,7 +430,8 @@ async function executeStepInTerminal(
   const instance = deps.getInstance(specDirectory);
   const targetPath = instance?.state.changeRoot || specDirectory;
   const label = step.label || step.name;
-  const formatted = formatCommandForProvider(step.command);
+  const command = resolveProfileCommand(step.command, specDirectory);
+  const formatted = formatCommandForProvider(command);
   const rawPrompt = `/${formatted} ${targetPath}`;
   const prompt = buildPrompt({
     command: rawPrompt,

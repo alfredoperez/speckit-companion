@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Added
+- **Template profiles — `companion-standard` + `companion-lean` presets** (Step 4 of the v1 plan): two selectable presets, each overriding the 7 pipeline commands (`specify`, `clarify`, `plan`, `tasks`, `analyze`, `implement`, `constitution`; replace strategy — the spec-kit default). `companion-standard` is the stock command bodies, verbatim, with timing baked in; `companion-lean` is the trimmed shape — a spec with **no user-story section**, a lean plan, and tasks on a **files/dependencies** axis (smaller spec folder). Install with `specify preset add --dev ./speckit-extension/presets/companion-{standard,lean}`; the VS Code `speckit.companion.templateProfile` setting reconciles them so only one is installed (mutually exclusive).
+- **Four opt-in `/speckit.companion.specify` / `.plan` / `.tasks` / `.implement` commands** — the per-spec lean path, emitting the lean shape regardless of the project's profile (declared in `extension.yml` `provides.commands`). A `scripts/check-shape-parity.py` guard keeps them in lockstep with the `companion-lean` bodies and asserts every body carries the shared timing partial.
+- **Baked-in timing** in every command body (`presets/_shared/timing-partial.md`): per-step self-close, live `date -u` per substep/task, and per-task `complete` — so durations and cadence are accurate for any dispatcher, not just the GUI.
+- **Duplicate-start dedup** in `write-context.py`: a repeated same-step `start` (e.g. GUI `startStep` + the `after_specify` hook both firing) now collapses instead of inflating `history[]`.
+
 ## [0.2.0] - 2026-06-07
 
 Full lifecycle capture, derive-from-files fallback, and Status + Resume — Steps 2–3 of the v1 plan. First catalog release. See [ROADMAP.md](./ROADMAP.md).

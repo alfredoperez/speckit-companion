@@ -17,7 +17,8 @@ import {
     WorkflowConfig,
 } from '../workflows';
 import { updateStepProgress, readSpecContextSync } from './specContextManager';
-import { startStep, completeStep, setStatus, reactivate } from './stepLifecycle';
+import { resolveProfileCommand } from './profileDispatch';
+import { startStep, completeStep, setStatus, reactivate, setProfile } from './stepLifecycle';
 import { lastEntryIsCompletionFor } from './historyHelpers';
 import { updateSelectionContextKeys } from './selectionContextKeys';
 import { track as trackTerminal } from './terminalStepTracker';
@@ -268,6 +269,27 @@ export function registerSpecKitCommands(
                 true
             );
         })
+    );
+
+    // Per-spec template profile — choose the lean shape (or back to standard) for
+    // one spec. Recorded in .spec-context.json; the viewer then dispatches the
+    // matching /speckit.companion.* (lean) or stock commands for this spec.
+    const setSpecProfile = async (item: SpecTreeItem, profile: 'standard' | 'lean'): Promise<void> => {
+        if (!item) return;
+        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+        if (!workspaceFolder) return;
+        const specDir = specDirFor(item, workspaceFolder.uri.fsPath);
+        await setProfile(specDir, profile);
+        specExplorer.refresh();
+        NotificationUtils.showAutoDismissNotification(`Profile: ${profile}`);
+    };
+    context.subscriptions.push(
+        vscode.commands.registerCommand('speckit.specs.setProfileStandard', (item: SpecTreeItem) =>
+            setSpecProfile(item, 'standard')
+        ),
+        vscode.commands.registerCommand('speckit.specs.setProfileLean', (item: SpecTreeItem) =>
+            setSpecProfile(item, 'lean')
+        )
     );
 
     // Open source file from sidebar inline action
@@ -577,13 +599,15 @@ async function executeWorkflowStep(
         outputChannel.appendLine(`[SpecKit] Failed to update step progress: ${err}`);
     });
 
-    // Resolve the command for this step
-    const command = resolveStepCommand(workflow, step);
+    // Resolve the command for this step, then apply the spec's per-spec profile
+    // (a `lean` spec dispatches the /speckit.companion.* twin).
+    const baseCommand = resolveStepCommand(workflow, step);
+    const command = resolveProfileCommand(baseCommand, targetDir);
     outputChannel.appendLine(`[SpecKit] Resolved command: ${command}`);
 
     // Check if command exists (warn if custom command may not exist)
-    if (command !== `speckit.${step}`) {
-        outputChannel.appendLine(`[SpecKit] Using custom command: ${command}`);
+    if (baseCommand !== `speckit.${step}`) {
+        outputChannel.appendLine(`[SpecKit] Using custom command: ${baseCommand}`);
     }
 
     // Build and execute the prompt (format command for current provider)

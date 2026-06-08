@@ -293,14 +293,26 @@ def update_context(feature_dir: Path, step: str, status: str, by: str) -> Path |
     ctx["status"] = status
     ctx["updated"] = _today()
 
-    log.append({
-        "step": step,
-        "substep": None,
-        "kind": "start",
-        "from": from_,
-        "by": by,
-        "at": now,
-    })
+    # Dedupe a duplicate same-step start: if the latest history entry is already a
+    # `start` for this step (substep None) with no intervening complete, the step is
+    # still open — a second fresh start-from-null just inflates history and corrupts
+    # duration math (e.g. the GUI's startStep + the after_specify hook both firing).
+    last = log[-1] if log else None
+    dup_start = (
+        isinstance(last, dict)
+        and last.get("step") == step
+        and last.get("substep") is None
+        and last.get("kind") == "start"
+    )
+    if not dup_start:
+        log.append({
+            "step": step,
+            "substep": None,
+            "kind": "start",
+            "from": from_,
+            "by": by,
+            "at": now,
+        })
     commit_log(ctx, log)
 
     atomic_write(target, ctx)

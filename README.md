@@ -216,6 +216,24 @@ This applies to all providers that support it: Claude (`--permission-mode bypass
 
 > **Copilot exception**: GitHub Copilot CLI cannot surface permission prompts in `-p` mode. Even with `permissionMode: "interactive"`, the extension auto-switches Copilot to auto-approve at dispatch time — otherwise the terminal would silently hang waiting for a prompt that never appears. This is enforced at runtime; dismissing the startup warning toast does not re-enable interactive mode for Copilot.
 
+### Template Profiles
+
+Selects the spec-kit pipeline shape for the project. `standard` is the stock commands with better timing capture (same sections, same files); `lean` trims them (no user-story section, files/dependencies tasks, a smaller spec folder); `off` is plain stock spec-kit.
+
+```json
+{
+  "speckit.companion.templateProfile": "standard"
+}
+```
+
+| Value | Behavior |
+|-------|----------|
+| `"standard"` (default) | Installs the `companion-standard` preset — stock `/speckit.*` commands, unchanged, with timing baked in. |
+| `"lean"` | Installs the `companion-lean` preset — the same commands trimmed to the lean shape. |
+| `"off"` | Removes both presets; plain stock spec-kit. |
+
+Selecting a profile reconciles the two presets (mutually exclusive) and persists to `.specify/companion.yml` (the source of truth). Override per spec from the spec's right-click menu (**Template Profile → Standard / Lean**), which the viewer honors when it dispatches commands. The preset and the opt-in `/speckit.companion.*` commands ship with the [spec-kit extension](./speckit-extension/README.md); full reference in [`docs/template-profiles.md`](./docs/template-profiles.md).
+
 ### Command Format
 
 Controls how speckit commands are formatted when sent to AI providers:

@@ -10,6 +10,7 @@ import { SpecExplorerProvider, registerSpecKitCommands, updateSelectionContextKe
 import { register as registerTerminalStepTracker } from './features/specs/terminalStepTracker';
 import { setLifecycleOutputChannel } from './features/specs/stepLifecycle';
 import { OverviewProvider } from './features/settings';
+import { reconcileCompanionPreset, TemplateProfile } from './features/settings/companionPresetReconciler';
 import { AgentManager } from './features/agents';
 import { SkillManager } from './features/skills';
 import { registerWorkflowEditorCommands } from './features/workflow-editor';
@@ -221,11 +222,38 @@ export async function activate(context: vscode.ExtensionContext) {
             ) {
                 void validatePermissionMode(context);
             }
+            if (e.affectsConfiguration(ConfigKeys.templateProfile)) {
+                const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+                if (root) {
+                    const profile = vscode.workspace
+                        .getConfiguration(ConfigKeys.namespace)
+                        .get<TemplateProfile>('companion.templateProfile', 'standard');
+                    void reconcileCompanionPreset(root, profile, {
+                        log: msg => outputChannel.appendLine(msg),
+                    });
+                }
+            }
         })
     );
 
     // Validate provider/permission combination after activation completes (non-blocking)
     setTimeout(() => { void validatePermissionMode(context); }, 0);
+
+    // Reconcile the project's template-profile preset on activation so a project
+    // whose setting was set in a prior session — or that carries a stale legacy
+    // preset — converges without needing a live setting change. No-ops when
+    // already reconciled.
+    {
+        const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        if (root) {
+            const profile = vscode.workspace
+                .getConfiguration(ConfigKeys.namespace)
+                .get<TemplateProfile>('companion.templateProfile', 'standard');
+            void reconcileCompanionPreset(root, profile, {
+                log: msg => outputChannel.appendLine(msg),
+            });
+        }
+    }
 }
 
 /**
