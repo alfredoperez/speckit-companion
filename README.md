@@ -184,6 +184,8 @@ workspace is initialized, IDE Chat auto-submits the prompt; when it isn't, it
 prefills the chat and shows a warning instead of sending a command the chat can't
 run. This is one-way dispatch — it does not read responses back or sync status.
 
+![SpecKit Companion dispatching /speckit.plan into GitHub Copilot Chat in VS Code](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/copilot.png)
+
 ### Claude in VS Code
 
 `Claude in VS Code` dispatches to the **Claude Code GUI panel** instead of
@@ -194,6 +196,8 @@ Code's URI handler and **prefills** the command; the Claude Code panel exposes n
 programmatic submit, so you **press Enter** to run it.
 Requires the [Claude Code extension](https://marketplace.visualstudio.com/items?itemName=anthropic.claude-code);
 if it isn't installed, the provider suggests switching to terminal `claude`.
+
+![SpecKit Companion dispatching /speckit.implement into the Claude Code panel in VS Code](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/claude-vscode.png)
 
 ## Configuration
 
