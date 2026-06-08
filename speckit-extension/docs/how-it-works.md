@@ -38,7 +38,7 @@ The migration rests on one agent-mediated chain: *spec-kit command → agent run
 
 ```bash
 mkdir -p specs/_zzz-proof-demo && printf '# Spec: Proof Demo\n' > specs/_zzz-proof-demo/spec.md
-python3 speckit-extension/scripts/write-context.py --feature-dir specs/_zzz-proof-demo \
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir specs/_zzz-proof-demo \
   --step specify --status specified --by extension
 cat specs/_zzz-proof-demo/.spec-context.json   # currentStep=specify, status=specified, history[].by=extension
 rm -rf specs/_zzz-proof-demo

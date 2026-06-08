@@ -47,3 +47,5 @@ specify extension list        # companion present
 ```
 
 Then run a real `/speckit.specify` and confirm `specs/<NNN>-<slug>/.spec-context.json` is written — see [how-it-works.md](./how-it-works.md#end-to-end-proof) for the full check.
+
+> The capture hook invokes the script at its **installed** path, `.specify/extensions/companion/scripts/write-context.py` (mirroring the `git` extension's `.specify/extensions/git/scripts/…` convention) — not the source-repo `speckit-extension/scripts/…`. That's why it runs cleanly on any install. If you ever see `No such file or directory` for `speckit-extension/scripts/…`, the command-markdown drifted back to the dev-source path.

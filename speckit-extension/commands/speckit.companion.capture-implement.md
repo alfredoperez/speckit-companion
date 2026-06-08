@@ -20,7 +20,7 @@ runs as the `after_implement` lifecycle hook. It uses the writer's **TASK-SYNC m
 Run the writer script from the repository root, passing the active feature's `tasks.md` path:
 
 ```bash
-python3 speckit-extension/scripts/write-context.py --step implement --status implemented --by extension --tasks-file specs/<NNN>-<slug>/tasks.md
+python3 .specify/extensions/companion/scripts/write-context.py --step implement --status implemented --by extension --tasks-file specs/<NNN>-<slug>/tasks.md
 ```
 
 Pass the active feature's `tasks.md` path to `--tasks-file`. If feature resolution is unambiguous the script resolves the feature directory on its own (in this order: `--feature-dir` → `SPECIFY_FEATURE_DIRECTORY` env → `SPECIFY_FEATURE` env → `.specify/feature.json` → current git branch prefix), but `--tasks-file` must still point at that feature's `tasks.md`. The `--status implemented` value is the terminal status applied only when all task markers are checked; partial completion records `implementing` automatically.

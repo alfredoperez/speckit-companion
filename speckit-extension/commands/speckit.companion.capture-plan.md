@@ -21,7 +21,7 @@ document is created by the core `/speckit.plan` workflow.
 Run the writer script from the repository root:
 
 ```bash
-python3 speckit-extension/scripts/write-context.py --step plan --status planned --by extension
+python3 .specify/extensions/companion/scripts/write-context.py --step plan --status planned --by extension
 ```
 
 The script resolves the active feature directory on its own, in this order:
@@ -32,7 +32,7 @@ If you already know the feature directory (e.g. the one `/speckit.plan` just
 wrote into), pass it explicitly so resolution is unambiguous:
 
 ```bash
-python3 speckit-extension/scripts/write-context.py --feature-dir specs/<NNN>-<slug> --step plan --status planned --by extension
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir specs/<NNN>-<slug> --step plan --status planned --by extension
 ```
 
 ## Graceful Degradation
