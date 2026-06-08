@@ -4,10 +4,10 @@ A minimal React + TypeScript + Vite todo application for testing AI CLI provider
 
 ## Purpose
 
-This app serves as a test bed for validating spec-driven development workflows across different AI CLI providers:
-- Claude Code
-- Gemini CLI
-- GitHub Copilot CLI
+This app has two roles:
+
+1. **Provider test bed** — validating spec-driven development workflows across different AI CLI providers (Claude Code, Gemini CLI, GitHub Copilot CLI).
+2. **Lean-vs-standard bench** — running the same feature through both the `companion-lean` and `companion-standard` template profiles, at three sizes, to compare correctness and speed. See [`bench/README.md`](./bench/README.md) (driven by the `/bench-prep` and `/bench-finish` Claude Code commands).
 
 ## Getting Started
 
@@ -24,71 +24,40 @@ npm run build
 
 ## Features to Implement
 
-The app has three planned features (one per CLI provider) that can be implemented using specs:
+The bench defines three feature specs of graded scope (see [`bench/`](./bench/)) — any of them can also serve as a provider smoke test:
 
-### 1. Due Dates (Claude Code)
-Add due date functionality to todos:
-- Date picker for setting due dates
-- Visual indicator for overdue items
-- Sort by due date
+| Size | Scope | Feature |
+|---|---|---|
+| `easy` | update a route / title | Rename the app title to "Task Manager" |
+| `medium` | add a feature to the todos | Due dates (input + overdue badge + sort) |
+| `hard` | a whole new feature area | Tags (new `/tags` route + store slice + persistence + filter) |
 
-### 2. Categories (Gemini CLI)
-Add category/tagging support:
-- Create and manage categories
-- Assign categories to todos
-- Filter by category
-
-### 3. Priority Levels (GitHub Copilot CLI)
-Add priority levels to todos:
-- Low, Medium, High priority options
-- Color-coded priority badges
-- Sort by priority
+The exact paste-in prompts live in `bench/prompts/{easy,medium,hard}.md`.
 
 ## Testing Procedure
 
-### Testing with Claude Code (Due Dates feature)
-1. Set SpecKit Companion provider to "claude"
-2. Open this folder in VS Code
-3. Run `claude` to initialize (creates CLAUDE.md)
-4. Verify CLAUDE.md appears in Steering view
-5. Use spec workflow to implement the "Due Dates" feature
-
-### Testing with Gemini CLI (Categories feature)
-1. Set SpecKit Companion provider to "gemini"
-2. Open this folder in VS Code
-3. Run `gemini` to initialize (creates GEMINI.md)
-4. Verify GEMINI.md appears in Steering view
-5. Use spec workflow to implement the "Categories" feature
-
-### Testing with GitHub Copilot CLI (Priority Levels feature)
-1. Set SpecKit Companion provider to "copilot"
-2. Open this folder in VS Code
-3. Run `ghcs` to initialize (creates .github/copilot-instructions.md)
-4. Verify copilot-instructions.md appears in Steering view
-5. Use spec workflow to implement the "Priority Levels" feature
+- **Lean-vs-standard bench** (the primary use): follow [`bench/README.md`](./bench/README.md) — `/bench-prep` → run the pipeline in VS Code → `/bench-finish`.
+- **Provider smoke test**: set the SpecKit Companion provider (Claude / Gemini / Copilot), open this folder in VS Code, initialize the CLI so its steering file appears, then implement one of the bench prompts via the spec workflow.
 
 ## Project Structure
 
 ```
-todo-test-app/
+todo-claude/
 ├── src/
-│   ├── components/
-│   │   ├── AddTodo.tsx
-│   │   ├── TodoItem.tsx
-│   │   └── TodoList.tsx
-│   ├── App.tsx
-│   ├── main.tsx
-│   └── types.ts
-├── .specify/
-│   └── specs/
-│       ├── due-dates/
-│       │   └── requirements.md
-│       ├── categories/
-│       │   └── requirements.md
-│       └── priority-levels/
-│           └── requirements.md
-├── index.html
-├── package.json
-├── tsconfig.json
-└── vite.config.ts
+│   ├── main.tsx            # entry — <BrowserRouter><App/></BrowserRouter>
+│   ├── App.tsx             # <TodosProvider> + layout + <Routes>
+│   ├── App.test.tsx
+│   ├── types.ts
+│   ├── lib/
+│   │   ├── storage.ts      # load/save — all persistence goes through here
+│   │   └── storage.test.ts
+│   ├── store/
+│   │   └── todos.tsx       # reducer + context + localStorage persistence
+│   ├── components/         # Header, AddTodo, TodoItem, TodoList
+│   └── pages/              # TodosPage, AboutPage (one per route)
+├── bench/                  # lean-vs-standard harness (prompts, oracle, scripts)
+├── .specify/               # spec-kit workspace (templates, scripts, extensions)
+├── index.html · package.json · tsconfig.json · vite.config.ts · vitest.config.ts
 ```
+
+See [`CLAUDE.md`](./CLAUDE.md) for the conventions to follow when implementing a feature.
