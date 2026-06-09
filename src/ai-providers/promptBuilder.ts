@@ -214,7 +214,7 @@ function renderLifecycleBody(target: string, dispatchUtc: string): string {
         '',
         STATUS_LIFECYCLE,
         '',
-        'For EACH step you work on (specify, plan, tasks, implement):',
+        'For EACH step you work on (specify, clarify, plan, tasks, analyze, implement):',
         '1. When you START a step on your own initiative (mid-run, not the initial seed): set currentStep = "<step>" and status = in-progress form. Append a history entry { step: "<step>", substep: null, kind: "start", from, by: "ai", at: <real timestamp from `date -u`> }.',
         '2. When you FINISH a **plan, tasks, clarify, or analyze** step: flip status = completed form and append { step: "<step>", substep: null, kind: "complete", by: "ai", at: <real timestamp from `date -u`> } — no `from` on completes. This clears the in-flight ring on the tab. Do NOT self-close **specify** or **implement**: the extension closes specify from its own command and the end-of-step hook closes implement, each with a real script timestamp — an `ai` complete there would duplicate it.',
         '3. Append a history entry for each substep boundary too (`by: "ai"`, real timestamp).',

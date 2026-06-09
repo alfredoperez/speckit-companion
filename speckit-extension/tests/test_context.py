@@ -223,6 +223,29 @@ class LifecycleCaptureTests(unittest.TestCase):
         self.assertEqual(len(starts), 1)
         self.assertEqual(len(completes), 1)
 
+    def test_dedup_recognizes_legacy_kindless_entries(self) -> None:
+        # A migrated spec may carry kind-less entries (self-loop = complete). The
+        # broadened dedup must read those via the legacy convention so it does not
+        # append a duplicate start or complete on top of them.
+        target = self.fd / ".spec-context.json"
+        target.write_text(json.dumps({
+            "workflow": "speckit", "specName": "x", "branch": "main",
+            "currentStep": "specify", "status": "specified",
+            "history": [
+                {"step": "specify", "substep": None, "from": {"step": None, "substep": None}, "by": "ai", "at": "2026-06-07T10:00:00.000Z"},
+                {"step": "specify", "substep": None, "from": {"step": "specify", "substep": None}, "by": "ai", "at": "2026-06-07T10:01:00.000Z"},
+            ],
+        }))
+        # The legacy log already has a specify start (entry 1) + complete (self-loop).
+        wc.update_context(self.fd, "specify", "specifying", "extension", "start")
+        wc.update_context(self.fd, "specify", "specified", "extension", "complete")
+        starts = [e for e in _ctx(self.fd)["history"]
+                  if e["step"] == "specify" and e["substep"] is None and wc._entry_kind(e) == "start"]
+        completes = [e for e in _ctx(self.fd)["history"]
+                     if e["step"] == "specify" and e["substep"] is None and wc._entry_kind(e) == "complete"]
+        self.assertEqual(len(starts), 1, "must not add a start over a legacy start")
+        self.assertEqual(len(completes), 1, "must not add a complete over a legacy self-loop complete")
+
     def test_kind_complete_respects_no_backward_clobber(self) -> None:
         # A late specify complete must never drag a shipped (implemented) spec back.
         wc.update_context(self.fd, "implement", "implemented", "extension", "complete")

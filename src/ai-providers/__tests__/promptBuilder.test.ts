@@ -308,7 +308,7 @@ describe('buildSpecifyCreationPreamble', () => {
         mockConfig(true);
         const out = buildSpecifyCreationPreamble('speckit', null);
         expect(out).toContain('For EACH step you work on');
-        expect(out).toContain('specify, plan, tasks, implement');
+        expect(out).toContain('specify, clarify, plan, tasks, analyze, implement');
     });
 
     it('does NOT carry an atomic-advance rule (start-entry coincides with the AI starting the next step)', () => {

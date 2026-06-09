@@ -268,6 +268,20 @@ def _journaled_tasks(transitions: list) -> set[str]:
     }
 
 
+def _entry_kind(e: dict) -> str:
+    """The entry's kind. Legacy `transitions[]`/pre-`kind` migrated entries may
+    carry no explicit `kind`; there the old convention is that a self-loop
+    (`from.step == step` with the matching substep) is a completion and anything
+    else is a start. Inferring it keeps the dedup correct on migrated specs."""
+    k = e.get("kind")
+    if k in ("start", "complete"):
+        return k
+    frm = e.get("from") or {}
+    if frm.get("step") == e.get("step") and frm.get("substep") == e.get("substep"):
+        return "complete"
+    return "start"
+
+
 def _has_step_start(log: list, step: str) -> bool:
     """True if a step-level (substep None) `start` for `step` already exists. A
     step is started once; this collapses every redundant start — the GUI's
@@ -278,7 +292,7 @@ def _has_step_start(log: list, step: str) -> bool:
         isinstance(e, dict)
         and e.get("step") == step
         and e.get("substep") is None
-        and e.get("kind") == "start"
+        and _entry_kind(e) == "start"
         for e in log
     )
 
@@ -287,12 +301,13 @@ def _has_complete(log: list, step: str, task: object = None) -> bool:
     """True if a `complete` for (step, task) already exists. task=None matches the
     step-level complete (substep None); a task id matches that per-task complete.
     Makes script-driven completes idempotent — it absorbs the GUI's guarded
-    completeStep, re-runs, and the per-task backstop double-writing a task."""
+    completeStep, re-runs, the per-task backstop double-writing a task, and a
+    legacy self-loop completion entry on a migrated spec."""
     return any(
         isinstance(e, dict)
         and e.get("step") == step
-        and e.get("kind") == "complete"
         and e.get("substep") == task
+        and _entry_kind(e) == "complete"
         for e in log
     )
 
