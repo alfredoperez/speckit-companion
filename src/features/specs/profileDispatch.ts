@@ -61,17 +61,16 @@ export function resolveNewSpecProfileCommand(stockCommand: string, workspaceRoot
  */
 function findWorkspaceRoot(specDirectory: string): string | undefined {
     let dir = path.resolve(specDirectory);
-    for (let i = 0; i < 12; i++) {
+    for (;;) {
         if (fs.existsSync(path.join(dir, '.specify'))) {
             return dir;
         }
         const parent = path.dirname(dir);
         if (parent === dir) {
-            break;
+            return undefined;
         }
         dir = parent;
     }
-    return undefined;
 }
 
 /**

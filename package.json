@@ -1032,7 +1032,7 @@
             "enumDescriptions": [
               "Stock /speckit.* commands, unchanged, with better timing capture (default; closest to upstream).",
               "Trimmed /speckit.companion.* commands — no user stories, files/dependencies tasks, smaller spec folder — plus timing.",
-              "Plain upstream spec-kit — routes to the stock commands with no Companion behavior."
+              "Routes to the stock /speckit.* commands and opts out of the Companion install/repair step — it won't remove companion-standard if a prior setting already installed it."
             ],
             "default": "standard",
             "scope": "window",
