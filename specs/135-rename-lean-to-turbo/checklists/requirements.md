@@ -1,6 +1,6 @@
 # Specification Quality Checklist: Rename the "lean" template profile to "turbo"
 
-**Purpose**: Validate lean specification completeness before planning
+**Purpose**: Validate turbo specification completeness before planning
 **Created**: 2026-06-09
 **Feature**: [spec.md](../spec.md)
 

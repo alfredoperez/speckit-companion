@@ -1,1 +1,9 @@
-templateProfile: lean
+# SpecKit Companion project config.
+# templateProfile selects the spec-kit pipeline shape:
+#   standard - stock /speckit.* commands + better timing (default; closest to upstream)
+#   turbo    - trimmed /speckit.companion.* commands (no user stories, files/deps tasks) + timing
+#   off      - routes to stock and opts out of the Companion install/repair step
+# Mirrors the `speckit.companion.templateProfile` VS Code setting; this file is the
+# persisted source of truth. Both command families stay installed at all times —
+# the value only routes which one a spec dispatches; switching never removes either.
+templateProfile: standard
