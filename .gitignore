@@ -42,6 +42,9 @@ storybook-static/
 # every machine; never hand-edited. (The non-companion `specify init --ai`
 # scaffolding under these dirs stays tracked as IDE-chat test fixtures.)
 .specify/extensions/companion/
+# Locally-installed preset copies + catalog cache/registry from `specify preset
+# add --dev` (source of truth is speckit-extension/presets/; never hand-edited).
+.specify/presets/
 .claude/skills/speckit-companion-*/
 .cursor/skills/speckit-companion-*/
 .agents/skills/speckit-companion-*/
