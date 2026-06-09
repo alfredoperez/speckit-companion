@@ -10,7 +10,7 @@ import { SpecExplorerProvider, registerSpecKitCommands, updateSelectionContextKe
 import { register as registerTerminalStepTracker } from './features/specs/terminalStepTracker';
 import { setLifecycleOutputChannel } from './features/specs/stepLifecycle';
 import { OverviewProvider } from './features/settings';
-import { reconcileCompanionPreset, TemplateProfile } from './features/settings/companionPresetReconciler';
+import { ensureStandardFamily, shouldEnsureStandard, writeTemplateProfile, TemplateProfile } from './features/settings/companionPresetReconciler';
 import { AgentManager } from './features/agents';
 import { SkillManager } from './features/skills';
 import { registerWorkflowEditorCommands } from './features/workflow-editor';
@@ -228,9 +228,18 @@ export async function activate(context: vscode.ExtensionContext) {
                     const profile = vscode.workspace
                         .getConfiguration(ConfigKeys.namespace)
                         .get<TemplateProfile>('companion.templateProfile', 'standard');
-                    void reconcileCompanionPreset(root, profile, {
-                        log: msg => outputChannel.appendLine(msg),
-                    });
+                    // Mode selection is non-destructive: mirror the choice to
+                    // .specify/companion.yml so new specs seed their pinned
+                    // profile from it. No preset swap — both command families
+                    // stay present; only which one a spec dispatches changes.
+                    writeTemplateProfile(root, profile);
+                    // Switching away from `off` at runtime re-materializes the
+                    // standard family without waiting for a reload (no-op when present).
+                    if (shouldEnsureStandard(profile)) {
+                        void ensureStandardFamily(root, {
+                            log: msg => outputChannel.appendLine(msg),
+                        });
+                    }
                 }
             }
         })
@@ -239,19 +248,25 @@ export async function activate(context: vscode.ExtensionContext) {
     // Validate provider/permission combination after activation completes (non-blocking)
     setTimeout(() => { void validatePermissionMode(context); }, 0);
 
-    // Reconcile the project's template-profile preset on activation so a project
-    // whose setting was set in a prior session — or that carries a stale legacy
-    // preset — converges without needing a live setting change. No-ops when
-    // already reconciled.
+    // On activation, mirror the project default to .specify/companion.yml and
+    // idempotently ensure the standard /speckit.* command family is present.
+    // The ensure is add-only — it re-materializes the standard family on a
+    // fresh checkout and recovers a project a prior swap left stranded, and it
+    // never removes a command set. No-ops when already present.
     {
         const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         if (root) {
             const profile = vscode.workspace
                 .getConfiguration(ConfigKeys.namespace)
                 .get<TemplateProfile>('companion.templateProfile', 'standard');
-            void reconcileCompanionPreset(root, profile, {
-                log: msg => outputChannel.appendLine(msg),
-            });
+            writeTemplateProfile(root, profile);
+            // `off` opts out of the ensure (plain upstream spec-kit); every other
+            // profile keeps the standard family materialized.
+            if (shouldEnsureStandard(profile)) {
+                void ensureStandardFamily(root, {
+                    log: msg => outputChannel.appendLine(msg),
+                });
+            }
         }
     }
 }

@@ -450,35 +450,9 @@
         "command": "speckit.specs.copyName",
         "title": "Copy Name",
         "category": "SpecKit"
-      },
-      {
-        "command": "speckit.specs.setProfileStandard",
-        "title": "Standard",
-        "category": "SpecKit"
-      },
-      {
-        "command": "speckit.specs.setProfileLean",
-        "title": "Lean",
-        "category": "SpecKit"
-      }
-    ],
-    "submenus": [
-      {
-        "id": "speckit.specs.profile",
-        "label": "Template Profile"
       }
     ],
     "menus": {
-      "speckit.specs.profile": [
-        {
-          "command": "speckit.specs.setProfileStandard",
-          "group": "profile@1"
-        },
-        {
-          "command": "speckit.specs.setProfileLean",
-          "group": "profile@2"
-        }
-      ],
       "view/title": [
         {
           "command": "speckit.create",
@@ -527,11 +501,6 @@
         }
       ],
       "view/item/context": [
-        {
-          "submenu": "speckit.specs.profile",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|completed|archived)$/",
-          "group": "7_modification@5"
-        },
         {
           "command": "speckit.delete",
           "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|completed|archived)$/",
@@ -1061,13 +1030,13 @@
               "off"
             ],
             "enumDescriptions": [
-              "Stock spec-kit commands, unchanged, with better timing capture (default; closest to upstream).",
-              "Trimmed commands — no user stories, files/dependencies tasks, smaller spec folder — plus timing.",
-              "Plain stock spec-kit; no Companion preset installed."
+              "Stock /speckit.* commands, unchanged, with better timing capture (default; closest to upstream).",
+              "Trimmed /speckit.companion.* commands — no user stories, files/dependencies tasks, smaller spec folder — plus timing.",
+              "Routes to the stock /speckit.* commands and opts out of the Companion install/repair step — it won't remove companion-standard if a prior setting already installed it."
             ],
             "default": "standard",
             "scope": "window",
-            "description": "Project default for the spec-kit pipeline shape. Selecting a profile reconciles the companion-standard / companion-lean presets (mutually exclusive) and writes .specify/companion.yml. Override per-spec from the spec's right-click menu (Profile → Standard/Lean)."
+            "description": "Project default for the spec-kit pipeline shape. Both command families stay installed at all times — this setting only routes which one a new spec dispatches: 'standard' uses the stock /speckit.* commands, 'lean' uses the trimmed /speckit.companion.* commands. Switching is non-destructive (neither set is ever removed), and each spec pins the default at creation, so changing this never reshapes a spec already in flight."
           }
         }
       }

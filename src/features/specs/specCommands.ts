@@ -18,7 +18,7 @@ import {
 } from '../workflows';
 import { updateStepProgress, readSpecContextSync } from './specContextManager';
 import { resolveProfileCommand } from './profileDispatch';
-import { startStep, completeStep, setStatus, reactivate, setProfile } from './stepLifecycle';
+import { startStep, completeStep, setStatus, reactivate } from './stepLifecycle';
 import { lastEntryIsCompletionFor } from './historyHelpers';
 import { updateSelectionContextKeys } from './selectionContextKeys';
 import { track as trackTerminal } from './terminalStepTracker';
@@ -269,27 +269,6 @@ export function registerSpecKitCommands(
                 true
             );
         })
-    );
-
-    // Per-spec template profile — choose the lean shape (or back to standard) for
-    // one spec. Recorded in .spec-context.json; the viewer then dispatches the
-    // matching /speckit.companion.* (lean) or stock commands for this spec.
-    const setSpecProfile = async (item: SpecTreeItem, profile: 'standard' | 'lean'): Promise<void> => {
-        if (!item) return;
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder) return;
-        const specDir = specDirFor(item, workspaceFolder.uri.fsPath);
-        await setProfile(specDir, profile);
-        specExplorer.refresh();
-        NotificationUtils.showAutoDismissNotification(`Profile: ${profile}`);
-    };
-    context.subscriptions.push(
-        vscode.commands.registerCommand('speckit.specs.setProfileStandard', (item: SpecTreeItem) =>
-            setSpecProfile(item, 'standard')
-        ),
-        vscode.commands.registerCommand('speckit.specs.setProfileLean', (item: SpecTreeItem) =>
-            setSpecProfile(item, 'lean')
-        )
     );
 
     // Open source file from sidebar inline action

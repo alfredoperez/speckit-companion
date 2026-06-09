@@ -2,7 +2,7 @@
 
 The long-form reference for how SpecKit Companion reshapes the spec-kit pipeline into selectable **profiles**, why the shape lives in command bodies (not document templates), how timing fidelity is baked in, and how a profile is selected. This is a living design doc — update it whenever the profiles, their command bodies, the timing partial, the setting/selection, or the reconciler change (see CLAUDE.md → Documentation).
 
-> Status: design locked, implementation in progress on branch `132-sdd-lean-pipeline`. The spec/plan for the first build live under `specs/132-sdd-lean-pipeline/`; this doc is the durable reference that outlives the spec folder.
+> Status: shipped. Mode selection is **non-destructive dispatch routing** — both command families are always present, and the setting only chooses which one a spec dispatches (no preset swap). This doc is the durable reference that outlives any one spec folder.
 
 ## The two profiles (+ off)
 
@@ -56,10 +56,14 @@ Both profiles bake a single shared **timing partial** into every overridden comm
 
 The GUI preamble stays as the extra path; the body-embedded partial is the standalone path. A parity check (`speckit-extension/scripts/check-shape-parity.py`) locks every body's partial so the two can't fork. Caveat: per-task `date -u` is still best-effort — it can burst on very fast tasks. A burst is still caught by the eval's `timestamps-real` round-millisecond check (`.claude/skills/eval-speckit-extension/check_capture.py`); folding the 0ms-gap signal into the `task-cadence` verdict specifically is a pending follow-up in the kaiju eval source (see "Areas to improve").
 
-## Selecting a profile — two levels
+## Selecting a profile — one setting, routed per spec
 
-1. **Project default** — `speckit.companion.templateProfile` (`"standard" | "lean" | "off"`, default `standard`), persisted to `.specify/companion.yml`. This rides the spec-kit **preset**: selecting a profile installs the matching `companion-*` preset and removes the other (mutually exclusive); `off` removes both. Handled by `src/features/settings/companionPresetReconciler.ts` (tri-state, removes-before-adds, CLI failures logged not thrown).
-2. **Per-spec, at the specify step** — a Standard/Lean control overrides the default for *one* spec, records `"profile"` in that spec's `.spec-context.json`, and the GUI dispatches the matching commands through plan → tasks → implement. This rides the **namespaced** `/speckit.companion.*` commands (always available regardless of preset). `off` uses neither path.
+Mode selection is **dispatch routing**, not a preset swap. Both command families are always present — the stock `/speckit.*` family (emitted by `specify init`, kept present by the always-on `companion-standard` carrier) and the namespaced `/speckit.companion.*` family (from the extension's `provides.commands`). The mode only picks which family a spec dispatches; nothing is ever removed.
+
+1. **Project default** — `speckit.companion.templateProfile` (`"standard" | "lean" | "off"`, default `standard`), mirrored to `.specify/companion.yml`. Changing it only records the default and seeds new specs — it issues **no** preset add/remove/swap, so it can never blank a command set.
+2. **Per-spec pin, seeded at the specify step** — each new spec records its shape in `.spec-context.json` `profile`, seeded from the project default at creation (`src/features/specs/profileDispatch.ts` `seedProfileForNewSpec`). `src/features/specs/profileDispatch.ts` `resolveProfileCommand` then maps `speckit.X` → `speckit.companion.X` for a `lean` spec across every dispatch path. Because the shape is pinned at creation, changing the default later never reshapes a spec already in flight; `standard`/absent/`off`/invalid all resolve to the stock command. The **specify** step is special — a brand-new spec has no pin yet, so `resolveNewSpecProfileCommand` routes its specify command from the project default directly (`lean` → `/speckit.companion.specify`), keeping the first artifact on the same shape the rest of the spec is seeded to.
+
+**Keeping the standard family present (recovery + steady state).** On activation the extension runs an **add-only** ensure (`src/features/settings/companionPresetReconciler.ts` `ensureStandardFamily`): it adds `companion-standard` from the bundled path when absent — re-materializing the stock command files on a fresh checkout and recovering a project a prior swap left stranded — and is a no-op when already present. It **never** removes the standard family, so it cannot strand a project. A one-time migration removes a leftover `companion-lean` install if present, but the setting itself issues no removes thereafter. CLI failures are logged, not thrown. The `off` escape hatch is the one exception — it opts out of the ensure entirely (`shouldEnsureStandard`), so it neither installs nor repairs `companion-standard`. It does **not** remove an already-installed `companion-standard` either — `off` skips the repair step, it doesn't revert a prior install, so a project that already has the timing-augmented bodies keeps them until the preset is removed manually.
 
 ## Naming
 
@@ -72,13 +76,13 @@ The feature carries **no "sdd"** tokens. Canonical names: presets `companion-sta
 - `speckit-extension/commands/speckit.companion.{specify,plan,tasks,implement}.md` — the per-spec lean opt-in commands (track the lean bodies).
 - `speckit-extension/scripts/check-shape-parity.py` — body/partial parity guard.
 - `speckit-extension/scripts/write-context.py` — duplicate-start dedup + specify self-close.
-- `src/features/settings/companionPresetReconciler.ts` (+ test) — profile → preset ops.
+- `src/features/settings/companionPresetReconciler.ts` (+ test) — the add-only `ensureStandardFamily` / `decideEnsureStandardOps` (keep-standard-present + one-time lean/legacy migration) and the `.specify/companion.yml` read/write helpers.
+- `src/features/specs/profileDispatch.ts` (+ test) — `resolveProfileCommand` (route `lean` specs to the `/speckit.companion.*` twin) and `seedProfileForNewSpec` (pin the project default at the specify step).
 - `package.json` `speckit.companion.templateProfile`; `src/core/constants.ts` `ConfigKeys.templateProfile`; `.specify/companion.yml`.
 
 ## Areas to improve (open)
 
 - **14 hand-maintained bodies** (7 commands × 2 profiles) drift against upstream stock + the timing partial. Mitigation: `companion-standard` is a verbatim stock copy + the one shared partial; the parity check locks the partial. A generator could reduce hand-maintenance.
 - **Best-effort cadence** — substep/self-close `date -u` stamps are still hand-authored second-precision; per-task timing is now finish-only via a script (`write-context.py --task <id> --kind complete`), which the eval grades by honest deltas (see `docs/capture-and-timing.md`).
-- **Catalog-add seam — fixed** — the runtime toggle now installs the `add` op from the bundled path (`specify preset add --dev .specify/extensions/companion/presets/<id>`) instead of catalog-form `add <id>`, so toggling `speckit.companion.templateProfile` activates the matching preset with no manual command. `enable`/`remove` stay id-form; `off` removes both.
-- **Per-spec control** — the specify-step Standard/Lean affordance + the `profile` field in `.spec-context.json` + the GUI dispatch-by-profile logic are a workstream beyond the preset/reconciler core.
+- **Catalog-add seam** — the bundled-path `add` (`specify preset add --dev .specify/extensions/companion/presets/companion-standard`) is what the add-only ensure uses to (re-)materialize the standard family; catalog-form `add <id>` silently no-ops in a consumer install, which is why the `--dev` bundled path is required.
 - **Lean plan/tasks templates** — viable later where template overrides flow via the setup scripts (see Mechanism).

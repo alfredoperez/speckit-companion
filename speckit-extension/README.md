@@ -58,11 +58,16 @@ Four capture commands run automatically as lifecycle hooks; two are yours to run
 
 Full reference: [docs/commands.md](./docs/commands.md).
 
-## Template profiles
+## Template profiles — pick your pipeline shape
 
-The extension ships two selectable presets that reshape the spec-kit pipeline: **`companion-standard`** (the stock commands, unchanged, with better timing baked in) and **`companion-lean`** (the same commands trimmed — no user-story section, lean plan, files/dependencies tasks). Both override the 7 pipeline commands (`specify`, `clarify`, `plan`, `tasks`, `analyze`, `implement`, `constitution`); `checklist` and `taskstoissues` stay on stock.
+SpecKit Companion offers two pipeline shapes, and **both are always installed at the same time** — choosing one never deletes the other:
 
-Pick a project default with the `speckit.companion.templateProfile` VS Code setting (`standard` | `lean` | `off`), which reconciles the two presets so only one is installed — activating the matching preset from the bundled path with no manual command. Override per spec from the spec's right-click menu. The four opt-in `/speckit.companion.*` commands above are the per-spec lean path; a `scripts/check-shape-parity.py` guard keeps them in lockstep with the `companion-lean` bodies, and asserts every body carries the shared timing partial. Full reference: [`../docs/template-profiles.md`](../docs/template-profiles.md).
+- **Standard** — the stock `/speckit.specify · plan · tasks · implement` commands, unchanged, with better timing capture. Closest to upstream spec-kit.
+- **Lean** — the `/speckit.companion.specify · plan · tasks · implement` commands: a trimmed shape with no user-story section, a lean plan, files/dependencies tasks, and a smaller spec folder.
+
+**How to switch:** set the `speckit.companion.templateProfile` VS Code setting to `standard` (the default), `lean`, or `off`. That's the only place the choice is made. Switching is **non-destructive** — neither command set is removed or overwritten, so you never lose your commands or hit "Unknown command" (the standard family is re-added automatically if a project is ever missing it). Each spec pins the project default the moment it's created, so flipping the setting later reshapes only *new* specs, never one that's already underway.
+
+`off` is an escape hatch that routes to the stock commands and skips the Companion install/repair step (it won't remove `companion-standard` if a prior setting already installed it). Under the hood the stock family stays present via an add-only activation step that also recovers a project whose commands a prior version may have stranded; a `scripts/check-shape-parity.py` guard keeps the lean commands in lockstep with their bodies and asserts every body carries the shared timing partial. Full reference: [`../docs/template-profiles.md`](../docs/template-profiles.md).
 
 ## Installation
 

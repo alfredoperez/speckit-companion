@@ -1,0 +1,422 @@
+{
+  "workflow": "speckit",
+  "specName": "Command Mode Selection",
+  "branch": "134-command-mode-selection",
+  "selectedAt": "2026-06-09T14:58:02.267Z",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": null,
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-09T14:58:02.267Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-09T15:07:36.988Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-09T15:07:36.990Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:16:41Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:19:12Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:19:20Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-09T15:23:31.926Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:27:12Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:27:31Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-09T15:27:54.805Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T001",
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:51:17.112Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T002",
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:51:17.194Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T003",
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:51:17.276Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T004",
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:51:17.355Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T005",
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:51:17.434Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T006",
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:51:17.511Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T007",
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:51:17.590Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T008",
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:51:17.667Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T009",
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:51:17.744Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T010",
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:51:17.826Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T011",
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:51:17.909Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T012",
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:51:17.990Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T013",
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:51:18.071Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T014",
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:51:18.150Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T015",
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:51:18.228Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T016",
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:51:18.308Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T017",
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:51:18.386Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T018",
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:51:18.464Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T019",
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:51:18.542Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T020",
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:51:18.627Z"
+    },
+    {
+      "step": "implement",
+      "substep": "run-tests",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T15:52:08Z"
+    }
+  ],
+  "updated": "2026-06-09",
+  "currentTask": "T020",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Confirmed the baseline compiled and all 74 suites / 866 tests passed before any change.",
+      "files": []
+    },
+    "T002": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Replaced the tri-state swap decision with an add-only decideEnsureStandardOps that never removes companion-standard.",
+      "files": [
+        "src/features/settings/companionPresetReconciler.ts"
+      ],
+      "concerns": [
+        "Made the steady state (companion-standard already present, no leftovers) a true no-op to satisfy the idempotency contract (FR-006 / Contract C / T008 / T014); the loose \"enable when already installed\" from T002 is emitted only when a leftover lean/legacy removal touched the shared command files."
+      ]
+    },
+    "T003": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Extracted the add-only ensureStandardFamily runner from reconcileCompanionPreset, dropping remove-before-add ordering and the removeFailed skip.",
+      "files": [
+        "src/features/settings/companionPresetReconciler.ts"
+      ],
+      "concerns": [
+        "ensureStandardFamily no longer mirrors the setting to companion.yml (the old reconcile did); that mirroring moved into extension.ts so seeding still reads the current default."
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Removed both destructive reconcile call sites — activation now mirrors the setting and runs the add-only ensure; the config-change handler only mirrors the setting.",
+      "files": [
+        "src/extension.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added a test asserting decideEnsureStandardOps emits no remove of companion-standard across every installed-state permutation.",
+      "files": [
+        "src/features/settings/companionPresetReconciler.test.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Extended profileDispatch tests to cover all four lean twins, standard/absent/invalid pass-through, corrupt-context safety, and seedProfileForNewSpec with in-flight pinning.",
+      "files": [
+        "src/features/specs/profileDispatch.test.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Deleted the dead swap machinery (PRESET_BY_PROFILE, tri-state target selection, off-removes-both, removeFailed guard); kept the installed-state probe.",
+      "files": [
+        "src/features/settings/companionPresetReconciler.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Rewrote the reconciler test for idempotency (already-present yields zero ops) and no standard-family remove on any mode change.",
+      "files": [
+        "src/features/settings/companionPresetReconciler.test.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Retired the right-click Template Profile submenu, its two setProfile commands, its menu items, and the context-menu reference in package.json.",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T010": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Removed the per-spec profile menu handler and dropped the now-unused setProfile import from specCommands.ts.",
+      "files": [
+        "src/features/specs/specCommands.ts"
+      ],
+      "concerns": [
+        "setProfile in stepLifecycle.ts is now unused but retained as internal plumbing per the plan (Decision 5)."
+      ]
+    },
+    "T011": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Seeded each new spec’s pinned profile from the project default at the specify-step skeletons via a shared seedProfileForNewSpec helper.",
+      "files": [
+        "src/features/specs/profileDispatch.ts",
+        "src/features/specs/specContextManager.ts",
+        "src/features/specs/stepLifecycle.ts"
+      ],
+      "concerns": [
+        "Seeded a third skeleton (stepLifecycle.buildFallback) beyond the two named in the task: startStep races updateStepProgress on the first write and uses buildFallback, so seeding only the two named sites would lose the pin when startStep wins."
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Rewrote the templateProfile setting description and enum descriptions to the routing model — no reconcile/swap, no retired menu.",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Verified ensureStandardFamily issues the bundled-path --dev add when companion-standard is absent and a no-op when present; presetCommandFor still emits the --dev form (covered by tests).",
+      "files": []
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Added a recovery test: a stranded state emits the bundled-path add; already-present emits zero ops.",
+      "files": [
+        "src/features/settings/companionPresetReconciler.test.ts"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Rewrote the README Template Profiles section to the single-setting, non-destructive routing model.",
+      "files": [
+        "README.md"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Rewrote the spec-kit extension README Template profiles section user-first: what each mode produces, how to switch via the setting, and the non-destructive guarantee.",
+      "files": [
+        "speckit-extension/README.md"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Rewrote the template-profiles selection + reconciler sections and Files list to the routing + add-only-ensure model, and updated the architecture docs (capture-and-timing.md, the extension install.md) per the user request.",
+      "files": [
+        "docs/template-profiles.md",
+        "docs/capture-and-timing.md",
+        "speckit-extension/docs/install.md"
+      ]
+    },
+    "T018": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Confirmed docs/sidebar.md never documented the right-click Template Profile menu, so no removal was needed.",
+      "files": [],
+      "concerns": [
+        "No-op task: sidebar.md had no Template-Profile menu reference to remove."
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Rewrote the unreleased Template-profiles changelog entries in both changelogs to the non-destructive routing model (effect-first, no internal symbol names).",
+      "files": [
+        "CHANGELOG.md",
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T020": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Ran compile + the full suite (74 suites / 870 tests pass) and mapped quickstart steps 1–6 to the automated tests covering SC-001..SC-005 and the in-flight/recovery edge cases.",
+      "files": [],
+      "concerns": [
+        "The manual GUI quickstart walk (installing the extension and clicking through the viewer) was not performed in this headless environment; the behaviors are covered by the unit tests instead."
+      ]
+    }
+  }
+}

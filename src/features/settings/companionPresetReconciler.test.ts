@@ -2,11 +2,12 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import {
-    decidePresetOps,
+    decideEnsureStandardOps,
     presetCommandFor,
     readTemplateProfile,
     writeTemplateProfile,
-    reconcileCompanionPreset,
+    ensureStandardFamily,
+    shouldEnsureStandard,
     PresetOp,
 } from './companionPresetReconciler';
 
@@ -28,39 +29,56 @@ describe('companionPresetReconciler', () => {
     };
     const ids = (ops: PresetOp[]): string[] => ops.map(o => `${o.action} ${o.id}`);
 
-    describe('decidePresetOps', () => {
-        it('adds the target when nothing is installed', () => {
-            expect(ids(decidePresetOps('standard', NONE))).toEqual(['add companion-standard']);
-            expect(ids(decidePresetOps('lean', NONE))).toEqual(['add companion-lean']);
+    describe('decideEnsureStandardOps', () => {
+        it('adds companion-standard from the bundled path when nothing is installed', () => {
+            expect(ids(decideEnsureStandardOps(NONE))).toEqual(['add companion-standard']);
         });
 
-        it('enables the target when it is already installed (idempotent-ish)', () => {
-            expect(ids(decidePresetOps('standard', { ...NONE, 'companion-standard': true })))
-                .toEqual(['enable companion-standard']);
+        it('is a no-op when companion-standard is already present (idempotent)', () => {
+            expect(decideEnsureStandardOps({ ...NONE, 'companion-standard': true })).toEqual([]);
         });
 
-        it('removes the other preset BEFORE adding the target when switching', () => {
-            expect(ids(decidePresetOps('standard', { 'companion-standard': false, 'companion-lean': true })))
+        it('migrates a leftover companion-lean: removes it, then adds standard when absent', () => {
+            expect(ids(decideEnsureStandardOps({ 'companion-standard': false, 'companion-lean': true })))
                 .toEqual(['remove companion-lean', 'add companion-standard']);
-            expect(ids(decidePresetOps('lean', { 'companion-standard': true, 'companion-lean': false })))
-                .toEqual(['remove companion-standard', 'add companion-lean']);
         });
 
-        it('off removes both installed presets and adds nothing', () => {
-            expect(ids(decidePresetOps('off', { 'companion-standard': true, 'companion-lean': true })))
-                .toEqual(['remove companion-standard', 'remove companion-lean']);
+        it('re-enables standard after removing a leftover lean that shared the command files', () => {
+            expect(ids(decideEnsureStandardOps({ 'companion-standard': true, 'companion-lean': true })))
+                .toEqual(['remove companion-lean', 'enable companion-standard']);
         });
 
-        it('off with nothing installed is a no-op', () => {
-            expect(decidePresetOps('off', NONE)).toEqual([]);
-        });
-
-        it('cleans up a stale legacy sdd-lean preset', () => {
-            const ops = ids(decidePresetOps('standard', { ...NONE, 'sdd-lean': true }));
+        it('cleans up a stale legacy preset alongside the ensure', () => {
+            const ops = ids(decideEnsureStandardOps({ ...NONE, 'sdd-lean': true }));
             expect(ops).toContain('remove sdd-lean');
             expect(ops).toContain('add companion-standard');
-            // the legacy remove comes before the add
             expect(ops.indexOf('remove sdd-lean')).toBeLessThan(ops.indexOf('add companion-standard'));
+        });
+
+        // The decision is add-only for the standard family — it never emits a
+        // remove of companion-standard for ANY installed state.
+        it('never removes companion-standard for any installed-state permutation', () => {
+            for (const standard of [true, false]) {
+                for (const lean of [true, false]) {
+                    for (const legacy of [true, false]) {
+                        const ops = ids(decideEnsureStandardOps({
+                            'companion-standard': standard,
+                            'companion-lean': lean,
+                            'sdd-lean': legacy,
+                        }));
+                        expect(ops).not.toContain('remove companion-standard');
+                    }
+                }
+            }
+        });
+
+        // A project stranded by a prior swap (no companion presets, no stock
+        // files) recovers via the bundled-path add.
+        it('recovers a stranded project with the bundled-path add', () => {
+            const ops = decideEnsureStandardOps(NONE);
+            expect(ops).toEqual([{ id: 'companion-standard', action: 'add' }]);
+            expect(presetCommandFor(ops[0]))
+                .toBe('specify preset add --dev .specify/extensions/companion/presets/companion-standard');
         });
     });
 
@@ -68,15 +86,13 @@ describe('companionPresetReconciler', () => {
         it('formats enable/remove as id-form CLI commands', () => {
             expect(presetCommandFor({ id: 'companion-lean', action: 'remove' }))
                 .toBe('specify preset remove companion-lean');
-            expect(presetCommandFor({ id: 'companion-lean', action: 'enable' }))
-                .toBe('specify preset enable companion-lean');
+            expect(presetCommandFor({ id: 'companion-standard', action: 'enable' }))
+                .toBe('specify preset enable companion-standard');
         });
 
         it('installs add from the bundled path with --dev (catalog-form add no-ops)', () => {
             expect(presetCommandFor({ id: 'companion-standard', action: 'add' }))
                 .toBe('specify preset add --dev .specify/extensions/companion/presets/companion-standard');
-            expect(presetCommandFor({ id: 'companion-lean', action: 'add' }))
-                .toBe('specify preset add --dev .specify/extensions/companion/presets/companion-lean');
         });
     });
 
@@ -109,79 +125,65 @@ describe('companionPresetReconciler', () => {
         });
     });
 
-    describe('reconcileCompanionPreset', () => {
-        it('persists the profile and runs add when enabling a fresh project', async () => {
+    describe('ensureStandardFamily', () => {
+        it('runs the bundled-path add on a fresh/stranded project', async () => {
             const calls: string[] = [];
-            const ops = await reconcileCompanionPreset(root, 'standard', { run: async c => { calls.push(c); } });
+            const ops = await ensureStandardFamily(root, { run: async (c: string) => { calls.push(c); } });
             expect(calls).toEqual(['specify preset add --dev .specify/extensions/companion/presets/companion-standard']);
-            expect(readTemplateProfile(root)).toBe('standard');
             expect(ops).toHaveLength(1);
         });
 
-        it('removes the other then adds the target when switching profiles', async () => {
+        it('is a no-op when the standard family is already present (idempotent)', async () => {
+            install('companion-standard');
+            const calls: string[] = [];
+            const ops = await ensureStandardFamily(root, { run: async (c: string) => { calls.push(c); } });
+            expect(calls).toEqual([]);
+            expect(ops).toEqual([]);
+        });
+
+        it('migrates a leftover lean install without ever removing the standard family', async () => {
             install('companion-lean');
             const calls: string[] = [];
-            await reconcileCompanionPreset(root, 'standard', { run: async c => { calls.push(c); } });
+            await ensureStandardFamily(root, { run: async (c: string) => { calls.push(c); } });
             expect(calls).toEqual([
                 'specify preset remove companion-lean',
                 'specify preset add --dev .specify/extensions/companion/presets/companion-standard',
             ]);
-            expect(readTemplateProfile(root)).toBe('standard');
+            expect(calls).not.toContain('specify preset remove companion-standard');
         });
 
-        it('removes both on off', async () => {
-            install('companion-standard');
-            install('companion-lean');
-            const calls: string[] = [];
-            await reconcileCompanionPreset(root, 'off', { run: async c => { calls.push(c); } });
-            expect(calls).toEqual([
-                'specify preset remove companion-standard',
-                'specify preset remove companion-lean',
-            ]);
-        });
-
-        it('runs no command when already reconciled (off + nothing installed)', async () => {
-            const calls: string[] = [];
-            await reconcileCompanionPreset(root, 'off', { run: async c => { calls.push(c); } });
-            expect(calls).toEqual([]);
+        // A standard↔lean mode change is non-destructive — no command set is
+        // removed by the preset path.
+        it('never issues a remove of the standard family in any installed state', async () => {
+            for (const standard of [true, false]) {
+                for (const lean of [true, false]) {
+                    const r = fs.mkdtempSync(path.join(os.tmpdir(), 'companion-perm-'));
+                    if (standard) fs.mkdirSync(path.join(r, '.specify', 'presets', 'companion-standard'), { recursive: true });
+                    if (lean) fs.mkdirSync(path.join(r, '.specify', 'presets', 'companion-lean'), { recursive: true });
+                    const calls: string[] = [];
+                    await ensureStandardFamily(r, { run: async (c: string) => { calls.push(c); } });
+                    expect(calls).not.toContain('specify preset remove companion-standard');
+                    fs.rmSync(r, { recursive: true, force: true });
+                }
+            }
         });
 
         it('does not throw when a CLI command fails', async () => {
             await expect(
-                reconcileCompanionPreset(root, 'standard', { run: async () => { throw new Error('specify not found'); } })
+                ensureStandardFamily(root, { run: async () => { throw new Error('specify not found'); } })
             ).resolves.toHaveLength(1);
-            expect(readTemplateProfile(root)).toBe('standard');
+        });
+    });
+
+    describe('shouldEnsureStandard', () => {
+        it('opts out only for the off escape hatch', () => {
+            expect(shouldEnsureStandard('off')).toBe(false);
         });
 
-        it('skips the add when a preceding remove fails (never registers both presets)', async () => {
-            install('companion-lean');
-            const calls: string[] = [];
-            await reconcileCompanionPreset(root, 'standard', {
-                run: async c => {
-                    calls.push(c);
-                    if (c.includes('remove')) {
-                        throw new Error('remove failed');
-                    }
-                },
-            });
-            // the remove was attempted and failed; the add must NOT run
-            expect(calls).toEqual(['specify preset remove companion-lean']);
-        });
-
-        it('skips ENABLE of the target when a preceding remove fails (target already installed)', async () => {
-            install('companion-standard'); // target installed → would be enabled
-            install('companion-lean');     // non-target installed → removed first
-            const calls: string[] = [];
-            await reconcileCompanionPreset(root, 'standard', {
-                run: async c => {
-                    calls.push(c);
-                    if (c.includes('remove')) {
-                        throw new Error('remove failed');
-                    }
-                },
-            });
-            // remove failed → the enable is skipped, so we don't leave both active
-            expect(calls).toEqual(['specify preset remove companion-lean']);
+        it('ensures the standard family for standard, lean, and an absent default', () => {
+            expect(shouldEnsureStandard('standard')).toBe(true);
+            expect(shouldEnsureStandard('lean')).toBe(true);
+            expect(shouldEnsureStandard(undefined)).toBe(true);
         });
     });
 });

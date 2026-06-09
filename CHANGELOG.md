@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- **Template profiles** (#132): a new `speckit.companion.templateProfile` setting (`standard` | `lean` | `off`, default `standard`) picks the shape of the spec-kit pipeline. `standard` runs the stock commands; `lean` produces a trimmed shape — a spec with no user-story section, tasks grouped by files/dependencies, and a smaller spec folder; `off` falls back to plain stock spec-kit. Switching the setting activates the matching profile (the two are mutually exclusive). You can also override the profile for a single spec from its right-click menu (**Template Profile → Standard / Lean**), and the viewer runs that spec's pipeline in the chosen shape. See `docs/template-profiles.md`.
+- **Template profiles** (#132, #134): a new `speckit.companion.templateProfile` setting (`standard` | `lean` | `off`, default `standard`) picks the shape of the spec-kit pipeline. `standard` runs the stock commands; `lean` produces a trimmed shape — a spec with no user-story section, tasks grouped by files/dependencies, and a smaller spec folder; `off` falls back to plain upstream spec-kit. **Both command sets stay installed at all times** — switching the setting is non-destructive: it only routes which one a spec uses and never deletes either, so creating a spec never fails with "Unknown command", in any mode or after any number of switches. Each spec pins the project default the moment it's created, so changing the setting reshapes only new specs, never one already in flight. See `docs/template-profiles.md`.
 
 ### Changed
 
@@ -14,7 +14,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-- **The template-profile setting now actually switches profiles** (#215): toggling `speckit.companion.templateProfile` used to record your choice but never activate the matching profile, so the default `standard` was effectively inert. Changing the setting now takes effect immediately, with no manual command.
+- **Switching modes no longer deletes your commands** (#134): selecting the lean shape used to swap command bundles in a way that could leave a project with no usable pipeline commands — creating a spec then failed with "Unknown command: /speckit-specify". The mode is now a non-destructive routing choice: both command sets are always present, and a project left without its stock commands by an earlier version recovers automatically on the next reload.
 
 ## [0.22.0] - 2026-06-07
 

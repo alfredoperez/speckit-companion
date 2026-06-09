@@ -8,13 +8,14 @@ const execAsync = promisify(exec);
 
 export type TemplateProfile = 'standard' | 'lean' | 'off';
 
-export const PRESET_BY_PROFILE: Record<Exclude<TemplateProfile, 'off'>, string> = {
-    standard: 'companion-standard',
-    lean: 'companion-lean',
-};
-export const ALL_PRESET_IDS = ['companion-standard', 'companion-lean'] as const;
-/** A preset left over from the pre-rename branch; cleaned up on first reconcile. */
+/** Carrier preset for the always-present standard `/speckit.*` command family. */
+const STANDARD_PRESET_ID = 'companion-standard';
+/** Retired from the selection path; removed once if left installed by an old swap. */
+const LEAN_PRESET_ID = 'companion-lean';
+/** A preset left over from the pre-rename branch; cleaned up on first ensure. */
 const LEGACY_PRESET_ID = 'sdd-lean';
+
+export const ALL_PRESET_IDS = ['companion-standard', 'companion-lean'] as const;
 
 const CONFIG_REL = path.join('.specify', 'companion.yml');
 const PRESETS_REL = path.join('.specify', 'presets');
@@ -25,32 +26,28 @@ export interface PresetOp {
 }
 
 /**
- * Pure decision: desired profile + which presets are installed on disk → an ordered
- * list of `specify preset` ops that converges to "only the target preset installed".
- * Mutual exclusivity is the invariant — any non-target preset that is installed is
- * removed, and removes are emitted BEFORE the add so a switch never has both
- * presets registered at once. "off" removes both.
+ * Pure decision: which `specify preset` ops bring a project to "the standard
+ * command family is present". Add-only for `companion-standard` — added (from
+ * the bundled path) when absent, never removed regardless of input state. A
+ * leftover `companion-lean` / legacy `sdd-lean` install is removed once (both
+ * are retired from the selection path); after such a removal, `companion-standard`
+ * is re-enabled so its bodies aren't left reverted. Already-present-and-clean is
+ * a no-op (idempotent).
  */
-export function decidePresetOps(
-    profile: TemplateProfile,
-    installed: Record<string, boolean>
-): PresetOp[] {
-    const target = profile === 'off' ? null : PRESET_BY_PROFILE[profile];
-    const removes: PresetOp[] = [];
-    let add: PresetOp | null = null;
-
-    for (const id of ALL_PRESET_IDS) {
-        if (id === target) {
-            add = installed[id] ? { id, action: 'enable' } : { id, action: 'add' };
-        } else if (installed[id]) {
-            removes.push({ id, action: 'remove' });
-        }
+export function decideEnsureStandardOps(installed: Record<string, boolean>): PresetOp[] {
+    const ops: PresetOp[] = [];
+    if (installed[LEAN_PRESET_ID]) {
+        ops.push({ id: LEAN_PRESET_ID, action: 'remove' });
     }
-    // Clean up a stale pre-rename install if present.
     if (installed[LEGACY_PRESET_ID]) {
-        removes.push({ id: LEGACY_PRESET_ID, action: 'remove' });
+        ops.push({ id: LEGACY_PRESET_ID, action: 'remove' });
     }
-    return add ? [...removes, add] : removes;
+    if (!installed[STANDARD_PRESET_ID]) {
+        ops.push({ id: STANDARD_PRESET_ID, action: 'add' });
+    } else if (ops.length > 0) {
+        ops.push({ id: STANDARD_PRESET_ID, action: 'enable' });
+    }
+    return ops;
 }
 
 /**
@@ -127,6 +124,16 @@ export function writeTemplateProfile(workspaceRoot: string, profile: TemplatePro
     fs.writeFileSync(p, yaml.dump(doc), 'utf8');
 }
 
+/**
+ * The `off` profile is the explicit "plain upstream spec-kit" escape hatch — it
+ * routes to stock commands and must NOT pull in the `companion-standard` family
+ * (which carries the timing-augmented bodies). Every other profile (and an absent
+ * one) keeps the standard family ensured so the pipeline is always present.
+ */
+export function shouldEnsureStandard(profile: TemplateProfile | undefined): boolean {
+    return profile !== 'off';
+}
+
 export interface ReconcileDeps {
     /** Runs a shell command in the workspace; injected so tests don't touch the real CLI. */
     run?: (cmd: string, cwd: string) => Promise<void>;
@@ -134,13 +141,15 @@ export interface ReconcileDeps {
 }
 
 /**
- * Persist the profile (the source of truth) and run the decided `specify preset`
- * ops in order. Idempotent: re-applying the current state yields no ops. CLI
- * failures are logged, not thrown, so toggling the setting never breaks activation.
+ * Idempotently ensure the standard `/speckit.*` command family is present:
+ * add `companion-standard` from the bundled path when absent (recovering a
+ * project a prior swap stranded), and migrate away a leftover `companion-lean`
+ * / legacy `sdd-lean` install. Add-only — never removes the standard family,
+ * so it cannot strand the project. CLI failures are logged, not thrown, so
+ * activation is never broken by a missing `specify` binary.
  */
-export async function reconcileCompanionPreset(
+export async function ensureStandardFamily(
     workspaceRoot: string,
-    profile: TemplateProfile,
     deps: ReconcileDeps = {}
 ): Promise<PresetOp[]> {
     const run = deps.run ?? (async (cmd: string, cwd: string): Promise<void> => {
@@ -148,30 +157,17 @@ export async function reconcileCompanionPreset(
     });
     const log = deps.log ?? ((): void => undefined);
 
-    writeTemplateProfile(workspaceRoot, profile);
-    const ops = decidePresetOps(profile, installedMap(workspaceRoot));
+    const ops = decideEnsureStandardOps(installedMap(workspaceRoot));
     if (ops.length === 0) {
-        log(`[companion] profile "${profile}" already reconciled — no preset action`);
+        log('[companion] standard command family already present — no preset action');
         return ops;
     }
-    // Removes run before the target op. If a remove fails, skip the target's
-    // activation (whether that's `add` or `enable`) rather than half-applying the
-    // switch — activating the target while the other preset survives is the exact
-    // both-active state mutual exclusivity exists to prevent. The next reconcile retries.
-    let removeFailed = false;
     for (const op of ops) {
         const cmd = presetCommandFor(op);
-        if ((op.action === 'add' || op.action === 'enable') && removeFailed) {
-            log(`[companion] skipping "${cmd}" — a preceding remove failed; not activating both presets`);
-            continue;
-        }
-        log(`[companion] profile "${profile}" → ${cmd}`);
+        log(`[companion] ensure standard → ${cmd}`);
         try {
             await run(cmd, workspaceRoot);
         } catch (e) {
-            if (op.action === 'remove') {
-                removeFailed = true;
-            }
             log(`[companion] preset command failed: ${cmd} — ${(e as Error).message}`);
         }
     }

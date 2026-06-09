@@ -32,6 +32,7 @@ import {
     updateSpecContext as canonicalUpdateSpecContext,
 } from './specContextWriter';
 import { normalizeSpecContext } from './specContextReader';
+import { seedProfileForNewSpec } from './profileDispatch';
 
 /**
  * Try reading a JSON file, return parsed content or undefined.
@@ -160,6 +161,7 @@ export async function updateSpecContext(
             currentStep: 'specify',
             status: 'draft',
             history: [],
+            profile: seedProfileForNewSpec(specDir),
         }),
     );
 }
@@ -226,6 +228,7 @@ export async function updateStepProgress(
                 currentStep: 'specify',
                 status: 'draft',
                 history: [],
+                profile: seedProfileForNewSpec(specDir),
             }),
         );
         return;
