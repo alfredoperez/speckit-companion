@@ -34,9 +34,30 @@ jest.config.js
 tsconfig.test.json
 coverage/**
 dist/__tests__/**
-docs/screenshots/**
+docs/**
 webpack.config.js
 *.log
 **/*.ts
-!**/*.d.ts
 src/**/*.js
+
+# Dev workspace — never runtime code (vsce ignores .gitignore when this file exists,
+# so gitignored caches/build output must be listed here too)
+.codex/**
+examples/**
+specs/**
+bench/**
+speckit-extension/**
+.specify/**
+.opencode/**
+.serena/**
+.cursor/**
+.agents/**
+.gemini/**
+.qwen/**
+.windsurf/**
+.storybook/**
+storybook-static/**
+**/*.stories.tsx
+assets/mascot/**
+AGENTS.md
+package-lock.json
