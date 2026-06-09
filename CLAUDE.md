@@ -116,7 +116,7 @@ When adding, changing, or removing a user-facing feature, update README.md. The 
 
 When modifying spec viewer statuses, badges, buttons, or step tab behavior, also update `docs/viewer-states.md` (full state machine: status lifecycle, footer button matrix, badge text logic, step tab visual states, data flow).
 
-When modifying the companion template profiles — the `companion-standard` / `companion-lean` presets, their command bodies, the shared timing partial, the `speckit.companion.templateProfile` setting, the per-spec profile control, or the preset reconciler — also update `docs/template-profiles.md` (the living reference for the two profiles, the commands-vs-templates mechanism, the per-file lean treatment, the timing partial, and the selection model).
+When modifying the companion template profiles — the `companion-standard` / `companion-turbo` presets, their command bodies, the shared timing partial, the `speckit.companion.templateProfile` setting, the per-spec profile control, or the preset reconciler — also update `docs/template-profiles.md` (the living reference for the two profiles, the commands-vs-templates mechanism, the per-file turbo treatment, the timing partial, and the selection model).
 
 When modifying the project structure, adding/removing modules, or changing the architecture, also update `docs/architecture.md`.
 
@@ -145,7 +145,7 @@ A change under `speckit-extension/` updates **its** README/CHANGELOG/version, **
 | New AI provider | "Supported AI Providers" matrix (add column) + provider count anywhere it's stated (e.g. "Six providers ship today" in "Why it exists") + `package.json` `contributes.configuration["speckit.aiProvider"].enum` must match |
 | New canonical workflow status | "Header badge color tiers" in `docs/sidebar.md` + "Status vocabulary" under Spec Context in README |
 | New configuration setting | "Configuration" section in README (add subsection with JSON example + value table) |
-| New sidebar action / right-click menu item | `docs/sidebar.md` (full reference) + the lean "Sidebar at a Glance" summary in README |
+| New sidebar action / right-click menu item | `docs/sidebar.md` (full reference) + the brief "Sidebar at a Glance" summary in README |
 | New keyboard or visual safety affordance | "Safety Affordances for Destructive Actions" in README |
 | New workflow phase or sub-document type | "Spec-Driven Phases" in README + Step Properties table under Custom Workflows |
 | New custom command type | "Custom Commands" properties table in README |

@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 
 // Bench-only Vitest config. The acceptance suites under bench/acceptance are the
-// hidden grading key for lean-vs-standard runs — they render the real app and
+// hidden grading key for turbo-vs-standard runs — they render the real app and
 // assert user-visible behavior, so they stay independent of whatever internal
 // API a given run generates. They are NOT part of `tsc`/`vite build` (tsconfig
 // only includes src/), so they never block a production build.

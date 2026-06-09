@@ -3,7 +3,7 @@ schema_version: "1.0"
 extension:
   id: companion
   name: "SpecKit Companion"
-  version: "0.2.0"
+  version: "0.3.0"
   description: "Live spec-driven progress for SpecKit Companion — lifecycle capture, status, and resume."
   author: alfredoperez
   repository: https://github.com/alfredoperez/speckit-companion
@@ -41,16 +41,16 @@ provides:
       description: "Resume the pipeline from the recorded step with decisions in scope, dispatching the next command"
     - name: speckit.companion.specify
       file: commands/speckit.companion.specify.md
-      description: "Companion lean specify — spec.md with no user-story section (per-spec opt-in)"
+      description: "Companion turbo specify — spec.md with no user-story section (per-spec opt-in)"
     - name: speckit.companion.plan
       file: commands/speckit.companion.plan.md
-      description: "Companion lean plan — files/dependencies, conditional side files (per-spec opt-in)"
+      description: "Companion turbo plan — files/dependencies, conditional side files (per-spec opt-in)"
     - name: speckit.companion.tasks
       file: commands/speckit.companion.tasks.md
-      description: "Companion lean tasks — files/dependencies axis (per-spec opt-in)"
+      description: "Companion turbo tasks — files/dependencies axis (per-spec opt-in)"
     - name: speckit.companion.implement
       file: commands/speckit.companion.implement.md
-      description: "Companion lean implement — dependency-ordered execution (per-spec opt-in)"
+      description: "Companion turbo implement — dependency-ordered execution (per-spec opt-in)"
 
 hooks:
   after_specify:

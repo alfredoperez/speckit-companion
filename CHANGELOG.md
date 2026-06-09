@@ -6,15 +6,16 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- **Template profiles** (#132, #134): a new `speckit.companion.templateProfile` setting (`standard` | `lean` | `off`, default `standard`) picks the shape of the spec-kit pipeline. `standard` runs the stock commands; `lean` produces a trimmed shape — a spec with no user-story section, tasks grouped by files/dependencies, and a smaller spec folder; `off` falls back to plain upstream spec-kit. **Both command sets stay installed at all times** — switching the setting is non-destructive: it only routes which one a spec uses and never deletes either, so creating a spec never fails with "Unknown command", in any mode or after any number of switches. Each spec pins the project default the moment it's created, so changing the setting reshapes only new specs, never one already in flight. See `docs/template-profiles.md`.
+- **Template profiles** (#132, #134): a new `speckit.companion.templateProfile` setting (`standard` | `turbo` | `off`, default `standard`) picks the shape of the spec-kit pipeline. `standard` runs the stock commands; `turbo` produces a trimmed shape — a spec with no user-story section, tasks grouped by files/dependencies, and a smaller spec folder; `off` falls back to plain upstream spec-kit. **Both command sets stay installed at all times** — switching the setting is non-destructive: it only routes which one a spec uses and never deletes either, so creating a spec never fails with "Unknown command", in any mode or after any number of switches. Each spec pins the project default the moment it's created, so changing the setting reshapes only new specs, never one already in flight. See `docs/template-profiles.md`.
 
 ### Changed
 
+- **The trimmed profile is named "turbo"** (#226): the trimmed pipeline shape ships under the `turbo` value of `speckit.companion.templateProfile`; its pre-release working name "lean" was dropped before any release, so there is no old value to migrate.
 - **More accurate timing in the activity panel** (#215): per-task and per-substep durations are now measured from single finish events rather than reconstructed from start/complete pairs. This removes the `0s` ticks, the unattributed gaps between tasks, and the substep "bursts" that previously showed up in the timeline, so per-step and per-task durations read accurately. See `docs/capture-and-timing.md`.
 
 ### Fixed
 
-- **Switching modes no longer deletes your commands** (#134): selecting the lean shape used to swap command bundles in a way that could leave a project with no usable pipeline commands — creating a spec then failed with "Unknown command: /speckit-specify". The mode is now a non-destructive routing choice: both command sets are always present, and a project left without its stock commands by an earlier version recovers automatically on the next reload.
+- **Switching modes no longer deletes your commands** (#134): selecting the trimmed shape used to swap command bundles in a way that could leave a project with no usable pipeline commands — creating a spec then failed with "Unknown command: /speckit-specify". The mode is now a non-destructive routing choice: both command sets are always present, and a project left without its stock commands by an earlier version recovers automatically on the next reload.
 
 ## [0.22.0] - 2026-06-07
 

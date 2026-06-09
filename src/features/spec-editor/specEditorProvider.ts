@@ -263,9 +263,9 @@ export class SpecEditorProvider {
             const provider = AIProviderFactory.getProvider(this.context, this.outputChannel);
 
             // Use custom command if provided, otherwise the workflow's specify command.
-            // For the default SpecKit workflow, route to the lean specify twin when the
-            // project default is lean — the new spec has no context to pin yet, so the
-            // first step honors the project default directly (FR-004 / lean default).
+            // For the default SpecKit workflow, route to the turbo specify twin when the
+            // project default is turbo — the new spec has no context to pin yet, so the
+            // first step honors the project default directly.
             let command = customCommand ? `/${customCommand}` : workflow.stepSpecify;
             if (!customCommand && workflow.name === 'speckit') {
                 const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;

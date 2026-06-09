@@ -4,13 +4,13 @@ import { readSpecContextSync } from './specContextReader';
 import { readTemplateProfile } from '../settings/companionPresetReconciler';
 
 /**
- * When a spec's per-spec profile is `lean`, the stock pipeline command is swapped
- * for its `/speckit.companion.*` lean twin so that one spec gets the lean shape
+ * When a spec's per-spec profile is `turbo`, the stock pipeline command is swapped
+ * for its `/speckit.companion.*` turbo twin so that one spec gets the turbo shape
  * regardless of the project-default preset. Only the four pipeline commands have
- * lean twins; everything else (custom commands, clarify/analyze/constitution)
+ * turbo twins; everything else (custom commands, clarify/analyze/constitution)
  * passes through unchanged.
  */
-const LEAN_COMMAND_BY_STOCK: Record<string, string> = {
+const TURBO_COMMAND_BY_STOCK: Record<string, string> = {
     'speckit.specify': 'speckit.companion.specify',
     'speckit.plan': 'speckit.companion.plan',
     'speckit.tasks': 'speckit.companion.tasks',
@@ -18,11 +18,11 @@ const LEAN_COMMAND_BY_STOCK: Record<string, string> = {
 };
 
 /**
- * Map a pipeline command to its lean twin when the spec should run lean — i.e. its
- * recorded `profile` is `lean`, or (when the spec has no pin yet) the project default
- * is `lean`. Only the four pipeline commands (specify/plan/tasks/implement) have lean
+ * Map a pipeline command to its turbo twin when the spec should run turbo — i.e. its
+ * recorded `profile` is `turbo`, or (when the spec has no pin yet) the project default
+ * is `turbo`. Only the four pipeline commands (specify/plan/tasks/implement) have turbo
  * twins; everything else passes through. Shared by every dispatch path (viewer footer,
- * command palette, sidebar) so the override is honored uniformly. An explicit non-lean
+ * command palette, sidebar) so the override is honored uniformly. An explicit non-turbo
  * pin, a standard default, or an unreadable context returns the command unchanged.
  */
 export function resolveProfileCommand(command: string, specDirectory: string): string {
@@ -39,8 +39,8 @@ export function resolveProfileCommand(command: string, specDirectory: string): s
     // pipeline keeps the shape the spec was created under. An explicit pin
     // (including `standard`) or an invalid value is respected as-is.
     const effective = profile ?? seedProfileForNewSpec(specDirectory);
-    if (effective === 'lean' && LEAN_COMMAND_BY_STOCK[command]) {
-        return LEAN_COMMAND_BY_STOCK[command];
+    if (effective === 'turbo' && TURBO_COMMAND_BY_STOCK[command]) {
+        return TURBO_COMMAND_BY_STOCK[command];
     }
     return command;
 }
@@ -48,16 +48,16 @@ export function resolveProfileCommand(command: string, specDirectory: string): s
 /**
  * Project-default routing for a brand-new spec, which has no `.spec-context.json`
  * yet (so `resolveProfileCommand` can't read a pinned profile). Maps the stock
- * pipeline command to its lean twin when the project default
- * (`speckit.companion.templateProfile`) is `lean`; otherwise returns it unchanged.
+ * pipeline command to its turbo twin when the project default
+ * (`speckit.companion.templateProfile`) is `turbo`; otherwise returns it unchanged.
  * This keeps the *first* step (specify) on the same shape as the rest of the spec
- * a lean default would seed — without it, a new lean-default spec's specify ran
+ * a turbo default would seed — without it, a new turbo-default spec's specify ran
  * stock and produced a standard-shaped spec.md.
  */
 export function resolveNewSpecProfileCommand(stockCommand: string, workspaceRoot: string | undefined): string {
     const projectDefault = workspaceRoot ? readTemplateProfile(workspaceRoot) : undefined;
-    if (projectDefault === 'lean' && LEAN_COMMAND_BY_STOCK[stockCommand]) {
-        return LEAN_COMMAND_BY_STOCK[stockCommand];
+    if (projectDefault === 'turbo' && TURBO_COMMAND_BY_STOCK[stockCommand]) {
+        return TURBO_COMMAND_BY_STOCK[stockCommand];
     }
     return stockCommand;
 }
@@ -83,12 +83,12 @@ function findWorkspaceRoot(specDirectory: string): string | undefined {
 /**
  * Resolve the pinned `profile` for a brand-new spec from the project default
  * (`speckit.companion.templateProfile`, mirrored to `.specify/companion.yml`).
- * Only an explicit `lean` default pins `lean`; `standard`, `off`, an absent
+ * Only an explicit `turbo` default pins `turbo`; `standard`, `off`, an absent
  * setting, or an undiscoverable root all pin `standard`. Pinning at creation
  * keeps a later default change from reshaping an in-flight spec.
  */
-export function seedProfileForNewSpec(specDirectory: string): 'standard' | 'lean' {
+export function seedProfileForNewSpec(specDirectory: string): 'standard' | 'turbo' {
     const root = findWorkspaceRoot(specDirectory);
     const projectDefault = root ? readTemplateProfile(root) : undefined;
-    return projectDefault === 'lean' ? 'lean' : 'standard';
+    return projectDefault === 'turbo' ? 'turbo' : 'standard';
 }

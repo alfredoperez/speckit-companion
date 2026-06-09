@@ -131,18 +131,18 @@ describe('updateSpecContext — profile pin back-fill', () => {
 
     it('back-fills the profile from the fallback when the existing context has none', async () => {
         writeFile(base); // no profile (as the spec-kit capture script writes it)
-        await updateSpecContext(specDir, c => c, makeContext({ profile: 'lean' }));
-        expect(readProfile()).toBe('lean');
+        await updateSpecContext(specDir, c => c, makeContext({ profile: 'turbo' }));
+        expect(readProfile()).toBe('turbo');
     });
 
     it('never overwrites an existing profile pin', async () => {
         writeFile({ ...base, profile: 'standard' });
-        await updateSpecContext(specDir, c => c, makeContext({ profile: 'lean' }));
+        await updateSpecContext(specDir, c => c, makeContext({ profile: 'turbo' }));
         expect(readProfile()).toBe('standard');
     });
 
     it('uses the fallback profile when no context file exists yet', async () => {
-        await updateSpecContext(specDir, c => c, makeContext({ profile: 'lean' }));
-        expect(readProfile()).toBe('lean');
+        await updateSpecContext(specDir, c => c, makeContext({ profile: 'turbo' }));
+        expect(readProfile()).toBe('turbo');
     });
 });

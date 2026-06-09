@@ -1,5 +1,5 @@
 ---
-description: A lightweight, non-destructive consistency pass over the lean spec/plan/tasks.
+description: Create or update the project constitution, turbo-style.
 ---
 
 ## User Input
@@ -10,19 +10,19 @@ $ARGUMENTS
 
 ## Outline
 
-A lean analyze — a quick consistency check, not a full cross-artifact matrix. Read-only: report findings, change nothing.
+A turbo constitution — set the principles and write the file. No exhaustive template-propagation checklist, no Sync-Impact-Report ceremony.
 
-1. Read `.specify/feature.json` for the feature directory; load `spec.md`, `plan.md`, and `tasks.md` (and `data-model.md` / `contracts/` if present).
+1. Read the existing `.specify/memory/constitution.md` if present.
 
-2. Check the few things that actually break a build:
-   - Every `tasks.md` item traces to a requirement (`FR-…`) or a concrete file in the plan; no orphan tasks.
-   - Every Functional Requirement is covered by at least one task.
-   - Plan's Approach & Structure paths match the files the tasks touch.
-   - No contradictions between spec, plan, and tasks.
+2. From the user input (and repo context), fill or update the constitution:
+   - **Principles** — the non-negotiable rules the project commits to, each a short titled statement with a one-line rationale.
+   - **Governance** — how principles are amended and what overrides what.
 
-3. Report findings as a short list (issue · where · suggested fix). Do **not** edit any artifact — the user decides what to act on.
+3. **Version** — bump the constitution version with semantic versioning (MAJOR for a removed/redefined principle, MINOR for a new principle or section, PATCH for wording). State the new version and the date.
 
-**Output**: a concise consistency report in the chat; no file written.
+4. Write the result to `.specify/memory/constitution.md`. Print a 2–3 line summary of what changed. Do not crawl every template to propagate edits — note any template that clearly conflicts, but leave propagation to the user.
+
+**Output**: an updated `.specify/memory/constitution.md` + a short change summary.
 
 
 <!-- speckit-companion:timing -->

@@ -240,7 +240,7 @@ def fill_required(ctx: dict, feature_dir: Path, branch: str) -> None:
     ctx.setdefault("branch", branch)
 
 
-# `**` is optional: matches the lean/companion bold form `- [x] **T001**` AND the
+# `**` is optional: matches the turbo/companion bold form `- [x] **T001**` AND the
 # standard tasks-template plain form `- [x] T001 …`. A `T\d+` is still required right
 # after the checkbox, so non-task checkboxes never false-match.
 COMPLETED_TASK_RE = re.compile(r"^\s*[-*]\s*\[[xX]\]\s*(?:\*\*)?(T\d+)")

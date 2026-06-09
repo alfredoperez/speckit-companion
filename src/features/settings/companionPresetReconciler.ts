@@ -6,16 +6,16 @@ import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
-export type TemplateProfile = 'standard' | 'lean' | 'off';
+export type TemplateProfile = 'standard' | 'turbo' | 'off';
 
 /** Carrier preset for the always-present standard `/speckit.*` command family. */
 const STANDARD_PRESET_ID = 'companion-standard';
 /** Retired from the selection path; removed once if left installed by an old swap. */
-const LEAN_PRESET_ID = 'companion-lean';
-/** A preset left over from the pre-rename branch; cleaned up on first ensure. */
-const LEGACY_PRESET_ID = 'sdd-lean';
+const TURBO_PRESET_ID = 'companion-turbo';
+/** Presets left over from pre-rename branches; cleaned up on first ensure. */
+const LEGACY_PRESET_IDS = ['companion-lean', 'sdd-lean'] as const;
 
-export const ALL_PRESET_IDS = ['companion-standard', 'companion-lean'] as const;
+export const ALL_PRESET_IDS = ['companion-standard', 'companion-turbo'] as const;
 
 const CONFIG_REL = path.join('.specify', 'companion.yml');
 const PRESETS_REL = path.join('.specify', 'presets');
@@ -29,18 +29,20 @@ export interface PresetOp {
  * Pure decision: which `specify preset` ops bring a project to "the standard
  * command family is present". Add-only for `companion-standard` — added (from
  * the bundled path) when absent, never removed regardless of input state. A
- * leftover `companion-lean` / legacy `sdd-lean` install is removed once (both
- * are retired from the selection path); after such a removal, `companion-standard`
- * is re-enabled so its bodies aren't left reverted. Already-present-and-clean is
- * a no-op (idempotent).
+ * leftover `companion-turbo` / legacy `companion-lean` / `sdd-lean` install is
+ * removed once (all are retired from the selection path); after such a removal,
+ * `companion-standard` is re-enabled so its bodies aren't left reverted.
+ * Already-present-and-clean is a no-op (idempotent).
  */
 export function decideEnsureStandardOps(installed: Record<string, boolean>): PresetOp[] {
     const ops: PresetOp[] = [];
-    if (installed[LEAN_PRESET_ID]) {
-        ops.push({ id: LEAN_PRESET_ID, action: 'remove' });
+    if (installed[TURBO_PRESET_ID]) {
+        ops.push({ id: TURBO_PRESET_ID, action: 'remove' });
     }
-    if (installed[LEGACY_PRESET_ID]) {
-        ops.push({ id: LEGACY_PRESET_ID, action: 'remove' });
+    for (const legacyId of LEGACY_PRESET_IDS) {
+        if (installed[legacyId]) {
+            ops.push({ id: legacyId, action: 'remove' });
+        }
     }
     if (!installed[STANDARD_PRESET_ID]) {
         ops.push({ id: STANDARD_PRESET_ID, action: 'add' });
@@ -74,13 +76,13 @@ export function isPresetInstalled(workspaceRoot: string, id: string): boolean {
 
 function installedMap(workspaceRoot: string): Record<string, boolean> {
     const map: Record<string, boolean> = {};
-    for (const id of [...ALL_PRESET_IDS, LEGACY_PRESET_ID]) {
+    for (const id of [...ALL_PRESET_IDS, ...LEGACY_PRESET_IDS]) {
         map[id] = isPresetInstalled(workspaceRoot, id);
     }
     return map;
 }
 
-const VALID_PROFILES: readonly TemplateProfile[] = ['standard', 'lean', 'off'];
+const VALID_PROFILES: readonly TemplateProfile[] = ['standard', 'turbo', 'off'];
 
 function isTemplateProfile(v: unknown): v is TemplateProfile {
     return typeof v === 'string' && (VALID_PROFILES as readonly string[]).includes(v);
@@ -143,8 +145,8 @@ export interface ReconcileDeps {
 /**
  * Idempotently ensure the standard `/speckit.*` command family is present:
  * add `companion-standard` from the bundled path when absent (recovering a
- * project a prior swap stranded), and migrate away a leftover `companion-lean`
- * / legacy `sdd-lean` install. Add-only — never removes the standard family,
+ * project a prior swap stranded), and migrate away a leftover `companion-turbo`
+ * / legacy `companion-lean` / `sdd-lean` install. Add-only — never removes the standard family,
  * so it cannot strand the project. CLI failures are logged, not thrown, so
  * activation is never broken by a missing `specify` binary.
  */

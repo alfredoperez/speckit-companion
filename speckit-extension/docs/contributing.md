@@ -40,7 +40,7 @@ Each migration step (see [ROADMAP.md](../ROADMAP.md)) is one PR-sized change:
 - Bump `version` in `extension.yml` (SemVer; independent of the VS Code extension's `package.json`).
 - Add a `CHANGELOG.md` entry under a new version heading.
 - Update `ROADMAP.md` status for the shipped step.
-- Update the relevant `docs/` page if behavior or commands changed; keep the README a lean "why install / quick start / links" page.
+- Update the relevant `docs/` page if behavior or commands changed; keep the README a tight "why install / quick start / links" page.
 
 ## Good to know
 

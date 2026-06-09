@@ -1026,7 +1026,7 @@
             "type": "string",
             "enum": [
               "standard",
-              "lean",
+              "turbo",
               "off"
             ],
             "enumDescriptions": [
@@ -1036,7 +1036,7 @@
             ],
             "default": "standard",
             "scope": "window",
-            "description": "Project default for the spec-kit pipeline shape. Both command families stay installed at all times — this setting only routes which one a new spec dispatches: 'standard' uses the stock /speckit.* commands, 'lean' uses the trimmed /speckit.companion.* commands. Switching is non-destructive (neither set is ever removed), and each spec pins the default at creation, so changing this never reshapes a spec already in flight."
+            "description": "Project default for the spec-kit pipeline shape. Both command families stay installed at all times — this setting only routes which one a new spec dispatches: 'standard' uses the stock /speckit.* commands, 'turbo' uses the trimmed /speckit.companion.* commands. Switching is non-destructive (neither set is ever removed), and each spec pins the default at creation, so changing this never reshapes a spec already in flight."
           }
         }
       }

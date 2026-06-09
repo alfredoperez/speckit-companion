@@ -86,7 +86,7 @@ Toggle **Activity** in the viewer's nav bar to swap the markdown pane for a card
 - **Tasks** — per-`T###` status, summary, file chips, and inline concerns.
 - **Decisions**, **Concerns**, **Review comments** (every persisted comment grouped by document, with jump-to-line and a per-document **Run refinement** button), and **Files touched** (clickable).
 
-Each card hides itself when its data is missing, so a lean speckit-style spec collapses to just *Phases*. Visibility is gated by `speckit.viewer.activityPanel` — `"off"`, `"beta"` (default; toggle shows a *beta* pill), or `"on"`.
+Each card hides itself when its data is missing, so a minimal speckit-style spec collapses to just *Phases*. Visibility is gated by `speckit.viewer.activityPanel` — `"off"`, `"beta"` (default; toggle shows a *beta* pill), or `"on"`.
 
 ![Activity Panel](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/activity.png)
 *Activity panel. The Phases timeline plus Approach, Tasks, and Review-comments cards — one overview of everything the spec's context file tracks.*
@@ -153,7 +153,7 @@ Looking for "what does good look like?" The repo's own `specs/` directory is the
 
 - [`specs/008-spec-viewer-ux/`](./specs/008-spec-viewer-ux/): **full SpecKit flow**: spec, plan, research, data model, quickstart, tasks, plus checklists and contracts.
 - [`specs/065-multi-select-specs/`](./specs/065-multi-select-specs/): **minimal SDD flow**: just `spec.md` + `plan.md` + `tasks.md` for a small UX change.
-- [`specs/051-explorer-viewer-fixes/`](./specs/051-explorer-viewer-fixes/): **minimal SDD flow**: same lean shape, applied to a focused bug-fix bundle.
+- [`specs/051-explorer-viewer-fixes/`](./specs/051-explorer-viewer-fixes/): **minimal SDD flow**: same minimal shape, applied to a focused bug-fix bundle.
 
 Compare the file lists side by side to see the contrast between the full and minimal flows.
 
@@ -222,7 +222,7 @@ This applies to all providers that support it: Claude (`--permission-mode bypass
 
 ### Template Profiles
 
-Selects the spec-kit pipeline shape for the project. **Both command families are always installed** — this setting only routes which one a spec dispatches. `standard` runs the stock `/speckit.*` commands (same sections, same files, with better timing capture); `lean` runs the trimmed `/speckit.companion.*` commands (no user-story section, files/dependencies tasks, a smaller spec folder); `off` routes to the stock commands and opts out of the Companion install/repair step.
+Selects the spec-kit pipeline shape for the project. **Both command families are always installed** — this setting only routes which one a spec dispatches. `standard` runs the stock `/speckit.*` commands (same sections, same files, with better timing capture); `turbo` runs the trimmed `/speckit.companion.*` commands (no user-story section, files/dependencies tasks, a smaller spec folder); `off` routes to the stock commands and opts out of the Companion install/repair step.
 
 ```json
 {
@@ -233,10 +233,10 @@ Selects the spec-kit pipeline shape for the project. **Both command families are
 | Value | Behavior |
 |-------|----------|
 | `"standard"` (default) | Routes to the stock `/speckit.*` commands — unchanged, with timing baked in. |
-| `"lean"` | Routes to the trimmed `/speckit.companion.*` commands — the lean shape. |
+| `"turbo"` | Routes to the trimmed `/speckit.companion.*` commands — the turbo shape. |
 | `"off"` | Routes to the stock `/speckit.*` commands and opts out of the Companion install/repair step. It won't remove `companion-standard` if a prior setting already installed it, so any timing-augmented bodies stay until you remove that preset yourself. |
 
-Switching is **non-destructive**: neither command set is ever removed or overwritten — only the dispatched shape changes, so you never hit "Unknown command" after a switch (the standard family is re-added automatically if a project is ever missing it). The value persists to `.specify/companion.yml`, and each spec **pins** the project default the moment it's created, so changing the default never reshapes a spec already in flight. The lean `/speckit.companion.*` commands ship with the [spec-kit extension](./speckit-extension/README.md), and the stock `/speckit.*` family stays present automatically; full reference in [`docs/template-profiles.md`](./docs/template-profiles.md).
+Switching is **non-destructive**: neither command set is ever removed or overwritten — only the dispatched shape changes, so you never hit "Unknown command" after a switch (the standard family is re-added automatically if a project is ever missing it). The value persists to `.specify/companion.yml`, and each spec **pins** the project default the moment it's created, so changing the default never reshapes a spec already in flight. The turbo `/speckit.companion.*` commands ship with the [spec-kit extension](./speckit-extension/README.md), and the stock `/speckit.*` family stays present automatically; full reference in [`docs/template-profiles.md`](./docs/template-profiles.md).
 
 ### Command Format
 

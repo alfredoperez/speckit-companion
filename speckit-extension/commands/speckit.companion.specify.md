@@ -1,5 +1,5 @@
 ---
-description: "Companion lean specify — spec.md with no user-story section (per-spec opt-in)"
+description: "Companion turbo specify — spec.md with no user-story section (per-spec opt-in)"
 ---
 
 ## User Input
@@ -10,7 +10,7 @@ $ARGUMENTS
 
 ## Outline
 
-Produce a lean specification — **no user-story / user-scenario section**. Capture intent as testable requirements, not narrative journeys.
+Produce a turbo specification — **no user-story / user-scenario section**. Capture intent as testable requirements, not narrative journeys.
 
 1. **Resolve the feature directory.** Use `.specify/feature.json` if present; otherwise ask the user for the path (e.g. `specs/my-feature`) and write it:
    ```json
@@ -27,14 +27,14 @@ Produce a lean specification — **no user-story / user-scenario section**. Capt
    - **Success Criteria** — measurable, technology-agnostic `SC-001…` outcomes (time, count, percentage, pass/fail). No framework or API names.
    - **Assumptions** — the informed defaults you chose for anything unspecified.
 
-3. Keep it business-readable. Do **not** add user stories, acceptance-scenario tables, or priority labels — lean tracks requirements and outcomes directly. Fold edge cases into Functional Requirements or Assumptions.
+3. Keep it business-readable. Do **not** add user stories, acceptance-scenario tables, or priority labels — turbo tracks requirements and outcomes directly. Fold edge cases into Functional Requirements or Assumptions.
 
-4. **Spec quality checklist.** Write `<feature_directory>/checklists/requirements.md` using the template below, then run a **single** self-check pass: grade each item pass/fail, fix obvious fails in `spec.md` in place, and leave any genuine ambiguity as a `[NEEDS CLARIFICATION: …]` marker (max 3) for the `clarify` step. Do **not** run a multi-iteration rewrite loop or prompt the user with option tables — lean defers interactive clarification to `clarify`. Update the checklist to reflect the final pass/fail state.
+4. **Spec quality checklist.** Write `<feature_directory>/checklists/requirements.md` using the template below, then run a **single** self-check pass: grade each item pass/fail, fix obvious fails in `spec.md` in place, and leave any genuine ambiguity as a `[NEEDS CLARIFICATION: …]` marker (max 3) for the `clarify` step. Do **not** run a multi-iteration rewrite loop or prompt the user with option tables — turbo defers interactive clarification to `clarify`. Update the checklist to reflect the final pass/fail state.
 
    ```markdown
    # Specification Quality Checklist: [FEATURE NAME]
 
-   **Purpose**: Validate lean specification completeness before planning
+   **Purpose**: Validate turbo specification completeness before planning
    **Created**: [DATE]
    **Feature**: [Link to spec.md]
 

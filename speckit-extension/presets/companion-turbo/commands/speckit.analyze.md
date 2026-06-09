@@ -1,5 +1,5 @@
 ---
-description: Execute the lean tasks.md in dependency order.
+description: A lightweight, non-destructive consistency pass over the turbo spec/plan/tasks.
 ---
 
 ## User Input
@@ -10,21 +10,19 @@ $ARGUMENTS
 
 ## Outline
 
-1. Read `.specify/feature.json` for the feature directory; load `<feature_directory>/tasks.md`, `plan.md`, and `spec.md`. Then record the **implement START** so the step's duration begins now (the script stamps the real clock; the end-of-step hook records each task and closes the step — do not hand-write implement timing):
-   ```bash
-   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step implement --status implementing --kind start --by extension
-   ```
+A turbo analyze — a quick consistency check, not a full cross-artifact matrix. Read-only: report findings, change nothing.
 
-2. Execute tasks in dependency order:
-   - Complete each layer before the next: Setup → Foundational → Core → Integration → Polish.
-   - Tasks marked `[P]` (different files, no incomplete dependency) may run together; tasks touching the same file run sequentially.
-   - Halt on a failed non-parallel task and report the cause; for `[P]` tasks, continue the others and report the failure.
+1. Read `.specify/feature.json` for the feature directory; load `spec.md`, `plan.md`, and `tasks.md` (and `data-model.md` / `contracts/` if present).
 
-3. After completing a task, mark it `- [x]` in `tasks.md`.
+2. Check the few things that actually break a build:
+   - Every `tasks.md` item traces to a requirement (`FR-…`) or a concrete file in the plan; no orphan tasks.
+   - Every Functional Requirement is covered by at least one task.
+   - Plan's Approach & Structure paths match the files the tasks touch.
+   - No contradictions between spec, plan, and tasks.
 
-4. On completion, validate the result against the spec's **Functional Requirements** and **Success Criteria**, and report a short summary of what was built and anything left undone.
+3. Report findings as a short list (issue · where · suggested fix). Do **not** edit any artifact — the user decides what to act on.
 
-**Output**: working changes per `tasks.md`, with completed tasks checked off.
+**Output**: a concise consistency report in the chat; no file written.
 
 
 <!-- speckit-companion:timing -->

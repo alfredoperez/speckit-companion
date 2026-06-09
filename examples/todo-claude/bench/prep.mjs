@@ -1,5 +1,5 @@
-// bench/prep.mjs — arm a lean-vs-standard bench run.
-//   node bench/prep.mjs --size <easy|medium|hard> --mode <lean|standard>
+// bench/prep.mjs — arm a turbo-vs-standard bench run.
+//   node bench/prep.mjs --size <easy|medium|hard> --mode <turbo|standard>
 // Sets the sandbox mode, snapshots a baseline so finish can attribute the run,
 // and prints the prompt to paste + the exact pipeline commands for the mode.
 import { writeFileSync, readFileSync } from 'node:fs'
@@ -91,12 +91,12 @@ writeFileSync(RUN_STATE, JSON.stringify(runState, null, 2))
 const promptPath = join(BENCH_DIR, 'prompts', `${size}.md`)
 const prompt = readFileSync(promptPath, 'utf8')
 
-const leanCmds = [
-  '/speckit.companion.specify  "<paste the prompt above>"   (always-lean — recommended)',
+const turboCmds = [
+  '/speckit.companion.specify  "<paste the prompt above>"   (always-turbo — recommended)',
   '/speckit.companion.plan',
   '/speckit.companion.tasks',
   '/speckit.companion.implement',
-  '   …or stock /speckit.* (the companion-lean preset is active, so they emit the lean shape).',
+  '   …or stock /speckit.* (the companion-turbo preset is active, so they emit the turbo shape).',
 ]
 const standardCmds = [
   '/speckit.specify  "<paste the prompt above>"',
@@ -104,9 +104,9 @@ const standardCmds = [
   '/speckit.tasks',
   '/speckit.implement',
   '   The companion-standard preset is active, so stock /speckit.* emit the standard shape.',
-  '   Never /speckit.companion.* — those are always lean.',
+  '   Never /speckit.companion.* — those are always turbo.',
 ]
-const cmds = mode === 'lean' ? leanCmds : standardCmds
+const cmds = mode === 'turbo' ? turboCmds : standardCmds
 
 console.log(`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -1,5 +1,5 @@
 ---
-description: "Companion lean plan — lean plan.md (per-spec opt-in)"
+description: "Companion turbo plan — turbo plan.md (per-spec opt-in)"
 ---
 
 ## User Input
@@ -10,7 +10,7 @@ $ARGUMENTS
 
 ## Outline
 
-Produce a **lean** plan — just enough to drive tasks. No multi-phase research scaffolding, no dual-option structure trees.
+Produce a **turbo** plan — just enough to drive tasks. No multi-phase research scaffolding, no dual-option structure trees.
 
 1. Read `.specify/feature.json` for the feature directory; load `<feature_directory>/spec.md` and `.specify/memory/constitution.md` if present.
 
