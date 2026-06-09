@@ -275,8 +275,8 @@ export class SpecEditorProvider {
             const prompt = `${command} ${tempFileSet.markdownFilePath}`;
             this.outputChannel.appendLine(`[SpecEditor] Using command: ${command} (temp file: ${tempFileSet.markdownFilePath})`);
 
-            // Execute in terminal
-            await provider.executeInTerminal(prompt, 'SpecKit - New Spec');
+            // Slash-command dispatch (like Resume/advance) — piping the whole "/speckit-specify <file>" as a prompt makes Claude Code reject it as an unknown command.
+            await provider.executeSlashCommand(prompt, 'SpecKit - New Spec');
 
             // Mark as submitted
             await this.tempFileManager.markSubmitted(tempFileSet.id);
