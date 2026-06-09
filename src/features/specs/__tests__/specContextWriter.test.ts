@@ -1,4 +1,7 @@
-import { appendHistory, setStepStarted, setStepCompleted, setSubstepStarted, setSubstepCompleted } from '../specContextWriter';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import { appendHistory, setStepStarted, setStepCompleted, setSubstepStarted, setSubstepCompleted, updateSpecContext } from '../specContextWriter';
 import type { HistoryEntry, SpecContext } from '../../../core/types/specContext';
 
 function makeContext(overrides: Partial<SpecContext> = {}): SpecContext {
@@ -113,5 +116,33 @@ describe('setSubstepCompleted', () => {
         expect(e.kind).toBe('complete');
         expect(e.substep).toBe('outline');
         expect(e.from).toBeUndefined();
+    });
+});
+
+describe('updateSpecContext — profile pin back-fill', () => {
+    let specDir: string;
+    const ctxPath = (): string => path.join(specDir, '.spec-context.json');
+    const writeFile = (obj: object): void => fs.writeFileSync(ctxPath(), JSON.stringify(obj), 'utf8');
+    const readProfile = (): unknown => JSON.parse(fs.readFileSync(ctxPath(), 'utf8')).profile;
+    const base = { workflow: 'speckit', specName: 'demo', branch: 'main', currentStep: 'plan', status: 'planned', history: [] };
+
+    beforeEach(() => { specDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctx-writer-')); });
+    afterEach(() => { fs.rmSync(specDir, { recursive: true, force: true }); });
+
+    it('back-fills the profile from the fallback when the existing context has none', async () => {
+        writeFile(base); // no profile (as the spec-kit capture script writes it)
+        await updateSpecContext(specDir, c => c, makeContext({ profile: 'lean' }));
+        expect(readProfile()).toBe('lean');
+    });
+
+    it('never overwrites an existing profile pin', async () => {
+        writeFile({ ...base, profile: 'standard' });
+        await updateSpecContext(specDir, c => c, makeContext({ profile: 'lean' }));
+        expect(readProfile()).toBe('standard');
+    });
+
+    it('uses the fallback profile when no context file exists yet', async () => {
+        await updateSpecContext(specDir, c => c, makeContext({ profile: 'lean' }));
+        expect(readProfile()).toBe('lean');
     });
 });

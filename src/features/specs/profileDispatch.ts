@@ -18,10 +18,12 @@ const LEAN_COMMAND_BY_STOCK: Record<string, string> = {
 };
 
 /**
- * Map a pipeline command to its lean twin when the spec's recorded profile is
- * `lean`. Shared by every dispatch path (viewer footer, command palette, sidebar)
- * so the per-spec override is honored uniformly. Returns the command unchanged
- * when the spec isn't lean or the command has no lean twin.
+ * Map a pipeline command to its lean twin when the spec should run lean — i.e. its
+ * recorded `profile` is `lean`, or (when the spec has no pin yet) the project default
+ * is `lean`. Only the four pipeline commands (specify/plan/tasks/implement) have lean
+ * twins; everything else passes through. Shared by every dispatch path (viewer footer,
+ * command palette, sidebar) so the override is honored uniformly. An explicit non-lean
+ * pin, a standard default, or an unreadable context returns the command unchanged.
  */
 export function resolveProfileCommand(command: string, specDirectory: string): string {
     let profile: string | undefined;
@@ -32,7 +34,12 @@ export function resolveProfileCommand(command: string, specDirectory: string): s
         // fall back to the stock command rather than throwing on every path.
         return command;
     }
-    if (profile === 'lean' && LEAN_COMMAND_BY_STOCK[command]) {
+    // No pinned profile — e.g. the spec-kit command's capture script created the
+    // context without one. Fall back to the project default so the rest of the
+    // pipeline keeps the shape the spec was created under. An explicit pin
+    // (including `standard`) or an invalid value is respected as-is.
+    const effective = profile ?? seedProfileForNewSpec(specDirectory);
+    if (effective === 'lean' && LEAN_COMMAND_BY_STOCK[command]) {
         return LEAN_COMMAND_BY_STOCK[command];
     }
     return command;
