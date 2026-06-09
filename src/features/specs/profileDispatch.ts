@@ -32,7 +32,12 @@ export function resolveProfileCommand(command: string, specDirectory: string): s
         // fall back to the stock command rather than throwing on every path.
         return command;
     }
-    if (profile === 'lean' && LEAN_COMMAND_BY_STOCK[command]) {
+    // No pinned profile — e.g. the spec-kit command's capture script created the
+    // context without one. Fall back to the project default so the rest of the
+    // pipeline keeps the shape the spec was created under. An explicit pin
+    // (including `standard`) or an invalid value is respected as-is.
+    const effective = profile ?? seedProfileForNewSpec(specDirectory);
+    if (effective === 'lean' && LEAN_COMMAND_BY_STOCK[command]) {
         return LEAN_COMMAND_BY_STOCK[command];
     }
     return command;

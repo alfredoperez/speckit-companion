@@ -266,6 +266,13 @@ export async function updateSpecContext(
         current = fallback;
     }
     const next = mutate(current);
+    // Back-fill the per-spec profile pin when the context never recorded one (the
+    // spec-kit capture script creates the file without a profile). Seed it from the
+    // project default carried by the fallback so the spec keeps a single shape
+    // through the pipeline; an existing pin is never overwritten.
+    if (!next.profile && fallback.profile) {
+        next.profile = fallback.profile;
+    }
     await writeSpecContext(specDir, next);
     return next;
 }

@@ -62,6 +62,49 @@ describe('resolveProfileCommand', () => {
     });
 });
 
+describe('resolveProfileCommand — project-default fallback when the spec has no pin', () => {
+    let wsRoot: string;
+    let specDir: string;
+    const writeCtxNoProfile = (profile?: string): void =>
+        fs.writeFileSync(
+            path.join(specDir, '.spec-context.json'),
+            JSON.stringify({ workflow: 'speckit', specName: 'demo', branch: 'main', currentStep: 'plan', status: 'planned', history: [], ...(profile ? { profile } : {}) }),
+            'utf8',
+        );
+
+    beforeEach(() => {
+        wsRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'profile-fallback-'));
+        fs.mkdirSync(path.join(wsRoot, '.specify'), { recursive: true });
+        specDir = path.join(wsRoot, 'specs', 'demo');
+        fs.mkdirSync(specDir, { recursive: true });
+    });
+    afterEach(() => {
+        fs.rmSync(wsRoot, { recursive: true, force: true });
+    });
+
+    it('routes to the lean twin when the spec has no profile but the project default is lean', () => {
+        writeTemplateProfile(wsRoot, 'lean');
+        writeCtxNoProfile();
+        expect(resolveProfileCommand('speckit.plan', specDir)).toBe('speckit.companion.plan');
+        expect(resolveProfileCommand('speckit.implement', specDir)).toBe('speckit.companion.implement');
+    });
+
+    it('stays stock when the spec has no profile and the project default is standard / off / absent', () => {
+        writeCtxNoProfile();
+        expect(resolveProfileCommand('speckit.plan', specDir)).toBe('speckit.plan'); // absent default
+        writeTemplateProfile(wsRoot, 'standard');
+        expect(resolveProfileCommand('speckit.plan', specDir)).toBe('speckit.plan');
+        writeTemplateProfile(wsRoot, 'off');
+        expect(resolveProfileCommand('speckit.plan', specDir)).toBe('speckit.plan');
+    });
+
+    it('respects an explicit standard pin over a lean project default', () => {
+        writeTemplateProfile(wsRoot, 'lean');
+        writeCtxNoProfile('standard');
+        expect(resolveProfileCommand('speckit.plan', specDir)).toBe('speckit.plan');
+    });
+});
+
 describe('resolveNewSpecProfileCommand', () => {
     let wsRoot: string;
 
