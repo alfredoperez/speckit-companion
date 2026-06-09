@@ -83,6 +83,7 @@ A developer's run records every executed task in the timeline even when the impl
 - **FR-005**: The system MUST keep step-level start/complete writes deterministic (host- or script-stamped at full precision, monotonic), distinct from the per-task/substep journaling.
 - **FR-006**: The finish event for a task or substep MUST be stamped from a script's own clock when a script records it, rather than hand-authored, so timestamps are precise and free of format drift.
 - **FR-007**: The timing instructions MUST be consistent across every dispatch surface the assistant receives them from (the profile command bodies and the GUI dispatch preamble), so the same finish-only model applies regardless of how the command was launched.
+- **FR-015**: Per-task marker detection MUST recognize both `tasks.md` formats — the bold lean/companion form (`- [x] **T001**`) and the plain standard-template form (`- [x] T001 …`) — so per-task journaling and implement-step auto-close fire regardless of which profile produced the task list.
 
 #### Resilient backstop journaling
 

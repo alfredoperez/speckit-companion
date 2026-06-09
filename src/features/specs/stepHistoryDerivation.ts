@@ -207,7 +207,7 @@ function buildSubsteps(
             // from the previous finish (or the step start) to this finish.
             const completedAt = s.at ?? fallbackEnd;
             out.push({ name: s.substep as string, startedAt: prevEnd, completedAt });
-            prevEnd = s.at ?? prevEnd;
+            prevEnd = completedAt ?? prevEnd;   // advance to the effective end, not just s.at
             continue;
         }
         if (next && next.substep === s.substep && next.kind === 'complete') {

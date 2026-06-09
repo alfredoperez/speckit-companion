@@ -92,6 +92,18 @@ Two-extension repo. Spec-kit-side files live under `speckit-extension/`; VS Code
 
 ---
 
+## Phase 5b: Marker-format detection (FR-015, folded in)
+
+**Goal**: Per-task capture reads both the bold (`**T001**`) and plain (`T001`) `tasks.md` formats, so standard-profile specs journal per-task and auto-close implement. Surfaced while dogfooding #215 — the standard tasks-template produces plain markers the bold-only regex missed.
+
+- [x] T025 Make the `**` wrapper optional in the marker regexes: `COMPLETED_TASK_RE` + `PENDING_TASK_RE` in `speckit-extension/scripts/write-context.py` (propagates to `derive-from-files.py` / `status-context.py` via `parse_task_markers`), and `COMPLETED_TASK_RE` + `ALL_TASK_RE` in `.claude/skills/eval-speckit-extension/check_capture.py`. Keep the `T\d+` capture so non-task checkboxes don't false-match. (TS side already counts plain checkboxes — no change.)
+- [x] T026 Add `speckit-extension/tests/test_context.py` cases: `parse_task_markers` detects plain + bold + ignores idless checkboxes; `sync_tasks` journals a plain-format `tasks.md` finish-only and closes the step.
+- [x] T027 Re-journal spec 133's own implement step with the fixed parser (it is itself a plain-format spec) so its record honestly shows implement + 24 per-task finishes; verify with `check_capture.py specs/133-timing-fidelity-v2/`. Docs: note both formats in `docs/capture-and-timing.md` + spec-kit `CHANGELOG.md`.
+
+**Checkpoint**: A standard-format `tasks.md` journals per-task and closes implement.
+
+---
+
 ## Phase 6: Polish & Cross-Cutting Concerns
 
 **Purpose**: Docs on both extensions and the acceptance gate. (Per repo rule: do NOT commit `/install-local` version bumps in the PR — version bumps land at publish.)

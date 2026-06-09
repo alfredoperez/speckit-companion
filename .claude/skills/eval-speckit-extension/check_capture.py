@@ -31,8 +31,10 @@ VALID_BY = {"extension", "user", "cli", "ai", "derive"}
 # `ai` is excluded: it journals best-effort with second-precision `date -u`.
 DETERMINISTIC_BY = {"extension", "derive", "cli", "user"}
 VALID_KIND = {"start", "complete"}
-COMPLETED_TASK_RE = re.compile(r"^\s*[-*]\s*\[[xX]\]\s*\*\*(T\d+)")
-ALL_TASK_RE = re.compile(r"^\s*[-*]\s*\[[ xX]\]\s*\*\*(T\d+)")
+# `**` optional: accepts both the bold (`- [x] **T001**`) and plain (`- [x] T001`)
+# tasks.md marker formats — see write-context.py's parsers.
+COMPLETED_TASK_RE = re.compile(r"^\s*[-*]\s*\[[xX]\]\s*(?:\*\*)?(T\d+)")
+ALL_TASK_RE = re.compile(r"^\s*[-*]\s*\[[ xX]\]\s*(?:\*\*)?(T\d+)")
 
 
 def _parse_at(s: str) -> dt.datetime | None:

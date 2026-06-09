@@ -165,6 +165,36 @@ class LifecycleCaptureTests(unittest.TestCase):
         wc.journal_task_finish(self.fd, "T009", "ai")
         self.assertFalse(any(t.get("task") == "T009" for t in _ctx(self.fd)["history"]))
 
+    def test_parse_task_markers_accepts_plain_and_bold(self) -> None:
+        # The standard tasks-template writes plain `- [x] T001`; the lean/companion
+        # bodies write bold `- [x] **T001**`. Both formats must be detected, and a
+        # checkbox without a task id is ignored.
+        (self.fd / "tasks.md").write_text(_tasks(
+            "- [x] T001 plain done",
+            "- [ ] T002 plain pending",
+            "- [x] **T003** bold done",
+            "- [x] Setup something (no id, ignored)",
+        ))
+        all_ids, done_ids = wc.parse_task_markers(self.fd / "tasks.md")
+        self.assertEqual(all_ids, ["T001", "T002", "T003"])
+        self.assertEqual(done_ids, ["T001", "T003"])
+
+    def test_sync_tasks_journals_plain_format(self) -> None:
+        # A standard-format (non-bold) tasks.md must journal per-task finishes and
+        # close the implement step — the marker-format gap fix.
+        (self.fd / "tasks.md").write_text(_tasks(
+            "- [x] T001 [P] do one",
+            "- [x] T002 do two",
+        ))
+        wc.sync_tasks(self.fd, self.fd / "tasks.md", "implemented", "extension")
+        ctx = _ctx(self.fd)
+        distinct = list(dict.fromkeys(t["task"] for t in ctx["history"] if t.get("task")))
+        self.assertEqual(distinct, ["T001", "T002"])
+        for tid in ("T001", "T002"):
+            kinds = [t["kind"] for t in ctx["history"] if t.get("task") == tid]
+            self.assertEqual(kinds, ["complete"])  # finish-only, no 0s pair
+        self.assertEqual(ctx["status"], "implemented")  # all checked → step closed
+
     def test_hook_skips_tasks_already_journaled(self) -> None:
         # If a task id is already journaled (e.g. a leftover live entry), the hook
         # must treat it as a no-op backstop — dedupe on the task id, not re-add it.
