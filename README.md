@@ -222,21 +222,38 @@ This applies to all providers that support it: Claude (`--permission-mode bypass
 
 ### Template Profiles
 
-Selects the spec-kit pipeline shape for the project. **Both command families are always installed** — this setting only routes which one a spec dispatches. `standard` runs the stock `/speckit.*` commands (same sections, same files, with better timing capture); `turbo` runs the trimmed `/speckit.companion.*` commands (no user-story section, files/dependencies tasks, a smaller spec folder); `off` routes to the stock commands and opts out of the Companion install/repair step.
+Selects the spec-kit pipeline shape for the project. This is an **opt-in beta** — it **defaults to `off`** (plain upstream spec-kit). **Both command families are always installed** — this setting only routes which one a spec dispatches. `standard` runs the stock `/speckit.*` commands (same sections, same files, with better timing capture); `turbo` runs the trimmed `/speckit.companion.*` commands (no user-story section, files/dependencies tasks, a smaller spec folder); `off` routes to the stock commands and opts out of the Companion install/repair step.
 
 ```json
 {
-  "speckit.companion.templateProfile": "standard"
+  "speckit.companion.templateProfile": "off"
 }
 ```
 
 | Value | Behavior |
 |-------|----------|
-| `"standard"` (default) | Routes to the stock `/speckit.*` commands — unchanged, with timing baked in. |
+| `"off"` (default) | Routes to the stock `/speckit.*` commands and opts out of the Companion install/repair step. It won't remove `companion-standard` if a prior setting already installed it, so any timing-augmented bodies stay until you remove that preset yourself. |
+| `"standard"` | Routes to the stock `/speckit.*` commands — unchanged, with timing baked in. |
 | `"turbo"` | Routes to the trimmed `/speckit.companion.*` commands — the turbo shape. |
-| `"off"` | Routes to the stock `/speckit.*` commands and opts out of the Companion install/repair step. It won't remove `companion-standard` if a prior setting already installed it, so any timing-augmented bodies stay until you remove that preset yourself. |
 
 Switching is **non-destructive**: neither command set is ever removed or overwritten — only the dispatched shape changes, so you never hit "Unknown command" after a switch (the standard family is re-added automatically if a project is ever missing it). The value persists to `.specify/companion.yml` — a machine-local, gitignored mirror the extension writes and regenerates on activation, so your choice never leaks into another checkout — and each spec **pins** the project default the moment it's created, so changing the default never reshapes a spec already in flight. The turbo `/speckit.companion.*` commands ship with the [spec-kit extension](./speckit-extension/README.md), and the stock `/speckit.*` family stays present automatically; full reference in [`docs/template-profiles.md`](./docs/template-profiles.md).
+
+### Complexity Fast-Path
+
+An **opt-in beta** that **defaults to `false`**. When enabled in `turbo` mode, small changes auto-detect and fast-track straight from specify to implement, skipping the separate plan and tasks stages. When `/speckit.companion.specify` decides a change is small (it projects ≤ 5 files / ≤ 10 tasks and reads no "larger" scope phrase like *rewrite* or *overhaul*), it writes a single combined `spec.md` — the usual sections plus an inline **Approach** and **Implementation Tasks** list — and records plan and tasks as satisfied, landing the spec at the implement step in one run. Larger changes keep the full specify → plan → tasks → implement pipeline; a change that crosses the 5-files / 10-tasks guardrail warns and runs the full pipeline rather than fast-tracking silently.
+
+```json
+{
+  "speckit.companion.complexityFastPath": false
+}
+```
+
+| Value | Behavior |
+|-------|----------|
+| `false` (default) | Force the full pipeline on every change — no combining, no warning. |
+| `true` | Auto-detect small changes and fast-track them; larger changes keep the full pipeline. |
+
+The flag is settable at both the project level (`complexityFastPath` in `.specify/companion.yml`) and the editor level (this setting); when the two disagree, the project value wins. It applies only to the turbo `/speckit.companion.*` commands. Full reference in [`docs/template-profiles.md`](./docs/template-profiles.md#complexity-fast-path-turbo-only).
 
 ### Command Format
 

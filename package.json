@@ -1004,7 +1004,7 @@
         }
       },
       {
-        "title": "SpecKit Companion: Beta Features",
+        "title": "Beta Features",
         "properties": {
           "speckit.viewer.activityPanel": {
             "type": "string",
@@ -1034,9 +1034,15 @@
               "Trimmed /speckit.companion.* commands — no user stories, files/dependencies tasks, smaller spec folder — plus timing.",
               "Routes to the stock /speckit.* commands and opts out of the Companion install/repair step — it won't remove companion-standard if a prior setting already installed it."
             ],
-            "default": "standard",
+            "default": "off",
             "scope": "window",
-            "description": "Project default for the spec-kit pipeline shape. Both command families stay installed at all times — this setting only routes which one a new spec dispatches: 'standard' uses the stock /speckit.* commands, 'turbo' uses the trimmed /speckit.companion.* commands. Switching is non-destructive (neither set is ever removed), and each spec pins the default at creation, so changing this never reshapes a spec already in flight."
+            "description": "Project default for the spec-kit pipeline shape. Both command families stay installed at all times — this setting only routes which one a new spec dispatches: 'standard' uses the stock /speckit.* commands, 'turbo' uses the trimmed /speckit.companion.* commands, 'off' routes to the stock commands and opts out of the Companion install/repair step. Defaults to 'off' (opt-in beta); switching is non-destructive (neither set is ever removed), and each spec pins the default at creation, so changing this never reshapes a spec already in flight."
+          },
+          "speckit.companion.complexityFastPath": {
+            "type": "boolean",
+            "default": false,
+            "scope": "window",
+            "description": "When enabled, auto-detect small changes and fast-track them from specify straight to implement, skipping separate plan and tasks stages. Mirrors the tiny-change guardrail (5 files / 10 tasks). Off by default (opt-in beta) — the full pipeline runs on every change unless enabled. Applies only to the turbo /speckit.companion.* commands."
           }
         }
       }

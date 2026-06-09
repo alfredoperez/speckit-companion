@@ -206,9 +206,37 @@ def run_checks(spec_dir: Path) -> Report:
                   "each task has a single finish (≤1 complete; ≤1 legacy start)" if not dupes
                   else f"DUPLICATED task/kind (hook re-added a live entry): {dupes}")
 
+    # fast-path fold — only asserted when a spec was fast-tracked (substep="fast-path").
+    _fastpath(r, history, ctx)
+
     # timing breakdown (info)
     _timing(r, history)
     return r
+
+
+def _fastpath(r: Report, history: list, ctx: dict) -> None:
+    """When a spec fast-tracked (the simple/minimal-mode branch), plan and tasks
+    are folded into the specify run: each carries a `start`+`complete` pair tagged
+    `substep="fast-path"`, the timestamps are real, and the spec lands at
+    `ready-to-implement`. Silent when no fold is present (a normal spec)."""
+    fold = [e for e in history if isinstance(e, dict) and e.get("substep") == "fast-path"]
+    if not fold:
+        return  # not a fast-tracked spec — nothing to assert
+    for step in ("plan", "tasks"):
+        kinds = {e.get("kind") for e in fold if e.get("step") == step}
+        ok = {"start", "complete"} <= kinds
+        r.add(ok, f"fast-path-{step}-folded",
+              f"{step} fold has {sorted(kinds)}"
+              + ("" if ok else " — expected both start and complete"))
+    # The fold is journaled by:ai with real `date -u` — every entry must parse and
+    # carry no hand-typed round-second look beyond the ai second-precision norm.
+    realness = all(_parse_at(e.get("at")) is not None for e in fold)
+    r.add(realness, "fast-path-timestamps-real",
+          "all fold timestamps parse" if realness else "a fold timestamp is unparseable")
+    status = ctx.get("status")
+    landed = status in ("ready-to-implement", "implementing", "implemented", "completed", "archived")
+    r.add(landed, "fast-path-ready-to-implement",
+          f"status={status}" + ("" if landed else " — expected ready-to-implement after a fold"))
 
 
 def _timing(r: Report, history: list) -> None:

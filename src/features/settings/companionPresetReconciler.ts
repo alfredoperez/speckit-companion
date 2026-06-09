@@ -127,6 +127,62 @@ export function writeTemplateProfile(workspaceRoot: string, profile: TemplatePro
 }
 
 /**
+ * Read the explicit `complexityFastPath` boolean from .specify/companion.yml.
+ * undefined when the file is absent/unreadable or the key is missing or not a
+ * boolean (a hand-edited `complexityFastPath: maybe` must not flow downstream).
+ */
+export function readComplexityFastPath(workspaceRoot: string): boolean | undefined {
+    const p = path.join(workspaceRoot, CONFIG_REL);
+    if (!fs.existsSync(p)) {
+        return undefined;
+    }
+    try {
+        const doc = yaml.load(fs.readFileSync(p, 'utf8')) as { complexityFastPath?: unknown } | null;
+        const value = doc?.complexityFastPath;
+        return typeof value === 'boolean' ? value : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
+/** Read-merge-write complexityFastPath, preserving every other key already in the file. */
+export function writeComplexityFastPath(workspaceRoot: string, value: boolean): void {
+    const p = path.join(workspaceRoot, CONFIG_REL);
+    let doc: Record<string, unknown> = {};
+    if (fs.existsSync(p)) {
+        try {
+            const loaded = yaml.load(fs.readFileSync(p, 'utf8'));
+            if (loaded && typeof loaded === 'object') {
+                doc = loaded as Record<string, unknown>;
+            }
+        } catch {
+            doc = {};
+        }
+    }
+    doc.complexityFastPath = value;
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.writeFileSync(p, yaml.dump(doc), 'utf8');
+}
+
+/**
+ * Resolve the effective complexity fast-path flag and mirror it into
+ * .specify/companion.yml so the turbo command body reads a single boolean.
+ * Precedence: an explicit project-level `complexityFastPath` in companion.yml
+ * wins; otherwise the VS Code setting; otherwise the default `false` (opt-in
+ * beta). The command body never reads VS Code settings — this mirror is the one
+ * source it consults.
+ */
+export function resolveComplexityFastPath(
+    workspaceRoot: string,
+    settingValue: boolean | undefined
+): boolean {
+    const project = readComplexityFastPath(workspaceRoot);
+    const resolved = project ?? settingValue ?? false;
+    writeComplexityFastPath(workspaceRoot, resolved);
+    return resolved;
+}
+
+/**
  * The `off` profile is the explicit "plain upstream spec-kit" escape hatch — it
  * routes to stock commands and must NOT pull in the `companion-standard` family
  * (which carries the timing-augmented bodies). Every other profile (and an absent

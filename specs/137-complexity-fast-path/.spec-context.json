@@ -1,0 +1,358 @@
+{
+  "workflow": "speckit",
+  "specName": "Complexity Fast-Path",
+  "branch": "137-complexity-fast-path",
+  "selectedAt": "2026-06-09T22:04:21.075Z",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": null,
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-09T22:04:21.075Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-09T22:08:45.237Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-09T22:08:45.241Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:12:00Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:13:08Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:13:17Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-09T22:15:14.196Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:19:06Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:19:17Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-09T22:21:43.732Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T001",
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:23:46.050Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T002",
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:23:46.124Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T004",
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:26:02.570Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T003",
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:27:22.035Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T005",
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:27:22.127Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T006",
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:27:22.207Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T007",
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:27:22.289Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T008",
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:27:22.360Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T011",
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:27:22.431Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T009",
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:29:47.441Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T010",
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:29:47.521Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T012",
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:32:23.555Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T013",
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:32:23.635Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T014",
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:32:23.712Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T015",
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:32:23.794Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T016",
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:33:03.107Z"
+    },
+    {
+      "step": "implement",
+      "substep": "run-tests",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:33:10Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-09T22:49:42Z"
+    }
+  ],
+  "updated": "2026-06-09",
+  "profile": "standard",
+  "currentTask": "T016",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added the complexityFastPath key to the ConfigKeys object in constants.ts.",
+      "files": [
+        "src/core/constants.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added the speckit.companion.complexityFastPath boolean setting (default true, window scope) to package.json contributes.configuration.",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added a --substep flag to write-context.py and threaded it through update_context start/complete entries with (step, substep)-aware idempotency; verified the four fold calls produce a clean ready-to-implement state and re-run idempotently.",
+      "files": [
+        "speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added the classify step (fastPathEnabled/projectedFiles/projectedTasks/scopeSignal → simple|normal verdict, errs toward normal) to the turbo specify command body.",
+      "files": [
+        "speckit-extension/commands/speckit.companion.specify.md"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added the simple/minimal-mode branch — appends Approach + Implementation Tasks to spec.md, keeps the checklist, and emits no separate plan.md/tasks.md.",
+      "files": [
+        "speckit-extension/commands/speckit.companion.specify.md"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added the lifecycle fold (plan start/complete, tasks start/complete, all --substep fast-path, final --status ready-to-implement) after the specify completion in the simple branch.",
+      "files": [
+        "speckit-extension/commands/speckit.companion.specify.md"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Added the normal branch — writes spec.md only with no fold so the existing full pipeline continues unchanged.",
+      "files": [
+        "speckit-extension/commands/speckit.companion.specify.md"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Added the guardrail warning (>5 files / >10 tasks / scopeSignal larger emits the verbatim line then runs normal; exactly-at-threshold does not warn).",
+      "files": [
+        "speckit-extension/commands/speckit.companion.specify.md"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Synced the full classify + simple + normal + guardrail + fold block into the companion-turbo preset parity copy; verified the two command bodies are byte-for-byte identical past the frontmatter.",
+      "files": [
+        "speckit-extension/presets/companion-turbo/commands/speckit.specify.md"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Implemented readComplexityFastPath / writeComplexityFastPath / resolveComplexityFastPath (project companion.yml wins → setting → default true, mirrored back into companion.yml) and wired the resolve into extension activation plus a setting-change mirror.",
+      "files": [
+        "src/features/settings/companionPresetReconciler.ts",
+        "src/extension.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Added Jest tests covering the four-row truth table, the mirror write, sibling-key preservation, non-boolean rejection, and writer round-trip; the suite passes (29 tests) and tsc is clean.",
+      "files": [
+        "src/features/settings/companionPresetReconciler.test.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Added a Complexity fast-path (turbo only) section to docs/template-profiles.md documenting the classify decision, simple/normal branches, combined-artifact shape, guardrail warning, and opt-out precedence.",
+      "files": [
+        "docs/template-profiles.md"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Added a Complexity Fast-Path Configuration subsection to the root README and a user-facing Added entry to the root CHANGELOG (no internal symbol names).",
+      "files": [
+        "README.md",
+        "CHANGELOG.md"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Added a Complexity fast-path (turbo) subsection to the spec-kit README and an Added entry to the spec-kit CHANGELOG; left the extension.yml version to the publish flow.",
+      "files": [
+        "speckit-extension/README.md",
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Added a _fastpath check to the eval — asserts folded plan/tasks start+complete substep=fast-path entries, real timestamps, and ready-to-implement landing; silent on a normal spec. Verified against a fold fixture and a non-fold spec.",
+      "files": [
+        ".claude/skills/eval-speckit-extension/check_capture.py"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Validated the deterministic quickstart scenarios — eval fast-path checks pass, fold mechanics produce ready-to-implement idempotently, opt-out truth table green, parity + full suite (894 tests) pass; scenarios 1–4 AI-prompt behavior matches the contracts.",
+      "files": [
+        "specs/137-complexity-fast-path/quickstart.md"
+      ]
+    }
+  }
+}

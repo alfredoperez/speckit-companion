@@ -8,8 +8,12 @@ import {
     writeTemplateProfile,
     ensureStandardFamily,
     shouldEnsureStandard,
+    readComplexityFastPath,
+    writeComplexityFastPath,
+    resolveComplexityFastPath,
     PresetOp,
 } from './companionPresetReconciler';
+import * as yaml from 'js-yaml';
 
 const NONE = { 'companion-standard': false, 'companion-turbo': false };
 
@@ -193,6 +197,61 @@ describe('companionPresetReconciler', () => {
             await expect(
                 ensureStandardFamily(root, { run: async () => { throw new Error('specify not found'); } })
             ).resolves.toHaveLength(1);
+        });
+    });
+
+    describe('resolveComplexityFastPath', () => {
+        const writeYml = (body: string): void => {
+            fs.mkdirSync(path.dirname(configPath()), { recursive: true });
+            fs.writeFileSync(configPath(), body, 'utf8');
+        };
+        const mirrored = (): unknown =>
+            (yaml.load(fs.readFileSync(configPath(), 'utf8')) as { complexityFastPath?: unknown })
+                .complexityFastPath;
+
+        // Truth table from contracts/config-setting.md.
+        it('project companion.yml false wins over a true setting', () => {
+            writeYml('complexityFastPath: false\n');
+            expect(resolveComplexityFastPath(root, true)).toBe(false);
+            expect(mirrored()).toBe(false);
+        });
+
+        it('project companion.yml true wins over a false setting', () => {
+            writeYml('complexityFastPath: true\n');
+            expect(resolveComplexityFastPath(root, false)).toBe(true);
+            expect(mirrored()).toBe(true);
+        });
+
+        it('falls back to the setting when companion.yml has no explicit value', () => {
+            expect(resolveComplexityFastPath(root, false)).toBe(false);
+            expect(mirrored()).toBe(false);
+        });
+
+        it('defaults to false (opt-in) when both companion.yml and the setting are absent', () => {
+            expect(resolveComplexityFastPath(root, undefined)).toBe(false);
+            expect(mirrored()).toBe(false);
+        });
+
+        it('mirrors the resolved value into companion.yml without clobbering siblings', () => {
+            writeYml("templateProfile: 'turbo'\n");
+            resolveComplexityFastPath(root, false);
+            const doc = yaml.load(fs.readFileSync(configPath(), 'utf8')) as Record<string, unknown>;
+            expect(doc.templateProfile).toBe('turbo');
+            expect(doc.complexityFastPath).toBe(false);
+        });
+
+        it('reads a non-boolean companion.yml value as unset (no downstream leak)', () => {
+            writeYml('complexityFastPath: maybe\n');
+            expect(readComplexityFastPath(root)).toBeUndefined();
+            // resolution falls through to the setting
+            expect(resolveComplexityFastPath(root, false)).toBe(false);
+        });
+
+        it('round-trips the mirror via the writer', () => {
+            writeComplexityFastPath(root, false);
+            expect(readComplexityFastPath(root)).toBe(false);
+            writeComplexityFastPath(root, true);
+            expect(readComplexityFastPath(root)).toBe(true);
         });
     });
 
