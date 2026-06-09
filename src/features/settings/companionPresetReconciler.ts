@@ -165,19 +165,17 @@ export function writeComplexityFastPath(workspaceRoot: string, value: boolean): 
 }
 
 /**
- * Resolve the effective complexity fast-path flag and mirror it into
- * .specify/companion.yml so the turbo command body reads a single boolean.
- * Precedence: an explicit project-level `complexityFastPath` in companion.yml
- * wins; otherwise the VS Code setting; otherwise the default `false` (opt-in
- * beta). The command body never reads VS Code settings — this mirror is the one
- * source it consults.
+ * Mirror the VS Code `complexityFastPath` setting into .specify/companion.yml so
+ * the turbo command body reads a single boolean (it never reads VS Code settings).
+ * The setting is the source of truth and companion.yml is a derived, machine-local
+ * cache (gitignored) — there is no project-level override. Defaults to `false`
+ * (opt-in beta) when the setting is unset.
  */
 export function resolveComplexityFastPath(
     workspaceRoot: string,
     settingValue: boolean | undefined
 ): boolean {
-    const project = readComplexityFastPath(workspaceRoot);
-    const resolved = project ?? settingValue ?? false;
+    const resolved = settingValue ?? false;
     writeComplexityFastPath(workspaceRoot, resolved);
     return resolved;
 }

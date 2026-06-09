@@ -272,8 +272,8 @@ export async function activate(context: vscode.ExtensionContext) {
                 .getConfiguration(ConfigKeys.namespace)
                 .get<TemplateProfile>('companion.templateProfile', 'off');
             writeTemplateProfile(root, profile);
-            // Resolve the fast-path flag (project companion.yml wins over the
-            // editor setting) and mirror it so the turbo body reads one boolean.
+            // Mirror the fast-path setting into companion.yml so the turbo body
+            // reads one boolean (the setting is the source of truth).
             const fastPathSetting = vscode.workspace
                 .getConfiguration(ConfigKeys.namespace)
                 .get<boolean>('companion.complexityFastPath', false);

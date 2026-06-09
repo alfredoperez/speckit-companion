@@ -22,9 +22,9 @@ Prereqs: a `turbo`-profile project (`.specify/companion.yml` → `templateProfil
 
 ## 4. Opt out (US3 / SC-004)
 
-1. Set `speckit.companion.complexityFastPath: false` (VS Code settings) **or** `complexityFastPath: false` in `.specify/companion.yml`.
+1. Set `speckit.companion.complexityFastPath: false` (VS Code settings) — or simply leave it unset, since it is off by default (opt-in beta).
 2. Start a one-line-change spec and run `/speckit.companion.specify`.
-3. **Expect**: full pipeline, no combining, no warning. (When the two sources disagree, the `companion.yml` value wins.)
+3. **Expect**: full pipeline, no combining, no warning. (The editor setting is the source of truth; the extension mirrors it into `.specify/companion.yml`, which the command body reads.)
 
 ## 5. Eval
 

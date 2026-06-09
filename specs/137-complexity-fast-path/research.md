@@ -18,13 +18,13 @@ All Technical Context items were resolvable from the existing architecture (`doc
 
 **Alternatives considered**: Have the command body read VS Code settings — impossible from the CLI context. Have the command body re-resolve precedence from two sources — duplicates logic in untestable prompt text.
 
-## Decision 3 — Config precedence (project vs editor)
+## Decision 3 — Config source (editor setting, mirrored)
 
-**Decision**: Project-level setting wins on disagreement (`.specify/companion.yml` value overrides the VS Code `settings.json` value). Resolution: project value if present → editor setting → default `true`.
+**Decision**: The VS Code setting is the single source of truth; the extension mirrors it into `.specify/companion.yml` for the command body to read. Resolution: `settingValue ?? false`. No project-level override.
 
-**Rationale**: Fixed by spec Assumptions / FR-008 — "a project's checked-in policy should govern everyone working in it." Implementing precedence in `companionPresetReconciler` keeps it in one tested place. Note the *current* `companion.yml` is a gitignored mirror; for "project-level checked-in policy" semantics the resolver treats an explicit `companion.yml` value as authoritative, matching the documented precedence even though the file itself is regenerated from settings when no explicit project policy is present.
+**Rationale**: `companion.yml` is a gitignored, machine-local mirror the extension regenerates on activation — so an "explicit project value" in it can't be a shared, checked-in team policy (it isn't committed, and activation overwrites it). A precedence model where companion.yml "wins" is therefore illusory. Collapsing to a plain mirror (the same pattern `templateProfile` uses) keeps resolution in one tested place and removes the runtime-clobber contradiction where toggling the setting overwrote the supposedly-authoritative project value.
 
-**Alternatives considered**: Editor wins — rejected, contradicts the spec's recorded resolution and lets one developer's editor override a team policy.
+**Alternatives considered**: Project-level `companion.yml` wins — rejected; the file is gitignored and regenerated from settings, so it can't carry durable team policy, and the "wins" semantics conflicted with the mirror writes.
 
 ## Decision 4 — Shape of the "single combined artifact"
 

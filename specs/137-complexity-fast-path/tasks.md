@@ -30,7 +30,7 @@ This feature spans **two co-located extensions**:
 **Purpose**: Declare the config knob's identity and schema so both the resolver and the command body can reference it.
 
 - [x] **T001** [P] Add `complexityFastPath: 'speckit.companion.complexityFastPath'` to the `ConfigKeys` object in `src/core/constants.ts`
-- [x] **T002** [P] Add the `speckit.companion.complexityFastPath` boolean setting (`type: boolean`, `default: true`, `scope: window`, description per `contracts/config-setting.md`) to `contributes.configuration` in `package.json`
+- [x] **T002** [P] Add the `speckit.companion.complexityFastPath` boolean setting (`type: boolean`, `default: false`, `scope: window`, description per `contracts/config-setting.md`) to `contributes.configuration` in `package.json`
 
 ---
 
@@ -79,14 +79,14 @@ This feature spans **two co-located extensions**:
 
 ## Phase 5: User Story 3 - Developer can force the full pipeline (Priority: P2)
 
-**Goal**: The fast-path is opt-out — a config flag (project-level or editor-level, project wins) disables auto-detection so every change runs the full pipeline.
+**Goal**: The fast-path is opt-in — an editor setting (default off) enables auto-detection; when it is off, every change runs the full pipeline.
 
-**Independent Test**: Set `speckit.companion.complexityFastPath: false` (VS Code settings) or `complexityFastPath: false` in `.specify/companion.yml`, run `/speckit.companion.specify` on a one-line change. Expect the full pipeline, no combining, no warning. When the two sources disagree, the `companion.yml` value wins.
+**Independent Test**: With `speckit.companion.complexityFastPath` unset or `false` (VS Code settings), run `/speckit.companion.specify` on a one-line change. Expect the full pipeline, no combining, no warning. The editor setting is the source of truth; the extension mirrors it into `.specify/companion.yml`, which the command body reads.
 
 ### Implementation for User Story 3
 
-- [x] **T009** [US3] Implement `resolveComplexityFastPath()` in `src/features/settings/companionPresetReconciler.ts`: precedence is explicit `.specify/companion.yml` `complexityFastPath` (boolean) → VS Code `speckit.companion.complexityFastPath` setting → default `true`; mirror the resolved boolean back into `.specify/companion.yml` alongside `templateProfile`, matching the existing mirror pattern (per `contracts/config-setting.md`, research Decision 3)
-- [x] **T010** [P] [US3] Add Jest tests for `resolveComplexityFastPath` to `src/features/settings/companionPresetReconciler.test.ts` covering the four-row truth table from `contracts/config-setting.md` (yml `false` / setting `true` → `false`; yml `true` / setting `false` → `true`; yml absent / setting `false` → `false`; both absent → `true`) and that the resolved value is mirrored into `companion.yml`
+- [x] **T009** [US3] Implement `resolveComplexityFastPath()` in `src/features/settings/companionPresetReconciler.ts`: resolve `settingValue ?? false` (the VS Code `speckit.companion.complexityFastPath` setting is the single source of truth) and mirror it into `.specify/companion.yml` alongside `templateProfile`, matching the existing mirror pattern (per `contracts/config-setting.md`, research Decision 3)
+- [x] **T010** [P] [US3] Add Jest tests for `resolveComplexityFastPath` to `src/features/settings/companionPresetReconciler.test.ts` covering the mirror behavior from `contracts/config-setting.md` (setting `true` → `true`; setting `false` → `false`; setting absent → `false`) and that the resolved value is mirrored into `companion.yml`
 
 **Checkpoint**: With the flag off, trivial changes run the full pipeline; precedence is deterministic (SC-004). The command body's `fastPathEnabled == false → normal, no warning` behavior already lands via the classify decision (T003).
 
@@ -163,7 +163,7 @@ Task: "Add the --substep flag to write-context.py"
 
 1. MVP (US1) — small changes fast-track (SC-001, SC-005).
 2. US2 — large/boundary changes keep the full pipeline + guardrail (SC-002, SC-003).
-3. US3 — opt-out flag with project-wins precedence (SC-004).
+3. US3 — opt-in flag (editor setting, default off), mirrored to companion.yml (SC-004).
 4. Polish — preset parity, docs, changelogs, eval, quickstart.
 
 ---
@@ -172,5 +172,5 @@ Task: "Add the --substep flag to write-context.py"
 
 - The classify step and both branches are **AI-prompt logic in command bodies**, not TypeScript — verified by the eval (T015) and quickstart (T016), not unit tests.
 - Two extensions, two changelogs: VS Code side (T013) and spec-kit side (T014) — never cross them, and never edit `.specify/extensions/companion/CHANGELOG.md` (generated).
-- Extension isolation: the command body reads the **mirrored** `companion.yml` value; it never reads VS Code settings directly. Precedence lives once in `resolveComplexityFastPath` (T009).
+- Extension isolation: the command body reads the **mirrored** `companion.yml` value; it never reads VS Code settings directly. The mirror lives once in `resolveComplexityFastPath` (T009).
 - Keep the preset copy (T011) byte-for-byte in parity with the per-spec opt-in command body.

@@ -209,20 +209,21 @@ describe('companionPresetReconciler', () => {
             (yaml.load(fs.readFileSync(configPath(), 'utf8')) as { complexityFastPath?: unknown })
                 .complexityFastPath;
 
-        // Truth table from contracts/config-setting.md.
-        it('project companion.yml false wins over a true setting', () => {
+        // The VS Code setting is the source of truth; companion.yml is a derived
+        // mirror with no project-level override (it is gitignored/machine-local).
+        it('overwrites companion.yml with a true setting', () => {
             writeYml('complexityFastPath: false\n');
-            expect(resolveComplexityFastPath(root, true)).toBe(false);
-            expect(mirrored()).toBe(false);
-        });
-
-        it('project companion.yml true wins over a false setting', () => {
-            writeYml('complexityFastPath: true\n');
-            expect(resolveComplexityFastPath(root, false)).toBe(true);
+            expect(resolveComplexityFastPath(root, true)).toBe(true);
             expect(mirrored()).toBe(true);
         });
 
-        it('falls back to the setting when companion.yml has no explicit value', () => {
+        it('overwrites companion.yml with a false setting', () => {
+            writeYml('complexityFastPath: true\n');
+            expect(resolveComplexityFastPath(root, false)).toBe(false);
+            expect(mirrored()).toBe(false);
+        });
+
+        it('mirrors the setting when companion.yml has no value', () => {
             expect(resolveComplexityFastPath(root, false)).toBe(false);
             expect(mirrored()).toBe(false);
         });

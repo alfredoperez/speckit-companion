@@ -5,7 +5,7 @@
 
 ## Summary
 
-Auto-detect small changes and right-size the ceremony. A **classify step** added to the turbo specify command body reads size signals from the feature description (projected files, projected tasks, scope phrases) against the existing tiny-change ceiling (5 files / 10 tasks). When a change classifies *simple* and the fast-path is enabled, the specify run produces a single combined spec/plan/tasks artifact and writes the lifecycle so plan and tasks read as satisfied-by-fast-path, landing the developer at implement in one run. *Normal* changes — and anything past the threshold (with a guardrail warning) — keep the full specify → plan → tasks → implement pipeline. A new opt-out config knob (`speckit.companion.complexityFastPath`, default on) is settable at both the project level (`.specify/companion.yml` mirror) and the editor level (VS Code settings), with the project-level value winning on disagreement. Per the project's presets-vs-commands decision, all complexity logic lives in this project's own `/speckit.companion.*` command bodies; core spec-kit commands are untouched.
+Auto-detect small changes and right-size the ceremony. A **classify step** added to the turbo specify command body reads size signals from the feature description (projected files, projected tasks, scope phrases) against the existing tiny-change ceiling (5 files / 10 tasks). When a change classifies *simple* and the fast-path is enabled, the specify run produces a single combined spec/plan/tasks artifact and writes the lifecycle so plan and tasks read as satisfied-by-fast-path, landing the developer at implement in one run. *Normal* changes — and anything past the threshold (with a guardrail warning) — keep the full specify → plan → tasks → implement pipeline. A new opt-in config knob (`speckit.companion.complexityFastPath`, default off — beta) is set in the editor (VS Code settings) and mirrored to the machine-local `.specify/companion.yml` the command body reads; the editor setting is the single source of truth. Per the project's presets-vs-commands decision, all complexity logic lives in this project's own `/speckit.companion.*` command bodies; core spec-kit commands are untouched.
 
 ## Technical Context
 
@@ -25,7 +25,7 @@ Auto-detect small changes and right-size the ceremony. A **classify step** added
 
 - **I. Extensibility and Configuration** — PASS. The fast-path is overridable through a VS Code setting (and the project-level mirror), satisfying "default behaviors MUST be overridable through VS Code settings." No provider logic touched.
 - **II. Spec-Driven Workflow** — PASS. The non-negotiable Specify → Plan → Tasks → Implement pipeline is preserved: the fast-path **folds** plan and tasks into the specify run rather than dropping them, the combined artifact still carries plan- and task-level content (sequential-phase artifact model intact), and FR-010 records the folded steps as satisfied so the lifecycle never shows them missing or stuck. *Normal* changes run the full pipeline unchanged.
-- **III. Visual and Interactive** — PASS (lifecycle-transition guard). Pipeline-step compression is heuristic, but the lifecycle **Active → Completed → Archived** transitions remain explicit user actions: the fast-path lands the spec at the implement step, it does not auto-complete or auto-archive. The heuristic is also opt-out and errs toward *normal*.
+- **III. Visual and Interactive** — PASS (lifecycle-transition guard). Pipeline-step compression is heuristic, but the lifecycle **Active → Completed → Archived** transitions remain explicit user actions: the fast-path lands the spec at the implement step, it does not auto-complete or auto-archive. The heuristic is also opt-in (off by default) and errs toward *normal*.
 - **IV. Modular Architecture** — PASS. Logic is split across clear seams: config resolution (extension `src/`), classify + branch + lifecycle (turbo command body + `write-context.py`).
 
 No violations → Complexity Tracking table omitted.
@@ -59,7 +59,7 @@ src/                                         # VS Code extension (shipped in .vs
         └── companionPresetReconciler.ts     # read/resolve + mirror the flag into .specify/companion.yml
         └── companionPresetReconciler.test.ts# resolution + mirror unit tests (Jest)
 
-package.json                                 # contributes.configuration: new boolean setting (default true)
+package.json                                 # contributes.configuration: new boolean setting (default false)
 
 speckit-extension/                           # spec-kit extension (shipped as speckit-ext-v* archive)
 ├── extension.yml                            # version bump

@@ -26,14 +26,14 @@ The observable inputs to classification, read from the drafted spec (not the raw
 
 ## Entity: Fast-path setting (persisted config)
 
-The opt-out knob controlling whether auto-detection is active.
+The opt-in knob controlling whether auto-detection is active.
 
 | Field | Type | Default | Location |
 |---|---|---|---|
-| `speckit.companion.complexityFastPath` | boolean | `true` | VS Code `settings.json` (editor-level) |
-| `complexityFastPath` | boolean | (mirrors resolved value) | `.specify/companion.yml` (project-level mirror, read by the command body) |
+| `speckit.companion.complexityFastPath` | boolean | `false` | VS Code `settings.json` (editor-level, source of truth) |
+| `complexityFastPath` | boolean | (mirrors the setting) | `.specify/companion.yml` (machine-local, gitignored cache read by the command body) |
 
-**Resolution precedence** (computed in `companionPresetReconciler`): explicit `.specify/companion.yml` value → VS Code setting → `true`. Project-level wins on disagreement (FR-008 / Assumptions).
+**Resolution** (in `companionPresetReconciler`): the VS Code setting is mirrored into `.specify/companion.yml` for the command body to read; it defaults to `false` (opt-in beta) when unset. The setting is the single source of truth — there is no project-level override (FR-008).
 
 ## Lifecycle fold (existing `.spec-context.json`)
 

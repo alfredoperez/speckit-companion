@@ -48,7 +48,7 @@ A developer who wants every change to go through the full ceremony — regardles
 **Acceptance Scenarios**:
 
 1. **Given** the complexity fast-path is disabled in configuration, **When** the developer runs the specify command on a trivial change, **Then** the full pipeline runs and no fast-path combining occurs.
-2. **Given** no configuration override is present, **When** the developer runs any spec, **Then** the fast-path is active by default (opt-out, not opt-in).
+2. **Given** the fast-path has not been enabled, **When** the developer runs any spec, **Then** the full pipeline runs — the fast-path is off by default (opt-in beta) and only activates once explicitly enabled.
 
 ---
 
@@ -58,7 +58,7 @@ A developer who wants every change to go through the full ceremony — regardles
 - **Conflicting signals**: A short description that nonetheless names many files, or uses a "rewrite"/"overhaul" scope phrase, is treated as normal even if it would otherwise look small.
 - **Boundary exactly at threshold**: A change at exactly the threshold (5 files / 10 tasks) is treated as the small-change ceiling; anything past it is normal and triggers the guardrail warning.
 - **Fast-path on a non-companion run**: The fast-path only applies to this project's own pipeline commands. A change run through core spec-kit commands is unaffected and always follows core behavior.
-- **Configuration disagreement**: When the project-level setting and the editor-level setting disagree, the behavior resolves to a single, predictable outcome (documented in Assumptions) so the developer is never surprised.
+- **Configuration source**: The fast-path flag is controlled by the editor setting; the extension mirrors it into a machine-local project file the command body reads. There is no separate project-level override to conflict with.
 
 ## Requirements *(mandatory)*
 
@@ -70,8 +70,8 @@ A developer who wants every change to go through the full ceremony — regardles
 - **FR-004**: When a change is classified *simple* (and the fast-path is enabled), the pipeline MUST produce a single combined spec/plan/tasks artifact and advance directly to the implement step in one run, without separate plan and tasks stages.
 - **FR-005**: When a change is classified *normal*, the pipeline MUST run the full specify → plan → tasks → implement sequence unchanged.
 - **FR-006**: When a change exceeds the small-change threshold, the system MUST warn that the guardrail was crossed rather than silently fast-tracking it.
-- **FR-007**: The system MUST expose a configuration knob to disable the fast-path entirely, defaulting to enabled (opt-out behavior).
-- **FR-008**: The configuration knob MUST be settable both at the project level (a project configuration file) and through the host editor's settings, with a single, predictable resolution when the two disagree.
+- **FR-007**: The system MUST expose a configuration knob to enable the fast-path, defaulting to disabled (opt-in beta).
+- **FR-008**: The configuration knob MUST be settable through the host editor's settings and mirrored into a machine-local project file the command body reads, with the editor setting as the single source of truth.
 - **FR-009**: The fast-path behavior MUST apply only to this project's own pipeline commands and MUST NOT change the behavior of core spec-kit pipeline commands.
 - **FR-010**: When the fast-path folds plan and tasks into a single artifact, the spec's recorded lifecycle MUST reflect that those steps were satisfied by the fast-path, so progress tracking does not show them as missing or stuck.
 
@@ -79,7 +79,7 @@ A developer who wants every change to go through the full ceremony — regardles
 
 - **Complexity classification**: The simple/normal verdict for a spec, derived from the description's size signals; determines which pipeline path runs.
 - **Size signals**: The inputs to classification — projected file count, projected task count, and scope phrases — evaluated against the small-change threshold.
-- **Fast-path setting**: The opt-out configuration controlling whether auto-detection is active, resolvable from project-level and editor-level sources.
+- **Fast-path setting**: The opt-in configuration controlling whether auto-detection is active, set in the editor and mirrored to a machine-local project file the command body reads.
 
 ## Success Criteria *(mandatory)*
 
@@ -94,7 +94,7 @@ A developer who wants every change to go through the full ceremony — regardles
 ## Assumptions
 
 - **Threshold values**: The small-change ceiling is fixed at 5 files / 10 tasks to mirror the project's existing tiny-change guardrail. These are not independently configurable in this feature; they track the existing guardrail.
-- **Default state**: The fast-path is on by default (opt-out). A team that wants full ceremony on every change disables it explicitly.
-- **Configuration precedence**: When the project-level setting and the editor-level setting disagree, the project-level setting wins, on the assumption that a project's checked-in policy should govern everyone working in it. (Recorded here as the predictable resolution for FR-008.)
+- **Default state**: The fast-path is off by default (opt-in beta). A team that wants it enables it explicitly; everyone else keeps the full pipeline on every change.
+- **Configuration source**: The editor setting is the single source of truth; the extension mirrors it into the machine-local `.specify/companion.yml` (gitignored) that the command body reads. There is no separate checked-in project policy to reconcile.
 - **Scope of effect**: Per the project's architecture decision on presets-vs-commands, complexity logic lives in this project's own pipeline commands only. Core spec-kit command behavior is intentionally untouched; the shared preset shapes templates, not command flow.
 - **Classification is best-effort**: Size signals are heuristic. When signals are weak or conflicting, the classifier errs toward *normal* so a change is never under-planned by accident.

@@ -32,4 +32,4 @@
 ## Notes
 
 - Items marked incomplete require spec updates before `/speckit.clarify` or `/speckit.plan`.
-- Two resolvable design decisions were settled with documented assumptions rather than [NEEDS CLARIFICATION] markers: the fixed 5/10 threshold (mirrors the existing tiny-change guardrail) and config precedence (project-level wins over editor-level). Both are flagged in Assumptions and can be revisited in `/speckit.clarify` if the maintainer disagrees.
+- Two resolvable design decisions were settled with documented assumptions rather than [NEEDS CLARIFICATION] markers: the fixed 5/10 threshold (mirrors the existing tiny-change guardrail) and the config source (the editor setting is the single source of truth, mirrored to a machine-local `companion.yml`). Both are flagged in Assumptions and can be revisited in `/speckit.clarify` if the maintainer disagrees.

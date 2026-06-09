@@ -23,17 +23,18 @@ complexityFastPath: true   # resolved boolean, written by the extension on activ
 ## Resolution contract (`companionPresetReconciler`)
 
 ```
-resolveComplexityFastPath():
-  if companion.yml has explicit `complexityFastPath` (boolean):  return it      # project wins
-  else if VS Code setting is set:                                return setting
-  else:                                                          return false   # default (opt-in beta)
+resolveComplexityFastPath(settingValue):
+  resolved = settingValue ?? false            # the VS Code setting is the source of truth
+  write resolved into companion.yml           # machine-local cache the command body reads
+  return resolved                             # default false (opt-in beta) when unset
 ```
 
-| companion.yml | VS Code setting | Resolved |
-|---|---|---|
-| `false` | `true` | `false` (project wins) |
-| `true` | `false` | `true` (project wins) |
-| absent | `false` | `false` |
-| absent | absent | `false` (opt-in default) |
+The setting is mirrored into `companion.yml`; the file is a derived, gitignored cache, not an independent project override.
+
+| VS Code setting | Resolved (and mirrored to companion.yml) |
+|---|---|
+| `true` | `true` |
+| `false` | `false` |
+| absent | `false` (opt-in default) |
 
 The resolved value is mirrored back into `.specify/companion.yml` so the command body reads a single boolean.
