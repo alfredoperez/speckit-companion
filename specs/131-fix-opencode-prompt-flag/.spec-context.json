@@ -4,7 +4,7 @@
   "branch": "131-fix-opencode-prompt-flag",
   "selectedAt": "2026-06-08T02:09:08.437Z",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
@@ -147,17 +147,23 @@
     "T001": {
       "status": "DONE",
       "did": "Added the failing-first regression test asserting OpenCode dispatches `opencode run \"…\"` (no `-p`) while Qwen/Copilot keep their `-p ` prompt flag.",
-      "files": ["src/ai-providers/__tests__/openCodeDispatch.test.ts"]
+      "files": [
+        "src/ai-providers/__tests__/openCodeDispatch.test.ts"
+      ]
     },
     "T002": {
       "status": "DONE",
       "did": "Overrode `cliPromptFlag()` to return `'run '` in OpenCodeProvider and corrected its class doc comment to the `opencode run` form.",
-      "files": ["src/ai-providers/openCodeProvider.ts"]
+      "files": [
+        "src/ai-providers/openCodeProvider.ts"
+      ]
     },
     "T003": {
       "status": "DONE",
       "did": "Corrected the base-class `cliPromptFlag()` doc comment to drop OpenCode from the `-p ` default note and explain OpenCode's positional `run ` override.",
-      "files": ["src/ai-providers/cliTerminalProvider.ts"]
+      "files": [
+        "src/ai-providers/cliTerminalProvider.ts"
+      ]
     },
     "T004": {
       "status": "DONE",

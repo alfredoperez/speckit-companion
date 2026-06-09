@@ -4,7 +4,7 @@
   "branch": "122-fix-upgrade-ai-agent",
   "selectedAt": "2026-06-04T21:00:59.162Z",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
@@ -116,52 +116,72 @@
     "T002": {
       "status": "DONE",
       "did": "Extracted `detectHostIde()` into a standalone exported function and made the instance method delegate, with `HostIde` now exported.",
-      "files": ["src/ai-providers/ideChatProvider.ts"]
+      "files": [
+        "src/ai-providers/ideChatProvider.ts"
+      ]
     },
     "T003": {
       "status": "DONE",
       "did": "Created the pure total `resolveSpecKitAgent` resolver, the `PROVIDER_TO_AGENT` map, and the impure `getConfiguredSpecKitAgent` wrapper.",
-      "files": ["src/speckit/specKitAgent.ts"]
+      "files": [
+        "src/speckit/specKitAgent.ts"
+      ]
     },
     "T004": {
       "status": "DONE",
       "did": "Routed both `upgradeProject` and `upgradeAll` dispatch sites through `getConfiguredSpecKitAgent()`, removing the hardcoded `claude-code`.",
-      "files": ["src/speckit/detector.ts"]
+      "files": [
+        "src/speckit/detector.ts"
+      ]
     },
     "T005": {
       "status": "DONE",
       "did": "Added resolver tests asserting gemini/copilot/codex/qwen/opencode each map to their own agent.",
-      "files": ["src/speckit/specKitAgent.test.ts"]
+      "files": [
+        "src/speckit/specKitAgent.test.ts"
+      ]
     },
     "T006": {
       "status": "DONE",
       "did": "Added an `upgradeProject` dispatch test asserting the terminal text contains `--ai codex` and no `claude-code`.",
-      "files": ["src/speckit/detector.test.ts"]
+      "files": [
+        "src/speckit/detector.test.ts"
+      ]
     },
     "T007": {
       "status": "DONE",
       "did": "Added tests for `claude`→`claude` and a guard that no provider/host combination ever yields `claude-code`.",
-      "files": ["src/speckit/specKitAgent.test.ts"]
+      "files": [
+        "src/speckit/specKitAgent.test.ts"
+      ]
     },
     "T008": {
       "status": "DONE",
       "did": "Added default-provider dispatch tests for both upgrade paths plus the same-`--ai`-value (FR-006) check.",
-      "files": ["src/speckit/detector.test.ts"]
+      "files": [
+        "src/speckit/detector.test.ts"
+      ]
     },
     "T009": {
       "status": "DONE",
       "did": "Added tests for `claude-vscode`, each `ide-chat` host, unknown-host, and undefined/empty/unrecognized fallback.",
-      "files": ["src/speckit/specKitAgent.test.ts"]
+      "files": [
+        "src/speckit/specKitAgent.test.ts"
+      ]
     },
     "T010": {
       "status": "DONE",
       "did": "Removed both `speckit.workflowEditor.enabled` references (config-keys block and troubleshooting item) from the docs.",
-      "files": ["docs/how-it-works.md"]
+      "files": [
+        "docs/how-it-works.md"
+      ]
     },
     "T011": {
       "status": "DONE",
       "did": "Deleted the unused `ConfigKeys.workflowEditorEnabled` constant.",
-      "files": ["src/core/constants.ts"]
+      "files": [
+        "src/core/constants.ts"
+      ]
     },
     "T012": {
       "status": "DONE",

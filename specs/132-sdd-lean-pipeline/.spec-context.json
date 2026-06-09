@@ -3,7 +3,7 @@
   "specName": "Pipeline + the sdd-lean Preset",
   "branch": "132-sdd-lean-pipeline",
   "currentStep": "implement",
-  "status": "implementing",
+  "status": "completed",
   "updated": "2026-06-08",
   "history": [
     {

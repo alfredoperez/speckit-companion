@@ -4,20 +4,40 @@
   "branch": "124-fix-footer-button-visibility",
   "selectedAt": "2026-06-05T19:24:41.188Z",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "type": "docs",
   "next": "done",
   "auto": false,
   "workingBranch": "docs/clarify-setup-components",
   "loadedDomains": [],
-  "files_modified": ["README.md"],
+  "files_modified": [
+    "README.md"
+  ],
   "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/198",
   "prNumber": 198,
   "last_action": "PR #198 opened — docs: clarify required components and extension-vs-CLI relationship.",
   "task_summaries": {
-    "T001": { "status": "DONE", "did": "Added '## Setup & Components' section after Getting Started with a 4-row Required/Optional component table.", "files": ["README.md"] },
-    "T002": { "status": "DONE", "did": "Wrote extension-dispatch-vs-terminal and shared-files ownership prose; linked the providers section and docs/how-it-works.md.", "files": ["README.md"] },
-    "T003": { "status": "DONE", "did": "Cross-checked against IDE Chat / Claude in VS Code notes for consistency; npm test (790 tests, docs-consistency) green and no hard wraps.", "files": ["README.md"] }
+    "T001": {
+      "status": "DONE",
+      "did": "Added '## Setup & Components' section after Getting Started with a 4-row Required/Optional component table.",
+      "files": [
+        "README.md"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Wrote extension-dispatch-vs-terminal and shared-files ownership prose; linked the providers section and docs/how-it-works.md.",
+      "files": [
+        "README.md"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Cross-checked against IDE Chat / Claude in VS Code notes for consistency; npm test (790 tests, docs-consistency) green and no hard wraps.",
+      "files": [
+        "README.md"
+      ]
+    }
   },
   "approach": "Add one README 'Setup & Components' section after Getting Started with a Required/Optional table plus prose on extension dispatch vs. terminal spec-kit and shared-files ownership.",
   "step_summaries": {
@@ -30,7 +50,9 @@
     "plan": {
       "approach_summary": "Add one README 'Setup & Components' section after Getting Started with a Required/Optional table plus prose on extension dispatch vs. terminal spec-kit and shared-files ownership.",
       "files_planned": 1,
-      "risks": ["Wording must stay consistent with existing IDE Chat / Claude in VS Code provider notes (one-way dispatch, spec-kit-must-be-initialized)."],
+      "risks": [
+        "Wording must stay consistent with existing IDE Chat / Claude in VS Code provider notes (one-way dispatch, spec-kit-must-be-initialized)."
+      ],
       "principles_concerns": 0,
       "domain_concerns": 0,
       "significance_score": 0
@@ -41,7 +63,10 @@
       "step": "specify",
       "substep": null,
       "kind": "start",
-      "from": { "step": null, "substep": null },
+      "from": {
+        "step": null,
+        "substep": null
+      },
       "by": "extension",
       "at": "2026-06-05T19:24:41.188Z"
     },
@@ -56,7 +81,10 @@
       "step": "plan",
       "substep": null,
       "kind": "start",
-      "from": { "step": "specify", "substep": null },
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
       "by": "ai",
       "at": "2026-06-05T19:38:14Z"
     },
@@ -71,7 +99,10 @@
       "step": "tasks",
       "substep": null,
       "kind": "start",
-      "from": { "step": "plan", "substep": null },
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
       "by": "ai",
       "at": "2026-06-05T19:39:15Z"
     },
@@ -86,7 +117,10 @@
       "step": "implement",
       "substep": "phase1",
       "kind": "start",
-      "from": { "step": "tasks", "substep": null },
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
       "by": "ai",
       "at": "2026-06-05T19:41:14Z"
     },

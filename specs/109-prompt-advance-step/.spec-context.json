@@ -20,7 +20,7 @@
       "key_finding": "promptBuilder.ts already centralizes preamble rendering through renderPreamble + renderLifecycleBody, and has COMPLETED_STATUS_BY_STEP / DONE_PHRASE_BY_STEP step-keyed maps — the next-step map fits the same pattern."
     }
   },
-  "status": "implementing",
+  "status": "completed",
   "task_summaries": {
     "T001": {
       "status": "DONE",
