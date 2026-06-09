@@ -6,7 +6,15 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- **Template profiles** (#132): new `speckit.companion.templateProfile` setting (`standard` | `lean` | `off`, default `standard`) selects the spec-kit pipeline shape. `standard` = stock commands with better timing capture; `lean` = trimmed commands (no user-story section, files/dependencies tasks, smaller spec folder); `off` = plain stock spec-kit. Selecting a profile reconciles the two `companion-standard` / `companion-lean` presets (mutually exclusive — switching removes the other) and persists to `.specify/companion.yml` as the source of truth. A per-spec override is available from the spec's right-click menu (**Template Profile → Standard / Lean**), recorded in `.spec-context.json`; the viewer then dispatches the lean `/speckit.companion.*` commands for that spec. Both profiles bake timing instructions into every command body (fixing duplicate-start and burst-stamped substeps in the captured durations). The presets and the opt-in `/speckit.companion.*` commands ship with the spec-kit extension; see `docs/template-profiles.md`.
+- **Template profiles** (#132): a new `speckit.companion.templateProfile` setting (`standard` | `lean` | `off`, default `standard`) picks the shape of the spec-kit pipeline. `standard` runs the stock commands; `lean` produces a trimmed shape — a spec with no user-story section, tasks grouped by files/dependencies, and a smaller spec folder; `off` falls back to plain stock spec-kit. Switching the setting activates the matching profile (the two are mutually exclusive). You can also override the profile for a single spec from its right-click menu (**Template Profile → Standard / Lean**), and the viewer runs that spec's pipeline in the chosen shape. See `docs/template-profiles.md`.
+
+### Changed
+
+- **More accurate timing in the activity panel** (#215): per-task and per-substep durations are now measured from single finish events rather than reconstructed from start/complete pairs. This removes the `0s` ticks, the unattributed gaps between tasks, and the substep "bursts" that previously showed up in the timeline, so per-step and per-task durations read accurately. See `docs/capture-and-timing.md`.
+
+### Fixed
+
+- **The template-profile setting now actually switches profiles** (#215): toggling `speckit.companion.templateProfile` used to record your choice but never activate the matching profile, so the default `standard` was effectively inert. Changing the setting now takes effect immediately, with no manual command.
 
 ## [0.22.0] - 2026-06-07
 

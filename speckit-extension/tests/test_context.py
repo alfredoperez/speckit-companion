@@ -108,9 +108,9 @@ class LifecycleCaptureTests(unittest.TestCase):
         wc.update_context(self.fd, "plan", "planned", "extension")
         self.assertEqual(_ctx(self.fd)["reviewComments"], [{"id": "rc1", "comment": "keep me"}])
 
-    def test_per_task_writes_start_and_complete_per_task(self) -> None:
-        # Each fresh task is journaled deterministically by the hook as a paired
-        # start+complete (the AI no longer journals timing live).
+    def test_per_task_writes_single_finish_per_task(self) -> None:
+        # Finish-only: the backstop journals each fresh task as ONE `complete`
+        # event (no start+complete pair → no 0s tick).
         (self.fd / "tasks.md").write_text(
             _tasks("- [x] **T001** a", "- [x] **T002** b", "- [ ] **T003** c")
         )
@@ -120,13 +120,80 @@ class LifecycleCaptureTests(unittest.TestCase):
         self.assertEqual(distinct, ["T001", "T002"])
         for tid in ("T001", "T002"):
             kinds = [t["kind"] for t in _ctx(self.fd)["history"] if t.get("task") == tid]
-            self.assertEqual(sorted(kinds), ["complete", "start"])
+            self.assertEqual(kinds, ["complete"])
         self.assertEqual(_ctx(self.fd)["status"], "implementing")
         self.assertEqual(_ctx(self.fd)["currentTask"], "T003")
         # Idempotent: a second sync adds nothing.
         before = len(_ctx(self.fd)["history"])
         wc.sync_tasks(self.fd, tasks_md, "implemented", "extension")
         self.assertEqual(len(_ctx(self.fd)["history"]), before)
+
+    def test_journal_task_finish_single_event_and_idempotent(self) -> None:
+        # Live path: one finish event per task, no per-task start; re-running is a no-op.
+        wc.update_context(self.fd, "implement", "implementing", "extension")
+        wc.journal_task_finish(self.fd, "T001", "ai")
+        wc.journal_task_finish(self.fd, "T001", "ai")  # idempotent
+        t001 = [t for t in _ctx(self.fd)["history"] if t.get("task") == "T001"]
+        self.assertEqual([t["kind"] for t in t001], ["complete"])
+        self.assertEqual(t001[0]["by"], "ai")
+        self.assertEqual(_ctx(self.fd)["currentTask"], "T001")
+
+    def test_backstop_journals_after_implement_self_closed(self) -> None:
+        # Same-step guard: status already "implemented" must NOT block per-task
+        # journaling (the backstop fills the journal regardless of AI behavior).
+        target = self.fd / ".spec-context.json"
+        wc.update_context(self.fd, "implement", "implementing", "extension")
+        wc.journal_task_finish(self.fd, "T001", "ai")  # one task live-journaled
+        ctx = _ctx(self.fd)
+        ctx["status"] = "implemented"  # AI self-closed before the rest were journaled
+        target.write_text(json.dumps(ctx))
+        tasks_md = self.fd / "tasks.md"
+        tasks_md.write_text(_tasks("- [x] **T001** a", "- [x] **T002** b", "- [x] **T003** c"))
+        wc.sync_tasks(self.fd, tasks_md, "implemented", "extension")
+        distinct = list(dict.fromkeys(t["task"] for t in _ctx(self.fd)["history"] if t.get("task")))
+        self.assertEqual(distinct, ["T001", "T002", "T003"])  # backstop filled T002, T003
+        t001 = [t for t in _ctx(self.fd)["history"] if t.get("task") == "T001"]
+        self.assertEqual(len(t001), 1, "live T001 must not be duplicated by the backstop")
+
+    def test_cross_step_terminal_blocks_per_task(self) -> None:
+        # A genuinely shipped spec (completed/archived) is never resurrected.
+        target = self.fd / ".spec-context.json"
+        wc.update_context(self.fd, "implement", "implementing", "extension")
+        ctx = _ctx(self.fd)
+        ctx["status"] = "completed"
+        target.write_text(json.dumps(ctx))
+        wc.journal_task_finish(self.fd, "T009", "ai")
+        self.assertFalse(any(t.get("task") == "T009" for t in _ctx(self.fd)["history"]))
+
+    def test_parse_task_markers_accepts_plain_and_bold(self) -> None:
+        # The standard tasks-template writes plain `- [x] T001`; the lean/companion
+        # bodies write bold `- [x] **T001**`. Both formats must be detected, and a
+        # checkbox without a task id is ignored.
+        (self.fd / "tasks.md").write_text(_tasks(
+            "- [x] T001 plain done",
+            "- [ ] T002 plain pending",
+            "- [x] **T003** bold done",
+            "- [x] Setup something (no id, ignored)",
+        ))
+        all_ids, done_ids = wc.parse_task_markers(self.fd / "tasks.md")
+        self.assertEqual(all_ids, ["T001", "T002", "T003"])
+        self.assertEqual(done_ids, ["T001", "T003"])
+
+    def test_sync_tasks_journals_plain_format(self) -> None:
+        # A standard-format (non-bold) tasks.md must journal per-task finishes and
+        # close the implement step — the marker-format gap fix.
+        (self.fd / "tasks.md").write_text(_tasks(
+            "- [x] T001 [P] do one",
+            "- [x] T002 do two",
+        ))
+        wc.sync_tasks(self.fd, self.fd / "tasks.md", "implemented", "extension")
+        ctx = _ctx(self.fd)
+        distinct = list(dict.fromkeys(t["task"] for t in ctx["history"] if t.get("task")))
+        self.assertEqual(distinct, ["T001", "T002"])
+        for tid in ("T001", "T002"):
+            kinds = [t["kind"] for t in ctx["history"] if t.get("task") == tid]
+            self.assertEqual(kinds, ["complete"])  # finish-only, no 0s pair
+        self.assertEqual(ctx["status"], "implemented")  # all checked → step closed
 
     def test_hook_skips_tasks_already_journaled(self) -> None:
         # If a task id is already journaled (e.g. a leftover live entry), the hook

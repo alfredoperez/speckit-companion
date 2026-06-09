@@ -170,6 +170,10 @@ A change under `speckit-extension/` updates **its** README/CHANGELOG/version, **
 
 When in doubt, look at how an existing feature is documented and follow the same pattern.
 
+### Changelog voice
+
+Changelog entries are **release notes for users**, not commit messages. Lead with the observable change — what a user can now do, or what stopped going wrong. Keep the things users actually touch: setting keys (`speckit.companion.templateProfile`), command names (`/speckit.companion.resume`), config files they edit, and the install commands they run. **Drop internal file and symbol names** — `promptBuilder.ts`, `stepHistoryDerivation`, `sync_tasks()`, `write-context.py --task …`, `CROSS_STEP_TERMINAL`, on-disk field names like `history[]`/`transitions[]`. Those belong in the commit message or PR description, where a maintainer chasing the mechanism will find them. The test: would the entry make sense to someone who has never opened `src/`? If it only lands for someone who has, it's too deep — move the mechanism out and keep the effect. This applies to both changelogs (root and `speckit-extension/`).
+
 ### Markdown formatting
 
 **No hard-wrapped paragraphs.** Every prose paragraph in any `.md` file in this repo (`README.md`, `CHANGELOG.md`, `CLAUDE.md`, anything under `docs/`, `specs/`, etc.) is a single logical line. Do not insert newlines mid-paragraph to fit a column width — modern editors soft-wrap, and hard-wrapping makes diffs noisier and edits harder. The only newlines inside a paragraph come from explicit Markdown breaks (two trailing spaces or `<br>`); the only newlines between paragraphs are blank-line separators. Bullets, table rows, code blocks, and headings remain on their own lines as usual.
@@ -259,5 +263,5 @@ They exist so the viewer can be opened against a known state during development.
 - 044-context-driven-badges: Added TypeScript 5.3+ (ES2022 target, strict mode) + VS Code Extension API (`@types/vscode ^1.84.0`)
 
 <!-- SPECKIT START -->
-For additional context about technologies to be used, project structure, shell commands, and other important information, read the current plan: `specs/132-sdd-lean-pipeline/plan.md`
+For additional context about technologies to be used, project structure, shell commands, and other important information, read the current plan: `specs/133-timing-fidelity-v2/plan.md`
 <!-- SPECKIT END -->

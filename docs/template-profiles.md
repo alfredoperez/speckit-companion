@@ -78,7 +78,7 @@ The feature carries **no "sdd"** tokens. Canonical names: presets `companion-sta
 ## Areas to improve (open)
 
 - **14 hand-maintained bodies** (7 commands × 2 profiles) drift against upstream stock + the timing partial. Mitigation: `companion-standard` is a verbatim stock copy + the one shared partial; the parity check locks the partial. A generator could reduce hand-maintenance.
-- **Best-effort cadence** — per-task `date -u` can still burst on fast tasks; the eval catches it but the partial can't guarantee live stamping.
-- **Catalog-add seam** — the runtime toggle's `specify preset add companion-*` needs the preset published to a catalog; until then it applies only via `--dev` scaffolding (the toggle silently no-ops in an unpublished project; `off` is the escape hatch).
+- **Best-effort cadence** — substep/self-close `date -u` stamps are still hand-authored second-precision; per-task timing is now finish-only via a script (`write-context.py --task <id> --kind complete`), which the eval grades by honest deltas (see `docs/capture-and-timing.md`).
+- **Catalog-add seam — fixed** — the runtime toggle now installs the `add` op from the bundled path (`specify preset add --dev .specify/extensions/companion/presets/<id>`) instead of catalog-form `add <id>`, so toggling `speckit.companion.templateProfile` activates the matching preset with no manual command. `enable`/`remove` stay id-form; `off` removes both.
 - **Per-spec control** — the specify-step Standard/Lean affordance + the `profile` field in `.spec-context.json` + the GUI dispatch-by-profile logic are a workstream beyond the preset/reconciler core.
 - **Lean plan/tasks templates** — viable later where template overrides flow via the setup scripts (see Mechanism).
