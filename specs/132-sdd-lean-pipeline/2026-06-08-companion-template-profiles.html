@@ -96,7 +96,7 @@
 <body>
   <div class="wrap">
     <header>
-      <div class="meta"><span>2026-06-08</span><span>·</span><span class="badge b-keep">shipped</span><span class="badge b-keep">854 tests green</span><span class="badge b-info">review-fixed</span></div>
+      <div class="meta"><span>2026-06-08</span><span>·</span><span>revised 2026-06-09</span><span>·</span><span class="badge b-keep">shipped</span><span class="badge b-keep">854 tests green</span><span class="badge b-info">review-fixed</span></div>
       <h1>Companion Template Profiles</h1>
       <p class="sub">Two profiles for the spec-kit pipeline. <b>Standard</b> = the stock commands, unchanged, with better timing. <b>Lean</b> = the same commands with specific sections trimmed or replaced. Here's exactly what changes, command by command, section by section.</p>
     </header>
@@ -106,7 +106,7 @@
       <p style="font-size:14.5px">SpecKit Companion runs the spec-kit pipeline in <b>two profiles</b> (plus off). Pick a default for the project, and flip a single spec to lean from its right-click menu.</p>
       <div class="pair">
         <div class="side a"><span class="lbl">standard — default</span><ul><li>Stock commands — <b>same sections, same files</b></li><li>Nothing reshaped; only better timing added</li><li>Closest to upstream spec-kit</li></ul></div>
-        <div class="side b"><span class="lbl">lean — opt in</span><ul><li>Same commands, <b>trimmed</b> — no user stories, files/deps tasks</li><li>Smaller spec folder (3 files vs 8)</li><li>Modifies the <b>command bodies</b>; document templates left stock</li></ul></div>
+        <div class="side b"><span class="lbl">lean — opt in</span><ul><li>Same commands, <b>trimmed</b> — no user stories, files/deps tasks</li><li>Smaller spec folder — spec/plan/tasks + requirements checklist; side files on demand</li><li>Modifies the <b>command bodies</b>; document templates left stock</li></ul></div>
       </div>
       <p style="font-size:13.5px;margin-top:10px"><code>off</code> = plain stock spec-kit, no overrides at all.</p>
     </section>
@@ -131,9 +131,10 @@
       <div class="lean-h">Lean</div>
       <div class="secrow"><div class="secname">User Scenarios &amp; Testing<span class="meta-s">user stories P1/P2/P3, acceptance tables, edge cases</span></div><div class="secnote"><span class="tag t-replace">replaced</span> by a 1–3 line <b>Overview</b> of intent; edge cases fold into requirements</div></div>
       <div class="secrow"><div class="secname">Functional Requirements<span class="meta-s">FR-001…</span></div><div class="secnote"><span class="tag t-keep">kept</span> testable FR list stays</div></div>
-      <div class="secrow"><div class="secname">Key Entities<span class="meta-s">data shapes</span></div><div class="secnote"><span class="tag t-move">moved</span> to <code>data-model.md</code> — only when the feature has entities</div></div>
+      <div class="secrow"><div class="secname">Key Entities<span class="meta-s">data shapes</span></div><div class="secnote"><span class="tag t-move">moved</span> to <code>data-model.md</code> — only when it helps a dev build the change</div></div>
       <div class="secrow"><div class="secname">Success Criteria<span class="meta-s">SC-001…</span></div><div class="secnote"><span class="tag t-keep">kept</span></div></div>
       <div class="secrow"><div class="secname">Assumptions</div><div class="secnote"><span class="tag t-keep">kept</span></div></div>
+      <div class="secrow"><div class="secname">Spec quality checklist<span class="meta-s">checklists/requirements.md</span></div><div class="secnote"><span class="tag t-keep">kept</span> a lean checklist (no user-story items), graded in one self-check pass</div></div>
     </div>
 
     <!-- CLARIFY -->
@@ -156,7 +157,7 @@
       <div class="secrow"><div class="secname">Project Structure<span class="meta-s">dual-option doc + source trees</span></div><div class="secnote"><span class="tag t-replace">replaced</span> by a lean <b>Approach &amp; Structure</b> (real files/deps, in order)</div></div>
       <div class="secrow"><div class="secname">Complexity Tracking</div><div class="secnote"><span class="tag t-remove">removed</span> unless there's a real violation to justify</div></div>
       <div class="secrow"><div class="secname">Out of Scope</div><div class="secnote"><span class="tag t-new">new</span> explicit non-goals</div></div>
-      <div class="secrow"><div class="secname">Side files<span class="meta-s">research / data-model / contracts / quickstart</span></div><div class="secnote"><span class="tag t-move">folded / conditional</span> research → into plan; data-model + contracts only when relevant; quickstart dropped</div></div>
+      <div class="secrow"><div class="secname">Side files<span class="meta-s">research / data-model / contracts / quickstart</span></div><div class="secnote"><span class="tag t-move">assess on demand</span> each created only when it helps a dev understand/build the change; otherwise folded into <code>plan.md</code></div></div>
     </div>
 
     <!-- TASKS -->
@@ -204,9 +205,9 @@
     <section>
       <div class="pair">
         <div class="side a"><span class="lbl">standard · 8 files</span><ul><li>spec.md + checklists/requirements.md</li><li>plan.md + research.md + data-model.md</li><li>contracts/* + quickstart.md</li><li>tasks.md</li></ul></div>
-        <div class="side b"><span class="lbl">lean · 3 (+2 conditional)</span><ul><li>spec.md · plan.md · tasks.md</li><li>+ data-model.md <em>(if entities)</em></li><li>+ contracts/ <em>(if it exposes an interface)</em></li><li>research → folded into plan.md</li></ul></div>
+        <div class="side b"><span class="lbl">lean · 4 + on-demand side files</span><ul><li>spec.md · plan.md · tasks.md · checklists/requirements.md</li><li>+ data-model.md / contracts/ / research.md / quickstart.md</li><li><em>each only when it helps build the change</em></li></ul></div>
       </div>
-      <p class="card-meta">The whole file delta is in <code>plan</code> (4 side files) and <code>specify</code> (the requirements checklist). Standard always keeps all of them.</p>
+      <p class="card-meta">Lean keeps the requirements checklist; the file delta vs standard is the <code>plan</code> side files (research / data-model / contracts / quickstart), now created on demand rather than always. Standard always keeps all of them.</p>
     </section>
 
     <!-- ============ SELECTION ============ -->
