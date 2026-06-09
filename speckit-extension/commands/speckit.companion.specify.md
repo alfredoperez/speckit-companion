@@ -47,7 +47,7 @@ Produce a lean specification — **no user-story / user-scenario section**. Capt
 
    ## Requirement Completeness
 
-   - [ ] No [NEEDS CLARIFICATION] markers remain
+   - [ ] Any [NEEDS CLARIFICATION] markers are genuine ambiguities (≤3) deferred to clarify — not unresolved guesses
    - [ ] Each Functional Requirement is a single, testable MUST/SHOULD statement
    - [ ] Success criteria are measurable
    - [ ] Success criteria are technology-agnostic (no implementation details)

@@ -34,7 +34,7 @@ So template overrides are **mixed** (work for plan/tasks, no-op for specify). Co
 
 | File | Lean treatment |
 |---|---|
-| `spec.md` | **redo** — User Scenarios (user stories) → replaced by a 1–3 line Overview; Key Entities → moved to `data-model.md` (if any); keep Functional Requirements, Success Criteria, Assumptions. |
+| `spec.md` | **redo** — User Scenarios (user stories) → replaced by a 1–3 line Overview; Key Entities → moved to `data-model.md` only when it helps build the change (assess on demand); keep Functional Requirements, Success Criteria, Assumptions. |
 | `checklists/requirements.md` | **keep** — a lean quality checklist (no user-story / acceptance-scenario items), graded in a single self-check pass; the FR/SC list still lives in `spec.md`. |
 | `plan.md` | **redo** — drop the dual-option Project Structure tree + Complexity Tracking; replace with a lean Approach & Structure (files/deps); add Out of Scope; keep Summary, Technical Context, short Constitution Check. |
 | `research.md` | **assess on demand** — create only for real unknowns/trade-offs worth their own file; otherwise fold a compact Decisions note into `plan.md`. |
