@@ -53,7 +53,20 @@ export function decidePresetOps(
     return add ? [...removes, add] : removes;
 }
 
+/**
+ * Bundled preset location in a consumer project (installed by the companion
+ * spec-kit extension), mirroring the `.specify/extensions/companion/scripts/`
+ * convention. Forward-slash literal so the CLI string is identical on every OS.
+ */
+const BUNDLED_PRESETS_REL = '.specify/extensions/companion/presets';
+
 export function presetCommandFor(op: PresetOp): string {
+    // The presets are bundled locally, never published to a catalog, so catalog-form
+    // `add <id>` silently no-ops. Install the `add` from the bundled path with --dev;
+    // once registered, `enable`/`remove` act on it by id.
+    if (op.action === 'add') {
+        return `specify preset add --dev ${BUNDLED_PRESETS_REL}/${op.id}`;
+    }
     return `specify preset ${op.action} ${op.id}`;
 }
 

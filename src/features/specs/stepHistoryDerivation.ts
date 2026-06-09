@@ -178,38 +178,50 @@ function groupStepsInOrder(transitions: HistoryEntry[]): RawStep[] {
 }
 
 /**
- * Build substep rows. Substep entries come in two shapes per the writers:
- *   - start:      `{ substep: 'X', from: { substep: null } }`
- *   - completion: `{ substep: 'X', from: { substep: 'X'  } }`  // self-loop
- * Pair a start with its matching completion (same substep name, completion
- * shape) when adjacent. Without a paired completion, fall through to
- * "started, ended at next substep's start" so legacy entries that only
- * record substep boundaries still render correctly.
+ * Build substep/task rows under the finish-only model.
+ *
+ * Each substep or task records a single finish event (`kind: 'complete'`); its
+ * duration is the gap from the *previous* finish (or the step's start, for the
+ * first) to its own finish. This is what kills the `0s` tick (no start==complete
+ * pair) and the inter-task gap (no complete→start dead time).
+ *
+ * Handles three entry shapes in one pass:
+ *   - finish-only `complete` (the model)  → delta row: prevEnd → this finish
+ *   - legacy `start`+`complete` pair       → its real recorded span: start → complete
+ *   - legacy single boundary marker        → start → the next marker (old behavior)
+ * so migrated specs and fixtures still render their real spans.
  */
-function buildSubsteps(stepTxs: HistoryEntry[], fallbackEnd: string | null): SubstepEntry[] {
+function buildSubsteps(
+    stepTxs: HistoryEntry[],
+    fallbackEnd: string | null,
+    stepStart: string,
+): SubstepEntry[] {
     const subs = stepTxs.filter(t => t.substep !== null && t.substep !== undefined);
     const out: SubstepEntry[] = [];
+    let prevEnd = stepStart;
     for (let i = 0; i < subs.length; i++) {
         const s = subs[i];
-        // A completion entry has `from.substep === substep`. A start has
-        // `from.substep == null` (or a different name). Skip completion
-        // entries here — they're consumed by the preceding start, not
-        // rendered as their own row.
-        const isCompletion = s.kind === 'complete';
-        if (isCompletion) continue;
-
         const next = subs[i + 1];
-        const nextIsMatchingCompletion =
-            next && next.substep === s.substep && next.kind === 'complete';
-        out.push({
-            name: s.substep as string,
-            startedAt: s.at,
-            completedAt: nextIsMatchingCompletion
-                ? next.at
-                : next
-                    ? next.at  // legacy: next substep's start ends this one
-                    : fallbackEnd,
-        });
+        if (s.kind === 'complete') {
+            // Finish-only (the model): a standalone finish. Its duration is the gap
+            // from the previous finish (or the step start) to this finish.
+            const completedAt = s.at ?? fallbackEnd;
+            out.push({ name: s.substep as string, startedAt: prevEnd, completedAt });
+            prevEnd = completedAt ?? prevEnd;   // advance to the effective end, not just s.at
+            continue;
+        }
+        if (next && next.substep === s.substep && next.kind === 'complete') {
+            // Legacy start+complete pair → render its real recorded span.
+            out.push({ name: s.substep as string, startedAt: s.at, completedAt: next.at });
+            prevEnd = next.at;
+            i++; // consume the paired complete
+            continue;
+        }
+        // Legacy single boundary marker (start / no kind): ends at the next marker's
+        // timestamp, or the step's end if it's the last.
+        const completedAt = next ? next.at : fallbackEnd;
+        out.push({ name: s.substep as string, startedAt: s.at, completedAt });
+        prevEnd = completedAt ?? prevEnd;
     }
     return out;
 }
@@ -267,7 +279,7 @@ export function deriveStepHistory(
             completedAt = g.transitions[g.transitions.length - 1].at;
         }
 
-        const substeps = buildSubsteps(g.transitions, completedAt);
+        const substeps = buildSubsteps(g.transitions, completedAt, startedAt);
 
         const entry: StepHistoryEntry = { startedAt, completedAt };
         if (substeps.length > 0) entry.substeps = substeps;

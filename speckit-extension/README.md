@@ -62,7 +62,7 @@ Full reference: [docs/commands.md](./docs/commands.md).
 
 The extension ships two selectable presets that reshape the spec-kit pipeline: **`companion-standard`** (the stock commands, unchanged, with better timing baked in) and **`companion-lean`** (the same commands trimmed — no user-story section, lean plan, files/dependencies tasks). Both override the 7 pipeline commands (`specify`, `clarify`, `plan`, `tasks`, `analyze`, `implement`, `constitution`); `checklist` and `taskstoissues` stay on stock.
 
-Pick a project default with the `speckit.companion.templateProfile` VS Code setting (`standard` | `lean` | `off`), which reconciles the two presets so only one is installed. Override per spec from the spec's right-click menu. The four opt-in `/speckit.companion.*` commands above are the per-spec lean path; a `scripts/check-shape-parity.py` guard keeps them in lockstep with the `companion-lean` bodies, and asserts every body carries the shared timing partial. Full reference: [`../docs/template-profiles.md`](../docs/template-profiles.md).
+Pick a project default with the `speckit.companion.templateProfile` VS Code setting (`standard` | `lean` | `off`), which reconciles the two presets so only one is installed — activating the matching preset from the bundled path with no manual command. Override per spec from the spec's right-click menu. The four opt-in `/speckit.companion.*` commands above are the per-spec lean path; a `scripts/check-shape-parity.py` guard keeps them in lockstep with the `companion-lean` bodies, and asserts every body carries the shared timing partial. Full reference: [`../docs/template-profiles.md`](../docs/template-profiles.md).
 
 ## Installation
 

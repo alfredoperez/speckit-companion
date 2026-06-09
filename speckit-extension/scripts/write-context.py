@@ -34,6 +34,10 @@ STEP_ORDER = {"specify": 0, "clarify": 1, "plan": 2, "tasks": 3, "analyze": 4, "
 # A spec at one of these statuses must never be dragged backward by a hook that
 # fires after an earlier step (e.g. after_specify re-resolving to a shipped spec).
 TERMINAL_STATUSES = {"implemented", "completed", "archived"}
+# Narrower guard for per-task / backstop writes: "implemented" is the implement
+# step's own same-step terminal, so per-task journaling is still allowed there;
+# only a genuinely shipped spec (completed/archived) is left untouched.
+CROSS_STEP_TERMINAL = {"completed", "archived"}
 
 PREFIX_RE = re.compile(r"^(\d+)-")
 
@@ -236,8 +240,11 @@ def fill_required(ctx: dict, feature_dir: Path, branch: str) -> None:
     ctx.setdefault("branch", branch)
 
 
-COMPLETED_TASK_RE = re.compile(r"^\s*[-*]\s*\[[xX]\]\s*\*\*(T\d+)")
-PENDING_TASK_RE = re.compile(r"^\s*[-*]\s*\[\s\]\s*\*\*(T\d+)")
+# `**` is optional: matches the lean/companion bold form `- [x] **T001**` AND the
+# standard tasks-template plain form `- [x] T001 …`. A `T\d+` is still required right
+# after the checkbox, so non-task checkboxes never false-match.
+COMPLETED_TASK_RE = re.compile(r"^\s*[-*]\s*\[[xX]\]\s*(?:\*\*)?(T\d+)")
+PENDING_TASK_RE = re.compile(r"^\s*[-*]\s*\[\s\]\s*(?:\*\*)?(T\d+)")
 
 
 def parse_task_markers(tasks_md: Path) -> tuple[list[str], list[str]]:
@@ -370,6 +377,50 @@ def update_context(
     return target
 
 
+def journal_task_finish(feature_dir: Path, task_id: str, by: str) -> Path | None:
+    """Append a SINGLE finish event for one implement task (finish-only model).
+
+    Called live by the assistant after each task (`--task <id> --kind complete`).
+    The delta to the previous finish (or the implement start) is the task's real
+    duration — no start/complete pair, so a task can never collapse to a 0s tick.
+    Idempotent (skips a task already closed) and same-step safe: it journals even
+    when implement already self-closed to `implemented`; only a genuinely shipped
+    spec (completed/archived) is left untouched.
+    """
+    target = feature_dir / ".spec-context.json"
+    ctx = read_ctx(target)
+    branch = _git_branch(_repo_root()) or "main"
+
+    if ctx.get("status") in CROSS_STEP_TERMINAL:
+        print(
+            f"[companion] {target} already at status={ctx.get('status')}; "
+            f"not journaling task {task_id}.",
+            file=sys.stderr,
+        )
+        return None
+
+    log = canonical_log(ctx)
+    fill_required(ctx, feature_dir, branch)
+    ctx["currentStep"] = "implement"
+    ctx["currentTask"] = task_id
+    if ctx.get("status") not in ("implemented", "completed", "archived"):
+        ctx["status"] = "implementing"
+    ctx["updated"] = _today()
+
+    if not _has_complete(log, "implement", task_id):
+        log.append({
+            "step": "implement",
+            "substep": task_id,
+            "task": task_id,
+            "kind": "complete",
+            "by": by,
+            "at": _now_iso(),
+        })
+    commit_log(ctx, log)
+    atomic_write(target, ctx)
+    return target
+
+
 def sync_tasks(feature_dir: Path, tasks_md: Path, final_status: str, by: str) -> Path | None:
     """Per-task journaling for the implement step.
 
@@ -383,10 +434,13 @@ def sync_tasks(feature_dir: Path, tasks_md: Path, final_status: str, by: str) ->
     branch = _git_branch(_repo_root()) or "main"
     ctx = read_ctx(target)
 
-    if ctx and _is_more_advanced(ctx, "implement"):
+    # Same-step safe: journal per-task even when implement already self-closed
+    # (status "implemented"), so the backstop fills the journal regardless of AI
+    # behavior. Only a genuinely shipped spec (completed/archived) is left alone.
+    if ctx.get("status") in CROSS_STEP_TERMINAL:
         print(
-            f"[companion] {target} already at currentStep={ctx.get('currentStep')} / "
-            f"status={ctx.get('status')}; not regressing to implement.",
+            f"[companion] {target} already at status={ctx.get('status')}; "
+            f"not regressing to implement.",
             file=sys.stderr,
         )
         return None
@@ -413,21 +467,11 @@ def sync_tasks(feature_dir: Path, tasks_md: Path, final_status: str, by: str) ->
     pending = [tid for tid in distinct_all if tid not in distinct_done]
     ctx["currentTask"] = (pending[0] if pending else (distinct_done[-1] if distinct_done else None))
 
-    # Per-task entries are substeps of implement (substep = task id). Each fresh
-    # task gets a start AND a complete, each stamped with the script's own real
-    # clock — deterministic capture that doesn't depend on the AI journaling live.
-    # (Per-task stamps land at end-of-step, so they share a tight window rather
-    # than reflecting live cadence — the accepted trade for reliability.)
+    # Finish-only backstop: append ONE finish per fresh task (no start/complete
+    # pair → no 0s tick). The live path (`--task <id> --kind complete`) already
+    # journaled tasks captured during the run; `_journaled_tasks` skips those, so
+    # this only fills gaps. Each is stamped with the script's own real clock.
     for tid in fresh:
-        log.append({
-            "step": "implement",
-            "substep": tid,
-            "task": tid,
-            "kind": "start",
-            "from": {"step": "implement", "substep": None},
-            "by": by,
-            "at": _now_iso(),
-        })
         log.append({
             "step": "implement",
             "substep": tid,
@@ -470,12 +514,16 @@ def main() -> int:
         "--tasks-file", default=None,
         help="Per-task journaling: append a transition per completed marker in this tasks.md.",
     )
+    parser.add_argument(
+        "--task", default=None,
+        help="Per-task finish (finish-only): append one complete event for this task id.",
+    )
     args = parser.parse_args()
 
     # Best-effort guard: a non-canonical step is a no-op, never a host failure.
     # Terminal state belongs in `status`, not `currentStep`. Skipped in task-sync
     # mode, which always operates on the implement step.
-    if not args.tasks_file and (args.step == "done" or args.step not in CANONICAL_STEPS):
+    if not args.tasks_file and not args.task and (args.step == "done" or args.step not in CANONICAL_STEPS):
         print(
             f"[companion] Skipping: '{args.step}' is not a canonical currentStep "
             f"({', '.join(sorted(CANONICAL_STEPS))}).",
@@ -504,6 +552,8 @@ def main() -> int:
             # ("specified") would be an incoherent terminal status here.
             final_status = args.status if args.status != parser.get_default("status") else "implemented"
             target = sync_tasks(feature_dir, tasks_md, final_status, args.by)
+        elif args.task:
+            target = journal_task_finish(feature_dir, args.task, args.by)
         else:
             target = update_context(feature_dir, args.step, args.status, args.by, args.kind)
     except Exception as exc:  # noqa: BLE001 - best-effort, swallow + report
@@ -511,7 +561,10 @@ def main() -> int:
         return 0
 
     if target is not None and not args.tasks_file:
-        print(f"[companion] Updated {target} (currentStep={args.step}, status={args.status}, kind={args.kind}, by={args.by})")
+        if args.task:
+            print(f"[companion] Journaled finish for task {args.task} in {target} (by={args.by})")
+        else:
+            print(f"[companion] Updated {target} (currentStep={args.step}, status={args.status}, kind={args.kind}, by={args.by})")
     return 0
 
 

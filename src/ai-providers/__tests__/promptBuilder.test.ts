@@ -85,39 +85,39 @@ describe('buildPrompt', () => {
             expect(out).toContain('never write "None"/"N/A"');
         });
 
-        it('tells implement NOT to journal timing — the end-of-step hook owns it', () => {
+        it('tells implement to journal each task finish via a script (finish-only)', () => {
             const out = buildPrompt({
                 command: '/speckit.implement x',
                 step: 'implement',
                 specDir: 'specs/001-demo',
             });
-            // The AI no longer hand-authors per-task JSON (that bursts); it just
-            // marks tasks done + writes summaries and lets the hook stamp timing.
-            expect(out).not.toContain('PER-TASK JOURNALING');
-            expect(out).toContain('Do NOT journal per-task timing');
+            // Finish-only: one script-stamped finish per task (reliable + honest deltas),
+            // no per-task start, no hand-authored JSON.
+            expect(out).toContain('finish-only');
+            expect(out).toContain('--task <TaskID> --kind complete --by ai');
+            expect(out).toContain('--feature-dir specs/001-demo');
             expect(out).toContain('task_summaries');
-            // implement does not self-close — the hook closes it.
+            // implement still does not self-close the STEP — the hook closes it.
             expect(out).not.toContain('Flip status to "implemented"');
-            expect(out).toContain('do NOT append a "complete" entry for implement');
+            expect(out).toContain('do NOT append a step-level "complete" entry for implement');
         });
 
-        it('never adds per-task journaling to any step', () => {
-            for (const step of ['specify', 'plan', 'tasks', 'analyze', 'implement'] as const) {
-                const out = buildPrompt({ command: 'x', step, specDir: 'specs/001-demo' });
-                expect(out).not.toContain('PER-TASK JOURNALING');
-            }
+        it('records each substep as a single finish (no start, no shared timestamp)', () => {
+            const out = buildPrompt({ command: 'x', step: 'plan', specDir: 'specs/001-demo' });
+            expect(out).toContain('SINGLE finish entry');
+            expect(out).toContain('never two sharing a timestamp');
         });
 
-        it('the multi-step lifecycle prompt defers per-task timing to the hook', () => {
+        it('the multi-step lifecycle prompt journals per-task finishes via the script', () => {
             const out = buildLifecyclePrompt('/sdd:auto x', 'specs/001-demo');
-            expect(out).not.toContain('PER-TASK JOURNALING');
-            expect(out).toContain('do NOT journal per-task timing');
+            expect(out).toContain('--task <TaskID> --kind complete --by ai');
+            expect(out).toContain('--feature-dir specs/001-demo');
         });
 
         it('specify does not self-close in the preamble — its command records completion', () => {
             const out = buildPrompt({ command: 'x', step: 'specify', specDir: 'specs/001-demo' });
             expect(out).not.toContain('Flip status to "specified"');
-            expect(out).toContain('do NOT append a "complete" entry for specify');
+            expect(out).toContain('do NOT append a step-level "complete" entry for specify');
         });
 
         it('returns raw command when step is unknown', () => {

@@ -74,6 +74,41 @@ describe('deriveStepHistory', () => {
         expect(subs[2]).toEqual({ name: 'detecting', startedAt: '2026-04-29T00:00:15Z', completedAt: '2026-04-29T00:01:00Z' });
     });
 
+    it('derives finish-only substeps from deltas, first anchored to the step start', () => {
+        // The model: one `complete` (finish) per substep; duration = gap to the
+        // previous finish, the first measured from the step start. No 0s ticks.
+        const transitions = [
+            tx({ step: 'plan', at: '2026-04-29T00:00:00Z' }),
+            tx({ step: 'plan', substep: 'research', kind: 'complete', by: 'ai', at: '2026-04-29T00:02:00Z' }),
+            tx({ step: 'plan', substep: 'design',   kind: 'complete', by: 'ai', at: '2026-04-29T00:05:00Z' }),
+            tx({ step: 'tasks', at: '2026-04-29T00:06:00Z' }),
+        ];
+        const out = deriveStepHistory(transitions, 'tasks');
+        const subs = out.plan.substeps!;
+        expect(subs).toHaveLength(2);
+        // research: step start → its finish (2 min), not a 0s tick
+        expect(subs[0]).toEqual({ name: 'research', startedAt: '2026-04-29T00:00:00Z', completedAt: '2026-04-29T00:02:00Z' });
+        // design: previous finish → its finish (3 min)
+        expect(subs[1]).toEqual({ name: 'design', startedAt: '2026-04-29T00:02:00Z', completedAt: '2026-04-29T00:05:00Z' });
+    });
+
+    it('derives finish-only per-task implement rows from deltas (no start, no 0s)', () => {
+        const transitions = [
+            tx({ step: 'implement', at: '2026-04-29T00:00:00Z' }),
+            tx({ step: 'implement', substep: 'T001', task: 'T001', kind: 'complete', by: 'ai', at: '2026-04-29T00:00:30Z' }),
+            tx({ step: 'implement', substep: 'T002', task: 'T002', kind: 'complete', by: 'ai', at: '2026-04-29T00:01:15Z' }),
+        ];
+        const out = deriveStepHistory(transitions, 'implement');
+        const subs = out.implement.substeps!;
+        expect(subs).toHaveLength(2);
+        expect(subs[0]).toEqual({ name: 'T001', startedAt: '2026-04-29T00:00:00Z', completedAt: '2026-04-29T00:00:30Z' });
+        expect(subs[1]).toEqual({ name: 'T002', startedAt: '2026-04-29T00:00:30Z', completedAt: '2026-04-29T00:01:15Z' });
+        // No row collapses to zero duration.
+        for (const s of subs) {
+            expect(s.startedAt).not.toBe(s.completedAt);
+        }
+    });
+
     it('omits substeps[] when the step has no non-null transitions', () => {
         const transitions = [
             tx({ step: 'specify', at: '2026-04-29T00:00:00Z' }),
