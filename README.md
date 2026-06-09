@@ -222,7 +222,7 @@ This applies to all providers that support it: Claude (`--permission-mode bypass
 
 ### Template Profiles
 
-Selects the spec-kit pipeline shape for the project. `standard` is the stock commands with better timing capture (same sections, same files); `lean` trims them (no user-story section, files/dependencies tasks, a smaller spec folder); `off` is plain stock spec-kit.
+Selects the spec-kit pipeline shape for the project. **Both command families are always installed** — this setting only routes which one a spec dispatches. `standard` runs the stock `/speckit.*` commands (same sections, same files, with better timing capture); `lean` runs the trimmed `/speckit.companion.*` commands (no user-story section, files/dependencies tasks, a smaller spec folder); `off` is plain upstream spec-kit.
 
 ```json
 {
@@ -232,11 +232,11 @@ Selects the spec-kit pipeline shape for the project. `standard` is the stock com
 
 | Value | Behavior |
 |-------|----------|
-| `"standard"` (default) | Installs the `companion-standard` preset — stock `/speckit.*` commands, unchanged, with timing baked in. |
-| `"lean"` | Installs the `companion-lean` preset — the same commands trimmed to the lean shape. |
-| `"off"` | Removes both presets; plain stock spec-kit. |
+| `"standard"` (default) | Routes to the stock `/speckit.*` commands — unchanged, with timing baked in. |
+| `"lean"` | Routes to the trimmed `/speckit.companion.*` commands — the lean shape. |
+| `"off"` | Plain upstream spec-kit — routes to the stock commands with no Companion behavior. |
 
-Selecting a profile reconciles the two presets (mutually exclusive) and persists to `.specify/companion.yml` (the source of truth). Override per spec from the spec's right-click menu (**Template Profile → Standard / Lean**), which the viewer honors when it dispatches commands. The preset and the opt-in `/speckit.companion.*` commands ship with the [spec-kit extension](./speckit-extension/README.md); full reference in [`docs/template-profiles.md`](./docs/template-profiles.md).
+Switching is **non-destructive**: neither command set is ever added, removed, or overwritten — only the dispatched shape changes, so you never hit "Unknown command" after a switch. The value persists to `.specify/companion.yml`, and each spec **pins** the project default the moment it's created, so changing the default never reshapes a spec already in flight. The lean `/speckit.companion.*` commands ship with the [spec-kit extension](./speckit-extension/README.md), and the stock `/speckit.*` family stays present automatically; full reference in [`docs/template-profiles.md`](./docs/template-profiles.md).
 
 ### Command Format
 

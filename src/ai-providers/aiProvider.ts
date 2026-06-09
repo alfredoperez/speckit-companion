@@ -390,14 +390,15 @@ export const PROVIDER_PATHS: Record<AIProviderType, ProviderPaths> =
 /**
  * Format a speckit command for the given provider.
  * Converts canonical dot format (speckit.specify) to provider-specific format.
- * E.g., for Claude/Codex: speckit.specify → speckit-specify
+ * E.g., for Claude/Codex: speckit.specify → speckit-specify,
+ * speckit.companion.specify → speckit-companion-specify.
  */
 export function formatCommandForProvider(command: string, providerType?: AIProviderType): string {
     const config = vscode.workspace.getConfiguration('speckit');
     const userFormat = config.get<string>('commandFormat', 'auto');
 
     if (userFormat === 'dash') {
-        return command.replace(/^speckit\./, 'speckit-');
+        return toDashCommand(command);
     }
     if (userFormat === 'dot') {
         return command;
@@ -407,9 +408,19 @@ export function formatCommandForProvider(command: string, providerType?: AIProvi
     const type = providerType ?? getConfiguredProviderType();
     const { commandFormat } = PROVIDER_PATHS[type];
     if (commandFormat === 'dash') {
-        return command.replace(/^speckit\./, 'speckit-');
+        return toDashCommand(command);
     }
     return command;
+}
+
+/**
+ * Dash form for the speckit family — every dot becomes a hyphen so namespaced
+ * commands match their registered skill name (`speckit.companion.specify` →
+ * `speckit-companion-specify`, not the malformed `speckit-companion.specify`).
+ * Non-speckit custom commands keep their dots.
+ */
+function toDashCommand(command: string): string {
+    return command.startsWith('speckit.') ? command.replace(/\./g, '-') : command;
 }
 
 /**

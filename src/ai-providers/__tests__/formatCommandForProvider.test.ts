@@ -42,6 +42,24 @@ describe('formatCommandForProvider', () => {
         });
     });
 
+    describe('namespaced companion commands', () => {
+        it('dash-converts every dot so the name matches the registered skill (Claude)', () => {
+            mockCommandFormat('auto');
+            expect(formatCommandForProvider('speckit.companion.specify', AIProviders.CLAUDE)).toBe('speckit-companion-specify');
+            expect(formatCommandForProvider('speckit.companion.plan', AIProviders.CLAUDE)).toBe('speckit-companion-plan');
+        });
+
+        it('keeps the dot form for a dot-default provider (Gemini)', () => {
+            mockCommandFormat('auto');
+            expect(formatCommandForProvider('speckit.companion.specify', AIProviders.GEMINI)).toBe('speckit.companion.specify');
+        });
+
+        it('leaves a non-speckit custom command untouched even in dash mode', () => {
+            mockCommandFormat('dash');
+            expect(formatCommandForProvider('myteam.custom', AIProviders.CLAUDE)).toBe('myteam.custom');
+        });
+    });
+
     describe('when commandFormat is "auto" (default)', () => {
         beforeEach(() => mockCommandFormat('auto'));
 

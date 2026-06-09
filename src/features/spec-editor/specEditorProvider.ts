@@ -12,6 +12,7 @@ import { normalizeWorkflowConfig, resolveStepCommand, isWorkflowSupportedForProv
 import type { WorkflowConfig } from '../workflows';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { buildSpecifyCreationPreamble } from '../../ai-providers/promptBuilder';
+import { resolveNewSpecProfileCommand } from '../specs/profileDispatch';
 import { AIProviders, WorkflowSteps, ConfigKeys } from '../../core/constants';
 
 /**
@@ -261,8 +262,15 @@ export class SpecEditorProvider {
             // Get AI provider and execute
             const provider = AIProviderFactory.getProvider(this.context, this.outputChannel);
 
-            // Use custom command if provided, otherwise workflow's specify command
-            const command = customCommand ? `/${customCommand}` : workflow.stepSpecify;
+            // Use custom command if provided, otherwise the workflow's specify command.
+            // For the default SpecKit workflow, route to the lean specify twin when the
+            // project default is lean — the new spec has no context to pin yet, so the
+            // first step honors the project default directly (FR-004 / lean default).
+            let command = customCommand ? `/${customCommand}` : workflow.stepSpecify;
+            if (!customCommand && workflow.name === 'speckit') {
+                const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+                command = `/${formatCommandForProvider(resolveNewSpecProfileCommand('speckit.specify', workspaceRoot))}`;
+            }
 
             const specContextInstruction = buildSpecifyCreationPreamble(workflowName, null);
             if (specContextInstruction) {
