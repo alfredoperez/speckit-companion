@@ -67,6 +67,14 @@ The 2026-06-08 fix above made per-task capture *reliable* (the hook owns it) but
 - **Both dispatch surfaces.** The instruction lives identically in `presets/_shared/timing-partial.md` (spec-kit path) and `src/ai-providers/promptBuilder.ts` (GUI path); `check-shape-parity.py` guards against a fork.
 - **Both marker formats.** Per-task detection accepts the turbo/companion **bold** form (`- [x] **T001**`) *and* the standard tasks-template **plain** form (`- [x] T001 …`) — `parse_task_markers` (`write-context.py`) and the eval make the `**` optional. Previously the bold-only regex silently no-op'd on a standard-profile `tasks.md`, so the spec got no per-task journal and implement never auto-closed. The TS/GUI task-percent already counted plain checkboxes, so only the Python parsers needed it.
 
+## Fast-path lifecycle fold (2026-06-09)
+
+The turbo complexity fast-path (opt-in beta — see [`template-profiles.md`](./template-profiles.md#complexity-fast-path-turbo-only)) folds the plan and tasks steps into the `specify` run for a small change. After `specify` self-closes, the simple-mode branch records the folded steps so the viewer reads them as satisfied (not missing) instead of dispatching separate `/speckit.companion.plan` / `.tasks` runs:
+
+- **`--substep` flag.** `write-context.py --step <plan|tasks> --kind <start|complete> --substep fast-path` tags the folded step-level entries with `substep: "fast-path"` instead of `null`. The fold is four ordered calls — `plan` start/complete then `tasks` start/complete, the last adding `--status ready-to-implement` — each stamped by the script's own clock (`by:ai`, real timestamps), so the spec lands at `ready-to-implement` in one run.
+- **Idempotent on (step, substep).** `_has_step_start` / `_has_complete` dedup on the `(step, substep)` pair, so a folded `fast-path` start/complete never collides with a real step-level (`substep:null`) entry and a re-run never doubles the fold.
+- **Eval coverage.** `check_capture.py` asserts a fast-tracked spec's folded `plan`/`tasks` start+complete entries (tagged `fast-path`), real timestamps, and final `ready-to-implement` status — and stays silent on a normal spec.
+
 ## Preset / command-override mechanism
 
 The document *shape* (standard vs turbo) and the timing partial both live in **command-body overrides**, not template files — core commands embed their own structure, and template overrides don't reach `specify` (it copies its template by literal path).
