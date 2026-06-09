@@ -8,6 +8,14 @@ All notable changes to this project will be documented in this file.
 
 - **Template profiles** (#132): new `speckit.companion.templateProfile` setting (`standard` | `lean` | `off`, default `standard`) selects the spec-kit pipeline shape. `standard` = stock commands with better timing capture; `lean` = trimmed commands (no user-story section, files/dependencies tasks, smaller spec folder); `off` = plain stock spec-kit. Selecting a profile reconciles the two `companion-standard` / `companion-lean` presets (mutually exclusive — switching removes the other) and persists to `.specify/companion.yml` as the source of truth. A per-spec override is available from the spec's right-click menu (**Template Profile → Standard / Lean**), recorded in `.spec-context.json`; the viewer then dispatches the lean `/speckit.companion.*` commands for that spec. Both profiles bake timing instructions into every command body (fixing duplicate-start and burst-stamped substeps in the captured durations). The presets and the opt-in `/speckit.companion.*` commands ship with the spec-kit extension; see `docs/template-profiles.md`.
 
+### Changed
+
+- **Finish-only timing in the captured durations** (#215): per-task and per-substep timing now records a *single* finish event instead of a start+complete pair, and durations are derived from the gap between consecutive finishes (the first anchored to the step's start). This removes the `0s` start==complete ticks, the unattributed gaps between tasks, and the substep "bursts" in the activity timeline. The GUI dispatch preamble (`promptBuilder.ts`) now instructs the AI to journal each implement task with a script (`write-context.py --task <id> --kind complete`, script-stamped → honest deltas) and to record each substep as one finish; `stepHistoryDerivation` computes rows from finish deltas (tolerant of legacy data). Mirrors the spec-kit extension's timing partial. See `docs/capture-and-timing.md`.
+
+### Fixed
+
+- **Template-profile setting now actually switches profiles** (#215): the reconciler issued catalog-form `specify preset add <id>`, which silently no-opped because the presets are bundled locally, not published — so toggling `speckit.companion.templateProfile` recorded the intent but never activated a preset (default-on `standard` was inert). It now installs the `add` op from the bundled path (`specify preset add --dev .specify/extensions/companion/presets/<id>`); `enable`/`remove` stay id-form. Toggling the setting activates the matching preset with no manual command.
+
 ## [0.22.0] - 2026-06-07
 
 ### Added

@@ -65,9 +65,18 @@ describe('companionPresetReconciler', () => {
     });
 
     describe('presetCommandFor', () => {
-        it('formats a preset CLI command', () => {
+        it('formats enable/remove as id-form CLI commands', () => {
             expect(presetCommandFor({ id: 'companion-lean', action: 'remove' }))
                 .toBe('specify preset remove companion-lean');
+            expect(presetCommandFor({ id: 'companion-lean', action: 'enable' }))
+                .toBe('specify preset enable companion-lean');
+        });
+
+        it('installs add from the bundled path with --dev (catalog-form add no-ops)', () => {
+            expect(presetCommandFor({ id: 'companion-standard', action: 'add' }))
+                .toBe('specify preset add --dev .specify/extensions/companion/presets/companion-standard');
+            expect(presetCommandFor({ id: 'companion-lean', action: 'add' }))
+                .toBe('specify preset add --dev .specify/extensions/companion/presets/companion-lean');
         });
     });
 
@@ -104,7 +113,7 @@ describe('companionPresetReconciler', () => {
         it('persists the profile and runs add when enabling a fresh project', async () => {
             const calls: string[] = [];
             const ops = await reconcileCompanionPreset(root, 'standard', { run: async c => { calls.push(c); } });
-            expect(calls).toEqual(['specify preset add companion-standard']);
+            expect(calls).toEqual(['specify preset add --dev .specify/extensions/companion/presets/companion-standard']);
             expect(readTemplateProfile(root)).toBe('standard');
             expect(ops).toHaveLength(1);
         });
@@ -115,7 +124,7 @@ describe('companionPresetReconciler', () => {
             await reconcileCompanionPreset(root, 'standard', { run: async c => { calls.push(c); } });
             expect(calls).toEqual([
                 'specify preset remove companion-lean',
-                'specify preset add companion-standard',
+                'specify preset add --dev .specify/extensions/companion/presets/companion-standard',
             ]);
             expect(readTemplateProfile(root)).toBe('standard');
         });

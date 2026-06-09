@@ -14,7 +14,7 @@ The extension or a script writes these; nothing depends on the AI's judgement.
 |---|---|---|---|
 | GUI lifecycle button (sidebar/viewer) | `src/features/specs/stepLifecycle.ts` → `specContextWriter.ts` | `extension` | step `start`/`complete`, `setStatus`, `setProfile` (atomic temp+rename) |
 | Command-body self-capture | the companion `specify`/`implement` bodies call `write-context.py --kind start`/`--kind complete` | `extension` | **specify** start (right after the dir is created) + complete (at the end) → a real begin→end span; **implement** start (at begin) |
-| `after_implement` hook | `write-context.py --tasks-file` → `sync_tasks()` (run by `speckit.companion.capture-implement`) | `extension` | every task's **start + complete**, then the implement step's **complete** — all stamped with the script's own clock |
+| `after_implement` hook | `write-context.py --tasks-file` → `sync_tasks()` (run by `speckit.companion.capture-implement`) | `extension` | a **single finish** per task not already journaled (finish-only backstop), then the implement step's **complete** — all stamped with the script's own clock |
 | Other lifecycle hooks | `write-context.py` (run by `speckit.companion.capture*`) | `extension` | step **start** (plan→planned, tasks→ready-to-implement, …) |
 | Reconstruction fallback | `speckit-extension/scripts/derive-from-files.py` | `derive` | state rebuilt from on-disk artifacts when a hook never fired (same start+complete shape) |
 
@@ -27,7 +27,7 @@ The **timing partial** — baked into every companion preset command body (`spec
 - **Self-close — plan/tasks/clarify/analyze only.** When one of those step's own work ends, append `{step, substep:null, kind:"complete", by:"ai", at:<date -u>}`. **specify** and **implement** are deliberately excluded — they are closed deterministically by scripts (see §1), so an `ai` complete there would duplicate the script's.
 - **Substeps live.** Each substep boundary (plan: `research`, `design`; tasks: `generate`) appends its own entry the moment it finishes.
 
-The AI no longer journals **per-task** timing — that was the burst-prone path; the `after_implement` hook now owns it (§1). These remaining `by:ai` entries carry **second precision** and are only as accurate as the AI's discipline allows.
+Per-task timing is journaled **live by the AI via a script** (finish-only): after each task it runs `write-context.py --task <id> --kind complete`, appending **one** finish event per task. Because a script stamps it, this carries **ms precision** and honest deltas (the gap between consecutive finishes is each task's real duration) — not hand-authored JSON. The `after_implement` hook is the backstop that fills any task the live path missed (§1). The remaining genuinely-hand-authored `by:ai` entries — the plan/tasks/clarify/analyze self-closes and the single-finish substep boundaries — carry **second precision** and are only as accurate as the AI's discipline allows.
 
 ## Why the split exists (the dispatch model)
 
@@ -51,9 +51,20 @@ This principle is also what the eval encodes: deterministic writes are held to a
 Both gaps the financial-page E2E exposed were closed by moving capture off the AI (see the reliability principle above):
 
 - **specify now self-closes.** The specify body calls `write-context.py --kind start` right after it creates the dir and `--kind complete` at the end (`by:extension`, ms precision) → a real begin→end span instead of a `complete` synthesized at plan-start. The late `after_specify` hook-start is collapsed by the broadened start-dedup in `update_context` (a step is started once).
-- **per-task no longer bursts.** The AI stopped hand-authoring per-task JSON; the `after_implement` hook's `sync_tasks()` writes each task's start+complete and the implement step's close, each with the script's own clock. Trade-off (accepted): the stamps land in a tight end-of-step window rather than reflecting live cadence — reliability over resolution.
+- **per-task no longer bursts.** The AI stopped hand-authoring per-task JSON; the `after_implement` hook's `sync_tasks()` writes each task with the script's own clock.
 
 The remaining `by:ai` writes are the plan/tasks/clarify/analyze self-closes and substep boundaries. History: `Projects/speckit companion/backlog/specify-duration-and-duplicate-start.md`.
+
+## Finish-only journaling (2026-06-08, v2)
+
+The 2026-06-08 fix above made per-task capture *reliable* (the hook owns it) but at the cost of *cadence*: writing a `start` **and** a `complete` for each task at one end-of-step instant produces `0s` ticks (start == complete) and a burst (all tasks share a tight window). v2 moves to a **finish-only** model that recovers honest cadence without re-introducing hand-authored JSON:
+
+- **One finish per task/substep.** A task or substep records a *single* `complete` event — never a start+complete pair. Its duration is the gap to the previous finish (the first measured from the step's `start`). No pair → no `0s` tick; deltas → no unattributed inter-task gap.
+- **Live, via a script.** The AI runs `write-context.py --task <id> --kind complete --by ai` as it finishes each task (the live path). A script stamps it, so it is reliable *and* honest (ms precision, real deltas). Substeps emit one hand-authored finish each.
+- **Backstop hardened.** `sync_tasks()` writes finish-only too and now journals per-task **even when implement already self-closed** (`status: implemented`): its guard was narrowed from `TERMINAL_STATUSES` to `CROSS_STEP_TERMINAL` (`completed`/`archived` only), so a same-step write is never rejected. `_journaled_tasks` keeps it from duplicating a task the live path captured.
+- **Parallel `[P]` caveat.** The delta model can't give each task in a parallel batch its own duration — the batch is attributed to whichever finishes last. Accepted for the common sequential case.
+- **Derivation.** `src/features/specs/stepHistoryDerivation.ts` (`buildSubsteps`) computes each row from finish deltas, staying tolerant of legacy start+complete pairs and single boundary markers.
+- **Both dispatch surfaces.** The instruction lives identically in `presets/_shared/timing-partial.md` (spec-kit path) and `src/ai-providers/promptBuilder.ts` (GUI path); `check-shape-parity.py` guards against a fork.
 
 ## Preset / command-override mechanism
 
@@ -67,9 +78,9 @@ The document *shape* (standard vs lean) and the timing partial both live in **co
 
 See `docs/template-profiles.md` for the full profile reference.
 
-## Activation seam (known reconciler bug)
+## Activation seam (fixed)
 
-The reconciler issues **catalog-form** `specify preset add <id>`, which silently no-ops because the presets aren't published to a catalog — they're only bundled at `.specify/extensions/companion/presets/`. Result: `.specify/companion.yml` records the intent but no preset actually activates (default-on `standard` is inert in real projects). Fix: install from the bundled path (`specify preset add --dev .specify/extensions/companion/presets/<id>`) or publish the presets. Pre-publish blocker. Tracked: `Projects/speckit companion/backlog/reconciler-preset-add-catalog-seam.md`.
+Previously the reconciler issued **catalog-form** `specify preset add <id>`, which silently no-opped because the presets aren't published to a catalog — they're only bundled at `.specify/extensions/companion/presets/`. The setting recorded the intent but no preset activated (default-on `standard` was inert in real projects). **Fixed:** `companionPresetReconciler.presetCommandFor` now installs the `add` op from the bundled path — `specify preset add --dev .specify/extensions/companion/presets/<id>` — while `enable`/`remove` stay id-form. Toggling `speckit.companion.templateProfile` now activates the matching preset with no manual command.
 
 ## Install paths
 
@@ -80,8 +91,8 @@ Capture scripts run from the **installed** extension dir, `.specify/extensions/c
 `.claude/skills/eval-speckit-extension/check_capture.py` is the regression net (a tracked project skill — edit it here, it is **not** sourced from kaiju). It bakes in the reliability principle:
 
 - **`timestamps-real` / `timestamps-monotonic`** apply strict checks only to **deterministic** writes (`by:extension`/`derive`/`cli`/`user`): those must be ms-precision and non-decreasing. `by:ai` second-precision and occasional burst is **expected**, reported as cadence quality — not a failure.
-- **`per-task-no-duplicates`** pairs by `(task, kind)`: a task may carry one `start` **and** one `complete`. Only a repeated `(task, kind)` is the real dedup-failure signal (the end-of-step hook re-adding an already-journaled task).
-- **`task-cadence`** reports its source: `live (by:ai)` (non-zero gaps are the real-cadence signal) vs `hook burst (by:extension)` (0 ms gaps expected, not a defect).
+- **`per-task-no-duplicates`** pairs by `(task, kind)`: finish-only means a task carries a single `complete` (a `start` may still appear on legacy specs). Only a repeated `(task, kind)` is the real dedup-failure signal (the backstop re-adding a task the live path already journaled).
+- **`task-cadence`** reports its source: `live (by:ai, script-stamped)` (non-zero gaps are the honest-cadence signal) vs `backstop (by:extension, end-of-step)` (near-zero gaps acceptable, not a defect).
 
 When the capture model changes, update both this doc and the eval in the same change — keep `VALID_BY` / `CANONICAL_STEPS` / `CANONICAL_STATUSES` in `check_capture.py` in sync with `src/core/types/spec-context.schema.json`.
 

@@ -1,0 +1,43 @@
+{
+  "workflow": "speckit",
+  "specName": "Timing fidelity v2 — finish-only journaling + reconciler activation",
+  "branch": "133-timing-fidelity-v2",
+  "currentStep": "tasks",
+  "status": "completed",
+  "updated": "2026-06-09",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": null,
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-09T01:33:51.392Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-09T01:40:38.325Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-09T01:44:35.263Z"
+    }
+  ]
+}

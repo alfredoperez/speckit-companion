@@ -193,16 +193,15 @@ def run_checks(spec_dir: Path) -> Report:
             r.add(not missing, "per-task-matches-tasksmd",
                   f"tasks.md done={len(distinct_done)}, journaled={len(journaled)}"
                   + (f", MISSING {missing}" if missing else ""))
-        # No-op-backstop invariant: a task carries one `start` + one `complete`
-        # (the per-task journaling model), so dedup is checked per (task, kind) —
-        # only a repeated (task, kind) means the after_implement hook re-added an
-        # already-journaled entry. (Counting bare task ids would false-fail the
-        # intended start+complete pair.)
+        # Finish-only invariant: a task carries a SINGLE `complete` (finish) event;
+        # a `start` may still appear on legacy/migrated specs. Dedup is checked per
+        # (task, kind) — only a repeated (task, kind) means the after_implement hook
+        # re-added a task the live path already journaled.
         if task_entries:
             counts = Counter((e.get("task"), e.get("kind")) for e in task_entries)
             dupes = {f"{t}:{k}": n for (t, k), n in counts.items() if n > 1}
             r.add(not dupes, "per-task-no-duplicates",
-                  "each task has ≤1 start + ≤1 complete" if not dupes
+                  "each task has a single finish (≤1 complete; ≤1 legacy start)" if not dupes
                   else f"DUPLICATED task/kind (hook re-added a live entry): {dupes}")
 
     # timing breakdown (info)
@@ -226,10 +225,11 @@ def _timing(r: Report, history: list) -> None:
             gap = (firsts[i][1] - firsts[i - 1][1]).total_seconds()
             parts.append(f"{firsts[i-1][0]}→{firsts[i][0]} {_fmt(gap)}")
         r.add(None, "step-timing", " | ".join(parts))
-    # Per-task cadence within implement. Per-task timing is now script-stamped by
-    # the end-of-step hook (by:extension), so a tight end-of-step window is the
-    # EXPECTED shape, not broken cadence. Any by:ai per-task entries would be a
-    # legacy live-journaling leftover.
+    # Per-task cadence within implement (finish-only model). The live path stamps
+    # ONE finish per task via a script as work proceeds (by:ai, ms precision) →
+    # non-zero gaps are the HEALTHY honest-cadence signal. The end-of-step hook
+    # (by:extension) is the backstop; if it journaled the batch, the finishes share
+    # a tight window (near-zero gaps) — acceptable, not a defect.
     task_evts = [e for e in history
                  if isinstance(e.get("task"), str) and _parse_at(e.get("at"))]
     if len(task_evts) >= 2:
@@ -238,8 +238,8 @@ def _timing(r: Report, history: list) -> None:
                 for i in range(1, len(task_times))]
         ai = sum(1 for e in task_evts if e.get("by") == "ai")
         ext = sum(1 for e in task_evts if e.get("by") == "extension")
-        source = ("script-stamped (by:extension, end-of-step) — tight window expected" if ext and not ai
-                  else "live (by:ai) — legacy live cadence" if ai and not ext
+        source = ("live (by:ai, script-stamped) — honest cadence" if ai and not ext
+                  else "backstop (by:extension, end-of-step) — tight window acceptable" if ext and not ai
                   else f"mixed (ai={ai}, extension={ext})")
         r.add(None, "task-cadence",
               f"{len(task_evts)} tasks; source={source}; gaps {', '.join(_fmt(g) for g in gaps)}")
