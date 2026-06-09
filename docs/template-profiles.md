@@ -9,7 +9,7 @@ The long-form reference for how SpecKit Companion reshapes the spec-kit pipeline
 | Profile | What it is | Output |
 |---|---|---|
 | `standard` (default) | The **stock** spec-kit commands, unchanged, with timing instructions added. | Same sections, same files as upstream spec-kit. |
-| `lean` | The same commands with specific sections trimmed or replaced (no user stories, files/dependencies task axis), plus the same timing. | A smaller spec folder (≈3 files vs 8). |
+| `lean` | The same commands with specific sections trimmed or replaced (no user stories, files/dependencies task axis), plus the same timing. | A smaller spec folder — always `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files created on demand. |
 | `off` | No overrides at all. | Plain upstream spec-kit. |
 
 Both `standard` and `lean` override the same **7** commands — `specify`, `clarify`, `plan`, `tasks`, `analyze`, `implement`, `constitution`. `checklist` and `taskstoissues` are left on stock.
@@ -34,17 +34,17 @@ So template overrides are **mixed** (work for plan/tasks, no-op for specify). Co
 
 | File | Lean treatment |
 |---|---|
-| `spec.md` | **redo** — User Scenarios (user stories) → replaced by a 1–3 line Overview; Key Entities → moved to `data-model.md` (if any); keep Functional Requirements, Success Criteria, Assumptions. |
-| `checklists/requirements.md` | **drop** — no separate quality-gate file; trust FR/SC to be testable. |
+| `spec.md` | **redo** — User Scenarios (user stories) → replaced by a 1–3 line Overview; Key Entities → moved to `data-model.md` only when it helps build the change (assess on demand); keep Functional Requirements, Success Criteria, Assumptions. |
+| `checklists/requirements.md` | **keep** — a lean quality checklist (no user-story / acceptance-scenario items), graded in a single self-check pass; the FR/SC list still lives in `spec.md`. |
 | `plan.md` | **redo** — drop the dual-option Project Structure tree + Complexity Tracking; replace with a lean Approach & Structure (files/deps); add Out of Scope; keep Summary, Technical Context, short Constitution Check. |
-| `research.md` | **fold** into `plan.md` as a compact Decisions list, only when real unknowns exist. |
-| `data-model.md` | **conditional** — emit only when the feature has entities; compact. |
-| `contracts/` | **conditional** — emit only when the feature exposes an interface (stock already gates this). |
-| `quickstart.md` | **drop** — verification lives in `tasks.md` + Success Criteria. |
+| `research.md` | **assess on demand** — create only for real unknowns/trade-offs worth their own file; otherwise fold a compact Decisions note into `plan.md`. |
+| `data-model.md` | **assess on demand** — create only when a dev needs entities spelled out to build this change; compact. |
+| `contracts/` | **assess on demand** — create only when it exposes an interface (API / CLI / schema / UI) a consumer codes against. |
+| `quickstart.md` | **assess on demand** — create only when there is a non-obvious setup/verification path a dev would otherwise miss. |
 | `tasks.md` | **redo** — drop user-story grouping/`[US#]` labels/MVP framing; keep strict `[Tn] [P?] + path`, Setup→Foundational→Core→Integration→Polish layering, deps/parallel notes. |
 | `constitution.md` | **redo** — keep principles/governance + semver bump + write the file; drop the template-propagation checklist + Sync-Impact ceremony. |
 
-Net lean spec folder: always `spec.md` + `plan.md` + `tasks.md`; conditionally `data-model.md` (entities) and `contracts/` (interfaces).
+Net lean spec folder: always `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files (`research.md` / `data-model.md` / `contracts/` / `quickstart.md`) created on demand, only when they help understand or build the change.
 
 ## Timing fidelity (both profiles)
 

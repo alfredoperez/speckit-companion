@@ -22,9 +22,14 @@ Produce a **lean** plan — just enough to drive tasks. No multi-phase research 
 
 3. If the constitution defines gates, add a short **Constitution Check** (pass / justified violations). Omit the Complexity-Tracking table unless there is a real violation to justify.
 
-4. **Side files, on demand only:** fold key decisions into a short "Decisions" note inside `plan.md` instead of a separate `research.md`. Write `data-model.md` only if the feature has entities, and `contracts/` only if it exposes an interface (API / CLI / schema / UI). Do not write `quickstart.md` — verification lives in `tasks.md` + Success Criteria.
+4. **Side files — assess on demand.** Create each only when it genuinely helps a developer understand or build *this* change; when the information fits naturally in `plan.md`, keep it there instead of spawning a file. Judge per feature:
+   - `research.md` — only for real unknowns or trade-offs worth recording on their own; otherwise fold a short "Decisions" note into `plan.md`.
+   - `data-model.md` — only when the change introduces or reshapes entities a dev needs spelled out to implement it.
+   - `contracts/` — only when it exposes an interface (API / CLI / schema / UI) a consumer codes against.
+   - `quickstart.md` — only when there is a non-obvious setup or verification path a dev would otherwise miss.
+   Default to folding into `plan.md`; create a side file only when its absence would slow understanding or implementation.
 
-**Output**: `<feature_directory>/plan.md` (+ conditional `data-model.md` / `contracts/`).
+**Output**: `<feature_directory>/plan.md` (+ any side files that genuinely help: `research.md` / `data-model.md` / `contracts/` / `quickstart.md`).
 
 
 <!-- speckit-companion:timing -->

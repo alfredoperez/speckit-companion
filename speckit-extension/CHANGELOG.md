@@ -19,6 +19,7 @@ The spec-kit extension's first catalog release — full lifecycle capture, Statu
 
 ### Changed
 - Captured state is written in the canonical `.spec-context.json` shape the VS Code GUI reads, so the extension and the GUI never disagree; older files are migrated forward on the next write.
+- **Lean profile keeps the requirements checklist, and side files are created on demand.** `companion-lean`'s `specify` again produces a `checklists/requirements.md` quality checklist — a lean version without the user-story / acceptance-scenario items, graded in a single self-check pass — instead of dropping it. And `plan`'s side files (`research.md`, `data-model.md`, `contracts/`, `quickstart.md`) are each created only when the file genuinely helps a developer understand or build *that* change, rather than by fixed "if entities / if interface" rules — so `research.md` and `quickstart.md` are no longer always dropped. The four-section spec (Overview + Functional Requirements + Success Criteria + Assumptions) and the files/dependencies task shape are unchanged. See [`../docs/template-profiles.md`](../docs/template-profiles.md).
 
 ### Fixed
 - **Standard-profile specs now get per-task timing too.** Task capture only recognized the lean/companion bold marker (`- [x] **T001**`) and silently skipped the standard tasks-template's plain markers (`- [x] T001`), so a standard-profile spec recorded no per-task progress and its implement step never auto-closed. Both marker formats are now detected.
