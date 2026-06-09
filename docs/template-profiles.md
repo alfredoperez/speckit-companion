@@ -9,34 +9,34 @@ The long-form reference for how SpecKit Companion reshapes the spec-kit pipeline
 | Profile | What it is | Output |
 |---|---|---|
 | `standard` (default) | The **stock** spec-kit commands, unchanged, with timing instructions added. | Same sections, same files as upstream spec-kit. |
-| `lean` | The same commands with specific sections trimmed or replaced (no user stories, files/dependencies task axis), plus the same timing. | A smaller spec folder — always `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files created on demand. |
+| `turbo` | The same commands with specific sections trimmed or replaced (no user stories, files/dependencies task axis), plus the same timing. | A smaller spec folder — always `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files created on demand. |
 | `off` | No overrides at all. | Plain upstream spec-kit. |
 
-Both `standard` and `lean` override the same **7** commands — `specify`, `clarify`, `plan`, `tasks`, `analyze`, `implement`, `constitution`. `checklist` and `taskstoissues` are left on stock.
+Both `standard` and `turbo` override the same **7** commands — `specify`, `clarify`, `plan`, `tasks`, `analyze`, `implement`, `constitution`. `checklist` and `taskstoissues` are left on stock.
 
 ## Mechanism: shape lives in commands, not templates
 
-A spec-kit preset can override two kinds of file: `type: command` (the AI prompt the agent runs) and `type: template` (a document scaffold like `spec-template.md`). **The shape is carried by command overrides.** We deliberately do **not** ship lean document-template overrides. The reason is not stylistic — it is that template overrides do not reach all commands:
+A spec-kit preset can override two kinds of file: `type: command` (the AI prompt the agent runs) and `type: template` (a document scaffold like `spec-template.md`). **The shape is carried by command overrides.** We deliberately do **not** ship turbo document-template overrides. The reason is not stylistic — it is that template overrides do not reach all commands:
 
 - spec-kit resolves a preset's `type: template` override through a layered stack (`.specify/templates/overrides/` → presets → extensions → core `.specify/templates/`), **but only when a setup script invokes the resolver**.
-- `specify` copies its template by literal path — *"Copy `templates/spec-template.md`"* — and never runs the resolver. A lean `spec-template.md` override would therefore **silently do nothing** for `specify` (the agent reads the core template). The lean spec shape *must* come from the command body.
+- `specify` copies its template by literal path — *"Copy `templates/spec-template.md`"* — and never runs the resolver. A turbo `spec-template.md` override would therefore **silently do nothing** for `specify` (the agent reads the core template). The turbo spec shape *must* come from the command body.
 - `plan` and `tasks` go through `setup-plan.sh` / `setup-tasks.sh`, which *do* resolve through the stack — so a template override there *would* take effect.
 
 So template overrides are **mixed** (work for plan/tasks, no-op for specify). Command overrides apply **uniformly** to every command. Putting the shape in command bodies is the only reliable single mechanism, so that is where it lives.
 
-**Consequence — accepted tradeoff:** in `lean` mode the on-disk `.specify/templates/spec-template.md` still shows the stock (user-story) shape; lean mode just doesn't read it. That cosmetic mismatch is the price of a reliable, single-source mechanism. Template-reading *secondary* surfaces (the stock `checklist`/`analyze` commands, the GUI spec editor) likewise see the stock template — acceptable for v1.
+**Consequence — accepted tradeoff:** in `turbo` mode the on-disk `.specify/templates/spec-template.md` still shows the stock (user-story) shape; turbo mode just doesn't read it. That cosmetic mismatch is the price of a reliable, single-source mechanism. Template-reading *secondary* surfaces (the stock `checklist`/`analyze` commands, the GUI spec editor) likewise see the stock template — acceptable for v1.
 
-**Future option:** if we later want the lean shape enforced at the skeleton level for `plan`/`tasks` specifically — where template overrides *do* flow via the setup scripts — we can add just those two lean templates then. Not needed for v1.
+**Future option:** if we later want the turbo shape enforced at the skeleton level for `plan`/`tasks` specifically — where template overrides *do* flow via the setup scripts — we can add just those two turbo templates then. Not needed for v1.
 
-## Per-file lean treatment
+## Per-file turbo treatment
 
-`standard` keeps every section/file verbatim (+ timing). `lean` per file, relative to stock:
+`standard` keeps every section/file verbatim (+ timing). `turbo` per file, relative to stock:
 
-| File | Lean treatment |
+| File | Turbo treatment |
 |---|---|
 | `spec.md` | **redo** — User Scenarios (user stories) → replaced by a 1–3 line Overview; Key Entities → moved to `data-model.md` only when it helps build the change (assess on demand); keep Functional Requirements, Success Criteria, Assumptions. |
-| `checklists/requirements.md` | **keep** — a lean quality checklist (no user-story / acceptance-scenario items), graded in a single self-check pass; the FR/SC list still lives in `spec.md`. |
-| `plan.md` | **redo** — drop the dual-option Project Structure tree + Complexity Tracking; replace with a lean Approach & Structure (files/deps); add Out of Scope; keep Summary, Technical Context, short Constitution Check. |
+| `checklists/requirements.md` | **keep** — a turbo quality checklist (no user-story / acceptance-scenario items), graded in a single self-check pass; the FR/SC list still lives in `spec.md`. |
+| `plan.md` | **redo** — drop the dual-option Project Structure tree + Complexity Tracking; replace with a turbo Approach & Structure (files/deps); add Out of Scope; keep Summary, Technical Context, short Constitution Check. |
 | `research.md` | **assess on demand** — create only for real unknowns/trade-offs worth their own file; otherwise fold a compact Decisions note into `plan.md`. |
 | `data-model.md` | **assess on demand** — create only when a dev needs entities spelled out to build this change; compact. |
 | `contracts/` | **assess on demand** — create only when it exposes an interface (API / CLI / schema / UI) a consumer codes against. |
@@ -44,7 +44,7 @@ So template overrides are **mixed** (work for plan/tasks, no-op for specify). Co
 | `tasks.md` | **redo** — drop user-story grouping/`[US#]` labels/MVP framing; keep strict `[Tn] [P?] + path`, Setup→Foundational→Core→Integration→Polish layering, deps/parallel notes. |
 | `constitution.md` | **redo** — keep principles/governance + semver bump + write the file; drop the template-propagation checklist + Sync-Impact ceremony. |
 
-Net lean spec folder: always `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files (`research.md` / `data-model.md` / `contracts/` / `quickstart.md`) created on demand, only when they help understand or build the change.
+Net turbo spec folder: always `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files (`research.md` / `data-model.md` / `contracts/` / `quickstart.md`) created on demand, only when they help understand or build the change.
 
 ## Timing fidelity (both profiles)
 
@@ -60,24 +60,24 @@ The GUI preamble stays as the extra path; the body-embedded partial is the stand
 
 Mode selection is **dispatch routing**, not a preset swap. Both command families are always present — the stock `/speckit.*` family (emitted by `specify init`, kept present by the always-on `companion-standard` carrier) and the namespaced `/speckit.companion.*` family (from the extension's `provides.commands`). The mode only picks which family a spec dispatches; nothing is ever removed.
 
-1. **Project default** — `speckit.companion.templateProfile` (`"standard" | "lean" | "off"`, default `standard`), mirrored to `.specify/companion.yml`. Changing it only records the default and seeds new specs — it issues **no** preset add/remove/swap, so it can never blank a command set.
-2. **Per-spec pin, with a project-default fallback** — each spec records its shape in `.spec-context.json` `profile`, seeded from the project default (`src/features/specs/profileDispatch.ts` `seedProfileForNewSpec`). But the spec-kit capture script that first writes the context on the `specify` step is profile-agnostic and leaves `profile` **absent**, so the pin can't be relied on at creation. The extension closes that gap two ways: `resolveProfileCommand` falls back to the project default when no pin is present (routing stays correct immediately), and the context writer **back-fills** the pin into `.spec-context.json` on the first lifecycle write (`src/features/specs/specContextWriter.ts` `updateSpecContext`), so it becomes durable. Either way `resolveProfileCommand` maps the four pipeline commands (`speckit.{specify,plan,tasks,implement}`) → their `speckit.companion.*` twins for a `lean` spec across every dispatch path; `clarify`/`analyze`/`constitution` and custom commands have no twin and pass through unchanged. An **explicit** pin (including `standard`) or an invalid value resolves to the stock command and is never overwritten — so once a spec is pinned, a later default change can't reshape it. The **specify** step is special — a brand-new spec has no context yet, so `resolveNewSpecProfileCommand` routes its specify command from the project default directly (`lean` → `/speckit.companion.specify`), keeping the first artifact on the same shape the rest of the spec is seeded to.
+1. **Project default** — `speckit.companion.templateProfile` (`"standard" | "turbo" | "off"`, default `standard`), mirrored to `.specify/companion.yml`. Changing it only records the default and seeds new specs — it issues **no** preset add/remove/swap, so it can never blank a command set.
+2. **Per-spec pin, with a project-default fallback** — each spec records its shape in `.spec-context.json` `profile`, seeded from the project default (`src/features/specs/profileDispatch.ts` `seedProfileForNewSpec`). But the spec-kit capture script that first writes the context on the `specify` step is profile-agnostic and leaves `profile` **absent**, so the pin can't be relied on at creation. The extension closes that gap two ways: `resolveProfileCommand` falls back to the project default when no pin is present (routing stays correct immediately), and the context writer **back-fills** the pin into `.spec-context.json` on the first lifecycle write (`src/features/specs/specContextWriter.ts` `updateSpecContext`), so it becomes durable. Either way `resolveProfileCommand` maps the four pipeline commands (`speckit.{specify,plan,tasks,implement}`) → their `speckit.companion.*` twins for a `turbo` spec across every dispatch path; `clarify`/`analyze`/`constitution` and custom commands have no twin and pass through unchanged. An **explicit** pin (including `standard`) or an invalid value resolves to the stock command and is never overwritten — so once a spec is pinned, a later default change can't reshape it. The **specify** step is special — a brand-new spec has no context yet, so `resolveNewSpecProfileCommand` routes its specify command from the project default directly (`turbo` → `/speckit.companion.specify`), keeping the first artifact on the same shape the rest of the spec is seeded to.
 
-**Keeping the standard family present (recovery + steady state).** On activation the extension runs an **add-only** ensure (`src/features/settings/companionPresetReconciler.ts` `ensureStandardFamily`): it adds `companion-standard` from the bundled path when absent — re-materializing the stock command files on a fresh checkout and recovering a project a prior swap left stranded — and is a no-op when already present. It **never** removes the standard family, so it cannot strand a project. A one-time migration removes a leftover `companion-lean` install if present, but the setting itself issues no removes thereafter. CLI failures are logged, not thrown. The `off` escape hatch is the one exception — it opts out of the ensure entirely (`shouldEnsureStandard`), so it neither installs nor repairs `companion-standard`. It does **not** remove an already-installed `companion-standard` either — `off` skips the repair step, it doesn't revert a prior install, so a project that already has the timing-augmented bodies keeps them until the preset is removed manually.
+**Keeping the standard family present (recovery + steady state).** On activation the extension runs an **add-only** ensure (`src/features/settings/companionPresetReconciler.ts` `ensureStandardFamily`): it adds `companion-standard` from the bundled path when absent — re-materializing the stock command files on a fresh checkout and recovering a project a prior swap left stranded — and is a no-op when already present. It **never** removes the standard family, so it cannot strand a project. A one-time migration removes a leftover `companion-turbo` install if present (and the pre-rename `companion-lean` / `sdd-lean` leftovers), but the setting itself issues no removes thereafter. CLI failures are logged, not thrown. The `off` escape hatch is the one exception — it opts out of the ensure entirely (`shouldEnsureStandard`), so it neither installs nor repairs `companion-standard`. It does **not** remove an already-installed `companion-standard` either — `off` skips the repair step, it doesn't revert a prior install, so a project that already has the timing-augmented bodies keeps them until the preset is removed manually.
 
 ## Naming
 
-The feature carries **no "sdd"** tokens. Canonical names: presets `companion-standard` / `companion-lean`; setting `speckit.companion.templateProfile`; config file `.specify/companion.yml`; reconciler `companionPresetReconciler.ts`; `ConfigKeys.templateProfile`.
+The feature carries **no "sdd"** tokens. Canonical names: presets `companion-standard` / `companion-turbo`; setting `speckit.companion.templateProfile`; config file `.specify/companion.yml`; reconciler `companionPresetReconciler.ts`; `ConfigKeys.templateProfile`.
 
 ## Files
 
-- `speckit-extension/presets/companion-standard/` · `companion-lean/` — `preset.yml` (7 `type: command` `replaces:` entries) + `commands/speckit.<cmd>.md` (7 each) + `README.md`.
+- `speckit-extension/presets/companion-standard/` · `companion-turbo/` — `preset.yml` (7 `type: command` `replaces:` entries) + `commands/speckit.<cmd>.md` (7 each) + `README.md`.
 - `speckit-extension/presets/_shared/timing-partial.md` — the canonical timing block embedded in every body.
-- `speckit-extension/commands/speckit.companion.{specify,plan,tasks,implement}.md` — the per-spec lean opt-in commands (track the lean bodies).
+- `speckit-extension/commands/speckit.companion.{specify,plan,tasks,implement}.md` — the per-spec turbo opt-in commands (track the turbo bodies).
 - `speckit-extension/scripts/check-shape-parity.py` — body/partial parity guard.
 - `speckit-extension/scripts/write-context.py` — duplicate-start dedup + specify self-close.
-- `src/features/settings/companionPresetReconciler.ts` (+ test) — the add-only `ensureStandardFamily` / `decideEnsureStandardOps` (keep-standard-present + one-time lean/legacy migration) and the `.specify/companion.yml` read/write helpers.
-- `src/features/specs/profileDispatch.ts` (+ test) — `resolveProfileCommand` (route `lean` specs to the `/speckit.companion.*` twin) and `seedProfileForNewSpec` (pin the project default at the specify step).
+- `src/features/settings/companionPresetReconciler.ts` (+ test) — the add-only `ensureStandardFamily` / `decideEnsureStandardOps` (keep-standard-present + one-time turbo/legacy migration) and the `.specify/companion.yml` read/write helpers.
+- `src/features/specs/profileDispatch.ts` (+ test) — `resolveProfileCommand` (route `turbo` specs to the `/speckit.companion.*` twin) and `seedProfileForNewSpec` (pin the project default at the specify step).
 - `package.json` `speckit.companion.templateProfile`; `src/core/constants.ts` `ConfigKeys.templateProfile`; `.specify/companion.yml`.
 
 ## Areas to improve (open)
@@ -85,4 +85,4 @@ The feature carries **no "sdd"** tokens. Canonical names: presets `companion-sta
 - **14 hand-maintained bodies** (7 commands × 2 profiles) drift against upstream stock + the timing partial. Mitigation: `companion-standard` is a verbatim stock copy + the one shared partial; the parity check locks the partial. A generator could reduce hand-maintenance.
 - **Best-effort cadence** — substep/self-close `date -u` stamps are still hand-authored second-precision; per-task timing is now finish-only via a script (`write-context.py --task <id> --kind complete`), which the eval grades by honest deltas (see `docs/capture-and-timing.md`).
 - **Catalog-add seam** — the bundled-path `add` (`specify preset add --dev .specify/extensions/companion/presets/companion-standard`) is what the add-only ensure uses to (re-)materialize the standard family; catalog-form `add <id>` silently no-ops in a consumer install, which is why the `--dev` bundled path is required.
-- **Lean plan/tasks templates** — viable later where template overrides flow via the setup scripts (see Mechanism).
+- **Turbo plan/tasks templates** — viable later where template overrides flow via the setup scripts (see Mechanism).

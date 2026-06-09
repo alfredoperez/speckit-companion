@@ -579,7 +579,7 @@ async function executeWorkflowStep(
     });
 
     // Resolve the command for this step, then apply the spec's per-spec profile
-    // (a `lean` spec dispatches the /speckit.companion.* twin).
+    // (a `turbo` spec dispatches the /speckit.companion.* twin).
     const baseCommand = resolveStepCommand(workflow, step);
     const command = resolveProfileCommand(baseCommand, targetDir);
     outputChannel.appendLine(`[SpecKit] Resolved command: ${command}`);

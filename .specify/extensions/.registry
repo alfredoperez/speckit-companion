@@ -55,39 +55,111 @@
       "installed_at": "2026-05-21T18:09:23.850204+00:00"
     },
     "companion": {
-      "version": "0.1.0",
+      "version": "0.3.0",
       "source": "local",
-      "manifest_hash": "sha256:827c7a27b9fd6693d4a5cc9a0b43492964001a60ef631d656d5b1ac96a16eba1",
+      "manifest_hash": "sha256:44155284927cbd8472eeb5d97dddc364283403e3ec29f407e3a4ac440367f3f8",
       "enabled": true,
       "priority": 10,
       "registered_commands": {
         "agy": [
-          "speckit.companion.capture"
+          "speckit.companion.capture",
+          "speckit.companion.capture-plan",
+          "speckit.companion.capture-tasks",
+          "speckit.companion.capture-implement",
+          "speckit.companion.status",
+          "speckit.companion.resume",
+          "speckit.companion.specify",
+          "speckit.companion.plan",
+          "speckit.companion.tasks",
+          "speckit.companion.implement"
         ],
         "claude": [
-          "speckit.companion.capture"
+          "speckit.companion.capture",
+          "speckit.companion.capture-plan",
+          "speckit.companion.capture-tasks",
+          "speckit.companion.capture-implement",
+          "speckit.companion.status",
+          "speckit.companion.resume",
+          "speckit.companion.specify",
+          "speckit.companion.plan",
+          "speckit.companion.tasks",
+          "speckit.companion.implement"
         ],
         "codex": [
-          "speckit.companion.capture"
+          "speckit.companion.capture",
+          "speckit.companion.capture-plan",
+          "speckit.companion.capture-tasks",
+          "speckit.companion.capture-implement",
+          "speckit.companion.status",
+          "speckit.companion.resume",
+          "speckit.companion.specify",
+          "speckit.companion.plan",
+          "speckit.companion.tasks",
+          "speckit.companion.implement"
         ],
         "copilot": [
-          "speckit.companion.capture"
+          "speckit.companion.capture",
+          "speckit.companion.capture-plan",
+          "speckit.companion.capture-tasks",
+          "speckit.companion.capture-implement",
+          "speckit.companion.status",
+          "speckit.companion.resume",
+          "speckit.companion.specify",
+          "speckit.companion.plan",
+          "speckit.companion.tasks",
+          "speckit.companion.implement"
         ],
         "cursor-agent": [
-          "speckit.companion.capture"
+          "speckit.companion.capture",
+          "speckit.companion.capture-plan",
+          "speckit.companion.capture-tasks",
+          "speckit.companion.capture-implement",
+          "speckit.companion.status",
+          "speckit.companion.resume",
+          "speckit.companion.specify",
+          "speckit.companion.plan",
+          "speckit.companion.tasks",
+          "speckit.companion.implement"
         ],
         "gemini": [
-          "speckit.companion.capture"
+          "speckit.companion.capture",
+          "speckit.companion.capture-plan",
+          "speckit.companion.capture-tasks",
+          "speckit.companion.capture-implement",
+          "speckit.companion.status",
+          "speckit.companion.resume",
+          "speckit.companion.specify",
+          "speckit.companion.plan",
+          "speckit.companion.tasks",
+          "speckit.companion.implement"
         ],
         "qwen": [
-          "speckit.companion.capture"
+          "speckit.companion.capture",
+          "speckit.companion.capture-plan",
+          "speckit.companion.capture-tasks",
+          "speckit.companion.capture-implement",
+          "speckit.companion.status",
+          "speckit.companion.resume",
+          "speckit.companion.specify",
+          "speckit.companion.plan",
+          "speckit.companion.tasks",
+          "speckit.companion.implement"
         ],
         "windsurf": [
-          "speckit.companion.capture"
+          "speckit.companion.capture",
+          "speckit.companion.capture-plan",
+          "speckit.companion.capture-tasks",
+          "speckit.companion.capture-implement",
+          "speckit.companion.status",
+          "speckit.companion.resume",
+          "speckit.companion.specify",
+          "speckit.companion.plan",
+          "speckit.companion.tasks",
+          "speckit.companion.implement"
         ]
       },
       "registered_skills": [],
-      "installed_at": "2026-05-25T13:25:56.875312+00:00"
+      "installed_at": "2026-06-09T19:23:43.815797+00:00"
     }
   }
 }

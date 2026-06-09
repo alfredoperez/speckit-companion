@@ -166,7 +166,7 @@ class LifecycleCaptureTests(unittest.TestCase):
         self.assertFalse(any(t.get("task") == "T009" for t in _ctx(self.fd)["history"]))
 
     def test_parse_task_markers_accepts_plain_and_bold(self) -> None:
-        # The standard tasks-template writes plain `- [x] T001`; the lean/companion
+        # The standard tasks-template writes plain `- [x] T001`; the turbo/companion
         # bodies write bold `- [x] **T001**`. Both formats must be detected, and a
         # checkbox without a task id is ignored.
         (self.fd / "tasks.md").write_text(_tasks(

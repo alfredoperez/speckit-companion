@@ -1,6 +1,6 @@
 ---
 allowed-tools: Bash(node examples/todo-claude/bench/finish.mjs:*), Bash(npm install:*), Bash(cd examples/todo-claude && npm install:*), Read
-description: Measure the armed bench run and update the lean-vs-standard report
+description: Measure the armed bench run and update the turbo-vs-standard report
 ---
 
 ## Your task

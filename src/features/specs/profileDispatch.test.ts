@@ -31,8 +31,8 @@ describe('resolveProfileCommand', () => {
         expect(resolveProfileCommand('speckit.plan', root)).toBe('speckit.plan');
     });
 
-    it('maps all four pipeline commands to their lean twins when the spec profile is lean', () => {
-        writeCtx(ctx({ profile: 'lean' }));
+    it('maps all four pipeline commands to their turbo twins when the spec profile is turbo', () => {
+        writeCtx(ctx({ profile: 'turbo' }));
         expect(resolveProfileCommand('speckit.specify', root)).toBe('speckit.companion.specify');
         expect(resolveProfileCommand('speckit.plan', root)).toBe('speckit.companion.plan');
         expect(resolveProfileCommand('speckit.tasks', root)).toBe('speckit.companion.tasks');
@@ -45,12 +45,12 @@ describe('resolveProfileCommand', () => {
     });
 
     it('leaves the command unchanged for an invalid/unknown profile value', () => {
-        writeCtx(ctx({ profile: 'turbo' }));
+        writeCtx(ctx({ profile: 'lean' }));
         expect(resolveProfileCommand('speckit.specify', root)).toBe('speckit.specify');
     });
 
-    it('passes through a command with no lean twin even when lean', () => {
-        writeCtx(ctx({ profile: 'lean' }));
+    it('passes through a command with no turbo twin even when turbo', () => {
+        writeCtx(ctx({ profile: 'turbo' }));
         expect(resolveProfileCommand('speckit.clarify', root)).toBe('speckit.clarify');
         expect(resolveProfileCommand('myteam.custom', root)).toBe('myteam.custom');
     });
@@ -82,8 +82,8 @@ describe('resolveProfileCommand — project-default fallback when the spec has n
         fs.rmSync(wsRoot, { recursive: true, force: true });
     });
 
-    it('routes to the lean twin when the spec has no profile but the project default is lean', () => {
-        writeTemplateProfile(wsRoot, 'lean');
+    it('routes to the turbo twin when the spec has no profile but the project default is turbo', () => {
+        writeTemplateProfile(wsRoot, 'turbo');
         writeCtxNoProfile();
         expect(resolveProfileCommand('speckit.plan', specDir)).toBe('speckit.companion.plan');
         expect(resolveProfileCommand('speckit.implement', specDir)).toBe('speckit.companion.implement');
@@ -98,8 +98,8 @@ describe('resolveProfileCommand — project-default fallback when the spec has n
         expect(resolveProfileCommand('speckit.plan', specDir)).toBe('speckit.plan');
     });
 
-    it('respects an explicit standard pin over a lean project default', () => {
-        writeTemplateProfile(wsRoot, 'lean');
+    it('respects an explicit standard pin over a turbo project default', () => {
+        writeTemplateProfile(wsRoot, 'turbo');
         writeCtxNoProfile('standard');
         expect(resolveProfileCommand('speckit.plan', specDir)).toBe('speckit.plan');
     });
@@ -115,8 +115,8 @@ describe('resolveNewSpecProfileCommand', () => {
         fs.rmSync(wsRoot, { recursive: true, force: true });
     });
 
-    it('routes specify to the lean twin when the project default is lean', () => {
-        writeTemplateProfile(wsRoot, 'lean');
+    it('routes specify to the turbo twin when the project default is turbo', () => {
+        writeTemplateProfile(wsRoot, 'turbo');
         expect(resolveNewSpecProfileCommand('speckit.specify', wsRoot)).toBe('speckit.companion.specify');
     });
 
@@ -128,8 +128,8 @@ describe('resolveNewSpecProfileCommand', () => {
         expect(resolveNewSpecProfileCommand('speckit.specify', wsRoot)).toBe('speckit.specify');
     });
 
-    it('passes a command with no lean twin through unchanged even when lean', () => {
-        writeTemplateProfile(wsRoot, 'lean');
+    it('passes a command with no turbo twin through unchanged even when turbo', () => {
+        writeTemplateProfile(wsRoot, 'turbo');
         expect(resolveNewSpecProfileCommand('speckit.clarify', wsRoot)).toBe('speckit.clarify');
     });
 
@@ -153,9 +153,9 @@ describe('seedProfileForNewSpec', () => {
         fs.rmSync(wsRoot, { recursive: true, force: true });
     });
 
-    it('pins lean when the project default is lean', () => {
-        writeTemplateProfile(wsRoot, 'lean');
-        expect(seedProfileForNewSpec(specDir)).toBe('lean');
+    it('pins turbo when the project default is turbo', () => {
+        writeTemplateProfile(wsRoot, 'turbo');
+        expect(seedProfileForNewSpec(specDir)).toBe('turbo');
     });
 
     it('pins standard for standard / off / absent project defaults', () => {
@@ -179,16 +179,16 @@ describe('seedProfileForNewSpec', () => {
     // seed, but a spec already pinned keeps its recorded profile (resolveProfileCommand
     // reads the pin, not the live default).
     it('changing the default reshapes future seeds, not an already-pinned spec', () => {
-        writeTemplateProfile(wsRoot, 'lean');
+        writeTemplateProfile(wsRoot, 'turbo');
         const pinned = seedProfileForNewSpec(specDir);
-        expect(pinned).toBe('lean');
+        expect(pinned).toBe('turbo');
         fs.writeFileSync(
             path.join(specDir, '.spec-context.json'),
             JSON.stringify({ workflow: 'speckit', specName: 'demo', branch: 'main', currentStep: 'plan', status: 'planned', history: [], profile: pinned }),
             'utf8',
         );
         writeTemplateProfile(wsRoot, 'standard');
-        // The pinned spec still dispatches its lean twin despite the default flip.
+        // The pinned spec still dispatches its turbo twin despite the default flip.
         expect(resolveProfileCommand('speckit.plan', specDir)).toBe('speckit.companion.plan');
         // A brand-new spec seeded now would be standard.
         expect(seedProfileForNewSpec(specDir)).toBe('standard');

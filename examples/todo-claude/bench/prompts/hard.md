@@ -1,6 +1,6 @@
 # Bench prompt — HARD ("Tags — a whole new feature")
 
-A **new feature area**: its own route, its own data model + store slice, persistence, and a nav entry — plus a touch-point on todos. Paste everything between the rules into the specify step. The **Required affordances** pin the user-visible surface so the bench can grade lean and standard on one yardstick. Implement them exactly, following the app's conventions (a `pages/` component + a `<Route>` in `App.tsx` + a nav `<Link>` in `Header.tsx`; a new store slice under `src/store/` wrapped in `App.tsx`; persistence through `src/lib/storage.ts`).
+A **new feature area**: its own route, its own data model + store slice, persistence, and a nav entry — plus a touch-point on todos. Paste everything between the rules into the specify step. The **Required affordances** pin the user-visible surface so the bench can grade turbo and standard on one yardstick. Implement them exactly, following the app's conventions (a `pages/` component + a `<Route>` in `App.tsx` + a nav `<Link>` in `Header.tsx`; a new store slice under `src/store/` wrapped in `App.tsx`; persistence through `src/lib/storage.ts`).
 
 ---
 

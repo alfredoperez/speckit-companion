@@ -1,6 +1,6 @@
 ---
 allowed-tools: Bash(node examples/todo-claude/bench/prep.mjs:*), AskUserQuestion
-description: Arm a lean-vs-standard bench run in the todo-claude sandbox
+description: Arm a turbo-vs-standard bench run in the todo-claude sandbox
 ---
 
 ## Your task
@@ -9,10 +9,10 @@ Arm a bench run so the next manual spec-kit pipeline pass (run by hand in VS Cod
 
 ### 1. Resolve size + mode
 
-Read them from `$ARGUMENTS` (e.g. `easy lean`, or `--size medium --mode standard`).
+Read them from `$ARGUMENTS` (e.g. `easy turbo`, or `--size medium --mode standard`).
 
 - **size** ∈ `easy` | `medium` | `hard`
-- **mode** ∈ `lean` | `standard`
+- **mode** ∈ `turbo` | `standard`
 
 If either is missing or ambiguous, ask with **AskUserQuestion** (one question for size, one for mode) before continuing. Do not guess.
 

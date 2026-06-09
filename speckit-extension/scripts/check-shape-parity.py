@@ -2,8 +2,8 @@
 """Guard the Companion profile command bodies. Two checks:
 
 1. PARITY — the opt-in namespaced /speckit.companion.{specify,plan,tasks,implement}
-   command bodies must equal the companion-lean preset bodies (frontmatter aside),
-   so the per-spec opt-in path and the lean preset path produce the same shape.
+   command bodies must equal the companion-turbo preset bodies (frontmatter aside),
+   so the per-spec opt-in path and the turbo preset path produce the same shape.
    (companion-standard has no namespaced twin — it is intentionally absent here.)
 
 2. TIMING PARTIAL — every overridden command body in BOTH presets (and the
@@ -20,13 +20,13 @@ EXT = os.path.dirname(HERE)  # speckit-extension/
 
 PIPELINE = ["specify", "plan", "tasks", "implement"]
 PARITY_PAIRS = [
-    (f"commands/speckit.companion.{c}.md", f"presets/companion-lean/commands/speckit.{c}.md")
+    (f"commands/speckit.companion.{c}.md", f"presets/companion-turbo/commands/speckit.{c}.md")
     for c in PIPELINE
 ]
 ALL_CMDS = ["specify", "clarify", "plan", "tasks", "analyze", "implement", "constitution"]
 BODIES_NEEDING_PARTIAL = (
     [f"presets/companion-standard/commands/speckit.{c}.md" for c in ALL_CMDS]
-    + [f"presets/companion-lean/commands/speckit.{c}.md" for c in ALL_CMDS]
+    + [f"presets/companion-turbo/commands/speckit.{c}.md" for c in ALL_CMDS]
     + [f"commands/speckit.companion.{c}.md" for c in PIPELINE]
 )
 PARTIAL_FILE = "presets/_shared/timing-partial.md"
@@ -76,7 +76,7 @@ def main() -> int:
             print("  -", p)
         return 1
     print(
-        f"[shape-parity] OK — {len(PARITY_PAIRS)} namespaced bodies match companion-lean; "
+        f"[shape-parity] OK — {len(PARITY_PAIRS)} namespaced bodies match companion-turbo; "
         f"{len(BODIES_NEEDING_PARTIAL)} bodies carry the timing partial"
     )
     return 0

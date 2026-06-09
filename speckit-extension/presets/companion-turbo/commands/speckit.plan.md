@@ -1,5 +1,5 @@
 ---
-description: Resolve genuine ambiguities in the lean spec with a few targeted questions.
+description: Create a turbo implementation plan and store it in plan.md.
 ---
 
 ## User Input
@@ -10,17 +10,26 @@ $ARGUMENTS
 
 ## Outline
 
-A lean clarify — no fixed five-question ceremony, no full coverage-taxonomy scan. Ask only what a reasonable default cannot resolve.
+Produce a **turbo** plan — just enough to drive tasks. No multi-phase research scaffolding, no dual-option structure trees.
 
-1. Read `.specify/feature.json` for the feature directory; load `<feature_directory>/spec.md`.
+1. Read `.specify/feature.json` for the feature directory; load `<feature_directory>/spec.md` and `.specify/memory/constitution.md` if present.
 
-2. Scan the spec for genuine ambiguities — choices that materially change scope, behavior, or success criteria and where no reasonable default exists. Ignore anything an informed default already covers.
+2. Create `<feature_directory>/plan.md` with these sections, in order:
+   - **Summary** — the primary requirement plus the technical approach in 2–4 sentences.
+   - **Technical Context** — language/version, primary dependencies, storage, testing, target platform, hard constraints. Mark unknowns `NEEDS CLARIFICATION`.
+   - **Approach & Structure** — the concrete files/modules this touches (real paths) and the order of attack. Organize by file/dependency, not by user story. (This replaces the stock Project Structure trees.)
+   - **Out of Scope** — what this explicitly does not do.
 
-3. Ask **at most 3** targeted questions, the highest-impact first. If nothing genuinely needs clarifying, say so and stop — do not invent questions to fill a quota.
+3. If the constitution defines gates, add a short **Constitution Check** (pass / justified violations). Omit the Complexity-Tracking table unless there is a real violation to justify.
 
-4. Write each answer back into `spec.md` **inline** (update the relevant requirement/assumption); do not create a separate artifact. Replace any `[NEEDS CLARIFICATION]` you resolve.
+4. **Side files — assess on demand.** Create each only when it genuinely helps a developer understand or build *this* change; when the information fits naturally in `plan.md`, keep it there instead of spawning a file. Judge per feature:
+   - `research.md` — only for real unknowns or trade-offs worth recording on their own; otherwise fold a short "Decisions" note into `plan.md`.
+   - `data-model.md` — only when the change introduces or reshapes entities a dev needs spelled out to implement it.
+   - `contracts/` — only when it exposes an interface (API / CLI / schema / UI) a consumer codes against.
+   - `quickstart.md` — only when there is a non-obvious setup or verification path a dev would otherwise miss.
+   Default to folding into `plan.md`; create a side file only when its absence would slow understanding or implementation.
 
-**Output**: an updated `<feature_directory>/spec.md` with resolved ambiguities; no new file.
+**Output**: `<feature_directory>/plan.md` (+ any side files that genuinely help: `research.md` / `data-model.md` / `contracts/` / `quickstart.md`).
 
 
 <!-- speckit-companion:timing -->

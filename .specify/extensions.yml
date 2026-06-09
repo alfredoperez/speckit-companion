@@ -120,8 +120,7 @@ hooks:
     enabled: true
     optional: false
     prompt: Execute speckit.companion.capture-plan?
-    description: Record plan completion (currentStep=plan, status=planned) into
-      .spec-context.json
+    description: Record plan completion (currentStep=plan, status=planned) into .spec-context.json
     condition: null
   after_tasks:
   - extension: git

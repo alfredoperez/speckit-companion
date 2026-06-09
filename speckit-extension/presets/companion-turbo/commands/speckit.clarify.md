@@ -1,5 +1,5 @@
 ---
-description: Create or update the project constitution, leanly.
+description: Resolve genuine ambiguities in the turbo spec with a few targeted questions.
 ---
 
 ## User Input
@@ -10,19 +10,17 @@ $ARGUMENTS
 
 ## Outline
 
-A lean constitution — set the principles and write the file. No exhaustive template-propagation checklist, no Sync-Impact-Report ceremony.
+A turbo clarify — no fixed five-question ceremony, no full coverage-taxonomy scan. Ask only what a reasonable default cannot resolve.
 
-1. Read the existing `.specify/memory/constitution.md` if present.
+1. Read `.specify/feature.json` for the feature directory; load `<feature_directory>/spec.md`.
 
-2. From the user input (and repo context), fill or update the constitution:
-   - **Principles** — the non-negotiable rules the project commits to, each a short titled statement with a one-line rationale.
-   - **Governance** — how principles are amended and what overrides what.
+2. Scan the spec for genuine ambiguities — choices that materially change scope, behavior, or success criteria and where no reasonable default exists. Ignore anything an informed default already covers.
 
-3. **Version** — bump the constitution version with semantic versioning (MAJOR for a removed/redefined principle, MINOR for a new principle or section, PATCH for wording). State the new version and the date.
+3. Ask **at most 3** targeted questions, the highest-impact first. If nothing genuinely needs clarifying, say so and stop — do not invent questions to fill a quota.
 
-4. Write the result to `.specify/memory/constitution.md`. Print a 2–3 line summary of what changed. Do not crawl every template to propagate edits — note any template that clearly conflicts, but leave propagation to the user.
+4. Write each answer back into `spec.md` **inline** (update the relevant requirement/assumption); do not create a separate artifact. Replace any `[NEEDS CLARIFICATION]` you resolve.
 
-**Output**: an updated `.specify/memory/constitution.md` + a short change summary.
+**Output**: an updated `<feature_directory>/spec.md` with resolved ambiguities; no new file.
 
 
 <!-- speckit-companion:timing -->

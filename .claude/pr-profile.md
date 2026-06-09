@@ -26,7 +26,7 @@ Paths: `speckit-extension/**`
 - **Version**: `speckit-extension/extension.yml` `extension.version` · **Release**: `/publish-speckit-ext` → `speckit-ext-v*` tag → catalog
 - Sub-areas:
   - **commands** — `speckit-extension/commands/**` (a new command must be in `extension.yml` `provides.commands` or the installer skips it → ⚠️ if missing)
-  - **presets** — `speckit-extension/presets/**` (lean/standard bodies; run `python3 speckit-extension/scripts/check-shape-parity.py`)
+  - **presets** — `speckit-extension/presets/**` (turbo/standard bodies; run `python3 speckit-extension/scripts/check-shape-parity.py`)
   - **scripts / hooks** — `speckit-extension/scripts/**`
   - **version** — `extension.yml` `extension.version`
 

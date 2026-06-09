@@ -1,5 +1,5 @@
 ---
-description: Create a lean implementation plan and store it in plan.md.
+description: Execute the turbo tasks.md in dependency order.
 ---
 
 ## User Input
@@ -10,26 +10,21 @@ $ARGUMENTS
 
 ## Outline
 
-Produce a **lean** plan — just enough to drive tasks. No multi-phase research scaffolding, no dual-option structure trees.
+1. Read `.specify/feature.json` for the feature directory; load `<feature_directory>/tasks.md`, `plan.md`, and `spec.md`. Then record the **implement START** so the step's duration begins now (the script stamps the real clock; the end-of-step hook records each task and closes the step — do not hand-write implement timing):
+   ```bash
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step implement --status implementing --kind start --by extension
+   ```
 
-1. Read `.specify/feature.json` for the feature directory; load `<feature_directory>/spec.md` and `.specify/memory/constitution.md` if present.
+2. Execute tasks in dependency order:
+   - Complete each layer before the next: Setup → Foundational → Core → Integration → Polish.
+   - Tasks marked `[P]` (different files, no incomplete dependency) may run together; tasks touching the same file run sequentially.
+   - Halt on a failed non-parallel task and report the cause; for `[P]` tasks, continue the others and report the failure.
 
-2. Create `<feature_directory>/plan.md` with these sections, in order:
-   - **Summary** — the primary requirement plus the technical approach in 2–4 sentences.
-   - **Technical Context** — language/version, primary dependencies, storage, testing, target platform, hard constraints. Mark unknowns `NEEDS CLARIFICATION`.
-   - **Approach & Structure** — the concrete files/modules this touches (real paths) and the order of attack. Organize by file/dependency, not by user story. (This replaces the stock Project Structure trees.)
-   - **Out of Scope** — what this explicitly does not do.
+3. After completing a task, mark it `- [x]` in `tasks.md`.
 
-3. If the constitution defines gates, add a short **Constitution Check** (pass / justified violations). Omit the Complexity-Tracking table unless there is a real violation to justify.
+4. On completion, validate the result against the spec's **Functional Requirements** and **Success Criteria**, and report a short summary of what was built and anything left undone.
 
-4. **Side files — assess on demand.** Create each only when it genuinely helps a developer understand or build *this* change; when the information fits naturally in `plan.md`, keep it there instead of spawning a file. Judge per feature:
-   - `research.md` — only for real unknowns or trade-offs worth recording on their own; otherwise fold a short "Decisions" note into `plan.md`.
-   - `data-model.md` — only when the change introduces or reshapes entities a dev needs spelled out to implement it.
-   - `contracts/` — only when it exposes an interface (API / CLI / schema / UI) a consumer codes against.
-   - `quickstart.md` — only when there is a non-obvious setup or verification path a dev would otherwise miss.
-   Default to folding into `plan.md`; create a side file only when its absence would slow understanding or implementation.
-
-**Output**: `<feature_directory>/plan.md` (+ any side files that genuinely help: `research.md` / `data-model.md` / `contracts/` / `quickstart.md`).
+**Output**: working changes per `tasks.md`, with completed tasks checked off.
 
 
 <!-- speckit-companion:timing -->

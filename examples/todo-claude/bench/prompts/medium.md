@@ -1,6 +1,6 @@
 # Bench prompt — MEDIUM ("Due dates on todos")
 
-A feature **added to the existing todos** — extend the todo item + the todos page. Paste everything between the rules into the specify step. The **Required affordances** pin the user-visible surface so the bench can grade lean and standard on one yardstick. Implement them exactly, following the app's conventions (store slice for state, `lib/storage` for any persistence, presentational components).
+A feature **added to the existing todos** — extend the todo item + the todos page. Paste everything between the rules into the specify step. The **Required affordances** pin the user-visible surface so the bench can grade turbo and standard on one yardstick. Implement them exactly, following the app's conventions (store slice for state, `lib/storage` for any persistence, presentational components).
 
 ---
 

@@ -1,4 +1,4 @@
-// Shared helpers for the lean-vs-standard bench harness.
+// Shared helpers for the turbo-vs-standard bench harness.
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve, join, relative } from 'node:path'
 import {
@@ -25,10 +25,10 @@ export const VITEST_OUT = join(BENCH_DIR, '.last-vitest.json')
 
 // easy = update a route/title · medium = add a feature to todos · hard = a whole new feature
 export const SIZES = ['easy', 'medium', 'hard']
-// The bench's A/B axis is the template profile: lean vs standard.
-export const MODES = ['lean', 'standard']
-export const PRESET_BY_MODE = { lean: 'companion-lean', standard: 'companion-standard' }
-export const ALL_PRESET_IDS = ['companion-standard', 'companion-lean']
+// The bench's A/B axis is the template profile: turbo vs standard.
+export const MODES = ['turbo', 'standard']
+export const PRESET_BY_MODE = { turbo: 'companion-turbo', standard: 'companion-standard' }
+export const ALL_PRESET_IDS = ['companion-standard', 'companion-turbo']
 export const LEGACY_PRESET_ID = 'sdd-lean' // pre-rename leftover; removed on reconcile
 
 export function readJson(p, fallback = null) {
@@ -143,9 +143,9 @@ export function fmtDur(sec) {
   return r ? `${m}m ${r}s` : `${m}m`
 }
 
-export function fmtDelta(std, lean, asDur = false) {
-  if (std == null || lean == null || Number.isNaN(std) || Number.isNaN(lean)) return '—'
-  const d = std - lean
+export function fmtDelta(std, turbo, asDur = false) {
+  if (std == null || turbo == null || Number.isNaN(std) || Number.isNaN(turbo)) return '—'
+  const d = std - turbo
   const sign = d > 0 ? '+' : d < 0 ? '−' : ''
   const mag = asDur ? fmtDur(Math.abs(d)) : String(Math.abs(d))
   return d === 0 ? '0' : `${sign}${mag}`
