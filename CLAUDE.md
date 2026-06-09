@@ -221,7 +221,7 @@ npm run test:watch    # Watch mode
 - **VS Code mock**: Extension-side tests use `tests/__mocks__/vscode.ts` (mapped via `jest.config.js` `moduleNameMapper`). Add mock APIs there as needed.
 - **Config**: Jest uses `ts-jest` with `tsconfig.test.json`
 
-### Demo testing specs (fixed baseline — never commit local edits)
+### Demo testing specs (fixed baseline — don't commit *test-time* edits)
 
 `specs/_00_demo-specified/`, `specs/_01_demo-planned/`, and `specs/_02_demo-tasked/` are **committed manual-testing fixtures**, each pinned to one viewer state:
 
@@ -231,7 +231,7 @@ npm run test:watch    # Watch mode
 | `_01_demo-planned` | `planned` | `spec.md`, `plan.md` | **Tasks** |
 | `_02_demo-tasked` | `ready-to-implement` | `spec.md`, `plan.md`, `tasks.md` | **Implement** |
 
-They exist so the viewer can be opened against a known state during development. **Do NOT commit local changes to these three dirs** — when exercising them you will mutate `.spec-context.json`/files; never `git add` those changes. To restore the baseline after playing around: `git restore specs/_00_demo-specified specs/_01_demo-planned specs/_02_demo-tasked` (or `git checkout -- …`). Other `specs/_*/` dirs remain gitignored (local-only).
+They exist so the viewer can be opened against a known state during development. Each baseline `.spec-context.json` uses the canonical `history[]` schema (a `start`+`complete` pair per step up to the spec's `currentStep`) — that's what makes `deriveViewerState`/`shouldShowApprove` surface the footer button. **Don't commit the *incidental* mutations you cause by exercising them** — clicking through the viewer rewrites `.spec-context.json`/files; `git restore` those, never `git add` them. **The exception is a deliberate baseline correction:** if you intentionally change what state a fixture represents (e.g. migrating it to a new schema), commit that. To restore the baseline after playing around: `git restore specs/_00_demo-specified specs/_01_demo-planned specs/_02_demo-tasked` (or `git checkout -- …`). Other `specs/_*/` dirs remain gitignored (local-only).
 
 ## Tech Stack
 

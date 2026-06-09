@@ -66,6 +66,7 @@
           "enum": ["specify", "clarify", "plan", "tasks", "analyze", "implement"]
         },
         "substep": { "type": ["string", "null"] },
+        "task": { "type": "string" },
         "kind": { "type": "string", "enum": ["start", "complete"] },
         "from": {
           "type": "object",

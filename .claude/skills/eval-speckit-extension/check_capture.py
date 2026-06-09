@@ -226,10 +226,10 @@ def _timing(r: Report, history: list) -> None:
             gap = (firsts[i][1] - firsts[i - 1][1]).total_seconds()
             parts.append(f"{firsts[i-1][0]}→{firsts[i][0]} {_fmt(gap)}")
         r.add(None, "step-timing", " | ".join(parts))
-    # Per-task cadence within implement. Report the authorship source so a
-    # hook-driven single-shot sync (by:extension, expected 0ms burst) isn't
-    # misread as broken cadence — real per-task timing comes from live AI
-    # journaling (by:ai), where non-zero gaps are the signal.
+    # Per-task cadence within implement. Per-task timing is now script-stamped by
+    # the end-of-step hook (by:extension), so a tight end-of-step window is the
+    # EXPECTED shape, not broken cadence. Any by:ai per-task entries would be a
+    # legacy live-journaling leftover.
     task_evts = [e for e in history
                  if isinstance(e.get("task"), str) and _parse_at(e.get("at"))]
     if len(task_evts) >= 2:
@@ -238,8 +238,8 @@ def _timing(r: Report, history: list) -> None:
                 for i in range(1, len(task_times))]
         ai = sum(1 for e in task_evts if e.get("by") == "ai")
         ext = sum(1 for e in task_evts if e.get("by") == "extension")
-        source = ("live (by:ai) — real cadence" if ai and not ext
-                  else "hook burst (by:extension) — cadence not a signal" if ext and not ai
+        source = ("script-stamped (by:extension, end-of-step) — tight window expected" if ext and not ai
+                  else "live (by:ai) — legacy live cadence" if ai and not ext
                   else f"mixed (ai={ai}, extension={ext})")
         r.add(None, "task-cadence",
               f"{len(task_evts)} tasks; source={source}; gaps {', '.join(_fmt(g) for g in gaps)}")

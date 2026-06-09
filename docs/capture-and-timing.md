@@ -13,20 +13,21 @@ The extension or a script writes these; nothing depends on the AI's judgement.
 | Trigger | Code | `by` | Writes |
 |---|---|---|---|
 | GUI lifecycle button (sidebar/viewer) | `src/features/specs/stepLifecycle.ts` → `specContextWriter.ts` | `extension` | step `start`/`complete`, `setStatus`, `setProfile` (atomic temp+rename) |
-| In-command lifecycle hook | `.specify/extensions/companion/scripts/write-context.py` (run by `speckit.companion.capture*`) | `extension` | step **start** (specify→specified, plan→planned, …) |
-| Reconstruction fallback | `speckit-extension/scripts/derive-from-files.py` | `derive` | state rebuilt from on-disk artifacts when a hook never fired |
+| Command-body self-capture | the companion `specify`/`implement` bodies call `write-context.py --kind start`/`--kind complete` | `extension` | **specify** start (right after the dir is created) + complete (at the end) → a real begin→end span; **implement** start (at begin) |
+| `after_implement` hook | `write-context.py --tasks-file` → `sync_tasks()` (run by `speckit.companion.capture-implement`) | `extension` | every task's **start + complete**, then the implement step's **complete** — all stamped with the script's own clock |
+| Other lifecycle hooks | `write-context.py` (run by `speckit.companion.capture*`) | `extension` | step **start** (plan→planned, tasks→ready-to-implement, …) |
+| Reconstruction fallback | `speckit-extension/scripts/derive-from-files.py` | `derive` | state rebuilt from on-disk artifacts when a hook never fired (same start+complete shape) |
 
 These carry **sub-second (ms) precision** because they read the real clock at write time, and they are monotonic because they fire in order.
 
 ### 2. Best-effort AI journaling — coarse, NOT guaranteed
 
-The **timing partial** — baked into every companion preset command body (`speckit-extension/presets/_shared/timing-partial.md`) and injected into the GUI dispatch preamble by `src/ai-providers/promptBuilder.ts` — *instructs* the AI to append entries with `by: "ai"` using a live `date -u +"%Y-%m-%dT%H:%M:%SZ"`:
+The **timing partial** — baked into every companion preset command body (`speckit-extension/presets/_shared/timing-partial.md`) and injected into the GUI dispatch preamble by `src/ai-providers/promptBuilder.ts` — *instructs* the AI to append entries with `by: "ai"` using a live `date -u +"%Y-%m-%dT%H:%M:%SZ"`, for the steps the scripts don't own:
 
-- **Self-close.** When a step's own work ends, append `{step, substep:null, kind:"complete", by:"ai", at:<date -u>}`. Don't let the next step close this one.
+- **Self-close — plan/tasks/clarify/analyze only.** When one of those step's own work ends, append `{step, substep:null, kind:"complete", by:"ai", at:<date -u>}`. **specify** and **implement** are deliberately excluded — they are closed deterministically by scripts (see §1), so an `ai` complete there would duplicate the script's.
 - **Substeps live.** Each substep boundary (plan: `research`, `design`; tasks: `generate`) appends its own entry the moment it finishes.
-- **Per task.** In implement, append a `start` and a `complete` per task (`substep == task == Tnnn`), one fresh `date -u` each — never batched.
 
-These carry **second precision** (that's what `date -u` emits) and are only as accurate as the AI's discipline allows.
+The AI no longer journals **per-task** timing — that was the burst-prone path; the `after_implement` hook now owns it (§1). These remaining `by:ai` entries carry **second precision** and are only as accurate as the AI's discipline allows.
 
 ## Why the split exists (the dispatch model)
 
@@ -35,7 +36,7 @@ The extension dispatches a command as **text** — to a terminal, the host edito
 1. **GUI button clicks** — user-driven, host-observed → deterministic.
 2. **In-command hook scripts** — the AI runs them at a fixed point in the command (the "check for extension hooks" step) → deterministic-ish (depends on the command reaching that step, which it reliably does).
 
-Anything finer than a step boundary — a step's *real* end time, per-task cadence — has no host-observable signal, so today it falls to the AI to journal. That is the entire source of timing imprecision.
+Anything finer than a step boundary — a step's *real* end time, per-task cadence — has no host-observable signal. The fix (applied 2026-06-08) is to move that capture off the AI and into **scripts the command runs**: the specify body brackets itself with `--kind start`/`--kind complete` calls, and the `after_implement` hook journals every task + the implement close. The script reads the real clock, so these are deterministic even though the host never saw the step finish.
 
 ## The reliability principle
 
@@ -45,10 +46,14 @@ The AI executes commands faithfully — every lifecycle hook fired on every run.
 
 This principle is also what the eval encodes: deterministic writes are held to a strict bar; AI-journaled timing is graded as quality, not pass/fail.
 
-## Known gaps (E2E on `command-center/specs/12-financial-page`, 2026-06-08)
+## Fixed — deterministic timing (2026-06-08)
 
-- **specify does not self-close.** Its `complete` is `by:extension`, synthesized 2 ms before plan-start. Unlike plan/tasks/implement (which self-close `by:ai`), specify journals no substeps and no self-close, so its duration reads as "time until plan started," not real work time. → fix: give the specify body a deterministic end-capture (a `write-context.py … --kind complete` call), not a prose self-close instruction. Tracked in the vault: `Projects/speckit companion/backlog/specify-duration-and-duplicate-start.md`.
-- **Per-task `date -u` bursts.** The AI batches timestamp calls → clustered second-precision stamps, some non-monotonic (`gaps 0ms, …, −38000ms`). Structure (start+complete per task) is correct; cadence resolution is coarse. → fix direction: route per-task capture through a script that stamps its own clock. Same backlog item.
+Both gaps the financial-page E2E exposed were closed by moving capture off the AI (see the reliability principle above):
+
+- **specify now self-closes.** The specify body calls `write-context.py --kind start` right after it creates the dir and `--kind complete` at the end (`by:extension`, ms precision) → a real begin→end span instead of a `complete` synthesized at plan-start. The late `after_specify` hook-start is collapsed by the broadened start-dedup in `update_context` (a step is started once).
+- **per-task no longer bursts.** The AI stopped hand-authoring per-task JSON; the `after_implement` hook's `sync_tasks()` writes each task's start+complete and the implement step's close, each with the script's own clock. Trade-off (accepted): the stamps land in a tight end-of-step window rather than reflecting live cadence — reliability over resolution.
+
+The remaining `by:ai` writes are the plan/tasks/clarify/analyze self-closes and substep boundaries. History: `Projects/speckit companion/backlog/specify-duration-and-duplicate-start.md`.
 
 ## Preset / command-override mechanism
 

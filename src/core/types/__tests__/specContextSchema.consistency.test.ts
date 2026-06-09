@@ -41,4 +41,9 @@ describe('spec-context.schema.json stays in sync with the TS contract', () => {
     it('historyEntry.kind enum is start/complete', () => {
         expect(schema.$defs.historyEntry.properties.kind.enum).toEqual(['start', 'complete']);
     });
+
+    it('historyEntry.task is an optional string (per-task journaling field)', () => {
+        expect(schema.$defs.historyEntry.properties.task).toEqual({ type: 'string' });
+        expect(schema.$defs.historyEntry.required).not.toContain('task');
+    });
 });
