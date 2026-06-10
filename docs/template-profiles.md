@@ -44,7 +44,7 @@ So template overrides are **mixed** (work for plan/tasks, no-op for specify). Co
 | `tasks.md` | **redo** — drop user-story grouping/`[US#]` labels/MVP framing; keep strict `[Tn] [P?] + path`, Setup→Foundational→Core→Integration→Polish layering, deps/parallel notes. |
 | `constitution.md` | **redo** — keep principles/governance + semver bump + write the file; drop the template-propagation checklist + Sync-Impact ceremony. |
 
-Net turbo spec folder: always `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files (`research.md` / `data-model.md` / `contracts/` / `quickstart.md`) created on demand, only when they help understand or build the change.
+Net turbo spec folder: `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files (`research.md` / `data-model.md` / `contracts/` / `quickstart.md`) created on demand, only when they help understand or build the change. (Exception: with the opt-in complexity fast-path on, a *small* change folds plan + tasks into `spec.md` and skips the separate `plan.md` / `tasks.md` — see [Complexity fast-path](#complexity-fast-path-turbo-only).)
 
 ## Timing fidelity (both profiles)
 
