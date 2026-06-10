@@ -86,7 +86,7 @@ Subagent prompt must include:
 - The ordered chain (there is **no** one-shot): run, in order, the skills
   `/speckit-companion-specify` → `/speckit-companion-plan` → `/speckit-companion-tasks` → `/speckit-companion-implement`,
   passing the issue as the feature description. The `before_specify` git hook creates the `NNN-<shortname>` feature branch automatically; do not create one manually. Spec artifacts land in `specs/<NNN>-<slug>/`.
-- After implement: ensure `specs/<NNN>-<slug>/` status is `completed`, all tasks checked. Commit only the real change + spec folder — **do NOT commit `.specify/` regenerated artifacts** (`feature.json`, registry files get swept by `git add -A`); `git checkout origin/main -- .specify/<file>` for any that show modified, then commit `src/`/`webview/`/`package.json` + `specs/<NNN>/`.
+- After implement: ensure `specs/<NNN>-<slug>/` status is `implemented` (NOT `completed` — that's reserved for the user's final Mark-Completed action; the capture script refuses to write it), all tasks checked, and the `.spec-context.json` `specName` is the real name (not a `[FEATURE NAME]` placeholder). Commit only the real change + spec folder — **do NOT commit `.specify/` regenerated artifacts** (`feature.json`, registry files get swept by `git add -A`); `git checkout origin/main -- .specify/<file>` for any that show modified, then commit `src/`/`webview/`/`package.json` + `specs/<NNN>/`.
 - **Verify before returning:** `npm run compile && npm test`. If `speckit-extension/**` changed, also `python3 speckit-extension/scripts/check-shape-parity.py`. If capture/timing changed, run the capture eval. Fix failures; do not return green if red.
 - Return: `{ branch, specDir, filesChanged[], testsPassed, summary, uiOrManualSurfaces[] }` where `uiOrManualSurfaces` lists anything touching the VS Code UI / webview / sidebar / settings that a human should eyeball.
 
@@ -115,8 +115,9 @@ gh api -X POST "repos/alfredoperez/speckit-companion/pulls/<PR>/requested_review
 Confirm it took by checking the PR's `requested_reviewers` includes the `Copilot` bot. Record whether Copilot was successfully requested.
 
 #### 6. Wait for + address Copilot — main loop poll, then **subagent**
-Only if Copilot was requested. Poll **gently** — Copilot takes ~4 min, so a tight interval just adds noise (it is NOT a rate-limit risk; GitHub allows 5k req/hr). Use **90s** intervals, ~12 min total, and run it as a background poll that exits on first hit:
+Only if Copilot was requested. Poll **gently** — Copilot takes **~4–5 min**, so **wait an initial `sleep 300` before the first check**, then poll at **90s** intervals (~12 min total). It is NOT a rate-limit risk (GitHub allows 5k req/hr); the delay just avoids no-op early checks. Run it as a background poll that exits on first hit:
 ```bash
+sleep 300   # Copilot's SLA — don't poll before this
 for i in $(seq 1 8); do
   gh pr view <PR> --json reviews,comments \
     --jq '[.reviews[],.comments[]] | map(select(.author.login|test("[Cc]opilot")))'
