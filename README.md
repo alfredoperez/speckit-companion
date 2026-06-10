@@ -253,7 +253,7 @@ An **opt-in beta** that **defaults to `false`**. When enabled in `turbo` mode, s
 | `false` (default) | Force the full pipeline on every change — no combining, no warning. |
 | `true` | Auto-detect small changes and fast-track them; larger changes keep the full pipeline. |
 
-The flag is settable at both the project level (`complexityFastPath` in `.specify/companion.yml`) and the editor level (this setting); when the two disagree, the project value wins. It applies only to the turbo `/speckit.companion.*` commands. Full reference in [`docs/template-profiles.md`](./docs/template-profiles.md#complexity-fast-path-turbo-only).
+The flag is set in the editor (this setting) and mirrored into `.specify/companion.yml` — a machine-local, gitignored cache the command body reads — so the editor setting is the single source of truth. It applies only to the turbo `/speckit.companion.*` commands. Full reference in [`docs/template-profiles.md`](./docs/template-profiles.md#complexity-fast-path-turbo-only).
 
 ### Command Format
 
