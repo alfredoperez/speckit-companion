@@ -1,8 +1,20 @@
-# Turbo-vs-Standard Bench
+# Adoption-Ladder Bench (5 modes · 3 sizes)
 
-Run the **same feature** through both template profiles — **turbo** (`companion-turbo`) and **standard** (`companion-standard`) — at three sizes, and compare correctness and speed. You drive the pipeline by hand in VS Code (SpecKit Companion + speckit extension); two Claude Code slash commands handle setup and measurement.
+Run the **same feature** through five workflow configurations — an *adoption ladder* where each rung adds exactly one thing — at three sizes, and compare correctness, speed, artifacts/ceremony, lifecycle-capture fidelity, and an **Overall health composite**. You build each cell through the real SpecKit Companion extension in VS Code; the harness then judges, scores, and records it.
 
-The three sizes are graded by **scope against the app**:
+## The 5 modes (each rung adds one thing vs the prior)
+
+| Mode | What it adds | Commands | Capture |
+|---|---|---|---|
+| `speckit` | plain upstream spec-kit, no companion | stock `/speckit.*` | none — blind |
+| `companion-logs` | companion installed, profile `off` | same stock `/speckit.*` | hooks → `.spec-context.json` |
+| `companion-standard` | `companion-standard` preset | stock `/speckit.*` shape + timing | capture |
+| `companion-turbo` | `companion-turbo` preset, lean bodies | `/speckit.companion.*` | baked in |
+| `companion-fast-path` | turbo **plus** `complexityFastPath` | `/speckit.companion.*` | baked in |
+
+Adjacent pairs differ by ONE variable, so a metric delta between them is attributable. The MODES list lives in `lib.mjs`.
+
+## The 3 sizes (graded by scope against the app)
 
 | Size | Scope | This bench's feature |
 |---|---|---|
@@ -12,63 +24,63 @@ The three sizes are graded by **scope against the app**:
 
 The target app (`examples/todo-claude`) is layered on purpose — react-router routes, a `store/` slice with `localStorage` persistence, `lib/storage`, presentational `components/`, route `pages/`, and a committed test suite — so each size has real surface to attach to. See its `CLAUDE.md` for conventions.
 
-## Where this runs (not a separate repo)
+## Run-in-folders model (no copies)
 
-The bench lives **inside this repo** at `examples/todo-claude/` — it is **not** a separate repository. But you **open it as its own VS Code workspace**, because the spec-kit pipeline always operates on the workspace root that contains `.specify/`, and the sandbox has its own (`examples/todo-claude/.specify/`, distinct from the repo root's). Opening the whole `speckit-companion` repo would point the pipeline at the *extension's* `.specify/`, not the sandbox's.
+The five folders `examples/bench-sandboxes/todo-{speckit,companion-logs,companion-standard,companion-turbo,companion-fast-path}/` **are** the run folders — you open each as its own VS Code window and build the feature in place. They are gitignored, each is its **own git repo** (so the capture writer's `git rev-parse --show-toplevel` resolves to the folder, not the parent), and they're baked by `bench/sync-templates.mjs` via the **real installers** (`specify init` + `specify extension add` + preset + profile). The diff baseline is the canonical `examples/todo-claude/src`.
 
-Everything the bench generates is isolated and gitignored — its `node_modules`, `dist`, the `.specify/companion.yml` / `.specify/presets/` / `.specify/extensions/` install artifacts, and the per-run `.run-state.json`. Only the harness, prompts, oracle, and `stats.jsonl`/`REPORT.md` are committed. So nested-but-isolated gives you a real, buildable target co-located with the turbo-mode code under test, without git churn. (If you ever want full git isolation, the same `bench/` tree drops into a standalone clone of just this folder — nothing here depends on the parent repo except the `speckit-extension/presets/` source that `/bench-prep` installs via `--dev`.)
+You must open each folder as its own VS Code workspace, because the spec-kit pipeline operates on the workspace root that contains `.specify/`. Opening the whole `speckit-companion` repo would point the pipeline at the *extension's* `.specify/`, not the sandbox's.
 
-## Setup (one-time)
+## How to run it
 
-```bash
-cd examples/todo-claude
-npm install
+Three slash commands, one size at a time:
+
+1. **`/bench-sync`** *(occasional)* — pull latest spec-kit + `speckit-extension`, then `node bench/sync-templates.mjs` re-bakes all five folders with the real installers. Re-run whenever the app, `speckit-extension/`, or the presets change.
+2. **`/bench-prep <size>`** — `node bench/run-all.mjs prep --size <size>` resets each folder to pristine (restores `src/` + `index.html` from the canonical app, clears `specs/`), writes a `.run-meta.json` marker, **prints the paste-able prompt**, and **opens all five folders in VS Code** (`code -n` per folder; `--no-open` to skip).
+3. Build the feature in each window through the extension: **specify → plan → tasks → implement** (Companion provider = Claude). `speckit`/`logs`/`standard` use stock `/speckit.*`; `turbo`/`fast-path` use `/speckit.companion.*`.
+4. **`/bench-capture <size>`** — spawns 5 independent rubric judges + one cross-solution **comparative reviewer**, then `node bench/run-all.mjs capture --size <size>` measures every signal, computes the Overall composite, records it, regenerates `REPORT.md`, and resets the folders.
+
+`/bench-run-all <size>` is the agent-driven automation of the same loop (drives the folders headlessly via Workflow agents instead of you in VS Code).
+
+## What gets measured
+
+Per cell: `npm run build` · the hidden **acceptance oracle** (`acceptance/<size>.test.tsx`) · the **full regression suite** (`src/**`) · convention + blast-radius checks · the **capture eval** (`check_capture.py`, skipped for `speckit`) · an independent **rubric** (readability/conventions/scope) · artifact shape (spec/plan/tasks lines, **total artifact lines across all files**, task count, side files) · diff size · and the **comparative review** (`reviews/<size>.md`).
+
+### Overall health composite
+
+A 0–100 score per cell so runs are comparable over time:
+
+```
+composite = round( 45·correctness + 30·rubric + 25·capture )
+  correctness = (build?1:0) × accept_ratio × regress_ratio
+  rubric      = (readability + conventions + scope) / 15
+  capture     = companion → pass/(pass+fail);  speckit → 0 (blind is the point)
 ```
 
-**Install the latest spec-kit extension** (the `companion` spec-kit extension — *not* the VS Code extension). This is what provides the `/speckit.companion.*` commands the turbo runs use, and keeps them current with your local `speckit-extension/` source:
-
-```bash
-# from examples/todo-claude (the workspace the pipeline reads)
-specify extension add ../../speckit-extension --dev --force
-```
-
-- `--dev` installs from the local directory (`speckit-extension/` in this repo, the source of truth); `--force` overwrites a prior install. It emits the companion commands into `.specify/extensions/companion/` (gitignored).
-- **Re-run this whenever you change `speckit-extension/`** so the bench tests the latest. (`specify extension list` shows what's installed; details in [`speckit-extension/docs/install.md`](../../../speckit-extension/docs/install.md).)
-- If `specify` lacks the `extension` subcommand (stock PyPI build), see that install doc — you need the spec-kit build that ships `specify extension`.
-
-The **presets** (`companion-turbo` / `companion-standard`) are installed automatically by `/bench-prep` (also `--dev`, from `speckit-extension/presets/`), so you don't install those by hand.
-
-Finally, **open `examples/todo-claude` as the VS Code workspace** and set the SpecKit Companion provider to Claude.
-
-## Each run (one size × one mode = one "cell")
-
-1. **In Claude Code:** `/bench-prep easy turbo` (it asks if you omit size/mode). This sets the sandbox `templateProfile`, reconciles the `companion-<mode>` preset (`--dev`), snapshots a git baseline into `.run-state.json`, and prints the **prompt to paste** + the **exact commands for that mode**.
-2. **In VS Code:** run **specify → plan → tasks → implement** for that spec.
-   - **turbo** → use `/speckit.companion.*` (always turbo), or stock `/speckit.*` (the `companion-turbo` preset is active).
-   - **standard** → use stock `/speckit.*` (the `companion-standard` preset is active). Never `/speckit.companion.*` — those are always turbo.
-3. **In Claude Code:** `/bench-finish`. It reads timing from the spec's `.spec-context.json`, runs `npm run build` + the size's acceptance suite, diffs the implementation, appends a row to `stats.jsonl`, and re-renders `REPORT.md`.
-4. **Reset for the next cell:** `git restore examples/todo-claude/src && git clean -fd examples/todo-claude/specs` (drops the generated implementation + spec so the next mode starts clean). Then repeat for the other mode, then the other sizes.
-
-Six cells total (3 sizes × 2 modes) fully populate `REPORT.md`.
+It is **cohort-independent** on purpose — a cell's score only moves when its own correctness, quality, or visibility moves, so a drop between runs is a real regression signal. Ceremony/efficiency stays in its own rows (it would wobble per cohort). The report shows it with two axes: **· vs speckit** (the companion value-add — an all-green speckit cell tops out at 75, a captured companion cell reaches 100) and **· vs last run** (the trend; renders `—` until a second run exists).
 
 ## How "passes" is graded
 
-`bench/acceptance/{size}.test.tsx` are the hidden grading key — RTL suites that render the real app and assert the user-visible affordances each prompt mandates (the `data-testid`s in `bench/prompts/{size}.md`). They are **not** part of `tsc`/`vite build` (tsconfig only includes `src/`), so they never block a build. "Passes" = build green **and** the size's acceptance suite green.
+`acceptance/{size}.test.tsx` are the hidden grading key — RTL suites that render the real app and assert the user-visible affordances each prompt mandates (the `data-testid`s in `prompts/{size}.md`). They are **not** part of `tsc`/`vite build` (tsconfig only includes `src/`), so they never block a build. "Passes" = build green **and** the size's acceptance suite green.
 
 ## How timing is measured
 
-Straight from the run's `specs/<dir>/.spec-context.json` `history[]` — it timestamps every step (specify/plan/tasks/implement) regardless of who wrote it. `finish` derives total + per-step durations from those stamps.
+Straight from the run's `specs/<dir>/.spec-context.json` `history[]` — it timestamps every step regardless of who wrote it. `capture` derives total + per-step durations from those stamps. `speckit` is blind, so it has no per-step timeline.
 
-## Files
+## History is durable — diff it later
+
+Committed and **never deleted**, so any future build can compare against today:
 
 | Path | What |
 |---|---|
 | `prompts/{easy,medium,hard}.md` | Paste-in feature text with baked-in required affordances |
 | `acceptance/{easy,medium,hard}.test.tsx` | Correctness oracle (RTL); shared render helper in `acceptance/harness.tsx` |
-| `prep.mjs` / `finish.mjs` | Arm a run / measure + report (called by the slash commands) |
-| `lib.mjs` | Shared paths + helpers |
-| `stats.jsonl` | Append-only ledger, one row per run (committed) |
-| `REPORT.md` | Generated turbo-vs-standard comparison |
-| `.run-state.json` | Current armed run (gitignored) |
+| `lib.mjs` / `run-all.mjs` / `sync-templates.mjs` | Harness: helpers · prep/capture engine · folder baker |
+| `cap.mjs` | Terse wrapper over `write-context.py` (companion capture) |
+| `stats.jsonl` | Latest row per cell (deduped) — the current `REPORT.md` source |
+| `history.jsonl` | **Append-only** — every run forever; powers `· vs last run` |
+| `REPORT.md` | Generated 5-column comparison (incl. Overall) |
+| `runs/<runId>.json` | Per-run snapshots |
+| `reviews/<size>.md` | Comparative reviewer output, prepended per run |
+| `reports/*.html` | Committed copies of the HTML briefs |
 
-Don't hand-edit `stats.jsonl` or `REPORT.md` — they're generated.
+Don't hand-edit `stats.jsonl`, `history.jsonl`, or `REPORT.md` — they're generated. The folders' `node_modules`/`dist`/`.specify` install artifacts are gitignored.

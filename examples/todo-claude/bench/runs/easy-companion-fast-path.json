@@ -1,0 +1,163 @@
+{
+  "runId": "easy-companion-fast-path",
+  "size": "easy",
+  "mode": "companion-fast-path",
+  "spec": "001-rename-task-manager",
+  "specName": "rename task manager",
+  "startedAt": null,
+  "finishedAt": null,
+  "wallClockSec": null,
+  "timing": {
+    "totalSec": 406.682,
+    "perStep": {
+      "specify": 30.879,
+      "plan": 0.075,
+      "tasks": 0.077,
+      "implement": 82.307
+    }
+  },
+  "buildPass": true,
+  "acceptancePassed": 1,
+  "acceptanceTotal": 1,
+  "regressionPassed": 5,
+  "regressionTotal": 5,
+  "conventions": [],
+  "blast": {
+    "files": [
+      "App.test.tsx",
+      "components/Header.tsx"
+    ],
+    "outOfScope": []
+  },
+  "quality": {
+    "readability": 5,
+    "conventions": 5,
+    "scope": 5,
+    "justification": "Clean pure rename touching only the header <h1>, the <title>, and the matching test expectation, with no out-of-scope files or churn."
+  },
+  "shape": {
+    "hasUserStories": false,
+    "specLines": 34,
+    "planLines": 0,
+    "tasksLines": 0,
+    "taskCount": 0,
+    "sideFiles": []
+  },
+  "diff": {
+    "filesChanged": 2,
+    "locAdded": 2,
+    "locRemoved": 2
+  },
+  "capture": {
+    "pass": 17,
+    "fail": 0,
+    "failing": [],
+    "checks": [
+      {
+        "status": "PASS",
+        "id": "valid-json",
+        "detail": "parses"
+      },
+      {
+        "status": "PASS",
+        "id": "canonical-history",
+        "detail": "9 entries"
+      },
+      {
+        "status": "PASS",
+        "id": "no-legacy-keys",
+        "detail": "clean"
+      },
+      {
+        "status": "PASS",
+        "id": "currentStep-valid",
+        "detail": "currentStep=implement"
+      },
+      {
+        "status": "PASS",
+        "id": "status-valid",
+        "detail": "status=implementing"
+      },
+      {
+        "status": "PASS",
+        "id": "last-entry-matches-currentStep",
+        "detail": "last history step=implement, currentStep=implement"
+      },
+      {
+        "status": "PASS",
+        "id": "entries-well-formed",
+        "detail": "all valid"
+      },
+      {
+        "status": "PASS",
+        "id": "entries-match-format",
+        "detail": "9 entries conform to historyEntry def"
+      },
+      {
+        "status": "PASS",
+        "id": "timestamps-monotonic",
+        "detail": "deterministic writes non-decreasing"
+      },
+      {
+        "status": "INFO",
+        "id": "authorship",
+        "detail": "ai=6, extension=3"
+      },
+      {
+        "status": "PASS",
+        "id": "hook-or-derive-captured",
+        "detail": "extension=3, derive=0"
+      },
+      {
+        "status": "INFO",
+        "id": "lifecycle-coverage",
+        "detail": "specify → plan → tasks → implement"
+      },
+      {
+        "status": "PASS",
+        "id": "timestamps-real",
+        "detail": "0/3 deterministic writes look hand-typed (round ms) — all real"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-substeps",
+        "detail": "2 task events; task id present, substep null|==task: True"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-no-duplicates",
+        "detail": "each task has a single finish (≤1 complete; ≤1 legacy start)"
+      },
+      {
+        "status": "PASS",
+        "id": "fast-path-plan-folded",
+        "detail": "plan fold has ['complete', 'start']"
+      },
+      {
+        "status": "PASS",
+        "id": "fast-path-tasks-folded",
+        "detail": "tasks fold has ['complete', 'start']"
+      },
+      {
+        "status": "PASS",
+        "id": "fast-path-timestamps-real",
+        "detail": "all fold timestamps parse"
+      },
+      {
+        "status": "PASS",
+        "id": "fast-path-ready-to-implement",
+        "detail": "status=implementing"
+      },
+      {
+        "status": "INFO",
+        "id": "step-timing",
+        "detail": "specify→plan 31.0s | plan→tasks 152ms | tasks→implement 4.9m"
+      },
+      {
+        "status": "INFO",
+        "id": "task-cadence",
+        "detail": "2 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 41.0s"
+      }
+    ]
+  }
+}

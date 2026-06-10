@@ -42,6 +42,19 @@ Capture works on its own (the JSON is useful to any tool), but it's **built to f
 - **Agent-agnostic** — works wherever spec-kit runs (Claude Code, Copilot, Cursor, Gemini, …), with extra depth on Claude.
 - **Safe by design** — writes are atomic and append-only, preserve unknown fields, never regress a shipped spec, and never fail your spec-kit command. Stdlib-only Python; degrades gracefully when `python3` is absent.
 
+## What you get
+
+| Capability | Status | What it gives you |
+|---|---|---|
+| **Lifecycle progress capture** | ✅ Shipped | Every spec-kit step (specify → plan → tasks → implement) is recorded into `.spec-context.json` as it happens — the GUI lights up on your existing flow, no new commands. |
+| **Per-task implement history** | ✅ Shipped | Implement journals each task as it completes, so the GUI shows real per-task progress, not just "in progress." |
+| **Honest state recovery** | ✅ Shipped | When a hook didn't fire, `derive-from-files.py` reconstructs state from the artifacts on disk — the GUI reflects reality, never a half-truth. |
+| **`/speckit.companion.status`** | ✅ Shipped | One command prints where the active spec stands — step, status, recorded decisions, and the next action. |
+| **`/speckit.companion.resume`** | ✅ Shipped | Pick up where you left off — carries recorded decisions into scope and dispatches the next command in the family the spec has been running. |
+| **Template profiles** ([standard / turbo](../docs/template-profiles.md)) | ✅ Shipped | Pick your pipeline shape: stock `/speckit.*` with better timing, or lean `/speckit.companion.*` (no user stories, trimmed plan, files/dependencies tasks). Both always installed; switching is non-destructive. |
+| **Complexity fast-path** ([turbo](../docs/template-profiles.md#complexity-fast-path-turbo-only)) | 🧪 Beta | Right-sizes the ceremony to the change — small edits fold specify+plan+tasks into one pass; larger changes keep the full pipeline. Off by default. |
+| **Agent-agnostic, safe by design** | ✅ Shipped | Runs wherever spec-kit runs (Claude, Copilot, Cursor, Gemini, …). Writes are atomic, append-only, never regress a shipped spec, and never fail your command; stdlib-only Python. |
+
 ## Commands
 
 Four capture commands run automatically as lifecycle hooks; two are yours to run.

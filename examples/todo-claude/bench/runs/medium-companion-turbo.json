@@ -1,0 +1,158 @@
+{
+  "runId": "medium-companion-turbo",
+  "size": "medium",
+  "mode": "companion-turbo",
+  "spec": "001-due-dates",
+  "specName": "Due Dates",
+  "startedAt": null,
+  "finishedAt": null,
+  "wallClockSec": null,
+  "timing": {
+    "totalSec": 901.875,
+    "perStep": {
+      "specify": 109.686,
+      "plan": 69.95,
+      "tasks": 50.5,
+      "implement": 263.805
+    }
+  },
+  "buildPass": true,
+  "acceptancePassed": 1,
+  "acceptanceTotal": 1,
+  "regressionPassed": 15,
+  "regressionTotal": 15,
+  "conventions": [],
+  "blast": {
+    "files": [
+      "components/TodoItem.tsx",
+      "components/TodoList.tsx",
+      "lib/dates.test.ts",
+      "lib/dates.ts",
+      "pages/TodosPage.test.tsx",
+      "pages/TodosPage.tsx",
+      "store/todos.test.tsx",
+      "store/todos.tsx",
+      "types.ts"
+    ],
+    "outOfScope": [
+      "lib/dates.test.ts",
+      "lib/dates.ts"
+    ]
+  },
+  "quality": {
+    "readability": 5,
+    "conventions": 5,
+    "scope": 5,
+    "justification": "All three requirements met with idiomatic implementation: dueDate state flows through the store reducer/useTodos, persistence rides the existing lib/storage useEffect, components stay prop-driven, test ids match verbatim, overdue logic is factored into a shared lib/dates, and changes stay strictly in-scope with well-targeted co-located tests."
+  },
+  "shape": {
+    "hasUserStories": false,
+    "specLines": 33,
+    "planLines": 50,
+    "tasksLines": 44,
+    "taskCount": 11,
+    "sideFiles": []
+  },
+  "diff": {
+    "filesChanged": 9,
+    "locAdded": 221,
+    "locRemoved": 4
+  },
+  "capture": {
+    "pass": 14,
+    "fail": 0,
+    "failing": [],
+    "checks": [
+      {
+        "status": "PASS",
+        "id": "valid-json",
+        "detail": "parses"
+      },
+      {
+        "status": "PASS",
+        "id": "canonical-history",
+        "detail": "21 entries"
+      },
+      {
+        "status": "PASS",
+        "id": "no-legacy-keys",
+        "detail": "clean"
+      },
+      {
+        "status": "PASS",
+        "id": "currentStep-valid",
+        "detail": "currentStep=implement"
+      },
+      {
+        "status": "PASS",
+        "id": "status-valid",
+        "detail": "status=implementing"
+      },
+      {
+        "status": "PASS",
+        "id": "last-entry-matches-currentStep",
+        "detail": "last history step=implement, currentStep=implement"
+      },
+      {
+        "status": "PASS",
+        "id": "entries-well-formed",
+        "detail": "all valid"
+      },
+      {
+        "status": "PASS",
+        "id": "entries-match-format",
+        "detail": "21 entries conform to historyEntry def"
+      },
+      {
+        "status": "PASS",
+        "id": "timestamps-monotonic",
+        "detail": "deterministic writes non-decreasing"
+      },
+      {
+        "status": "INFO",
+        "id": "authorship",
+        "detail": "ai=16, extension=5"
+      },
+      {
+        "status": "PASS",
+        "id": "hook-or-derive-captured",
+        "detail": "extension=5, derive=0"
+      },
+      {
+        "status": "INFO",
+        "id": "lifecycle-coverage",
+        "detail": "specify → plan → tasks → implement"
+      },
+      {
+        "status": "PASS",
+        "id": "timestamps-real",
+        "detail": "0/5 deterministic writes look hand-typed (round ms) — all real"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-substeps",
+        "detail": "11 task events; task id present, substep null|==task: True"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-matches-tasksmd",
+        "detail": "tasks.md done=11, journaled=11"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-no-duplicates",
+        "detail": "each task has a single finish (≤1 complete; ≤1 legacy start)"
+      },
+      {
+        "status": "INFO",
+        "id": "step-timing",
+        "detail": "specify→plan 2.7m | plan→tasks 3.4m | tasks→implement 4.6m"
+      },
+      {
+        "status": "INFO",
+        "id": "task-cadence",
+        "detail": "11 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 9.5s, 1.2s, 26.3s, 1.1s, 39.8s, 1.1s, 1.1s, 25.1s, 1.1s, 1.7m"
+      }
+    ]
+  }
+}

@@ -1,0 +1,158 @@
+{
+  "runId": "hard-companion-turbo",
+  "size": "hard",
+  "mode": "companion-turbo",
+  "spec": "001-tags",
+  "specName": "Tags",
+  "startedAt": null,
+  "finishedAt": null,
+  "wallClockSec": null,
+  "timing": {
+    "totalSec": 887.747,
+    "perStep": {
+      "specify": 102.616,
+      "plan": 57.602,
+      "tasks": 56.454,
+      "implement": 383.756
+    }
+  },
+  "buildPass": true,
+  "acceptancePassed": 1,
+  "acceptanceTotal": 1,
+  "regressionPassed": 17,
+  "regressionTotal": 17,
+  "conventions": [],
+  "blast": {
+    "files": [
+      "App.test.tsx",
+      "App.tsx",
+      "components/Header.tsx",
+      "components/TagFilters.tsx",
+      "components/TodoItem.tsx",
+      "pages/TagsPage.test.tsx",
+      "pages/TagsPage.tsx",
+      "pages/TodosPage.test.tsx",
+      "pages/TodosPage.tsx",
+      "store/tags.test.tsx",
+      "store/tags.tsx",
+      "types.ts"
+    ],
+    "outOfScope": []
+  },
+  "quality": {
+    "readability": 5,
+    "conventions": 5,
+    "scope": 5,
+    "justification": "Idiomatic new tags store slice mirroring todos.tsx, all persistence (tags + assignments, with cascade-on-remove) through lib/storage.ts, full route/nav/page/component wiring, verbatim test ids, and tightly-scoped edits with no out-of-scope churn."
+  },
+  "shape": {
+    "hasUserStories": false,
+    "specLines": 38,
+    "planLines": 52,
+    "tasksLines": 44,
+    "taskCount": 12,
+    "sideFiles": []
+  },
+  "diff": {
+    "filesChanged": 12,
+    "locAdded": 464,
+    "locRemoved": 28
+  },
+  "capture": {
+    "pass": 14,
+    "fail": 0,
+    "failing": [],
+    "checks": [
+      {
+        "status": "PASS",
+        "id": "valid-json",
+        "detail": "parses"
+      },
+      {
+        "status": "PASS",
+        "id": "canonical-history",
+        "detail": "23 entries"
+      },
+      {
+        "status": "PASS",
+        "id": "no-legacy-keys",
+        "detail": "clean"
+      },
+      {
+        "status": "PASS",
+        "id": "currentStep-valid",
+        "detail": "currentStep=implement"
+      },
+      {
+        "status": "PASS",
+        "id": "status-valid",
+        "detail": "status=implementing"
+      },
+      {
+        "status": "PASS",
+        "id": "last-entry-matches-currentStep",
+        "detail": "last history step=implement, currentStep=implement"
+      },
+      {
+        "status": "PASS",
+        "id": "entries-well-formed",
+        "detail": "all valid"
+      },
+      {
+        "status": "PASS",
+        "id": "entries-match-format",
+        "detail": "23 entries conform to historyEntry def"
+      },
+      {
+        "status": "PASS",
+        "id": "timestamps-monotonic",
+        "detail": "deterministic writes non-decreasing"
+      },
+      {
+        "status": "INFO",
+        "id": "authorship",
+        "detail": "ai=18, extension=5"
+      },
+      {
+        "status": "PASS",
+        "id": "hook-or-derive-captured",
+        "detail": "extension=5, derive=0"
+      },
+      {
+        "status": "INFO",
+        "id": "lifecycle-coverage",
+        "detail": "specify → plan → tasks → implement"
+      },
+      {
+        "status": "PASS",
+        "id": "timestamps-real",
+        "detail": "0/5 deterministic writes look hand-typed (round ms) — all real"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-substeps",
+        "detail": "12 task events; task id present, substep null|==task: True"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-matches-tasksmd",
+        "detail": "tasks.md done=12, journaled=12"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-no-duplicates",
+        "detail": "each task has a single finish (≤1 complete; ≤1 legacy start)"
+      },
+      {
+        "status": "INFO",
+        "id": "step-timing",
+        "detail": "specify→plan 4.5m | plan→tasks 2.1m | tasks→implement 1.8m"
+      },
+      {
+        "status": "INFO",
+        "id": "task-cadence",
+        "detail": "12 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 29.4s, 13.1s, 12.0s, 15.8s, 13.3s, 16.7s, 12.1s, 34.0s, 13.2s, 22.4s, 16.7s"
+      }
+    ]
+  }
+}

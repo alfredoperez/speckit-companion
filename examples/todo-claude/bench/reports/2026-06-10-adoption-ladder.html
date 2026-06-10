@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adoption-Ladder Eval Bench — SpecKit Companion</title>
+<style>
+  :root{
+    --bg:#0a1929; --panel:#0e2438; --panel-2:#0c1d30; --mock-bg:#06121f;
+    --ink:#dcefff; --ink-2:#aecbe8; --muted:#7193b3; --line:#16395a; --grid:rgba(77,208,225,.04);
+    --accent:#4dd0e1; --accent-2:#5b9dff;
+    --ok:#5ad1a8; --warn:#ffd277; --del:#ff8a80; --chip:#0e2740;
+    --fh:'Space Grotesk','Inter',ui-sans-serif,system-ui,sans-serif;
+    --fb:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    --fm:ui-monospace,'SF Mono','JetBrains Mono',Menlo,Consolas,monospace;
+    --r:5px; --r-lg:10px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 var(--fb);-webkit-font-smoothing:antialiased;
+    background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:30px 30px}
+  .wrap{max-width:960px;margin:0 auto;padding:52px 24px 110px}
+  h1{font:600 34px/1.08 var(--fh);letter-spacing:-.5px;margin:0 0 10px}
+  h3{font:600 15px/1.3 var(--fh);margin:0}
+  p{margin:0 0 14px;color:var(--ink-2)}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px dashed rgba(77,208,225,.4)}
+  code{font:400 12px var(--fm);background:var(--chip);padding:1.5px 6px;border-radius:var(--r);color:var(--ink);border:1px solid var(--line)}
+  b{color:var(--ink)}
+  .sub{color:var(--muted);font-size:15.5px;margin:0 0 16px;max-width:78ch}
+  .meta{display:flex;gap:12px;flex-wrap:wrap;align-items:center;color:var(--muted);font:12px/1 var(--fm);letter-spacing:.4px;margin-bottom:12px}
+  .badge{display:inline-block;font:700 10.5px/1 var(--fm);text-transform:uppercase;letter-spacing:.6px;padding:5px 10px;border-radius:var(--r)}
+  .b-ok{color:var(--ok);background:rgba(90,209,168,.12);border:1px solid rgba(90,209,168,.4)}
+  .b-info{color:var(--accent-2);background:rgba(91,157,255,.12);border:1px solid rgba(91,157,255,.4)}
+  .b-warn{color:var(--warn);background:rgba(255,210,119,.1);border:1px solid rgba(255,210,119,.4)}
+  .eyebrow{font:700 11px/1.2 var(--fm);text-transform:uppercase;letter-spacing:1.8px;color:var(--accent);margin:52px 0 16px;display:flex;align-items:center;gap:9px}
+  .eyebrow::before{content:"//";opacity:.7}
+  .eyebrow.lead{color:var(--warn)} .eyebrow.lead::before{content:"★"}
+  .callout{background:var(--panel);border:1px dashed var(--accent);border-radius:var(--r-lg);padding:16px 20px;margin:8px 0 16px}
+  .callout.warn{border-color:var(--warn)} .callout b{color:var(--ink)}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:4px 0}
+  th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px dashed var(--line)}
+  th{color:var(--accent);font:700 10.5px var(--fm);text-transform:uppercase;letter-spacing:.7px;border-bottom:1px solid var(--line)}
+  tr:last-child td{border-bottom:0}
+  td.mut{color:var(--muted)} .add{color:var(--ok);font-weight:600} .del{color:var(--del);font-weight:600} .warnc{color:var(--warn);font-weight:600}
+  td.num{font:600 13px var(--fm);text-align:right;white-space:nowrap}
+  th.num{text-align:right}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:4px}
+  .side{border-radius:var(--r-lg);padding:14px 16px;font-size:13.5px}
+  .side.a{background:rgba(255,138,128,.06);border:1px solid rgba(255,138,128,.32)}
+  .side.b{background:rgba(90,209,168,.06);border:1px dashed rgba(90,209,168,.45)}
+  .side .lbl{font:700 11px var(--fm);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;display:block}
+  .side.a .lbl{color:var(--del)} .side.b .lbl{color:var(--ok)}
+  .side ul{margin:0;padding-left:18px;color:var(--ink-2)} .side li{margin:4px 0}
+  .grid{display:grid;gap:12px} .cols-2{grid-template-columns:repeat(2,1fr)} .cols-3{grid-template-columns:repeat(3,1fr)} .cols-5{grid-template-columns:repeat(5,1fr)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 16px}
+  .card h3{font-size:14px;margin-bottom:4px} .card p{font-size:12.5px;color:var(--muted);margin:0}
+  .card .k{font:700 10px var(--fm);text-transform:uppercase;letter-spacing:.6px;color:var(--accent);display:block;margin-bottom:6px}
+  .stat{font:600 26px/1 var(--fh);color:var(--accent);letter-spacing:-.5px}
+  .mock{background:var(--mock-bg);border:1px dashed var(--line);border-radius:var(--r-lg);padding:15px 18px;font:12.5px/1.7 var(--fm);white-space:pre-wrap;color:var(--ink-2);overflow-x:auto;margin:4px 0 8px}
+  .mock .k{color:var(--accent)} .mock .s{color:var(--muted)} .mock .a{color:var(--ok)} .mock .x{color:var(--del)} .mock .w{color:var(--warn)}
+  ol.steps{counter-reset:s;list-style:none;margin:0;padding:0}
+  ol.steps li{counter-increment:s;position:relative;padding:11px 0 11px 38px;border-bottom:1px dashed var(--line);font-size:13.5px;color:var(--ink-2)}
+  ol.steps li:last-child{border-bottom:0}
+  ol.steps li::before{content:counter(s,decimal-leading-zero);position:absolute;left:0;top:11px;color:var(--accent);font:700 11px var(--fm)}
+  ol.steps li b{color:var(--ink)}
+  .band{background:var(--panel);border:1px solid var(--accent);border-left:4px solid var(--accent);border-radius:var(--r-lg);padding:22px 24px;margin:26px 0 0}
+  .band h3{font-size:17px;margin-bottom:8px} .band p{color:var(--ink-2);margin:0}
+  @media (max-width:680px){.wrap{padding:34px 16px 70px}.cols-2,.cols-3,.cols-5,.pair{grid-template-columns:1fr}h1{font-size:27px}table{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>One ladder, five rungs, same shipped code</h1>
+    <p class="sub">A 15-cell benchmark built the same feature at three sizes through five SpecKit Companion workflow configurations — an "adoption ladder" where each rung changes exactly one variable. Every cell ran through the real VS Code extension, then was graded by a deterministic harness plus an independent judge agent that didn't write the code.</p>
+    <div class="meta">
+      <span>2026-06-10</span><span>·</span><span>SpecKit Companion</span><span>·</span>
+      <span class="badge b-ok">15/15 shipped</span>
+      <span class="badge b-info">5 modes × 3 sizes</span>
+      <span class="badge b-warn">run-in-folders · /bench-prep · /bench-capture</span>
+    </div>
+  </header>
+
+  <div class="callout">
+    <b>Thesis:</b> all five rungs ship correct, convention-following, fully-tested code — every time, at every size. Correctness never moves. What moves is <b>process ceremony</b> and <b>progress visibility</b>. The lean rungs (turbo, fast-path) cut spec ceremony roughly in half and write zero throwaway side files; <b>fast-path</b> additionally collapses the whole pipeline on simple work and gracefully steps back up to the full pipeline when the work is genuinely complex.
+  </div>
+
+  <div class="eyebrow lead">The ladder — each rung adds exactly one thing</div>
+  <div class="grid cols-5">
+    <div class="card"><span class="k">rung 1</span><h3>speckit</h3><p>Plain upstream spec-kit. No companion, <b style="color:var(--del)">no capture</b>.</p></div>
+    <div class="card"><span class="k">+ capture</span><h3>companion-logs</h3><p>Same stock <code>/speckit.*</code> commands — but the GUI now tracks progress.</p></div>
+    <div class="card"><span class="k">+ preset</span><h3>companion-standard</h3><p>Standard preset: stock command shape + timing + capture.</p></div>
+    <div class="card"><span class="k">+ lean cmds</span><h3>companion-turbo</h3><p>Lean <code>/speckit.companion.*</code> commands. Fast-path off.</p></div>
+    <div class="card"><span class="k">+ fast-path</span><h3>companion-fast-path</h3><p>Turbo plus the <code>complexityFastPath</code> classifier.</p></div>
+  </div>
+  <p style="margin-top:14px">Three feature sizes, identical per size across all five rungs:</p>
+  <div class="grid cols-3">
+    <div class="card"><span class="k">easy</span><h3>Rename</h3><p>App title "Todo App" → "Task Manager" (header + browser title).</p></div>
+    <div class="card"><span class="k">medium</span><h3>Due dates</h3><p>Optional persisted due dates + an Overdue badge + a sort-by-due toggle.</p></div>
+    <div class="card"><span class="k">hard</span><h3>Tags</h3><p>New <code>/tags</code> route + store slice + per-todo assignment + filter row, all persisted.</p></div>
+  </div>
+
+  <div class="eyebrow">Result 1 — correctness is a flat tie</div>
+  <p>No rung produced broken or off-convention code. Across all fifteen cells:</p>
+  <div class="grid cols-3">
+    <div class="card"><div class="stat">15/15</div><p>build ✓ · acceptance 1/1 · full regression suite all-green</p></div>
+    <div class="card"><div class="stat">5.0/5</div><p>independent-judge rubric (readability · conventions · scope) — 14 of 15 perfect; one 4.7</p></div>
+    <div class="card"><div class="stat">12/12</div><p>companion cells with a clean lifecycle-capture eval — <b>14–17 ✓ / 0 ✗</b> each</p></div>
+  </div>
+  <div class="callout warn" style="margin-top:14px">
+    <b>So correctness doesn't decide it.</b> Same store slice, same persistence through <code>lib/storage</code>, same idiomatic helpers — every rung. If the feature always ships and always passes, the question becomes what each rung <i>costs</i> and what it leaves behind.
+  </div>
+
+  <div class="eyebrow">Result 2 — the ceremony gap widens with feature size</div>
+  <p>The spec the team has to read and maintain. Lower is leaner — the shipped feature is identical either way.</p>
+  <table>
+    <tr><th>spec.md lines</th><th class="num">speckit</th><th class="num">logs</th><th class="num">standard</th><th class="num">turbo</th><th class="num">fast-path</th></tr>
+    <tr><td class="mut">easy</td><td class="num">54</td><td class="num">53</td><td class="num">56</td><td class="num add">26</td><td class="num add">34</td></tr>
+    <tr><td class="mut">medium</td><td class="num">102</td><td class="num">106</td><td class="num">103</td><td class="num add">33</td><td class="num add">49</td></tr>
+    <tr><td class="mut">hard</td><td class="num">126</td><td class="num">112</td><td class="num">114</td><td class="num add">38</td><td class="num add">39</td></tr>
+  </table>
+  <p style="margin-top:16px">And the task list each rung generated — <code>tasks.md</code> task count:</p>
+  <table>
+    <tr><th>task count</th><th class="num">speckit</th><th class="num">logs</th><th class="num">standard</th><th class="num">turbo</th><th class="num">fast-path</th></tr>
+    <tr><td class="mut">easy</td><td class="num">6</td><td class="num">6</td><td class="num">7</td><td class="num">5</td><td class="num add">0</td></tr>
+    <tr><td class="mut">medium</td><td class="num">17</td><td class="num">16</td><td class="num">16</td><td class="num">11</td><td class="num add">0</td></tr>
+    <tr><td class="mut">hard</td><td class="num">22</td><td class="num">18</td><td class="num">18</td><td class="num add">12</td><td class="num add">12</td></tr>
+  </table>
+  <p style="margin-top:16px">And the throwaway side documents each rung left on disk (<code>research.md</code> / <code>data-model.md</code> / <code>quickstart.md</code> / <code>contracts/</code>, plus a <code>checklists/</code>):</p>
+  <table>
+    <tr><th>side artifacts</th><th class="num">speckit</th><th class="num">logs</th><th class="num">standard</th><th class="num">turbo</th><th class="num">fast-path</th></tr>
+    <tr><td class="mut">easy</td><td class="num warnc">3</td><td class="num warnc">4</td><td class="num warnc">3</td><td class="num add">0</td><td class="num add">0</td></tr>
+    <tr><td class="mut">medium</td><td class="num warnc">4</td><td class="num warnc">4</td><td class="num warnc">4</td><td class="num add">0</td><td class="num add">0</td></tr>
+    <tr><td class="mut">hard</td><td class="num warnc">4</td><td class="num warnc">4</td><td class="num warnc">4</td><td class="num add">0</td><td class="num add">0</td></tr>
+  </table>
+  <p style="margin-top:14px;color:var(--muted);font-size:13px">Stock speckit wrote three side files <i>to rename a title</i>. The lean rungs wrote none, at any size — and still shipped the Tags feature. <b style="color:var(--ink-2)">(Next run:</b> a new <code>artifact-total-lines</code> metric counts the lines <i>inside</i> those side files + checklists — see caveats; the count above is by file presence and already understates the real gap.)</p>
+
+  <div class="eyebrow">Result 3 — the headline: fast-path is adaptive</div>
+  <p>The most interesting finding isn't that fast-path is faster — it's that it knows <i>when</i> to be. It folds the plan/tasks pipeline into specify only when the change is genuinely simple, and steps back up to the full pipeline when it isn't.</p>
+  <div class="pair">
+    <div class="side b">
+      <span class="lbl">easy + medium → it folds</span>
+      <ul>
+        <li>plan.md and tasks.md = <b>0 lines, 0 tasks</b> — collapsed into specify.</li>
+        <li>Finishes in <b>~6.5 min</b> — less than half every other rung.</li>
+        <li>Tightest diff, zero out-of-scope, still 5.0 rubric.</li>
+      </ul>
+    </div>
+    <div class="side a" style="background:rgba(91,157,255,.06);border:1px dashed rgba(91,157,255,.4)">
+      <span class="lbl" style="color:var(--accent-2)">hard → it declines to fold</span>
+      <ul>
+        <li>Classifies the routed, multi-surface Tags feature as non-simple.</li>
+        <li>Runs the full plan→tasks pipeline — <b>12 tasks, 14m12s</b>.</li>
+        <li><b>Identical to turbo</b> (14m48s, 12 tasks). No penalty for the safety check.</li>
+      </ul>
+    </div>
+  </div>
+  <p style="margin-top:16px">Time through the captured pipeline, per size. The lean pair pulls away as the feature grows:</p>
+  <table>
+    <tr><th>history total</th><th class="num">speckit</th><th class="num">logs</th><th class="num">standard</th><th class="num">turbo</th><th class="num">fast-path</th></tr>
+    <tr><td class="mut">easy</td><td class="num">15m 03s</td><td class="num">15m 11s</td><td class="num">14m 39s</td><td class="num">13m 52s</td><td class="num add">6m 47s</td></tr>
+    <tr><td class="mut">medium</td><td class="num mut">10m 41s*</td><td class="num">18m 11s</td><td class="num">18m 01s</td><td class="num">15m 02s</td><td class="num add">6m 25s</td></tr>
+    <tr><td class="mut">hard</td><td class="num">28m 30s</td><td class="num">24m 22s</td><td class="num">28m 45s</td><td class="num add">14m 48s</td><td class="num add">14m 12s</td></tr>
+  </table>
+  <p style="margin-top:10px;color:var(--muted);font-size:12.5px">* speckit·medium is missing its implement timestamp, so its total undercounts and isn't comparable (see caveats). Times are a single sample per cell — agent variance applies — but the lean/heavy split is consistent and large.</p>
+
+  <div class="eyebrow">Result 4 — progress visibility (the thing speckit can't buy)</div>
+  <div class="pair">
+    <div class="side a">
+      <span class="lbl">speckit — blind</span>
+      <ul>
+        <li>Stock upstream writes no usable lifecycle history.</li>
+        <li>The GUI has no step, no status, no resume to render.</li>
+        <li>You find out where a spec stands by reading files.</li>
+      </ul>
+    </div>
+    <div class="side b">
+      <span class="lbl">companion (4 rungs) — tracked</span>
+      <ul>
+        <li>Full canonical <code>history[]</code>: a finish per step and per task.</li>
+        <li>Capture eval <b>14–17 ✓ / 0 ✗</b> on every companion cell.</li>
+        <li>Honest live timing — the GUI shows real progress and can resume.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="eyebrow">The pick</div>
+  <div class="pair">
+    <div class="side a">
+      <span class="lbl">speckit</span>
+      <ul>
+        <li>Identical shipped code…</li>
+        <li>…but heaviest doc ceremony (4 side files, longest specs).</li>
+        <li>Zero progress capture — blind to the GUI.</li>
+      </ul>
+    </div>
+    <div class="side b">
+      <span class="lbl">turbo / fast-path — sweet spot</span>
+      <ul>
+        <li>Same correctness, same feature, full capture.</li>
+        <li>~half the spec ceremony and diff, no throwaway side files.</li>
+        <li>fast-path = turbo + a free speedup on simple work, no penalty on hard.</li>
+      </ul>
+    </div>
+  </div>
+  <p style="margin-top:14px;color:var(--muted);font-size:13px"><b style="color:var(--ink-2)">companion-logs</b> is the entry rung — turn on visibility, change nothing else. <b style="color:var(--ink-2)">companion-standard</b> is the middle road: capture on, but you keep the verbose upstream artifact shape.</p>
+
+  <div class="eyebrow">Caveats — what this run hardened, honestly</div>
+  <p>Dogfooding the bench for real surfaced (and fixed) measurement issues that matter more than any single number:</p>
+  <ol class="steps">
+    <li><b>Artifact ceremony was undercounted.</b> The harness only counted <code>spec/plan/tasks</code> lines — never the lines <i>inside</i> <code>research.md</code> / <code>data-model.md</code> / <code>quickstart.md</code> / <code>contracts/</code> / <code>checklists/</code>. Fixed: a recursive <code>artifact-total-lines</code> metric now counts every file the spec produced. This run predates it, so the side-file numbers here are by presence (4 vs 0); the next run quantifies the true line gap — which favors the lean rungs even more.</li>
+    <li><b>A medium blast-radius false-positive.</b> The idiomatic new <code>lib/dueDate.ts</code> helper (judges praised it) was wrongly flagged "out-of-scope." Fixed: medium scope now allows new <code>lib/</code> files, the way hard already allows new <code>components/</code>.</li>
+    <li><b>speckit isn't perfectly blind.</b> The always-on VS Code extension writes some timing even for stock upstream — so speckit shows partial timings, and its medium run is missing the implement timestamp, making that one total non-comparable.</li>
+    <li><b>Implement step never auto-closes (<a href="https://github.com/alfredoperez/speckit-companion/issues/244">#244</a>).</b> The VS Code manual flow leaves implement at <code>implementing</code> instead of advancing to <code>implemented</code>. Mode-agnostic — affects every rung equally, filed separately. <b>Not</b> a fast-path bug.</li>
+  </ol>
+
+  <div class="band">
+    <h3>Repeatable, and it accumulates</h3>
+    <p>The round runs from the five sandbox folders directly — <code>/bench-prep &lt;size&gt;</code> arms and opens them, you build in the real extension, <code>/bench-capture &lt;size&gt;</code> judges + measures + banks a row into <code>bench/stats.jsonl</code> and regenerates <code>REPORT.md</code>. As fast-path, capture, and future features land, re-running shows whether the lean rungs keep holding the line on correctness — or start trading it away.</p>
+  </div>
+
+</div>
+</body>
+</html>

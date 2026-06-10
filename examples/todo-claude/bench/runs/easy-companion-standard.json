@@ -1,0 +1,152 @@
+{
+  "runId": "easy-companion-standard",
+  "size": "easy",
+  "mode": "companion-standard",
+  "spec": "001-rename-to-task-manager",
+  "specName": "Rename To Task Manager",
+  "startedAt": null,
+  "finishedAt": null,
+  "wallClockSec": null,
+  "timing": {
+    "totalSec": 879.163,
+    "perStep": {
+      "specify": 90.349,
+      "plan": 112.842,
+      "tasks": 80.609,
+      "implement": 177.493
+    }
+  },
+  "buildPass": true,
+  "acceptancePassed": 1,
+  "acceptanceTotal": 1,
+  "regressionPassed": 5,
+  "regressionTotal": 5,
+  "conventions": [],
+  "blast": {
+    "files": [
+      "App.test.tsx",
+      "components/Header.tsx"
+    ],
+    "outOfScope": []
+  },
+  "quality": {
+    "readability": 5,
+    "conventions": 5,
+    "scope": 5,
+    "justification": "Clean exact rename: only Header.tsx <h1> and index.html <title> changed to \"Task Manager\", with zero out-of-scope edits or churn."
+  },
+  "shape": {
+    "hasUserStories": true,
+    "specLines": 56,
+    "planLines": 71,
+    "tasksLines": 125,
+    "taskCount": 7,
+    "sideFiles": [
+      "research.md",
+      "data-model.md",
+      "quickstart.md"
+    ]
+  },
+  "diff": {
+    "filesChanged": 2,
+    "locAdded": 2,
+    "locRemoved": 2
+  },
+  "capture": {
+    "pass": 14,
+    "fail": 0,
+    "failing": [],
+    "checks": [
+      {
+        "status": "PASS",
+        "id": "valid-json",
+        "detail": "parses"
+      },
+      {
+        "status": "PASS",
+        "id": "canonical-history",
+        "detail": "18 entries"
+      },
+      {
+        "status": "PASS",
+        "id": "no-legacy-keys",
+        "detail": "clean"
+      },
+      {
+        "status": "PASS",
+        "id": "currentStep-valid",
+        "detail": "currentStep=implement"
+      },
+      {
+        "status": "PASS",
+        "id": "status-valid",
+        "detail": "status=implementing"
+      },
+      {
+        "status": "PASS",
+        "id": "last-entry-matches-currentStep",
+        "detail": "last history step=implement, currentStep=implement"
+      },
+      {
+        "status": "PASS",
+        "id": "entries-well-formed",
+        "detail": "all valid"
+      },
+      {
+        "status": "PASS",
+        "id": "entries-match-format",
+        "detail": "18 entries conform to historyEntry def"
+      },
+      {
+        "status": "PASS",
+        "id": "timestamps-monotonic",
+        "detail": "deterministic writes non-decreasing"
+      },
+      {
+        "status": "INFO",
+        "id": "authorship",
+        "detail": "ai=13, extension=5"
+      },
+      {
+        "status": "PASS",
+        "id": "hook-or-derive-captured",
+        "detail": "extension=5, derive=0"
+      },
+      {
+        "status": "INFO",
+        "id": "lifecycle-coverage",
+        "detail": "specify → plan → tasks → implement"
+      },
+      {
+        "status": "PASS",
+        "id": "timestamps-real",
+        "detail": "0/5 deterministic writes look hand-typed (round ms) — all real"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-substeps",
+        "detail": "7 task events; task id present, substep null|==task: True"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-matches-tasksmd",
+        "detail": "tasks.md done=6, journaled=7"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-no-duplicates",
+        "detail": "each task has a single finish (≤1 complete; ≤1 legacy start)"
+      },
+      {
+        "status": "INFO",
+        "id": "step-timing",
+        "detail": "specify→plan 5.2m | plan→tasks 3.4m | tasks→implement 3.1m"
+      },
+      {
+        "status": "INFO",
+        "id": "task-cadence",
+        "detail": "7 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 96ms, 30.7s, 91ms, 45.9s, 90ms, 89ms"
+      }
+    ]
+  }
+}
