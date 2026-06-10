@@ -289,6 +289,7 @@ def _has_step_start(log: list, step: str, substep: object = None) -> bool:
         isinstance(e, dict)
         and e.get("step") == step
         and e.get("substep") == substep
+        and e.get("task") is None
         and _entry_kind(e) == "start"
         for e in log
     )
@@ -304,7 +305,11 @@ def _has_complete(log: list, step: str, task: object = None) -> bool:
     completion entry on a migrated spec."""
     def _matches(e: dict) -> bool:
         if task is None:
-            return e.get("substep") is None
+            # Step-level complete only. A per-task finish now also has substep None
+            # (the id lives in `task`), so it must NOT count as the step's complete —
+            # otherwise the first task finish would skip the real step close and leave
+            # the step permanently in-flight.
+            return e.get("substep") is None and e.get("task") is None
         return e.get("task") == task or e.get("substep") == task
     return any(
         isinstance(e, dict)
