@@ -9,6 +9,7 @@ import type {
     ImageFormat
 } from './types';
 import { SIZE_LIMITS, CLEANUP_THRESHOLDS } from './types';
+import { rewriteImageRefsToStaged } from '../../ai-providers/promptBuilder';
 
 /**
  * Manages temporary markdown files and images for spec editor submissions.
@@ -183,6 +184,130 @@ export class TempFileManager {
     }
 
     /**
+     * Stage attached images into a self-gitignored cache dir INSIDE the workspace
+     * so a sandboxed CLI (OpenCode) — which auto-rejects reads outside the project
+     * root — can read them. globalStorage is outside that sandbox; this copies the
+     * images into `<workspace-root>/.speckit-companion/spec-editor/<stageId>/images/`
+     * and writes a `.gitignore` containing `*` at the cache root on first use so the
+     * tree never shows in `git status`.
+     *
+     * The staged set is registered in the manifest (images-only, `expiresAt` on the
+     * existing orphaned schedule) so it's reaped by `cleanupOrphanedFiles` — NOT by
+     * an immediate post-dispatch delete, which would race the agent's async read
+     * (see #207). Returns a map of the source globalStorage fsPath → staged fsPath
+     * for rewriting the inlined image references; returns an empty map (no-op) when
+     * no workspace folder is open or a copy fails — callers fall back to the
+     * original references.
+     */
+    async stageImagesInWorkspace(
+        stageId: string,
+        images: AttachedImage[],
+        sourcePaths: Record<string, string>
+    ): Promise<Record<string, string>> {
+        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri;
+        if (!workspaceRoot || images.length === 0) {
+            return {};
+        }
+
+        const cacheRoot = vscode.Uri.joinPath(workspaceRoot, '.speckit-companion');
+        const stagedImagesDir = vscode.Uri.joinPath(cacheRoot, 'spec-editor', stageId, 'images');
+
+        const rewriteMap: Record<string, string> = {};
+        try {
+            await vscode.workspace.fs.createDirectory(stagedImagesDir);
+            await this.ensureCacheGitignore(cacheRoot);
+
+            const stagedPaths: Record<string, string> = {};
+            for (const image of images) {
+                const source = sourcePaths[image.id];
+                if (!source) {
+                    continue;
+                }
+                const destPath = vscode.Uri.joinPath(
+                    stagedImagesDir,
+                    `${image.id}.${image.format}`
+                );
+                await vscode.workspace.fs.copy(
+                    vscode.Uri.file(source),
+                    destPath,
+                    { overwrite: true }
+                );
+                stagedPaths[image.id] = destPath.fsPath;
+                rewriteMap[source] = destPath.fsPath;
+            }
+
+            if (Object.keys(stagedPaths).length === 0) {
+                return {};
+            }
+
+            // Register a SEPARATE images-only entry so the existing expiry sweep
+            // reaps the workspace dir. The key must NOT collide with the temp-set's
+            // own manifest entry (keyed by `stageId` in createTempFileSet) — reusing
+            // `stageId` here would clobber that entry, losing its markdownFilePath
+            // and, because the overwritten entry would carry `workspaceStageDir`,
+            // making cleanup skip the original `baseDir/<stageId>` dir (a leak). Use
+            // a derived key; markdownFilePath is empty (no markdown staged here) and
+            // workspaceStageDir records the in-workspace dir for the sweep to delete.
+            const manifestKey = `${stageId}-staged-images`;
+            const manifest = await this.readManifest();
+            manifest.files[manifestKey] = {
+                id: manifestKey,
+                sessionId: stageId,
+                markdownFilePath: '',
+                imageFilePaths: stagedPaths,
+                workspaceStageDir: vscode.Uri.joinPath(cacheRoot, 'spec-editor', stageId).fsPath,
+                createdAt: Date.now(),
+                expiresAt: Date.now() + CLEANUP_THRESHOLDS.ORPHANED_FILES_MS,
+                status: 'submitted'
+            };
+            await this.writeManifest(manifest);
+
+            return rewriteMap;
+        } catch (e) {
+            console.error(`[TempFileManager] Failed to stage images in workspace: ${e}`);
+            return {};
+        }
+    }
+
+    /**
+     * Rewrite the markdown image references in a temp markdown file from their
+     * source (globalStorage) paths to staged in-workspace paths, in place. Used
+     * after `stageImagesInWorkspace` so the inlined OpenCode prompt carries
+     * readable in-project image paths.
+     */
+    async rewriteImageRefsInFile(
+        filePath: string,
+        rewriteMap: Record<string, string>
+    ): Promise<void> {
+        if (Object.keys(rewriteMap).length === 0) {
+            return;
+        }
+        const uri = vscode.Uri.file(filePath);
+        const existing = await vscode.workspace.fs.readFile(uri);
+        const rewritten = rewriteImageRefsToStaged(
+            Buffer.from(existing).toString('utf-8'),
+            rewriteMap
+        );
+        await vscode.workspace.fs.writeFile(uri, Buffer.from(rewritten, 'utf-8'));
+    }
+
+    /**
+     * Write a `.gitignore` containing `*` at the cache root on first use so the
+     * whole ephemeral cache tree is invisible to git. Idempotent — skips when the
+     * file already exists.
+     */
+    private async ensureCacheGitignore(cacheRoot: vscode.Uri): Promise<void> {
+        const gitignorePath = vscode.Uri.joinPath(cacheRoot, '.gitignore');
+        try {
+            await vscode.workspace.fs.stat(gitignorePath);
+            return; // already exists
+        } catch {
+            // not present — create it
+        }
+        await vscode.workspace.fs.writeFile(gitignorePath, Buffer.from('*\n', 'utf-8'));
+    }
+
+    /**
      * Delete an image file
      */
     async deleteImage(filePath: string): Promise<void> {
@@ -353,10 +478,14 @@ export class TempFileManager {
                     (now - tempFile.createdAt) > CLEANUP_THRESHOLDS.COMPLETED_FILES_MS;
 
                 if (isExpired || isOrphaned || isCompleted) {
-                    // Delete the directory
+                    // Delete the directory. Workspace-staged sets (OpenCode image
+                    // staging) live under the workspace, not baseDir — delete the
+                    // recorded staged dir for those; otherwise the baseDir/<id> dir.
                     try {
-                        const tempDir = vscode.Uri.joinPath(this.baseDir, id);
-                        await vscode.workspace.fs.delete(tempDir, { recursive: true });
+                        const dir = tempFile.workspaceStageDir
+                            ? vscode.Uri.file(tempFile.workspaceStageDir)
+                            : vscode.Uri.joinPath(this.baseDir, id);
+                        await vscode.workspace.fs.delete(dir, { recursive: true });
                     } catch {
                         // Directory may already be deleted
                     }

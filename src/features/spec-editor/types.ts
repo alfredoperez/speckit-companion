@@ -113,6 +113,13 @@ export interface TempSpecFile {
     /** Map of image IDs to their file paths */
     imageFilePaths: Record<string, string>;
 
+    /**
+     * For workspace-staged image sets (OpenCode): the in-workspace
+     * `.speckit-companion/spec-editor/<id>/` dir the cleanup sweep deletes.
+     * Absent for ordinary globalStorage temp sets (cleaned under baseDir/<id>).
+     */
+    workspaceStageDir?: string;
+
     /** Timestamp when created */
     createdAt: number;
 

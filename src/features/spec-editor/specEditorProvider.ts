@@ -293,20 +293,16 @@ export class SpecEditorProvider {
                 .map(id => this.attachedImages.get(id))
                 .filter((img): img is AttachedImage => img !== undefined);
 
-            // Warn if images attached but provider has limited support
-            if (images.length > 0) {
-                const providerType = getConfiguredProviderType();
-                if (providerType === AIProviders.COPILOT) {
-                    vscode.window.showWarningMessage(
-                        'GitHub Copilot CLI has limited image support. Images will be included as file references but may not be processed.'
-                    );
-                    this.outputChannel.appendLine('[SpecEditor] Warning: Copilot has limited image support');
-                } else if (providerType === AIProviders.OPENCODE) {
-                    vscode.window.showWarningMessage(
-                        'OpenCode blocks reads outside the project directory, so attached images cannot be read. The spec text is still sent.'
-                    );
-                    this.outputChannel.appendLine('[SpecEditor] Warning: OpenCode cannot read external image files');
-                }
+            const providerType = getConfiguredProviderType();
+
+            // Warn if images attached but provider has limited support. OpenCode no
+            // longer warns: its attached images are staged into a self-gitignored
+            // workspace cache dir below so the sandboxed CLI can read them (#208).
+            if (images.length > 0 && providerType === AIProviders.COPILOT) {
+                vscode.window.showWarningMessage(
+                    'GitHub Copilot CLI has limited image support. Images will be included as file references but may not be processed.'
+                );
+                this.outputChannel.appendLine('[SpecEditor] Warning: Copilot has limited image support');
             }
 
             // Create temp file set
@@ -316,6 +312,32 @@ export class SpecEditorProvider {
                 images
             );
             this.outputChannel.appendLine(`[SpecEditor] Created temp file set: ${tempFileSet.id}`);
+
+            // OpenCode sandboxes reads to the project root and rejects the
+            // globalStorage image paths the temp set references. Stage the images
+            // into a self-gitignored workspace cache dir and rewrite the temp
+            // markdown's image references to the in-workspace copies so the agent
+            // reads an in-project path. Other providers read globalStorage fine, so
+            // this is OpenCode-only; on no-workspace/failure it falls back to the
+            // original references (the staging helper returns an empty map).
+            if (images.length > 0 && providerType === AIProviders.OPENCODE) {
+                const rewriteMap = await this.tempFileManager.stageImagesInWorkspace(
+                    tempFileSet.id,
+                    images,
+                    tempFileSet.imageFilePaths
+                );
+                if (Object.keys(rewriteMap).length > 0) {
+                    await this.tempFileManager.rewriteImageRefsInFile(
+                        tempFileSet.markdownFilePath,
+                        rewriteMap
+                    );
+                    this.outputChannel.appendLine(
+                        `[SpecEditor] Staged ${Object.keys(rewriteMap).length} image(s) in workspace for OpenCode`
+                    );
+                } else {
+                    this.outputChannel.appendLine('[SpecEditor] OpenCode image staging skipped (no workspace or copy failed)');
+                }
+            }
 
             // Get AI provider and execute
             const provider = AIProviderFactory.getProvider(this.context, this.outputChannel);

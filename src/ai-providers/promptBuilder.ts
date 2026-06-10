@@ -437,6 +437,34 @@ export async function cleanCommandArg(command: string): Promise<string> {
 }
 
 /**
+ * Rewrite markdown image references from their source (globalStorage) paths to
+ * staged in-workspace paths. A pure ref-swap: for OpenCode, whose sandbox rejects
+ * reads outside the project root, after images are copied into a self-gitignored
+ * workspace cache dir, the inlined spec body's `![…](<sourcePath>)` links must
+ * point at the staged copies so the agent reads an in-project path.
+ *
+ * `mapping` is { sourceFsPath → stagedFsPath }. Each `](<sourcePath>)` occurrence
+ * is replaced with `](<stagedPath>)`. A body with no matching link is returned
+ * unchanged, and an empty mapping is a no-op — so the caller can pass whatever it
+ * staged and rely on this to touch only the references it actually moved.
+ */
+export function rewriteImageRefsToStaged(
+    body: string,
+    mapping: Record<string, string>
+): string {
+    let out = body;
+    for (const [source, staged] of Object.entries(mapping)) {
+        if (!source || source === staged) {
+            continue;
+        }
+        // Replace only inside a markdown image/link target `](<source>)` to avoid
+        // rewriting an incidental occurrence of the path elsewhere in prose.
+        out = out.split(`](${source})`).join(`](${staged})`);
+    }
+    return out;
+}
+
+/**
  * Inline a `/speckit.* specify <temp.md>` dispatch so the agent never has to
  * read the file: replace the path argument with the *full* file contents
  * (description + the appended capture bookkeeping), newline-separated. Unlike
