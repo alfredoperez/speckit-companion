@@ -42,6 +42,22 @@ Capture works on its own (the JSON is useful to any tool), but it's **built to f
 - **Agent-agnostic** — works wherever spec-kit runs (Claude Code, Copilot, Cursor, Gemini, …), with extra depth on Claude.
 - **Safe by design** — writes are atomic and append-only, preserve unknown fields, never regress a shipped spec, and never fail your spec-kit command. Stdlib-only Python; degrades gracefully when `python3` is absent.
 
+## Stock spec-kit vs + SpecKit Companion
+
+| Capability | Stock spec-kit | + SpecKit Companion |
+|---|:---:|:---:|
+| Spec-driven pipeline (`specify` → `plan` → `tasks` → `implement`) | ✅ | ✅ |
+| Runs across agents (Claude, Copilot, Cursor, Gemini, …) | ✅ | ✅ |
+| Live progress in the VS Code GUI (sidebar + status badges) | ❌ | ✅ |
+| Per-task history during implement | ❌ | ✅ |
+| `status` — where does this spec stand right now? | ❌ | ✅ |
+| `resume` — pick up exactly where you left off | ❌ | ✅ |
+| Lean "turbo" pipeline shape (no user stories, trimmed plan/tasks) | ❌ | ✅ |
+| Complexity fast-path — right-size the ceremony to the change | ❌ | ✅ (beta) |
+| Honest state recovery when a lifecycle hook didn't fire | ❌ | ✅ |
+
+Companion rides your **existing** spec-kit commands via lifecycle hooks — you get the whole right-hand column with **zero workflow change**.
+
 ## What you get
 
 | Capability | Status | What it gives you |
