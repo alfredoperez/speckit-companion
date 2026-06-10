@@ -1,0 +1,69 @@
+{
+  "runId": "hard-speckit",
+  "size": "hard",
+  "mode": "speckit",
+  "spec": "001-todo-tags",
+  "specName": "Todo Tags",
+  "startedAt": null,
+  "finishedAt": null,
+  "wallClockSec": null,
+  "timing": {
+    "totalSec": 1710.027,
+    "perStep": {
+      "specify": 217.665,
+      "plan": 212.361,
+      "tasks": 149.645,
+      "implement": 613.483
+    }
+  },
+  "buildPass": true,
+  "acceptancePassed": 1,
+  "acceptanceTotal": 1,
+  "regressionPassed": 28,
+  "regressionTotal": 28,
+  "conventions": [],
+  "blast": {
+    "files": [
+      "App.tsx",
+      "components/Header.tsx",
+      "components/TagFilters.test.tsx",
+      "components/TagFilters.tsx",
+      "components/TagManager.tsx",
+      "components/TodoItem.tsx",
+      "components/TodoList.tsx",
+      "pages/TagsPage.test.tsx",
+      "pages/TagsPage.tsx",
+      "pages/TodosPage.test.tsx",
+      "pages/TodosPage.tsx",
+      "store/tags.test.tsx",
+      "store/tags.tsx",
+      "types.ts"
+    ],
+    "outOfScope": []
+  },
+  "quality": {
+    "readability": 5,
+    "conventions": 5,
+    "scope": 5,
+    "justification": "Textbook execution: a tags store slice mirroring todos.tsx (reducer+context+hook) persisting both tags and assignments through lib/storage.ts, a /tags route + page + nav Link, presentational components with all exact testids, and zero out-of-scope churn."
+  },
+  "shape": {
+    "hasUserStories": true,
+    "specLines": 126,
+    "planLines": 95,
+    "tasksLines": 213,
+    "taskCount": 22,
+    "sideFiles": [
+      "research.md",
+      "data-model.md",
+      "quickstart.md",
+      "contracts"
+    ]
+  },
+  "diff": {
+    "filesChanged": 14,
+    "locAdded": 621,
+    "locRemoved": 32
+  },
+  "capture": null
+}

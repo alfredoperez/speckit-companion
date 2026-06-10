@@ -44,4 +44,4 @@ Routes: `/` → `TodosPage`, `/about` → `AboutPage`. The app title is the `<h1
 
 ## Bench
 
-This app doubles as the turbo-vs-standard bench target. See `bench/README.md`. Don't edit `bench/stats.jsonl` or `bench/REPORT.md` (generated).
+This app doubles as the 5-mode adoption-ladder bench target. To run it: `/bench-sync` (once) → `/bench-prep <size>` → build in VS Code → `/bench-capture <size>` — see the **Quick start** in `bench/README.md`. Don't edit `bench/stats.jsonl`, `bench/history.jsonl`, or `bench/REPORT.md` (generated).

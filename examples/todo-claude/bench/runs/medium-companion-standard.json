@@ -1,0 +1,169 @@
+{
+  "runId": "medium-companion-standard",
+  "size": "medium",
+  "mode": "companion-standard",
+  "spec": "001-due-dates",
+  "specName": "Due Dates",
+  "startedAt": null,
+  "finishedAt": null,
+  "wallClockSec": null,
+  "timing": {
+    "totalSec": 1081.285,
+    "perStep": {
+      "specify": 96.066,
+      "plan": 178.844,
+      "tasks": 147.014,
+      "implement": 484.371
+    }
+  },
+  "buildPass": true,
+  "acceptancePassed": 1,
+  "acceptanceTotal": 1,
+  "regressionPassed": 30,
+  "regressionTotal": 30,
+  "conventions": [],
+  "blast": {
+    "files": [
+      "components/TodoItem.test.tsx",
+      "components/TodoItem.tsx",
+      "components/TodoList.tsx",
+      "lib/dates.test.ts",
+      "lib/dates.ts",
+      "pages/TodosPage.test.tsx",
+      "pages/TodosPage.tsx",
+      "store/todos.test.ts",
+      "store/todos.tsx",
+      "types.ts"
+    ],
+    "outOfScope": [
+      "lib/dates.test.ts",
+      "lib/dates.ts"
+    ]
+  },
+  "quality": {
+    "readability": 5,
+    "conventions": 5,
+    "scope": 5,
+    "justification": "All three requirements met with verbatim test ids; due-date state flows through a store reducer action and persists via the existing storage useEffect, derived overdue/sort logic is isolated in a pure lib/dates.ts, components stay presentational, and no out-of-scope files were touched."
+  },
+  "shape": {
+    "hasUserStories": true,
+    "specLines": 103,
+    "planLines": 87,
+    "tasksLines": 182,
+    "taskCount": 16,
+    "sideFiles": [
+      "research.md",
+      "data-model.md",
+      "quickstart.md",
+      "contracts"
+    ]
+  },
+  "diff": {
+    "filesChanged": 10,
+    "locAdded": 305,
+    "locRemoved": 4
+  },
+  "capture": {
+    "pass": 15,
+    "fail": 0,
+    "failing": [],
+    "checks": [
+      {
+        "status": "PASS",
+        "id": "valid-json",
+        "detail": "parses"
+      },
+      {
+        "status": "PASS",
+        "id": "canonical-history",
+        "detail": "28 entries"
+      },
+      {
+        "status": "PASS",
+        "id": "no-legacy-keys",
+        "detail": "clean"
+      },
+      {
+        "status": "PASS",
+        "id": "currentStep-valid",
+        "detail": "currentStep=implement"
+      },
+      {
+        "status": "PASS",
+        "id": "status-valid",
+        "detail": "status=implemented"
+      },
+      {
+        "status": "PASS",
+        "id": "last-entry-matches-currentStep",
+        "detail": "last history step=implement, currentStep=implement"
+      },
+      {
+        "status": "PASS",
+        "id": "entries-well-formed",
+        "detail": "all valid"
+      },
+      {
+        "status": "PASS",
+        "id": "entries-match-format",
+        "detail": "28 entries conform to historyEntry def"
+      },
+      {
+        "status": "PASS",
+        "id": "timestamps-monotonic",
+        "detail": "deterministic writes non-decreasing"
+      },
+      {
+        "status": "INFO",
+        "id": "authorship",
+        "detail": "ai=22, extension=6"
+      },
+      {
+        "status": "PASS",
+        "id": "hook-or-derive-captured",
+        "detail": "extension=6, derive=0"
+      },
+      {
+        "status": "INFO",
+        "id": "lifecycle-coverage",
+        "detail": "specify → plan → tasks → implement"
+      },
+      {
+        "status": "PASS",
+        "id": "timestamps-real",
+        "detail": "0/6 deterministic writes look hand-typed (round ms) — all real"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-substeps",
+        "detail": "16 task events; task id present, substep null|==task: True"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-matches-tasksmd",
+        "detail": "tasks.md done=16, journaled=16"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-no-duplicates",
+        "detail": "each task has a single finish (≤1 complete; ≤1 legacy start)"
+      },
+      {
+        "status": "PASS",
+        "id": "task-cadence-span",
+        "detail": "16 ai finishes span 6.4m = 79.11% of 8.1m implement step (need ≥ 5%)"
+      },
+      {
+        "status": "INFO",
+        "id": "step-timing",
+        "detail": "specify→plan 1.7m | plan→tasks 3.6m | tasks→implement 4.6m"
+      },
+      {
+        "status": "INFO",
+        "id": "task-cadence",
+        "detail": "16 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 22.9s, 10.8s, 44.7s, 8.2s, 68.0s, 7.7s, 8.0s, 35.7s, 7.2s, 9.7s, 57.3s, 8.3s, 7.4s, 74.5s, 12.8s"
+      }
+    ]
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "runId": "easy-companion-logs",
+  "size": "easy",
+  "mode": "companion-logs",
+  "spec": "001-rename-task-manager",
+  "specName": "Rename Task Manager",
+  "startedAt": null,
+  "finishedAt": null,
+  "wallClockSec": null,
+  "timing": {
+    "totalSec": 911.461,
+    "perStep": {
+      "specify": 314.386,
+      "plan": 143.696,
+      "tasks": 80.036,
+      "implement": 206.472
+    }
+  },
+  "buildPass": true,
+  "acceptancePassed": 1,
+  "acceptanceTotal": 1,
+  "regressionPassed": 6,
+  "regressionTotal": 6,
+  "conventions": [],
+  "blast": {
+    "files": [
+      "App.test.tsx",
+      "components/Header.test.tsx",
+      "components/Header.tsx"
+    ],
+    "outOfScope": []
+  },
+  "quality": {
+    "readability": 5,
+    "conventions": 5,
+    "scope": 4,
+    "justification": "Clean exact rename of the h1 and <title> with the App.test.tsx assertion updated to match; only minor scope creep is an added Header.test.tsx that the prompt's pure rename didn't require, though CLAUDE.md endorses co-located tests."
+  },
+  "shape": {
+    "hasUserStories": true,
+    "specLines": 53,
+    "planLines": 73,
+    "tasksLines": 123,
+    "taskCount": 6,
+    "sideFiles": [
+      "research.md",
+      "data-model.md",
+      "quickstart.md",
+      "contracts"
+    ]
+  },
+  "diff": {
+    "filesChanged": 3,
+    "locAdded": 17,
+    "locRemoved": 2
+  },
+  "capture": {
+    "pass": 14,
+    "fail": 0,
+    "failing": [],
+    "checks": [
+      {
+        "status": "PASS",
+        "id": "valid-json",
+        "detail": "parses"
+      },
+      {
+        "status": "PASS",
+        "id": "canonical-history",
+        "detail": "17 entries"
+      },
+      {
+        "status": "PASS",
+        "id": "no-legacy-keys",
+        "detail": "clean"
+      },
+      {
+        "status": "PASS",
+        "id": "currentStep-valid",
+        "detail": "currentStep=implement"
+      },
+      {
+        "status": "PASS",
+        "id": "status-valid",
+        "detail": "status=implementing"
+      },
+      {
+        "status": "PASS",
+        "id": "last-entry-matches-currentStep",
+        "detail": "last history step=implement, currentStep=implement"
+      },
+      {
+        "status": "PASS",
+        "id": "entries-well-formed",
+        "detail": "all valid"
+      },
+      {
+        "status": "PASS",
+        "id": "entries-match-format",
+        "detail": "17 entries conform to historyEntry def"
+      },
+      {
+        "status": "PASS",
+        "id": "timestamps-monotonic",
+        "detail": "deterministic writes non-decreasing"
+      },
+      {
+        "status": "INFO",
+        "id": "authorship",
+        "detail": "ai=12, extension=5"
+      },
+      {
+        "status": "PASS",
+        "id": "hook-or-derive-captured",
+        "detail": "extension=5, derive=0"
+      },
+      {
+        "status": "INFO",
+        "id": "lifecycle-coverage",
+        "detail": "specify → plan → tasks → implement"
+      },
+      {
+        "status": "PASS",
+        "id": "timestamps-real",
+        "detail": "0/5 deterministic writes look hand-typed (round ms) — all real"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-substeps",
+        "detail": "6 task events; task id present, substep null|==task: True"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-matches-tasksmd",
+        "detail": "tasks.md done=6, journaled=6"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-no-duplicates",
+        "detail": "each task has a single finish (≤1 complete; ≤1 legacy start)"
+      },
+      {
+        "status": "INFO",
+        "id": "step-timing",
+        "detail": "specify→plan 5.2m | plan→tasks 3.4m | tasks→implement 3.1m"
+      },
+      {
+        "status": "INFO",
+        "id": "task-cadence",
+        "detail": "6 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 97ms, 24.2s, 91ms, 39.1s, 46.6s"
+      }
+    ]
+  }
+}

@@ -1,0 +1,164 @@
+{
+  "runId": "hard-companion-logs",
+  "size": "hard",
+  "mode": "companion-logs",
+  "spec": "001-tags-filtering",
+  "specName": "Tags Filtering",
+  "startedAt": null,
+  "finishedAt": null,
+  "wallClockSec": null,
+  "timing": {
+    "totalSec": 1462.073,
+    "perStep": {
+      "specify": 280.772,
+      "plan": 254.3,
+      "tasks": 114.015,
+      "implement": 367.968
+    }
+  },
+  "buildPass": true,
+  "acceptancePassed": 1,
+  "acceptanceTotal": 1,
+  "regressionPassed": 19,
+  "regressionTotal": 19,
+  "conventions": [],
+  "blast": {
+    "files": [
+      "App.test.tsx",
+      "App.tsx",
+      "components/Header.tsx",
+      "components/TagFilter.tsx",
+      "components/TodoItem.test.tsx",
+      "components/TodoItem.tsx",
+      "components/TodoList.tsx",
+      "pages/TagsPage.test.tsx",
+      "pages/TagsPage.tsx",
+      "pages/TodosPage.tsx",
+      "store/tags.test.ts",
+      "store/tags.tsx",
+      "types.ts"
+    ],
+    "outOfScope": []
+  },
+  "quality": {
+    "readability": 5,
+    "conventions": 5,
+    "scope": 5,
+    "justification": "Textbook implementation: a new tags store slice mirroring todos.tsx (pure extracted reducer, context, hook), persistence solely through lib/storage with tags and assignments both saved/restored, all required test ids and affordances met including cascade-on-remove and filter-revert, presentational components untouched-in-spirit, and zero out-of-scope churn."
+  },
+  "shape": {
+    "hasUserStories": true,
+    "specLines": 112,
+    "planLines": 93,
+    "tasksLines": 159,
+    "taskCount": 18,
+    "sideFiles": [
+      "research.md",
+      "data-model.md",
+      "quickstart.md",
+      "contracts"
+    ]
+  },
+  "diff": {
+    "filesChanged": 13,
+    "locAdded": 416,
+    "locRemoved": 13
+  },
+  "capture": {
+    "pass": 14,
+    "fail": 0,
+    "failing": [],
+    "checks": [
+      {
+        "status": "PASS",
+        "id": "valid-json",
+        "detail": "parses"
+      },
+      {
+        "status": "PASS",
+        "id": "canonical-history",
+        "detail": "29 entries"
+      },
+      {
+        "status": "PASS",
+        "id": "no-legacy-keys",
+        "detail": "clean"
+      },
+      {
+        "status": "PASS",
+        "id": "currentStep-valid",
+        "detail": "currentStep=implement"
+      },
+      {
+        "status": "PASS",
+        "id": "status-valid",
+        "detail": "status=implementing"
+      },
+      {
+        "status": "PASS",
+        "id": "last-entry-matches-currentStep",
+        "detail": "last history step=implement, currentStep=implement"
+      },
+      {
+        "status": "PASS",
+        "id": "entries-well-formed",
+        "detail": "all valid"
+      },
+      {
+        "status": "PASS",
+        "id": "entries-match-format",
+        "detail": "29 entries conform to historyEntry def"
+      },
+      {
+        "status": "PASS",
+        "id": "timestamps-monotonic",
+        "detail": "deterministic writes non-decreasing"
+      },
+      {
+        "status": "INFO",
+        "id": "authorship",
+        "detail": "ai=24, extension=5"
+      },
+      {
+        "status": "PASS",
+        "id": "hook-or-derive-captured",
+        "detail": "extension=5, derive=0"
+      },
+      {
+        "status": "INFO",
+        "id": "lifecycle-coverage",
+        "detail": "specify → plan → tasks → implement"
+      },
+      {
+        "status": "PASS",
+        "id": "timestamps-real",
+        "detail": "0/5 deterministic writes look hand-typed (round ms) — all real"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-substeps",
+        "detail": "18 task events; task id present, substep null|==task: True"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-matches-tasksmd",
+        "detail": "tasks.md done=18, journaled=18"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-no-duplicates",
+        "detail": "each task has a single finish (≤1 complete; ≤1 legacy start)"
+      },
+      {
+        "status": "INFO",
+        "id": "step-timing",
+        "detail": "specify→plan 4.7m | plan→tasks 4.9m | tasks→implement 8.7m"
+      },
+      {
+        "status": "INFO",
+        "id": "task-cadence",
+        "detail": "18 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 87ms, 87ms, 86ms, 86ms, 46.6s, 90ms, 88ms, 2.4m, 85ms, 87ms, 89ms, 97ms, 94ms, 94ms, 118ms, 96ms, 149ms"
+      }
+    ]
+  }
+}

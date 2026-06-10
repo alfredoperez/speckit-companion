@@ -1,0 +1,148 @@
+{
+  "runId": "easy-companion-turbo",
+  "size": "easy",
+  "mode": "companion-turbo",
+  "spec": "001-rename-task-manager",
+  "specName": "rename task manager",
+  "startedAt": null,
+  "finishedAt": null,
+  "wallClockSec": null,
+  "timing": {
+    "totalSec": 832.442,
+    "perStep": {
+      "specify": 30.827,
+      "plan": 55.155,
+      "tasks": 62.577,
+      "implement": 166.856
+    }
+  },
+  "buildPass": true,
+  "acceptancePassed": 1,
+  "acceptanceTotal": 1,
+  "regressionPassed": 5,
+  "regressionTotal": 5,
+  "conventions": [],
+  "blast": {
+    "files": [
+      "App.test.tsx",
+      "components/Header.tsx"
+    ],
+    "outOfScope": []
+  },
+  "quality": {
+    "readability": 5,
+    "conventions": 5,
+    "scope": 5,
+    "justification": "Clean pure rename hitting exactly the two required targets — Header <h1> and <title> — with no extra files, no churn, and no missed edits."
+  },
+  "shape": {
+    "hasUserStories": false,
+    "specLines": 26,
+    "planLines": 41,
+    "tasksLines": 38,
+    "taskCount": 5,
+    "sideFiles": []
+  },
+  "diff": {
+    "filesChanged": 2,
+    "locAdded": 2,
+    "locRemoved": 2
+  },
+  "capture": {
+    "pass": 14,
+    "fail": 0,
+    "failing": [],
+    "checks": [
+      {
+        "status": "PASS",
+        "id": "valid-json",
+        "detail": "parses"
+      },
+      {
+        "status": "PASS",
+        "id": "canonical-history",
+        "detail": "15 entries"
+      },
+      {
+        "status": "PASS",
+        "id": "no-legacy-keys",
+        "detail": "clean"
+      },
+      {
+        "status": "PASS",
+        "id": "currentStep-valid",
+        "detail": "currentStep=implement"
+      },
+      {
+        "status": "PASS",
+        "id": "status-valid",
+        "detail": "status=implementing"
+      },
+      {
+        "status": "PASS",
+        "id": "last-entry-matches-currentStep",
+        "detail": "last history step=implement, currentStep=implement"
+      },
+      {
+        "status": "PASS",
+        "id": "entries-well-formed",
+        "detail": "all valid"
+      },
+      {
+        "status": "PASS",
+        "id": "entries-match-format",
+        "detail": "15 entries conform to historyEntry def"
+      },
+      {
+        "status": "PASS",
+        "id": "timestamps-monotonic",
+        "detail": "deterministic writes non-decreasing"
+      },
+      {
+        "status": "INFO",
+        "id": "authorship",
+        "detail": "ai=10, extension=5"
+      },
+      {
+        "status": "PASS",
+        "id": "hook-or-derive-captured",
+        "detail": "extension=5, derive=0"
+      },
+      {
+        "status": "INFO",
+        "id": "lifecycle-coverage",
+        "detail": "specify → plan → tasks → implement"
+      },
+      {
+        "status": "PASS",
+        "id": "timestamps-real",
+        "detail": "0/5 deterministic writes look hand-typed (round ms) — all real"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-substeps",
+        "detail": "5 task events; task id present, substep null|==task: True"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-matches-tasksmd",
+        "detail": "tasks.md done=5, journaled=5"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-no-duplicates",
+        "detail": "each task has a single finish (≤1 complete; ≤1 legacy start)"
+      },
+      {
+        "status": "INFO",
+        "id": "step-timing",
+        "detail": "specify→plan 4.7m | plan→tasks 3.3m | tasks→implement 3.1m"
+      },
+      {
+        "status": "INFO",
+        "id": "task-cadence",
+        "detail": "5 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 14.4s, 13.5s, 60.9s, 15.0s"
+      }
+    ]
+  }
+}

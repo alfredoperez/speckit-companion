@@ -1,0 +1,56 @@
+{
+  "runId": "easy-speckit",
+  "size": "easy",
+  "mode": "speckit",
+  "spec": "001-rename-task-manager",
+  "specName": "Rename Task Manager",
+  "startedAt": null,
+  "finishedAt": null,
+  "wallClockSec": null,
+  "timing": {
+    "totalSec": 903.381,
+    "perStep": {
+      "specify": 318.216,
+      "plan": 154.163,
+      "tasks": 57.661,
+      "implement": 192.409
+    }
+  },
+  "buildPass": true,
+  "acceptancePassed": 1,
+  "acceptanceTotal": 1,
+  "regressionPassed": 5,
+  "regressionTotal": 5,
+  "conventions": [],
+  "blast": {
+    "files": [
+      "App.test.tsx",
+      "components/Header.tsx"
+    ],
+    "outOfScope": []
+  },
+  "quality": {
+    "readability": 5,
+    "conventions": 5,
+    "scope": 5,
+    "justification": "Clean exact rename touching only the header <h1>, the <title>, and the matching App.test.tsx expectation, with the precise text 'Task Manager' and zero out-of-scope churn."
+  },
+  "shape": {
+    "hasUserStories": true,
+    "specLines": 54,
+    "planLines": 75,
+    "tasksLines": 123,
+    "taskCount": 6,
+    "sideFiles": [
+      "research.md",
+      "data-model.md",
+      "quickstart.md"
+    ]
+  },
+  "diff": {
+    "filesChanged": 2,
+    "locAdded": 2,
+    "locRemoved": 2
+  },
+  "capture": null
+}

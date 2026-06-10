@@ -1,0 +1,68 @@
+{
+  "runId": "medium-speckit",
+  "size": "medium",
+  "mode": "speckit",
+  "spec": "001-todo-due-dates",
+  "specName": "Todo Due Dates",
+  "startedAt": null,
+  "finishedAt": null,
+  "wallClockSec": null,
+  "timing": {
+    "totalSec": 641.298,
+    "perStep": {
+      "specify": 144.714,
+      "plan": 158.873,
+      "tasks": 85.01,
+      "implement": null
+    }
+  },
+  "buildPass": true,
+  "acceptancePassed": 1,
+  "acceptanceTotal": 1,
+  "regressionPassed": 27,
+  "regressionTotal": 27,
+  "conventions": [],
+  "blast": {
+    "files": [
+      "components/TodoItem.test.tsx",
+      "components/TodoItem.tsx",
+      "components/TodoList.tsx",
+      "lib/dueDate.test.ts",
+      "lib/dueDate.ts",
+      "pages/TodosPage.test.tsx",
+      "pages/TodosPage.tsx",
+      "store/todos.test.tsx",
+      "store/todos.tsx",
+      "types.ts"
+    ],
+    "outOfScope": [
+      "lib/dueDate.test.ts",
+      "lib/dueDate.ts"
+    ]
+  },
+  "quality": {
+    "readability": 5,
+    "conventions": 5,
+    "scope": 5,
+    "justification": "Pure date helpers in lib/dueDate.ts, due-date state through the reducer/store with persistence via the existing save effect, presentational components, exact test ids, co-located tests, and zero out-of-scope churn."
+  },
+  "shape": {
+    "hasUserStories": true,
+    "specLines": 102,
+    "planLines": 82,
+    "tasksLines": 189,
+    "taskCount": 17,
+    "sideFiles": [
+      "research.md",
+      "data-model.md",
+      "quickstart.md",
+      "contracts"
+    ]
+  },
+  "diff": {
+    "filesChanged": 10,
+    "locAdded": 314,
+    "locRemoved": 4
+  },
+  "capture": null
+}
