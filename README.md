@@ -11,6 +11,7 @@ The spec workspace for developers running AI agents through Spec-Driven Developm
 
 ## Recently Shipped
 
+- **On `main` (next release)** Per-spec **Turbo** picker in *Create New Spec* (beta, install-gated) · complexity fast-path now writes lean `plan.md` + `tasks.md` so the stepper/sidebar stop showing "not created" · **OpenCode** now reads attached spec-editor images (workspace-staged for its sandbox) · cleaner sidebar spec-row text (drops step-state the icons already show)
 - **v0.22.0** Status + Resume — each active spec row shows its current step and last transition with an inline **Resume** action that continues the pipeline from where it stopped; live per-task journaling on implement (real per-task timing, not one end-of-run burst); malformed-`.spec-context.json` recovery with a reset action
 - **v0.21.0** Spec-context `history[]` schema migration with explicit `kind` field, end-to-end state-machine correctness fixes (15 findings, F1–F16), brand-name provider labels, wrapping task-line rendering polish, inline-comment persistence across all docs, install-pipeline reliability (tsc chained in prepublish)
 - **v0.20.0** Marketplace screenshot fix (stable-filename policy), heading/caption correction, Marketplace-safe anchor links
@@ -242,7 +243,7 @@ Switching is **non-destructive**: neither command set is ever removed or overwri
 
 ### Complexity Fast-Path
 
-An **opt-in beta** that **defaults to `false`**. When enabled in `turbo` mode, small changes auto-detect and fast-track straight from specify to implement, skipping the separate plan and tasks stages. When `/speckit.companion.specify` decides a change is small (it projects ≤ 5 files / ≤ 10 tasks and reads no "larger" scope phrase like *rewrite* or *overhaul*), it writes a single combined `spec.md` — the usual sections plus an inline **Approach** and **Implementation Tasks** list — and records plan and tasks as satisfied, landing the spec at the implement step in one run. Larger changes keep the full specify → plan → tasks → implement pipeline; a change that crosses the 5-files / 10-tasks guardrail warns and runs the full pipeline rather than fast-tracking silently.
+An **opt-in beta** that **defaults to `false`**. When enabled in `turbo` mode, small changes auto-detect and fast-track — folding plan and tasks into the specify pass instead of running them as separate stages. When `/speckit.companion.specify` decides a change is small (it projects ≤ 5 files / ≤ 10 tasks and reads no "larger" scope phrase like *rewrite* or *overhaul*), it writes **three lean files in one pass** — `spec.md` with an inline **Approach**, a **`plan.md`** pointer to it, and a real-checklist **`tasks.md`** — and folds plan and tasks into the same run, so the spec lands **ready-to-implement** in one run (the file-driven stepper and sidebar read the files as present, not "not created"; implement is the next user-triggered step). Larger changes keep the full specify → plan → tasks → implement pipeline; a change that crosses the 5-files / 10-tasks guardrail warns and runs the full pipeline rather than fast-tracking silently.
 
 ```json
 {
