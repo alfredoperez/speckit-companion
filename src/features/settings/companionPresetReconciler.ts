@@ -126,6 +126,41 @@ export function writeTemplateProfile(workspaceRoot: string, profile: TemplatePro
     fs.writeFileSync(p, yaml.dump(doc), 'utf8');
 }
 
+/** Read-merge-write complexityFastPath, preserving every other key already in the file. */
+export function writeComplexityFastPath(workspaceRoot: string, value: boolean): void {
+    const p = path.join(workspaceRoot, CONFIG_REL);
+    let doc: Record<string, unknown> = {};
+    if (fs.existsSync(p)) {
+        try {
+            const loaded = yaml.load(fs.readFileSync(p, 'utf8'));
+            if (loaded && typeof loaded === 'object') {
+                doc = loaded as Record<string, unknown>;
+            }
+        } catch {
+            doc = {};
+        }
+    }
+    doc.complexityFastPath = value;
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.writeFileSync(p, yaml.dump(doc), 'utf8');
+}
+
+/**
+ * Mirror the VS Code `complexityFastPath` setting into .specify/companion.yml so
+ * the turbo command body reads a single boolean (it never reads VS Code settings).
+ * The setting is the source of truth and companion.yml is a derived, machine-local
+ * cache (gitignored) — there is no project-level override. Defaults to `false`
+ * (opt-in beta) when the setting is unset.
+ */
+export function resolveComplexityFastPath(
+    workspaceRoot: string,
+    settingValue: boolean | undefined
+): boolean {
+    const resolved = settingValue ?? false;
+    writeComplexityFastPath(workspaceRoot, resolved);
+    return resolved;
+}
+
 /**
  * The `off` profile is the explicit "plain upstream spec-kit" escape hatch — it
  * routes to stock commands and must NOT pull in the `companion-standard` family

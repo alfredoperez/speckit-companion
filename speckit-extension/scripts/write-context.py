@@ -277,16 +277,18 @@ def _entry_kind(e: dict) -> str:
     return "start"
 
 
-def _has_step_start(log: list, step: str) -> bool:
-    """True if a step-level (substep None) `start` for `step` already exists. A
-    step is started once; this collapses every redundant start — the GUI's
-    startStep, the body's own start call, and the after_specify hook-start that
-    lands AFTER the body already self-closed specify (which the old
-    last-entry-only dedup missed, since the preceding entry was the complete)."""
+def _has_step_start(log: list, step: str, substep: object = None) -> bool:
+    """True if a `start` for `(step, substep)` already exists. A step (or a folded
+    substep entry) is started once; this collapses every redundant start — the
+    GUI's startStep, the body's own start call, and the after_specify hook-start
+    that lands AFTER the body already self-closed specify (which the old
+    last-entry-only dedup missed, since the preceding entry was the complete). The
+    `substep` arg keeps a folded fast-path start (substep="fast-path") idempotent
+    without colliding with the step-level (substep None) start."""
     return any(
         isinstance(e, dict)
         and e.get("step") == step
-        and e.get("substep") is None
+        and e.get("substep") == substep
         and _entry_kind(e) == "start"
         for e in log
     )
@@ -314,7 +316,8 @@ def _has_complete(log: list, step: str, task: object = None) -> bool:
 
 
 def update_context(
-    feature_dir: Path, step: str, status: str, by: str, kind: str = "start"
+    feature_dir: Path, step: str, status: str, by: str, kind: str = "start",
+    substep: str | None = None,
 ) -> Path | None:
     target = feature_dir / ".spec-context.json"
     now = _now_iso()
@@ -341,23 +344,25 @@ def update_context(
     if kind == "complete":
         # Deterministic self-close. Idempotent: skip if the step is already closed,
         # so the body's `--kind complete` and the GUI's guarded completeStep (or a
-        # re-run) never produce two completes. No `from` on a complete.
-        if not _has_complete(log, step, None):
+        # re-run) never produce two completes. No `from` on a complete. A `substep`
+        # ("fast-path") folds plan/tasks into the specify run; it dedups on (step,
+        # substep) so it never collides with a real step-level complete.
+        if not _has_complete(log, step, substep):
             log.append({
                 "step": step,
-                "substep": None,
+                "substep": substep,
                 "kind": "complete",
                 "by": by,
                 "at": now,
             })
     else:
-        # A step is started once. Skip a redundant start if this step already has a
-        # step-level start anywhere in the log — this collapses the GUI startStep +
+        # A step is started once. Skip a redundant start if this (step, substep)
+        # already has a start anywhere in the log — this collapses the GUI startStep +
         # the body start + the late after_specify hook-start into one entry.
-        if not _has_step_start(log, step):
+        if not _has_step_start(log, step, substep):
             log.append({
                 "step": step,
-                "substep": None,
+                "substep": substep,
                 "kind": "start",
                 "by": by,
                 "at": now,
@@ -498,6 +503,11 @@ def main() -> int:
     parser.add_argument("--status", default="specified")
     parser.add_argument("--by", default="extension")
     parser.add_argument("--kind", default="start", choices=["start", "complete"])
+    parser.add_argument(
+        "--substep", default=None,
+        help="Tag the step-level start/complete with a substep (e.g. 'fast-path' "
+             "to fold plan/tasks into the specify run).",
+    )
     parser.add_argument("--feature-dir", default=None)
     parser.add_argument(
         "--tasks-file", default=None,
@@ -544,7 +554,7 @@ def main() -> int:
         elif args.task:
             target = journal_task_finish(feature_dir, args.task, args.by)
         else:
-            target = update_context(feature_dir, args.step, args.status, args.by, args.kind)
+            target = update_context(feature_dir, args.step, args.status, args.by, args.kind, args.substep)
     except Exception as exc:  # noqa: BLE001 - best-effort, swallow + report
         print(f"[companion] Warning: skipped .spec-context.json write: {exc}", file=sys.stderr)
         return 0

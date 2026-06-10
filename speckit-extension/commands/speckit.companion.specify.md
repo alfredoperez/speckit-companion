@@ -65,12 +65,59 @@ Produce a turbo specification — **no user-story / user-scenario section**. Cap
    - Items marked incomplete require spec updates before clarify or plan
    ```
 
-**Output**: `<feature_directory>/spec.md` + `<feature_directory>/checklists/requirements.md` (Overview / Functional Requirements / Success Criteria / Assumptions).
+5. **Classify the change — right-size the ceremony.** After the spec content is drafted, decide whether this change is small enough to fast-track straight to implement, or large enough to keep the full specify → plan → tasks → implement pipeline. This is a best-effort heuristic and **MUST err toward `normal`** on weak or conflicting signals — a change is never under-planned by accident.
+
+   ```
+   fastPathEnabled = read `complexityFastPath` from .specify/companion.yml (default false when the key is absent — opt-in beta)
+
+   projectedFiles  = estimate the number of files the drafted requirements imply
+   projectedTasks  = estimate the number of implementation tasks the drafted requirements imply
+   scopeSignal     = "larger"  if the description/requirements contain rewrite | overhaul | new system | migration | redesign | …
+                     "smaller" if they contain one-line | rename | typo | tweak | copy change | …
+                     else "none"
+
+   crossedGuardrail = projectedFiles > 5 OR projectedTasks > 10   # fixed threshold — mirrors the tiny-change guardrail
+
+   verdict = "simple" if  fastPathEnabled
+                      and projectedFiles <= 5
+                      and projectedTasks <= 10
+                      and scopeSignal != "larger"
+             else "normal"
+   ```
+
+   - **Guardrail warning.** When `crossedGuardrail == true` OR `scopeSignal == "larger"`, print this line verbatim, then run the **normal** branch (never a silent fast-track):
+
+     ```
+     [companion] Change exceeds the small-change guardrail (5 files / 10 tasks) — running the full pipeline.
+     ```
+
+     Exactly-at-threshold (`projectedFiles == 5` / `projectedTasks == 10`) is the simple ceiling — it does **not** warn and stays eligible for `simple`.
+   - **Opt-out.** When `fastPathEnabled == false`, the verdict is always `normal` — no combining, no warning.
+
+6. **Branch on the verdict.**
+
+   - **`simple` — minimal mode.** Append two sections to the already-written `spec.md` and emit **no** separate `plan.md` / `tasks.md`:
+     - **Approach** — the files to touch and any dependencies, in a few bullets (the plan content, inline).
+     - **Implementation Tasks** — a dependency-ordered list, one per line as `- [ ] **T001** [P?] <description> + <path>` (the task content, inline; `[P]` marks tasks that can run in parallel).
+
+     Still write `<feature_directory>/checklists/requirements.md` as in step 4. Do **not** run `/speckit.companion.plan` or `/speckit.companion.tasks` — their content lives in the combined `spec.md`, and the lifecycle fold below records them as satisfied.
+   - **`normal` — full pipeline.** Write `spec.md` only (no Approach / Implementation Tasks sections, no lifecycle fold). The existing pipeline continues unchanged: plan and tasks are produced and recorded by their own `/speckit.companion.plan` and `/speckit.companion.tasks` runs.
+
+**Output**: `<feature_directory>/spec.md` + `<feature_directory>/checklists/requirements.md`. In **simple** mode, `spec.md` additionally carries **Approach** + **Implementation Tasks** (no separate `plan.md` / `tasks.md`); in **normal** mode, `spec.md` holds the four sections only.
 
 **Record completion.** After `spec.md` is written, close the specify step — the extension stamps the real end (do **not** hand-write an `ai` complete for specify):
 ```bash
 python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step specify --status specified --kind complete --by extension
 ```
+
+**Fast-path lifecycle fold (simple mode only).** When `verdict == "simple"`, record the folded `plan` and `tasks` steps so the viewer reads them as satisfied-by-fast-path — not missing — and the spec lands ready for implement. Run these **in order, after** the specify completion above (each call stamps its own real clock — do not hand-write these, and do not run them for a `normal` verdict):
+```bash
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step plan  --kind start    --substep fast-path --by ai
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step plan  --kind complete --substep fast-path --by ai
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step tasks --kind start    --substep fast-path --by ai
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step tasks --kind complete --substep fast-path --status ready-to-implement --by ai
+```
+After the fold, the spec sits at the **tasks** step with `status: ready-to-implement`; the developer triggers implement next. Do **not** write a `completed` status — the final completed gate stays a user action.
 
 
 <!-- speckit-companion:timing -->

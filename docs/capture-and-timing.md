@@ -76,6 +76,14 @@ Finish-only made the timing honest; this pass makes the record *self-describing*
 - **Cadence-span FAIL + format validation.** The eval gains `task-cadence-span` (the burst detector) and `entries-match-format` (per-entry schema validation) — see *The eval* below.
 - **Schema is the single vocabulary source.** `check_capture.py` loads its `by`/step/status enums *from* `spec-context.schema.json` instead of hard-coding parallel lists, so the eval can't drift from the format authority.
 
+## Fast-path lifecycle fold (2026-06-09)
+
+The turbo complexity fast-path (opt-in beta — see [`template-profiles.md`](./template-profiles.md#complexity-fast-path-turbo-only)) folds the plan and tasks steps into the `specify` run for a small change. After `specify` self-closes, the simple-mode branch records the folded steps so the viewer reads them as satisfied (not missing) instead of dispatching separate `/speckit.companion.plan` / `.tasks` runs:
+
+- **`--substep` flag.** `write-context.py --step <plan|tasks> --kind <start|complete> --substep fast-path` tags the folded step-level entries with `substep: "fast-path"` instead of `null`. The fold is four ordered calls — `plan` start/complete then `tasks` start/complete, the last adding `--status ready-to-implement` — each stamped by the script's own clock (`by:ai`, real timestamps), so the spec lands at `ready-to-implement` in one run.
+- **Idempotent on (step, substep).** `_has_step_start` / `_has_complete` dedup on the `(step, substep)` pair, so a folded `fast-path` start/complete never collides with a real step-level (`substep:null`) entry and a re-run never doubles the fold.
+- **Eval coverage.** `check_capture.py` asserts a fast-tracked spec's folded `plan`/`tasks` start+complete entries (tagged `fast-path`), real timestamps, and final `ready-to-implement` status — and stays silent on a normal spec.
+
 ## Preset / command-override mechanism
 
 The document *shape* (standard vs turbo) and the timing partial both live in **command-body overrides**, not template files — core commands embed their own structure, and template overrides don't reach `specify` (it copies its template by literal path).

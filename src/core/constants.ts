@@ -66,6 +66,7 @@ export const ConfigKeys = {
     customWorkflows: 'speckit.customWorkflows',
     defaultWorkflow: 'speckit.defaultWorkflow',
     templateProfile: 'speckit.companion.templateProfile',
+    complexityFastPath: 'speckit.companion.complexityFastPath',
     views: {
         specsVisible: 'speckit.views.specs.visible',
         steeringVisible: 'speckit.views.steering.visible',

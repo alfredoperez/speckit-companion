@@ -8,9 +8,9 @@ The long-form reference for how SpecKit Companion reshapes the spec-kit pipeline
 
 | Profile | What it is | Output |
 |---|---|---|
-| `standard` (default) | The **stock** spec-kit commands, unchanged, with timing instructions added. | Same sections, same files as upstream spec-kit. |
-| `turbo` | The same commands with specific sections trimmed or replaced (no user stories, files/dependencies task axis), plus the same timing. | A smaller spec folder — always `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files created on demand. |
-| `off` | No overrides at all. | Plain upstream spec-kit. |
+| `off` (default) | No overrides at all — an opt-in beta, so the profiles are off until selected. | Plain upstream spec-kit. |
+| `standard` | The **stock** spec-kit commands, unchanged, with timing instructions added. | Same sections, same files as upstream spec-kit. |
+| `turbo` | The same commands with specific sections trimmed or replaced (no user stories, files/dependencies task axis), plus the same timing. | A smaller spec folder — `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files created on demand. (With the opt-in complexity fast-path on, a *small* change folds plan + tasks into `spec.md` and skips the separate `plan.md`/`tasks.md` — see [Complexity fast-path](#complexity-fast-path-turbo-only).) |
 
 Both `standard` and `turbo` override the same **7** commands — `specify`, `clarify`, `plan`, `tasks`, `analyze`, `implement`, `constitution`. `checklist` and `taskstoissues` are left on stock.
 
@@ -44,7 +44,7 @@ So template overrides are **mixed** (work for plan/tasks, no-op for specify). Co
 | `tasks.md` | **redo** — drop user-story grouping/`[US#]` labels/MVP framing; keep strict `[Tn] [P?] + path`, Setup→Foundational→Core→Integration→Polish layering, deps/parallel notes. |
 | `constitution.md` | **redo** — keep principles/governance + semver bump + write the file; drop the template-propagation checklist + Sync-Impact ceremony. |
 
-Net turbo spec folder: always `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files (`research.md` / `data-model.md` / `contracts/` / `quickstart.md`) created on demand, only when they help understand or build the change.
+Net turbo spec folder: `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files (`research.md` / `data-model.md` / `contracts/` / `quickstart.md`) created on demand, only when they help understand or build the change. (Exception: with the opt-in complexity fast-path on, a *small* change folds plan + tasks into `spec.md` and skips the separate `plan.md` / `tasks.md` — see [Complexity fast-path](#complexity-fast-path-turbo-only).)
 
 ## Timing fidelity (both profiles)
 
@@ -56,11 +56,31 @@ Both profiles bake a single shared **timing partial** into every overridden comm
 
 The GUI preamble stays as the extra path; the body-embedded partial is the standalone path. A parity check (`speckit-extension/scripts/check-shape-parity.py`) locks every body's partial so the two can't fork. Caveat: per-task `date -u` is still best-effort — it can burst on very fast tasks. A burst is still caught by the eval's `timestamps-real` round-millisecond check (`.claude/skills/eval-speckit-extension/check_capture.py`); folding the 0ms-gap signal into the `task-cadence` verdict specifically is a pending follow-up in the kaiju eval source (see "Areas to improve").
 
+## Complexity fast-path (turbo only)
+
+Turbo right-sizes the ceremony to the change. This is an **opt-in beta** — it **defaults to off**; enable it and a **classify step** at the end of the `/speckit.companion.specify` body inspects the drafted spec and decides whether the change is small enough to fast-track or large enough to keep the full pipeline. It is best-effort and **errs toward `normal`** — a change is never under-planned by accident.
+
+The classify decision (lives in the command body, not TypeScript):
+
+- `fastPathEnabled` is read from `.specify/companion.yml` `complexityFastPath` (default `false` — opt-in beta). The extension resolves and mirrors this boolean; the body never reads VS Code settings directly.
+- `projectedFiles` / `projectedTasks` are estimated from the drafted requirements, measured against a fixed **5 files / 10 tasks** ceiling (the tiny-change guardrail).
+- `scopeSignal` reads scope phrases — `rewrite`/`overhaul`/`new system` push `larger`; `one-line`/`rename`/`typo` push `smaller`.
+- `verdict = simple` only when the fast-path is enabled, both projections sit at or under the ceiling, and the scope signal isn't `larger`; otherwise `normal`.
+
+Two branches follow from the verdict:
+
+- **`simple` — minimal mode.** The combined artifact stays in a single `spec.md`: the four turbo sections plus an appended **Approach** (files/dependencies — the plan content, inline) and **Implementation Tasks** (a dependency-ordered `- [ ] **T001** [P?] … + path` list — the task content, inline). No separate `plan.md` / `tasks.md` is emitted; `checklists/requirements.md` is still written. After specify self-closes, the body folds the lifecycle with `write-context.py --substep fast-path` calls — `plan` start/complete then `tasks` start/complete, the last carrying `--status ready-to-implement` — so the viewer reads plan and tasks as satisfied (not missing) and the spec lands ready for implement in one run. No `completed` status is written; the final completed gate stays a user action.
+- **`normal` — full pipeline.** `spec.md` only, no fold; plan and tasks run as their own `/speckit.companion.plan` / `/speckit.companion.tasks` steps, exactly as before.
+
+**Guardrail warning.** When the change crosses the ceiling (`>5` files or `>10` tasks) or the scope signal is `larger`, the body prints `[companion] Change exceeds the small-change guardrail (5 files / 10 tasks) — running the full pipeline.` and runs `normal` — never a silent fast-track. Exactly-at-threshold (5 files / 10 tasks) is the simple ceiling and does not warn.
+
+**Opt in / out.** The flag defaults to `false` (full pipeline on every change). Set `speckit.companion.complexityFastPath: true` (VS Code setting) to enable fast-tracking; set it `false` or leave it unset to force the full pipeline. The VS Code setting is the single source of truth — `resolveComplexityFastPath` (in `companionPresetReconciler.ts`) mirrors it into `.specify/companion.yml`, a machine-local, gitignored cache the command body reads (it can't read VS Code settings directly). There is no separate project-level override. The eval (`.claude/skills/eval-speckit-extension/check_capture.py`) asserts a fast-tracked spec's folded `plan`/`tasks` entries, real timestamps, and `ready-to-implement` landing.
+
 ## Selecting a profile — one setting, routed per spec
 
 Mode selection is **dispatch routing**, not a preset swap. Both command families are always present — the stock `/speckit.*` family (emitted by `specify init`, kept present by the always-on `companion-standard` carrier) and the namespaced `/speckit.companion.*` family (from the extension's `provides.commands`). The mode only picks which family a spec dispatches; nothing is ever removed.
 
-1. **Project default** — `speckit.companion.templateProfile` (`"standard" | "turbo" | "off"`, default `standard`), mirrored to `.specify/companion.yml` (a machine-local, gitignored mirror the extension writes and regenerates on activation — untracked, so one developer's choice never leaks into another checkout). Changing it only records the default and seeds new specs — it issues **no** preset add/remove/swap, so it can never blank a command set.
+1. **Project default** — `speckit.companion.templateProfile` (`"standard" | "turbo" | "off"`, default `off` — an opt-in beta), mirrored to `.specify/companion.yml` (a machine-local, gitignored mirror the extension writes and regenerates on activation — untracked, so one developer's choice never leaks into another checkout). Changing it only records the default and seeds new specs — it issues **no** preset add/remove/swap, so it can never blank a command set.
 2. **Per-spec pin, with a project-default fallback** — each spec records its shape in `.spec-context.json` `profile`, seeded from the project default (`src/features/specs/profileDispatch.ts` `seedProfileForNewSpec`). But the spec-kit capture script that first writes the context on the `specify` step is profile-agnostic and leaves `profile` **absent**, so the pin can't be relied on at creation. The extension closes that gap two ways: `resolveProfileCommand` falls back to the project default when no pin is present (routing stays correct immediately), and the context writer **back-fills** the pin into `.spec-context.json` on the first lifecycle write (`src/features/specs/specContextWriter.ts` `updateSpecContext`), so it becomes durable. Either way `resolveProfileCommand` maps the four pipeline commands (`speckit.{specify,plan,tasks,implement}`) → their `speckit.companion.*` twins for a `turbo` spec across every dispatch path; `clarify`/`analyze`/`constitution` and custom commands have no twin and pass through unchanged. An **explicit** pin (including `standard`) or an invalid value resolves to the stock command and is never overwritten — so once a spec is pinned, a later default change can't reshape it. The **specify** step is special — a brand-new spec has no context yet, so `resolveNewSpecProfileCommand` routes its specify command from the project default directly (`turbo` → `/speckit.companion.specify`), keeping the first artifact on the same shape the rest of the spec is seeded to.
 
 **Keeping the standard family present (recovery + steady state).** On activation the extension runs an **add-only** ensure (`src/features/settings/companionPresetReconciler.ts` `ensureStandardFamily`): it adds `companion-standard` from the bundled path when absent — re-materializing the stock command files on a fresh checkout and recovering a project a prior swap left stranded — and is a no-op when already present. It **never** removes the standard family, so it cannot strand a project. A one-time migration removes a leftover `companion-turbo` install if present (and the pre-rename `companion-lean` / `sdd-lean` leftovers), but the setting itself issues no removes thereafter. CLI failures are logged, not thrown. The `off` escape hatch is the one exception — it opts out of the ensure entirely (`shouldEnsureStandard`), so it neither installs nor repairs `companion-standard`. It does **not** remove an already-installed `companion-standard` either — `off` skips the repair step, it doesn't revert a prior install, so a project that already has the timing-augmented bodies keeps them until the preset is removed manually.
