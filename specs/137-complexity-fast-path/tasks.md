@@ -40,7 +40,7 @@ This feature spans **two co-located extensions**:
 
 **⚠️ CRITICAL**: US1 and US2 both edit `speckit.companion.specify.md` to attach their branch — they depend on this step and on each other for that file.
 
-- [x] **T003** Add the **classify step** to `speckit-extension/commands/speckit.companion.specify.md`: after the spec content is drafted, read `complexityFastPath` from `.specify/companion.yml` (default `true` when absent), estimate `projectedFiles` and `projectedTasks` from the drafted requirements, detect the scope-phrase signal (`smaller`/`larger`/`none`), and compute the `simple | normal` verdict per the decision block in `contracts/classification.md` (errs toward `normal` on weak/conflicting signals; the fixed 5-files / 10-tasks threshold is a constant in the body). Branch bodies are added per-story below.
+- [x] **T003** Add the **classify step** to `speckit-extension/commands/speckit.companion.specify.md`: after the spec content is drafted, read `complexityFastPath` from `.specify/companion.yml` (default `false` when absent — opt-in beta), estimate `projectedFiles` and `projectedTasks` from the drafted requirements, detect the scope-phrase signal (`smaller`/`larger`/`none`), and compute the `simple | normal` verdict per the decision block in `contracts/classification.md` (errs toward `normal` on weak/conflicting signals; the fixed 5-files / 10-tasks threshold is a constant in the body). Branch bodies are added per-story below.
 
 **Checkpoint**: The command body classifies every run; the branch behaviors are filled in by US1 and US2.
 
@@ -50,7 +50,7 @@ This feature spans **two co-located extensions**:
 
 **Goal**: A trivial change classifies `simple` and produces a single combined spec/plan/tasks artifact, landing the developer at the implement step in one run.
 
-**Independent Test**: Run `/speckit.companion.specify` with description `rename foo to bar`. Expect one combined `spec.md` (Overview + FR + SC + Assumptions + Approach + Implementation Tasks), no separate `plan.md`/`tasks.md`, and `.spec-context.json` with `plan`+`tasks` `start`/`complete` pairs tagged `substep: "fast-path"` and `status: ready-to-implement`. (Default flag is `true`, so this story is testable before US3 lands.)
+**Independent Test**: Run `/speckit.companion.specify` with description `rename foo to bar`. Expect one combined `spec.md` (Overview + FR + SC + Assumptions + Approach + Implementation Tasks), no separate `plan.md`/`tasks.md`, and `.spec-context.json` with `plan`+`tasks` `start`/`complete` pairs tagged `substep: "fast-path"` and `status: ready-to-implement`. (The fast-path flag defaults to `false` — set `speckit.companion.complexityFastPath: true` first to exercise this story.)
 
 ### Implementation for User Story 1
 

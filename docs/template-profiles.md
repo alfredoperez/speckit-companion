@@ -10,7 +10,7 @@ The long-form reference for how SpecKit Companion reshapes the spec-kit pipeline
 |---|---|---|
 | `off` (default) | No overrides at all — an opt-in beta, so the profiles are off until selected. | Plain upstream spec-kit. |
 | `standard` | The **stock** spec-kit commands, unchanged, with timing instructions added. | Same sections, same files as upstream spec-kit. |
-| `turbo` | The same commands with specific sections trimmed or replaced (no user stories, files/dependencies task axis), plus the same timing. | A smaller spec folder — always `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files created on demand. |
+| `turbo` | The same commands with specific sections trimmed or replaced (no user stories, files/dependencies task axis), plus the same timing. | A smaller spec folder — `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files created on demand. (With the opt-in complexity fast-path on, a *small* change folds plan + tasks into `spec.md` and skips the separate `plan.md`/`tasks.md` — see [Complexity fast-path](#complexity-fast-path-turbo-only).) |
 
 Both `standard` and `turbo` override the same **7** commands — `specify`, `clarify`, `plan`, `tasks`, `analyze`, `implement`, `constitution`. `checklist` and `taskstoissues` are left on stock.
 
