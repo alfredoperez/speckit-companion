@@ -254,6 +254,20 @@ function setupEventListeners(): void {
         vscode.postMessage({ type: 'requestTemplateDialog' });
     });
 
+    // Install banner actions (server-rendered, present only when the spec-kit
+    // extension is missing). data-action → the matching webview→extension message.
+    const installBanner = document.getElementById('install-banner');
+    if (installBanner) {
+        installBanner.addEventListener('click', (e) => {
+            const action = (e.target as HTMLElement).closest('[data-action]')?.getAttribute('data-action');
+            if (action === 'installSpecKitExtension') {
+                vscode.postMessage({ type: 'installSpecKitExtension' });
+            } else if (action === 'openReadme') {
+                vscode.postMessage({ type: 'openReadme' });
+            }
+        });
+    }
+
     // Attach image button
     elements.attachImageBtn.addEventListener('click', () => {
         const input = document.createElement('input');

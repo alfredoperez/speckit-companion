@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { readSpecContextSync } from './specContextReader';
-import { readTemplateProfile } from '../settings/companionPresetReconciler';
+import { readTemplateProfile, isCompanionInstalled } from '../settings/companionPresetReconciler';
 
 /**
  * When a spec's per-spec profile is `turbo`, the stock pipeline command is swapped
@@ -60,6 +60,76 @@ export function resolveNewSpecProfileCommand(stockCommand: string, workspaceRoot
         return TURBO_COMMAND_BY_STOCK[stockCommand];
     }
     return stockCommand;
+}
+
+/** Reverse map: the stock command a `/speckit.companion.*` twin falls back to. */
+const STOCK_COMMAND_BY_TURBO: Record<string, string> = Object.fromEntries(
+    Object.entries(TURBO_COMMAND_BY_STOCK).map(([stock, turbo]) => [turbo, stock])
+);
+
+/**
+ * The discriminator for "this command needs the spec-kit extension to exist": a
+ * resolved `/speckit.companion.*` twin only works when the companion extension dir
+ * is installed (it registers that namespaced command family). A stock `speckit.*`
+ * command never needs it.
+ */
+function isCompanionNamespacedCommand(command: string): boolean {
+    return command in STOCK_COMMAND_BY_TURBO;
+}
+
+export interface DispatchResolution {
+    /** The command to actually dispatch. */
+    command: string;
+    /**
+     * True when a `/speckit.companion.*` twin was downgraded to its stock command
+     * because the spec-kit extension is missing. The caller should warn (non-blocking)
+     * and run the stock flow — NEVER dispatch the unresolvable namespaced command.
+     */
+    fellBack: boolean;
+}
+
+/**
+ * Resolve the dispatch command for an existing spec AND guard the missing-extension
+ * case: if `resolveProfileCommand` picks a `/speckit.companion.*` twin but the
+ * companion spec-kit extension is not installed (no `.specify/extensions/companion/`),
+ * downgrade to the stock command and flag `fellBack` so the caller can warn. This is
+ * the FR-003 safety net — turning on turbo without the extension must never dispatch a
+ * command the AI CLI can't resolve.
+ */
+export function resolveProfileCommandWithFallback(
+    command: string,
+    specDirectory: string
+): DispatchResolution {
+    const resolved = resolveProfileCommand(command, specDirectory);
+    if (!isCompanionNamespacedCommand(resolved)) {
+        return { command: resolved, fellBack: false };
+    }
+    const root = findWorkspaceRoot(specDirectory);
+    if (root && isCompanionInstalled(root)) {
+        return { command: resolved, fellBack: false };
+    }
+    // Extension missing — fall back to the stock command rather than dispatch an
+    // unresolvable `/speckit.companion.*`.
+    return { command: STOCK_COMMAND_BY_TURBO[resolved], fellBack: true };
+}
+
+/**
+ * New-spec variant of {@link resolveProfileCommandWithFallback}: resolves the
+ * project-default turbo routing for a brand-new spec, then applies the same
+ * missing-extension guard. Used by the Create-Spec editor's specify dispatch.
+ */
+export function resolveNewSpecProfileCommandWithFallback(
+    stockCommand: string,
+    workspaceRoot: string | undefined
+): DispatchResolution {
+    const resolved = resolveNewSpecProfileCommand(stockCommand, workspaceRoot);
+    if (!isCompanionNamespacedCommand(resolved)) {
+        return { command: resolved, fellBack: false };
+    }
+    if (workspaceRoot && isCompanionInstalled(workspaceRoot)) {
+        return { command: resolved, fellBack: false };
+    }
+    return { command: STOCK_COMMAND_BY_TURBO[resolved], fellBack: true };
 }
 
 /**

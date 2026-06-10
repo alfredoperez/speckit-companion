@@ -16,6 +16,7 @@ import {
 import { escapeHtml, escapeHtmlAttribute, generateNonce } from '../utils';
 import { calculateWorkflowPhase, getDocTypeLabel } from '../phaseCalculation';
 import { SpecStatuses } from '../../../core/constants';
+import { renderInstallBannerHtml } from '../../spec-editor/installBanner';
 
 /**
  * Generate HTML for the webview
@@ -42,7 +43,8 @@ export function generateHtml(
     currentFilePath?: string | null,
     currentStep?: string | null,
     stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>,
-    activityPanelMode: 'off' | 'beta' | 'on' = 'beta'
+    activityPanelMode: 'off' | 'beta' | 'on' = 'beta',
+    showInstallPrompt: boolean = false
 ): string {
     // Get URIs for resources
     const styleUri = webview.asWebviewUri(
@@ -59,6 +61,12 @@ export function generateHtml(
     );
 
     const nonce = generateNonce();
+
+    // Install banner: shown only when the spec-kit extension is missing (and the
+    // prompt isn't `off`). Installed projects get an empty string — no banner, no
+    // regression (FR-008, FR-011). Visibility is decided by the provider via
+    // `shouldShowInstallPrompt`; here it's just markup.
+    const installBanner = renderInstallBannerHtml(showInstallPrompt);
 
     // Generate content or empty state
     const contentHtml = content
@@ -121,6 +129,7 @@ export function generateHtml(
     <title>Spec: ${escapeHtml(specName)}</title>
 </head>
 <body style="background: var(--vscode-editor-background, #1e1e1e);" data-spec-status="${specStatus}" data-spec-badge="${escapeHtml(badgeText || '')}">
+    ${installBanner}
     <div class="viewer-container" id="app-root"></div>
     <template id="initial-content" data-raw="${content ? escapeHtmlAttribute(content) : ''}"></template>
     <script nonce="${nonce}">
@@ -141,6 +150,23 @@ export function generateHtml(
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js" nonce="${nonce}"></script>
     <script nonce="${nonce}">
         const vscode = acquireVsCodeApi();
+        // Install banner actions (present only when the spec-kit extension is
+        // missing). data-action → the matching message the spec-viewer message
+        // handler resolves.
+        (function () {
+            const banner = document.getElementById('install-banner');
+            if (!banner) { return; }
+            banner.addEventListener('click', function (e) {
+                const el = e.target.closest('[data-action]');
+                if (!el) { return; }
+                const action = el.getAttribute('data-action');
+                if (action === 'installSpecKitExtension') {
+                    vscode.postMessage({ type: 'installSpecKitExtension' });
+                } else if (action === 'openReadme') {
+                    vscode.postMessage({ type: 'openReadme' });
+                }
+            });
+        })();
     </script>
     <script nonce="${nonce}" src="${scriptUri}"></script>
 </body>

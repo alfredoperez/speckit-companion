@@ -408,6 +408,13 @@ export type ViewerToExtensionMessage =
           source: string;
           message: string;
           stack?: string;
+      }
+    // Install banner actions (shown only when the spec-kit extension is missing)
+    | {
+          type: 'installSpecKitExtension';
+      }
+    | {
+          type: 'openReadme';
       };
 
 // ============================================

@@ -25,7 +25,9 @@ export type SpecEditorToExtensionMessage =
     | { type: 'loadTemplate'; specPath: string }
     | { type: 'requestTemplateDialog' }
     | { type: 'ready' }
-    | { type: 'cancel' };
+    | { type: 'cancel' }
+    | { type: 'installSpecKitExtension' }
+    | { type: 'openReadme' };
 
 // ============================================
 // Message Types: Extension → Webview

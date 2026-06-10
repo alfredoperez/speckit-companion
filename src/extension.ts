@@ -19,7 +19,8 @@ import { registerSpecViewerCommands, isSpecDocument } from './features/spec-view
 import { validateWorkflowsOnActivation, registerWorkflowConfigChangeListener } from './features/workflows';
 
 // SpecKit CLI integration
-import { SpecKitDetector, UpdateChecker, registerCliCommands, registerUtilityCommands } from './speckit';
+import { SpecKitDetector, UpdateChecker, registerCliCommands, registerUtilityCommands, registerSpecKitExtensionInstallCommands } from './speckit';
+import { isCompanionInstalled } from './features/settings/companionPresetReconciler';
 
 // Core
 import { Views, setupFileWatchers, setupTasksWatcher, setupSpecViewerWatcher } from './core';
@@ -172,6 +173,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Register all commands
     registerCliCommands(context, specKitDetector);
+    registerSpecKitExtensionInstallCommands(context);
     registerSteeringCommands(context, steeringManager, steeringExplorer, outputChannel);
     registerSpecKitCommands(context, specExplorer, outputChannel, specsTreeView, sidebarState.filter, sidebarState.sort);
     registerUtilityCommands(context, updateChecker, outputChannel);
@@ -291,6 +293,11 @@ export async function activate(context: vscode.ExtensionContext) {
                 .getConfiguration(ConfigKeys.namespace)
                 .get<boolean>('companion.resumeBeta', false);
             void setContextKey(CONTEXT_KEYS.resumeBeta, resumeBetaEnabled);
+            // Drive the sidebar install affordance: the install icon shows when
+            // the spec-kit extension is NOT installed. Refreshed by the watcher
+            // below when the extension dir appears/disappears (e.g. after the
+            // one-click install terminal completes).
+            void refreshCompanionInstalledContext(root);
             // `off` opts out of the ensure (plain upstream spec-kit); every other
             // profile keeps the standard family materialized.
             if (shouldEnsureStandard(profile)) {
@@ -298,8 +305,28 @@ export async function activate(context: vscode.ExtensionContext) {
                     log: msg => outputChannel.appendLine(msg),
                 });
             }
+            // Refresh the install context key whenever the companion extension dir
+            // is created or removed (the one-click install lands it on disk), so
+            // the sidebar affordance flips without a reload.
+            const extWatcher = vscode.workspace.createFileSystemWatcher(
+                new vscode.RelativePattern(root, '.specify/extensions/companion/**')
+            );
+            const refresh = (): void => { void refreshCompanionInstalledContext(root); };
+            extWatcher.onDidCreate(refresh);
+            extWatcher.onDidDelete(refresh);
+            context.subscriptions.push(extWatcher);
         }
     }
+}
+
+/**
+ * Mirror "is the companion spec-kit extension installed?" into the
+ * `speckit.companion.installed` context key. The sidebar install affordance's
+ * `when` clause reads `!speckit.companion.installed`, so this gate must be kept
+ * current as the extension dir appears/disappears on disk.
+ */
+async function refreshCompanionInstalledContext(root: string): Promise<void> {
+    await setContextKey(CONTEXT_KEYS.companionInstalled, isCompanionInstalled(root));
 }
 
 /**

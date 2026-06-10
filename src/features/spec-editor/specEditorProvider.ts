@@ -13,8 +13,10 @@ import { normalizeWorkflowConfig, resolveStepCommand, isWorkflowSupportedForProv
 import type { WorkflowConfig } from '../workflows';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { buildSpecifyCreationPreamble } from '../../ai-providers/promptBuilder';
-import { resolveNewSpecProfileCommand } from '../specs/profileDispatch';
+import { resolveNewSpecProfileCommandWithFallback } from '../specs/profileDispatch';
 import { isCompanionInstalled } from '../settings/companionPresetReconciler';
+import { shouldShowInstallPrompt, readInstallPromptMode } from '../../speckit/specKitExtensionInstall';
+import { renderInstallBannerHtml } from './installBanner';
 import { AIProviders, WorkflowSteps, ConfigKeys } from '../../core/constants';
 
 /** The turbo specify twin the picker routes to when turbo is chosen. */
@@ -137,6 +139,27 @@ export class SpecEditorProvider {
      * when `on`, the suffix is dropped (treated as stable) — mirroring the
      * activity-panel beta-flag precedent.
      */
+    /**
+     * Non-blocking warning shown when a turbo specify dispatch was downgraded to
+     * the stock command because the spec-kit extension is missing (FR-003). Offers
+     * a one-click install without leaving the editor.
+     */
+    private warnFellBackToStock(): void {
+        this.outputChannel.appendLine(
+            '[SpecEditor] Turbo specify unavailable — spec-kit extension not installed; running stock speckit.specify.'
+        );
+        void vscode.window
+            .showWarningMessage(
+                'Turbo mode needs the companion spec-kit extension, which is not installed — creating this spec with the standard SpecKit flow instead.',
+                'Install spec-kit Extension'
+            )
+            .then(choice => {
+                if (choice === 'Install spec-kit Extension') {
+                    void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
+                }
+            });
+    }
+
     private buildTurboWorkflowEntry(): WorkflowDefinition | undefined {
         const mode = vscode.workspace
             .getConfiguration(ConfigKeys.namespace)
@@ -249,6 +272,14 @@ export class SpecEditorProvider {
             case 'cancel':
                 this.handleCancel();
                 break;
+
+            case 'installSpecKitExtension':
+                void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
+                break;
+
+            case 'openReadme':
+                void vscode.commands.executeCommand('speckit.companion.openReadme');
+                break;
         }
     }
 
@@ -351,13 +382,27 @@ export class SpecEditorProvider {
             // turbo specify twin unconditionally (ignoring the project default) and pin
             // `profile: turbo` in the seed write so the whole pipeline runs turbo.
             const pickedTurbo = !customCommand && workflowName === TURBO_WORKFLOW_NAME;
-            const seedProfile: 'turbo' | undefined = pickedTurbo ? 'turbo' : undefined;
+            let seedProfile: 'turbo' | undefined = pickedTurbo ? 'turbo' : undefined;
+            const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
             let command = customCommand ? `/${customCommand}` : workflow.stepSpecify;
             if (pickedTurbo) {
-                command = `/${formatCommandForProvider(TURBO_SPECIFY_COMMAND)}`;
+                // The turbo picker is only offered when the extension is installed
+                // (buildTurboWorkflowEntry gates on it), but re-check here so a stale
+                // selection can never dispatch an unresolvable /speckit.companion.*.
+                const resolution = resolveNewSpecProfileCommandWithFallback('speckit.specify', workspaceRoot);
+                if (resolution.fellBack) {
+                    seedProfile = undefined;
+                    command = `/${formatCommandForProvider('speckit.specify')}`;
+                    this.warnFellBackToStock();
+                } else {
+                    command = `/${formatCommandForProvider(TURBO_SPECIFY_COMMAND)}`;
+                }
             } else if (!customCommand && workflow.name === 'speckit') {
-                const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-                command = `/${formatCommandForProvider(resolveNewSpecProfileCommand('speckit.specify', workspaceRoot))}`;
+                const resolution = resolveNewSpecProfileCommandWithFallback('speckit.specify', workspaceRoot);
+                command = `/${formatCommandForProvider(resolution.command)}`;
+                if (resolution.fellBack) {
+                    this.warnFellBackToStock();
+                }
             }
 
             // The turbo picker is a synthetic entry, not a real workflow config.
@@ -544,6 +589,18 @@ export class SpecEditorProvider {
 
         const nonce = generateNonce();
 
+        // Install banner: shown only when the prompt mode isn't `off` AND the
+        // spec-kit extension is missing — installed projects see nothing (FR-007,
+        // zero-regression). Visibility is the unit-tested gate; the markup is shared
+        // with the Activity panel.
+        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        const installBanner = renderInstallBannerHtml(
+            shouldShowInstallPrompt(
+                readInstallPromptMode(),
+                workspaceRoot ? isCompanionInstalled(workspaceRoot) : false
+            )
+        );
+
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -567,6 +624,7 @@ export class SpecEditorProvider {
         </header>
 
         <div class="spec-editor-content">
+            ${installBanner}
             <div id="error-container"></div>
 
             <div class="workflow-row">

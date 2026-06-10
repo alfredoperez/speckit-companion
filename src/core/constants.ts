@@ -69,6 +69,7 @@ export const ConfigKeys = {
     turboWorkflowPicker: 'speckit.companion.turboWorkflowPicker',
     complexityFastPath: 'speckit.companion.complexityFastPath',
     resumeBeta: 'speckit.companion.resumeBeta',
+    installPrompt: 'speckit.companion.installPrompt',
     views: {
         specsVisible: 'speckit.views.specs.visible',
         steeringVisible: 'speckit.views.steering.visible',

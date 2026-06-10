@@ -25,7 +25,7 @@ import {
   readSpecContextSync,
 } from "../specs/specContextReader";
 import { updateSpecContext } from "../specs/specContextWriter";
-import { resolveProfileCommand } from "../specs/profileDispatch";
+import { resolveProfileCommand, resolveProfileCommandWithFallback } from "../specs/profileDispatch";
 import { lastEntryIsCompletionFor } from "../specs/historyHelpers";
 import {
   completeStep,
@@ -147,6 +147,12 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
       const fn = FOOTER_ACTION_HANDLERS[msg.id];
       if (fn) await fn(dir, deps);
       else deps.outputChannel.appendLine(`[SpecViewer] Unknown footerAction id: ${msg.id}`);
+    },
+    installSpecKitExtension: async (_msg, _dir, _deps) => {
+      await vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
+    },
+    openReadme: async (_msg, _dir, _deps) => {
+      await vscode.commands.executeCommand('speckit.companion.openReadme');
     },
   };
 }
@@ -430,7 +436,25 @@ async function executeStepInTerminal(
   const instance = deps.getInstance(specDirectory);
   const targetPath = instance?.state.changeRoot || specDirectory;
   const label = step.label || step.name;
-  const command = resolveProfileCommand(step.command, specDirectory);
+  // Guard the missing-extension case: never dispatch a /speckit.companion.* twin
+  // when the spec-kit extension isn't installed — fall back to stock + warn (FR-003).
+  const resolution = resolveProfileCommandWithFallback(step.command, specDirectory);
+  const command = resolution.command;
+  if (resolution.fellBack) {
+    deps.outputChannel.appendLine(
+      `[SpecViewer] Turbo command unavailable — spec-kit extension not installed; running stock ${command}.`,
+    );
+    void vscode.window
+      .showWarningMessage(
+        'Turbo mode needs the companion spec-kit extension, which is not installed — running the standard SpecKit flow instead.',
+        'Install spec-kit Extension',
+      )
+      .then(choice => {
+        if (choice === 'Install spec-kit Extension') {
+          void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
+        }
+      });
+  }
   const formatted = formatCommandForProvider(command);
   const rawPrompt = `/${formatted} ${targetPath}`;
   const prompt = buildPrompt({
