@@ -1,4 +1,5 @@
-import { StepName } from '../../core/types/specContext';
+import { HistoryEntry, StepName } from '../../core/types/specContext';
+import { isPerTaskEntry } from './historyHelpers';
 
 export interface LastTransition {
     /** Human label for the most recent history entry, e.g. "Plan started". */
@@ -10,20 +11,16 @@ export interface LastTransition {
 }
 
 /**
- * Minimal structural shape of a history entry. Accepts both the canonical
- * `HistoryEntry` (has `kind`) and the reader's `TransitionEntry` (no `kind`).
+ * Minimal reader-facing view of a canonical `HistoryEntry`: the fields this
+ * module reads, all optional with `step` widened so the legacy `TransitionEntry`
+ * (no `kind`) also assigns.
  */
-interface HistoryEntryLike {
+type HistoryEntryView = Partial<Pick<HistoryEntry, 'substep' | 'task' | 'kind' | 'at'>> & {
     step?: string | null;
-    substep?: string | null;
-    /** Per-task id on implement finishes (substep is null on these). */
-    task?: string | null;
-    kind?: string;
-    at?: string;
-}
+};
 
 interface HistoryHolder {
-    history?: ReadonlyArray<HistoryEntryLike> | null;
+    history?: ReadonlyArray<HistoryEntryView> | null;
 }
 
 const STEP_LABELS: Record<StepName, string> = {
@@ -42,10 +39,10 @@ function stepLabel(step: StepName | string | null | undefined): string {
     return STEP_LABELS[step as StepName] ?? String(step);
 }
 
-function entryLabel(entry: HistoryEntryLike): string {
-    // A per-task implement finish (substep null + a task id) must read as that task,
-    // not as the step's completion — otherwise "T004 done" renders "Implement completed".
-    if (entry.task) {
+function entryLabel(entry: HistoryEntryView): string {
+    // A per-task implement finish must read as that task, not as the step's
+    // completion — otherwise "T004 done" renders "Implement completed".
+    if (isPerTaskEntry(entry)) {
         return `${stepLabel(entry.step)} · ${entry.task}`;
     }
     if (entry.substep) {

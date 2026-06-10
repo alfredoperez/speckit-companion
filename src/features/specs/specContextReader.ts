@@ -229,6 +229,9 @@ function normalizeHistoryKind(entries: HistoryEntry[]): HistoryEntry[] {
     return entries.map(e => {
         if (e.kind) return e;
         let kind: HistoryEntryKind;
+        // Keyed on `substep` alone (not the task-aware isStepLevelEntry): a legacy
+        // per-task entry must keep using the step self-loop rule, so substituting
+        // the predicate would change its backfilled kind.
         if (e.substep == null) {
             kind = e.from?.step === e.step ? 'complete' : 'start';
         } else {

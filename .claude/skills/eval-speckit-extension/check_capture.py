@@ -316,16 +316,21 @@ def run_checks(spec_dir: Path) -> Report:
     return r
 
 
+def _is_step_level(e: dict) -> bool:
+    """A step-level boundary entry: no substep and no per-task id. The single
+    Python expression of the rule TypeScript's `isStepLevelEntry` owns; per-task
+    finishes (substep None but `task` set) are excluded from step start/complete."""
+    return e.get("substep") is None and e.get("task") is None
+
+
 def _step_span(history: list, step: str):
     """(start_at, complete_at, seconds) for a step's start→complete at the step
     level (substep None); None when either boundary is missing or unparseable."""
     start = next((e for e in history if e.get("step") == step
-                  and e.get("substep") is None and e.get("task") is None
+                  and _is_step_level(e)
                   and e.get("kind") == "start"), None)
-    # Exclude per-task finishes (substep None, but `task` set) — only the step-level
-    # boundary (substep None AND task None) marks start/complete.
     completes = [e for e in history if e.get("step") == step
-                 and e.get("substep") is None and e.get("task") is None
+                 and _is_step_level(e)
                  and e.get("kind") == "complete"]
     if not start or not completes:
         return None

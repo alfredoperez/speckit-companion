@@ -277,6 +277,17 @@ def _entry_kind(e: dict) -> str:
     return "start"
 
 
+def _is_step_level(e: dict) -> bool:
+    """A step-level boundary entry: no substep and no per-task id. The single
+    Python expression of the rule TypeScript's `isStepLevelEntry` owns."""
+    return e.get("substep") is None and e.get("task") is None
+
+
+def _is_per_task(e: dict) -> bool:
+    """A per-task implement finish: carries a `task` id (`isPerTaskEntry`)."""
+    return e.get("task") is not None
+
+
 def _has_step_start(log: list, step: str, substep: object = None) -> bool:
     """True if a `start` for `(step, substep)` already exists. A step (or a folded
     substep entry) is started once; this collapses every redundant start — the
@@ -289,7 +300,7 @@ def _has_step_start(log: list, step: str, substep: object = None) -> bool:
         isinstance(e, dict)
         and e.get("step") == step
         and e.get("substep") == substep
-        and e.get("task") is None
+        and not _is_per_task(e)
         and _entry_kind(e) == "start"
         for e in log
     )
@@ -309,7 +320,7 @@ def _has_complete(log: list, step: str, task: object = None) -> bool:
             # (the id lives in `task`), so it must NOT count as the step's complete —
             # otherwise the first task finish would skip the real step close and leave
             # the step permanently in-flight.
-            return e.get("substep") is None and e.get("task") is None
+            return _is_step_level(e)
         return e.get("task") == task or e.get("substep") == task
     return any(
         isinstance(e, dict)

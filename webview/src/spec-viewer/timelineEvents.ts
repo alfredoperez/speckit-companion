@@ -17,6 +17,16 @@ import type { HistoryEntry, StepHistoryEntry, SubstepEntry } from './types';
 export type TimelineEventSource = 'tracked' | 'logged';
 
 /**
+ * Step-level vs per-task discriminators. Intentionally duplicated from the
+ * extension's `historyHelpers` (the webview must not import from `src/`); the
+ * rule is trivial and kept symmetric with the extension side.
+ */
+type DiscriminatorEntry = { substep?: string | null; task?: string | null };
+const isStepLevelEntry = (e: DiscriminatorEntry): boolean =>
+    e.substep == null && e.task == null;
+const isPerTaskEntry = (e: DiscriminatorEntry): boolean => e.task != null;
+
+/**
  * Substeps land on disk in two shapes:
  *   - array form: `Array<{name, startedAt, completedAt}>`
  *   - record form: `Record<name, {startedAt, completedAt}>`
@@ -48,8 +58,10 @@ export function buildHistoryIndex(
 ): Map<string, HistoryEntry> {
     const map = new Map<string, HistoryEntry>();
     for (const t of history) {
-        // Per-task implement entries carry a null `substep` + a `task` id; index
-        // them by task so the tracked row (named after the task) resolves its actor.
+        // Skip step-level boundaries; index substep and per-task entries. Per-task
+        // entries carry a null `substep` + a `task` id, so they index by task —
+        // the tracked row (named after the task) resolves its actor.
+        if (isStepLevelEntry(t)) continue;
         const name = t.substep || t.task;
         if (!name) continue;
         const key = `${t.step}:${name}`;
@@ -86,6 +98,9 @@ export function mergeStepEvents(
 
     for (const tx of history) {
         if (tx.step !== step) continue;
+        // Logged-only events are substep-bearing; skip step-level boundaries and
+        // per-task finishes (both substep null) — they surface via tracked rows.
+        if (isStepLevelEntry(tx) || isPerTaskEntry(tx)) continue;
         if (!tx.substep) continue;
         if (trackedNames.has(tx.substep)) continue;
         // A completion entry's `from.substep === substep` (self-loop). Skip;
