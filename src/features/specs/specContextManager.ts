@@ -246,6 +246,10 @@ function lastEntryIsCompletionFor(history: HistoryEntry[], step: StepName): bool
     for (let i = history.length - 1; i >= 0; i--) {
         const e = history[i];
         if (e.step !== step) continue;
+        // Per-task finishes are now `substep: null` with `task` set — they are NOT
+        // the step boundary, so skip them and look for the last step-level entry.
+        // Otherwise a mid-implement task finish reads as the step's completion.
+        if (e.task != null) continue;
         return e.kind === 'complete' && e.substep == null;
     }
     return false;
@@ -255,7 +259,7 @@ function lastEntryIsCompletionFor(history: HistoryEntry[], step: StepName): bool
 function stepHasBeenStarted(history: HistoryEntry[], step: StepName): boolean {
     for (const e of history) {
         if (e.step !== step) continue;
-        if (e.substep != null) continue;
+        if (e.substep != null || e.task != null) continue;
         if (e.kind === 'start') return true;
     }
     return false;

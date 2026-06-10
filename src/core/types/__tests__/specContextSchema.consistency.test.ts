@@ -24,11 +24,11 @@ describe('spec-context.schema.json stays in sync with the TS contract', () => {
         expect(schema.properties.status.enum).toEqual([...STATUSES]);
     });
 
-    it('historyEntry.from.step enum is STEP_NAMES plus null', () => {
-        expect(schema.$defs.historyEntry.properties.from.properties.step.enum).toEqual([
-            ...STEP_NAMES,
-            null,
-        ]);
+    it('historyEntry no longer declares `from` (writers stopped emitting it; legacy tolerated via permissive additionalProperties)', () => {
+        expect(schema.$defs.historyEntry.properties.from).toBeUndefined();
+        expect(schema.$defs.historyEntry.required).not.toContain('from');
+        // additionalProperties stays permissive so legacy records with `from` still validate.
+        expect(schema.additionalProperties).toBe(true);
     });
 
     it('historyEntry.by enum covers every author the writers emit', () => {

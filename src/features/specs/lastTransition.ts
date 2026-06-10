@@ -16,6 +16,8 @@ export interface LastTransition {
 interface HistoryEntryLike {
     step?: string | null;
     substep?: string | null;
+    /** Per-task id on implement finishes (substep is null on these). */
+    task?: string | null;
     kind?: string;
     at?: string;
 }
@@ -41,6 +43,11 @@ function stepLabel(step: StepName | string | null | undefined): string {
 }
 
 function entryLabel(entry: HistoryEntryLike): string {
+    // A per-task implement finish (substep null + a task id) must read as that task,
+    // not as the step's completion — otherwise "T004 done" renders "Implement completed".
+    if (entry.task) {
+        return `${stepLabel(entry.step)} · ${entry.task}`;
+    }
     if (entry.substep) {
         return `${stepLabel(entry.step)} · ${entry.substep}`;
     }

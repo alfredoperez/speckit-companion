@@ -21,16 +21,57 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-CANONICAL_STEPS = ["specify", "clarify", "plan", "tasks", "analyze", "implement"]
-CANONICAL_STATUSES = [
+# Inline fallbacks (used only when the schema can't be read).
+_FALLBACK_STEPS = ["specify", "clarify", "plan", "tasks", "analyze", "implement"]
+_FALLBACK_STATUSES = [
     "draft", "specifying", "specified", "planning", "planned", "tasking",
     "ready-to-implement", "implementing", "implemented", "completed", "archived",
 ]
-VALID_BY = {"extension", "user", "cli", "ai", "derive"}
+_FALLBACK_BY = {"extension", "user", "cli", "ai", "derive"}
+_FALLBACK_ENTRY_REQUIRED = ["step", "substep", "kind", "by", "at"]
+
+
+def _load_schema() -> dict | None:
+    """Locate and parse spec-context.schema.json (the format authority) by
+    walking up from this file to the repo root. None when unreadable."""
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        cand = parent / "src" / "core" / "types" / "spec-context.schema.json"
+        if cand.is_file():
+            try:
+                return json.loads(cand.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                return None
+    return None
+
+
+def _schema_vocab(schema: dict | None):
+    """Pull CANONICAL_STEPS/CANONICAL_STATUSES/VALID_BY/entry-required from the
+    schema enums so the eval can't drift from the format definition (FR-008).
+    Falls back to inline constants on any structural surprise."""
+    try:
+        props = schema["properties"]
+        steps = props["currentStep"]["enum"]
+        statuses = props["status"]["enum"]
+        entry = schema["$defs"]["historyEntry"]
+        by = entry["properties"]["by"]["enum"]
+        required = entry["required"]
+        if all(isinstance(x, list) for x in (steps, statuses, by, required)):
+            return list(steps), list(statuses), set(by), list(required)
+    except (KeyError, TypeError, AttributeError):
+        pass
+    return _FALLBACK_STEPS, _FALLBACK_STATUSES, _FALLBACK_BY, _FALLBACK_ENTRY_REQUIRED
+
+
+_SCHEMA = _load_schema()
+CANONICAL_STEPS, CANONICAL_STATUSES, VALID_BY, ENTRY_REQUIRED = _schema_vocab(_SCHEMA)
 # Writers that read the real clock at write time → held to ms-precision + monotonic.
 # `ai` is excluded: it journals best-effort with second-precision `date -u`.
 DETERMINISTIC_BY = {"extension", "derive", "cli", "user"}
 VALID_KIND = {"start", "complete"}
+# Cadence-span floor: by:ai task finishes must span at least this % of the
+# implement step's real start→complete duration, else they read as one burst.
+MIN_CADENCE_SPAN_PCT = 5
 # `**` optional: accepts both the bold (`- [x] **T001**`) and plain (`- [x] T001`)
 # tasks.md marker formats — see write-context.py's parsers.
 COMPLETED_TASK_RE = re.compile(r"^\s*[-*]\s*\[[xX]\]\s*(?:\*\*)?(T\d+)")
@@ -42,6 +83,30 @@ def _parse_at(s: str) -> dt.datetime | None:
         return dt.datetime.fromisoformat(str(s).replace("Z", "+00:00"))
     except (ValueError, TypeError):
         return None
+
+
+def _validate_entry_format(e: object, idx: int) -> list[str]:
+    """Minimal stdlib validator for one history entry against the schema's
+    `historyEntry` def. Returns a list of problems (empty == conforms)."""
+    if not isinstance(e, dict):
+        return [f"#{idx} not an object"]
+    errs: list[str] = []
+    for key in ENTRY_REQUIRED:
+        if key not in e:
+            errs.append(f"#{idx} missing '{key}'")
+    if "step" in e and e["step"] not in CANONICAL_STEPS:
+        errs.append(f"#{idx} step={e.get('step')}")
+    if "kind" in e and e["kind"] not in VALID_KIND:
+        errs.append(f"#{idx} kind={e.get('kind')}")
+    if "by" in e and e["by"] not in VALID_BY:
+        errs.append(f"#{idx} by={e.get('by')}")
+    if "substep" in e and not (e["substep"] is None or isinstance(e["substep"], str)):
+        errs.append(f"#{idx} substep is {type(e['substep']).__name__}, want string|null")
+    if "task" in e and not isinstance(e["task"], str):
+        errs.append(f"#{idx} task is {type(e['task']).__name__}, want string")
+    if _parse_at(e.get("at")) is None:
+        errs.append(f"#{idx} bad at={e.get('at')}")
+    return errs
 
 
 def _looks_handtyped(at: str) -> bool:
@@ -139,6 +204,16 @@ def run_checks(spec_dir: Path) -> Report:
             bad.append(f"#{i} bad at={e.get('at')}")
     r.add(not bad, "entries-well-formed", "all valid" if not bad else "; ".join(bad[:5]))
 
+    # entries-match-format — validate every entry against the schema's historyEntry
+    # def: required keys present, step/kind/by in enum, substep string|null,
+    # task string when present, at parseable. A single malformed entry → FAIL.
+    fmt_errs: list[str] = []
+    for i, e in enumerate(history):
+        fmt_errs.extend(_validate_entry_format(e, i))
+    r.add(not fmt_errs, "entries-match-format",
+          f"{len(history)} entries conform to historyEntry def" if not fmt_errs
+          else "; ".join(fmt_errs[:5]))
+
     # monotonic timestamps — strict only for DETERMINISTIC writes (extension/derive/
     # cli/user), which read the real clock in order. AI-journaled entries may burst
     # (the AI batches `date -u`); that coarseness is graded by task-cadence, not failed.
@@ -178,9 +253,16 @@ def run_checks(spec_dir: Path) -> Report:
     tasks_md = spec_dir / "tasks.md"
     if any(e.get("step") == "implement" for e in history):
         if task_entries:
-            substep_ok = all(e.get("substep") == e.get("task") for e in task_entries)
-            r.add(substep_ok, "per-task-substeps",
-                  f"{len(task_entries)} task events; substep==task: {substep_ok}")
+            # New shape: per-task entries carry `task` and a null `substep`. Legacy
+            # records mirror the id into `substep` — both are accepted; only an
+            # unrelated non-null substep is a defect.
+            shape_ok = all(
+                isinstance(e.get("task"), str) and e.get("task")
+                and (e.get("substep") is None or e.get("substep") == e.get("task"))
+                for e in task_entries
+            )
+            r.add(shape_ok, "per-task-substeps",
+                  f"{len(task_entries)} task events; task id present, substep null|==task: {shape_ok}")
         else:
             r.add(False, "per-task-substeps", "implement reached but no per-task events journaled")
         if tasks_md.is_file():
@@ -206,12 +288,52 @@ def run_checks(spec_dir: Path) -> Report:
                   "each task has a single finish (≤1 complete; ≤1 legacy start)" if not dupes
                   else f"DUPLICATED task/kind (hook re-added a live entry): {dupes}")
 
+        # task-cadence-span — the burst detector. Compare the span of by:ai task
+        # finishes (first→last) against the implement step's real start→complete
+        # duration. Clustered finishes (spec-136: 13 in ~0.2% of a 6m40s step) pass
+        # the non-zero-gap check yet are clearly one end-of-step dump → FAIL. Only
+        # by:ai finishes count; the by:extension backstop legitimately bursts.
+        span = _step_span(history, "implement")
+        ai_finishes = [e for e in history
+                       if isinstance(e.get("task"), str) and e.get("by") == "ai"
+                       and e.get("kind") == "complete" and _parse_at(e.get("at"))]
+        if span is not None and span[2] > 0 and len(ai_finishes) >= 3:
+            step_span = span[2]
+            ts = sorted(_parse_at(e["at"]) for e in ai_finishes)
+            finish_span = (ts[-1] - ts[0]).total_seconds()
+            pct = finish_span / step_span * 100
+            ok = finish_span >= step_span * MIN_CADENCE_SPAN_PCT / 100
+            r.add(ok, "task-cadence-span",
+                  f"{len(ai_finishes)} ai finishes span {_fmt(finish_span)} = {pct:.2f}% of "
+                  f"{_fmt(step_span)} implement step (need ≥ {MIN_CADENCE_SPAN_PCT}%)"
+                  + ("" if ok else " — finishes clustered into one end-of-step burst"))
+
     # fast-path fold — only asserted when a spec was fast-tracked (substep="fast-path").
     _fastpath(r, history, ctx)
 
     # timing breakdown (info)
     _timing(r, history)
     return r
+
+
+def _step_span(history: list, step: str):
+    """(start_at, complete_at, seconds) for a step's start→complete at the step
+    level (substep None); None when either boundary is missing or unparseable."""
+    start = next((e for e in history if e.get("step") == step
+                  and e.get("substep") is None and e.get("task") is None
+                  and e.get("kind") == "start"), None)
+    # Exclude per-task finishes (substep None, but `task` set) — only the step-level
+    # boundary (substep None AND task None) marks start/complete.
+    completes = [e for e in history if e.get("step") == step
+                 and e.get("substep") is None and e.get("task") is None
+                 and e.get("kind") == "complete"]
+    if not start or not completes:
+        return None
+    s = _parse_at(start.get("at"))
+    c = _parse_at(completes[-1].get("at"))
+    if s is None or c is None:
+        return None
+    return (s, c, (c - s).total_seconds())
 
 
 def _fastpath(r: Report, history: list, ctx: dict) -> None:

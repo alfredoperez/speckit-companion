@@ -126,7 +126,11 @@ export interface HistoryEntryFrom {
 export interface HistoryEntry {
     step: string;
     substep: string | null;
-    from: HistoryEntryFrom;
+    /** Per-task id on implement entries (substep is null on these). */
+    task?: string;
+    kind?: 'start' | 'complete';
+    /** Legacy, read-only: writers no longer emit it. Present on old records. */
+    from?: HistoryEntryFrom;
     by: string;
     at: string;
 }

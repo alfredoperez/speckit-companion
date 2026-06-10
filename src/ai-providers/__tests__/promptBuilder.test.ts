@@ -298,7 +298,8 @@ describe('buildSpecifyCreationPreamble', () => {
         const out = buildSpecifyCreationPreamble('speckit', null);
         expect(out).toContain('"step": "specify"');
         expect(out).toContain('"by": "extension"');
-        expect(out).toContain('"from": { "step": null, "substep": null }');
+        // The writer no longer emits `from` — the seed entry must not carry it.
+        expect(out).not.toContain('"from"');
         // The seed must go into `history`, not the deprecated `transitions` field.
         expect(out).toContain('"history": [');
         expect(out).not.toContain('"transitions": [');

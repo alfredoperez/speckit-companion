@@ -73,18 +73,15 @@ def derive(feature_dir: Path, by: str = "derive") -> Path | None:
     branch = wc._git_branch(wc._repo_root()) or "main"
 
     log = wc.canonical_log(ctx)
-    from_ = wc.step_from(ctx.get("currentStep"), step)
     wc.fill_required(ctx, feature_dir, branch)
 
     ctx["currentStep"] = step
     ctx["status"] = status
-    ctx["updated"] = wc._today()
 
     log.append({
         "step": step,
         "substep": None,
         "kind": "start",
-        "from": from_,
         "by": by,
         "at": now,
     })
@@ -94,24 +91,15 @@ def derive(feature_dir: Path, by: str = "derive") -> Path | None:
         distinct_all = list(dict.fromkeys(all_ids))
         distinct_done = list(dict.fromkeys(done_ids))
         already = wc._journaled_tasks(log)
-        # Per-task entries are substeps of implement (substep = task id) — a paired
-        # start+complete, matching write-context.py sync_tasks so a derived spec and
-        # a hook-captured one have the same shape.
+        # Finish-only per-task entries (substep null, task carries the id) — matching
+        # write-context.py sync_tasks so a derived spec and a hook-captured one have
+        # the same shape. No paired start/complete: one finish event per task.
         for tid in distinct_done:
             if tid in already:
                 continue
             log.append({
                 "step": "implement",
-                "substep": tid,
-                "task": tid,
-                "kind": "start",
-                "from": {"step": "implement", "substep": None},
-                "by": by,
-                "at": wc._now_iso(),
-            })
-            log.append({
-                "step": "implement",
-                "substep": tid,
+                "substep": None,
                 "task": tid,
                 "kind": "complete",
                 "by": by,

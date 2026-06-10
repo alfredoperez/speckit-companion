@@ -86,14 +86,17 @@ export type HistoryEntryKind = 'start' | 'complete';
  * by the viewer; it is not persisted.
  *
  * `kind` explicitly tags the entry as a start or completion event.
- * `from` is only present on `start` entries (absent on `complete` entries).
  */
 export interface HistoryEntry {
     step: StepName;
     substep: string | null;
-    /** Present only on implement per-task entries; equals the task id (`substep`). */
+    /** Per-task id on implement entries. The canonical per-task identifier; `substep` is null on these. */
     task?: string;
     kind: HistoryEntryKind;
+    /**
+     * Legacy, read-only: derivable from the previous entry's step. Writers no
+     * longer emit it; kept here so old records still parse. Never write it.
+     */
     from?: HistoryEntryFrom;
     by: HistoryEntryBy;
     at: string;

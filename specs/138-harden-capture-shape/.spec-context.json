@@ -1,0 +1,225 @@
+{
+  "workflow": "speckit",
+  "specName": "Harden Capture Shape",
+  "branch": "138-harden-capture-shape",
+  "selectedAt": "2026-06-10T00:45:22.606Z",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": null,
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-10T00:45:22.606Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-10T01:13:24.676Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-10T01:13:42.901Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T01:18:18Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T01:19:19Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T01:19:19Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-10T01:22:57.613Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T01:23:57Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T01:24:06Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-06-10T01:25:08.612Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T001",
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T01:26:00.567Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T002",
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T01:27:11.766Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T003",
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T01:27:56.823Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T004",
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T01:28:44.662Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T005",
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T01:29:02.640Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T006",
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T01:32:43.822Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T007",
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T01:34:14.643Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T008",
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T01:35:57.167Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T009",
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T01:39:12.895Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T010",
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T01:42:45.386Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T012",
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T01:43:37.641Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T011",
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T01:44:38.550Z"
+    },
+    {
+      "step": "implement",
+      "substep": "T013",
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T01:45:10.822Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T01:51:14Z"
+    }
+  ],
+  "updated": "2026-06-10",
+  "profile": "turbo",
+  "currentTask": "T013",
+  "task_summaries": {
+    "T001": { "status": "DONE", "did": "Removed the `from` property declaration from the schema's historyEntry def, keeping additionalProperties permissive for legacy records.", "files": ["src/core/types/spec-context.schema.json"] },
+    "T002": { "status": "DONE", "did": "Stopped write-context.py emitting `from`/`updated` and the per-task substep mirror; per-task finishes now carry substep:null+task; rekeyed _has_complete on task; dropped unused _today/step_from.", "files": ["speckit-extension/scripts/write-context.py"] },
+    "T003": { "status": "DONE", "did": "Aligned the derive-from-files combined-artifact path to the same finish-only, no-from, no-updated shape.", "files": ["speckit-extension/scripts/derive-from-files.py"] },
+    "T004": { "status": "DONE", "did": "Stopped the GUI writer building/emitting `from` on step and substep start entries; removed now-unused imports.", "files": ["src/features/specs/specContextWriter.ts"] },
+    "T005": { "status": "DONE", "did": "Marked `from?` legacy-read-only and revised the `task` doc comment so it no longer claims it equals substep.", "files": ["src/core/types/specContext.ts"] },
+    "T006": { "status": "DONE", "did": "Loaded eval enums from the schema; added entries-match-format and the task-cadence-span burst FAIL; updated per-task-substeps for the null-substep shape.", "files": [".claude/skills/eval-speckit-extension/check_capture.py"] },
+    "T007": { "status": "DONE", "did": "Strengthened the timing partial to require journaling each task finish the moment it completes (forbidding end-of-step batches) and re-synced it into all 18 command embedders.", "files": ["speckit-extension/presets/_shared/timing-partial.md"] },
+    "T008": { "status": "DONE", "did": "Dropped `from` from the dispatched schema/seed example and start-entry templates, and added the implement-cadence wording to promptBuilder.", "files": ["src/ai-providers/promptBuilder.ts"] },
+    "T009": { "status": "DONE", "did": "Made the derivation degrade cleanly with null-substep task entries (dedupe by task, name rows from task, exclude tasks from step-completion) plus historyHelpers/timelineEvents fixes; added a Jest identity test.", "files": ["src/features/specs/stepHistoryDerivation.ts", "src/features/specs/historyHelpers.ts", "webview/src/spec-viewer/timelineEvents.ts", "webview/src/spec-viewer/types.ts", "src/features/specs/__tests__/stepHistoryDerivation.test.ts"] },
+    "T010": { "status": "DONE", "did": "Ran all gates: 888 Jest tests pass, tsc + webpack clean, shape-parity OK, spec-136 fails cadence, and exactly one newly-failing prior spec (the intended target).", "files": ["src/core/types/__tests__/specContextSchema.consistency.test.ts", "src/features/specs/__tests__/specContextWriter.test.ts", "src/ai-providers/__tests__/promptBuilder.test.ts"] },
+    "T011": { "status": "DONE", "did": "Documented the cadence-span assertion, the dropped from/updated/substep-mirror fields, and schema-as-single-vocab-source.", "files": ["docs/capture-and-timing.md"] },
+    "T012": { "status": "DONE", "did": "Dropped `from` from the documented entry shape, added task/kind, and noted legacy read tolerance.", "files": ["docs/spec-context-schema.md"] },
+    "T013": { "status": "DONE", "did": "Prepended a user-facing changelog entry: malformed/bursted captures are now caught; no version bump.", "files": ["speckit-extension/CHANGELOG.md"] }
+  }
+}
