@@ -325,7 +325,13 @@ export class SpecEditorProvider {
                 command = `/${formatCommandForProvider(resolveNewSpecProfileCommand('speckit.specify', workspaceRoot))}`;
             }
 
-            const specContextInstruction = buildSpecifyCreationPreamble(workflowName, null, seedProfile);
+            // The turbo picker is a synthetic entry, not a real workflow config.
+            // Seed the `.spec-context.json` `workflow` field with the resolvable base
+            // name ('speckit') so downstream step-resolution (getWorkflow) finds it;
+            // turbo routing is carried entirely by the pinned `profile: turbo`, not
+            // by this field. Other workflows seed their own name unchanged.
+            const seedWorkflowName = pickedTurbo ? 'speckit' : workflowName;
+            const specContextInstruction = buildSpecifyCreationPreamble(seedWorkflowName, null, seedProfile);
             if (specContextInstruction) {
                 await this.tempFileManager.appendToMarkdownFile(
                     tempFileSet.markdownFilePath,
