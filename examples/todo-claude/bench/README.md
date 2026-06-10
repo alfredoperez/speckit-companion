@@ -2,6 +2,28 @@
 
 Run the **same feature** through five workflow configurations — an *adoption ladder* where each rung adds exactly one thing — at three sizes, and compare correctness, speed, artifacts/ceremony, lifecycle-capture fidelity, and an **Overall health composite**. You build each cell through the real SpecKit Companion extension in VS Code; the harness then judges, scores, and records it.
 
+## Quick start (TL;DR)
+
+Three slash commands, one size at a time (`easy` | `medium` | `hard`):
+
+```
+/bench-sync                  # ONCE (or when spec-kit / speckit-extension / presets change):
+                             #   re-bakes the 5 sandbox folders with the real installers.
+
+/bench-prep <size>           # arms + resets the 5 folders, opens a VS Code window per folder,
+                             #   and prints the ONE prompt to paste into all 5.
+
+#   → in EACH window: paste the printed prompt, set provider = Claude, then run
+#     specify → plan → tasks → implement.
+#     speckit / companion-logs / companion-standard → stock /speckit.*
+#     companion-turbo / companion-fast-path        → /speckit.companion.*
+
+/bench-capture <size>        # judges + comparative review + measures + scores + records
+                             #   + regenerates REPORT.md, then resets the folders.
+```
+
+That's the whole loop. Results land in `REPORT.md` (+ committed `stats.jsonl` / `history.jsonl` / `reviews/`). Everything below explains what each step does. First time on a fresh machine, run `/bench-sync` once first.
+
 ## The 5 modes (each rung adds one thing vs the prior)
 
 | Mode | What it adds | Commands | Capture |
