@@ -8,7 +8,6 @@ import {
     writeTemplateProfile,
     ensureStandardFamily,
     shouldEnsureStandard,
-    readComplexityFastPath,
     writeComplexityFastPath,
     resolveComplexityFastPath,
     PresetOp,
@@ -241,18 +240,17 @@ describe('companionPresetReconciler', () => {
             expect(doc.complexityFastPath).toBe(false);
         });
 
-        it('reads a non-boolean companion.yml value as unset (no downstream leak)', () => {
+        it('ignores a non-boolean companion.yml value (setting still resolves)', () => {
             writeYml('complexityFastPath: maybe\n');
-            expect(readComplexityFastPath(root)).toBeUndefined();
-            // resolution falls through to the setting
             expect(resolveComplexityFastPath(root, false)).toBe(false);
+            expect(mirrored()).toBe(false);
         });
 
         it('round-trips the mirror via the writer', () => {
             writeComplexityFastPath(root, false);
-            expect(readComplexityFastPath(root)).toBe(false);
+            expect(mirrored()).toBe(false);
             writeComplexityFastPath(root, true);
-            expect(readComplexityFastPath(root)).toBe(true);
+            expect(mirrored()).toBe(true);
         });
     });
 

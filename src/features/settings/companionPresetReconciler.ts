@@ -126,25 +126,6 @@ export function writeTemplateProfile(workspaceRoot: string, profile: TemplatePro
     fs.writeFileSync(p, yaml.dump(doc), 'utf8');
 }
 
-/**
- * Read the explicit `complexityFastPath` boolean from .specify/companion.yml.
- * undefined when the file is absent/unreadable or the key is missing or not a
- * boolean (a hand-edited `complexityFastPath: maybe` must not flow downstream).
- */
-export function readComplexityFastPath(workspaceRoot: string): boolean | undefined {
-    const p = path.join(workspaceRoot, CONFIG_REL);
-    if (!fs.existsSync(p)) {
-        return undefined;
-    }
-    try {
-        const doc = yaml.load(fs.readFileSync(p, 'utf8')) as { complexityFastPath?: unknown } | null;
-        const value = doc?.complexityFastPath;
-        return typeof value === 'boolean' ? value : undefined;
-    } catch {
-        return undefined;
-    }
-}
-
 /** Read-merge-write complexityFastPath, preserving every other key already in the file. */
 export function writeComplexityFastPath(workspaceRoot: string, value: boolean): void {
     const p = path.join(workspaceRoot, CONFIG_REL);
