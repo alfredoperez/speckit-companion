@@ -2,7 +2,7 @@
 // running the REAL installers, so each folder gets exactly what current tooling
 // produces (hyphenated /speckit-* + /speckit-companion-* skills) and we exercise
 // the actual install path.
-//   node bench/sync-templates.mjs [--only speckit|companion-logs|companion-commands|companion-turbo]
+//   node bench/sync-templates.mjs [--only speckit|companion-logs|companion-standard|companion-turbo|companion-fast-path]
 //
 // Per folder: clone the app (for src + node_modules), drop the stale spec-kit
 // emissions, `specify init` (current stock spec-kit), then for companion variants

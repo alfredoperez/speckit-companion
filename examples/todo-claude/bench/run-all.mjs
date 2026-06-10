@@ -37,7 +37,7 @@ if (args['dry-run']) {
     const tmpl = existsSync(folderDir(mode)) ? '✓' : '✗ MISSING (run sync-templates / /bench-sync)'
     console.log(`  ${tmpl}  todo-${mode.padEnd(20)} ${armNote(mode)}`)
   }
-  console.log(`\nFolders: ${relFromRepo(TEMPLATES_DIR)}/todo-* (gitignored). Run one size at a time across the 4 folders.`)
+  console.log(`\nFolders: ${relFromRepo(TEMPLATES_DIR)}/todo-* (gitignored). Run one size at a time across the ${MODES.length} folders.`)
   process.exit(0)
 }
 

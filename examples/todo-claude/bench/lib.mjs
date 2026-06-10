@@ -256,7 +256,8 @@ export function gitInitCell(cellDir) {
 // Leaves .specify/ (the armed companion state), node_modules, and .git intact.
 export function resetFolder(dir) {
   rmSync(join(dir, 'src'), { recursive: true, force: true })
-  run('cp', ['-cR', CANONICAL_SRC, join(dir, 'src')])
+  // -cR is an APFS reflink (instant on macOS); fall back to a plain copy off-APFS (Linux CI).
+  try { run('cp', ['-cR', CANONICAL_SRC, join(dir, 'src')]) } catch { run('cp', ['-R', CANONICAL_SRC, join(dir, 'src')]) }
   try { run('cp', [join(CANONICAL_DIR, 'index.html'), join(dir, 'index.html')]) } catch { /* */ }
   rmSync(join(dir, 'specs'), { recursive: true, force: true })
   mkdirSync(join(dir, 'specs'), { recursive: true })
@@ -482,8 +483,10 @@ function runAcceptance(cwd, size) {
   return { passed: r.numPassedTests ?? 0, total: r.numTotalTests ?? 0 }
 }
 
-// Measure one finished cell into a stats row. `mode === 'speckit'` has no
-// .spec-context.json, so timing comes only from the orchestrator wall-clock.
+// Measure one finished cell into a stats row. `mode === 'speckit'` skips the
+// capture EVAL (no companion install) — but the always-on VS Code extension may
+// still have written a `.spec-context.json`, so speckit can carry `history[]`
+// timing; it just isn't graded for capture fidelity.
 export function measureCell({ cellDir, size, mode, runId, startedAt, finishedAt, wallClockSec, quality = null }) {
   const specsDir = join(cellDir, 'specs')
   const specName = newestSpecDir(specsDir)
@@ -565,9 +568,14 @@ export function computeOverall(r) {
   return Math.round(45 * correctness + 30 * rubric + 25 * capture)
 }
 
+// Order rows chronologically. `capturedAt` is always stamped at capture time;
+// `finishedAt` is often null on the manual VS Code flow, so sorting on it alone
+// yields NaN and an unstable order. Prefer capturedAt, fall back to finishedAt.
+const rowTime = (r) => Date.parse(r?.capturedAt || r?.finishedAt || '') || 0
+
 function latest(rows, size, mode) {
   return rows.filter((r) => r.size === size && r.mode === mode)
-    .sort((a, b) => Date.parse(b.finishedAt) - Date.parse(a.finishedAt))[0]
+    .sort((a, b) => rowTime(b) - rowTime(a))[0]
 }
 
 export function renderReport(rows) {
@@ -649,7 +657,7 @@ export function renderReport(rows) {
   }
 
   const sections = SIZES.map(sizeTable).filter(Boolean)
-  const log = rows.slice().sort((a, b) => Date.parse(a.finishedAt) - Date.parse(b.finishedAt))
+  const log = rows.slice().sort((a, b) => rowTime(a) - rowTime(b))
     .map((r) => `- \`${r.runId}\` → ${r.mode}/${r.size} · build ${r.buildPass ? '✓' : '✗'} · acceptance ${r.acceptancePassed}/${r.acceptanceTotal} · capture ${r.capture ? `${r.capture.pass}✓/${r.capture.fail}✗` : 'n/a'} · ${fmtDur(r.wallClockSec)}`)
     .join('\n')
 

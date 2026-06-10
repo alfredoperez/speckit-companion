@@ -86,7 +86,7 @@ It is **cohort-independent** on purpose — a cell's score only moves when its o
 
 ## How timing is measured
 
-Straight from the run's `specs/<dir>/.spec-context.json` `history[]` — it timestamps every step regardless of who wrote it. `capture` derives total + per-step durations from those stamps. `speckit` is blind, so it has no per-step timeline.
+Straight from the run's `specs/<dir>/.spec-context.json` `history[]` — it timestamps every step regardless of who wrote it. `capture` derives total + per-step durations from those stamps. `speckit` isn't graded for capture fidelity (no companion install), but the always-on VS Code extension may still write a `.spec-context.json`, so a speckit cell can carry partial per-step timing — just don't treat it as a clean control.
 
 ## History is durable — diff it later
 
