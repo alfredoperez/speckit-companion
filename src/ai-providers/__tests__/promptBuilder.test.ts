@@ -1,5 +1,48 @@
 import * as vscode from 'vscode';
-import { buildPrompt, buildLifecyclePrompt, buildSpecifyCreationPreamble } from '../promptBuilder';
+import {
+    buildPrompt,
+    buildLifecyclePrompt,
+    buildSpecifyCreationPreamble,
+    rewriteImageRefsToStaged,
+} from '../promptBuilder';
+
+describe('rewriteImageRefsToStaged (#208)', () => {
+    it('swaps each markdown image target from its source path to the staged path', () => {
+        const src = '/gs/spec-editor/t1/images/a.png';
+        const staged = '/Users/x/project/.speckit-companion/spec-editor/s1/images/a.png';
+        const body = `intro\n\n![alt](${src})\n\nmore`;
+
+        expect(rewriteImageRefsToStaged(body, { [src]: staged }))
+            .toBe(`intro\n\n![alt](${staged})\n\nmore`);
+    });
+
+    it('rewrites every occurrence of a repeated source path', () => {
+        const src = '/gs/i.png';
+        const staged = '/ws/.speckit-companion/i.png';
+        const body = `![a](${src}) and ![b](${src})`;
+
+        expect(rewriteImageRefsToStaged(body, { [src]: staged }))
+            .toBe(`![a](${staged}) and ![b](${staged})`);
+    });
+
+    it('leaves a body without the source link untouched', () => {
+        const body = 'no images here';
+        expect(rewriteImageRefsToStaged(body, { '/gs/x.png': '/ws/x.png' })).toBe(body);
+    });
+
+    it('is a no-op for an empty mapping', () => {
+        const body = '![a](/gs/x.png)';
+        expect(rewriteImageRefsToStaged(body, {})).toBe(body);
+    });
+
+    it('does not rewrite a bare path occurrence outside a markdown link target', () => {
+        const src = '/gs/x.png';
+        const staged = '/ws/x.png';
+        // The path appears in prose, not as `](path)`. Left alone.
+        const body = `the file at ${src} is attached`;
+        expect(rewriteImageRefsToStaged(body, { [src]: staged })).toBe(body);
+    });
+});
 
 describe('buildPrompt', () => {
     const originalGetConfig = vscode.workspace.getConfiguration;

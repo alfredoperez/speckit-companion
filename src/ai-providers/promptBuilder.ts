@@ -449,6 +449,34 @@ export async function cleanCommandArg(command: string): Promise<string> {
  * as the path and the read itself is the validation. Any prompt that isn't a
  * `specify` command pointing at a readable `.md` path is returned unchanged.
  */
+/**
+ * Rewrite markdown image references from their source (globalStorage) paths to
+ * staged in-workspace paths. For OpenCode, whose sandbox rejects reads outside
+ * the project root: after images are copied into a self-gitignored workspace
+ * cache dir, the inlined spec body's `![…](<sourcePath>)` links must point at the
+ * staged copies so the agent reads an in-project path.
+ *
+ * `mapping` is { sourceFsPath → stagedFsPath }. Each `](<sourcePath>)` occurrence
+ * is replaced with `](<stagedPath>)`. A body with no matching link is returned
+ * unchanged, and an empty mapping is a no-op — so the caller can pass whatever it
+ * staged and rely on this to touch only the references it actually moved.
+ */
+export function rewriteImageRefsToStaged(
+    body: string,
+    mapping: Record<string, string>
+): string {
+    let out = body;
+    for (const [source, staged] of Object.entries(mapping)) {
+        if (!source || source === staged) {
+            continue;
+        }
+        // Replace only inside a markdown image/link target `](<source>)` to avoid
+        // rewriting an incidental occurrence of the path elsewhere in prose.
+        out = out.split(`](${source})`).join(`](${staged})`);
+    }
+    return out;
+}
+
 export async function inlineSpecifyTempPath(prompt: string): Promise<string> {
     const { preamble, command } = splitContextPreamble(prompt);
     const trimmed = command.trim();

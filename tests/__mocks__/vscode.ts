@@ -104,6 +104,8 @@ export const workspace = {
         readFile: jest.fn().mockResolvedValue(new Uint8Array()),
         writeFile: jest.fn().mockResolvedValue(undefined),
         createDirectory: jest.fn().mockResolvedValue(undefined),
+        copy: jest.fn().mockResolvedValue(undefined),
+        delete: jest.fn().mockResolvedValue(undefined),
     },
     workspaceFolders: undefined as any,
     findFiles: jest.fn().mockResolvedValue([]),
