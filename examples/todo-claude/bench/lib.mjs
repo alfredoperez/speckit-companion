@@ -1,4 +1,4 @@
-// Shared helpers for the turbo-vs-standard bench harness.
+// Shared helpers for the adoption-ladder bench harness.
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve, join, relative } from 'node:path'
 import {
