@@ -7,7 +7,7 @@ A minimal React + TypeScript + Vite todo application for testing AI CLI provider
 This app has two roles:
 
 1. **Provider test bed** — validating spec-driven development workflows across different AI CLI providers (Claude Code, Gemini CLI, GitHub Copilot CLI).
-2. **Turbo-vs-standard bench** — running the same feature through both the `companion-turbo` and `companion-standard` template profiles, at three sizes, to compare correctness and speed. See [`bench/README.md`](./bench/README.md) (driven by the `/bench-prep` and `/bench-finish` Claude Code commands).
+2. **Adoption-ladder bench** — running the same feature through five workflow modes (plain spec-kit → companion-logs → companion-standard → companion-turbo → companion-fast-path), at three sizes, to compare correctness, ceremony, and speed. See [`bench/README.md`](./bench/README.md) (driven by the `/bench-sync` → `/bench-prep` → `/bench-capture` Claude Code commands).
 
 ## Getting Started
 
@@ -36,7 +36,7 @@ The exact paste-in prompts live in `bench/prompts/{easy,medium,hard}.md`.
 
 ## Testing Procedure
 
-- **Turbo-vs-standard bench** (the primary use): follow [`bench/README.md`](./bench/README.md) — `/bench-prep` → run the pipeline in VS Code → `/bench-finish`.
+- **Adoption-ladder bench** (the primary use): follow [`bench/README.md`](./bench/README.md) — `/bench-prep <size>` → run the pipeline in each VS Code window → `/bench-capture <size>`.
 - **Provider smoke test**: set the SpecKit Companion provider (Claude / Gemini / Copilot), open this folder in VS Code, initialize the CLI so its steering file appears, then implement one of the bench prompts via the spec workflow.
 
 ## Project Structure
@@ -55,7 +55,7 @@ todo-claude/
 │   │   └── todos.tsx       # reducer + context + localStorage persistence
 │   ├── components/         # Header, AddTodo, TodoItem, TodoList
 │   └── pages/              # TodosPage, AboutPage (one per route)
-├── bench/                  # turbo-vs-standard harness (prompts, oracle, scripts)
+├── bench/                  # adoption-ladder harness (prompts, oracle, scripts)
 ├── .specify/               # spec-kit workspace (templates, scripts, extensions)
 ├── index.html · package.json · tsconfig.json · vite.config.ts · vitest.config.ts
 ```
