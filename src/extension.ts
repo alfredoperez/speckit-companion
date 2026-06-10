@@ -10,7 +10,7 @@ import { SpecExplorerProvider, registerSpecKitCommands, updateSelectionContextKe
 import { register as registerTerminalStepTracker } from './features/specs/terminalStepTracker';
 import { setLifecycleOutputChannel } from './features/specs/stepLifecycle';
 import { OverviewProvider } from './features/settings';
-import { ensureStandardFamily, shouldEnsureStandard, writeTemplateProfile, TemplateProfile } from './features/settings/companionPresetReconciler';
+import { ensureStandardFamily, shouldEnsureStandard, writeTemplateProfile, resolveComplexityFastPath, writeComplexityFastPath, TemplateProfile } from './features/settings/companionPresetReconciler';
 import { AgentManager } from './features/agents';
 import { SkillManager } from './features/skills';
 import { registerWorkflowEditorCommands } from './features/workflow-editor';
@@ -227,7 +227,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 if (root) {
                     const profile = vscode.workspace
                         .getConfiguration(ConfigKeys.namespace)
-                        .get<TemplateProfile>('companion.templateProfile', 'standard');
+                        .get<TemplateProfile>('companion.templateProfile', 'off');
                     // Mode selection is non-destructive: mirror the choice to
                     // .specify/companion.yml so new specs seed their pinned
                     // profile from it. No preset swap — both command families
@@ -240,6 +240,18 @@ export async function activate(context: vscode.ExtensionContext) {
                             log: msg => outputChannel.appendLine(msg),
                         });
                     }
+                }
+            }
+            if (e.affectsConfiguration(ConfigKeys.complexityFastPath)) {
+                const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+                if (root) {
+                    const enabled = vscode.workspace
+                        .getConfiguration(ConfigKeys.namespace)
+                        .get<boolean>('companion.complexityFastPath', false);
+                    // Mirror the editor choice to .specify/companion.yml so the
+                    // turbo specify body reads a single boolean (it never reads VS
+                    // Code settings directly).
+                    writeComplexityFastPath(root, enabled);
                 }
             }
         })
@@ -258,8 +270,14 @@ export async function activate(context: vscode.ExtensionContext) {
         if (root) {
             const profile = vscode.workspace
                 .getConfiguration(ConfigKeys.namespace)
-                .get<TemplateProfile>('companion.templateProfile', 'standard');
+                .get<TemplateProfile>('companion.templateProfile', 'off');
             writeTemplateProfile(root, profile);
+            // Mirror the fast-path setting into companion.yml so the turbo body
+            // reads one boolean (the setting is the source of truth).
+            const fastPathSetting = vscode.workspace
+                .getConfiguration(ConfigKeys.namespace)
+                .get<boolean>('companion.complexityFastPath', false);
+            resolveComplexityFastPath(root, fastPathSetting);
             // `off` opts out of the ensure (plain upstream spec-kit); every other
             // profile keeps the standard family materialized.
             if (shouldEnsureStandard(profile)) {
