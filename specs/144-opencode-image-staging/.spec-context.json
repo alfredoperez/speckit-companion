@@ -1,9 +1,9 @@
 {
   "workflow": "speckit",
-  "specName": "[FEATURE NAME]",
+  "specName": "opencode-image-staging",
   "branch": "144-opencode-image-staging",
   "currentStep": "implement",
-  "status": "completed",
+  "status": "implemented",
   "history": [
     {
       "step": "specify",

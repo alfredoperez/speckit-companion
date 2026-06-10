@@ -437,24 +437,11 @@ export async function cleanCommandArg(command: string): Promise<string> {
 }
 
 /**
- * Inline a `/speckit.* specify <temp.md>` dispatch so the agent never has to
- * read the file: replace the path argument with the *full* file contents
- * (description + the appended capture bookkeeping), newline-separated. Unlike
- * `cleanCommandArg` — which strips bookkeeping for human-facing chat surfaces —
- * this preserves everything a terminal agent would have read from the file.
- *
- * For sandboxed CLIs (OpenCode) that refuse to read paths outside the project
- * directory, where the spec-editor stages its temp file. The path may contain
- * spaces (e.g. macOS `Application Support`), so the whole argument is treated
- * as the path and the read itself is the validation. Any prompt that isn't a
- * `specify` command pointing at a readable `.md` path is returned unchanged.
- */
-/**
  * Rewrite markdown image references from their source (globalStorage) paths to
- * staged in-workspace paths. For OpenCode, whose sandbox rejects reads outside
- * the project root: after images are copied into a self-gitignored workspace
- * cache dir, the inlined spec body's `![…](<sourcePath>)` links must point at the
- * staged copies so the agent reads an in-project path.
+ * staged in-workspace paths. A pure ref-swap: for OpenCode, whose sandbox rejects
+ * reads outside the project root, after images are copied into a self-gitignored
+ * workspace cache dir, the inlined spec body's `![…](<sourcePath>)` links must
+ * point at the staged copies so the agent reads an in-project path.
  *
  * `mapping` is { sourceFsPath → stagedFsPath }. Each `](<sourcePath>)` occurrence
  * is replaced with `](<stagedPath>)`. A body with no matching link is returned
@@ -477,6 +464,19 @@ export function rewriteImageRefsToStaged(
     return out;
 }
 
+/**
+ * Inline a `/speckit.* specify <temp.md>` dispatch so the agent never has to
+ * read the file: replace the path argument with the *full* file contents
+ * (description + the appended capture bookkeeping), newline-separated. Unlike
+ * `cleanCommandArg` — which strips bookkeeping for human-facing chat surfaces —
+ * this preserves everything a terminal agent would have read from the file.
+ *
+ * For sandboxed CLIs (OpenCode) that refuse to read paths outside the project
+ * directory, where the spec-editor stages its temp file. The path may contain
+ * spaces (e.g. macOS `Application Support`), so the whole argument is treated
+ * as the path and the read itself is the validation. Any prompt that isn't a
+ * `specify` command pointing at a readable `.md` path is returned unchanged.
+ */
 export async function inlineSpecifyTempPath(prompt: string): Promise<string> {
     const { preamble, command } = splitContextPreamble(prompt);
     const trimmed = command.trim();
