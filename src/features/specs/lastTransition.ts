@@ -8,6 +8,13 @@ export interface LastTransition {
     at: string;
     /** Relative time from `at` (e.g. "2h ago"), measured against the entry. */
     relative: string;
+    /**
+     * The active task id (e.g. "T004") when the most recent entry is a per-task
+     * implement finish; otherwise undefined. Exposed as a discrete field so the
+     * sidebar can surface the task in its trimmed, icon-absent row description
+     * without string-parsing `label`.
+     */
+    task?: string;
 }
 
 /**
@@ -96,5 +103,8 @@ export function deriveLastTransition(
         label: entryLabel(entry),
         at: entry.at,
         relative: formatRelative(entry.at, now),
+        // Only a per-task implement finish carries an active task id; step-boundary
+        // and substep entries leave this undefined.
+        task: isPerTaskEntry(entry) ? entry.task ?? undefined : undefined,
     };
 }

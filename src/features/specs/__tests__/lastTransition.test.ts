@@ -65,6 +65,22 @@ describe('deriveLastTransition', () => {
         expect(result!.label).toBe('Implement · T014');
     });
 
+    it('exposes the active task id on a per-task implement finish', () => {
+        const result = deriveLastTransition(
+            ctxWithHistory([entry({ step: 'implement', substep: null, task: 'T004', kind: 'complete' })]),
+            Date.parse('2026-06-07T10:00:10.000Z')
+        );
+        expect(result!.task).toBe('T004');
+    });
+
+    it('leaves task undefined for a step-boundary entry', () => {
+        const result = deriveLastTransition(
+            ctxWithHistory([entry({ step: 'plan', kind: 'start', substep: null })]),
+            Date.parse('2026-06-07T10:00:10.000Z')
+        );
+        expect(result!.task).toBeUndefined();
+    });
+
     it('labels a complete entry as "<Step> completed"', () => {
         const result = deriveLastTransition(
             ctxWithHistory([entry({ step: 'tasks', kind: 'complete', substep: null })]),

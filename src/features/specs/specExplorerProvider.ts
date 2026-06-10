@@ -669,19 +669,26 @@ class SpecItem extends vscode.TreeItem {
             } else {
                 this.iconPath = new vscode.ThemeIcon('beaker');
             }
-            // Surface current step + last transition on the row so the canonical
-            // state is visible without opening the spec. Duplicate-name specs
-            // override description with their parent dir (set by the caller).
+            // Trim the row description to ONLY what the per-document step icons
+            // (Specification / Plan / Tasks) don't already convey (#238). The step
+            // name is redundant with those icons, so we deliberately DROP both the
+            // standalone `currentStep` word and the step-name phrase of the
+            // last-transition label ("Implement" / "Implement completed"). We KEEP
+            // the genuinely icon-absent info — the active task and the last-active
+            // relative time — in a compact "· T004 · 22h ago" form. The fuller
+            // step+time label still lives in the tooltip below for on-demand detail.
             const lastTransition = deriveLastTransition(specContext);
-            const descParts: string[] = [];
-            if (specContext?.currentStep) {
-                descParts.push(String(specContext.currentStep));
-            }
             if (lastTransition) {
-                descParts.push(`${lastTransition.label} · ${lastTransition.relative}`);
-            }
-            if (descParts.length > 0) {
-                this.description = descParts.join(' — ');
+                const kept: string[] = [];
+                if (lastTransition.task) {
+                    kept.push(lastTransition.task);
+                }
+                if (lastTransition.relative) {
+                    kept.push(lastTransition.relative);
+                }
+                if (kept.length > 0) {
+                    this.description = `· ${kept.join(' · ')}`;
+                }
             }
             const tooltipParts = [`SpecKit Spec: ${label}`];
             if (specContext?.status) {
