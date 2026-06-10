@@ -501,6 +501,58 @@ describe('SpecExplorerProvider', () => {
         });
     });
 
+    describe('spec row description trimmed of redundant step state (#238)', () => {
+        async function getSpecRow(specContext: any): Promise<any> {
+            const specName = 'my-feature';
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: specName, path: `specs/${specName}` },
+            ]);
+            (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
+            (readSpecContextSync as jest.Mock).mockReturnValue(specContext || undefined);
+            const groups = await provider.getChildren();
+            const specs = await provider.getChildren(groups[0]);
+            return specs[0];
+        }
+
+        // A per-task implement finish 30s ago → "· T004 · just now": keeps the
+        // task + time, drops "implement"/"Implement" (already shown by icons).
+        it('keeps the active task + time and drops the step word for a per-task finish', async () => {
+            const at = new Date(Date.now() - 30 * 1000).toISOString();
+            const row = await getSpecRow({
+                workflow: 'default',
+                currentStep: 'implement',
+                status: 'implementing',
+                history: [{ step: 'implement', substep: null, task: 'T004', kind: 'complete', by: 'ai', at }],
+            });
+            expect(row.description).toBe('· T004 · just now');
+            expect(row.description).not.toMatch(/implement/i);
+        });
+
+        // A step-boundary transition → "· <time>" only: no task, and no
+        // "Plan started" / "plan" word that the icons already convey.
+        it('keeps only the time for a step-boundary transition', async () => {
+            const at = new Date(Date.now() - 30 * 1000).toISOString();
+            const row = await getSpecRow({
+                workflow: 'default',
+                currentStep: 'plan',
+                status: 'planned',
+                history: [{ step: 'plan', substep: null, kind: 'start', by: 'extension', at }],
+            });
+            expect(row.description).toBe('· just now');
+            expect(row.description).not.toMatch(/plan/i);
+        });
+
+        // No history → no step-derived description (no stray "—" artifact).
+        it('sets no description when there is no history', async () => {
+            const row = await getSpecRow({
+                workflow: 'default',
+                currentStep: 'specify',
+                status: 'specifying',
+            });
+            expect(row.description).toBeUndefined();
+        });
+    });
+
     describe('spec-document items have no status circle descriptions', () => {
         it('should not set description on spec-document items with content', async () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([

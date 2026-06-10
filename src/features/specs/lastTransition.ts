@@ -8,6 +8,13 @@ export interface LastTransition {
     at: string;
     /** Relative time from `at` (e.g. "2h ago"), measured against the entry. */
     relative: string;
+    /**
+     * The active task id (e.g. "T004") when the most recent entry is a per-task
+     * implement finish; otherwise undefined. Exposed as a discrete field so the
+     * sidebar can surface the task in its trimmed, icon-absent row description
+     * without string-parsing `label`.
+     */
+    task?: string;
 }
 
 /**
@@ -37,6 +44,22 @@ function stepLabel(step: StepName | string | null | undefined): string {
         return 'Step';
     }
     return STEP_LABELS[step as StepName] ?? String(step);
+}
+
+/**
+ * True iff `entry` is the one shape that carries an active task id worth
+ * surfacing on the spec row: a per-task *implement finish*. We require the
+ * `implement` step and a completion (`kind === 'complete'`), so a `task`
+ * written on a non-implement step or a non-finish (`start`) entry never
+ * leaks onto the row. Legacy `kind`-less records (older writers) still
+ * qualify on the step + `task` alone, preserving prior behavior for entries
+ * that genuinely are implement finishes but predate the `kind` discriminator.
+ */
+function isImplementFinish(entry: HistoryEntryView): boolean {
+    if (!isPerTaskEntry(entry) || entry.step !== 'implement') {
+        return false;
+    }
+    return entry.kind === 'complete' || entry.kind == null;
 }
 
 function entryLabel(entry: HistoryEntryView): string {
@@ -96,5 +119,8 @@ export function deriveLastTransition(
         label: entryLabel(entry),
         at: entry.at,
         relative: formatRelative(entry.at, now),
+        // Only a per-task implement *finish* carries an active task id; step-boundary,
+        // substep, non-implement, and non-finish entries leave this undefined.
+        task: isImplementFinish(entry) ? entry.task ?? undefined : undefined,
     };
 }
