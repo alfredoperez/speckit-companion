@@ -73,6 +73,32 @@ describe('deriveLastTransition', () => {
         expect(result!.task).toBe('T004');
     });
 
+    it('does NOT surface task for a non-implement entry that carries a task field', () => {
+        const result = deriveLastTransition(
+            ctxWithHistory([entry({ step: 'plan', substep: null, task: 'T004', kind: 'complete' })]),
+            Date.parse('2026-06-07T10:00:10.000Z')
+        );
+        expect(result!.task).toBeUndefined();
+    });
+
+    it('does NOT surface task for a non-finish (start) implement entry that carries a task field', () => {
+        const result = deriveLastTransition(
+            ctxWithHistory([entry({ step: 'implement', substep: null, task: 'T004', kind: 'start' })]),
+            Date.parse('2026-06-07T10:00:10.000Z')
+        );
+        expect(result!.task).toBeUndefined();
+    });
+
+    it('surfaces task for a legacy kind-less implement finish (no discriminator)', () => {
+        const result = deriveLastTransition(
+            ctxWithHistory([
+                entry({ step: 'implement', substep: null, task: 'T004', kind: undefined }),
+            ]),
+            Date.parse('2026-06-07T10:00:10.000Z')
+        );
+        expect(result!.task).toBe('T004');
+    });
+
     it('leaves task undefined for a step-boundary entry', () => {
         const result = deriveLastTransition(
             ctxWithHistory([entry({ step: 'plan', kind: 'start', substep: null })]),

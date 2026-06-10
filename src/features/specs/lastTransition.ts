@@ -46,6 +46,22 @@ function stepLabel(step: StepName | string | null | undefined): string {
     return STEP_LABELS[step as StepName] ?? String(step);
 }
 
+/**
+ * True iff `entry` is the one shape that carries an active task id worth
+ * surfacing on the spec row: a per-task *implement finish*. We require the
+ * `implement` step and a completion (`kind === 'complete'`), so a `task`
+ * written on a non-implement step or a non-finish (`start`) entry never
+ * leaks onto the row. Legacy `kind`-less records (older writers) still
+ * qualify on the step + `task` alone, preserving prior behavior for entries
+ * that genuinely are implement finishes but predate the `kind` discriminator.
+ */
+function isImplementFinish(entry: HistoryEntryView): boolean {
+    if (!isPerTaskEntry(entry) || entry.step !== 'implement') {
+        return false;
+    }
+    return entry.kind === 'complete' || entry.kind == null;
+}
+
 function entryLabel(entry: HistoryEntryView): string {
     // A per-task implement finish must read as that task, not as the step's
     // completion — otherwise "T004 done" renders "Implement completed".
@@ -103,8 +119,8 @@ export function deriveLastTransition(
         label: entryLabel(entry),
         at: entry.at,
         relative: formatRelative(entry.at, now),
-        // Only a per-task implement finish carries an active task id; step-boundary
-        // and substep entries leave this undefined.
-        task: isPerTaskEntry(entry) ? entry.task ?? undefined : undefined,
+        // Only a per-task implement *finish* carries an active task id; step-boundary,
+        // substep, non-implement, and non-finish entries leave this undefined.
+        task: isImplementFinish(entry) ? entry.task ?? undefined : undefined,
     };
 }
