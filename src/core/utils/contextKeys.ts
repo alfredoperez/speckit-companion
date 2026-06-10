@@ -33,6 +33,7 @@ export const CONTEXT_KEYS = {
     specsSortActive: 'speckit.specs.sortActive',
     specsSelectionCount: 'speckit.specs.selection.count',
     specsSelectionMixed: 'speckit.specs.selection.mixed',
+    resumeBeta: 'speckit.resumeBeta',
 } as const;
 
 export type ContextKeyName = (typeof CONTEXT_KEYS)[keyof typeof CONTEXT_KEYS];
@@ -88,5 +89,6 @@ export async function resetAllContextKeys(logger?: ContextKeyLogger): Promise<vo
         setContextKey(CONTEXT_KEYS.specsSortActive, false, logger),
         setContextKey(CONTEXT_KEYS.specsSelectionCount, 0, logger),
         setContextKey(CONTEXT_KEYS.specsSelectionMixed, false, logger),
+        setContextKey(CONTEXT_KEYS.resumeBeta, false, logger),
     ]);
 }
