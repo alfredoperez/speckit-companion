@@ -139,7 +139,9 @@ The following fields were removed from the persisted shape:
 Files written by older versions that still carry `stepHistory`,
 `transitions`, an `updated` marker, or a `from` pointer on history entries
 are accepted on read (validated as undeclared extras via permissive
-`additionalProperties`) and the redundant fields are simply not re-emitted on
-the next write.
+`additionalProperties`). The legacy `transitions` array is actively dropped
+(rewritten to `history`); a top-level `updated` marker or a per-entry `from`
+pointer, by contrast, is **preserved** on records that already carry it — new
+writers simply stop *adding* them rather than stripping what's already there.
 
 > **Note:** `next` and `updated` are still written by external CLI skills for workflow use (resume/auto-advance and status display). The extension ignores these fields — they are skill-specific and not part of the SpecKit schema.

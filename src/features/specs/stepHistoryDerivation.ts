@@ -268,12 +268,13 @@ export function deriveStepHistory(
         // `step` — that's how setStepCompleted writes the close-boundary.
         // If the most recent entry for this step is a completion, the step
         // is done even if currentStep is still pointed at it.
-        const lastOwn = g.transitions[g.transitions.length - 1];
-        // A step-level completion has substep null AND no `task` — a per-task
-        // implement finish also has substep null now, so exclude task entries or
-        // the last task finish would wrongly close the in-flight step.
-        const lastOwnIsCompletion =
-            lastOwn?.kind === 'complete' && lastOwn?.substep == null && lastOwn?.task == null;
+        // The last STEP-LEVEL transition (substep null, no `task`), skipping per-task
+        // implement finishes the backstop can append AFTER the step-level complete —
+        // otherwise a trailing task finish hides the real completion and the step
+        // renders in-flight forever.
+        const lastStepLevel = [...g.transitions].reverse()
+            .find(t => t.substep == null && t.task == null);
+        const lastOwnIsCompletion = lastStepLevel?.kind === 'complete';
 
         if (g.nextStepFirstIdx !== -1) {
             // A later step exists in transitions — that step's first transition
@@ -284,7 +285,7 @@ export function deriveStepHistory(
             // No later step yet, but this step has a real completion entry —
             // honor it (covers `setStepCompleted` calls before the user has
             // clicked the next-phase button).
-            completedAt = lastOwn.at;
+            completedAt = lastStepLevel!.at;
         } else if (isLastSeen && isCurrent && isTerminal) {
             // Most recently seen step, currentStep matches, AND the spec is in
             // a terminal status → finalize to this step's last real transition

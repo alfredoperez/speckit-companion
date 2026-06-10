@@ -26,9 +26,11 @@ export function lastEntryIsCompletionFor(
     for (let i = history.length - 1; i >= 0; i--) {
         const e = history[i];
         if (e.step !== step) continue;
-        // A per-task implement finish carries substep null + a task id — it is not
-        // the step-level boundary, so don't read it as the step's completion.
-        if (e.substep != null || e.task != null) return false;
+        // Per-task implement finishes (substep null + a task id) and substep entries
+        // aren't the step boundary — skip them and keep searching. The backstop can
+        // append task finishes AFTER the step-level complete, so returning here would
+        // report the step incomplete forever.
+        if (e.substep != null || e.task != null) continue;
         if (e.kind === 'complete') return true;
         if (e.kind == null && e.from?.step === step) return true;
         return false;
