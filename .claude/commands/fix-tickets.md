@@ -115,13 +115,13 @@ gh api -X POST "repos/alfredoperez/speckit-companion/pulls/<PR>/requested_review
 Confirm it took by checking the PR's `requested_reviewers` includes the `Copilot` bot. Record whether Copilot was successfully requested.
 
 #### 6. Wait for + address Copilot — main loop poll, then **subagent**
-Only if Copilot was requested. Poll up to ~10 minutes:
+Only if Copilot was requested. Poll **gently** — Copilot takes ~4 min, so a tight interval just adds noise (it is NOT a rate-limit risk; GitHub allows 5k req/hr). Use **90s** intervals, ~12 min total, and run it as a background poll that exits on first hit:
 ```bash
-for i in $(seq 1 10); do
+for i in $(seq 1 8); do
   gh pr view <PR> --json reviews,comments \
     --jq '[.reviews[],.comments[]] | map(select(.author.login|test("[Cc]opilot")))'
   # break when a Copilot review/comment with actionable content appears
-  sleep 60
+  sleep 90
 done
 ```
 - If Copilot returns actionable comments → dispatch a subagent to address them: fix, commit, push. Re-run `npm test`.
