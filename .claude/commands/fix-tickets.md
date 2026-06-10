@@ -86,7 +86,7 @@ Subagent prompt must include:
 - The ordered chain (there is **no** one-shot): run, in order, the skills
   `/speckit-companion-specify` → `/speckit-companion-plan` → `/speckit-companion-tasks` → `/speckit-companion-implement`,
   passing the issue as the feature description. The `before_specify` git hook creates the `NNN-<shortname>` feature branch automatically; do not create one manually. Spec artifacts land in `specs/<NNN>-<slug>/`.
-- After implement: ensure `specs/<NNN>-<slug>/` status is `completed`, all tasks checked, and commit everything (`git add -A && git commit`).
+- After implement: ensure `specs/<NNN>-<slug>/` status is `completed`, all tasks checked. Commit only the real change + spec folder — **do NOT commit `.specify/` regenerated artifacts** (`feature.json`, registry files get swept by `git add -A`); `git checkout origin/main -- .specify/<file>` for any that show modified, then commit `src/`/`webview/`/`package.json` + `specs/<NNN>/`.
 - **Verify before returning:** `npm run compile && npm test`. If `speckit-extension/**` changed, also `python3 speckit-extension/scripts/check-shape-parity.py`. If capture/timing changed, run the capture eval. Fix failures; do not return green if red.
 - Return: `{ branch, specDir, filesChanged[], testsPassed, summary, uiOrManualSurfaces[] }` where `uiOrManualSurfaces` lists anything touching the VS Code UI / webview / sidebar / settings that a human should eyeball.
 
