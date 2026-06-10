@@ -98,9 +98,22 @@ export class SpecEditorProvider {
         // toggle is on AND the Companion extension is installed in the project;
         // otherwise the dropdown is byte-identical to before. Picking it pins
         // turbo on the new spec at submit (see handleSubmit) — pure selection UI.
+        //
+        // Reserved-name guard: TURBO_WORKFLOW_NAME ('speckit-turbo') is meant to
+        // be synthetic-only. If a user's custom workflow already claims that name,
+        // the real one wins — appending the synthetic entry would render duplicate
+        // <option value="speckit-turbo"> nodes and the this.workflows Map would
+        // keep only the last, silently changing what gets dispatched/pinned. So we
+        // skip the synthetic entry on collision and warn.
         const turboEntry = this.buildTurboWorkflowEntry();
         if (turboEntry) {
-            workflows.push(turboEntry);
+            if (workflows.some(wf => wf.name === TURBO_WORKFLOW_NAME)) {
+                this.outputChannel.appendLine(
+                    `[SpecEditor] Warning: a custom workflow uses the reserved name '${TURBO_WORKFLOW_NAME}' — skipping the synthetic turbo entry; the user's workflow wins`
+                );
+            } else {
+                workflows.push(turboEntry);
+            }
         }
 
         // Cache workflows for lookup. Rebuilt on every panel open; correctness
