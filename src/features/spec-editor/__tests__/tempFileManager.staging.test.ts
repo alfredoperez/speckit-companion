@@ -154,12 +154,52 @@ describe('TempFileManager.stageImagesInWorkspace (#208)', () => {
                 )
             ).toString('utf-8')
         );
-        const entry = manifest.files.stage1;
+        const entry = manifest.files['stage1-staged-images'];
         expect(entry).toBeDefined();
         expect(entry.workspaceStageDir).toBe(
             `${WORKSPACE_ROOT}/.speckit-companion/spec-editor/stage1`
         );
         expect(entry.expiresAt).toBeGreaterThanOrEqual(before + CLEANUP_THRESHOLDS.ORPHANED_FILES_MS);
+    });
+
+    it('registers under a derived key — never clobbers the temp-set entry with the same id', async () => {
+        const mgr = new TempFileManager(makeContext());
+        const img = makeImage('img1');
+
+        // Simulate the temp-set entry createTempFileSet wrote under the same id.
+        const manifestPath = vscode.Uri.file(`${GLOBAL_STORAGE}/spec-editor/manifest.json`);
+        await vscode.workspace.fs.writeFile(
+            manifestPath,
+            Buffer.from(
+                JSON.stringify({
+                    files: {
+                        stage1: {
+                            id: 'stage1',
+                            sessionId: 's1',
+                            markdownFilePath: `${GLOBAL_STORAGE}/spec-editor/stage1/spec.md`,
+                            imageFilePaths: { img1: `${GLOBAL_STORAGE}/spec-editor/stage1/images/img1.png` },
+                            createdAt: Date.now(),
+                            expiresAt: Date.now() + CLEANUP_THRESHOLDS.ORPHANED_FILES_MS,
+                            status: 'active',
+                        },
+                    },
+                })
+            )
+        );
+
+        await mgr.stageImagesInWorkspace('stage1', [img], { img1: img.filePath });
+
+        const manifest = JSON.parse(
+            Buffer.from(await vscode.workspace.fs.readFile(manifestPath)).toString('utf-8')
+        );
+        // Temp-set entry survives intact (markdownFilePath + no workspaceStageDir),
+        // so its baseDir/<id> dir is still reaped by the sweep.
+        expect(manifest.files.stage1.markdownFilePath).toBe(
+            `${GLOBAL_STORAGE}/spec-editor/stage1/spec.md`
+        );
+        expect(manifest.files.stage1.workspaceStageDir).toBeUndefined();
+        // Staged set lives under its own key.
+        expect(manifest.files['stage1-staged-images']).toBeDefined();
     });
 
     it('cleanup deletes the workspace-staged dir via the manifest sweep when expired', async () => {
@@ -172,13 +212,13 @@ describe('TempFileManager.stageImagesInWorkspace (#208)', () => {
         const manifest = JSON.parse(
             Buffer.from(await vscode.workspace.fs.readFile(manifestPath)).toString('utf-8')
         );
-        manifest.files.stage1.expiresAt = Date.now() - 1000;
+        manifest.files['stage1-staged-images'].expiresAt = Date.now() - 1000;
         await vscode.workspace.fs.writeFile(manifestPath, Buffer.from(JSON.stringify(manifest)));
 
         (vscode.workspace.fs.delete as jest.Mock).mockClear();
         const cleaned = await mgr.cleanupOrphanedFiles();
 
-        expect(cleaned).toContain('stage1');
+        expect(cleaned).toContain('stage1-staged-images');
         expect(vscode.workspace.fs.delete).toHaveBeenCalledWith(
             expect.objectContaining({
                 fsPath: `${WORKSPACE_ROOT}/.speckit-companion/spec-editor/stage1`,

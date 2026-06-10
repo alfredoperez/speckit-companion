@@ -240,13 +240,18 @@ export class TempFileManager {
                 return {};
             }
 
-            // Register an images-only entry so the existing expiry sweep reaps it.
-            // markdownFilePath is empty (no markdown staged here); the cleanup
-            // deletes the whole `<stageId>/` dir under this baseDir-agnostic path,
-            // so record the staged dir on the entry for the sweep to find it.
+            // Register a SEPARATE images-only entry so the existing expiry sweep
+            // reaps the workspace dir. The key must NOT collide with the temp-set's
+            // own manifest entry (keyed by `stageId` in createTempFileSet) — reusing
+            // `stageId` here would clobber that entry, losing its markdownFilePath
+            // and, because the overwritten entry would carry `workspaceStageDir`,
+            // making cleanup skip the original `baseDir/<stageId>` dir (a leak). Use
+            // a derived key; markdownFilePath is empty (no markdown staged here) and
+            // workspaceStageDir records the in-workspace dir for the sweep to delete.
+            const manifestKey = `${stageId}-staged-images`;
             const manifest = await this.readManifest();
-            manifest.files[stageId] = {
-                id: stageId,
+            manifest.files[manifestKey] = {
+                id: manifestKey,
                 sessionId: stageId,
                 markdownFilePath: '',
                 imageFilePaths: stagedPaths,
