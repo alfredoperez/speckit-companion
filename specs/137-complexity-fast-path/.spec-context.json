@@ -248,7 +248,7 @@
     },
     "T002": {
       "status": "DONE",
-      "did": "Added the speckit.companion.complexityFastPath boolean setting (default true, window scope) to package.json contributes.configuration.",
+      "did": "Added the speckit.companion.complexityFastPath boolean setting (default false — opt-in beta, window scope) to package.json contributes.configuration.",
       "files": [
         "package.json"
       ]
@@ -304,7 +304,7 @@
     },
     "T009": {
       "status": "DONE",
-      "did": "Implemented readComplexityFastPath / writeComplexityFastPath / resolveComplexityFastPath (project companion.yml wins → setting → default true, mirrored back into companion.yml) and wired the resolve into extension activation plus a setting-change mirror.",
+      "did": "Implemented readComplexityFastPath / writeComplexityFastPath / resolveComplexityFastPath (VS Code setting is the single source of truth, default false, mirrored into companion.yml — no project-level override) and wired the resolve into extension activation plus a setting-change mirror.",
       "files": [
         "src/features/settings/companionPresetReconciler.ts",
         "src/extension.ts"
@@ -319,7 +319,7 @@
     },
     "T012": {
       "status": "DONE",
-      "did": "Added a Complexity fast-path (turbo only) section to docs/template-profiles.md documenting the classify decision, simple/normal branches, combined-artifact shape, guardrail warning, and opt-out precedence.",
+      "did": "Added a Complexity fast-path (turbo only) section to docs/template-profiles.md documenting the classify decision, simple/normal branches, combined-artifact shape, guardrail warning, and the opt-in mirror model (setting is the source of truth).",
       "files": [
         "docs/template-profiles.md"
       ]
@@ -349,7 +349,7 @@
     },
     "T016": {
       "status": "DONE",
-      "did": "Validated the deterministic quickstart scenarios — eval fast-path checks pass, fold mechanics produce ready-to-implement idempotently, opt-out truth table green, parity + full suite (894 tests) pass; scenarios 1–4 AI-prompt behavior matches the contracts.",
+      "did": "Validated the deterministic quickstart scenarios — eval fast-path checks pass, fold mechanics produce ready-to-implement idempotently, mirror truth table green, parity + full suite (894 tests) pass; scenarios 1–4 AI-prompt behavior matches the contracts.",
       "files": [
         "specs/137-complexity-fast-path/quickstart.md"
       ]
