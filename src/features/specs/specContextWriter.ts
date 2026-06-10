@@ -16,8 +16,6 @@ import * as path from 'path';
 import {
     HistoryEntry,
     HistoryEntryBy,
-    HistoryEntryFrom,
-    HistoryEntryKind,
     SpecContext,
     StepName,
 } from '../../core/types/specContext';
@@ -151,13 +149,7 @@ export function setStepStarted(
     by: HistoryEntryBy,
     at: string = new Date().toISOString()
 ): SpecContext {
-    // If ctx.currentStep already equals `step` (fresh spec from buildFallback,
-    // or a Regenerate that restarts the same step), set from.step = null so
-    // the derivation's lastOwnIsCompletion check can't misfire on it.
-    const prevStep: StepName | null =
-        ctx.currentStep && ctx.currentStep !== step ? ctx.currentStep : null;
-    const from: HistoryEntryFrom = { step: prevStep, substep: null };
-    const entry: HistoryEntry = { step, substep: null, kind: 'start', from, by, at };
+    const entry: HistoryEntry = { step, substep: null, kind: 'start', by, at };
     return appendHistory(
         {
             ...ctx,
@@ -191,8 +183,7 @@ export function setSubstepStarted(
     by: HistoryEntryBy,
     at: string = new Date().toISOString()
 ): SpecContext {
-    const from: HistoryEntryFrom = { step, substep: null };
-    const entry: HistoryEntry = { step, substep, kind: 'start', from, by, at };
+    const entry: HistoryEntry = { step, substep, kind: 'start', by, at };
     return appendHistory(ctx, entry);
 }
 

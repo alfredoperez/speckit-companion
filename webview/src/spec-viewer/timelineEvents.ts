@@ -48,10 +48,13 @@ export function buildHistoryIndex(
 ): Map<string, HistoryEntry> {
     const map = new Map<string, HistoryEntry>();
     for (const t of history) {
-        if (!t.substep) continue;
-        const key = `${t.step}:${t.substep}`;
-        // Last write wins — most recent entry for the same (step, substep)
-        // pair carries the freshest actor info.
+        // Per-task implement entries carry a null `substep` + a `task` id; index
+        // them by task so the tracked row (named after the task) resolves its actor.
+        const name = t.substep || t.task;
+        if (!name) continue;
+        const key = `${t.step}:${name}`;
+        // Last write wins — most recent entry for the same (step, name) pair
+        // carries the freshest actor info.
         map.set(key, t);
     }
     return map;

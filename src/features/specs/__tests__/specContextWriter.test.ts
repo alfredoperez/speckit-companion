@@ -66,22 +66,23 @@ describe('appendHistory', () => {
 });
 
 describe('setStepStarted', () => {
-    it('emits kind:start on the history entry', () => {
+    it('emits kind:start on the history entry with no from field', () => {
         const ctx = makeContext({ currentStep: 'specify', status: 'specified' });
         const result = setStepStarted(ctx, 'plan', 'extension', '2026-04-29T01:00:00Z');
         const e = result.history[0];
         expect(e.kind).toBe('start');
         expect(e.step).toBe('plan');
         expect(e.substep).toBeNull();
-        expect(e.from?.step).toBe('specify');
+        // `from` is derivable from the prior entry — the writer no longer emits it.
+        expect(e.from).toBeUndefined();
     });
 
-    it('sets from.step to null when restarting the same step', () => {
+    it('never emits from, even when restarting the same step', () => {
         const ctx = makeContext({ currentStep: 'specify', status: 'specifying' });
         const result = setStepStarted(ctx, 'specify', 'extension', '2026-04-29T01:00:00Z');
         const e = result.history[0];
         expect(e.kind).toBe('start');
-        expect(e.from?.step).toBeNull();
+        expect(e.from).toBeUndefined();
     });
 });
 
@@ -98,13 +99,13 @@ describe('setStepCompleted', () => {
 });
 
 describe('setSubstepStarted', () => {
-    it('emits kind:start with substep name and from pointing at the step', () => {
+    it('emits kind:start with substep name and no from field', () => {
         const ctx = makeContext({ currentStep: 'specify', status: 'specifying' });
         const result = setSubstepStarted(ctx, 'specify', 'outline', 'extension', '2026-04-29T01:00:00Z');
         const e = result.history[0];
         expect(e.kind).toBe('start');
         expect(e.substep).toBe('outline');
-        expect(e.from?.substep).toBeNull();
+        expect(e.from).toBeUndefined();
     });
 });
 

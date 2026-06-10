@@ -68,17 +68,6 @@
         "substep": { "type": ["string", "null"] },
         "task": { "type": "string" },
         "kind": { "type": "string", "enum": ["start", "complete"] },
-        "from": {
-          "type": "object",
-          "required": ["step", "substep"],
-          "properties": {
-            "step": {
-              "type": ["string", "null"],
-              "enum": ["specify", "clarify", "plan", "tasks", "analyze", "implement", null]
-            },
-            "substep": { "type": ["string", "null"] }
-          }
-        },
         "by": { "type": "string", "enum": ["extension", "user", "cli", "ai", "derive"] },
         "at": { "type": "string", "format": "date-time" }
       }

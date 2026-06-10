@@ -137,13 +137,29 @@ function dedupeConsecutive(transitions: HistoryEntry[]): HistoryEntry[] {
         const prev = out[out.length - 1];
         const sameStep = prev !== undefined && prev.step === t.step;
         const sameSubstep = (prev?.substep ?? null) === (t.substep ?? null);
+        // Per-task implement entries now carry a null `substep` and identify
+        // themselves via `task`. Comparing `task` keeps two distinct task
+        // finishes (both substep=null) from collapsing into one row. Legacy
+        // records that still mirror the id into `substep` compare equal anyway.
+        const sameTask = (prev?.task ?? null) === (t.task ?? null);
         const sameKind = (prev?.kind ?? null) === (t.kind ?? null);
         const sameFromStep = (prev?.from?.step ?? null) === (t.from?.step ?? null);
         const sameFromSubstep = (prev?.from?.substep ?? null) === (t.from?.substep ?? null);
-        if (sameStep && sameSubstep && sameKind && sameFromStep && sameFromSubstep) continue;
+        if (sameStep && sameSubstep && sameTask && sameKind && sameFromStep && sameFromSubstep) continue;
         out.push(t);
     }
     return out;
+}
+
+/**
+ * The display name for a substep/task row. Per-task implement entries carry
+ * `substep: null` + `task: "<id>"`; legacy ones mirrored the id into `substep`.
+ * Prefer a real substep name, fall back to the task id, null when neither.
+ */
+function rowName(t: HistoryEntry): string | null {
+    if (t.substep !== null && t.substep !== undefined) return t.substep;
+    if (typeof t.task === 'string') return t.task;
+    return null;
 }
 
 function groupStepsInOrder(transitions: HistoryEntry[]): RawStep[] {
@@ -196,23 +212,24 @@ function buildSubsteps(
     fallbackEnd: string | null,
     stepStart: string,
 ): SubstepEntry[] {
-    const subs = stepTxs.filter(t => t.substep !== null && t.substep !== undefined);
+    const subs = stepTxs.filter(t => rowName(t) !== null);
     const out: SubstepEntry[] = [];
     let prevEnd = stepStart;
     for (let i = 0; i < subs.length; i++) {
         const s = subs[i];
+        const name = rowName(s) as string;
         const next = subs[i + 1];
         if (s.kind === 'complete') {
             // Finish-only (the model): a standalone finish. Its duration is the gap
             // from the previous finish (or the step start) to this finish.
             const completedAt = s.at ?? fallbackEnd;
-            out.push({ name: s.substep as string, startedAt: prevEnd, completedAt });
+            out.push({ name, startedAt: prevEnd, completedAt });
             prevEnd = completedAt ?? prevEnd;   // advance to the effective end, not just s.at
             continue;
         }
-        if (next && next.substep === s.substep && next.kind === 'complete') {
+        if (next && rowName(next) === name && next.kind === 'complete') {
             // Legacy start+complete pair → render its real recorded span.
-            out.push({ name: s.substep as string, startedAt: s.at, completedAt: next.at });
+            out.push({ name, startedAt: s.at, completedAt: next.at });
             prevEnd = next.at;
             i++; // consume the paired complete
             continue;
@@ -220,7 +237,7 @@ function buildSubsteps(
         // Legacy single boundary marker (start / no kind): ends at the next marker's
         // timestamp, or the step's end if it's the last.
         const completedAt = next ? next.at : fallbackEnd;
-        out.push({ name: s.substep as string, startedAt: s.at, completedAt });
+        out.push({ name, startedAt: s.at, completedAt });
         prevEnd = completedAt ?? prevEnd;
     }
     return out;
@@ -252,7 +269,11 @@ export function deriveStepHistory(
         // If the most recent entry for this step is a completion, the step
         // is done even if currentStep is still pointed at it.
         const lastOwn = g.transitions[g.transitions.length - 1];
-        const lastOwnIsCompletion = lastOwn?.kind === 'complete' && lastOwn?.substep == null;
+        // A step-level completion has substep null AND no `task` — a per-task
+        // implement finish also has substep null now, so exclude task entries or
+        // the last task finish would wrongly close the in-flight step.
+        const lastOwnIsCompletion =
+            lastOwn?.kind === 'complete' && lastOwn?.substep == null && lastOwn?.task == null;
 
         if (g.nextStepFirstIdx !== -1) {
             // A later step exists in transitions — that step's first transition

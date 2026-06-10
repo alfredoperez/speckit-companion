@@ -47,10 +47,6 @@ def _now_iso() -> str:
     return now.strftime("%Y-%m-%dT%H:%M:%S.") + f"{now.microsecond // 1000:03d}Z"
 
 
-def _today() -> str:
-    return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
-
-
 def _repo_root() -> Path:
     try:
         out = subprocess.run(
@@ -225,14 +221,6 @@ def commit_log(ctx: dict, log: list) -> None:
     ctx.pop("stepHistory", None)
 
 
-def step_from(prev_current: object, step: str) -> dict:
-    """`from` for a step `start` entry — the prior step, or null when there is
-    none or it equals `step` (mirrors the GUI's setStepStarted, which nulls a
-    self-origin so the reader can't misread it as a step completion)."""
-    prior = prev_current if (prev_current in CANONICAL_STEPS and prev_current != step) else None
-    return {"step": prior, "substep": None}
-
-
 def fill_required(ctx: dict, feature_dir: Path, branch: str) -> None:
     """Set required keys only when missing (read-then-merge preserves the rest)."""
     ctx.setdefault("workflow", "speckit")
@@ -307,13 +295,19 @@ def _has_step_start(log: list, step: str) -> bool:
 def _has_complete(log: list, step: str, task: object = None) -> bool:
     """True if a `complete` for (step, task) already exists. task=None matches the
     step-level complete (substep None); a task id matches that per-task complete.
-    Makes script-driven completes idempotent — it absorbs the GUI's guarded
-    completeStep, re-runs, the per-task backstop double-writing a task, and a
-    legacy self-loop completion entry on a migrated spec."""
+    Per-task entries are keyed on `task` (the canonical id); a legacy record that
+    still mirrors the id into `substep` matches via the fallback. Makes
+    script-driven completes idempotent — it absorbs the GUI's guarded completeStep,
+    re-runs, the per-task backstop double-writing a task, and a legacy self-loop
+    completion entry on a migrated spec."""
+    def _matches(e: dict) -> bool:
+        if task is None:
+            return e.get("substep") is None
+        return e.get("task") == task or e.get("substep") == task
     return any(
         isinstance(e, dict)
         and e.get("step") == step
-        and e.get("substep") == task
+        and _matches(e)
         and _entry_kind(e) == "complete"
         for e in log
     )
@@ -339,12 +333,10 @@ def update_context(
         return None
 
     log = canonical_log(ctx)
-    prev_current = ctx.get("currentStep")
     fill_required(ctx, feature_dir, branch)
 
     ctx["currentStep"] = step
     ctx["status"] = status
-    ctx["updated"] = _today()
 
     if kind == "complete":
         # Deterministic self-close. Idempotent: skip if the step is already closed,
@@ -367,7 +359,6 @@ def update_context(
                 "step": step,
                 "substep": None,
                 "kind": "start",
-                "from": step_from(prev_current, step),
                 "by": by,
                 "at": now,
             })
@@ -405,12 +396,11 @@ def journal_task_finish(feature_dir: Path, task_id: str, by: str) -> Path | None
     ctx["currentTask"] = task_id
     if ctx.get("status") not in ("implemented", "completed", "archived"):
         ctx["status"] = "implementing"
-    ctx["updated"] = _today()
 
     if not _has_complete(log, "implement", task_id):
         log.append({
             "step": "implement",
-            "substep": task_id,
+            "substep": None,
             "task": task_id,
             "kind": "complete",
             "by": by,
@@ -462,7 +452,6 @@ def sync_tasks(feature_dir: Path, tasks_md: Path, final_status: str, by: str) ->
     ctx["currentStep"] = "implement"
     all_done = bool(distinct_all) and set(distinct_done) >= set(distinct_all)
     ctx["status"] = final_status if all_done else "implementing"
-    ctx["updated"] = _today()
 
     pending = [tid for tid in distinct_all if tid not in distinct_done]
     ctx["currentTask"] = (pending[0] if pending else (distinct_done[-1] if distinct_done else None))
@@ -474,7 +463,7 @@ def sync_tasks(feature_dir: Path, tasks_md: Path, final_status: str, by: str) ->
     for tid in fresh:
         log.append({
             "step": "implement",
-            "substep": tid,
+            "substep": None,
             "task": tid,
             "kind": "complete",
             "by": by,

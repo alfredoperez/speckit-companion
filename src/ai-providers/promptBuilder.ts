@@ -56,9 +56,6 @@ const SPEC_CONTEXT_SCHEMA = [
     '          "step":    { "$ref": "#/properties/currentStep" },',
     '          "substep": { "type": ["string","null"] },',
     '          "kind":    { "enum": ["start","complete"] },',
-    '          "from":    { "type": "object",',
-    '                       "properties": { "step":    { "type": ["string","null"] },',
-    '                                       "substep": { "type": ["string","null"] } } },',
     '          "by":      { "enum": ["extension","user","cli","ai"] },',
     '          "at":      { "type": "string", "format": "date-time" }',
     '        }',
@@ -182,7 +179,7 @@ function renderClosingInstruction(
     return [
         `DONE: do NOT flip the status yourself and do NOT append a step-level "complete" entry for ${step} — ${recorder} with a real script timestamp; a hand-written "ai" complete would duplicate it.`,
         ...(step === 'implement'
-            ? [`Per-task timing is finish-only via a script: as you finish each task, mark it \`- [x] **<TaskID>**\` in tasks.md, append task_summaries.<TaskID>, then run \`${perTaskFinishCmd(specDir)}\` — that stamps ONE finish event from the real clock (no per-task start, no hand-authored JSON). The hook backfills any task you don't journal.`]
+            ? [`Per-task timing is finish-only via a script: as you finish each task, mark it \`- [x] **<TaskID>**\` in tasks.md, append task_summaries.<TaskID>, then run \`${perTaskFinishCmd(specDir)}\` — that stamps ONE finish event from the real clock (no per-task start, no hand-authored JSON). Run it the moment each task completes, not in one end-of-step batch: clustering every finish into a tiny window FAILS the cadence check. The hook backfills any task you don't journal.`]
             : []),
         `Print "${donePhrase}" as the final terminal line.`,
     ];
@@ -205,7 +202,7 @@ function renderPreamble(step: PromptStep, specDir: string): string {
         '',
         STATUS_LIFECYCLE,
         '',
-        `1. Pre-step: set currentStep = "${step}" and the matching in-progress status. Append a history entry { step: "${step}", substep: null, kind: "start", from, by: "extension", at: "${dispatchUtc}" }. Use the DISPATCH TIME for this start entry — it was sent by the extension.`,
+        `1. Pre-step: set currentStep = "${step}" and the matching in-progress status. Append a history entry { step: "${step}", substep: null, kind: "start", by: "extension", at: "${dispatchUtc}" }. Use the DISPATCH TIME for this start entry — it was sent by the extension.`,
         `1.5. When advancing from a previous step: flip the previous step's status to its completed form before writing the new step.`,
         '',
         substepsLine,
@@ -230,13 +227,13 @@ function renderLifecycleBody(target: string, dispatchUtc: string): string {
         STATUS_LIFECYCLE,
         '',
         'For EACH step you work on (specify, clarify, plan, tasks, analyze, implement):',
-        '1. When you START a step on your own initiative (mid-run, not the initial seed): set currentStep = "<step>" and status = in-progress form. Append a history entry { step: "<step>", substep: null, kind: "start", from, by: "ai", at: <real timestamp from `date -u`> }.',
+        '1. When you START a step on your own initiative (mid-run, not the initial seed): set currentStep = "<step>" and status = in-progress form. Append a history entry { step: "<step>", substep: null, kind: "start", by: "ai", at: <real timestamp from `date -u`> }.',
         '2. When you FINISH a **plan, tasks, clarify, or analyze** step: flip status = completed form and append { step: "<step>", substep: null, kind: "complete", by: "ai", at: <real timestamp from `date -u`> } — no `from` on completes. This clears the in-flight ring on the tab. Do NOT self-close **specify** or **implement**: the extension closes specify from its own command and the end-of-step hook closes implement, each with a real script timestamp — an `ai` complete there would duplicate it.',
         '3. For each substep boundary append a SINGLE finish entry { step, substep: "<name>", kind: "complete", by: "ai", at: <date -u> } the moment it ends — one per substep, never two sharing a timestamp, never a separate start.',
         '',
-        `Implement (finish-only per task): as you finish each task, mark it \`- [x] **<TaskID>**\` in tasks.md, append task_summaries.<TaskID>, then run \`${perTaskFinishCmd(featureDirFromTarget(target))}\` — ONE finish event from the real clock, no per-task start, no hand-authored JSON. The end-of-step hook backfills any task you miss and closes the step.`,
+        `Implement (finish-only per task): as you finish each task, mark it \`- [x] **<TaskID>**\` in tasks.md, append task_summaries.<TaskID>, then run \`${perTaskFinishCmd(featureDirFromTarget(target))}\` — ONE finish event from the real clock, no per-task start, no hand-authored JSON. Run it the moment each task completes, not in one end-of-step batch: clustering every finish into a tiny window FAILS the cadence check. The end-of-step hook backfills any task you miss and closes the step.`,
         '',
-        'Do NOT preemptively write a start-entry for the next step at completion time. The start-entry must coincide with you actually beginning that step (item 1 above), not with you finishing the previous one. Writing { step: "<next>", from: { step: "<this>" } } as part of the completion write produces a phantom "Generating <next>…" state in the viewer when in fact no one is generating anything.',
+        'Do NOT preemptively write a start-entry for the next step at completion time. The start-entry must coincide with you actually beginning that step (item 1 above), not with you finishing the previous one. Writing a { step: "<next>", kind: "start" } entry as part of the completion write produces a phantom "Generating <next>…" state in the viewer when in fact no one is generating anything.',
         '',
         'If this run is single-step (you finish after one /speckit.<step> command), stop after item 2 and leave currentStep on "<step>". The user clicks the next-phase button (or a fresh /speckit.<next> command runs) to actually advance — that path appends the next start-entry.',
         '',
@@ -290,7 +287,6 @@ function renderSpecifyCreationLifecyclePreamble(
         '      "step": "specify",',
         '      "substep": null,',
         '      "kind": "start",',
-        '      "from": { "step": null, "substep": null },',
         '      "by": "extension",',
         `      "at": "${dispatchUtc}"`,
         '    }',

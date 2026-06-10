@@ -292,6 +292,34 @@ describe('deriveStepHistory', () => {
         });
     });
 
+    // The writer no longer emits `from` on starts, nor mirrors the task id into
+    // `substep` on per-task implement finishes (substep is null, `task` carries
+    // the id). A record in the new shape must derive identically to a legacy one.
+    describe('new shape (no from, null substep on tasks) derives identically to legacy', () => {
+        it('per-task implement rows match whether substep mirrors task or is null', () => {
+            const legacy = [
+                tx({ step: 'specify',   substep: null, kind: 'start', from: { step: null, substep: null }, at: '2026-04-29T00:00:00Z' }),
+                tx({ step: 'specify',   substep: null, kind: 'complete', from: undefined, at: '2026-04-29T00:01:00Z' }),
+                tx({ step: 'implement', substep: null, kind: 'start', from: { step: 'specify', substep: null }, at: '2026-04-29T00:02:00Z' }),
+                tx({ step: 'implement', substep: 'T001', task: 'T001', kind: 'complete', from: undefined, at: '2026-04-29T00:02:30Z' }),
+                tx({ step: 'implement', substep: 'T002', task: 'T002', kind: 'complete', from: undefined, at: '2026-04-29T00:03:15Z' }),
+            ];
+            const newShape = [
+                tx({ step: 'specify',   substep: null, kind: 'start', from: undefined, at: '2026-04-29T00:00:00Z' }),
+                tx({ step: 'specify',   substep: null, kind: 'complete', from: undefined, at: '2026-04-29T00:01:00Z' }),
+                tx({ step: 'implement', substep: null, kind: 'start', from: undefined, at: '2026-04-29T00:02:00Z' }),
+                tx({ step: 'implement', substep: null, task: 'T001', kind: 'complete', from: undefined, at: '2026-04-29T00:02:30Z' }),
+                tx({ step: 'implement', substep: null, task: 'T002', kind: 'complete', from: undefined, at: '2026-04-29T00:03:15Z' }),
+            ];
+            const a = deriveStepHistory(legacy, 'implement', 'implementing');
+            const b = deriveStepHistory(newShape, 'implement', 'implementing');
+            expect(b).toEqual(a);
+            // And the per-task rows are the real shape we expect.
+            expect(b.implement.substeps!.map(s => s.name)).toEqual(['T001', 'T002']);
+            expect(b.implement.completedAt).toBeNull(); // still in flight, not closed by a task finish
+        });
+    });
+
     // Regression: review finding #7. The new writer emits separate start + complete
     // history entries per substep; buildSubsteps must fold the pair into one
     // SubstepEntry, not render two rows.

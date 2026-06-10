@@ -30,11 +30,14 @@ Each spec directory contains a `.spec-context.json` file that tracks workflow st
 {
   step: 'specify' | 'clarify' | 'plan' | 'tasks' | 'analyze' | 'implement',
   substep: string | null,
-  from: { step: string | null, substep: string | null },
+  task?: string,   // per-task implement finishes; substep is null on these
+  kind: 'start' | 'complete',
   by: 'extension' | 'user' | 'cli' | 'ai',
   at: string  // ISO timestamp
 }
 ```
+
+The writer no longer emits a `from` pointer (it is fully derivable from the previous entry's step). Records written before this change still carry `from`; readers tolerate it via the schema's permissive `additionalProperties`, so they keep validating and rendering — only the writers stopped producing it.
 
 ### Metadata
 
@@ -90,13 +93,14 @@ elapsed-timer notifications consume. It is **not** written to disk.
   "progress": "phase1",
   "currentTask": "T003",
   "history": [
-    { "step": "specify",   "substep": null, "from": { "step": null,      "substep": null }, "by": "extension", "at": "2026-04-05T22:00:01Z" },
-    { "step": "specify",   "substep": null, "from": { "step": "specify", "substep": null }, "by": "extension", "at": "2026-04-05T22:05:12Z" },
-    { "step": "plan",      "substep": null, "from": { "step": "specify", "substep": null }, "by": "extension", "at": "2026-04-05T22:05:12Z" },
-    { "step": "plan",      "substep": null, "from": { "step": "plan",    "substep": null }, "by": "extension", "at": "2026-04-05T22:11:34Z" },
-    { "step": "tasks",     "substep": null, "from": { "step": "plan",    "substep": null }, "by": "extension", "at": "2026-04-05T22:11:34Z" },
-    { "step": "tasks",     "substep": null, "from": { "step": "tasks",   "substep": null }, "by": "extension", "at": "2026-04-05T22:18:02Z" },
-    { "step": "implement", "substep": null, "from": { "step": "tasks",   "substep": null }, "by": "extension", "at": "2026-04-05T22:18:02Z" }
+    { "step": "specify",   "substep": null, "kind": "start",    "by": "extension", "at": "2026-04-05T22:00:01Z" },
+    { "step": "specify",   "substep": null, "kind": "complete",  "by": "extension", "at": "2026-04-05T22:05:12Z" },
+    { "step": "plan",      "substep": null, "kind": "start",     "by": "extension", "at": "2026-04-05T22:05:12Z" },
+    { "step": "plan",      "substep": null, "kind": "complete",  "by": "extension", "at": "2026-04-05T22:11:34Z" },
+    { "step": "tasks",     "substep": null, "kind": "start",     "by": "extension", "at": "2026-04-05T22:11:34Z" },
+    { "step": "tasks",     "substep": null, "kind": "complete",  "by": "extension", "at": "2026-04-05T22:18:02Z" },
+    { "step": "implement", "substep": null, "kind": "start",     "by": "extension", "at": "2026-04-05T22:18:02Z" },
+    { "step": "implement", "substep": null, "task": "T001", "kind": "complete", "by": "ai", "at": "2026-04-05T22:21:40Z" }
   ],
   "approach": "Add migration layer and fix race condition",
   "task_summaries": {
@@ -129,9 +133,13 @@ The following fields were removed from the persisted shape:
 | `substep` | `progress` |
 | `task` | `currentTask` |
 | `next` | Derived from `currentStep` + workflow step array at read time |
-| `updated` | Derived from latest `history[]` `at` |
+| `updated` | Dropped — the ms-stamped `history[]` `at` values are strictly more precise; no reader consumes it |
+| `from` (on history entries) | Dropped — derivable from the previous entry's step. Legacy records keep it; readers tolerate it |
 
-Files written by older versions that still carry `stepHistory` or
-`transitions` are accepted on read and migrated on the next write.
+Files written by older versions that still carry `stepHistory`,
+`transitions`, an `updated` marker, or a `from` pointer on history entries
+are accepted on read (validated as undeclared extras via permissive
+`additionalProperties`) and the redundant fields are simply not re-emitted on
+the next write.
 
 > **Note:** `next` and `updated` are still written by external CLI skills for workflow use (resume/auto-advance and status display). The extension ignores these fields — they are skill-specific and not part of the SpecKit schema.
