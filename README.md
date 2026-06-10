@@ -255,6 +255,23 @@ An **opt-in beta** that **defaults to `false`**. When enabled in `turbo` mode, s
 
 The flag is set in the editor (this setting) and mirrored into `.specify/companion.yml` — a machine-local, gitignored cache the command body reads — so the editor setting is the single source of truth. It applies only to the turbo `/speckit.companion.*` commands. Full reference in [`docs/template-profiles.md`](./docs/template-profiles.md#complexity-fast-path-turbo-only).
 
+### Resume Button
+
+An **opt-in beta** that **defaults to `false`**. When enabled, the sidebar shows a resume (▶) button on active specs (active / tasks-done) that dispatches the next pipeline step — picking up from the recorded step with prior decisions in scope, or the next unchecked task inside implement. Off by default, the button is hidden everywhere; toggling it on or off updates visibility immediately, with no window reload.
+
+```json
+{
+  "speckit.companion.resumeBeta": false
+}
+```
+
+| Value | Behavior |
+|-------|----------|
+| `false` (default) | The resume (▶) button is hidden on all specs. |
+| `true` | The resume (▶) button appears on eligible specs (active / tasks-done). |
+
+Resume dispatches the **command family the spec has been running** — a spec on the turbo flow resumes with `/speckit.companion.<step>`, a spec on the stock flow resumes with `/speckit.<step>` — based on the per-spec profile pin. Unlike the complexity fast-path, this gate lives only in VS Code settings; it is not mirrored into `.specify/companion.yml`.
+
 ### Command Format
 
 Controls how speckit commands are formatted when sent to AI providers:

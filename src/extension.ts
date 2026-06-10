@@ -254,6 +254,14 @@ export async function activate(context: vscode.ExtensionContext) {
                     writeComplexityFastPath(root, enabled);
                 }
             }
+            if (e.affectsConfiguration(ConfigKeys.resumeBeta)) {
+                // Pure VS Code menu gate — refresh the context key the resume
+                // `when` clause reads; no reload, no companion.yml mirror.
+                const enabled = vscode.workspace
+                    .getConfiguration(ConfigKeys.namespace)
+                    .get<boolean>('companion.resumeBeta', false);
+                void setContextKey(CONTEXT_KEYS.resumeBeta, enabled);
+            }
         })
     );
 
@@ -278,6 +286,11 @@ export async function activate(context: vscode.ExtensionContext) {
                 .getConfiguration(ConfigKeys.namespace)
                 .get<boolean>('companion.complexityFastPath', false);
             resolveComplexityFastPath(root, fastPathSetting);
+            // Gate the sidebar resume (▶) button on the opt-in beta setting.
+            const resumeBetaEnabled = vscode.workspace
+                .getConfiguration(ConfigKeys.namespace)
+                .get<boolean>('companion.resumeBeta', false);
+            void setContextKey(CONTEXT_KEYS.resumeBeta, resumeBetaEnabled);
             // `off` opts out of the ensure (plain upstream spec-kit); every other
             // profile keeps the standard family materialized.
             if (shouldEnsureStandard(profile)) {

@@ -513,7 +513,7 @@
         },
         {
           "command": "speckit.specs.resume",
-          "when": "view == speckit.views.explorer && (viewItem == spec-active || viewItem == spec-tasks-done)",
+          "when": "view == speckit.views.explorer && (viewItem == spec-active || viewItem == spec-tasks-done) && speckit.resumeBeta",
           "group": "inline"
         },
         {
@@ -1015,12 +1015,12 @@
               "on"
             ],
             "enumDescriptions": [
-              "Hide the Activity panel toggle in the spec viewer.",
-              "Show the Activity panel toggle with a \"beta\" badge (default).",
-              "Show the Activity panel toggle with no badge (treat as stable)."
+              "Hide the toggle.",
+              "Show the toggle with a \"beta\" badge (default).",
+              "Show the toggle with no badge (treat as stable)."
             ],
             "scope": "window",
-            "description": "Per-spec Activity panel in the spec viewer — a chronological timeline of transitions, decisions, files modified, and step history derived from .spec-context.json."
+            "description": "Show a per-spec Activity timeline in the spec viewer — transitions, decisions, and files modified over time. (opt-in beta, defaults to showing the toggle with a badge)"
           },
           "speckit.companion.templateProfile": {
             "type": "string",
@@ -1030,19 +1030,25 @@
               "off"
             ],
             "enumDescriptions": [
-              "Stock /speckit.* commands, unchanged, with better timing capture (default; closest to upstream).",
-              "Trimmed /speckit.companion.* commands — no user stories, files/dependencies tasks, smaller spec folder — plus timing.",
-              "Routes to the stock /speckit.* commands and opts out of the Companion install/repair step — it won't remove companion-standard if a prior setting already installed it."
+              "New specs run the stock /speckit.* commands (with timing capture).",
+              "New specs run the trimmed /speckit.companion.* commands — leaner spec, files/dependencies tasks.",
+              "New specs run the stock /speckit.* commands and skip the Companion install step (default)."
             ],
             "default": "off",
             "scope": "window",
-            "description": "Project default for the spec-kit pipeline shape. Both command families stay installed at all times — this setting only routes which one a new spec dispatches: 'standard' uses the stock /speckit.* commands, 'turbo' uses the trimmed /speckit.companion.* commands, 'off' routes to the stock commands and opts out of the Companion install/repair step. Defaults to 'off' (opt-in beta); switching is non-destructive (neither set is ever removed), and each spec pins the default at creation, so changing this never reshapes a spec already in flight."
+            "description": "Pick which command family new specs dispatch — stock /speckit.* or trimmed /speckit.companion.*. (opt-in beta, defaults to 'off'; both families stay installed, and each spec keeps the family it started with)"
           },
           "speckit.companion.complexityFastPath": {
             "type": "boolean",
             "default": false,
             "scope": "window",
-            "description": "When enabled, auto-detect small changes and fast-track them from specify straight to implement, skipping separate plan and tasks stages. Mirrors the tiny-change guardrail (5 files / 10 tasks). Off by default (opt-in beta) — the full pipeline runs on every change unless enabled. Applies only to the turbo /speckit.companion.* commands."
+            "description": "Fast-track small changes (≤5 files / ≤10 tasks) straight from specify to implement, skipping plan and tasks. (opt-in beta, off by default; turbo specs only)"
+          },
+          "speckit.companion.resumeBeta": {
+            "type": "boolean",
+            "default": false,
+            "scope": "window",
+            "description": "Show the resume (▶) button on specs in the sidebar to dispatch the next pipeline step. (opt-in beta, off by default)"
           }
         }
       }

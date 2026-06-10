@@ -53,7 +53,7 @@ Four capture commands run automatically as lifecycle hooks; two are yours to run
 | `speckit.companion.capture-tasks` | `after_tasks` hook | Record tasks completion (`ready-to-implement`) |
 | `speckit.companion.capture-implement` | `after_implement` hook | Per-task journaling on implement (`implemented` when all tasks checked) |
 | `/speckit.companion.status` | you | Print the current step, status, recorded decisions, and the next action |
-| `/speckit.companion.resume` | you | Continue the pipeline from the recorded step — carries decisions into scope and dispatches the next `/speckit.*` command (at the next unchecked task inside implement) |
+| `/speckit.companion.resume` | you | Continue the pipeline from the recorded step — carries decisions into scope and dispatches the next command in the family the spec has been running (`/speckit.companion.<step>` for turbo specs, `/speckit.<step>` for stock specs; at the next unchecked task inside implement) |
 | `/speckit.companion.specify` · `.plan` · `.tasks` · `.implement` | you | Opt-in turbo pipeline — emit the turbo shape (no user stories, trimmed plan, files/dependencies tasks) for one spec, regardless of the project's profile |
 
 Full reference: [docs/commands.md](./docs/commands.md).
