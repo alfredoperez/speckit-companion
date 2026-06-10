@@ -66,6 +66,7 @@ export const ConfigKeys = {
     customWorkflows: 'speckit.customWorkflows',
     defaultWorkflow: 'speckit.defaultWorkflow',
     templateProfile: 'speckit.companion.templateProfile',
+    turboWorkflowPicker: 'speckit.companion.turboWorkflowPicker',
     complexityFastPath: 'speckit.companion.complexityFastPath',
     resumeBeta: 'speckit.companion.resumeBeta',
     views: {

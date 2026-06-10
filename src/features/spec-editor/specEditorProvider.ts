@@ -8,12 +8,17 @@ import type {
     AttachedImage,
     WorkflowDefinition
 } from './types';
+import { TURBO_WORKFLOW_NAME } from './types';
 import { normalizeWorkflowConfig, resolveStepCommand, isWorkflowSupportedForProvider } from '../workflows';
 import type { WorkflowConfig } from '../workflows';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { buildSpecifyCreationPreamble } from '../../ai-providers/promptBuilder';
 import { resolveNewSpecProfileCommand } from '../specs/profileDispatch';
+import { isCompanionInstalled } from '../settings/companionPresetReconciler';
 import { AIProviders, WorkflowSteps, ConfigKeys } from '../../core/constants';
+
+/** The turbo specify twin the picker routes to when turbo is chosen. */
+const TURBO_SPECIFY_COMMAND = 'speckit.companion.specify';
 
 /**
  * Generates a random nonce for CSP
@@ -88,6 +93,29 @@ export class SpecEditorProvider {
             }
         }
 
+        // Beta-gated + install-gated turbo picker option. Appended last so it
+        // never reorders existing entries. Surfaces only when the turbo beta
+        // toggle is on AND the Companion extension is installed in the project;
+        // otherwise the dropdown is byte-identical to before. Picking it pins
+        // turbo on the new spec at submit (see handleSubmit) — pure selection UI.
+        //
+        // Reserved-name guard: TURBO_WORKFLOW_NAME ('speckit-turbo') is meant to
+        // be synthetic-only. If a user's custom workflow already claims that name,
+        // the real one wins — appending the synthetic entry would render duplicate
+        // <option value="speckit-turbo"> nodes and the this.workflows Map would
+        // keep only the last, silently changing what gets dispatched/pinned. So we
+        // skip the synthetic entry on collision and warn.
+        const turboEntry = this.buildTurboWorkflowEntry();
+        if (turboEntry) {
+            if (workflows.some(wf => wf.name === TURBO_WORKFLOW_NAME)) {
+                this.outputChannel.appendLine(
+                    `[SpecEditor] Warning: a custom workflow uses the reserved name '${TURBO_WORKFLOW_NAME}' — skipping the synthetic turbo entry; the user's workflow wins`
+                );
+            } else {
+                workflows.push(turboEntry);
+            }
+        }
+
         // Cache workflows for lookup. Rebuilt on every panel open; correctness
         // across an aiProvider change relies on that change forcing a window
         // reload (see extension.ts) which disposes this provider. If live
@@ -98,6 +126,36 @@ export class SpecEditorProvider {
         }
 
         return workflows;
+    }
+
+    /**
+     * Build the synthetic "SpecKit Companion (Turbo)" picker entry, or undefined
+     * when it must not appear. Returns undefined when the `turboWorkflowPicker`
+     * beta toggle resolves to `off`, OR when the Companion spec-kit extension is
+     * not installed in the project (so an `on`/`beta` toggle in a non-Companion
+     * project still hides it). When `beta`, the label carries a "(beta)" suffix;
+     * when `on`, the suffix is dropped (treated as stable) — mirroring the
+     * activity-panel beta-flag precedent.
+     */
+    private buildTurboWorkflowEntry(): WorkflowDefinition | undefined {
+        const mode = vscode.workspace
+            .getConfiguration(ConfigKeys.namespace)
+            .get<'off' | 'beta' | 'on'>('companion.turboWorkflowPicker', 'beta');
+        if (mode === 'off') {
+            return undefined;
+        }
+        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        if (!workspaceRoot || !isCompanionInstalled(workspaceRoot)) {
+            return undefined;
+        }
+        const isBeta = mode === 'beta';
+        return {
+            name: TURBO_WORKFLOW_NAME,
+            displayName: `SpecKit Companion (Turbo)${isBeta ? ' (beta)' : ''}`,
+            description: 'Pin turbo on this spec — leaner /speckit.companion.* pipeline, regardless of the project default.',
+            stepSpecify: `/${formatCommandForProvider(TURBO_SPECIFY_COMMAND)}`,
+            beta: isBeta,
+        };
     }
 
     /**
@@ -266,13 +324,27 @@ export class SpecEditorProvider {
             // For the default SpecKit workflow, route to the turbo specify twin when the
             // project default is turbo — the new spec has no context to pin yet, so the
             // first step honors the project default directly.
+            //
+            // When the user explicitly picked the turbo workflow option, route to the
+            // turbo specify twin unconditionally (ignoring the project default) and pin
+            // `profile: turbo` in the seed write so the whole pipeline runs turbo.
+            const pickedTurbo = !customCommand && workflowName === TURBO_WORKFLOW_NAME;
+            const seedProfile: 'turbo' | undefined = pickedTurbo ? 'turbo' : undefined;
             let command = customCommand ? `/${customCommand}` : workflow.stepSpecify;
-            if (!customCommand && workflow.name === 'speckit') {
+            if (pickedTurbo) {
+                command = `/${formatCommandForProvider(TURBO_SPECIFY_COMMAND)}`;
+            } else if (!customCommand && workflow.name === 'speckit') {
                 const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
                 command = `/${formatCommandForProvider(resolveNewSpecProfileCommand('speckit.specify', workspaceRoot))}`;
             }
 
-            const specContextInstruction = buildSpecifyCreationPreamble(workflowName, null);
+            // The turbo picker is a synthetic entry, not a real workflow config.
+            // Seed the `.spec-context.json` `workflow` field with the resolvable base
+            // name ('speckit') so downstream step-resolution (getWorkflow) finds it;
+            // turbo routing is carried entirely by the pinned `profile: turbo`, not
+            // by this field. Other workflows seed their own name unchanged.
+            const seedWorkflowName = pickedTurbo ? 'speckit' : workflowName;
+            const specContextInstruction = buildSpecifyCreationPreamble(seedWorkflowName, null, seedProfile);
             if (specContextInstruction) {
                 await this.tempFileManager.appendToMarkdownFile(
                     tempFileSet.markdownFilePath,

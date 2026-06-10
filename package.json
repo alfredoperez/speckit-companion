@@ -1022,6 +1022,22 @@
             "scope": "window",
             "description": "Show a per-spec Activity timeline in the spec viewer — transitions, decisions, and files modified over time. (opt-in beta, defaults to showing the toggle with a badge)"
           },
+          "speckit.companion.turboWorkflowPicker": {
+            "type": "string",
+            "default": "beta",
+            "enum": [
+              "off",
+              "beta",
+              "on"
+            ],
+            "enumDescriptions": [
+              "Hide the turbo choice from the Create New Spec workflow dropdown.",
+              "Offer a \"SpecKit Companion (Turbo)\" choice with a \"beta\" badge when the Companion extension is installed in the project (default).",
+              "Offer the \"SpecKit Companion (Turbo)\" choice with no badge (treat as stable) when the Companion extension is installed."
+            ],
+            "scope": "window",
+            "description": "Offer a per-spec \"SpecKit Companion (Turbo)\" option in the Create New Spec workflow dropdown — picking it pins turbo on that one spec, regardless of the project default. Only appears when the Companion spec-kit extension is installed in the project. (opt-in beta, defaults to showing the choice with a badge)"
+          },
           "speckit.companion.templateProfile": {
             "type": "string",
             "enum": [

@@ -10,6 +10,7 @@ import {
     shouldEnsureStandard,
     writeComplexityFastPath,
     resolveComplexityFastPath,
+    isCompanionInstalled,
     PresetOp,
 } from './companionPresetReconciler';
 import * as yaml from 'js-yaml';
@@ -263,6 +264,38 @@ describe('companionPresetReconciler', () => {
             expect(shouldEnsureStandard('standard')).toBe(true);
             expect(shouldEnsureStandard('turbo')).toBe(true);
             expect(shouldEnsureStandard(undefined)).toBe(true);
+        });
+    });
+
+    describe('isCompanionInstalled', () => {
+        it('is false in a bare project (no extension dir, no presets)', () => {
+            expect(isCompanionInstalled(root)).toBe(false);
+        });
+
+        it('is true when the bundled Companion extension dir is present', () => {
+            fs.mkdirSync(path.join(root, '.specify', 'extensions', 'companion'), { recursive: true });
+            expect(isCompanionInstalled(root)).toBe(true);
+        });
+
+        // Tightened gate: a preset only swaps the stock /speckit.* bodies, it does
+        // not register the namespaced /speckit.companion.* family the turbo picker
+        // dispatches. Preset-only-without-extension-dir must therefore read as NOT
+        // installed, or the picker would surface turbo and fail with an unknown
+        // /speckit.companion.specify command.
+        it('is false when only the standard preset is installed (no extension dir)', () => {
+            install('companion-standard');
+            expect(isCompanionInstalled(root)).toBe(false);
+        });
+
+        it('is false when only the turbo preset is installed (no extension dir)', () => {
+            install('companion-turbo');
+            expect(isCompanionInstalled(root)).toBe(false);
+        });
+
+        it('is true when the extension dir is present alongside a preset', () => {
+            install('companion-standard');
+            fs.mkdirSync(path.join(root, '.specify', 'extensions', 'companion'), { recursive: true });
+            expect(isCompanionInstalled(root)).toBe(true);
         });
     });
 });
