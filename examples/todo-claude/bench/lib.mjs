@@ -16,10 +16,7 @@ export const BENCH_DIR = dirname(fileURLToPath(import.meta.url))
 export const SANDBOX_DIR = dirname(BENCH_DIR) // examples/todo-claude
 export const REPO_ROOT = resolve(SANDBOX_DIR, '..', '..') // speckit-companion
 export const SPECS_DIR = join(SANDBOX_DIR, 'specs')
-export const COMPANION_CONFIG = join(SANDBOX_DIR, '.specify', 'companion.yml')
-export const PRESETS_DIR = join(SANDBOX_DIR, '.specify', 'presets')
 export const PRESET_SRC_DIR = join(REPO_ROOT, 'speckit-extension', 'presets')
-export const RUN_STATE = join(BENCH_DIR, '.run-state.json')
 export const STATS_FILE = join(BENCH_DIR, 'stats.jsonl')
 // Append-only trend log — NEVER deduped (stats.jsonl keeps only the latest row per
 // cell; this keeps every run forever so `· vs last run` and future comparisons work).
@@ -53,8 +50,6 @@ export const PROFILE_BY_MODE = {
   'companion-turbo': 'turbo',
   'companion-fast-path': 'turbo',
 }
-export const ALL_PRESET_IDS = ['companion-standard', 'companion-turbo']
-export const LEGACY_PRESET_ID = 'sdd-lean' // pre-rename leftover; removed on reconcile
 
 // The five per-variant sandbox FOLDERS are the run folders themselves — you open
 // them in VS Code and build the feature in place; there are no throwaway copies.
@@ -152,48 +147,6 @@ export function specContextMtime(name) {
   } catch {
     return 0
   }
-}
-
-// Set the sandbox's templateProfile (source of truth the extension/GUI reads),
-// preserving any other keys already in .specify/companion.yml.
-export function setTemplateProfile(profile) {
-  let text
-  if (existsSync(COMPANION_CONFIG)) {
-    text = readFileSync(COMPANION_CONFIG, 'utf8')
-    if (/^templateProfile:.*$/m.test(text)) {
-      text = text.replace(/^templateProfile:.*$/m, `templateProfile: ${profile}`)
-    } else {
-      text = `${text.trimEnd()}\ntemplateProfile: ${profile}\n`
-    }
-  } else {
-    text = `# Managed by bench/prep.mjs — sandbox template profile.\ntemplateProfile: ${profile}\n`
-  }
-  mkdirSync(dirname(COMPANION_CONFIG), { recursive: true })
-  writeFileSync(COMPANION_CONFIG, text)
-}
-
-// A preset is "installed" when its install dir exists under .specify/presets/.
-export function isPresetInstalled(id) {
-  return existsSync(join(PRESETS_DIR, id))
-}
-
-// Mirror of companionPresetReconciler.decidePresetOps: converge to "only the
-// target preset installed", removes before the add, plus legacy cleanup.
-export function decidePresetOps(mode) {
-  const target = PRESET_BY_MODE[mode]
-  const removes = []
-  let add = null
-  for (const id of ALL_PRESET_IDS) {
-    if (id === target) {
-      add = { id, action: isPresetInstalled(id) ? 'enable' : 'add' }
-    } else if (isPresetInstalled(id)) {
-      removes.push({ id, action: 'remove' })
-    }
-  }
-  if (isPresetInstalled(LEGACY_PRESET_ID)) {
-    removes.push({ id: LEGACY_PRESET_ID, action: 'remove' })
-  }
-  return add ? [...removes, add] : removes
 }
 
 export function relFromRepo(p) {
@@ -433,7 +386,7 @@ export function specArtifacts(specDir) {
   return { files, lines, byFile }
 }
 
-// ── Measurement (shared by finish.mjs single-cell + run-all.mjs round) ─────
+// ── Measurement (the run-all.mjs capture round) ─────
 
 export const STEPS = ['specify', 'plan', 'tasks', 'implement']
 
