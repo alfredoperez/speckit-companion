@@ -104,7 +104,7 @@ Produce a turbo specification — **no user-story / user-scenario section**. Cap
      Put the task checklist **only** in `tasks.md` — do **not** keep a second copy in `spec.md` (the duplicate would drift). `spec.md` keeps the Approach; `tasks.md` owns the tasks.
 
      Still write `<feature_directory>/checklists/requirements.md` as in step 4. Do **not** run `/speckit.companion.plan` or `/speckit.companion.tasks` — the three lean files plus the lifecycle fold below record those steps as satisfied.
-   - **`normal` — full pipeline.** Write `spec.md` only (no Approach / Implementation Tasks sections, no lifecycle fold). The existing pipeline continues unchanged: plan and tasks are produced and recorded by their own `/speckit.companion.plan` and `/speckit.companion.tasks` runs.
+   - **`normal` — full pipeline.** Write `spec.md` only (no appended Approach section, no `plan.md` / `tasks.md` here, no lifecycle fold). The existing pipeline continues unchanged: plan and tasks are produced and recorded by their own `/speckit.companion.plan` and `/speckit.companion.tasks` runs.
 
 **Output**: `<feature_directory>/spec.md` + `<feature_directory>/checklists/requirements.md`. In **simple** mode, `spec.md` additionally carries an **Approach** section, and two lean files are emitted alongside it — `plan.md` (a pointer to that Approach) and `tasks.md` (the real `- [ ] **T001** …` checklist; the task list lives here, not in `spec.md`); in **normal** mode, `spec.md` holds the four sections only and no `plan.md` / `tasks.md` are written here.
 
