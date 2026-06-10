@@ -357,4 +357,24 @@ describe('buildSpecifyCreationPreamble', () => {
         mockConfig(false);
         expect(buildSpecifyCreationPreamble('speckit', null)).toBe('');
     });
+
+    it('does NOT pin a profile in the seed JSON by default (preserves today\'s behavior)', () => {
+        mockConfig(true);
+        const out = buildSpecifyCreationPreamble('speckit', null);
+        expect(out).not.toContain('"profile": "turbo"');
+    });
+
+    it('pins profile: turbo in the seed JSON when the turbo option was picked', () => {
+        mockConfig(true);
+        const out = buildSpecifyCreationPreamble('speckit-turbo', null, 'turbo');
+        expect(out).toContain('"profile": "turbo"');
+        // And instructs the model to keep it.
+        expect(out).toContain('the user picked turbo for this spec at creation');
+    });
+
+    it('does NOT pin turbo when profile is explicitly standard', () => {
+        mockConfig(true);
+        const out = buildSpecifyCreationPreamble('speckit', null, 'standard');
+        expect(out).not.toContain('"profile": "turbo"');
+    });
 });

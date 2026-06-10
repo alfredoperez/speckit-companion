@@ -142,6 +142,15 @@ export interface TempFileManifest {
 // ============================================
 
 /**
+ * Reserved workflow name for the synthetic "SpecKit Companion (Turbo)" picker
+ * entry. It is never a real `customWorkflows` config entry — the extension
+ * computes it per panel open when the turbo beta toggle is on and the Companion
+ * extension is installed — and `handleSubmit` keys off this exact name to pin
+ * the turbo profile on the new spec.
+ */
+export const TURBO_WORKFLOW_NAME = 'speckit-turbo';
+
+/**
  * A workflow definition for spec-driven development
  */
 export interface WorkflowDefinition {
@@ -159,6 +168,8 @@ export interface WorkflowDefinition {
     stepImplement?: string;
     /** Custom commands for the specify step (shown next to Submit) */
     specifyCommands?: Array<{ name: string; title: string; command: string; tooltip?: string }>;
+    /** Marks a beta-gated synthetic entry (e.g. the turbo picker option). */
+    beta?: boolean;
 }
 
 // ============================================

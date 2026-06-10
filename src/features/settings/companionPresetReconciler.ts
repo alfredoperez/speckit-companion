@@ -74,6 +74,30 @@ export function isPresetInstalled(workspaceRoot: string, id: string): boolean {
     return fs.existsSync(path.join(workspaceRoot, PRESETS_REL, id));
 }
 
+/**
+ * The Companion spec-kit extension's on-disk install root in a consumer project
+ * (`.specify/extensions/companion/`), holding the bundled scripts and presets the
+ * turbo command family relies on. Forward-slash literal kept consistent with
+ * `BUNDLED_PRESETS_REL`.
+ */
+const COMPANION_EXTENSION_REL = '.specify/extensions/companion';
+
+/**
+ * True when the Companion spec-kit extension is installed *in the project* — the
+ * same on-disk signal the reconciler already keys off, not a VS Code marketplace
+ * lookup. Satisfied when the bundled extension dir (`.specify/extensions/companion/`)
+ * exists, or when a Companion preset (`companion-standard`/`companion-turbo`) is
+ * installed under `.specify/presets/`. Used to gate install-only UI (e.g. the
+ * Create-New-Spec turbo workflow option) so it never appears in a project that
+ * lacks the turbo command family.
+ */
+export function isCompanionInstalled(workspaceRoot: string): boolean {
+    if (fs.existsSync(path.join(workspaceRoot, COMPANION_EXTENSION_REL))) {
+        return true;
+    }
+    return ALL_PRESET_IDS.some(id => isPresetInstalled(workspaceRoot, id));
+}
+
 function installedMap(workspaceRoot: string): Record<string, boolean> {
     const map: Record<string, boolean> = {};
     for (const id of [...ALL_PRESET_IDS, ...LEGACY_PRESET_IDS]) {

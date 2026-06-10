@@ -36,6 +36,8 @@ export interface WorkflowDefinition {
     displayName: string;
     description?: string;
     specifyCommands?: Array<{ name: string; title: string; command: string; tooltip?: string }>;
+    /** Marks a beta-gated synthetic entry (e.g. the turbo picker option). */
+    beta?: boolean;
 }
 
 export type ExtensionToSpecEditorMessage =

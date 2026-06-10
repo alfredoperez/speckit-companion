@@ -10,6 +10,7 @@ import {
     shouldEnsureStandard,
     writeComplexityFastPath,
     resolveComplexityFastPath,
+    isCompanionInstalled,
     PresetOp,
 } from './companionPresetReconciler';
 import * as yaml from 'js-yaml';
@@ -263,6 +264,27 @@ describe('companionPresetReconciler', () => {
             expect(shouldEnsureStandard('standard')).toBe(true);
             expect(shouldEnsureStandard('turbo')).toBe(true);
             expect(shouldEnsureStandard(undefined)).toBe(true);
+        });
+    });
+
+    describe('isCompanionInstalled', () => {
+        it('is false in a bare project (no extension dir, no presets)', () => {
+            expect(isCompanionInstalled(root)).toBe(false);
+        });
+
+        it('is true when the bundled Companion extension dir is present', () => {
+            fs.mkdirSync(path.join(root, '.specify', 'extensions', 'companion'), { recursive: true });
+            expect(isCompanionInstalled(root)).toBe(true);
+        });
+
+        it('is true when a Companion preset is installed (standard)', () => {
+            install('companion-standard');
+            expect(isCompanionInstalled(root)).toBe(true);
+        });
+
+        it('is true when only the turbo preset is installed', () => {
+            install('companion-turbo');
+            expect(isCompanionInstalled(root)).toBe(true);
         });
     });
 });

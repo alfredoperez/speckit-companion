@@ -255,10 +255,16 @@ function renderLifecyclePreamble(specDir: string): string {
 
 function renderSpecifyCreationLifecyclePreamble(
     workflowName: string,
-    specDir: string | null
+    specDir: string | null,
+    profile?: 'standard' | 'turbo'
 ): string {
     const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
     const dispatchUtc = nowUtc();
+    // When the user explicitly picked turbo at creation, pin it in the seed write
+    // so the spec runs turbo regardless of the project-default templateProfile.
+    // No profile passed → seed JSON is unchanged and the extension seeds the
+    // project default as before.
+    const profileLine = profile === 'turbo' ? '  "profile": "turbo",' : null;
     return [
         MARKER_OPEN,
         '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
@@ -277,6 +283,7 @@ function renderSpecifyCreationLifecyclePreamble(
         '```json',
         '{',
         `  "workflow": "${workflowName}",`,
+        ...(profileLine ? [profileLine] : []),
         '  "specName": "<human-readable name derived from the spec directory slug, e.g. 108-my-feature → My Feature>",',
         '  "branch": "<output of: git rev-parse --abbrev-ref HEAD>",',
         `  "selectedAt": "${dispatchUtc}",`,
@@ -295,6 +302,9 @@ function renderSpecifyCreationLifecyclePreamble(
         '```',
         '',
         'Notes on the initial write:',
+        ...(profileLine
+            ? ['- Write `"profile": "turbo"` exactly as shown above — the user picked turbo for this spec at creation, so it must run the turbo command family for every step regardless of the project default. Do NOT change or drop this field.']
+            : []),
         '- Use the DISPATCH TIME value pinned above for BOTH `selectedAt` AND the',
         '  seed entry\'s `at`. Do NOT type a midnight placeholder. Do NOT run `date -u`',
         '  for these two values — the extension already captured the real wall-clock.',
@@ -334,13 +344,19 @@ export function buildLifecyclePrompt(command: string, specDir?: string | null): 
  *
  * Returns just the preamble (no command wrapper) because the spec editor
  * appends it to a temp markdown file separately from the dispatched command.
+ *
+ * `profile` pins the per-spec template profile in the seed write: pass `'turbo'`
+ * when the user picked the turbo workflow option so the new spec runs turbo
+ * regardless of the project default. Omit it (or pass `'standard'`) to keep the
+ * seed JSON unchanged so the extension seeds the project default as before.
  */
 export function buildSpecifyCreationPreamble(
     workflowName: string,
-    specDir?: string | null
+    specDir?: string | null,
+    profile?: 'standard' | 'turbo'
 ): string {
     if (!isContextInstructionsEnabled()) return '';
-    return renderSpecifyCreationLifecyclePreamble(workflowName, specDir ?? null);
+    return renderSpecifyCreationLifecyclePreamble(workflowName, specDir ?? null, profile);
 }
 
 /**
