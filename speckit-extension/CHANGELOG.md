@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-10
+
 The spec-kit extension's first catalog release — full lifecycle capture, Status + Resume, selectable template profiles, and accurate timing. See [ROADMAP.md](./ROADMAP.md).
 
 ### Added

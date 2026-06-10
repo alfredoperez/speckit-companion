@@ -10,13 +10,13 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/extension-companion-0b6dd9" alt="extension: companion">
-  <img src="https://img.shields.io/badge/version-0.2.0-0b6dd9" alt="version 0.2.0">
+  <img src="https://img.shields.io/badge/version-0.3.0-0b6dd9" alt="version 0.3.0">
   <img src="https://img.shields.io/badge/spec--kit-%E2%89%A50.8.5-008080" alt="requires spec-kit >= 0.8.5">
   <img src="https://img.shields.io/badge/license-MIT-gold" alt="license MIT">
 </p>
 
 ```bash
-specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/speckit-ext-v0.2.0/companion-0.2.0.zip
+specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/speckit-ext-v0.3.0/companion-0.3.0.zip
 ```
 
 > Tags: `#spec-driven-development` `#tracking` `#companion` · Independently maintained.
@@ -114,7 +114,7 @@ Then install the extension:
 
 ```bash
 # From the release archive (recommended)
-specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/speckit-ext-v0.2.0/companion-0.2.0.zip
+specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/speckit-ext-v0.3.0/companion-0.3.0.zip
 
 # Or from a local checkout while developing
 specify extension add ./speckit-extension --dev
