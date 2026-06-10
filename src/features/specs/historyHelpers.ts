@@ -9,6 +9,26 @@
 import type { HistoryEntry, StepName } from '../../core/types/specContext';
 
 /**
+ * Minimal structural shape both predicates accept, so canonical `HistoryEntry`
+ * and the looser reader/`HistoryEntryLike` shapes pass without casts.
+ */
+type DiscriminatorEntry = { substep?: string | null; task?: string | null };
+
+/**
+ * True iff `e` is a step-level boundary entry (a step start/complete), not a
+ * substep marker or a per-task implement finish. The single source of the
+ * `substep == null && task == null` rule.
+ */
+export function isStepLevelEntry(e: DiscriminatorEntry): boolean {
+    return e.substep == null && e.task == null;
+}
+
+/** True iff `e` is a per-task implement finish (carries a `task` id). */
+export function isPerTaskEntry(e: DiscriminatorEntry): boolean {
+    return e.task != null;
+}
+
+/**
  * Walk `history` from newest to oldest and report whether the most recent
  * entry for `step` is a completion.
  *
@@ -26,11 +46,11 @@ export function lastEntryIsCompletionFor(
     for (let i = history.length - 1; i >= 0; i--) {
         const e = history[i];
         if (e.step !== step) continue;
-        // Per-task implement finishes (substep null + a task id) and substep entries
-        // aren't the step boundary — skip them and keep searching. The backstop can
-        // append task finishes AFTER the step-level complete, so returning here would
-        // report the step incomplete forever.
-        if (e.substep != null || e.task != null) continue;
+        // Per-task implement finishes and substep entries aren't the step boundary —
+        // skip them and keep searching. The backstop can append task finishes AFTER
+        // the step-level complete, so returning here would report the step
+        // incomplete forever.
+        if (!isStepLevelEntry(e)) continue;
         if (e.kind === 'complete') return true;
         if (e.kind == null && e.from?.step === step) return true;
         return false;

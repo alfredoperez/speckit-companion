@@ -33,6 +33,7 @@ import {
 } from './specContextWriter';
 import { normalizeSpecContext } from './specContextReader';
 import { seedProfileForNewSpec } from './profileDispatch';
+import { isStepLevelEntry, lastEntryIsCompletionFor } from './historyHelpers';
 
 /**
  * Try reading a JSON file, return parsed content or undefined.
@@ -242,24 +243,11 @@ export async function updateStepProgress(
     });
 }
 
-function lastEntryIsCompletionFor(history: HistoryEntry[], step: StepName): boolean {
-    for (let i = history.length - 1; i >= 0; i--) {
-        const e = history[i];
-        if (e.step !== step) continue;
-        // Per-task finishes are now `substep: null` with `task` set — they are NOT
-        // the step boundary, so skip them and look for the last step-level entry.
-        // Otherwise a mid-implement task finish reads as the step's completion.
-        if (e.task != null) continue;
-        return e.kind === 'complete' && e.substep == null;
-    }
-    return false;
-}
-
 /** True iff `history` contains any *start* entry for `step` (not a completion). */
 function stepHasBeenStarted(history: HistoryEntry[], step: StepName): boolean {
     for (const e of history) {
         if (e.step !== step) continue;
-        if (e.substep != null || e.task != null) continue;
+        if (!isStepLevelEntry(e)) continue;
         if (e.kind === 'start') return true;
     }
     return false;

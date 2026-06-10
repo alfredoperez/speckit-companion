@@ -1,0 +1,243 @@
+{
+  "workflow": "speckit",
+  "specName": "centralize entry discriminator",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-10T10:24:34.504Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-10T10:25:20.076Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-10T10:31:36.572Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T10:34:42Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T10:35:29Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T10:35:48Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-10T10:40:08.693Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T10:41:01Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T10:41:02Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-10T10:48:20.999Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T10:49:49.595Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T10:49:49.674Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T10:56:25.186Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T10:56:25.259Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T10:56:25.335Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T10:56:25.404Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T10:56:25.481Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T10:56:25.550Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T10:56:25.644Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T10:56:25.713Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-10T11:10:55Z"
+    }
+  ],
+  "profile": "turbo",
+  "currentTask": "T010",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added and exported isStepLevelEntry/isPerTaskEntry predicates with a minimal structural param shape.",
+      "files": [
+        "src/features/specs/historyHelpers.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Rewrote lastEntryIsCompletionFor's loop to use the new predicates, making it the single source.",
+      "files": [
+        "src/features/specs/historyHelpers.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Deleted the duplicate lastEntryIsCompletionFor, imported the shared one, and routed stepHasBeenStarted through isStepLevelEntry.",
+      "files": [
+        "src/features/specs/specContextManager.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Replaced the inline step-level check in deriveStepHistory with isStepLevelEntry; kept dedupe field-equality and rowName display logic untouched.",
+      "files": [
+        "src/features/specs/stepHistoryDerivation.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Routed entryLabel's per-task branch through isPerTaskEntry and replaced HistoryEntryLike with a minimal Pick off canonical HistoryEntry.",
+      "files": [
+        "src/features/specs/lastTransition.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Left normalizeHistoryKind's backfill keyed on substep alone (task-aware predicate would alter legacy per-task backfilled kinds) and added a one-line note.",
+      "files": [
+        "src/features/specs/specContextReader.ts"
+      ],
+      "concerns": [
+        "Backfill intentionally not routed through isStepLevelEntry to preserve exact legacy kind semantics (FR-006)."
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Confirmed HistoryEntry.task is canonical and the predicate param accepts both canonical and legacy reader shapes; no type change needed.",
+      "files": [
+        "src/core/types/specContext.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Added local webview predicates and routed buildHistoryIndex/mergeStepEvents through them without crossing the extension boundary.",
+      "files": [
+        "webview/src/spec-viewer/timelineEvents.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Added _is_step_level/_is_per_task helpers and routed inline checks through them in write-context.py (+ mirror) and check_capture.py.",
+      "files": [
+        "speckit-extension/scripts/write-context.py",
+        ".specify/extensions/companion/scripts/write-context.py",
+        ".claude/skills/eval-speckit-extension/check_capture.py"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Compiled both tsconfigs and ran the suite (75 suites/899 tests pass incl. golden contract); grep confirmed SC-001/SC-002.",
+      "files": []
+    }
+  }
+}

@@ -42,6 +42,7 @@ import {
     SubstepEntry,
 } from '../../core/types/specContext';
 import { SpecStatuses } from '../../core/constants';
+import { isStepLevelEntry } from './historyHelpers';
 
 /**
  * Canonical spec-status derivation. Single entry point for "given a context
@@ -273,7 +274,7 @@ export function deriveStepHistory(
         // otherwise a trailing task finish hides the real completion and the step
         // renders in-flight forever.
         const lastStepLevel = [...g.transitions].reverse()
-            .find(t => t.substep == null && t.task == null);
+            .find(isStepLevelEntry);
         const lastOwnIsCompletion = lastStepLevel?.kind === 'complete';
 
         if (g.nextStepFirstIdx !== -1) {
