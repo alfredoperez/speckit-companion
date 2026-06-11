@@ -1,3 +1,4 @@
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { SpecExplorerProvider } from '../features/specs/specExplorerProvider';
 import { SteeringExplorerProvider } from '../features/steering/steeringExplorerProvider';
@@ -10,6 +11,9 @@ import {
 } from '../speckit/taskProgressService';
 import { NotificationUtils } from './utils/notificationUtils';
 import { getFileWatcherPatterns } from './specDirectoryResolver';
+import { readSpecContextSync } from '../features/specs/specContextReader';
+import { completeStep } from '../features/specs/stepLifecycle';
+import { shouldCloseImplement } from '../features/specs/implementCloseGuard';
 import { detectExternalTransition, transitionCache } from '../features/specs/transitionLogger';
 import { FEATURE_CONTEXT_FILE } from '../features/workflows/types';
 import type { TransitionEntry } from '../features/workflows/types';
@@ -217,6 +221,23 @@ export function setupTasksWatcher(
                     if (isPhaseCompletionNotificationEnabled()) {
                         await NotificationUtils.showPhaseCompleteNotification(specName, phaseName, uri.fsPath);
                     }
+                }
+
+                // Issue #244 — close the implement step when every task is checked.
+                // The tasks watcher is the only surface that fires for every driving
+                // mode (stock speckit has no companion hook; IDE-chat dispatch returns
+                // no terminal so the terminal-close tracker no-ops; implement has no
+                // next step so complete-on-advance never fires for it). When implement
+                // is underway and all tasks are now done, write the terminal close via
+                // the same `completeStep` lifecycle helper the tracker + Python hook use
+                // — idempotent and no-backward-clobber by the guard below. Best-effort:
+                // a failure here is logged-and-swallowed by the enclosing try/catch and
+                // never blocks the watcher.
+                const specDir = path.dirname(uri.fsPath);
+                const ctx = readSpecContextSync(specDir);
+                if (shouldCloseImplement(ctx, progress)) {
+                    await completeStep(specDir, 'implement', 'extension');
+                    outputChannel.appendLine(`[TasksWatcher] Implement complete: ${specName} → implemented (all tasks checked)`);
                 }
             } catch (error) {
                 outputChannel.appendLine(`[TasksWatcher] Error processing ${uri.fsPath}: ${error}`);
