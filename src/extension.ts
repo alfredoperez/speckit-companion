@@ -106,7 +106,8 @@ export async function activate(context: vscode.ExtensionContext) {
     try {
         await migrateBetaTriStateSettings();
     } catch (err) {
-        outputChannel.appendLine(`[Extension] Beta-settings migration skipped: ${err}`);
+        const detail = err instanceof Error ? err.message : String(err);
+        outputChannel.appendLine(`[Extension] Beta-settings migration skipped: ${detail}`);
     }
 
     // Reload ConfigManager settings on configuration changes (single listener for all consumers)

@@ -115,6 +115,20 @@ describe('migrateBetaTriStateSettings', () => {
         expect(update).not.toHaveBeenCalled();
     });
 
+    it('leaves an unknown (non-legacy) string untouched rather than coercing it', async () => {
+        const { update } = setupConfig({
+            'viewer.activityPanel': { globalValue: 'maybe' },
+            'companion.turboWorkflowPicker': {},
+            'companion.installPrompt': {},
+        });
+
+        await migrateBetaTriStateSettings();
+
+        // Only the three known legacy strings ('off'/'beta'/'on') are migrated;
+        // a typo is left for VS Code to flag, not silently rewritten to a boolean.
+        expect(update).not.toHaveBeenCalled();
+    });
+
     it('covers all three former tri-state settings', () => {
         expect(BETA_BOOLEAN_SETTINGS.map(s => s.key)).toEqual([
             'viewer.activityPanel',

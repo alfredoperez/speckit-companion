@@ -69,18 +69,19 @@ const SCOPES: ReadonlyArray<{
  */
 export async function migrateBetaTriStateSettings(): Promise<void> {
     const config = vscode.workspace.getConfiguration('speckit');
-    for (const { key } of BETA_BOOLEAN_SETTINGS) {
+    for (const { key, default: settingDefault } of BETA_BOOLEAN_SETTINGS) {
         const inspected = config.inspect(key);
         if (!inspected) {
             continue;
         }
         for (const { target, field } of SCOPES) {
             const persisted = inspected[field];
-            // Only rewrite a legacy *string* value. A boolean is already migrated;
-            // undefined means the user never set it at this scope — leave it.
-            if (typeof persisted === 'string') {
-                const coerced = coerceLegacyBoolean(persisted, true);
-                await config.update(key, coerced, target);
+            // Only rewrite a KNOWN legacy tri-state string. A boolean is already
+            // migrated; undefined means unset at this scope; and an unknown string
+            // (typo) is left untouched for VS Code to flag rather than silently
+            // coerced. Fall back to the per-setting default (not a hardcoded true).
+            if (persisted === 'off' || persisted === 'beta' || persisted === 'on') {
+                await config.update(key, coerceLegacyBoolean(persisted, settingDefault), target);
             }
         }
     }
