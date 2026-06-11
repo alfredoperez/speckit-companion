@@ -520,12 +520,12 @@
       "view/item/context": [
         {
           "command": "speckit.delete",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|completed|archived)$/",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
           "group": "inline"
         },
         {
           "command": "speckit.delete",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|completed|archived)$/",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
           "group": "7_modification"
         },
         {
@@ -540,7 +540,7 @@
         },
         {
           "command": "speckit.archive",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|completed)$/",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed)$/",
           "group": "7_modification"
         },
         {
@@ -565,12 +565,12 @@
         },
         {
           "command": "speckit.specs.reveal",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|completed|archived)$/",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
           "group": "navigation@98"
         },
         {
           "command": "speckit.specs.revealInExplorer",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|completed|archived)$/",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
           "group": "navigation@99"
         },
         {
@@ -600,12 +600,12 @@
         },
         {
           "command": "speckit.specs.copyPath",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|completed|archived)$/",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
           "group": "9_clipboard@1"
         },
         {
           "command": "speckit.specs.copyName",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|completed|archived)$/",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
           "group": "9_clipboard@2"
         }
       ],

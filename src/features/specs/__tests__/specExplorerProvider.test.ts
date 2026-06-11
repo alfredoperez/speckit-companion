@@ -1,7 +1,12 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { SpecExplorerProvider } from '../specExplorerProvider';
+import {
+    SpecExplorerProvider,
+    lifecycleContextValue,
+    isSpecLifecycleItem,
+    isSpecGroupItem,
+} from '../specExplorerProvider';
 import { SpecsFilterState } from '../specsFilterState';
 
 // Mock fs module
@@ -213,6 +218,21 @@ describe('SpecExplorerProvider', () => {
             expect(children).toHaveLength(1);
             expect(children[0].label).toBe('Completed (1)');
             // No Active or Archived groups
+        });
+
+        it('should NOT group an implemented spec under Active (terminal status)', async () => {
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: 'shipped-feature', path: 'specs/shipped-feature' },
+            ]);
+            (readSpecContextSync as jest.Mock).mockReturnValue({ status: 'implemented' });
+
+            const children = await provider.getChildren();
+
+            // Implemented is a terminal, done-but-not-user-completed status: it
+            // must land in the done (Completed) bucket, never under Active.
+            expect(children).toHaveLength(1);
+            expect(children[0].label).toBe('Completed (1)');
+            expect(children.some(c => c.label?.startsWith('Active'))).toBe(false);
         });
     });
 
@@ -878,5 +898,43 @@ describe('SpecExplorerProvider', () => {
 
             expect(groups.map(g => g.label)).toEqual(['Active (2)', 'Completed (1)']);
         });
+    });
+});
+
+describe('lifecycleContextValue', () => {
+    it('maps active to spec-active', () => {
+        expect(lifecycleContextValue({ status: 'active' } as any)).toBe('spec-active');
+    });
+
+    it('maps tasks-done to spec-tasks-done', () => {
+        expect(lifecycleContextValue({ status: 'tasks-done' } as any)).toBe('spec-tasks-done');
+    });
+
+    it('maps implemented to the terminal spec-implemented (not spec-active)', () => {
+        // Regression: an `implemented` spec must NOT fall through to spec-active,
+        // which would (a) match the Resume menu `when` and (b) group under Active.
+        const ctx = lifecycleContextValue({ status: 'implemented' } as any);
+        expect(ctx).toBe('spec-implemented');
+        expect(ctx).not.toBe('spec-active');
+    });
+
+    it('maps completed to spec-completed', () => {
+        expect(lifecycleContextValue({ status: 'completed' } as any)).toBe('spec-completed');
+    });
+
+    it('maps archived to spec-archived', () => {
+        expect(lifecycleContextValue({ status: 'archived' } as any)).toBe('spec-archived');
+    });
+
+    it('defaults unknown/missing status to spec-active', () => {
+        expect(lifecycleContextValue(undefined)).toBe('spec-active');
+        expect(lifecycleContextValue({ status: 'draft' } as any)).toBe('spec-active');
+    });
+
+    it('treats spec-implemented as a lifecycle item but not a group item', () => {
+        // Keeps lifecycle context-menu actions (Delete/Archive/Reveal/...) on the
+        // row while staying distinct from the Resume-matching values.
+        expect(isSpecLifecycleItem('spec-implemented')).toBe(true);
+        expect(isSpecGroupItem('spec-implemented')).toBe(false);
     });
 });
