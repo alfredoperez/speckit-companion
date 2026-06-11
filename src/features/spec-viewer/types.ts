@@ -259,6 +259,8 @@ export interface NavState {
     docTypeLabel?: string | null;
     /** Activity panel visibility mode (from `speckit.viewer.activityPanel` setting). */
     activityPanelMode?: 'off' | 'beta' | 'on';
+    /** Whether to render the install banner inside the Activity panel (viewer only). */
+    showInstallPrompt?: boolean;
 }
 
 /**

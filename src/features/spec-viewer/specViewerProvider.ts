@@ -975,6 +975,10 @@ export class SpecViewerProvider {
       filePath: doc?.filePath ?? null,
       docTypeLabel: getDocTypeLabel(featureCtx?.currentStep ?? resolvedType),
       activityPanelMode: this.readActivityPanelMode(),
+      // Must be re-sent on every update: the webview replaces the whole navState
+      // object, so omitting this would make the relocated Activity-panel banner
+      // (#255) vanish on the first content/spec-context refresh after load.
+      showInstallPrompt: this.computeShowInstallPrompt(),
     };
 
     // Derive ViewerState from the canonical .spec-context.json — the footer's

@@ -184,6 +184,94 @@ describe('StepTab — #229 in-flight sync glyph', () => {
         }
     });
 
+    it('stops spinning the moment the status settles, even with a MISSING completedAt (#255)', () => {
+        // The AI skipped the self-close `complete` history entry, so the plan
+        // step still has `activeStep === 'plan'` and no `completedAt`. The old
+        // derivation kept it spinning forever; the status-driven one stops it
+        // because `planned` is a settled status.
+        viewerState.value = {
+            status: 'planned', highlights: ['specify'], activeSubstep: null,
+        } as any;
+        const c = renderTab(baseProps({
+            doc: doc('plan', false, 'Plan'),
+            index: 1,
+            activeStep: 'plan',
+            currentStep: 'plan',
+            stepHistory: { plan: { startedAt: '2026-05-20T20:05:00Z', completedAt: null } },
+        }));
+        try {
+            // No spinner: the status settled even though completedAt is missing.
+            expect(c.querySelector('.step-status__sync')).toBeNull();
+            expect(c.querySelector('button')!.className).not.toContain('in-flight');
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('spins a genuinely-running step driven by an in-flight status (#255)', () => {
+        // `planning` is the in-flight status for the plan step — it must spin
+        // even before any history `completedAt` exists.
+        viewerState.value = {
+            status: 'planning', highlights: ['specify'], activeSubstep: null,
+        } as any;
+        const c = renderTab(baseProps({
+            doc: doc('plan', false, 'Plan'),
+            index: 1,
+            activeStep: 'plan',
+            currentStep: 'plan',
+            stepHistory: { plan: { startedAt: '2026-05-20T20:05:00Z', completedAt: null } },
+        }));
+        try {
+            expect(c.querySelector('button')!.className).toContain('in-flight');
+            expect(c.querySelector('.step-status__sync')).not.toBeNull();
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('does not spin a non-active step while another step is in-flight (#255)', () => {
+        // status `planning` drives ONLY the plan step — the spec step must not
+        // spin from status even though it has no completedAt.
+        viewerState.value = {
+            status: 'planning', highlights: [], activeSubstep: null,
+        } as any;
+        const c = renderTab(baseProps({
+            doc: doc('spec', false, 'Specify'),
+            index: 0,
+            activeStep: 'plan',
+            currentStep: 'plan',
+            stepHistory: {},
+        }));
+        try {
+            expect(c.querySelector('.step-status__sync')).toBeNull();
+            expect(c.querySelector('button')!.className).not.toContain('in-flight');
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('does not spin a history-active step while a DIFFERENT step is the in-flight status (#255 review)', () => {
+        // The in-flight status (`planning` → plan) is authoritative. The specify
+        // tab has activeStep === its own step + no completedAt (stale history),
+        // but must NOT spin: only one step spins, the one the status points at.
+        viewerState.value = {
+            status: 'planning', highlights: [], activeSubstep: null,
+        } as any;
+        const c = renderTab(baseProps({
+            doc: doc('spec', false, 'Specify'),
+            index: 0,
+            activeStep: 'specify',
+            currentStep: 'specify',
+            stepHistory: {},
+        }));
+        try {
+            expect(c.querySelector('.step-status__sync')).toBeNull();
+            expect(c.querySelector('button')!.className).not.toContain('in-flight');
+        } finally {
+            cleanup(c);
+        }
+    });
+
     it('renders the percentage pill (not the sync glyph) for the implement in-progress step', () => {
         viewerState.value = { highlights: ['specify', 'plan'], activeSubstep: null } as any;
         const c = renderTab(baseProps({

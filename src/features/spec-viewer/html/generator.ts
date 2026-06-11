@@ -16,7 +16,6 @@ import {
 import { escapeHtml, escapeHtmlAttribute, generateNonce } from '../utils';
 import { calculateWorkflowPhase, getDocTypeLabel } from '../phaseCalculation';
 import { SpecStatuses } from '../../../core/constants';
-import { renderInstallBannerHtml } from '../../spec-editor/installBanner';
 
 /**
  * Generate HTML for the webview
@@ -63,10 +62,10 @@ export function generateHtml(
     const nonce = generateNonce();
 
     // Install banner: shown only when the spec-kit extension is missing (and the
-    // prompt isn't `off`). Installed projects get an empty string — no banner, no
-    // regression (FR-008, FR-011). Visibility is decided by the provider via
-    // `shouldShowInstallPrompt`; here it's just markup.
-    const installBanner = renderInstallBannerHtml(showInstallPrompt);
+    // prompt isn't `off`). In the viewer the banner now renders INSIDE the Preact
+    // Activity panel (#255) — we pass the visibility via `initialNavState` rather
+    // than injecting markup above #app-root. Visibility is decided by the provider
+    // via `shouldShowInstallPrompt`.
 
     // Generate content or empty state
     const contentHtml = content
@@ -101,6 +100,7 @@ export function generateHtml(
         filePath: currentFilePath ?? null,
         docTypeLabel: getDocTypeLabel(currentStep ?? currentDocType),
         activityPanelMode,
+        showInstallPrompt,
     };
 
     return `<!DOCTYPE html>
@@ -129,7 +129,6 @@ export function generateHtml(
     <title>Spec: ${escapeHtml(specName)}</title>
 </head>
 <body style="background: var(--vscode-editor-background, #1e1e1e);" data-spec-status="${specStatus}" data-spec-badge="${escapeHtml(badgeText || '')}">
-    ${installBanner}
     <div class="viewer-container" id="app-root"></div>
     <template id="initial-content" data-raw="${content ? escapeHtmlAttribute(content) : ''}"></template>
     <script nonce="${nonce}">
@@ -152,13 +151,14 @@ export function generateHtml(
         const vscode = acquireVsCodeApi();
         // Install banner actions (present only when the spec-kit extension is
         // missing). data-action → the matching message the spec-viewer message
-        // handler resolves.
+        // handler resolves. The viewer banner now mounts inside the Preact
+        // Activity panel AFTER this script runs (#255), so delegate from the
+        // document rather than binding to the element at load time — an
+        // element-bound listener would no-op against a not-yet-mounted banner.
         (function () {
-            const banner = document.getElementById('install-banner');
-            if (!banner) { return; }
-            banner.addEventListener('click', function (e) {
+            document.addEventListener('click', function (e) {
                 if (!(e.target instanceof Element)) { return; }
-                const el = e.target.closest('[data-action]');
+                const el = e.target.closest('#install-banner [data-action]');
                 if (!el) { return; }
                 const action = el.getAttribute('data-action');
                 if (action === 'installSpecKitExtension') {

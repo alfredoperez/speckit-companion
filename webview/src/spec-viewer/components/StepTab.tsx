@@ -15,6 +15,25 @@ const STEP_TOOLTIPS: Record<string, string> = {
     done: 'Implement — execute and ship',
 };
 
+// Spec-level transition `status` → the step that is actively running for it.
+// An in-flight status spins ONLY its matching step; a settled status spins none.
+// (#255 — drive the in-flight glyph off `status`, not just history `completedAt`,
+// so a step stops spinning the moment its status settles even if the self-close
+// `complete` history entry never landed.)
+const STATUS_TO_INFLIGHT_STEP: Record<string, string> = {
+    specifying: 'specify',
+    planning: 'plan',
+    tasking: 'tasks',
+    implementing: 'implement',
+};
+
+// Settled statuses: no step spins. The in-flight counterparts above are the only
+// statuses that drive a spinner; everything else (incl. completed / archived) is
+// settled.
+const SETTLED_STATUSES = new Set([
+    'specified', 'planned', 'ready-to-implement', 'implemented', 'completed', 'archived',
+]);
+
 export interface StepTabProps {
     doc: SpecDocument;
     index: number;
@@ -47,17 +66,34 @@ export function StepTab(props: StepTabProps) {
     const isStale = stalenessMap?.[phase]?.isStale ?? false;
 
     const stepName = DOC_TO_STEP[phase] ?? phase;
+
+    const vs = viewerState.value;
+
+    // Drive the in-flight indicator off the transition `status` first, falling
+    // back to step-history for a live dispatch that hasn't moved `status` yet.
     // `activeStep` and `stepHistory` are keyed by step name (e.g. 'specify'),
     // not doc type (e.g. 'spec'). Compare against the mapped name so the
     // in-flight visual fires correctly during specifying / planning / etc.
-    const isWorking = activeStep === stepName && !stepHistory?.[stepName]?.completedAt;
+    const statusStep = vs?.status ? STATUS_TO_INFLIGHT_STEP[vs.status] : undefined;
+    const statusInFlight = statusStep === stepName;
+    // A settled status means NO step spins — even this one, even if its
+    // self-close `complete` history entry (a `completedAt`) never landed (#255).
+    const statusSettled = vs?.status ? SETTLED_STATUSES.has(vs.status) : false;
+    // When the status is itself in-flight (`statusStep` defined), it is
+    // authoritative: ONLY the step it points at spins. The history fallback is
+    // for statuses that give no in-flight guidance (e.g. `draft`/unknown) — using
+    // it while status is in-flight could spin a second tab if `activeStep` and
+    // `status` momentarily disagree (#255 review).
+    const statusGivesGuidance = statusStep !== undefined || statusSettled;
+    const isWorking = statusInFlight
+        || (!statusGivesGuidance
+            && activeStep === stepName
+            && !stepHistory?.[stepName]?.completedAt);
     const isLocked = runningStepIndex != null
         && index > runningStepIndex
         && !isViewing
         && !stepDocExists;
     const isClickable = (exists || index === 0) && !isLocked;
-
-    const vs = viewerState.value;
     // R003: checkmark only when completed AND the step's document exists.
     const vsCompleted = (vs?.highlights?.includes(stepName) ?? false) && stepDocExists;
     const vsSubstep = vs?.activeSubstep?.step === stepName ? vs.activeSubstep.name : null;
