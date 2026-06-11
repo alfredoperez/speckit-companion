@@ -1,0 +1,255 @@
+{
+  "workflow": "speckit",
+  "specName": "ui cleanup sidebar createspec",
+  "branch": "152-ui-cleanup-sidebar-createspec",
+  "currentStep": "implement",
+  "status": "implemented",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-11T14:26:42.735Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-11T14:27:29.689Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-11T14:27:39.386Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T14:28:31.310Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-11T14:28:35.371Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T14:28:58.099Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T14:28:58.164Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-11T14:29:02.346Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T14:29:33.573Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T14:29:44.994Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T14:30:31.841Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T14:34:14.090Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T14:34:14.158Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T14:34:14.231Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T14:35:05.936Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T14:35:06.004Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T14:35:06.078Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T14:35:06.149Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T14:35:06.225Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T14:35:06.300Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-11T14:35:17.932Z"
+    }
+  ],
+  "currentTask": "T012",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Gave install action a distinct glyph (desktop-download vs upgrade's cloud-download)",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Regrouped view/title actions: create=nav@1, list-controls=nav@2, install/upgrade=nav@3 so dividers render",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Removed Load Template switch cases, handleRequestTemplateDialog/handleLoadTemplate methods, and button markup from provider",
+      "files": [
+        "src/features/spec-editor/specEditorProvider.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Removed loadTemplate/requestTemplateDialog/templateLoaded message-type union members from extension types",
+      "files": [
+        "src/features/spec-editor/types.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Removed loadTemplateBtn lookup, click listener, and templateLoaded case from webview entry",
+      "files": [
+        "webview/src/spec-editor/index.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Removed the three Load Template message-type members from webview types",
+      "files": [
+        "webview/src/spec-editor/types.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Removed template-loader/load-template-btn CSS and split shared codicon rule",
+      "files": [
+        "webview/styles/spec-editor.css"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Removed Load Template mock button and restructured the Storybook mock row",
+      "files": [
+        "webview/src/spec-editor/CreateSpecMock.tsx"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Grepped all six Load Template tokens; zero in shipping source; cleaned a stale docs reference too",
+      "files": [
+        "docs/screenshots/CAPTURE.md"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Shortened turbo displayName to Turbo; full label moved into description tooltip; value speckit-turbo unchanged",
+      "files": [
+        "src/features/spec-editor/specEditorProvider.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Added flex-wrap/gap/min-width/ellipsis to workflow-row and image-attachment-header; extended max-width:500px media block to stack them",
+      "files": [
+        "webview/styles/spec-editor.css"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Ran compile (tsc+webpack) and jest: 972/972 pass",
+      "files": [
+        "(verification)"
+      ]
+    }
+  }
+}

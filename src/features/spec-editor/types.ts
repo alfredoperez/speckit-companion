@@ -189,8 +189,6 @@ export type SpecEditorToExtensionMessage =
     | { type: 'preview' }
     | { type: 'attachImage'; name: string; size: number; dataUri: string }
     | { type: 'removeImage'; imageId: string }
-    | { type: 'loadTemplate'; specPath: string }
-    | { type: 'requestTemplateDialog' }
     | { type: 'ready' }
     | { type: 'cancel' }
     | { type: 'installSpecKitExtension' }
@@ -204,7 +202,6 @@ export type ExtensionToSpecEditorMessage =
     | { type: 'init'; workflows: WorkflowDefinition[]; defaultWorkflow?: string }
     | { type: 'imageSaved'; imageId: string; thumbnailUri: string; originalName: string }
     | { type: 'imageRemoved'; imageId: string }
-    | { type: 'templateLoaded'; content: string }
     | { type: 'previewContent'; markdown: string }
     | { type: 'submissionStarted' }
     | { type: 'submissionComplete' }

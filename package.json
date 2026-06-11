@@ -375,7 +375,7 @@
         "command": "speckit.companion.installSpecKitExtension",
         "title": "Install spec-kit Extension",
         "category": "SpecKit",
-        "icon": "$(cloud-download)"
+        "icon": "$(desktop-download)"
       },
       {
         "command": "speckit.companion.openReadme",
@@ -469,32 +469,32 @@
         {
           "command": "speckit.create",
           "when": "view == speckit.views.explorer",
-          "group": "navigation@4"
+          "group": "navigation@1"
         },
         {
           "command": "speckit.specs.filter",
           "when": "view == speckit.views.explorer",
-          "group": "navigation@1"
+          "group": "navigation@2"
         },
         {
           "command": "speckit.specs.filter.clear",
           "when": "view == speckit.views.explorer && speckit.specs.filterActive",
-          "group": "navigation@1"
+          "group": "navigation@2"
         },
         {
           "command": "speckit.specs.sort",
           "when": "view == speckit.views.explorer",
-          "group": "navigation@1"
+          "group": "navigation@2"
         },
         {
           "command": "speckit.specs.collapseAll",
           "when": "view == speckit.views.explorer && !speckit.specs.allCollapsed",
-          "group": "navigation@3"
+          "group": "navigation@2"
         },
         {
           "command": "speckit.specs.expandAll",
           "when": "view == speckit.views.explorer && speckit.specs.allCollapsed",
-          "group": "navigation@3"
+          "group": "navigation@2"
         },
         {
           "command": "speckit.steering.create",
@@ -509,12 +509,12 @@
         {
           "command": "speckit.upgrade",
           "when": "view == speckit.views.explorer && (speckit.detected || speckit.cliInstalled)",
-          "group": "navigation@2"
+          "group": "navigation@3"
         },
         {
           "command": "speckit.companion.installSpecKitExtension",
           "when": "view == speckit.views.explorer && (speckit.detected || speckit.cliInstalled) && !speckit.companion.installed",
-          "group": "navigation@2"
+          "group": "navigation@3"
         }
       ],
       "view/item/context": [

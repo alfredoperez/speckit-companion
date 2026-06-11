@@ -51,25 +51,7 @@ export function CreateSpecMock({ initialContent = '', submitting = false }: Crea
                 </p>
             </header>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                <button
-                    type="button"
-                    style="
-                        background: var(--vscode-button-secondaryBackground, #1f1828);
-                        color: var(--vscode-button-secondaryForeground, #ddd);
-                        border: 1px solid var(--vscode-widget-border, #303030);
-                        padding: 8px 14px;
-                        border-radius: 4px;
-                        font-size: 13px;
-                        cursor: pointer;
-                        display: inline-flex;
-                        align-items: center;
-                        gap: 8px;
-                    "
-                >
-                    <span style="opacity: 0.7;">📄</span>
-                    Load Template
-                </button>
+            <div style="display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 24px;">
                 <div style="display: flex; align-items: center; gap: 12px; font-size: 13px;">
                     <span style="opacity: 0.7;">Workflow</span>
                     <button
