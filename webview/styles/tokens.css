@@ -41,8 +41,11 @@
 
     /* Text colors - mapped to VS Code theme variables */
     --text-primary: var(--vscode-editor-foreground, #d4d4d4);
-    --text-secondary: var(--vscode-descriptionForeground, #858585);
-    --text-muted: var(--vscode-disabledForeground, #6c6c6c);
+    /* Secondary/muted derive from the theme's own foreground (not the intentionally
+       low-contrast description/disabled tokens) so they clear WCAG AA on dark while
+       staying subordinate and theme-adaptive. See spec 148. */
+    --text-secondary: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 70%, transparent);
+    --text-muted: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 50%, transparent);
 
     /* Accent colors - mapped to VS Code theme variables */
     --accent: var(--vscode-focusBorder, #007fd4);
@@ -139,9 +142,11 @@ body.vscode-light {
     --bg-elevated: var(--vscode-editorWidget-background, #f3f3f3);
     --bg-hover: var(--vscode-list-hoverBackground, #e8e8e8);
     --text-primary: var(--vscode-editor-foreground, #333333);
-    --text-secondary: var(--vscode-descriptionForeground, #717171);
+    /* Derived from the editor foreground (see spec 148) — keeps secondary/muted
+       theme-adaptive and legible on light backgrounds. */
+    --text-secondary: color-mix(in srgb, var(--vscode-editor-foreground, #333333) 70%, transparent);
     --text-body: #4a4a4a;
-    --text-muted: var(--vscode-disabledForeground, #a0a0a0);
+    --text-muted: color-mix(in srgb, var(--vscode-editor-foreground, #333333) 50%, transparent);
     --border: var(--vscode-panel-border, #e0e0e0);
     --border-hover: var(--vscode-contrastBorder, #c0c0c0);
 
@@ -169,8 +174,11 @@ body.vscode-dark {
     --bg-elevated: var(--vscode-editorWidget-background, #252526);
     --bg-hover: var(--vscode-list-hoverBackground, #2a2d2e);
     --text-primary: var(--vscode-editor-foreground, #d4d4d4);
-    --text-secondary: var(--vscode-descriptionForeground, #858585);
-    --text-muted: var(--vscode-disabledForeground, #6c6c6c);
+    /* Derived from the editor foreground (semi-transparent, so effective color
+       composites over the background) so secondary text clears WCAG AA (≥4.5:1)
+       and muted clears ~3:1 against the dark editor bg. See spec 148. */
+    --text-secondary: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 70%, transparent);
+    --text-muted: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 50%, transparent);
     --border: var(--vscode-panel-border, #3c3c3c);
     --border-hover: var(--vscode-contrastBorder, #6c6c6c);
 }
@@ -181,9 +189,12 @@ body.vscode-high-contrast {
     --bg-elevated: var(--vscode-editorWidget-background, #000000);
     --bg-hover: var(--vscode-list-hoverBackground, #0a0a0a);
     --text-primary: var(--vscode-editor-foreground, #ffffff);
-    --text-secondary: var(--vscode-descriptionForeground, #ffffff);
+    /* High-contrast mandates maximal contrast: keep secondary at the full editor
+       foreground (no dilution) and derive muted only mildly (70%) so it stays
+       strong against the HC background. See spec 148. */
+    --text-secondary: var(--vscode-editor-foreground, #ffffff);
     --text-body: var(--vscode-editor-foreground, #ffffff);
-    --text-muted: var(--vscode-disabledForeground, #a0a0a0);
+    --text-muted: color-mix(in srgb, var(--vscode-editor-foreground, #ffffff) 70%, transparent);
     --border: var(--vscode-contrastBorder, #ffffff);
     --border-hover: var(--vscode-contrastBorder, #ffffff);
     --accent: var(--vscode-focusBorder, #f38518);
