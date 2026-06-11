@@ -236,23 +236,12 @@
 }
 
 /* Parent-doc chip distinguished from siblings: same shape, slightly stronger
-   weight + a thin trailing separator so the eye reads "[Parent] | children". */
+   weight. Spacing alone separates it from its sibling children — no trailing
+   middot (#255: the '·' read as a stray dot after "Specification"). */
 .step-child--parent {
     font-weight: 600;
     color: var(--text-primary);
     margin-right: 6px;
-    position: relative;
-}
-
-/* Quiet middot separator between the parent chip and its sibling children.
-   Pseudo-element so it doesn't pollute screen readers, low contrast so the
-   eye reads it as rhythm not punctuation. */
-.step-child--parent::after {
-    content: '·';
-    margin-left: 8px;
-    color: var(--text-muted);
-    font-weight: normal;
-    pointer-events: none;
 }
 
 .step-child.active {

@@ -83,6 +83,8 @@ export interface NavState {
     filePath?: string | null;
     docTypeLabel?: string | null;
     activityPanelMode?: 'off' | 'beta' | 'on';
+    /** Whether to render the install banner inside the Activity panel (viewer only). */
+    showInstallPrompt?: boolean;
 }
 
 // ============================================
