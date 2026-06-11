@@ -18,8 +18,7 @@ A spec workspace that turns AI-assisted, spec-driven development into something 
 - **Run leaner with Turbo.** Opt into the companion spec-kit extension's trimmed `/speckit.companion.*` pipeline — smaller specs, files-and-dependencies tasks, an optional fast-path for small changes — without giving up the stock flow.
 - **Bring your own AI and your own workflow.** Eight providers, custom phases, custom commands. Drop in your own SDD process; the sidebar and viewer adapt.
 
-<!-- 🎨 IMAGE: A clean four-up benefit strip in the SpecKit Companion neo-brutalist style (cream background, black borders + drop shadows, Lilita-caps labels, teal/blue/gold/coral accents). Four labeled tiles left-to-right: "Review specs like code" (a spec line with an inline comment bubble), "See every phase" (a Specify→Plan→Tasks→Done stepper), "Turbo mode" (a small rocket over a compact spec folder), "Any AI, any workflow" (a plug icon feeding markdown). 16:9, no photoreal, flat vector. -->
-![What you get: review specs like code, see every phase, turbo mode, any AI and any workflow](docs/screenshots/benefits-strip.png)
+![What you get: review specs like code, see every phase, turbo mode, any AI and any workflow](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/benefits-strip.jpg)
 
 ## Recently Shipped
 
@@ -166,8 +165,7 @@ specify extension add companion --from https://github.com/alfredoperez/speckit-c
 
 **Update it later** from the Specs view **Upgrade…** menu → *Update spec-kit Extension* (runs the same install with `--force`).
 
-<!-- 🎨 IMAGE: A two-panel "before / after" in the neo-brutalist theme. LEFT panel ("Missing"): the Create-Spec dialog with a teal-accented install banner reading "Install the spec-kit extension to unlock Turbo & Capture" and an "Install spec-kit extension" button. RIGHT panel ("Installed"): the same dialog with the banner gone and a Turbo workflow option visible in the dropdown. A bold arrow between them. 16:9, flat vector, cream bg, black borders + shadows. -->
-![Install banner in the Create-Spec panel before install, and the clean panel with Turbo available after](docs/screenshots/install-banner.png)
+![What installing the spec-kit extension unlocks: live progress capture, status, resume, the turbo pipeline, the complexity fast-path, and honest state recovery](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/install-banner.jpg)
 
 ## Setup & Components
 
@@ -305,8 +303,7 @@ Which mode should you pick? The short version:
 
 *(Numbers above are produced by running `/eval-speckit-extension` across `standard` / `turbo` / `off` and recording the deltas; this section is left as placeholders until that eval runs so no figures are fabricated.)*
 
-<!-- 🎨 IMAGE: A neo-brutalist comparison chart: three vertical bars labeled "off", "standard", "turbo" showing relative spec size / time, turbo clearly the shortest, with a teal "fastest" tag on turbo and a gold "full ceremony" tag on standard. Cream bg, black borders + drop shadows, Lilita-caps labels. Leave the numeric axis unlabeled (placeholder for eval data). 16:9, flat vector. -->
-![Mode comparison chart: off vs standard vs turbo](docs/screenshots/mode-comparison.png)
+![Mode comparison chart: off vs standard vs turbo, with turbo the fastest to results](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/mode-comparison.jpg)
 
 ### Complexity Fast-Path
 
