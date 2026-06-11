@@ -55,8 +55,10 @@ describe('specKitExtensionInstall', () => {
             expect(show).toHaveBeenCalled();
             const sent = sendText.mock.calls.map(c => c[0] as string);
             expect(sent).toContain('cd "/work/project"');
-            // Prereq is a comment (documents, does not auto-run an install of specify-cli).
-            expect(sent.some(line => line.startsWith('# Prerequisite') && line.includes(CLI_PREREQ_COMMAND))).toBe(true);
+            // Prereq is echoed (printed, not auto-run) — a raw `#` comment is unreliable
+            // in interactive zsh (INTERACTIVE_COMMENTS off), so echo is used instead.
+            expect(sent.some(line => line.startsWith('echo "Prerequisite') && line.includes(CLI_PREREQ_COMMAND))).toBe(true);
+            expect(sent.some(line => line.startsWith('#'))).toBe(false);
             expect(sent).toContain(buildInstallCommand());
         });
 

@@ -92,8 +92,11 @@ export function runInstallSpecKitExtension(workspaceRoot?: string): void {
     if (workspaceRoot) {
         terminal.sendText(`cd "${workspaceRoot}"`);
     }
-    // Comment line: documents (does not auto-run) the prereq, then the actual install.
-    terminal.sendText(`# Prerequisite (github-source spec-kit CLI): ${CLI_PREREQ_COMMAND}`);
+    // Print (do NOT run) the prereq via echo, then run the actual install. A raw `#`
+    // comment line is unreliable: interactive zsh has INTERACTIVE_COMMENTS off by
+    // default, so a leading `#` would be executed and error ("command not found: #")
+    // instead of being treated as a comment. echo is portable across bash/zsh.
+    terminal.sendText(`echo "Prerequisite (github-source spec-kit CLI): ${CLI_PREREQ_COMMAND}"`);
     terminal.sendText(buildInstallCommand());
 }
 

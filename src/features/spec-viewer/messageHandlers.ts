@@ -25,7 +25,7 @@ import {
   readSpecContextSync,
 } from "../specs/specContextReader";
 import { updateSpecContext } from "../specs/specContextWriter";
-import { resolveProfileCommand, resolveProfileCommandWithFallback } from "../specs/profileDispatch";
+import { resolveProfileCommandWithFallback } from "../specs/profileDispatch";
 import { lastEntryIsCompletionFor } from "../specs/historyHelpers";
 import {
   completeStep,

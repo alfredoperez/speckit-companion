@@ -387,10 +387,12 @@ export class SpecEditorProvider {
             let command = customCommand ? `/${customCommand}` : workflow.stepSpecify;
             if (pickedTurbo) {
                 // The turbo picker is only offered when the extension is installed
-                // (buildTurboWorkflowEntry gates on it), but re-check here so a stale
-                // selection can never dispatch an unresolvable /speckit.companion.*.
-                const resolution = resolveNewSpecProfileCommandWithFallback('speckit.specify', workspaceRoot);
-                if (resolution.fellBack) {
+                // (buildTurboWorkflowEntry gates on it), but re-check installation
+                // directly here so a stale selection can never dispatch an unresolvable
+                // /speckit.companion.*. Note: an explicit turbo pick routes to the turbo
+                // twin regardless of the project default, so the project-default resolver
+                // can't be the guard — only the extension's on-disk presence can.
+                if (!workspaceRoot || !isCompanionInstalled(workspaceRoot)) {
                     seedProfile = undefined;
                     command = `/${formatCommandForProvider('speckit.specify')}`;
                     this.warnFellBackToStock();
