@@ -15,8 +15,8 @@ Secondary and muted body text — and the secondary/ghost buttons that inherit t
 
 ## Success Criteria
 
-- **SC-001**: On the default dark theme, `--text-secondary` resolves to approximately `#bdbdbd`, yielding a contrast ratio ≥ 4.5:1 against the `#1e1e1e` editor background (WCAG AA for body text).
-- **SC-002**: On the default dark theme, `--text-muted` resolves to approximately `#a0a0a0`, yielding a contrast ratio ≥ 3:1 against the `#1e1e1e` editor background.
+- **SC-001**: On the default dark theme, `--text-secondary` (a semi-transparent `color-mix` composited over the editor background) yields a contrast ratio ≥ 4.5:1 against the `#1e1e1e` editor background (WCAG AA for body text).
+- **SC-002**: On the default dark theme, `--text-muted` (semi-transparent, composited over the background) yields a contrast ratio ≥ 3:1 against the `#1e1e1e` editor background.
 - **SC-003**: The secondary (Archive) and ghost (Regenerate) buttons render with a rest-state text color that reads as clearly clickable (≥ 3:1 against background), not disabled, while remaining visually subordinate to the primary button.
 - **SC-004**: Light and high-contrast themes show no contrast regression — the derived secondary/muted values remain legible and subordinate on those backgrounds.
 - **SC-005**: The full test suite and TypeScript compile pass with the change applied.
