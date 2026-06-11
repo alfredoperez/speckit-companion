@@ -97,6 +97,12 @@ export class RelativePattern {
     }
 }
 
+export enum ConfigurationTarget {
+    Global = 1,
+    Workspace = 2,
+    WorkspaceFolder = 3,
+}
+
 export const workspace = {
     fs: {
         readDirectory: jest.fn().mockResolvedValue([]),

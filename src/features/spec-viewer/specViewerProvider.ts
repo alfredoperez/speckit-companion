@@ -45,6 +45,7 @@ import {
 import { getDocumentTypeFromPath, getSpecDirectoryFromPath } from "./utils";
 import { optionalCommandButtonsForTab } from "./optionalCommands";
 import { ConfigKeys, SpecStatuses, WorkflowSteps } from "../../core/constants";
+import { coerceLegacyBoolean } from "../../core/settingsMigration";
 import type { CustomCommandConfig } from "../../core/types/config";
 import { deriveChangeRoot } from "../../core/specDirectoryResolver";
 import { deriveSpecName } from "../specs/specContextManager";
@@ -55,7 +56,7 @@ import { backfillMinimalContext } from "../specs/specContextBackfill";
 import { resetMalformedContext } from "../specs/specContextReset";
 import { reconcileAndPersist } from "../specs/specContextReconciler";
 import { isCompanionInstalled } from "../settings/companionPresetReconciler";
-import { shouldShowInstallPrompt, readInstallPromptMode } from "../../speckit/specKitExtensionInstall";
+import { shouldShowInstallPrompt, readInstallPromptEnabled } from "../../speckit/specKitExtensionInstall";
 import { deriveViewerState, isStepCompleted, findRunningStep } from "./stateDerivation";
 import { hasNonTrivialArtifact } from "./stepArtifact";
 import { StepCompletionNotifier, NotifierContext } from "./stepCompletionNotifier";
@@ -157,14 +158,16 @@ export class SpecViewerProvider {
   ) {}
 
   /**
-   * Read `speckit.viewer.activityPanel` from VS Code settings. Falls back
-   * to `"beta"` if the setting is missing or has an unknown value.
+   * Read `speckit.viewer.activityPanel` from VS Code settings as a boolean.
+   * Defaults to `true` (shown). Tolerates a legacy tri-state string
+   * (`'beta'`/`'on'` → `true`, `'off'` → `false`) until the settings migration
+   * rewrites it.
    */
-  private readActivityPanelMode(): 'off' | 'beta' | 'on' {
-    const v = vscode.workspace
+  private readActivityPanelEnabled(): boolean {
+    const raw = vscode.workspace
       .getConfiguration('speckit.viewer')
-      .get<string>('activityPanel', 'beta');
-    return v === 'off' || v === 'on' ? v : 'beta';
+      .get<unknown>('activityPanel', true);
+    return coerceLegacyBoolean(raw, true);
   }
 
   /**
@@ -175,7 +178,7 @@ export class SpecViewerProvider {
   private computeShowInstallPrompt(): boolean {
     const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     return shouldShowInstallPrompt(
-      readInstallPromptMode(),
+      readInstallPromptEnabled(),
       root ? isCompanionInstalled(root) : false
     );
   }
@@ -614,7 +617,7 @@ export class SpecViewerProvider {
         doc?.filePath ?? null,
         featureCtx?.currentStep ?? doc?.type ?? null,
         derived.stepHistoryByTab,
-        this.readActivityPanelMode(),
+        this.readActivityPanelEnabled(),
         this.computeShowInstallPrompt(),
       );
 
@@ -974,7 +977,7 @@ export class SpecViewerProvider {
       currentStep: featureCtx?.currentStep ?? resolvedType ?? null,
       filePath: doc?.filePath ?? null,
       docTypeLabel: getDocTypeLabel(featureCtx?.currentStep ?? resolvedType),
-      activityPanelMode: this.readActivityPanelMode(),
+      activityPanelEnabled: this.readActivityPanelEnabled(),
       // Must be re-sent on every update: the webview replaces the whole navState
       // object, so omitting this would make the relocated Activity-panel banner
       // (#255) vanish on the first content/spec-context refresh after load.

@@ -26,6 +26,7 @@ import { isCompanionInstalled } from './features/settings/companionPresetReconci
 import { Views, setupFileWatchers, setupTasksWatcher, setupSpecViewerWatcher } from './core';
 import { ConfigKeys } from './core/constants';
 import { ConfigManager } from './core/utils/configManager';
+import { migrateBetaTriStateSettings } from './core/settingsMigration';
 import { openSpecFile } from './core/utils/fileOpener';
 
 let aiProvider: IAIProvider;
@@ -97,6 +98,17 @@ export async function activate(context: vscode.ExtensionContext) {
     // Initialize providers and managers
     aiProvider = AIProviderFactory.getProvider(context, outputChannel);
     outputChannel.appendLine(`[Extension] Using AI provider: ${aiProvider.name}`);
+
+    // Migrate the former tri-state beta settings (#259) to booleans before any
+    // reader runs. Idempotent and scope-preserving: legacy `'beta'`/`'on'` → true,
+    // `'off'` → false. Readers still coerce defensively, so an un-migrated scope or
+    // an in-flight read is safe regardless.
+    try {
+        await migrateBetaTriStateSettings();
+    } catch (err) {
+        const detail = err instanceof Error ? err.message : String(err);
+        outputChannel.appendLine(`[Extension] Beta-settings migration skipped: ${detail}`);
+    }
 
     // Reload ConfigManager settings on configuration changes (single listener for all consumers)
     const configManager = ConfigManager.getInstance();

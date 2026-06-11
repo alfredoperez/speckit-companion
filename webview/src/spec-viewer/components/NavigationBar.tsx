@@ -63,7 +63,7 @@ export function NavigationBar() {
     const showChildrenRow = displayRelatedDocs.length > 0 && parentStepDoc;
 
     const activityActive = activityVisible.value;
-    const activityMode = ns.activityPanelMode ?? 'beta';
+    const activityEnabled = ns.activityPanelEnabled ?? true;
     const handleActivityToggle = () => {
         activityVisible.value = !activityVisible.value;
     };
@@ -102,7 +102,7 @@ export function NavigationBar() {
                         );
                     })}
                 </div>
-                {activityMode !== 'off' && (
+                {activityEnabled && (
                     <button
                         type="button"
                         class="activity-toggle"
@@ -111,9 +111,6 @@ export function NavigationBar() {
                         onClick={handleActivityToggle}
                     >
                         Activity
-                        {activityMode === 'beta' && (
-                            <span class="activity-toggle__beta">beta</span>
-                        )}
                     </button>
                 )}
             </div>

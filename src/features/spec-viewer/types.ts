@@ -257,8 +257,8 @@ export interface NavState {
     filePath?: string | null;
     /** Display label for the current doc type (e.g., "Spec", "Plan") */
     docTypeLabel?: string | null;
-    /** Activity panel visibility mode (from `speckit.viewer.activityPanel` setting). */
-    activityPanelMode?: 'off' | 'beta' | 'on';
+    /** Whether the Activity toggle is shown (from `speckit.viewer.activityPanel` setting). */
+    activityPanelEnabled?: boolean;
     /** Whether to render the install banner inside the Activity panel (viewer only). */
     showInstallPrompt?: boolean;
 }

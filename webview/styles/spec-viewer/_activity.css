@@ -555,20 +555,6 @@
     font-weight: 700;
 }
 
-.activity-toggle__beta {
-    display: inline-block;
-    font-size: 0.62rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 1px 6px;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--warning) 18%, transparent);
-    color: var(--warning);
-    border: 1px solid color-mix(in srgb, var(--warning) 50%, transparent);
-    line-height: 1.2;
-}
-
 /* ── Review comments card ─────────────────────────────────────── */
 .comments-doc-group {
     margin-bottom: 12px;

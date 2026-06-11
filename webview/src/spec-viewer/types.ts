@@ -82,7 +82,8 @@ export interface NavState {
     currentStep?: string | null;
     filePath?: string | null;
     docTypeLabel?: string | null;
-    activityPanelMode?: 'off' | 'beta' | 'on';
+    /** Whether the Activity toggle is shown (from `speckit.viewer.activityPanel` setting). */
+    activityPanelEnabled?: boolean;
     /** Whether to render the install banner inside the Activity panel (viewer only). */
     showInstallPrompt?: boolean;
 }

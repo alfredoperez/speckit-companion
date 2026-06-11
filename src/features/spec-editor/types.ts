@@ -175,8 +175,6 @@ export interface WorkflowDefinition {
     stepImplement?: string;
     /** Custom commands for the specify step (shown next to Submit) */
     specifyCommands?: Array<{ name: string; title: string; command: string; tooltip?: string }>;
-    /** Marks a beta-gated synthetic entry (e.g. the turbo picker option). */
-    beta?: boolean;
 }
 
 // ============================================

@@ -1,0 +1,291 @@
+{
+  "workflow": "speckit",
+  "specName": "boolean beta settings",
+  "branch": "153-boolean-beta-settings",
+  "currentStep": "implement",
+  "status": "implemented",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-11T14:55:21.495Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-11T14:56:15.691Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-11T14:56:25.500Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T14:56:59.146Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-11T14:57:09.272Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T14:57:37.486Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T14:57:37.564Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-11T14:57:41.875Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T14:58:34.303Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T14:59:04.309Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T14:59:26.461Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T15:01:04.600Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T15:01:04.675Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T15:03:32.373Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T15:03:32.454Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T15:03:32.538Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T15:03:32.621Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T15:03:32.710Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T15:03:32.794Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T15:03:32.878Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T15:03:32.962Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T15:04:45.006Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-11T15:04:57.487Z"
+    }
+  ],
+  "currentTask": "T014",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Add settingsMigration.ts: coerceLegacyBoolean + migrateBetaTriStateSettings (per-scope rewrite)",
+      "files": [
+        "src/core/settingsMigration.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Add settingsMigration.test.ts: coercion + per-scope migration + idempotency (9 cases, passing)",
+      "files": [
+        "src/core/settingsMigration.test.ts",
+        "tests/__mocks__/vscode.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Convert 3 settings to boolean type/default:true in package.json; removed enum/enumDescriptions; kept opt-in beta wording",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "installPrompt reader→boolean (readInstallPromptEnabled via coerceLegacyBoolean); shouldShowInstallPrompt(enabled,installed); updated its 2 tests",
+      "files": [
+        "src/speckit/specKitExtensionInstall.ts",
+        "src/speckit/specKitExtensionInstall.test.ts",
+        "src/features/spec-editor/installBanner.test.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Updated both shouldShowInstallPrompt/readInstallPromptEnabled call sites in spec-editor + spec-viewer providers",
+      "files": [
+        "src/features/spec-editor/specEditorProvider.ts",
+        "src/features/spec-viewer/specViewerProvider.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "buildTurboWorkflowEntry reads boolean; dropped (beta) label suffix and beta field",
+      "files": [
+        "src/features/spec-editor/specEditorProvider.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "readActivityPanelMode→readActivityPanelEnabled(boolean); updated 2 call sites; payload now activityPanelEnabled",
+      "files": [
+        "src/features/spec-viewer/specViewerProvider.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "NavState activityPanelMode→activityPanelEnabled?:boolean in both type files",
+      "files": [
+        "src/features/spec-viewer/types.ts",
+        "webview/src/spec-viewer/types.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "generator.ts param activityPanelMode→activityPanelEnabled:boolean default true",
+      "files": [
+        "src/features/spec-viewer/html/generator.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Dropped unused beta field from WorkflowDefinition in both type files",
+      "files": [
+        "src/features/spec-editor/types.ts",
+        "webview/src/spec-editor/types.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "NavigationBar reads activityPanelEnabled; removed activity-toggle__beta span",
+      "files": [
+        "webview/src/spec-viewer/components/NavigationBar.tsx"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Removed .activity-toggle__beta CSS rule",
+      "files": [
+        "webview/styles/spec-viewer/_activity.css"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Call migrateBetaTriStateSettings() early in activate()",
+      "files": [
+        "src/extension.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "npm run compile + compile-web + jest all green (80 suites, 981 tests); audited residual symbols; fixed stale comment",
+      "files": [
+        "src/features/spec-editor/specEditorProvider.ts"
+      ]
+    }
+  }
+}

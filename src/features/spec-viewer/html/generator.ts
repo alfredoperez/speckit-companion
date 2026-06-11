@@ -42,7 +42,7 @@ export function generateHtml(
     currentFilePath?: string | null,
     currentStep?: string | null,
     stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>,
-    activityPanelMode: 'off' | 'beta' | 'on' = 'beta',
+    activityPanelEnabled: boolean = true,
     showInstallPrompt: boolean = false
 ): string {
     // Get URIs for resources
@@ -99,7 +99,7 @@ export function generateHtml(
         currentStep: currentStep ?? null,
         filePath: currentFilePath ?? null,
         docTypeLabel: getDocTypeLabel(currentStep ?? currentDocType),
-        activityPanelMode,
+        activityPanelEnabled,
         showInstallPrompt,
     };
 
