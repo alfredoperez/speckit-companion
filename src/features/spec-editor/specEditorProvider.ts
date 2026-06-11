@@ -15,9 +15,10 @@ import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { buildSpecifyCreationPreamble } from '../../ai-providers/promptBuilder';
 import { resolveNewSpecProfileCommandWithFallback } from '../specs/profileDispatch';
 import { isCompanionInstalled } from '../settings/companionPresetReconciler';
-import { shouldShowInstallPrompt, readInstallPromptMode } from '../../speckit/specKitExtensionInstall';
+import { shouldShowInstallPrompt, readInstallPromptEnabled } from '../../speckit/specKitExtensionInstall';
 import { renderInstallBannerHtml } from './installBanner';
 import { AIProviders, WorkflowSteps, ConfigKeys } from '../../core/constants';
+import { coerceLegacyBoolean } from '../../core/settingsMigration';
 
 /** The turbo specify twin the picker routes to when turbo is chosen. */
 const TURBO_SPECIFY_COMMAND = 'speckit.companion.specify';
@@ -133,11 +134,9 @@ export class SpecEditorProvider {
     /**
      * Build the synthetic "SpecKit Companion (Turbo)" picker entry, or undefined
      * when it must not appear. Returns undefined when the `turboWorkflowPicker`
-     * beta toggle resolves to `off`, OR when the Companion spec-kit extension is
-     * not installed in the project (so an `on`/`beta` toggle in a non-Companion
-     * project still hides it). When `beta`, the label carries a "(beta)" suffix;
-     * when `on`, the suffix is dropped (treated as stable) — mirroring the
-     * activity-panel beta-flag precedent.
+     * toggle is off, OR when the Companion spec-kit extension is not installed in
+     * the project (so an enabled toggle in a non-Companion project still hides it).
+     * The toggle is a boolean opt-in; the label carries no badge.
      */
     /**
      * Non-blocking warning shown when a turbo specify dispatch was downgraded to
@@ -161,24 +160,21 @@ export class SpecEditorProvider {
     }
 
     private buildTurboWorkflowEntry(): WorkflowDefinition | undefined {
-        const mode = vscode.workspace
+        const raw = vscode.workspace
             .getConfiguration(ConfigKeys.namespace)
-            .get<'off' | 'beta' | 'on'>('companion.turboWorkflowPicker', 'beta');
-        if (mode === 'off') {
+            .get<unknown>('companion.turboWorkflowPicker', true);
+        if (!coerceLegacyBoolean(raw, true)) {
             return undefined;
         }
         const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         if (!workspaceRoot || !isCompanionInstalled(workspaceRoot)) {
             return undefined;
         }
-        const isBeta = mode === 'beta';
-        const fullLabel = `SpecKit Companion (Turbo)${isBeta ? ' (beta)' : ''}`;
         return {
             name: TURBO_WORKFLOW_NAME,
             displayName: 'Turbo',
-            description: `${fullLabel} — pin turbo on this spec — leaner /speckit.companion.* pipeline, regardless of the project default.`,
+            description: `SpecKit Companion (Turbo) — pin turbo on this spec — leaner /speckit.companion.* pipeline, regardless of the project default.`,
             stepSpecify: `/${formatCommandForProvider(TURBO_SPECIFY_COMMAND)}`,
-            beta: isBeta,
         };
     }
 
@@ -545,14 +541,13 @@ export class SpecEditorProvider {
 
         const nonce = generateNonce();
 
-        // Install banner: shown only when the prompt mode isn't `off` AND the
-        // spec-kit extension is missing — installed projects see nothing (FR-007,
-        // zero-regression). Visibility is the unit-tested gate; the markup is shared
-        // with the Activity panel.
+        // Install banner: shown only when the prompt is enabled AND the spec-kit
+        // extension is missing — installed projects see nothing (zero-regression).
+        // Visibility is the unit-tested gate; the markup is shared with the Activity panel.
         const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         const installBanner = renderInstallBannerHtml(
             shouldShowInstallPrompt(
-                readInstallPromptMode(),
+                readInstallPromptEnabled(),
                 workspaceRoot ? isCompanionInstalled(workspaceRoot) : false
             )
         );

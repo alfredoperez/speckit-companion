@@ -1024,34 +1024,14 @@
         "title": "Beta Features",
         "properties": {
           "speckit.viewer.activityPanel": {
-            "type": "string",
-            "default": "beta",
-            "enum": [
-              "off",
-              "beta",
-              "on"
-            ],
-            "enumDescriptions": [
-              "Hide the toggle.",
-              "Show the toggle with a \"beta\" badge (default).",
-              "Show the toggle with no badge (treat as stable)."
-            ],
+            "type": "boolean",
+            "default": true,
             "scope": "window",
             "description": "Show a per-spec Activity timeline in the viewer — step transitions, decisions, and files touched. Opt-in beta."
           },
           "speckit.companion.turboWorkflowPicker": {
-            "type": "string",
-            "default": "beta",
-            "enum": [
-              "off",
-              "beta",
-              "on"
-            ],
-            "enumDescriptions": [
-              "Hide the turbo choice from the Create New Spec workflow dropdown.",
-              "Offer a \"SpecKit Companion (Turbo)\" choice with a \"beta\" badge when the Companion extension is installed in the project (default).",
-              "Offer the \"SpecKit Companion (Turbo)\" choice with no badge (treat as stable) when the Companion extension is installed."
-            ],
+            "type": "boolean",
+            "default": true,
             "scope": "window",
             "description": "Add a \"SpecKit Companion (Turbo)\" choice to the Create-Spec workflow dropdown, pinning turbo on just that spec. Appears only when the spec-kit extension is installed. Opt-in beta."
           },
@@ -1084,20 +1064,10 @@
             "description": "Show a Resume (▶) button on sidebar specs that dispatches the next pipeline step. Opt-in beta, off by default."
           },
           "speckit.companion.installPrompt": {
-            "type": "string",
-            "default": "on",
-            "enum": [
-              "off",
-              "beta",
-              "on"
-            ],
-            "enumDescriptions": [
-              "Never show the spec-kit extension install banner, even when it's missing.",
-              "Show the install banner when the spec-kit extension is missing (same as 'on'; reserved for parity with other flags).",
-              "Show a one-click install banner in the Create-Spec and Activity panels when the spec-kit extension is missing (default)."
-            ],
+            "type": "boolean",
+            "default": true,
             "scope": "window",
-            "description": "Prompt to install the companion spec-kit extension (Create-Spec + Activity panels) when it's missing. Hidden once installed. Defaults to on."
+            "description": "Prompt to install the companion spec-kit extension (Create-Spec + Activity panels) when it's missing — a one-click install banner in the Create-Spec and Activity panels. Hidden once installed. Opt-in beta; defaults to on."
           }
         }
       }

@@ -28,19 +28,17 @@ describe('specKitExtensionInstall', () => {
     });
 
     describe('shouldShowInstallPrompt', () => {
-        it('shows when missing and mode is on/beta', () => {
-            expect(shouldShowInstallPrompt('on', false)).toBe(true);
-            expect(shouldShowInstallPrompt('beta', false)).toBe(true);
+        it('shows when missing and the prompt is enabled', () => {
+            expect(shouldShowInstallPrompt(true, false)).toBe(true);
         });
 
         it('never shows when installed — zero regression for existing users', () => {
-            expect(shouldShowInstallPrompt('on', true)).toBe(false);
-            expect(shouldShowInstallPrompt('beta', true)).toBe(false);
-            expect(shouldShowInstallPrompt('off', true)).toBe(false);
+            expect(shouldShowInstallPrompt(true, true)).toBe(false);
+            expect(shouldShowInstallPrompt(false, true)).toBe(false);
         });
 
-        it('never shows when mode is off — explicit opt-out', () => {
-            expect(shouldShowInstallPrompt('off', false)).toBe(false);
+        it('never shows when disabled — explicit opt-out', () => {
+            expect(shouldShowInstallPrompt(false, false)).toBe(false);
         });
     });
 

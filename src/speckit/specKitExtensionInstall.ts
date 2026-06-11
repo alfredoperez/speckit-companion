@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { isCompanionInstalled } from '../features/settings/companionPresetReconciler';
+import { coerceLegacyBoolean } from '../core/settingsMigration';
 
 /**
  * One-click install / update of the Companion **spec-kit CLI extension**.
@@ -58,26 +59,29 @@ export function buildInstallCommand(): string {
 
 /**
  * Pure gate for whether an install prompt (banner / affordance) should be shown:
- * the prompt mode is not `off` AND the extension is missing. Installed projects and
- * an explicit `off` always return `false` — no banner, no warning (zero-regression
- * acceptance). Mirrors the `activityPanel` `'off' | 'beta' | 'on'` precedent.
+ * the prompt is enabled AND the extension is missing. Installed projects and an
+ * explicit opt-out (`enabled === false`) always return `false` — no banner, no
+ * warning (zero-regression acceptance).
  */
 export function shouldShowInstallPrompt(
-    mode: 'off' | 'beta' | 'on',
+    enabled: boolean,
     installed: boolean
 ): boolean {
-    return mode !== 'off' && !installed;
+    return enabled && !installed;
 }
 
 /**
- * Resolve the install-prompt mode from VS Code settings. Defaults to `'on'`: this is
- * launch-critical safety guidance shown to everyone who is missing the extension, not
- * an experiment — `'off'` is the explicit opt-out.
+ * Resolve whether the install prompt is enabled from VS Code settings. Defaults to
+ * `true`: this is launch-critical guidance shown to everyone missing the extension,
+ * not an experiment — `false` is the explicit opt-out. Tolerates a legacy tri-state
+ * string (`'beta'`/`'on'` → `true`, `'off'` → `false`) until the settings migration
+ * rewrites it.
  */
-export function readInstallPromptMode(): 'off' | 'beta' | 'on' {
-    return vscode.workspace
+export function readInstallPromptEnabled(): boolean {
+    const raw = vscode.workspace
         .getConfiguration('speckit')
-        .get<'off' | 'beta' | 'on'>('companion.installPrompt', 'on');
+        .get<unknown>('companion.installPrompt', true);
+    return coerceLegacyBoolean(raw, true);
 }
 
 /**

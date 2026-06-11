@@ -13,12 +13,12 @@ describe('renderInstallBannerHtml — gated banner visibility', () => {
         expect(renderInstallBannerHtml(false)).toBe('');
     });
 
-    it('is driven by shouldShowInstallPrompt: installed → empty, missing+on → banner', () => {
-        // Installed project: no banner regardless of mode (zero regression).
-        expect(renderInstallBannerHtml(shouldShowInstallPrompt('on', true))).toBe('');
-        // Missing extension + prompt on: banner shows.
-        expect(renderInstallBannerHtml(shouldShowInstallPrompt('on', false))).toContain('install-banner');
-        // Missing extension but explicitly off: no banner.
-        expect(renderInstallBannerHtml(shouldShowInstallPrompt('off', false))).toBe('');
+    it('is driven by shouldShowInstallPrompt: installed → empty, missing+enabled → banner', () => {
+        // Installed project: no banner whether enabled or not (zero regression).
+        expect(renderInstallBannerHtml(shouldShowInstallPrompt(true, true))).toBe('');
+        // Missing extension + prompt enabled: banner shows.
+        expect(renderInstallBannerHtml(shouldShowInstallPrompt(true, false))).toContain('install-banner');
+        // Missing extension but explicitly disabled: no banner.
+        expect(renderInstallBannerHtml(shouldShowInstallPrompt(false, false))).toBe('');
     });
 });
