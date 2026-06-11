@@ -113,8 +113,10 @@
 }
 
 /* The pill grows wider only when there's a percent string to show
-   (the implement-step inProgress case). */
-.step-tab.in-flight .step-status:not(:empty) {
+   (the implement-step inProgress case). The sync-glyph badge is also
+   non-empty (it wraps a <span>), so explicitly exclude it — it keeps
+   the default 16×16 geometry, not the percentage pill. */
+.step-tab.in-flight .step-status:not(:empty):not(:has(.step-status__sync)) {
     width: auto;
     min-width: 32px;
     padding: 0 6px;
@@ -143,8 +145,9 @@
 
 /* Extra left padding when the pill is widened, so the working-pulse
    glow doesn't crash into the preceding connector line. The default
-   16×16 in-flight badge needs no extra padding. */
-.step-tab.in-flight:has(.step-status:not(:empty)) {
+   16×16 in-flight badge (and the sync-glyph badge) needs no extra
+   padding, so scope this to the percentage pill only. */
+.step-tab.in-flight:has(.step-status:not(:empty):not(:has(.step-status__sync))) {
     padding-left: 20px;
 }
 
