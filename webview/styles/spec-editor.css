@@ -126,8 +126,10 @@
 
 .image-attachment-header {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
     margin-bottom: 12px;
 }
 
@@ -135,6 +137,9 @@
     font-size: 0.9em;
     font-weight: 500;
     margin: 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     color: var(--text-primary);
 }
 
@@ -158,8 +163,7 @@
 }
 
 /* Codicon baseline inside spec-editor chrome */
-.attach-image-btn .codicon,
-.load-template-btn .codicon {
+.attach-image-btn .codicon {
     font-size: 14px;
     line-height: 1;
     display: inline-flex;
@@ -248,50 +252,23 @@
 }
 
 /* ============================================
-   Template Loader
-   ============================================ */
-
-.template-loader {
-    margin-bottom: 12px;
-}
-
-.load-template-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    border: 1px solid var(--vscode-button-secondaryBorder, var(--border));
-    border-radius: var(--radius-sm);
-    background: var(--vscode-button-secondaryBackground, transparent);
-    color: var(--vscode-button-secondaryForeground, var(--text-primary));
-    font-size: 0.85em;
-    cursor: pointer;
-    transition: background-color 0.15s ease;
-}
-
-.load-template-btn:hover {
-    background-color: var(--vscode-button-secondaryHoverBackground, var(--bg-hover));
-}
-
-/* ============================================
    Workflow Row
    ============================================ */
 
 .workflow-row {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
     margin-bottom: 12px;
-}
-
-.workflow-row .template-loader {
-    margin-bottom: 0;
 }
 
 .workflow-selector {
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0;
 }
 
 .workflow-selector label {
@@ -307,6 +284,9 @@
     color: var(--vscode-input-foreground);
     font-size: 0.85em;
     cursor: pointer;
+    min-width: 0;
+    max-width: 100%;
+    text-overflow: ellipsis;
 }
 
 .workflow-selector select:focus {
@@ -509,5 +489,21 @@
 
     .action-spacer {
         display: none;
+    }
+
+    /* Stack the workflow row and image-attachment header so neither overflows
+       horizontally at narrow widths. */
+    .workflow-row,
+    .image-attachment-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .workflow-selector {
+        justify-content: space-between;
+    }
+
+    .workflow-selector select {
+        flex: 1;
     }
 }

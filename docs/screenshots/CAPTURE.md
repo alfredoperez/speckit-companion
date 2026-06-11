@@ -81,7 +81,7 @@ chip, step tabs, children rail, TOC, footer state machine).
 | `viewer.png` | `_01_demo-planned` viewer, Plan tab — **sidebar visible** | Specs sidebar + viewer together; title-leading header + `Planned` badge + `demo/planned` chip + date pill; Spec/Plan/Tasks tabs; children-rail chips (data-model / research / quickstart); the architecture/mermaid diagram; next-step **Tasks** footer |
 | `comments.png` | `_01_demo-planned` viewer, hover a line, click `+` | GitHub-style comment card mid-use: context header, textarea with text, footer (secondary action left / Cancel + Add Comment right) |
 | `activity.png` | `_02_demo-tasked`, toggle **Activity** | Phases timeline + Approach / Tasks / Review-comments cards |
-| `create-spec.png` | `+` New Spec | Title, **Load Template**, **Workflow** picker, description + char counter, **Attach Image**, footer Cancel / **Auto Mode** / Submit |
+| `create-spec.png` | `+` New Spec | Title, **Workflow** picker, description + char counter, **Attach Image**, footer Cancel / **Auto Mode** / Submit |
 
 These four also feed the AI assets: `viewer` + `comments` + `activity` are the
 three hero inputs (`hero/PROMPT.md`), and the resulting `hero.jpg` seeds the demo

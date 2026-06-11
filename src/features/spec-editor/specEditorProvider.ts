@@ -172,10 +172,11 @@ export class SpecEditorProvider {
             return undefined;
         }
         const isBeta = mode === 'beta';
+        const fullLabel = `SpecKit Companion (Turbo)${isBeta ? ' (beta)' : ''}`;
         return {
             name: TURBO_WORKFLOW_NAME,
-            displayName: `SpecKit Companion (Turbo)${isBeta ? ' (beta)' : ''}`,
-            description: 'Pin turbo on this spec — leaner /speckit.companion.* pipeline, regardless of the project default.',
+            displayName: 'Turbo',
+            description: `${fullLabel} — pin turbo on this spec — leaner /speckit.companion.* pipeline, regardless of the project default.`,
             stepSpecify: `/${formatCommandForProvider(TURBO_SPECIFY_COMMAND)}`,
             beta: isBeta,
         };
@@ -259,14 +260,6 @@ export class SpecEditorProvider {
 
             case 'removeImage':
                 await this.handleRemoveImage(message.imageId);
-                break;
-
-            case 'requestTemplateDialog':
-                await this.handleRequestTemplateDialog();
-                break;
-
-            case 'loadTemplate':
-                await this.handleLoadTemplate(message.specPath);
                 break;
 
             case 'cancel':
@@ -521,45 +514,6 @@ export class SpecEditorProvider {
     }
 
     /**
-     * Handle request to show template dialog
-     */
-    private async handleRequestTemplateDialog(): Promise<void> {
-        const result = await vscode.window.showOpenDialog({
-            canSelectFiles: true,
-            canSelectFolders: false,
-            canSelectMany: false,
-            filters: {
-                'Markdown files': ['md'],
-                'All files': ['*']
-            },
-            title: 'Load Template'
-        });
-
-        if (result && result.length > 0) {
-            await this.handleLoadTemplate(result[0].fsPath);
-        }
-    }
-
-    /**
-     * Handle template loading
-     */
-    private async handleLoadTemplate(specPath: string): Promise<void> {
-        try {
-            const content = await vscode.workspace.fs.readFile(vscode.Uri.file(specPath));
-            const text = Buffer.from(content).toString('utf-8');
-
-            this.outputChannel.appendLine(`[SpecEditor] Template loaded: ${specPath}`);
-            this.postMessage({ type: 'templateLoaded', content: text });
-        } catch (error) {
-            this.outputChannel.appendLine(`[SpecEditor] Template load error: ${error}`);
-            this.postMessage({
-                type: 'error',
-                message: `Failed to load template: ${error instanceof Error ? error.message : String(error)}`
-            });
-        }
-    }
-
-    /**
      * Handle cancel/close
      */
     private handleCancel(): void {
@@ -630,12 +584,6 @@ export class SpecEditorProvider {
             <div id="error-container"></div>
 
             <div class="workflow-row">
-                <div class="template-loader">
-                    <button class="load-template-btn" id="loadTemplateBtn">
-                        <span class="codicon codicon-file" aria-hidden="true"></span>
-                        Load Template
-                    </button>
-                </div>
                 <div class="workflow-selector" id="workflowSelector" style="display: none;">
                     <label for="workflowSelect">Workflow</label>
                     <select id="workflowSelect">

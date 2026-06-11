@@ -35,7 +35,6 @@ function getElements() {
         submitBtn: document.getElementById('submitBtn') as HTMLButtonElement,
         cancelBtn: document.getElementById('cancelBtn') as HTMLButtonElement,
         attachImageBtn: document.getElementById('attachImageBtn') as HTMLButtonElement,
-        loadTemplateBtn: document.getElementById('loadTemplateBtn') as HTMLButtonElement,
         workflowSelector: document.getElementById('workflowSelector') as HTMLElement,
         workflowSelect: document.getElementById('workflowSelect') as HTMLSelectElement,
         commandButtonsContainer: document.getElementById('commandButtons') as HTMLElement,
@@ -249,11 +248,6 @@ function setupEventListeners(): void {
         vscode.postMessage({ type: 'cancel' });
     });
 
-    // Load template button
-    elements.loadTemplateBtn.addEventListener('click', () => {
-        vscode.postMessage({ type: 'requestTemplateDialog' });
-    });
-
     // Install banner actions (server-rendered, present only when the spec-kit
     // extension is missing). data-action → the matching webview→extension message.
     const installBanner = document.getElementById('install-banner');
@@ -445,13 +439,6 @@ function handleMessage(event: MessageEvent): void {
         case 'imageRemoved':
             attachedImages = attachedImages.filter(img => img.id !== message.imageId);
             updateThumbnails();
-            saveDraft();
-            break;
-
-        case 'templateLoaded':
-            const { textarea } = getElements();
-            textarea.value = message.content;
-            updateCharCount();
             saveDraft();
             break;
 
