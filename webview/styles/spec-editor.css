@@ -139,6 +139,7 @@
     margin: 0;
     min-width: 0;
     overflow: hidden;
+    white-space: nowrap;
     text-overflow: ellipsis;
     color: var(--text-primary);
 }
@@ -286,6 +287,8 @@
     cursor: pointer;
     min-width: 0;
     max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
     text-overflow: ellipsis;
 }
 
