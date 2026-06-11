@@ -156,6 +156,30 @@
     font-weight: 700;
 }
 
+/* Live implement-percentage label (#256).
+   Right-aligned within the tab (margin-left:auto pushes it to the trailing edge)
+   and color-ramps from the in-progress color toward the success/goal color as the
+   spec nears 100%. `--impl-progress` is a 0→1 ratio set inline per render from the
+   live, file-watched taskCompletionPercent (tasks.md checkboxes) — no capture write
+   is needed for it to advance. The ramp crosses --purple → --warning at the midpoint
+   → --success, so "almost done" reads green at a glance. Tabular numerals keep the
+   width steady as the value ticks up. */
+.step-tab__percent {
+    margin-left: auto;
+    padding-left: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    color: color-mix(
+        in srgb,
+        color-mix(in srgb, var(--purple) calc((1 - min(var(--impl-progress, 0) * 2, 1)) * 100%), var(--warning))
+            calc((1 - max((var(--impl-progress, 0) - 0.5) * 2, 0)) * 100%),
+        var(--success)
+    );
+    transition: color var(--transition-fast);
+}
+
 /* Locked (canonical): non-clickable, dimmed */
 .step-tab.locked,
 .step-tab[aria-disabled="true"] {

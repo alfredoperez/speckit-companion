@@ -272,7 +272,7 @@ describe('StepTab — #229 in-flight sync glyph', () => {
         }
     });
 
-    it('renders the percentage pill (not the sync glyph) for the implement in-progress step', () => {
+    it('renders the live percentage label (not the sync glyph) for the implement in-progress step', () => {
         viewerState.value = { highlights: ['specify', 'plan'], activeSubstep: null } as any;
         const c = renderTab(baseProps({
             doc: doc('tasks', true, 'Tasks'),
@@ -286,7 +286,33 @@ describe('StepTab — #229 in-flight sync glyph', () => {
         try {
             expect(c.querySelector('button')!.className).toContain('in-flight');
             expect(c.querySelector('.step-status__sync')).toBeNull();
-            expect(c.querySelector('.step-status')!.textContent).toContain('60%');
+            // #256: the % is now a dedicated right-aligned label, not the round badge.
+            // The badge is suppressed entirely so it never renders an empty circle.
+            const pct = c.querySelector('.step-tab__percent');
+            expect(pct).not.toBeNull();
+            expect(pct!.textContent).toContain('60%');
+            expect(c.querySelector('.step-status')).toBeNull();
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('ramps the percentage label color via the --impl-progress ratio', () => {
+        viewerState.value = { highlights: ['specify', 'plan'], activeSubstep: null } as any;
+        const c = renderTab(baseProps({
+            doc: doc('tasks', true, 'Tasks'),
+            index: 2,
+            totalSteps: 3,
+            currentStep: 'implement',
+            taskCompletionPercent: 95,
+            currentDoc: 'tasks',
+            stepHistory: {},
+        }));
+        try {
+            const pct = c.querySelector('.step-tab__percent') as HTMLElement;
+            expect(pct).not.toBeNull();
+            // 0→1 ratio drives the CSS color-mix ramp toward the success color.
+            expect(pct.style.getPropertyValue('--impl-progress')).toBe('0.95');
         } finally {
             cleanup(c);
         }
