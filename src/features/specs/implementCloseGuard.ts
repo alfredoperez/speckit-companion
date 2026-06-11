@@ -80,7 +80,7 @@ export function shouldCloseImplement(
     // completion entry, don't append a second one. (Per-task implement finishes
     // are skipped by `lastEntryIsCompletionFor` via `isStepLevelEntry`, so a
     // trailing task finish can't hide a missing real close.)
-    if (lastEntryIsCompletionFor(history as never, 'implement')) {
+    if (lastEntryIsCompletionFor(history as Parameters<typeof lastEntryIsCompletionFor>[0], 'implement')) {
         return false;
     }
 

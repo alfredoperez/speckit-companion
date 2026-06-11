@@ -236,8 +236,13 @@ export function setupTasksWatcher(
                 const specDir = path.dirname(uri.fsPath);
                 const ctx = readSpecContextSync(specDir);
                 if (shouldCloseImplement(ctx, progress)) {
+                    // `completeStep` is best-effort: it logs-and-swallows write
+                    // failures internally and returns void, so we can't confirm the
+                    // terminal close was actually persisted here. Describe the action
+                    // taken (all tasks checked → closing implement) rather than
+                    // claiming a confirmed `implemented` outcome.
+                    outputChannel.appendLine(`[TasksWatcher] All implement tasks checked → closing implement for ${specName}`);
                     await completeStep(specDir, 'implement', 'extension');
-                    outputChannel.appendLine(`[TasksWatcher] Implement complete: ${specName} → implemented (all tasks checked)`);
                 }
             } catch (error) {
                 outputChannel.appendLine(`[TasksWatcher] Error processing ${uri.fsPath}: ${error}`);
