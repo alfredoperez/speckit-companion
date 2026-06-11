@@ -9,6 +9,17 @@ The spec workspace for developers running AI agents through Spec-Driven Developm
 
 ![SpecKit Companion: Spec-driven development, visualized. Specify, Plan, Tasks, Done.](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/hero.jpg)
 
+## What you get
+
+A spec workspace that turns AI-assisted, spec-driven development into something you can actually see and steer — without leaving VS Code:
+
+- **Catch bad specs before they become bad code.** Review AI-generated specs the way you review pull requests: inline comments on specific lines, refine in place, and kill a vague requirement before it turns into 200 lines of wrong implementation.
+- **Watch every feature flow through its phases.** Specify → Plan → Tasks → Done, each a one-click action, with live progress, a phase timeline, and an Activity overview of everything the spec tracks.
+- **Run leaner with Turbo.** Opt into the companion spec-kit extension's trimmed `/speckit.companion.*` pipeline — smaller specs, files-and-dependencies tasks, an optional fast-path for small changes — without giving up the stock flow.
+- **Bring your own AI and your own workflow.** Eight providers, custom phases, custom commands. Drop in your own SDD process; the sidebar and viewer adapt.
+
+![What you get: review specs like code, see every phase, turbo mode, any AI and any workflow](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/benefits-strip.jpg)
+
 ## Recently Shipped
 
 - **On `main` (next release)** Per-spec **Turbo** picker in *Create New Spec* (beta, install-gated) · complexity fast-path now writes lean `plan.md` + `tasks.md` so the stepper/sidebar stop showing "not created" · **OpenCode** now reads attached spec-editor images (workspace-staged for its sandbox) · cleaner sidebar spec-row text (drops step-state the icons already show)
@@ -131,6 +142,31 @@ Actions that change the spec's lifecycle are protected so a misfired click is ea
 2. **Open the sidebar**: the SpecKit icon is always visible in the activity bar; with no folder open, clicking it shows an empty-state panel with an **Open Folder** action
 3. **Create a spec**: once a folder is open, click the `+` button in the Specs view to start your first feature
 
+## Install the spec-kit Extension
+
+There are **two** installs, and they're independent:
+
+1. **The VS Code extension** (this product) — the Visual Spec Viewer, inline review comments, the sidebar, and command dispatch. Install it from the VS Code Marketplace (or a `.vsix`). This works on its own.
+2. **The companion spec-kit *CLI* extension** — adds the leaner `/speckit.companion.*` pipeline (**Turbo** mode) and the lifecycle **capture** hooks that drive the Activity timeline. This is a [spec-kit](https://github.com/github/spec-kit) *CLI* extension, **not** a VS Code Marketplace extension, so it installs through the `specify` CLI.
+
+**One-click from inside the editor.** When the spec-kit extension is missing, an **Install spec-kit extension** banner appears in the Create-Spec and Activity panels, and an install icon appears in the Specs sidebar. Click it and the extension runs the install in an integrated terminal — no copy-paste. (Already have it installed? You'll never see the banner.)
+
+**Manual install.** You need a **github-source** spec-kit CLI first — the stock PyPI `specify-cli` does **not** ship the `extension` subcommand:
+
+```bash
+# 1. github-source spec-kit CLI (required: stock PyPI specify-cli lacks `extension`)
+uv tool install specify-cli --from git+https://github.com/github/spec-kit.git --force
+
+# 2. the companion spec-kit extension (installs/updates; --force is idempotent)
+specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/speckit-ext-v0.3.0/companion-0.3.0.zip --force
+```
+
+> Once the extension is listed in the spec-kit catalog, the second command shortens to `specify extension add companion --force`. Until then, install from the release URL above.
+
+**Update it later** from the Specs view **Upgrade…** menu → *Update spec-kit Extension* (runs the same install with `--force`).
+
+![What installing the spec-kit extension unlocks: live progress capture, status, resume, the turbo pipeline, the complexity fast-path, and honest state recovery](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/install-banner.jpg)
+
 ## Setup & Components
 
 SpecKit Companion is one extension that sits *on top of* a spec-driven workflow — it does not replace the command-line [spec-kit](https://github.com/github/spec-kit) process, and most of its pieces are optional. Here's what's actually required:
@@ -240,6 +276,34 @@ Selects the spec-kit pipeline shape for the project. This is an **opt-in beta** 
 Switching is **non-destructive**: neither command set is ever removed or overwritten — only the dispatched shape changes, so you never hit "Unknown command" after a switch (the standard family is re-added automatically if a project is ever missing it). The value persists to `.specify/companion.yml` — a machine-local, gitignored mirror the extension writes and regenerates on activation, so your choice never leaks into another checkout — and each spec **pins** the project default the moment it's created, so changing the default never reshapes a spec already in flight. The turbo `/speckit.companion.*` commands ship with the [spec-kit extension](./speckit-extension/README.md), and the stock `/speckit.*` family stays present automatically; full reference in [`docs/template-profiles.md`](./docs/template-profiles.md).
 
 **Per-spec turbo, at creation (beta).** Beyond the project default, you can pick **turbo for a single spec** from the **Workflow** dropdown in *Create New Spec* — a "SpecKit Companion (Turbo)" choice that pins turbo on just that spec, regardless of the default. It's an **opt-in beta** gated by `speckit.companion.turboWorkflowPicker` (`off | beta | on`, defaults to `beta`) and only appears when the Companion spec-kit extension is installed in the project; otherwise the dropdown is unchanged. Creating a spec without picking it keeps today's behavior (the project default). See [`docs/template-profiles.md`](./docs/template-profiles.md#selecting-a-profile--one-setting-routed-per-spec).
+
+#### Mode comparison: off vs standard vs turbo
+
+Which mode should you pick? The short version:
+
+- **`off`** — plain upstream spec-kit. Stock `/speckit.*` commands, no Companion install, no timing capture. Pick this if you want zero changes to the spec-kit you already run.
+- **`standard`** — the stock `/speckit.*` shape (same sections, same files) **plus** lifecycle timing capture that powers the Activity timeline. Pick this for the full spec-kit ceremony with the Companion overview on top.
+- **`turbo`** — the trimmed `/speckit.companion.*` pipeline: no user-story section, files-and-dependencies tasks, a smaller spec folder, and the optional complexity fast-path for small changes. Pick this to move fast on focused work. Requires the spec-kit extension.
+
+| | `off` | `standard` | `turbo` |
+|---|---|---|---|
+| Commands dispatched | stock `/speckit.*` | stock `/speckit.*` | trimmed `/speckit.companion.*` |
+| User-story / scenario section | yes | yes | no |
+| Tasks shape | per stock template | per stock template | files & dependencies |
+| Activity timeline (capture) | no | yes | yes |
+| Complexity fast-path available | no | no | yes (opt-in) |
+| Needs the spec-kit extension | no | no | **yes** |
+
+**Measured impact (across the same set of features run in each mode):**
+
+<!-- TODO(eval): standard vs turbo vs off numbers from /eval-speckit-extension — wall-clock time per spec -->
+<!-- TODO(eval): standard vs turbo vs off numbers from /eval-speckit-extension — spec/plan/tasks token or word count -->
+<!-- TODO(eval): standard vs turbo vs off numbers from /eval-speckit-extension — files generated per spec folder -->
+<!-- TODO(eval): standard vs turbo vs off numbers from /eval-speckit-extension — rework rate / clarify passes needed -->
+
+*(Numbers above are produced by running `/eval-speckit-extension` across `standard` / `turbo` / `off` and recording the deltas; this section is left as placeholders until that eval runs so no figures are fabricated.)*
+
+![Mode comparison chart: off vs standard vs turbo, with turbo the fastest to results](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/mode-comparison.jpg)
 
 ### Complexity Fast-Path
 

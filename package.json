@@ -372,6 +372,18 @@
         "icon": "$(cloud-download)"
       },
       {
+        "command": "speckit.companion.installSpecKitExtension",
+        "title": "Install spec-kit Extension",
+        "category": "SpecKit",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "speckit.companion.openReadme",
+        "title": "About the spec-kit Extension",
+        "category": "SpecKit",
+        "icon": "$(book)"
+      },
+      {
         "command": "speckit.workflowEditor.editSource",
         "title": "Edit Source",
         "category": "SpecKit",
@@ -497,6 +509,11 @@
         {
           "command": "speckit.upgrade",
           "when": "view == speckit.views.explorer && (speckit.detected || speckit.cliInstalled)",
+          "group": "navigation@2"
+        },
+        {
+          "command": "speckit.companion.installSpecKitExtension",
+          "when": "view == speckit.views.explorer && (speckit.detected || speckit.cliInstalled) && !speckit.companion.installed",
           "group": "navigation@2"
         }
       ],
@@ -1020,7 +1037,7 @@
               "Show the toggle with no badge (treat as stable)."
             ],
             "scope": "window",
-            "description": "Show a per-spec Activity timeline in the spec viewer — transitions, decisions, and files modified over time. (opt-in beta, defaults to showing the toggle with a badge)"
+            "description": "Show a per-spec Activity timeline in the viewer — step transitions, decisions, and files touched. Opt-in beta."
           },
           "speckit.companion.turboWorkflowPicker": {
             "type": "string",
@@ -1036,7 +1053,7 @@
               "Offer the \"SpecKit Companion (Turbo)\" choice with no badge (treat as stable) when the Companion extension is installed."
             ],
             "scope": "window",
-            "description": "Offer a per-spec \"SpecKit Companion (Turbo)\" option in the Create New Spec workflow dropdown — picking it pins turbo on that one spec, regardless of the project default. Only appears when the Companion spec-kit extension is installed in the project. (opt-in beta, defaults to showing the choice with a badge)"
+            "description": "Add a \"SpecKit Companion (Turbo)\" choice to the Create-Spec workflow dropdown, pinning turbo on just that spec. Appears only when the spec-kit extension is installed. Opt-in beta."
           },
           "speckit.companion.templateProfile": {
             "type": "string",
@@ -1052,19 +1069,35 @@
             ],
             "default": "off",
             "scope": "window",
-            "description": "Pick which command family new specs dispatch — stock /speckit.* or trimmed /speckit.companion.*. (opt-in beta, defaults to 'off'; both families stay installed, and each spec keeps the family it started with)"
+            "description": "Default pipeline shape for new specs: stock /speckit.* (standard) or trimmed /speckit.companion.* (turbo). Both stay installed; each spec keeps the shape it started with. Opt-in beta, off by default."
           },
           "speckit.companion.complexityFastPath": {
             "type": "boolean",
             "default": false,
             "scope": "window",
-            "description": "Fast-track small changes (≤5 files / ≤10 tasks) straight from specify to implement, skipping plan and tasks. (opt-in beta, off by default; turbo specs only)"
+            "description": "In turbo mode, fast-track small changes (≤5 files / ≤10 tasks): fold plan and tasks into the specify pass so the spec lands ready-to-implement in one run. Opt-in beta, off by default."
           },
           "speckit.companion.resumeBeta": {
             "type": "boolean",
             "default": false,
             "scope": "window",
-            "description": "Show the resume (▶) button on specs in the sidebar to dispatch the next pipeline step. (opt-in beta, off by default)"
+            "description": "Show a Resume (▶) button on sidebar specs that dispatches the next pipeline step. Opt-in beta, off by default."
+          },
+          "speckit.companion.installPrompt": {
+            "type": "string",
+            "default": "on",
+            "enum": [
+              "off",
+              "beta",
+              "on"
+            ],
+            "enumDescriptions": [
+              "Never show the spec-kit extension install banner, even when it's missing.",
+              "Show the install banner when the spec-kit extension is missing (same as 'on'; reserved for parity with other flags).",
+              "Show a one-click install banner in the Create-Spec and Activity panels when the spec-kit extension is missing (default)."
+            ],
+            "scope": "window",
+            "description": "Prompt to install the companion spec-kit extension (Create-Spec + Activity panels) when it's missing. Hidden once installed. Defaults to on."
           }
         }
       }

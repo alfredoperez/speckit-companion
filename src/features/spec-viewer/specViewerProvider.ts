@@ -54,6 +54,8 @@ import { deriveStepHistory } from "../specs/stepHistoryDerivation";
 import { backfillMinimalContext } from "../specs/specContextBackfill";
 import { resetMalformedContext } from "../specs/specContextReset";
 import { reconcileAndPersist } from "../specs/specContextReconciler";
+import { isCompanionInstalled } from "../settings/companionPresetReconciler";
+import { shouldShowInstallPrompt, readInstallPromptMode } from "../../speckit/specKitExtensionInstall";
 import { deriveViewerState, isStepCompleted, findRunningStep } from "./stateDerivation";
 import { hasNonTrivialArtifact } from "./stepArtifact";
 import { StepCompletionNotifier, NotifierContext } from "./stepCompletionNotifier";
@@ -163,6 +165,19 @@ export class SpecViewerProvider {
       .getConfiguration('speckit.viewer')
       .get<string>('activityPanel', 'beta');
     return v === 'off' || v === 'on' ? v : 'beta';
+  }
+
+  /**
+   * Whether to show the install banner in the Activity panel: the install-prompt
+   * mode isn't `off` AND the companion spec-kit extension is missing. Installed
+   * projects return `false` — no banner, no regression.
+   */
+  private computeShowInstallPrompt(): boolean {
+    const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    return shouldShowInstallPrompt(
+      readInstallPromptMode(),
+      root ? isCompanionInstalled(root) : false
+    );
   }
 
   /**
@@ -600,6 +615,7 @@ export class SpecViewerProvider {
         featureCtx?.currentStep ?? doc?.type ?? null,
         derived.stepHistoryByTab,
         this.readActivityPanelMode(),
+        this.computeShowInstallPrompt(),
       );
 
       this.outputChannel.appendLine(

@@ -4,6 +4,14 @@
  */
 
 @import './tokens.css';
+/* Install banner — single shared source. The styles live in
+   spec-viewer/_install-banner.css; both the spec-editor and spec-viewer bundles
+   import that one file so the banner (rendered by installBanner.ts) stays
+   pixel-identical in every panel. Do NOT inline a copy here — edit the partial.
+   Webpack copies the spec-viewer/ partials dir to dist, so this relative @import
+   resolves at runtime exactly like './tokens.css'. Must stay grouped with the
+   other @import at the top: CSS ignores @import rules that follow any style rule. */
+@import 'spec-viewer/_install-banner.css';
 
 /* ============================================
    Base Layout

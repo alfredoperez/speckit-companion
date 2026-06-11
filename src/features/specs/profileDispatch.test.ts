@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { resolveProfileCommand, resolveNewSpecProfileCommand, seedProfileForNewSpec } from './profileDispatch';
+import { resolveProfileCommand, resolveNewSpecProfileCommand, seedProfileForNewSpec, resolveProfileCommandWithFallback, resolveNewSpecProfileCommandWithFallback } from './profileDispatch';
 import { writeTemplateProfile } from '../settings/companionPresetReconciler';
 
 const ctx = (extra: Record<string, unknown>): string =>
@@ -192,5 +192,89 @@ describe('seedProfileForNewSpec', () => {
         expect(resolveProfileCommand('speckit.plan', specDir)).toBe('speckit.companion.plan');
         // A brand-new spec seeded now would be standard.
         expect(seedProfileForNewSpec(specDir)).toBe('standard');
+    });
+});
+
+describe('resolveProfileCommandWithFallback — missing-extension safety (FR-003)', () => {
+    let wsRoot: string;
+    let specDir: string;
+    const writeTurboCtx = (): void =>
+        fs.writeFileSync(
+            path.join(specDir, '.spec-context.json'),
+            JSON.stringify({ workflow: 'speckit', specName: 'demo', branch: 'main', currentStep: 'plan', status: 'planned', history: [], profile: 'turbo' }),
+            'utf8',
+        );
+    const installExtension = (): void => {
+        fs.mkdirSync(path.join(wsRoot, '.specify', 'extensions', 'companion'), { recursive: true });
+    };
+
+    beforeEach(() => {
+        wsRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fallback-'));
+        fs.mkdirSync(path.join(wsRoot, '.specify'), { recursive: true });
+        specDir = path.join(wsRoot, 'specs', 'demo');
+        fs.mkdirSync(specDir, { recursive: true });
+    });
+    afterEach(() => {
+        fs.rmSync(wsRoot, { recursive: true, force: true });
+    });
+
+    it('downgrades a turbo twin to stock and flags fellBack when the extension is missing', () => {
+        writeTurboCtx(); // turbo pin, but no .specify/extensions/companion/
+        const r = resolveProfileCommandWithFallback('speckit.plan', specDir);
+        expect(r.command).toBe('speckit.plan');
+        expect(r.fellBack).toBe(true);
+    });
+
+    it('keeps the turbo twin (no fallback) when the extension IS installed', () => {
+        writeTurboCtx();
+        installExtension();
+        const r = resolveProfileCommandWithFallback('speckit.plan', specDir);
+        expect(r.command).toBe('speckit.companion.plan');
+        expect(r.fellBack).toBe(false);
+    });
+
+    it('never flags fellBack for a stock spec (no twin involved), installed or not', () => {
+        fs.writeFileSync(
+            path.join(specDir, '.spec-context.json'),
+            JSON.stringify({ workflow: 'speckit', specName: 'demo', branch: 'main', currentStep: 'plan', status: 'planned', history: [], profile: 'standard' }),
+            'utf8',
+        );
+        const r = resolveProfileCommandWithFallback('speckit.plan', specDir);
+        expect(r.command).toBe('speckit.plan');
+        expect(r.fellBack).toBe(false);
+    });
+});
+
+describe('resolveNewSpecProfileCommandWithFallback — missing-extension safety (FR-003)', () => {
+    let wsRoot: string;
+
+    beforeEach(() => {
+        wsRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'new-fallback-'));
+        fs.mkdirSync(path.join(wsRoot, '.specify'), { recursive: true });
+    });
+    afterEach(() => {
+        fs.rmSync(wsRoot, { recursive: true, force: true });
+    });
+
+    it('downgrades a turbo-default new spec to stock + fellBack when the extension is missing', () => {
+        writeTemplateProfile(wsRoot, 'turbo');
+        const r = resolveNewSpecProfileCommandWithFallback('speckit.specify', wsRoot);
+        expect(r.command).toBe('speckit.specify');
+        expect(r.fellBack).toBe(true);
+    });
+
+    it('keeps the turbo twin when the extension is installed', () => {
+        writeTemplateProfile(wsRoot, 'turbo');
+        fs.mkdirSync(path.join(wsRoot, '.specify', 'extensions', 'companion'), { recursive: true });
+        const r = resolveNewSpecProfileCommandWithFallback('speckit.specify', wsRoot);
+        expect(r.command).toBe('speckit.companion.specify');
+        expect(r.fellBack).toBe(false);
+    });
+
+    it('no fallback for a standard/off default (no twin in play)', () => {
+        writeTemplateProfile(wsRoot, 'off');
+        const r = resolveNewSpecProfileCommandWithFallback('speckit.specify', wsRoot);
+        expect(r.command).toBe('speckit.specify');
+        expect(r.fellBack).toBe(false);
     });
 });

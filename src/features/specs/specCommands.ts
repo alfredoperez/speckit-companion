@@ -17,7 +17,7 @@ import {
     WorkflowConfig,
 } from '../workflows';
 import { updateStepProgress, readSpecContextSync } from './specContextManager';
-import { resolveProfileCommand } from './profileDispatch';
+import { resolveProfileCommandWithFallback } from './profileDispatch';
 import { startStep, completeStep, setStatus, reactivate } from './stepLifecycle';
 import { lastEntryIsCompletionFor } from './historyHelpers';
 import { updateSelectionContextKeys } from './selectionContextKeys';
@@ -581,7 +581,25 @@ async function executeWorkflowStep(
     // Resolve the command for this step, then apply the spec's per-spec profile
     // (a `turbo` spec dispatches the /speckit.companion.* twin).
     const baseCommand = resolveStepCommand(workflow, step);
-    const command = resolveProfileCommand(baseCommand, targetDir);
+    // Guard the missing-extension case: if this resolves to a /speckit.companion.*
+    // twin but the spec-kit extension isn't installed, fall back to the stock
+    // command + a non-blocking warning rather than dispatch something the AI CLI
+    // can't resolve (FR-003).
+    const resolution = resolveProfileCommandWithFallback(baseCommand, targetDir);
+    const command = resolution.command;
+    if (resolution.fellBack) {
+        outputChannel.appendLine(
+            `[SpecKit] Turbo command unavailable — spec-kit extension not installed; running stock ${command}.`
+        );
+        void vscode.window.showWarningMessage(
+            'Turbo mode needs the companion spec-kit extension, which is not installed — running the standard SpecKit flow instead.',
+            'Install spec-kit Extension'
+        ).then(choice => {
+            if (choice === 'Install spec-kit Extension') {
+                void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
+            }
+        });
+    }
     outputChannel.appendLine(`[SpecKit] Resolved command: ${command}`);
 
     // Check if command exists (warn if custom command may not exist)

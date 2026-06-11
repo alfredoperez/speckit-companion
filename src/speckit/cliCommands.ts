@@ -47,6 +47,11 @@ export function registerCliCommands(
                         description: 'Install the latest spec-kit CLI globally',
                         commandId: 'speckit.upgradeCli',
                     },
+                    {
+                        label: '$(cloud-download) Update spec-kit Extension',
+                        description: 'Install or force-update the companion spec-kit extension (Turbo + Capture)',
+                        commandId: 'speckit.companion.installSpecKitExtension',
+                    },
                 ],
                 { title: 'SpecKit: Upgrade', placeHolder: 'Choose what to upgrade' }
             );
