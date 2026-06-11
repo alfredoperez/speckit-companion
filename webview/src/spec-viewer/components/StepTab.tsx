@@ -79,8 +79,14 @@ export function StepTab(props: StepTabProps) {
     // A settled status means NO step spins — even this one, even if its
     // self-close `complete` history entry (a `completedAt`) never landed (#255).
     const statusSettled = vs?.status ? SETTLED_STATUSES.has(vs.status) : false;
+    // When the status is itself in-flight (`statusStep` defined), it is
+    // authoritative: ONLY the step it points at spins. The history fallback is
+    // for statuses that give no in-flight guidance (e.g. `draft`/unknown) — using
+    // it while status is in-flight could spin a second tab if `activeStep` and
+    // `status` momentarily disagree (#255 review).
+    const statusGivesGuidance = statusStep !== undefined || statusSettled;
     const isWorking = statusInFlight
-        || (!statusSettled
+        || (!statusGivesGuidance
             && activeStep === stepName
             && !stepHistory?.[stepName]?.completedAt);
     const isLocked = runningStepIndex != null

@@ -250,6 +250,28 @@ describe('StepTab — #229 in-flight sync glyph', () => {
         }
     });
 
+    it('does not spin a history-active step while a DIFFERENT step is the in-flight status (#255 review)', () => {
+        // The in-flight status (`planning` → plan) is authoritative. The specify
+        // tab has activeStep === its own step + no completedAt (stale history),
+        // but must NOT spin: only one step spins, the one the status points at.
+        viewerState.value = {
+            status: 'planning', highlights: [], activeSubstep: null,
+        } as any;
+        const c = renderTab(baseProps({
+            doc: doc('spec', false, 'Specify'),
+            index: 0,
+            activeStep: 'specify',
+            currentStep: 'specify',
+            stepHistory: {},
+        }));
+        try {
+            expect(c.querySelector('.step-status__sync')).toBeNull();
+            expect(c.querySelector('button')!.className).not.toContain('in-flight');
+        } finally {
+            cleanup(c);
+        }
+    });
+
     it('renders the percentage pill (not the sync glyph) for the implement in-progress step', () => {
         viewerState.value = { highlights: ['specify', 'plan'], activeSubstep: null } as any;
         const c = renderTab(baseProps({
