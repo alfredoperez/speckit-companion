@@ -25,6 +25,7 @@ Rules for what goes here:
 - **Guard `e.target` with `instanceof Element` before `.closest()`.** In click-delegation handlers (including injected webview scripts), `e.target` can be a non-Element `EventTarget` or null and throw. (#234)
 - **Gate availability on the direct install check at every call-site.** A turbo fallback inferred from the *project-default* resolver missed the explicit-turbo-pick path (it still dispatched an unresolvable command). Check `isCompanionInstalled()` directly wherever the namespaced command could be dispatched. (#234)
 - **Marketing/README images must not invent fake UI that misrepresents a concept.** A generated "install" image showed Turbo as an AI-model dropdown choice — but Turbo is a *template profile*, not a model. Prefer an honest feature list over fabricated UI. (#234)
+- **Close the implement step from the always-on `tasks.md` watcher, not terminal/hook paths.** Implement has no "next step" to trigger its close; IDE-chat dispatch returns no terminal handle; stock mode has no hook — so terminal/hook close paths no-op for it. The `tasks.md` file watcher is the one mode-agnostic surface; write the terminal `implemented` close there (guarded by all-tasks-checked + underway + not-already-terminal). (#244)
 
 ## Loop operations (guide `/fix-tickets` itself)
 
