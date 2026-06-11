@@ -18,8 +18,6 @@ A spec workspace that turns AI-assisted, spec-driven development into something 
 - **Run leaner with Turbo.** Opt into the companion spec-kit extension's trimmed `/speckit.companion.*` pipeline — smaller specs, files-and-dependencies tasks, an optional fast-path for small changes — without giving up the stock flow.
 - **Bring your own AI and your own workflow.** Eight providers, custom phases, custom commands. Drop in your own SDD process; the sidebar and viewer adapt.
 
-![What you get: review specs like code, see every phase, turbo mode, any AI and any workflow](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/benefits-strip.jpg)
-
 ## Recently Shipped
 
 - **On `main` (next release)** Per-spec **Turbo** picker in *Create New Spec* (beta, install-gated) · complexity fast-path now writes lean `plan.md` + `tasks.md` so the stepper/sidebar stop showing "not created" · **OpenCode** now reads attached spec-editor images (workspace-staged for its sandbox) · cleaner sidebar spec-row text (drops step-state the icons already show)
