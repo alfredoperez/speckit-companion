@@ -1,4 +1,5 @@
 import { deriveStepHistory } from '../stepHistoryDerivation';
+import { findRunningStep } from '../../spec-viewer/stateDerivation';
 import type { Transition } from '../../../core/types/specContext';
 
 const tx = (overrides: Partial<Transition>): Transition => ({
@@ -347,6 +348,39 @@ describe('deriveStepHistory', () => {
             expect(out.specify.substeps![0].name).toBe('outline');
             expect(out.specify.substeps![0].startedAt).toBe('2026-04-29T00:01:00Z');
             expect(out.specify.substeps![0].completedAt).toBe('2026-04-29T00:02:00Z');
+        });
+    });
+
+    // Regression for #229: an AI-authored step-level completion must clear
+    // in-flight exactly like an extension-authored one. The viewer's tab
+    // in-flight visual is gated on `completedAt` + `findRunningStep`; if a
+    // `by: "ai"` complete didn't register, the tab would spin forever after
+    // the AI finished the step (the original #229 symptom).
+    describe('regression #229: ai-authored completion clears in-flight', () => {
+        it('records completedAt and stops the running step for a by:"ai" step-level complete', () => {
+            // currentStep still 'plan' (the AI self-closed before the user
+            // advanced), status flipped to 'planned'. Mirrors the
+            // specs/_01_demo-planned fixture inline (no .specify dependency).
+            const history: Transition[] = [
+                tx({ step: 'specify', kind: 'complete', by: 'ai', at: '2026-05-20T20:05:00Z' }),
+                tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-05-20T20:05:00Z' }),
+                tx({ step: 'plan', kind: 'complete', by: 'ai', at: '2026-05-20T20:10:00Z' }),
+            ];
+            const sh = deriveStepHistory(history, 'plan', 'planned');
+            expect(sh.plan.completedAt).toBe('2026-05-20T20:10:00Z');
+            expect(findRunningStep(sh)).toBeNull();
+        });
+
+        it('keeps a genuinely-running step in flight (started, no completion)', () => {
+            const history: Transition[] = [
+                tx({ step: 'specify', kind: 'complete', by: 'ai', at: '2026-05-20T20:05:00Z' }),
+                tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-05-20T20:05:00Z' }),
+                // Substep finishes recorded, but no step-level complete yet.
+                tx({ step: 'plan', substep: 'research', kind: 'complete', by: 'ai', at: '2026-05-20T20:07:00Z' }),
+            ];
+            const sh = deriveStepHistory(history, 'plan', 'planning');
+            expect(sh.plan.completedAt).toBeNull();
+            expect(findRunningStep(sh)).toEqual({ step: 'plan', startedAt: '2026-05-20T20:05:00Z' });
         });
     });
 });

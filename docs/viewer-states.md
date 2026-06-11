@@ -144,12 +144,20 @@
 > pulse remain the ambient "AI is working" cues; the sidebar's
 > per-row Archive remains as an escape hatch.
 >
-> **Step-tab in-flight pill size**: The active step's
-> `.step-status` badge stays at the same 16×16 size as the
-> completed checkmark while empty, only widening to a pill when
-> there's a `taskCompletionPercent` to show on the implement step.
-> Implemented via `:not(:empty)` in
-> `webview/styles/spec-viewer/_navigation.css`.
+> **Step-tab in-flight indicator (spec 147, #229)**: While a
+> specify / plan / tasks step is running, its `.step-status`
+> renders a spinning `sync` codicon (looping arrows) — a
+> `<span class="codicon codicon-sync step-status__sync">` colored
+> with the `--purple` theme var and spun via the shared `spin`
+> keyframe. This replaced the earlier filled-circle dot: looping
+> arrows read as "actively working" at a glance. The glyph is
+> rendered only when `canonicalState === 'in-flight'` and there is
+> no percentage to show, so it **disappears the instant the step
+> completes** (a `completedAt` is recorded or `activeStep` moves
+> off the step — no manual refresh). The implement step keeps its
+> `taskCompletionPercent` pill (the `:not(:empty)` widening path) —
+> the glyph applies only to the empty in-flight case. Implemented
+> in `StepTab.tsx` + `webview/styles/spec-viewer/_navigation.css`.
 >
 > **Footer overflow note (future-proofing)**: After this redesign
 > the right-side bar typically holds 1–3 buttons. If more lifecycle
@@ -415,7 +423,7 @@ stateDiagram-v2
 |-------|---------|--------|
 | `exists` | File exists on disk | Green checkmark dot + bright label (normal weight) |
 | `viewing` | Currently displayed in viewer | Accent-tinted fill + inset accent ring wrapping the whole tab + bold bright label |
-| `working` | Step being worked on (from `spec-context.step`, only if not completed) | Pulsing green glow on dot + live elapsed timer (e.g. `3m 22s`) rendered via `.step-tab__elapsed` |
+| `working` | Step being worked on (from `spec-context.step`, only if not completed) | Spinning `sync` codicon (looping arrows, `.step-status__sync`) + live elapsed timer (e.g. `3m 22s`) via `.step-tab__elapsed`; both clear the moment the step completes |
 | `tasks-active` | Viewing tasks with 0-100% progress | Percentage badge in dot |
 | `in-progress` | Tasks have progress but not viewing | Percentage in dot (subtle) |
 | `workflow` | Current workflow phase (not viewing) | Bright label |
