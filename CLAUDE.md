@@ -213,6 +213,8 @@ Default to writing **no comment**. Only add one when removing it would surprise 
 3. **Webview Communication**: Use `postMessage()` for extension ↔ webview messaging
 4. **CSS Variables**: Webviews use VS Code theme variables (e.g., `--vscode-editor-background`)
 5. **Context Menus**: Defined in `package.json` under `contributes.menus`
+6. **Verify before fixing a backlog issue**: queued issues go stale — confirm the bug still reproduces on current `main` before building. Backlog tickets are frequently already-fixed by a later PR, a dup, or an already-correct path; close the dup or deliver only the genuinely-missing part rather than rebuilding what's there.
+7. **Design tokens (`webview/styles/tokens.css`)**: readable content must use `--text-body` / `--text-primary`. `--text-secondary` / `--text-muted` map to VS Code's intentionally low-contrast `descriptionForeground` / `disabledForeground` (below WCAG AA on dark — they blend), so reserve them for true metadata. The secondary/muted tokens should derive from the theme foreground via `color-mix` rather than the raw VS Code description color (tracked in #254).
 
 ## Testing
 
@@ -224,6 +226,7 @@ npm run test:watch    # Watch mode
 - **BDD style**: Use `describe`/`it` blocks that describe behavior, not implementation
 - **VS Code mock**: Extension-side tests use `tests/__mocks__/vscode.ts` (mapped via `jest.config.js` `moduleNameMapper`). Add mock APIs there as needed.
 - **Config**: Jest uses `ts-jest` with `tsconfig.test.json`
+- **Known gap — config-dependent webview paths lack coverage**: components/providers that read live `vscode.workspace` config (e.g. `getWorkflows()`, the spec-editor turbo-pick dispatch) have no config-mock harness, so their gating/branch logic is review-only. This has recurred as a residual across #218/#234/#229 — adding a config-mock harness would let those branches get regression tests.
 
 ### Demo testing specs (fixed baseline — don't commit *test-time* edits)
 

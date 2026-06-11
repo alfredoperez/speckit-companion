@@ -82,6 +82,7 @@ Dispatch a `general-purpose` subagent. Its job: fix issue `N` end-to-end using t
 Subagent prompt must include:
 - The issue number, title, and body.
 - **Read `.claude/lessons-learned.md` first** (the "Code conventions" section) and honor it — those are bug classes prior tickets' reviews already caught.
+- **VERIFY THE BUG REPRODUCES on current `main` before building.** Backlog tickets go stale — they're frequently already fixed by a later PR, a duplicate, or an already-correct path (this happened to ~3 of 8 tickets in one batch). Have the subagent confirm the defect exists in the current code first; if it's already fixed, STOP and report that with evidence (so the orchestrator closes it as resolved/dup) instead of inventing a change. Deliver only the genuinely-missing part.
 - Instruction to ensure turbo profile is active for this run: `.specify/companion.yml` `templateProfile: turbo` (the companion skills are the `/speckit-companion-*` turbo family).
 - The ordered chain (there is **no** one-shot): run, in order, the skills
   `/speckit-companion-specify` → `/speckit-companion-plan` → `/speckit-companion-tasks` → `/speckit-companion-implement`,
