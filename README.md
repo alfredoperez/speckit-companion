@@ -292,14 +292,15 @@ Which mode should you pick? The short version:
 | Complexity fast-path available | no | no | yes (opt-in) |
 | Needs the spec-kit extension | no | no | **yes** |
 
-**Measured impact (across the same set of features run in each mode):**
+**Measured impact** comes from a 9-cell benchmark (`/bench-run-all`, 2026-06-10): the same feature set built through each mode at three sizes (easy / medium / hard), in isolated sandbox clones with a deterministic harness plus an independent judge. Wall-clock is a single sample per cell, so read timing as directional.
 
-<!-- TODO(eval): standard vs turbo vs off numbers from /eval-speckit-extension — wall-clock time per spec -->
-<!-- TODO(eval): standard vs turbo vs off numbers from /eval-speckit-extension — spec/plan/tasks token or word count -->
-<!-- TODO(eval): standard vs turbo vs off numbers from /eval-speckit-extension — files generated per spec folder -->
-<!-- TODO(eval): standard vs turbo vs off numbers from /eval-speckit-extension — rework rate / clarify passes needed -->
+| Per size (easy / medium / hard) | `off` | `standard` | `turbo` |
+|---|---|---|---|
+| Spec size (`spec.md` lines) | 61 / 91 / 94 | 60 / 87 / 52 | 24 / 29 / 36 |
+| Throwaway side files written | 3 / 4 / 4 | 0 / 3 / 0 | 0 / 0 / 0 |
+| Wall-clock | 2m05s / 4m31s / 7m38s | 3m45s / 7m56s / 6m35s | 3m03s / 5m03s / 5m59s |
 
-*(Numbers above are produced by running `/eval-speckit-extension` across `standard` / `turbo` / `off` and recording the deltas; this section is left as placeholders until that eval runs so no figures are fabricated.)*
+Turbo specs run roughly 60 to 68% leaner than `off`, write zero throwaway side files at any size (`research.md` / `data-model.md` / `quickstart.md` / `contracts/`), and trend fastest as the feature gets harder. Correctness was a tie: every cell in every mode shipped a passing, convention-following build (9/9 builds, all-green regression suite, 5.0/5 independent-judge rubric), so no mode needed rework. The difference is ceremony and progress visibility, not whether the feature works.
 
 ![Mode comparison chart: off vs standard vs turbo, with turbo the fastest to results](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/mode-comparison.jpg)
 
