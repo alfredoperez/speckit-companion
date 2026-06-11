@@ -389,7 +389,43 @@ def update_context(
     return target
 
 
-def journal_task_finish(feature_dir: Path, task_id: str, by: str) -> Path | None:
+def _upsert_task_summary(
+    ctx: dict, task_id: str, did: str | None, files: list[str] | None,
+    status: str = "DONE",
+) -> None:
+    """Upsert `ctx["task_summaries"][task_id]` to the shape the Activity panel reads.
+
+    The Tasks card (`TasksCard.tsx`, fed by `stateDerivation.ts`
+    `pickRecord('task_summaries')`) keys the map by task id and reads
+    `TaskSummary = { status; did?; files?; concerns? }`. We write exactly that shape
+    so a script-journaled task shows up with no hand-authored `.spec-context.json` edit
+    — this is the field that was silently absent on turbo runs (it used to depend on a
+    skippable AI edit). Idempotent and non-destructive: re-journaling updates the single
+    keyed entry, never a duplicate key, and other tasks' summaries are preserved.
+    Empty `did`/`files` are omitted so the entry stays minimal but still renders the row.
+    """
+    summaries = ctx.get("task_summaries")
+    if not isinstance(summaries, dict):
+        summaries = {}
+    existing = summaries.get(task_id)
+    # Merge onto the existing entry rather than replacing it: a re-journal must
+    # preserve previously-recorded fields (incl. hand-authored `concerns`) and
+    # must NOT erase prior `did`/`files` when those flags are omitted this time.
+    # Only overwrite a field when a new non-empty value is supplied (backfill).
+    entry: dict = dict(existing) if isinstance(existing, dict) else {}
+    entry["status"] = status
+    if did:
+        entry["did"] = did
+    if files:
+        entry["files"] = files
+    summaries[task_id] = entry
+    ctx["task_summaries"] = summaries
+
+
+def journal_task_finish(
+    feature_dir: Path, task_id: str, by: str,
+    did: str | None = None, files: list[str] | None = None,
+) -> Path | None:
     """Append a SINGLE finish event for one implement task (finish-only model).
 
     Called live by the assistant after each task (`--task <id> --kind complete`).
@@ -398,6 +434,12 @@ def journal_task_finish(feature_dir: Path, task_id: str, by: str) -> Path | None
     Idempotent (skips a task already closed) and same-step safe: it journals even
     when implement already self-closed to `implemented`; only a genuinely shipped
     spec (completed/archived) is left untouched.
+
+    Also writes `task_summaries.<task_id>` (the field the Activity panel's Tasks card
+    reads) in the SAME atomic write, from `--did`/`--files`, so the panel is populated
+    by the script call rather than a separately-skippable AI edit. The summary is
+    upserted on every call (so a re-run can backfill a `did`/`files` it lacked) while
+    the history finish event stays single (idempotent).
     """
     target = feature_dir / ".spec-context.json"
     ctx = read_ctx(target)
@@ -427,6 +469,7 @@ def journal_task_finish(feature_dir: Path, task_id: str, by: str) -> Path | None
             "by": by,
             "at": _now_iso(),
         })
+    _upsert_task_summary(ctx, task_id, did, files)
     commit_log(ctx, log)
     atomic_write(target, ctx)
     return target
@@ -533,6 +576,16 @@ def main() -> int:
         "--task", default=None,
         help="Per-task finish (finish-only): append one complete event for this task id.",
     )
+    parser.add_argument(
+        "--did", default=None,
+        help="With --task: a one-line summary of what the task did, written to "
+             "task_summaries.<id>.did (the Activity panel's Tasks card).",
+    )
+    parser.add_argument(
+        "--files", default=None,
+        help="With --task: comma-separated files the task touched, written to "
+             "task_summaries.<id>.files.",
+    )
     args = parser.parse_args()
 
     # Best-effort guard: a non-canonical step is a no-op, never a host failure.
@@ -568,7 +621,12 @@ def main() -> int:
             final_status = args.status if args.status != parser.get_default("status") else "implemented"
             target = sync_tasks(feature_dir, tasks_md, final_status, args.by)
         elif args.task:
-            target = journal_task_finish(feature_dir, args.task, args.by)
+            files = (
+                [f.strip() for f in args.files.split(",") if f.strip()]
+                if args.files else None
+            )
+            did = args.did.strip() if args.did else None
+            target = journal_task_finish(feature_dir, args.task, args.by, did, files)
         else:
             target = update_context(feature_dir, args.step, args.status, args.by, args.kind, args.substep)
     except Exception as exc:  # noqa: BLE001 - best-effort, swallow + report

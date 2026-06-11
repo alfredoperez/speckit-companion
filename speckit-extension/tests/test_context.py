@@ -138,6 +138,66 @@ class LifecycleCaptureTests(unittest.TestCase):
         self.assertEqual(t001[0]["by"], "ai")
         self.assertEqual(_ctx(self.fd)["currentTask"], "T001")
 
+    def test_journal_task_writes_activity_panel_task_summary(self) -> None:
+        # #256: the script must write `task_summaries.<id>` (the field the Activity
+        # panel's Tasks card reads) in the same call that journals the finish — so the
+        # panel is populated without a skippable hand-authored .spec-context.json edit.
+        # Shape must match TaskSummary { status; did?; files? } keyed by task id, the
+        # contract verified against specs/138-harden-capture-shape.
+        wc.update_context(self.fd, "implement", "implementing", "extension")
+        wc.journal_task_finish(
+            self.fd, "T001", "ai",
+            did="Added X to the writer",
+            files=["src/a.ts", "src/b.ts"],
+        )
+        ctx = _ctx(self.fd)
+        # 1. task_summaries entry has the exact reader shape, keyed by task id.
+        self.assertIn("task_summaries", ctx)
+        self.assertEqual(set(ctx["task_summaries"].keys()), {"T001"})
+        self.assertEqual(
+            ctx["task_summaries"]["T001"],
+            {"status": "DONE", "did": "Added X to the writer",
+             "files": ["src/a.ts", "src/b.ts"]},
+        )
+        # 2. The history finish event is still recorded (no regression to journaling).
+        t001 = [t for t in ctx["history"] if t.get("task") == "T001"]
+        self.assertEqual([t["kind"] for t in t001], ["complete"])
+
+    def test_journal_task_summary_idempotent_and_preserves_other_keys(self) -> None:
+        # Re-journaling updates the single keyed entry (never a duplicate key) and
+        # leaves other tasks' summaries untouched; a finish with no did/files still
+        # records a {status} entry so the task at least appears in the panel.
+        wc.update_context(self.fd, "implement", "implementing", "extension")
+        wc.journal_task_finish(self.fd, "T001", "ai", did="first", files=["a.ts"])
+        wc.journal_task_finish(self.fd, "T002", "ai")  # no did/files
+        # Re-run T001 — single history finish stays single; summary upserts in place.
+        wc.journal_task_finish(self.fd, "T001", "ai", did="second", files=["a.ts", "c.ts"])
+        ctx = _ctx(self.fd)
+        self.assertEqual(set(ctx["task_summaries"].keys()), {"T001", "T002"})
+        self.assertEqual(ctx["task_summaries"]["T001"]["did"], "second")
+        self.assertEqual(ctx["task_summaries"]["T002"], {"status": "DONE"})
+        t001 = [t for t in ctx["history"] if t.get("task") == "T001"]
+        self.assertEqual(len(t001), 1, "history finish must stay single on re-journal")
+
+    def test_journal_task_summary_merge_is_non_destructive(self) -> None:
+        # #256 review (Copilot): a re-journal must MERGE, not replace. Re-running a
+        # task without --did/--files must NOT erase previously-recorded did/files, and
+        # a hand-authored `concerns` field (which the panel reads) must survive.
+        wc.update_context(self.fd, "implement", "implementing", "extension")
+        wc.journal_task_finish(self.fd, "T001", "ai", did="did the thing", files=["a.ts"])
+        # Simulate a hand-authored concerns note on the same entry.
+        target = self.fd / ".spec-context.json"
+        ctx0 = json.loads(target.read_text())
+        ctx0["task_summaries"]["T001"]["concerns"] = ["watch perf"]
+        target.write_text(json.dumps(ctx0))
+        # Re-journal with NO did/files — prior fields must be preserved, not erased.
+        wc.journal_task_finish(self.fd, "T001", "ai")
+        entry = _ctx(self.fd)["task_summaries"]["T001"]
+        self.assertEqual(entry["did"], "did the thing", "did must not be erased on bare re-journal")
+        self.assertEqual(entry["files"], ["a.ts"], "files must not be erased on bare re-journal")
+        self.assertEqual(entry["concerns"], ["watch perf"], "hand-authored concerns must survive")
+        self.assertEqual(entry["status"], "DONE")
+
     def test_backstop_journals_after_implement_self_closed(self) -> None:
         # Same-step guard: status already "implemented" must NOT block per-task
         # journaling (the backstop fills the journal regardless of AI behavior).

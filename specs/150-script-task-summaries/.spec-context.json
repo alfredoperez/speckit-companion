@@ -1,0 +1,124 @@
+{
+  "workflow": "speckit",
+  "specName": "Script-written task_summaries + live implement percentage label",
+  "branch": "150-script-task-summaries",
+  "currentStep": "implement",
+  "status": "implemented",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-11T13:32:18.816Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-11T13:33:02.520Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-11T13:33:23.075Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-11T13:33:30.623Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T13:35:37.730Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T13:35:45.005Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T13:36:37.519Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T13:39:07.728Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-11T13:39:51.869Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-11T13:40:11.453Z"
+    }
+  ],
+  "currentTask": "T005",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added _upsert_task_summary helper plus --did/--files flags so journal_task_finish writes task_summaries.<id> {status,did,files} alongside the history finish event",
+      "files": [
+        "speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added two Python tests proving --task writes a well-formed task_summaries entry (status/did/files), keeps the single history finish, is idempotent, and preserves other tasks' summaries",
+      "files": [
+        "speckit-extension/tests/test_context.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Rewrote the implement timing rule in the shared timing-partial to call write-context.py --task with --did/--files (script owns task_summaries, no hand edit, not batched); propagated the verbatim block to all 18 embedding command bodies; shape-parity green",
+      "files": [
+        "speckit-extension/presets/_shared/timing-partial.md"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Restyled the implement % into a dedicated right-aligned .step-tab__percent label whose color ramps purple->warning->success via --impl-progress (live taskCompletionPercent); badge suppressed when % shows; updated StepTab tests",
+      "files": [
+        "webview/src/spec-viewer/components/StepTab.tsx",
+        "webview/styles/spec-viewer/_navigation.css",
+        "webview/src/spec-viewer/components/__tests__/StepTab.test.tsx"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Verified: npm run compile + compile-web + jest (964 pass incl. updated StepTab tests), check-shape-parity OK, my 2 new Python tests pass, and 150 task_summaries shape matches 138 exactly {status,did,files}",
+      "files": [
+        "specs/150-script-task-summaries/tasks.md"
+      ]
+    }
+  }
+}
