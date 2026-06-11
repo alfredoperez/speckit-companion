@@ -82,10 +82,18 @@ export function StepTab(props: StepTabProps) {
         isStale && 'stale',
     ].filter(Boolean).join(' ');
 
-    // Status content: percentage in-flight, ✓ done, empty otherwise.
+    // Status content: percentage in-flight (implement), ✓ done, empty otherwise.
     const statusIcon = canonicalState === 'in-flight' && inProgress
         ? `${taskCompletionPercent}%`
         : (canonicalState === 'done' ? '✓' : '');
+
+    // The empty in-flight indicator (specify / plan / tasks — anything that
+    // isn't the implement-step percentage pill) renders a spinning `sync`
+    // codicon: looping arrows that read as "actively working" at a glance.
+    // It vanishes the instant `canonicalState` is no longer `in-flight`
+    // (completion recorded or activeStep moved on), so a done step never
+    // keeps the glyph.
+    const showSyncGlyph = canonicalState === 'in-flight' && !inProgress;
 
     const baseTooltip = STEP_TOOLTIPS[phase] ?? doc.label;
     const tooltip = isLocked
@@ -113,7 +121,11 @@ export function StepTab(props: StepTabProps) {
             disabled={!isClickable}
             onClick={() => isClickable && phase !== 'done' && onClick(phase)}
         >
-            <span class="step-status">{statusIcon}</span>
+            <span class="step-status">
+                {showSyncGlyph
+                    ? <span class="codicon codicon-sync step-status__sync" aria-hidden="true" />
+                    : statusIcon}
+            </span>
             <span class="step-label">{doc.label}</span>
             {vsSubstep && <span class="step-tab__substep">{vsSubstep}</span>}
             {runningStartedAt && <ElapsedTimer startedAt={runningStartedAt} />}

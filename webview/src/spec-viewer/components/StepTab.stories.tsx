@@ -40,6 +40,21 @@ export const InFlight: Story = {
     args: { ...base, doc: mockDoc('tasks', true, 'Tasks'), index: 2, taskCompletionPercent: 72 },
 };
 
+// #229: the empty (non-implement) in-flight indicator is a spinning `sync`
+// codicon — looping arrows that read as "actively working". The implement
+// step keeps its percentage pill (see InFlight above). The glyph disappears
+// the moment the step completes (activeStep moves off / completedAt set).
+export const InFlightSyncGlyph: Story = {
+    args: {
+        ...base,
+        doc: mockDoc('plan', true, 'Plan'),
+        index: 1,
+        activeStep: 'plan',
+        currentStep: 'plan',
+        stepHistory: { plan: { startedAt: new Date(Date.now() - 18_000).toISOString() } },
+    },
+};
+
 export const Locked: Story = {
     args: {
         ...base,

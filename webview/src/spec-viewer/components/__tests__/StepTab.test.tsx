@@ -121,3 +121,86 @@ describe('StepTab — reflects true per-step state', () => {
         }
     });
 });
+
+describe('StepTab — #229 in-flight sync glyph', () => {
+    afterEach(() => {
+        viewerState.value = null;
+    });
+
+    it('renders a spinning sync codicon (not a checkmark) while the step is in flight', () => {
+        viewerState.value = { highlights: ['specify'], activeSubstep: null } as any;
+        const c = renderTab(baseProps({
+            doc: doc('plan', false, 'Plan'),
+            index: 1,
+            activeStep: 'plan',
+            currentStep: 'plan',
+            stepHistory: { plan: { startedAt: '2026-05-20T20:05:00Z', completedAt: null } },
+        }));
+        try {
+            expect(c.querySelector('button')!.className).toContain('in-flight');
+            expect(c.querySelector('.step-status__sync')).not.toBeNull();
+            expect(c.querySelector('.step-status__sync')!.classList.contains('codicon-sync')).toBe(true);
+            // No checkmark while running.
+            expect(c.querySelector('.step-status')!.textContent).not.toContain('✓');
+            // The live elapsed timer is mounted while running.
+            expect(c.querySelector('.step-tab__elapsed')).not.toBeNull();
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('drops the sync glyph and shows the checkmark + stops the timer when the step completes', () => {
+        // Before: plan running, glyph + timer present.
+        viewerState.value = { highlights: ['specify'], activeSubstep: null } as any;
+        const c = renderTab(baseProps({
+            doc: doc('plan', false, 'Plan'),
+            index: 1,
+            activeStep: 'plan',
+            currentStep: 'plan',
+            stepHistory: { plan: { startedAt: '2026-05-20T20:05:00Z', completedAt: null } },
+        }));
+        try {
+            expect(c.querySelector('.step-status__sync')).not.toBeNull();
+            expect(c.querySelector('.step-tab__elapsed')).not.toBeNull();
+
+            // After: AI completion lands — doc now exists, completedAt set,
+            // activeStep moved off plan. The tab flips to done.
+            viewerState.value = { highlights: ['specify', 'plan'], activeSubstep: null } as any;
+            rerender(c, baseProps({
+                doc: doc('plan', true, 'Plan'),
+                index: 1,
+                activeStep: null,
+                currentStep: 'tasks',
+                stepHistory: { plan: { startedAt: '2026-05-20T20:05:00Z', completedAt: '2026-05-20T20:10:00Z' } },
+            }));
+
+            expect(c.querySelector('button')!.className).toContain('done');
+            expect(c.querySelector('.step-status')!.textContent).toContain('✓');
+            // Glyph gone, timer unmounted.
+            expect(c.querySelector('.step-status__sync')).toBeNull();
+            expect(c.querySelector('.step-tab__elapsed')).toBeNull();
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('renders the percentage pill (not the sync glyph) for the implement in-progress step', () => {
+        viewerState.value = { highlights: ['specify', 'plan'], activeSubstep: null } as any;
+        const c = renderTab(baseProps({
+            doc: doc('tasks', true, 'Tasks'),
+            index: 2,
+            totalSteps: 3,
+            currentStep: 'implement',
+            taskCompletionPercent: 60,
+            currentDoc: 'tasks',
+            stepHistory: {},
+        }));
+        try {
+            expect(c.querySelector('button')!.className).toContain('in-flight');
+            expect(c.querySelector('.step-status__sync')).toBeNull();
+            expect(c.querySelector('.step-status')!.textContent).toContain('60%');
+        } finally {
+            cleanup(c);
+        }
+    });
+});
