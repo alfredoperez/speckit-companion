@@ -28,3 +28,21 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+  capture-suite:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run capture tests (stdlib unittest, no deps)
+        run: python3 -m unittest discover -s speckit-extension/tests -p "test_*.py"
+
+      - name: Check capture shape parity
+        run: python3 speckit-extension/scripts/check-shape-parity.py
