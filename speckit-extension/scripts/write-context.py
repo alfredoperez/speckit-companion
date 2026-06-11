@@ -407,7 +407,13 @@ def _upsert_task_summary(
     summaries = ctx.get("task_summaries")
     if not isinstance(summaries, dict):
         summaries = {}
-    entry: dict = {"status": status}
+    existing = summaries.get(task_id)
+    # Merge onto the existing entry rather than replacing it: a re-journal must
+    # preserve previously-recorded fields (incl. hand-authored `concerns`) and
+    # must NOT erase prior `did`/`files` when those flags are omitted this time.
+    # Only overwrite a field when a new non-empty value is supplied (backfill).
+    entry: dict = dict(existing) if isinstance(existing, dict) else {}
+    entry["status"] = status
     if did:
         entry["did"] = did
     if files:

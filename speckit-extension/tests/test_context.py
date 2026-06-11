@@ -179,6 +179,25 @@ class LifecycleCaptureTests(unittest.TestCase):
         t001 = [t for t in ctx["history"] if t.get("task") == "T001"]
         self.assertEqual(len(t001), 1, "history finish must stay single on re-journal")
 
+    def test_journal_task_summary_merge_is_non_destructive(self) -> None:
+        # #256 review (Copilot): a re-journal must MERGE, not replace. Re-running a
+        # task without --did/--files must NOT erase previously-recorded did/files, and
+        # a hand-authored `concerns` field (which the panel reads) must survive.
+        wc.update_context(self.fd, "implement", "implementing", "extension")
+        wc.journal_task_finish(self.fd, "T001", "ai", did="did the thing", files=["a.ts"])
+        # Simulate a hand-authored concerns note on the same entry.
+        target = self.fd / ".spec-context.json"
+        ctx0 = json.loads(target.read_text())
+        ctx0["task_summaries"]["T001"]["concerns"] = ["watch perf"]
+        target.write_text(json.dumps(ctx0))
+        # Re-journal with NO did/files — prior fields must be preserved, not erased.
+        wc.journal_task_finish(self.fd, "T001", "ai")
+        entry = _ctx(self.fd)["task_summaries"]["T001"]
+        self.assertEqual(entry["did"], "did the thing", "did must not be erased on bare re-journal")
+        self.assertEqual(entry["files"], ["a.ts"], "files must not be erased on bare re-journal")
+        self.assertEqual(entry["concerns"], ["watch perf"], "hand-authored concerns must survive")
+        self.assertEqual(entry["status"], "DONE")
+
     def test_backstop_journals_after_implement_self_closed(self) -> None:
         # Same-step guard: status already "implemented" must NOT block per-task
         # journaling (the backstop fills the journal regardless of AI behavior).
