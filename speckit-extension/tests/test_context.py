@@ -44,12 +44,16 @@ class LifecycleCaptureTests(unittest.TestCase):
 
     def test_history_is_append_only(self) -> None:
         wc.update_context(self.fd, "specify", "specified", "extension")
-        n1 = len(_ctx(self.fd)["history"])
+        h1 = _ctx(self.fd)["history"]
+        n1 = len(h1)
+        specify_entry = dict(h1[0])  # snapshot the prior entry before the next write
         wc.update_context(self.fd, "plan", "planned", "extension")
         h2 = _ctx(self.fd)["history"]
         self.assertGreater(len(h2), n1)
-        # Append-only: the prior specify entry survives untouched and the new
-        # plan start lands at the tail (current shape has no `from` key — #138).
+        # Append-only: the prior specify entry survives BYTE-FOR-BYTE untouched
+        # (not just its step) and the new plan start lands at the tail (current
+        # shape has no `from` key — #138).
+        self.assertEqual(h2[0], specify_entry)
         self.assertEqual([e["step"] for e in h2], ["specify", "plan"])
         self.assertEqual(h2[-1]["step"], "plan")
         self.assertEqual(h2[-1]["kind"], "start")
