@@ -44,13 +44,19 @@ class LifecycleCaptureTests(unittest.TestCase):
 
     def test_history_is_append_only(self) -> None:
         wc.update_context(self.fd, "specify", "specified", "extension")
-        n1 = len(_ctx(self.fd)["history"])
+        h1 = _ctx(self.fd)["history"]
+        n1 = len(h1)
+        specify_entry = dict(h1[0])  # snapshot the prior entry before the next write
         wc.update_context(self.fd, "plan", "planned", "extension")
         h2 = _ctx(self.fd)["history"]
         self.assertGreater(len(h2), n1)
+        # Append-only: the prior specify entry survives BYTE-FOR-BYTE untouched
+        # (not just its step) and the new plan start lands at the tail (current
+        # shape has no `from` key — #138).
+        self.assertEqual(h2[0], specify_entry)
+        self.assertEqual([e["step"] for e in h2], ["specify", "plan"])
         self.assertEqual(h2[-1]["step"], "plan")
         self.assertEqual(h2[-1]["kind"], "start")
-        self.assertEqual(h2[-1]["from"], {"step": "specify", "substep": None})
 
     def test_duplicate_same_step_start_is_deduped(self) -> None:
         # GUI startStep + the after_specify hook both firing must not append two
@@ -65,8 +71,12 @@ class LifecycleCaptureTests(unittest.TestCase):
         wc.update_context(self.fd, "specify", "specified", "extension")  # deduped
         wc.update_context(self.fd, "plan", "planned", "extension")
         h = _ctx(self.fd)["history"]
+        # The dedup collapsed the duplicate specify start, but the next step's
+        # start still appends — exactly one specify start, then the plan start.
+        specify_starts = [e for e in h if e["step"] == "specify" and e["kind"] == "start"]
+        self.assertEqual(len(specify_starts), 1)
         self.assertEqual(h[-1]["step"], "plan")
-        self.assertEqual(h[-1]["from"], {"step": "specify", "substep": None})
+        self.assertEqual(h[-1]["kind"], "start")
 
     def test_writes_canonical_history_not_legacy_keys(self) -> None:
         wc.update_context(self.fd, "specify", "specified", "extension")
@@ -281,9 +291,13 @@ class LifecycleCaptureTests(unittest.TestCase):
         wc.sync_tasks(self.fd, tasks_md, "implemented", "extension")
         self.assertEqual(_ctx(self.fd)["status"], "implemented")
         # The hook owns the implement self-close: a single step-level complete lands.
+        # A step-level complete is substep None AND task None — per-task finishes now
+        # also carry substep None (the id lives in `task`), so they must be excluded
+        # or they'd be miscounted as step completions (#138).
         step_completes = [
             t for t in _ctx(self.fd)["history"]
-            if t["step"] == "implement" and t["substep"] is None and t["kind"] == "complete"
+            if t["step"] == "implement" and t["substep"] is None
+            and t.get("task") is None and t["kind"] == "complete"
         ]
         self.assertEqual(len(step_completes), 1)
 
@@ -291,23 +305,31 @@ class LifecycleCaptureTests(unittest.TestCase):
         tasks_md = self.fd / "tasks.md"
         tasks_md.write_text(_tasks("- [x] **T001** a", "- [ ] **T002** b"))
         wc.sync_tasks(self.fd, tasks_md, "implemented", "extension")
+        # Step-level complete = substep None AND task None; T001's per-task finish
+        # (substep None, task set) must NOT be miscounted as the step's self-close.
         step_completes = [
             t for t in _ctx(self.fd)["history"]
-            if t["step"] == "implement" and t["substep"] is None and t["kind"] == "complete"
+            if t["step"] == "implement" and t["substep"] is None
+            and t.get("task") is None and t["kind"] == "complete"
         ]
         self.assertEqual(step_completes, [], "implement must not self-close while tasks remain")
 
     def test_per_task_entries_are_substeps_not_step_completions(self) -> None:
-        # A substep==null transition whose from.step==step reads as a step
-        # COMPLETION in the viewer — per-task entries must never look like that,
-        # or the implement step renders done while still in flight.
+        # #138 moved the per-task id off `substep` and into its own `task` field;
+        # a per-task entry now carries `task` (the id) with `substep` None. It must
+        # still be distinguishable from a step-level complete (which has BOTH
+        # substep and task None) so the viewer never renders implement done while
+        # tasks remain — that distinction is the carried `task` id.
         tasks_md = self.fd / "tasks.md"
         tasks_md.write_text(_tasks("- [x] **T001** a", "- [x] **T002** b", "- [ ] **T003** c"))
         wc.sync_tasks(self.fd, tasks_md, "implemented", "extension")
-        for t in _ctx(self.fd)["history"]:
-            if t.get("task"):
-                self.assertEqual(t["substep"], t["task"])
-                self.assertIsNotNone(t["substep"])
+        per_task = [t for t in _ctx(self.fd)["history"] if t.get("task")]
+        self.assertEqual([t["task"] for t in per_task], ["T001", "T002"])
+        for t in per_task:
+            self.assertIsNotNone(t["task"])
+            self.assertIsNone(t["substep"])
+            # A per-task entry must never read as a step-level boundary.
+            self.assertFalse(wc._is_step_level(t))
 
     def test_duplicate_marker_id_yields_one_task(self) -> None:
         tasks_md = self.fd / "tasks.md"
@@ -409,10 +431,11 @@ class DeriveRoundTripTests(unittest.TestCase):
         self.assertEqual(ctx["status"], "implemented")
         distinct = list(dict.fromkeys(t["task"] for t in ctx["history"] if t.get("task")))
         self.assertEqual(distinct, ["T001", "T002"])
-        # Each task derives a paired start+complete (matches sync_tasks shape).
+        # Finish-only: each task derives a SINGLE `complete` event (no 0s start+
+        # complete pair), matching write-context.py sync_tasks (#138).
         for tid in ("T001", "T002"):
-            kinds = sorted(t["kind"] for t in ctx["history"] if t.get("task") == tid)
-            self.assertEqual(kinds, ["complete", "start"])
+            kinds = [t["kind"] for t in ctx["history"] if t.get("task") == tid]
+            self.assertEqual(kinds, ["complete"])
         self.assertTrue(any(t.get("by") == "derive" for t in ctx["history"]))
 
     def test_derive_distinct_id_coverage_matches_sync(self) -> None:
