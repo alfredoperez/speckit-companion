@@ -64,10 +64,7 @@ export function isSpecGroupItem(contextValue: string | undefined): boolean {
 export function lifecycleContextValue(
     specContext: FeatureWorkflowContext | undefined
 ): SpecLifecycleContextValue {
-    // `SpecStatus` is narrowed to active/completed/archived, but legacy specs
-    // and the `SpecStatuses.TASKS_DONE` constant can both surface 'tasks-done'
-    // at runtime — widen to string before matching so that case is reachable.
-    const status = specContext?.status as string | undefined;
+    const status = specContext?.status;
     switch (status) {
         case SpecStatuses.TASKS_DONE:
             return 'spec-tasks-done';
@@ -173,10 +170,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             for (const spec of specs) {
                 const specFullPath = path.join(basePath, spec.path);
                 const context = readSpecContextSync(specFullPath);
-                // Widen to string: `SpecStatus` is narrowed to active/completed/
-                // archived, but `.spec-context.json` can surface 'tasks-done' and
-                // the terminal 'implemented' at runtime (see lifecycleContextValue).
-                const status: string = context?.status || SpecStatuses.ACTIVE;
+                const status = context?.status || SpecStatuses.ACTIVE;
                 specNameByPath.set(spec.path, context?.specName);
                 statusByPath.set(spec.path, context?.currentStep);
                 if (status === SpecStatuses.COMPLETED || status === SpecStatuses.IMPLEMENTED) {

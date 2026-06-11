@@ -545,7 +545,7 @@
         },
         {
           "command": "speckit.reactivate",
-          "when": "view == speckit.views.explorer && (viewItem == spec-implemented || viewItem == spec-completed || viewItem == spec-archived)",
+          "when": "view == speckit.views.explorer && (viewItem == spec-completed || viewItem == spec-archived)",
           "group": "7_modification"
         },
         {

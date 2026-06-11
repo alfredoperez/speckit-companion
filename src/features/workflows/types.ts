@@ -117,9 +117,13 @@ export interface TransitionEntry {
 }
 
 /**
- * Spec status for sidebar grouping
+ * Spec status for sidebar grouping. Mirrors the canonical `SpecStatuses`
+ * (src/core/constants.ts) so status handling is type-checked end to end:
+ * `tasks-done` (all tasks checked, pre-completion) and the terminal
+ * `implemented` (pipeline finished implement; distinct from user `completed`)
+ * are both first-class here, not runtime-only strings.
  */
-export type SpecStatus = 'active' | 'completed' | 'archived';
+export type SpecStatus = 'active' | 'tasks-done' | 'implemented' | 'completed' | 'archived';
 
 /**
  * Step history entry tracking when a step was started and completed
