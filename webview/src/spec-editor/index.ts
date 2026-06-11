@@ -259,7 +259,8 @@ function setupEventListeners(): void {
     const installBanner = document.getElementById('install-banner');
     if (installBanner) {
         installBanner.addEventListener('click', (e) => {
-            const action = (e.target as HTMLElement).closest('[data-action]')?.getAttribute('data-action');
+            if (!(e.target instanceof Element)) { return; }
+            const action = e.target.closest('[data-action]')?.getAttribute('data-action');
             if (action === 'installSpecKitExtension') {
                 vscode.postMessage({ type: 'installSpecKitExtension' });
             } else if (action === 'openReadme') {

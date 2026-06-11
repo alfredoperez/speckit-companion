@@ -87,11 +87,15 @@ export function readInstallPromptMode(): 'off' | 'beta' | 'on' {
  * terminal is shown so the user sees progress and any prompts without leaving the editor.
  */
 export function runInstallSpecKitExtension(workspaceRoot?: string): void {
-    const terminal = vscode.window.createTerminal('Install spec-kit Extension');
+    // Set the working directory via the terminal options' `cwd` rather than emitting a
+    // `cd "${workspaceRoot}"` command. A workspace path containing `"`, `` ` ``, `$`, or
+    // `\` could otherwise break out of the quoting and inject shell — VS Code handles the
+    // path as a structured value here, so it is never interpolated into a command string.
+    const terminal = vscode.window.createTerminal({
+        name: 'Install spec-kit Extension',
+        ...(workspaceRoot ? { cwd: workspaceRoot } : {}),
+    });
     terminal.show();
-    if (workspaceRoot) {
-        terminal.sendText(`cd "${workspaceRoot}"`);
-    }
     // Print (do NOT run) the prereq via echo, then run the actual install. A raw `#`
     // comment line is unreliable: interactive zsh has INTERACTIVE_COMMENTS off by
     // default, so a leading `#` would be executed and error ("command not found: #")

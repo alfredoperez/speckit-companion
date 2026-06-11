@@ -157,6 +157,7 @@ export function generateHtml(
             const banner = document.getElementById('install-banner');
             if (!banner) { return; }
             banner.addEventListener('click', function (e) {
+                if (!(e.target instanceof Element)) { return; }
                 const el = e.target.closest('[data-action]');
                 if (!el) { return; }
                 const action = el.getAttribute('data-action');
