@@ -34,12 +34,14 @@ export interface SpecInfo {
 export type SpecLifecycleContextValue =
     | 'spec-active'
     | 'spec-tasks-done'
+    | 'spec-implemented'
     | 'spec-completed'
     | 'spec-archived';
 
 const SPEC_LIFECYCLE_CONTEXT_VALUES: ReadonlySet<string> = new Set<SpecLifecycleContextValue>([
     'spec-active',
     'spec-tasks-done',
+    'spec-implemented',
     'spec-completed',
     'spec-archived',
 ]);
@@ -69,6 +71,10 @@ export function lifecycleContextValue(
     switch (status) {
         case SpecStatuses.TASKS_DONE:
             return 'spec-tasks-done';
+        case SpecStatuses.IMPLEMENTED:
+            // Terminal: pipeline finished implement. Must NOT match the Resume
+            // menu `when` (active/tasks-done only) and must group out of Active.
+            return 'spec-implemented';
         case SpecStatuses.COMPLETED:
             return 'spec-completed';
         case SpecStatuses.ARCHIVED:
@@ -167,10 +173,16 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             for (const spec of specs) {
                 const specFullPath = path.join(basePath, spec.path);
                 const context = readSpecContextSync(specFullPath);
-                const status = context?.status || SpecStatuses.ACTIVE;
+                // Widen to string: `SpecStatus` is narrowed to active/completed/
+                // archived, but `.spec-context.json` can surface 'tasks-done' and
+                // the terminal 'implemented' at runtime (see lifecycleContextValue).
+                const status: string = context?.status || SpecStatuses.ACTIVE;
                 specNameByPath.set(spec.path, context?.specName);
                 statusByPath.set(spec.path, context?.currentStep);
-                if (status === SpecStatuses.COMPLETED) {
+                if (status === SpecStatuses.COMPLETED || status === SpecStatuses.IMPLEMENTED) {
+                    // `implemented` is a terminal, done-but-not-user-completed
+                    // state — group it with the done specs (Completed), never
+                    // under Active.
                     completedSpecs.push(spec);
                 } else if (status === SpecStatuses.ARCHIVED) {
                     archivedSpecs.push(spec);

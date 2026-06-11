@@ -241,6 +241,12 @@ export const WorkflowSteps = {
 export const SpecStatuses = {
     ACTIVE: 'active',
     TASKS_DONE: 'tasks-done',
+    // Terminal status written when the pipeline finishes implement autonomously
+    // (all tasks checked). Distinct from COMPLETED — `completed` is reserved for
+    // the user's explicit Mark Completed action; there is NO auto-advance from
+    // `implemented` to `completed`. A spec at `implemented` is done work awaiting
+    // that explicit user decision.
+    IMPLEMENTED: 'implemented',
     COMPLETED: 'completed',
     ARCHIVED: 'archived',
 } as const;
