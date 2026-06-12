@@ -65,6 +65,8 @@ description: "Live spec-driven progress for SpecKit Companion — lifecycle capt
 author: alfredoperez
 repository: https://github.com/alfredoperez/speckit-companion
 homepage: https://github.com/alfredoperez/speckit-companion/tree/main/speckit-extension
+documentation: https://github.com/alfredoperez/speckit-companion/blob/main/speckit-extension/README.md
+changelog: https://github.com/alfredoperez/speckit-companion/blob/main/speckit-extension/CHANGELOG.md
 license: MIT
 requires:
   speckit_version: ">=0.8.5"
@@ -88,3 +90,10 @@ SpecKit Companion captures the spec-kit lifecycle into a per-spec `.spec-context
 - **Resume** — `/speckit.companion.resume` continues the pipeline from the recorded step with decisions in scope, dispatching the next `/speckit.*` command (works on stock spec-kit — no `specify workflow resume` subcommand required).
 
 Stdlib-only Python; degrades gracefully without `python3`; never fails the host spec-kit command.
+
+## Catalog page display gotchas (community site)
+
+The community site (`speckit-community.github.io/extensions/<id>`) is a static site that bakes two things at build time. Both behave differently than the catalog `version`/`description` fields suggest, and both are sharper for us because the extension lives in a **subdirectory of a monorepo** rather than its own repo:
+
+- **`documentation` IS the rendered README.** The page's main content area is whatever the catalog `documentation` URL points at, fetched as markdown. **It must be a specific `.md` file** (`…/speckit-extension/README.md`), never a directory — a directory URL fetches nothing and the page renders a blank README (`readmeContent: null`). This is why the snippet above sets `documentation` explicitly.
+- **The displayed version is the GitHub release tag, not the catalog `version`.** The site shows the repo's release tag (with a `release` badge). Because our tag is **prefixed** (`speckit-ext-v*`, required so the release doesn't trigger the VS Code Marketplace publish on `v*`), the page shows `speckit-ext-v0.3.0` instead of `0.3.0`. It also tracks whichever release is newest in the repo, so a later VS Code `/publish` (a `v*` tag) can surface on the companion page. A dedicated single-purpose repo with clean `v*` tags (README at root, standard `archive/refs/tags/v*.zip` install) is the only way to get a clean version + install line matching the other catalog extensions; the monorepo can't without colliding with the Marketplace release tag.
