@@ -136,6 +136,8 @@ This repo ships **two independently-versioned extensions**, each with its **own*
 | Version | `package.json` `version` | `speckit-extension/extension.yml` `extension.version` |
 | Release | `/publish` or `/ship` → **`v*`** tag → `release.yml` → Marketplace/OpenVSX | `/publish-speckit-ext` → **`speckit-ext-v*`** tag → GitHub release → spec-kit catalog (`speckit-extension/docs/publishing.md`) |
 
+To release both in one pass, use `/publish-both` — it runs `/publish` then `/publish-speckit-ext` sequentially (versions asked once up front, no rollback of phase 1 if phase 2 fails).
+
 A change under `speckit-extension/` updates **its** README/CHANGELOG/version, **never** the root ones (and vice-versa). The two changelogs may both describe a feature that spans the GUI and the spec-kit side (e.g. status/resume) — each from its own half; that overlap is expected. **Never edit `.specify/extensions/companion/CHANGELOG.md`** — it's a generated copy of the source, gitignored, and overwritten on every install.
 
 ### Feature → README section map
