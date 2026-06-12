@@ -36,21 +36,35 @@ Release the **spec-kit extension** (`speckit-extension/`, `id: companion`) so pe
    ( cd speckit-extension && tar cf - --exclude=tests --exclude=assets . ) | ( cd /tmp/cb/companion-$V && tar xf - )
    ( cd /tmp/cb && zip -rq companion-$V.zip companion-$V )
    ```
-6. **Cut the release** (prefixed tag, attach the zip):
+6. **Cut the release** (prefixed tag, attach the version-named zip for archival):
    ```bash
    gh release create speckit-ext-v$V /tmp/cb/companion-$V.zip \
      --title "SpecKit Companion spec-kit extension v$V" \
      --notes-file <[X.Y.Z] section of speckit-extension/CHANGELOG.md> --target main
    ```
-7. **Verify the deployed install** (simulate a user) in a scratch dir:
+7. **Refresh the stable `companion-latest` asset** — this is what the README/install docs point users at, so the install/update URL never changes between releases. Force-replace the **stable-named** `companion.zip` on a reusable `companion-latest` **prerelease** with the *same* build:
+   ```bash
+   cp /tmp/cb/companion-$V.zip /tmp/cb/companion.zip
+   if gh release view companion-latest >/dev/null 2>&1; then
+     gh release upload companion-latest /tmp/cb/companion.zip --clobber
+   else
+     gh release create companion-latest /tmp/cb/companion.zip \
+       --title "SpecKit Companion (latest)" \
+       --notes "Rolling stable download for the spec-kit extension. Always serves the newest \`companion\` build. Install/update: \`specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force\`" \
+       --prerelease --target main
+   fi
+   ```
+   - **`--prerelease` is mandatory.** It keeps `companion-latest` out of the repo's `/releases/latest` (which resolves across BOTH products — a `v*` VS Code release would otherwise hijack it). The stable URL `…/releases/download/companion-latest/companion.zip` resolves by **tag**, so it's immune to the `v*`/`speckit-ext-v*` interleaving. Never document `…/releases/latest/download/…` for this repo.
+   - The `companion-latest` tag is non-`v*`, so it does **not** trigger `release.yml` (the VS Code Marketplace publish).
+8. **Verify the deployed install** (simulate a user) in a scratch dir — install from the **stable** URL, the same one users run:
    ```bash
    mkdir -p /tmp/sk-verify/.specify/extensions && cd /tmp/sk-verify
-   yes | specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/speckit-ext-v$V/companion-$V.zip --force
+   yes | specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force
    specify extension list   # → SpecKit Companion (vX.Y.Z), all commands listed
    ```
    - If a prior local install left **inconsistent emission dirs** (`.{claude,cursor,agents}/skills/speckit-companion-*`, `.{gemini,qwen}/commands/speckit.companion.*`, etc.), the install can throw `FileNotFoundError`. Nuke all companion emission artifacts first, then retry.
    - **Expected non-error output** (don't flag these as failures): a raw-URL install shows a one-time `⚠ Untrusted Source` prompt; a pre-existing install aborts with `already installed … retry with --force` (remove first or use `--force`); a stale `✗ companion (v0.1.0) ⚠️ Corrupted extension` must be removed before installing; and a clean install ends with an **informational** `⚠ Configuration may be required / Check: .specify/extensions/companion/` — no manual config is actually needed.
-8. **Confirm** the prefixed tag did **not** trigger `release.yml`: `gh run list --workflow=release.yml --limit 2` (no new run).
-9. **Report** the release URL + the install command. Remind that the by-name catalog install (`specify extension add companion`) needs the **Extension Submission issue** on github/spec-kit (see `publishing.md`) — that step is the user's call.
+9. **Confirm** neither the prefixed tag nor `companion-latest` triggered `release.yml`: `gh run list --workflow=release.yml --limit 2` (no new run — both tags are non-`v*`).
+10. **Report** the release URL + the **stable** install command (`…/releases/download/companion-latest/companion.zip`, re-runnable with `--force` to update). Remind that the by-name catalog install (`specify extension add companion`) needs the **Extension Submission issue** on github/spec-kit (see `publishing.md`) — that step is the user's call.
 
-Update version references (README badge, `publishing.md`) to the new version. Never commit a VS Code `package.json` version bump as part of this.
+Update version references (README badge, `publishing.md`) to the new version; keep the documented install/update URL pointed at the stable `companion-latest/companion.zip`. Never commit a VS Code `package.json` version bump as part of this.
