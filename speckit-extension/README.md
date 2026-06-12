@@ -25,10 +25,10 @@ specify extension add companion --from https://github.com/alfredoperez/speckit-c
 
 ## Made for the SpecKit Companion VS Code extension
 
-This is the **spec-kit-side half** of [**SpecKit Companion**](https://marketplace.visualstudio.com/items?itemName=alfredo-dev.speckit-companion) (`id: companion`). It runs inside spec-kit and **writes** the canonical `.spec-context.json` that the **VS Code GUI reads** — it never reads or depends on the GUI at runtime. The two are installed independently:
+This is the **spec-kit-side half** of [**SpecKit Companion**](https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion) (`id: companion`). It runs inside spec-kit and **writes** the canonical `.spec-context.json` that the **VS Code GUI reads** — it never reads or depends on the GUI at runtime. The two are installed independently:
 
 ```bash
-code --install-extension alfredo-dev.speckit-companion   # the GUI (VS Code Marketplace / OpenVSX)
+code --install-extension alfredoperez.speckit-companion   # the GUI (VS Code Marketplace / OpenVSX)
 specify extension add --from <release-url>                # this extension (spec-kit side)
 ```
 
@@ -141,7 +141,7 @@ Each lifecycle hook appends one entry to the canonical append-only `history[]` a
 
 ## Docs & links
 
-- [**SpecKit Companion (VS Code)**](https://marketplace.visualstudio.com/items?itemName=alfredo-dev.speckit-companion) — the GUI this feeds.
+- [**SpecKit Companion (VS Code)**](https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion) — the GUI this feeds.
 - [docs/install.md](./docs/install.md) — install (release / dev / fallback) + verification.
 - [docs/commands.md](./docs/commands.md) — the commands and the hooks they run.
 - [docs/how-it-works.md](./docs/how-it-works.md) — the hook → script → `.spec-context.json` chain and canonical schema.

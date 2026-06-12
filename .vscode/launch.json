@@ -7,7 +7,7 @@
             "request": "launch",
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}",
-                "--enable-proposed-api=alfredo-dev.speckit-companion"
+                "--enable-proposed-api=alfredoperez.speckit-companion"
             ],
             "outFiles": [
                 "${workspaceFolder}/dist/**/*.js"

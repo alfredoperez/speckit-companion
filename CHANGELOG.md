@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **In-app update notifications fire again, and install links resolve** (#274): the extension referenced a retired publisher handle, which silently disabled the "a new version is available" notification and pointed every Marketplace/OpenVSX install and listing link at a dead (404) page. The update check now reads your installed version reliably and the links resolve to the live listing. The check also compares only against the VS Code releases, so a spec-kit-side release no longer masquerades as a newer GUI version.
 - **Switching modes no longer deletes your commands** (#134): selecting the trimmed shape used to swap command bundles in a way that could leave a project with no usable pipeline commands — creating a spec then failed with "Unknown command: /speckit-specify". The mode is now a non-destructive routing choice: both command sets are always present, and a project left without its stock commands by an earlier version recovers automatically on the next reload.
 
 ## [0.22.0] - 2026-06-07

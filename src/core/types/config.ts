@@ -43,8 +43,10 @@ export interface HookInfo {
 // GitHub release (updateChecker.ts)
 export interface GitHubRelease {
     tag_name: string;
-    name: string;
-    html_url: string;
+    name?: string | null;
+    html_url?: string;
+    draft?: boolean;
+    prerelease?: boolean;
 }
 
 // Installed plugins (agentManager.ts, skillManager.ts)

@@ -59,30 +59,57 @@ export class UpdateChecker {
      * Get current extension version
      */
     private getCurrentVersion(): string | undefined {
-        const extension = vscode.extensions.getExtension('alfredo-dev.speckit-companion');
-        return extension?.packageJSON.version;
+        return this.context.extension.packageJSON.version;
     }
 
     /**
-     * Fetch latest release from GitHub API
+     * Fetch the newest VS Code (`v*`) release from GitHub, ignoring spec-kit (`speckit-ext-v*`) releases
      */
     private async fetchLatestRelease(): Promise<GitHubRelease | null> {
         try {
-            this.outputChannel.appendLine('[UpdateChecker] Fetching latest release from GitHub...');
-            const response = await fetch('https://api.github.com/repos/alfredoperez/speckit-companion/releases/latest');
+            this.outputChannel.appendLine('[UpdateChecker] Fetching releases from GitHub...');
+            const response = await fetch(
+                'https://api.github.com/repos/alfredoperez/speckit-companion/releases?per_page=100',
+                { headers: { 'User-Agent': 'speckit-companion', Accept: 'application/vnd.github+json' } }
+            );
 
             if (!response.ok) {
                 this.outputChannel.appendLine(`[UpdateChecker] GitHub API returned ${response.status}: ${response.statusText}`);
                 return null;
             }
 
-            const release = await response.json() as GitHubRelease;
-            this.outputChannel.appendLine(`[UpdateChecker] Latest release: ${release?.tag_name || 'unknown'}`);
-            return release;
+            const releases = await response.json() as GitHubRelease[];
+            const latest = this.selectLatestVsCodeRelease(releases);
+            this.outputChannel.appendLine(`[UpdateChecker] Latest VS Code release: ${latest?.tag_name || 'none'}`);
+            return latest;
         } catch (error) {
-            this.outputChannel.appendLine(`[UpdateChecker] ERROR: Failed to fetch latest release: ${error}`);
+            this.outputChannel.appendLine(`[UpdateChecker] ERROR: Failed to fetch releases: ${error}`);
             return null;
         }
+    }
+
+    /**
+     * Pick the highest-version published release whose tag is a VS Code `v<major>.<minor>.<patch>` tag.
+     * Excludes spec-kit releases tagged `speckit-ext-v*` (which share this list) and any draft/prerelease
+     * — the swap from `/releases/latest` to `/releases` would otherwise surface unpublished builds.
+     */
+    private selectLatestVsCodeRelease(releases: GitHubRelease[]): GitHubRelease | null {
+        if (!Array.isArray(releases)) {
+            return null;
+        }
+        let latest: GitHubRelease | null = null;
+        let latestVersion = '';
+        for (const release of releases) {
+            if (release.draft || release.prerelease || !/^v\d+\.\d+\.\d+$/.test(release.tag_name)) {
+                continue;
+            }
+            const version = release.tag_name.replace(/^v/, '');
+            if (!latest || this.isNewerVersion(latestVersion, version)) {
+                latest = release;
+                latestVersion = version;
+            }
+        }
+        return latest;
     }
     
     /**
