@@ -3,7 +3,7 @@
   "specName": "boolean beta settings",
   "branch": "153-boolean-beta-settings",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "implementing",
   "history": [
     {
       "step": "specify",
@@ -179,6 +179,20 @@
       "kind": "complete",
       "by": "extension",
       "at": "2026-06-11T15:04:57.487Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-12T22:18:12.288Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-12T22:18:16.036Z"
     }
   ],
   "currentTask": "T014",
@@ -287,5 +301,6 @@
         "src/features/spec-editor/specEditorProvider.ts"
       ]
     }
-  }
+  },
+  "profile": "turbo"
 }

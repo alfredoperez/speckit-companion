@@ -1,0 +1,9 @@
+{
+  "workflow": "speckit",
+  "specName": "126-remove-sdd-coupling",
+  "branch": "126-remove-sdd-coupling",
+  "selectedAt": "2026-06-12T22:15:55.478Z",
+  "currentStep": "specify",
+  "status": "draft",
+  "history": []
+}

@@ -152,7 +152,7 @@ hooks:
     optional: false
     prompt: Execute speckit.companion.capture-implement?
     description: Per-task journaling on implement (currentStep=implement; status=implemented
-      when all tasks checked) into .spec-context.json
+      when all tasks checked)
     condition: null
   after_checklist:
   - extension: git
