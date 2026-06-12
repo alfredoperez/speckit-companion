@@ -76,10 +76,10 @@ jobs:
             **From Extension Marketplace:**
             ```bash
             # VSCode (from VSCode Marketplace)
-            code --install-extension alfredo-dev.speckit-companion
+            code --install-extension alfredoperez.speckit-companion
 
             # Cursor (from OpenVSX)
-            cursor --install-extension alfredo-dev.speckit-companion
+            cursor --install-extension alfredoperez.speckit-companion
             ```
 
             **From VSIX file:**
@@ -93,8 +93,8 @@ jobs:
             ```
 
             ### Links
-            - [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=alfredo-dev.speckit-companion)
-            - [OpenVSX Registry](https://open-vsx.org/extension/alfredo-dev/speckit-companion)
+            - [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion)
+            - [OpenVSX Registry](https://open-vsx.org/extension/alfredoperez/speckit-companion)
             - [Documentation](https://github.com/alfredoperez/speckit-companion#readme)
 
             ---

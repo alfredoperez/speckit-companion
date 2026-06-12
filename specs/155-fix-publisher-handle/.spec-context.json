@@ -1,0 +1,173 @@
+{
+  "workflow": "speckit",
+  "specName": "fix publisher handle",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "implemented",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-12T23:21:52.629Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-12T23:22:36.130Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-12T23:22:43.069Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-12T23:22:43.148Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-12T23:22:43.227Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-12T23:22:43.308Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-12T23:22:54.789Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-12T23:23:14.252Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-12T23:23:21.004Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-12T23:23:41.554Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-12T23:23:41.635Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-12T23:23:41.719Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-12T23:23:59.988Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-12T23:25:16.896Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-12T23:25:30.262Z"
+    }
+  ],
+  "currentTask": "T007",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Read installed version from context.extension.packageJSON.version instead of hardcoded alfredo-dev handle",
+      "files": [
+        "src/speckit/updateChecker.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Fetch /releases and select newest v<x.y.z> tag, excluding speckit-ext-v* releases",
+      "files": [
+        "src/speckit/updateChecker.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Replaced alfredo-dev with alfredoperez in install commands, Marketplace itemName, and OpenVSX namespace URL",
+      "files": [
+        ".github/workflows/release.yml"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Replaced alfredo-dev with alfredoperez in enable-proposed-api arg",
+      "files": [
+        ".vscode/launch.json"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Replaced alfredo-dev with alfredoperez in Marketplace links and install command",
+      "files": [
+        "speckit-extension/README.md"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added user-facing Fixed entry: update notifications fire again and install links resolve",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Verified zero residual alfredo-dev in tracked non-dist files; added updateChecker unit tests; full suite green",
+      "files": [
+        "src/speckit/updateChecker.test.ts"
+      ]
+    }
+  }
+}
