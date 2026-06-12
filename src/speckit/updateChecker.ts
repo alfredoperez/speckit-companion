@@ -68,7 +68,10 @@ export class UpdateChecker {
     private async fetchLatestRelease(): Promise<GitHubRelease | null> {
         try {
             this.outputChannel.appendLine('[UpdateChecker] Fetching releases from GitHub...');
-            const response = await fetch('https://api.github.com/repos/alfredoperez/speckit-companion/releases');
+            const response = await fetch(
+                'https://api.github.com/repos/alfredoperez/speckit-companion/releases?per_page=100',
+                { headers: { 'User-Agent': 'speckit-companion', Accept: 'application/vnd.github+json' } }
+            );
 
             if (!response.ok) {
                 this.outputChannel.appendLine(`[UpdateChecker] GitHub API returned ${response.status}: ${response.statusText}`);
@@ -86,19 +89,24 @@ export class UpdateChecker {
     }
 
     /**
-     * Pick the highest-version release whose tag is a VS Code `v<major>.<minor>.<patch>` tag.
-     * Excludes spec-kit releases tagged `speckit-ext-v*`, which share this releases list.
+     * Pick the highest-version published release whose tag is a VS Code `v<major>.<minor>.<patch>` tag.
+     * Excludes spec-kit releases tagged `speckit-ext-v*` (which share this list) and any draft/prerelease
+     * — the swap from `/releases/latest` to `/releases` would otherwise surface unpublished builds.
      */
     private selectLatestVsCodeRelease(releases: GitHubRelease[]): GitHubRelease | null {
         if (!Array.isArray(releases)) {
             return null;
         }
-        const vsCodeReleases = releases.filter((release) => /^v\d+\.\d+\.\d+$/.test(release.tag_name));
         let latest: GitHubRelease | null = null;
-        for (const release of vsCodeReleases) {
+        let latestVersion = '';
+        for (const release of releases) {
+            if (release.draft || release.prerelease || !/^v\d+\.\d+\.\d+$/.test(release.tag_name)) {
+                continue;
+            }
             const version = release.tag_name.replace(/^v/, '');
-            if (!latest || this.isNewerVersion(latest.tag_name.replace(/^v/, ''), version)) {
+            if (!latest || this.isNewerVersion(latestVersion, version)) {
                 latest = release;
+                latestVersion = version;
             }
         }
         return latest;
