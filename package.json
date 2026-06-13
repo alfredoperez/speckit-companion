@@ -1053,7 +1053,7 @@
             "default": true,
             "scope": "window",
             "order": 3,
-            "markdownDescription": "Add a \"SpecKit Companion (Turbo)\" choice to the Create-Spec workflow dropdown, pinning turbo on just that spec. Appears only when the spec-kit extension is installed. Opt-in beta. Requires the [companion spec-kit extension](https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension)."
+            "markdownDescription": "Add a \"SpecKit Companion\" choice to the Create-Spec workflow dropdown, pinning turbo on just that spec. Appears only when the spec-kit extension is installed. Opt-in beta. Requires the [companion spec-kit extension](https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension)."
           },
           "speckit.companion.complexityFastPath": {
             "type": "boolean",

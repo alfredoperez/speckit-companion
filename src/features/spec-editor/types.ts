@@ -149,7 +149,7 @@ export interface TempFileManifest {
 // ============================================
 
 /**
- * Reserved workflow name for the synthetic "SpecKit Companion (Turbo)" picker
+ * Reserved workflow name for the synthetic "SpecKit Companion" picker
  * entry. It is never a real `customWorkflows` config entry — the extension
  * computes it per panel open when the turbo beta toggle is on and the Companion
  * extension is installed — and `handleSubmit` keys off this exact name to pin
