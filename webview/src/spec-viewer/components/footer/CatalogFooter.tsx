@@ -24,6 +24,14 @@ export interface CatalogFooterProps {
     vs: ViewerState;
     /** Whether the spec is in a still-active phase (drives enhancement-button visibility). */
     isActive: boolean;
+    /**
+     * The current step is in flight (specifying / planning / tasking /
+     * implementing). While true, the forward-motion lifecycle button (Approve /
+     * the next step's `start`) is suppressed — the step hasn't settled, so
+     * advancing it makes no sense. The spinning step tab carries the in-flight
+     * signal instead (#277 Child 4).
+     */
+    stepInFlight?: boolean;
     /** Enhancement buttons resolved from custom commands + workflow config. */
     enhancementButtons: EnhancementButton[];
 }
@@ -38,15 +46,21 @@ export interface CatalogFooterProps {
  *
  * Extracted from FooterActions for symmetry with GeneratingFooter.
  */
-export function CatalogFooter({ vs, isActive, enhancementButtons }: CatalogFooterProps) {
+export function CatalogFooter({ vs, isActive, stepInFlight = false, enhancementButtons }: CatalogFooterProps) {
     const send = (msg: ViewerToExtensionMessage) => () => vscode.postMessage(msg);
     const sendFooter = (id: string) => () => vscode.postMessage({ type: 'footerAction', id });
 
     const visible = vs.footer;
     const LEFT_IDS = new Set(['regenerate']);
     const RIGHT_IDS = new Set(['refine', 'approve', 'reactivate', 'archive', 'complete', 'start']);
+    // While the current step is in flight, drop the forward-motion buttons
+    // (Approve / next-step `start`) — the step hasn't settled. Closure/refine
+    // actions (archive / complete / reactivate / refine) are unaffected.
+    const FORWARD_MOTION_IDS = new Set(['approve', 'start']);
     const leftActions = visible.filter((a) => LEFT_IDS.has(a.id));
-    const rightActions = visible.filter((a) => RIGHT_IDS.has(a.id));
+    const rightActions = visible.filter(
+        (a) => RIGHT_IDS.has(a.id) && !(stepInFlight && FORWARD_MOTION_IDS.has(a.id)),
+    );
 
     // Once the spec is at the closure gate (Mark Completed / Reactivate are
     // offered), the optional refinement commands no longer make sense — gate

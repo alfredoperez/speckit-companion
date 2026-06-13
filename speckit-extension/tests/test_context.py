@@ -610,5 +610,83 @@ class StatusResolveTests(unittest.TestCase):
         self.assertEqual(res["nextTask"], "T002")
 
 
+class TasksFileResolvesFeatureDirTests(unittest.TestCase):
+    """Child 2 (#277): task-sync mode settles the spec whose tasks.md is passed,
+    NOT whichever spec the active-feature pointer names."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        self.specs = self.root / "specs"
+        # The spec we hand --tasks-file for (the one that should settle).
+        self.target = self.specs / "016-target"
+        self.target.mkdir(parents=True)
+        (self.target / "tasks.md").write_text(_tasks("- [x] **T001** a", "- [x] **T002** b"))
+        # A DIFFERENT spec the active-feature pointer would resolve to.
+        self.active = self.specs / "017-active"
+        self.active.mkdir(parents=True)
+        (self.active / "tasks.md").write_text(_tasks("- [ ] **T001** a"))
+
+        self._orig_root = wc._repo_root
+        self._orig_resolve = wc.resolve_feature_dir
+        wc._repo_root = lambda: self.root
+
+        # Simulate the active-feature pointer landing on the LATER spec when no
+        # --feature-dir is given; honor an explicit --feature-dir when supplied
+        # (so the mismatch-vs-match branches exercise real path comparison).
+        def _resolve(root: Path, explicit: str | None) -> Path:
+            if explicit:
+                p = Path(explicit)
+                return p if p.is_absolute() else root / p
+            return self.active
+        wc.resolve_feature_dir = _resolve
+
+    def tearDown(self) -> None:
+        wc._repo_root = self._orig_root
+        wc.resolve_feature_dir = self._orig_resolve
+        self._tmp.cleanup()
+
+    def _run(self, argv: list[str]) -> int:
+        orig_argv = sys.argv
+        sys.argv = ["write-context.py", *argv]
+        try:
+            return wc.main()
+        finally:
+            sys.argv = orig_argv
+
+    def test_tasks_file_dir_wins_over_active_pointer(self) -> None:
+        rc = self._run([
+            "--step", "implement", "--status", "implemented", "--by", "extension",
+            "--tasks-file", "specs/016-target/tasks.md",
+        ])
+        self.assertEqual(rc, 0)
+        # The TARGET spec settled; the ACTIVE spec was never touched.
+        self.assertTrue((self.target / ".spec-context.json").is_file())
+        self.assertFalse((self.active / ".spec-context.json").is_file())
+        ctx = _ctx(self.target)
+        self.assertEqual(ctx["status"], "implemented")
+
+    def test_feature_dir_mismatch_refuses_to_write(self) -> None:
+        rc = self._run([
+            "--step", "implement", "--status", "implemented", "--by", "extension",
+            "--tasks-file", "specs/016-target/tasks.md",
+            "--feature-dir", "specs/017-active",
+        ])
+        self.assertEqual(rc, 0)  # best-effort: never fails the host
+        # Neither spec was settled — the mismatch was surfaced, not absorbed.
+        self.assertFalse((self.target / ".spec-context.json").is_file())
+        self.assertFalse((self.active / ".spec-context.json").is_file())
+
+    def test_feature_dir_matching_tasks_file_still_writes(self) -> None:
+        rc = self._run([
+            "--step", "implement", "--status", "implemented", "--by", "extension",
+            "--tasks-file", "specs/016-target/tasks.md",
+            "--feature-dir", "specs/016-target",
+        ])
+        self.assertEqual(rc, 0)
+        self.assertTrue((self.target / ".spec-context.json").is_file())
+        self.assertEqual(_ctx(self.target)["status"], "implemented")
+
+
 if __name__ == "__main__":
     unittest.main()

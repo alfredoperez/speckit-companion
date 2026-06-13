@@ -102,6 +102,19 @@ def _match_by_prefix(specs_dir: Path, name: str) -> Path | None:
     return None
 
 
+def feature_dir_from_tasks_file(root: Path, tasks_file: str) -> Path:
+    """The spec dir that owns a tasks.md is its parent directory.
+
+    In task-sync mode the tasks file is authoritative: the spec whose task list
+    was handed in is the spec to settle, regardless of which spec the active-
+    feature pointer (env / feature.json / branch) currently names. This is what
+    prevents settling the wrong spec when a later spec is "active"."""
+    p = Path(tasks_file)
+    if not p.is_absolute():
+        p = root / p
+    return p.parent
+
+
 def resolve_feature_dir(root: Path, explicit: str | None) -> Path | None:
     """spec-kit resolution precedence, most-specific first."""
     specs_dir = root / "specs"
@@ -600,7 +613,29 @@ def main() -> int:
         return 0
 
     root = _repo_root()
-    feature_dir = resolve_feature_dir(root, args.feature_dir)
+
+    # Task-sync mode: the `--tasks-file` parent is the authoritative spec dir.
+    # The active-feature pointer (env / feature.json / branch) can name a LATER
+    # spec while settling an earlier one, so trusting it here writes completion
+    # into the wrong spec. When `--feature-dir` is also given and disagrees with
+    # the tasks file's dir, refuse to write (surface the mismatch) rather than
+    # silently picking one.
+    if args.tasks_file:
+        tf_dir = feature_dir_from_tasks_file(root, args.tasks_file)
+        if args.feature_dir:
+            explicit_dir = resolve_feature_dir(root, args.feature_dir)
+            if explicit_dir is not None and explicit_dir.resolve() != tf_dir.resolve():
+                print(
+                    f"[companion] --feature-dir ({explicit_dir}) and --tasks-file dir "
+                    f"({tf_dir}) disagree; refusing to write to avoid settling the "
+                    f"wrong spec. Drop --feature-dir or point --tasks-file at its tasks.md.",
+                    file=sys.stderr,
+                )
+                return 0
+        feature_dir: Path | None = tf_dir
+    else:
+        feature_dir = resolve_feature_dir(root, args.feature_dir)
+
     if feature_dir is None or not feature_dir.is_dir():
         print(
             "[companion] Could not resolve the active feature directory "

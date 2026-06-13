@@ -2,10 +2,11 @@
  * Storybook coverage for the spec-viewer footer.
  *
  * The footer is a pure function of one `viewerState` snapshot (single-source
- * model). Every story drives `viewerState.footer` plus, for in-flight states,
- * the run-step/generating fields on `viewerState`. `navState` only supplies the
- * workflow-derived `enhancementButtons`. There are exactly two render shapes:
- * `CatalogFooter` and `GeneratingFooter`.
+ * model). Every story drives `viewerState.footer`. `navState` only supplies the
+ * workflow-derived `enhancementButtons`. There is a single render shape now:
+ * `CatalogFooter`. The in-flight "Generating…" pill was removed (#277 Child 4) —
+ * the spinning step tab carries the in-flight signal — and while the current
+ * step is in flight the footer suppresses the forward-motion button.
  *
  * Story names use the visible status label only; no parens, no extra
  * annotations.
@@ -56,21 +57,18 @@ const baseViewerState = (
         ...extra,
     }) as ViewerState;
 
-// In-flight factory: stamps the run-step fields so isGenerating fires. The
-// right side shows a non-clickable "Generating <label>…" chip; the left shows
-// the "Mark step complete" override.
-const generatingViewerState = (
+// In-flight factory: an in-flight status (specifying / planning / tasking /
+// implementing) makes the footer drop the forward-motion button — the spinning
+// step tab carries the in-flight signal instead. Only Regenerate (+ closure /
+// refine actions) remain.
+const inFlightViewerState = (
     status: string,
     activeStep: string,
-    label: string,
     footer: FooterEntry[],
-    opts: { artifactReady?: boolean; startedAt?: string } = {},
 ): ViewerState => {
-    const startedAt = opts.startedAt ?? new Date().toISOString();
+    const startedAt = new Date().toISOString();
     return baseViewerState(status, activeStep, footer, {
-        runningStepArtifactReady: opts.artifactReady ?? false,
         runningStepStartedAt: startedAt,
-        runningStepLabel: label,
         stepHistory: { [activeStep]: { startedAt, completedAt: null } },
     });
 };
@@ -201,51 +199,35 @@ export const Archived: Story = {
     },
 };
 
-// ── Generating state ───────────────────────────────────────────────────────
-// The right side shows a non-clickable "Generating <label>…" status chip while
-// the running step's artifact is not yet on disk; the left shows the secondary
-// "Mark step complete" override. Once the artifact lands (or the recovery
-// timeout elapses) the normal footer returns.
+// ── In-flight state ────────────────────────────────────────────────────────
+// While the current step is in flight the footer suppresses its forward-motion
+// button (Approve / next-step start) — only Regenerate remains. The spinning
+// step tab (StepTab stories) carries the "actively working" signal now; the old
+// "Generating…" footer pill was removed (#277 Child 4).
 
-export const GeneratingPlan: Story = {
-    name: 'Generating — Plan',
+export const InFlightPlanning: Story = {
+    name: 'In-flight — Planning',
     render: () => {
         navState.value = mockNavState({ specStatus: 'planning' });
-        viewerState.value = generatingViewerState('planning', 'plan', 'Plan', pauseFooter('Tasks'));
+        viewerState.value = inFlightViewerState('planning', 'plan', pauseFooter('Tasks'));
         return <FooterActions initialSpecStatus="planning" />;
     },
 };
 
-export const GeneratingTasks: Story = {
-    name: 'Generating — Tasks',
+export const InFlightTasking: Story = {
+    name: 'In-flight — Tasking',
     render: () => {
         navState.value = mockNavState({ specStatus: 'tasking' });
-        viewerState.value = generatingViewerState('tasking', 'tasks', 'Tasks', pauseFooter('Implement'));
+        viewerState.value = inFlightViewerState('tasking', 'tasks', pauseFooter('Implement'));
         return <FooterActions initialSpecStatus="tasking" />;
     },
 };
 
-export const GeneratingArtifactReady: Story = {
-    name: 'Generating — artifact ready (re-enabled)',
+export const InFlightImplementing: Story = {
+    name: 'In-flight — Implementing',
     render: () => {
-        // Running, but the artifact is now detected → normal forward footer.
-        navState.value = mockNavState({ specStatus: 'tasking' });
-        viewerState.value = generatingViewerState('tasking', 'tasks', 'Tasks', pauseFooter('Implement'), {
-            artifactReady: true,
-        });
-        return <FooterActions initialSpecStatus="tasking" />;
-    },
-};
-
-export const GeneratingTimedOut: Story = {
-    name: 'Generating — recovery timeout',
-    render: () => {
-        // Running, artifact never appeared, but the 10-min window elapsed →
-        // footer falls back to the enabled buttons so it never strands.
-        navState.value = mockNavState({ specStatus: 'tasking' });
-        viewerState.value = generatingViewerState('tasking', 'tasks', 'Tasks', pauseFooter('Implement'), {
-            startedAt: '2026-05-08T00:00:00Z',
-        });
-        return <FooterActions initialSpecStatus="tasking" />;
+        navState.value = mockNavState({ specStatus: 'implementing' });
+        viewerState.value = inFlightViewerState('implementing', 'implement', pauseFooter('Mark Completed'));
+        return <FooterActions initialSpecStatus="implementing" />;
     },
 };

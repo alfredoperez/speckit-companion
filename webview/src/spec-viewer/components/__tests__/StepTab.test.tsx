@@ -272,7 +272,7 @@ describe('StepTab — #229 in-flight sync glyph', () => {
         }
     });
 
-    it('renders the live percentage label (not the sync glyph) for the implement in-progress step', () => {
+    it('renders the live percentage label AND the spinning sync glyph for the implement in-progress step', () => {
         viewerState.value = { highlights: ['specify', 'plan'], activeSubstep: null } as any;
         const c = renderTab(baseProps({
             doc: doc('tasks', true, 'Tasks'),
@@ -285,12 +285,14 @@ describe('StepTab — #229 in-flight sync glyph', () => {
         }));
         try {
             expect(c.querySelector('button')!.className).toContain('in-flight');
-            expect(c.querySelector('.step-status__sync')).toBeNull();
-            // #256: the % is now a dedicated right-aligned label, not the round badge.
-            // The badge is suppressed entirely so it never renders an empty circle.
+            // #277 Child 4: the implement tab now has motion — the sync glyph
+            // renders INSIDE the percent label, next to the live percentage.
             const pct = c.querySelector('.step-tab__percent');
             expect(pct).not.toBeNull();
             expect(pct!.textContent).toContain('60%');
+            expect(pct!.querySelector('.step-status__sync')).not.toBeNull();
+            // #256: the round badge is still suppressed (no empty circle) — the
+            // glyph lives in the percent label, not the badge.
             expect(c.querySelector('.step-status')).toBeNull();
         } finally {
             cleanup(c);

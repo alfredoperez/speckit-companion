@@ -123,13 +123,15 @@
     border-radius: 10px;
 }
 
-/* Sync-glyph in-flight (specify / plan / tasks): looping-arrows codicon
-   that spins while the step is actively running. Reads as "working" far
+/* Sync-glyph in-flight (every running step, incl. implement): looping-arrows
+   codicon that spins while the step is actively running. Reads as "working" far
    better than a static filled dot. The glyph is theme-colored; the badge
    chrome (filled circle + working-pulse) is dropped so only the arrows
    show. The whole indicator vanishes the moment the step is no longer
    in-flight — `.step-status__sync` is rendered only for `canonicalState
-   === 'in-flight'` && !inProgress, so a done step has no glyph. */
+   === 'in-flight'`, so a done step has no glyph. During implement it renders
+   inside `.step-tab__percent`, next to the live percentage. Reduced-motion is
+   handled globally (tokens.css) — the spin neutralizes to a static glyph. */
 .step-tab.in-flight .step-status:has(.step-status__sync) {
     background: transparent;
     border-color: transparent;
@@ -171,6 +173,9 @@
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     color: color-mix(
         in srgb,
         color-mix(in srgb, var(--purple) calc((1 - min(var(--impl-progress, 0) * 2, 1)) * 100%), var(--warning))

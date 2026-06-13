@@ -39,6 +39,12 @@ export function setupFileWatchers(
     // Watch for changes in .claude directory with debouncing
     setupClaudeDirectoryWatcher(context, specExplorer, steeringExplorer, specViewer, outputChannel);
 
+    // Watch `.spec-context.json` under every configured spec directory so the
+    // open viewer refreshes (and the sidebar re-scans) when a step settles —
+    // the `.claude` watcher above misses the default `specs/` (and
+    // `.specify/specs/`) layout. (#277 Child 3 / #270)
+    setupSpecContextWatchers(context, specExplorer, specViewer, outputChannel);
+
     // Watch for changes in Claude settings
     setupClaudeSettingsWatcher(context, steeringExplorer);
 
@@ -74,56 +80,97 @@ function setupClaudeDirectoryWatcher(
         }, 1000);
     };
 
-    const handleSpecContextChange = async (uri: vscode.Uri) => {
-        if (!uri.fsPath.endsWith(FEATURE_CONTEXT_FILE)) {
-            return;
-        }
-        try {
-            const content = await vscode.workspace.fs.readFile(uri);
-            const data = JSON.parse(Buffer.from(content).toString('utf-8'));
-            const specDir = uri.fsPath.replace(/[/\\].spec-context\.json$/, '');
-
-            // Canonical writer emits `history[]`; legacy files may still
-            // carry `transitions[]`. Prefer history; fall back to transitions
-            // so external-transition logs survive both schema generations.
-            const logMessage = detectExternalTransition(
-                specDir,
-                data.currentStep,
-                data.substep ?? null,
-                (data.history ?? data.transitions) as TransitionEntry[] | undefined,
-            );
-
-            if (logMessage) {
-                outputChannel.appendLine(logMessage);
-            }
-
-            // Re-derive viewer state so the open viewer's timeline picks up
-            // the new transition without a reload (R008, NFR004).
-            void specViewer.refreshContextIfDisplaying(uri.fsPath);
-        } catch {
-            // Ignore parse errors
-        }
-    };
-
-    const handleSpecContextDelete = (uri: vscode.Uri) => {
-        if (!uri.fsPath.endsWith(FEATURE_CONTEXT_FILE)) {
-            return;
-        }
-        const specDir = uri.fsPath.replace(/[/\\].spec-context\.json$/, '');
-        transitionCache.delete(specDir);
-    };
-
     claudeWatcher.onDidCreate((uri) => debouncedRefresh('Create', uri));
     claudeWatcher.onDidDelete((uri) => {
         handleSpecContextDelete(uri);
         debouncedRefresh('Delete', uri);
     });
     claudeWatcher.onDidChange((uri) => {
-        handleSpecContextChange(uri);
+        handleSpecContextChange(uri, specViewer, outputChannel);
         debouncedRefresh('Change', uri);
     });
 
     context.subscriptions.push(claudeWatcher);
+}
+
+/**
+ * Re-derive viewer state on a `.spec-context.json` write so the open viewer's
+ * timeline picks up the new transition without a reload (R008, NFR004). Shared
+ * by the `.claude` watcher and the per-spec-directory context watcher.
+ */
+async function handleSpecContextChange(
+    uri: vscode.Uri,
+    specViewer: SpecViewerProvider,
+    outputChannel: vscode.OutputChannel,
+): Promise<void> {
+    if (!uri.fsPath.endsWith(FEATURE_CONTEXT_FILE)) {
+        return;
+    }
+    try {
+        const content = await vscode.workspace.fs.readFile(uri);
+        const data = JSON.parse(Buffer.from(content).toString('utf-8'));
+        const specDir = uri.fsPath.replace(/[/\\].spec-context\.json$/, '');
+
+        // Canonical writer emits `history[]`; legacy files may still
+        // carry `transitions[]`. Prefer history; fall back to transitions
+        // so external-transition logs survive both schema generations.
+        const logMessage = detectExternalTransition(
+            specDir,
+            data.currentStep,
+            data.substep ?? null,
+            (data.history ?? data.transitions) as TransitionEntry[] | undefined,
+        );
+
+        if (logMessage) {
+            outputChannel.appendLine(logMessage);
+        }
+
+        void specViewer.refreshContextIfDisplaying(uri.fsPath);
+    } catch {
+        // Ignore parse errors
+    }
+}
+
+function handleSpecContextDelete(uri: vscode.Uri): void {
+    if (!uri.fsPath.endsWith(FEATURE_CONTEXT_FILE)) {
+        return;
+    }
+    const specDir = uri.fsPath.replace(/[/\\].spec-context\.json$/, '');
+    transitionCache.delete(specDir);
+}
+
+/**
+ * Watch `.spec-context.json` under every configured spec directory.
+ *
+ * The `.claude` watcher only sees `**​/.claude/**​/*`, but specs default to
+ * `specDirectories: ['specs', '.specify/specs']`, so a context write under
+ * `specs/<name>/` or `.specify/specs/<name>/` was unobserved — the open viewer
+ * never refreshed on step completion (#277 Child 3) and a freshly-created spec
+ * never cleared the welcome screen (#270). This watcher targets the context
+ * file directly under each configured pattern, refreshing the viewer on every
+ * write and re-scanning the sidebar when a new context file appears.
+ */
+function setupSpecContextWatchers(
+    context: vscode.ExtensionContext,
+    specExplorer: SpecExplorerProvider,
+    specViewer: SpecViewerProvider,
+    outputChannel: vscode.OutputChannel,
+): void {
+    const patterns = getFileWatcherPatterns().specContext;
+    for (const pattern of patterns) {
+        const watcher = vscode.workspace.createFileSystemWatcher(pattern);
+        watcher.onDidChange((uri) => handleSpecContextChange(uri, specViewer, outputChannel));
+        watcher.onDidCreate((uri) => {
+            // A new context file = a newly-created (or newly-tracked) spec.
+            // Refresh the sidebar so it appears and the welcome screen clears,
+            // and refresh the viewer in case it is already open on that path.
+            specExplorer.refresh();
+            void handleSpecContextChange(uri, specViewer, outputChannel);
+        });
+        watcher.onDidDelete(handleSpecContextDelete);
+        context.subscriptions.push(watcher);
+    }
+    outputChannel.appendLine(`[FileWatcher] spec-context watchers registered for ${patterns.length} spec patterns`);
 }
 
 /**

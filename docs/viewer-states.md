@@ -110,54 +110,49 @@
 > `completedAt` is set — at `implemented` the spec-scope
 > `Mark Completed` is the right surface, not `Approve`.
 >
-> **Generating-during-in-flight (spec 099, restyled in spec 115)**:
-> While a step is mid-generation, the footer renders **two
-> non-competing affordances**: a non-clickable accent-tinted
-> `Generating <step>…` status chip (`<span
-> class="footer-generating-chip">` + spinner) on the **right**, and
-> the secondary `Mark step complete` override button on the
-> **left**. The status chip is not a button — it has
-> `pointer-events: none`, `role="status"`, and `aria-live="polite"`,
-> so it cannot be clicked or focused and is announced as ambient
-> live status rather than an interactive control. The renderer in
-> `webview/src/spec-viewer/components/FooterActions.tsx` shows this
-> state while the running step (`startedAt` set, no `completedAt`)
-> has **not** yet produced its artifact. Completion is content-aware:
-> the provider calls `hasNonTrivialArtifact()`
-> (`src/features/spec-viewer/stepArtifact.ts`) — `<step>.md` must
-> exist with a real heading or ≥40 non-whitespace chars after
-> frontmatter is stripped. The result is injected into
-> `deriveViewerState`, which carries `runningStepArtifactReady`,
-> `runningStepStartedAt`, and `runningStepLabel` on **`viewerState`**
-> (the footer's sole input). Both refresh messages — `contentUpdated`
-> (tab switch) and `viewerStateUpdated` (`.spec-context.json` change) —
-> ship a complete `viewerState`, so the state is consistent however the
-> viewer last refreshed. The existing watchers trigger the refresh, so
-> no new polling is added (the `implement` step has no single artifact
-> and is treated ready at 100% task completion).
+> **In-flight indicator consolidated onto the step tab (#277 Child 4)**:
+> There is no longer a "Generating…" footer pill. The single source of
+> in-flight motion is the **spinning step tab**. While the current step
+> is in flight (status `specifying` / `planning` / `tasking` /
+> `implementing`), the footer simply **suppresses its forward-motion
+> button** (`approve` / the next step's `start`) — the step hasn't
+> settled, so advancing it makes no sense — while keeping `Regenerate`
+> and any closure/refine actions. `FooterActions.tsx` reads `status`
+> from `viewerState` and passes a `stepInFlight` flag to `CatalogFooter`,
+> which drops the forward-motion ids. The old `GeneratingFooter`
+> component (and its left-side `Mark step complete` override + the
+> 10-minute recovery-timeout net) were removed: the extension now
+> reliably settles implement on its own from the always-on `tasks.md`
+> watcher (#244), so the manual override is no longer needed, and the
+> step tab stops the moment `status` settles (#255), so the strand-guard
+> is obsolete.
 >
-> Two escape hatches keep the footer from stranding: the left-side
-> `Mark step complete` override (posts `markStepComplete`, which
-> calls `completeStep` for the running step) and a **10-minute
-> recovery timeout** after which the footer reverts to its normal
-> enabled buttons. The header status badge and the active step's
-> pulse remain the ambient "AI is working" cues; the sidebar's
-> per-row Archive remains as an escape hatch.
+> **Step-tab in-flight indicator (spec 147, #229; extended in #277)**:
+> While **any** step is running — specify / plan / tasks **and**
+> implement — its tab renders a spinning `sync` codicon (looping
+> arrows) — a `<span class="codicon codicon-sync step-status__sync">`
+> colored with the `--purple` theme var and spun via the shared `spin`
+> keyframe. The glyph is rendered whenever `canonicalState ===
+> 'in-flight'`, so it **disappears the instant the step completes** (a
+> `completedAt` is recorded or `status` settles — no manual refresh).
+> During the implement step the glyph renders **inside
+> `.step-tab__percent`, next to the live `taskCompletionPercent`**, so
+> the implement tab has motion instead of a static "Tasks 0%". For the
+> earlier steps it renders in the (otherwise empty) `.step-status` badge.
+> Reduced-motion users get a static glyph (the global
+> `prefers-reduced-motion` rule in `tokens.css` neutralizes the spin).
+> Implemented in `StepTab.tsx` + `webview/styles/spec-viewer/_navigation.css`.
 >
-> **Step-tab in-flight indicator (spec 147, #229)**: While a
-> specify / plan / tasks step is running, its `.step-status`
-> renders a spinning `sync` codicon (looping arrows) — a
-> `<span class="codicon codicon-sync step-status__sync">` colored
-> with the `--purple` theme var and spun via the shared `spin`
-> keyframe. This replaced the earlier filled-circle dot: looping
-> arrows read as "actively working" at a glance. The glyph is
-> rendered only when `canonicalState === 'in-flight'` and there is
-> no percentage to show, so it **disappears the instant the step
-> completes** (a `completedAt` is recorded or `activeStep` moves
-> off the step — no manual refresh). The implement step keeps its
-> `taskCompletionPercent` pill (the `:not(:empty)` widening path) —
-> the glyph applies only to the empty in-flight case. Implemented
-> in `StepTab.tsx` + `webview/styles/spec-viewer/_navigation.css`.
+> **Viewer refresh on completion (#277 Child 3 / #270)**: The open
+> viewer re-derives its state on every `.spec-context.json` write,
+> driven by a watcher over each configured spec directory
+> (`**/<pattern>/**/.spec-context.json` from `getFileWatcherPatterns`,
+> wired in `src/core/fileWatchers.ts`). The legacy `.claude` watcher is
+> kept for back-compat. This is why completing a step now stops the
+> spinner and surfaces the next action within a debounce window without
+> switching tabs, and why a newly-created spec (including under
+> `.specify/specs/`) clears the welcome screen and appears in the
+> sidebar without a window reload.
 >
 > **Footer overflow note (future-proofing)**: After this redesign
 > the right-side bar typically holds 1–3 buttons. If more lifecycle
