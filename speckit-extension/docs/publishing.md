@@ -56,7 +56,7 @@ The whole flow is automated by the `/publish-speckit-ext` skill.
 ## Pre-submit checklist (mapped to the guide)
 
 - [x] `id` lowercase-with-hyphens — `companion`
-- [x] `version` semver — `0.2.0`
+- [x] `version` semver — matches `extension.yml` `extension.version` (e.g. `X.Y.Z`)
 - [x] `description` < 100 chars — 88
 - [x] `repository` valid public GitHub URL
 - [x] `homepage` present

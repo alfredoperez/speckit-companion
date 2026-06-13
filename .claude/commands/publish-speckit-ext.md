@@ -50,7 +50,7 @@ Release the **spec-kit extension** (`speckit-extension/`, `id: companion`) so pe
    else
      gh release create companion-latest /tmp/cb/companion.zip \
        --title "SpecKit Companion (latest)" \
-       --notes "Rolling stable download for the spec-kit extension. Always serves the newest \`companion\` build. Install/update: \`specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force\`" \
+       --notes 'Rolling stable download for the spec-kit extension. Always serves the newest `companion` build. Install/update: `specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force`' \
        --prerelease --target main
    fi
    gh release edit companion-latest --prerelease   # idempotent — re-asserts prerelease every run so a mis-marked prior release can't become /releases/latest

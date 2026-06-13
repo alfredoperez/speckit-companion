@@ -14,7 +14,7 @@ The documented way to install and update the spec-kit extension (`id: companion`
 - **FR-006** `speckit-extension/README.md` MUST document the install command using the stable `companion-latest/companion.zip` URL, and MUST include an explicit "to update, re-run the same command with `--force`" instruction.
 - **FR-007** `speckit-extension/docs/install.md` MUST document the same stable install/update command and the `--force` update line.
 - **FR-008** `speckit-extension/docs/publishing.md` MUST document the `companion-latest` stable-asset step as part of the release process.
-- **FR-009** `speckit-extension/extension.yml` `extension.version` MUST be bumped, and `speckit-extension/CHANGELOG.md` MUST gain a user-facing entry describing the stable install/update URL. Root `README.md`/`CHANGELOG.md`/`package.json` MUST NOT be touched.
+- **FR-009** `speckit-extension/extension.yml` `extension.version` MUST be bumped, and `speckit-extension/CHANGELOG.md` MUST gain a user-facing entry describing the stable install/update URL. The root `README.md`'s spec-kit-extension **install command** MUST be repointed to the same stable URL (a factual link-accuracy fix — otherwise root-README users stay version-pinned); root `CHANGELOG.md`/`package.json` and the root extension's own versioned docs MUST NOT be touched.
 - **FR-010** No release may be published as part of this change — the flow is wired so the *next* `/publish-speckit-ext` produces the stable asset.
 
 ## Success Criteria
