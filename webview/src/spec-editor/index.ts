@@ -8,8 +8,7 @@ import type {
     SpecEditorToExtensionMessage,
     ExtensionToSpecEditorMessage,
     SpecEditorWebviewState,
-    AttachedImageUI,
-    SIZE_LIMITS
+    AttachedImageUI
 } from './types';
 import { canSubmit, isOverLimit, shouldShowCharCount, isMacPlatform, MAX_CHARS } from './submitGate';
 
@@ -132,6 +131,9 @@ function setLoading(loading: boolean): void {
     loadingOverlay.style.display = loading ? 'flex' : 'none';
     loadingOverlay.setAttribute('aria-hidden', loading ? 'false' : 'true');
     loadingOverlay.setAttribute('aria-busy', loading ? 'true' : 'false');
+    if (loading) {
+        announce('Creating your spec…');
+    }
     updateSubmitState();
     if (commandButtonsContainer) {
         commandButtonsContainer.querySelectorAll('button').forEach(btn => {

@@ -8,13 +8,6 @@ export const MAX_CHARS = 50_000;
 /** Fraction of the limit at which the character counter becomes visible. */
 export const CHAR_COUNT_REVEAL_RATIO = 0.9;
 
-export const SUBTITLE_TEXT =
-    'Describe your feature — the AI will generate the spec, plan, and tasks for it.';
-
-export const HELPER_TEXT =
-    'Write what you want and why. Helpful to include: the problem it solves, who it is for, ' +
-    'the key requirements, and any constraints or dependencies.';
-
 /** True when the description is non-empty (ignoring whitespace) and within the limit. */
 export function canSubmit(content: string, max: number = MAX_CHARS): boolean {
     const trimmed = content.trim();
