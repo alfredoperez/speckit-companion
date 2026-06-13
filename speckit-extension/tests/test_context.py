@@ -688,5 +688,88 @@ class TasksFileResolvesFeatureDirTests(unittest.TestCase):
         self.assertEqual(_ctx(self.target)["status"], "implemented")
 
 
+class MarkCompleteTests(unittest.TestCase):
+    """`mark_spec_complete` / `--mark-complete`: the only sanctioned writer of
+    `status: completed`. Promotes a finished spec, preserves the canonical
+    invariant (last history step == currentStep), and is idempotent."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.fd = Path(self._tmp.name) / "specs" / "_zzz-test"
+        self.fd.mkdir(parents=True)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def _implemented_spec(self) -> None:
+        # Drive a spec to the implement step's own terminal (`implemented`).
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.update_context(self.fd, "implement", "implemented", "extension", "complete")
+
+    def test_promotes_implemented_to_completed(self) -> None:
+        self._implemented_spec()
+        result = wc.mark_spec_complete(self.fd, "ai")
+        self.assertIsNotNone(result)
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], "completed")
+        # Invariant: currentStep stays at the last real step (implement), which is
+        # the last history entry's step — so last-history-step == currentStep holds.
+        self.assertEqual(ctx["currentStep"], "implement")
+        self.assertEqual(ctx["history"][-1]["step"], "implement")
+
+    def test_history_is_untouched(self) -> None:
+        self._implemented_spec()
+        before = list(_ctx(self.fd)["history"])
+        wc.mark_spec_complete(self.fd, "ai")
+        # mark-complete writes no history entry — the log is byte-for-byte preserved.
+        self.assertEqual(_ctx(self.fd)["history"], before)
+
+    def test_idempotent_on_completed(self) -> None:
+        self._implemented_spec()
+        wc.mark_spec_complete(self.fd, "ai")
+        before = _ctx(self.fd)
+        result = wc.mark_spec_complete(self.fd, "ai")
+        self.assertIsNone(result)
+        self.assertEqual(_ctx(self.fd), before)
+
+    def test_idempotent_on_archived(self) -> None:
+        target = self.fd / ".spec-context.json"
+        self._implemented_spec()
+        ctx = _ctx(self.fd)
+        ctx["status"] = "archived"
+        target.write_text(json.dumps(ctx))
+        before = _ctx(self.fd)
+        result = wc.mark_spec_complete(self.fd, "ai")
+        self.assertIsNone(result, "an archived spec must not be regressed to completed")
+        self.assertEqual(_ctx(self.fd), before)
+
+    def test_unknown_keys_preserved(self) -> None:
+        target = self.fd / ".spec-context.json"
+        self._implemented_spec()
+        ctx = _ctx(self.fd)
+        ctx["reviewComments"] = [{"id": "rc1", "comment": "keep me"}]
+        target.write_text(json.dumps(ctx))
+        wc.mark_spec_complete(self.fd, "ai")
+        out = _ctx(self.fd)
+        self.assertEqual(out["reviewComments"], [{"id": "rc1", "comment": "keep me"}])
+        self.assertEqual(out["status"], "completed")
+
+    def test_cli_mark_complete_dispatch(self) -> None:
+        # The argparse wiring + main() dispatch branch end-to-end.
+        self._implemented_spec()
+        orig_root, orig_resolve = wc._repo_root, wc.resolve_feature_dir
+        wc._repo_root = lambda: Path(self._tmp.name)
+        wc.resolve_feature_dir = lambda root, explicit: self.fd
+        orig_argv = sys.argv
+        sys.argv = ["write-context.py", "--mark-complete", "--by", "ai"]
+        try:
+            rc = wc.main()
+        finally:
+            sys.argv = orig_argv
+            wc._repo_root, wc.resolve_feature_dir = orig_root, orig_resolve
+        self.assertEqual(rc, 0)
+        self.assertEqual(_ctx(self.fd)["status"], "completed")
+
+
 if __name__ == "__main__":
     unittest.main()

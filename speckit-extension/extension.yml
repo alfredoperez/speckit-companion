@@ -3,7 +3,7 @@ schema_version: "1.0"
 extension:
   id: companion
   name: "SpecKit Companion"
-  version: "0.4.1"
+  version: "0.5.0"
   description: "Live spec-driven progress for SpecKit Companion — lifecycle capture, status, and resume."
   author: alfredoperez
   repository: https://github.com/alfredoperez/speckit-companion
@@ -11,10 +11,10 @@ extension:
   license: MIT
 
 requires:
-  # Floor for the workflow `integration: auto` path the later phases ride.
-  # Confirm/raise once the exact spec-kit release that wired after_specify /
-  # after_plan hooks is verified against the installed CLI (see README).
-  speckit_version: ">=0.8.5"
+  # Floor is the workflow-engine surface the Companion workflow rides:
+  # `specify workflow run`/`resume` plus the `command`/`gate`/`switch` step
+  # registry, all present from the 0.9.x engine (validation target 0.9.5.dev0).
+  speckit_version: ">=0.9.5"
   tools:
     - name: python3
       required: false
@@ -51,6 +51,12 @@ provides:
     - name: speckit.companion.implement
       file: commands/speckit.companion.implement.md
       description: "Companion turbo implement — dependency-ordered execution (per-spec opt-in)"
+    - name: speckit.companion.classify
+      file: commands/speckit.companion.classify.md
+      description: "Classify change size (small | normal | oversized) for the Companion workflow routing node"
+    - name: speckit.companion.mark-complete
+      file: commands/speckit.companion.mark-complete.md
+      description: "Terminal Companion step — write status: completed to .spec-context.json"
 
 hooks:
   after_specify:

@@ -3,7 +3,7 @@
   "specName": "create spec ux",
   "branch": "164-create-spec-ux",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
@@ -145,6 +145,13 @@
       "kind": "complete",
       "by": "extension",
       "at": "2026-06-13T04:02:52.344Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-13T21:43:49.212Z"
     }
   ],
   "currentTask": "T008",
@@ -204,5 +211,6 @@
       "status": "DONE",
       "did": "Verified: npm run compile clean, full suite 1020/1020 green, npm run package built webview with no webpack/tsc errors"
     }
-  }
+  },
+  "profile": "turbo"
 }
