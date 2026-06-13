@@ -22,7 +22,7 @@ Reorder the "Beta Features" settings in VS Code Settings to follow the adoption 
 
 ## Assumptions
 
-- The README anchor for install instructions is `#installing-the-spec-kit-extension`; if that heading differs, the link target is adjusted to match the actual heading.
+- The README anchor for install instructions is `#install-the-spec-kit-extension` (the actual heading is `## Install the spec-kit Extension`); the originally-assumed `#installing-the-spec-kit-extension` does not exist, so the link target was adjusted to match.
 - Dependency wording follows the issue suggestion: "Requires the [companion spec-kit extension](…)."
 - Descriptions carrying a markdown link use `markdownDescription` (links do not render in plain `description`); descriptions without a link may stay as `description`.
 - "Order" is expressed via the VS Code `order` property (1–6) on each setting; explicit numbering overrides the default alphabetical sort.
@@ -32,7 +32,7 @@ Reorder the "Beta Features" settings in VS Code Settings to follow the adoption 
 
 Files to touch:
 
-- **`package.json`** — In the "Beta Features" configuration block (currently ~l.1023–1073), add an `order` property to each of the six settings following the funnel (`installPrompt`=1, `templateProfile`=2, `turboWorkflowPicker`=3, `complexityFastPath`=4, `resumeBeta`=5, `viewer.activityPanel`=6). For the five dependency-bearing settings, convert `description` → `markdownDescription` and append the consistent note: `Requires the [companion spec-kit extension](https://github.com/alfredoperez/speckit-companion#installing-the-spec-kit-extension).` Leave `installPrompt` without a note. Do not change any `default`, `type`, `enum`, or `scope`.
-- **`README.md`** — Update the "Configuration" section (Beta Features subsection) to reflect the new ordering and note which settings require the spec-kit extension, with the same install link. Verify the `#installing-the-spec-kit-extension` anchor exists; adjust the link target if the actual heading differs.
+- **`package.json`** — In the "Beta Features" configuration block (currently ~l.1023–1073), add an `order` property to each of the six settings following the funnel (`installPrompt`=1, `templateProfile`=2, `turboWorkflowPicker`=3, `complexityFastPath`=4, `resumeBeta`=5, `viewer.activityPanel`=6). For the five dependency-bearing settings, convert `description` → `markdownDescription` and append the consistent note: `Requires the [companion spec-kit extension](https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension).` Leave `installPrompt` without a note. Do not change any `default`, `type`, `enum`, or `scope`.
+- **`README.md`** — Update the "Configuration" section (Beta Features subsection) to reflect the new ordering and note which settings require the spec-kit extension, with the same install link. The actual heading is `## Install the spec-kit Extension`, so the link target is `#install-the-spec-kit-extension`.
 
 Dependencies / ordering: README edit depends on confirming the install-instructions heading/anchor in the same file. No code/runtime changes — this is configuration metadata and docs only.
