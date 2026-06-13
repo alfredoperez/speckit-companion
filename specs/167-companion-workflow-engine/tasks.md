@@ -35,10 +35,10 @@
 - [x] T011 [P] Update `docs/capture-and-timing.md`: describe the `workflow run`/`resume` capture path (each step still captures into `.spec-context.json`; implement still journals per-task finishes — FR-009).
 - [x] T012 [P] Update root `CLAUDE.md` where the dual-extension / capture model is described to reflect the new Companion workflow. Do NOT touch root `README.md`, root `CHANGELOG.md`, or `package.json` (FR-012, spec-kit-extension-only change).
 - [x] T013 Validate the YAML: `specify workflow info speckit-extension/workflows/speckit-companion.workflow.yml` reports zero validation errors (SC-007). Depends on T005/T006.
-- [ ] T014 Live end-to-end check: `specify workflow run speckit-companion` walks specify → plan → tasks → implement → mark-complete pausing at each gate (SC-001), then `specify workflow resume <run_id>` resumes a forced-pause run from the exact node with no repeated/skipped step (SC-002).
-- [ ] T015 Route verification across one fixture per branch (SC-003): `small` folds plan/tasks toward implement; `normal` runs all four phases; `oversized` prints a warning and still runs all four (3/3 route correctly, 0 silent skips).
+- [x] T014 Live end-to-end check: `specify workflow run speckit-companion` walks specify → plan → tasks → implement → mark-complete pausing at each gate (SC-001), then `specify workflow resume <run_id>` resumes a forced-pause run from the exact node with no repeated/skipped step (SC-002).
+- [x] T015 Route verification across one fixture per branch (SC-003): `small` folds plan/tasks toward implement; `normal` runs all four phases; `oversized` prints a warning and still runs all four (3/3 route correctly, 0 silent skips).
 - [x] T016 Additive-only diff check (SC-005): confirm the stock `speckit` workflow, its commands, and all other installed extension files are byte-for-byte unchanged — the diff shows only the new files plus the extension's own README/CHANGELOG/version/docs.
-- [ ] T017 Run the capture eval `/eval-speckit-extension` for a full Companion workflow run (SC-006, FR-013): `.spec-context.json` records each step with real (non-backfilled) timing, implement journals per-task finishes, and the run terminates at `status: completed` (SC-004).
+- [x] T017 Run the capture eval `/eval-speckit-extension` for a full Companion workflow run (SC-006, FR-013): `.spec-context.json` records each step with real (non-backfilled) timing, implement journals per-task finishes, and the run terminates at `status: completed` (SC-004).
 
 ## Dependencies
 
