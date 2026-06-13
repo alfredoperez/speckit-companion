@@ -138,7 +138,7 @@ export function CreateSpecMock({
 
                 <footer style="padding-top: 16px; display: flex; align-items: center; gap: 12px;">
                     <p style="margin: 0; font-size: 11px; color: var(--vscode-foreground, #c8c8c8);">
-                        <kbd style="background: var(--vscode-keybindingLabel-background, #2a2a2a); padding: 1px 6px; border-radius: 3px; border: 1px solid var(--vscode-widget-border, #303030);">Cmd</kbd>
+                        <kbd style="background: var(--vscode-keybindingLabel-background, #2a2a2a); padding: 1px 6px; border-radius: 3px; border: 1px solid var(--vscode-widget-border, #303030);">Ctrl/Cmd</kbd>
                         {' + '}
                         <kbd style="background: var(--vscode-keybindingLabel-background, #2a2a2a); padding: 1px 6px; border-radius: 3px; border: 1px solid var(--vscode-widget-border, #303030);">Enter</kbd>
                         {' to submit · '}

@@ -38,6 +38,7 @@ function getElements() {
         thumbnails: document.getElementById('thumbnails') as HTMLElement,
         sizeInfo: document.getElementById('sizeInfo') as HTMLElement,
         loadingOverlay: document.getElementById('loadingOverlay') as HTMLElement,
+        app: document.getElementById('app') as HTMLElement,
         submitBtn: document.getElementById('submitBtn') as HTMLButtonElement,
         cancelBtn: document.getElementById('cancelBtn') as HTMLButtonElement,
         attachImageBtn: document.getElementById('attachImageBtn') as HTMLButtonElement,
@@ -71,7 +72,7 @@ function updateCharCount(): void {
     const count = textarea.value.length;
     const over = isOverLimit(textarea.value, MAX_CHARS);
 
-    charCount.hidden = !shouldShowCharCount(count, MAX_CHARS);
+    charCount.classList.toggle('sr-only', !shouldShowCharCount(count, MAX_CHARS));
     charCount.classList.remove('warning', 'error');
 
     if (over) {
@@ -125,12 +126,14 @@ function escapeHtml(text: string): string {
 // ============================================
 
 function setLoading(loading: boolean): void {
-    const { loadingOverlay, commandButtonsContainer } = getElements();
+    const { loadingOverlay, commandButtonsContainer, app } = getElements();
     isSubmitting = loading;
 
     loadingOverlay.style.display = loading ? 'flex' : 'none';
     loadingOverlay.setAttribute('aria-hidden', loading ? 'false' : 'true');
-    loadingOverlay.setAttribute('aria-busy', loading ? 'true' : 'false');
+    if (app) {
+        app.setAttribute('aria-busy', loading ? 'true' : 'false');
+    }
     if (loading) {
         announce('Creating your spec…');
     }

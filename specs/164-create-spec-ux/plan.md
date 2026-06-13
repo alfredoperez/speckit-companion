@@ -22,8 +22,8 @@ Order of attack, by file:
    - `isOverLimit(content: string, max: number): boolean`.
    - `shouldShowCharCount(count: number, max: number): boolean` — true at ≥90% of max.
    - `isMacPlatform(platform: string, userAgent: string): boolean` — Mac detection.
-   - `helperText` / `subtitleText` constants (the persistent guidance + "what happens next" subtitle).
-   These are imported by `index.ts` and exercised directly by tests.
+   - `MAX_CHARS` and `CHAR_COUNT_REVEAL_RATIO` constants (the limit + counter reveal threshold).
+   The persistent guidance + "what happens next" subtitle copy lives in the HTML template (`specEditorProvider.ts`) and the mock — not in this module. These helpers are imported by `index.ts` and exercised directly by tests.
 
 2. **`src/features/spec-editor/specEditorProvider.ts` (HTML template ~l.585-650)**:
    - Wrap the content region in `<main>`; demote the attachments `<h3>` to `<h2>` (fix h1→h3 skip).

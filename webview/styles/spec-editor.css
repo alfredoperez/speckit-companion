@@ -150,9 +150,9 @@
     text-align: right;
 }
 
-.char-count[hidden] {
-    display: none;
-}
+/* Below the reveal threshold the counter keeps the .sr-only utility so it
+   stays in the a11y tree (the textarea's aria-describedby conveys the limit)
+   while staying visually hidden. */
 
 .char-count.warning {
     color: var(--warning);
@@ -531,6 +531,10 @@
 
     .spec-editor-actions {
         flex-wrap: wrap;
+    }
+
+    .action-spacer {
+        display: none;
     }
 
     .keyboard-hints {

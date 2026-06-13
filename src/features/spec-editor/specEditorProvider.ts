@@ -583,7 +583,7 @@ export class SpecEditorProvider {
     <title>New Spec</title>
 </head>
 <body>
-    <div class="spec-editor" id="app">
+    <div class="spec-editor" id="app" aria-busy="false">
         <main class="spec-editor-column">
             <header class="spec-editor-header">
                 <h1>Create New Spec</h1>
@@ -617,7 +617,7 @@ export class SpecEditorProvider {
                             <span class="codicon codicon-file-media" aria-hidden="true"></span>
                             Attach image
                         </button>
-                        <div class="char-count" id="charCount" hidden>0 / 50,000</div>
+                        <div class="char-count sr-only" id="charCount">0 / 50,000</div>
                     </div>
                     <div class="image-thumbnails" id="thumbnails"></div>
                     <div class="image-size-info" id="sizeInfo"></div>

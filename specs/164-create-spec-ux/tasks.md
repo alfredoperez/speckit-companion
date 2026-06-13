@@ -4,7 +4,7 @@ Dependency-ordered, grouped by execution layer. Traceability is to files and `FR
 
 ## Foundational
 
-- [x] **T001** Create pure helper module `webview/src/spec-editor/submitGate.ts` with `canSubmit`, `isOverLimit`, `shouldShowCharCount`, `isMacPlatform`, and exported `HELPER_TEXT` / `SUBTITLE_TEXT` constants (FR-002, FR-004, FR-008, FR-009, FR-010, FR-019)
+- [x] **T001** Create pure helper module `webview/src/spec-editor/submitGate.ts` exporting `MAX_CHARS`, `CHAR_COUNT_REVEAL_RATIO`, and the gate helpers `canSubmit`, `isOverLimit`, `shouldShowCharCount`, `isMacPlatform`; the helper/subtitle copy lives in the HTML template and the mock, not in this module (FR-002, FR-004, FR-008, FR-009, FR-010, FR-019)
 
 ## Core work
 
