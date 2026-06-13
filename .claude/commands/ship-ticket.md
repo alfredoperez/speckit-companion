@@ -102,12 +102,21 @@ git checkout main && git fetch origin && git pull --ff-only
 # /install-local …
 git restore package.json package-lock.json .specify/
 ```
-End with a tight summary: issue shipped, PR link, merged / in-review / blocked, new installed version, lessons-captured count, and a **🖐️ manual-verification** list — the UI / sidebar / webview / settings surfaces a human should eyeball (vs what tests/CI already exercised).
+**If the branch touched `speckit-extension/**`** — `/install-local` only refreshes the VS Code extension; the spec-kit extension also needs a `--dev` reinstall so the new `/speckit.companion.*` commands + workflow are resolvable in Claude Code. Check with `git diff --name-only origin/main...HEAD | grep -q '^speckit-extension/'`, and if so:
+```bash
+specify extension remove companion                # committed stub means a fresh add reports "already installed"
+specify extension add ./speckit-extension --dev   # re-copies into .specify/extensions/companion/ + re-emits .claude/ command
+specify extension list                            # confirm "companion" at the new state
+git restore .specify/                             # gitignored dev-install copies — never commit these
+```
+The `.claude/` command emissions are **committed real files** (not gitignored like `.specify/`), and the merged PR should already carry the updated ones. If the reinstall leaves `.claude/` dirty (`git status`), that means the PR shipped without re-emitting — **surface it, don't silently restore or commit on main**; the emission belongs in the feature PR.
+End with a tight summary: issue shipped, PR link, merged / in-review / blocked, new installed version, **whether the spec-kit extension was reinstalled**, lessons-captured count, and a **🖐️ manual-verification** list — the UI / sidebar / webview / settings surfaces a human should eyeball (vs what tests/CI already exercised).
 
 ## Guardrails
 
 - **Never rebuild** — that's `/fix-tickets`' job. This ships what's already on the branch.
 - **Never merge red checks.** Report instead.
 - **Never commit version bumps or `.specify/` regenerated artifacts** into the feature PR (install-local's bump is throwaway — restore it).
+- **Reinstall the spec-kit extension when the branch touched `speckit-extension/**`** — `/install-local` only covers the VS Code side; `specify extension remove companion && specify extension add ./speckit-extension --dev` is what makes the new `/speckit.companion.*` commands resolvable in Claude Code. Restore the gitignored `.specify/` copies; never commit them on main.
 - Copilot is best-effort; its absence is not an error.
 - Always reply to + resolve review threads (ours and Copilot's) after fixing.
