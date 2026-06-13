@@ -28,6 +28,9 @@ import { ConfigKeys } from './core/constants';
 import { ConfigManager } from './core/utils/configManager';
 import { migrateBetaTriStateSettings } from './core/settingsMigration';
 import { openSpecFile } from './core/utils/fileOpener';
+import { TelemetryService, initTelemetry, sendTelemetryEvent, buildBetaSnapshot } from './core/telemetry';
+import { getConfiguredProviderType } from './ai-providers/aiProvider';
+import { resolveSpecDirectories } from './core/specDirectoryResolver';
 
 let aiProvider: IAIProvider;
 let extensionContext: vscode.ExtensionContext;
@@ -98,6 +101,15 @@ export async function activate(context: vscode.ExtensionContext) {
     // Initialize providers and managers
     aiProvider = AIProviderFactory.getProvider(context, outputChannel);
     outputChannel.appendLine(`[Extension] Using AI provider: ${aiProvider.name}`);
+
+    // Anonymous, PII-free telemetry. Gated on both `speckit.telemetry` and VS
+    // Code's global telemetry level; fires nothing when the connection string
+    // is empty. Construct, register dispose, and emit the once-per-activation
+    // event with the beta-flag snapshot.
+    const telemetryService = new TelemetryService();
+    initTelemetry(telemetryService);
+    context.subscriptions.push({ dispose: () => telemetryService.dispose() });
+    void fireActivatedEvent(context);
 
     // Migrate the former tri-state beta settings (#259) to booleans before any
     // reader runs. Idempotent and scope-preserving: legacy `'beta'`/`'on'` → true,
@@ -222,6 +234,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(async e => {
             if (e.affectsConfiguration('speckit.aiProvider')) {
+                sendTelemetryEvent('provider.selected', { providerId: getConfiguredProviderType() });
                 const action = await vscode.window.showInformationMessage(
                     'AI provider changed. Reload window to apply changes.',
                     'Reload Now'
@@ -339,6 +352,30 @@ export async function activate(context: vscode.ExtensionContext) {
  */
 async function refreshCompanionInstalledContext(root: string): Promise<void> {
     await setContextKey(CONTEXT_KEYS.companionInstalled, isCompanionInstalled(root));
+}
+
+/**
+ * Fire the once-per-activation `extension.activated` event: version
+ * distribution + spec count + the beta-flag snapshot. All anonymous.
+ */
+async function fireActivatedEvent(context: vscode.ExtensionContext): Promise<void> {
+    let specCount = 0;
+    try {
+        const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        if (root) {
+            specCount = (await resolveSpecDirectories(root)).length;
+        }
+    } catch {
+        /* spec discovery failure is non-fatal — report 0 */
+    }
+    sendTelemetryEvent('extension.activated', {
+        extensionVersion: String(context.extension.packageJSON.version ?? 'unknown'),
+        vscodeVersion: vscode.version,
+        // No CLI version detector exists today — the detector only checks presence.
+        speckitCliVersion: 'unknown',
+        specCount: String(specCount),
+        ...buildBetaSnapshot(),
+    });
 }
 
 /**

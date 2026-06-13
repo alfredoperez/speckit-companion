@@ -50,6 +50,12 @@ jest.mock("../../../src/features/specs/historyHelpers", () => ({
 
 jest.mock("../../../src/ai-providers/aiProvider", () => ({
   formatCommandForProvider: (cmd: string) => cmd,
+  getConfiguredProviderType: () => "claude",
+}));
+
+jest.mock("../../../src/core/telemetry", () => ({
+  sendTelemetryEvent: jest.fn(),
+  getSpecTelemetryContext: jest.fn().mockReturnValue({}),
 }));
 
 jest.mock("../../../src/ai-providers/promptBuilder", () => ({

@@ -1075,6 +1075,13 @@
             "scope": "window",
             "order": 6,
             "markdownDescription": "Show a per-spec Activity timeline in the viewer — step transitions, decisions, and files touched. Opt-in beta. Requires the [companion spec-kit extension](https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension)."
+          },
+          "speckit.telemetry": {
+            "type": "boolean",
+            "default": true,
+            "scope": "window",
+            "order": 7,
+            "markdownDescription": "Send **anonymous, PII-free** usage telemetry that helps prioritize which AI providers and pipeline features to invest in. Collected: the selected AI provider, the pipeline profile (standard/turbo), which workflow phase was dispatched, spec lifecycle counts (created / completed / archived), and the on/off state of beta flags. **Never collected**: prompt content, file paths, spec names, or custom workflow names — only enum-like values, booleans, versions, counts, and a random per-spec id. Also honors VS Code's global `telemetry.telemetryLevel`: if either this setting or the global setting is off, no telemetry is sent. Defaults to on."
           }
         }
       }
@@ -1098,6 +1105,7 @@
   "dependencies": {
     "@preact/signals": "^1.3.4",
     "@vscode/codicons": "^0.0.45",
+    "@vscode/extension-telemetry": "^1.5.2",
     "js-yaml": "^4.1.1",
     "preact": "^10.29.1"
   },

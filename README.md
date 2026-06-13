@@ -254,6 +254,37 @@ This applies to all providers that support it: Claude (`--permission-mode bypass
 
 > **Copilot exception**: GitHub Copilot CLI cannot surface permission prompts in `-p` mode. Even with `permissionMode: "interactive"`, the extension auto-switches Copilot to auto-approve at dispatch time — otherwise the terminal would silently hang waiting for a prompt that never appears. This is enforced at runtime; dismissing the startup warning toast does not re-enable interactive mode for Copilot.
 
+### Telemetry
+
+The extension sends **anonymous, PII-free** usage telemetry to help prioritize which AI providers and pipeline features to invest in. It is gated on two switches — if **either** is off, nothing is sent:
+
+```json
+{
+  "speckit.telemetry": true
+}
+```
+
+| Switch | Effect when off |
+|--------|-----------------|
+| `speckit.telemetry` (default `true`) | Disables all extension telemetry, regardless of the global setting |
+| VS Code's global `telemetry.telemetryLevel` | Disables all extension telemetry, regardless of `speckit.telemetry` |
+
+**What is collected** (all anonymous):
+
+| Signal | Example value |
+|--------|---------------|
+| Selected AI provider | `claude`, `copilot`, `gemini`, … |
+| Pipeline profile | `standard` / `turbo` |
+| Which workflow phase was dispatched | `specify` / `plan` / `tasks` / `implement` |
+| Spec lifecycle counts | created / completed / archived |
+| Beta-flag on/off states | a snapshot reported once per session |
+| Extension / VS Code versions, spec count | for version distribution and scale |
+| Chosen workflow | the built-in id, or the literal `custom` |
+
+**What is never collected**: prompt content, file paths, spec names, or custom workflow names — only enum-like values, booleans, versions, counts, and a random per-spec id.
+
+That per-spec id is a **random UUID, not the spec name or path**. It correlates a single spec's events into a funnel (created → dispatched → completed) without ever revealing which spec it is. It is stored in the spec's `.spec-context.json` so the same id rides every event for that spec.
+
 ### Beta Features
 
 The opt-in beta toggles appear under **Beta Features** in VS Code Settings in adoption-funnel order — the sequence you'd enable them in, not alphabetical:

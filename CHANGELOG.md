@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **Opt-in anonymous telemetry** (#129): a new `speckit.telemetry` setting (default on) sends anonymous, PII-free usage signal that helps prioritize which AI providers and pipeline features to invest in — the selected provider, the pipeline profile (standard/turbo), which workflow phase was dispatched, spec lifecycle counts (created / completed / archived), and the on/off state of beta flags. It honors VS Code's global telemetry setting too: if either switch is off, nothing is sent. It never collects prompt content, file paths, spec names, or custom workflow names — only enum-like values, booleans, versions, counts, and a random per-spec id that correlates one spec's events without revealing which spec it is. See the Telemetry section in the README.
+
 ## [0.23.0] - 2026-06-12
 
 ### Added
