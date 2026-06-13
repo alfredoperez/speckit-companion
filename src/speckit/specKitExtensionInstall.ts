@@ -12,9 +12,15 @@ import { coerceLegacyBoolean } from '../core/settingsMigration';
  * so the URL/by-name swap and the prereq note have exactly one home.
  */
 
-/** The published release asset. Install works TODAY against this `--from <url>` form. */
+/**
+ * The stable rolling release asset. The `/publish-speckit-ext` flow refreshes this
+ * fixed `companion-latest/companion.zip` URL on every release, so installing against
+ * this `--from <url>` form always pulls the newest published build — no version
+ * string, no per-release edit here. Both READMEs and the catalog `download_url` point
+ * at the same asset.
+ */
 export const RELEASE_URL =
-    'https://github.com/alfredoperez/speckit-companion/releases/download/speckit-ext-v0.3.0/companion-0.3.0.zip';
+    'https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip';
 
 /**
  * The catalog by-name form. Resolves ONLY after github/spec-kit's catalog review

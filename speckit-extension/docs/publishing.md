@@ -64,6 +64,10 @@ The whole flow is automated by the `/publish-speckit-ext` skill.
 - [x] `tags` 2–5, lowercase — `spec-driven-development`, `tracking`, `companion`
 - [x] every `provides.commands[].file` exists (6: capture, capture-plan/-tasks/-implement, status, resume)
 - [x] `README.md` + `CHANGELOG.md` present
+- [ ] **No version-pinned install download URL in shipped code/docs** — the in-editor Install/Update must point at the stable rolling `companion-latest/companion.zip` asset, never a `speckit-ext-vX.Y.Z` / `companion-X.Y.Z.zip` pin (a pin makes "Update" a silent downgrade). This must return **nothing** before tagging:
+  ```bash
+  grep -rnE 'releases/download/(speckit-ext-v[0-9]|companion-[0-9])' src speckit-extension README.md
+  ```
 - [ ] GitHub release created with a `speckit-ext-v*` tag + archive URL
 - [ ] Extension Submission issue filed
 
