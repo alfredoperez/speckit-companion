@@ -103,6 +103,34 @@ export enum ConfigurationTarget {
     WorkspaceFolder = 3,
 }
 
+/**
+ * A capturing FileSystemWatcher stub. Records the glob it was registered for
+ * and the listeners passed to each `onDid*`, exposing `fire*` helpers so a test
+ * can drive a change/create/delete through the registered handlers.
+ */
+export function createMockFileSystemWatcher(pattern: any) {
+    const handlers: { change: any[]; create: any[]; delete: any[] } = {
+        change: [],
+        create: [],
+        delete: [],
+    };
+    const register = (bucket: any[]) => (cb: any) => {
+        bucket.push(cb);
+        return { dispose: jest.fn() };
+    };
+    return {
+        pattern,
+        onDidChange: jest.fn(register(handlers.change)),
+        onDidCreate: jest.fn(register(handlers.create)),
+        onDidDelete: jest.fn(register(handlers.delete)),
+        dispose: jest.fn(),
+        __handlers: handlers,
+        fireChange: (uri: any) => Promise.all(handlers.change.map(cb => cb(uri))),
+        fireCreate: (uri: any) => Promise.all(handlers.create.map(cb => cb(uri))),
+        fireDelete: (uri: any) => Promise.all(handlers.delete.map(cb => cb(uri))),
+    };
+}
+
 export const workspace = {
     fs: {
         readDirectory: jest.fn().mockResolvedValue([]),
@@ -115,6 +143,7 @@ export const workspace = {
     },
     workspaceFolders: undefined as any,
     findFiles: jest.fn().mockResolvedValue([]),
+    createFileSystemWatcher: jest.fn().mockImplementation(createMockFileSystemWatcher),
     getConfiguration: jest.fn().mockReturnValue({
         get: jest.fn().mockReturnValue(['specs']),
     }),
