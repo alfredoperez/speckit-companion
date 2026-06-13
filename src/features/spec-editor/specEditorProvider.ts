@@ -19,6 +19,8 @@ import { shouldShowInstallPrompt, readInstallPromptEnabled } from '../../speckit
 import { renderInstallBannerHtml } from './installBanner';
 import { AIProviders, WorkflowSteps, ConfigKeys } from '../../core/constants';
 import { coerceLegacyBoolean } from '../../core/settingsMigration';
+import { sendTelemetryEvent } from '../../core/telemetry';
+import * as crypto from 'crypto';
 
 /** The turbo specify twin the picker routes to when turbo is chosen. */
 const TURBO_SPECIFY_COMMAND = 'speckit.companion.specify';
@@ -415,6 +417,19 @@ export class SpecEditorProvider {
 
             // Execute in terminal
             await provider.executeInTerminal(prompt, 'SpecKit - New Spec');
+
+            // Anonymous spec.created. The spec dir doesn't exist yet (the AI
+            // creates it), so the persisted per-spec id is minted lazily on the
+            // first later event; this carries a fresh id as a creation marker.
+            // Profile is derived from the resolved command (the turbo twin routes
+            // via the `companion.*` family) so it catches BOTH an explicit turbo
+            // pick AND a project-default-turbo resolution — `seedProfile` is only
+            // set on the explicit-pick path and would miss the project default.
+            sendTelemetryEvent('spec.created', {
+                providerId: providerType,
+                profile: command.includes('companion.') ? 'turbo' : 'standard',
+                specInstanceId: crypto.randomUUID(),
+            });
 
             // Mark as submitted
             await this.tempFileManager.markSubmitted(tempFileSet.id);

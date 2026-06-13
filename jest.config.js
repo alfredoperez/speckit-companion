@@ -19,6 +19,7 @@ module.exports = {
   moduleNameMapper: {
     // Handle VS Code module
     'vscode': '<rootDir>/tests/__mocks__/vscode.ts',
+    '^@vscode/extension-telemetry$': '<rootDir>/tests/__mocks__/@vscode/extension-telemetry.ts',
     // Preact ships ESM-only via the "import" condition, which Jest in
     // CommonJS mode can't load. Force the CJS entry for tests.
     '^preact$': '<rootDir>/node_modules/preact/dist/preact.js',

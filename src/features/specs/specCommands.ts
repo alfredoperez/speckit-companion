@@ -28,6 +28,8 @@ import { SpecsSortState } from './specsSortState';
 import { ALL_SORT_MODES, DEFAULT_SORT_MODE, SortMode } from './specsSortMode';
 import { loadCustomCommands, NormalizedCustomCommand } from './customCommandConfig';
 import { CONTEXT_KEYS, setContextKey } from '../../core/utils/contextKeys';
+import { sendTelemetryEvent, getSpecTelemetryContext, phaseTelemetryId } from '../../core/telemetry';
+import { getConfiguredProviderType } from '../../ai-providers/aiProvider';
 
 function toWorkspaceRelative(absOrRel: string): string {
     const ws = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -291,6 +293,21 @@ export function registerSpecKitCommands(
         return path.join(wsPath, relativePath);
     }
 
+    function telemetryIdProps(specDir: string): Record<string, string> {
+        const id = getSpecTelemetryContext(specDir).specInstanceId;
+        return id ? { specInstanceId: id } : {};
+    }
+
+    async function completeApply(specDir: string): Promise<void> {
+        await setStatus(specDir, 'completed');
+        sendTelemetryEvent('spec.completed', telemetryIdProps(specDir));
+    }
+
+    async function archiveApply(specDir: string): Promise<void> {
+        await setStatus(specDir, 'archived');
+        sendTelemetryEvent('spec.archived', telemetryIdProps(specDir));
+    }
+
     async function runBulkStatusChange(
         item: SpecTreeItem | undefined,
         items: SpecTreeItem[] | undefined,
@@ -358,7 +375,7 @@ export function registerSpecKitCommands(
             await runBulkStatusChange(
                 item,
                 items,
-                specDir => setStatus(specDir, 'completed'),
+                completeApply,
                 'marked as completed',
                 'marked as completed',
                 s => s === SpecStatuses.COMPLETED
@@ -372,7 +389,7 @@ export function registerSpecKitCommands(
             await runBulkStatusChange(
                 item,
                 items,
-                specDir => setStatus(specDir, 'archived'),
+                archiveApply,
                 'archived',
                 'archived',
                 s => s === SpecStatuses.ARCHIVED
@@ -401,7 +418,7 @@ export function registerSpecKitCommands(
                 item,
                 'active',
                 'Mark as Completed',
-                specDir => setStatus(specDir, 'completed'),
+                completeApply,
                 'marked as completed',
                 'marked as completed',
                 s => s === SpecStatuses.COMPLETED
@@ -418,7 +435,7 @@ export function registerSpecKitCommands(
                 item,
                 groupLabel,
                 'Archive',
-                specDir => setStatus(specDir, 'archived'),
+                archiveApply,
                 'archived',
                 'archived',
                 s => s === SpecStatuses.ARCHIVED
@@ -601,6 +618,14 @@ async function executeWorkflowStep(
         });
     }
     outputChannel.appendLine(`[SpecKit] Resolved command: ${command}`);
+
+    const specTelemetry = getSpecTelemetryContext(targetDir);
+    sendTelemetryEvent('phase.dispatched', {
+        providerId: getConfiguredProviderType(),
+        phase: phaseTelemetryId(step),
+        ...(specTelemetry.profile ? { profile: specTelemetry.profile } : {}),
+        ...(specTelemetry.specInstanceId ? { specInstanceId: specTelemetry.specInstanceId } : {}),
+    });
 
     // Check if command exists (warn if custom command may not exist)
     if (baseCommand !== `speckit.${step}`) {

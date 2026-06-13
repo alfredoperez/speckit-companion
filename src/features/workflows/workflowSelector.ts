@@ -9,6 +9,17 @@ import * as vscode from 'vscode';
 import { WorkflowConfig } from './types';
 import { getWorkflows, getFeatureWorkflow, saveFeatureWorkflow, getWorkflow } from './workflowManager';
 import { ConfigKeys } from '../../core/constants';
+import { sendTelemetryEvent } from '../../core/telemetry';
+
+/**
+ * Map a chosen workflow to the value reported in telemetry: the built-in
+ * `speckit` id verbatim, or the literal `"custom"` for any user-defined
+ * workflow (privacy: never send a user's custom workflow name).
+ */
+function workflowTelemetryId(workflowName: string): string {
+    // Legacy `'default'` is an alias for the built-in `speckit` workflow.
+    return workflowName === 'speckit' || workflowName === 'default' ? 'speckit' : 'custom';
+}
 
 /**
  * Check if workflow selection is needed
@@ -96,6 +107,10 @@ export async function selectWorkflow(featureDir: string): Promise<WorkflowConfig
 
     // Save selection to feature context
     await saveFeatureWorkflow(featureDir, selection.workflow.name);
+
+    sendTelemetryEvent('workflow.selected', {
+        workflow: workflowTelemetryId(selection.workflow.name),
+    });
 
     return selection.workflow;
 }

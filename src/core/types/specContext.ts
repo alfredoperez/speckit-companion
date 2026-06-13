@@ -172,6 +172,13 @@ export interface SpecContext {
      */
     profile?: 'standard' | 'turbo';
     /**
+     * Random per-spec correlation id for anonymous telemetry. A UUID, never the
+     * spec name or path. Minted at spec creation (or lazily on the first
+     * telemetry event for a pre-existing spec) and persisted so the same id
+     * rides every later event for this spec, enabling a per-spec funnel.
+     */
+    telemetryInstanceId?: string;
+    /**
      * Per-task summaries (skill-authored). Loosely typed at the raw on-disk
      * layer because writers emit varied shapes; the reader normalizes them and
      * the viewer exposes the strongly-typed form via `ViewerState.taskSummaries`.
