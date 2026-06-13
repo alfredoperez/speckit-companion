@@ -1,0 +1,138 @@
+{
+  "workflow": "speckit",
+  "profile": "turbo",
+  "specName": "Reorder Beta Settings",
+  "branch": "main",
+  "selectedAt": "2026-06-13T01:01:05.174Z",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-13T01:01:05.174Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-13T01:02:34.684Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-13T01:02:34.760Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T01:02:34.842Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-13T01:02:34.923Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T01:02:35.003Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-13T01:04:25.883Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-13T01:04:25.885Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T01:05:48.217Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T01:05:56.151Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T01:06:42.783Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T01:06:51.185Z"
+    },
+    {
+      "step": "implement",
+      "substep": "run-tests",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T01:07:11Z"
+    }
+  ],
+  "currentTask": "T004",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added order 1-6 to each Beta Features setting in funnel order and physically reordered the block",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Converted the five dependency-bearing settings to markdownDescription and appended the consistent 'Requires the companion spec-kit extension' note with install link; left installPrompt unchanged",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Verified the install heading is '## Install the spec-kit Extension' and corrected the link anchor to #install-the-spec-kit-extension (the #installing-... anchor does not exist)",
+      "files": [
+        "README.md",
+        "package.json"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added a Beta Features overview subsection to README Configuration showing the funnel order and which toggles require the spec-kit extension, with the corrected install link",
+      "files": [
+        "README.md"
+      ]
+    }
+  }
+}
