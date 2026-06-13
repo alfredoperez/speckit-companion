@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-12
+
+### Changed
+- **One stable install command that also updates you.** The install command now points at a permanent download URL that always serves the newest release, so you're no longer frozen on whatever version you happened to copy. Install with `specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force`, and **to update later, re-run the exact same line** — `--force` refreshes your installed copy in place. No version number to bump, no new URL to hunt down.
+
 ## [0.3.0] - 2026-06-10
 
 The spec-kit extension's first catalog release — full lifecycle capture, Status + Resume, selectable template profiles, and accurate timing. See [ROADMAP.md](./ROADMAP.md).

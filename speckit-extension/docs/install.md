@@ -13,6 +13,19 @@ specify extension --help     # confirm `add` / `list` are present
 
 > **Version floor:** the extension declares `requires.speckit_version: ">=0.8.5"` (the floor for the workflow `integration: auto` path later phases ride). Confirm/raise once the exact spec-kit release that wired `after_specify`/`after_plan` is verified.
 
+## From the release archive (recommended)
+
+Install from the **stable** release URL — it always serves the newest build, so the same command installs and updates:
+
+```bash
+specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force
+specify extension list   # confirm "companion" is listed at the new version
+```
+
+**To update:** re-run the exact same command. The `companion-latest/companion.zip` URL is reused on every release (it's a dedicated rolling asset, not a version-pinned one), and `--force` refreshes an existing install in place — no version string to edit, no new URL to find. A raw-URL install shows a one-time "untrusted source" prompt until the catalog lists `companion`.
+
+> **Why not `/releases/latest/download/…`?** This repo publishes two products into one releases list (the VS Code extension on `v*` tags and this extension on `speckit-ext-v*` tags). GitHub's `/releases/latest` tracks the newest release across **both**, so a `/releases/latest/download/companion.zip` URL would 404 the moment the next VS Code release is cut. The `companion-latest` tag above resolves by name and is immune to that.
+
 ## Local / development (today)
 
 Not published to the spec-kit catalog yet, so install straight from this directory. From the repo root:

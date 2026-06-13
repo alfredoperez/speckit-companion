@@ -10,14 +10,17 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/extension-companion-0b6dd9" alt="extension: companion">
-  <img src="https://img.shields.io/badge/version-0.3.0-0b6dd9" alt="version 0.3.0">
+  <img src="https://img.shields.io/badge/version-0.4.0-0b6dd9" alt="version 0.4.0">
   <img src="https://img.shields.io/badge/spec--kit-%E2%89%A50.8.5-008080" alt="requires spec-kit >= 0.8.5">
   <img src="https://img.shields.io/badge/license-MIT-gold" alt="license MIT">
 </p>
 
 ```bash
-specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/speckit-ext-v0.3.0/companion-0.3.0.zip
+# Install — and update, by re-running with --force (always pulls the newest build)
+specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force
 ```
+
+> The URL above is **stable** — it always serves the newest release, so the same command installs and updates. To update later, just re-run it (the `--force` flag refreshes an existing install in place).
 
 > Tags: `#spec-driven-development` `#tracking` `#companion` · Independently maintained.
 
@@ -113,14 +116,14 @@ uv tool install specify-cli --from git+https://github.com/github/spec-kit.git --
 Then install the extension:
 
 ```bash
-# From the release archive (recommended)
-specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/speckit-ext-v0.3.0/companion-0.3.0.zip
+# From the release archive (recommended) — this URL is stable, so the SAME line updates you later
+specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force
 
 # Or from a local checkout while developing
 specify extension add ./speckit-extension --dev
 ```
 
-Once it lands in the spec-kit community catalog this shortens to `specify extension add companion`. `python3` is used by the capture scripts but is **optional** — capture skips gracefully if it's missing and never fails the host command. Full prerequisites + a CLI-less fallback: [docs/install.md](./docs/install.md).
+**To update:** re-run the exact same command — the `companion-latest/companion.zip` URL always serves the newest release, and `--force` refreshes the installed copy in place. No version string to bump, no new URL to find. Once it lands in the spec-kit community catalog this shortens to `specify extension add companion`. `python3` is used by the capture scripts but is **optional** — capture skips gracefully if it's missing and never fails the host command. Full prerequisites + a CLI-less fallback: [docs/install.md](./docs/install.md).
 
 Verify:
 

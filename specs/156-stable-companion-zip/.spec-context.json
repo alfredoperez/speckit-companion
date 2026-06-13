@@ -1,0 +1,166 @@
+{
+  "workflow": "speckit",
+  "specName": "stable companion zip",
+  "branch": "156-stable-companion-zip",
+  "currentStep": "implement",
+  "status": "implemented",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-12T23:45:19.760Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-12T23:46:20.104Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-12T23:46:20.183Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-12T23:46:20.262Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-12T23:46:20.343Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-12T23:46:20.422Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-12T23:46:54.274Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-12T23:47:36.097Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-12T23:48:08.225Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-12T23:48:35.050Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-12T23:48:52.059Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-12T23:48:52.141Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-12T23:49:27.417Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-12T23:49:33.228Z"
+    }
+  ],
+  "currentTask": "T007",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added companion-latest stable-asset step to the release flow (force-replace companion.zip on a prerelease) and updated verify/report steps",
+      "files": [
+        ".claude/commands/publish-speckit-ext.md"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added companion-latest stable-asset step to the publishing Process, explained the two-product /releases/latest pitfall, and pointed the catalog download_url at the stable URL",
+      "files": [
+        "speckit-extension/docs/publishing.md"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Replaced both version-pinned install commands with the stable companion-latest URL, added --force update guidance, bumped version badge to 0.4.0",
+      "files": [
+        "speckit-extension/README.md"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added a stable release-archive install/update section with the companion-latest URL, --force update note, and the /releases/latest pitfall explainer",
+      "files": [
+        "speckit-extension/docs/install.md"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Bumped extension.version 0.3.0 to 0.4.0",
+      "files": [
+        "speckit-extension/extension.yml"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added a user-facing 0.4.0 CHANGELOG entry for the stable install/update URL",
+      "files": [
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Verified: npm compile clean, 987 tests pass, check-shape-parity OK, publish shell snippets pass bash -n",
+      "files": [
+        "(verification only)"
+      ]
+    }
+  }
+}
