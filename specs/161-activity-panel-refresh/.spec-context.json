@@ -1,0 +1,146 @@
+{
+  "workflow": "speckit",
+  "profile": "turbo",
+  "specName": "Activity Panel Refresh",
+  "branch": "main",
+  "selectedAt": "2026-06-13T02:07:32.160Z",
+  "currentStep": "implement",
+  "status": "implementing",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-13T02:07:32.160Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-13T02:16:06.890Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-13T02:16:15.366Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T02:16:15.433Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-13T02:16:15.501Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T02:16:15.573Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-13T02:19:15.365Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-13T02:19:15.368Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T02:22:03.499Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T02:24:10.503Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T02:24:22.761Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T02:24:46.985Z"
+    },
+    {
+      "step": "implement",
+      "substep": "run-tests",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T02:24:54Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T02:26:22.017Z"
+    }
+  ],
+  "currentTask": "T006",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added a capturing createFileSystemWatcher to the VS Code test mock that records the registered glob and onDid* listeners with fire helpers",
+      "files": [
+        "tests/__mocks__/vscode.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added fileWatchers regression test asserting one spec-context watcher per configured pattern and that change/create dispatch the viewer refresh and sidebar re-scan",
+      "files": [
+        "tests/unit/core/fileWatchers.spec.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added a deriveViewerState payload-completeness test asserting the refresh payload carries full history, per-task taskSummaries, and filesModified",
+      "files": [
+        "tests/unit/spec-viewer/stateDerivation.spec.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Ran the full Jest suite: 82 suites / 992 tests pass including the two new regression tests"
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "No production change needed: refresh payload completeness (history, taskSummaries, filesModified) and watcher dispatch are now covered by tests; the single shared buildViewerPayload already carries the full viewerState — no stale field found"
+    }
+  }
+}

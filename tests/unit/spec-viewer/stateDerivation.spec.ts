@@ -238,3 +238,32 @@ describe('deriveHighlights — includes inferred-completed steps', () => {
         expect(highlights).not.toContain('implement');
     });
 });
+
+describe('deriveViewerState — Activity refresh payload completeness (#278)', () => {
+    it('carries full history, per-task taskSummaries, and filesModified from the context', () => {
+        const history = [
+            { step: 'implement', substep: null, kind: 'start', from: { step: 'tasks', substep: null }, by: 'extension', at: 't1' },
+            { step: 'implement', substep: null, kind: 'complete', by: 'ai', at: 't2' },
+        ];
+        const ctx = baseCtx({
+            currentStep: 'implement',
+            status: 'implementing',
+            history: history as any,
+            task_summaries: {
+                T001: { status: 'DONE', did: 'wired the mock', files: ['a.ts'] },
+                T002: { status: 'DONE_WITH_CONCERNS', did: 'added the test', files: ['b.ts'], concerns: ['flaky'] },
+            },
+            files_modified: ['a.ts', 'b.ts'],
+        } as any);
+
+        const vs = deriveViewerState(ctx, 'implement');
+
+        // Full step history — the step-progression view re-renders from this, not a partial.
+        expect(vs.history).toEqual(history);
+        // Per-task summaries — the Tasks card reads these.
+        expect(vs.taskSummaries).toEqual((ctx as any).task_summaries);
+        expect(Object.keys(vs.taskSummaries ?? {})).toEqual(['T001', 'T002']);
+        // Modified-files list — the Files card reads this.
+        expect(vs.filesModified).toEqual(['a.ts', 'b.ts']);
+    });
+});
