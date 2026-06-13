@@ -38,7 +38,10 @@ function globSegmentToRegex(segment: string): RegExp {
  */
 function getConfiguredPatterns(): string[] {
     const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
-    return config.get<string[]>('specDirectories', ['specs']);
+    // Keep this fallback in sync with the package.json `specDirectories` default;
+    // it is only reached when the contribution isn't loaded (bare config), and a
+    // divergence would silently drop `.specify/specs` and reintroduce #270.
+    return config.get<string[]>('specDirectories', ['specs', '.specify/specs']);
 }
 
 /**
