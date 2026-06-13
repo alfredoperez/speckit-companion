@@ -26,8 +26,18 @@ export default meta;
 type Story = StoryObj;
 
 export const Empty: Story = {
-    name: 'Empty',
+    name: 'Empty (Create Spec disabled)',
     render: () => <CreateSpecMock />,
+};
+
+export const OverLimit: Story = {
+    name: 'Over Limit (submission blocked)',
+    render: () => (
+        <CreateSpecMock
+            initialContent={'A very long specification that exceeds the character limit…'}
+            overLimit
+        />
+    ),
 };
 
 export const WithDraft: Story = {

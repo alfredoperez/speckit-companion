@@ -1,0 +1,208 @@
+{
+  "workflow": "speckit",
+  "specName": "create spec ux",
+  "branch": "164-create-spec-ux",
+  "currentStep": "implement",
+  "status": "implemented",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-13T03:54:37.172Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-13T03:55:22.894Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-13T03:55:29.846Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T03:56:06.830Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T03:56:07.918Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T03:56:09.019Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-13T03:56:15.028Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T03:56:38.235Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T03:56:39.318Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-13T03:56:42.973Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T03:56:56.414Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T03:57:22.575Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T03:58:49.721Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T04:00:13.385Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T04:00:55.949Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T04:01:16.705Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T04:01:55.131Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T04:02:40.205Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-13T04:02:52.344Z"
+    }
+  ],
+  "currentTask": "T008",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added pure submitGate helpers (canSubmit, isOverLimit, shouldShowCharCount, isMacPlatform) + helper/subtitle text constants",
+      "files": [
+        "webview/src/spec-editor/submitGate.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Reworked HTML template: main landmark, removed h3-skip, what-happens-next subtitle, persistent helper text, role=alert error region, aria-describedby textarea, hidden counter, composer-row attach button with aria-label, aria-busy loading overlay with status text, Create Spec disabled-by-default, regrouped footer, sr-only status region",
+      "files": [
+        "src/features/spec-editor/specEditorProvider.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Wired submit gate (disabled on empty/over-limit), hidden-until-90% counter with non-color over-limit text, accessible error close+focus, aria-busy loading, sr-status announcements for attach/remove, aria-labelled remove buttons, platform-correct Cmd/Ctrl hints, Esc confirm-before-discard",
+      "files": [
+        "webview/src/spec-editor/index.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Restyled: centered 800px column, proportional textarea+placeholder, helper-text via --text-body, visible focus-visible rings on textarea/select/all buttons/close/remove, removed dashed drag affordance + composer row, dropped divider rules, sr-only utility, hidden-counter, single-row footer hints-left, loading-text",
+      "files": [
+        "webview/styles/spec-editor.css"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Updated CreateSpecMock + stories to new layout (centered main, helper text, Create Spec disabled-on-empty, composer attach row, Cmd hint, footer hints-left) and added Empty-disabled + OverLimit variants",
+      "files": [
+        "webview/src/spec-editor/CreateSpecMock.tsx",
+        "webview/src/spec-editor/__stories__/CreateSpec.stories.tsx"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added submitGate unit tests covering empty/whitespace/over-limit/at-limit canSubmit, isOverLimit boundary, shouldShowCharCount 90% threshold, isMacPlatform across platform/userAgent",
+      "files": [
+        "webview/src/spec-editor/__tests__/submitGate.test.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Updated README Create-Specs-Visually section and added CHANGELOG [Unreleased] user-facing entry for the Create Spec UX+a11y overhaul",
+      "files": [
+        "README.md",
+        "CHANGELOG.md"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Verified: npm run compile clean, full suite 1020/1020 green, npm run package built webview with no webpack/tsc errors"
+    }
+  }
+}
