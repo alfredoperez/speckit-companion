@@ -535,7 +535,7 @@
         },
         {
           "command": "speckit.markCompleted",
-          "when": "view == speckit.views.explorer && (viewItem == spec-active || viewItem == spec-tasks-done)",
+          "when": "view == speckit.views.explorer && (viewItem == spec-active || viewItem == spec-tasks-done || viewItem == spec-implemented)",
           "group": "7_modification"
         },
         {

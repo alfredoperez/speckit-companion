@@ -7,7 +7,7 @@ Detailed reference for the SpecKit Companion sidebar. For an overview, see the [
 Specs are grouped into three collapsible sections based on their status (stored in `.spec-context.json`). Each group header displays a count, e.g. `Active (3)`, `Completed (12)`, `Archived (8)`.
 
 - **Active** — Specs in progress, ordered by numeric prefix (newest first) by default, expanded by default.
-- **Completed** — Specs marked as done, collapsed by default.
+- **Completed** — Specs that have finished the pipeline, collapsed by default. This group holds two states: **confirmed-completed** specs (you explicitly marked them done) and **implemented** specs (the pipeline finished the implement step but they still await your Mark-as-Completed confirmation). The two are told apart by icon tint — see [Spec tree icons](#spec-tree-icons).
 - **Archived** — Specs moved to archive, collapsed by default.
 
 The Specs view title bar exposes **Filter**, **Sort**, an **Upgrade…** picker, a **collapse/expand all** toggle, and **Create New Spec** (rightmost). A **clear filter** icon appears only while a filter is active. The collapse/expand icon swaps to reflect the next action; state is in-memory only and is not persisted across sessions. The spec-kit upgrade commands are consolidated behind a single icon — see [Maintenance actions](#maintenance-actions) below.
@@ -46,7 +46,7 @@ Each spec row's description shows its **current step** and a one-line **last tra
 
 ## Right-click and multi-select
 
-Right-click a spec to access **Mark as Completed**, **Archive**, **Reactivate**, **Delete**, **Reveal in File Explorer** (opens the spec's folder in Finder, File Explorer, or the default file manager), **Copy Path**, and **Copy Name**. Menu items reflect the spec's lifecycle group — e.g., "Reactivate" appears only on completed or archived specs, "Mark as Completed" only on active ones.
+Right-click a spec to access **Mark as Completed**, **Archive**, **Reactivate**, **Delete**, **Reveal in File Explorer** (opens the spec's folder in Finder, File Explorer, or the default file manager), **Copy Path**, and **Copy Name**. Menu items reflect the spec's lifecycle group — e.g., "Reactivate" appears only on completed or archived specs. **Mark as Completed** appears on active, tasks-done, and **implemented** specs: an implemented spec sits in the Completed group but still needs your confirmation, so right-clicking it offers Mark as Completed to flip it to confirmed-completed (without it, the only way to confirm was the viewer footer).
 
 **Copy Path** copies the workspace-relative spec directory (e.g. `specs/089-copy-spec-path-name`) to the clipboard; **Copy Name** copies just the slug (e.g. `089-copy-spec-path-name`). Both show a brief auto-dismiss notification and live in a `9_clipboard` group below the modification and reveal entries — useful when referencing a spec in PRs, chat, or external tools. They appear on specs in any lifecycle (active, tasks-done, completed, archived) and are not shown on document children, related docs, or group headers.
 
@@ -95,7 +95,8 @@ Every canonical status is mapped to a distinct color treatment so badges read at
 
 ## Spec tree icons
 
-- Green beaker icon — completed spec
+- Green beaker icon — confirmed-completed spec
+- Yellow beaker icon — implemented spec (pipeline finished implement, awaiting your Mark-as-Completed confirmation); distinguishes it from confirmed-completed specs within the Completed group
 - Blue beaker icon — spec with an active workflow step
 - Green check — completed step (requires the step's file to exist on disk; a hand-crafted or out-of-sync `.spec-context.json` that claims completion without the file shows the default empty icon instead)
 - Green pulsing glow — step actively being worked on
