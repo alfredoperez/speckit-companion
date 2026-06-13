@@ -255,6 +255,21 @@ This applies to all providers that support it: Claude (`--permission-mode bypass
 
 > **Copilot exception**: GitHub Copilot CLI cannot surface permission prompts in `-p` mode. Even with `permissionMode: "interactive"`, the extension auto-switches Copilot to auto-approve at dispatch time — otherwise the terminal would silently hang waiting for a prompt that never appears. This is enforced at runtime; dismissing the startup warning toast does not re-enable interactive mode for Copilot.
 
+### Beta Features
+
+The opt-in beta toggles appear under **Beta Features** in VS Code Settings in adoption-funnel order — the sequence you'd enable them in, not alphabetical:
+
+| Order | Setting | Requires the spec-kit extension? |
+|-------|---------|----------------------------------|
+| 1 | `speckit.companion.installPrompt` — install banner when the extension is missing | No (its job is to surface the missing extension) |
+| 2 | `speckit.companion.templateProfile` — default pipeline shape for new specs | Yes |
+| 3 | `speckit.companion.turboWorkflowPicker` — per-spec turbo choice in Create-Spec | Yes |
+| 4 | `speckit.companion.complexityFastPath` — fold plan/tasks into specify for small changes | Yes |
+| 5 | `speckit.companion.resumeBeta` — resume (▶) button on sidebar specs | Yes |
+| 6 | `speckit.viewer.activityPanel` — per-spec Activity timeline in the viewer | Yes |
+
+Every toggle except the install prompt only functions when the [companion spec-kit extension](#install-the-spec-kit-extension) is installed; their settings descriptions carry the same note with that install link, so a toggle that looks inert is usually waiting on the extension. Each setting is detailed in the subsections below.
+
 ### Template Profiles
 
 Selects the spec-kit pipeline shape for the project. This is an **opt-in beta** — it **defaults to `off`** (plain upstream spec-kit). **Both command families are always installed** — this setting only routes which one a spec dispatches. `standard` runs the stock `/speckit.*` commands (same sections, same files, with better timing capture); `turbo` runs the trimmed `/speckit.companion.*` commands (no user-story section, files/dependencies tasks, a smaller spec folder); `off` routes to the stock commands and opts out of the Companion install/repair step.

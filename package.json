@@ -1024,17 +1024,12 @@
       {
         "title": "Beta Features",
         "properties": {
-          "speckit.viewer.activityPanel": {
+          "speckit.companion.installPrompt": {
             "type": "boolean",
             "default": true,
             "scope": "window",
-            "description": "Show a per-spec Activity timeline in the viewer — step transitions, decisions, and files touched. Opt-in beta."
-          },
-          "speckit.companion.turboWorkflowPicker": {
-            "type": "boolean",
-            "default": true,
-            "scope": "window",
-            "description": "Add a \"SpecKit Companion (Turbo)\" choice to the Create-Spec workflow dropdown, pinning turbo on just that spec. Appears only when the spec-kit extension is installed. Opt-in beta."
+            "order": 1,
+            "description": "Prompt to install the companion spec-kit extension (Create-Spec + Activity panels) when it's missing — a one-click install banner in the Create-Spec and Activity panels. Hidden once installed. Opt-in beta; defaults to on."
           },
           "speckit.companion.templateProfile": {
             "type": "string",
@@ -1050,25 +1045,36 @@
             ],
             "default": "off",
             "scope": "window",
-            "description": "Default pipeline shape for new specs: stock /speckit.* (standard) or trimmed /speckit.companion.* (turbo). Both stay installed; each spec keeps the shape it started with. Opt-in beta, off by default."
+            "order": 2,
+            "markdownDescription": "Default pipeline shape for new specs: stock /speckit.* (standard) or trimmed /speckit.companion.* (turbo). Both stay installed; each spec keeps the shape it started with. Opt-in beta, off by default. Requires the [companion spec-kit extension](https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension)."
+          },
+          "speckit.companion.turboWorkflowPicker": {
+            "type": "boolean",
+            "default": true,
+            "scope": "window",
+            "order": 3,
+            "markdownDescription": "Add a \"SpecKit Companion (Turbo)\" choice to the Create-Spec workflow dropdown, pinning turbo on just that spec. Appears only when the spec-kit extension is installed. Opt-in beta. Requires the [companion spec-kit extension](https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension)."
           },
           "speckit.companion.complexityFastPath": {
             "type": "boolean",
             "default": false,
             "scope": "window",
-            "description": "In turbo mode, fast-track small changes (≤5 files / ≤10 tasks): fold plan and tasks into the specify pass so the spec lands ready-to-implement in one run. Opt-in beta, off by default."
+            "order": 4,
+            "markdownDescription": "In turbo mode, fast-track small changes (≤5 files / ≤10 tasks): fold plan and tasks into the specify pass so the spec lands ready-to-implement in one run. Opt-in beta, off by default. Requires the [companion spec-kit extension](https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension)."
           },
           "speckit.companion.resumeBeta": {
             "type": "boolean",
             "default": false,
             "scope": "window",
-            "description": "Show a Resume (▶) button on sidebar specs that dispatches the next pipeline step. Opt-in beta, off by default."
+            "order": 5,
+            "markdownDescription": "Show a Resume (▶) button on sidebar specs that dispatches the next pipeline step. Opt-in beta, off by default. Requires the [companion spec-kit extension](https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension)."
           },
-          "speckit.companion.installPrompt": {
+          "speckit.viewer.activityPanel": {
             "type": "boolean",
             "default": true,
             "scope": "window",
-            "description": "Prompt to install the companion spec-kit extension (Create-Spec + Activity panels) when it's missing — a one-click install banner in the Create-Spec and Activity panels. Hidden once installed. Opt-in beta; defaults to on."
+            "order": 6,
+            "markdownDescription": "Show a per-spec Activity timeline in the viewer — step transitions, decisions, and files touched. Opt-in beta. Requires the [companion spec-kit extension](https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension)."
           }
         }
       }
