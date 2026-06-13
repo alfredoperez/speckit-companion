@@ -55,6 +55,15 @@ export function profileTelemetryId(profile: string | undefined): 'standard' | 't
     return profile === 'turbo' ? 'turbo' : profile === 'standard' ? 'standard' : undefined;
 }
 
+/**
+ * Coerce the `companion.templateProfile` setting to its allow-list before reporting.
+ * The setting is an enum, but settings.json accepts arbitrary strings — an out-of-range
+ * value is reported as the default `'off'`, never sent verbatim (privacy contract).
+ */
+export function templateProfileTelemetryId(value: string | undefined): 'standard' | 'turbo' | 'off' {
+    return value === 'standard' || value === 'turbo' || value === 'off' ? value : 'off';
+}
+
 /** The seven beta-flag states reported with `extension.activated`. */
 export interface BetaSnapshot {
     templateProfile: string;
@@ -76,7 +85,7 @@ export function buildBetaSnapshot(): BetaSnapshot {
     const coerced = (key: string, fallback: boolean): string =>
         String(coerceLegacyBoolean(config.get<unknown>(key), fallback));
     return {
-        templateProfile: config.get<string>('companion.templateProfile', 'off'),
+        templateProfile: templateProfileTelemetryId(config.get<string>('companion.templateProfile', 'off')),
         complexityFastPath: bool('companion.complexityFastPath', false),
         turboWorkflowPicker: coerced('companion.turboWorkflowPicker', true),
         resumeBeta: bool('companion.resumeBeta', false),

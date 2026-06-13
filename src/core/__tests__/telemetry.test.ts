@@ -8,6 +8,7 @@ import {
     buildBetaSnapshot,
     phaseTelemetryId,
     profileTelemetryId,
+    templateProfileTelemetryId,
     APP_INSIGHTS_CONNECTION_STRING,
 } from '../telemetry';
 // `@vscode/extension-telemetry` is mapped to the test mock (jest.config.js).
@@ -161,6 +162,20 @@ describe('TelemetryService', () => {
             expect(profileTelemetryId('client-acme-internal')).toBeUndefined();
             expect(profileTelemetryId('lean')).toBeUndefined();
             expect(profileTelemetryId(undefined)).toBeUndefined();
+        });
+    });
+
+    describe('templateProfileTelemetryId (privacy: no arbitrary settings.json value)', () => {
+        it('passes the three allow-listed values through', () => {
+            expect(templateProfileTelemetryId('standard')).toBe('standard');
+            expect(templateProfileTelemetryId('turbo')).toBe('turbo');
+            expect(templateProfileTelemetryId('off')).toBe('off');
+        });
+
+        it('reports an out-of-range / hand-edited value as the default off, never verbatim', () => {
+            expect(templateProfileTelemetryId('client-secret-mode')).toBe('off');
+            expect(templateProfileTelemetryId('')).toBe('off');
+            expect(templateProfileTelemetryId(undefined)).toBe('off');
         });
     });
 
