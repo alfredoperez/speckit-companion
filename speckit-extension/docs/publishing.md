@@ -31,10 +31,14 @@ v0.2.0                  ❌  matches v* → would publish the WRONG thing to the
 7. **Refresh the stable `companion-latest` asset** — the README/install docs point users at a *stable* URL so install/update never needs a version edit. Force-replace `companion.zip` on a reusable `companion-latest` **prerelease** with the same build:
    ```bash
    cp /tmp/cb/companion-$V.zip /tmp/cb/companion.zip
-   gh release view companion-latest >/dev/null 2>&1 \
-     && gh release upload companion-latest /tmp/cb/companion.zip --clobber \
-     || gh release create companion-latest /tmp/cb/companion.zip --title "SpecKit Companion (latest)" --prerelease --target main
+   if gh release view companion-latest >/dev/null 2>&1; then
+     gh release upload companion-latest /tmp/cb/companion.zip --clobber
+   else
+     gh release create companion-latest /tmp/cb/companion.zip --title "SpecKit Companion (latest)" --prerelease --target main
+   fi
+   gh release edit companion-latest --prerelease   # idempotent — re-asserts prerelease every run
    ```
+   > Use `if/else`, not `view && upload || create`: with the `&&…||` chain a transient `upload` failure falls through to `create` and then errors on the already-existing tag, masking the real fault.
    **Why a dedicated tag, not `/releases/latest`:** this is a two-product repo — `release.yml` publishes the VS Code extension on `v*` tags, and those releases interleave with `speckit-ext-v*` in one GitHub releases list. GitHub's `/releases/latest` resolves to the newest non-prerelease across **both** products, so `…/releases/latest/download/companion.zip` would 404 the moment the next VS Code `v*` release is cut. The stable URL `…/releases/download/companion-latest/companion.zip` resolves **by tag** and is immune to that interleaving. The `--prerelease` flag keeps `companion-latest` out of `/releases/latest`; the non-`v*` tag keeps it from triggering the Marketplace publish.
 8. **Verify the deployed install** in a scratch dir (simulate a user), from the **stable** URL: `mkdir -p /tmp/v/.specify/extensions && cd /tmp/v && yes | specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force` → `specify extension list` shows the version + all commands. Note: the **`companion` name arg is required**, the URL must be **HTTPS**, and a raw-URL install shows a one-time "untrusted source" prompt. If a prior local install left inconsistent emission dirs, nuke all `speckit-companion-*` / `speckit.companion.*` artifacts first.
 

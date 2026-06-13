@@ -156,10 +156,10 @@ There are **two** installs, and they're independent:
 uv tool install specify-cli --from git+https://github.com/github/spec-kit.git --force
 
 # 2. the companion spec-kit extension (installs/updates; --force is idempotent)
-specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/speckit-ext-v0.3.0/companion-0.3.0.zip --force
+specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force
 ```
 
-> Once the extension is listed in the spec-kit catalog, the second command shortens to `specify extension add companion --force`. Until then, install from the release URL above.
+> The `companion-latest/companion.zip` URL is a stable rolling asset — it always serves the newest build, so the same command installs **and** updates (re-run with `--force`). Once the extension is listed in the spec-kit catalog, it shortens to `specify extension add companion --force`.
 
 **Update it later** from the Specs view **Upgrade…** menu → *Update spec-kit Extension* (runs the same install with `--force`).
 

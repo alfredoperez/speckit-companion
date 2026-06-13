@@ -53,8 +53,9 @@ Release the **spec-kit extension** (`speckit-extension/`, `id: companion`) so pe
        --notes "Rolling stable download for the spec-kit extension. Always serves the newest \`companion\` build. Install/update: \`specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force\`" \
        --prerelease --target main
    fi
+   gh release edit companion-latest --prerelease   # idempotent — re-asserts prerelease every run so a mis-marked prior release can't become /releases/latest
    ```
-   - **`--prerelease` is mandatory.** It keeps `companion-latest` out of the repo's `/releases/latest` (which resolves across BOTH products — a `v*` VS Code release would otherwise hijack it). The stable URL `…/releases/download/companion-latest/companion.zip` resolves by **tag**, so it's immune to the `v*`/`speckit-ext-v*` interleaving. Never document `…/releases/latest/download/…` for this repo.
+   - **`--prerelease` is mandatory.** It keeps `companion-latest` out of the repo's `/releases/latest` (which resolves across BOTH products — a `v*` VS Code release would otherwise hijack it). The stable URL `…/releases/download/companion-latest/companion.zip` resolves by **tag**, so it's immune to the `v*`/`speckit-ext-v*` interleaving. The trailing `gh release edit … --prerelease` re-asserts the flag on every run (the create path sets it, but an existing release that lost the flag would otherwise stay a normal release). Never document `…/releases/latest/download/…` for this repo.
    - The `companion-latest` tag is non-`v*`, so it does **not** trigger `release.yml` (the VS Code Marketplace publish).
 8. **Verify the deployed install** (simulate a user) in a scratch dir — install from the **stable** URL, the same one users run:
    ```bash
