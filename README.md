@@ -20,10 +20,9 @@ A spec workspace that turns AI-assisted, spec-driven development into something 
 
 ## Recently Shipped
 
-- **On `main` (next release)** Per-spec **Turbo** picker in *Create New Spec* (beta, install-gated) · complexity fast-path now writes lean `plan.md` + `tasks.md` so the stepper/sidebar stop showing "not created" · **OpenCode** now reads attached spec-editor images (workspace-staged for its sandbox) · cleaner sidebar spec-row text (drops step-state the icons already show)
+- **v0.23.0** One-click install + graceful degradation for the companion spec-kit extension (detection, banners, sidebar action) · a finished implementation reliably shows as done — the viewer auto-refreshes and the in-flight spinner is consolidated onto the step tab · in-app update notifications work again and install links resolve · the in-editor "Install/Update spec-kit Extension" always pulls the newest build · Beta Features simplified to on/off and ordered by adoption · per-spec **SpecKit Companion** pipeline pick in *Create New Spec* (beta) · higher-contrast text on dark + sidebar polish
 - **v0.22.0** Status + Resume — each active spec row shows its current step and last transition with an inline **Resume** action that continues the pipeline from where it stopped; live per-task journaling on implement (real per-task timing, not one end-of-run burst); malformed-`.spec-context.json` recovery with a reset action
 - **v0.21.0** Spec-context `history[]` schema migration with explicit `kind` field, end-to-end state-machine correctness fixes (15 findings, F1–F16), brand-name provider labels, wrapping task-line rendering polish, inline-comment persistence across all docs, install-pipeline reliability (tsc chained in prepublish)
-- **v0.20.0** Marketplace screenshot fix (stable-filename policy), heading/caption correction, Marketplace-safe anchor links
 - [Full changelog →](./CHANGELOG.md)
 
 ## Why it exists

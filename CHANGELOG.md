@@ -4,11 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-06-12
+
 ### Added
 
 - **Resume button is now an opt-in beta** (#140): the sidebar resume (▶) button ships under the "Beta Features" group and defaults to off. Enable `speckit.companion.resumeBeta` to show it on active specs (active / tasks-done); toggling it on or off updates visibility immediately, with no window reload. Resume now also dispatches the command family the spec has been running — a turbo spec resumes with `/speckit.companion.<step>`, a stock spec with `/speckit.<step>` — across every step it can advance.
 - **Complexity fast-path** (#137): an opt-in beta (off by default) that, in `turbo` mode, fast-tracks small changes straight from specify to implement, skipping the separate plan and tasks stages. When a change projects at or under 5 files / 10 tasks (and reads as a small change), specify writes a single combined `spec.md` — the usual sections plus an inline Approach and Implementation Tasks list — and lands the spec at the implement step in one run. Larger changes keep the full pipeline; a change that crosses the 5-files / 10-tasks guardrail warns and runs the full pipeline rather than fast-tracking silently. Enable it with the `speckit.companion.complexityFastPath` setting. See `docs/template-profiles.md`.
 - **Template profiles** (#132, #134): a new `speckit.companion.templateProfile` setting (`standard` | `turbo` | `off`, default `off`) picks the shape of the spec-kit pipeline. `standard` runs the stock commands; `turbo` produces a trimmed shape — a spec with no user-story section, tasks grouped by files/dependencies, and a smaller spec folder; `off` falls back to plain upstream spec-kit. **Both command sets stay installed at all times** — switching the setting is non-destructive: it only routes which one a spec uses and never deletes either, so creating a spec never fails with "Unknown command", in any mode or after any number of switches. Each spec pins the project default the moment it's created, so changing the setting reshapes only new specs, never one already in flight. See `docs/template-profiles.md`.
+- **One-click install and graceful degradation for the spec-kit extension** (#234): the GUI now detects whether the companion spec-kit extension is installed and works fine without it. When it's missing, an **Install spec-kit extension** banner appears in the Create-Spec and Activity panels and an install icon appears in the Specs sidebar — clicking either runs the install in an integrated terminal, no copy-paste. Already-installed projects never see the banner.
+- **Pick the leaner pipeline per spec at create time** (#247): when the companion spec-kit extension is installed, the Create-Spec **Workflow** dropdown offers a choice that pins the leaner companion pipeline on just that spec, regardless of the project default. Opt-in beta.
 
 ### Changed
 
@@ -19,6 +23,11 @@ All notable changes to this project will be documented in this file.
 - **The trimmed profile is named "turbo"** (#226): the trimmed pipeline shape ships under the `turbo` value of `speckit.companion.templateProfile`; its pre-release working name "lean" was dropped before any release, so there is no old value to migrate.
 - **More accurate timing in the activity panel** (#215): per-task and per-substep durations are now measured from single finish events rather than reconstructed from start/complete pairs. This removes the `0s` ticks, the unattributed gaps between tasks, and the substep "bursts" that previously showed up in the timeline, so per-step and per-task durations read accurately. See `docs/capture-and-timing.md`.
 - **The in-flight indicator now lives on the step tab, not the footer** (#277): a running step used to show two competing cues — a "Generating…" pill at the bottom and the step tab. The footer pill is gone; the step tab is now the single "AI is working" signal, and during implement it shows a spinning indicator next to the live task percentage instead of a static "Tasks 0%". While a step is still in flight the footer no longer offers the next-step button (there's nothing to advance yet). Reduced-motion users get a static indicator.
+- **Finished specs read as done** (#257): a fully-implemented spec is now a first-class "implemented" state — the Resume action is hidden on finished specs, and they're shown distinctly in the sidebar. Marking a spec completed by hand still works.
+- **Beta toggles are a simple on/off** (#259): the Beta Features settings collapsed from a three-way (off / beta / on) control to a plain on/off switch, and the redundant "beta" badges were dropped — less to reason about for the same behavior.
+- **Sidebar polish** (#258, #238): a distinct install icon plus grouped, consistently-ordered sidebar actions, and spec rows no longer repeat the status text next to the spec name.
+- **More readable text on dark themes** (#254): secondary and muted text and ghost buttons were brightened to meet accessibility contrast minimums on dark backgrounds.
+- **Richer Activity panel** (#256): the panel now shows per-task summaries and a live implement percentage that advances as tasks complete.
 
 ### Fixed
 
@@ -27,6 +36,8 @@ All notable changes to this project will be documented in this file.
 - **Newly-created specs appear instead of stranding on the welcome screen** (#270): a spec created under the SpecKit CLI's `.specify/specs/` layout was never discovered, so the sidebar stayed stuck on "Welcome to SpecKit / Create your first spec". `.specify/specs` is now scanned by default, and a freshly-created spec clears the welcome screen and lists itself without reloading the window.
 - **In-app update notifications fire again, and install links resolve** (#274): the extension referenced a retired publisher handle, which silently disabled the "a new version is available" notification and pointed every Marketplace/OpenVSX install and listing link at a dead (404) page. The update check now reads your installed version reliably and the links resolve to the live listing. The check also compares only against the VS Code releases, so a spec-kit-side release no longer masquerades as a newer GUI version.
 - **Switching modes no longer deletes your commands** (#134): selecting the trimmed shape used to swap command bundles in a way that could leave a project with no usable pipeline commands — creating a spec then failed with "Unknown command: /speckit-specify". The mode is now a non-destructive routing choice: both command sets are always present, and a project left without its stock commands by an earlier version recovers automatically on the next reload.
+- **A running step's tab no longer gets stuck spinning** (#229): when a step settled, its tab could keep showing an "in progress" looping-arrows indicator; the tab now stops on the settled state and shows a clear sync glyph while genuinely running.
+- **OpenCode: images in the spec editor load again** (#208): spec-editor images now resolve under OpenCode, staged in a self-contained workspace location so they render instead of failing to load.
 
 ## [0.22.0] - 2026-06-07
 
