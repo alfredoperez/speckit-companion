@@ -27,6 +27,18 @@ describe('specKitExtensionInstall', () => {
         });
     });
 
+    describe('RELEASE_URL', () => {
+        it('points at the stable rolling asset with no version string', () => {
+            // The in-editor Install/Update must always pull the newest build. A version
+            // string here makes "Update" a silent downgrade — so guard that none returns.
+            expect(RELEASE_URL).toBe(
+                'https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip'
+            );
+            expect(RELEASE_URL).not.toMatch(/speckit-ext-v\d/);
+            expect(RELEASE_URL).not.toMatch(/companion-\d/);
+        });
+    });
+
     describe('shouldShowInstallPrompt', () => {
         it('shows when missing and the prompt is enabled', () => {
             expect(shouldShowInstallPrompt(true, false)).toBe(true);
