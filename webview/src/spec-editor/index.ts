@@ -157,24 +157,41 @@ function updateThumbnails(): void {
         return;
     }
 
-    thumbnails.innerHTML = attachedImages.map(img => `
-        <div class="image-thumbnail" data-id="${img.id}">
-            <img src="${img.thumbnailUri}" alt="${escapeHtml(img.originalName)}">
-            <span class="image-name">${escapeHtml(img.originalName)}</span>
-            <button class="remove-btn" type="button" data-id="${img.id}" aria-label="Remove image ${escapeHtml(img.originalName)}">×</button>
-        </div>
-    `).join('');
+    // Built via DOM APIs (not innerHTML) so a filename containing quotes/markup
+    // can't break out of an attribute or inject into the webview — `escapeHtml`
+    // (textContent→innerHTML) does not escape attribute quotes.
+    thumbnails.replaceChildren();
+    for (const img of attachedImages) {
+        const wrap = document.createElement('div');
+        wrap.className = 'image-thumbnail';
+        wrap.dataset.id = img.id;
 
-    // Add remove button handlers
-    thumbnails.querySelectorAll('.remove-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        const thumb = document.createElement('img');
+        thumb.src = img.thumbnailUri;
+        thumb.alt = img.originalName;
+        wrap.appendChild(thumb);
+
+        const name = document.createElement('span');
+        name.className = 'image-name';
+        name.textContent = img.originalName;
+        wrap.appendChild(name);
+
+        const remove = document.createElement('button');
+        remove.className = 'remove-btn';
+        remove.type = 'button';
+        remove.dataset.id = img.id;
+        remove.setAttribute('aria-label', `Remove image ${img.originalName}`);
+        remove.textContent = '×';
+        remove.addEventListener('click', (e) => {
             e.stopPropagation();
-            const id = (btn as HTMLElement).dataset.id;
-            if (id) {
-                removeImage(id);
+            if (remove.dataset.id) {
+                removeImage(remove.dataset.id);
             }
         });
-    });
+        wrap.appendChild(remove);
+
+        thumbnails.appendChild(wrap);
+    }
 }
 
 function removeImage(id: string): void {
