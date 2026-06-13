@@ -56,6 +56,7 @@ jest.mock("../../../src/ai-providers/aiProvider", () => ({
 jest.mock("../../../src/core/telemetry", () => ({
   sendTelemetryEvent: jest.fn(),
   getSpecTelemetryContext: jest.fn().mockReturnValue({}),
+  phaseTelemetryId: (s: string) => s,
 }));
 
 jest.mock("../../../src/ai-providers/promptBuilder", () => ({

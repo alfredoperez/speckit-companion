@@ -421,12 +421,13 @@ export class SpecEditorProvider {
             // Anonymous spec.created. The spec dir doesn't exist yet (the AI
             // creates it), so the persisted per-spec id is minted lazily on the
             // first later event; this carries a fresh id as a creation marker.
-            // Resolve profile from the dispatched command: a turbo twin command
-            // routes via the `/...companion.*` family.
-            const createdProfile = command.includes('companion.') ? 'turbo' : 'standard';
+            // Profile is derived from the resolved command (the turbo twin routes
+            // via the `companion.*` family) so it catches BOTH an explicit turbo
+            // pick AND a project-default-turbo resolution — `seedProfile` is only
+            // set on the explicit-pick path and would miss the project default.
             sendTelemetryEvent('spec.created', {
                 providerId: providerType,
-                profile: createdProfile,
+                profile: command.includes('companion.') ? 'turbo' : 'standard',
                 specInstanceId: crypto.randomUUID(),
             });
 

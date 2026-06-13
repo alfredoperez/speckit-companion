@@ -17,7 +17,8 @@ import { sendTelemetryEvent } from '../../core/telemetry';
  * workflow (privacy: never send a user's custom workflow name).
  */
 function workflowTelemetryId(workflowName: string): string {
-    return workflowName === 'speckit' ? 'speckit' : 'custom';
+    // Legacy `'default'` is an alias for the built-in `speckit` workflow.
+    return workflowName === 'speckit' || workflowName === 'default' ? 'speckit' : 'custom';
 }
 
 /**

@@ -6,7 +6,7 @@
 import * as path from "path";
 import * as vscode from "vscode";
 import { formatCommandForProvider, getConfiguredProviderType } from "../../ai-providers/aiProvider";
-import { sendTelemetryEvent, getSpecTelemetryContext } from "../../core/telemetry";
+import { sendTelemetryEvent, getSpecTelemetryContext, phaseTelemetryId } from "../../core/telemetry";
 import {
   buildLifecyclePrompt,
   buildPrompt,
@@ -459,7 +459,7 @@ async function executeStepInTerminal(
   const specTelemetry = getSpecTelemetryContext(specDirectory);
   sendTelemetryEvent('phase.dispatched', {
     providerId: getConfiguredProviderType(),
-    phase: step.name,
+    phase: phaseTelemetryId(step.name),
     ...(specTelemetry.profile ? { profile: specTelemetry.profile } : {}),
     ...(specTelemetry.specInstanceId ? { specInstanceId: specTelemetry.specInstanceId } : {}),
   });

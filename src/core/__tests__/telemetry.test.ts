@@ -6,6 +6,8 @@ import {
     TelemetryService,
     getSpecTelemetryContext,
     buildBetaSnapshot,
+    phaseTelemetryId,
+    profileTelemetryId,
     APP_INSIGHTS_CONNECTION_STRING,
 } from '../telemetry';
 // `@vscode/extension-telemetry` is mapped to the test mock (jest.config.js).
@@ -131,6 +133,34 @@ describe('TelemetryService', () => {
                 installPrompt: 'true',
                 telemetry: 'true',
             });
+        });
+    });
+
+    describe('phaseTelemetryId (privacy: no custom step names)', () => {
+        it('sends the four built-in lifecycle steps verbatim', () => {
+            expect(phaseTelemetryId('specify')).toBe('specify');
+            expect(phaseTelemetryId('plan')).toBe('plan');
+            expect(phaseTelemetryId('tasks')).toBe('tasks');
+            expect(phaseTelemetryId('implement')).toBe('implement');
+        });
+
+        it('collapses any user-defined custom workflow step name to "custom"', () => {
+            expect(phaseTelemetryId('my-internal-secret-phase')).toBe('custom');
+            expect(phaseTelemetryId('review')).toBe('custom');
+            expect(phaseTelemetryId('')).toBe('custom');
+        });
+    });
+
+    describe('profileTelemetryId (privacy: no free-text profile)', () => {
+        it('passes the two known profiles through', () => {
+            expect(profileTelemetryId('standard')).toBe('standard');
+            expect(profileTelemetryId('turbo')).toBe('turbo');
+        });
+
+        it('drops any other on-disk profile value rather than sending it verbatim', () => {
+            expect(profileTelemetryId('client-acme-internal')).toBeUndefined();
+            expect(profileTelemetryId('lean')).toBeUndefined();
+            expect(profileTelemetryId(undefined)).toBeUndefined();
         });
     });
 

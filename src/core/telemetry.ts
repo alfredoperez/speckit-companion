@@ -14,9 +14,10 @@
 import * as crypto from 'crypto';
 import * as vscode from 'vscode';
 import { TelemetryReporter } from '@vscode/extension-telemetry';
-import { ConfigKeys } from './constants';
+import { ConfigKeys, WorkflowSteps } from './constants';
+import { coerceLegacyBoolean } from './settingsMigration';
 import { readSpecContextSync, SPEC_CONTEXT_FILENAME } from '../features/specs/specContextReader';
-import { writeSpecContext } from '../features/specs/specContextWriter';
+import { updateSpecContext } from '../features/specs/specContextWriter';
 
 /**
  * Application Insights connection string. This is a **write-only ingestion
@@ -27,6 +28,32 @@ export const APP_INSIGHTS_CONNECTION_STRING =
     'InstrumentationKey=536761b8-e09d-4c53-8c7b-23b54523c17f;IngestionEndpoint=https://southcentralus-3.in.applicationinsights.azure.com/;LiveEndpoint=https://southcentralus.livediagnostics.monitor.azure.com/;ApplicationId=08e87c2e-a745-4eca-90e3-e00bae6f4256';
 
 export type TelemetryProperties = Record<string, string>;
+
+/** Canonical built-in lifecycle phases — the only step names sent verbatim. */
+const BUILT_IN_PHASES: ReadonlySet<string> = new Set([
+    WorkflowSteps.SPECIFY,
+    WorkflowSteps.PLAN,
+    WorkflowSteps.TASKS,
+    WorkflowSteps.IMPLEMENT,
+]);
+
+/**
+ * Map a workflow step name to the value reported as `phase`: the built-in step
+ * verbatim, or the literal `"custom"` for any user-defined workflow step
+ * (privacy: a custom workflow's step names are user-authored — never send them).
+ */
+export function phaseTelemetryId(stepName: string): string {
+    return BUILT_IN_PHASES.has(stepName) ? stepName : 'custom';
+}
+
+/**
+ * Coerce a `.spec-context.json` `profile` to the reported enum. The on-disk
+ * value is user/hook-authored free text, so anything other than the two known
+ * profiles is dropped (returns `undefined`) — never sent verbatim.
+ */
+export function profileTelemetryId(profile: string | undefined): 'standard' | 'turbo' | undefined {
+    return profile === 'turbo' ? 'turbo' : profile === 'standard' ? 'standard' : undefined;
+}
 
 /** The seven beta-flag states reported with `extension.activated`. */
 export interface BetaSnapshot {
@@ -44,13 +71,17 @@ export function buildBetaSnapshot(): BetaSnapshot {
     const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
     const bool = (key: string, fallback: boolean): string =>
         String(config.get<boolean>(key, fallback));
+    // The three former tri-state settings (#259) funnel through coerceLegacyBoolean
+    // so an un-migrated scope reports a clean boolean, not a stale 'beta'/'on'/'off'.
+    const coerced = (key: string, fallback: boolean): string =>
+        String(coerceLegacyBoolean(config.get<unknown>(key), fallback));
     return {
         templateProfile: config.get<string>('companion.templateProfile', 'off'),
         complexityFastPath: bool('companion.complexityFastPath', false),
-        turboWorkflowPicker: bool('companion.turboWorkflowPicker', true),
+        turboWorkflowPicker: coerced('companion.turboWorkflowPicker', true),
         resumeBeta: bool('companion.resumeBeta', false),
-        activityPanel: bool('viewer.activityPanel', true),
-        installPrompt: bool('companion.installPrompt', true),
+        activityPanel: coerced('viewer.activityPanel', true),
+        installPrompt: coerced('companion.installPrompt', true),
         telemetry: bool('telemetry', true),
     };
 }
@@ -81,16 +112,18 @@ export function getSpecTelemetryContext(specDir: string): SpecTelemetryContext {
     if (!ctx) return {};
 
     if (ctx.telemetryInstanceId) {
-        return { profile: ctx.profile, specInstanceId: ctx.telemetryInstanceId };
+        return { profile: profileTelemetryId(ctx.profile), specInstanceId: ctx.telemetryInstanceId };
     }
 
     const id = crypto.randomUUID();
-    // Persist the freshly-minted id; tolerate a write failure (still return it
-    // for this event so the in-flight event is correlated).
-    void writeSpecContext(specDir, { ...ctx, telemetryInstanceId: id }).catch(() => {
+    // Persist the freshly-minted id via a re-read-then-set mutator, so a skill /
+    // hook write that lands between our read above and this write isn't clobbered
+    // (we touch only telemetryInstanceId). Fire-and-forget: a failed backfill is
+    // non-fatal — the id is still returned for this in-flight event.
+    void updateSpecContext(specDir, c => ({ ...c, telemetryInstanceId: id }), ctx).catch(() => {
         /* a failed backfill is non-fatal — the id is still used for this event */
     });
-    return { profile: ctx.profile, specInstanceId: id };
+    return { profile: profileTelemetryId(ctx.profile), specInstanceId: id };
 }
 
 /**

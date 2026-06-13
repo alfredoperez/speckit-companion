@@ -104,12 +104,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Anonymous, PII-free telemetry. Gated on both `speckit.telemetry` and VS
     // Code's global telemetry level; fires nothing when the connection string
-    // is empty. Construct, register dispose, and emit the once-per-activation
-    // event with the beta-flag snapshot.
+    // is empty. Construct + register dispose now; the once-per-activation event
+    // fires after the settings migration so the beta snapshot reads coerced
+    // boolean values, not legacy tri-state strings.
     const telemetryService = new TelemetryService();
     initTelemetry(telemetryService);
     context.subscriptions.push({ dispose: () => telemetryService.dispose() });
-    void fireActivatedEvent(context);
 
     // Migrate the former tri-state beta settings (#259) to booleans before any
     // reader runs. Idempotent and scope-preserving: legacy `'beta'`/`'on'` → true,
@@ -121,6 +121,8 @@ export async function activate(context: vscode.ExtensionContext) {
         const detail = err instanceof Error ? err.message : String(err);
         outputChannel.appendLine(`[Extension] Beta-settings migration skipped: ${detail}`);
     }
+
+    void fireActivatedEvent(context);
 
     // Reload ConfigManager settings on configuration changes (single listener for all consumers)
     const configManager = ConfigManager.getInstance();

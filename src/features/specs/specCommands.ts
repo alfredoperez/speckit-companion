@@ -28,7 +28,7 @@ import { SpecsSortState } from './specsSortState';
 import { ALL_SORT_MODES, DEFAULT_SORT_MODE, SortMode } from './specsSortMode';
 import { loadCustomCommands, NormalizedCustomCommand } from './customCommandConfig';
 import { CONTEXT_KEYS, setContextKey } from '../../core/utils/contextKeys';
-import { sendTelemetryEvent, getSpecTelemetryContext } from '../../core/telemetry';
+import { sendTelemetryEvent, getSpecTelemetryContext, phaseTelemetryId } from '../../core/telemetry';
 import { getConfiguredProviderType } from '../../ai-providers/aiProvider';
 
 function toWorkspaceRelative(absOrRel: string): string {
@@ -622,7 +622,7 @@ async function executeWorkflowStep(
     const specTelemetry = getSpecTelemetryContext(targetDir);
     sendTelemetryEvent('phase.dispatched', {
         providerId: getConfiguredProviderType(),
-        phase: step,
+        phase: phaseTelemetryId(step),
         ...(specTelemetry.profile ? { profile: specTelemetry.profile } : {}),
         ...(specTelemetry.specInstanceId ? { specInstanceId: specTelemetry.specInstanceId } : {}),
     });
