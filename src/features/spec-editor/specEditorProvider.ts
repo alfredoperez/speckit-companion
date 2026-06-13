@@ -583,70 +583,64 @@ export class SpecEditorProvider {
     <title>New Spec</title>
 </head>
 <body>
-    <div class="spec-editor" id="app">
-        <header class="spec-editor-header">
-            <h1>Create New Spec</h1>
-            <p>Write a detailed specification for your feature or task</p>
-        </header>
+    <div class="spec-editor" id="app" aria-busy="false">
+        <main class="spec-editor-column">
+            <header class="spec-editor-header">
+                <h1>Create New Spec</h1>
+                <p>Describe your feature — the AI will generate the spec, plan, and tasks for it.</p>
+            </header>
 
-        <div class="spec-editor-content">
-            ${installBanner}
-            <div id="error-container"></div>
+            <div class="spec-editor-content">
+                ${installBanner}
+                <div id="error-container" role="alert" aria-live="assertive"></div>
 
-            <div class="workflow-row">
-                <div class="workflow-selector" id="workflowSelector" style="display: none;">
-                    <label for="workflowSelect">Workflow</label>
-                    <select id="workflowSelect">
-                        <option value="speckit">SpecKit</option>
-                    </select>
+                <div class="workflow-row">
+                    <div class="workflow-selector" id="workflowSelector" style="display: none;">
+                        <label for="workflowSelect">Workflow</label>
+                        <select id="workflowSelect">
+                            <option value="speckit">SpecKit</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="editor-container">
+                    <label class="editor-label" for="specContent">Specification</label>
+                    <p class="helper-text" id="helperText">Write what you want and why. Helpful to include: the problem it solves, who it is for, the key requirements, and any constraints or dependencies.</p>
+                    <textarea
+                        class="spec-editor-textarea"
+                        id="specContent"
+                        aria-describedby="helperText charCount"
+                        placeholder="Describe your feature or task in detail…"
+                    ></textarea>
+                    <div class="editor-footer-row">
+                        <button class="attach-image-btn" id="attachImageBtn" aria-label="Attach image (or paste an image to attach)">
+                            <span class="codicon codicon-file-media" aria-hidden="true"></span>
+                            Attach image
+                        </button>
+                        <div class="char-count sr-only" id="charCount">0 / 50,000</div>
+                    </div>
+                    <div class="image-thumbnails" id="thumbnails"></div>
+                    <div class="image-size-info" id="sizeInfo"></div>
                 </div>
             </div>
 
-            <div class="editor-container">
-                <label class="editor-label" for="specContent">Specification</label>
-                <textarea
-                    class="spec-editor-textarea"
-                    id="specContent"
-                    placeholder="Describe your feature or task in detail...
-
-Example:
-- What is the feature about?
-- What problem does it solve?
-- Who are the target users?
-- What are the key requirements?
-- Are there any constraints or dependencies?"
-                ></textarea>
-                <div class="char-count" id="charCount">0 / 50,000</div>
-            </div>
-
-            <div class="image-attachment-section">
-                <div class="image-attachment-header">
-                    <h3>Attachments</h3>
-                    <button class="attach-image-btn" id="attachImageBtn">
-                        <span class="codicon codicon-file-media" aria-hidden="true"></span>
-                        Attach Image
-                    </button>
+            <footer class="spec-editor-actions">
+                <div class="keyboard-hints" id="keyboardHints">
+                    <kbd>Ctrl</kbd>+<kbd>Enter</kbd> to submit • <kbd>Esc</kbd> to cancel
                 </div>
-                <p class="paste-hint">Use the button above or paste (Ctrl+V / Cmd+V) to attach images</p>
-                <div class="image-thumbnails" id="thumbnails"></div>
-                <div class="image-size-info" id="sizeInfo"></div>
-            </div>
-        </div>
+                <div class="action-spacer"></div>
+                <span id="commandButtons" style="display: none;"></span>
+                <button class="btn-cancel" id="cancelBtn">Cancel</button>
+                <button class="btn-primary" id="submitBtn" disabled>Create Spec</button>
+            </footer>
+        </main>
 
-        <footer class="spec-editor-actions">
-            <button class="btn-cancel" id="cancelBtn">Cancel</button>
-            <div class="action-spacer"></div>
-            <span id="commandButtons" style="display: none;"></span>
-            <button class="btn-primary" id="submitBtn">Submit</button>
-        </footer>
-
-        <div class="keyboard-hints">
-            <kbd>Ctrl</kbd>+<kbd>Enter</kbd> to submit • <kbd>Esc</kbd> to cancel
-        </div>
+        <div class="sr-only" id="sr-status" role="status" aria-live="polite"></div>
     </div>
 
-    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
-        <div class="loading-spinner"></div>
+    <div class="loading-overlay" id="loadingOverlay" role="status" aria-live="polite" aria-hidden="true" style="display: none;">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <p class="loading-text">Creating your spec…</p>
     </div>
 
     <script nonce="${nonce}">

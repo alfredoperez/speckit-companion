@@ -7,27 +7,32 @@
  *   - SpecEditor/CreateSpec stories (standalone view).
  *   - Viewer/Transitions/CreateSpec (the lifecycle "phase zero" entry).
  *
- * Auto Mode lives here, next to Submit — by design it is the canonical
+ * Auto Mode lives here, next to Create Spec — by design it is the canonical
  * first-time entry point for the spec pipeline, NOT a viewer-footer button.
  */
 
 export interface CreateSpecMockProps {
     initialContent?: string;
     submitting?: boolean;
+    overLimit?: boolean;
 }
 
-export function CreateSpecMock({ initialContent = '', submitting = false }: CreateSpecMockProps) {
-    const placeholder =
-        'Describe your feature or task in detail...\n\n' +
-        'Example:\n' +
-        '- What is the feature about?\n' +
-        '- What problem does it solve?\n' +
-        '- Who are the target users?\n' +
-        '- What are the key requirements?\n' +
-        '- Are there any constraints or dependencies?';
+const MAX_CHARS = 50_000;
 
-    const charCount = initialContent.length;
-    const maxChars = 50_000;
+const HELPER_TEXT =
+    'Write what you want and why. Helpful to include: the problem it solves, who it is for, ' +
+    'the key requirements, and any constraints or dependencies.';
+
+export function CreateSpecMock({
+    initialContent = '',
+    submitting = false,
+    overLimit = false,
+}: CreateSpecMockProps) {
+    const charCount = overLimit ? MAX_CHARS + 1200 : initialContent.length;
+    const isEmpty = initialContent.trim().length === 0;
+    const canSubmit = !isEmpty && !overLimit && !submitting;
+    // Counter is hidden until ~90% of the limit, then shows in warning/over-limit color.
+    const showCount = charCount >= MAX_CHARS * 0.9;
 
     return (
         <div
@@ -38,112 +43,123 @@ export function CreateSpecMock({ initialContent = '', submitting = false }: Crea
                 padding: 32px;
                 min-height: 100vh;
                 box-sizing: border-box;
-                max-width: 760px;
-                margin: 0 auto;
             `}
         >
-            <header style="margin-bottom: 28px;">
-                <h1 style="font-size: 28px; font-weight: 700; margin: 0 0 6px; color: var(--vscode-foreground, #fff);">
-                    Create New Spec
-                </h1>
-                <p style="font-size: 13px; opacity: 0.7; margin: 0;">
-                    Write a detailed specification for your feature or task
-                </p>
-            </header>
+            <main style="max-width: 800px; margin: 0 auto;">
+                <header style="margin-bottom: 24px;">
+                    <h1 style="font-size: 28px; font-weight: 700; margin: 0 0 6px; color: var(--vscode-foreground, #fff);">
+                        Create New Spec
+                    </h1>
+                    <p style="font-size: 13px; margin: 0; color: var(--vscode-foreground, #c8c8c8);">
+                        Describe your feature — the AI will generate the spec, plan, and tasks for it.
+                    </p>
+                </header>
 
-            <div style="display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 24px;">
-                <div style="display: flex; align-items: center; gap: 12px; font-size: 13px;">
-                    <span style="opacity: 0.7;">Workflow</span>
-                    <button
-                        type="button"
-                        style="
-                            background: var(--vscode-button-secondaryBackground, #1f1828);
-                            color: var(--vscode-button-secondaryForeground, #ddd);
-                            border: 1px solid var(--vscode-widget-border, #303030);
-                            padding: 8px 14px;
-                            border-radius: 4px;
+                <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 12px; font-size: 13px;">
+                        <span>Workflow</span>
+                        <button
+                            type="button"
+                            style="
+                                background: var(--vscode-button-secondaryBackground, #1f1828);
+                                color: var(--vscode-button-secondaryForeground, #ddd);
+                                border: 1px solid var(--vscode-widget-border, #303030);
+                                padding: 6px 12px;
+                                border-radius: 4px;
+                                font-size: 13px;
+                                cursor: pointer;
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 8px;
+                                min-width: 120px;
+                                justify-content: space-between;
+                            "
+                        >
+                            SpecKit
+                            <span style="opacity: 0.5;">▾</span>
+                        </button>
+                    </div>
+                </div>
+
+                <section style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 13px; font-weight: 600; margin: 0 0 6px;">
+                        Specification
+                    </label>
+                    <p style="font-size: 13px; line-height: 1.5; margin: 0 0 8px; color: var(--vscode-foreground, #c8c8c8);">
+                        {HELPER_TEXT}
+                    </p>
+                    <div
+                        style={`
+                            background: var(--vscode-input-background, #0c0814);
+                            border: 1px solid var(--vscode-widget-border, #2a2a2a);
+                            border-radius: 6px;
+                            padding: 16px;
+                            font-family: var(--vscode-font-family, system-ui, sans-serif);
                             font-size: 13px;
-                            cursor: pointer;
-                            display: inline-flex;
-                            align-items: center;
-                            gap: 8px;
-                            min-width: 120px;
-                            justify-content: space-between;
-                        "
+                            line-height: 1.6;
+                            min-height: 280px;
+                            white-space: pre-wrap;
+                            color: ${isEmpty ? 'rgba(200, 200, 200, 0.85)' : 'var(--vscode-input-foreground, #ddd)'};
+                        `}
                     >
-                        SpecKit
-                        <span style="opacity: 0.5;">▾</span>
-                    </button>
-                </div>
-            </div>
+                        {initialContent || 'Describe your feature or task in detail…'}
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px;">
+                        <button
+                            type="button"
+                            aria-label="Attach image (or paste an image to attach)"
+                            style="
+                                background: transparent;
+                                color: var(--vscode-button-secondaryForeground, #ddd);
+                                border: 1px solid var(--vscode-widget-border, #303030);
+                                padding: 4px 10px;
+                                font-size: 12px;
+                                border-radius: 4px;
+                                cursor: pointer;
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 6px;
+                            "
+                        >
+                            <span aria-hidden="true">🖼</span>
+                            Attach image
+                        </button>
+                        {showCount && (
+                            <span
+                                style={`font-size: 12px; color: ${overLimit ? 'var(--vscode-editorError-foreground, #f14c4c)' : 'var(--vscode-editorWarning-foreground, #cca700)'};`}
+                            >
+                                {overLimit
+                                    ? `Over limit — ${charCount.toLocaleString()} / ${MAX_CHARS.toLocaleString()} (remove ${(charCount - MAX_CHARS).toLocaleString()} characters)`
+                                    : `${charCount.toLocaleString()} / ${MAX_CHARS.toLocaleString()}`}
+                            </span>
+                        )}
+                    </div>
+                </section>
 
-            <section style="margin-bottom: 20px;">
-                <h2 style="font-size: 14px; font-weight: 600; margin: 0 0 10px;">
-                    Specification
-                </h2>
-                <div
-                    style={`
-                        background: var(--vscode-input-background, #0c0814);
-                        border: 1px solid var(--vscode-widget-border, #2a2a2a);
-                        border-radius: 6px;
-                        padding: 16px;
-                        font-family: var(--vscode-editor-font-family, monospace);
-                        font-size: 13px;
-                        line-height: 1.6;
-                        min-height: 320px;
-                        white-space: pre-wrap;
-                        color: ${initialContent ? 'var(--vscode-input-foreground, #ddd)' : 'rgba(190, 175, 230, 0.7)'};
-                    `}
-                >
-                    {initialContent || placeholder}
-                </div>
-                <div style="text-align: right; margin-top: 6px; font-size: 12px; opacity: 0.6;">
-                    {charCount.toLocaleString()} / {maxChars.toLocaleString()}
-                </div>
-            </section>
-
-            <section style="border-top: 1px solid var(--vscode-widget-border, #2a2a2a); padding-top: 16px; margin-bottom: 24px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <h2 style="font-size: 14px; font-weight: 600; margin: 0;">Attachments</h2>
+                <footer style="padding-top: 16px; display: flex; align-items: center; gap: 12px;">
+                    <p style="margin: 0; font-size: 11px; color: var(--vscode-foreground, #c8c8c8);">
+                        <kbd style="background: var(--vscode-keybindingLabel-background, #2a2a2a); padding: 1px 6px; border-radius: 3px; border: 1px solid var(--vscode-widget-border, #303030);">Ctrl/Cmd</kbd>
+                        {' + '}
+                        <kbd style="background: var(--vscode-keybindingLabel-background, #2a2a2a); padding: 1px 6px; border-radius: 3px; border: 1px solid var(--vscode-widget-border, #303030);">Enter</kbd>
+                        {' to submit · '}
+                        <kbd style="background: var(--vscode-keybindingLabel-background, #2a2a2a); padding: 1px 6px; border-radius: 3px; border: 1px solid var(--vscode-widget-border, #303030);">Esc</kbd>
+                        {' to cancel'}
+                    </p>
+                    <div style="flex: 1;" />
                     <button
                         type="button"
                         style="
                             background: transparent;
                             color: var(--vscode-foreground, #ddd);
-                            border: none;
-                            padding: 4px 0;
+                            border: 1px solid var(--vscode-widget-border, #303030);
+                            padding: 8px 18px;
+                            border-radius: 4px;
                             font-size: 13px;
                             cursor: pointer;
-                            display: inline-flex;
-                            align-items: center;
-                            gap: 8px;
                         "
                     >
-                        <span style="opacity: 0.7;">🖼</span>
-                        Attach Image
+                        Cancel
                     </button>
-                </div>
-                <p style="font-size: 12px; opacity: 0.55; margin: 0; font-style: italic;">
-                    Use the button above or paste (Ctrl+V / Cmd+V) to attach images
-                </p>
-            </section>
-
-            <footer style="border-top: 1px solid var(--vscode-widget-border, #2a2a2a); padding-top: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px;">
-                <button
-                    type="button"
-                    style="
-                        background: transparent;
-                        color: var(--vscode-foreground, #ddd);
-                        border: 1px solid var(--vscode-widget-border, #303030);
-                        padding: 8px 18px;
-                        border-radius: 4px;
-                        font-size: 13px;
-                        cursor: pointer;
-                    "
-                >
-                    Cancel
-                </button>
-                <div style="display: flex; gap: 10px;">
                     <button
                         type="button"
                         title="Run the full spec pipeline automatically (specify → plan → tasks → implement)"
@@ -162,32 +178,23 @@ export function CreateSpecMock({ initialContent = '', submitting = false }: Crea
                     </button>
                     <button
                         type="button"
-                        disabled={submitting}
+                        disabled={!canSubmit}
                         style={`
-                            background: ${submitting ? 'var(--vscode-button-secondaryBackground, #2a2a2a)' : 'var(--vscode-button-background, #3c3c3c)'};
+                            background: ${canSubmit ? 'var(--vscode-button-background, #3c3c3c)' : 'var(--vscode-button-secondaryBackground, #2a2a2a)'};
                             color: var(--vscode-button-foreground, #fff);
                             border: 1px solid var(--vscode-widget-border, #303030);
                             padding: 8px 22px;
                             border-radius: 4px;
                             font-size: 13px;
                             font-weight: 600;
-                            cursor: ${submitting ? 'wait' : 'pointer'};
-                            opacity: ${submitting ? 0.6 : 1};
+                            cursor: ${canSubmit ? 'pointer' : 'not-allowed'};
+                            opacity: ${canSubmit ? 1 : 0.5};
                         `}
                     >
-                        {submitting ? 'Submitting…' : 'Submit'}
+                        {submitting ? 'Creating…' : 'Create Spec'}
                     </button>
-                </div>
-            </footer>
-
-            <p style="margin-top: 14px; font-size: 11px; opacity: 0.55; text-align: left;">
-                <kbd style="background: var(--vscode-keybindingLabel-background, #2a2a2a); padding: 1px 6px; border-radius: 3px; border: 1px solid var(--vscode-widget-border, #303030);">Ctrl</kbd>
-                {' + '}
-                <kbd style="background: var(--vscode-keybindingLabel-background, #2a2a2a); padding: 1px 6px; border-radius: 3px; border: 1px solid var(--vscode-widget-border, #303030);">Enter</kbd>
-                {' to submit · '}
-                <kbd style="background: var(--vscode-keybindingLabel-background, #2a2a2a); padding: 1px 6px; border-radius: 3px; border: 1px solid var(--vscode-widget-border, #303030);">Esc</kbd>
-                {' to cancel'}
-            </p>
+                </footer>
+            </main>
         </div>
     );
 }

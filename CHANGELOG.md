@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **The Create Spec page is easier to use and accessible** (#272): the form now sits in a centered, readable-width column instead of stretching across the whole editor, with persistent writing guidance below the field (it stays visible while you type) and a primary button that reads **Create Spec** and stays disabled until you've written something. The attachments area collapsed into a compact "Attach image" control beside the field, and the character counter stays out of the way until you near the 50,000 limit. It's now usable without a mouse or sight: errors, "creating your spec…", and image attach/remove are announced to screen readers; every button has a meaningful name; every control shows a visible focus ring when you tab to it; the limit is communicated beyond color and over-limit content can't be submitted; the keyboard hint shows Cmd on macOS; and pressing Esc with typed content asks before discarding your work.
+
 ### Added
 
 - **Mark implemented specs complete from the sidebar, and tell them apart at a glance** (#271): a spec that finishes the pipeline sits in the **Completed** group as "implemented" but still needs your confirmation. You can now right-click it and choose **Mark as Completed** — previously the only way to confirm was the spec viewer's footer. Implemented specs also get a distinct **yellow** beaker icon (vs. the green icon for confirmed-completed specs), so within the Completed group you can see at a glance which specs are done and which are still awaiting your sign-off.

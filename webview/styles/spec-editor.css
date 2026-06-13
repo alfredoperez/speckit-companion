@@ -26,6 +26,31 @@
     font-family: var(--font-family);
     background-color: var(--bg-primary);
     color: var(--text-primary);
+    overflow-y: auto;
+}
+
+/* Centered readable-width column — keeps line length comfortable on wide editors. */
+.spec-editor-column {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Visually-hidden live region (announcements) — present in the a11y tree only. */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 .spec-editor-header {
@@ -42,7 +67,15 @@
 .spec-editor-header p {
     margin: 4px 0 0;
     font-size: 0.9em;
-    color: var(--text-secondary);
+    color: var(--text-body);
+}
+
+/* Persistent writing guidance — readable contrast, proportional font. */
+.helper-text {
+    margin: 0 0 8px;
+    font-size: 0.85em;
+    line-height: 1.5;
+    color: var(--text-body);
 }
 
 /* ============================================
@@ -84,28 +117,42 @@
     border-radius: var(--radius-sm);
     background-color: var(--vscode-input-background);
     color: var(--vscode-input-foreground);
-    font-family: var(--font-mono);
+    font-family: var(--font-family);
     font-size: var(--font-size);
     line-height: 1.5;
     resize: vertical;
     box-sizing: border-box;
 }
 
-.spec-editor-textarea:focus {
-    outline: none;
+.spec-editor-textarea:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -1px;
     border-color: var(--accent);
 }
 
 .spec-editor-textarea::placeholder {
-    color: var(--vscode-input-placeholderForeground);
+    color: var(--text-body);
+    opacity: 0.85;
+}
+
+/* Composer-style row beneath the textarea: attach control left, counter right. */
+.editor-footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 6px;
 }
 
 .char-count {
-    margin-top: 4px;
     font-size: 0.8em;
-    color: var(--text-secondary);
+    color: var(--warning);
     text-align: right;
 }
+
+/* Below the reveal threshold the counter keeps the .sr-only utility so it
+   stays in the a11y tree (the textarea's aria-describedby conveys the limit)
+   while staying visually hidden. */
 
 .char-count.warning {
     color: var(--warning);
@@ -119,48 +166,28 @@
    Image Attachment Area
    ============================================ */
 
-.image-attachment-section {
-    border-top: 1px solid var(--border);
-    padding-top: 16px;
-}
-
-.image-attachment-header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 12px;
-}
-
-.image-attachment-header h3 {
-    font-size: 0.9em;
-    font-weight: 500;
-    margin: 0;
-    min-width: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    color: var(--text-primary);
-}
-
+/* Compact composer-style attach control (no drag-drop affordance — DnD isn't implemented). */
 .attach-image-btn {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 14px;
-    border: 1px dashed var(--vscode-button-secondaryBorder, var(--border));
+    padding: 4px 10px;
+    border: 1px solid var(--vscode-button-secondaryBorder, var(--border));
     border-radius: var(--radius-sm);
     background: transparent;
     color: var(--vscode-button-secondaryForeground, var(--text-primary));
-    font-size: 0.85em;
+    font-size: 0.8em;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: background-color 0.15s ease;
 }
 
 .attach-image-btn:hover {
     background-color: var(--vscode-button-secondaryHoverBackground, var(--bg-hover));
-    border-style: solid;
+}
+
+.attach-image-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
 /* Codicon baseline inside spec-editor chrome */
@@ -171,19 +198,16 @@
     align-items: center;
 }
 
-/* Paste hint */
-.paste-hint {
-    margin: 0 0 12px 0;
-    color: var(--text-secondary);
-    font-size: 0.8em;
-    font-style: italic;
-}
-
 /* Thumbnail grid */
 .image-thumbnails {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
+    margin-top: 12px;
+}
+
+.image-thumbnails:empty {
+    margin-top: 0;
 }
 
 .image-thumbnail {
@@ -242,6 +266,11 @@
     opacity: 1;
 }
 
+.image-thumbnail .remove-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
 .image-thumbnail .remove-btn:hover {
     background-color: var(--vscode-inputValidation-errorBackground, var(--error));
 }
@@ -292,8 +321,9 @@
     text-overflow: ellipsis;
 }
 
-.workflow-selector select:focus {
-    outline: none;
+.workflow-selector select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
     border-color: var(--accent);
 }
 
@@ -303,9 +333,9 @@
 
 .spec-editor-actions {
     display: flex;
+    align-items: center;
     gap: 12px;
     padding-top: 16px;
-    border-top: 1px solid var(--border);
 }
 
 .spec-editor-actions button {
@@ -321,6 +351,11 @@
 .spec-editor-actions button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+.spec-editor-actions button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
 .spec-editor-actions .btn-primary {
@@ -414,9 +449,17 @@
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 16px;
     z-index: 1000;
+}
+
+.loading-text {
+    margin: 0;
+    color: white;
+    font-size: 0.95em;
 }
 
 .loading-spinner {
@@ -454,14 +497,18 @@
     line-height: 1;
 }
 
+.error-message .close-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
 /* ============================================
    Keyboard Shortcuts Hint
    ============================================ */
 
 .keyboard-hints {
     font-size: 0.75em;
-    color: var(--text-secondary);
-    margin-top: 8px;
+    color: var(--text-body);
 }
 
 .keyboard-hints kbd {
@@ -483,21 +530,25 @@
     }
 
     .spec-editor-actions {
-        flex-direction: column;
-    }
-
-    .spec-editor-actions button {
-        width: 100%;
+        flex-wrap: wrap;
     }
 
     .action-spacer {
         display: none;
     }
 
-    /* Stack the workflow row and image-attachment header so neither overflows
-       horizontally at narrow widths. */
-    .workflow-row,
-    .image-attachment-header {
+    .keyboard-hints {
+        flex-basis: 100%;
+        order: 3;
+    }
+
+    .spec-editor-actions .btn-cancel,
+    .spec-editor-actions .btn-primary {
+        flex: 1;
+    }
+
+    /* Stack the workflow row so it doesn't overflow horizontally at narrow widths. */
+    .workflow-row {
         flex-direction: column;
         align-items: stretch;
     }
