@@ -3,7 +3,7 @@
   "specName": "boolean beta settings",
   "branch": "153-boolean-beta-settings",
   "currentStep": "implement",
-  "status": "implementing",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
@@ -193,6 +193,13 @@
       "kind": "complete",
       "by": "extension",
       "at": "2026-06-12T22:18:16.036Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-13T01:57:26.508Z"
     }
   ],
   "currentTask": "T014",

@@ -132,7 +132,7 @@ export class SpecEditorProvider {
     }
 
     /**
-     * Build the synthetic "SpecKit Companion (Turbo)" picker entry, or undefined
+     * Build the synthetic "SpecKit Companion" picker entry, or undefined
      * when it must not appear. Returns undefined when the `turboWorkflowPicker`
      * toggle is off, OR when the Companion spec-kit extension is not installed in
      * the project (so an enabled toggle in a non-Companion project still hides it).
@@ -172,8 +172,8 @@ export class SpecEditorProvider {
         }
         return {
             name: TURBO_WORKFLOW_NAME,
-            displayName: 'Turbo',
-            description: `SpecKit Companion (Turbo) — pin turbo on this spec — leaner /speckit.companion.* pipeline, regardless of the project default.`,
+            displayName: 'SpecKit Companion',
+            description: `Pins the leaner SpecKit Companion (turbo) /speckit.companion.* pipeline on this spec, regardless of the project default.`,
             stepSpecify: `/${formatCommandForProvider(TURBO_SPECIFY_COMMAND)}`,
         };
     }
