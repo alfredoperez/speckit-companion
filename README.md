@@ -387,7 +387,7 @@ Set to `false` to silence the message while keeping the in-viewer elapsed timer.
 
 ### Spec Directories
 
-By default, specs live in `specs/`. You can configure multiple directories or use glob patterns:
+By default, specs are discovered in `specs/` **and** `.specify/specs/` (the SpecKit CLI's own layout), so a spec created either way shows up without extra configuration. You can configure additional directories or use glob patterns:
 
 ```json
 {

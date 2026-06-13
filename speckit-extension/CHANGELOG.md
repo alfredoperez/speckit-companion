@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-06-12
+
+### Fixed
+- **Settling an implementation only ever updates the spec you point it at.** When recording implement progress, the capture now trusts the task list it's handed — the spec whose `tasks.md` you pass is the spec that gets updated — instead of whichever spec the workspace currently treats as "active." Previously, finishing one spec's implementation while a later spec was active could write the completion into the wrong spec and flip an unrelated spec to done. If a conflicting feature directory is also passed, the capture now refuses to write rather than guessing.
+
 ## [0.4.0] - 2026-06-12
 
 ### Changed

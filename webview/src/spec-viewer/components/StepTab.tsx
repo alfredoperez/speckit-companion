@@ -128,13 +128,14 @@ export function StepTab(props: StepTabProps) {
     // Status content: ✓ done, empty otherwise. The percentage is its own label.
     const statusIcon = canonicalState === 'done' && !showPercentLabel ? '✓' : '';
 
-    // The empty in-flight indicator (specify / plan / tasks — anything that
-    // isn't the implement-step percentage pill) renders a spinning `sync`
-    // codicon: looping arrows that read as "actively working" at a glance.
-    // It vanishes the instant `canonicalState` is no longer `in-flight`
-    // (completion recorded or activeStep moved on), so a done step never
+    // The in-flight indicator renders a spinning `sync` codicon: looping arrows
+    // that read as "actively working" at a glance. It now fires for EVERY
+    // in-flight step including implement — during implement it sits next to the
+    // percent label so the tab has motion instead of a static "Tasks 0%"
+    // (#277 Child 4). It vanishes the instant `canonicalState` is no longer
+    // `in-flight` (completion recorded or status settled), so a done step never
     // keeps the glyph.
-    const showSyncGlyph = canonicalState === 'in-flight' && !inProgress;
+    const showSyncGlyph = canonicalState === 'in-flight';
 
     const baseTooltip = STEP_TOOLTIPS[phase] ?? doc.label;
     const tooltip = isLocked
@@ -176,6 +177,9 @@ export function StepTab(props: StepTabProps) {
                     style={{ '--impl-progress': taskCompletionPercent / 100 } as Record<string, string | number>}
                     aria-label={`${taskCompletionPercent}% of tasks complete`}
                 >
+                    {showSyncGlyph && (
+                        <span class="codicon codicon-sync step-status__sync" aria-hidden="true" />
+                    )}
                     {taskCompletionPercent}%
                 </span>
             )}

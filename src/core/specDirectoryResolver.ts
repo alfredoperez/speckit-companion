@@ -38,7 +38,10 @@ function globSegmentToRegex(segment: string): RegExp {
  */
 function getConfiguredPatterns(): string[] {
     const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
-    return config.get<string[]>('specDirectories', ['specs']);
+    // Keep this fallback in sync with the package.json `specDirectories` default;
+    // it is only reached when the contribution isn't loaded (bare config), and a
+    // divergence would silently drop `.specify/specs` and reintroduce #270.
+    return config.get<string[]>('specDirectories', ['specs', '.specify/specs']);
 }
 
 /**
@@ -362,19 +365,25 @@ function matchGlobSpecDir(relativePath: string, pattern: string): string | undef
  * Get file watcher glob patterns for all configured spec directories.
  * Returns patterns suitable for vscode.workspace.createFileSystemWatcher
  */
-export function getFileWatcherPatterns(): { specs: string[]; tasks: string[]; markdown: string[] } {
+export function getFileWatcherPatterns(): { specs: string[]; tasks: string[]; markdown: string[]; specContext: string[] } {
     const patterns = getConfiguredPatterns();
     const specs: string[] = [];
     const tasks: string[] = [];
     const markdown: string[] = [];
+    // `.spec-context.json` lives directly in each spec dir. A dedicated glob lets
+    // the viewer-refresh watcher target the context file under every configured
+    // spec directory (specs default `specDirectories`), not only `.claude/`. VS
+    // Code `**` globs match dotfiles, so the leading `.` is fine.
+    const specContext: string[] = [];
 
     for (const pattern of patterns) {
         specs.push(`**/${pattern}/**/*`);
         tasks.push(`**/${pattern}/**/tasks.md`);
         markdown.push(`**/${pattern}/**/*.md`);
+        specContext.push(`**/${pattern}/**/.spec-context.json`);
     }
 
-    return { specs, tasks, markdown };
+    return { specs, tasks, markdown, specContext };
 }
 
 /**

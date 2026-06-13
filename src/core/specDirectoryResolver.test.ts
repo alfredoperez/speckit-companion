@@ -227,7 +227,7 @@ describe('directoryHasMarkdown (tested indirectly via resolveSpecDirectories)', 
 });
 
 describe('getFileWatcherPatterns', () => {
-    it('generates spec/task/markdown patterns for each configured directory', () => {
+    it('generates spec/task/markdown/specContext patterns for each configured directory', () => {
         mockConfig(['specs', 'docs']);
 
         const result = getFileWatcherPatterns();
@@ -236,6 +236,7 @@ describe('getFileWatcherPatterns', () => {
             specs: ['**/specs/**/*', '**/docs/**/*'],
             tasks: ['**/specs/**/tasks.md', '**/docs/**/tasks.md'],
             markdown: ['**/specs/**/*.md', '**/docs/**/*.md'],
+            specContext: ['**/specs/**/.spec-context.json', '**/docs/**/.spec-context.json'],
         });
     });
 });

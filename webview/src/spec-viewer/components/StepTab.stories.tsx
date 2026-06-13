@@ -40,10 +40,9 @@ export const InFlight: Story = {
     args: { ...base, doc: mockDoc('tasks', true, 'Tasks'), index: 2, taskCompletionPercent: 72 },
 };
 
-// #229: the empty (non-implement) in-flight indicator is a spinning `sync`
-// codicon — looping arrows that read as "actively working". The implement
-// step keeps its percentage pill (see InFlight above). The glyph disappears
-// the moment the step completes (activeStep moves off / completedAt set).
+// #229: the in-flight indicator is a spinning `sync` codicon — looping arrows
+// that read as "actively working". The glyph disappears the moment the step
+// completes (activeStep moves off / completedAt set).
 export const InFlightSyncGlyph: Story = {
     args: {
         ...base,
@@ -52,6 +51,20 @@ export const InFlightSyncGlyph: Story = {
         activeStep: 'plan',
         currentStep: 'plan',
         stepHistory: { plan: { startedAt: new Date(Date.now() - 18_000).toISOString() } },
+    },
+};
+
+// #277 Child 4: the implement tab now shows the spinning sync glyph NEXT TO the
+// live percentage, so it has motion instead of a static "Tasks 0%". The glyph
+// renders inside `.step-tab__percent`.
+export const InFlightImplementPercentAndGlyph: Story = {
+    args: {
+        ...base,
+        doc: mockDoc('tasks', true, 'Tasks'),
+        index: 2,
+        currentDoc: 'tasks',
+        currentStep: 'implement',
+        taskCompletionPercent: 40,
     },
 };
 

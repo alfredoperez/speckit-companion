@@ -784,11 +784,12 @@
               "type": "string"
             },
             "default": [
-              "specs"
+              "specs",
+              ".specify/specs"
             ],
             "scope": "window",
             "order": 5,
-            "description": "Glob patterns for spec directories. Simple names (e.g. 'specs') list their children as specs. Patterns with wildcards (e.g. 'openspec/changes/*') treat each match as a spec folder. Use step-level subDir to discover sub-specs within each match."
+            "description": "Glob patterns for spec directories. Simple names (e.g. 'specs') list their children as specs. Patterns with wildcards (e.g. 'openspec/changes/*') treat each match as a spec folder. '.specify/specs' is included by default so specs created under the SpecKit CLI's '.specify/specs/' layout are discovered. Use step-level subDir to discover sub-specs within each match."
           },
           "speckit.customCommands": {
             "type": "array",

@@ -3,12 +3,14 @@
  *
  * FooterActions single-source test.
  *
- * The footer is a pure function of one `viewerState` snapshot. There are
- * exactly two render shapes — `CatalogFooter` and `GeneratingFooter` — and
- * both derive from `viewerState`. A stale/partial `navState` can never hide a
- * still-valid lifecycle button. This test pins that contract: the generating
- * gate, the button catalog, and the generating→catalog revert all key off
- * `viewerState` alone.
+ * The footer is a pure function of one `viewerState` snapshot. The in-flight
+ * "Generating…" pill was removed (#277 Child 4) — the only render shape is now
+ * `CatalogFooter`, and the single source of in-flight motion is the spinning
+ * step tab. This test pins the remaining contract: the button catalog derives
+ * from `viewerState.footer`, a stale/partial `navState` can never hide a valid
+ * button, and while the current step is in flight the forward-motion lifecycle
+ * button (Approve / next-step `start`) is suppressed (but Regenerate and
+ * closure actions remain).
  */
 
 import { render } from 'preact';
@@ -60,7 +62,7 @@ describe('FooterActions — single source (viewerState)', () => {
         viewerState.value = null;
     });
 
-    it('renders GeneratingFooter when a step is in flight and the artifact is not ready', () => {
+    it('never renders a Generating footer pill (consolidated onto the step tab)', () => {
         viewerState.value = vs({
             status: 'planning',
             activeStep: 'plan',
@@ -72,19 +74,35 @@ describe('FooterActions — single source (viewerState)', () => {
 
         const container = renderInto();
         try {
-            const chip = container.querySelector('.footer-generating-chip');
-            expect(chip).not.toBeNull();
-            expect(chip!.textContent).toContain('Generating Plan');
-            // CatalogFooter buttons MUST NOT be present in this branch.
-            expect(container.querySelector('.actions-right button')).toBeNull();
+            expect(container.querySelector('.footer-generating-chip')).toBeNull();
         } finally {
             cleanup(container);
         }
     });
 
-    it('renders CatalogFooter from viewerState.footer when no step is generating', () => {
+    it('suppresses the forward-motion button while the current step is in flight', () => {
         viewerState.value = vs({
-            status: 'specified',
+            status: 'planning', // step in flight
+            activeStep: 'plan',
+            footer: [
+                { id: 'regenerate', label: 'Regenerate', scope: 'step', tooltip: 're-run' },
+                { id: 'approve', label: 'Tasks', scope: 'step', tooltip: 'continue' },
+            ],
+        });
+
+        const container = renderInto();
+        try {
+            // Regenerate stays; the forward-motion Approve/Tasks button is hidden.
+            expect(labels(container)).toContain('Regenerate');
+            expect(labels(container)).not.toContain('Tasks');
+        } finally {
+            cleanup(container);
+        }
+    });
+
+    it('renders CatalogFooter from viewerState.footer for a settled step', () => {
+        viewerState.value = vs({
+            status: 'specified', // settled — forward motion allowed
             footer: [
                 { id: 'regenerate', label: 'Regenerate', scope: 'step', tooltip: 're-run' },
                 { id: 'approve', label: 'Plan', scope: 'step', tooltip: 'continue' },
@@ -101,10 +119,6 @@ describe('FooterActions — single source (viewerState)', () => {
     });
 
     it('a stale/partial navState cannot hide a still-valid viewerState button', () => {
-        // navState carries an in-flight `activeStep`/`stepHistory` from a prior
-        // snapshot — under the old multi-source footer this could short-circuit
-        // into GeneratingFooter and hide the forward action. With single-source
-        // it is ignored entirely.
         navState.value = {
             activeStep: 'plan',
             stepHistory: { plan: { startedAt: new Date().toISOString(), completedAt: null } },
@@ -112,8 +126,7 @@ describe('FooterActions — single source (viewerState)', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
         viewerState.value = vs({
-            status: 'specified',
-            runningStepStartedAt: null, // truth: nothing is generating
+            status: 'specified', // settled per viewerState (the source of truth)
             footer: [
                 { id: 'regenerate', label: 'Regenerate', scope: 'step', tooltip: 're-run' },
                 { id: 'approve', label: 'Plan', scope: 'step', tooltip: 'continue' },
@@ -129,35 +142,10 @@ describe('FooterActions — single source (viewerState)', () => {
         }
     });
 
-    it('reverts from GeneratingFooter to CatalogFooter when the artifact becomes ready', () => {
+    it('shows the forward-motion button once the step settles (implementing → implemented offers closure)', () => {
         viewerState.value = vs({
-            status: 'tasking',
+            status: 'ready-to-implement', // settled tasks step
             activeStep: 'tasks',
-            runningStepStartedAt: new Date().toISOString(),
-            runningStepArtifactReady: true, // artifact landed → no overlay
-            runningStepLabel: 'Tasks',
-            footer: [
-                { id: 'regenerate', label: 'Regenerate', scope: 'step', tooltip: 're-run' },
-                { id: 'approve', label: 'Implement', scope: 'step', tooltip: 'continue' },
-            ],
-        });
-
-        const container = renderInto();
-        try {
-            expect(container.querySelector('.footer-generating-chip')).toBeNull();
-            expect(labels(container)).toEqual(expect.arrayContaining(['Regenerate', 'Implement']));
-        } finally {
-            cleanup(container);
-        }
-    });
-
-    it('reverts to CatalogFooter when the recovery timeout has elapsed', () => {
-        viewerState.value = vs({
-            status: 'tasking',
-            activeStep: 'tasks',
-            runningStepStartedAt: '2026-01-01T00:00:00Z', // long past the 10-min window
-            runningStepArtifactReady: false,
-            runningStepLabel: 'Tasks',
             footer: [
                 { id: 'regenerate', label: 'Regenerate', scope: 'step', tooltip: 're-run' },
                 { id: 'approve', label: 'Implement', scope: 'step', tooltip: 'continue' },
