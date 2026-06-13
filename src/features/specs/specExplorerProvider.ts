@@ -670,6 +670,8 @@ class SpecItem extends vscode.TreeItem {
                 this.iconPath = new vscode.ThemeIcon('sync~spin');
             } else if (specContext?.status === SpecStatuses.COMPLETED) {
                 this.iconPath = new vscode.ThemeIcon('beaker', new vscode.ThemeColor('testing.iconPassed'));
+            } else if (specContext?.status === SpecStatuses.IMPLEMENTED) {
+                this.iconPath = new vscode.ThemeIcon('beaker', new vscode.ThemeColor('charts.yellow'));
             } else if (specContext?.currentStep) {
                 this.iconPath = new vscode.ThemeIcon('beaker', new vscode.ThemeColor('charts.blue'));
             } else {

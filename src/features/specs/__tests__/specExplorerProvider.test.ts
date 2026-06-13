@@ -331,6 +331,21 @@ describe('SpecExplorerProvider', () => {
             expect((icon.color as vscode.ThemeColor).id).toBe('charts.blue');
         });
 
+        it('should use a yellow beaker icon for implemented specs, distinct from green completed and blue in-progress', async () => {
+            const specs = await getSpecItems('my-feature', false, {
+                status: 'implemented',
+                currentStep: 'implement',
+                workflow: 'default',
+                selectedAt: '2026-01-01',
+            });
+            const icon = specs[0].iconPath as vscode.ThemeIcon;
+            expect(icon.id).toBe('beaker');
+            expect(icon.color).toBeInstanceOf(vscode.ThemeColor);
+            expect((icon.color as vscode.ThemeColor).id).toBe('charts.yellow');
+            expect((icon.color as vscode.ThemeColor).id).not.toBe('testing.iconPassed');
+            expect((icon.color as vscode.ThemeColor).id).not.toBe('charts.blue');
+        });
+
         it('should prefer sync~spin over colored beaker when spec is active', async () => {
             const specs = await getSpecItems('my-feature', true, {
                 status: 'active',
@@ -936,5 +951,20 @@ describe('lifecycleContextValue', () => {
         // row while staying distinct from the Resume-matching values.
         expect(isSpecLifecycleItem('spec-implemented')).toBe(true);
         expect(isSpecGroupItem('spec-implemented')).toBe(false);
+    });
+});
+
+describe('speckit.markCompleted menu eligibility', () => {
+    it('offers Mark as Completed for active, tasks-done, and implemented specs', () => {
+        const pkg = require('../../../../package.json');
+        const menus: Array<{ command: string; when: string }> =
+            pkg.contributes.menus['view/item/context'];
+        const markCompleted = menus.find(
+            m => m.command === 'speckit.markCompleted' && m.when.includes('viewItem')
+        );
+        expect(markCompleted).toBeDefined();
+        expect(markCompleted!.when).toContain('spec-active');
+        expect(markCompleted!.when).toContain('spec-tasks-done');
+        expect(markCompleted!.when).toContain('spec-implemented');
     });
 });

@@ -1,0 +1,177 @@
+{
+  "workflow": "speckit",
+  "specName": "implemented mark completed",
+  "branch": "282-implemented-mark-completed",
+  "currentStep": "implement",
+  "status": "implemented",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-13T03:39:13.399Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-13T03:39:50.879Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-13T03:39:57.636Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T03:40:19.784Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-13T03:40:27.394Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T03:40:43.007Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T03:40:43.074Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-13T03:40:52.875Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T03:41:02.111Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T03:41:11.751Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T03:41:45.603Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T03:42:15.248Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T03:42:32.818Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T03:42:46.739Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T03:43:11.140Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-13T03:43:11.196Z"
+    }
+  ],
+  "currentTask": "T007",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Broaden speckit.markCompleted menu when-clause to admit spec-implemented",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Add implemented icon branch (beaker + charts.yellow) distinct from green completed and blue in-progress",
+      "files": [
+        "src/features/specs/specExplorerProvider.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Add tests: implemented spec yellow beaker (distinct) + markCompleted menu when-clause admits spec-implemented",
+      "files": [
+        "src/features/specs/__tests__/specExplorerProvider.test.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Document Completed-group dual membership, yellow implemented icon, and Mark-as-Completed on implemented specs",
+      "files": [
+        "docs/sidebar.md"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Mirror Completed-group dual membership, yellow icon, and Mark-as-Completed in README Sidebar at a Glance",
+      "files": [
+        "README.md"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Add user-facing [Unreleased] changelog entry for #271 mark-completed + yellow icon",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Verified npm run compile and full test suite (1009 passing)"
+    }
+  }
+}
