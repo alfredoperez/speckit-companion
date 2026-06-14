@@ -56,38 +56,35 @@ export function profileTelemetryId(profile: string | undefined): 'standard' | 't
 }
 
 /**
- * Coerce the `companion.templateProfile` setting to its allow-list before reporting.
- * The setting is an enum, but settings.json accepts arbitrary strings — an out-of-range
- * value is reported as the default `'off'`, never sent verbatim (privacy contract).
+ * Coerce the `speckit.defaultWorkflow` setting to its allow-list before reporting.
+ * The setting is an enum, but settings.json accepts arbitrary strings — anything
+ * other than `companion` is reported as the default `'speckit'`, never sent
+ * verbatim (privacy contract: a custom workflow name is user-authored).
  */
-export function templateProfileTelemetryId(value: string | undefined): 'standard' | 'turbo' | 'off' {
-    return value === 'standard' || value === 'turbo' || value === 'off' ? value : 'off';
+export function defaultWorkflowTelemetryId(value: string | undefined): 'speckit' | 'companion' {
+    return value === 'companion' ? 'companion' : 'speckit';
 }
 
-/** The seven beta-flag states reported with `extension.activated`. */
+/** The beta-flag + workflow states reported with `extension.activated`. */
 export interface BetaSnapshot {
-    templateProfile: string;
-    complexityFastPath: string;
-    turboWorkflowPicker: string;
+    defaultWorkflow: string;
     resumeBeta: string;
     activityPanel: string;
     installPrompt: string;
     telemetry: string;
 }
 
-/** Read the seven `speckit.*` beta-flag settings into a string-valued snapshot. */
+/** Read the reported `speckit.*` settings into a string-valued snapshot. */
 export function buildBetaSnapshot(): BetaSnapshot {
     const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
     const bool = (key: string, fallback: boolean): string =>
         String(config.get<boolean>(key, fallback));
-    // The three former tri-state settings (#259) funnel through coerceLegacyBoolean
+    // The former tri-state settings (#259) funnel through coerceLegacyBoolean
     // so an un-migrated scope reports a clean boolean, not a stale 'beta'/'on'/'off'.
     const coerced = (key: string, fallback: boolean): string =>
         String(coerceLegacyBoolean(config.get<unknown>(key), fallback));
     return {
-        templateProfile: templateProfileTelemetryId(config.get<string>('companion.templateProfile', 'off')),
-        complexityFastPath: bool('companion.complexityFastPath', false),
-        turboWorkflowPicker: coerced('companion.turboWorkflowPicker', true),
+        defaultWorkflow: defaultWorkflowTelemetryId(config.get<string>('defaultWorkflow', 'speckit')),
         resumeBeta: bool('companion.resumeBeta', false),
         activityPanel: coerced('viewer.activityPanel', true),
         installPrompt: coerced('companion.installPrompt', true),

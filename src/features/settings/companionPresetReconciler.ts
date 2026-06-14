@@ -1,12 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as yaml from 'js-yaml';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
-
-export type TemplateProfile = 'standard' | 'turbo' | 'off';
 
 /** Carrier preset for the always-present standard `/speckit.*` command family. */
 const STANDARD_PRESET_ID = 'companion-standard';
@@ -17,7 +14,6 @@ const LEGACY_PRESET_IDS = ['companion-lean', 'sdd-lean'] as const;
 
 export const ALL_PRESET_IDS = ['companion-standard', 'companion-turbo'] as const;
 
-const CONFIG_REL = path.join('.specify', 'companion.yml');
 const PRESETS_REL = path.join('.specify', 'presets');
 
 export interface PresetOp {
@@ -108,95 +104,6 @@ function installedMap(workspaceRoot: string): Record<string, boolean> {
         map[id] = isPresetInstalled(workspaceRoot, id);
     }
     return map;
-}
-
-const VALID_PROFILES: readonly TemplateProfile[] = ['standard', 'turbo', 'off'];
-
-function isTemplateProfile(v: unknown): v is TemplateProfile {
-    return typeof v === 'string' && (VALID_PROFILES as readonly string[]).includes(v);
-}
-
-/**
- * Read templateProfile from .specify/companion.yml; undefined when absent, unreadable,
- * or set to a value that isn't a known profile (a hand-edited `templateProfile: foo`
- * must not flow downstream as a TemplateProfile).
- */
-export function readTemplateProfile(workspaceRoot: string): TemplateProfile | undefined {
-    const p = path.join(workspaceRoot, CONFIG_REL);
-    if (!fs.existsSync(p)) {
-        return undefined;
-    }
-    try {
-        const doc = yaml.load(fs.readFileSync(p, 'utf8')) as { templateProfile?: unknown } | null;
-        const value = doc?.templateProfile;
-        return isTemplateProfile(value) ? value : undefined;
-    } catch {
-        return undefined;
-    }
-}
-
-/** Read-merge-write templateProfile, preserving every other key already in the file. */
-export function writeTemplateProfile(workspaceRoot: string, profile: TemplateProfile): void {
-    const p = path.join(workspaceRoot, CONFIG_REL);
-    let doc: Record<string, unknown> = {};
-    if (fs.existsSync(p)) {
-        try {
-            const loaded = yaml.load(fs.readFileSync(p, 'utf8'));
-            if (loaded && typeof loaded === 'object') {
-                doc = loaded as Record<string, unknown>;
-            }
-        } catch {
-            doc = {};
-        }
-    }
-    doc.templateProfile = profile;
-    fs.mkdirSync(path.dirname(p), { recursive: true });
-    fs.writeFileSync(p, yaml.dump(doc), 'utf8');
-}
-
-/** Read-merge-write complexityFastPath, preserving every other key already in the file. */
-export function writeComplexityFastPath(workspaceRoot: string, value: boolean): void {
-    const p = path.join(workspaceRoot, CONFIG_REL);
-    let doc: Record<string, unknown> = {};
-    if (fs.existsSync(p)) {
-        try {
-            const loaded = yaml.load(fs.readFileSync(p, 'utf8'));
-            if (loaded && typeof loaded === 'object') {
-                doc = loaded as Record<string, unknown>;
-            }
-        } catch {
-            doc = {};
-        }
-    }
-    doc.complexityFastPath = value;
-    fs.mkdirSync(path.dirname(p), { recursive: true });
-    fs.writeFileSync(p, yaml.dump(doc), 'utf8');
-}
-
-/**
- * Mirror the VS Code `complexityFastPath` setting into .specify/companion.yml so
- * the turbo command body reads a single boolean (it never reads VS Code settings).
- * The setting is the source of truth and companion.yml is a derived, machine-local
- * cache (gitignored) — there is no project-level override. Defaults to `false`
- * (opt-in beta) when the setting is unset.
- */
-export function resolveComplexityFastPath(
-    workspaceRoot: string,
-    settingValue: boolean | undefined
-): boolean {
-    const resolved = settingValue ?? false;
-    writeComplexityFastPath(workspaceRoot, resolved);
-    return resolved;
-}
-
-/**
- * The `off` profile is the explicit "plain upstream spec-kit" escape hatch — it
- * routes to stock commands and must NOT pull in the `companion-standard` family
- * (which carries the timing-augmented bodies). Every other profile (and an absent
- * one) keeps the standard family ensured so the pipeline is always present.
- */
-export function shouldEnsureStandard(profile: TemplateProfile | undefined): boolean {
-    return profile !== 'off';
 }
 
 export interface ReconcileDeps {

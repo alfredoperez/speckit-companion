@@ -1,54 +1,43 @@
-# Companion Template Profiles
+# Companion Workflow (pipeline shape & timing)
 
-The long-form reference for how SpecKit Companion reshapes the spec-kit pipeline into selectable **profiles**, why the shape lives in command bodies (not document templates), how timing fidelity is baked in, and how a profile is selected. This is a living design doc — update it whenever the profiles, their command bodies, the timing partial, the setting/selection, or the reconciler change (see CLAUDE.md → Documentation).
+The long-form reference for how SpecKit Companion reshapes the spec-kit pipeline, why the shape lives in command bodies (not document templates), how timing fidelity is baked in, and how the workflow is chosen. This is a living design doc — update it whenever the Companion command bodies, the timing partial, the workflow choice/selection, the routing node, or the reconciler change (see CLAUDE.md → Documentation).
 
-> Status: shipped. Mode selection is **non-destructive dispatch routing** — both command families are always present, and the setting only chooses which one a spec dispatches (no preset swap). This doc is the durable reference that outlives any one spec folder.
+> Status: shipped. The extension exposes a single **workflow choice** — stock **SpecKit** or **SpecKit Companion** — on `speckit.defaultWorkflow`. Both command families are always present; the chosen workflow only picks which family a spec dispatches (no preset swap). The three former toggles (`templateProfile`, `turboWorkflowPicker`, `complexityFastPath`) are retired and folded into this one choice. This doc is the durable reference that outlives any one spec folder.
 
-## The two profiles (+ off)
+## The two workflows
 
-| Profile | What it is | Output |
+| Workflow | What it is | Output |
 |---|---|---|
-| `off` (default) | No overrides at all — an opt-in beta, so the profiles are off until selected. | Plain upstream spec-kit. |
-| `standard` | The **stock** spec-kit commands, unchanged, with timing instructions added. | Same sections, same files as upstream spec-kit. |
-| `turbo` | The same commands with specific sections trimmed or replaced (no user stories, files/dependencies task axis), plus the same timing. | A smaller spec folder — `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files created on demand. (When the Companion workflow routes a *small* change, that one specify pass still emits three lean files — `spec.md` with an inline Approach, a `plan.md` pointer to it, and a real-checklist `tasks.md` — see [Companion workflow routing node](#companion-workflow-routing-node).) |
+| `speckit` (default) | The **stock** spec-kit commands, unchanged, with timing instructions added by the always-present `companion-standard` carrier preset. | Same sections, same files as upstream spec-kit. |
+| `companion` | The same commands with specific sections trimmed or replaced (no user stories, files/dependencies task axis), plus the same timing and a terminal `mark-complete` step. | A smaller spec folder — `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files created on demand. (When the Companion workflow routes a *small* change, that one specify pass still emits three lean files — `spec.md` with an inline Approach, a `plan.md` pointer to it, and a real-checklist `tasks.md` — see [Companion workflow routing node](#companion-workflow-routing-node).) |
 
-Both `standard` and `turbo` override the same **7** commands — `specify`, `clarify`, `plan`, `tasks`, `analyze`, `implement`, `constitution`. `checklist` and `taskstoissues` are left on stock.
+The Companion command family overrides the same **7** commands the stock family carries timing for — `specify`, `clarify`, `plan`, `tasks`, `analyze`, `implement`, `constitution`. `checklist` and `taskstoissues` are left on stock.
 
 ## Mechanism: shape lives in commands, not templates
 
-A spec-kit preset can override two kinds of file: `type: command` (the AI prompt the agent runs) and `type: template` (a document scaffold like `spec-template.md`). **The shape is carried by command overrides.** We deliberately do **not** ship turbo document-template overrides. The reason is not stylistic — it is that template overrides do not reach all commands:
+A spec-kit preset can override two kinds of file: `type: command` (the AI prompt the agent runs) and `type: template` (a document scaffold like `spec-template.md`). **The shape is carried by command overrides.** We deliberately do **not** ship Companion document-template overrides. The reason is not stylistic — it is that template overrides do not reach all commands:
 
 - spec-kit resolves a preset's `type: template` override through a layered stack (`.specify/templates/overrides/` → presets → extensions → core `.specify/templates/`), **but only when a setup script invokes the resolver**.
-- `specify` copies its template by literal path — *"Copy `templates/spec-template.md`"* — and never runs the resolver. A turbo `spec-template.md` override would therefore **silently do nothing** for `specify` (the agent reads the core template). The turbo spec shape *must* come from the command body.
+- `specify` copies its template by literal path — *"Copy `templates/spec-template.md`"* — and never runs the resolver. A Companion `spec-template.md` override would therefore **silently do nothing** for `specify` (the agent reads the core template). The Companion spec shape *must* come from the command body.
 - `plan` and `tasks` go through `setup-plan.sh` / `setup-tasks.sh`, which *do* resolve through the stack — so a template override there *would* take effect.
 
 So template overrides are **mixed** (work for plan/tasks, no-op for specify). Command overrides apply **uniformly** to every command. Putting the shape in command bodies is the only reliable single mechanism, so that is where it lives.
 
-**Consequence — accepted tradeoff:** in `turbo` mode the on-disk `.specify/templates/spec-template.md` still shows the stock (user-story) shape; turbo mode just doesn't read it. That cosmetic mismatch is the price of a reliable, single-source mechanism. Template-reading *secondary* surfaces (the stock `checklist`/`analyze` commands, the GUI spec editor) likewise see the stock template — acceptable for v1.
+**Consequence — accepted tradeoff:** on the Companion workflow the on-disk `.specify/templates/spec-template.md` still shows the stock (user-story) shape; the Companion commands just don't read it. That cosmetic mismatch is the price of a reliable, single-source mechanism. Template-reading *secondary* surfaces (the stock `checklist`/`analyze` commands, the GUI spec editor) likewise see the stock template — acceptable for v1.
 
-**Future option:** if we later want the turbo shape enforced at the skeleton level for `plan`/`tasks` specifically — where template overrides *do* flow via the setup scripts — we can add just those two turbo templates then. Not needed for v1.
+**Future option:** if we later want the Companion shape enforced at the skeleton level for `plan`/`tasks` specifically — where template overrides *do* flow via the setup scripts — we can add just those two Companion templates then. Not needed for v1.
 
-## Per-file turbo treatment
+## Per-file Companion treatment
 
-`standard` keeps every section/file verbatim (+ timing). `turbo` per file, relative to stock:
+| Command | Stock | Companion |
+|---|---|---|
+| `specify` | user stories + acceptance scenarios | no user-story section; lean requirements + success criteria |
+| `tasks` | per stock template | files & dependencies task axis |
+| `plan` / `implement` / `clarify` / `analyze` / `constitution` | stock body | stock body + the shared timing partial |
 
-| File | Turbo treatment |
-|---|---|
-| `spec.md` | **redo** — User Scenarios (user stories) → replaced by a 1–3 line Overview; Key Entities → moved to `data-model.md` only when it helps build the change (assess on demand); keep Functional Requirements, Success Criteria, Assumptions. |
-| `checklists/requirements.md` | **keep** — a turbo quality checklist (no user-story / acceptance-scenario items), graded in a single self-check pass; the FR/SC list still lives in `spec.md`. |
-| `plan.md` | **redo** — drop the dual-option Project Structure tree + Complexity Tracking; replace with a turbo Approach & Structure (files/deps); add Out of Scope; keep Summary, Technical Context, short Constitution Check. |
-| `research.md` | **assess on demand** — create only for real unknowns/trade-offs worth their own file; otherwise fold a compact Decisions note into `plan.md`. |
-| `data-model.md` | **assess on demand** — create only when a dev needs entities spelled out to build this change; compact. |
-| `contracts/` | **assess on demand** — create only when it exposes an interface (API / CLI / schema / UI) a consumer codes against. |
-| `quickstart.md` | **assess on demand** — create only when there is a non-obvious setup/verification path a dev would otherwise miss. |
-| `tasks.md` | **redo** — drop user-story grouping/`[US#]` labels/MVP framing; keep strict `[Tn] [P?] + path`, Setup→Foundational→Core→Integration→Polish layering, deps/parallel notes. |
-| `constitution.md` | **redo** — keep principles/governance + semver bump + write the file; drop the template-propagation checklist + Sync-Impact ceremony. |
+## Timing fidelity (both workflows)
 
-Net turbo spec folder: `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files (`research.md` / `data-model.md` / `contracts/` / `quickstart.md`) created on demand, only when they help understand or build the change. (Exception: when the Companion workflow routes a *small* change, that one specify pass still emits the three lean files — `spec.md` carries an inline Approach, `plan.md` is a short pointer to it, and `tasks.md` holds the real checklist — see [Companion workflow routing node](#companion-workflow-routing-node).)
-
-## Timing fidelity (both profiles)
-
-Both profiles bake a single shared **timing partial** into every overridden command body, so durations stay honest for any dispatcher — not only when the GUI prepends its preamble (`src/ai-providers/promptBuilder.ts`). The partial fixes three logged bugs:
+Both families bake a single shared **timing partial** into every overridden command body, so durations stay honest for any dispatcher — not only when the GUI prepends its preamble (`src/ai-providers/promptBuilder.ts`). The partial fixes three logged bugs:
 
 1. **Self-close** — each step writes its own `complete` when its work ends. (Previously `specify` never self-closed, so the next step stamped its end.)
 2. **No duplicate start** — a repeated same-step `start` is deduped at write time in `speckit-extension/scripts/write-context.py` instead of doubling `history[]`.
@@ -58,48 +47,48 @@ The GUI preamble stays as the extra path; the body-embedded partial is the stand
 
 ## Companion workflow routing node
 
-Right-sizing the ceremony to the change can run on spec-kit's own engine, in the **Companion workflow** (`speckit-extension/workflows/speckit-companion.workflow.yml`) via `specify workflow run speckit-companion`. This is an **additional** home for the right-sizing decision, alongside the existing command-body fast-path in `/speckit.companion.specify` (still present and still gated by the `complexityFastPath` VS Code setting) — not a replacement for it. On the workflow path there is **no on/off toggle**: the thresholds live in the workflow definition itself, a small change is routed automatically, and the `complexityFastPath` setting plays no part in a workflow run.
+Right-sizing the ceremony to the change runs **inside the Companion workflow** (`speckit-extension/workflows/speckit-companion.workflow.yml`) via `specify workflow run speckit-companion`. This is where the former "complexity fast-path" now lives — there is **no user-facing on/off setting**: the thresholds live in the workflow definition itself, and a small change is routed automatically.
 
-After specify, the workflow runs a thin **classify** step (`speckit.companion.classify`) that emits a single size signal — `small | normal | oversized` — from the same fixed **5 files / 10 tasks** guardrail the old fast-path used. A `switch` routing node reads that signal and picks a branch:
+After specify, the workflow runs a thin **classify** step (`speckit.companion.classify`) that emits a single size signal — `small | normal | oversized` — from a fixed **5 files / 10 tasks** guardrail. A `switch` routing node reads that signal and picks a branch:
 
 - **`small` — folded path.** Less ceremony for a tiny change: the branch folds plan/tasks toward implement, with no review gate.
 - **`normal` — full pipeline.** The default branch: review-spec gate → plan → review-plan gate → tasks → implement, mirroring the bundled `speckit` workflow's gates.
-- **`oversized` — warn, then full pipeline.** A visible warning step runs first, then the **same** full pipeline. It never silently skips a phase (FR-004).
+- **`oversized` — warn, then full pipeline.** A visible warning step runs first, then the **same** full pipeline. It never silently skips a phase.
 
 The `switch`'s `default:` branch is the full pipeline, so an ambiguous or unresolved size always runs every phase — a change is never under-planned by accident. (Today the engine captures only `exit_code`/`stdout`/`stderr` from a command step, so the classify size doesn't yet resolve into the `switch` at runtime and the safe default runs; the `small` fold is latent until the engine captures structured command output. The full pipeline is always correct in the meantime.)
 
 The workflow ends with a terminal `mark-complete` step (`speckit.companion.mark-complete`) that writes `status: completed` — the command writes it, never the AI. Runs pause at the review gates and resume from the exact node with `specify workflow resume <run_id>`; each step still captures into `.spec-context.json`.
 
-## Selecting a profile — one setting, routed per spec
+## Selecting a workflow — recorded per spec
 
-Mode selection is **dispatch routing**, not a preset swap. Both command families are always present — the stock `/speckit.*` family (emitted by `specify init`, kept present by the always-on `companion-standard` carrier) and the namespaced `/speckit.companion.*` family (from the extension's `provides.commands`). The mode only picks which family a spec dispatches; nothing is ever removed.
+The workflow choice is **dispatch routing**, not a preset swap. Both command families are always present — the stock `/speckit.*` family (emitted by `specify init`, kept present by the always-on `companion-standard` carrier) and the namespaced `/speckit.companion.*` family (from the extension's `provides.commands`). The choice only picks which family a spec dispatches; nothing is ever removed.
 
-1. **Project default** — `speckit.companion.templateProfile` (`"standard" | "turbo" | "off"`, default `off` — an opt-in beta), mirrored to `.specify/companion.yml` (a machine-local, gitignored mirror the extension writes and regenerates on activation — untracked, so one developer's choice never leaks into another checkout). Changing it only records the default and seeds new specs — it issues **no** preset add/remove/swap, so it can never blank a command set.
-2. **Per-spec pin, with a project-default fallback** — each spec records its shape in `.spec-context.json` `profile`, seeded from the project default (`src/features/specs/profileDispatch.ts` `seedProfileForNewSpec`). But the spec-kit capture script that first writes the context on the `specify` step is profile-agnostic and leaves `profile` **absent**, so the pin can't be relied on at creation. The extension closes that gap two ways: `resolveProfileCommand` falls back to the project default when no pin is present (routing stays correct immediately), and the context writer **back-fills** the pin into `.spec-context.json` on the first lifecycle write (`src/features/specs/specContextWriter.ts` `updateSpecContext`), so it becomes durable. Either way `resolveProfileCommand` maps the four pipeline commands (`speckit.{specify,plan,tasks,implement}`) → their `speckit.companion.*` twins for a `turbo` spec across every dispatch path; `clarify`/`analyze`/`constitution` and custom commands have no twin and pass through unchanged. An **explicit** pin (including `standard`) or an invalid value resolves to the stock command and is never overwritten — so once a spec is pinned, a later default change can't reshape it. The **specify** step is special — a brand-new spec has no context yet, so `resolveNewSpecProfileCommand` routes its specify command from the project default directly (`turbo` → `/speckit.companion.specify`), keeping the first artifact on the same shape the rest of the spec is seeded to.
+1. **Project default** — `speckit.defaultWorkflow` (`"speckit" | "companion"`, default `speckit`). It is the workflow the Create-Spec picker pre-selects; it issues **no** preset add/remove/swap, so it can never blank a command set.
+2. **Recorded per spec** — each spec records its chosen workflow in `.spec-context.json` `workflow`, seeded verbatim at creation (`buildSpecifyCreationPreamble`). Every dispatch path (viewer footer, sidebar resume, command palette, Create-Spec specify) resolves that workflow's command for each step via `resolveStepCommand` and then applies the missing-extension fallback (`src/features/specs/profileDispatch.ts` `resolveDispatchWithFallback`): a `/speckit.companion.*` command resolves as-is when the spec-kit extension is installed, and downgrades to its stock twin (`fellBack: true`, with a one-click install warning) when it isn't. `clarify`/`analyze`/`constitution` and custom commands have no companion twin and pass through unchanged.
+3. **Create-Spec picker.** The **Workflow** dropdown in *Create New Spec* lists exactly the two built-in workflows, pre-selecting `speckit.defaultWorkflow`. Picking **SpecKit Companion** seeds `workflow: companion` and dispatches `/speckit.companion.specify` (downgrading to stock specify + warning when the extension is missing). The chosen workflow then carries the whole pipeline through `resolveStepCommand`.
 
-3. **Per-spec choice at creation — the turbo workflow picker (beta).** Independently of the project default, a developer can pick **turbo for one spec** at the moment they create it, from the **Workflow** dropdown in *Create New Spec*. This is a pure selection UI: it adds no configuration surface, and choosing it only changes which command family the new spec is created under. It is **beta-gated** by `speckit.companion.turboWorkflowPicker` (`off | beta | on`, default `beta`, in the *SpecKit Companion: Beta Features* group) and **install-gated** by whether the Companion spec-kit extension is installed in the project (`isCompanionInstalled`, the same on-disk `.specify/extensions/companion/` + bundled-preset signal the reconciler uses). The option only appears when the toggle is `beta`/`on` **and** the extension is installed; `off`, or a project without the Companion install, shows the dropdown unchanged. When the toggle is `beta` the entry is labeled **"SpecKit Companion (beta)"**; `on` drops the badge. Picking it routes specify to `/speckit.companion.specify` regardless of the `templateProfile` default and pins `profile: "turbo"` in the spec's seed write (`buildSpecifyCreationPreamble`), so the whole pipeline (specify/plan/tasks/implement) runs turbo through the same `profileDispatch` routing above. Submitting **without** picking it preserves today's behavior exactly — specify routing and the seeded profile follow the project default.
-
-**Keeping the standard family present (recovery + steady state).** On activation the extension runs an **add-only** ensure (`src/features/settings/companionPresetReconciler.ts` `ensureStandardFamily`): it adds `companion-standard` from the bundled path when absent — re-materializing the stock command files on a fresh checkout and recovering a project a prior swap left stranded — and is a no-op when already present. It **never** removes the standard family, so it cannot strand a project. A one-time migration removes a leftover `companion-turbo` install if present (and the pre-rename `companion-lean` / `sdd-lean` leftovers), but the setting itself issues no removes thereafter. CLI failures are logged, not thrown. The `off` escape hatch is the one exception — it opts out of the ensure entirely (`shouldEnsureStandard`), so it neither installs nor repairs `companion-standard`. It does **not** remove an already-installed `companion-standard` either — `off` skips the repair step, it doesn't revert a prior install, so a project that already has the timing-augmented bodies keeps them until the preset is removed manually.
+**Keeping the standard family present (recovery + steady state).** On activation the extension runs an **add-only** ensure (`src/features/settings/companionPresetReconciler.ts` `ensureStandardFamily`): it adds `companion-standard` from the bundled path when absent — re-materializing the stock command files on a fresh checkout and recovering a project a prior swap left stranded — and is a no-op when already present. It **never** removes the standard family, so it cannot strand a project. A one-time migration removes a leftover `companion-turbo` install if present (and the pre-rename `companion-lean` / `sdd-lean` leftovers). CLI failures are logged, not thrown.
 
 ## Naming
 
-The feature carries **no "sdd"** tokens. Canonical names: presets `companion-standard` / `companion-turbo`; setting `speckit.companion.templateProfile`; config file `.specify/companion.yml`; reconciler `companionPresetReconciler.ts`; `ConfigKeys.templateProfile`.
+The feature carries **no "sdd"** tokens. Canonical names: presets `companion-standard` / `companion-turbo` (the latter retired from the selection path, removed on first ensure if left over); setting `speckit.defaultWorkflow`; reconciler `companionPresetReconciler.ts`; workflow constant `COMPANION_WORKFLOW` (`src/features/workflows/workflowManager.ts`).
 
 ## Files
 
-- `speckit-extension/presets/companion-standard/` · `companion-turbo/` — `preset.yml` (7 `type: command` `replaces:` entries) + `commands/speckit.<cmd>.md` (7 each) + `README.md`.
+- `speckit-extension/presets/companion-standard/` — `preset.yml` (7 `type: command` `replaces:` entries) + `commands/speckit.<cmd>.md` (7) + `README.md`. The carrier for the timing-augmented stock command family.
 - `speckit-extension/presets/_shared/timing-partial.md` — the canonical timing block embedded in every body.
-- `speckit-extension/commands/speckit.companion.{specify,plan,tasks,implement}.md` — the per-spec turbo opt-in commands (track the turbo bodies).
+- `speckit-extension/commands/speckit.companion.{specify,plan,tasks,implement}.md` — the Companion pipeline commands; `speckit.companion.{classify,mark-complete}.md` — the routing/terminal commands.
 - `speckit-extension/scripts/check-shape-parity.py` — body/partial parity guard.
 - `speckit-extension/scripts/write-context.py` — duplicate-start dedup + specify self-close.
-- `src/features/settings/companionPresetReconciler.ts` (+ test) — the add-only `ensureStandardFamily` / `decideEnsureStandardOps` (keep-standard-present + one-time turbo/legacy migration) and the `.specify/companion.yml` read/write helpers.
-- `src/features/specs/profileDispatch.ts` (+ test) — `resolveProfileCommand` (route `turbo` specs to the `/speckit.companion.*` twin) and `seedProfileForNewSpec` (pin the project default at the specify step).
-- `package.json` `speckit.companion.templateProfile` + `speckit.companion.turboWorkflowPicker`; `src/core/constants.ts` `ConfigKeys.templateProfile` / `ConfigKeys.turboWorkflowPicker`; `.specify/companion.yml`.
-- `src/features/spec-editor/specEditorProvider.ts` (`buildTurboWorkflowEntry` — beta+install-gated picker entry; `handleSubmit` — pins turbo on the picked spec) + `src/features/spec-editor/types.ts` (`TURBO_WORKFLOW_NAME`, `WorkflowDefinition.beta`); `src/ai-providers/promptBuilder.ts` (`buildSpecifyCreationPreamble` `profile` arg → seed pin); `src/features/settings/companionPresetReconciler.ts` `isCompanionInstalled`.
+- `src/features/settings/companionPresetReconciler.ts` (+ test) — the add-only `ensureStandardFamily` / `decideEnsureStandardOps` and `isCompanionInstalled`.
+- `src/features/specs/profileDispatch.ts` (+ test) — `resolveDispatchWithFallback` / `resolveDispatchForRoot` (the missing-extension fallback applied to an already-resolved workflow command).
+- `src/features/workflows/workflowManager.ts` — `DEFAULT_WORKFLOW` (`speckit`) and `COMPANION_WORKFLOW` (`companion`), surfaced by `getWorkflows()`.
+- `package.json` `speckit.defaultWorkflow` (two-value enum); `src/core/constants.ts` `ConfigKeys.defaultWorkflow`, `COMPANION_WORKFLOW_NAME`.
+- `src/features/spec-editor/specEditorProvider.ts` (the two-workflow picker; `handleSubmit` seeds the chosen workflow) + `src/ai-providers/promptBuilder.ts` (`buildSpecifyCreationPreamble` seeds `workflow`).
 
 ## Areas to improve (open)
 
-- **14 hand-maintained bodies** (7 commands × 2 profiles) drift against upstream stock + the timing partial. Mitigation: `companion-standard` is a verbatim stock copy + the one shared partial; the parity check locks the partial. A generator could reduce hand-maintenance.
-- **Best-effort cadence** — substep/self-close `date -u` stamps are still hand-authored second-precision; per-task timing is now finish-only via a script (`write-context.py --task <id> --kind complete`), which the eval grades by honest deltas (see `docs/capture-and-timing.md`).
+- **Hand-maintained bodies** drift against upstream stock + the timing partial. Mitigation: `companion-standard` is a verbatim stock copy + the one shared partial; the parity check locks the partial. A generator could reduce hand-maintenance.
+- **Best-effort cadence** — substep/self-close `date -u` stamps are still hand-authored second-precision; per-task timing is finish-only via a script (`write-context.py --task <id> --kind complete`), which the eval grades by honest deltas (see `docs/capture-and-timing.md`).
 - **Catalog-add seam** — the bundled-path `add` (`specify preset add --dev .specify/extensions/companion/presets/companion-standard`) is what the add-only ensure uses to (re-)materialize the standard family; catalog-form `add <id>` silently no-ops in a consumer install, which is why the `--dev` bundled path is required.
-- **Turbo plan/tasks templates** — viable later where template overrides flow via the setup scripts (see Mechanism).
+- **Latent small-fold** — the workflow routing node's `small` branch is latent until the engine captures structured command output from the classify step; the safe full-pipeline default runs in the meantime.

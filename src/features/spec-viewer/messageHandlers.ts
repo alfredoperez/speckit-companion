@@ -26,7 +26,7 @@ import {
   readSpecContextSync,
 } from "../specs/specContextReader";
 import { updateSpecContext } from "../specs/specContextWriter";
-import { resolveProfileCommandWithFallback } from "../specs/profileDispatch";
+import { resolveDispatchWithFallback } from "../specs/profileDispatch";
 import { lastEntryIsCompletionFor } from "../specs/historyHelpers";
 import {
   completeStep,
@@ -437,17 +437,17 @@ async function executeStepInTerminal(
   const instance = deps.getInstance(specDirectory);
   const targetPath = instance?.state.changeRoot || specDirectory;
   const label = step.label || step.name;
-  // Guard the missing-extension case: never dispatch a /speckit.companion.* twin
-  // when the spec-kit extension isn't installed — fall back to stock + warn (FR-003).
-  const resolution = resolveProfileCommandWithFallback(step.command, specDirectory);
+  // Guard the missing-extension case: never dispatch a /speckit.companion.* command
+  // when the spec-kit extension isn't installed — fall back to stock + warn (FR-006/FR-007).
+  const resolution = resolveDispatchWithFallback(step.command, specDirectory);
   const command = resolution.command;
   if (resolution.fellBack) {
     deps.outputChannel.appendLine(
-      `[SpecViewer] Turbo command unavailable — spec-kit extension not installed; running stock ${command}.`,
+      `[SpecViewer] Companion command unavailable — spec-kit extension not installed; running stock ${command}.`,
     );
     void vscode.window
       .showWarningMessage(
-        'Turbo mode needs the companion spec-kit extension, which is not installed — running the standard SpecKit flow instead.',
+        'The SpecKit Companion workflow needs the companion spec-kit extension, which is not installed — running the standard SpecKit flow instead.',
         'Install spec-kit Extension',
       )
       .then(choice => {

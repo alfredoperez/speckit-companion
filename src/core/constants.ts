@@ -65,9 +65,6 @@ export const ConfigKeys = {
     specDirectories: 'speckit.specDirectories',
     customWorkflows: 'speckit.customWorkflows',
     defaultWorkflow: 'speckit.defaultWorkflow',
-    templateProfile: 'speckit.companion.templateProfile',
-    turboWorkflowPicker: 'speckit.companion.turboWorkflowPicker',
-    complexityFastPath: 'speckit.companion.complexityFastPath',
     resumeBeta: 'speckit.companion.resumeBeta',
     installPrompt: 'speckit.companion.installPrompt',
     views: {
@@ -272,6 +269,14 @@ export const AIProviders = {
 export const Workflows = {
     SPECKIT_COMPANION: 'speckit-companion',
 } as const;
+
+/**
+ * The two built-in workflow identities `speckit.defaultWorkflow` selects between.
+ * `speckit` is the stock pipeline; `companion` dispatches the `/speckit.companion.*`
+ * command family through to a terminal `mark-complete` step.
+ */
+export const SPECKIT_WORKFLOW_NAME = 'speckit';
+export const COMPANION_WORKFLOW_NAME = 'companion';
 
 /**
  * Workflows that include explicit approval gates between steps.

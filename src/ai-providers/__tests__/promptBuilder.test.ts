@@ -401,23 +401,15 @@ describe('buildSpecifyCreationPreamble', () => {
         expect(buildSpecifyCreationPreamble('speckit', null)).toBe('');
     });
 
-    it('does NOT pin a profile in the seed JSON by default (preserves today\'s behavior)', () => {
+    it('never pins a profile in the seed JSON (the profile axis is retired)', () => {
         mockConfig(true);
-        const out = buildSpecifyCreationPreamble('speckit', null);
-        expect(out).not.toContain('"profile": "turbo"');
+        expect(buildSpecifyCreationPreamble('speckit', null)).not.toContain('"profile"');
+        expect(buildSpecifyCreationPreamble('companion', null)).not.toContain('"profile"');
     });
 
-    it('pins profile: turbo in the seed JSON when the turbo option was picked', () => {
+    it('seeds the chosen workflow name verbatim', () => {
         mockConfig(true);
-        const out = buildSpecifyCreationPreamble('speckit-turbo', null, 'turbo');
-        expect(out).toContain('"profile": "turbo"');
-        // And instructs the model to keep it.
-        expect(out).toContain('the user picked turbo for this spec at creation');
-    });
-
-    it('does NOT pin turbo when profile is explicitly standard', () => {
-        mockConfig(true);
-        const out = buildSpecifyCreationPreamble('speckit', null, 'standard');
-        expect(out).not.toContain('"profile": "turbo"');
+        expect(buildSpecifyCreationPreamble('companion', null)).toContain('"workflow": "companion"');
+        expect(buildSpecifyCreationPreamble('speckit', null)).toContain('"workflow": "speckit"');
     });
 });

@@ -8,7 +8,7 @@ import {
     buildBetaSnapshot,
     phaseTelemetryId,
     profileTelemetryId,
-    templateProfileTelemetryId,
+    defaultWorkflowTelemetryId,
     APP_INSIGHTS_CONNECTION_STRING,
 } from '../telemetry';
 // `@vscode/extension-telemetry` is mapped to the test mock (jest.config.js).
@@ -114,11 +114,9 @@ describe('TelemetryService', () => {
     });
 
     describe('the beta snapshot', () => {
-        it('assembles all seven beta-flag fields from config', () => {
+        it('assembles the workflow + beta-flag fields from config', () => {
             mockConfig({
-                'companion.templateProfile': 'turbo',
-                'companion.complexityFastPath': true,
-                'companion.turboWorkflowPicker': false,
+                defaultWorkflow: 'companion',
                 'companion.resumeBeta': true,
                 'viewer.activityPanel': false,
                 'companion.installPrompt': true,
@@ -126,14 +124,17 @@ describe('TelemetryService', () => {
             });
 
             expect(buildBetaSnapshot()).toEqual({
-                templateProfile: 'turbo',
-                complexityFastPath: 'true',
-                turboWorkflowPicker: 'false',
+                defaultWorkflow: 'companion',
                 resumeBeta: 'true',
                 activityPanel: 'false',
                 installPrompt: 'true',
                 telemetry: 'true',
             });
+        });
+
+        it('reports the default workflow as speckit when unset or out-of-range', () => {
+            mockConfig({ telemetry: true });
+            expect(buildBetaSnapshot().defaultWorkflow).toBe('speckit');
         });
     });
 
@@ -165,17 +166,16 @@ describe('TelemetryService', () => {
         });
     });
 
-    describe('templateProfileTelemetryId (privacy: no arbitrary settings.json value)', () => {
-        it('passes the three allow-listed values through', () => {
-            expect(templateProfileTelemetryId('standard')).toBe('standard');
-            expect(templateProfileTelemetryId('turbo')).toBe('turbo');
-            expect(templateProfileTelemetryId('off')).toBe('off');
+    describe('defaultWorkflowTelemetryId (privacy: no arbitrary settings.json value)', () => {
+        it('passes the two built-in workflow ids through', () => {
+            expect(defaultWorkflowTelemetryId('speckit')).toBe('speckit');
+            expect(defaultWorkflowTelemetryId('companion')).toBe('companion');
         });
 
-        it('reports an out-of-range / hand-edited value as the default off, never verbatim', () => {
-            expect(templateProfileTelemetryId('client-secret-mode')).toBe('off');
-            expect(templateProfileTelemetryId('')).toBe('off');
-            expect(templateProfileTelemetryId(undefined)).toBe('off');
+        it('reports an out-of-range / custom workflow name as the default speckit, never verbatim', () => {
+            expect(defaultWorkflowTelemetryId('my-custom-workflow')).toBe('speckit');
+            expect(defaultWorkflowTelemetryId('')).toBe('speckit');
+            expect(defaultWorkflowTelemetryId(undefined)).toBe('speckit');
         });
     });
 

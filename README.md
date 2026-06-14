@@ -15,7 +15,7 @@ A spec workspace that turns AI-assisted, spec-driven development into something 
 
 - **Catch bad specs before they become bad code.** Review AI-generated specs the way you review pull requests: inline comments on specific lines, refine in place, and kill a vague requirement before it turns into 200 lines of wrong implementation.
 - **Watch every feature flow through its phases.** Specify → Plan → Tasks → Done, each a one-click action, with live progress, a phase timeline, and an Activity overview of everything the spec tracks.
-- **Run leaner with Turbo.** Opt into the companion spec-kit extension's trimmed `/speckit.companion.*` pipeline — smaller specs, files-and-dependencies tasks, an optional fast-path for small changes — without giving up the stock flow.
+- **Pick one pipeline, run it end to end.** Choose stock **SpecKit** or the leaner **SpecKit Companion** workflow once — smaller specs, files-and-dependencies tasks, built-in right-sizing for small changes — and every step of the run dispatches that choice.
 - **Bring your own AI and your own workflow.** Eight providers, custom phases, custom commands. Drop in your own SDD process; the sidebar and viewer adapt.
 
 ## Recently Shipped
@@ -274,7 +274,7 @@ The extension sends **anonymous, PII-free** usage telemetry to help prioritize w
 | Signal | Example value |
 |--------|---------------|
 | Selected AI provider | `claude`, `copilot`, `gemini`, … |
-| Pipeline profile | `standard` / `turbo` |
+| Default workflow | `speckit` / `companion` |
 | Which workflow phase was dispatched | `specify` / `plan` / `tasks` / `implement` |
 | Spec lifecycle counts | created / completed / archived |
 | Beta-flag on/off states | a snapshot reported once per session |
@@ -292,79 +292,41 @@ The opt-in beta toggles appear under **Beta Features** in VS Code Settings in ad
 | Order | Setting | Requires the spec-kit extension? |
 |-------|---------|----------------------------------|
 | 1 | `speckit.companion.installPrompt` — install banner when the extension is missing | No (its job is to surface the missing extension) |
-| 2 | `speckit.companion.templateProfile` — default pipeline shape for new specs | Yes |
-| 3 | `speckit.companion.turboWorkflowPicker` — per-spec turbo choice in Create-Spec | Yes |
-| 4 | `speckit.companion.complexityFastPath` — fold plan/tasks into specify for small changes | Yes |
-| 5 | `speckit.companion.resumeBeta` — resume (▶) button on sidebar specs | Yes |
-| 6 | `speckit.viewer.activityPanel` — per-spec Activity timeline in the viewer | Yes |
+| 2 | `speckit.companion.resumeBeta` — resume (▶) button on sidebar specs | Yes |
+| 3 | `speckit.viewer.activityPanel` — per-spec Activity timeline in the viewer | Yes |
 
 Every toggle except the install prompt only functions when the [companion spec-kit extension](#install-the-spec-kit-extension) is installed; their settings descriptions carry the same note with that install link, so a toggle that looks inert is usually waiting on the extension. Each setting is detailed in the subsections below.
 
-### Template Profiles
+### Workflow Choice
 
-Selects the spec-kit pipeline shape for the project. This is an **opt-in beta** — it **defaults to `off`** (plain upstream spec-kit). **Both command families are always installed** — this setting only routes which one a spec dispatches. `standard` runs the stock `/speckit.*` commands (same sections, same files, with better timing capture); `turbo` runs the trimmed `/speckit.companion.*` commands (no user-story section, files/dependencies tasks, a smaller spec folder); `off` routes to the stock commands and opts out of the Companion install/repair step.
+You make **one decision, once**: run the stock **SpecKit** pipeline or the **SpecKit Companion** pipeline. That choice lives in a single setting, `speckit.defaultWorkflow`, and is pre-selected in the **Workflow** dropdown of *Create New Spec*. There is no separate template-profile, turbo-picker, or fast-path toggle — those three settings have been retired and folded into this one choice.
 
 ```json
 {
-  "speckit.companion.templateProfile": "off"
+  "speckit.defaultWorkflow": "speckit"
 }
 ```
 
 | Value | Behavior |
 |-------|----------|
-| `"off"` (default) | Routes to the stock `/speckit.*` commands and opts out of the Companion install/repair step. It won't remove `companion-standard` if a prior setting already installed it, so any timing-augmented bodies stay until you remove that preset yourself. |
-| `"standard"` | Routes to the stock `/speckit.*` commands — unchanged, with timing baked in. |
-| `"turbo"` | Routes to the trimmed `/speckit.companion.*` commands — the turbo shape. |
+| `"speckit"` (default) | The stock SpecKit pipeline: `/speckit.*` commands, same sections and files as upstream spec-kit. |
+| `"companion"` | The SpecKit Companion pipeline: the trimmed `/speckit.companion.*` commands (no user-story section, files/dependencies tasks, a smaller spec folder), built-in right-sizing for small vs. large changes, and a terminal mark-complete step. Requires the [companion spec-kit extension](#install-the-spec-kit-extension). |
 
-Switching is **non-destructive**: neither command set is ever removed or overwritten — only the dispatched shape changes, so you never hit "Unknown command" after a switch (the standard family is re-added automatically if a project is ever missing it). The value persists to `.specify/companion.yml` — a machine-local, gitignored mirror the extension writes and regenerates on activation, so your choice never leaks into another checkout — and each spec **pins** the project default the moment it's created, so changing the default never reshapes a spec already in flight. The turbo `/speckit.companion.*` commands ship with the [spec-kit extension](./speckit-extension/README.md), and the stock `/speckit.*` family stays present automatically; full reference in [`docs/template-profiles.md`](./docs/template-profiles.md).
+The chosen workflow is recorded on the spec at creation and dispatches **its** command family for every step of the run, so there's no cross-workflow command leakage. Existing users see no change: the default stays `speckit`.
 
-**Per-spec turbo, at creation (beta).** Beyond the project default, you can pick **turbo for a single spec** from the **Workflow** dropdown in *Create New Spec* — a "SpecKit Companion" choice that pins turbo on just that spec, regardless of the default. It's an **opt-in beta** gated by `speckit.companion.turboWorkflowPicker` (`off | beta | on`, defaults to `beta`) and only appears when the Companion spec-kit extension is installed in the project; otherwise the dropdown is unchanged. Creating a spec without picking it keeps today's behavior (the project default). See [`docs/template-profiles.md`](./docs/template-profiles.md#selecting-a-profile--one-setting-routed-per-spec).
+**Right-sizing is built in.** What used to be the opt-in "complexity fast-path" now lives **inside the Companion workflow itself** — its routing step detects a small change and folds the ceremony (skips the review-gate pauses) without you flipping any setting. Larger changes keep the full specify → plan → tasks → implement pipeline.
 
-#### Mode comparison: off vs standard vs turbo
+**When the extension is missing.** Companion's `/speckit.companion.*` commands ship with the [spec-kit extension](./speckit-extension/README.md). If you pick **SpecKit Companion** in a project that doesn't have it installed, each step **falls back to the stock `/speckit.*` command** and a one-click "Install spec-kit Extension" prompt appears — you never hit an "Unknown command". Full reference in [`docs/template-profiles.md`](./docs/template-profiles.md).
 
-Which mode should you pick? The short version:
+**Measured impact** comes from a benchmark (`/bench-run-all`, 2026-06-10): the same feature set built through each workflow at three sizes (easy / medium / hard), in isolated sandbox clones with a deterministic harness plus an independent judge. Wall-clock is a single sample per cell, so read timing as directional.
 
-- **`off`** — plain upstream spec-kit. Stock `/speckit.*` commands, no Companion install, no timing capture. Pick this if you want zero changes to the spec-kit you already run.
-- **`standard`** — the stock `/speckit.*` shape (same sections, same files) **plus** lifecycle timing capture that powers the Activity timeline. Pick this for the full spec-kit ceremony with the Companion overview on top.
-- **`turbo`** — the trimmed `/speckit.companion.*` pipeline: no user-story section, files-and-dependencies tasks, a smaller spec folder, and the optional complexity fast-path for small changes. Pick this to move fast on focused work. Requires the spec-kit extension.
+| Per size (easy / medium / hard) | SpecKit | SpecKit Companion |
+|---|---|---|
+| Spec size (`spec.md` lines) | 61 / 91 / 94 | 24 / 29 / 36 |
+| Throwaway side files written | 3 / 4 / 4 | 0 / 0 / 0 |
+| Wall-clock | 2m05s / 4m31s / 7m38s | 3m03s / 5m03s / 5m59s |
 
-| | `off` | `standard` | `turbo` |
-|---|---|---|---|
-| Commands dispatched | stock `/speckit.*` | stock `/speckit.*` | trimmed `/speckit.companion.*` |
-| User-story / scenario section | yes | yes | no |
-| Tasks shape | per stock template | per stock template | files & dependencies |
-| Activity timeline (capture) | no | yes | yes |
-| Complexity fast-path available | no | no | yes (opt-in) |
-| Needs the spec-kit extension | no | no | **yes** |
-
-**Measured impact** comes from a 9-cell benchmark (`/bench-run-all`, 2026-06-10): the same feature set built through each mode at three sizes (easy / medium / hard), in isolated sandbox clones with a deterministic harness plus an independent judge. Wall-clock is a single sample per cell, so read timing as directional.
-
-| Per size (easy / medium / hard) | `off` | `standard` | `turbo` |
-|---|---|---|---|
-| Spec size (`spec.md` lines) | 61 / 91 / 94 | 60 / 87 / 52 | 24 / 29 / 36 |
-| Throwaway side files written | 3 / 4 / 4 | 0 / 3 / 0 | 0 / 0 / 0 |
-| Wall-clock | 2m05s / 4m31s / 7m38s | 3m45s / 7m56s / 6m35s | 3m03s / 5m03s / 5m59s |
-
-Turbo specs run roughly 60 to 68% leaner than `off`, write zero throwaway side files at any size (`research.md` / `data-model.md` / `quickstart.md` / `contracts/`), and trend fastest as the feature gets harder. Correctness was a tie: every cell in every mode shipped a passing, convention-following build (9/9 builds, all-green regression suite, 5.0/5 independent-judge rubric), so no mode needed rework. The difference is ceremony and progress visibility, not whether the feature works.
-
-![Mode comparison chart: off vs standard vs turbo, with turbo the fastest to results](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/mode-comparison.jpg)
-
-### Complexity Fast-Path
-
-An **opt-in beta** that **defaults to `false`**. When enabled in `turbo` mode, small changes auto-detect and fast-track — folding plan and tasks into the specify pass instead of running them as separate stages. When `/speckit.companion.specify` decides a change is small (it projects ≤ 5 files / ≤ 10 tasks and reads no "larger" scope phrase like *rewrite* or *overhaul*), it writes **three lean files in one pass** — `spec.md` with an inline **Approach**, a **`plan.md`** pointer to it, and a real-checklist **`tasks.md`** — and folds plan and tasks into the same run, so the spec lands **ready-to-implement** in one run (the file-driven stepper and sidebar read the files as present, not "not created"; implement is the next user-triggered step). Larger changes keep the full specify → plan → tasks → implement pipeline; a change that crosses the 5-files / 10-tasks guardrail warns and runs the full pipeline rather than fast-tracking silently.
-
-```json
-{
-  "speckit.companion.complexityFastPath": false
-}
-```
-
-| Value | Behavior |
-|-------|----------|
-| `false` (default) | Force the full pipeline on every change — no combining, no warning. |
-| `true` | Auto-detect small changes and fast-track them; larger changes keep the full pipeline. |
-
-The flag is set in the editor (this setting) and mirrored into `.specify/companion.yml` — a machine-local, gitignored cache the command body reads — so the editor setting is the single source of truth. It applies only to the turbo `/speckit.companion.*` commands. Full reference in [`docs/template-profiles.md`](./docs/template-profiles.md#complexity-fast-path-turbo-only).
+Companion specs run roughly 60 to 68% leaner, write zero throwaway side files at any size (`research.md` / `data-model.md` / `quickstart.md` / `contracts/`), and trend fastest as the feature gets harder. Correctness was a tie: every cell in both workflows shipped a passing, convention-following build (all-green regression suite, 5.0/5 independent-judge rubric), so neither needed rework. The difference is ceremony and progress visibility, not whether the feature works.
 
 ### Resume Button
 
@@ -381,7 +343,7 @@ An **opt-in beta** that **defaults to `false`**. When enabled, the sidebar shows
 | `false` (default) | The resume (▶) button is hidden on all specs. |
 | `true` | The resume (▶) button appears on eligible specs (active / tasks-done). |
 
-Resume dispatches the **command family the spec has been running** — a spec on the turbo flow resumes with `/speckit.companion.<step>`, a spec on the stock flow resumes with `/speckit.<step>` — based on the per-spec profile pin. Unlike the complexity fast-path, this gate lives only in VS Code settings; it is not mirrored into `.specify/companion.yml`.
+Resume dispatches the **command family the spec has been running** — a spec on the Companion workflow resumes with `/speckit.companion.<step>`, a spec on the stock SpecKit workflow resumes with `/speckit.<step>` — based on the workflow recorded on the spec. This gate lives only in VS Code settings.
 
 ### Command Format
 
@@ -656,7 +618,7 @@ existence is never used to infer step completion.
 
 ```json
 {
-  "workflow": "speckit-companion | speckit-terminal | <custom>",
+  "workflow": "speckit | companion | <custom>",
   "specName": "060-spec-context-tracking",
   "branch": "060-spec-context-tracking",
   "currentStep": "specify | clarify | plan | tasks | analyze | implement",

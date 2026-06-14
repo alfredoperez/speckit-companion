@@ -149,15 +149,6 @@ export interface TempFileManifest {
 // ============================================
 
 /**
- * Reserved workflow name for the synthetic "SpecKit Companion" picker
- * entry. It is never a real `customWorkflows` config entry — the extension
- * computes it per panel open when the turbo beta toggle is on and the Companion
- * extension is installed — and `handleSubmit` keys off this exact name to pin
- * the turbo profile on the new spec.
- */
-export const TURBO_WORKFLOW_NAME = 'speckit-turbo';
-
-/**
  * A workflow definition for spec-driven development
  */
 export interface WorkflowDefinition {
