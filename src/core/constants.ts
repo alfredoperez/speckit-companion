@@ -65,7 +65,7 @@ export const ConfigKeys = {
     specDirectories: 'speckit.specDirectories',
     customWorkflows: 'speckit.customWorkflows',
     defaultWorkflow: 'speckit.defaultWorkflow',
-    resumeBeta: 'speckit.companion.resumeBeta',
+    resumeBeta: 'speckit.companion.workflowBeta',
     installPrompt: 'speckit.companion.installPrompt',
     views: {
         specsVisible: 'speckit.views.specs.visible',

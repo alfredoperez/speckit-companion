@@ -98,6 +98,37 @@ export async function migrateBetaTriStateSettings(): Promise<void> {
 }
 
 /**
+ * One-time, idempotent migration of the retired `companion.resumeBeta` opt-in into
+ * the single `companion.workflowBeta` gate. Per scope: when the old value coerces
+ * to `true` (boolean, or legacy `'on'`/`'beta'`) AND the user hasn't already set
+ * `workflowBeta` there, copy `true` across; then delete the old key at every scope
+ * it was set. An off/garbage value migrates nothing but is still cleaned up. Scope
+ * is preserved via per-scope `inspect()`, so re-running (old key gone) is a no-op.
+ * Invoked from `activate()` inside try/catch — never throws activation (FR-005).
+ */
+export async function migrateResumeBetaToWorkflowBeta(): Promise<void> {
+    const config = vscode.workspace.getConfiguration('speckit');
+    const oldKey = 'companion.resumeBeta';
+    const newKey = 'companion.workflowBeta';
+    const oldInspected = config.inspect(oldKey);
+    if (!oldInspected) {
+        return;
+    }
+    const newInspected = config.inspect(newKey);
+    for (const { target, field } of SCOPES) {
+        const persisted = oldInspected[field];
+        if (persisted === undefined) {
+            continue;
+        }
+        const alreadySet = newInspected ? newInspected[field] !== undefined : false;
+        if (coerceLegacyBoolean(persisted, false) && !alreadySet) {
+            await config.update(newKey, true, target);
+        }
+        await config.update(oldKey, undefined, target);
+    }
+}
+
+/**
  * One-time, idempotent cleanup: remove any persisted value for the retired
  * spec-driven toggles from settings.json at every scope. Setting a key to
  * `undefined` deletes it at that scope; a key that was never set is skipped, so

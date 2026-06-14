@@ -292,7 +292,7 @@ The opt-in beta toggles appear under **Beta Features** in VS Code Settings in ad
 | Order | Setting | Requires the spec-kit extension? |
 |-------|---------|----------------------------------|
 | 1 | `speckit.companion.installPrompt` — install banner when the extension is missing | No (its job is to surface the missing extension) |
-| 2 | `speckit.companion.resumeBeta` — resume (▶) button on sidebar specs | Yes |
+| 2 | `speckit.companion.workflowBeta` — turns on the whole SpecKit Companion workflow (Create-Spec picker + Continue/Resume button) | Yes |
 | 3 | `speckit.viewer.activityPanel` — per-spec Activity timeline in the viewer | Yes |
 
 Every toggle except the install prompt only functions when the [companion spec-kit extension](#install-the-spec-kit-extension) is installed; their settings descriptions carry the same note with that install link, so a toggle that looks inert is usually waiting on the extension. Each setting is detailed in the subsections below.
@@ -300,6 +300,8 @@ Every toggle except the install prompt only functions when the [companion spec-k
 ### Workflow Choice
 
 You make **one decision, once**: run the stock **SpecKit** pipeline or the **SpecKit Companion** pipeline. That choice lives in a single setting, `speckit.defaultWorkflow`, and is pre-selected in the **Workflow** dropdown of *Create New Spec*. There is no separate template-profile, turbo-picker, or fast-path toggle — those three settings have been retired and folded into this one choice.
+
+The Companion option is a beta: the **Workflow** picker only appears once you turn on `speckit.companion.workflowBeta` **and** the [companion spec-kit extension](#install-the-spec-kit-extension) is installed. Until then, Create Spec runs stock SpecKit with no picker — so you never see a Companion choice that would silently do nothing.
 
 ```json
 {
@@ -328,20 +330,22 @@ The chosen workflow is recorded on the spec at creation and dispatches **its** c
 
 Companion specs run roughly 60 to 68% leaner, write zero throwaway side files at any size (`research.md` / `data-model.md` / `quickstart.md` / `contracts/`), and trend fastest as the feature gets harder. Correctness was a tie: every cell in both workflows shipped a passing, convention-following build (all-green regression suite, 5.0/5 independent-judge rubric), so neither needed rework. The difference is ceremony and progress visibility, not whether the feature works.
 
-### Resume Button
+### Companion Workflow Beta (picker + resume)
 
-An **opt-in beta** that **defaults to `false`**. When enabled, the sidebar shows a resume (▶) button on active specs (active / tasks-done) that dispatches the next pipeline step — picking up from the recorded step with prior decisions in scope, or the next unchecked task inside implement. Off by default, the button is hidden everywhere; toggling it on or off updates visibility immediately, with no window reload.
+A single **opt-in beta** that **defaults to `false`** and turns on the whole SpecKit Companion experience. With it on, Create Spec offers the SpecKit / SpecKit Companion picker (when the companion extension is installed) **and** the sidebar shows a resume (▶) button on active specs (active / tasks-done). With it off, both disappear and you're on stock SpecKit only. Toggling it updates visibility immediately, with no window reload.
 
 ```json
 {
-  "speckit.companion.resumeBeta": false
+  "speckit.companion.workflowBeta": false
 }
 ```
 
 | Value | Behavior |
 |-------|----------|
-| `false` (default) | The resume (▶) button is hidden on all specs. |
-| `true` | The resume (▶) button appears on eligible specs (active / tasks-done). |
+| `false` (default) | No workflow picker; the resume (▶) button is hidden on all specs. |
+| `true` | The picker appears (when the companion extension is installed) and the resume (▶) button appears on eligible specs (active / tasks-done). |
+
+This one setting replaces the former separate resume toggle — a prior `speckit.companion.resumeBeta` opt-in carries over to it automatically on upgrade.
 
 Resume dispatches the **command family the spec has been running** — a spec on the Companion workflow resumes with `/speckit.companion.<step>`, a spec on the stock SpecKit workflow resumes with `/speckit.<step>` — based on the workflow recorded on the spec. This gate lives only in VS Code settings.
 

@@ -117,7 +117,7 @@ describe('TelemetryService', () => {
         it('assembles the workflow + beta-flag fields from config', () => {
             mockConfig({
                 defaultWorkflow: 'companion',
-                'companion.resumeBeta': true,
+                'companion.workflowBeta': true,
                 'viewer.activityPanel': false,
                 'companion.installPrompt': true,
                 telemetry: true,
@@ -125,7 +125,7 @@ describe('TelemetryService', () => {
 
             expect(buildBetaSnapshot()).toEqual({
                 defaultWorkflow: 'companion',
-                resumeBeta: 'true',
+                workflowBeta: 'true',
                 activityPanel: 'false',
                 installPrompt: 'true',
                 telemetry: 'true',

@@ -1039,12 +1039,12 @@
             "order": 1,
             "description": "Prompt to install the companion spec-kit extension (Create-Spec + Activity panels) when it's missing — a one-click install banner in the Create-Spec and Activity panels. Hidden once installed. Opt-in beta; defaults to on."
           },
-          "speckit.companion.resumeBeta": {
+          "speckit.companion.workflowBeta": {
             "type": "boolean",
             "default": false,
             "scope": "window",
             "order": 5,
-            "markdownDescription": "Show a Resume (▶) button on sidebar specs that dispatches the next pipeline step. Opt-in beta, off by default. Requires the [companion spec-kit extension](https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension)."
+            "markdownDescription": "Enable the **SpecKit Companion** workflow (beta). Adds the SpecKit / SpecKit Companion picker to Create Spec (when the [companion spec-kit extension](https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension) is installed) and enables the Continue/Resume button on sidebar specs. Off by default."
           },
           "speckit.viewer.activityPanel": {
             "type": "boolean",

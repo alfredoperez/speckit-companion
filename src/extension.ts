@@ -26,7 +26,7 @@ import { isCompanionInstalled } from './features/settings/companionPresetReconci
 import { Views, setupFileWatchers, setupTasksWatcher, setupSpecViewerWatcher } from './core';
 import { ConfigKeys } from './core/constants';
 import { ConfigManager } from './core/utils/configManager';
-import { migrateBetaTriStateSettings, removeRetiredSettings } from './core/settingsMigration';
+import { migrateBetaTriStateSettings, removeRetiredSettings, migrateResumeBetaToWorkflowBeta, coerceLegacyBoolean } from './core/settingsMigration';
 import { openSpecFile } from './core/utils/fileOpener';
 import { TelemetryService, initTelemetry, sendTelemetryEvent, buildBetaSnapshot } from './core/telemetry';
 import { getConfiguredProviderType } from './ai-providers/aiProvider';
@@ -130,6 +130,16 @@ export async function activate(context: vscode.ExtensionContext) {
     } catch (err) {
         const detail = err instanceof Error ? err.message : String(err);
         outputChannel.appendLine(`[Extension] Retired-settings cleanup skipped: ${detail}`);
+    }
+
+    // Carry a prior resume opt-in (any historical value) into the single
+    // companion.workflowBeta gate, then drop the old key. Wrapped so a bad stored
+    // value can never fail activation (the provider-rename lesson, FR-005).
+    try {
+        await migrateResumeBetaToWorkflowBeta();
+    } catch (err) {
+        const detail = err instanceof Error ? err.message : String(err);
+        outputChannel.appendLine(`[Extension] Resume-beta migration skipped: ${detail}`);
     }
 
     void fireActivatedEvent(context);
@@ -264,9 +274,12 @@ export async function activate(context: vscode.ExtensionContext) {
             if (e.affectsConfiguration(ConfigKeys.resumeBeta)) {
                 // Pure VS Code menu gate — refresh the context key the resume
                 // `when` clause reads; no reload, no companion.yml mirror.
-                const enabled = vscode.workspace
-                    .getConfiguration(ConfigKeys.namespace)
-                    .get<boolean>('companion.resumeBeta', false);
+                const enabled = coerceLegacyBoolean(
+                    vscode.workspace
+                        .getConfiguration(ConfigKeys.namespace)
+                        .get<unknown>('companion.workflowBeta'),
+                    false
+                );
                 void setContextKey(CONTEXT_KEYS.resumeBeta, enabled);
             }
         })
@@ -282,10 +295,13 @@ export async function activate(context: vscode.ExtensionContext) {
     {
         const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         if (root) {
-            // Gate the sidebar resume (▶) button on the opt-in beta setting.
-            const resumeBetaEnabled = vscode.workspace
-                .getConfiguration(ConfigKeys.namespace)
-                .get<boolean>('companion.resumeBeta', false);
+            // Gate the sidebar resume (▶) button on the single Companion beta setting.
+            const resumeBetaEnabled = coerceLegacyBoolean(
+                vscode.workspace
+                    .getConfiguration(ConfigKeys.namespace)
+                    .get<unknown>('companion.workflowBeta'),
+                false
+            );
             void setContextKey(CONTEXT_KEYS.resumeBeta, resumeBetaEnabled);
             // Drive the sidebar install affordance: the install icon shows when
             // the spec-kit extension is NOT installed. Refreshed by the watcher
