@@ -48,8 +48,12 @@ steps:
     input:
       args: "{{ inputs.spec }}"
 
-  # Routing node — right-sizes the pipeline on the classify signal. The safe
-  # default (`default:`) is the FULL pipeline, so an unmatched or unresolved
+  # Routing node — right-sizes the pipeline on the classify signal. It reads the
+  # size from `classify` and never re-derives the 5-files / 10-tasks bar: that
+  # threshold is authored once in presets/_parts/sizing.md (the same block the
+  # classify and specify commands embed). The case structure below is the single
+  # source of the routing rule (also stated in presets/_parts/routing.md). The
+  # safe default (`default:`) is the FULL pipeline, so an unmatched or unresolved
   # size value never skips a phase (FR-004). `normal` falls through to default.
   - id: route
     type: switch

@@ -65,9 +65,6 @@ import {
   DEFAULT_WORKFLOW,
   getFeatureWorkflow,
   resolveWorkflow,
-  getWorkflow,
-  getWorkflowCommands,
-  normalizeWorkflowConfig,
 } from "../workflows";
 import type { FeatureWorkflowContext, WorkflowStepConfig } from "../workflows/types";
 
@@ -184,37 +181,12 @@ export class SpecViewerProvider {
   }
 
   /**
-   * Resolve workflow steps for a spec directory.
-   * Checks persisted context first, then auto-selects and persists the default.
+   * The viewer's pipeline shape is the static canonical pipeline — not derived
+   * from the workflow definition. The footer buttons render from this static
+   * pipeline plus the spec's `.spec-context.json` status; the commands (and the
+   * workflow the engine reads) own the pipeline shape, not the panel.
    */
-  private async resolveWorkflowSteps(
-    specDirectory: string,
-    changeRoot?: string | null,
-  ): Promise<WorkflowStepConfig[]> {
-    try {
-      // 1. Check for feature-level .spec-context.json (checks both specDir and changeRoot)
-      const ctx = await getFeatureWorkflow(specDirectory, changeRoot);
-      if (ctx) {
-        // Resolve workflow config; fall back to default for unrecognized names
-        const wf = getWorkflow(ctx.workflow) || DEFAULT_WORKFLOW;
-        const normalized = normalizeWorkflowConfig(wf);
-        if (normalized.steps && normalized.steps.length > 0) {
-          return normalized.steps;
-        }
-      }
-    } catch {
-      // fall through
-    }
-
-    // 2. No persisted context — resolve default without writing to disk
-    const selected = await resolveWorkflow(specDirectory);
-    if (selected) {
-      const normalized = normalizeWorkflowConfig(selected);
-      if (normalized.steps && normalized.steps.length > 0) {
-        return normalized.steps;
-      }
-    }
-
+  private async resolveWorkflowSteps(): Promise<WorkflowStepConfig[]> {
     return DEFAULT_WORKFLOW.steps!;
   }
 
@@ -482,10 +454,7 @@ export class SpecViewerProvider {
       sendContentUpdateMessage: (dir, docType) =>
         this.sendContentUpdateMessage(dir, docType),
       refreshContextIfDisplaying: ctxPath => this.refreshContextIfDisplaying(ctxPath),
-      resolveWorkflowSteps: dir => {
-        const inst = this.getInstance(dir);
-        return this.resolveWorkflowSteps(dir, inst?.state.changeRoot);
-      },
+      resolveWorkflowSteps: () => this.resolveWorkflowSteps(),
       executeInTerminal: async (prompt: string) => {
         await getAIProvider().executeInTerminal(prompt);
       },
@@ -514,8 +483,8 @@ export class SpecViewerProvider {
       // Compute change root for two-level layouts
       const changeRoot = this.computeChangeRoot(specDirectory);
 
-      // Scan for available documents using workflow steps
-      const steps = await this.resolveWorkflowSteps(specDirectory, changeRoot);
+      // Scan for available documents using the static canonical pipeline steps
+      const steps = await this.resolveWorkflowSteps();
       const documents = await scanDocuments(specDirectory, this.outputChannel, steps, changeRoot);
       const specName = path.basename(specDirectory);
 
@@ -560,7 +529,6 @@ export class SpecViewerProvider {
       // Resolve enhancement buttons (vscode config + workflow defaults)
       const enhancementButtons = this.resolveEnhancementButtons(
         doc?.type || CORE_DOCUMENTS.SPEC,
-        featureCtx?.workflow,
       );
 
       // Pure derivation: stepHistory, phases, status, badges, dates, footer
@@ -637,12 +605,13 @@ export class SpecViewerProvider {
   }
 
   /**
-   * Resolve enhancement buttons for a document type from customCommands setting
-   * and workflow commands.
+   * Resolve enhancement buttons for a document type from the customCommands
+   * setting and the built-in optional SpecKit commands. The panel does not
+   * read the workflow definition to build these — driving logic lives in the
+   * commands, not the panel.
    */
   private resolveEnhancementButtons(
     docType: DocumentType,
-    workflowName?: string,
   ): EnhancementButton[] {
     const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
     const rawCommands = config.get<Array<CustomCommandConfig | string>>("customCommands", []);
@@ -670,30 +639,8 @@ export class SpecViewerProvider {
       });
     }
 
-    // Merge workflow commands
-    if (workflowName) {
-      for (const wfCmd of getWorkflowCommands(workflowName)) {
-        if (!wfCmd.command) continue;
-        const rawStep = wfCmd.step || "all";
-        const step = rawStep === "all" ? "all" : (mapStepToTab(rawStep) || rawStep);
-        if (step !== docType && step !== "all") continue;
-        if (seenCommands.has(wfCmd.command)) continue;
-
-        const title = wfCmd.title || wfCmd.name;
-        if (!title) continue;
-
-        seenCommands.add(wfCmd.command);
-        buttons.push({
-          label: title,
-          command: wfCmd.command,
-          icon: "⚡",
-          tooltip: wfCmd.tooltip || title,
-        });
-      }
-    }
-
     // Append built-in optional SpecKit command buttons for this tab, deduped
-    // against user/workflow commands (which take precedence).
+    // against the user's custom commands (which take precedence).
     buttons.push(...optionalCommandButtonsForTab(docType, seenCommands));
 
     return buttons;
@@ -927,7 +874,7 @@ export class SpecViewerProvider {
       );
     }
 
-    const enhancementButtons = this.resolveEnhancementButtons(resolvedType, featureCtx?.workflow);
+    const enhancementButtons = this.resolveEnhancementButtons(resolvedType);
 
     const derived = computePanelDerivedState(
       { documents: instance.state.availableDocuments, doc, tasksContent, featureCtx },
@@ -995,7 +942,7 @@ export class SpecViewerProvider {
         const active: StepName = STEP_NAMES.includes(specCtx.currentStep as StepName)
           ? (specCtx.currentStep as StepName)
           : 'specify';
-        const wfSteps = (getWorkflow(specCtx.workflow) || DEFAULT_WORKFLOW).steps;
+        const wfSteps = DEFAULT_WORKFLOW.steps;
         const derivedVs = deriveViewerState(specCtx, active, wfSteps, runInfo.artifactReady ?? false);
         viewerState = {
           ...derivedVs,

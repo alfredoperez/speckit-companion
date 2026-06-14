@@ -5,37 +5,17 @@ import type { SpecInfo, RelatedDoc, EnhancementButton } from '../../../core/type
 import { WorkflowSteps } from '../../../core/constants';
 import { CORE_DOCUMENTS } from '../../spec-viewer/types';
 import {
-    getFeatureWorkflow,
-    getWorkflow,
-    normalizeWorkflowConfig,
     getStepFile,
     DEFAULT_WORKFLOW,
     type WorkflowStepConfig,
-    FEATURE_CONTEXT_FILE,
 } from '../../workflows';
 
 /**
- * Resolve workflow steps for a spec directory from .spec-context.json.
+ * The pipeline shape is the static canonical pipeline, not derived from the
+ * workflow definition — the commands (and the workflow the engine reads) own
+ * that shape, not the panel.
  */
-function resolveStepsSync(dirPath: string): WorkflowStepConfig[] {
-    try {
-        const contextPath = path.join(dirPath, FEATURE_CONTEXT_FILE);
-        if (fs.existsSync(contextPath)) {
-            const content = fs.readFileSync(contextPath, 'utf-8');
-            const ctx = JSON.parse(content);
-            if (ctx.workflow) {
-                const wf = getWorkflow(ctx.workflow);
-                if (wf) {
-                    const normalized = normalizeWorkflowConfig(wf);
-                    if (normalized.steps && normalized.steps.length > 0) {
-                        return normalized.steps;
-                    }
-                }
-            }
-        }
-    } catch {
-        // fall through
-    }
+function resolveStepsSync(): WorkflowStepConfig[] {
     return DEFAULT_WORKFLOW.steps!;
 }
 
@@ -46,8 +26,8 @@ export function parseSpecInfo(document: vscode.TextDocument): SpecInfo {
     const fileName = path.basename(document.fileName);
     const dirPath = path.dirname(document.fileName);
 
-    // Resolve workflow steps dynamically (exclude action-only steps)
-    const steps = resolveStepsSync(dirPath).filter(s => !s.actionOnly);
+    // Static canonical pipeline steps (exclude action-only steps)
+    const steps = resolveStepsSync().filter(s => !s.actionOnly);
 
     // Build step-to-file and file-to-step maps
     const fileToStep = new Map<string, WorkflowStepConfig>();

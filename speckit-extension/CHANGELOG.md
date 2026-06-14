@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-06-14
+
+### Added
+- **One step hands off to the next on agentic CLIs.** When you run a Companion step in an assistant that keeps working after a step finishes, it now reads the pipeline and continues into the next step on its own — pausing wherever the workflow asks you to review, and running a final "mark complete" step after implementation so the spec lands in **Completed**. In a plain or one-shot terminal nothing auto-advances: you drive the pipeline one step at a time, just as before, and completion stays a manual action. Stock SpecKit is unchanged and still stops at "implemented".
+
+### Changed
+- **Shared command logic is now written once.** How a change is sized (small vs. large), how the pipeline routes after sizing, and how timing is recorded each used to be repeated across several command files. Each now lives in exactly one shared block that the commands reuse, so changing a rule is a one-place edit instead of hunting through three files. The installed commands stay whole and self-contained — running one in a plain terminal still gives you a complete command, and a parity check proves the reshape changed no behavior.
+
 ## [0.6.0] - 2026-06-14
 
 ### Changed

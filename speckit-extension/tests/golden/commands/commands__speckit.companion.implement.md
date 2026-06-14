@@ -1,5 +1,5 @@
 ---
-description: "Companion tasks — files/dependencies task axis"
+description: "Companion implement — execute tasks.md in dependency order"
 ---
 
 ## User Input
@@ -10,31 +10,24 @@ $ARGUMENTS
 
 ## Outline
 
-Produce tasks organized by **files and dependencies**, not grouped under user stories.
-
-1. Read `.specify/feature.json` for the feature directory; load `plan.md` and `spec.md` (and `data-model.md` / `contracts/` if present).
-
-2. Create `<feature_directory>/tasks.md` as a dependency-ordered checklist. Group by execution layer, not by story:
-   - **Setup** — project/structure/config prerequisites.
-   - **Foundational** — shared pieces every later task depends on (blocking).
-   - **Core work** — one task per file/module/unit, ordered so dependencies come first.
-   - **Integration** — wiring the units together.
-   - **Polish** — docs, cleanup, validation against the spec's Success Criteria.
-
-3. Every task uses the strict format:
-   ```text
-   - [ ] [TaskID] [P?] Description with exact file path
+1. Read `.specify/feature.json` for the feature directory; load `<feature_directory>/tasks.md`, `plan.md`, and `spec.md`. Then record the **implement START** so the step's duration begins now (the script stamps the real clock; the end-of-step hook records each task and closes the step — do not hand-write implement timing):
+   ```bash
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step implement --status implementing --kind start --by extension
    ```
-   - `[P]` marks tasks touching different files with no incomplete dependency (parallelizable).
-   - Each task names the concrete file it creates or edits.
-   - No user-story labels, no per-story test sections, no MVP framing — traceability is to files and requirements (`FR-…`).
 
-4. Add a short **Dependencies** note (what blocks what) and a **Parallel** note (which `[P]` tasks can run together).
+2. Execute tasks in dependency order:
+   - Complete each layer before the next: Setup → Foundational → Core → Integration → Polish.
+   - Tasks marked `[P]` (different files, no incomplete dependency) may run together; tasks touching the same file run sequentially.
+   - Halt on a failed non-parallel task and report the cause; for `[P]` tasks, continue the others and report the failure.
 
-**Output**: `<feature_directory>/tasks.md` organized by files/dependencies.
+3. After completing a task, mark it `- [x]` in `tasks.md`.
+
+4. On completion, validate the result against the spec's **Functional Requirements** and **Success Criteria**, and report a short summary of what was built and anything left undone.
+
+**Output**: working changes per `tasks.md`, with completed tasks checked off.
 
 
-<!-- speckit-companion:part timing -->
+<!-- speckit-companion:timing -->
 ## Timing — keep `.spec-context.json` honest
 
 These rules apply to every Companion profile command. The extension records lifecycle timing with its own scripts wherever it can; these rules keep anything you append consistent with that and accurate for any dispatcher (terminal, IDE chat, or the GUI). The model is **finish-only**: each task and each substep records a *single* finish event, and its duration is the gap to the previous finish (or the step's start). Never a `start`+`complete` pair for a task or substep — a pair stamped at one instant is what produces `0s` ticks and bursts.
@@ -50,15 +43,4 @@ These rules apply to every Companion profile command. The extension records life
 
   The `--did`/`--files` flags make the script write `task_summaries.<TaskID>` (the field the Activity panel's Tasks card reads) in the same call that records the finish — so the panel is populated by the script, NOT by a hand-authored `.spec-context.json` edit. Do NOT also hand-edit `task_summaries` yourself; the script owns it. Run this **the moment that task completes** — one finish per task, as you go. Do NOT defer journaling to the end of the step and do NOT dump every task's finish in one end-of-step batch: that collapses their real durations into a single instant, and the cadence check now FAILS a run whose task finishes are clustered into a tiny fraction of the step's real duration. This stamps **one** finish event from the real clock — its delta to the previous task's finish is that task's duration. Do NOT hand-author per-task JSON and do NOT write a per-task `start`. The end-of-step hook is a backstop that fills any task you didn't journal (it won't duplicate one you did). Parallel `[P]` tasks: journal each as it finishes; the batch's time is attributed to whichever finishes last (accepted limitation).
 - **Never write the next step's start.** Only the next command appends the next step's start entry; writing it here makes the viewer render a phantom "Generating <next>…".
-<!-- /speckit-companion:part timing -->
-
-<!-- speckit-companion:part self-advance -->
-## Self-advance — hand off to the next node
-
-This step is one node in the Companion pipeline. How the run continues depends on the environment you are running in; do not invoke a separate headless/deterministic run command for the everyday flow.
-
-- **On an agentic CLI that keeps acting after a step finishes:** once this step's work is complete, read the Companion workflow definition (`speckit-extension/workflows/speckit-companion.workflow.yml`) to learn which node comes next, then continue into it on your own — dispatch the next step's `/speckit.companion.*` command and keep going through the pipeline.
-- **Pause at every review gate.** Where the workflow marks a `gate` (e.g. review-spec, review-plan), stop and wait for approval rather than running past it. Only continue once the gate is approved.
-- **Terminal node after implement.** After the implementation step finishes (and any commit step), the workflow's final node is `mark-complete`. Run it so the spec lands at `status: completed`. That node writes `completed` only through `write-context.py --mark-complete`, which refuses unless the spec is already `implemented` — never introduce a second completed-writer.
-- **Degrade gracefully on a one-shot environment.** If your environment runs one step and then stops, the handoff simply does not fire: finish this step, record its progress, and stop. The run stays valid and resumable, and the next step is triggered manually (by the developer or the companion panel). Completion likewise stays a manual action there.
-<!-- /speckit-companion:part self-advance -->
+<!-- /speckit-companion:timing -->

@@ -41,7 +41,6 @@ jest.mock('../../specs/specContextWriter', () => ({
 import { setStatus, reactivate } from '../../specs/stepLifecycle';
 import { updateStepProgress } from '../../specs/specContextManager';
 import { NotificationUtils } from '../../../core/utils/notificationUtils';
-import { getFeatureWorkflow, getWorkflowCommands } from '../../workflows';
 import { readSpecContext } from '../../specs/specContextReader';
 import { updateSpecContext } from '../../specs/specContextWriter';
 
@@ -214,7 +213,7 @@ describe('messageHandlers - lifecycle actions', () => {
     });
 });
 
-describe('messageHandlers - clarify (workflow commands)', () => {
+describe('messageHandlers - clarify (custom commands)', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -237,77 +236,6 @@ describe('messageHandlers - clarify (workflow commands)', () => {
             expect.stringContaining('/speckit.review')
         );
     });
-
-    it('should fall back to workflow commands when no customCommand matches', async () => {
-        const config = vscode.workspace.getConfiguration();
-        (config.get as jest.Mock).mockImplementation((key: string, defaultValue?: any) => {
-            if (key === 'customCommands') return [];
-            return defaultValue;
-        });
-
-        (getFeatureWorkflow as jest.Mock).mockResolvedValue({ workflow: 'speckit' });
-        (getWorkflowCommands as jest.Mock).mockReturnValue([
-            { name: 'implement', title: 'Implement', command: '/speckit.implement', step: 'spec' },
-        ]);
-
-        const deps = createMockDeps();
-        const handler = createMessageHandlers(SPEC_DIR, deps);
-
-        await handler({ type: 'clarify', command: '/speckit.implement' } as any);
-
-        expect(getWorkflowCommands).toHaveBeenCalledWith('speckit');
-        expect(deps.executeInTerminal).toHaveBeenCalledWith(
-            expect.stringContaining('/speckit.implement')
-        );
-    });
-
-    it('should not execute workflow command when step does not match', async () => {
-        const config = vscode.workspace.getConfiguration();
-        (config.get as jest.Mock).mockImplementation((key: string, defaultValue?: any) => {
-            if (key === 'customCommands') return [];
-            return defaultValue;
-        });
-
-        (getFeatureWorkflow as jest.Mock).mockResolvedValue({ workflow: 'speckit' });
-        (getWorkflowCommands as jest.Mock).mockReturnValue([
-            { name: 'implement', title: 'Implement', command: '/speckit.implement', step: 'plan' },
-        ]);
-
-        const deps = createMockDeps({
-            getInstance: jest.fn().mockReturnValue({
-                state: { specDirectory: SPEC_DIR, specName: 'my-feature', currentDocument: 'spec', availableDocuments: [] },
-                debounceTimer: undefined,
-            }),
-        });
-        const handler = createMessageHandlers(SPEC_DIR, deps);
-
-        // No buttonCommand — falls through to step matching; "plan" !== "spec"
-        await handler({ type: 'clarify' } as any);
-
-        expect(deps.executeInTerminal).not.toHaveBeenCalled();
-    });
-
-    it('should execute workflow command with step "all" on any tab', async () => {
-        const config = vscode.workspace.getConfiguration();
-        (config.get as jest.Mock).mockImplementation((key: string, defaultValue?: any) => {
-            if (key === 'customCommands') return [];
-            return defaultValue;
-        });
-
-        (getFeatureWorkflow as jest.Mock).mockResolvedValue({ workflow: 'speckit' });
-        (getWorkflowCommands as jest.Mock).mockReturnValue([
-            { name: 'implement', title: 'Implement', command: '/speckit.implement', step: 'all' },
-        ]);
-
-        const deps = createMockDeps();
-        const handler = createMessageHandlers(SPEC_DIR, deps);
-
-        await handler({ type: 'clarify' } as any);
-
-        expect(deps.executeInTerminal).toHaveBeenCalledWith(
-            expect.stringContaining('/speckit.implement')
-        );
-    });
 });
 
 describe('messageHandlers - clarify (built-in optional commands)', () => {
@@ -318,8 +246,6 @@ describe('messageHandlers - clarify (built-in optional commands)', () => {
             if (key === 'customCommands') return [];
             return defaultValue;
         });
-        (getFeatureWorkflow as jest.Mock).mockResolvedValue(undefined);
-        (getWorkflowCommands as jest.Mock).mockReturnValue([]);
     });
 
     it('dispatches a built-in optional command via the registered VS Code command', async () => {
