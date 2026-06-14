@@ -41,7 +41,6 @@ jest.mock('../../specs/specContextWriter', () => ({
 import { setStatus, reactivate } from '../../specs/stepLifecycle';
 import { updateStepProgress } from '../../specs/specContextManager';
 import { NotificationUtils } from '../../../core/utils/notificationUtils';
-import { getFeatureWorkflow, getWorkflowCommands } from '../../workflows';
 import { readSpecContext } from '../../specs/specContextReader';
 import { updateSpecContext } from '../../specs/specContextWriter';
 
@@ -247,8 +246,6 @@ describe('messageHandlers - clarify (built-in optional commands)', () => {
             if (key === 'customCommands') return [];
             return defaultValue;
         });
-        (getFeatureWorkflow as jest.Mock).mockResolvedValue(undefined);
-        (getWorkflowCommands as jest.Mock).mockReturnValue([]);
     });
 
     it('dispatches a built-in optional command via the registered VS Code command', async () => {
