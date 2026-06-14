@@ -1,0 +1,183 @@
+{
+  "workflow": "companion",
+  "specName": "Create Spec Polish",
+  "branch": "main",
+  "selectedAt": "2026-06-14T12:32:51.166Z",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-14T12:32:51.166Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-14T12:35:40.234Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-14T12:35:47.118Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T12:35:47.192Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-14T12:35:47.286Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T12:35:47.369Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-14T12:49:37.800Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-14T12:49:37.803Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T12:50:53.529Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T12:50:58.111Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T12:51:20.574Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T12:52:03.926Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T12:52:24.635Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T12:52:38.136Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T12:53:10.206Z"
+    },
+    {
+      "step": "implement",
+      "substep": "run-tests",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T12:53:13Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T13:20:52.985Z"
+    }
+  ],
+  "telemetryInstanceId": "594097b3-e29b-4987-a3dd-6d6e0ae9d701",
+  "currentTask": "T007",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Right-aligned the workflow selector by switching .workflow-row to justify-content: flex-end",
+      "files": [
+        "webview/styles/spec-editor.css"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Bumped helper text, label, and selector type to 1em and moved the selector label off the low-contrast --text-secondary token onto --text-body",
+      "files": [
+        "webview/styles/spec-editor.css"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Rewrote the #specContent placeholder to show a concrete feature example plus sample Jira and GitHub reference links",
+      "files": [
+        "src/features/spec-editor/specEditorProvider.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Mirrored the polish in the Storybook mock: bumped base type to 15px and swapped the empty-state hint for the example placeholder with Jira and GitHub links",
+      "files": [
+        "webview/src/spec-editor/CreateSpecMock.tsx"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Updated the CreateSpec story description and Empty story name to describe the polished top-right selector, larger type, and example placeholder baseline",
+      "files": [
+        "webview/src/spec-editor/__stories__/CreateSpec.stories.tsx"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Reviewed README Create-Spec copy; it documents neither the placeholder text nor the selector corner position, so per FR-007 no edit was required"
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Ran the full suite (998 tests, 84 suites all passing) and a clean tsc compile to confirm no behavioral regressions in submit, char count, attach, keyboard, or workflow change"
+    }
+  }
+}
