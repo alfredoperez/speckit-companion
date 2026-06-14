@@ -18,7 +18,7 @@ import {
     WORKFLOW_NAME_PATTERN,
     FEATURE_CONTEXT_FILE,
 } from './types';
-import { ConfigKeys, WorkflowSteps, AIProviders } from '../../core/constants';
+import { ConfigKeys, WorkflowSteps, AIProviders, COMPANION_WORKFLOW_NAME } from '../../core/constants';
 import { getConfiguredProviderType, AIProviderType } from '../../ai-providers/aiProvider';
 
 /**
@@ -46,6 +46,31 @@ export const DEFAULT_WORKFLOW: WorkflowConfig = {
     [WorkflowSteps.CONFIG_PLAN]: 'speckit.plan',
     [WorkflowSteps.CONFIG_TASKS]: 'speckit.tasks',
     [WorkflowSteps.CONFIG_IMPLEMENT]: 'speckit.implement',
+    checkpoints: [],
+};
+
+/**
+ * Built-in SpecKit Companion workflow. Mirrors {@link DEFAULT_WORKFLOW} but every
+ * step dispatches the `/speckit.companion.*` command family, with a terminal
+ * `mark-complete` step. Selecting it records `workflow: companion` on the spec;
+ * the missing-extension fallback (profileDispatch) downgrades each companion
+ * command to its stock twin when the spec-kit extension isn't installed.
+ */
+export const COMPANION_WORKFLOW: WorkflowConfig = {
+    name: COMPANION_WORKFLOW_NAME,
+    displayName: 'SpecKit Companion',
+    description: 'SpecKit Companion pipeline — leaner output with built-in right-sizing, through to mark-complete',
+    steps: [
+        { name: WorkflowSteps.SPECIFY, label: 'Specification', command: 'speckit.companion.specify', file: 'spec.md', subDir: 'checklists' },
+        { name: WorkflowSteps.PLAN, label: 'Plan', command: 'speckit.companion.plan', file: 'plan.md', subFiles: ['research.md', 'data-model.md', 'quickstart.md'], subDir: 'contracts', includeRelatedDocs: true },
+        { name: WorkflowSteps.TASKS, label: 'Tasks', command: 'speckit.companion.tasks', file: 'tasks.md' },
+        { name: WorkflowSteps.IMPLEMENT, label: 'Implement', command: 'speckit.companion.implement', actionOnly: true },
+        { name: 'mark-complete', label: 'Mark Complete', command: 'speckit.companion.mark-complete', actionOnly: true },
+    ],
+    [WorkflowSteps.CONFIG_SPECIFY]: 'speckit.companion.specify',
+    [WorkflowSteps.CONFIG_PLAN]: 'speckit.companion.plan',
+    [WorkflowSteps.CONFIG_TASKS]: 'speckit.companion.tasks',
+    [WorkflowSteps.CONFIG_IMPLEMENT]: 'speckit.companion.implement',
     checkpoints: [],
 };
 
@@ -125,7 +150,7 @@ export function validateWorkflow(config: WorkflowConfig): ValidationResult {
     }
 
     // Check reserved names
-    if (config.name === 'speckit' || config.name === LEGACY_DEFAULT_NAME) {
+    if (config.name === 'speckit' || config.name === LEGACY_DEFAULT_NAME || config.name === COMPANION_WORKFLOW_NAME) {
         errors.push(`Workflow name "${config.name}" is reserved`);
         return { valid: false, errors, warnings };
     }
@@ -209,10 +234,11 @@ function buildWorkflows(filterByProvider: boolean, outputChannel?: vscode.Output
     const customWorkflows = config.get<WorkflowConfig[]>('customWorkflows', []);
     const activeProvider = getConfiguredProviderType();
 
-    // The default workflow has no provider declaration, so it is never filtered —
-    // at least one workflow is always available.
-    const validWorkflows: WorkflowConfig[] = [DEFAULT_WORKFLOW];
-    const seenNames = new Set<string>(['speckit', LEGACY_DEFAULT_NAME]);
+    // The two built-in workflows have no provider declaration, so they are never
+    // filtered — at least one workflow is always available, and `companion` is
+    // always selectable (its missing-extension fallback handles an absent extension).
+    const validWorkflows: WorkflowConfig[] = [DEFAULT_WORKFLOW, COMPANION_WORKFLOW];
+    const seenNames = new Set<string>(['speckit', LEGACY_DEFAULT_NAME, COMPANION_WORKFLOW_NAME]);
 
     for (const workflow of customWorkflows) {
         const result = validateWorkflow(workflow);
@@ -465,7 +491,7 @@ export function validateWorkflowsOnActivation(outputChannel?: vscode.OutputChann
 
     // Validate defaultWorkflow setting
     const defaultWorkflowName = config.get<string>('defaultWorkflow', 'speckit');
-    const allWorkflowNames = ['speckit', LEGACY_DEFAULT_NAME, ...seenNames];
+    const allWorkflowNames = ['speckit', LEGACY_DEFAULT_NAME, COMPANION_WORKFLOW_NAME, ...seenNames];
     if (!allWorkflowNames.includes(defaultWorkflowName)) {
         outputChannel?.appendLine(
             `[Workflows] Default workflow "${defaultWorkflowName}" is not configured. Check your speckit.defaultWorkflow setting.`

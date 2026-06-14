@@ -1,135 +1,88 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { readSpecContextSync } from './specContextReader';
-import { readTemplateProfile, isCompanionInstalled } from '../settings/companionPresetReconciler';
+import { isCompanionInstalled } from '../settings/companionPresetReconciler';
+
+/** Prefix every Companion-namespaced command shares. */
+const COMPANION_COMMAND_PREFIX = 'speckit.companion.';
 
 /**
- * When a spec's per-spec profile is `turbo`, the stock pipeline command is swapped
- * for its `/speckit.companion.*` turbo twin so that one spec gets the turbo shape
- * regardless of the project-default preset. Only the four pipeline commands have
- * turbo twins; everything else (custom commands, clarify/analyze/constitution)
- * passes through unchanged.
+ * The stock command each `/speckit.companion.*` command downgrades to when the
+ * spec-kit companion extension is not installed. Only the four pipeline commands
+ * have stock twins; companion-only commands with no twin (e.g. `mark-complete`,
+ * `classify`) have no entry and are suppressed rather than dispatched (see
+ * {@link resolveDispatchForRoot}).
  */
-const TURBO_COMMAND_BY_STOCK: Record<string, string> = {
-    'speckit.specify': 'speckit.companion.specify',
-    'speckit.plan': 'speckit.companion.plan',
-    'speckit.tasks': 'speckit.companion.tasks',
-    'speckit.implement': 'speckit.companion.implement',
+const STOCK_COMMAND_BY_COMPANION: Record<string, string> = {
+    'speckit.companion.specify': 'speckit.specify',
+    'speckit.companion.plan': 'speckit.plan',
+    'speckit.companion.tasks': 'speckit.tasks',
+    'speckit.companion.implement': 'speckit.implement',
 };
 
 /**
- * Map a pipeline command to its turbo twin when the spec should run turbo — i.e. its
- * recorded `profile` is `turbo`, or (when the spec has no pin yet) the project default
- * is `turbo`. Only the four pipeline commands (specify/plan/tasks/implement) have turbo
- * twins; everything else passes through. Shared by every dispatch path (viewer footer,
- * command palette, sidebar) so the override is honored uniformly. An explicit non-turbo
- * pin, a standard default, or an unreadable context returns the command unchanged.
- */
-export function resolveProfileCommand(command: string, specDirectory: string): string {
-    let profile: string | undefined;
-    try {
-        profile = readSpecContextSync(specDirectory)?.profile;
-    } catch {
-        // A corrupt/unreadable .spec-context.json must not break dispatch —
-        // fall back to the stock command rather than throwing on every path.
-        return command;
-    }
-    // No pinned profile — e.g. the spec-kit command's capture script created the
-    // context without one. Fall back to the project default so the rest of the
-    // pipeline keeps the shape the spec was created under. An explicit pin
-    // (including `standard`) or an invalid value is respected as-is.
-    const effective = profile ?? seedProfileForNewSpec(specDirectory);
-    if (effective === 'turbo' && TURBO_COMMAND_BY_STOCK[command]) {
-        return TURBO_COMMAND_BY_STOCK[command];
-    }
-    return command;
-}
-
-/**
- * Project-default routing for a brand-new spec, which has no `.spec-context.json`
- * yet (so `resolveProfileCommand` can't read a pinned profile). Maps the stock
- * pipeline command to its turbo twin when the project default
- * (`speckit.companion.templateProfile`) is `turbo`; otherwise returns it unchanged.
- * This keeps the *first* step (specify) on the same shape as the rest of the spec
- * a turbo default would seed — without it, a new turbo-default spec's specify ran
- * stock and produced a standard-shaped spec.md.
- */
-export function resolveNewSpecProfileCommand(stockCommand: string, workspaceRoot: string | undefined): string {
-    const projectDefault = workspaceRoot ? readTemplateProfile(workspaceRoot) : undefined;
-    if (projectDefault === 'turbo' && TURBO_COMMAND_BY_STOCK[stockCommand]) {
-        return TURBO_COMMAND_BY_STOCK[stockCommand];
-    }
-    return stockCommand;
-}
-
-/** Reverse map: the stock command a `/speckit.companion.*` twin falls back to. */
-const STOCK_COMMAND_BY_TURBO: Record<string, string> = Object.fromEntries(
-    Object.entries(TURBO_COMMAND_BY_STOCK).map(([stock, turbo]) => [turbo, stock])
-);
-
-/**
- * The discriminator for "this command needs the spec-kit extension to exist": a
- * resolved `/speckit.companion.*` twin only works when the companion extension dir
- * is installed (it registers that namespaced command family). A stock `speckit.*`
- * command never needs it.
+ * Whether a command needs the spec-kit companion extension to resolve — ANY
+ * `/speckit.companion.*` command, not just the four with stock twins. Detection is
+ * prefix-based so a companion-only command (`mark-complete`, `classify`) can never
+ * slip past the missing-extension guard and dispatch unresolvably. A stock
+ * `speckit.*` command never needs it.
  */
 function isCompanionNamespacedCommand(command: string): boolean {
-    return command in STOCK_COMMAND_BY_TURBO;
+    return command.startsWith(COMPANION_COMMAND_PREFIX);
 }
 
 export interface DispatchResolution {
-    /** The command to actually dispatch. */
-    command: string;
     /**
-     * True when a `/speckit.companion.*` twin was downgraded to its stock command
-     * because the spec-kit extension is missing. The caller should warn (non-blocking)
-     * and run the stock flow — NEVER dispatch the unresolvable namespaced command.
+     * The command to actually dispatch, or `null` when a companion command with no
+     * stock twin (e.g. `mark-complete`) was suppressed because the extension is
+     * missing — the caller must NOT dispatch anything in that case.
+     */
+    command: string | null;
+    /**
+     * True when a `/speckit.companion.*` command could not run as-is because the
+     * spec-kit extension is missing — either downgraded to its stock twin (`command`
+     * is the stock command) or suppressed when it has no twin (`command` is null).
+     * The caller should warn (non-blocking) and NEVER dispatch the unresolvable
+     * namespaced command.
      */
     fellBack: boolean;
 }
 
 /**
- * Resolve the dispatch command for an existing spec AND guard the missing-extension
- * case: if `resolveProfileCommand` picks a `/speckit.companion.*` twin but the
- * companion spec-kit extension is not installed (no `.specify/extensions/companion/`),
- * downgrade to the stock command and flag `fellBack` so the caller can warn. This is
- * the FR-003 safety net — turning on turbo without the extension must never dispatch a
- * command the AI CLI can't resolve.
+ * Apply the missing-extension fallback to an already-resolved workflow command,
+ * given a workspace root. A `/speckit.companion.*` command resolves as-is when the
+ * companion spec-kit extension is installed; otherwise it downgrades to its stock
+ * twin (`fellBack: true`), or — for a companion-only command with no twin like
+ * `mark-complete` — is suppressed (`command: null, fellBack: true`) so nothing
+ * unresolvable is dispatched. Stock commands pass through unchanged. This is the
+ * FR-006/FR-007 safety net so a Companion workflow never dispatches a command the
+ * AI CLI can't resolve.
  */
-export function resolveProfileCommandWithFallback(
+export function resolveDispatchForRoot(
     command: string,
-    specDirectory: string
+    workspaceRoot: string | undefined
 ): DispatchResolution {
-    const resolved = resolveProfileCommand(command, specDirectory);
-    if (!isCompanionNamespacedCommand(resolved)) {
-        return { command: resolved, fellBack: false };
+    if (!isCompanionNamespacedCommand(command)) {
+        return { command, fellBack: false };
     }
-    const root = findWorkspaceRoot(specDirectory);
-    if (root && isCompanionInstalled(root)) {
-        return { command: resolved, fellBack: false };
+    if (workspaceRoot && isCompanionInstalled(workspaceRoot)) {
+        return { command, fellBack: false };
     }
-    // Extension missing — fall back to the stock command rather than dispatch an
-    // unresolvable `/speckit.companion.*`.
-    return { command: STOCK_COMMAND_BY_TURBO[resolved], fellBack: true };
+    // Extension missing: downgrade to the stock twin, or suppress (null) when the
+    // companion command has no stock equivalent (mark-complete / classify).
+    return { command: STOCK_COMMAND_BY_COMPANION[command] ?? null, fellBack: true };
 }
 
 /**
- * New-spec variant of {@link resolveProfileCommandWithFallback}: resolves the
- * project-default turbo routing for a brand-new spec, then applies the same
- * missing-extension guard. Used by the Create-Spec editor's specify dispatch.
+ * Spec-directory variant of {@link resolveDispatchForRoot}: walks up to the
+ * workspace root from a spec directory, then applies the missing-extension
+ * fallback. Used by every existing-spec dispatch path (viewer footer, sidebar
+ * resume, command palette).
  */
-export function resolveNewSpecProfileCommandWithFallback(
-    stockCommand: string,
-    workspaceRoot: string | undefined
+export function resolveDispatchWithFallback(
+    command: string,
+    specDirectory: string
 ): DispatchResolution {
-    const resolved = resolveNewSpecProfileCommand(stockCommand, workspaceRoot);
-    if (!isCompanionNamespacedCommand(resolved)) {
-        return { command: resolved, fellBack: false };
-    }
-    if (workspaceRoot && isCompanionInstalled(workspaceRoot)) {
-        return { command: resolved, fellBack: false };
-    }
-    return { command: STOCK_COMMAND_BY_TURBO[resolved], fellBack: true };
+    return resolveDispatchForRoot(command, findWorkspaceRoot(specDirectory));
 }
 
 /**
@@ -148,17 +101,4 @@ function findWorkspaceRoot(specDirectory: string): string | undefined {
         }
         dir = parent;
     }
-}
-
-/**
- * Resolve the pinned `profile` for a brand-new spec from the project default
- * (`speckit.companion.templateProfile`, mirrored to `.specify/companion.yml`).
- * Only an explicit `turbo` default pins `turbo`; `standard`, `off`, an absent
- * setting, or an undiscoverable root all pin `standard`. Pinning at creation
- * keeps a later default change from reshaping an in-flight spec.
- */
-export function seedProfileForNewSpec(specDirectory: string): 'standard' | 'turbo' {
-    const root = findWorkspaceRoot(specDirectory);
-    const projectDefault = root ? readTemplateProfile(root) : undefined;
-    return projectDefault === 'turbo' ? 'turbo' : 'standard';
 }

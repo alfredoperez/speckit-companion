@@ -10,7 +10,7 @@ import { SpecExplorerProvider, registerSpecKitCommands, updateSelectionContextKe
 import { register as registerTerminalStepTracker } from './features/specs/terminalStepTracker';
 import { setLifecycleOutputChannel } from './features/specs/stepLifecycle';
 import { OverviewProvider } from './features/settings';
-import { ensureStandardFamily, shouldEnsureStandard, writeTemplateProfile, resolveComplexityFastPath, writeComplexityFastPath, TemplateProfile } from './features/settings/companionPresetReconciler';
+import { ensureStandardFamily } from './features/settings/companionPresetReconciler';
 import { AgentManager } from './features/agents';
 import { SkillManager } from './features/skills';
 import { registerWorkflowEditorCommands } from './features/workflow-editor';
@@ -26,7 +26,7 @@ import { isCompanionInstalled } from './features/settings/companionPresetReconci
 import { Views, setupFileWatchers, setupTasksWatcher, setupSpecViewerWatcher } from './core';
 import { ConfigKeys } from './core/constants';
 import { ConfigManager } from './core/utils/configManager';
-import { migrateBetaTriStateSettings } from './core/settingsMigration';
+import { migrateBetaTriStateSettings, removeRetiredSettings } from './core/settingsMigration';
 import { openSpecFile } from './core/utils/fileOpener';
 import { TelemetryService, initTelemetry, sendTelemetryEvent, buildBetaSnapshot } from './core/telemetry';
 import { getConfiguredProviderType } from './ai-providers/aiProvider';
@@ -120,6 +120,16 @@ export async function activate(context: vscode.ExtensionContext) {
     } catch (err) {
         const detail = err instanceof Error ? err.message : String(err);
         outputChannel.appendLine(`[Extension] Beta-settings migration skipped: ${detail}`);
+    }
+
+    // Drop the retired spec-driven toggles (templateProfile / turboWorkflowPicker /
+    // complexityFastPath) from settings.json. Activation tolerates them either way;
+    // this just keeps users' settings tidy after the single-picker collapse (FR-004).
+    try {
+        await removeRetiredSettings();
+    } catch (err) {
+        const detail = err instanceof Error ? err.message : String(err);
+        outputChannel.appendLine(`[Extension] Retired-settings cleanup skipped: ${detail}`);
     }
 
     void fireActivatedEvent(context);
@@ -251,38 +261,6 @@ export async function activate(context: vscode.ExtensionContext) {
             ) {
                 void validatePermissionMode(context);
             }
-            if (e.affectsConfiguration(ConfigKeys.templateProfile)) {
-                const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-                if (root) {
-                    const profile = vscode.workspace
-                        .getConfiguration(ConfigKeys.namespace)
-                        .get<TemplateProfile>('companion.templateProfile', 'off');
-                    // Mode selection is non-destructive: mirror the choice to
-                    // .specify/companion.yml so new specs seed their pinned
-                    // profile from it. No preset swap — both command families
-                    // stay present; only which one a spec dispatches changes.
-                    writeTemplateProfile(root, profile);
-                    // Switching away from `off` at runtime re-materializes the
-                    // standard family without waiting for a reload (no-op when present).
-                    if (shouldEnsureStandard(profile)) {
-                        void ensureStandardFamily(root, {
-                            log: msg => outputChannel.appendLine(msg),
-                        });
-                    }
-                }
-            }
-            if (e.affectsConfiguration(ConfigKeys.complexityFastPath)) {
-                const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-                if (root) {
-                    const enabled = vscode.workspace
-                        .getConfiguration(ConfigKeys.namespace)
-                        .get<boolean>('companion.complexityFastPath', false);
-                    // Mirror the editor choice to .specify/companion.yml so the
-                    // turbo specify body reads a single boolean (it never reads VS
-                    // Code settings directly).
-                    writeComplexityFastPath(root, enabled);
-                }
-            }
             if (e.affectsConfiguration(ConfigKeys.resumeBeta)) {
                 // Pure VS Code menu gate — refresh the context key the resume
                 // `when` clause reads; no reload, no companion.yml mirror.
@@ -297,24 +275,13 @@ export async function activate(context: vscode.ExtensionContext) {
     // Validate provider/permission combination after activation completes (non-blocking)
     setTimeout(() => { void validatePermissionMode(context); }, 0);
 
-    // On activation, mirror the project default to .specify/companion.yml and
-    // idempotently ensure the standard /speckit.* command family is present.
-    // The ensure is add-only — it re-materializes the standard family on a
+    // On activation, idempotently ensure the standard /speckit.* command family is
+    // present. The ensure is add-only — it re-materializes the standard family on a
     // fresh checkout and recovers a project a prior swap left stranded, and it
     // never removes a command set. No-ops when already present.
     {
         const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         if (root) {
-            const profile = vscode.workspace
-                .getConfiguration(ConfigKeys.namespace)
-                .get<TemplateProfile>('companion.templateProfile', 'off');
-            writeTemplateProfile(root, profile);
-            // Mirror the fast-path setting into companion.yml so the turbo body
-            // reads one boolean (the setting is the source of truth).
-            const fastPathSetting = vscode.workspace
-                .getConfiguration(ConfigKeys.namespace)
-                .get<boolean>('companion.complexityFastPath', false);
-            resolveComplexityFastPath(root, fastPathSetting);
             // Gate the sidebar resume (▶) button on the opt-in beta setting.
             const resumeBetaEnabled = vscode.workspace
                 .getConfiguration(ConfigKeys.namespace)
@@ -325,20 +292,30 @@ export async function activate(context: vscode.ExtensionContext) {
             // below when the extension dir appears/disappears (e.g. after the
             // one-click install terminal completes).
             void refreshCompanionInstalledContext(root);
-            // `off` opts out of the ensure (plain upstream spec-kit); every other
-            // profile keeps the standard family materialized.
-            if (shouldEnsureStandard(profile)) {
-                void ensureStandardFamily(root, {
-                    log: msg => outputChannel.appendLine(msg),
-                });
-            }
-            // Refresh the install context key whenever the companion extension dir
-            // is created or removed (the one-click install lands it on disk), so
-            // the sidebar affordance flips without a reload.
+            // Keep the timing-augmented standard command family materialized — but
+            // ONLY when the companion spec-kit extension is installed: the ensure's
+            // bundled preset path lives inside `.specify/extensions/companion/`, so
+            // running it without the extension just fails + logs on every activation.
+            // The watcher below reruns it once the extension dir appears (one-click
+            // install), so it doesn't wait for a reload.
+            const ensureStandardWhenInstalled = (): void => {
+                if (isCompanionInstalled(root)) {
+                    void ensureStandardFamily(root, {
+                        log: msg => outputChannel.appendLine(msg),
+                    });
+                }
+            };
+            ensureStandardWhenInstalled();
+            // Refresh the install context key (and rerun the standard-family ensure)
+            // whenever the companion extension dir is created or removed (the
+            // one-click install lands it on disk), so both flip without a reload.
             const extWatcher = vscode.workspace.createFileSystemWatcher(
                 new vscode.RelativePattern(root, '.specify/extensions/companion/**')
             );
-            const refresh = (): void => { void refreshCompanionInstalledContext(root); };
+            const refresh = (): void => {
+                void refreshCompanionInstalledContext(root);
+                ensureStandardWhenInstalled();
+            };
             extWatcher.onDidCreate(refresh);
             extWatcher.onDidDelete(refresh);
             context.subscriptions.push(extWatcher);

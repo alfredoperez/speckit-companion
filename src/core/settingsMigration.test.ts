@@ -2,7 +2,9 @@ import * as vscode from 'vscode';
 import {
     coerceLegacyBoolean,
     migrateBetaTriStateSettings,
+    removeRetiredSettings,
     BETA_BOOLEAN_SETTINGS,
+    RETIRED_SETTINGS,
 } from './settingsMigration';
 
 describe('coerceLegacyBoolean', () => {
@@ -66,15 +68,14 @@ describe('migrateBetaTriStateSettings', () => {
 
     it('rewrites legacy "on" → true and "off" → false at their set scopes', async () => {
         const { update } = setupConfig({
-            'viewer.activityPanel': {},
-            'companion.turboWorkflowPicker': { workspaceValue: 'on' },
+            'viewer.activityPanel': { workspaceValue: 'on' },
             'companion.installPrompt': { workspaceFolderValue: 'off' },
         });
 
         await migrateBetaTriStateSettings();
 
         expect(update).toHaveBeenCalledWith(
-            'companion.turboWorkflowPicker',
+            'viewer.activityPanel',
             true,
             vscode.ConfigurationTarget.Workspace
         );
@@ -129,11 +130,77 @@ describe('migrateBetaTriStateSettings', () => {
         expect(update).not.toHaveBeenCalled();
     });
 
-    it('covers all three former tri-state settings', () => {
+    it('covers the remaining tri-state settings (turboWorkflowPicker retired)', () => {
         expect(BETA_BOOLEAN_SETTINGS.map(s => s.key)).toEqual([
             'viewer.activityPanel',
-            'companion.turboWorkflowPicker',
             'companion.installPrompt',
         ]);
+    });
+});
+
+describe('removeRetiredSettings', () => {
+    type Inspection = {
+        globalValue?: unknown;
+        workspaceValue?: unknown;
+        workspaceFolderValue?: unknown;
+    };
+
+    function setupConfig(inspections: Record<string, Inspection | undefined>) {
+        const update = jest.fn().mockResolvedValue(undefined);
+        const inspect = jest.fn((key: string) => inspections[key]);
+        jest.spyOn(vscode.workspace, 'getConfiguration').mockReturnValue({
+            inspect,
+            update,
+            get: jest.fn(),
+        } as unknown as vscode.WorkspaceConfiguration);
+        return { update, inspect };
+    }
+
+    afterEach(() => jest.restoreAllMocks());
+
+    it('lists exactly the three retired keys', () => {
+        expect([...RETIRED_SETTINGS]).toEqual([
+            'companion.templateProfile',
+            'companion.turboWorkflowPicker',
+            'companion.complexityFastPath',
+        ]);
+    });
+
+    it('deletes a persisted retired key at the scope it was set (update to undefined)', async () => {
+        const { update } = setupConfig({
+            'companion.templateProfile': { globalValue: 'turbo' },
+            'companion.turboWorkflowPicker': { workspaceValue: true },
+            'companion.complexityFastPath': {},
+        });
+
+        await removeRetiredSettings();
+
+        expect(update).toHaveBeenCalledWith(
+            'companion.templateProfile',
+            undefined,
+            vscode.ConfigurationTarget.Global
+        );
+        expect(update).toHaveBeenCalledWith(
+            'companion.turboWorkflowPicker',
+            undefined,
+            vscode.ConfigurationTarget.Workspace
+        );
+    });
+
+    it('is a no-op when no retired key is set (idempotent)', async () => {
+        const { update } = setupConfig({
+            'companion.templateProfile': {},
+            'companion.turboWorkflowPicker': {},
+            'companion.complexityFastPath': {},
+        });
+
+        await removeRetiredSettings();
+
+        expect(update).not.toHaveBeenCalled();
+    });
+
+    it('does not crash when inspect returns undefined for a key', async () => {
+        setupConfig({});
+        await expect(removeRetiredSettings()).resolves.toBeUndefined();
     });
 });

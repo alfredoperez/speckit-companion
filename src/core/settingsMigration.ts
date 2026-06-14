@@ -25,8 +25,18 @@ export const BETA_BOOLEAN_SETTINGS: ReadonlyArray<{
     readonly default: boolean;
 }> = [
     { key: 'viewer.activityPanel', default: true },
-    { key: 'companion.turboWorkflowPicker', default: true },
     { key: 'companion.installPrompt', default: true },
+];
+
+/**
+ * Settings removed when the three spec-driven toggles collapsed into the single
+ * `speckit.defaultWorkflow` picker. Their persisted values are dropped at every
+ * scope on activation so they don't linger in users' settings.json.
+ */
+export const RETIRED_SETTINGS: ReadonlyArray<string> = [
+    'companion.templateProfile',
+    'companion.turboWorkflowPicker',
+    'companion.complexityFastPath',
 ];
 
 /**
@@ -82,6 +92,28 @@ export async function migrateBetaTriStateSettings(): Promise<void> {
             // coerced. Fall back to the per-setting default (not a hardcoded true).
             if (persisted === 'off' || persisted === 'beta' || persisted === 'on') {
                 await config.update(key, coerceLegacyBoolean(persisted, settingDefault), target);
+            }
+        }
+    }
+}
+
+/**
+ * One-time, idempotent cleanup: remove any persisted value for the retired
+ * spec-driven toggles from settings.json at every scope. Setting a key to
+ * `undefined` deletes it at that scope; a key that was never set is skipped, so
+ * re-running is a no-op. Activation tolerates these keys whether or not this runs
+ * (VS Code ignores unknown keys) — this just keeps users' settings tidy (FR-004).
+ */
+export async function removeRetiredSettings(): Promise<void> {
+    const config = vscode.workspace.getConfiguration('speckit');
+    for (const key of RETIRED_SETTINGS) {
+        const inspected = config.inspect(key);
+        if (!inspected) {
+            continue;
+        }
+        for (const { target, field } of SCOPES) {
+            if (inspected[field] !== undefined) {
+                await config.update(key, undefined, target);
             }
         }
     }

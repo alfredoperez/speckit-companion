@@ -165,10 +165,10 @@ export interface SpecContext {
     /** Last action one-liner written by the implement skill. */
     last_action?: string;
     /**
-     * Per-spec template profile override, chosen at the specify step. When `turbo`,
-     * the GUI dispatches the `/speckit.companion.*` (turbo) pipeline commands for
-     * this spec instead of the stock ones. Absent → use the project default
-     * (`speckit.companion.templateProfile`).
+     * Legacy per-spec profile field from before the workflow-choice collapse.
+     * No longer written or read for dispatch — the `workflow` field now drives the
+     * command family. Kept optional so older specs that still carry it are tolerated
+     * and preserved on write.
      */
     profile?: 'standard' | 'turbo';
     /**

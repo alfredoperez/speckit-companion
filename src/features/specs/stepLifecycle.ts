@@ -22,7 +22,6 @@ import {
 } from './specContextWriter';
 import { Status } from '../../core/types/specContext';
 import { deriveSpecName } from './specContextManager';
-import { seedProfileForNewSpec } from './profileDispatch';
 
 let outputChannel: vscode.OutputChannel | undefined;
 
@@ -46,7 +45,6 @@ function buildFallback(specDir: string, step: StepName): SpecContext {
         currentStep: step,
         status: 'draft',
         history: [],
-        profile: seedProfileForNewSpec(specDir),
     };
 }
 

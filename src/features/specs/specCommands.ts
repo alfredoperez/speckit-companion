@@ -17,7 +17,7 @@ import {
     WorkflowConfig,
 } from '../workflows';
 import { updateStepProgress, readSpecContextSync } from './specContextManager';
-import { resolveProfileCommandWithFallback } from './profileDispatch';
+import { resolveDispatchWithFallback } from './profileDispatch';
 import { startStep, completeStep, setStatus, reactivate } from './stepLifecycle';
 import { lastEntryIsCompletionFor } from './historyHelpers';
 import { updateSelectionContextKeys } from './selectionContextKeys';
@@ -595,27 +595,33 @@ async function executeWorkflowStep(
         outputChannel.appendLine(`[SpecKit] Failed to update step progress: ${err}`);
     });
 
-    // Resolve the command for this step, then apply the spec's per-spec profile
-    // (a `turbo` spec dispatches the /speckit.companion.* twin).
+    // Resolve the command for this step from the spec's workflow (a `companion`
+    // spec resolves the /speckit.companion.* command family).
     const baseCommand = resolveStepCommand(workflow, step);
-    // Guard the missing-extension case: if this resolves to a /speckit.companion.*
-    // twin but the spec-kit extension isn't installed, fall back to the stock
-    // command + a non-blocking warning rather than dispatch something the AI CLI
-    // can't resolve (FR-003).
-    const resolution = resolveProfileCommandWithFallback(baseCommand, targetDir);
-    const command = resolution.command;
+    // Guard the missing-extension case: if this is a /speckit.companion.* command
+    // but the spec-kit extension isn't installed, fall back to the stock command +
+    // a non-blocking warning rather than dispatch something the AI CLI can't
+    // resolve (FR-006/FR-007).
+    const resolution = resolveDispatchWithFallback(baseCommand, targetDir);
     if (resolution.fellBack) {
+        // command === null means a companion-only step (e.g. mark-complete) has no
+        // stock twin and the extension is missing — suppress dispatch entirely.
+        const suffix = resolution.command ? `running stock ${resolution.command}` : 'no stock equivalent — skipping';
         outputChannel.appendLine(
-            `[SpecKit] Turbo command unavailable — spec-kit extension not installed; running stock ${command}.`
+            `[SpecKit] Companion command unavailable — spec-kit extension not installed; ${suffix}.`
         );
         void vscode.window.showWarningMessage(
-            'Turbo mode needs the companion spec-kit extension, which is not installed — running the standard SpecKit flow instead.',
+            'The SpecKit Companion workflow needs the companion spec-kit extension, which is not installed — running the standard SpecKit flow instead.',
             'Install spec-kit Extension'
         ).then(choice => {
             if (choice === 'Install spec-kit Extension') {
                 void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
             }
         });
+    }
+    const command = resolution.command;
+    if (!command) {
+        return;
     }
     outputChannel.appendLine(`[SpecKit] Resolved command: ${command}`);
 

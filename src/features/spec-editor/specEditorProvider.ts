@@ -8,22 +8,20 @@ import type {
     AttachedImage,
     WorkflowDefinition
 } from './types';
-import { TURBO_WORKFLOW_NAME } from './types';
 import { normalizeWorkflowConfig, resolveStepCommand, isWorkflowSupportedForProvider } from '../workflows';
 import type { WorkflowConfig } from '../workflows';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { buildSpecifyCreationPreamble } from '../../ai-providers/promptBuilder';
-import { resolveNewSpecProfileCommandWithFallback } from '../specs/profileDispatch';
+import { resolveDispatchForRoot } from '../specs/profileDispatch';
 import { isCompanionInstalled } from '../settings/companionPresetReconciler';
 import { shouldShowInstallPrompt, readInstallPromptEnabled } from '../../speckit/specKitExtensionInstall';
 import { renderInstallBannerHtml } from './installBanner';
-import { AIProviders, WorkflowSteps, ConfigKeys } from '../../core/constants';
-import { coerceLegacyBoolean } from '../../core/settingsMigration';
+import { AIProviders, WorkflowSteps, ConfigKeys, COMPANION_WORKFLOW_NAME } from '../../core/constants';
 import { sendTelemetryEvent } from '../../core/telemetry';
 import * as crypto from 'crypto';
 
-/** The turbo specify twin the picker routes to when turbo is chosen. */
-const TURBO_SPECIFY_COMMAND = 'speckit.companion.specify';
+/** The Companion specify command the picker dispatches when the Companion workflow is chosen. */
+const COMPANION_SPECIFY_COMMAND = 'speckit.companion.specify';
 
 /**
  * Generates a random nonce for CSP
@@ -69,19 +67,28 @@ export class SpecEditorProvider {
         const customWorkflows = config.get<WorkflowConfig[]>('customWorkflows', []);
         const activeProvider = getConfiguredProviderType();
 
-        // Always include default workflow (no provider declaration → never filtered)
+        // Always include the two built-in workflows (no provider declaration →
+        // never filtered). Companion is always offered; its missing-extension
+        // fallback (handleSubmit) downgrades to stock when the extension is absent.
         const workflows: WorkflowDefinition[] = [
             {
                 name: 'speckit',
                 displayName: 'SpecKit',
                 description: 'Standard SpecKit workflow',
                 stepSpecify: `/${formatCommandForProvider('speckit.specify')}`
+            },
+            {
+                name: COMPANION_WORKFLOW_NAME,
+                displayName: 'SpecKit Companion',
+                description: 'Leaner SpecKit Companion pipeline with built-in right-sizing, through to mark-complete.',
+                stepSpecify: `/${formatCommandForProvider(COMPANION_SPECIFY_COMMAND)}`,
             }
         ];
 
         // Add custom workflows the active provider supports
         for (const wf of customWorkflows) {
             if (wf.name && wf.name !== 'speckit' && wf.name !== 'default'
+                && wf.name !== COMPANION_WORKFLOW_NAME
                 && isWorkflowSupportedForProvider(wf, activeProvider)) {
                 const normalized = normalizeWorkflowConfig(wf);
                 workflows.push({
@@ -98,29 +105,6 @@ export class SpecEditorProvider {
             }
         }
 
-        // Beta-gated + install-gated turbo picker option. Appended last so it
-        // never reorders existing entries. Surfaces only when the turbo beta
-        // toggle is on AND the Companion extension is installed in the project;
-        // otherwise the dropdown is byte-identical to before. Picking it pins
-        // turbo on the new spec at submit (see handleSubmit) — pure selection UI.
-        //
-        // Reserved-name guard: TURBO_WORKFLOW_NAME ('speckit-turbo') is meant to
-        // be synthetic-only. If a user's custom workflow already claims that name,
-        // the real one wins — appending the synthetic entry would render duplicate
-        // <option value="speckit-turbo"> nodes and the this.workflows Map would
-        // keep only the last, silently changing what gets dispatched/pinned. So we
-        // skip the synthetic entry on collision and warn.
-        const turboEntry = this.buildTurboWorkflowEntry();
-        if (turboEntry) {
-            if (workflows.some(wf => wf.name === TURBO_WORKFLOW_NAME)) {
-                this.outputChannel.appendLine(
-                    `[SpecEditor] Warning: a custom workflow uses the reserved name '${TURBO_WORKFLOW_NAME}' — skipping the synthetic turbo entry; the user's workflow wins`
-                );
-            } else {
-                workflows.push(turboEntry);
-            }
-        }
-
         // Cache workflows for lookup. Rebuilt on every panel open; correctness
         // across an aiProvider change relies on that change forcing a window
         // reload (see extension.ts) which disposes this provider. If live
@@ -134,24 +118,17 @@ export class SpecEditorProvider {
     }
 
     /**
-     * Build the synthetic "SpecKit Companion" picker entry, or undefined
-     * when it must not appear. Returns undefined when the `turboWorkflowPicker`
-     * toggle is off, OR when the Companion spec-kit extension is not installed in
-     * the project (so an enabled toggle in a non-Companion project still hides it).
-     * The toggle is a boolean opt-in; the label carries no badge.
-     */
-    /**
-     * Non-blocking warning shown when a turbo specify dispatch was downgraded to
-     * the stock command because the spec-kit extension is missing (FR-003). Offers
-     * a one-click install without leaving the editor.
+     * Non-blocking warning shown when a Companion specify dispatch was downgraded
+     * to the stock command because the spec-kit extension is missing
+     * (FR-006/FR-007). Offers a one-click install without leaving the editor.
      */
     private warnFellBackToStock(): void {
         this.outputChannel.appendLine(
-            '[SpecEditor] Turbo specify unavailable — spec-kit extension not installed; running stock speckit.specify.'
+            '[SpecEditor] Companion specify unavailable — spec-kit extension not installed; running stock speckit.specify.'
         );
         void vscode.window
             .showWarningMessage(
-                'Turbo mode needs the companion spec-kit extension, which is not installed — creating this spec with the standard SpecKit flow instead.',
+                'The SpecKit Companion workflow needs the companion spec-kit extension, which is not installed — creating this spec with the standard SpecKit flow instead.',
                 'Install spec-kit Extension'
             )
             .then(choice => {
@@ -159,25 +136,6 @@ export class SpecEditorProvider {
                     void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
                 }
             });
-    }
-
-    private buildTurboWorkflowEntry(): WorkflowDefinition | undefined {
-        const raw = vscode.workspace
-            .getConfiguration(ConfigKeys.namespace)
-            .get<unknown>('companion.turboWorkflowPicker', true);
-        if (!coerceLegacyBoolean(raw, true)) {
-            return undefined;
-        }
-        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-        if (!workspaceRoot || !isCompanionInstalled(workspaceRoot)) {
-            return undefined;
-        }
-        return {
-            name: TURBO_WORKFLOW_NAME,
-            displayName: 'SpecKit Companion',
-            description: `Pins the leaner SpecKit Companion (turbo) /speckit.companion.* pipeline on this spec, regardless of the project default.`,
-            stepSpecify: `/${formatCommandForProvider(TURBO_SPECIFY_COMMAND)}`,
-        };
     }
 
     /**
@@ -365,46 +323,26 @@ export class SpecEditorProvider {
             const provider = AIProviderFactory.getProvider(this.context, this.outputChannel);
 
             // Use custom command if provided, otherwise the workflow's specify command.
-            // For the default SpecKit workflow, route to the turbo specify twin when the
-            // project default is turbo — the new spec has no context to pin yet, so the
-            // first step honors the project default directly.
-            //
-            // When the user explicitly picked the turbo workflow option, route to the
-            // turbo specify twin unconditionally (ignoring the project default) and pin
-            // `profile: turbo` in the seed write so the whole pipeline runs turbo.
-            const pickedTurbo = !customCommand && workflowName === TURBO_WORKFLOW_NAME;
-            let seedProfile: 'turbo' | undefined = pickedTurbo ? 'turbo' : undefined;
+            // When the SpecKit Companion workflow is chosen, dispatch its specify
+            // command — but guard the missing-extension case: downgrade to stock
+            // speckit.specify (and warn) when the spec-kit extension is absent so a
+            // Companion pick never dispatches an unresolvable /speckit.companion.*.
             const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
             let command = customCommand ? `/${customCommand}` : workflow.stepSpecify;
-            if (pickedTurbo) {
-                // The turbo picker is only offered when the extension is installed
-                // (buildTurboWorkflowEntry gates on it), but re-check installation
-                // directly here so a stale selection can never dispatch an unresolvable
-                // /speckit.companion.*. Note: an explicit turbo pick routes to the turbo
-                // twin regardless of the project default, so the project-default resolver
-                // can't be the guard — only the extension's on-disk presence can.
-                if (!workspaceRoot || !isCompanionInstalled(workspaceRoot)) {
-                    seedProfile = undefined;
-                    command = `/${formatCommandForProvider('speckit.specify')}`;
-                    this.warnFellBackToStock();
-                } else {
-                    command = `/${formatCommandForProvider(TURBO_SPECIFY_COMMAND)}`;
-                }
-            } else if (!customCommand && workflow.name === 'speckit') {
-                const resolution = resolveNewSpecProfileCommandWithFallback('speckit.specify', workspaceRoot);
-                command = `/${formatCommandForProvider(resolution.command)}`;
+            if (!customCommand && workflowName === COMPANION_WORKFLOW_NAME) {
+                const resolution = resolveDispatchForRoot(COMPANION_SPECIFY_COMMAND, workspaceRoot);
+                // specify always has a stock twin, so command is never suppressed (null) here.
+                command = `/${formatCommandForProvider(resolution.command ?? 'speckit.specify')}`;
                 if (resolution.fellBack) {
                     this.warnFellBackToStock();
                 }
             }
 
-            // The turbo picker is a synthetic entry, not a real workflow config.
-            // Seed the `.spec-context.json` `workflow` field with the resolvable base
-            // name ('speckit') so downstream step-resolution (getWorkflow) finds it;
-            // turbo routing is carried entirely by the pinned `profile: turbo`, not
-            // by this field. Other workflows seed their own name unchanged.
-            const seedWorkflowName = pickedTurbo ? 'speckit' : workflowName;
-            const specContextInstruction = buildSpecifyCreationPreamble(seedWorkflowName, null, seedProfile);
+            // Seed the chosen workflow name verbatim into `.spec-context.json` so
+            // downstream step-resolution (getWorkflow) dispatches the right command
+            // family for every step. A Companion pick seeds `companion` even when the
+            // extension is missing — each step then applies the same fallback.
+            const specContextInstruction = buildSpecifyCreationPreamble(workflowName, null);
             if (specContextInstruction) {
                 await this.tempFileManager.appendToMarkdownFile(
                     tempFileSet.markdownFilePath,
@@ -421,13 +359,12 @@ export class SpecEditorProvider {
             // Anonymous spec.created. The spec dir doesn't exist yet (the AI
             // creates it), so the persisted per-spec id is minted lazily on the
             // first later event; this carries a fresh id as a creation marker.
-            // Profile is derived from the resolved command (the turbo twin routes
-            // via the `companion.*` family) so it catches BOTH an explicit turbo
-            // pick AND a project-default-turbo resolution — `seedProfile` is only
-            // set on the explicit-pick path and would miss the project default.
+            // Workflow is derived from the resolved command (a Companion pick routes
+            // via the `companion.*` family) so a missing-extension downgrade to stock
+            // is reported as `speckit`, matching what actually ran.
             sendTelemetryEvent('spec.created', {
                 providerId: providerType,
-                profile: command.includes('companion.') ? 'turbo' : 'standard',
+                workflow: command.includes('companion.') ? COMPANION_WORKFLOW_NAME : 'speckit',
                 specInstanceId: crypto.randomUUID(),
             });
 

@@ -32,7 +32,6 @@ import {
     updateSpecContext as canonicalUpdateSpecContext,
 } from './specContextWriter';
 import { normalizeSpecContext } from './specContextReader';
-import { seedProfileForNewSpec } from './profileDispatch';
 import { isStepLevelEntry, lastEntryIsCompletionFor } from './historyHelpers';
 
 /**
@@ -162,7 +161,6 @@ export async function updateSpecContext(
             currentStep: 'specify',
             status: 'draft',
             history: [],
-            profile: seedProfileForNewSpec(specDir),
         }),
     );
 }
@@ -229,7 +227,6 @@ export async function updateStepProgress(
                 currentStep: 'specify',
                 status: 'draft',
                 history: [],
-                profile: seedProfileForNewSpec(specDir),
             }),
         );
         return;

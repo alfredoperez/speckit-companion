@@ -1014,10 +1014,18 @@
           },
           "speckit.defaultWorkflow": {
             "type": "string",
+            "enum": [
+              "speckit",
+              "companion"
+            ],
+            "enumDescriptions": [
+              "SpecKit — the stock spec-driven pipeline (specify → plan → tasks → implement).",
+              "SpecKit Companion — the leaner pipeline with built-in right-sizing, through to a terminal mark-complete step. Requires the companion spec-kit extension."
+            ],
             "default": "speckit",
             "scope": "window",
             "order": 8,
-            "description": "Workflow to auto-select for new features. Must match a workflow name from customWorkflows or 'speckit'."
+            "markdownDescription": "Workflow to auto-select for new features: **SpecKit** (the stock pipeline) or **SpecKit Companion** (the leaner pipeline with right-sizing). The Create-Spec picker pre-selects this choice. Companion requires the [companion spec-kit extension](https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension); when it's missing, a Companion spec runs the stock commands instead."
           }
         }
       },
@@ -1030,37 +1038,6 @@
             "scope": "window",
             "order": 1,
             "description": "Prompt to install the companion spec-kit extension (Create-Spec + Activity panels) when it's missing — a one-click install banner in the Create-Spec and Activity panels. Hidden once installed. Opt-in beta; defaults to on."
-          },
-          "speckit.companion.templateProfile": {
-            "type": "string",
-            "enum": [
-              "standard",
-              "turbo",
-              "off"
-            ],
-            "enumDescriptions": [
-              "New specs run the stock /speckit.* commands (with timing capture).",
-              "New specs run the trimmed /speckit.companion.* commands — leaner spec, files/dependencies tasks.",
-              "New specs run the stock /speckit.* commands and skip the Companion install step (default)."
-            ],
-            "default": "off",
-            "scope": "window",
-            "order": 2,
-            "markdownDescription": "Default pipeline shape for new specs: stock /speckit.* (standard) or trimmed /speckit.companion.* (turbo). Both stay installed; each spec keeps the shape it started with. Opt-in beta, off by default. Requires the [companion spec-kit extension](https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension)."
-          },
-          "speckit.companion.turboWorkflowPicker": {
-            "type": "boolean",
-            "default": true,
-            "scope": "window",
-            "order": 3,
-            "markdownDescription": "Add a \"SpecKit Companion\" choice to the Create-Spec workflow dropdown, pinning turbo on just that spec. Appears only when the spec-kit extension is installed. Opt-in beta. Requires the [companion spec-kit extension](https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension)."
-          },
-          "speckit.companion.complexityFastPath": {
-            "type": "boolean",
-            "default": false,
-            "scope": "window",
-            "order": 4,
-            "markdownDescription": "In turbo mode, fast-track small changes (≤5 files / ≤10 tasks): fold plan and tasks into the specify pass so the spec lands ready-to-implement in one run. Opt-in beta, off by default. Requires the [companion spec-kit extension](https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension)."
           },
           "speckit.companion.resumeBeta": {
             "type": "boolean",
@@ -1081,7 +1058,7 @@
             "default": true,
             "scope": "window",
             "order": 7,
-            "markdownDescription": "Send **anonymous, PII-free** usage telemetry that helps prioritize which AI providers and pipeline features to invest in. Collected: the selected AI provider, the pipeline profile (standard/turbo), which workflow phase was dispatched, spec lifecycle counts (created / completed / archived), and the on/off state of beta flags. **Never collected**: prompt content, file paths, spec names, or custom workflow names — only enum-like values, booleans, versions, counts, and a random per-spec id. Also honors VS Code's global `telemetry.telemetryLevel`: if either this setting or the global setting is off, no telemetry is sent. Defaults to on."
+            "markdownDescription": "Send **anonymous, PII-free** usage telemetry that helps prioritize which AI providers and pipeline features to invest in. Collected: the selected AI provider, the default workflow (speckit/companion), which workflow phase was dispatched, spec lifecycle counts (created / completed / archived), and the on/off state of beta flags. **Never collected**: prompt content, file paths, spec names, or custom workflow names — only enum-like values, booleans, versions, counts, and a random per-spec id. Also honors VS Code's global `telemetry.telemetryLevel`: if either this setting or the global setting is off, no telemetry is sent. Defaults to on."
           }
         }
       }
