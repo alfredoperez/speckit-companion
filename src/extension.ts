@@ -292,18 +292,30 @@ export async function activate(context: vscode.ExtensionContext) {
             // below when the extension dir appears/disappears (e.g. after the
             // one-click install terminal completes).
             void refreshCompanionInstalledContext(root);
-            // Keep the timing-augmented standard command family materialized so the
-            // Companion workflow (and stock specs) always have it on disk.
-            void ensureStandardFamily(root, {
-                log: msg => outputChannel.appendLine(msg),
-            });
-            // Refresh the install context key whenever the companion extension dir
-            // is created or removed (the one-click install lands it on disk), so
-            // the sidebar affordance flips without a reload.
+            // Keep the timing-augmented standard command family materialized — but
+            // ONLY when the companion spec-kit extension is installed: the ensure's
+            // bundled preset path lives inside `.specify/extensions/companion/`, so
+            // running it without the extension just fails + logs on every activation.
+            // The watcher below reruns it once the extension dir appears (one-click
+            // install), so it doesn't wait for a reload.
+            const ensureStandardWhenInstalled = (): void => {
+                if (isCompanionInstalled(root)) {
+                    void ensureStandardFamily(root, {
+                        log: msg => outputChannel.appendLine(msg),
+                    });
+                }
+            };
+            ensureStandardWhenInstalled();
+            // Refresh the install context key (and rerun the standard-family ensure)
+            // whenever the companion extension dir is created or removed (the
+            // one-click install lands it on disk), so both flip without a reload.
             const extWatcher = vscode.workspace.createFileSystemWatcher(
                 new vscode.RelativePattern(root, '.specify/extensions/companion/**')
             );
-            const refresh = (): void => { void refreshCompanionInstalledContext(root); };
+            const refresh = (): void => {
+                void refreshCompanionInstalledContext(root);
+                ensureStandardWhenInstalled();
+            };
             extWatcher.onDidCreate(refresh);
             extWatcher.onDidDelete(refresh);
             context.subscriptions.push(extWatcher);
