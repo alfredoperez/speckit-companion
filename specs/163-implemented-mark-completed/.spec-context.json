@@ -3,7 +3,7 @@
   "specName": "implemented mark completed",
   "branch": "282-implemented-mark-completed",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
@@ -123,6 +123,13 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-06-13T03:43:11.196Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-14T13:41:20.100Z"
     }
   ],
   "currentTask": "T007",
@@ -173,5 +180,6 @@
       "status": "DONE",
       "did": "Verified npm run compile and full test suite (1009 passing)"
     }
-  }
+  },
+  "telemetryInstanceId": "f1133fe9-ba0b-4b9d-a43f-94acfe26bf61"
 }

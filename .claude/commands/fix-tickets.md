@@ -26,7 +26,7 @@ After all tickets: generate one **themed HTML brief** (via the vault `/html-brie
 - **Copilot wait:** poll ~10 min, then fall back to our `/code-review` alone.
 - **Sequential only.** Never parallelize — each `install-local` must land before the next ticket starts.
 - **Heavy steps run in subagents** (the turbo fix, the code review, addressing Copilot comments, distilling learnings) so the main orchestration context stays lean. The main loop only does git/gh/decisions and accumulates the report.
-- **The loop compounds.** Every ticket reads + appends to `.claude/lessons-learned.md`, so review/Copilot findings strengthen the *next* fix. Code lessons land automatically; promotions into the curated `CLAUDE.md` are *proposed* in the report, never auto-applied.
+- **The loop compounds.** Every ticket reads `.claude/review-checklist.md` (+ the `CLAUDE.md` conventions it points to) before fixing, and routes any new high-signal learning to where it fires (review check → checklist; authoring convention → `CLAUDE.md`; loop-mechanics → this file; gap → an issue). So review/Copilot findings strengthen the *next* fix. Convention/architecture promotions are *proposed* in the report, never auto-applied.
 - **Queue gating honored.** `🔒 Gated` tickets are skipped; `⏸️ Review-gated` tickets pause before merge.
 
 ## Inputs
@@ -81,7 +81,7 @@ Dispatch a `general-purpose` subagent. Its job: fix issue `N` end-to-end using t
 
 Subagent prompt must include:
 - The issue number, title, and body.
-- **Read `.claude/lessons-learned.md` first** (the "Code conventions" section) and honor it — those are bug classes prior tickets' reviews already caught.
+- **Read `.claude/review-checklist.md` first** (and the `CLAUDE.md` conventions it points to) and honor it — those are bug classes prior tickets' reviews already caught.
 - **VERIFY THE BUG REPRODUCES on current `main` before building.** Backlog tickets go stale — they're frequently already fixed by a later PR, a duplicate, or an already-correct path (this happened to ~3 of 8 tickets in one batch). Have the subagent confirm the defect exists in the current code first; if it's already fixed, STOP and report that with evidence (so the orchestrator closes it as resolved/dup) instead of inventing a change. Deliver only the genuinely-missing part.
 - Instruction to ensure turbo profile is active for this run: `.specify/companion.yml` `templateProfile: turbo` (the companion skills are the `/speckit-companion-*` turbo family).
 - The ordered chain (there is **no** one-shot): run, in order, the skills
@@ -94,7 +94,7 @@ Subagent prompt must include:
 Capture this result. If the subagent reports it could not produce a passing fix, **skip merge** for this ticket, record it as "needs attention," and continue to the next ticket.
 
 #### 3. Code review — **subagent (or `/code-review` inline)**
-Run `/code-review` on the branch diff vs `main` at **high** effort, and apply the findings (`--fix`). Keep it in a subagent so the review reasoning doesn't fill the main context. Tell the subagent to **read `.claude/lessons-learned.md` first** and check the diff against those known bug classes too. Record what each finding was (you'll distill them in step 8). Commit and re-run `npm test` if code changed.
+Run `/code-review` on the branch diff vs `main` at **high** effort, and apply the findings (`--fix`). Keep it in a subagent so the review reasoning doesn't fill the main context. Tell the subagent to **read `.claude/review-checklist.md` first** (and the `CLAUDE.md` conventions it points to) and check the diff against those known bug classes too. Record what each finding was (you'll distill them in step 8). Commit and re-run `npm test` if code changed.
 
 #### 4. Open the PR — main loop
 Use the repo's `/create-pr` conventions (reads `.claude/pr-profile.md`): conventional-commit title `type(scope): summary`, body with `Closes #N`, summary, technical notes, and how-to-verify. Then:
@@ -157,11 +157,12 @@ If checks fail and can't be auto-addressed, leave the PR open, record as "merged
 #### 8. Capture learnings + tick the box — **distill subagent** (cheap) + main loop
 Two things, so the loop compounds and your tracker stays current:
 
-**a) Distill learnings.** Dispatch a small subagent with the code-review findings (step 3) and Copilot comments (step 6) for THIS ticket. It appends to `~/dev/GitHub/speckit-companion/.claude/lessons-learned.md`, following that file's own rules:
-- **Code conventions** — only a real bug class a reviewer caught, phrased as a do/don't, deduped against what's there. (Skip style nits.)
-- **Loop operations** — anything that would make `/fix-tickets` itself run smoother next time.
-- **Architecture / skill flags** — candidates to promote to `CLAUDE.md` / an ADR / a skill. These are NOT auto-applied; they get surfaced in the final report for your approval. Accumulate them across the run.
-- If a ticket produced nothing high-signal, append nothing. An empty distill is fine.
+**a) Distill learnings — route by shape, don't dump.** Dispatch a small subagent with the code-review findings (step 3) and Copilot comments (step 6) for THIS ticket. A learning earns capture only if it's **checkable, recurring or high-cost, and phrased as a rule/scan**; prefer editing an existing line over a near-duplicate; **an empty distill is the norm.** Route each kept learning to where it fires:
+- a **codebase-specific review check** → `.claude/review-checklist.md`
+- a **universal authoring convention** → the matching `CLAUDE.md` section (Webview & rendering invariants / Code Comments / Design tokens) — *proposed* in the report, not auto-applied
+- a **loop-mechanics** improvement → this command file
+- an **architecture / coverage gap** → a GitHub issue (accumulate across the run, surface in the report)
+- If it can become a test or hook, propose that instead of prose. (`.claude/lessons-learned.md` is retired — don't append to it.)
 
 **b) Tick the box in `Current.md`.** In the vault file `~/dev/GitHub/obsidian-vault/Current.md`, under `## SpecKit Companion → ### Live queue (GitHub)`, flip this ticket's line from `- [ ]` to `- [x]` and append `→ [PR #NNN](url)`, matching the existing shipped-line format. (Tickets are tracked there by `#NNN`; if a ticket isn't listed, add it under the right group as `- [x]`.)
 
@@ -187,7 +188,7 @@ Generate **one themed HTML brief via the vault `/html-brief` skill** (house dark
 - **Per ticket:** issue # + title, one-sentence "what was fixed," PR link, merged / in-review / skipped, new extension version after its `install-local`.
 - **🖐️ Manual verification needed** — a clearly separated section listing the UI / sidebar / webview / settings surfaces from each ticket's `uiOrManualSurfaces[]`. This is the part the user spends their time on. For each: what changed and how to eyeball it.
 - **Already exercised by turbo** — what the re-run of the companion pipeline + tests + CI proved (so the user knows NOT to re-test those).
-- **🧠 Lessons captured this run** — the new entries added to `.claude/lessons-learned.md` (code conventions + loop ops).
+- **🧠 Lessons captured this run** — new review checks added to `.claude/review-checklist.md` and loop-mechanics tweaks to this command file (with where each landed).
 - **🏗️ Architecture / skill flags** — the promotion candidates accumulated in step 8, each with a one-line "promote to `CLAUDE.md` / ADR / which skill?" suggestion for the user to approve.
 - **Needs attention** — any ticket skipped (and why), PR left in review, or Copilot/CI gap.
 
