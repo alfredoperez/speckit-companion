@@ -9,7 +9,9 @@ workflow:
 requires:
   # Floor is the engine surface this workflow rides: `specify workflow run`/`resume`
   # plus the `command`/`gate`/`switch` step registry. Validation target: 0.9.5.dev0.
-  speckit_version: ">=0.9.5"
+  # `.dev0` suffix is deliberate — a bare `>=0.9.5` excludes the `0.9.5.devN`
+  # git/`uv` pre-release builds under PEP 440.
+  speckit_version: ">=0.9.5.dev0"
   integrations:
     # Advisory, non-exhaustive compatibility hint (the documented `any: [...]` shape).
     # The workflow runs against any integration that provides the Companion commands.

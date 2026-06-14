@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-06-14
+
+### Fixed
+- **Installs again on git/`uv` dev builds of spec-kit.** The 0.5.0 minimum was written as `>=0.9.5`, which — under Python's version rules — actually *excludes* the `0.9.5.devN` pre-release builds that `uv tool install --from git+…` produces (the exact install path the README recommends). The result was a `Compatibility Error: requires spec-kit >=0.9.5, but 0.9.5.dev0 is installed` on a correctly-set-up machine. The floor is now `>=0.9.5.dev0`, which accepts those dev builds and every 0.9.5+ release.
+
 ## [0.5.0] - 2026-06-13
 
 ### Added
