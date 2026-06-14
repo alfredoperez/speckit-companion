@@ -173,10 +173,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 const status = context?.status || SpecStatuses.ACTIVE;
                 specNameByPath.set(spec.path, context?.specName);
                 statusByPath.set(spec.path, context?.currentStep);
-                if (status === SpecStatuses.COMPLETED || status === SpecStatuses.IMPLEMENTED) {
-                    // `implemented` is a terminal, done-but-not-user-completed
-                    // state — group it with the done specs (Completed), never
-                    // under Active.
+                if (status === SpecStatuses.COMPLETED) {
                     completedSpecs.push(spec);
                 } else if (status === SpecStatuses.ARCHIVED) {
                     archivedSpecs.push(spec);

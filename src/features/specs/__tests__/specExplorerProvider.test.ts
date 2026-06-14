@@ -220,7 +220,7 @@ describe('SpecExplorerProvider', () => {
             // No Active or Archived groups
         });
 
-        it('should NOT group an implemented spec under Active (terminal status)', async () => {
+        it('should group an implemented spec under Active so it can still be marked complete', async () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'shipped-feature', path: 'specs/shipped-feature' },
             ]);
@@ -228,11 +228,30 @@ describe('SpecExplorerProvider', () => {
 
             const children = await provider.getChildren();
 
-            // Implemented is a terminal, done-but-not-user-completed status: it
-            // must land in the done (Completed) bucket, never under Active.
+            // Implemented is done-but-not-user-completed: it stays in Active so
+            // the still-needs-mark-complete state remains visible. Only
+            // `completed` specs surface under Completed.
             expect(children).toHaveLength(1);
-            expect(children[0].label).toBe('Completed (1)');
-            expect(children.some(c => c.label?.startsWith('Active'))).toBe(false);
+            expect(children[0].label).toBe('Active (1)');
+            expect(children.some(c => c.label?.startsWith('Completed'))).toBe(false);
+        });
+
+        it('should split an implemented spec into Active and a completed spec into Completed', async () => {
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: 'shipped-feature', path: 'specs/shipped-feature' },
+                { name: 'done-feature', path: 'specs/done-feature' },
+            ]);
+            (readSpecContextSync as jest.Mock).mockImplementation((specPath: string) => {
+                if (specPath.includes('shipped-feature')) {
+                    return { status: 'implemented' };
+                }
+                return { status: 'completed' };
+            });
+
+            const children = await provider.getChildren();
+
+            expect(children[0].label).toBe('Active (1)');
+            expect(children[1].label).toBe('Completed (1)');
         });
     });
 

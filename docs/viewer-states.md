@@ -17,7 +17,10 @@
 > Terminal `completed` is reached only when the user clicks
 > `Mark Completed` (the spec-scope action that calls
 > `completeSpec`). This keeps the user in control of when a spec is
-> truly closed.
+> truly closed. Because of this gate, the sidebar keeps `implemented`
+> specs in the **Active** group, not **Completed** — only `completed`
+> specs surface under Completed, so the "still needs a manual
+> Mark Completed" state stays visible (see `docs/sidebar.md`).
 >
 > **Visible-label overrides**: The viewer's status badge uses friendlier
 > labels for two canonical keys without changing the on-disk values:
