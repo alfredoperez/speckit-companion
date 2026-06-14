@@ -1,6 +1,6 @@
 # Specification Quality Checklist: One SpecKit Companion Workflow
 
-**Purpose**: Validate turbo specification completeness before planning
+**Purpose**: Validate Companion specification completeness before planning
 **Created**: 2026-06-14
 **Feature**: [Link to spec.md](../spec.md)
 
