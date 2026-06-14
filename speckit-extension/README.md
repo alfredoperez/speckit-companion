@@ -10,8 +10,8 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/extension-companion-0b6dd9" alt="extension: companion">
-  <img src="https://img.shields.io/badge/version-0.4.1-0b6dd9" alt="version 0.4.1">
-  <img src="https://img.shields.io/badge/spec--kit-%E2%89%A50.8.5-008080" alt="requires spec-kit >= 0.8.5">
+  <img src="https://img.shields.io/badge/version-0.5.0-0b6dd9" alt="version 0.5.0">
+  <img src="https://img.shields.io/badge/spec--kit-%E2%89%A50.9.5-008080" alt="requires spec-kit >= 0.9.5">
   <img src="https://img.shields.io/badge/license-MIT-gold" alt="license MIT">
 </p>
 
@@ -56,7 +56,7 @@ Capture works on its own (the JSON is useful to any tool), but it's **built to f
 | `status` — where does this spec stand right now? | ❌ | ✅ |
 | `resume` — pick up exactly where you left off | ❌ | ✅ |
 | Lean "turbo" pipeline shape (no user stories, trimmed plan/tasks) | ❌ | ✅ |
-| Complexity fast-path — right-size the ceremony to the change | ❌ | ✅ (beta) |
+| One real workflow on spec-kit's engine (`specify workflow run`/`resume`) with built-in size routing | ❌ | ✅ |
 | Honest state recovery when a lifecycle hook didn't fire | ❌ | ✅ |
 
 Companion rides your **existing** spec-kit commands via lifecycle hooks — you get the whole right-hand column with **zero workflow change**.
@@ -71,7 +71,7 @@ Companion rides your **existing** spec-kit commands via lifecycle hooks — you 
 | **`/speckit.companion.status`** | ✅ Shipped | One command prints where the active spec stands — step, status, recorded decisions, and the next action. |
 | **`/speckit.companion.resume`** | ✅ Shipped | Pick up where you left off — carries recorded decisions into scope and dispatches the next command in the family the spec has been running. |
 | **Template profiles** ([standard / turbo](../docs/template-profiles.md)) | ✅ Shipped | Pick your pipeline shape: stock `/speckit.*` with better timing, or lean `/speckit.companion.*` (no user stories, trimmed plan, files/dependencies tasks). Both always installed; switching is non-destructive. |
-| **Complexity fast-path** ([turbo](../docs/template-profiles.md#complexity-fast-path-turbo-only)) | 🧪 Beta | Right-sizes the ceremony to the change — small edits fold specify+plan+tasks into one pass; larger changes keep the full pipeline. Off by default. |
+| **Companion workflow** ([engine](../docs/template-profiles.md#companion-workflow-routing-node)) | ✅ Shipped | The whole Companion pipeline as one spec-kit workflow the engine drives end to end — `specify workflow run speckit-companion` walks specify → plan → tasks → implement → mark-complete with review gates, and a built-in routing node right-sizes small vs. oversized changes (no on/off setting — the thresholds live in the workflow). |
 | **Agent-agnostic, safe by design** | ✅ Shipped | Runs wherever spec-kit runs (Claude, Copilot, Cursor, Gemini, …). Writes are atomic, append-only, never regress a shipped spec, and never fail your command; stdlib-only Python. |
 
 ## Commands
@@ -87,6 +87,8 @@ Four capture commands run automatically as lifecycle hooks; two are yours to run
 | `/speckit.companion.status` | you | Print the current step, status, recorded decisions, and the next action |
 | `/speckit.companion.resume` | you | Continue the pipeline from the recorded step — carries decisions into scope and dispatches the next command in the family the spec has been running (`/speckit.companion.<step>` for turbo specs, `/speckit.<step>` for stock specs; at the next unchecked task inside implement) |
 | `/speckit.companion.specify` · `.plan` · `.tasks` · `.implement` | you | Opt-in turbo pipeline — emit the turbo shape (no user stories, trimmed plan, files/dependencies tasks) for one spec, regardless of the project's profile |
+| `speckit.companion.classify` | workflow routing node | Emit a `small \| normal \| oversized` size signal so the Companion workflow can right-size the pipeline (thresholds live here, not in a setting) |
+| `speckit.companion.mark-complete` | workflow terminal step | Write `status: completed` to `.spec-context.json` — the Companion workflow's final node (the command writes it; the AI never hand-writes `completed`) |
 
 Full reference: [docs/commands.md](./docs/commands.md).
 
@@ -101,9 +103,33 @@ SpecKit Companion offers two pipeline shapes, and **both are always installed at
 
 `off` is an escape hatch that routes to the stock commands and skips the Companion install/repair step (it won't remove `companion-standard` if a prior setting already installed it). Under the hood the stock family stays present via an add-only activation step that also recovers a project whose commands a prior version may have stranded; a `scripts/check-shape-parity.py` guard keeps the turbo commands in lockstep with their bodies and asserts every body carries the shared timing partial. Full reference: [`../docs/template-profiles.md`](../docs/template-profiles.md).
 
-### Complexity fast-path (turbo)
+## Companion workflow — run the whole pipeline on spec-kit's engine
 
-Turbo can right-size the ceremony to the change. This is an **opt-in beta** — it's **off by default**. When enabled, `/speckit.companion.specify` classifies the drafted spec: a small change (projected ≤ 5 files / ≤ 10 tasks, with no "larger" scope phrase) writes three lean files in one pass — `spec.md` with an inline **Approach**, a **`plan.md`** pointer to it, and a real-checklist **`tasks.md`** — and folds plan and tasks into the same run, so the spec lands **ready-to-implement** in one pass instead of three (the file-driven stepper and sidebar read the files as present, not "not created"; implement is the next user-triggered step). Larger changes keep the full specify → plan → tasks → implement pipeline; a change that crosses the 5-files / 10-tasks guardrail prints a warning and runs the full pipeline rather than fast-tracking silently. Enable it with `speckit.companion.complexityFastPath: true` (VS Code setting); the extension mirrors that into `complexityFastPath` in `.specify/companion.yml` — a machine-local cache the command body reads, so the VS Code setting is the single source of truth. Full reference: [`../docs/template-profiles.md`](../docs/template-profiles.md#complexity-fast-path-turbo-only).
+The Companion pipeline also ships as a first-class spec-kit **workflow definition** (`workflows/speckit-companion.workflow.yml`) that runs on spec-kit's own engine, so you drive specify → plan → tasks → implement → mark-complete with one command instead of invoking the commands by hand:
+
+```bash
+# Run by local path (no install needed) …
+specify workflow run speckit-extension/workflows/speckit-companion.workflow.yml
+
+# … or register it once, then run by ID
+specify workflow add speckit-extension/workflows/speckit-companion.workflow.yml
+specify workflow run speckit-companion
+
+# Paused at a review gate? Pick up from the exact node it stopped at
+specify workflow resume <run_id>
+```
+
+The run **pauses at review gates** before planning and before tasks (reject aborts), and **ends by marking the spec `completed`** — the terminal `mark-complete` step the stock `speckit` workflow doesn't have. Each step still captures into `.spec-context.json`, so the VS Code GUI reflects progress for both `run` and `resume`.
+
+### Companion workflow routing node
+
+A built-in **routing node** right-sizes the pipeline with no on/off setting — the thresholds live in the workflow, not in a VS Code toggle. After specify, `speckit.companion.classify` emits a `small | normal | oversized` signal from the same ≤ 5-files / ≤ 10-tasks guardrail the command-body fast-path uses:
+
+- **small** — folds plan/tasks toward implement (less ceremony).
+- **normal** — the full pipeline with both review gates.
+- **oversized** — prints a **visible warning** and still runs the **full** pipeline — it never silently skips a phase.
+
+The workflow's safe default is the full pipeline, so an ambiguous size never drops a step. Full reference: [`../docs/template-profiles.md`](../docs/template-profiles.md#companion-workflow-routing-node).
 
 ## Installation
 

@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-06-13
+
+### Added
+- **The whole Companion pipeline is now one real workflow you run with a single command.** Instead of invoking specify, plan, tasks, and implement by hand, run `specify workflow run speckit-companion` (or point it at the workflow file directly) and spec-kit's engine drives the entire pipeline end to end — specify → plan → tasks → implement → mark-complete — **pausing at review gates** before planning and before tasks. Paused at a gate? `specify workflow resume <run_id>` picks up from the exact step it stopped at. Every step still feeds `.spec-context.json`, so the VS Code GUI lights up for both run and resume.
+- **The run ends by marking the spec completed.** The workflow has a terminal step that writes `status: completed` once everything before it finishes — the explicit end-of-lifecycle the stock pipeline never had.
+- **Built-in size routing, no on/off setting.** A routing node right-sizes the pipeline: a small change folds plan/tasks toward implement, a normal change runs the full pipeline with both gates, and an oversized change prints a visible warning and still runs the full pipeline — it never silently skips a phase. The ≤ 5-files / ≤ 10-tasks thresholds now live inside the workflow; there's no on/off toggle to set.
+
+### Changed
+- **Now requires spec-kit ≥ 0.9.5** — the release line that provides the workflow engine (`specify workflow run`/`resume`) the Companion workflow rides.
+
 ## [0.4.1] - 2026-06-12
 
 ### Fixed

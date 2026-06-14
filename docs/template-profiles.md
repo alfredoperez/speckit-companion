@@ -10,7 +10,7 @@ The long-form reference for how SpecKit Companion reshapes the spec-kit pipeline
 |---|---|---|
 | `off` (default) | No overrides at all — an opt-in beta, so the profiles are off until selected. | Plain upstream spec-kit. |
 | `standard` | The **stock** spec-kit commands, unchanged, with timing instructions added. | Same sections, same files as upstream spec-kit. |
-| `turbo` | The same commands with specific sections trimmed or replaced (no user stories, files/dependencies task axis), plus the same timing. | A smaller spec folder — `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files created on demand. (With the opt-in complexity fast-path on, a *small* change still emits three lean files in one pass — `spec.md` with an inline Approach, a `plan.md` pointer to it, and a real-checklist `tasks.md` — see [Complexity fast-path](#complexity-fast-path-turbo-only).) |
+| `turbo` | The same commands with specific sections trimmed or replaced (no user stories, files/dependencies task axis), plus the same timing. | A smaller spec folder — `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files created on demand. (When the Companion workflow routes a *small* change, that one specify pass still emits three lean files — `spec.md` with an inline Approach, a `plan.md` pointer to it, and a real-checklist `tasks.md` — see [Companion workflow routing node](#companion-workflow-routing-node).) |
 
 Both `standard` and `turbo` override the same **7** commands — `specify`, `clarify`, `plan`, `tasks`, `analyze`, `implement`, `constitution`. `checklist` and `taskstoissues` are left on stock.
 
@@ -44,7 +44,7 @@ So template overrides are **mixed** (work for plan/tasks, no-op for specify). Co
 | `tasks.md` | **redo** — drop user-story grouping/`[US#]` labels/MVP framing; keep strict `[Tn] [P?] + path`, Setup→Foundational→Core→Integration→Polish layering, deps/parallel notes. |
 | `constitution.md` | **redo** — keep principles/governance + semver bump + write the file; drop the template-propagation checklist + Sync-Impact ceremony. |
 
-Net turbo spec folder: `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files (`research.md` / `data-model.md` / `contracts/` / `quickstart.md`) created on demand, only when they help understand or build the change. (Exception: with the opt-in complexity fast-path on, a *small* change still emits the three lean files in one pass — `spec.md` carries an inline Approach, `plan.md` is a short pointer to it, and `tasks.md` holds the real checklist — see [Complexity fast-path](#complexity-fast-path-turbo-only).)
+Net turbo spec folder: `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files (`research.md` / `data-model.md` / `contracts/` / `quickstart.md`) created on demand, only when they help understand or build the change. (Exception: when the Companion workflow routes a *small* change, that one specify pass still emits the three lean files — `spec.md` carries an inline Approach, `plan.md` is a short pointer to it, and `tasks.md` holds the real checklist — see [Companion workflow routing node](#companion-workflow-routing-node).)
 
 ## Timing fidelity (both profiles)
 
@@ -56,25 +56,19 @@ Both profiles bake a single shared **timing partial** into every overridden comm
 
 The GUI preamble stays as the extra path; the body-embedded partial is the standalone path. A parity check (`speckit-extension/scripts/check-shape-parity.py`) locks every body's partial so the two can't fork. Caveat: per-task `date -u` is still best-effort — it can burst on very fast tasks. A burst is still caught by the eval's `timestamps-real` round-millisecond check (`.claude/skills/eval-speckit-extension/check_capture.py`); folding the 0ms-gap signal into the `task-cadence` verdict specifically is a pending follow-up in the kaiju eval source (see "Areas to improve").
 
-## Complexity fast-path (turbo only)
+## Companion workflow routing node
 
-Turbo right-sizes the ceremony to the change. This is an **opt-in beta** — it **defaults to off**; enable it and a **classify step** at the end of the `/speckit.companion.specify` body inspects the drafted spec and decides whether the change is small enough to fast-track or large enough to keep the full pipeline. It is best-effort and **errs toward `normal`** — a change is never under-planned by accident.
+Right-sizing the ceremony to the change can run on spec-kit's own engine, in the **Companion workflow** (`speckit-extension/workflows/speckit-companion.workflow.yml`) via `specify workflow run speckit-companion`. This is an **additional** home for the right-sizing decision, alongside the existing command-body fast-path in `/speckit.companion.specify` (still present and still gated by the `complexityFastPath` VS Code setting) — not a replacement for it. On the workflow path there is **no on/off toggle**: the thresholds live in the workflow definition itself, a small change is routed automatically, and the `complexityFastPath` setting plays no part in a workflow run.
 
-The classify decision (lives in the command body, not TypeScript):
+After specify, the workflow runs a thin **classify** step (`speckit.companion.classify`) that emits a single size signal — `small | normal | oversized` — from the same fixed **5 files / 10 tasks** guardrail the old fast-path used. A `switch` routing node reads that signal and picks a branch:
 
-- `fastPathEnabled` is read from `.specify/companion.yml` `complexityFastPath` (default `false` — opt-in beta). The extension resolves and mirrors this boolean; the body never reads VS Code settings directly.
-- `projectedFiles` / `projectedTasks` are estimated from the drafted requirements, measured against a fixed **5 files / 10 tasks** ceiling (the tiny-change guardrail).
-- `scopeSignal` reads scope phrases — `rewrite`/`overhaul`/`new system` push `larger`; `one-line`/`rename`/`typo` push `smaller`.
-- `verdict = simple` only when the fast-path is enabled, both projections sit at or under the ceiling, and the scope signal isn't `larger`; otherwise `normal`.
+- **`small` — folded path.** Less ceremony for a tiny change: the branch folds plan/tasks toward implement, with no review gate.
+- **`normal` — full pipeline.** The default branch: review-spec gate → plan → review-plan gate → tasks → implement, mirroring the bundled `speckit` workflow's gates.
+- **`oversized` — warn, then full pipeline.** A visible warning step runs first, then the **same** full pipeline. It never silently skips a phase (FR-004).
 
-Two branches follow from the verdict:
+The `switch`'s `default:` branch is the full pipeline, so an ambiguous or unresolved size always runs every phase — a change is never under-planned by accident. (Today the engine captures only `exit_code`/`stdout`/`stderr` from a command step, so the classify size doesn't yet resolve into the `switch` at runtime and the safe default runs; the `small` fold is latent until the engine captures structured command output. The full pipeline is always correct in the meantime.)
 
-- **`simple` — minimal mode.** The one specify pass emits **three lean files** so the file-driven views (top stepper, sidebar, implement progress) reconcile with the history-driven fold — never a single combined `spec.md`. `spec.md` carries the four turbo sections plus an appended **Approach** (files/dependencies — the plan content, inline, kept as the plan source-of-truth). `plan.md` is a **short pointer** to that Approach (no duplicated bullets). `tasks.md` carries the **real** dependency-ordered `- [ ] **T001** [P?] … + path` checklist — not a pointer, because implement progress counts these checkboxes, so a pointer would read 0/0. The task list lives **only** in `tasks.md` (not duplicated in `spec.md`) to avoid drift. `checklists/requirements.md` is still written. After specify self-closes, the body folds the lifecycle with `write-context.py --substep fast-path` calls — `plan` start/complete then `tasks` start/complete, the last carrying `--status ready-to-implement` — so the history panels read plan and tasks as satisfied; paired with the lean files, the stepper/sidebar/progress agree and the spec lands ready for implement in one run. No `completed` status is written; the final completed gate stays a user action.
-- **`normal` — full pipeline.** `spec.md` only, no fold; plan and tasks run as their own `/speckit.companion.plan` / `/speckit.companion.tasks` steps, exactly as before.
-
-**Guardrail warning.** When the change crosses the ceiling (`>5` files or `>10` tasks) or the scope signal is `larger`, the body prints `[companion] Change exceeds the small-change guardrail (5 files / 10 tasks) — running the full pipeline.` and runs `normal` — never a silent fast-track. Exactly-at-threshold (5 files / 10 tasks) is the simple ceiling and does not warn.
-
-**Opt in / out.** The flag defaults to `false` (full pipeline on every change). Set `speckit.companion.complexityFastPath: true` (VS Code setting) to enable fast-tracking; set it `false` or leave it unset to force the full pipeline. The VS Code setting is the single source of truth — `resolveComplexityFastPath` (in `companionPresetReconciler.ts`) mirrors it into `.specify/companion.yml`, a machine-local, gitignored cache the command body reads (it can't read VS Code settings directly). There is no separate project-level override. The eval (`.claude/skills/eval-speckit-extension/check_capture.py`) asserts a fast-tracked spec's folded `plan`/`tasks` entries, real timestamps, and `ready-to-implement` landing.
+The workflow ends with a terminal `mark-complete` step (`speckit.companion.mark-complete`) that writes `status: completed` — the command writes it, never the AI. Runs pause at the review gates and resume from the exact node with `specify workflow resume <run_id>`; each step still captures into `.spec-context.json`.
 
 ## Selecting a profile — one setting, routed per spec
 

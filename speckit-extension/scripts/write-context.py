@@ -488,6 +488,53 @@ def journal_task_finish(
     return target
 
 
+def mark_spec_complete(feature_dir: Path, by: str) -> Path | None:
+    """Promote a finished spec to the terminal `completed` status.
+
+    This is the only sanctioned writer of `status: completed`. The Companion
+    workflow's terminal `mark-complete` node dispatches the command that calls
+    this; the AI never hand-writes `completed`. `update_context` deliberately
+    refuses to advance a spec whose status is already terminal (`implemented`),
+    so the final promotion needs this dedicated path. `currentStep` stays at
+    `implement` (the last real step), keeping the canonical invariant that the
+    last `history` entry's step equals `currentStep`.
+
+    Strict on the source state: it promotes ONLY a spec that has actually
+    finished implement (`status == "implemented"`). A spec still `specifying` /
+    `planning` / `implementing` is not done, so a stray or out-of-order
+    invocation can never "ship" incomplete work. Idempotent: a spec already
+    `completed`/`archived` is left untouched.
+    """
+    target = feature_dir / ".spec-context.json"
+    ctx = read_ctx(target)
+    branch = _git_branch(_repo_root()) or "main"
+
+    if ctx.get("status") in CROSS_STEP_TERMINAL:
+        print(
+            f"[companion] {target} already at status={ctx.get('status')}; "
+            f"nothing to mark complete.",
+            file=sys.stderr,
+        )
+        return None
+
+    if ctx.get("status") != "implemented":
+        print(
+            f"[companion] {target} is at status={ctx.get('status')!r}, not "
+            f"'implemented'; refusing to mark complete (only a finished "
+            f"implement step can be shipped).",
+            file=sys.stderr,
+        )
+        return None
+
+    log = canonical_log(ctx)
+    fill_required(ctx, feature_dir, branch)
+    ctx.setdefault("currentStep", "implement")
+    ctx["status"] = "completed"
+    commit_log(ctx, log)
+    atomic_write(target, ctx)
+    return target
+
+
 def sync_tasks(feature_dir: Path, tasks_md: Path, final_status: str, by: str) -> Path | None:
     """Per-task journaling for the implement step.
 
@@ -590,6 +637,11 @@ def main() -> int:
         help="Per-task finish (finish-only): append one complete event for this task id.",
     )
     parser.add_argument(
+        "--mark-complete", action="store_true",
+        help="Promote a finished spec to the terminal status 'completed' "
+             "(the only sanctioned writer of completed; keeps currentStep=implement).",
+    )
+    parser.add_argument(
         "--did", default=None,
         help="With --task: a one-line summary of what the task did, written to "
              "task_summaries.<id>.did (the Activity panel's Tasks card).",
@@ -604,7 +656,7 @@ def main() -> int:
     # Best-effort guard: a non-canonical step is a no-op, never a host failure.
     # Terminal state belongs in `status`, not `currentStep`. Skipped in task-sync
     # mode, which always operates on the implement step.
-    if not args.tasks_file and not args.task and (args.step == "done" or args.step not in CANONICAL_STEPS):
+    if not args.tasks_file and not args.task and not args.mark_complete and (args.step == "done" or args.step not in CANONICAL_STEPS):
         print(
             f"[companion] Skipping: '{args.step}' is not a canonical currentStep "
             f"({', '.join(sorted(CANONICAL_STEPS))}).",
@@ -655,6 +707,8 @@ def main() -> int:
             # ("specified") would be an incoherent terminal status here.
             final_status = args.status if args.status != parser.get_default("status") else "implemented"
             target = sync_tasks(feature_dir, tasks_md, final_status, args.by)
+        elif args.mark_complete:
+            target = mark_spec_complete(feature_dir, args.by)
         elif args.task:
             files = (
                 [f.strip() for f in args.files.split(",") if f.strip()]
@@ -669,7 +723,9 @@ def main() -> int:
         return 0
 
     if target is not None and not args.tasks_file:
-        if args.task:
+        if args.mark_complete:
+            print(f"[companion] Marked {target} complete (status=completed, by={args.by})")
+        elif args.task:
             print(f"[companion] Journaled finish for task {args.task} in {target} (by={args.by})")
         else:
             print(f"[companion] Updated {target} (currentStep={args.step}, status={args.status}, kind={args.kind}, by={args.by})")
