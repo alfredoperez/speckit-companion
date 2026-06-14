@@ -3,7 +3,7 @@ schema_version: "1.0"
 extension:
   id: companion
   name: "SpecKit Companion"
-  version: "0.5.0"
+  version: "0.5.1"
   description: "Live spec-driven progress for SpecKit Companion — lifecycle capture, status, and resume."
   author: alfredoperez
   repository: https://github.com/alfredoperez/speckit-companion
@@ -13,8 +13,12 @@ extension:
 requires:
   # Floor is the workflow-engine surface the Companion workflow rides:
   # `specify workflow run`/`resume` plus the `command`/`gate`/`switch` step
-  # registry, all present from the 0.9.x engine (validation target 0.9.5.dev0).
-  speckit_version: ">=0.9.5"
+  # registry, all present from the 0.9.5 engine (validation target 0.9.5.dev0).
+  # The `.dev0` suffix is required: under PEP 440 a bare `>=0.9.5` EXCLUDES the
+  # `0.9.5.devN` pre-release builds that `uv tool install --from git+…` produces
+  # (the install path the README documents), so it would block every dev-build
+  # user. `>=0.9.5.dev0` admits those builds and every 0.9.5+ final.
+  speckit_version: ">=0.9.5.dev0"
   tools:
     - name: python3
       required: false
