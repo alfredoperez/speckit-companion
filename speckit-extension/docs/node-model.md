@@ -92,3 +92,53 @@ reads: [gather-context]    # advisory ordering, validated against the active rec
 | mark-complete | — | — | **existing command** (`speckit.companion.mark-complete.md`) — stays separately dispatchable; not decomposed in v1 |
 
 Parts (`sizing`, `timing`, `self-advance`, `routing`) stay in `presets/_parts/` and are absorbed as inner fences inside the node bodies that already carried them.
+
+## `.specify/companion.yml` — hooks and recipes
+
+This optional, project-local file is how a team customizes the pipeline without forking any command. It is **deltas only**: if it's absent, every command runs exactly as shipped. The AI reads it at run time — there is no engine; the orchestrator instructions appended to each command (the `orchestrator` part) tell the AI what to do with it. `scripts/companion_config.py` is the executable spec of the same contract, unit-tested in CI so the prose and the behavior can't drift.
+
+### Node hooks
+
+Attach your own work `before` or `after` any node, keyed by the node's id:
+
+```yaml
+commands:
+  implement:
+    hooks:
+      before:
+        handoff:
+          - { type: command, run: "npm test" }            # AI runs it with its terminal tool
+          - { type: prompt,  text: "Confirm the CHANGELOG is updated." }  # AI inlines this instruction
+      after:
+        implement-exec:
+          - { type: node, ref: review }                    # AI reads .specify/companion/nodes/review.md and runs it
+```
+
+- **Anchors** are `before`/`after` a named node. Several hooks at one anchor run **top to bottom, in declared order**.
+- **Hook types:** `command` (run a shell command — needs a terminal tool; chat-only providers degrade gracefully), `prompt` (an inline instruction), `node` (run a user node file from `.specify/companion/nodes/<id>.md`).
+
+### Recipes
+
+A recipe replaces a command's node order with `nodes: [...]`:
+
+```yaml
+commands:
+  plan:
+    nodes: [gather-context, plan-doc, side-files, handoff]   # drops constitution-check
+```
+
+In v1 this changes *assembly order only*, not the per-node output text — true add/drop-a-section composition is a later step. A recipe that drops a node which a kept node still `reads:` is a **load-time error**, so a recipe can't silently break the pipeline.
+
+### Failure table
+
+| Situation | Behavior |
+|-----------|----------|
+| No `companion.yml` | Shipped defaults, no warning |
+| Malformed / unparseable | Shipped defaults **+ one warning** |
+| Hook anchored to a node not in the active recipe | Warn + skip that anchor |
+| `type: node` hook with a missing `ref` file | **Error** (real misconfiguration) |
+| `reads:` a node the recipe dropped | **Load-time error** |
+
+A hook never fails the host command: its own failure is reported and the pipeline continues unless that clearly makes the rest unsafe — the same "never fail the host command" stance as `mark-complete`.
+
+> **Node hook ≠ lifecycle hook.** These `before`/`after` inserts are *node hooks* (this config). The engine-level **lifecycle hooks** in `extension.yml` (`after_specify` → capture) are a different mechanism and are unaffected.
