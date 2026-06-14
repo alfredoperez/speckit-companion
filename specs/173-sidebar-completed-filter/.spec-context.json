@@ -1,0 +1,172 @@
+{
+  "workflow": "companion",
+  "specName": "Sidebar Completed Filter",
+  "branch": "main",
+  "selectedAt": "2026-06-14T21:41:19.983Z",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-14T21:42:37.544Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-14T21:44:02.044Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-14T21:44:10.128Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T21:44:10.199Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-14T21:44:10.274Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T21:44:10.373Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-14T21:44:52.116Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-14T21:44:52.118Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T21:45:43.669Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T21:46:12.009Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T21:46:52.587Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T21:47:16.276Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T21:47:50.557Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T21:48:29.754Z"
+    },
+    {
+      "step": "implement",
+      "substep": "run-tests",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T21:48:29Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-14T22:15:45.035Z"
+    }
+  ],
+  "telemetryInstanceId": "0f5bf397-206e-4978-90fc-396f19b5314b",
+  "currentTask": "T006",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Dropped the IMPLEMENTED case from the Completed-bucket branch so implemented specs fall into the active bucket, and removed the stale comment.",
+      "files": [
+        "src/features/specs/specExplorerProvider.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Inverted the existing implemented-grouping test to expect Active and added a test splitting an implemented spec into Active and a completed spec into Completed.",
+      "files": [
+        "src/features/specs/__tests__/specExplorerProvider.test.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Updated the sidebar reference so implemented specs are described as staying in Active and only completed specs surface under Completed.",
+      "files": [
+        "docs/sidebar.md"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Documented the implemented-vs-completed sidebar surfacing under the final approval gate note.",
+      "files": [
+        "docs/viewer-states.md"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added a user-facing release note for the corrected Completed filter and reconciled the #271 entry to say implemented specs sit in Active.",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Ran npm test (1008 passed) and npm run compile (clean) to confirm the partition change and tests pass.",
+      "files": []
+    }
+  }
+}
