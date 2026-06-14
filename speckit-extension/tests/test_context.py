@@ -765,6 +765,38 @@ class MarkCompleteTests(unittest.TestCase):
         self.assertEqual(_ctx(self.fd)["status"], "implementing")
         self.assertEqual(_ctx(self.fd), before)
 
+    def _implementing_all_tasks_done(self) -> None:
+        # A spec stuck at `implementing` but with every task marker checked off —
+        # the race that left a 100%-done spec unmarkable before the P6 fix.
+        (self.fd / "tasks.md").write_text("- [x] **T001** a\n- [x] **T002** b\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+
+    def test_promotes_implementing_at_100pct_to_completed(self) -> None:
+        # Acceptance (#317 P6): implementing + all tasks [x] -> --mark-complete -> completed.
+        self._implementing_all_tasks_done()
+        result = wc.mark_spec_complete(self.fd, "ai")
+        self.assertIsNotNone(result)
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], "completed")
+        # The implement step is closed in history during the atomic promotion.
+        impl_completes = [e for e in ctx["history"] if e["step"] == "implement" and e["kind"] == "complete"]
+        self.assertTrue(impl_completes, "implement step must be closed before completed")
+        self.assertEqual(ctx["currentStep"], "implement")
+
+    def test_refuses_implementing_with_pending_tasks(self) -> None:
+        (self.fd / "tasks.md").write_text("- [x] **T001** a\n- [ ] **T002** b\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        result = wc.mark_spec_complete(self.fd, "ai")
+        self.assertIsNone(result)
+        self.assertEqual(_ctx(self.fd)["status"], "implementing")
+
+    def test_last_task_finish_lands_at_implemented_not_implementing(self) -> None:
+        # journal_task_finish at 100% must not re-assert `implementing` (the race).
+        (self.fd / "tasks.md").write_text("- [x] **T001** a\n- [x] **T002** b\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.journal_task_finish(self.fd, "T002", "ai")
+        self.assertEqual(_ctx(self.fd)["status"], "implemented")
+
     def test_cli_mark_complete_dispatch(self) -> None:
         # The argparse wiring + main() dispatch branch end-to-end.
         self._implemented_spec()
