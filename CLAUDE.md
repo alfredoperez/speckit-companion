@@ -209,6 +209,23 @@ Default to writing **no comment**. Only add one when removing it would surprise 
 - **No "added for X" / "handles case from Y" comments.** Identifier names and structure should communicate this. If they don't, fix the naming before adding the comment.
 - **One line max per inline comment.** No multi-paragraph rationale blocks above functions, no JSDoc-style narrative essays explaining the history of a fix. If you need more than one sentence, the function probably needs to be split or named better.
 - **Strip diagnostic logs before commit.** Any `console.log('[handleApprove] firing…')` / `[advance] SKIPPED` / `[stepLifecycle] *done` line added while chasing a finding is diagnostic, not telemetry — remove it once the answer is in hand. Structural error-log lines (`logError`, `outputChannel.appendLine` inside catch blocks) stay; they're production-fit.
+- **Over-commenting is a review finding.** A diff that adds comments restating the code, narrating a fix's history, or running past one line gets flagged in review (`.claude/review-checklist.md`). When in doubt, delete the comment and let the names carry it.
+
+## Webview & rendering invariants
+
+Recurring correctness rules for the webview / CSS layer — follow them while writing; `.claude/review-checklist.md` scans diffs for violations.
+
+- **Never interpolate user data into an HTML attribute through `innerHTML`.** The webview's `escapeHtml` (textContent→innerHTML) escapes `<`/`>`/`&` but NOT attribute quotes (`"`/`'`), so a user value inside `alt="${escapeHtml(x)}"` can break out and inject. Build markup carrying user data with DOM APIs (`createElement` + `textContent` + `setAttribute`); `escapeHtml` is safe only for element *content*.
+- **Use a visually-hidden `.sr-only` class, not `hidden` / `display:none`, for anything `aria-describedby` / `aria-labelledby` points at.** `hidden`/`display:none` drops the node from the accessibility tree, so the description is never announced. `.sr-only` (clip/off-screen) keeps it discoverable while invisible.
+- **`aria-busy` goes on the content region that becomes busy** (`<main>` / `#app`), not a transient loading overlay.
+- **`text-overflow: ellipsis` needs the full trio** — `white-space: nowrap` + `overflow: hidden`, plus `min-width: 0` on a flex child so it can shrink. Any one missing and it silently wraps instead of truncating.
+- **Preact `style` accepts a string** (unlike React) — the webview / Storybook `.tsx` files use `style="…"` throughout. Don't "fix" string styles to objects; only an *inconsistent* mix is worth touching.
+- **Guard `e.target` with `instanceof Element` before `.closest()`** in click-delegation handlers (including injected webview scripts) — `e.target` can be a non-Element `EventTarget` or null and throw.
+- **Document `color-mix(…, transparent)` tokens by WCAG contrast ratio, not an "effective hex."** They composite over whatever background they sit on, so a `~#bdbdbd` "resolves to" note is a false cross-theme guarantee.
+
+## Release tag model (two products, one releases list)
+
+The VS Code extension (`v*` tags) and the spec-kit extension (`speckit-ext-v*` tags) share a single GitHub releases list, and `…/releases/latest` resolves across **both** — which has bitten the update checker (#274) and install URLs (#273). Two guards keep them apart: the update checker filters tags by `^v\d+\.\d+\.\d+$`, and the stable spec-kit-ext download lives behind a dedicated `companion-latest` prerelease tag. Any release-touching change must respect both — never reintroduce a bare `/releases/latest` lookup in this repo.
 
 ## Important Notes
 

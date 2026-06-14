@@ -47,7 +47,7 @@ git status --porcelain                        # work should be committed; a clea
 - If anything is red, **stop and report** — don't ship a broken branch.
 
 ### 1. Code review — subagent (or `/code-review` inline)
-Run `/code-review` on the branch diff vs `main` at **high** effort, apply findings (`--fix`). Tell the subagent to **read `.claude/lessons-learned.md` first** and check the diff against those known bug classes. Commit fixes; re-run `npm test` if code changed. Record each finding (you'll distill in step 6).
+Run `/code-review` on the branch diff vs `main` at **high** effort, apply findings (`--fix`). Tell the subagent to **read `.claude/review-checklist.md` first** (and honor the `CLAUDE.md` conventions it points to) and check the diff against those known bug classes. Commit fixes; re-run `npm test` if code changed. Record each finding (you'll distill in step 6).
 
 ### 2. Open the PR — main loop
 Use `/create-pr` conventions (reads `.claude/pr-profile.md`): conventional-commit title `type(scope): summary`, body with `Closes #N`, summary, technical notes, how-to-verify.
@@ -92,7 +92,12 @@ gh pr merge <PR> --squash --delete-branch
 If checks fail and can't be auto-addressed, leave the PR open, record "merged: NO — checks failing," report.
 
 ### 6. Capture learnings + tick the box — distill subagent + main loop
-- **Distill:** small subagent appends to `.claude/lessons-learned.md` (real bug classes a reviewer caught, deduped, do/don't phrasing; loop-ops; architecture/skill-promotion candidates surfaced for approval, not auto-applied). Empty distill is fine.
+- **Distill — route by shape, don't dump.** A learning earns capture only if it's **checkable, recurring or high-cost, and phrased as a rule/scan**; prefer editing an existing line over adding a near-duplicate; **empty distill is the norm, not the exception.** Route each kept learning to where it fires:
+  - a **codebase-specific review check** → `.claude/review-checklist.md`
+  - a **universal authoring convention** → the matching `CLAUDE.md` section (Webview & rendering invariants / Code Comments / Design tokens)
+  - a **loop-mechanics** improvement → this command file (or `fix-tickets.md`)
+  - an **architecture / coverage gap** → a GitHub issue (surface in the report; don't auto-apply)
+  - If it can become a test or hook, propose that instead of prose. (`.claude/lessons-learned.md` is retired — don't append to it.)
 - **Tick the box:** flip this ticket's line in `~/dev/GitHub/obsidian-vault/Current.md` (and `Projects/speckit companion/composable-workflow/queue.md`) from `- [ ]` to `- [x]` with `→ [PR #NNN](url)`.
 
 ### 7. Reinstall + report — main loop
