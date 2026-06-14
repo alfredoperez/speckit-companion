@@ -70,7 +70,8 @@
     color: var(--text-body);
 }
 
-/* Persistent writing guidance — readable contrast, proportional font. */
+/* Writing guidance — emitted with .sr-only so it stays in the a11y tree only;
+   the base type/contrast here apply if it's ever rendered visibly again. */
 .helper-text {
     margin: 0 0 8px;
     font-size: 1em;
