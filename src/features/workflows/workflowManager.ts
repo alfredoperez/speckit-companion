@@ -236,7 +236,7 @@ export function validateWorkflow(config: WorkflowConfig): ValidationResult {
  * gate is on AND the companion spec-kit extension is present on disk. Drives the
  * Create-Spec picker so it never lists an option that silently falls back.
  */
-function isCompanionSelectable(): boolean {
+export function isCompanionSelectable(): boolean {
     const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
     if (!coerceLegacyBoolean(config.get<unknown>('companion.workflowBeta'), false)) {
         return false;
