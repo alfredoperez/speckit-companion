@@ -11,8 +11,8 @@ Design sources: `sdd` repo → `specs/024-speckit-extension-foundation/spec.md` 
 | 1 | **Foundation + `after_specify` spike** | one hook → `write-context.py` → `.spec-context.json`; minimal canonical-schema alignment | ✅ **Shipped & proven** ([PR #173](https://github.com/alfredoperez/speckit-companion/pull/173)) |
 | 2 | Full lifecycle capture + fallback | `after_plan`/`after_tasks`/`after_implement` hooks; derive-from-files when a hook didn't fire | ✅ Shipped |
 | 3 | `status` + `resume` commands | pipeline view (`--json`) + next-step detection — **completes v1** | ◻ Planned |
-| 4 | Template profiles + per-spec control | `companion-standard` / `companion-turbo` presets + namespaced `/speckit.companion.*` + baked-in timing | ◷ In progress |
-| 5 | Complexity detector + fast path | right-size small changes (spec+plan+tasks in one pass) | ◻ Planned |
+| 4 | One Companion workflow + workflow choice | a single lean `/speckit.companion.*` family (no turbo/standard split) + the `companion-standard` timing carrier, selected by `speckit.defaultWorkflow` | ✅ Shipped |
+| 5 | Complexity detector + fast path | right-size small changes (spec+plan+tasks in one pass), on by default | ✅ Shipped |
 | 6 | Living specs + drift | domain specs + drift detection — *the differentiator* | ◻ Planned |
 | 7 | Auto-mode workflow | a spec-kit `workflow.yml` driving specify→implement, with a no-gate variant | ◻ Planned |
 | 8 | Agent-team `[P]` parallelism | Claude-only fan-out of independent task groups; sequential fallback elsewhere | ◻ Planned |
