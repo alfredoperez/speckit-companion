@@ -524,7 +524,7 @@ export class SpecEditorProvider {
         <main class="spec-editor-column">
             <header class="spec-editor-header">
                 <h1>Create New Spec</h1>
-                <p>Describe your feature — the AI will generate the spec, plan, and tasks for it.</p>
+                <p>Describe your feature — or just paste a link — and the AI will generate the spec, plan, and tasks for it.</p>
             </header>
 
             <div class="spec-editor-content">
@@ -541,13 +541,13 @@ export class SpecEditorProvider {
                 </div>
 
                 <div class="editor-container">
-                    <label class="editor-label" for="specContent">Specification</label>
-                    <p class="helper-text" id="helperText">Write what you want and why. Helpful to include: the problem it solves, who it is for, the key requirements, and any constraints or dependencies.</p>
+                    <label class="editor-label sr-only" for="specContent">Specification</label>
+                    <p class="helper-text sr-only" id="helperText">Write as much or as little as you like — even just a Jira or GitHub link on its own works, and the AI will pull the details from it.</p>
                     <textarea
                         class="spec-editor-textarea"
                         id="specContent"
                         aria-describedby="helperText charCount"
-                        placeholder="Describe your feature or task in detail…"
+                        placeholder="Describe your feature or task in detail — or just paste a link below and skip the description entirely.&#10;&#10;What helps:&#10;- What is the feature about?&#10;- What problem does it solve?&#10;- Who is it for?&#10;- Key requirements, constraints, or dependencies?&#10;&#10;Or paste a reference link on its own:&#10;- Jira:  https://your-org.atlassian.net/browse/PROJ-1234&#10;- GitHub:  https://github.com/your-org/your-repo/issues/42"
                     ></textarea>
                     <div class="editor-footer-row">
                         <button class="attach-image-btn" id="attachImageBtn" aria-label="Attach image (or paste an image to attach)">

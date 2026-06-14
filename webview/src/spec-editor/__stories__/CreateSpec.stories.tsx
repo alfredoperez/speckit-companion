@@ -16,7 +16,9 @@ const meta: Meta = {
             description: {
                 component:
                     'The Create New Spec form (a separate webview) is what the user sees before any spec exists. ' +
-                    'Auto Mode is invoked here — the spec viewer never opens at status=draft.',
+                    'Auto Mode is invoked here — the spec viewer never opens at status=draft. ' +
+                    'The title and subtitle explain the task, the workflow selector sits on its own right-aligned row above the field, ' +
+                    'and the empty field carries all the guidance in its placeholder — including that a Jira or GitHub link on its own is enough.',
             },
         },
     },
@@ -26,7 +28,7 @@ export default meta;
 type Story = StoryObj;
 
 export const Empty: Story = {
-    name: 'Empty (Create Spec disabled)',
+    name: 'Empty (right-aligned selector, guidance placeholder)',
     render: () => <CreateSpecMock />,
 };
 

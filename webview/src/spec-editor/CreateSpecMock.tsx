@@ -19,9 +19,16 @@ export interface CreateSpecMockProps {
 
 const MAX_CHARS = 50_000;
 
-const HELPER_TEXT =
-    'Write what you want and why. Helpful to include: the problem it solves, who it is for, ' +
-    'the key requirements, and any constraints or dependencies.';
+const PLACEHOLDER_TEXT =
+    'Describe your feature or task in detail — or just paste a link below and skip the description entirely.\n\n' +
+    'What helps:\n' +
+    '- What is the feature about?\n' +
+    '- What problem does it solve?\n' +
+    '- Who is it for?\n' +
+    '- Key requirements, constraints, or dependencies?\n\n' +
+    'Or paste a reference link on its own:\n' +
+    '- Jira:  https://your-org.atlassian.net/browse/PROJ-1234\n' +
+    '- GitHub:  https://github.com/your-org/your-repo/issues/42';
 
 export function CreateSpecMock({
     initialContent = '',
@@ -50,44 +57,36 @@ export function CreateSpecMock({
                     <h1 style="font-size: 28px; font-weight: 700; margin: 0 0 6px; color: var(--vscode-foreground, #fff);">
                         Create New Spec
                     </h1>
-                    <p style="font-size: 13px; margin: 0; color: var(--vscode-foreground, #c8c8c8);">
-                        Describe your feature — the AI will generate the spec, plan, and tasks for it.
+                    <p style="font-size: 15px; margin: 0; color: var(--vscode-foreground, #c8c8c8);">
+                        Describe your feature — or just paste a link — and the AI will generate the spec, plan, and tasks for it.
                     </p>
                 </header>
 
-                <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 20px;">
-                    <div style="display: flex; align-items: center; gap: 12px; font-size: 13px;">
-                        <span>Workflow</span>
-                        <button
-                            type="button"
-                            style="
-                                background: var(--vscode-button-secondaryBackground, #1f1828);
-                                color: var(--vscode-button-secondaryForeground, #ddd);
-                                border: 1px solid var(--vscode-widget-border, #303030);
-                                padding: 6px 12px;
-                                border-radius: 4px;
-                                font-size: 13px;
-                                cursor: pointer;
-                                display: inline-flex;
-                                align-items: center;
-                                gap: 8px;
-                                min-width: 120px;
-                                justify-content: space-between;
-                            "
-                        >
-                            SpecKit
-                            <span style="opacity: 0.5;">▾</span>
-                        </button>
-                    </div>
+                <div style="display: flex; justify-content: flex-end; align-items: center; gap: 12px; font-size: 15px; margin-bottom: 8px;">
+                    <span>Workflow</span>
+                    <button
+                        type="button"
+                        style="
+                            background: var(--vscode-button-secondaryBackground, #1f1828);
+                            color: var(--vscode-button-secondaryForeground, #ddd);
+                            border: 1px solid var(--vscode-widget-border, #303030);
+                            padding: 6px 12px;
+                            border-radius: 4px;
+                            font-size: 15px;
+                            cursor: pointer;
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 8px;
+                            min-width: 120px;
+                            justify-content: space-between;
+                        "
+                    >
+                        SpecKit
+                        <span style="opacity: 0.5;">▾</span>
+                    </button>
                 </div>
 
                 <section style="margin-bottom: 20px;">
-                    <label style="display: block; font-size: 13px; font-weight: 600; margin: 0 0 6px;">
-                        Specification
-                    </label>
-                    <p style="font-size: 13px; line-height: 1.5; margin: 0 0 8px; color: var(--vscode-foreground, #c8c8c8);">
-                        {HELPER_TEXT}
-                    </p>
                     <div
                         style={`
                             background: var(--vscode-input-background, #0c0814);
@@ -95,14 +94,14 @@ export function CreateSpecMock({
                             border-radius: 6px;
                             padding: 16px;
                             font-family: var(--vscode-font-family, system-ui, sans-serif);
-                            font-size: 13px;
+                            font-size: 15px;
                             line-height: 1.6;
                             min-height: 280px;
                             white-space: pre-wrap;
                             color: ${isEmpty ? 'rgba(200, 200, 200, 0.85)' : 'var(--vscode-input-foreground, #ddd)'};
                         `}
                     >
-                        {initialContent || 'Describe your feature or task in detail…'}
+                        {initialContent || PLACEHOLDER_TEXT}
                     </div>
                     <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px;">
                         <button

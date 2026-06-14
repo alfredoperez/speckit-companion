@@ -66,14 +66,15 @@
 
 .spec-editor-header p {
     margin: 4px 0 0;
-    font-size: 0.9em;
+    font-size: 1em;
     color: var(--text-body);
 }
 
-/* Persistent writing guidance — readable contrast, proportional font. */
+/* Writing guidance — emitted with .sr-only so it stays in the a11y tree only;
+   the base type/contrast here apply if it's ever rendered visibly again. */
 .helper-text {
     margin: 0 0 8px;
-    font-size: 0.85em;
+    font-size: 1em;
     line-height: 1.5;
     color: var(--text-body);
 }
@@ -102,7 +103,7 @@
 }
 
 .editor-label {
-    font-size: 0.85em;
+    font-size: 1em;
     font-weight: 500;
     margin-bottom: 6px;
     color: var(--text-primary);
@@ -118,8 +119,8 @@
     background-color: var(--vscode-input-background);
     color: var(--vscode-input-foreground);
     font-family: var(--font-family);
-    font-size: var(--font-size);
-    line-height: 1.5;
+    font-size: max(15px, var(--font-size));
+    line-height: 1.6;
     resize: vertical;
     box-sizing: border-box;
 }
@@ -288,10 +289,10 @@
 .workflow-row {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
     gap: 8px;
-    margin-bottom: 12px;
+    margin-bottom: 4px;
 }
 
 .workflow-selector {
@@ -302,8 +303,8 @@
 }
 
 .workflow-selector label {
-    font-size: 0.85em;
-    color: var(--text-secondary);
+    font-size: 1em;
+    color: var(--text-body);
 }
 
 .workflow-selector select {
@@ -312,7 +313,7 @@
     border-radius: var(--radius-sm);
     background-color: var(--vscode-input-background);
     color: var(--vscode-input-foreground);
-    font-size: 0.85em;
+    font-size: 1em;
     cursor: pointer;
     min-width: 0;
     max-width: 100%;
