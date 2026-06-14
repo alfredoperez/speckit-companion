@@ -118,6 +118,8 @@ specify workflow resume <run_id>
 
 The run **pauses at review gates** before planning and before tasks (reject aborts), and **ends by marking the spec `completed`** — the terminal `mark-complete` step the stock `speckit` workflow doesn't have. Each step still captures into `.spec-context.json`, so the VS Code GUI reflects progress for both `run` and `resume`.
 
+You don't have to use `workflow run` to get this hand-off. On an agentic CLI that keeps working after a step finishes, each Companion command now reads the pipeline and **continues into the next step on its own** — pausing at the same review gates and running `mark-complete` after implement, so the spec still lands in **Completed** without invoking a separate run command. In a plain or one-shot terminal nothing auto-advances: you trigger each step yourself (or from the GUI), exactly as before.
+
 ### Companion workflow routing node
 
 A built-in **routing node** right-sizes the pipeline with no on/off setting — the thresholds live in the workflow, not in a VS Code toggle. After specify, `speckit.companion.classify` emits a `small | normal | oversized` signal from the same ≤ 5-files / ≤ 10-tasks guardrail the command-body fast-path uses:

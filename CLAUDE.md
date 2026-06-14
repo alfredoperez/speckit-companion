@@ -120,7 +120,7 @@ When modifying the companion template profiles — the `companion-standard` / `c
 
 When modifying the project structure, adding/removing modules, or changing the architecture, also update `docs/architecture.md`.
 
-When modifying how `.spec-context.json` gets captured — the lifecycle hooks, `write-context.py`, the timing partial (`speckit-extension/presets/_shared/timing-partial.md` / `promptBuilder.ts`), the preset command-override mechanism, `derive-from-files.py`, or the eval (`check_capture.py`) — also update `docs/capture-and-timing.md` (the deterministic-vs-best-effort capture model, the reliability principle, install paths, known timing gaps, and what the eval asserts). Don't re-derive this flow from the code each time; this doc is the map.
+When modifying how `.spec-context.json` gets captured — the lifecycle hooks, `write-context.py`, the timing part (`speckit-extension/presets/_parts/timing.md` / `promptBuilder.ts`), the preset command-override mechanism, `derive-from-files.py`, or the eval (`check_capture.py`) — also update `docs/capture-and-timing.md` (the deterministic-vs-best-effort capture model, the reliability principle, install paths, known timing gaps, and what the eval asserts). Don't re-derive this flow from the code each time; this doc is the map.
 
 The Companion pipeline also ships as a first-class spec-kit **workflow definition** (`speckit-extension/workflows/speckit-companion.workflow.yml`) that runs the whole pipeline on spec-kit's own engine (`specify workflow run speckit-companion` / `resume`), with review gates, a `switch` routing node that right-sizes small vs. oversized changes (thresholds live in the workflow, no toggle — the workflow path doesn't read the `complexityFastPath` setting), and a terminal `mark-complete` step that writes `status: completed` via `write-context.py --mark-complete`. Capture is unchanged on this path — the engine dispatches the same `speckit.companion.*` commands, so the same hooks/bodies write `.spec-context.json`. When modifying the workflow, its `classify`/`mark-complete` commands, or the routing node, update `docs/template-profiles.md` (routing-node reference), `docs/capture-and-timing.md` (run/resume capture path), and the spec-kit extension's own README/CHANGELOG/`extension.yml` version — never the root README/CHANGELOG/`package.json`.
 
@@ -287,5 +287,5 @@ They exist so the viewer can be opened against a known state during development.
 - 044-context-driven-badges: Added TypeScript 5.3+ (ES2022 target, strict mode) + VS Code Extension API (`@types/vscode ^1.84.0`)
 
 <!-- SPECKIT START -->
-For additional context about technologies to be used, project structure, shell commands, and other important information, read the current plan: `specs/170-single-beta-gate/plan.md`
+For additional context about technologies to be used, project structure, shell commands, and other important information, read the current plan: `specs/172-composable-command-nodes/plan.md`
 <!-- SPECKIT END -->

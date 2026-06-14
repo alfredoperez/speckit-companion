@@ -14,6 +14,6 @@ specify preset resolve speckit.specify    # → companion-standard
 
 Off / switch: `specify preset remove companion-standard` (or pick a different profile via the `speckit.companion.templateProfile` setting, which reconciles the presets for you).
 
-## Timing partial
+## Shared parts
 
-Every command body ends with the shared timing block from [`../_shared/timing-partial.md`](../_shared/timing-partial.md). It is identical across both profiles and is enforced by `speckit-extension/scripts/check-shape-parity.py`.
+Every command body is assembled from single-source blocks in [`../_parts/`](../_parts/) — `timing.md` (the shared timing block every body ends with), plus `sizing.md`, `routing.md`, and `self-advance.md` where a command uses them. The blocks are expanded into whole, self-contained bodies by `speckit-extension/scripts/build-commands.py`, and `speckit-extension/scripts/check-shape-parity.py` enforces that each fenced region matches its part byte-for-byte.

@@ -34,8 +34,7 @@ import {
   setStatus,
   startStep,
 } from "../specs/stepLifecycle";
-import { getFeatureWorkflow, getWorkflowCommands } from "../workflows";
-import type { FeatureWorkflowContext, WorkflowStepConfig } from "../workflows/types";
+import type { WorkflowStepConfig } from "../workflows/types";
 import { isOptionalCommand } from "./optionalCommands";
 import {
   addComment as addCommentToCtx,
@@ -72,9 +71,7 @@ export interface MessageHandlerDependencies {
     documentType: DocumentType,
   ) => Promise<void>;
   refreshContextIfDisplaying: (specContextPath: string) => Promise<void>;
-  resolveWorkflowSteps: (
-    specDirectory: string,
-  ) => Promise<WorkflowStepConfig[]>;
+  resolveWorkflowSteps: () => Promise<WorkflowStepConfig[]>;
   executeInTerminal: (prompt: string) => Promise<void>;
   outputChannel: vscode.OutputChannel;
   context: vscode.ExtensionContext;
@@ -286,7 +283,7 @@ async function handleRegenerate(
   // wrong step.
   const ctx = readSpecContextSync(specDirectory);
   const targetStepName = ctx?.currentStep;
-  const steps = await deps.resolveWorkflowSteps(specDirectory);
+  const steps = await deps.resolveWorkflowSteps();
   const stepDef = targetStepName
     ? steps.find((s) => s.name === targetStepName)
     : undefined;
@@ -324,7 +321,7 @@ async function handleApprove(
   if (!instance) return;
 
   const ctx = readSpecContextSync(specDirectory);
-  const steps = await deps.resolveWorkflowSteps(specDirectory);
+  const steps = await deps.resolveWorkflowSteps();
   const navSteps = steps.filter((s) => !s.actionOnly);
 
   // Dispatch routes off ctx.currentStep so a past stepper tab can't
@@ -518,10 +515,8 @@ async function handleLifecycleAction(
  * Handle clarify/enhancement button - executes the matching customCommand in the AI terminal
  */
 /**
- * A normalised enhancement command pulled from either `customCommands`
- * (settings) or `getWorkflowCommands` (workflow YAML). Both sources used to
- * be walked through near-identical for-loops with the same matcher and the
- * same dispatch builder — now they unify behind this shape.
+ * A normalised enhancement command pulled from the user's `customCommands`
+ * settings. Matched and dispatched through a shared matcher + dispatch builder.
  */
 interface EnhancementCommand {
   command: string;
@@ -594,34 +589,7 @@ async function handleClarify(
     }
   }
 
-  // Source 2: workflow-defined commands. Tolerate transient read failures —
-  // the dispatch should not crash if .spec-context.json is briefly
-  // unreadable (e.g., mid-write by the AI CLI).
-  let featureCtx: FeatureWorkflowContext | undefined;
-  try {
-    featureCtx = await getFeatureWorkflow(specDirectory, instance.state.changeRoot);
-  } catch (err) {
-    deps.outputChannel.appendLine(
-      `[SpecViewer] handleClarify: getFeatureWorkflow failed — ${err instanceof Error ? err.message : String(err)}`,
-    );
-  }
-  if (featureCtx?.workflow) {
-    for (const wfCmd of getWorkflowCommands(featureCtx.workflow)) {
-      if (!wfCmd.command) continue;
-      const cmd: EnhancementCommand = {
-        command: wfCmd.command,
-        step: wfCmd.step,
-        title: wfCmd.title,
-        name: wfCmd.name,
-      };
-      if (matchesCommand(cmd, buttonCommand, docType)) {
-        await dispatchEnhancement(cmd, "workflow", targetPath, deps);
-        return;
-      }
-    }
-  }
-
-  // Source 3: built-in optional SpecKit commands (clarify/checklist/analyze).
+  // Source 2: built-in optional SpecKit commands (clarify/checklist/analyze).
   // Dispatch through the registered VS Code command so provider formatting
   // and step tracking match invoking it from the Command Palette.
   if (buttonCommand && isOptionalCommand(buttonCommand)) {

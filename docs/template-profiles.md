@@ -76,9 +76,10 @@ The feature carries **no "sdd"** tokens. Canonical names: preset `companion-stan
 ## Files
 
 - `speckit-extension/presets/companion-standard/` — `preset.yml` (7 `type: command` `replaces:` entries) + `commands/speckit.<cmd>.md` (7) + `README.md`. The carrier for the timing-augmented stock command family.
-- `speckit-extension/presets/_shared/timing-partial.md` — the canonical timing block embedded in every body.
+- `speckit-extension/presets/_parts/` — the single-source shared blocks each command body is composed from: `timing.md` (the canonical timing block, relocated here from the old `_shared/timing-partial.md`), `sizing.md` (the small/normal/oversized definition + the 5-files / 10-tasks bar), `routing.md` (which step runs next given the size), and `self-advance.md` (the agentic-CLI handoff). A rule lives in exactly one part; commands embed it via a `<!-- speckit-companion:part NAME -->…<!-- /…part NAME -->` fence.
 - `speckit-extension/commands/speckit.companion.{specify,plan,tasks,implement}.md` — the Companion pipeline commands; `speckit.companion.{classify,mark-complete}.md` — the routing/terminal commands.
-- `speckit-extension/scripts/check-shape-parity.py` — body/partial parity guard.
+- `speckit-extension/scripts/build-commands.py` — assembles the parts into whole, self-contained command bodies (`--check` mode diffs instead of writing). `capture-golden.py` froze the pre-reshape command set under `tests/golden/commands/`.
+- `speckit-extension/scripts/check-shape-parity.py` — the parity gate: each fenced region must equal its part byte-for-byte, and each unchanged body must equal its golden capture.
 - `speckit-extension/scripts/write-context.py` — duplicate-start dedup + specify self-close.
 - `src/features/settings/companionPresetReconciler.ts` (+ test) — the add-only `ensureStandardFamily` / `decideEnsureStandardOps` and `isCompanionInstalled`.
 - `src/features/specs/profileDispatch.ts` (+ test) — `resolveDispatchWithFallback` / `resolveDispatchForRoot` (the missing-extension fallback applied to an already-resolved workflow command).

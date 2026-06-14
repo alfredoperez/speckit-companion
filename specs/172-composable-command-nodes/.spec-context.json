@@ -1,0 +1,683 @@
+{
+  "workflow": "speckit",
+  "specName": "Composable Command Nodes",
+  "branch": "172-composable-command-nodes",
+  "selectedAt": "2026-06-14T19:45:33.354Z",
+  "currentStep": "implement",
+  "status": "implementing",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-14T19:45:33.354Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-14T19:49:40.819Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-14T19:49:40.821Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T19:55:18Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:05:14Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:05:27Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-14T20:08:01.883Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:10:46Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:10:58Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-14T20:12:15.545Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:17:37.627Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:17:37.706Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:17:37.791Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:17:37.875Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:20:10.852Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:20:10.926Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:20:11.007Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:20:11.087Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:20:11.171Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:20:11.246Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:26:00.894Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:26:00.971Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:26:01.049Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:26:01.127Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:26:01.201Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:26:01.275Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:26:01.345Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:26:01.439Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:40:12.061Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:40:12.138Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:40:12.221Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:40:12.299Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:40:12.373Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:40:12.471Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T025",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:40:12.549Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T026",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:40:12.627Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T027",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:40:41.206Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T028",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:40:41.289Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T029",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:40:41.376Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T030",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:40:41.464Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T031",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:40:41.553Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T032",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:40:41.632Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T033",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:49:37.161Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T034",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:49:37.241Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T035",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:49:37.322Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T036",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:49:37.409Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T037",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:49:37.488Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T038",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:49:37.565Z"
+    },
+    {
+      "step": "implement",
+      "substep": "run-tests",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T20:49:53Z"
+    }
+  ],
+  "telemetryInstanceId": "2b960801-fa62-479b-a300-ec96b5c5de3f",
+  "currentTask": "T038",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Created the shared _parts/ directory",
+      "files": [
+        "speckit-extension/presets/_parts/"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Created the golden fixtures directory",
+      "files": [
+        "speckit-extension/tests/golden/commands/"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Wrote capture-golden.py snapshotting all tracked command bodies",
+      "files": [
+        "speckit-extension/scripts/capture-golden.py",
+        "speckit-extension/scripts/_command_parts.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Ran capture-golden.py freezing 13 command bodies as the baseline",
+      "files": [
+        "speckit-extension/tests/golden/commands/"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Wrote build-commands.py: assemble parts into bodies, --check mode, hard errors on bad fences",
+      "files": [
+        "speckit-extension/scripts/build-commands.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Relocated timing partial to _parts/timing.md and removed _shared/",
+      "files": [
+        "speckit-extension/presets/_parts/timing.md",
+        "speckit-extension/presets/companion-standard/README.md"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Migrated the timing fence to the generalized part fence in all 11 bodies",
+      "files": [
+        "speckit-extension/commands/speckit.companion.specify.md",
+        "speckit-extension/commands/speckit.companion.plan.md",
+        "speckit-extension/commands/speckit.companion.tasks.md",
+        "speckit-extension/commands/speckit.companion.implement.md",
+        "speckit-extension/presets/companion-standard/commands/"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Extended check-shape-parity.py to region-equality + golden-equality gate",
+      "files": [
+        "speckit-extension/scripts/check-shape-parity.py",
+        "speckit-extension/scripts/_command_parts.py"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Ran build-commands.py; only fence-marker text changed in bodies",
+      "files": [
+        "speckit-extension/presets/companion-standard/commands/",
+        "speckit-extension/commands/"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Ran parity gate: green, 13 bodies match parts and golden",
+      "files": [
+        "speckit-extension/scripts/check-shape-parity.py"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Extracted sizing definition verbatim into _parts/sizing.md",
+      "files": [
+        "speckit-extension/presets/_parts/sizing.md"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Extracted routing contract verbatim into _parts/routing.md",
+      "files": [
+        "speckit-extension/presets/_parts/routing.md"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Re-fenced classify to embed sizing+routing parts (golden-green)",
+      "files": [
+        "speckit-extension/commands/speckit.companion.classify.md"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Re-fenced specify classification to reference the sizing part, behavior preserved",
+      "files": [
+        "speckit-extension/commands/speckit.companion.specify.md",
+        "speckit-extension/scripts/check-shape-parity.py"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Pointed workflow route node at the sizing/routing parts, no 5/10 re-derivation",
+      "files": [
+        "speckit-extension/workflows/speckit-companion.workflow.yml"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Routing single-sourced in routing part (classify embeds; workflow references)",
+      "files": [
+        "speckit-extension/commands/speckit.companion.classify.md",
+        "speckit-extension/workflows/speckit-companion.workflow.yml"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Rebuilt+parity green: region equality for sizing/routing, no golden drift",
+      "files": [
+        "speckit-extension/scripts/check-shape-parity.py"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Verified single-source: propagation probe edited one part, propagated to classify+specify, reverted clean",
+      "files": [
+        "speckit-extension/presets/_parts/sizing.md"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Authored the self-advance handoff part",
+      "files": [
+        "speckit-extension/presets/_parts/self-advance.md"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Added self-advance fence to specify",
+      "files": [
+        "speckit-extension/commands/speckit.companion.specify.md"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Added self-advance fence to plan",
+      "files": [
+        "speckit-extension/commands/speckit.companion.plan.md"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Added self-advance fence to tasks",
+      "files": [
+        "speckit-extension/commands/speckit.companion.tasks.md"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "Added self-advance fence to implement",
+      "files": [
+        "speckit-extension/commands/speckit.companion.implement.md"
+      ]
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "Confirmed mark-complete is single-writer (only write-context.py --mark-complete)",
+      "files": [
+        "speckit-extension/commands/speckit.companion.mark-complete.md"
+      ]
+    },
+    "T025": {
+      "status": "DONE",
+      "did": "Verified terminal mark-complete node runs after implement in companion workflow",
+      "files": [
+        "speckit-extension/workflows/speckit-companion.workflow.yml"
+      ]
+    },
+    "T026": {
+      "status": "DONE",
+      "did": "Confirmed mark-complete registered in extension.yml provides.commands",
+      "files": [
+        "speckit-extension/extension.yml"
+      ]
+    },
+    "T027": {
+      "status": "DONE",
+      "did": "Reverted specInfoParser step resolution to the static canonical pipeline",
+      "files": [
+        "src/features/workflow-editor/workflow/specInfoParser.ts"
+      ]
+    },
+    "T028": {
+      "status": "DONE",
+      "did": "Reverted specViewerProvider to static pipeline for steps, footer, and enhancement buttons",
+      "files": [
+        "src/features/spec-viewer/specViewerProvider.ts"
+      ]
+    },
+    "T029": {
+      "status": "DONE",
+      "did": "Dropped the workflow-def command lookup in messageHandlers clarify handler",
+      "files": [
+        "src/features/spec-viewer/messageHandlers.ts",
+        "src/features/spec-viewer/__tests__/messageHandlers.test.ts"
+      ]
+    },
+    "T030": {
+      "status": "DONE",
+      "did": "Confirmed getFeatureWorkflow no longer drives steps (remains a context reader for status)",
+      "files": [
+        "src/features/workflows/workflowManager.ts"
+      ]
+    },
+    "T031": {
+      "status": "DONE",
+      "did": "Ran build+parity (green) and npm run compile + full jest (clean)",
+      "files": [
+        "speckit-extension/scripts/build-commands.py",
+        "src/"
+      ]
+    },
+    "T032": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Verified US3 wiring: self-advance in 4 bodies, terminal node, single-writer precondition; live agentic vs one-shot is manual",
+      "files": [
+        "speckit-extension/commands/",
+        "speckit-extension/workflows/speckit-companion.workflow.yml"
+      ],
+      "concerns": [
+        "SC-005/SC-006 (live agentic-CLI self-advance vs one-shot, and stock SpecKit stopping at 'implemented') were verified by code/wiring inspection, not by an end-to-end run in each environment \u2014 those require live CLIs."
+      ]
+    },
+    "T033": {
+      "status": "DONE",
+      "did": "Updated template-profiles.md: _parts mechanism, build/capture scripts, parity gate",
+      "files": [
+        "docs/template-profiles.md"
+      ]
+    },
+    "T034": {
+      "status": "DONE",
+      "did": "Updated capture-and-timing.md: timing part relocation, unchanged capture path",
+      "files": [
+        "docs/capture-and-timing.md",
+        "CLAUDE.md"
+      ]
+    },
+    "T035": {
+      "status": "DONE",
+      "did": "Updated speckit-extension README+CHANGELOG and bumped version to 0.7.0",
+      "files": [
+        "speckit-extension/README.md",
+        "speckit-extension/CHANGELOG.md",
+        "speckit-extension/extension.yml"
+      ]
+    },
+    "T036": {
+      "status": "DONE",
+      "did": "Ran capture regression (53 unittest) green: capture output unchanged (SC-007)",
+      "files": [
+        "speckit-extension/tests/test_context.py"
+      ]
+    },
+    "T037": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Capture intact post-reshape: regression net green and this run journaled correctly; full eval skill is a separate live invocation",
+      "files": [
+        "speckit-extension/tests/test_context.py"
+      ],
+      "concerns": [
+        "The full eval-speckit-extension skill was not invoked; capture integrity is covered by the green unittest regression and this run's own correct journaling, but a live end-to-end eval is a separate manual step."
+      ]
+    },
+    "T038": {
+      "status": "DONE",
+      "did": "Walked quickstart loop; documented output reconciled with the byte-for-byte golden + re-bless model",
+      "files": [
+        "specs/172-composable-command-nodes/quickstart.md"
+      ]
+    }
+  }
+}

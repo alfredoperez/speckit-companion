@@ -1,54 +1,81 @@
 #!/usr/bin/env python3
-"""Guard the Companion command bodies.
+"""Parity gate for the Companion command bodies (Contract 2).
 
-TIMING PARTIAL — every overridden command body in the companion-standard preset
-(and the namespaced /speckit.companion.* commands) must embed the canonical timing
-block from presets/_shared/timing-partial.md verbatim, so timing instructions
-can't fork.
+Two assertions, run over every tracked command body:
 
-Exit 0 on success, 1 on drift. Stdlib only.
+  (a) REGION equality — the text inside each `<!-- speckit-companion:part NAME -->`
+      fence equals presets/_parts/NAME.md byte-for-byte. This is the single-source
+      guarantee: a forked copy of a shared rule fails here.
+      Failure: `part drift: <command>#<name>`.
+
+  (b) GOLDEN equality — each command not intentionally changed equals its frozen
+      tests/golden/commands/ capture, compared after normalizing fence-marker
+      comment lines (so the timing marker rename and the part-fence convention are
+      not miscounted as content changes). This proves the reshape changed no
+      instruction text. Failure: `golden drift: <command>`.
+
+Exit 0 on success, 1 on any drift. Stdlib only.
 """
 import os
 import sys
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-EXT = os.path.dirname(HERE)  # speckit-extension/
-
-PIPELINE = ["specify", "plan", "tasks", "implement"]
-ALL_CMDS = ["specify", "clarify", "plan", "tasks", "analyze", "implement", "constitution"]
-BODIES_NEEDING_PARTIAL = (
-    [f"presets/companion-standard/commands/speckit.{c}.md" for c in ALL_CMDS]
-    + [f"commands/speckit.companion.{c}.md" for c in PIPELINE]
+from _command_parts import (
+    EXT,
+    GOLDEN_BODIES,
+    PART_FENCE,
+    canonical,
+    golden_path,
+    part_content,
+    part_path,
+    read,
 )
-PARTIAL_FILE = "presets/_shared/timing-partial.md"
 
-
-def read(rel: str) -> str:
-    return open(os.path.join(EXT, rel), encoding="utf-8").read()
+# Commands whose CONTENT is intentionally changed by this feature (so golden
+# equality no longer applies — they still pass region equality). US2 rewrites the
+# specify classification prose to single-source the sizing bar; US3 adds the
+# self-advance part to the pipeline bodies. Behavior is preserved; only the text
+# changes, so these are exempt from the byte-for-byte golden compare.
+INTENTIONALLY_CHANGED = {
+    "commands/speckit.companion.specify.md",
+    "commands/speckit.companion.plan.md",
+    "commands/speckit.companion.tasks.md",
+    "commands/speckit.companion.implement.md",
+}
 
 
 def main() -> int:
     problems = []
 
-    try:
-        partial = read(PARTIAL_FILE).strip()
-    except OSError:
-        print(f"[shape-parity] DRIFT — missing {PARTIAL_FILE}")
-        return 1
-    for rel in BODIES_NEEDING_PARTIAL:
-        if not os.path.isfile(os.path.join(EXT, rel)):
+    for rel in GOLDEN_BODIES:
+        path = os.path.join(EXT, rel)
+        if not os.path.isfile(path):
             problems.append(f"missing file: {rel}")
-        elif partial not in read(rel):
-            problems.append(f"timing partial missing/forked: {rel}")
+            continue
+        body = read(rel)
+
+        # (a) region equality
+        for m in PART_FENCE.finditer(body):
+            name = m.group(1)
+            if not os.path.isfile(part_path(name)):
+                problems.append(f"unknown part: {rel}#{name}")
+            elif m.group(2) != part_content(name):
+                problems.append(f"part drift: {rel}#{name}")
+
+        # (b) golden equality (content-frozen commands only)
+        if rel in INTENTIONALLY_CHANGED:
+            continue
+        gpath = golden_path(rel)
+        if not os.path.isfile(gpath):
+            problems.append(f"missing golden: {rel}")
+        elif canonical(body) != canonical(open(gpath, encoding="utf-8").read()):
+            problems.append(f"golden drift: {rel}")
 
     if problems:
         print("[shape-parity] DRIFT")
         for p in problems:
             print("  -", p)
         return 1
-    print(
-        f"[shape-parity] OK — {len(BODIES_NEEDING_PARTIAL)} bodies carry the timing partial"
-    )
+    print(f"[shape-parity] OK — {len(GOLDEN_BODIES)} bodies match parts and golden")
     return 0
 
 

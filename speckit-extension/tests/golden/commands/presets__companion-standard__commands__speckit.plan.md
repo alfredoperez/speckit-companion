@@ -152,7 +152,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 - ERROR on gate failures or unresolved clarifications
 
 
-<!-- speckit-companion:part timing -->
+<!-- speckit-companion:timing -->
 ## Timing — keep `.spec-context.json` honest
 
 These rules apply to every Companion profile command. The extension records lifecycle timing with its own scripts wherever it can; these rules keep anything you append consistent with that and accurate for any dispatcher (terminal, IDE chat, or the GUI). The model is **finish-only**: each task and each substep records a *single* finish event, and its duration is the gap to the previous finish (or the step's start). Never a `start`+`complete` pair for a task or substep — a pair stamped at one instant is what produces `0s` ticks and bursts.
@@ -168,4 +168,4 @@ These rules apply to every Companion profile command. The extension records life
 
   The `--did`/`--files` flags make the script write `task_summaries.<TaskID>` (the field the Activity panel's Tasks card reads) in the same call that records the finish — so the panel is populated by the script, NOT by a hand-authored `.spec-context.json` edit. Do NOT also hand-edit `task_summaries` yourself; the script owns it. Run this **the moment that task completes** — one finish per task, as you go. Do NOT defer journaling to the end of the step and do NOT dump every task's finish in one end-of-step batch: that collapses their real durations into a single instant, and the cadence check now FAILS a run whose task finishes are clustered into a tiny fraction of the step's real duration. This stamps **one** finish event from the real clock — its delta to the previous task's finish is that task's duration. Do NOT hand-author per-task JSON and do NOT write a per-task `start`. The end-of-step hook is a backstop that fills any task you didn't journal (it won't duplicate one you did). Parallel `[P]` tasks: journal each as it finishes; the batch's time is attributed to whichever finishes last (accepted limitation).
 - **Never write the next step's start.** Only the next command appends the next step's start entry; writing it here makes the viewer render a phantom "Generating <next>…".
-<!-- /speckit-companion:part timing -->
+<!-- /speckit-companion:timing -->
