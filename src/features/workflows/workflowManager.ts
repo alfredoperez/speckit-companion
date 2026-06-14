@@ -20,6 +20,8 @@ import {
 } from './types';
 import { ConfigKeys, WorkflowSteps, AIProviders, COMPANION_WORKFLOW_NAME } from '../../core/constants';
 import { getConfiguredProviderType, AIProviderType } from '../../ai-providers/aiProvider';
+import { coerceLegacyBoolean } from '../../core/settingsMigration';
+import { isCompanionInstalled } from '../settings/companionPresetReconciler';
 
 /**
  * Legacy alias — existing .spec-context.json files may use "default".
@@ -229,15 +231,37 @@ export function validateWorkflow(config: WorkflowConfig): ValidationResult {
  * already-chosen workflow (`getWorkflow`) must NOT filter, otherwise an existing
  * spec would lose its real steps when viewed under a different provider.
  */
+/**
+ * Whether the Companion workflow may be offered for SELECTION: the single beta
+ * gate is on AND the companion spec-kit extension is present on disk. Drives the
+ * Create-Spec picker so it never lists an option that silently falls back.
+ */
+export function isCompanionSelectable(): boolean {
+    const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
+    if (!coerceLegacyBoolean(config.get<unknown>('companion.workflowBeta'), false)) {
+        return false;
+    }
+    const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    return !!root && isCompanionInstalled(root);
+}
+
 function buildWorkflows(filterByProvider: boolean, outputChannel?: vscode.OutputChannel): WorkflowConfig[] {
     const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
     const customWorkflows = config.get<WorkflowConfig[]>('customWorkflows', []);
     const activeProvider = getConfiguredProviderType();
 
-    // The two built-in workflows have no provider declaration, so they are never
-    // filtered — at least one workflow is always available, and `companion` is
-    // always selectable (its missing-extension fallback handles an absent extension).
-    const validWorkflows: WorkflowConfig[] = [DEFAULT_WORKFLOW, COMPANION_WORKFLOW];
+    // SpecKit is always available. Companion is seeded into the SELECTION list
+    // (filterByProvider) only behind the single beta gate AND an installed companion
+    // piece — so the picker never offers a hollow option that does nothing. The
+    // RESOLUTION path (getAllWorkflows) always includes it so an existing companion
+    // spec keeps its real steps regardless of the gate.
+    const includeCompanion = !filterByProvider || isCompanionSelectable();
+    const validWorkflows: WorkflowConfig[] = [DEFAULT_WORKFLOW];
+    if (includeCompanion) {
+        validWorkflows.push(COMPANION_WORKFLOW);
+    }
+    // The companion name stays reserved at every scope so a custom workflow can
+    // never shadow the built-in id, even when it isn't seeded into selection.
     const seenNames = new Set<string>(['speckit', LEGACY_DEFAULT_NAME, COMPANION_WORKFLOW_NAME]);
 
     for (const workflow of customWorkflows) {

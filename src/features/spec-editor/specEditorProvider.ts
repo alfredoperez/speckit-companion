@@ -8,7 +8,7 @@ import type {
     AttachedImage,
     WorkflowDefinition
 } from './types';
-import { normalizeWorkflowConfig, resolveStepCommand, isWorkflowSupportedForProvider } from '../workflows';
+import { normalizeWorkflowConfig, resolveStepCommand, isWorkflowSupportedForProvider, isCompanionSelectable } from '../workflows';
 import type { WorkflowConfig } from '../workflows';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { buildSpecifyCreationPreamble } from '../../ai-providers/promptBuilder';
@@ -67,23 +67,26 @@ export class SpecEditorProvider {
         const customWorkflows = config.get<WorkflowConfig[]>('customWorkflows', []);
         const activeProvider = getConfiguredProviderType();
 
-        // Always include the two built-in workflows (no provider declaration →
-        // never filtered). Companion is always offered; its missing-extension
-        // fallback (handleSubmit) downgrades to stock when the extension is absent.
+        // SpecKit is always offered. Companion is added to the Create-Spec picker
+        // only behind the single beta gate (companion.workflowBeta on AND the
+        // companion piece installed) — same predicate as the workflow manager — so
+        // the picker never lists an option that silently falls back to stock.
         const workflows: WorkflowDefinition[] = [
             {
                 name: 'speckit',
                 displayName: 'SpecKit',
                 description: 'Standard SpecKit workflow',
                 stepSpecify: `/${formatCommandForProvider('speckit.specify')}`
-            },
-            {
+            }
+        ];
+        if (isCompanionSelectable()) {
+            workflows.push({
                 name: COMPANION_WORKFLOW_NAME,
                 displayName: 'SpecKit Companion',
                 description: 'Leaner SpecKit Companion pipeline with built-in right-sizing, through to mark-complete.',
                 stepSpecify: `/${formatCommandForProvider(COMPANION_SPECIFY_COMMAND)}`,
-            }
-        ];
+            });
+        }
 
         // Add custom workflows the active provider supports
         for (const wf of customWorkflows) {

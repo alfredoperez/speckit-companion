@@ -68,7 +68,7 @@ export function defaultWorkflowTelemetryId(value: string | undefined): 'speckit'
 /** The beta-flag + workflow states reported with `extension.activated`. */
 export interface BetaSnapshot {
     defaultWorkflow: string;
-    resumeBeta: string;
+    workflowBeta: string;
     activityPanel: string;
     installPrompt: string;
     telemetry: string;
@@ -85,7 +85,9 @@ export function buildBetaSnapshot(): BetaSnapshot {
         String(coerceLegacyBoolean(config.get<unknown>(key), fallback));
     return {
         defaultWorkflow: defaultWorkflowTelemetryId(config.get<string>('defaultWorkflow', 'speckit')),
-        resumeBeta: bool('companion.resumeBeta', false),
+        // Coerced (not bool): workflowBeta inherits migrated resumeBeta values, so an
+        // un-migrated scope could still hold a legacy 'on'/'beta' string — report a clean boolean.
+        workflowBeta: coerced('companion.workflowBeta', false),
         activityPanel: coerced('viewer.activityPanel', true),
         installPrompt: coerced('companion.installPrompt', true),
         telemetry: bool('telemetry', true),

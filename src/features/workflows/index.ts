@@ -39,6 +39,7 @@ export {
     validateWorkflowsOnActivation,
     registerWorkflowConfigChangeListener,
     isWorkflowSupportedForProvider,
+    isCompanionSelectable,
 } from './workflowManager';
 
 // Workflow Selector
