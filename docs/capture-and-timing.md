@@ -65,7 +65,7 @@ The 2026-06-08 fix above made per-task capture *reliable* (the hook owns it) but
 - **Parallel `[P]` caveat.** The delta model can't give each task in a parallel batch its own duration — the batch is attributed to whichever finishes last. Accepted for the common sequential case.
 - **Derivation.** `src/features/specs/stepHistoryDerivation.ts` (`buildSubsteps`) computes each row from finish deltas, staying tolerant of legacy start+complete pairs and single boundary markers. A per-task row is named from `task` (or a legacy `substep` mirror); the derivation compares `task` so two distinct finishes don't collapse, and excludes task entries when deciding whether the step itself is closed.
 - **Both dispatch surfaces.** The instruction lives identically in `presets/_shared/timing-partial.md` (spec-kit path) and `src/ai-providers/promptBuilder.ts` (GUI path); `check-shape-parity.py` guards against a fork.
-- **Both marker formats.** Per-task detection accepts the turbo/companion **bold** form (`- [x] **T001**`) *and* the standard tasks-template **plain** form (`- [x] T001 …`) — `parse_task_markers` (`write-context.py`) and the eval make the `**` optional. Previously the bold-only regex silently no-op'd on a standard-profile `tasks.md`, so the spec got no per-task journal and implement never auto-closed. The TS/GUI task-percent already counted plain checkboxes, so only the Python parsers needed it.
+- **Both marker formats.** Per-task detection accepts the Companion **bold** form (`- [x] **T001**`) *and* the stock tasks-template **plain** form (`- [x] T001 …`) — `parse_task_markers` (`write-context.py`) and the eval make the `**` optional. Previously the bold-only regex silently no-op'd on a stock `tasks.md`, so the spec got no per-task journal and implement never auto-closed. The TS/GUI task-percent already counted plain checkboxes, so only the Python parsers needed it.
 
 ## Record-shape hardening (2026-06-09)
 
@@ -78,7 +78,7 @@ Finish-only made the timing honest; this pass makes the record *self-describing*
 
 ## Fast-path lifecycle fold (2026-06-09)
 
-The turbo complexity fast-path — the command-body fold described here, and separately available as the [Companion workflow routing node](./template-profiles.md#companion-workflow-routing-node) — folds the plan and tasks steps into the `specify` run for a small change. The same pass also emits three lean files — `spec.md` (inline Approach), a `plan.md` pointer, and a real-checklist `tasks.md` — so the file-driven stepper, sidebar, and implement progress agree with this history fold rather than reading "not created". After `specify` self-closes, the simple-mode branch records the folded steps so the history panels read them as satisfied (not missing) instead of dispatching separate `/speckit.companion.plan` / `.tasks` runs:
+The Companion complexity fast-path — the command-body fold described here (**on by default**, no flag), and separately available as the [Companion workflow routing node](./template-profiles.md#companion-workflow-routing-node) — folds the plan and tasks steps into the `specify` run for a small change. The same pass also emits three lean files — `spec.md` (inline Approach), a `plan.md` pointer, and a real-checklist `tasks.md` — so the file-driven stepper, sidebar, and implement progress agree with this history fold rather than reading "not created". After `specify` self-closes, the simple-mode branch records the folded steps so the history panels read them as satisfied (not missing) instead of dispatching separate `/speckit.companion.plan` / `.tasks` runs:
 
 - **`--substep` flag.** `write-context.py --step <plan|tasks> --kind <start|complete> --substep fast-path` tags the folded step-level entries with `substep: "fast-path"` instead of `null`. The fold is four ordered calls — `plan` start/complete then `tasks` start/complete, the last adding `--status ready-to-implement` — each stamped by the script's own clock (`by:ai`, real timestamps), so the spec lands at `ready-to-implement` in one run.
 - **Idempotent on (step, substep).** `_has_step_start` / `_has_complete` dedup on the `(step, substep)` pair, so a folded `fast-path` start/complete never collides with a real step-level (`substep:null`) entry and a re-run never doubles the fold.
@@ -111,9 +111,9 @@ The document *shape* (stock SpecKit vs Companion) and the timing partial both li
 
 See `docs/template-profiles.md` for the full workflow reference.
 
-## Activation ensure (keep the standard family present)
+## Activation ensure (keep the stock family present)
 
-On activation the extension runs an **add-only** ensure — `companionPresetReconciler.ensureStandardFamily` — that adds `companion-standard` from the bundled path (`specify preset add --dev .specify/extensions/companion/presets/companion-standard`) when the stock command files are absent, and is a no-op when present. The `--dev` bundled path is required because catalog-form `add <id>` silently no-ops (the presets aren't published to a catalog). The ensure **never** removes the standard family, so it cannot strand a project: it re-materializes the stock commands on a fresh checkout and recovers a project a prior swap left without them. A one-time migration removes a leftover `companion-turbo` install if present (and the pre-rename `companion-lean` / `sdd-lean` leftovers); the workflow choice itself issues no removes thereafter. CLI failures are logged, not thrown, so activation never breaks.
+On activation the extension runs an **add-only** ensure — `companionPresetReconciler.ensureStandardFamily` — that adds `companion-standard` from the bundled path (`specify preset add --dev .specify/extensions/companion/presets/companion-standard`) when the stock command files are absent, and is a no-op when present. The `--dev` bundled path is required because catalog-form `add <id>` silently no-ops (the presets aren't published to a catalog). The ensure **never** removes the stock family, so it cannot strand a project: it re-materializes the stock commands on a fresh checkout and recovers a project a prior swap left without them. A one-time migration removes a leftover `companion-turbo` install if present (and the pre-rename `companion-lean` / `sdd-lean` leftovers); the workflow choice itself issues no removes thereafter. CLI failures are logged, not thrown, so activation never breaks.
 
 ## Install paths
 
@@ -135,5 +135,5 @@ The eval **loads `CANONICAL_STEPS` / `CANONICAL_STATUSES` / `VALID_BY` (and the 
 
 - `docs/architecture.md` — structural overview of the codebase.
 - `docs/spec-context-schema.md` — the on-disk `.spec-context.json` schema.
-- `docs/template-profiles.md` — the standard/turbo profile reference.
+- `docs/template-profiles.md` — the Companion workflow & pipeline-shape reference.
 - `docs/viewer-states.md` — how captured state drives the viewer.

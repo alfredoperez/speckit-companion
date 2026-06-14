@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-06-14
+
+### Changed
+- **One SpecKit Companion workflow, no more "standard vs. turbo" choice.** There used to be two advertised shapes — a "standard" profile and a "turbo" profile. In practice there was only ever one Companion workflow: the lean one. That lean shape is now the single Companion offering. The dead "turbo" preset is gone, and "turbo"/"standard" no longer appear as profile names in the commands or docs. Stock SpecKit is untouched — it's still the unchanged `/speckit.*` commands with better timing capture, available to everyone. If you ever installed the old turbo preset, it's cleaned up automatically on upgrade.
+- **Small changes fast-track to implement automatically.** The right-sizing fast-path — which folds a small change straight to implement instead of running the full specify → plan → tasks pipeline — is now on by default. No flag to set. Larger changes (more than 5 files or 10 tasks, or a "bigger" scope signal) still run the full pipeline and print the guardrail warning, exactly as before; nothing is ever silently fast-tracked.
+
 ## [0.5.1] - 2026-06-14
 
 ### Fixed

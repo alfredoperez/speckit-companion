@@ -1,5 +1,5 @@
 ---
-description: "Companion turbo specify — spec.md with no user-story section (per-spec opt-in)"
+description: "Companion specify — spec.md with no user-story section"
 ---
 
 ## User Input
@@ -10,7 +10,7 @@ $ARGUMENTS
 
 ## Outline
 
-Produce a turbo specification — **no user-story / user-scenario section**. Capture intent as testable requirements, not narrative journeys.
+Produce a Companion specification — **no user-story / user-scenario section**. Capture intent as testable requirements, not narrative journeys.
 
 1. **Resolve the feature directory — mint a fresh dir for new work.** `.specify/feature.json` is an **output** of this step, not an input to reuse: it points at the *previous* spec (frequently already completed), so reusing it would clobber finished work. Pick the target:
    - If the request explicitly names a target path (or `SPECIFY_FEATURE_DIRECTORY` is set), use it.
@@ -26,14 +26,14 @@ Produce a turbo specification — **no user-story / user-scenario section**. Cap
    - **Success Criteria** — measurable, technology-agnostic `SC-001…` outcomes (time, count, percentage, pass/fail). No framework or API names.
    - **Assumptions** — the informed defaults you chose for anything unspecified.
 
-3. Keep it business-readable. Do **not** add user stories, acceptance-scenario tables, or priority labels — turbo tracks requirements and outcomes directly. Fold edge cases into Functional Requirements or Assumptions.
+3. Keep it business-readable. Do **not** add user stories, acceptance-scenario tables, or priority labels — Companion tracks requirements and outcomes directly. Fold edge cases into Functional Requirements or Assumptions.
 
-4. **Spec quality checklist.** Write `<feature_directory>/checklists/requirements.md` using the template below, then run a **single** self-check pass: grade each item pass/fail, fix obvious fails in `spec.md` in place, and leave any genuine ambiguity as a `[NEEDS CLARIFICATION: …]` marker (max 3) for the `clarify` step. Do **not** run a multi-iteration rewrite loop or prompt the user with option tables — turbo defers interactive clarification to `clarify`. Update the checklist to reflect the final pass/fail state.
+4. **Spec quality checklist.** Write `<feature_directory>/checklists/requirements.md` using the template below, then run a **single** self-check pass: grade each item pass/fail, fix obvious fails in `spec.md` in place, and leave any genuine ambiguity as a `[NEEDS CLARIFICATION: …]` marker (max 3) for the `clarify` step. Do **not** run a multi-iteration rewrite loop or prompt the user with option tables — Companion defers interactive clarification to `clarify`. Update the checklist to reflect the final pass/fail state.
 
    ```markdown
    # Specification Quality Checklist: [FEATURE NAME]
 
-   **Purpose**: Validate turbo specification completeness before planning
+   **Purpose**: Validate Companion specification completeness before planning
    **Created**: [DATE]
    **Feature**: [Link to spec.md]
 
@@ -68,7 +68,7 @@ Produce a turbo specification — **no user-story / user-scenario section**. Cap
 5. **Classify the change — right-size the ceremony.** After the spec content is drafted, decide whether this change is small enough to fast-track straight to implement, or large enough to keep the full specify → plan → tasks → implement pipeline. This is a best-effort heuristic and **MUST err toward `normal`** on weak or conflicting signals — a change is never under-planned by accident.
 
    ```
-   fastPathEnabled = read `complexityFastPath` from .specify/companion.yml (default false when the key is absent — opt-in beta)
+   fastPathEnabled = true   # Companion fast-path is core behavior — no flag required
 
    projectedFiles  = estimate the number of files the drafted requirements imply
    projectedTasks  = estimate the number of implementation tasks the drafted requirements imply
@@ -78,8 +78,7 @@ Produce a turbo specification — **no user-story / user-scenario section**. Cap
 
    crossedGuardrail = projectedFiles > 5 OR projectedTasks > 10   # fixed threshold — mirrors the tiny-change guardrail
 
-   verdict = "simple" if  fastPathEnabled
-                      and projectedFiles <= 5
+   verdict = "simple" if  projectedFiles <= 5
                       and projectedTasks <= 10
                       and scopeSignal != "larger"
              else "normal"
@@ -92,7 +91,6 @@ Produce a turbo specification — **no user-story / user-scenario section**. Cap
      ```
 
      Exactly-at-threshold (`projectedFiles == 5` / `projectedTasks == 10`) is the simple ceiling — it does **not** warn and stays eligible for `simple`.
-   - **Opt-out.** When `fastPathEnabled == false`, the verdict is always `normal` — no combining, no warning.
 
 6. **Branch on the verdict.**
 

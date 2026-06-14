@@ -1,5 +1,5 @@
 ---
-description: "Companion turbo tasks — files/dependencies task axis (per-spec opt-in)"
+description: "Companion tasks — files/dependencies task axis"
 ---
 
 ## User Input

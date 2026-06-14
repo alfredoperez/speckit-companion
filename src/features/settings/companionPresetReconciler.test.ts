@@ -133,8 +133,8 @@ describe('companionPresetReconciler', () => {
             ]);
         });
 
-        // A standard↔turbo mode change is non-destructive — no command set is
-        // removed by the preset path.
+        // Cleaning up a leftover turbo install is non-destructive — no command set
+        // is removed by the preset path beyond the leftover itself.
         it('never issues a remove of the standard family in any installed state', async () => {
             for (const standard of [true, false]) {
                 for (const turbo of [true, false]) {
@@ -167,9 +167,9 @@ describe('companionPresetReconciler', () => {
         });
 
         // Tightened gate: a preset only swaps the stock /speckit.* bodies, it does
-        // not register the namespaced /speckit.companion.* family the turbo picker
-        // dispatches. Preset-only-without-extension-dir must therefore read as NOT
-        // installed, or the picker would surface turbo and fail with an unknown
+        // not register the namespaced /speckit.companion.* family the Companion
+        // workflow dispatches. Preset-only-without-extension-dir must therefore read
+        // as NOT installed, or the workflow would surface and fail with an unknown
         // /speckit.companion.specify command.
         it('is false when only the standard preset is installed (no extension dir)', () => {
             install('companion-standard');

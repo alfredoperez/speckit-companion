@@ -7,12 +7,10 @@ const execAsync = promisify(exec);
 
 /** Carrier preset for the always-present standard `/speckit.*` command family. */
 const STANDARD_PRESET_ID = 'companion-standard';
-/** Retired from the selection path; removed once if left installed by an old swap. */
+/** Leftover from an old install; removed once if left installed by an old swap. */
 const TURBO_PRESET_ID = 'companion-turbo';
 /** Presets left over from pre-rename branches; cleaned up on first ensure. */
 const LEGACY_PRESET_IDS = ['companion-lean', 'sdd-lean'] as const;
-
-export const ALL_PRESET_IDS = ['companion-standard', 'companion-turbo'] as const;
 
 const PRESETS_REL = path.join('.specify', 'presets');
 
@@ -26,7 +24,7 @@ export interface PresetOp {
  * command family is present". Add-only for `companion-standard` — added (from
  * the bundled path) when absent, never removed regardless of input state. A
  * leftover `companion-turbo` / legacy `companion-lean` / `sdd-lean` install is
- * removed once (all are retired from the selection path); after such a removal,
+ * removed once (all are leftovers from old installs); after such a removal,
  * `companion-standard` is re-enabled so its bodies aren't left reverted.
  * Already-present-and-clean is a no-op (idempotent).
  */
@@ -73,7 +71,7 @@ export function isPresetInstalled(workspaceRoot: string, id: string): boolean {
 /**
  * The Companion spec-kit extension's on-disk install root in a consumer project
  * (`.specify/extensions/companion/`), holding the bundled scripts and presets the
- * turbo command family relies on. Forward-slash literal kept consistent with
+ * Companion command family relies on. Forward-slash literal kept consistent with
  * `BUNDLED_PRESETS_REL`.
  */
 const COMPANION_EXTENSION_REL = '.specify/extensions/companion';
@@ -86,13 +84,13 @@ const COMPANION_EXTENSION_REL = '.specify/extensions/companion';
  * Requires the bundled extension dir (`.specify/extensions/companion/`) and ONLY
  * that. The presets are intentionally NOT accepted here: a preset only replaces
  * the stock `/speckit.*` command bodies, it does not register the namespaced
- * `/speckit.companion.*` family. The turbo picker dispatches
+ * `/speckit.companion.*` family. The Companion workflow dispatches
  * `speckit.companion.specify`, which is provided exclusively by the Companion
  * *extension*. A project that has the preset(s) but no extension dir would
- * therefore surface turbo and then fail with an unknown command — so the gate is
+ * therefore surface the workflow and then fail with an unknown command — so the gate is
  * aligned with "the `/speckit.companion.*` commands actually exist", which is the
  * extension dir's presence, not a preset's. Used to gate install-only UI (e.g.
- * the Create-New-Spec turbo workflow option).
+ * the Create-New-Spec Companion workflow option).
  */
 export function isCompanionInstalled(workspaceRoot: string): boolean {
     return fs.existsSync(path.join(workspaceRoot, COMPANION_EXTENSION_REL));
@@ -100,7 +98,7 @@ export function isCompanionInstalled(workspaceRoot: string): boolean {
 
 function installedMap(workspaceRoot: string): Record<string, boolean> {
     const map: Record<string, boolean> = {};
-    for (const id of [...ALL_PRESET_IDS, ...LEGACY_PRESET_IDS]) {
+    for (const id of [STANDARD_PRESET_ID, TURBO_PRESET_ID, ...LEGACY_PRESET_IDS]) {
         map[id] = isPresetInstalled(workspaceRoot, id);
     }
     return map;

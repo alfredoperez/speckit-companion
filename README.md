@@ -144,7 +144,7 @@ Actions that change the spec's lifecycle are protected so a misfired click is ea
 There are **two** installs, and they're independent:
 
 1. **The VS Code extension** (this product) — the Visual Spec Viewer, inline review comments, the sidebar, and command dispatch. Install it from the VS Code Marketplace (or a `.vsix`). This works on its own.
-2. **The companion spec-kit *CLI* extension** — adds the leaner `/speckit.companion.*` pipeline (**Turbo** mode) and the lifecycle **capture** hooks that drive the Activity timeline. This is a [spec-kit](https://github.com/github/spec-kit) *CLI* extension, **not** a VS Code Marketplace extension, so it installs through the `specify` CLI.
+2. **The companion spec-kit *CLI* extension** — adds the lean `/speckit.companion.*` pipeline and the lifecycle **capture** hooks that drive the Activity timeline. This is a [spec-kit](https://github.com/github/spec-kit) *CLI* extension, **not** a VS Code Marketplace extension, so it installs through the `specify` CLI.
 
 **One-click from inside the editor.** When the spec-kit extension is missing, an **Install spec-kit extension** banner appears in the Create-Spec and Activity panels, and an install icon appears in the Specs sidebar. Click it and the extension runs the install in an integrated terminal — no copy-paste. (Already have it installed? You'll never see the banner.)
 
@@ -162,7 +162,7 @@ specify extension add companion --from https://github.com/alfredoperez/speckit-c
 
 **Update it later** from the Specs view **Upgrade…** menu → *Update spec-kit Extension* (runs the same install with `--force`).
 
-![What installing the spec-kit extension unlocks: live progress capture, status, resume, the turbo pipeline, the complexity fast-path, and honest state recovery](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/install-banner.jpg)
+![What installing the spec-kit extension unlocks: live progress capture, status, resume, the lean Companion pipeline, the complexity fast-path, and honest state recovery](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/install-banner.jpg)
 
 ## Setup & Components
 

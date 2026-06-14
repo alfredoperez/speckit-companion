@@ -1,5 +1,5 @@
 ---
-description: "Companion turbo implement — execute tasks.md in dependency order (per-spec opt-in)"
+description: "Companion implement — execute tasks.md in dependency order"
 ---
 
 ## User Input
