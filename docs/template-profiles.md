@@ -58,7 +58,7 @@ The GUI preamble stays as the extra path; the body-embedded partial is the stand
 
 ## Companion workflow routing node
 
-Right-sizing the ceremony to the change can run on spec-kit's own engine, in the **Companion workflow** (`speckit-extension/workflows/speckit-companion.workflow.yml`) via `specify workflow run speckit-companion`, rather than in the `/speckit.companion.specify` command body. On this path there is **no on/off toggle** — the thresholds live in the workflow definition itself, and a small change is routed automatically (the VS Code `complexityFastPath` setting that gates the command-body fast-path plays no part in a workflow run).
+Right-sizing the ceremony to the change can run on spec-kit's own engine, in the **Companion workflow** (`speckit-extension/workflows/speckit-companion.workflow.yml`) via `specify workflow run speckit-companion`. This is an **additional** home for the right-sizing decision, alongside the existing command-body fast-path in `/speckit.companion.specify` (still present and still gated by the `complexityFastPath` VS Code setting) — not a replacement for it. On the workflow path there is **no on/off toggle**: the thresholds live in the workflow definition itself, a small change is routed automatically, and the `complexityFastPath` setting plays no part in a workflow run.
 
 After specify, the workflow runs a thin **classify** step (`speckit.companion.classify`) that emits a single size signal — `small | normal | oversized` — from the same fixed **5 files / 10 tasks** guardrail the old fast-path used. A `switch` routing node reads that signal and picks a branch:
 
