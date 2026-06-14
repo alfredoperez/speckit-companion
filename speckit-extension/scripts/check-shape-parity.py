@@ -22,7 +22,9 @@ import sys
 from _command_parts import (
     EXT,
     GOLDEN_BODIES,
+    PART_CLOSE,
     PART_FENCE,
+    PART_OPEN,
     canonical,
     golden_path,
     part_content,
@@ -52,6 +54,15 @@ def main() -> int:
             problems.append(f"missing file: {rel}")
             continue
         body = read(rel)
+
+        # (a0) well-formed fences — every open marker must have a matching close
+        # of the same name. A malformed/unbalanced fence is skipped by PART_FENCE
+        # (which only matches a complete pair), so without this guard a mismatched
+        # or unclosed marker would slip past region equality and the golden
+        # compare (which strips marker lines) could falsely pass.
+        opens, closes = PART_OPEN.findall(body), PART_CLOSE.findall(body)
+        if opens != closes:
+            problems.append(f"malformed fence: {rel} (opens={opens} closes={closes})")
 
         # (a) region equality
         for m in PART_FENCE.finditer(body):

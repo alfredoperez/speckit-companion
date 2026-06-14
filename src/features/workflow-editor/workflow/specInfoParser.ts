@@ -26,7 +26,7 @@ export function parseSpecInfo(document: vscode.TextDocument): SpecInfo {
     const fileName = path.basename(document.fileName);
     const dirPath = path.dirname(document.fileName);
 
-    // Resolve workflow steps dynamically (exclude action-only steps)
+    // Static canonical pipeline steps (exclude action-only steps)
     const steps = resolveStepsSync().filter(s => !s.actionOnly);
 
     // Build step-to-file and file-to-step maps

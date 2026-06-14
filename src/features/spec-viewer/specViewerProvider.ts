@@ -640,7 +640,7 @@ export class SpecViewerProvider {
     }
 
     // Append built-in optional SpecKit command buttons for this tab, deduped
-    // against user/workflow commands (which take precedence).
+    // against the user's custom commands (which take precedence).
     buttons.push(...optionalCommandButtonsForTab(docType, seenCommands));
 
     return buttons;
