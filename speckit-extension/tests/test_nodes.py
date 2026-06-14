@@ -17,6 +17,7 @@ SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 asm = importlib.import_module("assemble-nodes")
 cp = importlib.import_module("_command_parts")
+cc = importlib.import_module("companion_config")
 
 
 class NodeAssemblyParityTests(unittest.TestCase):
@@ -40,6 +41,36 @@ class NodeAssemblyParityTests(unittest.TestCase):
                     self.assertEqual(meta.get("id"), node_id, f"{command}/{node_id} id mismatch")
                     self.assertEqual(meta.get("command"), command)
                     self.assertIn(meta.get("kind"), {"investigate", "author", "gate", "control"})
+
+
+class RecipeOverrideTests(unittest.TestCase):
+    """A recipe's node-list override changes assembly without touching the default."""
+
+    def test_recipe_drops_a_node_from_assembly(self) -> None:
+        default = asm.default_order("plan")
+        self.assertIn("constitution-check", default)
+        recipe = [n for n in default if n != "constitution-check"]
+
+        default_out = asm.assemble_command("plan", order=default)
+        recipe_out = asm.assemble_command("plan", order=recipe)
+
+        self.assertNotEqual(default_out, recipe_out)
+        self.assertIn("Constitution Check", default_out)
+        self.assertNotIn("Constitution Check", recipe_out)
+
+    def test_default_assembly_still_matches_golden(self) -> None:
+        golden = Path(cp.golden_path("commands/speckit.companion.plan.md")).read_text(encoding="utf-8")
+        self.assertEqual(asm.assemble_command("plan", order=asm.default_order("plan")), golden)
+        self.assertEqual(asm.assemble_command("plan"), golden)
+
+    def test_valid_recipe_passes_reads_validation(self) -> None:
+        recipe = [n for n in asm.default_order("plan") if n != "constitution-check"]
+        cc.validate_reads(asm.node_reads_map("plan", recipe))  # no raise
+
+    def test_recipe_dropping_a_read_dependency_errors(self) -> None:
+        recipe = [n for n in asm.default_order("plan") if n != "gather-context"]
+        with self.assertRaises(cc.ConfigError):
+            cc.validate_reads(asm.node_reads_map("plan", recipe))
 
 
 if __name__ == "__main__":

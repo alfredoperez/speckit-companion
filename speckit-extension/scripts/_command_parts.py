@@ -136,7 +136,9 @@ def parse_order(path: str) -> list:
     """Read an _order.yml `order:` list — supports inline `[a, b]` and a block list."""
     ids = []
     in_order = False
-    for raw in open(path, encoding="utf-8"):
+    with open(path, encoding="utf-8") as fh:
+        raw_lines = fh.readlines()
+    for raw in raw_lines:
         s = raw.strip()
         if not s or s.startswith("#"):
             continue
@@ -161,5 +163,6 @@ def read_node(command: str, node_id: str) -> tuple:
     path = os.path.join(nodes_command_dir(command), f"{node_id}.md")
     if not os.path.isfile(path):
         raise SystemExit(f"[nodes] missing node file: {command}/{node_id}.md")
-    fm, body = split_frontmatter(open(path, encoding="utf-8").read())
+    with open(path, encoding="utf-8") as fh:
+        fm, body = split_frontmatter(fh.read())
     return parse_node_meta(fm), body

@@ -58,6 +58,15 @@ def assemble_command(command: str, order: list = None) -> str:
     return out
 
 
+def default_order(command: str) -> list:
+    return parse_order(os.path.join(nodes_command_dir(command), "_order.yml"))
+
+
+def node_reads_map(command: str, order: list) -> dict:
+    """{node_id: reads_list} for every node in an order — input to validate_reads."""
+    return {nid: (read_node(command, nid)[0].get("reads") or []) for nid in order}
+
+
 def command_path(command: str) -> str:
     return os.path.join(EXT, "commands", f"speckit.companion.{command}.md")
 
