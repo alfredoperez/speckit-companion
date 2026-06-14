@@ -47,6 +47,7 @@ The review subagent in `/ship-ticket` and `/fix-tickets` reads this **before** r
 - **Deleting a component drops every capability it owned — confirm the replacement covers the SAME cases, not a subset.** Removing `GeneratingFooter` dropped manual "mark complete" for all steps, but the surviving backstop only covers implement. Enumerate what it did; verify each capability is re-homed. (#277)
 - **Trace a deleted component's FULL message/handler/state chain.** Follow `postMessage` → handler → state fields → disk probes and remove/​re-home the whole chain, not just the `.tsx`. (#277)
 - **A menu `when` that newly matches a contextValue needs a handler that ACTS on it.** Broadening a row's contextValue can surface a menu whose command no-ops → a dead, misleading click. Re-check every `view/item/context` `when` it now matches. (#257)
+- **When you gate/change a UI list, gate EVERY assembler that feeds it — the source you edited may not be the one that renders.** The Create-Spec workflow picker is built independently in `workflowManager.getWorkflows()` AND `specEditorProvider.getWorkflows()`; gating only the former left the picker always showing Companion. Grep for the displayed entry/option across all builders; reuse one predicate (`isCompanionSelectable()`) rather than gating one copy. (#302)
 
 ## Shell & release scripts
 
