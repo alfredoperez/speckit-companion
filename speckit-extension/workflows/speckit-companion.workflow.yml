@@ -54,8 +54,20 @@ steps:
     expression: "{{ steps.classify.output.size }}"
     cases:
       small:
-        # Folded path — less ceremony for a tiny change. plan/tasks are folded
-        # toward implement; no review gate.
+        # Folded path — less ceremony for a small change: plan and tasks still
+        # run (implement reads tasks.md, so it can't be skipped), but WITHOUT the
+        # review-gate pauses. That is the "fold toward implement" — fewer stops,
+        # not fewer artifacts.
+        - id: small-plan
+          command: speckit.companion.plan
+          integration: "{{ inputs.integration }}"
+          input:
+            args: "{{ inputs.spec }}"
+        - id: small-tasks
+          command: speckit.companion.tasks
+          integration: "{{ inputs.integration }}"
+          input:
+            args: "{{ inputs.spec }}"
         - id: small-implement
           command: speckit.companion.implement
           integration: "{{ inputs.integration }}"

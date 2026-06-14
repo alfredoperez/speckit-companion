@@ -754,6 +754,17 @@ class MarkCompleteTests(unittest.TestCase):
         self.assertEqual(out["reviewComments"], [{"id": "rc1", "comment": "keep me"}])
         self.assertEqual(out["status"], "completed")
 
+    def test_refuses_unfinished_spec(self) -> None:
+        # Only a finished implement (`implemented`) may ship. A spec still
+        # `implementing` (or specifying/planning) must NOT be promoted, so an
+        # out-of-order or stray invocation can't mark incomplete work complete.
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        before = _ctx(self.fd)
+        result = wc.mark_spec_complete(self.fd, "ai")
+        self.assertIsNone(result)
+        self.assertEqual(_ctx(self.fd)["status"], "implementing")
+        self.assertEqual(_ctx(self.fd), before)
+
     def test_cli_mark_complete_dispatch(self) -> None:
         # The argparse wiring + main() dispatch branch end-to-end.
         self._implemented_spec()

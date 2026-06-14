@@ -497,7 +497,12 @@ def mark_spec_complete(feature_dir: Path, by: str) -> Path | None:
     refuses to advance a spec whose status is already terminal (`implemented`),
     so the final promotion needs this dedicated path. `currentStep` stays at
     `implement` (the last real step), keeping the canonical invariant that the
-    last `history` entry's step equals `currentStep`. Idempotent: a spec already
+    last `history` entry's step equals `currentStep`.
+
+    Strict on the source state: it promotes ONLY a spec that has actually
+    finished implement (`status == "implemented"`). A spec still `specifying` /
+    `planning` / `implementing` is not done, so a stray or out-of-order
+    invocation can never "ship" incomplete work. Idempotent: a spec already
     `completed`/`archived` is left untouched.
     """
     target = feature_dir / ".spec-context.json"
@@ -508,6 +513,15 @@ def mark_spec_complete(feature_dir: Path, by: str) -> Path | None:
         print(
             f"[companion] {target} already at status={ctx.get('status')}; "
             f"nothing to mark complete.",
+            file=sys.stderr,
+        )
+        return None
+
+    if ctx.get("status") != "implemented":
+        print(
+            f"[companion] {target} is at status={ctx.get('status')!r}, not "
+            f"'implemented'; refusing to mark complete (only a finished "
+            f"implement step can be shipped).",
             file=sys.stderr,
         )
         return None
