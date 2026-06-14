@@ -65,21 +65,23 @@ Produce a Companion specification — **no user-story / user-scenario section**.
    - Items marked incomplete require spec updates before clarify or plan
    ```
 
-5. **Classify the change — right-size the ceremony.** After the spec content is drafted, decide whether this change is small enough to fast-track straight to implement, or large enough to keep the full specify → plan → tasks → implement pipeline. This is a best-effort heuristic and **MUST err toward `normal`** on weak or conflicting signals — a change is never under-planned by accident.
+5. **Classify the change — right-size the ceremony.** After the spec content is drafted, decide whether this change is small enough to fast-track straight to implement, or large enough to keep the full specify → plan → tasks → implement pipeline. Apply the shared size definition below — the same one the standalone size step uses, so the small/large bar is authored in exactly one place. This is a best-effort heuristic and **MUST err toward `normal`** on weak or conflicting signals — a change is never under-planned by accident.
+
+<!-- speckit-companion:part sizing -->
+- **small** — the change plausibly touches **≤ 5 files** and decomposes into **≤ 10 tasks**.
+- **oversized** — the change clearly exceeds the small bar by a wide margin (broad multi-subsystem
+  work, many new files, or a long task list).
+- **normal** — anything in between (the default).
+
+The two constants (5 files / 10 tasks) are the same guardrail the old `complexityFastPath` used.
+<!-- /speckit-companion:part sizing -->
+
+   Estimate `projectedFiles` and `projectedTasks` for the drafted requirements, and read a `scopeSignal` from the wording (`"larger"` for rewrite | overhaul | new system | migration | redesign | …; `"smaller"` for one-line | rename | typo | tweak | copy change | …; else `"none"`). Then map the size definition above to a verdict:
 
    ```
-   fastPathEnabled = true   # Companion fast-path is core behavior — no flag required
+   crossedGuardrail = the change exceeds the **small** bar above (more files or tasks than it allows)
 
-   projectedFiles  = estimate the number of files the drafted requirements imply
-   projectedTasks  = estimate the number of implementation tasks the drafted requirements imply
-   scopeSignal     = "larger"  if the description/requirements contain rewrite | overhaul | new system | migration | redesign | …
-                     "smaller" if they contain one-line | rename | typo | tweak | copy change | …
-                     else "none"
-
-   crossedGuardrail = projectedFiles > 5 OR projectedTasks > 10   # fixed threshold — mirrors the tiny-change guardrail
-
-   verdict = "simple" if  projectedFiles <= 5
-                      and projectedTasks <= 10
+   verdict = "simple" if  the change is **small** by the definition above
                       and scopeSignal != "larger"
              else "normal"
    ```
@@ -121,7 +123,7 @@ python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <fe
 After the fold, the spec sits at the **tasks** step with `status: ready-to-implement`; the developer triggers implement next. Do **not** write a `completed` status — the final completed gate stays a user action.
 
 
-<!-- speckit-companion:timing -->
+<!-- speckit-companion:part timing -->
 ## Timing — keep `.spec-context.json` honest
 
 These rules apply to every Companion profile command. The extension records lifecycle timing with its own scripts wherever it can; these rules keep anything you append consistent with that and accurate for any dispatcher (terminal, IDE chat, or the GUI). The model is **finish-only**: each task and each substep records a *single* finish event, and its duration is the gap to the previous finish (or the step's start). Never a `start`+`complete` pair for a task or substep — a pair stamped at one instant is what produces `0s` ticks and bursts.
@@ -137,4 +139,15 @@ These rules apply to every Companion profile command. The extension records life
 
   The `--did`/`--files` flags make the script write `task_summaries.<TaskID>` (the field the Activity panel's Tasks card reads) in the same call that records the finish — so the panel is populated by the script, NOT by a hand-authored `.spec-context.json` edit. Do NOT also hand-edit `task_summaries` yourself; the script owns it. Run this **the moment that task completes** — one finish per task, as you go. Do NOT defer journaling to the end of the step and do NOT dump every task's finish in one end-of-step batch: that collapses their real durations into a single instant, and the cadence check now FAILS a run whose task finishes are clustered into a tiny fraction of the step's real duration. This stamps **one** finish event from the real clock — its delta to the previous task's finish is that task's duration. Do NOT hand-author per-task JSON and do NOT write a per-task `start`. The end-of-step hook is a backstop that fills any task you didn't journal (it won't duplicate one you did). Parallel `[P]` tasks: journal each as it finishes; the batch's time is attributed to whichever finishes last (accepted limitation).
 - **Never write the next step's start.** Only the next command appends the next step's start entry; writing it here makes the viewer render a phantom "Generating <next>…".
-<!-- /speckit-companion:timing -->
+<!-- /speckit-companion:part timing -->
+
+<!-- speckit-companion:part self-advance -->
+## Self-advance — hand off to the next step
+
+This is one step in the Companion pipeline. How the run continues depends on the environment you are running in; do not invoke a separate headless/deterministic run command for the everyday flow.
+
+- **On an agentic CLI that keeps acting after a step finishes:** once this step's work is complete, read the Companion workflow definition (`speckit-extension/workflows/speckit-companion.workflow.yml`) to learn which step comes next, then continue into it on your own — dispatch the next step's `/speckit.companion.*` command and keep going through the pipeline.
+- **Pause at every review gate.** Where the workflow marks a `gate` (e.g. review-spec, review-plan), stop and wait for approval rather than running past it. Only continue once the gate is approved.
+- **Terminal step after implement.** After the implementation step finishes (and any commit step), the workflow's final step is `mark-complete`. Run it so the spec lands at `status: completed`. That step writes `completed` only through `write-context.py --mark-complete`, which refuses unless the spec is already `implemented` — never introduce a second completed-writer.
+- **Degrade gracefully on a one-shot environment.** If your environment runs one step and then stops, the handoff simply does not fire: finish this step, record its progress, and stop. The run stays valid and resumable, and the next step is triggered manually (by the developer or the companion panel). Completion likewise stays a manual action there.
+<!-- /speckit-companion:part self-advance -->

@@ -5,7 +5,7 @@ description: "Mark the active spec completed — the Companion workflow's termin
 # Mark Spec Complete
 
 Promote the active feature to the terminal `completed` status in `.spec-context.json`. This is the
-Companion workflow's final node: it runs after `implement` has finished so the spec lands at the
+Companion workflow's final step: it runs after `implement` has finished so the spec lands at the
 end of the Active → Completed lifecycle. The **command** writes `completed` via the shared
 `write-context.py` path — you never hand-edit `.spec-context.json` to do it.
 
