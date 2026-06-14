@@ -53,13 +53,13 @@ specify extension add companion --ai-skills
 
 If you're stuck on the stock PyPI build and can't reinstall, replicate what the CLI does by hand: copy `speckit-extension/` → `.specify/extensions/companion/`, add a `companion` entry to `.specify/extensions/.registry`, and emit a `.claude/skills/speckit-companion-capture/SKILL.md` mirroring `.claude/skills/speckit-git-commit/SKILL.md`. This is a stopgap — the supported path is the source install above.
 
-## Template profiles (standard vs turbo)
+## Command families (stock SpecKit + the Companion workflow)
 
-The extension offers two pipeline shapes, and **both stay installed at once** — selecting one never removes the other. The **standard** shape is the stock `/speckit.*` commands (+ timing), carried by the `companion-standard` preset; the **turbo** shape is the namespaced `/speckit.companion.*` commands (trimmed — no user stories, trimmed plan, files/dependencies tasks). See the full reference in [`../../docs/template-profiles.md`](../../docs/template-profiles.md).
+Two command families stay installed at once — installing one never removes the other. The stock `/speckit.*` commands (+ timing) are carried by the `companion-standard` preset; the SpecKit Companion workflow is the namespaced `/speckit.companion.*` commands (lean — no user stories, trimmed plan, files/dependencies tasks). See the full reference in [`../../docs/template-profiles.md`](../../docs/template-profiles.md).
 
-**How to switch:** set the `speckit.companion.templateProfile` VS Code setting to `standard` (default), `turbo`, or `off`, mirrored to `.specify/companion.yml` — a machine-local, gitignored file the extension writes and regenerates on activation, so it never propagates across checkouts. Switching is **non-destructive** — it only routes which family a spec dispatches; no preset is added, removed, or swapped, so you never lose a command set. The extension keeps `companion-standard` present with an **add-only** activation ensure (it never removes it), which also recovers a project whose stock commands a prior version may have stranded.
+The Companion workflow is an opt-in beta gated by the `speckit.companion.workflowBeta` VS Code setting (off by default); stock SpecKit is always available regardless. Both families coexist — no preset is added, removed, or swapped when you toggle the gate, so you never lose a command set. The extension keeps `companion-standard` present with an **add-only** activation ensure (it never removes it), which also recovers a project whose stock commands a prior version may have stranded.
 
-The standard carrier installs from the bundled path; verify or (re-)materialize it manually with:
+The stock carrier installs from the bundled path; verify or (re-)materialize it manually with:
 
 ```bash
 specify preset add --dev ./speckit-extension/presets/companion-standard   # local/dev install
@@ -74,6 +74,6 @@ specify extension list        # companion present
 specify preset list           # companion-standard present
 ```
 
-Then run a real `/speckit.specify` and confirm `specs/<NNN>-<slug>/.spec-context.json` is written — see [how-it-works.md](./how-it-works.md#end-to-end-proof) for the full check. In **turbo** mode, confirm the produced `spec.md` has no user-story section.
+Then run a real `/speckit.specify` and confirm `specs/<NNN>-<slug>/.spec-context.json` is written — see [how-it-works.md](./how-it-works.md#end-to-end-proof) for the full check. With the Companion workflow, confirm the produced `spec.md` has no user-story section.
 
 > The capture hook invokes the script at its **installed** path, `.specify/extensions/companion/scripts/write-context.py` (mirroring the `git` extension's `.specify/extensions/git/scripts/…` convention) — not the source-repo `speckit-extension/scripts/…`. That's why it runs cleanly on any install. If you ever see `No such file or directory` for `speckit-extension/scripts/…`, the command-markdown drifted back to the dev-source path.

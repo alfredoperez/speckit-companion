@@ -1,0 +1,306 @@
+{
+  "workflow": "companion",
+  "specName": "One Companion Workflow",
+  "branch": "main",
+  "selectedAt": "2026-06-14T17:49:01.783Z",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-14T17:49:01.783Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-14T17:50:57.405Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-14T18:09:46.746Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T18:12:33Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T18:13:15Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T18:14:06Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-14T18:16:14.367Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T18:16:58Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T18:17:04Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-14T18:18:18.449Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T18:19:05.973Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T18:19:16.146Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T18:20:17.976Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T18:20:59.445Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T18:22:43.227Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T18:22:49.440Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T18:22:55.278Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T18:23:02.702Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T18:23:26.990Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T18:25:08.806Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T18:25:26.307Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T18:27:20.330Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T18:27:34.263Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-14T18:28:44.576Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "cli",
+      "at": "2026-06-14T18:33:00.561Z"
+    }
+  ],
+  "telemetryInstanceId": "e5e088b1-9a76-4e4d-9d7d-648e6e03ca55",
+  "currentTask": "T014",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Inventoried all turbo/standard-profile references across speckit-extension and src to scope later edits",
+      "files": [
+        "specs/171-one-companion-workflow/tasks.md"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Deleted the companion-turbo preset source tree, leaving _shared and companion-standard intact",
+      "files": [
+        "speckit-extension/presets/companion-turbo/"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Emptied ALL_PRESET_IDS to standard-only, kept the turbo leftover-removal path by adding TURBO_PRESET_ID to installedMap, and reframed turbo comments as old-install leftovers",
+      "files": [
+        "src/features/settings/companionPresetReconciler.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Confirmed reconciler tests stay green with turbo as leftover-only and refreshed stale turbo-mode comments to reflect the single Companion workflow",
+      "files": [
+        "src/features/settings/companionPresetReconciler.test.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Removed the turbo body-parity check, dropped companion-turbo from BODIES_NEEDING_PARTIAL, and updated the docstring/success line",
+      "files": [
+        "speckit-extension/scripts/check-shape-parity.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Scrubbed turbo from the speckit.companion.* command descriptions in extension.yml and bumped the extension version to 0.6.0",
+      "files": [
+        "speckit-extension/extension.yml"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Scrubbed turbo wording from the specify body and turned the fast-path on by default by setting fastPathEnabled=true and removing the opt-out gate from the verdict",
+      "files": [
+        "speckit-extension/commands/speckit.companion.specify.md"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Scrubbed turbo wording from the plan, tasks, and implement command descriptions and bodies",
+      "files": [
+        "speckit-extension/commands/speckit.companion.plan.md",
+        "speckit-extension/commands/speckit.companion.tasks.md",
+        "speckit-extension/commands/speckit.companion.implement.md"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Ran the full test suite (1010 passing) and the shape-parity check (OK), confirming behavior with turbo removed",
+      "files": [
+        "src/features/settings/companionPresetReconciler.test.ts",
+        "speckit-extension/scripts/check-shape-parity.py"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Rewrote the README and install docs to describe stock SpecKit + timing and the single lean Companion workflow, dropping turbo/standard as profile names",
+      "files": [
+        "speckit-extension/README.md",
+        "speckit-extension/docs/install.md"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Added a 0.6.0 CHANGELOG entry covering the single-workflow collapse and on-by-default fast-path in user-facing voice",
+      "files": [
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Updated template-profiles and capture-and-timing docs to drop turbo/standard as profile names, reflect the single workflow, and mark the command-path fast-path as on by default",
+      "files": [
+        "docs/template-profiles.md",
+        "docs/capture-and-timing.md"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Dropped the 'for turbo specs' phrasing in sidebar.md, using 'Companion specs' instead",
+      "files": [
+        "docs/sidebar.md"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Ran final SC-001/SC-002 greps (no active companion-turbo source/id, no turbo/standard profile naming) and re-ran the full suite (1010), docs-consistency, and parity — all green",
+      "files": [
+        "specs/171-one-companion-workflow/tasks.md"
+      ]
+    }
+  }
+}

@@ -55,7 +55,7 @@ Capture works on its own (the JSON is useful to any tool), but it's **built to f
 | Per-task history during implement | ❌ | ✅ |
 | `status` — where does this spec stand right now? | ❌ | ✅ |
 | `resume` — pick up exactly where you left off | ❌ | ✅ |
-| Lean "turbo" pipeline shape (no user stories, trimmed plan/tasks) | ❌ | ✅ |
+| Lean Companion pipeline shape (no user stories, trimmed plan/tasks) | ❌ | ✅ |
 | One real workflow on spec-kit's engine (`specify workflow run`/`resume`) with built-in size routing | ❌ | ✅ |
 | Honest state recovery when a lifecycle hook didn't fire | ❌ | ✅ |
 
@@ -70,7 +70,7 @@ Companion rides your **existing** spec-kit commands via lifecycle hooks — you 
 | **Honest state recovery** | ✅ Shipped | When a hook didn't fire, `derive-from-files.py` reconstructs state from the artifacts on disk — the GUI reflects reality, never a half-truth. |
 | **`/speckit.companion.status`** | ✅ Shipped | One command prints where the active spec stands — step, status, recorded decisions, and the next action. |
 | **`/speckit.companion.resume`** | ✅ Shipped | Pick up where you left off — carries recorded decisions into scope and dispatches the next command in the family the spec has been running. |
-| **Template profiles** ([standard / turbo](../docs/template-profiles.md)) | ✅ Shipped | Pick your pipeline shape: stock `/speckit.*` with better timing, or lean `/speckit.companion.*` (no user stories, trimmed plan, files/dependencies tasks). Both always installed; switching is non-destructive. |
+| **SpecKit Companion workflow** ([details](../docs/template-profiles.md)) | ✅ Shipped | The lean `/speckit.companion.*` pipeline — no user stories, a trimmed plan, files/dependencies tasks, smaller spec folder. The stock `/speckit.*` commands stay installed with better timing capture; both families coexist non-destructively. |
 | **Companion workflow** ([engine](../docs/template-profiles.md#companion-workflow-routing-node)) | ✅ Shipped | The whole Companion pipeline as one spec-kit workflow the engine drives end to end — `specify workflow run speckit-companion` walks specify → plan → tasks → implement → mark-complete with review gates, and a built-in routing node right-sizes small vs. oversized changes (no on/off setting — the thresholds live in the workflow). |
 | **Agent-agnostic, safe by design** | ✅ Shipped | Runs wherever spec-kit runs (Claude, Copilot, Cursor, Gemini, …). Writes are atomic, append-only, never regress a shipped spec, and never fail your command; stdlib-only Python. |
 
@@ -85,23 +85,20 @@ Four capture commands run automatically as lifecycle hooks; two are yours to run
 | `speckit.companion.capture-tasks` | `after_tasks` hook | Record tasks completion (`ready-to-implement`) |
 | `speckit.companion.capture-implement` | `after_implement` hook | Per-task journaling on implement (`implemented` when all tasks checked) |
 | `/speckit.companion.status` | you | Print the current step, status, recorded decisions, and the next action |
-| `/speckit.companion.resume` | you | Continue the pipeline from the recorded step — carries decisions into scope and dispatches the next command in the family the spec has been running (`/speckit.companion.<step>` for turbo specs, `/speckit.<step>` for stock specs; at the next unchecked task inside implement) |
-| `/speckit.companion.specify` · `.plan` · `.tasks` · `.implement` | you | Opt-in turbo pipeline — emit the turbo shape (no user stories, trimmed plan, files/dependencies tasks) for one spec, regardless of the project's profile |
+| `/speckit.companion.resume` | you | Continue the pipeline from the recorded step — carries decisions into scope and dispatches the next command in the family the spec has been running (`/speckit.companion.<step>` for Companion specs, `/speckit.<step>` for stock specs; at the next unchecked task inside implement) |
+| `/speckit.companion.specify` · `.plan` · `.tasks` · `.implement` | you | The SpecKit Companion pipeline — emit the lean shape (no user stories, trimmed plan, files/dependencies tasks) for a spec |
 | `speckit.companion.classify` | workflow routing node | Emit a `small \| normal \| oversized` size signal so the Companion workflow can right-size the pipeline (thresholds live here, not in a setting) |
 | `speckit.companion.mark-complete` | workflow terminal step | Write `status: completed` to `.spec-context.json` — the Companion workflow's final node (the command writes it; the AI never hand-writes `completed`) |
 
 Full reference: [docs/commands.md](./docs/commands.md).
 
-## Template profiles — pick your pipeline shape
+## SpecKit Companion workflow — the lean pipeline shape
 
-SpecKit Companion offers two pipeline shapes, and **both are always installed at the same time** — choosing one never deletes the other:
+There is one SpecKit Companion workflow: the lean `/speckit.companion.specify · plan · tasks · implement` commands — a trimmed shape with no user-story section, a trimmed plan, files/dependencies tasks, and a smaller spec folder. It runs alongside the **stock** `/speckit.*` commands, which stay installed unchanged with better timing capture (closest to upstream spec-kit). The two families coexist — installing one never deletes the other.
 
-- **Standard** — the stock `/speckit.specify · plan · tasks · implement` commands, unchanged, with better timing capture. Closest to upstream spec-kit.
-- **Turbo** — the `/speckit.companion.specify · plan · tasks · implement` commands: a trimmed shape with no user-story section, a trimmed plan, files/dependencies tasks, and a smaller spec folder.
+**How to turn it on:** the Companion workflow is an opt-in beta gated by the `speckit.companion.workflowBeta` VS Code setting (off by default). When it's on, the SpecKit / SpecKit Companion picker appears in Create Spec and the Continue/Resume button lights up on sidebar specs. Stock SpecKit is always available regardless of the gate.
 
-**How to switch:** set the `speckit.companion.templateProfile` VS Code setting to `standard`, `turbo`, or `off` (the default — it's an opt-in beta, so the profiles are off until you pick one). That's the only place the choice is made. Switching is **non-destructive** — neither command set is removed or overwritten, so you never lose your commands or hit "Unknown command" (the standard family is re-added automatically if a project is ever missing it). Each spec pins the project default the moment it's created, so flipping the setting later reshapes only *new* specs, never one that's already underway.
-
-`off` is an escape hatch that routes to the stock commands and skips the Companion install/repair step (it won't remove `companion-standard` if a prior setting already installed it). Under the hood the stock family stays present via an add-only activation step that also recovers a project whose commands a prior version may have stranded; a `scripts/check-shape-parity.py` guard keeps the turbo commands in lockstep with their bodies and asserts every body carries the shared timing partial. Full reference: [`../docs/template-profiles.md`](../docs/template-profiles.md).
+Under the hood the stock family stays present via an add-only activation step that also recovers a project whose commands a prior version may have stranded; a `scripts/check-shape-parity.py` guard asserts every Companion command body carries the shared timing partial. Full reference: [`../docs/template-profiles.md`](../docs/template-profiles.md).
 
 ## Companion workflow — run the whole pipeline on spec-kit's engine
 
