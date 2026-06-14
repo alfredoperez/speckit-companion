@@ -331,7 +331,8 @@ export class SpecEditorProvider {
             let command = customCommand ? `/${customCommand}` : workflow.stepSpecify;
             if (!customCommand && workflowName === COMPANION_WORKFLOW_NAME) {
                 const resolution = resolveDispatchForRoot(COMPANION_SPECIFY_COMMAND, workspaceRoot);
-                command = `/${formatCommandForProvider(resolution.command)}`;
+                // specify always has a stock twin, so command is never suppressed (null) here.
+                command = `/${formatCommandForProvider(resolution.command ?? 'speckit.specify')}`;
                 if (resolution.fellBack) {
                     this.warnFellBackToStock();
                 }

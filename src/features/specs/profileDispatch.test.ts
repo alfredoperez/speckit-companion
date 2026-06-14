@@ -47,9 +47,22 @@ describe('resolveDispatchWithFallback — missing-extension safety (FR-006/FR-00
         expect(r.fellBack).toBe(false);
     });
 
-    it('passes through a non-pipeline command unchanged (no stock twin to fall back to)', () => {
+    it('passes through a non-pipeline stock command unchanged (no stock twin to fall back to)', () => {
         const r = resolveDispatchWithFallback('speckit.clarify', specDir);
         expect(r.command).toBe('speckit.clarify');
+        expect(r.fellBack).toBe(false);
+    });
+
+    it('suppresses a companion-only command with no stock twin when the extension is missing', () => {
+        const r = resolveDispatchWithFallback('speckit.companion.mark-complete', specDir);
+        expect(r.command).toBeNull();
+        expect(r.fellBack).toBe(true);
+    });
+
+    it('keeps a companion-only command (no twin) when the extension IS installed', () => {
+        installExtension(wsRoot);
+        const r = resolveDispatchWithFallback('speckit.companion.mark-complete', specDir);
+        expect(r.command).toBe('speckit.companion.mark-complete');
         expect(r.fellBack).toBe(false);
     });
 });

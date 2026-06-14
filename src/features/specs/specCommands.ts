@@ -603,10 +603,12 @@ async function executeWorkflowStep(
     // a non-blocking warning rather than dispatch something the AI CLI can't
     // resolve (FR-006/FR-007).
     const resolution = resolveDispatchWithFallback(baseCommand, targetDir);
-    const command = resolution.command;
     if (resolution.fellBack) {
+        // command === null means a companion-only step (e.g. mark-complete) has no
+        // stock twin and the extension is missing — suppress dispatch entirely.
+        const suffix = resolution.command ? `running stock ${resolution.command}` : 'no stock equivalent — skipping';
         outputChannel.appendLine(
-            `[SpecKit] Companion command unavailable — spec-kit extension not installed; running stock ${command}.`
+            `[SpecKit] Companion command unavailable — spec-kit extension not installed; ${suffix}.`
         );
         void vscode.window.showWarningMessage(
             'The SpecKit Companion workflow needs the companion spec-kit extension, which is not installed — running the standard SpecKit flow instead.',
@@ -616,6 +618,10 @@ async function executeWorkflowStep(
                 void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
             }
         });
+    }
+    const command = resolution.command;
+    if (!command) {
+        return;
     }
     outputChannel.appendLine(`[SpecKit] Resolved command: ${command}`);
 

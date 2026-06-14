@@ -440,10 +440,12 @@ async function executeStepInTerminal(
   // Guard the missing-extension case: never dispatch a /speckit.companion.* command
   // when the spec-kit extension isn't installed — fall back to stock + warn (FR-006/FR-007).
   const resolution = resolveDispatchWithFallback(step.command, specDirectory);
-  const command = resolution.command;
   if (resolution.fellBack) {
+    // command === null means a companion-only step (e.g. mark-complete) has no
+    // stock twin and the extension is missing — suppress dispatch entirely.
+    const suffix = resolution.command ? `running stock ${resolution.command}` : 'no stock equivalent — skipping';
     deps.outputChannel.appendLine(
-      `[SpecViewer] Companion command unavailable — spec-kit extension not installed; running stock ${command}.`,
+      `[SpecViewer] Companion command unavailable — spec-kit extension not installed; ${suffix}.`,
     );
     void vscode.window
       .showWarningMessage(
@@ -455,6 +457,10 @@ async function executeStepInTerminal(
           void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
         }
       });
+  }
+  const command = resolution.command;
+  if (!command) {
+    return;
   }
   const specTelemetry = getSpecTelemetryContext(specDirectory);
   sendTelemetryEvent('phase.dispatched', {

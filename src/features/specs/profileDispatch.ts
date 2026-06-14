@@ -2,10 +2,15 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { isCompanionInstalled } from '../settings/companionPresetReconciler';
 
+/** Prefix every Companion-namespaced command shares. */
+const COMPANION_COMMAND_PREFIX = 'speckit.companion.';
+
 /**
  * The stock command each `/speckit.companion.*` command downgrades to when the
  * spec-kit companion extension is not installed. Only the four pipeline commands
- * have stock twins; `mark-complete` has none (it's the terminal companion action).
+ * have stock twins; companion-only commands with no twin (e.g. `mark-complete`,
+ * `classify`) have no entry and are suppressed rather than dispatched (see
+ * {@link resolveDispatchForRoot}).
  */
 const STOCK_COMMAND_BY_COMPANION: Record<string, string> = {
     'speckit.companion.specify': 'speckit.specify',
@@ -15,21 +20,28 @@ const STOCK_COMMAND_BY_COMPANION: Record<string, string> = {
 };
 
 /**
- * Whether a command needs the spec-kit companion extension to resolve — i.e. it's
- * one of the `/speckit.companion.*` pipeline commands. A stock `speckit.*` command
- * never needs it.
+ * Whether a command needs the spec-kit companion extension to resolve — ANY
+ * `/speckit.companion.*` command, not just the four with stock twins. Detection is
+ * prefix-based so a companion-only command (`mark-complete`, `classify`) can never
+ * slip past the missing-extension guard and dispatch unresolvably. A stock
+ * `speckit.*` command never needs it.
  */
 function isCompanionNamespacedCommand(command: string): boolean {
-    return command in STOCK_COMMAND_BY_COMPANION;
+    return command.startsWith(COMPANION_COMMAND_PREFIX);
 }
 
 export interface DispatchResolution {
-    /** The command to actually dispatch. */
-    command: string;
     /**
-     * True when a `/speckit.companion.*` command was downgraded to its stock twin
-     * because the spec-kit extension is missing. The caller should warn
-     * (non-blocking) and run the stock flow — NEVER dispatch the unresolvable
+     * The command to actually dispatch, or `null` when a companion command with no
+     * stock twin (e.g. `mark-complete`) was suppressed because the extension is
+     * missing — the caller must NOT dispatch anything in that case.
+     */
+    command: string | null;
+    /**
+     * True when a `/speckit.companion.*` command could not run as-is because the
+     * spec-kit extension is missing — either downgraded to its stock twin (`command`
+     * is the stock command) or suppressed when it has no twin (`command` is null).
+     * The caller should warn (non-blocking) and NEVER dispatch the unresolvable
      * namespaced command.
      */
     fellBack: boolean;
@@ -39,7 +51,9 @@ export interface DispatchResolution {
  * Apply the missing-extension fallback to an already-resolved workflow command,
  * given a workspace root. A `/speckit.companion.*` command resolves as-is when the
  * companion spec-kit extension is installed; otherwise it downgrades to its stock
- * twin with `fellBack: true`. Stock commands pass through unchanged. This is the
+ * twin (`fellBack: true`), or — for a companion-only command with no twin like
+ * `mark-complete` — is suppressed (`command: null, fellBack: true`) so nothing
+ * unresolvable is dispatched. Stock commands pass through unchanged. This is the
  * FR-006/FR-007 safety net so a Companion workflow never dispatches a command the
  * AI CLI can't resolve.
  */
@@ -53,7 +67,9 @@ export function resolveDispatchForRoot(
     if (workspaceRoot && isCompanionInstalled(workspaceRoot)) {
         return { command, fellBack: false };
     }
-    return { command: STOCK_COMMAND_BY_COMPANION[command], fellBack: true };
+    // Extension missing: downgrade to the stock twin, or suppress (null) when the
+    // companion command has no stock equivalent (mark-complete / classify).
+    return { command: STOCK_COMMAND_BY_COMPANION[command] ?? null, fellBack: true };
 }
 
 /**
