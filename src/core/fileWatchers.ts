@@ -14,10 +14,6 @@ import { getFileWatcherPatterns } from './specDirectoryResolver';
 import { readSpecContextSync } from '../features/specs/specContextReader';
 import { completeStep } from '../features/specs/stepLifecycle';
 import { shouldCloseImplement } from '../features/specs/implementCloseGuard';
-import {
-    shouldSettleArtifactStep,
-    type ArtifactSettleStep,
-} from '../features/specs/artifactSettleGuard';
 import { detectExternalTransition, transitionCache } from '../features/specs/transitionLogger';
 import { FEATURE_CONTEXT_FILE } from '../features/workflows/types';
 import type { TransitionEntry } from '../features/workflows/types';
@@ -357,80 +353,6 @@ async function initializeExistingTasksCache(outputChannel: vscode.OutputChannel)
     } catch (error) {
         outputChannel.appendLine(`[TasksWatcher] Error scanning for tasks.md files: ${error}`);
     }
-}
-
-/** Spec artifacts whose quiet window settles the matching step (#324). */
-const ARTIFACT_FILE_TO_STEP: Record<string, ArtifactSettleStep> = {
-    'spec.md': 'specify',
-    'plan.md': 'plan',
-};
-
-// How long `spec.md`/`plan.md` must be quiet before we treat the step as done.
-// Existence alone is not "done" (these files are written incrementally), so we
-// wait for writes to stop. Long enough to clear mid-generation pauses; if it
-// fires early, a later edit is harmless — the guard sees `status` already past
-// the in-flight form and no-ops, so the close is never double-written.
-const ARTIFACT_SETTLE_QUIET_MS = 4000;
-
-/**
- * Settle `specify`/`plan` deterministically from artifact stability (#324).
- *
- * `implement` settles from the always-on `tasks.md` watcher; `specify`/`plan`
- * had no equivalent, so in stock mode (no companion `after_*` hook, no terminal
- * handle for panel/chat dispatch) they stuck at `specifying`/`planning` forever
- * and the in-flight footer gate hid the advance button. This watcher closes the
- * step once its artifact has gone quiet, via the same `completeStep` lifecycle
- * helper — idempotent and no-backward-clobber by `shouldSettleArtifactStep`.
- * Mode-agnostic: it fires with NO companion extension installed, and no-ops in
- * companion mode where the hook has already settled the step.
- */
-export function setupArtifactSettleWatcher(
-    context: vscode.ExtensionContext,
-    outputChannel: vscode.OutputChannel
-): void {
-    const settleTimers = new Map<string, NodeJS.Timeout>();
-
-    const scheduleSettle = (uri: vscode.Uri) => {
-        const step = ARTIFACT_FILE_TO_STEP[path.basename(uri.fsPath)];
-        if (!step) return;
-        const specDir = path.dirname(uri.fsPath);
-        const key = `${specDir}::${step}`;
-
-        const existing = settleTimers.get(key);
-        if (existing) clearTimeout(existing);
-
-        settleTimers.set(key, setTimeout(async () => {
-            settleTimers.delete(key);
-            try {
-                const ctx = readSpecContextSync(specDir);
-                if (shouldSettleArtifactStep(ctx, step)) {
-                    outputChannel.appendLine(
-                        `[ArtifactSettleWatcher] ${path.basename(uri.fsPath)} quiet → settling ${step} for ${path.basename(specDir)}`
-                    );
-                    await completeStep(specDir, step, 'extension');
-                }
-            } catch (error) {
-                outputChannel.appendLine(`[ArtifactSettleWatcher] Error settling ${specDir}: ${error}`);
-            }
-        }, ARTIFACT_SETTLE_QUIET_MS));
-    };
-
-    // Narrow to just spec.md/plan.md under each configured root — watching every
-    // *.md (as setupSpecViewerWatcher already does) is needless event overhead
-    // here since scheduleSettle only reacts to those two basenames.
-    const roots = getFileWatcherPatterns().markdown.map(p => p.replace(/\*\.md$/, ''));
-    let registered = 0;
-    for (const root of roots) {
-        for (const file of Object.keys(ARTIFACT_FILE_TO_STEP)) {
-            const watcher = vscode.workspace.createFileSystemWatcher(`${root}${file}`);
-            watcher.onDidChange(scheduleSettle);
-            watcher.onDidCreate(scheduleSettle);
-            context.subscriptions.push(watcher);
-            registered++;
-        }
-    }
-    context.subscriptions.push({ dispose: () => settleTimers.forEach(clearTimeout) });
-    outputChannel.appendLine(`[ArtifactSettleWatcher] registered ${registered} artifact watchers`);
 }
 
 /**

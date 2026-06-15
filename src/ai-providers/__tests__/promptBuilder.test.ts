@@ -157,10 +157,16 @@ describe('buildPrompt', () => {
             expect(out).toContain('--feature-dir specs/001-demo');
         });
 
-        it('specify does not self-close in the preamble — its command records completion', () => {
-            const out = buildPrompt({ command: 'x', step: 'specify', specDir: 'specs/001-demo' });
+        it('companion specify defers self-close — its command records completion', () => {
+            const out = buildPrompt({ command: '/speckit.companion.specify x', step: 'specify', specDir: 'specs/001-demo' });
             expect(out).not.toContain('Flip status to "specified"');
             expect(out).toContain('do NOT append a step-level "complete" entry for specify');
+        });
+
+        it('stock specify SELF-closes — no companion command to record it', () => {
+            const out = buildPrompt({ command: '/speckit.specify x', step: 'specify', specDir: 'specs/001-demo' });
+            expect(out).toContain('Flip status to "specified"');
+            expect(out).not.toContain('do NOT append a step-level "complete" entry for specify');
         });
 
         it('returns raw command when step is unknown', () => {

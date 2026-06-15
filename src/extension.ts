@@ -23,7 +23,7 @@ import { SpecKitDetector, UpdateChecker, registerCliCommands, registerUtilityCom
 import { isCompanionInstalled } from './features/settings/companionPresetReconciler';
 
 // Core
-import { Views, setupFileWatchers, setupTasksWatcher, setupSpecViewerWatcher, setupArtifactSettleWatcher } from './core';
+import { Views, setupFileWatchers, setupTasksWatcher, setupSpecViewerWatcher } from './core';
 import { ConfigKeys } from './core/constants';
 import { ConfigManager } from './core/utils/configManager';
 import { migrateBetaTriStateSettings, removeRetiredSettings, migrateResumeBetaToWorkflowBeta, migrateWorkflowBetaKey, isCompanionWorkflowEnabled } from './core/settingsMigration';
@@ -243,10 +243,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Set up tasks watcher for phase completion notifications
     setupTasksWatcher(context, outputChannel);
-
-    // Deterministically settle specify/plan from artifact stability so stock
-    // specs (no companion hook) don't stick at specifying/planning (#324).
-    setupArtifactSettleWatcher(context, outputChannel);
 
     // Validate custom workflows on activation and register change listener
     validateWorkflowsOnActivation(outputChannel);
