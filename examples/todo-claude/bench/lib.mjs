@@ -415,11 +415,12 @@ function cellStatus(cellDir) {
 export async function waitForSettle(cellDir, step, timeoutMs = 600000, pollMs = 500) {
   const want = SETTLED_STATUS_BY_STEP[step]
   if (!want) throw new Error(`waitForSettle: unknown step "${step}"`)
-  const deadline = Date.now() + timeoutMs
+  const startMs = Date.now()
+  const elapsed = () => Math.max(0, Date.now() - startMs)
   for (;;) {
     const status = cellStatus(cellDir)
-    if (status === want) return { settled: true, status, waitedMs: timeoutMs - (deadline - Date.now()) }
-    if (Date.now() >= deadline) return { settled: false, status, waitedMs: timeoutMs }
+    if (status === want) return { settled: true, status, waitedMs: elapsed() }
+    if (elapsed() >= timeoutMs) return { settled: false, status, waitedMs: elapsed() }
     await new Promise((r) => setTimeout(r, pollMs))
   }
 }

@@ -1,11 +1,11 @@
 ---
 allowed-tools: Bash(node examples/todo-claude/bench/run-all.mjs:*), Agent, Workflow, AskUserQuestion
-description: Score the 5 bench variant folders for one size (build/acceptance/regression/conventions/capture + rubric + cross-solution review), record, report, and reset
+description: Score the 2 bench variant folders for one size (build/acceptance/regression/conventions/capture + rubric + cross-solution review), record, report, and reset
 ---
 
 ## Your task
 
-After you've run a size through the five folders in VS Code, capture the evals, append to history, regenerate the report, and reset the folders for the next round.
+After you've run a size through the two folders in VS Code, capture the evals, append to history, regenerate the report, and reset the folders for the next round.
 
 ### 1. Resolve the size
 
@@ -13,20 +13,20 @@ From `$ARGUMENTS` — `easy` | `medium` | `hard`. If missing, ask with **AskUser
 
 ### 2. Independent rubric judges (before measuring — they read the diff)
 
-Spawn one **judge agent per folder** (a `parallel()` Workflow of 5, or five Agent calls). Each judge — which did NOT write the code — does exactly:
+Spawn one **judge agent per folder** (a `parallel()` Workflow of 2, or two Agent calls). Each judge — which did NOT write the code — does exactly:
 
 - Read the diff: `git -C examples/bench-sandboxes/todo-<variant> diff --no-index examples/todo-claude/src examples/bench-sandboxes/todo-<variant>/src` (plus `index.html`).
 - Read the requirements `bench/prompts/<size>.md` and conventions `CLAUDE.md` in the folder.
 - Score 1–5: `readability`, `conventions`, `scope`. For a pure rename, store/lib-storage conventions are N/A — don't penalize their absence.
 - Write `quality = {readability, conventions, scope, justification}` into `examples/bench-sandboxes/todo-<variant>/.run-meta.json` (MERGE — keep runId/size/mode).
 
-The five variants: `speckit`, `companion-logs`, `companion-standard`, `companion-turbo`, `companion-fast-path`.
+The two variants: `speckit`, `companion`.
 
 ### 3. Comparative reviewer (one agent, cross-solution — augments the per-folder judges)
 
-The per-folder judges score each solution in isolation. Code correctness is hard to fully pin with tests, so also spawn **one** reviewer agent (it did NOT write any of the code) that sees **all five solutions at once**. **Run it before step 4** — measure resets the folders and erases the diffs. It does exactly:
+The per-folder judges score each solution in isolation. Code correctness is hard to fully pin with tests, so also spawn **one** reviewer agent (it did NOT write any of the code) that sees **both solutions at once**. **Run it before step 4** — measure resets the folders and erases the diffs. It does exactly:
 
-- Read every variant's diff: for each of the five variants, `git -C examples/bench-sandboxes/todo-<variant> diff --no-index examples/todo-claude/src examples/bench-sandboxes/todo-<variant>/src` (plus `index.html`).
+- Read every variant's diff: for each of the two variants, `git -C examples/bench-sandboxes/todo-<variant> diff --no-index examples/todo-claude/src examples/bench-sandboxes/todo-<variant>/src` (plus `index.html`).
 - Read the requirements `bench/prompts/<size>.md` and the conventions `CLAUDE.md`.
 - Produce a **comparative** review (not five isolated scores):
   - **Ranking** best→worst, one line each.
@@ -42,7 +42,7 @@ The per-folder judges score each solution in isolation. Code correctness is hard
 node examples/todo-claude/bench/run-all.mjs capture --size <size>
 ```
 
-This runs `npm run build` + the acceptance oracle + the full regression suite + convention/blast checks + the capture eval (`check_capture.py`, skipped for `speckit`), folds in each folder's rubric, computes the **Overall health composite** (+ `vs speckit` and `vs last run`), appends one row per variant to `bench/stats.jsonl` (deduped to last-per-variant) **and** to the append-only `bench/history.jsonl` (never deduped — the durable trend log), regenerates the 5-column `bench/REPORT.md`, writes per-run snapshots to `bench/runs/`, then **resets the five folders** to pristine for the next round. (Pass `--no-reset` if you want to inspect them first.)
+This runs `npm run build` + the acceptance oracle + the full regression suite + convention/blast checks + the capture eval (`check_capture.py`, skipped for `speckit`), folds in each folder's rubric, computes the **Overall health composite** (+ `vs speckit` and `vs last run`), appends one row per variant to `bench/stats.jsonl` (deduped to last-per-variant) **and** to the append-only `bench/history.jsonl` (never deduped — the durable trend log), regenerates the 2-column `bench/REPORT.md`, writes per-run snapshots to `bench/runs/`, then **resets the two folders** to pristine for the next round. (Pass `--no-reset` if you want to inspect them first.)
 
 ### 5. Brief (optional)
 
@@ -50,4 +50,4 @@ If the user wants a refreshed comparison brief, regenerate it via the **html-bri
 
 ### 6. Report
 
-Print the size's 5-column table (including the **Overall** rows), surface the comparative reviewer's ranking + verdict and the `reviews/<size>.md` path, and confirm the folders were reset (or note `--no-reset`).
+Print the size's 2-column table (including the **Overall** rows), surface the comparative reviewer's ranking + verdict and the `reviews/<size>.md` path, and confirm the folders were reset (or note `--no-reset`).
