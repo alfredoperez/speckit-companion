@@ -2,8 +2,7 @@
 // Run from INSIDE the cell root (cwd = the cell). Resolves the feature dir from
 // .specify/feature.json and the companion writer locally, so a driver issues
 // `node <repo>/examples/todo-claude/bench/cap.mjs plan complete` instead of the
-// full python invocation. Every companion mode uses this (companion-logs,
-// companion-standard, companion-turbo, companion-fast-path); only speckit runs no capture.
+// full python invocation. The companion mode uses this; speckit runs no capture.
 //
 //   specify start | specify complete
 //   plan start | plan substep <name> | plan complete

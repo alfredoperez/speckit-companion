@@ -1,11 +1,12 @@
-// bench/run-all.mjs — engine for the adoption-ladder bench (run-in-folders model).
-//   node bench/run-all.mjs --dry-run                  list the 5 variant folders + arm state
-//   node bench/run-all.mjs prep --size easy           clean + arm the 5 folders for a size
-//   node bench/run-all.mjs capture --size easy        measure the 5 folders → stats + report, then reset
+// bench/run-all.mjs — engine for the faithful 2-mode bench (run-in-folders model).
+//   node bench/run-all.mjs --dry-run                  list the variant folders + arm state
+//   node bench/run-all.mjs prep --size easy           clean + arm the folders for a size
+//   node bench/run-all.mjs capture --size easy        measure the folders → stats + report, then reset
 //
-// The 5 variant folders ARE the run folders — you build the feature in them (in VS
-// Code, or an agent drives them); there are no throwaway copies. `capture` reads any
-// rubric the judge wrote into each folder's .run-meta.json, then resets the folder.
+// The variant folders (one per mode in MODES — speckit, companion) ARE the run
+// folders — you build the feature in them (in VS Code, or an agent drives them); there
+// are no throwaway copies. `capture` reads any rubric + captureOverheadSec the driver
+// wrote into each folder's .run-meta.json, then resets the folder.
 import { existsSync, writeFileSync, mkdirSync, appendFileSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { execFileSync } from 'node:child_process'
@@ -26,13 +27,12 @@ function armNote(mode) {
   if (mode === 'speckit') return 'plain upstream · stock /speckit.* · no capture'
   const preset = PRESET_BY_MODE[mode]
   const profile = PROFILE_BY_MODE[mode]
-  const cmds = (mode === 'companion-turbo' || mode === 'companion-fast-path') ? '/speckit.companion.*' : 'stock /speckit.*'
-  return `companion · profile=${profile}${preset ? ` · ${preset}` : ' · no preset'} · ${cmds} (+capture)`
+  return `companion · profile=${profile}${preset ? ` · ${preset}` : ' · no preset'} · /speckit.companion.* (+capture, same GUI preamble as speckit)`
 }
 
 // ── --dry-run ──────────────────────────────────────────────────────────────
 if (args['dry-run']) {
-  console.log(`Adoption-ladder bench — ${MODES.length} variant folders × ${SIZES.length} sizes\n`)
+  console.log(`Faithful bench — ${MODES.length} variant folders × ${SIZES.length} sizes\n`)
   for (const mode of MODES) {
     const tmpl = existsSync(folderDir(mode)) ? '✓' : '✗ MISSING (run sync-templates / /bench-sync)'
     console.log(`  ${tmpl}  todo-${mode.padEnd(20)} ${armNote(mode)}`)
@@ -88,7 +88,8 @@ if (cmd === 'capture') {
     const startedAt = meta.startedAt || null
     const finishedAt = meta.finishedAt || null
     const wallClockSec = startedAt && finishedAt ? (Date.parse(finishedAt) - Date.parse(startedAt)) / 1000 : null
-    const row = { ...measureCell({ cellDir: dir, size, mode, runId: `${size}-${mode}`, startedAt, finishedAt, wallClockSec, quality: meta.quality || null }), capturedAt: new Date().toISOString() }
+    const captureOverheadSec = typeof meta.captureOverheadSec === 'number' ? meta.captureOverheadSec : null
+    const row = { ...measureCell({ cellDir: dir, size, mode, runId: `${size}-${mode}`, startedAt, finishedAt, wallClockSec, captureOverheadSec, quality: meta.quality || null }), capturedAt: new Date().toISOString() }
     appendFileSync(STATS_FILE, JSON.stringify(row) + '\n')
     appendFileSync(HISTORY_FILE, JSON.stringify(row) + '\n') // append-only; never deduped
     writeFileSync(join(RUNS_SNAP_DIR, `${row.runId}.json`), JSON.stringify(row, null, 2))
