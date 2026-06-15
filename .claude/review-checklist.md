@@ -61,6 +61,7 @@ The review subagent in `/ship-ticket` and `/fix-tickets` reads this **before** r
 - **Swapping a convenience endpoint for a list endpoint drops what it did for free** — `/releases/latest` → `/releases` loses draft/prerelease filtering, pagination, and incidental headers (`User-Agent`); re-add each. (#274)
 
 ## Tests & PR hygiene
+- **A test must exercise the REAL code path, not re-implement the condition under test.** A test that re-derives the predicate inline (e.g. recomputing a guard's boolean) passes even if the production guard is broken — false confidence. Extract the predicate into a named function and have both the production caller and the test call it. (#310)
 
 - **Green a stale test by re-deriving the fixture from the current contract — never weaken it to pass.** It must still fail on a real regression (verify by simulating one); append-only tests assert prior entries are byte-for-byte unchanged. Gate the suite in CI (no `|| true`). (#263)
 - **When you broaden a change's scope mid-PR, update the spec/PR-description constraint in the SAME commit** — a diff that contradicts its own stated constraint is flagged immediately. (#273)
