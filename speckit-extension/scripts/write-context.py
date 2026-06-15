@@ -498,10 +498,17 @@ def journal_task_finish(
             "at": _now_iso(),
         })
     _upsert_task_summary(ctx, task_id, did, files)
-    # At 100%, close the implement step itself too — the same step-level complete
-    # the sync_tasks backstop writes — so the live per-task path and the backstop
-    # converge on one canonical 'implemented' state (idempotent across both).
-    if at_100 and not _has_complete(log, "implement", None):
+    # Close the implement step itself only once EVERY task in tasks.md has a
+    # journaled finish (the one just appended included) — the same step-level
+    # complete the sync_tasks backstop writes. Gating on "all journaled" rather
+    # than "tasks.md 100%" keeps the step close as the LAST history entry even
+    # when the journal lags tasks.md's checkboxes. Idempotent with the backstop.
+    tasks_md = feature_dir / "tasks.md"
+    all_journaled = False
+    if tasks_md.is_file():
+        all_ids = set(dict.fromkeys(parse_task_markers(tasks_md)[0]))
+        all_journaled = bool(all_ids) and all_ids <= _journaled_tasks(log)
+    if all_journaled and not _has_complete(log, "implement", None):
         log.append({
             "step": "implement",
             "substep": None,

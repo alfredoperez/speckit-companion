@@ -72,6 +72,15 @@ class RecipeOverrideTests(unittest.TestCase):
         with self.assertRaises(cc.ConfigError):
             cc.validate_reads(asm.node_reads_map("plan", recipe))
 
+    def test_specify_reads_chain_validates_full_and_catches_a_dropped_link(self) -> None:
+        # specify has the deepest reads chain; the full order validates, and
+        # dropping a mid-chain node a kept node still reads is a load-time error.
+        default = asm.default_order("specify")
+        cc.validate_reads(asm.node_reads_map("specify", default))  # no raise
+        recipe = [n for n in default if n != "draft-spec"]  # read by quality-checklist + classify-size
+        with self.assertRaises(cc.ConfigError):
+            cc.validate_reads(asm.node_reads_map("specify", recipe))
+
 
 if __name__ == "__main__":
     unittest.main()
