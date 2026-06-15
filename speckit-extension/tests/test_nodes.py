@@ -97,10 +97,14 @@ class TimingFencePresenceTests(unittest.TestCase):
                 self.assertIn("timing", cp.PART_OPEN.findall(cp.read(rel)))
 
     def test_guard_flags_a_carrier_that_dropped_the_timing_fence(self) -> None:
+        # Exercise the REAL guard (parity.missing_timing_fence), not a re-implementation.
         rel = self._carriers()[0]
-        forked = cp.PART_FENCE.sub(lambda m: m.group(2), cp.read(rel))  # inline the part, drop the fence
-        flagged = rel.startswith(parity.STANDARD_CARRIER_PREFIX) and "timing" not in cp.PART_OPEN.findall(forked)
-        self.assertTrue(flagged, "guard must flag a carrier whose timing fence was inlined")
+        body = cp.read(rel)
+        self.assertFalse(parity.missing_timing_fence(rel, body), "an intact carrier must pass the guard")
+        forked = cp.PART_FENCE.sub(lambda m: m.group(2), body)  # inline the part, drop the fence
+        self.assertTrue(parity.missing_timing_fence(rel, forked), "guard must flag a dropped timing fence")
+        # Carrier-scoped: a non-carrier body without a timing fence is NOT flagged.
+        self.assertFalse(parity.missing_timing_fence("commands/speckit.companion.classify.md", "no fence"))
 
 
 if __name__ == "__main__":

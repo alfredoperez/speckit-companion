@@ -55,6 +55,13 @@ INTENTIONALLY_CHANGED = {
 STANDARD_CARRIER_PREFIX = "presets/companion-standard/commands/"
 
 
+def missing_timing_fence(rel: str, body: str) -> bool:
+    """True for a stock carrier that dropped its shared `timing` fence (and would
+    thus carry an un-single-sourced copy). The single source of check (c), so a
+    test can exercise the real guard instead of re-implementing the condition."""
+    return rel.startswith(STANDARD_CARRIER_PREFIX) and "timing" not in PART_OPEN.findall(body)
+
+
 def main() -> int:
     problems = []
 
@@ -83,7 +90,7 @@ def main() -> int:
                 problems.append(f"part drift: {rel}#{name}")
 
         # (c) timing-fence presence on the stock carriers
-        if rel.startswith(STANDARD_CARRIER_PREFIX) and "timing" not in PART_OPEN.findall(body):
+        if missing_timing_fence(rel, body):
             problems.append(f"missing timing fence: {rel}")
 
         # (b) golden equality (content-frozen commands only)
