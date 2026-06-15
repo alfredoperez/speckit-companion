@@ -1,0 +1,13 @@
+# Example: the SAME ship tail expressed as inline command/prompt hooks instead of
+# node files — no nodes/ directory needed. Use this form when the steps are short
+# enough to live in the config. SCRATCH-ONLY (the last two steps merge + reinstall).
+commands:
+  implement:
+    hooks:
+      after:
+        implement-exec:
+          - { type: command, run: "npm run compile && npm test && python3 speckit-extension/scripts/check-shape-parity.py" }
+          - { type: prompt, text: "Run /code-review at high effort on the branch diff vs main and apply --fix; commit fixes." }
+          - { type: prompt, text: "Open a PR with /create-pr conventions (conventional title, Closes #N, how-to-verify)." }
+          - { type: prompt, text: "Request a Copilot review (best-effort), address actionable threads, then merge with --squash. Never merge red checks." }
+          - { type: command, run: "echo '[ship] scratch run — skipping real install-local'" }

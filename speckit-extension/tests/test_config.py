@@ -96,6 +96,30 @@ class RecipeResolveTests(unittest.TestCase):
         cc.validate_reads(active)  # no raise
 
 
+class ShipTicketDogfoodTests(unittest.TestCase):
+    """The ship-ticket example wires real node hooks; assert it parses + resolves."""
+
+    EXAMPLE = Path(__file__).resolve().parent.parent / "examples" / "ship-ticket"
+
+    def test_node_form_merges_five_hooks_in_order_with_refs_resolving(self) -> None:
+        cfg = cc.load_yaml((self.EXAMPLE / "companion.yml").read_text())
+        ordered, warnings = cc.merge_hooks(
+            cfg, "implement", ["implement-exec", "handoff"],
+            nodes_dir=str(self.EXAMPLE / "nodes"),
+        )
+        refs = [h["hook"]["ref"] for h in ordered]
+        self.assertEqual(refs, ["review", "pr", "copilot", "merge", "install-local"])
+        self.assertTrue(all(h["when"] == "after" and h["anchor"] == "implement-exec" for h in ordered))
+        self.assertEqual(warnings, [])
+
+    def test_inline_form_parses_command_and_prompt_hooks(self) -> None:
+        cfg = cc.load_yaml((self.EXAMPLE / "companion.inline.yml").read_text())
+        ordered, warnings = cc.merge_hooks(cfg, "implement", ["implement-exec", "handoff"])
+        types = [h["hook"]["type"] for h in ordered]
+        self.assertEqual(types, ["command", "prompt", "prompt", "prompt", "command"])
+        self.assertEqual(warnings, [])
+
+
 class FailureTableTests(unittest.TestCase):
     def test_absent_config_is_silent_defaults(self) -> None:
         with tempfile.TemporaryDirectory() as d:
