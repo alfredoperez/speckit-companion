@@ -7,7 +7,7 @@ A minimal React + TypeScript + Vite todo application for testing AI CLI provider
 This app has two roles:
 
 1. **Provider test bed** — validating spec-driven development workflows across different AI CLI providers (Claude Code, Gemini CLI, GitHub Copilot CLI).
-2. **Adoption-ladder bench** — running the same feature through five workflow modes (plain spec-kit → companion-logs → companion-standard → companion-turbo → companion-fast-path), at three sizes, to compare correctness, ceremony, and speed. See [`bench/README.md`](./bench/README.md) (driven by the `/bench-sync` → `/bench-prep` → `/bench-capture` Claude Code commands).
+2. **Faithful bench** — running the same feature two ways (plain spec-kit vs the SpecKit Companion pipeline), at three sizes, to compare correctness, ceremony, and speed with capture overhead isolated. See [`bench/README.md`](./bench/README.md) (driven by the `/bench-sync` → `/bench-prep` → `/bench-capture` Claude Code commands).
 
 ## Getting Started
 
@@ -55,7 +55,7 @@ todo-claude/
 │   │   └── todos.tsx       # reducer + context + localStorage persistence
 │   ├── components/         # Header, AddTodo, TodoItem, TodoList
 │   └── pages/              # TodosPage, AboutPage (one per route)
-├── bench/                  # adoption-ladder harness (prompts, oracle, scripts)
+├── bench/                  # faithful 2-mode harness (prompts, oracle, scripts)
 ├── .specify/               # spec-kit workspace (templates, scripts, extensions)
 ├── index.html · package.json · tsconfig.json · vite.config.ts · vitest.config.ts
 ```

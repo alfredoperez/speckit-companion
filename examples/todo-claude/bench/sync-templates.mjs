@@ -1,8 +1,8 @@
-// bench/sync-templates.mjs — (re)bake the five per-variant sandbox FOLDERS by
-// running the REAL installers, so each folder gets exactly what current tooling
-// produces (hyphenated /speckit-* + /speckit-companion-* skills) and we exercise
-// the actual install path.
-//   node bench/sync-templates.mjs [--only speckit|companion-logs|companion-standard|companion-turbo|companion-fast-path]
+// bench/sync-templates.mjs — (re)bake the per-mode sandbox FOLDERS (speckit,
+// companion) by running the REAL installers, so each folder gets exactly what
+// current tooling produces (hyphenated /speckit-* + /speckit-companion-* skills)
+// and we exercise the actual install path.
+//   node bench/sync-templates.mjs [--only speckit|companion]
 //
 // Per folder: clone the app (for src + node_modules), drop the stale spec-kit
 // emissions, `specify init` (current stock spec-kit), then for companion variants
@@ -76,7 +76,7 @@ export function installCompanion(dir, variant) {
     if (existsSync(join(dir, '.specify', 'presets', presetId))) specify(dir, ['preset', 'remove', presetId])
     presetOk = specify(dir, ['preset', 'add', presetId, '--dev', join(PRESET_SRC_DIR, presetId)])
   }
-  writeProfile(dir, PROFILE_BY_MODE[variant], variant === 'companion-fast-path')
+  writeProfile(dir, PROFILE_BY_MODE[variant]) // fast-path stays off in every cell
   return { extOk, presetOk, presetId }
 }
 

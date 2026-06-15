@@ -26,29 +26,25 @@ export const VITEST_OUT = join(BENCH_DIR, '.last-vitest.json')
 
 // easy = update a route/title · medium = add a feature to todos · hard = a whole new feature
 export const SIZES = ['easy', 'medium', 'hard']
-// The bench axis is an adoption ladder. Each step adds ONE thing vs the prior:
-//   speckit            — plain upstream, no companion, NO capture (blind).
-//   companion-logs     — companion installed (capture/logs), SAME stock /speckit-* commands, profile off.
-//   companion-standard — companion-standard preset (stock /speckit-* shape + timing + capture).
-//   companion-turbo    — companion-turbo preset, lean /speckit-companion-* commands, fast-path OFF.
-//   companion-fast-path— same as turbo PLUS complexityFastPath ON.
-// (turbo & fast-path differ ONLY by complexityFastPath; standard & turbo differ by preset/commands.)
-export const MODES = ['speckit', 'companion-logs', 'companion-standard', 'companion-turbo', 'companion-fast-path']
+// Post-#312 the pipeline consolidated to TWO workflows — the turbo/lean/fast-path/
+// logs preset axis no longer exists. The bench mirrors that, with exactly two modes:
+//   speckit   — plain upstream spec-kit, no companion, NO capture (blind control).
+//   companion — the SpecKit Companion pipeline (`/speckit.companion.*` + capture).
+// They differ ONLY in the command family; both receive the SAME per-step GUI dispatch
+// preamble (see bench/driver.mjs), so the comparison is a trustworthy RELATIVE
+// stock-vs-companion delta, not an absolute wall-clock match to a human GUI run.
+// Legacy rows (companion-logs/standard/turbo/fast-path) still READ from the jsonl
+// logs for back-compat — we simply stopped generating them.
+export const MODES = ['speckit', 'companion']
 // Modes with companion installed → capture fires. (speckit is the only blind one.)
-export const COMPANION_MODES = ['companion-logs', 'companion-standard', 'companion-turbo', 'companion-fast-path']
+export const COMPANION_MODES = ['companion']
 export const PRESET_BY_MODE = {
   'speckit': null,
-  'companion-logs': null,
-  'companion-standard': 'companion-standard',
-  'companion-turbo': 'companion-turbo',
-  'companion-fast-path': 'companion-turbo',
+  'companion': 'companion-standard',
 }
 // templateProfile written into each companion cell's .specify/companion.yml.
 export const PROFILE_BY_MODE = {
-  'companion-logs': 'off',
-  'companion-standard': 'standard',
-  'companion-turbo': 'turbo',
-  'companion-fast-path': 'turbo',
+  'companion': 'standard',
 }
 
 // The five per-variant sandbox FOLDERS are the run folders themselves — you open
@@ -83,10 +79,10 @@ export function folderDir(style) {
 export function writeVscodeSettings(dir, mode) {
   const s = {
     'speckit.aiProvider': 'claude',
+    'speckit.defaultWorkflow': mode === 'speckit' ? 'speckit' : 'companion',
     'speckit.companion.templateProfile': mode === 'speckit' ? 'off' : PROFILE_BY_MODE[mode],
-    // Pin fast-path in EVERY folder so the user's global setting can't leak in.
-    // Only the dedicated companion-fast-path mode runs WITH it; everything else false.
-    'speckit.companion.complexityFastPath': mode === 'companion-fast-path',
+    // Pin fast-path OFF in every folder so the user's global setting can't leak in.
+    'speckit.companion.complexityFastPath': false,
   }
   mkdirSync(join(dir, '.vscode'), { recursive: true })
   writeFileSync(join(dir, '.vscode', 'settings.json'), JSON.stringify(s, null, 2) + '\n')
@@ -390,6 +386,44 @@ export function specArtifacts(specDir) {
 
 export const STEPS = ['specify', 'plan', 'tasks', 'implement']
 
+// The completed-form status a step's own `.spec-context.json` lands on — the same
+// settle signal the GUI's file watchers wait for before surfacing the next-phase
+// button. A driver must wait for this (not fire capture synchronously) so per-step
+// times measure real work, not the dispatch instant.
+export const SETTLED_STATUS_BY_STEP = {
+  specify: 'specified',
+  plan: 'planned',
+  tasks: 'ready-to-implement',
+  implement: 'implemented',
+}
+
+// Resolve the cell's newest spec dir's .spec-context.json status, or null when
+// the file/dir doesn't exist yet.
+function cellStatus(cellDir) {
+  const specsDir = join(cellDir, 'specs')
+  const specName = newestSpecDir(specsDir)
+  if (!specName) return null
+  const ctx = readJson(join(specsDir, specName, '.spec-context.json'), null)
+  return ctx && typeof ctx.status === 'string' ? ctx.status : null
+}
+
+// Wait for a dispatched step to SETTLE before advancing: poll the cell's
+// `.spec-context.json` until its status reaches the step's completed form
+// (`specified`/`planned`/`ready-to-implement`/`implemented`). Resolves
+// { settled:true, status, waitedMs } on settle, or { settled:false, ... } on
+// timeout. Mirrors the GUI's settle-wait so the bench is a faithful proxy.
+export async function waitForSettle(cellDir, step, timeoutMs = 600000, pollMs = 500) {
+  const want = SETTLED_STATUS_BY_STEP[step]
+  if (!want) throw new Error(`waitForSettle: unknown step "${step}"`)
+  const deadline = Date.now() + timeoutMs
+  for (;;) {
+    const status = cellStatus(cellDir)
+    if (status === want) return { settled: true, status, waitedMs: timeoutMs - (deadline - Date.now()) }
+    if (Date.now() >= deadline) return { settled: false, status, waitedMs: timeoutMs }
+    await new Promise((r) => setTimeout(r, pollMs))
+  }
+}
+
 export function timingFromHistory(history) {
   const at = (e) => Date.parse(e.at)
   const ats = history.map(at).filter((n) => !Number.isNaN(n))
@@ -440,7 +474,7 @@ function runAcceptance(cwd, size) {
 // capture EVAL (no companion install) — but the always-on VS Code extension may
 // still have written a `.spec-context.json`, so speckit can carry `history[]`
 // timing; it just isn't graded for capture fidelity.
-export function measureCell({ cellDir, size, mode, runId, startedAt, finishedAt, wallClockSec, quality = null }) {
+export function measureCell({ cellDir, size, mode, runId, startedAt, finishedAt, wallClockSec, captureOverheadSec = null, quality = null }) {
   const specsDir = join(cellDir, 'specs')
   const specName = newestSpecDir(specsDir)
   const specDir = specName ? join(specsDir, specName) : null
@@ -475,6 +509,10 @@ export function measureCell({ cellDir, size, mode, runId, startedAt, finishedAt,
     spec: specName || null,
     specName: ctx.specName || specName || null,
     startedAt, finishedAt, wallClockSec,
+    // Time the driver spent inside capture (write-context/journaling) for this
+    // cell — reported as its OWN row so the speed comparison isolates work-time
+    // from the capture tax. null for speckit (blind, no capture).
+    captureOverheadSec,
     timing,
     buildPass,
     acceptancePassed: acceptance.passed,
@@ -490,7 +528,7 @@ export function measureCell({ cellDir, size, mode, runId, startedAt, finishedAt,
   }
 }
 
-// ── 3-way report rendering (speckit | standard | turbo) ────────────────────
+// ── 2-mode report rendering (speckit | companion) ──────────────────────────
 
 export function loadStatsRows() {
   return readText(STATS_FILE).split('\n').filter(Boolean).map((l) => {
@@ -556,6 +594,7 @@ export function renderReport(rows) {
 
   const metric = [
     ['Wall-clock', (r) => fmtDur(r.wallClockSec)],
+    ['Capture overhead', (r) => (r.captureOverheadSec == null ? '—' : fmtDur(r.captureOverheadSec))],
     ['History total', (r) => fmtDur(dur(r, 'total'))],
     ['· specify', (r) => fmtDur(dur(r, 'specify'))],
     ['· plan', (r) => fmtDur(dur(r, 'plan'))],
@@ -614,10 +653,13 @@ export function renderReport(rows) {
     .map((r) => `- \`${r.runId}\` → ${r.mode}/${r.size} · build ${r.buildPass ? '✓' : '✗'} · acceptance ${r.acceptancePassed}/${r.acceptanceTotal} · capture ${r.capture ? `${r.capture.pass}✓/${r.capture.fail}✗` : 'n/a'} · ${fmtDur(r.wallClockSec)}`)
     .join('\n')
 
-  return `# Adoption-Ladder Bench — Report\n\n` +
-    `Generated from \`bench/stats.jsonl\`. Each size shows the latest run per variant: ` +
-    `**speckit** (plain, no companion) → **companion-logs** (capture, same commands) → ` +
-    `**companion-standard** (standard preset) → **companion-turbo** (lean) → ` +
-    `**companion-fast-path** (turbo + fast-path).\n\n` +
+  return `# Faithful Bench — Report\n\n` +
+    `Generated from \`bench/stats.jsonl\`. Each size shows the latest run per mode: ` +
+    `**speckit** (plain upstream, no companion, blind) vs **companion** (the SpecKit ` +
+    `Companion pipeline + capture). Both modes receive the SAME per-step GUI dispatch ` +
+    `preamble, so this is a trustworthy RELATIVE comparison — the **Capture overhead** ` +
+    `row isolates time spent journaling from work time. Absolute wall-clock here will ` +
+    `NOT match a human's interactive GUI run (agents are far faster); your own GUI runs ` +
+    `are the absolute yardstick.\n\n` +
     `${sections.join('\n')}\n## All runs\n\n${log || '_none yet_'}\n`
 }
