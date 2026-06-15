@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **Stock specs no longer get stuck after the Specify (or Plan) step** (#324): in a plain SpecKit project — without the companion spec-kit extension — running Specify from the editor's chat panel used to finish writing the spec file but leave the spec showing "specifying" forever, with the next-step button hidden, so the only way forward was hand-editing a file. The spec now advances to "specified" on its own once the spec file settles (and the same for Plan → "planned"), and the next-step button reappears. Specs running the Companion pipeline are unaffected — they already advanced on their own.
 - **The spec viewer's footer now follows the spec's own workflow** (#317): the next-step button in the open spec used to always reflect the default pipeline, even for a spec running a different workflow. It now resolves each spec's own workflow (the same way the sidebar does) and falls back to the default only when none is set, so the button you see and click matches the spec in front of you.
 
 ### Changed
