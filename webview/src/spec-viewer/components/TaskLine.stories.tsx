@@ -112,6 +112,31 @@ const taskItemBaseStyle: React.CSSProperties = {
   lineHeight: "1.5",
 };
 
+// Layout-relevant checkbox styles from li.task-item input[type="checkbox"]
+// (size + margin + flex-shrink — the bits that drive alignment). Cosmetic props
+// like cursor/transition are intentionally omitted; this is a story baseline,
+// not a 1:1 CSS clone. margin-top tracks the label line-height so the box
+// centers on the first text line at any font size — matches _tasks.css.
+const checkboxStyle: React.CSSProperties = {
+  appearance: "none",
+  WebkitAppearance: "none",
+  width: "16px",
+  height: "16px",
+  minWidth: "16px",
+  margin: "calc((1.4em - 16px) / 2) 0 0 0",
+  border: "2px solid var(--border-checkbox)",
+  borderRadius: "50%",
+  background: "var(--bg-checkbox)",
+  flexShrink: 0,
+};
+
+// Mirrors li.task-item .task-text — tighter line-height than the row.
+const taskTextStyle: React.CSSProperties = {
+  flex: "1 1 auto",
+  minWidth: 0,
+  lineHeight: "1.4",
+};
+
 // ============================================================
 // US1 / SC-001: Zero layout shift on hover
 // ============================================================
@@ -132,8 +157,8 @@ export const TaskLineSingleLineIdle: Story = {
         >
           <CommentIconSVG />
         </button>
-        <input type="checkbox" />
-        <span class="task-text line-content">
+        <input type="checkbox" style={checkboxStyle} />
+        <span class="task-text line-content" style={taskTextStyle}>
           Implement login form with email and password fields
         </span>
         <div class="line-comment-slot"></div>
@@ -146,8 +171,8 @@ export const TaskLineSingleLineIdle: Story = {
         >
           <CommentIconSVG />
         </button>
-        <input type="checkbox" />
-        <span class="task-text line-content">
+        <input type="checkbox" style={checkboxStyle} />
+        <span class="task-text line-content" style={taskTextStyle}>
           Write unit tests for form validation
         </span>
         <div class="line-comment-slot"></div>
@@ -189,8 +214,8 @@ export const TaskLineSingleLineHover: Story = {
         >
           <CommentIconSVG />
         </button>
-        <input type="checkbox" />
-        <span class="task-text line-content">
+        <input type="checkbox" style={checkboxStyle} />
+        <span class="task-text line-content" style={taskTextStyle}>
           Implement login form with email and password fields
         </span>
         <div class="line-comment-slot"></div>
@@ -203,8 +228,8 @@ export const TaskLineSingleLineHover: Story = {
         >
           <CommentIconSVG />
         </button>
-        <input type="checkbox" />
-        <span class="task-text line-content">
+        <input type="checkbox" style={checkboxStyle} />
+        <span class="task-text line-content" style={taskTextStyle}>
           Write unit tests for form validation
         </span>
         <div class="line-comment-slot"></div>
@@ -238,8 +263,8 @@ export const TaskLineWrappingIdle: Story = {
         >
           <CommentIconSVG />
         </button>
-        <input type="checkbox" />
-        <span class="task-text line-content">{WRAPPING_TEXT}</span>
+        <input type="checkbox" style={checkboxStyle} />
+        <span class="task-text line-content" style={taskTextStyle}>{WRAPPING_TEXT}</span>
         <div class="line-comment-slot"></div>
       </li>
       <li class="task-item line" style={taskItemBaseStyle}>
@@ -250,8 +275,8 @@ export const TaskLineWrappingIdle: Story = {
         >
           <CommentIconSVG />
         </button>
-        <input type="checkbox" />
-        <span class="task-text line-content">Short single-line task below</span>
+        <input type="checkbox" style={checkboxStyle} />
+        <span class="task-text line-content" style={taskTextStyle}>Short single-line task below</span>
         <div class="line-comment-slot"></div>
       </li>
     </ul>
@@ -291,8 +316,8 @@ export const TaskLineWrappingHover: Story = {
         >
           <CommentIconSVG />
         </button>
-        <input type="checkbox" />
-        <span class="task-text line-content">{WRAPPING_TEXT}</span>
+        <input type="checkbox" style={checkboxStyle} />
+        <span class="task-text line-content" style={taskTextStyle}>{WRAPPING_TEXT}</span>
         <div class="line-comment-slot"></div>
       </li>
       <li class="task-item line" style={taskItemBaseStyle}>
@@ -303,8 +328,8 @@ export const TaskLineWrappingHover: Story = {
         >
           <CommentIconSVG />
         </button>
-        <input type="checkbox" />
-        <span class="task-text line-content">Short single-line task below</span>
+        <input type="checkbox" style={checkboxStyle} />
+        <span class="task-text line-content" style={taskTextStyle}>Short single-line task below</span>
         <div class="line-comment-slot"></div>
       </li>
     </ul>
