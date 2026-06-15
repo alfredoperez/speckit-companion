@@ -116,6 +116,13 @@ commands:
 
 - **Anchors** are `before`/`after` a named node. Several hooks at one anchor run **top to bottom, in declared order**.
 - **Hook types:** `command` (run a shell command — needs a terminal tool; chat-only providers degrade gracefully), `prompt` (an inline instruction), `node` (run a user node file from `.specify/companion/nodes/<id>.md`).
+- **`background: true`** on any hook kicks it off and lets the pipeline continue without waiting — so a slow side-effect never holds the spec prisoner:
+
+  ```yaml
+  - { type: command, run: "npm run e2e", background: true }
+  ```
+
+  Use it for slow, independent work (a test run, a build, a notification). **Don't** put it on anything that writes `.spec-context.json` (the timing/capture calls): those are fast already, and two of them racing in the background can lose an update on the shared file. Background is for side-effects, not bookkeeping.
 
 ### Recipes
 

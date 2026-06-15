@@ -74,6 +74,8 @@ This command is assembled from ordered **nodes**. A project can attach its own w
 - `{ type: prompt, text: "<instruction>" }` — treat the text as an inline instruction and act on it before moving on.
 - `{ type: node, ref: <id> }` — read `.specify/companion/nodes/<id>.md` and carry out its body as if it were part of this command.
 
+**Background hooks.** Any hook may add `background: true`. Kick it off and continue the pipeline immediately without waiting for it to finish — it must not hold the spec prisoner. Use it for slow, independent side-effects (a test run, a build, a notification): for a `command`, launch it detached (e.g. append `&` or use `nohup … &`); for a `node`/`prompt`, do its work without blocking the next step. Report its result whenever it lands, but never block on it. **Do not** mark a `background` hook on anything that writes `.spec-context.json` (the timing/capture calls): those are fast already and run a read-modify-write on the shared file, so two of them racing in the background can lose an update. Background is for side-effects, not bookkeeping.
+
 **Failure handling (never abort the host command):**
 
 - **No `.specify/companion.yml`** → there are no hooks; run the command exactly as written. Do not warn.

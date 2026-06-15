@@ -59,6 +59,21 @@ class MergeContractTests(unittest.TestCase):
         self.assertNotIn("handoff", [h["anchor"] for h in ordered])
         self.assertTrue(any("handoff" in w and "skipped" in w for w in warnings))
 
+    def test_background_flag_is_preserved_through_merge(self) -> None:
+        cfg = cc.load_yaml(
+            "commands:\n"
+            "  implement:\n"
+            "    hooks:\n"
+            "      after:\n"
+            "        implement-exec:\n"
+            "          - { type: command, run: \"npm run e2e\", background: true }\n"
+            "          - { type: command, run: \"echo done\" }\n"
+        )
+        ordered, warnings = cc.merge_hooks(cfg, "implement", ["implement-exec", "handoff"])
+        self.assertEqual(ordered[0]["hook"].get("background"), True)
+        self.assertIsNone(ordered[1]["hook"].get("background"))
+        self.assertEqual(warnings, [])
+
     def test_missing_node_ref_is_hard_error(self) -> None:
         with tempfile.TemporaryDirectory() as d:
             with self.assertRaises(cc.ConfigError):
