@@ -32,8 +32,9 @@ export interface ArtifactSettleContext {
  * True iff the watcher should now write the terminal close for `step`.
  *
  * All of the following must hold:
- *   - The spec is not terminal (`implemented`/`completed`/`archived`) — never
- *     regress a finished spec.
+ *   - The spec is not terminal (`completed`/`archived`, per `isTerminalStatus`)
+ *     — never regress a finished spec. `implemented` need not be listed: its
+ *     `currentStep` is `implement`, so the next check already excludes it.
  *   - The spec is sitting ON this step: `currentStep === step`. A fast-path spec
  *     that folded `plan`/`tasks` into `specify` has already moved `currentStep`
  *     past `specify`, so its `plan.md`/`spec.md` writes never settle here.

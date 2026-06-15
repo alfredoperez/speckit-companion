@@ -15,7 +15,6 @@ import { readSpecContextSync } from '../features/specs/specContextReader';
 import { completeStep } from '../features/specs/stepLifecycle';
 import { shouldCloseImplement } from '../features/specs/implementCloseGuard';
 import {
-    ARTIFACT_SETTLE_STEPS,
     shouldSettleArtifactStep,
     type ArtifactSettleStep,
 } from '../features/specs/artifactSettleGuard';
@@ -406,7 +405,7 @@ export function setupArtifactSettleWatcher(
                 const ctx = readSpecContextSync(specDir);
                 if (shouldSettleArtifactStep(ctx, step)) {
                     outputChannel.appendLine(
-                        `[ArtifactSettleWatcher] ${path.basename(uri.fsPath)} quiet → closing ${step} (→ ${ARTIFACT_SETTLE_STEPS[step]} done) for ${path.basename(specDir)}`
+                        `[ArtifactSettleWatcher] ${path.basename(uri.fsPath)} quiet → settling ${step} for ${path.basename(specDir)}`
                     );
                     await completeStep(specDir, step, 'extension');
                 }
@@ -416,15 +415,22 @@ export function setupArtifactSettleWatcher(
         }, ARTIFACT_SETTLE_QUIET_MS));
     };
 
-    const patterns = getFileWatcherPatterns().markdown;
-    for (const pattern of patterns) {
-        const watcher = vscode.workspace.createFileSystemWatcher(pattern);
-        watcher.onDidChange(scheduleSettle);
-        watcher.onDidCreate(scheduleSettle);
-        context.subscriptions.push(watcher);
+    // Narrow to just spec.md/plan.md under each configured root — watching every
+    // *.md (as setupSpecViewerWatcher already does) is needless event overhead
+    // here since scheduleSettle only reacts to those two basenames.
+    const roots = getFileWatcherPatterns().markdown.map(p => p.replace(/\*\.md$/, ''));
+    let registered = 0;
+    for (const root of roots) {
+        for (const file of Object.keys(ARTIFACT_FILE_TO_STEP)) {
+            const watcher = vscode.workspace.createFileSystemWatcher(`${root}${file}`);
+            watcher.onDidChange(scheduleSettle);
+            watcher.onDidCreate(scheduleSettle);
+            context.subscriptions.push(watcher);
+            registered++;
+        }
     }
     context.subscriptions.push({ dispose: () => settleTimers.forEach(clearTimeout) });
-    outputChannel.appendLine(`[ArtifactSettleWatcher] registered for ${patterns.length} spec patterns`);
+    outputChannel.appendLine(`[ArtifactSettleWatcher] registered ${registered} artifact watchers`);
 }
 
 /**
