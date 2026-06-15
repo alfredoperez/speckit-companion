@@ -85,9 +85,9 @@ export function buildBetaSnapshot(): BetaSnapshot {
         String(coerceLegacyBoolean(config.get<unknown>(key), fallback));
     return {
         defaultWorkflow: defaultWorkflowTelemetryId(config.get<string>('defaultWorkflow', 'speckit')),
-        // Coerced (not bool): workflowBeta inherits migrated resumeBeta values, so an
-        // un-migrated scope could still hold a legacy 'on'/'beta' string — report a clean boolean.
-        workflowBeta: coerced('companion.workflowBeta', false),
+        // Coerced (not bool): the Companion-workflow flag inherits migrated resumeBeta/workflowBeta
+        // values, so an un-migrated scope could still hold a legacy 'on'/'beta' string.
+        workflowBeta: coerced('companion.speckitCompanionWorkflow', false),
         activityPanel: coerced('viewer.activityPanel', true),
         installPrompt: coerced('companion.installPrompt', true),
         telemetry: bool('telemetry', true),

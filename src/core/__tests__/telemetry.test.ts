@@ -117,7 +117,7 @@ describe('TelemetryService', () => {
         it('assembles the workflow + beta-flag fields from config', () => {
             mockConfig({
                 defaultWorkflow: 'companion',
-                'companion.workflowBeta': true,
+                'companion.speckitCompanionWorkflow': true,
                 'viewer.activityPanel': false,
                 'companion.installPrompt': true,
                 telemetry: true,

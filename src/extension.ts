@@ -26,7 +26,7 @@ import { isCompanionInstalled } from './features/settings/companionPresetReconci
 import { Views, setupFileWatchers, setupTasksWatcher, setupSpecViewerWatcher } from './core';
 import { ConfigKeys } from './core/constants';
 import { ConfigManager } from './core/utils/configManager';
-import { migrateBetaTriStateSettings, removeRetiredSettings, migrateResumeBetaToWorkflowBeta, coerceLegacyBoolean } from './core/settingsMigration';
+import { migrateBetaTriStateSettings, removeRetiredSettings, migrateResumeBetaToWorkflowBeta, migrateWorkflowBetaKey, coerceLegacyBoolean } from './core/settingsMigration';
 import { openSpecFile } from './core/utils/fileOpener';
 import { TelemetryService, initTelemetry, sendTelemetryEvent, buildBetaSnapshot } from './core/telemetry';
 import { getConfiguredProviderType } from './ai-providers/aiProvider';
@@ -140,6 +140,16 @@ export async function activate(context: vscode.ExtensionContext) {
     } catch (err) {
         const detail = err instanceof Error ? err.message : String(err);
         outputChannel.appendLine(`[Extension] Resume-beta migration skipped: ${detail}`);
+    }
+
+    // Carry the prior workflowBeta opt-in to the renamed key (Settings now reads
+    // "SpecKit Companion Workflow"), then drop the old key. Wrapped so a bad stored
+    // value can never fail activation (the provider-rename lesson, FR-003).
+    try {
+        await migrateWorkflowBetaKey();
+    } catch (err) {
+        const detail = err instanceof Error ? err.message : String(err);
+        outputChannel.appendLine(`[Extension] Companion-workflow key migration skipped: ${detail}`);
     }
 
     void fireActivatedEvent(context);
@@ -271,13 +281,13 @@ export async function activate(context: vscode.ExtensionContext) {
             ) {
                 void validatePermissionMode(context);
             }
-            if (e.affectsConfiguration(ConfigKeys.resumeBeta)) {
+            if (e.affectsConfiguration(ConfigKeys.companionWorkflow)) {
                 // Pure VS Code menu gate — refresh the context key the resume
                 // `when` clause reads; no reload, no companion.yml mirror.
                 const enabled = coerceLegacyBoolean(
                     vscode.workspace
                         .getConfiguration(ConfigKeys.namespace)
-                        .get<unknown>('companion.workflowBeta'),
+                        .get<unknown>('companion.speckitCompanionWorkflow'),
                     false
                 );
                 void setContextKey(CONTEXT_KEYS.resumeBeta, enabled);
@@ -299,7 +309,7 @@ export async function activate(context: vscode.ExtensionContext) {
             const resumeBetaEnabled = coerceLegacyBoolean(
                 vscode.workspace
                     .getConfiguration(ConfigKeys.namespace)
-                    .get<unknown>('companion.workflowBeta'),
+                    .get<unknown>('companion.speckitCompanionWorkflow'),
                 false
             );
             void setContextKey(CONTEXT_KEYS.resumeBeta, resumeBetaEnabled);

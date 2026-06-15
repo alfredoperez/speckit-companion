@@ -238,7 +238,7 @@ export function validateWorkflow(config: WorkflowConfig): ValidationResult {
  */
 export function isCompanionSelectable(): boolean {
     const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
-    if (!coerceLegacyBoolean(config.get<unknown>('companion.workflowBeta'), false)) {
+    if (!coerceLegacyBoolean(config.get<unknown>('companion.speckitCompanionWorkflow'), false)) {
         return false;
     }
     const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;

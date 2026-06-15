@@ -1025,40 +1025,40 @@
             "default": "speckit",
             "scope": "window",
             "order": 8,
-            "markdownDescription": "Workflow to auto-select for new features: **SpecKit** (the stock pipeline) or **SpecKit Companion** (the leaner pipeline with right-sizing). The Create-Spec picker pre-selects this choice. Companion requires the [companion spec-kit extension](https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension); when it's missing, a Companion spec runs the stock commands instead."
+            "markdownDescription": "Workflow pre-selected in Create Spec for new features: **SpecKit** (stock) or **SpecKit Companion** (leaner, right-sizing). Companion needs the [companion spec-kit extension](https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension); without it, a Companion spec runs the stock commands."
           }
         }
       },
       {
         "title": "Beta Features",
         "properties": {
-          "speckit.companion.installPrompt": {
-            "type": "boolean",
-            "default": true,
-            "scope": "window",
-            "order": 1,
-            "description": "Prompt to install the companion spec-kit extension (Create-Spec + Activity panels) when it's missing — a one-click install banner in the Create-Spec and Activity panels. Hidden once installed. Opt-in beta; defaults to on."
-          },
-          "speckit.companion.workflowBeta": {
+          "speckit.companion.speckitCompanionWorkflow": {
             "type": "boolean",
             "default": false,
             "scope": "window",
             "order": 5,
-            "markdownDescription": "Enable the **SpecKit Companion** workflow (beta). Adds the SpecKit / SpecKit Companion picker to Create Spec (when the [companion spec-kit extension](https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension) is installed) and enables the Continue/Resume button on sidebar specs. Off by default."
+            "markdownDescription": "Turn on the **SpecKit Companion** workflow (beta) — the leaner pipeline with right-sizing, the SpecKit / Companion picker in Create Spec, and the sidebar Continue/Resume button. Off by default."
+          },
+          "speckit.companion.installPrompt": {
+            "type": "boolean",
+            "default": true,
+            "scope": "window",
+            "order": 6,
+            "markdownDescription": "Offer a one-click banner to install the companion spec-kit extension when it's missing. Only applies while the **SpecKit Companion Workflow** is on."
           },
           "speckit.viewer.activityPanel": {
             "type": "boolean",
             "default": true,
             "scope": "window",
-            "order": 6,
-            "markdownDescription": "Show a per-spec Activity timeline in the viewer — step transitions, decisions, and files touched. Opt-in beta. Requires the [companion spec-kit extension](https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension)."
+            "order": 7,
+            "markdownDescription": "Show a per-spec Activity timeline in the viewer (steps, decisions, files touched). Requires the [companion spec-kit extension](https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension)."
           },
           "speckit.telemetry": {
             "type": "boolean",
             "default": true,
             "scope": "window",
-            "order": 7,
-            "markdownDescription": "Send **anonymous, PII-free** usage telemetry that helps prioritize which AI providers and pipeline features to invest in. Collected: the selected AI provider, the default workflow (speckit/companion), which workflow phase was dispatched, spec lifecycle counts (created / completed / archived), and the on/off state of beta flags. **Never collected**: prompt content, file paths, spec names, or custom workflow names — only enum-like values, booleans, versions, counts, and a random per-spec id. Also honors VS Code's global `telemetry.telemetryLevel`: if either this setting or the global setting is off, no telemetry is sent. Defaults to on."
+            "order": 8,
+            "markdownDescription": "Send anonymous, PII-free usage telemetry to help prioritize providers and features. [What's collected](https://github.com/alfredoperez/speckit-companion#telemetry). Also honors VS Code's global `telemetry.telemetryLevel`."
           }
         }
       }
