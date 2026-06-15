@@ -119,6 +119,9 @@
 #markdown-content li.task-item input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
+  /* Inherit the text font so `1.4em` below tracks the real line-height at every
+     font size — form controls default to ~13.3px, freezing the offset (#331). */
+  font: inherit;
   width: 16px;
   height: 16px;
   min-width: 16px;
