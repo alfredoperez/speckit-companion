@@ -1,0 +1,174 @@
+{
+  "workflow": "speckit",
+  "specName": "assemble stock carrier",
+  "branch": "176-assemble-stock-carrier",
+  "currentStep": "implement",
+  "status": "implemented",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-15T04:06:52.833Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-15T04:08:08.786Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-15T04:08:08.852Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T04:08:08.926Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-15T04:08:09.002Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T04:08:09.068Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T04:09:01.392Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T04:09:01.467Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T04:09:35.258Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T04:09:35.325Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T04:10:35.700Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T04:10:35.767Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T04:12:06.288Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-15T04:12:22.108Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-15T04:12:22.176Z"
+    }
+  ],
+  "currentTask": "T007",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Add timing-fence presence assertion (check c) to the parity gate",
+      "files": [
+        "speckit-extension/scripts/check-shape-parity.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Verified guard fails on a stripped timing fence and passes when restored",
+      "files": [
+        "speckit-extension/scripts/check-shape-parity.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Rewrote the drift Known-limitation entry to the resolved single-source state",
+      "files": [
+        "docs/template-profiles.md"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Documented the stock-carrier shape and deferred vendored-body assembly",
+      "files": [
+        "speckit-extension/docs/node-model.md"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added user-facing CHANGELOG entry and bumped extension version to 0.8.0",
+      "files": [
+        "speckit-extension/CHANGELOG.md",
+        "speckit-extension/extension.yml"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Refreshed the spec-kit README under-the-hood note on the timing single-source guard",
+      "files": [
+        "speckit-extension/README.md"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Verified all gates: compile, 1026 JS tests, 86 Python tests, 3 parity gates green; added regression tests for the timing-fence guard",
+      "files": [
+        "speckit-extension/tests/test_nodes.py"
+      ]
+    }
+  }
+}

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Parity gate for the Companion command bodies (Contract 2).
 
-Two assertions, run over every tracked command body:
+Three assertions, run over every tracked command body:
 
   (a) REGION equality — the text inside each `<!-- speckit-companion:part NAME -->`
       fence equals presets/_parts/NAME.md byte-for-byte. This is the single-source
@@ -13,6 +13,12 @@ Two assertions, run over every tracked command body:
       comment lines (so the timing marker rename and the part-fence convention are
       not miscounted as content changes). This proves the reshape changed no
       instruction text. Failure: `golden drift: <command>`.
+
+  (c) TIMING PRESENCE — every companion-standard carrier still carries the shared
+      `timing` part via a fence (not a pasted copy). This keeps the timing block
+      single-sourced: a carrier that drops the fence and inlines its own copy fails
+      here even though (a) only checks fences that exist. Failure: `missing timing
+      fence: <command>`.
 
 Exit 0 on success, 1 on any drift. Stdlib only.
 """
@@ -44,6 +50,17 @@ INTENTIONALLY_CHANGED = {
     "commands/speckit.companion.implement.md",
 }
 
+# Carriers that must keep the shared timing block as a fence (single-sourced),
+# never a pasted copy. Asserted by check (c).
+STANDARD_CARRIER_PREFIX = "presets/companion-standard/commands/"
+
+
+def missing_timing_fence(rel: str, body: str) -> bool:
+    """True for a stock carrier that dropped its shared `timing` fence (and would
+    thus carry an un-single-sourced copy). The single source of check (c), so a
+    test can exercise the real guard instead of re-implementing the condition."""
+    return rel.startswith(STANDARD_CARRIER_PREFIX) and "timing" not in PART_OPEN.findall(body)
+
 
 def main() -> int:
     problems = []
@@ -72,6 +89,10 @@ def main() -> int:
             elif m.group(2) != part_content(name):
                 problems.append(f"part drift: {rel}#{name}")
 
+        # (c) timing-fence presence on the stock carriers
+        if missing_timing_fence(rel, body):
+            problems.append(f"missing timing fence: {rel}")
+
         # (b) golden equality (content-frozen commands only)
         if rel in INTENTIONALLY_CHANGED:
             continue
@@ -86,7 +107,7 @@ def main() -> int:
         for p in problems:
             print("  -", p)
         return 1
-    print(f"[shape-parity] OK — {len(GOLDEN_BODIES)} bodies match parts and golden")
+    print(f"[shape-parity] OK — {len(GOLDEN_BODIES)} bodies match parts, golden, and carry the timing fence")
     return 0
 
 

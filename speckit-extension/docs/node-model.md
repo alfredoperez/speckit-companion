@@ -93,6 +93,12 @@ reads: [gather-context]    # advisory ordering, validated against the active rec
 
 Parts (`sizing`, `timing`, `self-advance`, `routing`) stay in `presets/_parts/` and are absorbed as inner fences inside the node bodies that already carried them.
 
+## The stock carrier — what's single-sourced, what isn't
+
+The namespaced `/speckit.companion.*` commands above are assembled from nodes. The **stock** family (`presets/companion-standard/commands/speckit.*.md`) is a different shape: each carrier is the **raw upstream spec-kit command template** — it still carries the upstream placeholders (`{SCRIPT}`, `__CONTEXT_FILE__`, `/memory/constitution.md`), so it is the pre-render template, not an agent-rendered copy — **plus the shared `timing` part**, injected by a `<!-- speckit-companion:part timing -->` fence. The timing block is single-sourced: it is edited once in `presets/_parts/timing.md`, the parity check locks the fenced region to that part byte-for-byte, and `check-shape-parity.py` separately fails any carrier that drops the fence and inlines its own copy. So the timing single-source cannot silently regress.
+
+The stock body *above* the fence is still hand-maintained against upstream. Assembling it from a separately-vendored upstream source byte-for-byte would require pinning an upstream-vendor input into the repo (there is no second copy of the raw template to assemble from today). That is deferred — a larger change than the timing single-sourcing, and out of scope for the anti-drift work that locked the timing part.
+
 ## `.specify/companion.yml` — hooks and recipes
 
 This optional, project-local file is how a team customizes the pipeline without forking any command. It is **deltas only**: if it's absent, every command runs exactly as shipped. The AI reads it at run time — there is no engine; the orchestrator instructions appended to each command (the `orchestrator` part) tell the AI what to do with it. `scripts/companion_config.py` is the executable spec of the same contract, unit-tested in CI so the prose and the behavior can't drift.

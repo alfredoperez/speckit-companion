@@ -98,7 +98,7 @@ There is one SpecKit Companion workflow: the lean `/speckit.companion.specify ·
 
 **How to turn it on:** the Companion workflow is an opt-in beta gated by the `speckit.companion.speckitCompanionWorkflow` VS Code setting (off by default). When it's on, the SpecKit / SpecKit Companion picker appears in Create Spec and the Continue/Resume button lights up on sidebar specs. Stock SpecKit is always available regardless of the gate.
 
-Under the hood the stock family stays present via an add-only activation step that also recovers a project whose commands a prior version may have stranded; a `scripts/check-shape-parity.py` guard asserts every Companion command body carries the shared timing partial. Full reference: [`../docs/template-profiles.md`](../docs/template-profiles.md).
+Under the hood the stock family stays present via an add-only activation step that also recovers a project whose commands a prior version may have stranded. The shared timing instructions are kept in one place: a `scripts/check-shape-parity.py` guard asserts every stock command body still pulls them from that single shared copy via a fence and fails the build if a command ever forks its own pasted copy — so editing the timing rules stays a one-place change. Full reference: [`../docs/template-profiles.md`](../docs/template-profiles.md).
 
 ## Companion workflow — run the whole pipeline on spec-kit's engine
 
