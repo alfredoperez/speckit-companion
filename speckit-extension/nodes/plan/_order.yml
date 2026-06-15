@@ -1,0 +1,8 @@
+# Canonical node order — the byte-parity baseline. A recipe's
+# nodes: [...] replaces this list.
+order:
+  - gather-context
+  - plan-doc
+  - constitution-check
+  - side-files
+  - handoff

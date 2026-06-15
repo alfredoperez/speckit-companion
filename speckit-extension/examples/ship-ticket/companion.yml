@@ -1,0 +1,20 @@
+# Example: ship-ticket as node hooks.
+#
+# Copy this to `.specify/companion.yml` and the files in nodes/ to
+# `.specify/companion/nodes/` to wire a review → PR → Copilot → merge →
+# install-local tail onto the end of the implement step. The orchestrator runs
+# these in declared order after implement-exec, before the pipeline hands off to
+# mark-complete.
+#
+# SCRATCH-ONLY. The merge and install nodes do real, hard-to-reverse things
+# (gh pr merge, local reinstall). Run this only against a throwaway branch/spec.
+commands:
+  implement:
+    hooks:
+      after:
+        implement-exec:
+          - { type: node, ref: review }
+          - { type: node, ref: pr }
+          - { type: node, ref: copilot }
+          - { type: node, ref: merge }
+          - { type: node, ref: install-local }

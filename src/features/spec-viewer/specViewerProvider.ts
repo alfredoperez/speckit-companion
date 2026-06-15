@@ -64,6 +64,8 @@ import { StepName, STEP_NAMES, Status, ViewerState as CoreViewerState } from "..
 import {
   DEFAULT_WORKFLOW,
   getFeatureWorkflow,
+  getWorkflow,
+  normalizeWorkflowConfig,
   resolveWorkflow,
 } from "../workflows";
 import type { FeatureWorkflowContext, WorkflowStepConfig } from "../workflows/types";
@@ -181,12 +183,35 @@ export class SpecViewerProvider {
   }
 
   /**
-   * The viewer's pipeline shape is the static canonical pipeline — not derived
-   * from the workflow definition. The footer buttons render from this static
-   * pipeline plus the spec's `.spec-context.json` status; the commands (and the
-   * workflow the engine reads) own the pipeline shape, not the panel.
+   * Resolve the footer pipeline for a spec from its own workflow, mirroring the
+   * sidebar (specExplorerProvider.resolveWorkflowSteps). Falls back to the default
+   * pipeline when no workflow is persisted or resolution throws, so the footer
+   * never renders empty.
    */
-  private async resolveWorkflowSteps(): Promise<WorkflowStepConfig[]> {
+  private async resolveWorkflowSteps(specDir?: string): Promise<WorkflowStepConfig[]> {
+    if (specDir) {
+      try {
+        const ctx = await getFeatureWorkflow(specDir, this.computeChangeRoot(specDir));
+        if (ctx) {
+          const wf = getWorkflow(ctx.workflow);
+          if (wf) {
+            const normalized = normalizeWorkflowConfig(wf);
+            if (normalized.steps && normalized.steps.length > 0) {
+              return normalized.steps;
+            }
+          }
+        }
+        const selected = await resolveWorkflow(specDir);
+        if (selected) {
+          const normalized = normalizeWorkflowConfig(selected);
+          if (normalized.steps && normalized.steps.length > 0) {
+            return normalized.steps;
+          }
+        }
+      } catch {
+        // fall through to the default pipeline
+      }
+    }
     return DEFAULT_WORKFLOW.steps!;
   }
 
@@ -454,7 +479,7 @@ export class SpecViewerProvider {
       sendContentUpdateMessage: (dir, docType) =>
         this.sendContentUpdateMessage(dir, docType),
       refreshContextIfDisplaying: ctxPath => this.refreshContextIfDisplaying(ctxPath),
-      resolveWorkflowSteps: () => this.resolveWorkflowSteps(),
+      resolveWorkflowSteps: () => this.resolveWorkflowSteps(specDirectory),
       executeInTerminal: async (prompt: string) => {
         await getAIProvider().executeInTerminal(prompt);
       },
@@ -483,8 +508,8 @@ export class SpecViewerProvider {
       // Compute change root for two-level layouts
       const changeRoot = this.computeChangeRoot(specDirectory);
 
-      // Scan for available documents using the static canonical pipeline steps
-      const steps = await this.resolveWorkflowSteps();
+      // Scan for available documents using the spec's resolved pipeline steps
+      const steps = await this.resolveWorkflowSteps(specDirectory);
       const documents = await scanDocuments(specDirectory, this.outputChannel, steps, changeRoot);
       const specName = path.basename(specDirectory);
 
@@ -942,7 +967,7 @@ export class SpecViewerProvider {
         const active: StepName = STEP_NAMES.includes(specCtx.currentStep as StepName)
           ? (specCtx.currentStep as StepName)
           : 'specify';
-        const wfSteps = DEFAULT_WORKFLOW.steps;
+        const wfSteps = await this.resolveWorkflowSteps(specDirectory);
         const derivedVs = deriveViewerState(specCtx, active, wfSteps, runInfo.artifactReady ?? false);
         viewerState = {
           ...derivedVs,

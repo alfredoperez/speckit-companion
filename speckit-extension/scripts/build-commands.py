@@ -16,41 +16,35 @@ import sys
 
 from _command_parts import (
     EXT,
-    PART_CLOSE,
-    PART_FENCE,
     PART_OPEN,
-    part_content,
-    part_path,
+    decomposed_commands,
+    fill_parts,
 )
 
 
 def command_files() -> list:
-    """Every shipped command body that may carry part fences."""
+    """Every shipped command body that may carry part fences.
+
+    Excludes the namespaced commands now assembled from node files — those are
+    generated (and part-filled) by assemble-nodes.py, which owns their bodies.
+    """
     pats = [
         "presets/companion-standard/commands/speckit.*.md",
         "commands/speckit.companion.*.md",
     ]
+    owned = {
+        os.path.join(EXT, f"commands/speckit.companion.{c}.md")
+        for c in decomposed_commands()
+    }
     out = []
     for pat in pats:
-        out.extend(sorted(glob.glob(os.path.join(EXT, pat))))
+        out.extend(p for p in sorted(glob.glob(os.path.join(EXT, pat))) if p not in owned)
     return out
 
 
 def assemble(text: str, rel: str) -> str:
     """Return text with every part region filled from its part file."""
-    opens = PART_OPEN.findall(text)
-    closes = PART_CLOSE.findall(text)
-    if opens != closes:
-        raise SystemExit(f"[build] unbalanced/unclosed part fence in {rel}: opens={opens} closes={closes}")
-    for name in opens:
-        if not os.path.isfile(part_path(name)):
-            raise SystemExit(f"[build] unknown part '{name}' referenced in {rel} (no {name}.md in _parts/)")
-
-    def repl(m):
-        name = m.group(1)
-        return f"<!-- speckit-companion:part {name} -->\n{part_content(name)}\n<!-- /speckit-companion:part {name} -->"
-
-    return PART_FENCE.sub(repl, text)
+    return fill_parts(text, rel)
 
 
 def main() -> int:

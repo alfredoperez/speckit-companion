@@ -46,3 +46,6 @@ jobs:
 
       - name: Check capture shape parity
         run: python3 speckit-extension/scripts/check-shape-parity.py
+
+      - name: Check node-assembly parity (commands re-assemble byte-identical)
+        run: python3 speckit-extension/scripts/assemble-nodes.py --check

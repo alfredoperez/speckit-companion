@@ -765,6 +765,74 @@ class MarkCompleteTests(unittest.TestCase):
         self.assertEqual(_ctx(self.fd)["status"], "implementing")
         self.assertEqual(_ctx(self.fd), before)
 
+    def _implementing_all_tasks_done(self) -> None:
+        # A spec stuck at `implementing` but with every task marker checked off —
+        # the race that left a 100%-done spec unmarkable before the P6 fix.
+        (self.fd / "tasks.md").write_text("- [x] **T001** a\n- [x] **T002** b\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+
+    def test_promotes_implementing_at_100pct_to_completed(self) -> None:
+        # Acceptance (#317 P6): implementing + all tasks [x] -> --mark-complete -> completed.
+        self._implementing_all_tasks_done()
+        result = wc.mark_spec_complete(self.fd, "ai")
+        self.assertIsNotNone(result)
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], "completed")
+        # The implement step is closed in history during the atomic promotion.
+        impl_completes = [e for e in ctx["history"] if e["step"] == "implement" and e["kind"] == "complete"]
+        self.assertTrue(impl_completes, "implement step must be closed before completed")
+        self.assertEqual(ctx["currentStep"], "implement")
+
+    def test_refuses_implementing_with_pending_tasks(self) -> None:
+        (self.fd / "tasks.md").write_text("- [x] **T001** a\n- [ ] **T002** b\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        result = wc.mark_spec_complete(self.fd, "ai")
+        self.assertIsNone(result)
+        self.assertEqual(_ctx(self.fd)["status"], "implementing")
+
+    def test_duplicate_id_with_one_unchecked_is_not_100pct(self) -> None:
+        # [x] T001 + [ ] T001 must not read as done (set-collapse would hide the pending one).
+        (self.fd / "tasks.md").write_text("- [x] **T001** a\n- [ ] **T001** a-again\n")
+        self.assertFalse(wc._feature_tasks_at_100(self.fd))
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        self.assertIsNone(wc.mark_spec_complete(self.fd, "ai"))
+        self.assertEqual(_ctx(self.fd)["status"], "implementing")
+
+    def test_last_task_finish_lands_at_implemented_not_implementing(self) -> None:
+        # journal_task_finish at 100% must not re-assert `implementing` (the race).
+        (self.fd / "tasks.md").write_text("- [x] **T001** a\n- [x] **T002** b\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.journal_task_finish(self.fd, "T002", "ai")
+        self.assertEqual(_ctx(self.fd)["status"], "implemented")
+
+    def test_step_close_waits_for_all_tasks_journaled_and_lands_last(self) -> None:
+        # tasks.md pre-checked 2/2, but the journal lags: the step-level implement
+        # complete must NOT appear until every task is journaled, and must land last.
+        (self.fd / "tasks.md").write_text("- [x] **T001** a\n- [x] **T002** b\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.journal_task_finish(self.fd, "T001", "ai")
+        hist = _ctx(self.fd)["history"]
+        self.assertFalse(
+            any(e["step"] == "implement" and e["kind"] == "complete" and not e.get("task") for e in hist),
+            "step must not close while T002 is still un-journaled",
+        )
+        wc.journal_task_finish(self.fd, "T002", "ai")
+        last = _ctx(self.fd)["history"][-1]
+        self.assertEqual((last["step"], last["kind"], last.get("task")), ("implement", "complete", None))
+
+    def test_step_does_not_close_when_journaled_but_checkbox_unchecked(self) -> None:
+        # tasks.md still [ ] for the only task: journaling it must NOT close the
+        # implement step (closing it while status stays implementing is inconsistent).
+        (self.fd / "tasks.md").write_text("- [ ] **T001** a\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.journal_task_finish(self.fd, "T001", "ai")
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], "implementing")
+        self.assertFalse(
+            any(e["step"] == "implement" and e["kind"] == "complete" and not e.get("task") for e in ctx["history"]),
+            "step must not close while tasks.md is below 100%",
+        )
+
     def test_cli_mark_complete_dispatch(self) -> None:
         # The argparse wiring + main() dispatch branch end-to-end.
         self._implemented_spec()

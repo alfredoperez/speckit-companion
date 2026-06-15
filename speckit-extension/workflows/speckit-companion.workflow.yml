@@ -48,7 +48,7 @@ steps:
     input:
       args: "{{ inputs.spec }}"
 
-  # Routing node — right-sizes the pipeline on the classify signal. It reads the
+  # Routing step — right-sizes the pipeline on the classify signal. It reads the
   # size from `classify` and never re-derives the 5-files / 10-tasks bar: that
   # threshold is authored once in presets/_parts/sizing.md (the same block the
   # classify and specify commands embed). The case structure below is the single

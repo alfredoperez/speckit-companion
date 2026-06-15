@@ -267,6 +267,17 @@ def parse_task_markers(tasks_md: Path) -> tuple[list[str], list[str]]:
     return all_ids, done_ids
 
 
+def _feature_tasks_at_100(feature_dir: Path) -> bool:
+    """True when feature_dir/tasks.md exists, has markers, and every one is checked."""
+    tasks_md = feature_dir / "tasks.md"
+    if not tasks_md.is_file():
+        return False
+    # Per-occurrence length equality, not set subset: a duplicate id with one
+    # marker still unchecked ([x] T001 + [ ] T001) must not read as 100%.
+    all_ids, done_ids = parse_task_markers(tasks_md)
+    return bool(all_ids) and len(done_ids) == len(all_ids)
+
+
 def _journaled_tasks(transitions: list) -> set[str]:
     """Task ids already recorded as per-task transitions (idempotency key)."""
     return {
@@ -470,8 +481,10 @@ def journal_task_finish(
     fill_required(ctx, feature_dir, branch)
     ctx["currentStep"] = "implement"
     ctx["currentTask"] = task_id
+    # At 100% tasks land at `implemented`, not `implementing` — re-asserting `implementing` was the race that left a done spec unmarkable.
+    at_100 = _feature_tasks_at_100(feature_dir)
     if ctx.get("status") not in ("implemented", "completed", "archived"):
-        ctx["status"] = "implementing"
+        ctx["status"] = "implemented" if at_100 else "implementing"
 
     if not _has_complete(log, "implement", task_id):
         log.append({
@@ -483,6 +496,27 @@ def journal_task_finish(
             "at": _now_iso(),
         })
     _upsert_task_summary(ctx, task_id, did, files)
+    # Close the implement step only once tasks.md is 100% AND every task has a journaled finish — never on one signal alone, so a journaled-but-unchecked task can't close the step while status is still implementing.
+    tasks_md = feature_dir / "tasks.md"
+    all_done = False
+    if tasks_md.is_file():
+        markers = parse_task_markers(tasks_md)[0]
+        distinct = list(dict.fromkeys(markers))
+        # Duplicate/ambiguous ids: don't auto-close the step from tasks.md.
+        all_done = (
+            bool(markers)
+            and len(distinct) == len(markers)
+            and at_100
+            and set(distinct) <= _journaled_tasks(log)
+        )
+    if all_done and not _has_complete(log, "implement", None):
+        log.append({
+            "step": "implement",
+            "substep": None,
+            "kind": "complete",
+            "by": by,
+            "at": _now_iso(),
+        })
     commit_log(ctx, log)
     atomic_write(target, ctx)
     return target
@@ -499,11 +533,15 @@ def mark_spec_complete(feature_dir: Path, by: str) -> Path | None:
     `implement` (the last real step), keeping the canonical invariant that the
     last `history` entry's step equals `currentStep`.
 
-    Strict on the source state: it promotes ONLY a spec that has actually
-    finished implement (`status == "implemented"`). A spec still `specifying` /
-    `planning` / `implementing` is not done, so a stray or out-of-order
-    invocation can never "ship" incomplete work. Idempotent: a spec already
-    `completed`/`archived` is left untouched.
+    Source state: promotes a spec that has finished implement (`status ==
+    "implemented"`), and also one still `implementing` whose tasks are **all
+    checked off** — that 100%-done spec is finished in fact, so it advances
+    implementing → implemented → completed in a single atomic write (the
+    implement step is closed in `history` first; no distinct `implemented` status
+    is persisted — the status goes straight to `completed`).
+    A spec still `specifying` / `planning`, or `implementing` with work left, is
+    not done, so a stray or out-of-order invocation can never "ship" incomplete
+    work. Idempotent: a spec already `completed`/`archived` is left untouched.
     """
     target = feature_dir / ".spec-context.json"
     ctx = read_ctx(target)
@@ -517,11 +555,13 @@ def mark_spec_complete(feature_dir: Path, by: str) -> Path | None:
         )
         return None
 
-    if ctx.get("status") != "implemented":
+    status = ctx.get("status")
+    from_implementing_at_100 = status == "implementing" and _feature_tasks_at_100(feature_dir)
+    if status != "implemented" and not from_implementing_at_100:
         print(
-            f"[companion] {target} is at status={ctx.get('status')!r}, not "
-            f"'implemented'; refusing to mark complete (only a finished "
-            f"implement step can be shipped).",
+            f"[companion] {target} is at status={status!r} with implement not "
+            f"finished; refusing to mark complete (only a finished implement step, "
+            f"or an implementing spec with every task checked, can be shipped).",
             file=sys.stderr,
         )
         return None
@@ -529,6 +569,15 @@ def mark_spec_complete(feature_dir: Path, by: str) -> Path | None:
     log = canonical_log(ctx)
     fill_required(ctx, feature_dir, branch)
     ctx.setdefault("currentStep", "implement")
+    # Promoting straight from implementing@100%: close the implement step first so the canonical `implemented` state exists before `completed`.
+    if from_implementing_at_100 and not _has_complete(log, "implement", None):
+        log.append({
+            "step": "implement",
+            "substep": None,
+            "kind": "complete",
+            "by": by,
+            "at": _now_iso(),
+        })
     ctx["status"] = "completed"
     commit_log(ctx, log)
     atomic_write(target, ctx)

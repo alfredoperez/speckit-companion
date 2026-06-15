@@ -1,0 +1,14 @@
+# Sample .specify/companion.yml — deltas only; absent file = shipped defaults.
+commands:
+  implement:
+    hooks:
+      before:
+        handoff:
+          - { type: command, run: "npm test" }
+          - { type: prompt, text: "Confirm the CHANGELOG is updated." }
+      after:
+        implement-exec:
+          - { type: node, ref: review }
+  plan:
+    # recipe: a node-list override (drops constitution-check)
+    nodes: [gather-context, plan-doc, side-files, handoff]

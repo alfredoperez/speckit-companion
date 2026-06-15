@@ -13,6 +13,8 @@ The extension splits into three runtime layers and one configuration surface:
 - **Static assets** (`assets/`, `webview/styles/`) — icons and CSS partials.
 - **Manifest** (`package.json`) — declarative contributions (views, commands, menus, configuration enums).
 
+The repo also ships a **separate, independently-versioned spec-kit extension** under `speckit-extension/` (its own README/CHANGELOG/`extension.yml`). Its Companion commands are assembled from composable **nodes** by `scripts/assemble-nodes.py` (with `scripts/companion_config.py` as the executable spec of the `.specify/companion.yml` hook/recipe contract); see [`speckit-extension/docs/node-model.md`](../speckit-extension/docs/node-model.md). The VS Code extension does not depend on these at runtime — it only dispatches command text the host resolves.
+
 ## Extension host (`src/`)
 
 The host code organises around four directories, each with a single responsibility.
@@ -112,3 +114,4 @@ User data is stored under the workspace `.claude/` and `specs/` directories, plu
 - `docs/sidebar.md` — long-form sidebar reference.
 - `docs/how-it-works.md` — narrative walk-through that complements this structural overview.
 - `docs/capture-and-timing.md` — how `.spec-context.json` gets written (deterministic hooks vs best-effort AI journaling), the preset/command-override mechanism, install paths, and what the eval asserts.
+- `speckit-extension/docs/node-model.md` — how the spec-kit extension's Companion commands are composed from nodes, the `.specify/companion.yml` hook/recipe model, and the byte-parity assembler.
