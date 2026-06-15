@@ -12,7 +12,7 @@
 const BANNER_BODY = `
     <div class="install-banner__icon"><span class="codicon codicon-rocket" aria-hidden="true"></span></div>
     <div class="install-banner__text">
-        <strong>Install the spec-kit extension to unlock Turbo & Capture</strong>
+        <strong title="Install the spec-kit extension to unlock Turbo &amp; Capture">Install the spec-kit extension to unlock Turbo &amp; Capture</strong>
         <span>The companion spec-kit extension adds the leaner <code>/speckit.companion.*</code> pipeline and lifecycle capture. It's a one-click install — no need to leave the editor.</span>
     </div>
     <div class="install-banner__actions">

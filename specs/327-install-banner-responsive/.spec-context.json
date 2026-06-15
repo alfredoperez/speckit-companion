@@ -1,0 +1,153 @@
+{
+  "workflow": "companion",
+  "specName": "Install Banner Responsive",
+  "branch": "main",
+  "selectedAt": "2026-06-15T19:58:10.242Z",
+  "currentStep": "implement",
+  "status": "implemented",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-15T19:58:10.242Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-15T20:00:35.514Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-15T20:00:35.595Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T20:00:35.678Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-15T20:00:35.770Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T20:00:35.858Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-15T20:06:18.244Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-15T20:06:18.246Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T20:07:21.744Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T20:07:32.152Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T20:07:46.000Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T20:08:01.198Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T20:08:21.271Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T20:08:21.272Z"
+    }
+  ],
+  "telemetryInstanceId": "2e1e85ba-9001-46e5-9b52-94bfbc0036b4",
+  "currentTask": "T005",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Made .install-banner a query container (container-type: inline-size) and added flex-wrap: wrap",
+      "files": [
+        "webview/styles/spec-viewer/_install-banner.css"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added @container (max-width: 420px) rule giving .install-banner__actions a full-width basis so it stacks below the text",
+      "files": [
+        "webview/styles/spec-viewer/_install-banner.css"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Applied ellipsis trio (white-space: nowrap + overflow: hidden + text-overflow: ellipsis + min-width: 0) to .install-banner__text strong; body span left wrapping",
+      "files": [
+        "webview/styles/spec-viewer/_install-banner.css"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added a title attribute carrying the full heading text to the banner <strong> so the truncated heading is recoverable via tooltip",
+      "files": [
+        "src/features/spec-editor/installBanner.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Statically verified the responsive CSS/markup (TS compiles, container-query + ellipsis trio + title applied); live visual pass at narrow/medium/wide in both panels still needs a human in VS Code",
+      "files": [
+        "webview/styles/spec-viewer/_install-banner.css",
+        "src/features/spec-editor/installBanner.ts"
+      ]
+    }
+  }
+}
