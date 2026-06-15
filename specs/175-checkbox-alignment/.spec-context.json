@@ -1,0 +1,125 @@
+{
+  "workflow": "speckit",
+  "specName": "checkbox alignment",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "implemented",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-15T03:52:04.994Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-15T03:52:40.309Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-15T03:52:40.379Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T03:52:40.446Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-15T03:52:40.528Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T03:52:40.602Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-15T03:52:50.663Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T03:53:01.004Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T03:53:40.212Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T03:53:58.122Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T03:54:24.426Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T03:54:24.427Z"
+    }
+  ],
+  "currentTask": "T004",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Center task checkbox on first label line via line-height-relative top margin",
+      "files": [
+        "webview/styles/spec-viewer/_tasks.css"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Mirror line-height-relative checkbox margin in story baseline via shared checkboxStyle/taskTextStyle",
+      "files": [
+        "webview/src/spec-viewer/components/TaskLine.stories.tsx"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Reviewed InlineComment stories — bare checkbox has no hardcoded margin to correct (row-height-parity stories); no change needed",
+      "files": [
+        "webview/src/spec-viewer/components/InlineComment.stories.tsx"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Verified npm run compile and npm test pass (86 suites, 1026 tests)"
+    }
+  }
+}
