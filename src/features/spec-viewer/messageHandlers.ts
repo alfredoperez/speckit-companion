@@ -43,8 +43,6 @@ import {
   pendingForDoc,
   removeComment as removeCommentFromCtx,
 } from "./reviewComments";
-import { findRunningStep } from "./stateDerivation";
-import { deriveStepHistory } from "../specs/stepHistoryDerivation";
 import type { CoreDocumentType } from "./types";
 import type { ReviewCommentDoc } from "../../core/types/specContext";
 import {
@@ -121,7 +119,6 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
     stepperClick: (msg, dir, deps) => handleStepperClick(dir, msg.phase, deps),
     regenerate: (_msg, dir, deps) => handleRegenerate(dir, deps),
     approve: (_msg, dir, deps) => handleApprove(dir, deps),
-    markStepComplete: (_msg, dir, deps) => handleMarkStepComplete(dir, deps),
     clarify: (msg, dir, deps) => handleClarify(dir, deps, msg.command),
     refineLine: (msg, dir, deps) => handleRefineLine(dir, msg.lineNum, msg.content, msg.instruction, deps),
     editLine: (msg, dir, deps) => handleEditLine(dir, msg.lineNum, msg.newText, deps),
@@ -379,46 +376,6 @@ async function handleApprove(
       await executeStepInTerminal(implementStep, specDirectory, deps);
     }
   }
-}
-
-/**
- * Spec 099: manual completion fallback. Resolves the running step (startedAt,
- * no completedAt) and marks it complete, then refreshes the viewer. Lets the
- * user advance the footer when content-aware auto-detection never fires (e.g.
- * the AI failed silently).
- */
-async function handleMarkStepComplete(
-  specDirectory: string,
-  deps: MessageHandlerDependencies,
-): Promise<void> {
-  const instance = deps.getInstance(specDirectory);
-  if (!instance) return;
-
-  let ctx: SpecContext | null = null;
-  try {
-    ctx = await readSpecContext(specDirectory);
-  } catch (err) {
-    deps.outputChannel.appendLine(
-      `[SpecViewer] markStepComplete: readSpecContext failed — ${err instanceof Error ? err.message : String(err)}`,
-    );
-  }
-  const derived = ctx
-    ? deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status)
-    : undefined;
-  const running = findRunningStep(derived)?.step ?? null;
-
-  if (!running || !isLifecycleStep(running)) {
-    deps.outputChannel.appendLine(
-      "[SpecViewer] markStepComplete: no running step to complete",
-    );
-    return;
-  }
-
-  deps.outputChannel.appendLine(
-    `[SpecViewer] markStepComplete: completing "${running}"`,
-  );
-  await completeStep(specDirectory, running as StepName, "extension");
-  await deps.updateContent(specDirectory, instance.state.currentDocument);
 }
 
 /**

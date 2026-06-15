@@ -34,9 +34,6 @@ function vs(overrides: Partial<ViewerState>): ViewerState {
         footer: [],
         history: [],
         stepHistory: {},
-        runningStepArtifactReady: false,
-        runningStepStartedAt: null,
-        runningStepLabel: null,
         ...overrides,
     };
 }
@@ -66,9 +63,6 @@ describe('FooterActions — single source (viewerState)', () => {
         viewerState.value = vs({
             status: 'planning',
             activeStep: 'plan',
-            runningStepStartedAt: new Date().toISOString(),
-            runningStepArtifactReady: false,
-            runningStepLabel: 'Plan',
             footer: [{ id: 'approve', label: 'Tasks', scope: 'step', tooltip: 'continue' }],
         });
 

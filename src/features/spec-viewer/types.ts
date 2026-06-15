@@ -357,9 +357,6 @@ export type ViewerToExtensionMessage =
           type: 'approve';
       }
     | {
-          type: 'markStepComplete';
-      }
-    | {
           type: 'clarify';
           command?: string;
       }

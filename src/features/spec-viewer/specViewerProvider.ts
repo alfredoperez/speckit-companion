@@ -44,7 +44,7 @@ import {
 } from "./types";
 import { getDocumentTypeFromPath, getSpecDirectoryFromPath } from "./utils";
 import { optionalCommandButtonsForTab } from "./optionalCommands";
-import { ConfigKeys, SpecStatuses, WorkflowSteps } from "../../core/constants";
+import { ConfigKeys, SpecStatuses } from "../../core/constants";
 import { coerceLegacyBoolean } from "../../core/settingsMigration";
 import type { CustomCommandConfig } from "../../core/types/config";
 import { deriveChangeRoot } from "../../core/specDirectoryResolver";
@@ -58,7 +58,6 @@ import { reconcileAndPersist } from "../specs/specContextReconciler";
 import { isCompanionInstalled } from "../settings/companionPresetReconciler";
 import { shouldShowInstallPrompt, readInstallPromptEnabled } from "../../speckit/specKitExtensionInstall";
 import { deriveViewerState, isStepCompleted, findRunningStep } from "./stateDerivation";
-import { hasNonTrivialArtifact } from "./stepArtifact";
 import { StepCompletionNotifier, NotifierContext } from "./stepCompletionNotifier";
 import { StepName, STEP_NAMES, Status, ViewerState as CoreViewerState } from "../../core/types/specContext";
 import {
@@ -578,14 +577,9 @@ export class SpecViewerProvider {
       const docLabel = doc?.label || "Spec";
       instance.panel.title = `Spec: ${specName} - ${docLabel}`;
 
-      // Staleness and running-step are still I/O (filesystem probes); compute
-      // here after derived state is known so taskCompletionPercent feeds them.
+      // Staleness is I/O (filesystem probes); compute here after derived state.
       const stalenessMap = await computeStaleness(documents);
-      const runInfo = await this.deriveRunningStepInfo(
-        derived.derivedStepHistory,
-        specDirectory,
-        derived.taskCompletionPercent,
-      );
+      const runInfo = this.deriveRunningStepInfo(derived.derivedStepHistory);
 
       // Generate and set HTML
       instance.panel.webview.html = generateHtml(
@@ -671,39 +665,15 @@ export class SpecViewerProvider {
     return buttons;
   }
 
-  /**
-   * Spec 099: content-aware running-step info for the footer's Generating→ready
-   * transition. Shipped to the webview via *both* the initial HTML navState
-   * (watcher refresh path) and the contentUpdated message (tab-switch path) so
-   * the state is consistent however the viewer last refreshed. Touches disk
-   * only while a step is actually running — idle specs do no extra I/O.
-   */
-  private async deriveRunningStepInfo(
+  /** Tab id of the in-flight step (for the active-step indicator), or null when idle. */
+  private deriveRunningStepInfo(
     stepHistory: Record<string, { startedAt?: string; completedAt?: string | null }> | undefined,
-    specDirectory: string,
-    taskCompletionPercent: number,
-  ): Promise<{
-    tab: string | null;
-    artifactReady: boolean | undefined;
-    startedAt: string | null;
-    label: string | null;
-  }> {
+  ): { tab: string | null } {
     const running = findRunningStep(stepHistory);
     if (!running) {
-      return { tab: null, artifactReady: undefined, startedAt: null, label: null };
+      return { tab: null };
     }
-    // The implement step produces no single markdown artifact — treat it ready
-    // once every task is checked.
-    const artifactReady =
-      running.step === WorkflowSteps.IMPLEMENT
-        ? taskCompletionPercent === 100
-        : await hasNonTrivialArtifact(specDirectory, running.step);
-    return {
-      tab: mapStepToTab(running.step) || running.step,
-      artifactReady,
-      startedAt: running.startedAt,
-      label: getDocTypeLabel(running.step),
-    };
+    return { tab: mapStepToTab(running.step) || running.step };
   }
 
   /**
@@ -922,11 +892,7 @@ export class SpecViewerProvider {
       ? {}
       : await computeStaleness(instance.state.availableDocuments);
 
-    const runInfo = await this.deriveRunningStepInfo(
-      derived.derivedStepHistory,
-      specDirectory,
-      effectiveTaskPct,
-    );
+    const runInfo = this.deriveRunningStepInfo(derived.derivedStepHistory);
 
     const navState: NavState = {
       coreDocs: derived.coreDocs,
@@ -968,7 +934,7 @@ export class SpecViewerProvider {
           ? (specCtx.currentStep as StepName)
           : 'specify';
         const wfSteps = await this.resolveWorkflowSteps(specDirectory);
-        const derivedVs = deriveViewerState(specCtx, active, wfSteps, runInfo.artifactReady ?? false);
+        const derivedVs = deriveViewerState(specCtx, active, wfSteps);
         viewerState = {
           ...derivedVs,
           footer: derivedVs.footer.map(a => ({
