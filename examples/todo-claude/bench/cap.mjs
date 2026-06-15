@@ -21,7 +21,16 @@ if (!existsSync(W)) {
 }
 let fd
 try { fd = JSON.parse(readFileSync(join(root, '.specify', 'feature.json'), 'utf8')).feature_directory } catch { /* */ }
-if (!fd) { console.error('[cap] no .specify/feature.json feature_directory — run specify first'); process.exit(1) }
+// Fallback when feature.json is absent (create-new-feature.sh doesn't write it):
+// derive the feature dir from the git branch — `specs/<branch>` — mirroring
+// write-context.py's resolver, so the driver doesn't have to seed feature.json.
+if (!fd) {
+  try {
+    const branch = execFileSync('git', ['-C', root, 'rev-parse', '--abbrev-ref', 'HEAD'], { encoding: 'utf8' }).trim()
+    if (branch && existsSync(join(root, 'specs', branch))) fd = join('specs', branch)
+  } catch { /* */ }
+}
+if (!fd) { console.error('[cap] no feature dir — set .specify/feature.json or run specify on a specs/<branch> first'); process.exit(1) }
 
 const [step, action, name] = process.argv.slice(2)
 const STATUS = { specify: 'specified', plan: 'planned', tasks: 'ready-to-implement', implement: 'implemented' }

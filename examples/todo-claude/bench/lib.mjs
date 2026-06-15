@@ -200,6 +200,17 @@ export function gitInitCell(cellDir) {
   try { run('git', ['init', '-q', '-b', 'main', cellDir]) } catch { /* git absent — capture falls back to feature.json */ }
 }
 
+// Commit a baseline so `create-new-feature.sh` can branch off it during a run.
+// Without an initial commit the cell sits on an unborn `main` and the script's
+// `git checkout -b` fails. Inline user identity so it works with no global git
+// config. Call AFTER the cell is fully baked (app + spec-kit + companion).
+export function gitCommitCellBaseline(cellDir) {
+  try {
+    run('git', ['-C', cellDir, 'add', '-A'])
+    run('git', ['-C', cellDir, '-c', 'user.email=bench@local', '-c', 'user.name=bench', 'commit', '-q', '-m', 'bench baseline'])
+  } catch { /* git absent or nothing to commit — capture falls back to feature.json */ }
+}
+
 // Reset a run folder to pristine for the next round: restore the mutable working
 // surface (src/, index.html) from the canonical app and clear the generated spec.
 // Leaves .specify/ (the armed companion state), node_modules, and .git intact.

@@ -22,6 +22,7 @@ import {
   parseArgs,
   cloneDir,
   gitInitCell,
+  gitCommitCellBaseline,
   folderDir,
   writeVscodeSettings,
   seedConstitution,
@@ -94,11 +95,13 @@ if (process.argv[1] && process.argv[1].endsWith('sync-templates.mjs')) {
     writeVscodeSettings(dir, variant)
 
     if (variant === 'speckit') {
+      gitCommitCellBaseline(dir) // so create-new-feature.sh can branch during a run
       console.log(initOk ? 'stock spec-kit ✓ (plain upstream)' : 'init ✗')
       continue
     }
     process.stdout.write('extension add… ')
     const { extOk, presetOk, presetId } = installCompanion(dir, variant)
+    gitCommitCellBaseline(dir) // so create-new-feature.sh can branch during a run
     console.log(`${initOk ? 'init✓' : 'init✗'} ${extOk ? 'companion✓' : 'companion✗'} ${presetId ? (presetOk ? `${presetId}✓` : 'preset✗') : 'no-preset'} profile=${PROFILE_BY_MODE[variant]}`)
   }
 
