@@ -42,6 +42,7 @@ The review subagent in `/ship-ticket` and `/fix-tickets` reads this **before** r
 - **Type external API responses to the API's real schema** — mark genuinely-nullable fields `| null`, unconsumed/optional fields `?`; don't over-require `string`. (#274)
 - **An inline config default MUST match the `package.json` manifest default.** A resolver fallback `['specs']` diverging from manifest `['specs', '.specify/specs']` reintroduces bugs on bare/early reads. Grep for the literal when you change a manifest default. (#277)
 - **A settings migration rewrites ONLY known legacy values + coerces at read.** Migrate per-scope via `inspect()` + same-target `update()`; leave unknown strings for VS Code to flag; funnel every reader through one coercion helper (`Boolean("off") === true` is the trap). (#259)
+- **When you RENAME a setting key, the readers must fall back to the legacy key — the migration alone is not enough.** The migration is best-effort (try/catch at activation); if it throws or hasn't run, the new key is unset (schema default) while the user's opt-in still lives on the old key, silently dropping it. Route every reader (incl. telemetry/snapshot reads) through one helper that prefers the new key when explicitly set, else coerces the legacy key(s). Grep the old key name — every live read must be the helper, not `config.get(newKey)`. (#307)
 
 ## Deleting / broadening a component
 
