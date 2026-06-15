@@ -209,7 +209,8 @@ def merge_hooks(config: dict, command: str, active_nodes: list, nodes_dir: str =
 
     ordered_hooks is a flat list of dicts: {when, anchor, index, hook}. Hooks at a
     given (when, anchor) keep their declared order. An anchor not in active_nodes is
-    warned + skipped. A `type: node` hook whose ref file is missing raises ConfigError.
+    warned + skipped. A `type: node` hook with no `ref` always raises ConfigError;
+    when `nodes_dir` is given, a `ref` whose `.md` file is absent also raises.
     """
     warnings = []
     ordered = []

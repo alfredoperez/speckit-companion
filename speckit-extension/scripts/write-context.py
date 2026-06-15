@@ -496,19 +496,20 @@ def journal_task_finish(
             "at": _now_iso(),
         })
     _upsert_task_summary(ctx, task_id, did, files)
-    # Close the implement step only once every task has a journaled finish, so the step-close stays the last history entry even if the journal lags tasks.md.
+    # Close the implement step only once tasks.md is 100% AND every task has a journaled finish — never on one signal alone, so a journaled-but-unchecked task can't close the step while status is still implementing.
     tasks_md = feature_dir / "tasks.md"
-    all_journaled = False
+    all_done = False
     if tasks_md.is_file():
         markers = parse_task_markers(tasks_md)[0]
         distinct = list(dict.fromkeys(markers))
         # Duplicate/ambiguous ids: don't auto-close the step from tasks.md.
-        all_journaled = (
+        all_done = (
             bool(markers)
             and len(distinct) == len(markers)
+            and at_100
             and set(distinct) <= _journaled_tasks(log)
         )
-    if all_journaled and not _has_complete(log, "implement", None):
+    if all_done and not _has_complete(log, "implement", None):
         log.append({
             "step": "implement",
             "substep": None,

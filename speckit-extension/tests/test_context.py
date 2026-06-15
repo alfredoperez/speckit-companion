@@ -820,6 +820,19 @@ class MarkCompleteTests(unittest.TestCase):
         last = _ctx(self.fd)["history"][-1]
         self.assertEqual((last["step"], last["kind"], last.get("task")), ("implement", "complete", None))
 
+    def test_step_does_not_close_when_journaled_but_checkbox_unchecked(self) -> None:
+        # tasks.md still [ ] for the only task: journaling it must NOT close the
+        # implement step (closing it while status stays implementing is inconsistent).
+        (self.fd / "tasks.md").write_text("- [ ] **T001** a\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.journal_task_finish(self.fd, "T001", "ai")
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], "implementing")
+        self.assertFalse(
+            any(e["step"] == "implement" and e["kind"] == "complete" and not e.get("task") for e in ctx["history"]),
+            "step must not close while tasks.md is below 100%",
+        )
+
     def test_cli_mark_complete_dispatch(self) -> None:
         # The argparse wiring + main() dispatch branch end-to-end.
         self._implemented_spec()
