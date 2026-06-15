@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { isCompanionInstalled } from '../features/settings/companionPresetReconciler';
-import { coerceLegacyBoolean } from '../core/settingsMigration';
+import { coerceLegacyBoolean, isCompanionWorkflowEnabled } from '../core/settingsMigration';
 
 /**
  * One-click install / update of the Companion **spec-kit CLI extension**.
@@ -85,11 +85,7 @@ export function shouldShowInstallPrompt(
  */
 export function readInstallPromptEnabled(): boolean {
     const config = vscode.workspace.getConfiguration('speckit');
-    const workflowEnabled = coerceLegacyBoolean(
-        config.get<unknown>('companion.speckitCompanionWorkflow'),
-        false
-    );
-    if (!workflowEnabled) {
+    if (!isCompanionWorkflowEnabled(config)) {
         return false;
     }
     return coerceLegacyBoolean(config.get<unknown>('companion.installPrompt', true), true);

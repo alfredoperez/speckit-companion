@@ -60,6 +60,33 @@ export function coerceLegacyBoolean(value: unknown, fallback: boolean): boolean 
     return fallback;
 }
 
+/**
+ * Whether the SpecKit Companion workflow is enabled, resilient to a migration that
+ * never ran (or threw — it's best-effort under try/catch). The renamed key
+ * (`companion.speckitCompanionWorkflow`) wins when it's explicitly set at ANY scope;
+ * otherwise the read falls back to the legacy `companion.workflowBeta`, then the
+ * older `companion.resumeBeta` opt-in — all coerced via `coerceLegacyBoolean`. So a
+ * user whose opt-in still lives only on a legacy key reads as enabled, and an
+ * explicit `false` on the new key correctly overrides a stale legacy `true`.
+ */
+export function isCompanionWorkflowEnabled(config: vscode.WorkspaceConfiguration): boolean {
+    const newInspected =
+        typeof config.inspect === 'function'
+            ? config.inspect<unknown>('companion.speckitCompanionWorkflow')
+            : undefined;
+    const explicitNew = newInspected
+        ? newInspected.workspaceFolderValue ?? newInspected.workspaceValue ?? newInspected.globalValue
+        : config.get<unknown>('companion.speckitCompanionWorkflow');
+    if (explicitNew !== undefined) {
+        return coerceLegacyBoolean(explicitNew, false);
+    }
+    const legacyWorkflowBeta = config.get<unknown>('companion.workflowBeta');
+    if (legacyWorkflowBeta !== undefined) {
+        return coerceLegacyBoolean(legacyWorkflowBeta, false);
+    }
+    return coerceLegacyBoolean(config.get<unknown>('companion.resumeBeta'), false);
+}
+
 /** The three config scopes a value can be explicitly set at, with their inspect field. */
 const SCOPES: ReadonlyArray<{
     readonly target: vscode.ConfigurationTarget;

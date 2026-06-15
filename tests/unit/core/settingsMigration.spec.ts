@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { migrateWorkflowBetaKey, coerceLegacyBoolean } from '../../../src/core/settingsMigration';
+import { migrateWorkflowBetaKey, coerceLegacyBoolean, isCompanionWorkflowEnabled } from '../../../src/core/settingsMigration';
 
 /**
  * An in-memory `WorkspaceConfiguration` stand-in supporting per-scope `inspect()`
@@ -59,6 +59,49 @@ describe('coerceLegacyBoolean', () => {
         expect(coerceLegacyBoolean('off', true)).toBe(false);
         expect(coerceLegacyBoolean(undefined, true)).toBe(true);
         expect(coerceLegacyBoolean('garbage', false)).toBe(false);
+    });
+});
+
+describe('isCompanionWorkflowEnabled', () => {
+    it('reads a legacy workflowBeta opt-in (true) when the new key is unset', () => {
+        const { config } = makeConfigStore({
+            'companion.workflowBeta': { global: true },
+        });
+        expect(isCompanionWorkflowEnabled(config as any)).toBe(true);
+    });
+
+    it('reads a legacy tri-state workflowBeta opt-in ("on") when the new key is unset', () => {
+        const { config } = makeConfigStore({
+            'companion.workflowBeta': { workspace: 'on' },
+        });
+        expect(isCompanionWorkflowEnabled(config as any)).toBe(true);
+    });
+
+    it('falls back to resumeBeta when neither the new key nor workflowBeta is set', () => {
+        const { config } = makeConfigStore({
+            'companion.resumeBeta': { global: 'beta' },
+        });
+        expect(isCompanionWorkflowEnabled(config as any)).toBe(true);
+    });
+
+    it('an explicit false on the new key overrides a stale legacy workflowBeta true', () => {
+        const { config } = makeConfigStore({
+            'companion.speckitCompanionWorkflow': { global: false },
+            'companion.workflowBeta': { global: true },
+        });
+        expect(isCompanionWorkflowEnabled(config as any)).toBe(false);
+    });
+
+    it('an explicit true on the new key is honored', () => {
+        const { config } = makeConfigStore({
+            'companion.speckitCompanionWorkflow': { workspace: true },
+        });
+        expect(isCompanionWorkflowEnabled(config as any)).toBe(true);
+    });
+
+    it('returns false when nothing is set anywhere', () => {
+        const { config } = makeConfigStore({});
+        expect(isCompanionWorkflowEnabled(config as any)).toBe(false);
     });
 });
 

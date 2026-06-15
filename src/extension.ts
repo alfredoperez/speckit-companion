@@ -26,7 +26,7 @@ import { isCompanionInstalled } from './features/settings/companionPresetReconci
 import { Views, setupFileWatchers, setupTasksWatcher, setupSpecViewerWatcher } from './core';
 import { ConfigKeys } from './core/constants';
 import { ConfigManager } from './core/utils/configManager';
-import { migrateBetaTriStateSettings, removeRetiredSettings, migrateResumeBetaToWorkflowBeta, migrateWorkflowBetaKey, coerceLegacyBoolean } from './core/settingsMigration';
+import { migrateBetaTriStateSettings, removeRetiredSettings, migrateResumeBetaToWorkflowBeta, migrateWorkflowBetaKey, isCompanionWorkflowEnabled } from './core/settingsMigration';
 import { openSpecFile } from './core/utils/fileOpener';
 import { TelemetryService, initTelemetry, sendTelemetryEvent, buildBetaSnapshot } from './core/telemetry';
 import { getConfiguredProviderType } from './ai-providers/aiProvider';
@@ -284,11 +284,8 @@ export async function activate(context: vscode.ExtensionContext) {
             if (e.affectsConfiguration(ConfigKeys.companionWorkflow)) {
                 // Pure VS Code menu gate — refresh the context key the resume
                 // `when` clause reads; no reload, no companion.yml mirror.
-                const enabled = coerceLegacyBoolean(
-                    vscode.workspace
-                        .getConfiguration(ConfigKeys.namespace)
-                        .get<unknown>('companion.speckitCompanionWorkflow'),
-                    false
+                const enabled = isCompanionWorkflowEnabled(
+                    vscode.workspace.getConfiguration(ConfigKeys.namespace)
                 );
                 void setContextKey(CONTEXT_KEYS.resumeBeta, enabled);
             }
@@ -306,11 +303,8 @@ export async function activate(context: vscode.ExtensionContext) {
         const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         if (root) {
             // Gate the sidebar resume (▶) button on the single Companion beta setting.
-            const resumeBetaEnabled = coerceLegacyBoolean(
-                vscode.workspace
-                    .getConfiguration(ConfigKeys.namespace)
-                    .get<unknown>('companion.speckitCompanionWorkflow'),
-                false
+            const resumeBetaEnabled = isCompanionWorkflowEnabled(
+                vscode.workspace.getConfiguration(ConfigKeys.namespace)
             );
             void setContextKey(CONTEXT_KEYS.resumeBeta, resumeBetaEnabled);
             // Drive the sidebar install affordance: the install icon shows when
