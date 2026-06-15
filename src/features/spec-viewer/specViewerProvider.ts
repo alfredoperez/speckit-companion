@@ -967,7 +967,7 @@ export class SpecViewerProvider {
         const active: StepName = STEP_NAMES.includes(specCtx.currentStep as StepName)
           ? (specCtx.currentStep as StepName)
           : 'specify';
-        const wfSteps = DEFAULT_WORKFLOW.steps;
+        const wfSteps = await this.resolveWorkflowSteps(specDirectory);
         const derivedVs = deriveViewerState(specCtx, active, wfSteps, runInfo.artifactReady ?? false);
         viewerState = {
           ...derivedVs,

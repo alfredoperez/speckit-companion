@@ -93,6 +93,14 @@ def _indent(line: str) -> int:
     return len(line) - len(line.lstrip(" "))
 
 
+def _starts_block_map(rest: str) -> bool:
+    """True for a seq item that opens a block mapping (`key: val`), not a scalar.
+    A colon followed by end-or-space marks the key/value split; `http://x` (colon
+    then `/`) and bare scalars (`resolve-dir`) stay scalars."""
+    ci = rest.find(":")
+    return ci != -1 and (ci + 1 == len(rest) or rest[ci + 1] == " ")
+
+
 def load_yaml(text: str):
     """Parse the constrained YAML subset into nested dict/list. Raises on the rest."""
     lines = [ln for ln in text.split("\n") if ln.strip() and not ln.lstrip().startswith("#")]
@@ -118,6 +126,13 @@ def load_yaml(text: str):
             pos[0] += 1
             if rest.startswith("{") or rest.startswith("["):
                 items.append(_parse_flow(rest))
+            elif _starts_block_map(rest):
+                # block-mapping item ("- key: val" + deeper-indented keys): re-anchor
+                # the line at the key column and let _parse_map gather the whole entry.
+                item_indent = ind + 2
+                pos[0] -= 1
+                lines[pos[0]] = " " * item_indent + rest
+                items.append(_parse_map(item_indent))
             elif rest:
                 items.append(_scalar(rest))
             else:

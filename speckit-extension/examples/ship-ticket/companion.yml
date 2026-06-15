@@ -1,4 +1,4 @@
-# Example: ship-ticket as node hooks (#317 P5 dogfood).
+# Example: ship-ticket as node hooks.
 #
 # Copy this to `.specify/companion.yml` and the files in nodes/ to
 # `.specify/companion/nodes/` to wire a review → PR → Copilot → merge →

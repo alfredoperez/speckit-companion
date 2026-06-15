@@ -28,6 +28,24 @@ class YamlSubsetTests(unittest.TestCase):
         self.assertEqual(impl["before"]["handoff"][1]["type"], "prompt")
         self.assertEqual(impl["after"]["implement-exec"][0], {"type": "node", "ref": "review"})
 
+    def test_block_form_hooks_parse_and_do_not_swallow_siblings(self) -> None:
+        cfg = cc.load_yaml(
+            "commands:\n"
+            "  implement:\n"
+            "    hooks:\n"
+            "      after:\n"
+            "        implement-exec:\n"
+            "          - type: command\n"
+            "            run: npm test\n"
+            "      before:\n"
+            "        handoff:\n"
+            "          - type: prompt\n"
+            "            text: Confirm CHANGELOG.\n"
+        )
+        hooks = cfg["commands"]["implement"]["hooks"]
+        self.assertEqual(hooks["after"]["implement-exec"][0], {"type": "command", "run": "npm test"})
+        self.assertEqual(hooks["before"]["handoff"][0], {"type": "prompt", "text": "Confirm CHANGELOG."})
+
     def test_recipe_node_list_is_a_flow_seq(self) -> None:
         cfg = cc.load_yaml((FIXTURES / "companion.yml").read_text())
         self.assertEqual(

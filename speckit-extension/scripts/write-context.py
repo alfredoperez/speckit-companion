@@ -480,10 +480,7 @@ def journal_task_finish(
     fill_required(ctx, feature_dir, branch)
     ctx["currentStep"] = "implement"
     ctx["currentTask"] = task_id
-    # Don't downgrade a spec whose close has started. Once every task is checked
-    # off, this finish lands the spec at `implemented` (ready for mark-complete)
-    # rather than re-asserting `implementing` — that re-assertion was the race that
-    # left a 100%-done spec stuck and unmarkable.
+    # At 100% tasks land at `implemented`, not `implementing` — re-asserting `implementing` was the race that left a done spec unmarkable.
     at_100 = _feature_tasks_at_100(feature_dir)
     if ctx.get("status") not in ("implemented", "completed", "archived"):
         ctx["status"] = "implemented" if at_100 else "implementing"
@@ -498,11 +495,7 @@ def journal_task_finish(
             "at": _now_iso(),
         })
     _upsert_task_summary(ctx, task_id, did, files)
-    # Close the implement step itself only once EVERY task in tasks.md has a
-    # journaled finish (the one just appended included) — the same step-level
-    # complete the sync_tasks backstop writes. Gating on "all journaled" rather
-    # than "tasks.md 100%" keeps the step close as the LAST history entry even
-    # when the journal lags tasks.md's checkboxes. Idempotent with the backstop.
+    # Close the implement step only once every task has a journaled finish, so the step-close stays the last history entry even if the journal lags tasks.md.
     tasks_md = feature_dir / "tasks.md"
     all_journaled = False
     if tasks_md.is_file():
@@ -567,8 +560,7 @@ def mark_spec_complete(feature_dir: Path, by: str) -> Path | None:
     log = canonical_log(ctx)
     fill_required(ctx, feature_dir, branch)
     ctx.setdefault("currentStep", "implement")
-    # Promoting straight from implementing@100%: close the implement step in
-    # history first, so the canonical 'implemented' state exists before completed.
+    # Promoting straight from implementing@100%: close the implement step first so the canonical `implemented` state exists before `completed`.
     if from_implementing_at_100 and not _has_complete(log, "implement", None):
         log.append({
             "step": "implement",
