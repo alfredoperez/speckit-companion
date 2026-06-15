@@ -125,20 +125,32 @@ const DONE_PHRASE_BY_STEP: Record<PromptStep, string> = {
     implement: 'Done implementing',
 };
 
-// Which steps the AI self-closes by hand. specify and implement are excluded:
-// the extension records those deterministically (specify from its own command's
-// `--kind complete` call; implement from the end-of-step `write-context.py
-// --tasks-file` hook, which also journals every task). An AI-authored complete
-// there would duplicate the script's, and an early `status: implemented` would
-// trip the hook's no-backward-clobber guard and suppress the per-task journal.
+// Which steps the AI self-closes by hand. `clarify/plan/tasks/analyze` always do.
+// `specify` is conditional (see `aiSelfClosesStep`): the companion specify command
+// records its own `--kind complete`, so when companion is installed the AI defers
+// — but in STOCK mode the upstream `/speckit.specify` makes no such call, so the
+// AI MUST close specify itself or it sticks at `specifying` forever (#332).
+// `implement` always defers: the always-on `tasks.md` watcher closes it, and an
+// early `ai` complete would trip the hook's no-backward-clobber guard.
 const AI_SELF_CLOSE_STEPS: ReadonlySet<PromptStep> = new Set([
     'clarify', 'plan', 'tasks', 'analyze',
 ]);
 
+/**
+ * True when the AI must write `<step>`'s completion itself. The four steps above
+ * always do; `specify` joins them only when companion is NOT installed (no
+ * companion command to record it). `implement` never does — its watcher closes it.
+ */
+function aiSelfClosesStep(step: PromptStep, companionInstalled: boolean): boolean {
+    if (AI_SELF_CLOSE_STEPS.has(step)) return true;
+    return step === 'specify' && !companionInstalled;
+}
+
 function renderClosingInstruction(
-    step: PromptStep, completedStatus: string, donePhrase: string, specDir: string
+    step: PromptStep, completedStatus: string, donePhrase: string, specDir: string,
+    companionInstalled: boolean
 ): string[] {
-    if (AI_SELF_CLOSE_STEPS.has(step)) {
+    if (aiSelfClosesStep(step, companionInstalled)) {
         return [
             '╔══════════════════════════════════════════════════════════════════╗',
             '║  MANDATORY FINAL WRITE — DO THIS BEFORE YOUR TURN ENDS          ║',
@@ -164,7 +176,7 @@ function renderClosingInstruction(
     ];
 }
 
-export function renderPreamble(step: PromptStep, specDir: string, dispatchUtc: string): string {
+export function renderPreamble(step: PromptStep, specDir: string, dispatchUtc: string, companionInstalled = false): string {
     const substepsList = CANONICAL_SUBSTEPS[step];
     const substepsLine = substepsList.length === 0
         ? `Canonical substeps for ${step}: none — single-pass step.`
@@ -185,7 +197,7 @@ export function renderPreamble(step: PromptStep, specDir: string, dispatchUtc: s
         '',
         substepsLine,
         '',
-        ...renderClosingInstruction(step, completedStatus, donePhrase, specDir),
+        ...renderClosingInstruction(step, completedStatus, donePhrase, specDir, companionInstalled),
         '',
         `Leave currentStep on "${step}". This command is single-step — you are done after the instruction above. The user clicks the next-phase button (or the extension dispatches a fresh /speckit.<next> command) to advance; that path appends the next start-entry. Writing a start-entry for the next step here is a lie that makes the viewer render a phantom "Generating <next>…" indefinitely.`,
         '',
@@ -196,7 +208,12 @@ export function renderPreamble(step: PromptStep, specDir: string, dispatchUtc: s
     ].join('\n');
 }
 
-export function renderLifecycleBody(target: string, dispatchUtc: string): string {
+export function renderLifecycleBody(target: string, dispatchUtc: string, companionInstalled = false): string {
+    // Whether the AI must close `specify` itself depends on mode: in stock there is
+    // no companion command to record it, so specify joins the self-close steps (#332).
+    const selfCloseLine = companionInstalled
+        ? '2. When you FINISH a **plan, tasks, clarify, or analyze** step: flip status = completed form and append { step: "<step>", substep: null, kind: "complete", by: "ai", at: <real timestamp from `date -u`> } — no `from` on completes. This clears the in-flight ring on the tab. Do NOT self-close **specify** or **implement**: the extension closes specify from its own command and the end-of-step hook closes implement, each with a real script timestamp — an `ai` complete there would duplicate it.'
+        : '2. When you FINISH a **specify, plan, tasks, clarify, or analyze** step: flip status = completed form and append { step: "<step>", substep: null, kind: "complete", by: "ai", at: <real timestamp from `date -u`> } — no `from` on completes. This clears the in-flight ring on the tab. There is no companion extension here, so closing specify is YOUR job — skip it and the spec sticks on `specifying` with the next-step button hidden. Do NOT self-close **implement**: the end-of-step watcher closes it when every task is checked.';
     return [
         `Throughout this run, keep ${target} up to date as you move through steps. Schema:`,
         '',
@@ -206,7 +223,7 @@ export function renderLifecycleBody(target: string, dispatchUtc: string): string
         '',
         'For EACH step you work on (specify, clarify, plan, tasks, analyze, implement):',
         '1. When you START a step on your own initiative (mid-run, not the initial seed): set currentStep = "<step>" and status = in-progress form. Append a history entry { step: "<step>", substep: null, kind: "start", by: "ai", at: <real timestamp from `date -u`> }.',
-        '2. When you FINISH a **plan, tasks, clarify, or analyze** step: flip status = completed form and append { step: "<step>", substep: null, kind: "complete", by: "ai", at: <real timestamp from `date -u`> } — no `from` on completes. This clears the in-flight ring on the tab. Do NOT self-close **specify** or **implement**: the extension closes specify from its own command and the end-of-step hook closes implement, each with a real script timestamp — an `ai` complete there would duplicate it.',
+        selfCloseLine,
         '3. For each substep boundary append a SINGLE finish entry { step, substep: "<name>", kind: "complete", by: "ai", at: <date -u> } the moment it ends — one per substep, never two sharing a timestamp, never a separate start.',
         '',
         `Implement (finish-only per task): as you finish each task, mark it \`- [x] **<TaskID>**\` in tasks.md, append task_summaries.<TaskID>, then run \`${perTaskFinishCmd(featureDirFromTarget(target))}\` — ONE finish event from the real clock, no per-task start, no hand-authored JSON. Run it the moment each task completes, not in one end-of-step batch: clustering every finish into a tiny window FAILS the cadence check. The end-of-step hook backfills any task you miss and closes the step.`,
@@ -221,11 +238,11 @@ export function renderLifecycleBody(target: string, dispatchUtc: string): string
     ].join('\n');
 }
 
-export function renderLifecyclePreamble(specDir: string, dispatchUtc: string): string {
+export function renderLifecyclePreamble(specDir: string, dispatchUtc: string, companionInstalled = false): string {
     const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
     return [
         MARKER_OPEN,
-        renderLifecycleBody(target, dispatchUtc),
+        renderLifecycleBody(target, dispatchUtc, companionInstalled),
         MARKER_CLOSE,
     ].join('\n');
 }
@@ -233,7 +250,8 @@ export function renderLifecyclePreamble(specDir: string, dispatchUtc: string): s
 export function renderSpecifyCreationLifecyclePreamble(
     workflowName: string,
     specDir: string | null,
-    dispatchUtc: string
+    dispatchUtc: string,
+    companionInstalled = false
 ): string {
     const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
     return [
@@ -279,7 +297,7 @@ export function renderSpecifyCreationLifecyclePreamble(
         '- The seed history entry is attributed to `"extension"` because this lifecycle was initiated by the SpecKit Companion extension dispatching the command, even though you are the one transcribing it into the file.',
         '- Only update the `.spec-context.json` for the spec being created. Do NOT touch other spec dirs.',
         '',
-        renderLifecycleBody(target, dispatchUtc),
+        renderLifecycleBody(target, dispatchUtc, companionInstalled),
         MARKER_CLOSE,
     ].join('\n');
 }

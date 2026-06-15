@@ -43,18 +43,18 @@ async function loadPreamble() {
 // The per-step preamble the GUI prepends to a single-step dispatch — identical bytes
 // for speckit and companion. `dispatchUtc` is the dispatch instant (ISO); defaults to
 // now, matching the GUI's nowUtc(). Pass a fixed value to keep a recipe reproducible.
-export async function buildStepPreamble(step, specDir, dispatchUtc = new Date().toISOString()) {
+export async function buildStepPreamble(step, specDir, dispatchUtc = new Date().toISOString(), companionInstalled = false) {
   const m = await loadPreamble()
   if (!m.isKnownStep(step)) throw new Error(`[driver] unknown step "${step}"`)
-  return m.renderPreamble(step, specDir ?? '', dispatchUtc)
+  return m.renderPreamble(step, specDir ?? '', dispatchUtc, companionInstalled)
 }
 
 // The combined creation+lifecycle preamble the GUI's spec-editor "Create" dispatch
 // uses (seeds .spec-context.json and covers the whole run). `workflowName` is the
 // chosen workflow ("speckit" | "companion").
-export async function buildCreationPreamble(workflowName, specDir, dispatchUtc = new Date().toISOString()) {
+export async function buildCreationPreamble(workflowName, specDir, dispatchUtc = new Date().toISOString(), companionInstalled = (workflowName === 'companion')) {
   const m = await loadPreamble()
-  return m.renderSpecifyCreationLifecyclePreamble(workflowName, specDir ?? null, dispatchUtc)
+  return m.renderSpecifyCreationLifecyclePreamble(workflowName, specDir ?? null, dispatchUtc, companionInstalled)
 }
 
 export { STEPS, SETTLED_STATUS_BY_STEP, waitForSettle }

@@ -7,6 +7,7 @@ import {
     renderLifecyclePreamble,
     renderSpecifyCreationLifecyclePreamble,
 } from './promptPreamble';
+import { isCompanionInstalled } from '../features/settings/companionPresetReconciler';
 
 export type { PromptStep } from './promptPreamble';
 
@@ -30,11 +31,31 @@ function nowUtc(): string {
     return new Date().toISOString();
 }
 
+/**
+ * Whether a companion `/speckit.companion.*` command will close `specify` itself
+ * (via its `write-context.py --kind complete` call). When false, the AI must
+ * self-close specify or it sticks at `specifying` (#332). A companion command
+ * existing implies the extension is installed, so the command verb is the signal.
+ */
+function companionRecordsSteps(command: string): boolean {
+    return /companion/i.test(command);
+}
+
+/** Companion extension present in the current workspace (for the create flow, which has no command verb yet). */
+function companionInstalledHere(): boolean {
+    try {
+        const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        return !!root && isCompanionInstalled(root);
+    } catch {
+        return false;
+    }
+}
+
 export function buildPrompt(options: BuildPromptOptions): string {
     const { command, step, specDir } = options;
     if (!isContextInstructionsEnabled()) return command;
     if (!isKnownStep(step)) return command;
-    const preamble = renderPreamble(step as PromptStep, specDir ?? '', nowUtc());
+    const preamble = renderPreamble(step as PromptStep, specDir ?? '', nowUtc(), companionRecordsSteps(command));
     return `${preamble}\n\n${command}`;
 }
 
@@ -44,7 +65,7 @@ export function buildPrompt(options: BuildPromptOptions): string {
  */
 export function buildLifecyclePrompt(command: string, specDir?: string | null): string {
     if (!isContextInstructionsEnabled()) return command;
-    const preamble = renderLifecyclePreamble(specDir ?? '', nowUtc());
+    const preamble = renderLifecyclePreamble(specDir ?? '', nowUtc(), companionRecordsSteps(command));
     return `${preamble}\n\n${command}`;
 }
 
@@ -66,7 +87,10 @@ export function buildSpecifyCreationPreamble(
     specDir?: string | null
 ): string {
     if (!isContextInstructionsEnabled()) return '';
-    return renderSpecifyCreationLifecyclePreamble(workflowName, specDir ?? null, nowUtc());
+    // specify is self-recorded only when the companion workflow runs AND its
+    // extension is installed; otherwise the AI must close specify itself (#332).
+    const companionRecords = workflowName === 'companion' && companionInstalledHere();
+    return renderSpecifyCreationLifecyclePreamble(workflowName, specDir ?? null, nowUtc(), companionRecords);
 }
 
 /**

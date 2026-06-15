@@ -133,13 +133,13 @@
 > **No one-click force-complete for specify / plan / tasks (accepted gap, #281)**:
 > With the override removed, an in-flight specify / plan / tasks step has
 > no manual "mark complete" button — only `Regenerate`. In practice each
-> of these steps settles on its own: in companion mode through its
-> `after_*` lifecycle hook, and — added in #324 — `specify`/`plan` also
-> settle in **stock** mode (no companion hook) once `spec.md`/`plan.md`
-> goes quiet, via the always-on artifact watcher (`setupArtifactSettleWatcher`
-> → `shouldSettleArtifactStep`). That closes the gap that left stock specs
-> stuck at `specifying` with the advance button hidden. If a transition is
-> still ever missed, the recovery path remains **Regenerate**, which re-runs
+> of these steps settles on its own: the AI writes each step's completion
+> per the dispatch preamble. `plan`/`tasks`/`clarify`/`analyze` always do;
+> `specify` was the exception — it deferred to "the specify command," which
+> only closes it in companion mode. #332 made that **mode-aware**: in **stock**
+> the preamble now tells the AI to self-close `specify` too, so it advances to
+> `specified` on its own and the next-step button appears (no hand-edit). If a
+> transition is still ever missed, the recovery path remains **Regenerate**, which re-runs
 > the step and lets capture settle it. The gap is accepted rather than
 > re-homed to a force-complete surface, which would reintroduce exactly the
 > redundant in-flight control #277 removed. The orphaned `markStepComplete`
