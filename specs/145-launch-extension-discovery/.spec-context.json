@@ -3,7 +3,7 @@
   "specName": "launch extension discovery",
   "branch": "145-launch-extension-discovery",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",

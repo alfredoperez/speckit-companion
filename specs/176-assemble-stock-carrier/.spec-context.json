@@ -3,7 +3,7 @@
   "specName": "assemble stock carrier",
   "branch": "176-assemble-stock-carrier",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",

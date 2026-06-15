@@ -4,7 +4,7 @@
   "branch": "172-composable-command-nodes",
   "selectedAt": "2026-06-14T19:45:33.354Z",
   "currentStep": "implement",
-  "status": "implementing",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
@@ -628,7 +628,7 @@
         "speckit-extension/workflows/speckit-companion.workflow.yml"
       ],
       "concerns": [
-        "SC-005/SC-006 (live agentic-CLI self-advance vs one-shot, and stock SpecKit stopping at 'implemented') were verified by code/wiring inspection, not by an end-to-end run in each environment \u2014 those require live CLIs."
+        "SC-005/SC-006 (live agentic-CLI self-advance vs one-shot, and stock SpecKit stopping at 'implemented') were verified by code/wiring inspection, not by an end-to-end run in each environment — those require live CLIs."
       ]
     },
     "T033": {

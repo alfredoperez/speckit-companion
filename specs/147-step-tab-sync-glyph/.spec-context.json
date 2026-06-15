@@ -3,7 +3,7 @@
   "specName": "step tab sync glyph",
   "branch": "147-step-tab-sync-glyph",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",

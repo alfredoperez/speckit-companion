@@ -3,7 +3,7 @@
   "specName": "Green-Baseline Stale Capture Tests + CI Gate",
   "branch": "154-stale-capture-tests",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",

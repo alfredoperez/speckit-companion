@@ -3,7 +3,7 @@
   "specName": "ui cleanup sidebar createspec",
   "branch": "152-ui-cleanup-sidebar-createspec",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",

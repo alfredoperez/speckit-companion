@@ -3,7 +3,7 @@
   "specName": "contrast secondary muted tokens",
   "branch": "148-contrast-secondary-muted-tokens",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",

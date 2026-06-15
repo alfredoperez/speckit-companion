@@ -3,7 +3,7 @@
   "specName": "beta settings cleanup",
   "branch": "main",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
