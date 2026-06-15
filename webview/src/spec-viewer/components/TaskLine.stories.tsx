@@ -112,9 +112,11 @@ const taskItemBaseStyle: React.CSSProperties = {
   lineHeight: "1.5",
 };
 
-// Custom checkbox styles (mirror li.task-item input[type="checkbox"] CSS).
-// margin-top tracks the label line-height so the box centers on the first
-// text line at any font size — matches _tasks.css, not a fixed pixel.
+// Layout-relevant checkbox styles from li.task-item input[type="checkbox"]
+// (size + margin + flex-shrink — the bits that drive alignment). Cosmetic props
+// like cursor/transition are intentionally omitted; this is a story baseline,
+// not a 1:1 CSS clone. margin-top tracks the label line-height so the box
+// centers on the first text line at any font size — matches _tasks.css.
 const checkboxStyle: React.CSSProperties = {
   appearance: "none",
   WebkitAppearance: "none",
