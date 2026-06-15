@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **The spec viewer's footer now follows the spec's own workflow** (#317): the next-step button in the open spec used to always reflect the default pipeline, even for a spec running a different workflow. It now resolves each spec's own workflow (the same way the sidebar does) and falls back to the default only when none is set, so the button you see and click matches the spec in front of you.
+
 ### Changed
 
 - **One switch turns on the whole SpecKit Companion experience** (#170): a single Beta Features setting now enables both the Create-Spec workflow picker and the Continue/Resume button — no more separate resume toggle. With the setting on (and the companion extension installed), Create Spec offers the SpecKit / SpecKit Companion picker and the sidebar shows the resume button; with it off, you're on stock SpecKit only. The picker no longer appears when the companion piece isn't installed, so you'll never see a Companion choice that silently does nothing — and the install prompt stays reachable so you can add it. Upgrading is seamless: if you'd already turned the old resume toggle on, that choice carries over automatically and the old setting is cleaned out of your settings.

@@ -1,6 +1,6 @@
 # Companion Workflow (pipeline shape & timing)
 
-The long-form reference for how SpecKit Companion reshapes the spec-kit pipeline, why the shape lives in command bodies (not document templates), how timing fidelity is baked in, and how the workflow is chosen. This is a living design doc — update it whenever the Companion command bodies, the timing partial, the workflow choice/selection, the routing node, or the reconciler change (see CLAUDE.md → Documentation).
+The long-form reference for how SpecKit Companion reshapes the spec-kit pipeline, why the shape lives in command bodies (not document templates), how timing fidelity is baked in, and how the workflow is chosen. This is a living design doc — update it whenever the Companion command bodies, the timing partial, the workflow choice/selection, the routing step, or the reconciler change (see CLAUDE.md → Documentation).
 
 > Status: shipped. The extension exposes a single **workflow choice** — stock **SpecKit** or **SpecKit Companion** — on `speckit.defaultWorkflow`. Both command families are always present; the chosen workflow only picks which family a spec dispatches (no preset swap). The three former toggles (`templateProfile`, `turboWorkflowPicker`, `complexityFastPath`) are retired and folded into this one choice. This doc is the durable reference that outlives any one spec folder.
 
@@ -9,7 +9,7 @@ The long-form reference for how SpecKit Companion reshapes the spec-kit pipeline
 | Workflow | What it is | Output |
 |---|---|---|
 | `speckit` (default) | The **stock** spec-kit commands, unchanged, with timing instructions added by the always-present `companion-standard` carrier preset. | Same sections, same files as upstream spec-kit. |
-| `companion` | The same commands with specific sections trimmed or replaced (no user stories, files/dependencies task axis), plus the same timing and a terminal `mark-complete` step. | A smaller spec folder — `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files created on demand. (When the Companion workflow routes a *small* change, that one specify pass still emits three lean files — `spec.md` with an inline Approach, a `plan.md` pointer to it, and a real-checklist `tasks.md` — see [Companion workflow routing node](#companion-workflow-routing-node).) |
+| `companion` | The same commands with specific sections trimmed or replaced (no user stories, files/dependencies task axis), plus the same timing and a terminal `mark-complete` step. | A smaller spec folder — `spec.md` + `plan.md` + `tasks.md` + `checklists/requirements.md`; side files created on demand. (When the Companion workflow routes a *small* change, that one specify pass still emits three lean files — `spec.md` with an inline Approach, a `plan.md` pointer to it, and a real-checklist `tasks.md` — see [Companion workflow routing step](#companion-workflow-routing-step).) |
 
 The Companion command family overrides the same **7** commands the stock family carries timing for — `specify`, `clarify`, `plan`, `tasks`, `analyze`, `implement`, `constitution`. `checklist` and `taskstoissues` are left on stock.
 
@@ -45,11 +45,13 @@ Both families bake a single shared **timing partial** into every overridden comm
 
 The GUI preamble stays as the extra path; the body-embedded partial is the standalone path. A parity check (`speckit-extension/scripts/check-shape-parity.py`) locks every body's partial so the two can't fork. Caveat: per-task `date -u` is still best-effort — it can burst on very fast tasks. A burst is still caught by the eval's `timestamps-real` round-millisecond check (`.claude/skills/eval-speckit-extension/check_capture.py`); folding the 0ms-gap signal into the `task-cadence` verdict specifically is a pending follow-up in the kaiju eval source (see "Areas to improve").
 
-## Companion workflow routing node
+## Companion workflow routing step
+
+> The Companion commands are themselves assembled from composable **nodes** (sections inside a command) — see [`docs/node-model.md`](./node-model.md). Here "routing" is a `switch` **step** in the workflow, not a command node; the node-model glossary keeps the two terms apart.
 
 Right-sizing the ceremony to the change runs **inside the Companion workflow** (`speckit-extension/workflows/speckit-companion.workflow.yml`) via `specify workflow run speckit-companion`. The command-driven `/speckit.companion.specify` path also right-sizes automatically — its small-change fast-path is **on by default**, with no flag to set. Either way there is **no user-facing on/off setting**: the thresholds live in the workflow definition (and, for the command path, in the specify body) and a small change is routed automatically.
 
-After specify, the workflow runs a thin **classify** step (`speckit.companion.classify`) that emits a single size signal — `small | normal | oversized` — from a fixed **5 files / 10 tasks** guardrail. A `switch` routing node reads that signal and picks a branch:
+After specify, the workflow runs a thin **classify** step (`speckit.companion.classify`) that emits a single size signal — `small | normal | oversized` — from a fixed **5 files / 10 tasks** guardrail. A `switch` routing step reads that signal and picks a branch:
 
 - **`small` — folded path.** Less ceremony for a tiny change: the branch folds plan/tasks toward implement, with no review gate.
 - **`normal` — full pipeline.** The default branch: review-spec gate → plan → review-plan gate → tasks → implement, mirroring the bundled `speckit` workflow's gates.
@@ -92,4 +94,4 @@ The feature carries **no "sdd"** tokens. Canonical names: preset `companion-stan
 - **Hand-maintained bodies** drift against upstream stock + the timing partial. Mitigation: `companion-standard` is a verbatim stock copy + the one shared partial; the parity check locks the partial. A generator could reduce hand-maintenance.
 - **Best-effort cadence** — substep/self-close `date -u` stamps are still hand-authored second-precision; per-task timing is finish-only via a script (`write-context.py --task <id> --kind complete`), which the eval grades by honest deltas (see `docs/capture-and-timing.md`).
 - **Catalog-add seam** — the bundled-path `add` (`specify preset add --dev .specify/extensions/companion/presets/companion-standard`) is what the add-only ensure uses to (re-)materialize the standard family; catalog-form `add <id>` silently no-ops in a consumer install, which is why the `--dev` bundled path is required.
-- **Latent small-fold** — the workflow routing node's `small` branch is latent until the engine captures structured command output from the classify step; the safe full-pipeline default runs in the meantime.
+- **Latent small-fold** — the workflow routing step's `small` branch is latent until the engine captures structured command output from the classify step; the safe full-pipeline default runs in the meantime.

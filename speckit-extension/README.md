@@ -71,7 +71,7 @@ Companion rides your **existing** spec-kit commands via lifecycle hooks — you 
 | **`/speckit.companion.status`** | ✅ Shipped | One command prints where the active spec stands — step, status, recorded decisions, and the next action. |
 | **`/speckit.companion.resume`** | ✅ Shipped | Pick up where you left off — carries recorded decisions into scope and dispatches the next command in the family the spec has been running. |
 | **SpecKit Companion workflow** ([details](../docs/template-profiles.md)) | ✅ Shipped | The lean `/speckit.companion.*` pipeline — no user stories, a trimmed plan, files/dependencies tasks, smaller spec folder. The stock `/speckit.*` commands stay installed with better timing capture; both families coexist non-destructively. |
-| **Companion workflow** ([engine](../docs/template-profiles.md#companion-workflow-routing-node)) | ✅ Shipped | The whole Companion pipeline as one spec-kit workflow the engine drives end to end — `specify workflow run speckit-companion` walks specify → plan → tasks → implement → mark-complete with review gates, and a built-in routing node right-sizes small vs. oversized changes (no on/off setting — the thresholds live in the workflow). |
+| **Companion workflow** ([engine](../docs/template-profiles.md#companion-workflow-routing-step)) | ✅ Shipped | The whole Companion pipeline as one spec-kit workflow the engine drives end to end — `specify workflow run speckit-companion` walks specify → plan → tasks → implement → mark-complete with review gates, and a built-in routing step right-sizes small vs. oversized changes (no on/off setting — the thresholds live in the workflow). |
 | **Agent-agnostic, safe by design** | ✅ Shipped | Runs wherever spec-kit runs (Claude, Copilot, Cursor, Gemini, …). Writes are atomic, append-only, never regress a shipped spec, and never fail your command; stdlib-only Python. |
 
 ## Commands
@@ -87,8 +87,8 @@ Four capture commands run automatically as lifecycle hooks; two are yours to run
 | `/speckit.companion.status` | you | Print the current step, status, recorded decisions, and the next action |
 | `/speckit.companion.resume` | you | Continue the pipeline from the recorded step — carries decisions into scope and dispatches the next command in the family the spec has been running (`/speckit.companion.<step>` for Companion specs, `/speckit.<step>` for stock specs; at the next unchecked task inside implement) |
 | `/speckit.companion.specify` · `.plan` · `.tasks` · `.implement` | you | The SpecKit Companion pipeline — emit the lean shape (no user stories, trimmed plan, files/dependencies tasks) for a spec |
-| `speckit.companion.classify` | workflow routing node | Emit a `small \| normal \| oversized` size signal so the Companion workflow can right-size the pipeline (thresholds live here, not in a setting) |
-| `speckit.companion.mark-complete` | workflow terminal step | Write `status: completed` to `.spec-context.json` — the Companion workflow's final node (the command writes it; the AI never hand-writes `completed`) |
+| `speckit.companion.classify` | workflow routing step | Emit a `small \| normal \| oversized` size signal so the Companion workflow can right-size the pipeline (thresholds live here, not in a setting) |
+| `speckit.companion.mark-complete` | workflow terminal step | Write `status: completed` to `.spec-context.json` — the Companion workflow's final step (the command writes it; the AI never hand-writes `completed`) |
 
 Full reference: [docs/commands.md](./docs/commands.md).
 
@@ -120,15 +120,19 @@ The run **pauses at review gates** before planning and before tasks (reject abor
 
 You don't have to use `workflow run` to get this hand-off. On an agentic CLI that keeps working after a step finishes, each Companion command now reads the pipeline and **continues into the next step on its own** — pausing at the same review gates and running `mark-complete` after implement, so the spec still lands in **Completed** without invoking a separate run command. In a plain or one-shot terminal nothing auto-advances: you trigger each step yourself (or from the GUI), exactly as before.
 
-### Companion workflow routing node
+### Companion workflow routing step
 
-A built-in **routing node** right-sizes the pipeline with no on/off setting — the thresholds live in the workflow, not in a VS Code toggle. After specify, `speckit.companion.classify` emits a `small | normal | oversized` signal from the same ≤ 5-files / ≤ 10-tasks guardrail the command-body fast-path uses:
+A built-in **routing step** right-sizes the pipeline with no on/off setting — the thresholds live in the workflow, not in a VS Code toggle. After specify, `speckit.companion.classify` emits a `small | normal | oversized` signal from the same ≤ 5-files / ≤ 10-tasks guardrail the command-body fast-path uses:
 
 - **small** — folds plan/tasks toward implement (less ceremony).
 - **normal** — the full pipeline with both review gates.
 - **oversized** — prints a **visible warning** and still runs the **full** pipeline — it never silently skips a phase.
 
-The workflow's safe default is the full pipeline, so an ambiguous size never drops a step. Full reference: [`../docs/template-profiles.md`](../docs/template-profiles.md#companion-workflow-routing-node).
+The workflow's safe default is the full pipeline, so an ambiguous size never drops a step. Full reference: [`../docs/template-profiles.md`](../docs/template-profiles.md#companion-workflow-routing-step).
+
+## Customize the pipeline (`.specify/companion.yml`)
+
+The Companion commands are assembled from composable **nodes** — small sections inside a command. An optional, project-local `.specify/companion.yml` lets you attach your own work before or after any node (run a shell command, add an instruction, or call a reusable node file) and reorder which nodes a command runs — without forking a command. If the file is absent, every command runs exactly as it ships. A worked example (a review → PR → Copilot → merge → reinstall ship tail) is in [`examples/ship-ticket/`](./examples/ship-ticket/). Full reference: [`docs/node-model.md`](./docs/node-model.md).
 
 ## Installation
 
@@ -173,6 +177,7 @@ Each lifecycle hook appends one entry to the canonical append-only `history[]` a
 - [docs/install.md](./docs/install.md) — install (release / dev / fallback) + verification.
 - [docs/commands.md](./docs/commands.md) — the commands and the hooks they run.
 - [docs/how-it-works.md](./docs/how-it-works.md) — the hook → script → `.spec-context.json` chain and canonical schema.
+- [docs/node-model.md](./docs/node-model.md) — how Companion commands are composed from nodes, the `.specify/companion.yml` hook/recipe model, and the byte-parity assembler.
 - [docs/publishing.md](./docs/publishing.md) — how this extension is released to the spec-kit catalog (separate from the VS Code extension).
 - [ROADMAP.md](./ROADMAP.md) — the migration plan and per-step status.
 - [CHANGELOG.md](./CHANGELOG.md) — version history (independent of the VS Code extension).

@@ -57,7 +57,7 @@ provides:
       description: "Companion implement — dependency-ordered execution"
     - name: speckit.companion.classify
       file: commands/speckit.companion.classify.md
-      description: "Classify change size (small | normal | oversized) for the Companion workflow routing node"
+      description: "Classify change size (small | normal | oversized) for the Companion workflow routing step"
     - name: speckit.companion.mark-complete
       file: commands/speckit.companion.mark-complete.md
       description: "Terminal Companion step — write status: completed to .spec-context.json"

@@ -5,7 +5,7 @@ description: "Classify the change size (small | normal | oversized) so the Compa
 # Classify Change Size
 
 Emit a single complexity signal — `small`, `normal`, or `oversized` — that the Companion
-workflow's routing node reads to right-size the pipeline. On the workflow path there is no
+workflow's routing step reads to right-size the pipeline. On the workflow path there is no
 `complexityFastPath` on/off setting: the thresholds live here, in the workflow, not in a
 VS Code toggle.
 
@@ -24,7 +24,7 @@ Estimate the scope of the change from `spec.md` (and `plan.md`/`tasks.md` if the
 
 The two constants (5 files / 10 tasks) are the same guardrail the old `complexityFastPath` used.
 <!-- /speckit-companion:part sizing -->
-When unsure, prefer `normal` — the routing node's safe default is the full pipeline, so an
+When unsure, prefer `normal` — the routing step's safe default is the full pipeline, so an
 ambiguous estimate never skips a phase.
 
 ## Output
