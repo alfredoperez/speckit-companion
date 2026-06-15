@@ -577,8 +577,7 @@ export class SpecViewerProvider {
       const docLabel = doc?.label || "Spec";
       instance.panel.title = `Spec: ${specName} - ${docLabel}`;
 
-      // Staleness and running-step are still I/O (filesystem probes); compute
-      // here after derived state is known so taskCompletionPercent feeds them.
+      // Staleness is I/O (filesystem probes); compute here after derived state.
       const stalenessMap = await computeStaleness(documents);
       const runInfo = this.deriveRunningStepInfo(derived.derivedStepHistory);
 
@@ -666,13 +665,7 @@ export class SpecViewerProvider {
     return buttons;
   }
 
-  /**
-   * Spec 099: content-aware running-step info for the footer's Generating→ready
-   * transition. Shipped to the webview via *both* the initial HTML navState
-   * (watcher refresh path) and the contentUpdated message (tab-switch path) so
-   * the state is consistent however the viewer last refreshed. Touches disk
-   * only while a step is actually running — idle specs do no extra I/O.
-   */
+  /** Tab id of the in-flight step (for the active-step indicator), or null when idle. */
   private deriveRunningStepInfo(
     stepHistory: Record<string, { startedAt?: string; completedAt?: string | null }> | undefined,
   ): { tab: string | null } {
