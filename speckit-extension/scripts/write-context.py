@@ -529,7 +529,8 @@ def mark_spec_complete(feature_dir: Path, by: str) -> Path | None:
     "implemented"`), and also one still `implementing` whose tasks are **all
     checked off** — that 100%-done spec is finished in fact, so it advances
     implementing → implemented → completed in a single atomic write (the
-    intermediate `implemented` is recorded in history, not separately persisted).
+    implement step is closed in `history` first; no distinct `implemented` status
+    is persisted — the status goes straight to `completed`).
     A spec still `specifying` / `planning`, or `implementing` with work left, is
     not done, so a stray or out-of-order invocation can never "ship" incomplete
     work. Idempotent: a spec already `completed`/`archived` is left untouched.

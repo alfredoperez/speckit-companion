@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ## [Unreleased]
 
 ### Added
-- **Customize the pipeline without forking a command.** An optional project file (`.specify/companion.yml`) now lets you attach your own steps before or after any part of a Companion command — run a shell command, drop in an extra instruction, or call a reusable step file — and reorder which parts of a command run. If the file is absent, every command runs exactly as it ships. A worked example wires a full ship tail (review → PR → Copilot review → merge → reinstall) onto the end of a build; see `examples/ship-ticket/`.
+- **Customize the pipeline without forking a command.** An optional project file (`.specify/companion.yml`) now lets you attach your own actions before or after any part of a Companion command — run a shell command, drop in an extra instruction, or call a reusable instruction file — and reorder which parts of a command run. If the file is absent, every command runs exactly as it ships. A worked example wires a full ship tail (review → PR → Copilot review → merge → reinstall) onto the end of a build; see `examples/ship-ticket/`.
 - **A spec that's 100% done now finishes cleanly.** Marking a spec complete used to require it to have already settled into the "implemented" state; a spec sitting at "implementing" with every task checked off would refuse to complete. It now completes correctly the moment all its tasks are done, and finishing the last task no longer bumps a closing spec back to "implementing."
 
 ### Changed

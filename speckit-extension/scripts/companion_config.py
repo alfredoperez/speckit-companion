@@ -93,6 +93,21 @@ def _indent(line: str) -> int:
     return len(line) - len(line.lstrip(" "))
 
 
+def _strip_comment(line: str) -> str:
+    """Drop a trailing `# …` comment. A `#` is a comment only at line start or after
+    whitespace and outside quotes — so `run: "echo #x"` and `a#b` keep their hash."""
+    quote = None
+    for i, ch in enumerate(line):
+        if quote:
+            if ch == quote:
+                quote = None
+        elif ch in "\"'":
+            quote = ch
+        elif ch == "#" and (i == 0 or line[i - 1] in " \t"):
+            return line[:i].rstrip()
+    return line
+
+
 def _starts_block_map(rest: str) -> bool:
     """True for a seq item that opens a block mapping (`key: val`), not a scalar.
     A colon followed by end-or-space marks the key/value split; `http://x` (colon
@@ -103,7 +118,7 @@ def _starts_block_map(rest: str) -> bool:
 
 def load_yaml(text: str):
     """Parse the constrained YAML subset into nested dict/list. Raises on the rest."""
-    lines = [ln for ln in text.split("\n") if ln.strip() and not ln.lstrip().startswith("#")]
+    lines = [stripped for ln in text.split("\n") if (stripped := _strip_comment(ln)).strip()]
     pos = [0]
 
     def parse_block(min_indent: int):

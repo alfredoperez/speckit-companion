@@ -46,6 +46,25 @@ class YamlSubsetTests(unittest.TestCase):
         self.assertEqual(hooks["after"]["implement-exec"][0], {"type": "command", "run": "npm test"})
         self.assertEqual(hooks["before"]["handoff"][0], {"type": "prompt", "text": "Confirm CHANGELOG."})
 
+    def test_inline_comment_after_flow_seq_is_stripped(self) -> None:
+        cfg = cc.load_yaml(
+            "commands:\n"
+            "  plan:\n"
+            "    nodes: [gather-context, plan-doc, handoff]   # drops constitution-check\n"
+        )
+        self.assertEqual(cfg["commands"]["plan"]["nodes"], ["gather-context", "plan-doc", "handoff"])
+
+    def test_hash_inside_quoted_scalar_is_not_a_comment(self) -> None:
+        cfg = cc.load_yaml(
+            "commands:\n"
+            "  implement:\n"
+            "    hooks:\n"
+            "      before:\n"
+            "        handoff:\n"
+            "          - { type: command, run: \"echo '#42 done'\" }\n"
+        )
+        self.assertEqual(cfg["commands"]["implement"]["hooks"]["before"]["handoff"][0]["run"], "echo '#42 done'")
+
     def test_recipe_node_list_is_a_flow_seq(self) -> None:
         cfg = cc.load_yaml((FIXTURES / "companion.yml").read_text())
         self.assertEqual(
