@@ -1,0 +1,172 @@
+{
+  "workflow": "speckit",
+  "specName": "Fade Spec Placeholder",
+  "branch": "326-fade-spec-placeholder",
+  "selectedAt": "2026-06-15T18:36:11.969Z",
+  "currentStep": "implement",
+  "status": "implemented",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-15T18:36:11.969Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-15T18:39:27.839Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-15T18:40:27.119Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T18:42:33Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T18:42:34Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T18:42:35Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-15T18:46:30.920Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T18:47:47Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T18:47:48Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-15T18:51:26.206Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T18:52:07.594Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T18:52:07.679Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T18:53:14.889Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T18:53:14.974Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T18:53:15.080Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T18:53:15.166Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-15T18:53:15.167Z"
+    }
+  ],
+  "telemetryInstanceId": "c1324bd5-fc46-4a2a-bb8b-d8f07ac1aee3",
+  "currentTask": "T006",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Confirmed the placeholder rule used --text-body with opacity 0.85 and that --text-secondary is a theme-adaptive 70% color-mix defined for both light and dark.",
+      "files": ["webview/styles/spec-editor.css", "webview/styles/tokens.css"]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Swapped the .spec-editor-textarea::placeholder color to var(--text-secondary) and removed the stacked opacity declaration.",
+      "files": ["webview/styles/spec-editor.css"]
+    },
+    "T003": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Rebuilt the webview bundle and confirmed the faded placeholder color landed in dist/webview/spec-editor.css.",
+      "files": ["dist/webview/spec-editor.css"],
+      "concerns": ["Live Extension Development Host eyeballing of empty vs typed contrast is left for the user; verified at the build/code level only."]
+    },
+    "T004": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Verified --text-secondary is defined for the dark theme as a 70% foreground color-mix (WCAG-AA documented), distinct from the disabled token.",
+      "files": ["webview/styles/tokens.css"],
+      "concerns": ["Interactive dark-theme EDH check is the user's to confirm visually."]
+    },
+    "T005": {
+      "status": "DONE_WITH_CONCERNS",
+      "did": "Verified --text-secondary is defined for the light theme as a 70% foreground color-mix, distinct from the disabled token.",
+      "files": ["webview/styles/tokens.css"],
+      "concerns": ["Interactive light-theme EDH check is the user's to confirm visually."]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Confirmed the Empty story still represents the intended empty-placeholder baseline; it picks up the CSS automatically with no code change.",
+      "files": ["webview/src/spec-editor/__stories__/CreateSpec.stories.tsx"]
+    }
+  }
+}

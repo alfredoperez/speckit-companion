@@ -132,8 +132,7 @@
 }
 
 .spec-editor-textarea::placeholder {
-    color: var(--text-body);
-    opacity: 0.85;
+    color: var(--text-secondary);
 }
 
 /* Composer-style row beneath the textarea: attach control left, counter right. */
