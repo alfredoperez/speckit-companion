@@ -341,7 +341,7 @@ speckit.specDirectories               // Additional spec directories
 speckit.customCommands                // Custom command definitions
 speckit.customWorkflows               // Custom workflow definitions
 speckit.defaultWorkflow               // Default workflow name
-speckit.companion.workflowBeta        // boolean — gates the Create-Spec picker (when extension installed) + resume button
+speckit.companion.speckitCompanionWorkflow // boolean — gates the Create-Spec picker (when extension installed) + resume button + install banner
 speckit.notifications.phaseCompletion // boolean
 speckit.views.steering.visible        // boolean
 speckit.views.settings.visible        // boolean

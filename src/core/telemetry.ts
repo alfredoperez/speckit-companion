@@ -15,7 +15,7 @@ import * as crypto from 'crypto';
 import * as vscode from 'vscode';
 import { TelemetryReporter } from '@vscode/extension-telemetry';
 import { ConfigKeys, WorkflowSteps } from './constants';
-import { coerceLegacyBoolean } from './settingsMigration';
+import { coerceLegacyBoolean, isCompanionWorkflowEnabled } from './settingsMigration';
 import { readSpecContextSync, SPEC_CONTEXT_FILENAME } from '../features/specs/specContextReader';
 import { updateSpecContext } from '../features/specs/specContextWriter';
 
@@ -85,9 +85,10 @@ export function buildBetaSnapshot(): BetaSnapshot {
         String(coerceLegacyBoolean(config.get<unknown>(key), fallback));
     return {
         defaultWorkflow: defaultWorkflowTelemetryId(config.get<string>('defaultWorkflow', 'speckit')),
-        // Coerced (not bool): workflowBeta inherits migrated resumeBeta values, so an
-        // un-migrated scope could still hold a legacy 'on'/'beta' string — report a clean boolean.
-        workflowBeta: coerced('companion.workflowBeta', false),
+        // Reads through the same legacy-fallback helper the live readers use, so an
+        // un-migrated scope (new key unset, legacy workflowBeta/resumeBeta still set)
+        // reports the user's effective opt-in rather than the schema default.
+        workflowBeta: String(isCompanionWorkflowEnabled(config)),
         activityPanel: coerced('viewer.activityPanel', true),
         installPrompt: coerced('companion.installPrompt', true),
         telemetry: bool('telemetry', true),

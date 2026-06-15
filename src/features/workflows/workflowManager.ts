@@ -20,7 +20,7 @@ import {
 } from './types';
 import { ConfigKeys, WorkflowSteps, AIProviders, COMPANION_WORKFLOW_NAME } from '../../core/constants';
 import { getConfiguredProviderType, AIProviderType } from '../../ai-providers/aiProvider';
-import { coerceLegacyBoolean } from '../../core/settingsMigration';
+import { isCompanionWorkflowEnabled } from '../../core/settingsMigration';
 import { isCompanionInstalled } from '../settings/companionPresetReconciler';
 
 /**
@@ -238,7 +238,7 @@ export function validateWorkflow(config: WorkflowConfig): ValidationResult {
  */
 export function isCompanionSelectable(): boolean {
     const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
-    if (!coerceLegacyBoolean(config.get<unknown>('companion.workflowBeta'), false)) {
+    if (!isCompanionWorkflowEnabled(config)) {
         return false;
     }
     const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
