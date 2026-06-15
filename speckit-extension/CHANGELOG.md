@@ -6,7 +6,7 @@ All notable changes to the **spec-kit extension** (`id: companion`) are document
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/); this extension follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.8.0] - 2026-06-15
 
 ### Added
 - **Customize the pipeline without forking a command.** An optional project file (`.specify/companion.yml`) now lets you attach your own actions before or after any part of a Companion command — run a shell command, drop in an extra instruction, or call a reusable instruction file — and reorder which parts of a command run. If the file is absent, every command runs exactly as it ships. A worked example wires a full ship tail (review → PR → Copilot review → merge → reinstall) onto the end of a build; see `examples/ship-ticket/`.
