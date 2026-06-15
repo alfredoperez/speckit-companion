@@ -55,7 +55,8 @@ def part_path(name: str) -> str:
 
 def part_content(name: str) -> str:
     """A part's canonical inner text (trailing newline stripped to match a region)."""
-    return open(part_path(name), encoding="utf-8").read().rstrip("\n")
+    with open(part_path(name), encoding="utf-8") as fh:
+        return fh.read().rstrip("\n")
 
 
 def canonical(text: str) -> str:

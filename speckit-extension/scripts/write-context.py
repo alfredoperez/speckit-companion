@@ -484,8 +484,9 @@ def journal_task_finish(
     # off, this finish lands the spec at `implemented` (ready for mark-complete)
     # rather than re-asserting `implementing` — that re-assertion was the race that
     # left a 100%-done spec stuck and unmarkable.
+    at_100 = _feature_tasks_at_100(feature_dir)
     if ctx.get("status") not in ("implemented", "completed", "archived"):
-        ctx["status"] = "implemented" if _feature_tasks_at_100(feature_dir) else "implementing"
+        ctx["status"] = "implemented" if at_100 else "implementing"
 
     if not _has_complete(log, "implement", task_id):
         log.append({
@@ -497,6 +498,17 @@ def journal_task_finish(
             "at": _now_iso(),
         })
     _upsert_task_summary(ctx, task_id, did, files)
+    # At 100%, close the implement step itself too — the same step-level complete
+    # the sync_tasks backstop writes — so the live per-task path and the backstop
+    # converge on one canonical 'implemented' state (idempotent across both).
+    if at_100 and not _has_complete(log, "implement", None):
+        log.append({
+            "step": "implement",
+            "substep": None,
+            "kind": "complete",
+            "by": by,
+            "at": _now_iso(),
+        })
     commit_log(ctx, log)
     atomic_write(target, ctx)
     return target

@@ -38,7 +38,10 @@ def assemble_command(command: str, order: list = None) -> str:
     """Return the full command body assembled from nodes/<command>/."""
     cdir = nodes_command_dir(command)
     frame_path = os.path.join(cdir, "_frame.md")
-    out = open(frame_path, encoding="utf-8").read() if os.path.isfile(frame_path) else ""
+    out = ""
+    if os.path.isfile(frame_path):
+        with open(frame_path, encoding="utf-8") as fh:
+            out = fh.read()
 
     ids = order if order is not None else parse_order(os.path.join(cdir, "_order.yml"))
     for node_id in ids:
