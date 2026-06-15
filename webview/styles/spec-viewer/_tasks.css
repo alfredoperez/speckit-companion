@@ -89,7 +89,10 @@
    Tighter line-height than the surrounding prose so a wrapping task doesn't
    visually bloat into a pseudo-paragraph (spec 112). */
 #markdown-content li.task-item .task-text {
-  flex: 1 1 auto;
+  /* flex-basis 0 (not auto): auto resolves to the text's max-content width, which
+     with the row's flex-wrap pushes the whole label onto its own line below the
+     checkbox. basis 0 lets it sit beside the checkbox and wrap internally (#331). */
+  flex: 1 1 0;
   min-width: 0;
   line-height: 1.4;
 }
@@ -119,6 +122,9 @@
 #markdown-content li.task-item input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
+  /* Inherit the text font so `1.4em` below tracks the real line-height at every
+     font size — form controls default to ~13.3px, freezing the offset (#331). */
+  font: inherit;
   width: 16px;
   height: 16px;
   min-width: 16px;
