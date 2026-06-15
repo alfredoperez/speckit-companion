@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ### Changed
 - **Companion commands are now assembled from smaller, reusable parts.** Each command is built from a short ordered list of named sections rather than one hand-written file, which is what makes the customization above possible. This is a behind-the-scenes reshape — the commands you run are byte-for-byte identical to before, proven by a parity check in CI — so nothing about how they behave changes.
+- **The timing rules stay in one place and can't quietly fork.** The shared timing instructions baked into every stock command are now guarded so they always come from the single shared copy — if a command ever pasted its own version of them, the build catches it. Editing the timing rules remains a one-place change that flows into every command. The commands you run are byte-for-byte unchanged.
 
 ## [0.7.0] - 2026-06-14
 

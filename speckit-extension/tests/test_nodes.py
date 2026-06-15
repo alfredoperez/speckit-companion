@@ -18,6 +18,7 @@ sys.path.insert(0, str(SCRIPTS))
 asm = importlib.import_module("assemble-nodes")
 cp = importlib.import_module("_command_parts")
 cc = importlib.import_module("companion_config")
+parity = importlib.import_module("check-shape-parity")
 
 
 class NodeAssemblyParityTests(unittest.TestCase):
@@ -80,6 +81,26 @@ class RecipeOverrideTests(unittest.TestCase):
         recipe = [n for n in default if n != "draft-spec"]  # read by quality-checklist + classify-size
         with self.assertRaises(cc.ConfigError):
             cc.validate_reads(asm.node_reads_map("specify", recipe))
+
+
+class TimingFencePresenceTests(unittest.TestCase):
+    """The stock carriers must keep the shared timing block as a fence, not a copy."""
+
+    def _carriers(self) -> list:
+        return [r for r in cp.GOLDEN_BODIES if r.startswith(parity.STANDARD_CARRIER_PREFIX)]
+
+    def test_every_stock_carrier_currently_carries_the_timing_fence(self) -> None:
+        carriers = self._carriers()
+        self.assertTrue(carriers, "expected at least one companion-standard carrier")
+        for rel in carriers:
+            with self.subTest(rel=rel):
+                self.assertIn("timing", cp.PART_OPEN.findall(cp.read(rel)))
+
+    def test_guard_flags_a_carrier_that_dropped_the_timing_fence(self) -> None:
+        rel = self._carriers()[0]
+        forked = cp.PART_FENCE.sub(lambda m: m.group(2), cp.read(rel))  # inline the part, drop the fence
+        flagged = rel.startswith(parity.STANDARD_CARRIER_PREFIX) and "timing" not in cp.PART_OPEN.findall(forked)
+        self.assertTrue(flagged, "guard must flag a carrier whose timing fence was inlined")
 
 
 if __name__ == "__main__":
