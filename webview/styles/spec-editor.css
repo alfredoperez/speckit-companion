@@ -132,7 +132,7 @@
 }
 
 .spec-editor-textarea::placeholder {
-    color: var(--text-secondary);
+    color: var(--vscode-input-placeholderForeground, var(--text-muted));
     opacity: 1;
 }
 

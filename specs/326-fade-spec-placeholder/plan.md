@@ -5,7 +5,7 @@
 
 ## Summary
 
-The Create Spec description field paints its placeholder guidance in nearly the same color as real typed text, so an empty field can be mistaken for a filled one. The fix is a one-line CSS color change: move the placeholder from the body-content token (`--text-body`) to the conventional subordinate token (`--text-secondary`), which sits clearly between full-contrast content and the disabled appearance and stays legible on both light and dark themes. We also drop the heavy `opacity: 0.85` stacking so the fade comes from the color treatment as a whole rather than from layering transparency on top of an already-readable color (FR-004).
+The Create Spec description field paints its placeholder guidance in nearly the same color as real typed text, so an empty field can be mistaken for a filled one. The fix is a one-line CSS color change: move the placeholder from the body-content token (`--text-body`) to VS Code's native input-placeholder color (`--vscode-input-placeholderForeground`, falling back to the muted token), which sits clearly between full-contrast content and the disabled appearance and stays legible on both light and dark themes. We also drop the heavy `opacity: 0.85` stacking (pinning `opacity: 1`) so the fade comes from the color treatment as a whole rather than from layering transparency on top of an already-readable color (FR-004).
 
 ## Technical Context
 
@@ -59,8 +59,8 @@ webview/
 
 ## Approach
 
-1. In `webview/styles/spec-editor.css`, change the `.spec-editor-textarea::placeholder` rule from `color: var(--text-body); opacity: 0.85;` to `color: var(--text-secondary);` (dropping the stacked opacity).
-   - `--text-secondary` is defined as `color-mix(... foreground 70%, transparent)` on both themes — theme-adaptive, documented to clear WCAG AA on dark, and the project's conventional "subordinate but readable" token. This satisfies FR-001 (lighter than content), FR-002 (legible both themes), FR-003 (not the disabled token), and FR-004 (fade from the color itself, not from stacked opacity).
+1. In `webview/styles/spec-editor.css`, change the `.spec-editor-textarea::placeholder` rule from `color: var(--text-body); opacity: 0.85;` to `color: var(--vscode-input-placeholderForeground, var(--text-muted)); opacity: 1;` (dropping the stacked 0.85 opacity).
+   - `--vscode-input-placeholderForeground` is VS Code's native input-placeholder color — purpose-built for this, theme-adaptive, and consistent with the textarea already using `--vscode-input-background` / `--vscode-input-foreground`. It reads clearly faded on both themes without looking disabled, satisfying FR-001/002/003. `opacity: 1` keeps the fade sourced purely from the color token so no UA-default placeholder opacity stacks on top (FR-004). Falls back to `--text-muted` (a 50%-foreground `color-mix`) for any theme that doesn't define the native token.
 2. Verify the empty Create Spec state visually in the Extension Development Host on both a light and a dark theme.
 3. Confirm the `CreateSpec.stories.tsx` empty-placeholder story still represents the intended baseline (it picks up the CSS automatically; no story-code change expected, but it is the FR-005 reference to eyeball).
 

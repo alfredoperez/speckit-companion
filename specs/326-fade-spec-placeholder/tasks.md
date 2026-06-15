@@ -41,7 +41,7 @@ Single VS Code extension with a webview UI layer. The change is isolated to `web
 
 **Independent Test**: Open the Create Spec page with the description field empty and confirm the placeholder text is visibly lighter than typed text, reading as a hint rather than entered content.
 
-- [x] **T002** [US1] In `webview/styles/spec-editor.css`, change the `.spec-editor-textarea::placeholder` rule (line 134) from `color: var(--text-body); opacity: 0.85;` to `color: var(--text-secondary);`, removing the stacked `opacity` declaration (satisfies FR-001 and FR-004).
+- [x] **T002** [US1] In `webview/styles/spec-editor.css`, change the `.spec-editor-textarea::placeholder` rule (line 134) from `color: var(--text-body); opacity: 0.85;` to `color: var(--vscode-input-placeholderForeground, var(--text-muted)); opacity: 1;`, dropping the stacked 0.85 (satisfies FR-001 and FR-004).
 - [x] **T003** [US1] Rebuild the webview bundle (`npm run compile`) so the CSS change is picked up, then open the Create Spec page with an empty description field in the Extension Development Host and confirm the placeholder is visibly lighter than typed content and reads as guidance (Acceptance Scenarios 1 & 2; SC-001, SC-003).
 
 **Checkpoint**: Empty placeholder is clearly distinguishable from typed text — US1 independently verifiable.
