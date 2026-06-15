@@ -132,8 +132,11 @@
 }
 
 .spec-editor-textarea::placeholder {
-    color: var(--text-body);
-    opacity: 0.85;
+    /* Muted, not body color, so the empty field reads as guidance — but the
+       placeholder carries real teaching, so don't stack a low token with low
+       opacity (#330). One muted token at full opacity stays legible. */
+    color: var(--text-secondary);
+    opacity: 1;
 }
 
 /* Composer-style row beneath the textarea: attach control left, counter right. */
