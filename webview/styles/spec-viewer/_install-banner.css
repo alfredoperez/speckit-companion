@@ -5,8 +5,10 @@
  */
 
 .install-banner {
+    container-type: inline-size;
     display: flex;
     align-items: flex-start;
+    flex-wrap: wrap;
     gap: 12px;
     padding: 12px 14px;
     margin: 0 0 12px 0;
@@ -32,6 +34,10 @@
 
 .install-banner__text strong {
     font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
 }
 
 .install-banner__text span {
@@ -77,4 +83,10 @@
 
 .install-banner__btn--link:hover {
     text-decoration: underline;
+}
+
+@container (max-width: 420px) {
+    .install-banner__actions {
+        flex: 1 0 100%;
+    }
 }
