@@ -130,6 +130,19 @@
 > step tab stops the moment `status` settles (#255), so the strand-guard
 > is obsolete.
 >
+> **No one-click force-complete for specify / plan / tasks (accepted gap, #281)**:
+> With the override removed, an in-flight specify / plan / tasks step has
+> no manual "mark complete" button — only `Regenerate`. In practice each
+> of these steps settles reliably through its `after_*` lifecycle hook,
+> so the step advances on its own. If a transition is ever missed (the
+> capture hook didn't fire and the status stays stuck), the recovery
+> path is **Regenerate**, which re-runs the step and lets capture settle
+> it. This gap is accepted rather than re-homed: re-adding a force-complete
+> surface would reintroduce exactly the redundant in-flight control #277
+> removed. The orphaned `markStepComplete` message chain and the dead
+> `runningStep*` `ViewerState` fields it relied on were deleted with this
+> decision (#281).
+>
 > **Step-tab in-flight indicator (spec 147, #229; extended in #277)**:
 > While **any** step is running — specify / plan / tasks **and**
 > implement — its tab renders a spinning `sync` codicon (looping
@@ -212,13 +225,13 @@ flowchart TD
 snapshot derived solely from `.spec-context.json` (`deriveViewerState` →
 `getFooterActions`). The webview footer reads **only** `viewerState` for every
 decision — status, the button catalog (`viewerState.footer`), the
-generating/run-step gate (`runningStepArtifactReady`, `runningStepStartedAt`,
-`runningStepLabel`), the recovery-timeout anchor, and button labels. It does
+in-flight gate (the `status` discriminator), and button labels. It does
 **not** read `navState` for any of these (the lone `navState` read is the
 workflow-derived `enhancementButtons`, which can never hide a lifecycle button).
-There are exactly two render shapes: the normal `CatalogFooter` and the
-`GeneratingFooter` overlay — no legacy fallback branch and no multi-source
-status chain. Because every refresh path ships a **complete** `viewerState`
+There is exactly one render shape — the `CatalogFooter`, which suppresses its
+forward-motion button while the step is in flight — no legacy fallback branch and
+no multi-source status chain. Because every refresh path ships a **complete**
+`viewerState`
 (via one shared payload builder), the same true state always yields the same
 button set (determinism by construction).
 
@@ -228,7 +241,7 @@ Zones: **Left** = `regenerate`. **Right** = `refine`, `approve`, `reactivate`,
 
 | Status | Left | Right | Notes |
 |--------|------|-------|-------|
-| `specifying` / `planning` / `tasking` / `implementing` | Mark step complete | Generating chip | Generating overlay while the running step's artifact is not yet ready (and the recovery window has not elapsed) |
+| `specifying` / `planning` / `tasking` / `implementing` | Regenerate | _(forward-motion button suppressed)_ | In-flight: the spinning step tab carries the only motion; the footer hides the forward button until the step settles. No one-click force-complete — Regenerate is the recovery path (#281). |
 | `specified` | Regenerate | Approve → **Plan** | forward action present |
 | `planned` | Regenerate | Approve → **Tasks** | |
 | `ready-to-implement` | Regenerate | Approve → **Implement** | |
@@ -238,10 +251,10 @@ Zones: **Left** = `regenerate`. **Right** = `refine`, `approve`, `reactivate`,
 
 The `Approve` label resolves to the next workflow step (`getApproveLabel`); it is
 hidden on the final `implement` step and whenever a past tab is viewed (the
-footer always reflects the true workflow stage, not the viewed tab). Once the
-running step's artifact lands (or the 10-minute recovery timeout elapses), the
-`GeneratingFooter` reverts to the normal `CatalogFooter` buttons — it never
-leaves the action bar empty.
+footer always reflects the true workflow stage, not the viewed tab). While a step
+is in flight the `CatalogFooter` suppresses its forward-motion button and keeps
+`Regenerate` (plus any closure/refine actions); the moment `status` settles, the
+forward button reappears — it never leaves the action bar empty.
 
 The source-tab **Refine** button (`✨ Refine (N)`) still appears dynamically
 when pending inline comments are collected. Each comment is persisted to
@@ -604,7 +617,7 @@ footer-relevant field as a partial merged onto a stale snapshot.
 | `src/features/spec-viewer/phaseCalculation.ts` | `computeBadgeText()`, `computeCreatedDate()`, `computeLastUpdatedDate()`, `mapStepToTab()`, `getDocTypeLabel()` |
 | `src/features/spec-viewer/messageHandlers.ts` | Lifecycle action handlers (complete/archive/reactivate) |
 | `src/features/spec-viewer/types.ts` | `SpecStatus` type, message types |
-| `webview/src/spec-viewer/components/FooterActions.tsx` | Single-source footer (CatalogFooter vs GeneratingFooter) |
+| `webview/src/spec-viewer/components/FooterActions.tsx` | Single-source footer (CatalogFooter; forward button suppressed while in flight) |
 | `webview/src/spec-viewer/components/StepTab.tsx` | Step-tab class derivation |
 | `webview/src/spec-viewer/actions.ts` | Checkbox toggle + percentage update |
 | `webview/styles/spec-viewer/_navigation.css` | Tab visual states |

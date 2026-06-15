@@ -205,12 +205,6 @@ export interface ViewerState {
     footer: SerializedFooterAction[];
     history: HistoryEntry[];
     stepHistory: Record<string, StepHistoryEntry>;
-    /** Whether the running step's artifact is ready (100% tasks for implement). Drives the footer's Generating→ready transition. */
-    runningStepArtifactReady: boolean;
-    /** `startedAt` of the running step, anchoring the recovery-timeout window. `null` when no step is in flight. */
-    runningStepStartedAt: string | null;
-    /** Human label of the running step (e.g. "Plan"). `null` when no step is in flight. */
-    runningStepLabel: string | null;
     approach?: string;
     lastAction?: string;
     taskSummaries?: Record<string, TaskSummary>;
@@ -246,8 +240,6 @@ export type ViewerToExtensionMessage =
     | { type: 'approve' }
     | { type: 'clarify'; command?: string }
     | { type: 'footerAction'; id: string }
-    // Spec 099: manual completion fallback for the running step
-    | { type: 'markStepComplete' }
     // Lifecycle actions
     | { type: 'completeSpec' }
     | { type: 'archiveSpec' }

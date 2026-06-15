@@ -51,9 +51,6 @@ const baseViewerState = (
         footer,
         history: [],
         stepHistory: {},
-        runningStepArtifactReady: false,
-        runningStepStartedAt: null,
-        runningStepLabel: null,
         ...extra,
     }) as ViewerState;
 
@@ -68,7 +65,6 @@ const inFlightViewerState = (
 ): ViewerState => {
     const startedAt = new Date().toISOString();
     return baseViewerState(status, activeStep, footer, {
-        runningStepStartedAt: startedAt,
         stepHistory: { [activeStep]: { startedAt, completedAt: null } },
     });
 };
