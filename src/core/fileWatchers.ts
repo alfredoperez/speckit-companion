@@ -423,6 +423,7 @@ export function setupArtifactSettleWatcher(
         watcher.onDidCreate(scheduleSettle);
         context.subscriptions.push(watcher);
     }
+    context.subscriptions.push({ dispose: () => settleTimers.forEach(clearTimeout) });
     outputChannel.appendLine(`[ArtifactSettleWatcher] registered for ${patterns.length} spec patterns`);
 }
 

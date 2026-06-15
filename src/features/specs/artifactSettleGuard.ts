@@ -1,25 +1,13 @@
 /**
- * Pure decision: should the always-on artifact watcher settle a `specify` or
- * `plan` step from its artifact (`spec.md` / `plan.md`) going quiet?
+ * Pure decision: should the always-on artifact watcher settle a `specify`/`plan`
+ * step from its artifact (`spec.md`/`plan.md`) going quiet? The mode-agnostic
+ * sibling of `shouldCloseImplement` for the two earlier steps (#324). Kept as a
+ * pure function so it is testable without a live `vscode` watcher.
  *
- * Issue #324 — in a stock SpecKit project (no companion spec-kit extension),
- * `specify` finishes writing `spec.md` but `.spec-context.json` never advances
- * to `specified`. The completing transition is recorded only by the companion
- * `after_specify`/`after_plan` hooks (absent in stock), a terminal-exit tracker
- * (no signal for panel/chat dispatch), or a footer click (suppressed while the
- * status is the in-flight `specifying`). So the spec sticks forever and the only
- * way forward is editing `.spec-context.json` by hand.
- *
- * `implement` already has a mode-agnostic settle (the `tasks.md` watcher closes
- * it from "every task checked"). This is the same move for the two earlier
- * artifact steps, decided as a pure function so it is testable without a live
- * `vscode` watcher — no extension/runtime deps.
- *
- * Unlike `tasks.md` (where "all boxes checked" is a content-level done signal),
- * `spec.md`/`plan.md` simply existing is NOT "done" — they are written
- * incrementally while the step is still running. The watcher therefore only
- * calls this AFTER the artifact has been quiet for a stability window; this
- * guard adds the state-level conditions on top.
+ * The watcher calls this only AFTER the artifact has been quiet for a stability
+ * window — existence alone is not "done" (these files are written incrementally,
+ * unlike `tasks.md` where "all boxes checked" is a content-level done signal).
+ * See `docs/capture-and-timing.md` for the reliability model.
  */
 
 import { lastEntryIsCompletionFor } from './historyHelpers';
