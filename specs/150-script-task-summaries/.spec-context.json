@@ -3,7 +3,7 @@
   "specName": "Script-written task_summaries + live implement percentage label",
   "branch": "150-script-task-summaries",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",

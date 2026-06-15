@@ -3,7 +3,7 @@
   "specName": "stable companion zip",
   "branch": "156-stable-companion-zip",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",

@@ -4,7 +4,7 @@
   "branch": "170-single-beta-gate",
   "selectedAt": "2026-06-14T13:53:29.626Z",
   "currentStep": "implement",
-  "status": "implementing",
+  "status": "completed",
   "history": [
     {
       "step": "specify",

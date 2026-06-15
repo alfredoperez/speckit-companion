@@ -3,7 +3,7 @@
   "specName": "provider adoption telemetry",
   "branch": "main",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",

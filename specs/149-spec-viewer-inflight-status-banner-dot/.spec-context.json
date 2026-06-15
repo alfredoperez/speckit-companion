@@ -3,7 +3,7 @@
   "specName": "spec viewer inflight status banner dot",
   "branch": "149-spec-viewer-inflight-status-banner-dot",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",

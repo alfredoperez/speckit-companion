@@ -3,7 +3,7 @@
   "specName": "Hide Resume on Terminal Specs (Make `implemented` a First-Class Status)",
   "branch": "151-implemented-terminal-status",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",

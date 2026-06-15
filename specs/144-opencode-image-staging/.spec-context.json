@@ -3,7 +3,7 @@
   "specName": "opencode-image-staging",
   "branch": "144-opencode-image-staging",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",

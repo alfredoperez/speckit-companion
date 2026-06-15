@@ -3,7 +3,7 @@
   "specName": "remove markstepcomplete orphan",
   "branch": "177-remove-markstepcomplete-orphan",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
