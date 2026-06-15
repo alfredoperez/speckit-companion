@@ -272,9 +272,10 @@ def _feature_tasks_at_100(feature_dir: Path) -> bool:
     tasks_md = feature_dir / "tasks.md"
     if not tasks_md.is_file():
         return False
+    # Per-occurrence length equality, not set subset: a duplicate id with one
+    # marker still unchecked ([x] T001 + [ ] T001) must not read as 100%.
     all_ids, done_ids = parse_task_markers(tasks_md)
-    distinct_all = set(all_ids)
-    return bool(distinct_all) and distinct_all <= set(done_ids)
+    return bool(all_ids) and len(done_ids) == len(all_ids)
 
 
 def _journaled_tasks(transitions: list) -> set[str]:
@@ -499,8 +500,14 @@ def journal_task_finish(
     tasks_md = feature_dir / "tasks.md"
     all_journaled = False
     if tasks_md.is_file():
-        all_ids = set(dict.fromkeys(parse_task_markers(tasks_md)[0]))
-        all_journaled = bool(all_ids) and all_ids <= _journaled_tasks(log)
+        markers = parse_task_markers(tasks_md)[0]
+        distinct = list(dict.fromkeys(markers))
+        # Duplicate/ambiguous ids: don't auto-close the step from tasks.md.
+        all_journaled = (
+            bool(markers)
+            and len(distinct) == len(markers)
+            and set(distinct) <= _journaled_tasks(log)
+        )
     if all_journaled and not _has_complete(log, "implement", None):
         log.append({
             "step": "implement",

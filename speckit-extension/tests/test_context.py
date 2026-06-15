@@ -790,6 +790,14 @@ class MarkCompleteTests(unittest.TestCase):
         self.assertIsNone(result)
         self.assertEqual(_ctx(self.fd)["status"], "implementing")
 
+    def test_duplicate_id_with_one_unchecked_is_not_100pct(self) -> None:
+        # [x] T001 + [ ] T001 must not read as done (set-collapse would hide the pending one).
+        (self.fd / "tasks.md").write_text("- [x] **T001** a\n- [ ] **T001** a-again\n")
+        self.assertFalse(wc._feature_tasks_at_100(self.fd))
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        self.assertIsNone(wc.mark_spec_complete(self.fd, "ai"))
+        self.assertEqual(_ctx(self.fd)["status"], "implementing")
+
     def test_last_task_finish_lands_at_implemented_not_implementing(self) -> None:
         # journal_task_finish at 100% must not re-assert `implementing` (the race).
         (self.fd / "tasks.md").write_text("- [x] **T001** a\n- [x] **T002** b\n")
