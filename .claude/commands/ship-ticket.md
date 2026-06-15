@@ -80,6 +80,7 @@ done
 - Actionable comments → subagent: fix, commit, push, re-run `npm test`. **Reply to + resolve each Copilot thread** after fixing it.
 - ~10 min, nothing → log "Copilot timed out; relying on /code-review" and proceed.
 - **Conditional 2nd pass:** if the fix changed real LOGIC (control flow, a migration, a data-shape writer, an availability/auth gate), capture the current Copilot inline-comment count as a baseline, re-request Copilot, poll for NEW comments; address, then merge. Docs/CSS/label-only fixes skip the 2nd pass.
+- **Stopping rule (avoid the treadmill):** each logic fix can trigger another pass, so this can loop 3–4×. Keep going only while a new pass surfaces a **real bug your change introduced or sits on**. Stop and merge once new findings are **pre-existing edge cases the PR didn't touch, prose/docstring precision, or equivalent nitpicks** — reply with the rationale and resolve, don't keep re-requesting. Convergence ≠ zero findings; it's "no new finding worth a code change."
 
 ### 5. Merge + cleanup — main loop
 ```bash
