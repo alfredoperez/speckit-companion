@@ -2,13 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [0.24.0] - 2026-06-15
 
 ### Fixed
 
 - **The "Install spec-kit extension" banner stays readable in a narrow panel** (#327): when the Create-Spec or Activity panel was slim, the banner's heading and body got crushed into a thin column of one- and two-word lines while the buttons clung to the right edge. The banner now adapts to its own width — the install button and "Learn more" link drop onto their own row below the text when space is tight, the body always wraps across the full width, and an over-long heading is trimmed with an ellipsis you can hover to read in full. At comfortable widths it looks exactly as before.
 - **Stock specs no longer get stuck after the Specify step** (#332): in a plain SpecKit project — without the companion spec-kit extension — running Specify from the editor's chat panel used to finish writing the spec but leave it showing "specifying" forever, with the next-step button hidden, so the only way forward was hand-editing a file. Specify now advances to "specified" on its own and the next-step (Plan) button reappears. Specs running the Companion pipeline are unaffected — they already advanced on their own.
 - **The spec viewer's footer now follows the spec's own workflow** (#317): the next-step button in the open spec used to always reflect the default pipeline, even for a spec running a different workflow. It now resolves each spec's own workflow (the same way the sidebar does) and falls back to the default only when none is set, so the button you see and click matches the spec in front of you.
+- **Task checkboxes line up with their labels, including long multi-line tasks** (#331): a wrapping or completed task used to drop its whole label onto a line below the checkbox, and the checkmark drifted as you changed the editor font size. The checkbox now sits next to the first line with the rest of the label hanging-indented, and it stays aligned at any font size.
+- **The Create Spec placeholder reads as faded guidance** (#330): the description field's placeholder used the full body text color, so an empty field could look like it already had text typed in. It's now a muted gray — clearly a placeholder, still legible.
 
 ### Changed
 
