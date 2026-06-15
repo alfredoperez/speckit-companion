@@ -191,7 +191,7 @@ export class SpecViewerProvider {
   private async resolveWorkflowSteps(specDir?: string): Promise<WorkflowStepConfig[]> {
     if (specDir) {
       try {
-        const ctx = await getFeatureWorkflow(specDir);
+        const ctx = await getFeatureWorkflow(specDir, this.computeChangeRoot(specDir));
         if (ctx) {
           const wf = getWorkflow(ctx.workflow);
           if (wf) {
