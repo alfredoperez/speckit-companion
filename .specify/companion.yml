@@ -1,0 +1,8 @@
+commands:
+  implement:
+    hooks:
+      after:
+        handoff:
+          - { type: prompt, text: "Before this spec is marked complete, self-review your full diff against the project conventions and the review checklist, and fix any violations you find." }
+          - { type: prompt, text: "Run the code-simplifier agent on the files you changed and apply its safe behavior-preserving simplifications. If you have no agent tool, say so and continue." }
+          - { type: prompt, text: "Commit the work and open a pull request using the create-pr skill, following the repo PR conventions. Do not merge. Leave the PR open for review. If you cannot run git or gh, report what you would do and continue." }
