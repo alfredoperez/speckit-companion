@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **An Auto button builds the whole spec hands-off, right from Create Spec.** Select the **SpecKit Companion** workflow and an **Auto** button appears next to Create Spec: describe what you need and walk away while it runs specify → plan → tasks → implement → completion on its own, with no approval pauses. **Create Spec** still does the normal step-by-step flow, so you choose per spec. Auto only shows for the Companion workflow (it needs the companion spec-kit extension); with stock SpecKit selected, only Create Spec appears, and the step-by-step flow always stays available.
+
 ## [0.24.0] - 2026-06-15
 
 ### Fixed

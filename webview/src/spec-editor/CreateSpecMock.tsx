@@ -7,15 +7,18 @@
  *   - SpecEditor/CreateSpec stories (standalone view).
  *   - Viewer/Transitions/CreateSpec (the lifecycle "phase zero" entry).
  *
- * The Run button (hands-off auto pipeline) lives here, next to Create Spec —
+ * The Auto button (hands-off auto pipeline) lives here, next to Create Spec —
  * by design it is the canonical first-time entry point for the spec pipeline,
- * NOT a viewer-footer button.
+ * NOT a viewer-footer button. It is shown only when a workflow with a hands-off
+ * orchestrator (SpecKit Companion) is selected; `showAuto` mirrors that gating.
  */
 
 export interface CreateSpecMockProps {
     initialContent?: string;
     submitting?: boolean;
     overLimit?: boolean;
+    /** Whether the selected workflow exposes the hands-off Auto button (Companion). */
+    showAuto?: boolean;
 }
 
 const MAX_CHARS = 50_000;
@@ -35,6 +38,7 @@ export function CreateSpecMock({
     initialContent = '',
     submitting = false,
     overLimit = false,
+    showAuto = true,
 }: CreateSpecMockProps) {
     const charCount = overLimit ? MAX_CHARS + 1200 : initialContent.length;
     const isEmpty = initialContent.trim().length === 0;
@@ -160,6 +164,7 @@ export function CreateSpecMock({
                     >
                         Cancel
                     </button>
+                    {showAuto && (
                     <button
                         type="button"
                         disabled={!canSubmit}
@@ -176,8 +181,9 @@ export function CreateSpecMock({
                             opacity: ${canSubmit ? 1 : 0.5};
                         `}
                     >
-                        Run
+                        Auto
                     </button>
+                    )}
                     <button
                         type="button"
                         disabled={!canSubmit}
