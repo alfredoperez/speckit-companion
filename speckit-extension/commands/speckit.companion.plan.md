@@ -25,8 +25,7 @@ If you cannot spawn subagents, do all of it sequentially — no error, identical
 <!-- /speckit-companion:part parallel -->
 
 1. Read `.specify/feature.json` for the feature directory; load `<feature_directory>/spec.md` and `.specify/memory/constitution.md` if present.
-
-2. If you support subagents, fan these reads out in parallel (one per area) and collect findings; otherwise read sequentially.
+   - If you support subagents, fan these reads out in parallel (one per area) and collect findings; otherwise read sequentially.
 
 2. Create `<feature_directory>/plan.md` with these sections, in order:
    - **Summary** — the primary requirement plus the technical approach in 2–4 sentences.
