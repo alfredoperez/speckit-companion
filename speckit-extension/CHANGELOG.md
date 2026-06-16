@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ### Added
 - **Runs now finish on their own.** When the last task is done, the spec is marked completed automatically, so a run lands in Completed instead of stopping at "implemented" and waiting for a manual step.
+- **Your installed spec-kit extensions keep working under Companion.** A Companion run now honors the same extension hooks a stock spec-kit run does, so the git extension (and any others you've installed) still fire at the start and end of each step — the branch-on-spec, the commit callouts, whatever they do. Previously those were silently skipped on the Companion pipeline. Companion's own customization hooks run on top of them, unchanged.
 
 ## [0.10.0] - 2026-06-16
 

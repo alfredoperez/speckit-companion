@@ -149,6 +149,8 @@ The workflow's safe default is the full pipeline, so an ambiguous size never dro
 
 The Companion commands are assembled from composable **nodes** — small sections inside a command. An optional, project-local `.specify/companion.yml` lets you attach your own work before or after any node (run a shell command, add an instruction, or call a reusable node file) and reorder which nodes a command runs — without forking a command. If the file is absent, every command runs exactly as it ships. A worked example (a review → PR → Copilot → merge → reinstall ship tail) is in [`examples/ship-ticket/`](./examples/ship-ticket/). Full reference: [`docs/node-model.md`](./docs/node-model.md).
 
+This is separate from stock spec-kit's own extension hooks (`.specify/extensions.yml`): a Companion run honors those too, so any spec-kit extension you've installed (the git extension and others) fires at the start and end of each step exactly as it would on a stock `/speckit.*` run. Both hook systems run on the same pipeline.
+
 ## Installation
 
 Requires a **github-source** spec-kit — the stock PyPI `specify-cli` has no `extension` subsystem:

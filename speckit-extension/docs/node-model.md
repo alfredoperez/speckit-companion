@@ -99,6 +99,15 @@ The namespaced `/speckit.companion.*` commands above are assembled from nodes. T
 
 The stock body *above* the fence is still hand-maintained against upstream. Assembling it from a separately-vendored upstream source byte-for-byte would require pinning an upstream-vendor input into the repo (there is no second copy of the raw template to assemble from today). That is deferred — a larger change than the timing single-sourcing, and out of scope for the anti-drift work that locked the timing part.
 
+## Two hook systems — stock `extensions.yml` *and* Companion `companion.yml`
+
+There are two independent hook files, and a Companion run fires **both**:
+
+- **`.specify/extensions.yml`** is **stock spec-kit's** own extension registry — how installed spec-kit extensions (the git extension, and any others) attach `before_<step>` / `after_<step>` work to the lifecycle. Stock `/speckit.*` commands check it; so must Companion, or those extensions silently no-op under the Companion pipeline (e.g. the git extension's branch-on-specify never fires). Each command frame opens with a **Pre-Execution Checks** block — the shared `speckit-hooks` part (`presets/_parts/speckit-hooks.md`) — that reads `extensions.yml`, runs the `before_<step>` hooks before the command's work and the `after_<step>` hooks once it's reported, using the exact upstream output format and the same silent-skip-on-missing/malformed stance. This keeps stock-extension parity.
+- **`.specify/companion.yml`** (below) is **Companion's own** node-hook + recipe layer, appended as the `orchestrator` part. It is unrelated to `extensions.yml` and keyed by *node id*, not lifecycle step.
+
+A run therefore fires stock extension hooks (compatibility) *and* Companion node hooks (customization). Both follow the "never fail the host command" rule.
+
 ## `.specify/companion.yml` — hooks and recipes
 
 This optional, project-local file is how a team customizes the pipeline without forking any command. It is **deltas only**: if it's absent, every command runs exactly as shipped. The AI reads it at run time — there is no engine; the orchestrator instructions appended to each command (the `orchestrator` part) tell the AI what to do with it. `scripts/companion_config.py` is the executable spec of the same contract, unit-tested in CI so the prose and the behavior can't drift.
