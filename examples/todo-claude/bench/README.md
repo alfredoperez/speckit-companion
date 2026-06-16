@@ -128,6 +128,8 @@ The primary grader is the **behavioral judge** (`behavioral-judge.mjs`): it pull
 
 The old testid suites (`acceptance/{size}.test.tsx`) are kept as a **labeled baseline** only (`deterministicBaseline` in each stats row) — useful as a sanity check, but no longer the score driver, since the prompts intentionally don't reveal the ids they assert. Each cell records which grader was primary (`acceptanceSource: behavioral | deterministic`). The suites are still **not** part of `tsc`/`vite build`, so they never block a build.
 
+**The oracle is never baked into a cell.** A baked cell's `bench/` is stripped down to just `vitest.setup.ts` (the bake does this), so the implementing model can't browse `acceptance/`, `prompts/`, or past `stats.jsonl` and code to the hidden grade. At scoring time `runAcceptance` copies the size's `acceptance/<size>.test.tsx` + `harness.tsx` from the **source** bench dir into the cell, runs it (vitest runs an explicit positional path even when it isn't in the cell's `include`), then removes it — so the deterministic baseline still works without the cell ever carrying the oracle between runs.
+
 ## How timing is measured
 
 Straight from the run's `specs/<dir>/.spec-context.json` `history[]` — it timestamps every step regardless of who wrote it. `capture` derives total + per-step durations from those stamps, and the driver-tracked `captureOverheadSec` (time spent journaling) is reported as its own line so work-time and capture-tax don't blur. `speckit` isn't graded for capture fidelity (no companion install), but the always-on VS Code extension may still write a `.spec-context.json`, so a speckit cell can carry partial per-step timing — just don't treat it as a clean control.

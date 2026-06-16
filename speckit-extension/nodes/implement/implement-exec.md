@@ -10,12 +10,24 @@ reads: []
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step implement --status implementing --kind start --by extension
    ```
 
-2. Execute `tasks.md` **phase by phase, in dependency order**: complete **Setup**, then **Foundational** (which blocks every story), then each **user-story** phase in priority order (P1 first), then **Polish**. Within a story, write any tests first and confirm they fail before implementing; then go models → services → UI → integration. Halt on a failed task and report the cause.
-   - **Run the independent (`[P]`) tasks in a phase concurrently — the default on Claude Code, not an optional optimization.** Within the current phase, the `[P]` tasks (different files, no incomplete dependency) form a batch: **issue one subagent (Task tool) per task in the batch, all in a single message,** so they run at once. Each subagent makes only its task's edits, touches no file outside it, returns a one-line summary, and does **not** edit `tasks.md` or `.spec-context.json`. If the tasks share an interface (a contract pinned in `tasks.md`/`contracts/`), paste that contract into each subagent's brief verbatim so they don't drift. Same-file or dependent tasks stay ordered (never in one batch). A host without subagents runs the batch sequentially — identical result.
-   - **After a batch returns, reconcile it** (main agent): type-check/build the touched files and fix any seam drift between the files written side by side, before moving on. Then do the bookkeeping below.
+2. Work `tasks.md` **phase by phase, in dependency order**: **Setup**, then **Foundational** (which blocks every story), then each **user-story** phase in priority order (P1 first), then **Polish**. Within a story, write any tests first and confirm they fail before implementing; then go models → services → UI → integration. Halt on a failed task and report the cause.
 
-3. **Append each task's finish, then materialize per batch (main agent owns `tasks.md`).** As the batch reconciles, mark each finished task `- [x]` in `tasks.md` and **append** its finish with `--append` (the parallel-safe, no-read path — see the Timing rules below), one per task. Then run a single `--materialize` to fold the batch's lines into `.spec-context.json` so the panel updates. The append is cheap and never re-serializes the parallel work; only `tasks.md` stays single-writer (the main agent), never a subagent.
+3. **Inside each phase, FAN OUT — build the independent (`[P]`) tasks in parallel with subagents. This is the default, not an optimization.** Look at the phase's `[P]` tasks (different files, no incomplete dependency): that set is a batch, and you build the **whole batch at once** by **spawning one subagent (the Task tool) per task — all in a single message** so they run concurrently. Do not implement `[P]` tasks one-by-one yourself; that is the slow fallback for a host with no subagents, and it should be your last resort, not your habit. Each subagent's brief is tight:
+   - It makes **only its own task's edits** (the one file the task names), touches nothing else, and returns a one-line summary.
+   - When its work is done, it **appends its own finish** to the event log as the closing action of the task — nothing more:
+     ```bash
+     python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --task <TaskID> --kind complete --by ai --did "<one line>" --files "<files>" --append
+     ```
+     `--append` is a single no-read write, so every subagent can append at the same time without contending. The subagent does **not** edit `tasks.md` and does **not** touch `.spec-context.json` — the script checks the box later.
+   - If the batch's tasks share an interface (a contract pinned in `tasks.md`/`contracts/`), paste that contract into each subagent's brief verbatim so they don't drift.
+   Same-file or dependent tasks are **not** `[P]` — keep those ordered (never in one batch).
 
-4. On completion, validate the result against the spec's **Functional Requirements** and **Success Criteria**, and report a short summary of what was built and anything left undone.
+4. **After a batch returns, reconcile and materialize (main agent).** Type-check/build the files the subagents wrote side by side and fix any seam drift. Then fold the batch with one call — it both updates the panel and checks off the `tasks.md` boxes for every appended finish:
+   ```bash
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --materialize
+   ```
+   You (the main agent) own `tasks.md` only through this `--materialize` call; no subagent edits it, so there is no shared-file race. Move to the next phase.
+
+5. On completion, validate the result against the spec's **Functional Requirements** and **Success Criteria**, and report a short summary of what was built and anything left undone.
 
 **Output**: working changes per `tasks.md`, with completed tasks checked off.

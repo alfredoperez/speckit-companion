@@ -9,6 +9,7 @@ import {
   statSync,
   mkdirSync,
   rmSync,
+  copyFileSync,
 } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { judgeBehavior } from './behavioral-judge.mjs'
@@ -465,13 +466,26 @@ function buildPasses(cwd) {
   } catch { return false }
 }
 
+// The deterministic testid oracle is NOT baked into the cell — the implementing
+// model would read it and code to the hidden testids. Inject it transiently from
+// the bench source just for grading, run it (vitest runs an explicit positional
+// path even when it isn't in the cell's `include` glob), then remove it so the
+// cell never carries the oracle between runs.
 function runAcceptance(cwd, size) {
   const out = join(cwd, '.last-vitest.json')
   rmSync(out, { force: true })
+  const destDir = join(cwd, 'bench', 'acceptance')
+  const srcDir = join(BENCH_DIR, 'acceptance')
+  mkdirSync(destDir, { recursive: true })
+  for (const f of [`${size}.test.tsx`, 'harness.tsx']) {
+    const src = join(srcDir, f)
+    if (existsSync(src)) copyFileSync(src, join(destDir, f))
+  }
   try {
     execFileSync('npm', ['run', 'test', '--', `bench/acceptance/${size}.test.tsx`, '--reporter=json', `--outputFile=${out}`],
       { cwd, stdio: 'ignore', timeout: 300000 })
   } catch { /* failing tests still write the json report */ }
+  rmSync(destDir, { recursive: true, force: true }) // never leave the oracle in the cell
   const r = readJson(out, {})
   return { passed: r.numPassedTests ?? 0, total: r.numTotalTests ?? 0 }
 }

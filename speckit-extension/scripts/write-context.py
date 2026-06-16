@@ -308,6 +308,40 @@ def parse_task_markers(tasks_md: Path) -> tuple[list[str], list[str]]:
     return all_ids, done_ids
 
 
+def _mark_tasks_done(tasks_md: Path, ids: set) -> None:
+    """Flip `- [ ] **<id>**` → `- [x]` in tasks.md for every journaled task id.
+
+    The script owns the checkboxes so the model (and any subagent) never has to
+    edit the shared tasks.md — it only appends its finish to the event log, and
+    this single writer derives the checkboxes from that log. Targeted: only a
+    *pending* line whose captured id is in `ids` is flipped (idempotent — an
+    already-checked line never matches PENDING_TASK_RE), and only that line's
+    first `[ ]` is rewritten, so surrounding text is untouched."""
+    if not ids or not tasks_md.is_file():
+        return
+    try:
+        lines = tasks_md.read_text(encoding="utf-8").splitlines(keepends=True)
+    except OSError:
+        return
+    changed = False
+    for i, line in enumerate(lines):
+        m = PENDING_TASK_RE.match(line)
+        if m and m.group(1) in ids:
+            lines[i] = line.replace("[ ]", "[x]", 1)
+            changed = True
+    if not changed:
+        return
+    tmp = tasks_md.with_suffix(tasks_md.suffix + ".tmp")
+    try:
+        tmp.write_text("".join(lines), encoding="utf-8")
+        os.replace(tmp, tasks_md)
+    except OSError:
+        try:
+            tmp.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
 def _feature_tasks_at_100(feature_dir: Path) -> bool:
     """True when feature_dir/tasks.md exists, has markers, and every one is checked."""
     tasks_md = feature_dir / "tasks.md"
@@ -536,6 +570,11 @@ def _maybe_close_implement(ctx: dict, log: list, feature_dir: Path, by: str) -> 
             "by": by,
             "at": _now_iso(),
         })
+        # Keep status consistent with the closed step. The fold that ran before
+        # the script checked the boxes may have left status at `implementing`
+        # (tasks.md wasn't 100% yet); now that the step is closing, it's implemented.
+        if ctx.get("status") not in ("completed", "archived"):
+            ctx["status"] = "implemented"
 
 
 def journal_task_finish(
@@ -574,6 +613,7 @@ def journal_task_finish(
     log = canonical_log(ctx)
     fill_required(ctx, feature_dir, branch)
     _fold_task_finish(ctx, log, feature_dir, task_id, by, did, files, _now_iso())
+    _mark_tasks_done(feature_dir / "tasks.md", {task_id})
     _maybe_close_implement(ctx, log, feature_dir, by)
     commit_log(ctx, log)
     atomic_write(target, ctx)
@@ -648,6 +688,10 @@ def materialize_log(feature_dir: Path, by: str) -> Path | None:
             e.get("did"), e.get("files"), e.get("at") or _now_iso(),
         )
         folded += 1
+    # The script owns the checkboxes: flip tasks.md `[ ]` → `[x]` for every
+    # journaled task (single writer, so parallel subagents that only append are
+    # race-free). Must run BEFORE the step-close check, which reads tasks.md.
+    _mark_tasks_done(feature_dir / "tasks.md", _journaled_tasks(log))
     _maybe_close_implement(ctx, log, feature_dir, by)
     commit_log(ctx, log)
     atomic_write(target, ctx)

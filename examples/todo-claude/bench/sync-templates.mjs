@@ -7,9 +7,23 @@
 // Per folder: clone the app (for src + node_modules), drop the stale spec-kit
 // emissions, `specify init` (current stock spec-kit), then for companion variants
 // `specify extension add` (+ preset + profile). Gitignored; re-run via /bench-sync.
-import { existsSync, writeFileSync, mkdirSync, rmSync } from 'node:fs'
+import { existsSync, writeFileSync, mkdirSync, rmSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { execFileSync } from 'node:child_process'
+
+// A baked cell must NOT carry the bench toolkit — the implementing model would
+// read the acceptance oracle / prompts / past stats and code to the hidden grade.
+// Strip the cell's bench/ down to ONLY vitest.setup.ts (the one file the cell's
+// own src tests need via vitest.config.ts setupFiles). The grader runs from the
+// SOURCE bench dir and injects the oracle into the cell only at scoring time.
+function stripBenchToolkit(dir) {
+  const bench = join(dir, 'bench')
+  if (!existsSync(bench)) return
+  for (const entry of readdirSync(bench)) {
+    if (entry === 'vitest.setup.ts') continue
+    rmSync(join(bench, entry), { recursive: true, force: true })
+  }
+}
 import {
   SANDBOX_DIR,
   TEMPLATES_DIR,
@@ -80,6 +94,7 @@ if (process.argv[1] && process.argv[1].endsWith('sync-templates.mjs')) {
     const dir = folderDir(variant)
     process.stdout.write(`• todo-${variant}: clone… `)
     cloneDir(SANDBOX_DIR, dir)
+    stripBenchToolkit(dir) // the model must never see the oracle/prompts/stats
     gitInitCell(dir) // own git root so the capture writer resolves the folder, not the parent repo
     process.stdout.write('specify init… ')
     const initOk = installSpeckit(dir)

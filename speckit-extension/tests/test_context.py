@@ -869,17 +869,30 @@ class MarkCompleteTests(unittest.TestCase):
         last = _ctx(self.fd)["history"][-1]
         self.assertEqual((last["step"], last["kind"], last.get("task")), ("implement", "complete", None))
 
-    def test_step_does_not_close_when_journaled_but_checkbox_unchecked(self) -> None:
-        # tasks.md still [ ] for the only task: journaling it must NOT close the
-        # implement step (closing it while status stays implementing is inconsistent).
+    def test_journaling_a_task_checks_its_box_and_can_close_the_step(self) -> None:
+        # The script now owns the checkbox: journaling the only task flips its
+        # `- [ ]` → `- [x]` (so tasks.md and the journal can't diverge) and, being
+        # the last task, closes the implement step. This replaces the old
+        # journaled-but-unchecked divergence guard, which the coupling removes.
         (self.fd / "tasks.md").write_text("- [ ] **T001** a\n")
         wc.update_context(self.fd, "implement", "implementing", "extension", "start")
         wc.journal_task_finish(self.fd, "T001", "ai")
         ctx = _ctx(self.fd)
-        self.assertEqual(ctx["status"], "implementing")
+        self.assertIn("- [x] **T001** a", (self.fd / "tasks.md").read_text())
+        self.assertEqual(ctx["status"], "implemented")
+        self.assertEqual(ctx["history"][-1].get("task"), None)  # step-close lands last
+
+    def test_step_does_not_close_when_box_checked_but_not_journaled(self) -> None:
+        # The other half of the guard still holds: a box checked WITHOUT a journaled
+        # finish (e.g. hand-checked) must NOT close the step — close needs both 100%
+        # checked AND every task journaled.
+        (self.fd / "tasks.md").write_text("- [x] **T001** a\n- [ ] **T002** b\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.journal_task_finish(self.fd, "T001", "ai")  # only T001 journaled; T002 still pending
+        ctx = _ctx(self.fd)
         self.assertFalse(
             any(e["step"] == "implement" and e["kind"] == "complete" and not e.get("task") for e in ctx["history"]),
-            "step must not close while tasks.md is below 100%",
+            "step must not close while T002 is neither checked nor journaled",
         )
 
     def test_cli_mark_complete_dispatch(self) -> None:
@@ -976,6 +989,37 @@ class AppendLogMaterializeTests(unittest.TestCase):
         target.write_text(json.dumps(ctx0))
         self.assertIsNone(wc.materialize_log(self.fd, "ai"))
         self.assertEqual(_ctx(self.fd)["status"], "completed")
+
+    def test_materialize_checks_off_tasks_md_from_the_log(self) -> None:
+        # The script owns the checkboxes: appended finishes flip `- [ ]` → `- [x]`
+        # at materialize, so the model/subagent never edits the shared tasks.md.
+        (self.fd / "tasks.md").write_text("- [ ] **T001** a\n- [ ] **T002** b\n- [ ] **T003** c\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.append_task_log(self.fd, "T001", "ai")
+        wc.append_task_log(self.fd, "T003", "ai")
+        wc.materialize_log(self.fd, "ai")
+        md = (self.fd / "tasks.md").read_text()
+        self.assertIn("- [x] **T001** a", md)
+        self.assertIn("- [ ] **T002** b", md)  # not journaled → stays unchecked
+        self.assertIn("- [x] **T003** c", md)
+
+    def test_mark_tasks_done_is_idempotent_and_never_unmarks(self) -> None:
+        (self.fd / "tasks.md").write_text("- [x] **T001** a\n- [ ] **T002** b\n")
+        # Re-marking an already-checked task is a no-op; marking T002 flips only it.
+        wc._mark_tasks_done(self.fd / "tasks.md", {"T001", "T002"})
+        md = (self.fd / "tasks.md").read_text()
+        self.assertEqual(md, "- [x] **T001** a\n- [x] **T002** b\n")
+        # An id not present changes nothing.
+        wc._mark_tasks_done(self.fd / "tasks.md", {"T999"})
+        self.assertEqual((self.fd / "tasks.md").read_text(), md)
+
+    def test_journal_task_finish_also_checks_tasks_md(self) -> None:
+        (self.fd / "tasks.md").write_text("- [ ] **T001** a\n- [ ] **T002** b\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.journal_task_finish(self.fd, "T001", "ai")
+        md = (self.fd / "tasks.md").read_text()
+        self.assertIn("- [x] **T001** a", md)
+        self.assertIn("- [ ] **T002** b", md)
 
     def test_cli_append_then_materialize_dispatch(self) -> None:
         (self.fd / "tasks.md").write_text("- [x] **T001** a\n")

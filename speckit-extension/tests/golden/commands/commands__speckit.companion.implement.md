@@ -73,19 +73,31 @@ For `specify`, branch creation is normally one of these `before_specify` hooks (
 
 ## Outline
 
-Execute `tasks.md` phase by phase in dependency order, journaling each task as it finishes, then mark the spec complete.
+Execute `tasks.md` phase by phase in dependency order. **Within each phase, build the independent (`[P]`) tasks in parallel: spawn one subagent (Task tool) per `[P]` task, all in a single message, so they run at once — this is the default on a host that has subagents, not an optional optimization. Doing them one at a time yourself is the fallback only when no subagent tool exists.** Each task's finish is logged the moment it completes; then mark the spec complete.
 1. Read `.specify/feature.json` for the feature directory; load `<feature_directory>/tasks.md`, `plan.md`, and `spec.md` (and `data-model.md` / `contracts/` if present). Then record the **implement START** so the step's duration begins now (the script stamps the real clock; do not hand-write implement timing):
    ```bash
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step implement --status implementing --kind start --by extension
    ```
 
-2. Execute `tasks.md` **phase by phase, in dependency order**: complete **Setup**, then **Foundational** (which blocks every story), then each **user-story** phase in priority order (P1 first), then **Polish**. Within a story, write any tests first and confirm they fail before implementing; then go models → services → UI → integration. Halt on a failed task and report the cause.
-   - **Run the independent (`[P]`) tasks in a phase concurrently — the default on Claude Code, not an optional optimization.** Within the current phase, the `[P]` tasks (different files, no incomplete dependency) form a batch: **issue one subagent (Task tool) per task in the batch, all in a single message,** so they run at once. Each subagent makes only its task's edits, touches no file outside it, returns a one-line summary, and does **not** edit `tasks.md` or `.spec-context.json`. If the tasks share an interface (a contract pinned in `tasks.md`/`contracts/`), paste that contract into each subagent's brief verbatim so they don't drift. Same-file or dependent tasks stay ordered (never in one batch). A host without subagents runs the batch sequentially — identical result.
-   - **After a batch returns, reconcile it** (main agent): type-check/build the touched files and fix any seam drift between the files written side by side, before moving on. Then do the bookkeeping below.
+2. Work `tasks.md` **phase by phase, in dependency order**: **Setup**, then **Foundational** (which blocks every story), then each **user-story** phase in priority order (P1 first), then **Polish**. Within a story, write any tests first and confirm they fail before implementing; then go models → services → UI → integration. Halt on a failed task and report the cause.
 
-3. **Append each task's finish, then materialize per batch (main agent owns `tasks.md`).** As the batch reconciles, mark each finished task `- [x]` in `tasks.md` and **append** its finish with `--append` (the parallel-safe, no-read path — see the Timing rules below), one per task. Then run a single `--materialize` to fold the batch's lines into `.spec-context.json` so the panel updates. The append is cheap and never re-serializes the parallel work; only `tasks.md` stays single-writer (the main agent), never a subagent.
+3. **Inside each phase, FAN OUT — build the independent (`[P]`) tasks in parallel with subagents. This is the default, not an optimization.** Look at the phase's `[P]` tasks (different files, no incomplete dependency): that set is a batch, and you build the **whole batch at once** by **spawning one subagent (the Task tool) per task — all in a single message** so they run concurrently. Do not implement `[P]` tasks one-by-one yourself; that is the slow fallback for a host with no subagents, and it should be your last resort, not your habit. Each subagent's brief is tight:
+   - It makes **only its own task's edits** (the one file the task names), touches nothing else, and returns a one-line summary.
+   - When its work is done, it **appends its own finish** to the event log as the closing action of the task — nothing more:
+     ```bash
+     python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --task <TaskID> --kind complete --by ai --did "<one line>" --files "<files>" --append
+     ```
+     `--append` is a single no-read write, so every subagent can append at the same time without contending. The subagent does **not** edit `tasks.md` and does **not** touch `.spec-context.json` — the script checks the box later.
+   - If the batch's tasks share an interface (a contract pinned in `tasks.md`/`contracts/`), paste that contract into each subagent's brief verbatim so they don't drift.
+   Same-file or dependent tasks are **not** `[P]` — keep those ordered (never in one batch).
 
-4. On completion, validate the result against the spec's **Functional Requirements** and **Success Criteria**, and report a short summary of what was built and anything left undone.
+4. **After a batch returns, reconcile and materialize (main agent).** Type-check/build the files the subagents wrote side by side and fix any seam drift. Then fold the batch with one call — it both updates the panel and checks off the `tasks.md` boxes for every appended finish:
+   ```bash
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --materialize
+   ```
+   You (the main agent) own `tasks.md` only through this `--materialize` call; no subagent edits it, so there is no shared-file race. Move to the next phase.
+
+5. On completion, validate the result against the spec's **Functional Requirements** and **Success Criteria**, and report a short summary of what was built and anything left undone.
 
 **Output**: working changes per `tasks.md`, with completed tasks checked off.
 5. **Mark the spec complete.** Once every task in `tasks.md` is checked off and the work validates, finish the lifecycle so the spec lands at `completed` instead of stopping at `implemented`. Run from the repository root (the feature directory resolves on its own):
@@ -101,21 +113,21 @@ These rules apply to every Companion profile command. The extension records life
 - **Live timestamps.** When you append a history entry yourself, stamp it by running `date -u +"%Y-%m-%dT%H:%M:%SZ"` at that moment. Never hand-type a timestamp, never reuse an earlier value, never stamp several entries with one shared value.
 - **Self-close — but not specify or implement.** When your own work for **plan, tasks, clarify, or analyze** ends, append `{ "step": "<this step>", "substep": null, "kind": "complete", "by": "ai", "at": "<date -u output>" }`. Do NOT self-close **specify** or **implement**: the extension closes those itself (specify from its own command, implement from the end-of-step hook), so an `ai` complete there would duplicate it.
 - **Substeps — one finish each.** For each substep boundary (plan: `research`, `design`; tasks: `generate`) append a single finish `{ "step": "<step>", "substep": "<name>", "kind": "complete", "by": "ai", "at": "<fresh date -u>" }` the moment that substep ends. One entry per substep, each with its own real timestamp — never two substeps sharing a value, never a separate `start`. The delta between consecutive finishes is each substep's duration.
-- **Implement — append each task's finish, then materialize (finish-only).** As you finish each task: mark it `- [x] **<TaskID>**` in `tasks.md`, then **append** its finish (feature dir from `.specify/feature.json`):
+- **Implement — finishing a task *is* logging it (finish-only).** Recording a task's finish is the **closing action of that task**, done the instant its work is complete and before you start the next one — not a bookkeeping pass you batch at the end of a phase. The closing action is a single append (feature dir from `.specify/feature.json`):
 
   ```bash
   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --task <TaskID> --kind complete --by ai --did "<one-line summary of what this task did>" --files "<comma,separated,files,touched>" --append
   ```
 
-  `--append` writes **one line** to `.spec-context.events.jsonl` and does **not** read or rewrite the shared `.spec-context.json`, so it never hits the "read the file first" retry and **parallel workers can each append their own finish at the same time without contending** — the line carries its own real timestamp (`date -u` is stamped by the script). The `--did`/`--files` flags ride along so the Activity panel's Tasks card is populated from the script, not a hand-authored edit. Run it **the moment that task completes** — one finish per task, as you go. Do NOT hand-author per-task JSON and do NOT write a per-task `start`.
+  `--append` writes **one line** to `.spec-context.events.jsonl` and does **not** read or rewrite the shared `.spec-context.json`, so it never hits the "read the file first" retry and **parallel workers can each append their own finish at the same time without contending** — the line carries its own real timestamp (`date -u` is stamped by the script). The `--did`/`--files` flags ride along so the Activity panel's Tasks card is populated from the script. **Do NOT hand-edit the `- [ ]` checkbox in `tasks.md`** — the script owns it: materialize flips it to `- [x]` from your appended finish, so a fanned-out subagent only appends and never touches the shared `tasks.md`. Do NOT hand-author per-task JSON and do NOT write a per-task `start`.
 
-  Then **fold the appended lines into `.spec-context.json`** so the panel updates — run this after each batch of tasks and again when the step ends:
+  Then **fold the appended lines into `.spec-context.json`** — run this after each batch of tasks and again when the step ends:
 
   ```bash
   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --materialize
   ```
 
-  `--materialize` is the one read-modify-write, and it is idempotent (re-folding never double-counts), so running it per batch keeps the GUI current without re-serializing the per-task work. The end-of-step hook is a backstop that materializes anything you didn't fold and fills any task you didn't journal (it won't duplicate one you did). Do NOT defer all journaling to one end-of-step batch: that collapses real durations into a single instant, and the cadence check FAILS a run whose task finishes cluster into a tiny fraction of the step's real duration — append each finish *as it happens* so the per-line timestamps stay honest.
+  `--materialize` is the one read-modify-write: it folds the finishes into the panel **and checks off the matching `tasks.md` boxes** for every journaled task, idempotently (re-folding never double-counts), so running it per batch keeps the GUI current without re-serializing the per-task work. The end-of-step hook is a backstop that materializes anything you didn't fold and fills any task you didn't journal. Do NOT defer all journaling to one end-of-step batch: that collapses real durations into a single instant, and the cadence check FAILS a run whose task finishes cluster into a tiny fraction of the step's real duration — append each finish *the moment its task is done* so the per-line timestamps stay honest.
 - **Never write the next step's start.** Only the next command appends the next step's start entry; writing it here makes the viewer render a phantom "Generating <next>…".
 <!-- /speckit-companion:part timing -->
 
