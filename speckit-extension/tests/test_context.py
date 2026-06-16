@@ -403,6 +403,55 @@ class LifecycleCaptureTests(unittest.TestCase):
         self.assertEqual(_ctx(self.fd), before, "no-backward-clobber must hold for completes")
 
 
+class SetFieldsTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.fd = Path(self._tmp.name) / "specs" / "_zzz-set"
+        self.fd.mkdir(parents=True)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_coerces_bool_int_null_else_string(self) -> None:
+        self.assertIs(wc._coerce_value("true"), True)
+        self.assertIs(wc._coerce_value("false"), False)
+        self.assertIsNone(wc._coerce_value("null"))
+        self.assertIsNone(wc._coerce_value("none"))
+        self.assertEqual(wc._coerce_value("42"), 42)
+        self.assertEqual(wc._coerce_value("-7"), -7)
+        self.assertEqual(wc._coerce_value("hello"), "hello")
+        # Malformed numerics fall back to string, never raise.
+        self.assertEqual(wc._coerce_value("1-2"), "1-2")
+        self.assertEqual(wc._coerce_value("3.14"), "3.14")
+
+    def test_set_records_field_without_touching_lifecycle(self) -> None:
+        wc.update_context(self.fd, "specify", "specified", "extension")
+        before = _ctx(self.fd)
+        wc.set_fields(self.fd, ["unattended=true"])
+        ctx = _ctx(self.fd)
+        self.assertIs(ctx["unattended"], True)
+        # Lifecycle log + status + step are byte-for-byte untouched.
+        self.assertEqual(ctx["history"], before["history"])
+        self.assertEqual(ctx["status"], before["status"])
+        self.assertEqual(ctx["currentStep"], before["currentStep"])
+
+    def test_set_refuses_lifecycle_keys(self) -> None:
+        wc.update_context(self.fd, "specify", "specified", "extension")
+        before = _ctx(self.fd)
+        wc.set_fields(self.fd, ["status=completed", "currentStep=implement", "history=[]"])
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], before["status"])
+        self.assertEqual(ctx["currentStep"], before["currentStep"])
+        self.assertEqual(ctx["history"], before["history"])
+
+    def test_set_skips_malformed_pair(self) -> None:
+        wc.update_context(self.fd, "specify", "specified", "extension")
+        wc.set_fields(self.fd, ["noequals", "kept=ok"])
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["kept"], "ok")
+        self.assertNotIn("noequals", ctx)
+
+
 class DeriveRoundTripTests(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()

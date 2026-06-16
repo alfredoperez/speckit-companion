@@ -254,10 +254,14 @@ def _coerce_value(raw: str):
         return raw
 
 
+PROTECTED_SET_KEYS = frozenset({"history", "transitions", "status", "currentStep"})
+
+
 def set_fields(feature_dir: Path, pairs: list[str]) -> Path | None:
     """Merge top-level `key=value` fields onto the existing context, leaving the
-    rest (history, status, currentStep) untouched. Used by auto to record
-    `unattended=true` without disturbing the lifecycle log."""
+    lifecycle log (history, status, currentStep) untouched. Used by auto to record
+    `unattended=true` without disturbing it. Lifecycle keys are refused so `--set`
+    can never bypass the `--mark-complete` / hook-driven status writers."""
     target = feature_dir / ".spec-context.json"
     branch = _git_branch(_repo_root()) or "main"
     ctx = read_ctx(target)
@@ -268,8 +272,12 @@ def set_fields(feature_dir: Path, pairs: list[str]) -> Path | None:
             continue
         key, raw = pair.split("=", 1)
         key = key.strip()
-        if key:
-            ctx[key] = _coerce_value(raw.strip())
+        if not key:
+            continue
+        if key in PROTECTED_SET_KEYS:
+            print(f"[companion] Refusing --set '{key}' — lifecycle keys are managed by the capture/mark-complete writers.", file=sys.stderr)
+            continue
+        ctx[key] = _coerce_value(raw.strip())
     atomic_write(target, ctx)
     return target
 
@@ -736,7 +744,7 @@ def main() -> int:
     parser.add_argument(
         "--set", dest="set_pairs", action="append", default=None, metavar="KEY=VALUE",
         help="Merge a top-level key=value onto .spec-context.json (e.g. --set unattended=true). "
-             "Repeatable. Leaves the lifecycle log untouched.",
+             "Repeatable. Lifecycle keys (history/status/currentStep) are refused.",
     )
     args = parser.parse_args()
 
