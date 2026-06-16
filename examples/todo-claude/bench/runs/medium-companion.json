@@ -1,0 +1,179 @@
+{
+  "runId": "medium-companion",
+  "size": "medium",
+  "mode": "companion",
+  "spec": "001-todo-due-dates",
+  "specName": "Todo Due Dates",
+  "startedAt": null,
+  "finishedAt": null,
+  "wallClockSec": null,
+  "captureOverheadSec": null,
+  "timing": {
+    "totalSec": 549.361,
+    "perStep": {
+      "specify": 160.546,
+      "plan": 0.26,
+      "tasks": 3.826,
+      "implement": 384.185
+    }
+  },
+  "buildPass": true,
+  "acceptancePassed": 1,
+  "acceptanceTotal": 1,
+  "regressionPassed": 12,
+  "regressionTotal": 12,
+  "conventions": [],
+  "blast": {
+    "files": [
+      "components/TodoItem.test.tsx",
+      "components/TodoItem.tsx",
+      "components/TodoList.tsx",
+      "pages/TodosPage.test.tsx",
+      "pages/TodosPage.tsx",
+      "store/todos.tsx",
+      "types.ts"
+    ],
+    "outOfScope": []
+  },
+  "quality": {
+    "readability": 5,
+    "conventions": 5,
+    "scope": 5,
+    "justification": "Clear naming and a small pure isOverdue helper; state correctly lives in the todos store slice with a setDueDate action, components stay presentational, and all three test-ids match verbatim. Touched only the files the feature needs, added co-located tests, and left index.html and unrelated code untouched."
+  },
+  "shape": {
+    "hasUserStories": false,
+    "specLines": 41,
+    "planLines": 4,
+    "tasksLines": 10,
+    "taskCount": 7,
+    "sideFiles": [
+      "checklists"
+    ],
+    "artifactFiles": 4,
+    "artifactLines": 89
+  },
+  "diff": {
+    "filesChanged": 7,
+    "locAdded": 183,
+    "locRemoved": 4
+  },
+  "capture": {
+    "pass": 18,
+    "fail": 0,
+    "failing": [],
+    "checks": [
+      {
+        "status": "PASS",
+        "id": "valid-json",
+        "detail": "parses"
+      },
+      {
+        "status": "PASS",
+        "id": "canonical-history",
+        "detail": "15 entries"
+      },
+      {
+        "status": "PASS",
+        "id": "no-legacy-keys",
+        "detail": "clean"
+      },
+      {
+        "status": "PASS",
+        "id": "currentStep-valid",
+        "detail": "currentStep=implement"
+      },
+      {
+        "status": "PASS",
+        "id": "status-valid",
+        "detail": "status=implementing"
+      },
+      {
+        "status": "PASS",
+        "id": "last-entry-matches-currentStep",
+        "detail": "last history step=implement, currentStep=implement"
+      },
+      {
+        "status": "PASS",
+        "id": "entries-well-formed",
+        "detail": "all valid"
+      },
+      {
+        "status": "PASS",
+        "id": "entries-match-format",
+        "detail": "15 entries conform to historyEntry def"
+      },
+      {
+        "status": "PASS",
+        "id": "timestamps-monotonic",
+        "detail": "deterministic writes non-decreasing"
+      },
+      {
+        "status": "INFO",
+        "id": "authorship",
+        "detail": "ai=11, extension=4"
+      },
+      {
+        "status": "PASS",
+        "id": "hook-or-derive-captured",
+        "detail": "extension=4, derive=0"
+      },
+      {
+        "status": "INFO",
+        "id": "lifecycle-coverage",
+        "detail": "specify → plan → tasks → implement"
+      },
+      {
+        "status": "PASS",
+        "id": "timestamps-real",
+        "detail": "0/4 deterministic writes look hand-typed (round ms) — all real"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-substeps",
+        "detail": "7 task events; task id present, substep null|==task: True"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-matches-tasksmd",
+        "detail": "tasks.md done=7, journaled=7"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-no-duplicates",
+        "detail": "each task has a single finish (≤1 complete; ≤1 legacy start)"
+      },
+      {
+        "status": "PASS",
+        "id": "fast-path-plan-folded",
+        "detail": "plan fold has ['complete', 'start']"
+      },
+      {
+        "status": "PASS",
+        "id": "fast-path-tasks-folded",
+        "detail": "tasks fold has ['complete', 'start']"
+      },
+      {
+        "status": "PASS",
+        "id": "fast-path-timestamps-real",
+        "detail": "all fold timestamps parse"
+      },
+      {
+        "status": "PASS",
+        "id": "fast-path-ready-to-implement",
+        "detail": "status=implementing"
+      },
+      {
+        "status": "INFO",
+        "id": "step-timing",
+        "detail": "specify→plan 2.7m | plan→tasks 521ms | tasks→implement 3.8s"
+      },
+      {
+        "status": "INFO",
+        "id": "task-cadence",
+        "detail": "7 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 25.2s, 25.8s, 5.6s, 22.7s, 3.9m, 6.1s"
+      }
+    ]
+  },
+  "capturedAt": "2026-06-16T00:46:23.089Z"
+}

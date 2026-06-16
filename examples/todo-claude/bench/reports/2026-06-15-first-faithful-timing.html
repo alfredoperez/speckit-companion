@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>First Faithful Timing: Stock vs Companion</title>
+<style>
+  :root{--bg:#fbfaf7;--fg:#23201a;--muted:#6b6557;--line:#e6e1d6;--win:#1f7a4d;--win-bg:#e9f6ef;--warn-bg:#fbf3e0;--card:#fff;--accent:#f4d03f}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:18px/1.65 "Atkinson Hyperlegible","Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:860px;margin:0 auto;padding:56px 24px 96px}
+  h1{font-size:2.1rem;line-height:1.15;margin:0 0 .2em}
+  .date{color:var(--muted);font-size:.95rem;letter-spacing:.02em;margin-bottom:2.2em}
+  h2{font-size:1.4rem;margin:2.2em 0 .5em;padding-top:.4em;border-top:2px solid var(--line)}
+  h3{font-size:1.1rem;margin:1.6em 0 .3em}
+  p{margin:.6em 0}
+  .lede{font-size:1.15rem}
+  mark{background:var(--accent);padding:0 .15em;border-radius:2px}
+  .note{background:var(--win-bg);border:1px solid #cfe6d8;padding:.85em 1.1em;border-radius:8px;margin:1.2em 0;font-size:.97rem}
+  .warn{background:var(--warn-bg);border:1px solid #ecd9ab}
+  table{border-collapse:collapse;width:100%;margin:1em 0;font-size:.94rem;background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  th,td{text-align:left;padding:.55em .8em;border-bottom:1px solid var(--line)}
+  th{background:#f3efe6;font-weight:700}
+  td:not(:first-child),th:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
+  tr:last-child td{border-bottom:none}
+  .win{color:var(--win);font-weight:700}
+  .health td{font-weight:700;background:#faf7ee}
+  ol,ul{padding-left:1.3em}
+  li{margin:.35em 0}
+  code{background:#f0ece2;padding:.1em .35em;border-radius:4px;font-size:.88em}
+  footer{margin-top:3em;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);padding-top:1em}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>First Faithful Timing: Stock vs Companion</h1>
+<div class="date">2026-06-15 · medium + hard · 2-mode faithful bench</div>
+
+<p class="lede">The first run on the rebuilt <strong>faithful</strong> bench. Two modes only (plain upstream spec-kit vs the single SpecKit Companion pipeline), each dispatched the way the editor does, so a per-step delta is attributable to the workflow rather than harness drift. This is our first trustworthy timing of stock against companion.</p>
+
+<div class="note warn">
+<strong>Read the numbers right.</strong> These are a <strong>relative</strong> comparison, not a stopwatch. Agents build faster than a human in the GUI, so the minutes won't match how it feels in your editor. What you can trust is the gap between the columns (identical feature, identical dispatch, identical settle-wait) plus the capture-fidelity row. Timing is "active span" from the lifecycle history. Each cell is <strong>n&nbsp;=&nbsp;1</strong>, so read it as signal, not yet settled fact.
+</div>
+
+<h2>The one-paragraph takeaway</h2>
+<p>On a <strong>small</strong> feature the Companion pipeline right-sized it and skipped the heavy planning: <mark>roughly half the time, a fifth of the ceremony, the same working result, and a higher quality score</mark>. On a <strong>large</strong> feature both ran the full pipeline. Companion was still leaner and a touch faster, but its speed came with a cost. It shipped a real edge-case bug that the happy-path test couldn't see and that stock's heavier ceremony happened to avoid. <strong>Less ceremony buys speed and usually holds quality, but on a complex change it can drop an edge case.</strong></p>
+
+<h2>Medium: "Due dates" <span style="font-weight:400;font-size:1rem;color:var(--muted)">(small, so Companion fast-pathed it)</span></h2>
+<table>
+<tr><th>Metric</th><th>stock</th><th>companion</th></tr>
+<tr><td>Active time</td><td>17m 17s</td><td class="win">9m 9s</td></tr>
+<tr><td>specify / plan / tasks / implement</td><td>1m37 / 4m6 / 2m13 / 7m43</td><td>2m41 / <b>0s</b> / <b>4s</b> / 6m24</td></tr>
+<tr><td>Build · Acceptance</td><td>✓ · 1/1</td><td>✓ · 1/1</td></tr>
+<tr><td>Regression</td><td>23/23</td><td>12/12</td></tr>
+<tr><td>Quality (rubric)</td><td>4.8 / 5</td><td class="win">5.0 / 5</td></tr>
+<tr><td>Task count</td><td>19</td><td class="win">7</td></tr>
+<tr><td>Artifact lines</td><td>646</td><td class="win">89</td></tr>
+<tr><td>Capture eval</td><td>n/a (blind)</td><td class="win">18 ✓ / 0 ✗</td></tr>
+<tr class="health"><td>Overall health</td><td>74</td><td class="win">100 (▲ +26)</td></tr>
+</table>
+<p><strong>Reviewer:</strong> stock ranked #1 on pure craft, with date logic in a tested <code>lib/dueDate.ts</code> behind an injectable clock and an explicit stable sort; companion ranked #2 (correct and complete, but it inlined the comparator). Both avoided the UTC off-by-one trap. Net result: companion shipped the same passing feature at a higher rubric score in half the time, while stock wrote more rigorous code and dinged its own scope with an out-of-scope <code>SortToggle.tsx</code>.</p>
+
+<h2>Hard: "Tags" <span style="font-weight:400;font-size:1rem;color:var(--muted)">(large, so both ran the full pipeline)</span></h2>
+<table>
+<tr><th>Metric</th><th>stock</th><th>companion</th></tr>
+<tr><td>Active time</td><td>15m 24s</td><td class="win">12m 46s</td></tr>
+<tr><td>specify / plan / tasks / implement</td><td>1m41 / 3m49 / 1m54 / 5m23</td><td>1m48 / 1m28 / 1m11 / 6m6</td></tr>
+<tr><td>Build · Acceptance</td><td>✓ · 1/1</td><td>✓ · 1/1</td></tr>
+<tr><td>Regression</td><td>23/23</td><td>16/16</td></tr>
+<tr><td>Quality (rubric)</td><td class="win">5.0 / 5</td><td>4.7 / 5</td></tr>
+<tr><td>Task count</td><td>21</td><td>13</td></tr>
+<tr><td>Artifact lines</td><td>624</td><td class="win">184</td></tr>
+<tr><td>Capture eval</td><td>n/a (blind)</td><td class="win">15 ✓ / 0 ✗</td></tr>
+<tr class="health"><td>Overall health</td><td>75</td><td>98 (▲ +23)</td></tr>
+</table>
+<p><strong>Reviewer:</strong> stock ranked #1. Companion's model was cleaner (<code>{id, name}</code> tags, richer unit tests) but it carried a real bug the deterministic harness can't catch. Removing the tag you're currently filtering by empties the list with no auto-revert to "All", a dead filter with no visible recovery. Stock handled exactly that case, with a <code>useEffect</code> that resets to "All" when the active tag disappears plus a test for it. So Companion's 98 reads a touch generous: there's a latent correctness gap the id-based oracle never exercised.</p>
+
+<h2>Update, 2026-06-16: the Tags edge case reproduced (n = 2)</h2>
+<div class="note">
+<p>A second, independent build of Hard, this one agent-driven rather than hand-run in the GUI, hit the <strong>same</strong> stale-filter bug. Companion's <code>TodosPage</code> again never re-checks the active filter against the live tag list, so removing the filtered tag leaves a dead empty filter; stock's version self-heals again. Two for two.</p>
+<ul>
+<li><strong>The happy-path oracle passed the buggy build 1/1 again</strong>, so it genuinely can't see this class of bug.</li>
+<li><strong>Both isolated rubric judges scored companion 5/5/5 and missed it</strong>; only the adversarial comparative reviewer caught it, in both runs.</li>
+</ul>
+<p>Timing from the agent-driven run isn't comparable to the GUI numbers above, so it isn't recorded here, only the reproduction conclusion. Two independent hits is enough to treat the gap as real and act on it.</p>
+</div>
+
+<h2>What this tells us</h2>
+<ul>
+<li><strong>Fast-path-as-default earns its keep on small work.</strong> Medium is a clean win on every axis a user feels.</li>
+<li><strong>On large work the trade is real but narrow.</strong> Companion stays faster and far leaner, but the ceremony it skips is sometimes the ceremony that catches a seam (teardown, removal, "what points at this when it's gone?"). The fix isn't more planning everywhere; it's a cheap, targeted backstop.</li>
+<li><strong>Lifecycle capture is solid.</strong> 18 ✓ and 15 ✓, zero misses.</li>
+</ul>
+
+<h2>Caveats, so we don't over-read this yet</h2>
+<ol>
+<li><strong>Small n.</strong> Still only a couple of runs per cell, so the magnitudes (times, scores) aren't settled and need ~3 to 5 runs with variance reported. The Tags edge-case bug specifically has now reproduced across two independent runs (see the update above), so that gap reads as systematic rather than a fluke.</li>
+<li><strong>The acceptance oracle is shallow.</strong> It's id-based happy-path and it <em>passed a buggy solution</em>, because it never ran the remove-while-filtered sequence. It needs teardown and edge sequences before it can fail a solution that drops them.</li>
+<li><strong>Timing is active-span, not wall-clock,</strong> and a relative comparator only.</li>
+</ol>
+
+<h2>Next</h2>
+<ul>
+<li>Add a lightweight <strong>edge-case forcing function</strong> to the Companion spec (and/or an <code>after: implement</code> verify hook, using the composable hooks from #317) that enumerates each entity's removal, empty, and teardown path. That targets the exact class of bug that slipped here without re-bloating the base pipeline.</li>
+<li><strong>Deepen the acceptance oracle</strong> with edge sequences so the harness can prove the backstop works.</li>
+<li>Re-run <strong>n ≥ 3</strong> per cell and report variance.</li>
+</ul>
+
+<footer>
+Data: <code>bench/REPORT.md</code> (latest) · <code>bench/stats.jsonl</code> and <code>history.jsonl</code> (trend) · <code>bench/reviews/medium.md</code> and <code>bench/reviews/hard.md</code> (comparative reviews). Companion font: Atkinson Hyperlegible.
+</footer>
+
+</div>
+</body>
+</html>

@@ -11,7 +11,7 @@ import { existsSync, writeFileSync, mkdirSync, appendFileSync, readFileSync } fr
 import { join } from 'node:path'
 import { execFileSync } from 'node:child_process'
 import {
-  SIZES, MODES, PRESET_BY_MODE, PROFILE_BY_MODE,
+  SIZES, MODES, PRESET_BY_MODE,
   TEMPLATES_DIR, STATS_FILE, HISTORY_FILE, REPORT_FILE, BENCH_DIR,
   parseArgs, readJson, relFromRepo,
   folderDir, resetFolder,
@@ -26,8 +26,7 @@ const RUNS_SNAP_DIR = join(BENCH_DIR, 'runs')
 function armNote(mode) {
   if (mode === 'speckit') return 'plain upstream · stock /speckit.* · no capture'
   const preset = PRESET_BY_MODE[mode]
-  const profile = PROFILE_BY_MODE[mode]
-  return `companion · profile=${profile}${preset ? ` · ${preset}` : ' · no preset'} · /speckit.companion.* (+capture, same GUI preamble as speckit)`
+  return `companion${preset ? ` · ${preset}` : ' · no preset'} · /speckit.companion.* (+capture, same GUI preamble as speckit)`
 }
 
 // ── --dry-run ──────────────────────────────────────────────────────────────

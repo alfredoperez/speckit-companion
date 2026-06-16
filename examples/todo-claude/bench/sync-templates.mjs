@@ -16,7 +16,6 @@ import {
   MODES,
   COMPANION_MODES,
   PRESET_BY_MODE,
-  PROFILE_BY_MODE,
   PRESET_SRC_DIR,
   SPECKIT_EXT_DIR,
   parseArgs,
@@ -47,14 +46,6 @@ function specify(cwd, cmdArgs) {
   }
 }
 
-function writeProfile(dir, profile, fastPath = false) {
-  const cfg = join(dir, '.specify', 'companion.yml')
-  mkdirSync(join(dir, '.specify'), { recursive: true })
-  let text = `# Managed by bench/sync-templates.mjs — sandbox template profile.\ntemplateProfile: ${profile}\n`
-  if (fastPath) text += `complexityFastPath: true\n`
-  writeFileSync(cfg, text)
-}
-
 // Install / refresh current stock spec-kit (Claude integration → hyphenated skills).
 export function installSpeckit(dir) {
   rmSync(join(dir, '.specify'), { recursive: true, force: true })
@@ -66,7 +57,8 @@ export function installSpeckit(dir) {
   return ok
 }
 
-// Install the companion spec-kit extension (+ this variant's preset + profile).
+// Install the companion spec-kit extension (+ this variant's preset). Fast-path is
+// a built-in default of the single Companion pipeline now — no profile/toggle to bake.
 export function installCompanion(dir, variant) {
   const extOk = specify(dir, ['extension', 'add', SPECKIT_EXT_DIR, '--dev', '--force'])
   const presetId = PRESET_BY_MODE[variant]
@@ -77,7 +69,6 @@ export function installCompanion(dir, variant) {
     if (existsSync(join(dir, '.specify', 'presets', presetId))) specify(dir, ['preset', 'remove', presetId])
     presetOk = specify(dir, ['preset', 'add', presetId, '--dev', join(PRESET_SRC_DIR, presetId)])
   }
-  writeProfile(dir, PROFILE_BY_MODE[variant]) // fast-path stays off in every cell
   return { extOk, presetOk, presetId }
 }
 
@@ -102,7 +93,7 @@ if (process.argv[1] && process.argv[1].endsWith('sync-templates.mjs')) {
     process.stdout.write('extension add… ')
     const { extOk, presetOk, presetId } = installCompanion(dir, variant)
     gitCommitCellBaseline(dir) // so create-new-feature.sh can branch during a run
-    console.log(`${initOk ? 'init✓' : 'init✗'} ${extOk ? 'companion✓' : 'companion✗'} ${presetId ? (presetOk ? `${presetId}✓` : 'preset✗') : 'no-preset'} profile=${PROFILE_BY_MODE[variant]}`)
+    console.log(`${initOk ? 'init✓' : 'init✗'} ${extOk ? 'companion✓' : 'companion✗'} ${presetId ? (presetOk ? `${presetId}✓` : 'preset✗') : 'no-preset'}`)
   }
 
   console.log(`\nDone. ${variants.length} folder(s) ready (real installers ran).`)

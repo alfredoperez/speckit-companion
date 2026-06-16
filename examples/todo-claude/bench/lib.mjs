@@ -42,10 +42,6 @@ export const PRESET_BY_MODE = {
   'speckit': null,
   'companion': 'companion-standard',
 }
-// templateProfile written into each companion cell's .specify/companion.yml.
-export const PROFILE_BY_MODE = {
-  'companion': 'standard',
-}
 
 // The five per-variant sandbox FOLDERS are the run folders themselves — you open
 // them in VS Code and build the feature in place; there are no throwaway copies.
@@ -80,9 +76,6 @@ export function writeVscodeSettings(dir, mode) {
   const s = {
     'speckit.aiProvider': 'claude',
     'speckit.defaultWorkflow': mode === 'speckit' ? 'speckit' : 'companion',
-    'speckit.companion.templateProfile': mode === 'speckit' ? 'off' : PROFILE_BY_MODE[mode],
-    // Pin fast-path OFF in every folder so the user's global setting can't leak in.
-    'speckit.companion.complexityFastPath': false,
   }
   mkdirSync(join(dir, '.vscode'), { recursive: true })
   writeFileSync(join(dir, '.vscode', 'settings.json'), JSON.stringify(s, null, 2) + '\n')

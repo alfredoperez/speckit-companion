@@ -1,0 +1,170 @@
+{
+  "runId": "hard-companion",
+  "size": "hard",
+  "mode": "companion",
+  "spec": "001-tags",
+  "specName": "Tags",
+  "startedAt": null,
+  "finishedAt": null,
+  "wallClockSec": null,
+  "captureOverheadSec": null,
+  "timing": {
+    "totalSec": 766.03,
+    "perStep": {
+      "specify": 108.486,
+      "plan": 87.675,
+      "tasks": 71.077,
+      "implement": 365.887
+    }
+  },
+  "buildPass": true,
+  "acceptancePassed": 1,
+  "acceptanceTotal": 1,
+  "regressionPassed": 16,
+  "regressionTotal": 16,
+  "conventions": [],
+  "blast": {
+    "files": [
+      "App.tsx",
+      "components/AddTag.tsx",
+      "components/Header.tsx",
+      "components/TagFilter.test.tsx",
+      "components/TagFilter.tsx",
+      "components/TodoItem.tsx",
+      "components/TodoList.tsx",
+      "pages/TagsPage.test.tsx",
+      "pages/TagsPage.tsx",
+      "pages/TodosPage.tsx",
+      "store/tags.test.tsx",
+      "store/tags.tsx",
+      "types.ts"
+    ],
+    "outOfScope": []
+  },
+  "quality": {
+    "readability": 4.5,
+    "conventions": 4.5,
+    "scope": 5,
+    "justification": "Tags store cleanly mirrors the todos slice (reducer + context + storage persistence) with a thorough, behavior-focused test suite and verbatim test ids; only ding is TodoItem swapping the Todo domain type for an inline structural shape. Scope is tight — storage.ts, todos.tsx, and unrelated files are untouched and existing behavior is preserved."
+  },
+  "shape": {
+    "hasUserStories": false,
+    "specLines": 38,
+    "planLines": 66,
+    "tasksLines": 46,
+    "taskCount": 13,
+    "sideFiles": [
+      "checklists"
+    ],
+    "artifactFiles": 4,
+    "artifactLines": 184
+  },
+  "diff": {
+    "filesChanged": 13,
+    "locAdded": 425,
+    "locRemoved": 33
+  },
+  "capture": {
+    "pass": 15,
+    "fail": 0,
+    "failing": [],
+    "checks": [
+      {
+        "status": "PASS",
+        "id": "valid-json",
+        "detail": "parses"
+      },
+      {
+        "status": "PASS",
+        "id": "canonical-history",
+        "detail": "24 entries"
+      },
+      {
+        "status": "PASS",
+        "id": "no-legacy-keys",
+        "detail": "clean"
+      },
+      {
+        "status": "PASS",
+        "id": "currentStep-valid",
+        "detail": "currentStep=implement"
+      },
+      {
+        "status": "PASS",
+        "id": "status-valid",
+        "detail": "status=implemented"
+      },
+      {
+        "status": "PASS",
+        "id": "last-entry-matches-currentStep",
+        "detail": "last history step=implement, currentStep=implement"
+      },
+      {
+        "status": "PASS",
+        "id": "entries-well-formed",
+        "detail": "all valid"
+      },
+      {
+        "status": "PASS",
+        "id": "entries-match-format",
+        "detail": "24 entries conform to historyEntry def"
+      },
+      {
+        "status": "PASS",
+        "id": "timestamps-monotonic",
+        "detail": "deterministic writes non-decreasing"
+      },
+      {
+        "status": "INFO",
+        "id": "authorship",
+        "detail": "ai=19, extension=5"
+      },
+      {
+        "status": "PASS",
+        "id": "hook-or-derive-captured",
+        "detail": "extension=5, derive=0"
+      },
+      {
+        "status": "INFO",
+        "id": "lifecycle-coverage",
+        "detail": "specify → plan → tasks → implement"
+      },
+      {
+        "status": "PASS",
+        "id": "timestamps-real",
+        "detail": "0/5 deterministic writes look hand-typed (round ms) — all real"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-substeps",
+        "detail": "13 task events; task id present, substep null|==task: True"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-matches-tasksmd",
+        "detail": "tasks.md done=13, journaled=13"
+      },
+      {
+        "status": "PASS",
+        "id": "per-task-no-duplicates",
+        "detail": "each task has a single finish (≤1 complete; ≤1 legacy start)"
+      },
+      {
+        "status": "PASS",
+        "id": "task-cadence-span",
+        "detail": "13 ai finishes span 5.3m = 87.67% of 6.1m implement step (need ≥ 5%)"
+      },
+      {
+        "status": "INFO",
+        "id": "step-timing",
+        "detail": "specify→plan 2.1m | plan→tasks 2.0m | tasks→implement 2.7m"
+      },
+      {
+        "status": "INFO",
+        "id": "task-cadence",
+        "detail": "13 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 19.7s, 39.0s, 80ms, 81ms, 15.1s, 33.4s, 24.8s, 76ms, 47.7s, 80ms, 83ms, 2.3m"
+      }
+    ]
+  },
+  "capturedAt": "2026-06-16T01:36:28.139Z"
+}
