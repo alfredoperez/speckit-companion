@@ -8,8 +8,8 @@ reads: []
 
 - **`normal` or `oversized`** — produce the full plan and every design artifact exactly as the steps describe. No trimming.
 - **`simple`** — a small change does not need the full ceremony. Produce a **lean** plan:
-  - `plan.md`: keep the **Summary** and a **Technical Context** trimmed to the lines that shape the build (Language/Version, Primary Dependencies, Storage, Testing, Constraints — drop Performance Goals / Scale-Scope / Target Platform boilerplate). **Skip the Project Structure section** (the task list already names every file) and **skip the Constitution Check** unless there is a real violation to flag.
-  - **Skip `data-model.md`** — fold the one or two types into the plan's prose. **Skip `quickstart.md`** — it would only restate the obvious.
+  - `plan.md`: keep the **Summary** only. **Skip the Project Structure section** (the task list already names every file) and **skip the Constitution Check** unless there is a real violation to flag.
+  - **Skip `data-model.md`** — fold the one or two types into the plan's prose.
   - Write the design rationale as a short **Key Decisions** note folded into `plan.md` (a few Decision/why lines), not a separate `research.md`, unless a decision genuinely needs its own page.
   - Generate `contracts/` only if the feature exposes an interface a consumer or test codes against.
 

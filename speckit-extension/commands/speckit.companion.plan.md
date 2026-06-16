@@ -73,21 +73,20 @@ For `specify`, branch creation is normally one of these `before_specify` hooks (
 
 ## Outline
 
-Produce an implementation plan and its design artifacts in phases: load context → write `plan.md` (Summary, Technical Context, Constitution Check, Project Structure) → Phase 0 research → Phase 1 design (data model, contracts, quickstart).
+Produce an implementation plan and its design artifacts in phases: load context → write `plan.md` (Summary, Constitution Check, Project Structure) → Phase 0 research → Phase 1 design (data model, contracts).
 **Right-size this plan to the change.** Before anything else, read the recorded size from the spec's context — `.spec-context.json` → the `size` field (treat a missing value as `normal`). That size sets the budget for the steps below; **apply it to them, omitting anything it says to skip.**
 
 - **`normal` or `oversized`** — produce the full plan and every design artifact exactly as the steps describe. No trimming.
 - **`simple`** — a small change does not need the full ceremony. Produce a **lean** plan:
-  - `plan.md`: keep the **Summary** and a **Technical Context** trimmed to the lines that shape the build (Language/Version, Primary Dependencies, Storage, Testing, Constraints — drop Performance Goals / Scale-Scope / Target Platform boilerplate). **Skip the Project Structure section** (the task list already names every file) and **skip the Constitution Check** unless there is a real violation to flag.
-  - **Skip `data-model.md`** — fold the one or two types into the plan's prose. **Skip `quickstart.md`** — it would only restate the obvious.
+  - `plan.md`: keep the **Summary** only. **Skip the Project Structure section** (the task list already names every file) and **skip the Constitution Check** unless there is a real violation to flag.
+  - **Skip `data-model.md`** — fold the one or two types into the plan's prose.
   - Write the design rationale as a short **Key Decisions** note folded into `plan.md` (a few Decision/why lines), not a separate `research.md`, unless a decision genuinely needs its own page.
   - Generate `contracts/` only if the feature exposes an interface a consumer or test codes against.
 
 This budget governs every step that follows. Where a later step would produce something the budget skips, omit it — do not produce it and then delete it.
 1. Read `.specify/feature.json` for the feature directory; load `<feature_directory>/spec.md` and `.specify/memory/constitution.md` if present — the inputs the plan must satisfy. Then **investigate the codebase, in parallel when you can.** Understand where this feature attaches: the patterns it must follow (state/store, routing, persistence, component and test conventions) and the exact files it will touch. From the spec, derive the handful of **independent investigation areas** this change implicates, then — when your provider can spawn subagents — **read them concurrently: one subagent per area in a single message, each returning a distilled finding** (the pattern to copy, the concrete file paths, the conventions to match), never a dump of file contents. Collect the findings as the research basis for the plan. A host without subagents reads the areas in sequence for an identical result.
 2. Create `<feature_directory>/plan.md` with these sections, in order. Lead each with prose; reserve `inline code` for real identifiers (paths, types, packages), not ordinary nouns — a sentence that is mostly code spans is a rewrite.
-   - **Summary** — 2–4 plain-language sentences: the primary requirement plus the technical approach.
-   - **Technical Context** — the stack as plain `Label: value` lines, each named once: Language/Version, Primary Dependencies, Storage, Testing, Target Platform, Project Type, Performance Goals, Constraints, Scale/Scope. Mark a genuine unknown `NEEDS CLARIFICATION`. Keep the values readable — don't backtick every noun.
+   - **Summary** — 2–4 plain-language sentences: the primary requirement plus the technical approach. If a stack choice genuinely isn't obvious from the codebase (a new language, a newly-added dependency, a non-default storage or test setup), name it in a sentence here; otherwise don't restate the project's known stack.
    - **Project Structure** — the concrete source layout this feature touches, as a short tree of real directories/files, plus a one-line **Structure Decision**. Use the actual paths; do not leave placeholder option-trees in the output.
 3. **Constitution Check** — add a `## Constitution Check` section to `plan.md` as a table: one row per constitution principle with a PASS / justified-violation assessment. This is a gate before Phase 0 research, re-checked after Phase 1 design. If a violation is genuinely necessary, justify it in a short **Complexity Tracking** table (violation | why needed | simpler alternative rejected). Omit Complexity Tracking when there are no violations; ERROR on an unjustified gate failure.
 4. **Phase 0 — Research (first).** Write `<feature_directory>/research.md` before the Phase 1 docs, since they build on its decisions. For each unknown in Technical Context and each significant dependency, integration, or design choice, record a short entry as **Decision** (what you chose) / **Rationale** (why) / **Alternatives considered** (what else, and why not). Resolve every `NEEDS CLARIFICATION` here — this is where a maintainer sees *why* the design is shaped this way.
@@ -95,10 +94,9 @@ This budget governs every step that follows. Where a later step would produce so
 5. **Phase 1 — Design & contracts (in parallel).** With research settled, generate the design artifacts the size budget keeps. They are **independent documents that share no evolving state**, so — when your provider can spawn subagents — **generate them concurrently: issue one subagent per document in a single message, then collect the results.** A host without subagents writes them in sequence for an identical result.
    - `<feature_directory>/data-model.md` — the entities this feature introduces or reshapes: fields, relationships, validation rules drawn from the requirements, and any state transitions.
    - `<feature_directory>/contracts/` — the interface the feature exposes (API / CLI / schema, or a UI contract listing routes and the identifiers a consumer/test codes against). **Copy every identifier from the spec's Verbatim Constraints exactly — never rename, recase, pluralize, or invent an identifier the spec already pinned; those exact strings *are* the contract.** Skip the directory only when the feature exposes no interface at all.
-   - `<feature_directory>/quickstart.md` — only when there is a non-obvious setup or verification path a developer would otherwise miss; skip it rather than restating what's already obvious.
    After the documents return, re-check the Constitution Check against the final design.
 
-**Output**: `<feature_directory>/plan.md` plus `research.md`, `data-model.md`, `contracts/`, and `quickstart.md` when applicable.
+**Output**: `<feature_directory>/plan.md` plus `research.md`, `data-model.md`, and `contracts/` when applicable.
 <!-- speckit-companion:part timing -->
 ## Timing — keep `.spec-context.json` honest
 
