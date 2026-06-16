@@ -248,9 +248,10 @@ def _coerce_value(raw: str):
         return low == "true"
     if low in ("null", "none"):
         return None
-    if raw.lstrip("-").isdigit():
+    try:
         return int(raw)
-    return raw
+    except ValueError:
+        return raw
 
 
 def set_fields(feature_dir: Path, pairs: list[str]) -> Path | None:
