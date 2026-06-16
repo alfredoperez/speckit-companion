@@ -230,7 +230,7 @@ export class SpecEditorProvider {
                 break;
 
             case 'submitAuto':
-                await this.handleSubmit(message.content, message.images, message.workflow, undefined, true);
+                await this.handleSubmit(message.content, message.images, COMPANION_WORKFLOW_NAME, undefined, true);
                 break;
 
             case 'submitCommand':
@@ -382,7 +382,7 @@ export class SpecEditorProvider {
             // downstream step-resolution (getWorkflow) dispatches the right command
             // family for every step. A Companion pick seeds `companion` even when the
             // extension is missing — each step then applies the same fallback.
-            const specContextInstruction = buildSpecifyCreationPreamble(auto ? COMPANION_WORKFLOW_NAME : workflowName, null);
+            const specContextInstruction = buildSpecifyCreationPreamble(workflowName, null);
             if (specContextInstruction) {
                 await this.tempFileManager.appendToMarkdownFile(
                     tempFileSet.markdownFilePath,
