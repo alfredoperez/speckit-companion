@@ -11,6 +11,16 @@ $ARGUMENTS
 ## Outline
 
 Produce an implementation plan and its design artifacts in phases: load context → write `plan.md` (Summary, Technical Context, Constitution Check, Project Structure) → Phase 0 research → Phase 1 design (data model, contracts, quickstart).
+**Right-size this plan to the change.** Before anything else, read the recorded size from the spec's context — `.spec-context.json` → the `size` field (treat a missing value as `normal`). That size sets the budget for the steps below; **apply it to them, omitting anything it says to skip.**
+
+- **`normal` or `oversized`** — produce the full plan and every design artifact exactly as the steps describe. No trimming.
+- **`simple`** — a small change does not need the full ceremony. Produce a **lean** plan:
+  - `plan.md`: keep the **Summary** and a **Technical Context** trimmed to the lines that shape the build (Language/Version, Primary Dependencies, Storage, Testing, Constraints — drop Performance Goals / Scale-Scope / Target Platform boilerplate). **Skip the Project Structure section** (the task list already names every file) and **skip the Constitution Check** unless there is a real violation to flag.
+  - **Skip `data-model.md`** — fold the one or two types into the plan's prose. **Skip `quickstart.md`** — it would only restate the obvious.
+  - Write the design rationale as a short **Key Decisions** note folded into `plan.md` (a few Decision/why lines), not a separate `research.md`, unless a decision genuinely needs its own page.
+  - Generate `contracts/` only if the feature exposes an interface a consumer or test codes against.
+
+This budget governs every step that follows. Where a later step would produce something the budget skips, omit it — do not produce it and then delete it.
 1. Read `.specify/feature.json` for the feature directory; load `<feature_directory>/spec.md` and `.specify/memory/constitution.md` if present. These are the inputs the plan must satisfy: the spec's requirements and the project's constitution gates. Then study the existing codebase the feature attaches to — the patterns it must follow (state/store, routing, persistence, component and test conventions) and the exact files it will touch — so the plan reflects how this project actually builds.
 2. Create `<feature_directory>/plan.md` with these sections, in order. Lead each with prose; reserve `inline code` for real identifiers (paths, types, packages), not ordinary nouns — a sentence that is mostly code spans is a rewrite.
    - **Summary** — 2–4 plain-language sentences: the primary requirement plus the technical approach.
