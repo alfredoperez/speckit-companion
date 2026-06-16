@@ -8,7 +8,8 @@ import type {
     SpecEditorToExtensionMessage,
     ExtensionToSpecEditorMessage,
     SpecEditorWebviewState,
-    AttachedImageUI
+    AttachedImageUI,
+    WorkflowDefinition
 } from './types';
 import { canSubmit, isOverLimit, shouldShowCharCount, isMacPlatform, MAX_CHARS } from './submitGate';
 
@@ -404,13 +405,6 @@ function setupEventListeners(): void {
 // Workflow Selector
 // ============================================
 
-interface WorkflowDefinition {
-    name: string;
-    displayName: string;
-    description?: string;
-    specifyCommands?: Array<{ name: string; title: string; command: string; tooltip?: string }>;
-    supportsAuto?: boolean;
-}
 
 function initWorkflows(workflows: WorkflowDefinition[], defaultWorkflow?: string): void {
     const { workflowSelector, workflowSelect } = getElements();
