@@ -16,7 +16,9 @@ const meta: Meta = {
             description: {
                 component:
                     'The Create New Spec form (a separate webview) is what the user sees before any spec exists. ' +
-                    'Auto Mode is invoked here — the spec viewer never opens at status=draft. ' +
+                    'The Auto button (hands-off pipeline) is invoked here — the spec viewer never opens at status=draft. ' +
+                    'Auto shows only when a workflow with a hands-off orchestrator (SpecKit Companion) is selected; ' +
+                    'with stock SpecKit only Create Spec appears. ' +
                     'The title and subtitle explain the task, the workflow selector sits on its own right-aligned row above the field, ' +
                     'and the empty field carries all the guidance in its placeholder — including that a Jira or GitHub link on its own is enough.',
             },
@@ -66,6 +68,16 @@ export const Submitting: Story = {
                 'Goal: hide premature lifecycle actions while a step is mid-generation.'
             }
             submitting
+        />
+    ),
+};
+
+export const StockWorkflow: Story = {
+    name: 'Stock SpecKit (no Auto button)',
+    render: () => (
+        <CreateSpecMock
+            initialContent={'Add a quiet-footer mode to the spec viewer.'}
+            showAuto={false}
         />
     ),
 };

@@ -29,7 +29,7 @@ export function registerSpecEditorCommands(
         })
     );
 
-    // Open Create Spec where the Run button builds the whole spec hands-off.
+    // Open Create Spec where the Auto button builds the whole spec hands-off.
     context.subscriptions.push(
         vscode.commands.registerCommand('speckit.companion.auto.run', () => {
             provider.show();

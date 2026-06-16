@@ -166,6 +166,8 @@ export interface WorkflowDefinition {
     stepImplement?: string;
     /** Custom commands for the specify step (shown next to Submit) */
     specifyCommands?: Array<{ name: string; title: string; command: string; tooltip?: string }>;
+    /** Workflow has a hands-off auto orchestrator — surfaces the Auto button when selected */
+    supportsAuto?: boolean;
 }
 
 // ============================================

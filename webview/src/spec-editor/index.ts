@@ -40,7 +40,7 @@ function getElements() {
         loadingOverlay: document.getElementById('loadingOverlay') as HTMLElement,
         app: document.getElementById('app') as HTMLElement,
         submitBtn: document.getElementById('submitBtn') as HTMLButtonElement,
-        runBtn: document.getElementById('runBtn') as HTMLButtonElement,
+        autoBtn: document.getElementById('autoBtn') as HTMLButtonElement,
         cancelBtn: document.getElementById('cancelBtn') as HTMLButtonElement,
         attachImageBtn: document.getElementById('attachImageBtn') as HTMLButtonElement,
         workflowSelector: document.getElementById('workflowSelector') as HTMLElement,
@@ -86,13 +86,13 @@ function updateCharCount(): void {
 }
 
 function updateSubmitState(): void {
-    const { textarea, submitBtn, runBtn } = getElements();
+    const { textarea, submitBtn, autoBtn } = getElements();
     const disabled = isSubmitting || !canSubmit(textarea.value, MAX_CHARS);
     if (submitBtn) {
         submitBtn.disabled = disabled;
     }
-    if (runBtn) {
-        runBtn.disabled = disabled;
+    if (autoBtn) {
+        autoBtn.disabled = disabled;
     }
 }
 
@@ -311,8 +311,8 @@ function setupEventListeners(): void {
         });
     });
 
-    // Run button — build the whole spec hands-off via the auto orchestrator.
-    elements.runBtn?.addEventListener('click', () => {
+    // Auto button — build the whole spec hands-off via the auto orchestrator.
+    elements.autoBtn?.addEventListener('click', () => {
         if (isSubmitting || !canSubmit(elements.textarea.value, MAX_CHARS)) return;
         clearError();
         vscode.postMessage({
@@ -409,6 +409,7 @@ interface WorkflowDefinition {
     displayName: string;
     description?: string;
     specifyCommands?: Array<{ name: string; title: string; command: string; tooltip?: string }>;
+    supportsAuto?: boolean;
 }
 
 function initWorkflows(workflows: WorkflowDefinition[], defaultWorkflow?: string): void {
@@ -459,9 +460,15 @@ function sendCommand(command: string): void {
 }
 
 function updateCommandButtons(workflowName: string): void {
-    const { commandButtonsContainer, keyboardHints } = getElements();
+    const { commandButtonsContainer, keyboardHints, autoBtn } = getElements();
     const workflow = workflowList.find(wf => wf.name === workflowName);
     const commands = workflow?.specifyCommands || [];
+
+    // The Auto button is shown only for workflows that declare a hands-off
+    // orchestrator (Companion); the normal Create Spec path stays available.
+    if (autoBtn) {
+        autoBtn.style.display = workflow?.supportsAuto ? '' : 'none';
+    }
 
     if (!commandButtonsContainer) return;
 

@@ -23,7 +23,7 @@ import * as crypto from 'crypto';
 /** The Companion specify command the picker dispatches when the Companion workflow is chosen. */
 const COMPANION_SPECIFY_COMMAND = 'speckit.companion.specify';
 
-/** The Companion auto orchestrator the Run button dispatches — runs the whole pipeline hands-off. */
+/** The Companion auto orchestrator the Auto button dispatches — runs the whole pipeline hands-off. */
 const COMPANION_AUTO_COMMAND = 'speckit.companion.auto';
 
 /**
@@ -88,6 +88,7 @@ export class SpecEditorProvider {
                 displayName: 'SpecKit Companion',
                 description: 'Leaner SpecKit Companion pipeline with built-in right-sizing, through to mark-complete.',
                 stepSpecify: `/${formatCommandForProvider(COMPANION_SPECIFY_COMMAND)}`,
+                supportsAuto: true,
             });
         }
 
@@ -145,17 +146,17 @@ export class SpecEditorProvider {
     }
 
     /**
-     * Non-blocking warning shown when Run (auto) is requested but the spec-kit
+     * Non-blocking warning shown when Auto is requested but the spec-kit
      * extension is missing. Auto has no stock twin, so it is suppressed rather
      * than downgraded — the run does not start.
      */
     private warnAutoUnavailable(): void {
         this.outputChannel.appendLine(
-            '[SpecEditor] Companion auto unavailable — spec-kit extension not installed; Run aborted.'
+            '[SpecEditor] Companion auto unavailable — spec-kit extension not installed; Auto aborted.'
         );
         void vscode.window
             .showWarningMessage(
-                'Run needs the companion spec-kit extension, which is not installed — install it, then use Run to build the whole spec hands-off.',
+                'Auto needs the companion spec-kit extension, which is not installed — install it, then use Auto to build the whole spec hands-off.',
                 'Install spec-kit Extension'
             )
             .then(choice => {
@@ -365,7 +366,7 @@ export class SpecEditorProvider {
                 const resolution = resolveDispatchForRoot(COMPANION_AUTO_COMMAND, workspaceRoot);
                 if (!resolution.command) {
                     this.warnAutoUnavailable();
-                    this.postMessage({ type: 'error', message: 'Run needs the companion spec-kit extension, which is not installed.' });
+                    this.postMessage({ type: 'error', message: 'Auto needs the companion spec-kit extension, which is not installed.' });
                     return;
                 }
                 command = `/${formatCommandForProvider(resolution.command)}`;
@@ -608,7 +609,7 @@ export class SpecEditorProvider {
                 <div class="action-spacer"></div>
                 <span id="commandButtons" style="display: none;"></span>
                 <button class="btn-cancel" id="cancelBtn">Cancel</button>
-                <button class="btn-secondary" id="runBtn" title="Build the whole spec hands-off — specify → plan → tasks → implement → completed, no pauses" disabled>Run</button>
+                <button class="btn-secondary" id="autoBtn" title="Build the whole spec hands-off — specify → plan → tasks → implement → completed, no pauses" style="display: none;" disabled>Auto</button>
                 <button class="btn-primary" id="submitBtn" disabled>Create Spec</button>
             </footer>
         </main>
