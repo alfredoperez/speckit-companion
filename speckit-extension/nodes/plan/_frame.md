@@ -13,14 +13,14 @@ $ARGUMENTS
 Produce a **lean** plan — just enough to drive tasks. No multi-phase research scaffolding, no dual-option structure trees.
 
 <!-- speckit-companion:part parallel -->
-## Parallel work — use subagents where your provider supports them
+## Parallel work — default to subagents when your provider supports them
 
-If you can spawn subagents or run work concurrently, use that capability across this step:
+If your provider can spawn subagents (for example Claude Code's Task tool), **make concurrency your default execution strategy, not an optional optimization.** When the capability is there, using it is expected; sequential is the fallback for chat-only hosts, not the comfortable path. Do not default to one-thing-at-a-time just because it feels simpler.
 
 - **Investigation.** Fan out independent reads across subagents (one per area) and return distilled findings, instead of reading every file serially into the main context.
-- **Tasks.** Mark independent (different-file, no open dependency) tasks `[P]` so they can run together.
-- **Implement.** Run `[P]` batches concurrently via subagents; same-file or dependent tasks stay ordered.
+- **Tasks.** Organize `tasks.md` into **waves** — each wave a set of different-file, no-shared-dependency tasks that are parallel by construction. The wave *is* the batch; you don't infer it from inline markers.
+- **Implement.** Run the waves in order. For each wave, issue one subagent per task **in a single message** so the whole wave runs concurrently, then let the main agent do the bookkeeping. Do **not** grind through a wave's tasks one at a time. The next wave waits for the current one.
 
-If you cannot spawn subagents, do all of it sequentially — no error, identical output. This is a capability suggestion, not a requirement: a chat-only host simply runs the step the slow way and produces the same artifacts.
+Only when you genuinely cannot spawn subagents, run sequentially — no error, identical artifacts.
 <!-- /speckit-companion:part parallel -->
 

@@ -11,15 +11,15 @@ $ARGUMENTS
 ## Outline
 
 <!-- speckit-companion:part parallel -->
-## Parallel work — use subagents where your provider supports them
+## Parallel work — default to subagents when your provider supports them
 
-If you can spawn subagents or run work concurrently, use that capability across this step:
+If your provider can spawn subagents (for example Claude Code's Task tool), **make concurrency your default execution strategy, not an optional optimization.** When the capability is there, using it is expected; sequential is the fallback for chat-only hosts, not the comfortable path. Do not default to one-thing-at-a-time just because it feels simpler.
 
 - **Investigation.** Fan out independent reads across subagents (one per area) and return distilled findings, instead of reading every file serially into the main context.
-- **Tasks.** Mark independent (different-file, no open dependency) tasks `[P]` so they can run together.
-- **Implement.** Run `[P]` batches concurrently via subagents; same-file or dependent tasks stay ordered.
+- **Tasks.** Organize `tasks.md` into **waves** — each wave a set of different-file, no-shared-dependency tasks that are parallel by construction. The wave *is* the batch; you don't infer it from inline markers.
+- **Implement.** Run the waves in order. For each wave, issue one subagent per task **in a single message** so the whole wave runs concurrently, then let the main agent do the bookkeeping. Do **not** grind through a wave's tasks one at a time. The next wave waits for the current one.
 
-If you cannot spawn subagents, do all of it sequentially — no error, identical output. This is a capability suggestion, not a requirement: a chat-only host simply runs the step the slow way and produces the same artifacts.
+Only when you genuinely cannot spawn subagents, run sequentially — no error, identical artifacts.
 <!-- /speckit-companion:part parallel -->
 
 1. Read `.specify/feature.json` for the feature directory; load `<feature_directory>/tasks.md`, `plan.md`, and `spec.md`. Then record the **implement START** so the step's duration begins now (the script stamps the real clock; the end-of-step hook records each task and closes the step — do not hand-write implement timing):
@@ -27,12 +27,14 @@ If you cannot spawn subagents, do all of it sequentially — no error, identical
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step implement --status implementing --kind start --by extension
    ```
 
-2. Execute tasks in dependency order:
-   - Complete each layer before the next: Setup → Foundational → Core → Integration → Polish.
-   - If you support subagents, run each `[P]` batch (different files, no incomplete dependency) concurrently — one subagent per task. As each finishes, the main agent (never the subagents) records it one at a time, so writes to `.spec-context.json` stay foreground and never race (timing rules unchanged). Same-file or dependent tasks stay ordered. No subagent support → run `[P]` tasks sequentially. A project may route task types to specialist subagents via a hook (the agent-routing seam).
-   - Halt on a failed non-parallel task and report the cause; for `[P]` tasks, continue the others and report the failure.
+2. Execute `tasks.md` **wave by wave, in order**. A wave is a barrier: every task in it runs at once, and you do not begin the next wave until the current one is fully done. For each `## Wave N` section, top to bottom:
+   - **Fan out — this is the mechanical default on Claude Code, not an optional optimization.** Issue one subagent (Task tool) call per task in the wave, **all in a single message**, so the whole wave runs concurrently. A wave of N tasks is N Task calls in one batch. Each subagent makes **only** its task's code edits, touches no file outside its task, returns a one-line summary, and does **not** edit `tasks.md` or `.spec-context.json`. Do not collapse a multi-task wave into one sequential pass because it feels simpler — the wave was built to run in parallel.
+   - **Hand every subagent in the wave its `> Contract:` line verbatim.** If the wave declares a shared contract (a pinned export shape + signature + handler/attribute names), paste it into each subagent's brief unchanged, so files written side by side code to the *same* shape instead of each guessing. This is the cheapest way to stop seam drift before it starts.
+   - **Wait for the whole wave, then reconcile it.** Concurrent subagents can't see each other's choices, so the **seams between same-wave files** are where drift lands — a test that imported a default export the implementation made named, two files that named a shared prop differently, a contract one side pinned and the other guessed. On the **main agent**, type-check/build the touched files and fix any such seam drift before moving on. This reconciliation pass is expected, not a failure of fan-out.
+   - **Then do the bookkeeping** — on the **main agent only**, never a subagent — one finished task at a time: mark `- [x]` in `tasks.md` and run `write-context.py` for it. Keeping all writes to the shared `tasks.md` / `.spec-context.json` on the foreground main agent is what stops them racing (timing rules unchanged).
+   - If a task in the wave fails, journal the others, report the cause, and **stop before the next wave** — a later wave may depend on it. A single-task wave is just one subagent (or done inline). Only a host that genuinely cannot spawn subagents runs a wave's tasks sequentially — identical artifacts. A project may route task types to specialist subagents via a hook (the agent-routing seam).
 
-3. After completing a task, mark it `- [x]` in `tasks.md`.
+3. Bookkeeping stays on the main agent (per step 2): after each task finishes, mark it `- [x]` in `tasks.md` — never from a subagent.
 
 4. On completion, validate the result against the spec's **Functional Requirements** and **Success Criteria**, and report a short summary of what was built and anything left undone.
 
@@ -53,7 +55,7 @@ These rules apply to every Companion profile command. The extension records life
   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --task <TaskID> --kind complete --by ai --did "<one-line summary of what this task did>" --files "<comma,separated,files,touched>"
   ```
 
-  The `--did`/`--files` flags make the script write `task_summaries.<TaskID>` (the field the Activity panel's Tasks card reads) in the same call that records the finish — so the panel is populated by the script, NOT by a hand-authored `.spec-context.json` edit. Do NOT also hand-edit `task_summaries` yourself; the script owns it. Run this **the moment that task completes** — one finish per task, as you go. Do NOT defer journaling to the end of the step and do NOT dump every task's finish in one end-of-step batch: that collapses their real durations into a single instant, and the cadence check now FAILS a run whose task finishes are clustered into a tiny fraction of the step's real duration. This stamps **one** finish event from the real clock — its delta to the previous task's finish is that task's duration. Do NOT hand-author per-task JSON and do NOT write a per-task `start`. The end-of-step hook is a backstop that fills any task you didn't journal (it won't duplicate one you did). Parallel `[P]` tasks: journal each as it finishes; the batch's time is attributed to whichever finishes last (accepted limitation).
+  The `--did`/`--files` flags make the script write `task_summaries.<TaskID>` (the field the Activity panel's Tasks card reads) in the same call that records the finish — so the panel is populated by the script, NOT by a hand-authored `.spec-context.json` edit. Do NOT also hand-edit `task_summaries` yourself; the script owns it. Run this **the moment that task completes** — one finish per task, as you go. Do NOT defer journaling to the end of the step and do NOT dump every task's finish in one end-of-step batch: that collapses their real durations into a single instant, and the cadence check now FAILS a run whose task finishes are clustered into a tiny fraction of the step's real duration. This stamps **one** finish event from the real clock — its delta to the previous task's finish is that task's duration. Do NOT hand-author per-task JSON and do NOT write a per-task `start`. The end-of-step hook is a backstop that fills any task you didn't journal (it won't duplicate one you did). Tasks in the same parallel wave: the main agent journals each as its subagent returns; the wave's time is attributed to whichever finishes last (accepted limitation).
 - **Never write the next step's start.** Only the next command appends the next step's start entry; writing it here makes the viewer render a phantom "Generating <next>…".
 <!-- /speckit-companion:part timing -->
 

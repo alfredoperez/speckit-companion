@@ -103,9 +103,13 @@ Auto needs an AI agent that keeps working after each step finishes. On a plain o
 
 ### As fast as your assistant allows
 
-When your AI assistant can work on several things at once, the Companion steps spread the work out automatically — there's nothing to switch on. While investigating, it reads different parts of the codebase side by side instead of one file at a time. When it generates tasks, it flags which ones are independent enough to run together. During implementation, it builds those independent tasks at the same time, while anything that touches the same file or depends on earlier work still runs in order. Assistants that can't run work concurrently simply do each step the usual one-at-a-time way and produce the exact same result — no error, identical output.
+When your AI assistant can work on several things at once, the Companion steps spread the work out automatically — there's nothing to switch on. While investigating, it reads different parts of the codebase side by side instead of one file at a time. The big difference is in how the work is laid out and built: the task list is organized into **waves** — each wave a group of genuinely independent pieces (different files, nothing waiting on anything else in the same wave) — and implementation builds a whole wave at once, then moves to the next. A wave is a barrier: the next one starts only after the current one is done, and anything that touches a shared file or depends on earlier work lands in a later wave. After each wave the assistant does a quick pass to stitch the pieces together (the seams between files written side by side are where small mismatches show up). Assistants that can't run work concurrently simply do each wave one piece at a time and produce the exact same result — no error, identical output.
 
 A project can also point specific kinds of work at a specialist helper — for example, sending test tasks to a testing specialist — without changing the built-in implementation step.
+
+### A built-in skeptic checks the plan before it's built
+
+When the task list is generated, the Companion pipeline now takes one deliberately adversarial pass over the spec, plan, and tasks together — looking for the kind of bug that lean specs tend to ship: a deletion that leaves stale data behind, something you're filtering by that then gets removed, state that survives a reload when it shouldn't. It only flags problems it can tie to a concrete failure (a thorough spec gets a clean bill of health, not invented busywork), and when it finds a real one it **closes the gap in the task list itself** — adding the missing requirement and the task to cover it — so the fix gets built, not just noted. This catches whole-feature interactions that an up-front "edge cases" checklist never would, without adding user-story ceremony.
 
 ## SpecKit Companion workflow — the lean pipeline shape
 

@@ -2,4 +2,5 @@
 # nodes: [...] replaces this list.
 order:
   - tasks-doc
+  - review-gaps
   - handoff
