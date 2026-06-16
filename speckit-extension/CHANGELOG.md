@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ## [Unreleased]
 
 ### Changed
+- **Implementation logs progress without slowing down.** Recording each finished task used to rewrite the whole progress file every time, which the assistant sometimes had to retry and which quietly forced parallel work back into single file. Each finished task is now jotted down instantly to a side log and folded into the progress file in one pass after each batch, so the activity panel still keeps up while several tasks can genuinely build at the same time. Per-task timings stay just as accurate.
 - **Companion output now mirrors stock spec-kit.** The `/speckit.companion.*` pipeline produces the familiar spec-kit shape: a spec with prioritized user stories, acceptance scenarios, key entities, and edge cases; a plan with a technical context, a constitution check, and the design files (`research.md`, `data-model.md`, `contracts/`); and a task list grouped by user story into phases. Same readable shape you already know, with the Companion extras layered on top: lifecycle timing capture, size-based right-sizing, and automatic completion.
 
 ### Added
