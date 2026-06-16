@@ -4,13 +4,12 @@ kind: author
 command: plan
 reads: [plan-doc]
 ---
-4. **Side files — assess on demand.** Create each only when it genuinely helps a developer understand or build *this* change; when the information fits naturally in `plan.md`, keep it there instead of spawning a file. Judge per feature:
-   - `research.md` — only for real unknowns or trade-offs worth recording on their own; otherwise fold a short "Decisions" note into `plan.md`.
-   - `data-model.md` — only when the change introduces or reshapes entities a dev needs spelled out to implement it.
-   - `contracts/` — only when it exposes an interface (API / CLI / schema / UI) a consumer codes against.
-   - `quickstart.md` — only when there is a non-obvious setup or verification path a dev would otherwise miss.
-   Default to folding into `plan.md`; create a side file only when its absence would slow understanding or implementation.
+4. **Phase 0 — Research.** Write `<feature_directory>/research.md`. For each unknown in Technical Context and each significant dependency, integration, or design choice, record a short entry as **Decision** (what you chose) / **Rationale** (why) / **Alternatives considered** (what else, and why not). Resolve every `NEEDS CLARIFICATION` here. This is where the architecture decisions and their trade-offs are captured, so a maintainer can see *why* — don't skip it.
 
-**Output**: `<feature_directory>/plan.md` (+ any side files that genuinely help: `research.md` / `data-model.md` / `contracts/` / `quickstart.md`).
+5. **Phase 1 — Design & contracts.** With research settled, generate the design artifacts:
+   - `<feature_directory>/data-model.md` — the entities this feature introduces or reshapes: fields, relationships, validation rules drawn from the requirements, and any state transitions.
+   - `<feature_directory>/contracts/` — the interface the feature exposes (API / CLI / schema, or a UI contract listing routes and the identifiers a consumer/test codes against). Skip only when the feature exposes no such interface.
+   - `<feature_directory>/quickstart.md` — only when there is a non-obvious setup or verification path a developer would otherwise miss; skip it rather than restating what's already obvious.
+   Then re-check the Constitution Check against the final design.
 
-
+**Output**: `<feature_directory>/plan.md` plus `research.md`, `data-model.md`, `contracts/`, and `quickstart.md` when applicable.

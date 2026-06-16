@@ -8,11 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
-### Added
-- **A built-in skeptic reviews the plan before anything is built.** When the task list is generated, the pipeline now takes one adversarial pass over the spec, plan, and tasks — hunting for the bugs lean specs tend to ship: a deletion that orphans data, something you're filtering by that then gets removed, state that wrongly survives a reload. It only raises problems it can tie to a real failure (a thorough spec gets a clean result, not invented work), and when it finds one it closes the gap right in the task list — adding the missing requirement and a task to fix it — so the fix actually gets built. Catches whole-feature interactions an up-front checklist would miss, with no extra ceremony.
-
 ### Changed
-- **Independent work now runs in true parallel waves.** The task list is organized into waves — each a group of genuinely independent pieces — and implementation builds a whole wave at once before moving on, instead of inferring parallel batches from inline markers. After each wave the assistant does a quick pass to reconcile the pieces written side by side. On a single hard feature this built a wave of five pieces in roughly the time of the slowest one, not the sum. Assistants that can't work concurrently still run each wave one piece at a time and produce identical output.
+- **Companion output now mirrors stock spec-kit.** The `/speckit.companion.*` pipeline produces the familiar spec-kit shape: a spec with prioritized user stories, acceptance scenarios, key entities, and edge cases; a plan with a technical context, a constitution check, and the design files (`research.md`, `data-model.md`, `contracts/`); and a task list grouped by user story into phases. Same readable shape you already know, with the Companion extras layered on top: lifecycle timing capture, size-based right-sizing, and automatic completion.
+
+### Added
+- **Runs now finish on their own.** When the last task is done, the spec is marked completed automatically, so a run lands in Completed instead of stopping at "implemented" and waiting for a manual step.
 
 ## [0.10.0] - 2026-06-16
 

@@ -1,5 +1,5 @@
 ---
-description: "Companion tasks — files/dependencies task axis"
+description: "Companion tasks — user-story phased task list"
 ---
 
 ## User Input
@@ -10,56 +10,22 @@ $ARGUMENTS
 
 ## Outline
 
-Produce tasks organized by **files and dependencies**, not grouped under user stories.
+Produce a dependency-ordered task list organized **by user story** into phases (Setup → Foundational → one phase per story → Polish), so each story is an independently testable increment.
+1. Read `.specify/feature.json` for the feature directory; load `plan.md` and `spec.md` (required), plus `data-model.md`, `contracts/`, and `research.md` if present.
 
-<!-- speckit-companion:part parallel -->
-## Parallel work — default to subagents when your provider supports them
+2. Create `<feature_directory>/tasks.md` organized **by user story**, so each story can be implemented, tested, and delivered as an independent increment. Use the line format `T### [P?] [US#] Description with exact file path`:
+   - `[P]` marks a task that can run in parallel — a different file with no incomplete dependency (advisory; same-file or dependent tasks stay ordered).
+   - `[US#]` maps the task to a user story from the spec for traceability.
 
-If your provider can spawn subagents (for example Claude Code's Task tool), **make concurrency your default execution strategy, not an optional optimization.** When the capability is there, using it is expected; sequential is the fallback for chat-only hosts, not the comfortable path. Do not default to one-thing-at-a-time just because it feels simpler.
+3. Group the tasks into phases, in this order:
+   - **Phase 1: Setup** — project structure, config, and tooling prerequisites shared by everything.
+   - **Phase 2: Foundational** — core infrastructure that BLOCKS all stories (shared models/types, providers, routing, persistence). Note that no user-story work begins until this phase is done.
+   - **Phase 3 onward: one phase per user story**, in priority order (P1 first = the MVP slice). For each story: an optional `### Tests` block (include only when the spec or constitution asks for tests — write them to fail first), then `### Implementation` (models → services → UI → integration), then a **Checkpoint** line stating the story is now independently functional and testable.
+   - **Final phase: Polish** — cross-cutting cleanup, docs, and validation against the spec's Success Criteria.
 
-- **Investigation.** Fan out independent reads across subagents (one per area) and return distilled findings, instead of reading every file serially into the main context.
-- **Tasks.** Organize `tasks.md` into **waves** — each wave a set of different-file, no-shared-dependency tasks that are parallel by construction. The wave *is* the batch; you don't infer it from inline markers.
-- **Implement.** Run the waves in order. For each wave, issue one subagent per task **in a single message** so the whole wave runs concurrently, then let the main agent do the bookkeeping. Do **not** grind through a wave's tasks one at a time. The next wave waits for the current one.
+4. End with a **Dependencies & Execution Order** section: the phase dependencies (Setup → Foundational → stories → Polish), the ordering within a story (tests before code; models before services before endpoints), and the parallel opportunities. Each task names the concrete file it creates or edits.
 
-Only when you genuinely cannot spawn subagents, run sequentially — no error, identical artifacts.
-<!-- /speckit-companion:part parallel -->
-
-1. Read `.specify/feature.json` for the feature directory; load `plan.md` and `spec.md` (and `data-model.md` / `contracts/` if present).
-
-2. Build the dependency graph, then **level it into waves**. A wave is a set of tasks that can all run at the same time — they touch different files and none depends on another in the same wave. Wave 1 is everything with no prerequisite; Wave 2 is everything whose prerequisites are all in Wave 1; and so on. This is how `tasks.md` is organized — by waves, not by a flat list and not by user story. Waves are parallel **by construction**, so implement can fan them out without re-deriving batches from inline markers.
-
-3. Write `<feature_directory>/tasks.md`. Open with one line: tasks run wave by wave; every task in a wave runs concurrently, and a wave starts only after the one before it finishes. Then emit each wave as a section:
-   ```text
-   ## Wave 1 — <short label> (parallel)
-   - [ ] T001 Description with exact file path
-   - [ ] T002 Description with exact file path
-   ```
-   - Header is `## Wave N — <label>`; the label hints at the work (Setup, Types, Components, Integration, Polish). Add `(parallel)` when the wave has more than one task.
-   - Every task line is `- [ ] T### Description with the exact file it creates or edits`. Keep the `T###` id right after the checkbox. **Do not** put `[P]` markers on tasks — the wave already means "parallel"; a single-task wave means "alone".
-   - Each task touches **one** file. Two tasks in the same wave must never touch the same file. A task that depends on another's output goes in a later wave (or its own single-task wave if nothing can run beside it).
-   - Prefer wide waves: when an implementation file and its test have a stable contract, put **both in the same wave** (one subagent writes `Foo.tsx`, another writes `Foo.test.tsx`). Independent components, independent helpers, and a file + its co-located test are the common same-wave pairings.
-   - **When same-wave tasks share an interface, write the interface ONCE as a wave `> Contract:` line, not twice in two task descriptions.** Concurrent subagents can't see each other's files, so two descriptions that each *describe* the same shape are exactly where they drift (a default-vs-named export, a handler named two ways). Put a single `> Contract:` note right under the wave header that every task in the wave — and the implement step's subagents — follows verbatim: the **export shape** (default to a **named export** unless the codebase convention is otherwise — that alone removes the most common drift), the exact **signature** (props/params/return), and the **names** of any shared handlers or test attributes. Example: `> Contract: \`useTags()\` (named export from \`src/store/tags.tsx\`) → \`{ tags: Tag[]; addTag(name: string): void; removeTag(id: string): void }\`.`
-   - **Keep a tight producer→consumer chain in one task, not a same-wave fan-out.** When several files just thread the *same new prop* through a render tree (page → list → row), one collision in the shared shape can't be self-healed by concurrent agents — write the chain as a **single coherent task** one subagent owns end to end. Reserve same-wave splitting for files that are genuinely independent.
-   - No user-story labels, no per-story test sections, no MVP framing — traceability is to files and requirements (`FR-…`).
-
-4. End with a short **Dependencies & waves** note: one line per wave saying what it needs from earlier waves, and call out any same-wave pair that shares a pinned contract.
-
-**Output**: `<feature_directory>/tasks.md` organized into dependency-leveled parallel waves.
-
-
-5. **Adversarial gap review — attack the artifacts before implementing them.** With `tasks.md` written, take one pass whose only job is to find the destructive, lifecycle, and edge-case interactions that lean specs under-specify and ship broken. This is not a rewrite and not a generator of busywork — it is a skeptic reading `spec.md`, `plan.md`, and `tasks.md` together and asking "what real failure is unspecified or untasked here?"
-   - **If you can spawn subagents, run this as a small panel — distinct lenses, concurrently — not one generalist.** Issue the reviewers in a single message (the parallel investigation in plan banked the time for exactly this), each attacking a different failure family, then merge their findings on the main agent: dedup overlaps, and keep only gaps tied to a concrete failure. Diversity catches what one reader misses; the merge + the skeptic rule below keep it from flooding false positives. A good split of lenses:
-     - **Destructive cascades** — when an entity is deleted/removed, what dangling references, orphaned data, or stale UI is left behind, in *every* direction (not just the obvious one)?
-     - **Active-state vs. mutation** — if the user is filtering/selecting/viewing something and the thing it depends on is removed or changes, what happens?
-     - **Persistence & boundary** — what survives a reload that shouldn't (or doesn't that should), and the empty / zero / duplicate / whitespace / max cases.
-   - On a host without subagents, do the same sweep inline as one careful pass over the same lenses.
-   - For each candidate, decide honestly whether it is already covered by a specific `FR-…` **and** a task. A behavior asserted in prose (an Overview or Assumptions sentence) but with no requirement and no task is still a gap. **Only surface a gap you can tie to a concrete failure; if the spec already covers it, say nothing.** A thorough spec produces zero findings — that is a valid, expected result, not a reason to invent issues.
-   - For every genuinely-uncovered gap that would ship a user-visible bug, **close it in `tasks.md`**: add the missing task(s) — to the right wave, or a final remediation wave — in the same wave format, each naming the exact file and the requirement it satisfies. Different-file remediation tasks may share a wave; keep the same-file/dependency rules.
-   - Report a one-line verdict: implementation-ready, or how many high-severity gaps you closed.
-
-**Output**: `tasks.md`, with any high-severity coverage gaps the review found added as tasks.
-
-
+**Output**: `<feature_directory>/tasks.md` organized by user story into dependency-ordered phases.
 <!-- speckit-companion:part timing -->
 ## Timing — keep `.spec-context.json` honest
 

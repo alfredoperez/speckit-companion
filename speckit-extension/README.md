@@ -101,15 +101,11 @@ Because it runs unattended, auto sets an **`unattended`** signal that project ch
 
 Auto needs an AI agent that keeps working after each step finishes. On a plain one-shot terminal it gracefully falls back to the normal flow: it runs the first step and stops, and the rest is triggered the usual way.
 
-### As fast as your assistant allows
+### Familiar spec-kit output, plus right-sizing and completion
 
-When your AI assistant can work on several things at once, the Companion steps spread the work out automatically — there's nothing to switch on. While investigating, it reads different parts of the codebase side by side instead of one file at a time. The big difference is in how the work is laid out and built: the task list is organized into **waves** — each wave a group of genuinely independent pieces (different files, nothing waiting on anything else in the same wave) — and implementation builds a whole wave at once, then moves to the next. A wave is a barrier: the next one starts only after the current one is done, and anything that touches a shared file or depends on earlier work lands in a later wave. After each wave the assistant does a quick pass to stitch the pieces together (the seams between files written side by side are where small mismatches show up). Assistants that can't run work concurrently simply do each wave one piece at a time and produce the exact same result — no error, identical output.
+Companion's `/speckit.companion.*` commands produce the same shape of artifacts as stock spec-kit, so the output reads the way you already expect: a spec with prioritized user stories, acceptance scenarios, key entities, and edge cases; a plan with a technical context, a constitution check, and the design files (`research.md`, `data-model.md`, `contracts/`); and a task list grouped by user story into phases.
 
-A project can also point specific kinds of work at a specialist helper — for example, sending test tasks to a testing specialist — without changing the built-in implementation step.
-
-### A built-in skeptic checks the plan before it's built
-
-When the task list is generated, the Companion pipeline now takes one deliberately adversarial pass over the spec, plan, and tasks together — looking for the kind of bug that lean specs tend to ship: a deletion that leaves stale data behind, something you're filtering by that then gets removed, state that survives a reload when it shouldn't. It only flags problems it can tie to a concrete failure (a thorough spec gets a clean bill of health, not invented busywork), and when it finds a real one it **closes the gap in the task list itself** — adding the missing requirement and the task to cover it — so the fix gets built, not just noted. This catches whole-feature interactions that an up-front "edge cases" checklist never would, without adding user-story ceremony.
+On top of that familiar shape, the Companion pipeline adds three things stock does not have. It **right-sizes** the run, so a small change skips the review pauses and a large one gets extra scrutiny. It **captures lifecycle timing** into `.spec-context.json` as each step and task finishes, which is what lights up the GUI. And it **marks the spec complete** at the end, so the run lands in Completed on its own instead of stopping at "implemented."
 
 ## SpecKit Companion workflow — the lean pipeline shape
 

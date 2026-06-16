@@ -1,5 +1,5 @@
 ---
-description: "Companion plan — lean plan.md"
+description: "Companion plan — implementation plan with research & design artifacts"
 ---
 
 ## User Input
@@ -10,44 +10,22 @@ $ARGUMENTS
 
 ## Outline
 
-Produce a **lean** plan — just enough to drive tasks. No multi-phase research scaffolding, no dual-option structure trees.
+Produce an implementation plan and its design artifacts in phases: load context → write `plan.md` (Summary, Technical Context, Constitution Check, Project Structure) → Phase 0 research → Phase 1 design (data model, contracts, quickstart).
+1. Read `.specify/feature.json` for the feature directory; load `<feature_directory>/spec.md` and `.specify/memory/constitution.md` if present. These are the inputs the plan must satisfy: the spec's requirements and the project's constitution gates. Then study the existing codebase the feature attaches to — the patterns it must follow (state/store, routing, persistence, component and test conventions) and the exact files it will touch — so the plan reflects how this project actually builds.
+2. Create `<feature_directory>/plan.md` with these sections, in order. Lead each with prose; reserve `inline code` for real identifiers (paths, types, packages), not ordinary nouns — a sentence that is mostly code spans is a rewrite.
+   - **Summary** — 2–4 plain-language sentences: the primary requirement plus the technical approach.
+   - **Technical Context** — the stack as plain `Label: value` lines, each named once: Language/Version, Primary Dependencies, Storage, Testing, Target Platform, Project Type, Performance Goals, Constraints, Scale/Scope. Mark a genuine unknown `NEEDS CLARIFICATION`. Keep the values readable — don't backtick every noun.
+   - **Project Structure** — the concrete source layout this feature touches, as a short tree of real directories/files, plus a one-line **Structure Decision**. Use the actual paths; do not leave placeholder option-trees in the output.
+3. **Constitution Check** — add a `## Constitution Check` section to `plan.md` as a table: one row per constitution principle with a PASS / justified-violation assessment. This is a gate before Phase 0 research, re-checked after Phase 1 design. If a violation is genuinely necessary, justify it in a short **Complexity Tracking** table (violation | why needed | simpler alternative rejected). Omit Complexity Tracking when there are no violations; ERROR on an unjustified gate failure.
+4. **Phase 0 — Research.** Write `<feature_directory>/research.md`. For each unknown in Technical Context and each significant dependency, integration, or design choice, record a short entry as **Decision** (what you chose) / **Rationale** (why) / **Alternatives considered** (what else, and why not). Resolve every `NEEDS CLARIFICATION` here. This is where the architecture decisions and their trade-offs are captured, so a maintainer can see *why* — don't skip it.
 
-<!-- speckit-companion:part parallel -->
-## Parallel work — default to subagents when your provider supports them
+5. **Phase 1 — Design & contracts.** With research settled, generate the design artifacts:
+   - `<feature_directory>/data-model.md` — the entities this feature introduces or reshapes: fields, relationships, validation rules drawn from the requirements, and any state transitions.
+   - `<feature_directory>/contracts/` — the interface the feature exposes (API / CLI / schema, or a UI contract listing routes and the identifiers a consumer/test codes against). Skip only when the feature exposes no such interface.
+   - `<feature_directory>/quickstart.md` — only when there is a non-obvious setup or verification path a developer would otherwise miss; skip it rather than restating what's already obvious.
+   Then re-check the Constitution Check against the final design.
 
-If your provider can spawn subagents (for example Claude Code's Task tool), **make concurrency your default execution strategy, not an optional optimization.** When the capability is there, using it is expected; sequential is the fallback for chat-only hosts, not the comfortable path. Do not default to one-thing-at-a-time just because it feels simpler.
-
-- **Investigation.** Fan out independent reads across subagents (one per area) and return distilled findings, instead of reading every file serially into the main context.
-- **Tasks.** Organize `tasks.md` into **waves** — each wave a set of different-file, no-shared-dependency tasks that are parallel by construction. The wave *is* the batch; you don't infer it from inline markers.
-- **Implement.** Run the waves in order. For each wave, issue one subagent per task **in a single message** so the whole wave runs concurrently, then let the main agent do the bookkeeping. Do **not** grind through a wave's tasks one at a time. The next wave waits for the current one.
-
-Only when you genuinely cannot spawn subagents, run sequentially — no error, identical artifacts.
-<!-- /speckit-companion:part parallel -->
-
-1. Read `.specify/feature.json` for the feature directory; load `<feature_directory>/spec.md` and `.specify/memory/constitution.md` if present — this is what the plan must satisfy.
-
-2. **Investigate the codebase in parallel — this is the default on a host with subagents, not an optional optimization.** Before designing anything, understand where this feature attaches: the existing patterns it must follow and the exact files it will touch. From the spec, derive the handful of **independent investigation areas** this change implicates — for example the state/store pattern for new data, routing/navigation for a new page, the persistence helper for anything saved, component and styling conventions for new UI, and the test setup for new tests.
-   - **Fan the investigation out: issue one subagent per area, all in a single message, so they read concurrently.** Each subagent investigates only its area and returns a **distilled finding** — the pattern to copy, the concrete file paths, the conventions to match, and anything surprising — never a dump of file contents. This keeps each area's reading out of the main context and runs them at once; collect the findings as the research basis the plan is built on.
-   - Same dependency rules as everywhere: areas that are genuinely independent go in the one fan-out; if one area's answer is needed to even know what else to look at, investigate it first, then fan out the rest. Only a host that cannot spawn subagents reads the areas one at a time — identical result, just slower.
-
-2. Create `<feature_directory>/plan.md` with these sections, in order:
-   - **Summary** — the primary requirement plus the technical approach in 2–4 sentences.
-   - **Technical Context** — language/version, primary dependencies, storage, testing, target platform, hard constraints. Mark unknowns `NEEDS CLARIFICATION`.
-   - **Approach & Structure** — the concrete files/modules this touches (real paths) and the order of attack. Organize by file/dependency, not by user story. (This replaces the stock Project Structure trees.)
-   - **Out of Scope** — what this explicitly does not do.
-
-3. If the constitution defines gates, add a short **Constitution Check** (pass / justified violations). Omit the Complexity-Tracking table unless there is a real violation to justify.
-
-4. **Side files — assess on demand.** Create each only when it genuinely helps a developer understand or build *this* change; when the information fits naturally in `plan.md`, keep it there instead of spawning a file. Judge per feature:
-   - `research.md` — only for real unknowns or trade-offs worth recording on their own; otherwise fold a short "Decisions" note into `plan.md`.
-   - `data-model.md` — only when the change introduces or reshapes entities a dev needs spelled out to implement it.
-   - `contracts/` — only when it exposes an interface (API / CLI / schema / UI) a consumer codes against.
-   - `quickstart.md` — only when there is a non-obvious setup or verification path a dev would otherwise miss.
-   Default to folding into `plan.md`; create a side file only when its absence would slow understanding or implementation.
-
-**Output**: `<feature_directory>/plan.md` (+ any side files that genuinely help: `research.md` / `data-model.md` / `contracts/` / `quickstart.md`).
-
-
+**Output**: `<feature_directory>/plan.md` plus `research.md`, `data-model.md`, `contracts/`, and `quickstart.md` when applicable.
 <!-- speckit-companion:part timing -->
 ## Timing — keep `.spec-context.json` honest
 

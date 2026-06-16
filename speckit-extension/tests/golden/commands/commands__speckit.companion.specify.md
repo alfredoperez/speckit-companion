@@ -1,5 +1,5 @@
 ---
-description: "Companion specify — spec.md with no user-story section"
+description: "Companion specify — spec.md with prioritized user stories"
 ---
 
 ## User Input
@@ -10,20 +10,7 @@ $ARGUMENTS
 
 ## Outline
 
-Produce a Companion specification — **no user-story / user-scenario section**. Capture intent as testable requirements, not narrative journeys.
-
-<!-- speckit-companion:part parallel -->
-## Parallel work — default to subagents when your provider supports them
-
-If your provider can spawn subagents (for example Claude Code's Task tool), **make concurrency your default execution strategy, not an optional optimization.** When the capability is there, using it is expected; sequential is the fallback for chat-only hosts, not the comfortable path. Do not default to one-thing-at-a-time just because it feels simpler.
-
-- **Investigation.** Fan out independent reads across subagents (one per area) and return distilled findings, instead of reading every file serially into the main context.
-- **Tasks.** Organize `tasks.md` into **waves** — each wave a set of different-file, no-shared-dependency tasks that are parallel by construction. The wave *is* the batch; you don't infer it from inline markers.
-- **Implement.** Run the waves in order. For each wave, issue one subagent per task **in a single message** so the whole wave runs concurrently, then let the main agent do the bookkeeping. Do **not** grind through a wave's tasks one at a time. The next wave waits for the current one.
-
-Only when you genuinely cannot spawn subagents, run sequentially — no error, identical artifacts.
-<!-- /speckit-companion:part parallel -->
-
+Produce a feature specification: prioritized user stories with acceptance scenarios, functional requirements, key entities, edge cases, and measurable success criteria, then a quality checklist.
 1. **Resolve the feature directory — mint a fresh dir for new work.** `.specify/feature.json` is an **output** of this step, not an input to reuse: it points at the *previous* spec (frequently already completed), so reusing it would clobber finished work. Pick the target:
    - If the request explicitly names a target path (or `SPECIFY_FEATURE_DIRECTORY` is set), use it.
    - Otherwise create the next numbered dir: scan `specs/` for the highest `NNN-…` prefix, derive a 2–4 word short-name from the description, and use `specs/<NNN+1>-<short-name>/`. **Never write into a directory that already contains a `spec.md`** — that's a stale pointer to a prior spec, not this feature.
@@ -32,14 +19,21 @@ Only when you genuinely cannot spawn subagents, run sequentially — no error, i
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step specify --status specifying --kind start --by extension
    ```
 
-2. Create `<feature_directory>/spec.md` with exactly these sections, in order:
-   - **Overview** — 1–3 sentences: what this delivers and why. No implementation detail. (This replaces the stock user-scenarios narrative.)
-   - **Functional Requirements** — a numbered `FR-001…` list. Each requirement is a single, testable MUST/SHOULD statement. Mark a genuinely unresolvable choice with `[NEEDS CLARIFICATION: …]` (max 3; prefer informed defaults).
-   - **Success Criteria** — measurable, technology-agnostic `SC-001…` outcomes (time, count, percentage, pass/fail). No framework or API names.
-   - **Assumptions** — the informed defaults you chose for anything unspecified.
+2. Create `<feature_directory>/spec.md` with these sections, in order. Write for a business stakeholder — plain language first, focused on **what** users need and **why**, not **how** to build it. Reserve `inline code` for literal identifiers a reader would copy (real names, routes, keys); never backtick ordinary nouns.
 
-3. Keep it business-readable. Do **not** add user stories, acceptance-scenario tables, or priority labels — Companion tracks requirements and outcomes directly. Fold edge cases into Functional Requirements or Assumptions.
+   - **User Scenarios & Testing** *(mandatory)* — the heart of the spec. Capture the feature as **prioritized user stories**, each an independently testable slice that delivers value on its own:
+     - `### User Story N - <short title> (Priority: P1|P2|P3)` followed by one plain-language paragraph describing the journey.
+     - **Why this priority** — one line on its value and ordering.
+     - **Independent Test** — how this story alone can be exercised and what value it proves.
+     - **Acceptance Scenarios** — a numbered list of `**Given** … **When** … **Then** …` cases.
+     Order P1 first (the MVP slice); add as many stories as the feature genuinely needs.
+   - **Edge Cases** — a short list of the boundary and error questions the implementation must answer (empty input, an entity removed while in use, duplicates, reload/persistence).
+   - **Requirements › Functional Requirements** *(mandatory)* — a numbered `FR-001…` list; each a single, testable MUST/SHOULD statement. Mark a genuinely unresolvable choice `[NEEDS CLARIFICATION: …]` (max 3; prefer an informed default and record it under Assumptions instead).
+   - **Key Entities** *(include when the feature involves data)* — each entity: what it represents, its key attributes and relationships, no implementation detail.
+   - **Success Criteria › Measurable Outcomes** *(mandatory)* — measurable, technology-agnostic `SC-001…` outcomes (time, count, percentage, pass/fail). No framework, API, or database names.
+   - **Assumptions** — the informed defaults you chose for anything the description left open.
 
+3. Keep it business-readable. Every vague requirement should fail a "testable and unambiguous" check — tighten it. Remove a section that genuinely does not apply rather than leaving it as "N/A".
 4. **Spec quality checklist.** Write `<feature_directory>/checklists/requirements.md` using the template below, then run a **single** self-check pass: grade each item pass/fail, fix obvious fails in `spec.md` in place, and leave any genuine ambiguity as a `[NEEDS CLARIFICATION: …]` marker (max 3) for the `clarify` step. Do **not** run a multi-iteration rewrite loop or prompt the user with option tables — Companion defers interactive clarification to `clarify`. Update the checklist to reflect the final pass/fail state.
 
    ```markdown
@@ -52,9 +46,9 @@ Only when you genuinely cannot spawn subagents, run sequentially — no error, i
    ## Content Quality
 
    - [ ] No implementation details (languages, frameworks, APIs)
-   - [ ] Focused on user/business value and the change's intent
-   - [ ] Overview states what is delivered and why in 1–3 sentences
-   - [ ] All four sections present (Overview, Functional Requirements, Success Criteria, Assumptions)
+   - [ ] Focused on user value and business needs
+   - [ ] Written for non-technical stakeholders
+   - [ ] All mandatory sections completed (User Scenarios, Requirements, Success Criteria)
 
    ## Requirement Completeness
 
@@ -62,14 +56,16 @@ Only when you genuinely cannot spawn subagents, run sequentially — no error, i
    - [ ] Each Functional Requirement is a single, testable MUST/SHOULD statement
    - [ ] Success criteria are measurable
    - [ ] Success criteria are technology-agnostic (no implementation details)
-   - [ ] Edge cases are folded into Functional Requirements or Assumptions
+   - [ ] All acceptance scenarios are defined
+   - [ ] Edge cases are identified
    - [ ] Scope is clearly bounded
    - [ ] Dependencies and assumptions identified
 
    ## Feature Readiness
 
-   - [ ] Every Functional Requirement maps to at least one Success Criterion
-   - [ ] Overview intent is reflected by the FR list (no orphan goals)
+   - [ ] All functional requirements have clear acceptance criteria
+   - [ ] User scenarios cover primary flows
+   - [ ] Feature meets measurable outcomes defined in Success Criteria
    - [ ] No implementation details leak into the specification
 
    ## Notes

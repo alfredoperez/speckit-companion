@@ -55,9 +55,12 @@ class RecipeOverrideTests(unittest.TestCase):
         default_out = asm.assemble_command("plan", order=default)
         recipe_out = asm.assemble_command("plan", order=recipe)
 
+        # Probe on a string unique to the constitution-check node body
+        # ("Constitution Check" itself now also appears in the plan frame's
+        # outline and the side-files re-check note, so it isn't node-specific).
         self.assertNotEqual(default_out, recipe_out)
-        self.assertIn("Constitution Check", default_out)
-        self.assertNotIn("Constitution Check", recipe_out)
+        self.assertIn("Complexity Tracking", default_out)
+        self.assertNotIn("Complexity Tracking", recipe_out)
 
     def test_default_assembly_still_matches_golden(self) -> None:
         golden = Path(cp.golden_path("commands/speckit.companion.plan.md")).read_text(encoding="utf-8")
