@@ -1,16 +1,3 @@
----
-description: "Companion implement — execute tasks.md in dependency order"
----
-
-## User Input
-
-```text
-$ARGUMENTS
-```
-
-## Outline
-
-<!-- speckit-companion:part parallel -->
 ## Parallel work — use subagents where your provider supports them
 
 If you can spawn subagents or run work concurrently, use that capability across this step:
@@ -20,5 +7,3 @@ If you can spawn subagents or run work concurrently, use that capability across 
 - **Implement.** Run `[P]` batches concurrently via subagents; same-file or dependent tasks stay ordered.
 
 If you cannot spawn subagents, do all of it sequentially — no error, identical output. This is a capability suggestion, not a requirement: a chat-only host simply runs the step the slow way and produces the same artifacts.
-<!-- /speckit-companion:part parallel -->
-

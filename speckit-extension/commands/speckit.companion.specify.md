@@ -12,6 +12,18 @@ $ARGUMENTS
 
 Produce a Companion specification — **no user-story / user-scenario section**. Capture intent as testable requirements, not narrative journeys.
 
+<!-- speckit-companion:part parallel -->
+## Parallel work — use subagents where your provider supports them
+
+If you can spawn subagents or run work concurrently, use that capability across this step:
+
+- **Investigation.** Fan out independent reads across subagents (one per area) and return distilled findings, instead of reading every file serially into the main context.
+- **Tasks.** Mark independent (different-file, no open dependency) tasks `[P]` so they can run together.
+- **Implement.** Run `[P]` batches concurrently via subagents; same-file or dependent tasks stay ordered.
+
+If you cannot spawn subagents, do all of it sequentially — no error, identical output. This is a capability suggestion, not a requirement: a chat-only host simply runs the step the slow way and produces the same artifacts.
+<!-- /speckit-companion:part parallel -->
+
 1. **Resolve the feature directory — mint a fresh dir for new work.** `.specify/feature.json` is an **output** of this step, not an input to reuse: it points at the *previous* spec (frequently already completed), so reusing it would clobber finished work. Pick the target:
    - If the request explicitly names a target path (or `SPECIFY_FEATURE_DIRECTORY` is set), use it.
    - Otherwise create the next numbered dir: scan `specs/` for the highest `NNN-…` prefix, derive a 2–4 word short-name from the description, and use `specs/<NNN+1>-<short-name>/`. **Never write into a directory that already contains a `spec.md`** — that's a stale pointer to a prior spec, not this feature.

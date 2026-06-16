@@ -10,7 +10,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/extension-companion-0b6dd9" alt="extension: companion">
-  <img src="https://img.shields.io/badge/version-0.8.0-0b6dd9" alt="version 0.8.0">
+  <img src="https://img.shields.io/badge/version-0.10.0-0b6dd9" alt="version 0.10.0">
   <img src="https://img.shields.io/badge/spec--kit-%E2%89%A50.9.5-008080" alt="requires spec-kit >= 0.9.5">
   <img src="https://img.shields.io/badge/license-MIT-gold" alt="license MIT">
 </p>
@@ -100,6 +100,12 @@ Full reference: [docs/commands.md](./docs/commands.md).
 Because it runs unattended, auto sets an **`unattended`** signal that project checkpoint hooks read. A checkpoint hook ("Continue / Fix / Stop") that would normally stop and ask a person to proceed checks this signal and instead records the checkpoint and keeps going. Background work, reviews, and PR steps still run as usual — only the wait-for-a-human pause is skipped. Authors of checkpoint hooks should branch on the `unattended` flag: if it is set, record and continue; otherwise ask.
 
 Auto needs an AI agent that keeps working after each step finishes. On a plain one-shot terminal it gracefully falls back to the normal flow: it runs the first step and stops, and the rest is triggered the usual way.
+
+### As fast as your assistant allows
+
+When your AI assistant can work on several things at once, the Companion steps spread the work out automatically — there's nothing to switch on. While investigating, it reads different parts of the codebase side by side instead of one file at a time. When it generates tasks, it flags which ones are independent enough to run together. During implementation, it builds those independent tasks at the same time, while anything that touches the same file or depends on earlier work still runs in order. Assistants that can't run work concurrently simply do each step the usual one-at-a-time way and produce the exact same result — no error, identical output.
+
+A project can also point specific kinds of work at a specialist helper — for example, sending test tasks to a testing specialist — without changing the built-in implementation step.
 
 ## SpecKit Companion workflow — the lean pipeline shape
 

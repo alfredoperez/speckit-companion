@@ -12,7 +12,7 @@ reads: []
 
 2. Execute tasks in dependency order:
    - Complete each layer before the next: Setup → Foundational → Core → Integration → Polish.
-   - Tasks marked `[P]` (different files, no incomplete dependency) may run together; tasks touching the same file run sequentially.
+   - If you support subagents, run each `[P]` batch (different files, no incomplete dependency) concurrently — one subagent per task. As each finishes, the main agent (never the subagents) records it one at a time, so writes to `.spec-context.json` stay foreground and never race (timing rules unchanged). Same-file or dependent tasks stay ordered. No subagent support → run `[P]` tasks sequentially. A project may route task types to specialist subagents via a hook (the agent-routing seam).
    - Halt on a failed non-parallel task and report the cause; for `[P]` tasks, continue the others and report the failure.
 
 3. After completing a task, mark it `- [x]` in `tasks.md`.

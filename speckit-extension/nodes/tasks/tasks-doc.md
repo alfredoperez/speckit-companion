@@ -18,7 +18,7 @@ reads: []
    ```text
    - [ ] [TaskID] [P?] Description with exact file path
    ```
-   - `[P]` marks tasks touching different files with no incomplete dependency (parallelizable).
+   - `[P]` marks tasks touching different files with no incomplete dependency (parallelizable). When the dispatcher supports subagents, be deliberate about `[P]`: split independent, different-file work so implement can run it concurrently. When it doesn't, `[P]` is informational only.
    - Each task names the concrete file it creates or edits.
    - No user-story labels, no per-story test sections, no MVP framing — traceability is to files and requirements (`FR-…`).
 
