@@ -23,6 +23,9 @@ import * as crypto from 'crypto';
 /** The Companion specify command the picker dispatches when the Companion workflow is chosen. */
 const COMPANION_SPECIFY_COMMAND = 'speckit.companion.specify';
 
+/** The Companion auto orchestrator the Run button dispatches — runs the whole pipeline hands-off. */
+const COMPANION_AUTO_COMMAND = 'speckit.companion.auto';
+
 /**
  * Generates a random nonce for CSP
  */
@@ -142,6 +145,27 @@ export class SpecEditorProvider {
     }
 
     /**
+     * Non-blocking warning shown when Run (auto) is requested but the spec-kit
+     * extension is missing. Auto has no stock twin, so it is suppressed rather
+     * than downgraded — the run does not start.
+     */
+    private warnAutoUnavailable(): void {
+        this.outputChannel.appendLine(
+            '[SpecEditor] Companion auto unavailable — spec-kit extension not installed; Run aborted.'
+        );
+        void vscode.window
+            .showWarningMessage(
+                'Run needs the companion spec-kit extension, which is not installed — install it, then use Run to build the whole spec hands-off.',
+                'Install spec-kit Extension'
+            )
+            .then(choice => {
+                if (choice === 'Install spec-kit Extension') {
+                    void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
+                }
+            });
+    }
+
+    /**
      * Show the spec editor webview
      */
     public async show(): Promise<void> {
@@ -205,6 +229,10 @@ export class SpecEditorProvider {
                 await this.handleSubmit(message.content, message.images, message.workflow);
                 break;
 
+            case 'submitAuto':
+                await this.handleSubmit(message.content, message.images, COMPANION_WORKFLOW_NAME, undefined, true);
+                break;
+
             case 'submitCommand':
                 await this.handleSubmit(message.content, message.images, message.workflow, message.command);
                 break;
@@ -250,7 +278,7 @@ export class SpecEditorProvider {
     /**
      * Handle spec submission
      */
-    private async handleSubmit(content: string, imageIds: string[], workflowName: string, customCommand?: string): Promise<void> {
+    private async handleSubmit(content: string, imageIds: string[], workflowName: string, customCommand?: string, auto?: boolean): Promise<void> {
         if (!this.sessionId) {
             this.postMessage({ type: 'error', message: 'No active session' });
             return;
@@ -332,7 +360,16 @@ export class SpecEditorProvider {
             // Companion pick never dispatches an unresolvable /speckit.companion.*.
             const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
             let command = customCommand ? `/${customCommand}` : workflow.stepSpecify;
-            if (!customCommand && workflowName === COMPANION_WORKFLOW_NAME) {
+            if (auto) {
+                // Auto has no stock twin, so a missing extension suppresses it (command: null) — warn and abort.
+                const resolution = resolveDispatchForRoot(COMPANION_AUTO_COMMAND, workspaceRoot);
+                if (!resolution.command) {
+                    this.warnAutoUnavailable();
+                    this.postMessage({ type: 'error', message: 'Run needs the companion spec-kit extension, which is not installed.' });
+                    return;
+                }
+                command = `/${formatCommandForProvider(resolution.command)}`;
+            } else if (!customCommand && workflowName === COMPANION_WORKFLOW_NAME) {
                 const resolution = resolveDispatchForRoot(COMPANION_SPECIFY_COMMAND, workspaceRoot);
                 // specify always has a stock twin, so command is never suppressed (null) here.
                 command = `/${formatCommandForProvider(resolution.command ?? 'speckit.specify')}`;
@@ -571,6 +608,7 @@ export class SpecEditorProvider {
                 <div class="action-spacer"></div>
                 <span id="commandButtons" style="display: none;"></span>
                 <button class="btn-cancel" id="cancelBtn">Cancel</button>
+                <button class="btn-secondary" id="runBtn" title="Build the whole spec hands-off — specify → plan → tasks → implement → completed, no pauses" disabled>Run</button>
                 <button class="btn-primary" id="submitBtn" disabled>Create Spec</button>
             </footer>
         </main>

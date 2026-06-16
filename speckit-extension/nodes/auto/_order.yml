@@ -1,0 +1,6 @@
+# Canonical node order — the byte-parity baseline. A recipe's
+# nodes: [...] replaces this list.
+order:
+  - resolve-dir
+  - orchestrate
+  - handoff

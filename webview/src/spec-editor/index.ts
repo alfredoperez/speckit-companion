@@ -40,6 +40,7 @@ function getElements() {
         loadingOverlay: document.getElementById('loadingOverlay') as HTMLElement,
         app: document.getElementById('app') as HTMLElement,
         submitBtn: document.getElementById('submitBtn') as HTMLButtonElement,
+        runBtn: document.getElementById('runBtn') as HTMLButtonElement,
         cancelBtn: document.getElementById('cancelBtn') as HTMLButtonElement,
         attachImageBtn: document.getElementById('attachImageBtn') as HTMLButtonElement,
         workflowSelector: document.getElementById('workflowSelector') as HTMLElement,
@@ -85,9 +86,13 @@ function updateCharCount(): void {
 }
 
 function updateSubmitState(): void {
-    const { textarea, submitBtn } = getElements();
+    const { textarea, submitBtn, runBtn } = getElements();
+    const disabled = isSubmitting || !canSubmit(textarea.value, MAX_CHARS);
     if (submitBtn) {
-        submitBtn.disabled = isSubmitting || !canSubmit(textarea.value, MAX_CHARS);
+        submitBtn.disabled = disabled;
+    }
+    if (runBtn) {
+        runBtn.disabled = disabled;
     }
 }
 
@@ -300,6 +305,18 @@ function setupEventListeners(): void {
         clearError();
         vscode.postMessage({
             type: 'submit',
+            content: elements.textarea.value,
+            images: attachedImages.map(img => img.id),
+            workflow: getSelectedWorkflow()
+        });
+    });
+
+    // Run button — build the whole spec hands-off via the auto orchestrator.
+    elements.runBtn?.addEventListener('click', () => {
+        if (isSubmitting || !canSubmit(elements.textarea.value, MAX_CHARS)) return;
+        clearError();
+        vscode.postMessage({
+            type: 'submitAuto',
             content: elements.textarea.value,
             images: attachedImages.map(img => img.id),
             workflow: getSelectedWorkflow()

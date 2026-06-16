@@ -121,6 +121,12 @@
         "icon": "$(plus)"
       },
       {
+        "command": "speckit.companion.auto.run",
+        "title": "Run Spec Hands-Off (Auto)",
+        "category": "SpecKit",
+        "icon": "$(run-all)"
+      },
+      {
         "command": "speckit.specify",
         "title": "Specify",
         "category": "SpecKit",
