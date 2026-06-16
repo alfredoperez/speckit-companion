@@ -7,8 +7,9 @@
  *   - SpecEditor/CreateSpec stories (standalone view).
  *   - Viewer/Transitions/CreateSpec (the lifecycle "phase zero" entry).
  *
- * Auto Mode lives here, next to Create Spec — by design it is the canonical
- * first-time entry point for the spec pipeline, NOT a viewer-footer button.
+ * The Run button (hands-off auto pipeline) lives here, next to Create Spec —
+ * by design it is the canonical first-time entry point for the spec pipeline,
+ * NOT a viewer-footer button.
  */
 
 export interface CreateSpecMockProps {
@@ -161,19 +162,21 @@ export function CreateSpecMock({
                     </button>
                     <button
                         type="button"
-                        title="Run the full spec pipeline automatically (specify → plan → tasks → implement)"
-                        style="
+                        disabled={!canSubmit}
+                        title="Build the whole spec hands-off — specify → plan → tasks → implement → completed, no pauses"
+                        style={`
                             background: var(--vscode-button-secondaryBackground, #1f1828);
                             color: var(--vscode-button-secondaryForeground, #ddd);
                             border: 1px solid var(--vscode-widget-border, #303030);
                             padding: 8px 18px;
                             border-radius: 4px;
                             font-size: 13px;
-                            cursor: pointer;
+                            cursor: ${canSubmit ? 'pointer' : 'not-allowed'};
                             font-weight: 500;
-                        "
+                            opacity: ${canSubmit ? 1 : 0.5};
+                        `}
                     >
-                        Auto Mode
+                        Run
                     </button>
                     <button
                         type="button"

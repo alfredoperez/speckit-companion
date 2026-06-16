@@ -89,8 +89,17 @@ Four capture commands run automatically as lifecycle hooks; two are yours to run
 | `/speckit.companion.specify` · `.plan` · `.tasks` · `.implement` | you | The SpecKit Companion pipeline — emit the lean shape (no user stories, trimmed plan, files/dependencies tasks) for a spec |
 | `speckit.companion.classify` | workflow routing step | Emit a `small \| normal \| oversized` size signal so the Companion workflow can right-size the pipeline (thresholds live here, not in a setting) |
 | `speckit.companion.mark-complete` | workflow terminal step | Write `status: completed` to `.spec-context.json` — the Companion workflow's final step (the command writes it; the AI never hand-writes `completed`) |
+| `/speckit.companion.auto` | you | Run the whole pipeline hands-off — specify → plan → tasks → implement → completed, no approval pauses. The Run button in Create Spec triggers the same flow |
 
 Full reference: [docs/commands.md](./docs/commands.md).
+
+### Run the whole spec hands-off
+
+`/speckit.companion.auto "what you want built"` builds the entire spec end to end and only stops when it is finished — it walks specify, plan, tasks, implement, and the final completion step on its own, without pausing for approval in between. It is the unattended sibling of the manual one-step-at-a-time flow, and it rides on top of the exact same per-step commands, so it can never drift from what they do.
+
+Because it runs unattended, auto sets an **`unattended`** signal that project checkpoint hooks read. A checkpoint hook ("Continue / Fix / Stop") that would normally stop and ask a person to proceed checks this signal and instead records the checkpoint and keeps going. Background work, reviews, and PR steps still run as usual — only the wait-for-a-human pause is skipped. Authors of checkpoint hooks should branch on the `unattended` flag: if it is set, record and continue; otherwise ask.
+
+Auto needs an AI agent that keeps working after each step finishes. On a plain one-shot terminal it gracefully falls back to the normal flow: it runs the first step and stops, and the rest is triggered the usual way.
 
 ## SpecKit Companion workflow — the lean pipeline shape
 

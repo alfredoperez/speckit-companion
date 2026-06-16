@@ -241,6 +241,38 @@ def fill_required(ctx: dict, feature_dir: Path, branch: str) -> None:
     ctx.setdefault("branch", branch)
 
 
+def _coerce_value(raw: str):
+    """Coerce a `--set key=value` string into bool/int/None where it reads as one, else the string."""
+    low = raw.lower()
+    if low in ("true", "false"):
+        return low == "true"
+    if low in ("null", "none"):
+        return None
+    if raw.lstrip("-").isdigit():
+        return int(raw)
+    return raw
+
+
+def set_fields(feature_dir: Path, pairs: list[str]) -> Path | None:
+    """Merge top-level `key=value` fields onto the existing context, leaving the
+    rest (history, status, currentStep) untouched. Used by auto to record
+    `unattended=true` without disturbing the lifecycle log."""
+    target = feature_dir / ".spec-context.json"
+    branch = _git_branch(_repo_root()) or "main"
+    ctx = read_ctx(target)
+    fill_required(ctx, feature_dir, branch)
+    for pair in pairs:
+        if "=" not in pair:
+            print(f"[companion] Skipping malformed --set '{pair}' (expected key=value).", file=sys.stderr)
+            continue
+        key, raw = pair.split("=", 1)
+        key = key.strip()
+        if key:
+            ctx[key] = _coerce_value(raw.strip())
+    atomic_write(target, ctx)
+    return target
+
+
 # `**` is optional: matches the turbo/companion bold form `- [x] **T001**` AND the
 # standard tasks-template plain form `- [x] T001 …`. A `T\d+` is still required right
 # after the checkbox, so non-task checkboxes never false-match.
@@ -700,12 +732,17 @@ def main() -> int:
         help="With --task: comma-separated files the task touched, written to "
              "task_summaries.<id>.files.",
     )
+    parser.add_argument(
+        "--set", dest="set_pairs", action="append", default=None, metavar="KEY=VALUE",
+        help="Merge a top-level key=value onto .spec-context.json (e.g. --set unattended=true). "
+             "Repeatable. Leaves the lifecycle log untouched.",
+    )
     args = parser.parse_args()
 
     # Best-effort guard: a non-canonical step is a no-op, never a host failure.
     # Terminal state belongs in `status`, not `currentStep`. Skipped in task-sync
     # mode, which always operates on the implement step.
-    if not args.tasks_file and not args.task and not args.mark_complete and (args.step == "done" or args.step not in CANONICAL_STEPS):
+    if not args.tasks_file and not args.task and not args.mark_complete and not args.set_pairs and (args.step == "done" or args.step not in CANONICAL_STEPS):
         print(
             f"[companion] Skipping: '{args.step}' is not a canonical currentStep "
             f"({', '.join(sorted(CANONICAL_STEPS))}).",
@@ -748,7 +785,9 @@ def main() -> int:
 
     # Never let a bookkeeping write fail the host spec-kit command.
     try:
-        if args.tasks_file:
+        if args.set_pairs:
+            target = set_fields(feature_dir, args.set_pairs)
+        elif args.tasks_file:
             tasks_md = Path(args.tasks_file)
             if not tasks_md.is_absolute():
                 tasks_md = root / tasks_md
@@ -772,7 +811,9 @@ def main() -> int:
         return 0
 
     if target is not None and not args.tasks_file:
-        if args.mark_complete:
+        if args.set_pairs:
+            print(f"[companion] Set {', '.join(args.set_pairs)} in {target}")
+        elif args.mark_complete:
             print(f"[companion] Marked {target} complete (status=completed, by={args.by})")
         elif args.task:
             print(f"[companion] Journaled finish for task {args.task} in {target} (by={args.by})")

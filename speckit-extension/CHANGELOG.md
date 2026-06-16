@@ -6,6 +6,12 @@ All notable changes to the **spec-kit extension** (`id: companion`) are document
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/); this extension follows [Semantic Versioning](https://semver.org/).
 
+## [0.9.0] - 2026-06-16
+
+### Added
+- **Build a whole spec hands-off with one command.** The new `/speckit.companion.auto` runs the entire pipeline end to end — from a description all the way to a finished, completed spec — without stopping for approval in between. It is the unattended sibling of the step-by-step flow and drives the very same per-step commands, so it can't drift from what they do. There's also a **Run** button in Create Spec that kicks off the same hands-off build from the editor.
+- **Checkpoint hooks know when no one is watching.** Auto marks the run as unattended, and project checkpoint hooks ("Continue / Fix / Stop") can read that signal to record the checkpoint and keep going instead of waiting for a person. Background work, reviews, and PR steps still run — only the human pause is skipped. On a plain one-shot terminal, Run falls back to the normal one-step-at-a-time flow.
+
 ## [0.8.0] - 2026-06-15
 
 ### Added

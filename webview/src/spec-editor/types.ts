@@ -18,6 +18,7 @@ export interface VSCodeApi {
 
 export type SpecEditorToExtensionMessage =
     | { type: 'submit'; content: string; images: string[]; workflow: string }
+    | { type: 'submitAuto'; content: string; images: string[]; workflow: string }
     | { type: 'submitCommand'; content: string; images: string[]; workflow: string; command: string }
     | { type: 'preview' }
     | { type: 'attachImage'; name: string; size: number; dataUri: string }

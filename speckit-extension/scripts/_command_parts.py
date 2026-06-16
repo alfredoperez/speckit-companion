@@ -16,7 +16,7 @@ NODES_DIR = "nodes"
 # Companion-standard preset commands (host-editor profile bodies).
 PRESET_CMDS = ["specify", "clarify", "plan", "tasks", "analyze", "implement", "constitution"]
 # Namespaced /speckit.companion.* bodies the parts mechanism covers.
-NAMESPACED_CMDS = ["specify", "plan", "tasks", "implement", "classify", "mark-complete"]
+NAMESPACED_CMDS = ["specify", "plan", "tasks", "implement", "classify", "mark-complete", "auto"]
 
 GOLDEN_BODIES = (
     [f"presets/companion-standard/commands/speckit.{c}.md" for c in PRESET_CMDS]

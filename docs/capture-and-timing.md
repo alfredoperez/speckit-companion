@@ -111,6 +111,14 @@ The fix lives in the **dispatch preamble**, not in extension code (`promptBuilde
 - **No double-write in companion mode.** When a companion command runs it still records the completion via its script; the preamble keeps telling the AI to defer, so there's no duplicate `ai` complete.
 - **(Removed) the #326 artifact-stability watcher.** An earlier attempt added an extension-side `spec.md` quiet-window watcher; it was the wrong layer (the status is written by the AI per the preamble, not by code) and it didn't fire reliably. It was removed in favor of this preamble fix.
 
+## Auto orchestrator — the `unattended` flag (#309)
+
+`/speckit.companion.auto` drives the whole pipeline hands-off. It is a pure **orchestrator**: it dispatches the same per-step `/speckit.companion.*` commands, so capture is unchanged — the same bodies/hooks write `.spec-context.json` at each step exactly as in a manual or GUI run. Auto adds nothing to the lifecycle log itself.
+
+The one new write is the **unattended signal**. Auto runs `write-context.py --set unattended=true` once, near the start of its loop, recording `unattended: true` as a top-level field. `--set` is a generic merge (read → set the named keys → atomic write) that leaves `history`, `status`, and `currentStep` untouched — it is bookkeeping, not a lifecycle event, so it never appends a history entry and never runs the canonical-step guard. Values coerce (`true`/`false` → bool, digits → int, `null`/`none` → null), so `unattended=true` lands as a real boolean.
+
+The flag is a **convention for checkpoint hook authors**, not enforced by the script: a project checkpoint `prompt` hook reads `unattended` and records-and-continues instead of pausing for a person. Background / review / PR hooks are unaffected — only the human pause is skipped. On a one-shot terminal auto can't chain steps, so it degrades to the normal one-step flow (it still sets the flag; there's just no further dispatch to carry it into).
+
 ## Preset / command-override mechanism
 
 The document *shape* (stock SpecKit vs Companion) and the timing partial both live in **command-body overrides**, not template files — core commands embed their own structure, and template overrides don't reach `specify` (it copies its template by literal path).
