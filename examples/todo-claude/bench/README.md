@@ -105,7 +105,7 @@ Three slash commands, one size at a time:
 
 ## What gets measured
 
-Per cell: `npm run build` · the hidden **acceptance oracle** (`acceptance/<size>.test.tsx`) · the **full regression suite** (`src/**`) · convention + blast-radius checks · the **capture eval** (`check_capture.py`, skipped for `speckit`) · an independent **rubric** (readability/conventions/scope) · artifact shape (spec/plan/tasks lines, **total artifact lines across all files**, task count, side files) · diff size · **capture overhead** (time journaling, companion only) · and the **comparative review** (`reviews/<size>.md`).
+Per cell: `npm run build` · the **behavioral oracle** (`behavioral-judge.mjs`, with the testid suite as a labeled baseline) · the **full regression suite** (`src/**`) · convention + blast-radius checks · the **capture eval** (`check_capture.py`, skipped for `speckit`) · an independent **rubric** (readability/conventions/scope) · artifact shape (spec/plan/tasks lines, **total artifact lines across all files**, task count, side files) · diff size · **capture overhead** (time journaling, companion only) · and the **comparative review** (`reviews/<size>.md`).
 
 ### Overall health composite
 
@@ -122,7 +122,11 @@ It is **cohort-independent** on purpose — a cell's score only moves when its o
 
 ## How "passes" is graded
 
-`acceptance/{size}.test.tsx` are the hidden grading key — RTL suites that render the real app and assert the user-visible affordances each prompt mandates (the `data-testid`s in `prompts/{size}.md`). They are **not** part of `tsc`/`vite build` (tsconfig only includes `src/`), so they never block a build. "Passes" = build green **and** the size's acceptance suite green.
+Correctness is graded on **behavior**, not on exact `data-testid`s. The prompts (`prompts/{size}.md`) describe what a user can see and do — they no longer spell out test ids, which was both hinting the model and fighting the app's own role/text-query convention. We don't grade architecture; we grade "does the feature work."
+
+The primary grader is the **behavioral judge** (`behavioral-judge.mjs`): it pulls the spec's own acceptance scenarios (the Given/When/Then lines), hands them plus the changed source to an LLM judge, and gets back a per-scenario pass/fail verdict that ignores wiring and naming. The judge command is configurable via `BENCH_JUDGE_CMD` (default `claude -p`); with no judge available it returns nothing and the cell falls back to the deterministic baseline. "Passes" = build green **and** the behavioral verdict green.
+
+The old testid suites (`acceptance/{size}.test.tsx`) are kept as a **labeled baseline** only (`deterministicBaseline` in each stats row) — useful as a sanity check, but no longer the score driver, since the prompts intentionally don't reveal the ids they assert. Each cell records which grader was primary (`acceptanceSource: behavioral | deterministic`). The suites are still **not** part of `tsc`/`vite build`, so they never block a build.
 
 ## How timing is measured
 
@@ -134,8 +138,9 @@ Committed and **never deleted**, so any future build can compare against today:
 
 | Path | What |
 |---|---|
-| `prompts/{easy,medium,hard}.md` | Paste-in feature text with baked-in required affordances |
-| `acceptance/{easy,medium,hard}.test.tsx` | Correctness oracle (RTL); shared render helper in `acceptance/harness.tsx` |
+| `prompts/{easy,medium,hard}.md` | Paste-in feature text — user-visible behavior only, no testid hints |
+| `behavioral-judge.mjs` | Primary correctness oracle — judges the spec's acceptance scenarios against the built source (behavior, not testids); `BENCH_JUDGE_CMD` |
+| `acceptance/{easy,medium,hard}.test.tsx` | Deterministic testid baseline (RTL), kept for sanity; shared render helper in `acceptance/harness.tsx` |
 | `lib.mjs` / `run-all.mjs` / `sync-templates.mjs` | Harness: helpers · prep/capture engine · folder baker |
 | `driver.mjs` | Faithful per-step dispatch (GUI preamble + settle-wait) for agent drivers |
 | `waitForSettle.test.mjs` | Unit test for the settle-wait (`node --test`) |

@@ -11,6 +11,7 @@ import {
   rmSync,
 } from 'node:fs'
 import { execFileSync } from 'node:child_process'
+import { judgeBehavior } from './behavioral-judge.mjs'
 
 export const BENCH_DIR = dirname(fileURLToPath(import.meta.url))
 export const SANDBOX_DIR = dirname(BENCH_DIR) // examples/todo-claude
@@ -490,13 +491,21 @@ export function measureCell({ cellDir, size, mode, runId, startedAt, finishedAt,
     : nullTiming()
 
   const buildPass = buildPasses(cellDir)
-  const acceptance = runAcceptance(cellDir, size)
   const regression = runRegression(cellDir)
   const changed = changedSrcFiles(cellDir)
   const conventions = conventionChecks(changed)
   const blast = blastRadius(size, changed)
 
   const specMd = readText(join(specDir || cellDir, 'spec.md'))
+
+  // Correctness is graded on BEHAVIOR (the spec's acceptance scenarios judged
+  // against the built source), not exact data-testids. The prompts no longer
+  // leak testids, so the deterministic testid suite is kept only as a labeled
+  // baseline; the behavioral judge is primary when a judge command is wired.
+  const deterministic = runAcceptance(cellDir, size)
+  const behavioral = judgeBehavior({ specMd, changed, buildPass })
+  const acceptance = behavioral || deterministic
+  const acceptanceSource = behavioral ? 'behavioral' : 'deterministic'
   const planMd = readText(join(specDir || cellDir, 'plan.md'))
   const tasksMd = readText(join(specDir || cellDir, 'tasks.md'))
   const lines = (t) => (t ? t.split('\n').length : 0)
@@ -522,6 +531,9 @@ export function measureCell({ cellDir, size, mode, runId, startedAt, finishedAt,
     buildPass,
     acceptancePassed: acceptance.passed,
     acceptanceTotal: acceptance.total,
+    acceptanceSource,
+    behavioralVerdicts: behavioral?.verdicts || null,
+    deterministicBaseline: { passed: deterministic.passed, total: deterministic.total },
     regressionPassed: regression.passed,
     regressionTotal: regression.total,
     conventions,
