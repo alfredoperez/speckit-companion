@@ -23,6 +23,11 @@ The review subagent in `/ship-ticket` and `/fix-tickets` reads this **before** r
 - **A generic field-setter/merge onto `.spec-context.json` must refuse lifecycle keys** (`history`/`status`/`currentStep`/`transitions`). A bare `ctx[key] = value` loop (e.g. `write-context.py --set`) otherwise lets `--set status=completed` bypass the mark-complete safeguard and corrupt the log. Deny-list lifecycle keys with a stderr note; cover with a protected-key test. (#309)
 - **Task completeness compares per-occurrence marker counts, never collapsed sets.** `set(all) <= set(done)` reads 100%-done when a duplicate id has one marker checked and one not; use `len(done) == len(all)` on the per-occurrence lists. A completion/step-close gate also needs BOTH signals — tasks.md at 100% AND every task journaled — not either alone, or a journaled-but-unchecked task closes the step while status stays `implementing`. (#317)
 
+## Node assembly (`speckit-extension/nodes/`)
+
+- **A node that injects a step into a command that keeps numbering downstream must use a sub-bullet or unnumbered note, not a new top-level `N.`** — the assembled body concatenates node bodies, so a fresh `2.` in one node lands next to the next node's `2.` and double-numbers. Check the ASSEMBLED command, not just the node. After any node/part edit, re-bless golden (`capture-golden.py`) and confirm `assemble-nodes.py --check` + `check-shape-parity.py` pass. (#319)
+- **Prose telling a capable provider to run work concurrently must name who serializes the `.spec-context.json` write** — "journal each as it finishes" under per-task subagents reads as concurrent writes (the race the timing part warns about); say the MAIN agent records one at a time, foreground. (#319)
+
 ## Command-family & extension gating
 
 - **Guard a command/namespace family by shared PREFIX, not an enumerated subset.** An enumerated map of the 4 pipeline commands let a 5th (`speckit.companion.mark-complete`) slip the guard. Key off the `speckit.companion.` prefix; suppress members with no stock twin rather than dispatching them. (#300)
