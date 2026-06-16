@@ -6,6 +6,12 @@ All notable changes to the **spec-kit extension** (`id: companion`) are document
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/); this extension follows [Semantic Versioning](https://semver.org/).
 
+## [0.10.0] - 2026-06-15
+
+### Added
+- **The pipeline runs as fast as your assistant allows.** When your AI assistant can work on several things at once, the Companion steps now spread the work out: it reads different parts of the codebase side by side while investigating, flags which tasks are independent enough to run together, and builds those independent tasks at the same time during implementation. Assistants that can't do that simply run each step the usual one-at-a-time way and produce the exact same result — nothing to turn on, nothing breaks.
+- **Point specific kinds of work at specialist helpers.** Implementation now leaves a clean place for a project to say "send test tasks to the testing specialist," so teams can route task types to dedicated helpers without changing the built-in steps.
+
 ## [0.9.0] - 2026-06-16
 
 ### Added

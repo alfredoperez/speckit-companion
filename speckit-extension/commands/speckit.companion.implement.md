@@ -10,6 +10,18 @@ $ARGUMENTS
 
 ## Outline
 
+<!-- speckit-companion:part parallel -->
+## Parallel work — use subagents where your provider supports them
+
+If you can spawn subagents or run work concurrently, use that capability across this step:
+
+- **Investigation.** Fan out independent reads across subagents (one per area) and return distilled findings, instead of reading every file serially into the main context.
+- **Tasks.** Mark independent (different-file, no open dependency) tasks `[P]` so they can run together.
+- **Implement.** Run `[P]` batches concurrently via subagents; same-file or dependent tasks stay ordered.
+
+If you cannot spawn subagents, do all of it sequentially — no error, identical output. This is a capability suggestion, not a requirement: a chat-only host simply runs the step the slow way and produces the same artifacts.
+<!-- /speckit-companion:part parallel -->
+
 1. Read `.specify/feature.json` for the feature directory; load `<feature_directory>/tasks.md`, `plan.md`, and `spec.md`. Then record the **implement START** so the step's duration begins now (the script stamps the real clock; the end-of-step hook records each task and closes the step — do not hand-write implement timing):
    ```bash
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step implement --status implementing --kind start --by extension
@@ -17,7 +29,7 @@ $ARGUMENTS
 
 2. Execute tasks in dependency order:
    - Complete each layer before the next: Setup → Foundational → Core → Integration → Polish.
-   - Tasks marked `[P]` (different files, no incomplete dependency) may run together; tasks touching the same file run sequentially.
+   - If you support subagents, run each `[P]` batch (different files, no incomplete dependency) concurrently — one subagent per task — and journal each as it finishes (timing rules unchanged). Same-file or dependent tasks stay ordered. No subagent support → run `[P]` tasks sequentially. A project may route task types to specialist subagents via a hook (the agent-routing seam).
    - Halt on a failed non-parallel task and report the cause; for `[P]` tasks, continue the others and report the failure.
 
 3. After completing a task, mark it `- [x]` in `tasks.md`.
