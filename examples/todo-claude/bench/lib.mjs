@@ -466,26 +466,49 @@ function buildPasses(cwd) {
   } catch { return false }
 }
 
+// A throwaway vitest config written into the cell only for a grading pass. The
+// cell's committed vitest.config covers `src/**` only (it must read as a plain
+// app), and vitest treats a positional test path as a FILTER over `include` —
+// not an extra include — so without this the injected oracle under
+// bench/acceptance/ would be filtered out and "No test files found" → 0/0.
+const GRADE_VITEST_CONFIG = `import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./vitest.setup.ts'],
+    include: ['bench/acceptance/**/*.test.tsx'],
+  },
+})
+`
+
 // The deterministic testid oracle is NOT baked into the cell — the implementing
 // model would read it and code to the hidden testids. Inject it transiently from
-// the bench source just for grading, run it (vitest runs an explicit positional
-// path even when it isn't in the cell's `include` glob), then remove it so the
-// cell never carries the oracle between runs.
+// the bench source (plus a grade-only vitest config that includes it), run it,
+// then remove both so the cell never carries the oracle or any bench config
+// between runs.
 function runAcceptance(cwd, size) {
   const out = join(cwd, '.last-vitest.json')
   rmSync(out, { force: true })
   const destDir = join(cwd, 'bench', 'acceptance')
   const srcDir = join(BENCH_DIR, 'acceptance')
+  const gradeCfg = join(cwd, 'vitest.grade.config.ts')
   mkdirSync(destDir, { recursive: true })
   for (const f of [`${size}.test.tsx`, 'harness.tsx']) {
     const src = join(srcDir, f)
     if (existsSync(src)) copyFileSync(src, join(destDir, f))
   }
+  writeFileSync(gradeCfg, GRADE_VITEST_CONFIG)
   try {
-    execFileSync('npm', ['run', 'test', '--', `bench/acceptance/${size}.test.tsx`, '--reporter=json', `--outputFile=${out}`],
+    execFileSync('npm', ['run', 'test', '--', '--config', 'vitest.grade.config.ts',
+      `bench/acceptance/${size}.test.tsx`, '--reporter=json', `--outputFile=${out}`],
       { cwd, stdio: 'ignore', timeout: 300000 })
   } catch { /* failing tests still write the json report */ }
   rmSync(destDir, { recursive: true, force: true }) // never leave the oracle in the cell
+  rmSync(gradeCfg, { force: true })
   const r = readJson(out, {})
   return { passed: r.numPassedTests ?? 0, total: r.numTotalTests ?? 0 }
 }

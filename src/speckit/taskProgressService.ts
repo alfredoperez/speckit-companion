@@ -32,8 +32,8 @@ export function parseTasksFile(content: string, specName: string, specPath: stri
     let currentPhase: PhaseProgress | null = null;
 
     for (const line of lines) {
-        // Detect phase/wave headers: ## Phase N: or ## Wave N — (Companion emits waves)
-        const phaseMatch = line.match(/^#{2,3}\s+(?:Phase|Wave)\s+\d+\s*[:—–-]?\s*(.+)/i);
+        // Detect phase headers: ## Phase N: or ### Phase N:
+        const phaseMatch = line.match(/^#{2,3}\s+Phase\s+\d+[:\s]+(.+)/i);
         if (phaseMatch) {
             // Save previous phase if exists
             if (currentPhase) {

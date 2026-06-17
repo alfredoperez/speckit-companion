@@ -12,9 +12,10 @@ import { join } from 'node:path'
 import { execFileSync } from 'node:child_process'
 
 // A clean vitest config for the baked cell — no bench framing, setup lifted to
-// the root, only the app's own src tests in the default run. The grader still
-// runs an explicit acceptance path it injects at scoring time (vitest runs an
-// explicit positional path even when it isn't in `include`).
+// the root, only the app's own src tests in the default run. At grade time the
+// grader injects the acceptance oracle AND a throwaway config that includes it
+// (see runAcceptance in lib.mjs) — a positional path alone is filtered out by
+// this `include`, so it can't carry the oracle.
 const CLEAN_VITEST_CONFIG = `import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 

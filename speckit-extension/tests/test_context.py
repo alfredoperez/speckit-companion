@@ -949,6 +949,15 @@ class JournalFinishTests(unittest.TestCase):
         self.assertEqual(len([e for e in hist if e.get("substep") == "research"]), 1)
         self.assertEqual(len([e for e in hist if e["kind"] == "complete" and e.get("substep") is None]), 1)
 
+    def test_finish_rejects_non_canonical_step(self) -> None:
+        # A typo'd / omitted step (would default to "specify") must not journal junk.
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        self.assertIsNone(wc.journal_finish(self.fd, "buld", "ai"))
+        self.assertFalse(
+            any(e.get("step") == "buld" for e in _ctx(self.fd)["history"]),
+            "a non-canonical step must never be journaled",
+        )
+
     def test_finish_leaves_shipped_spec_untouched(self) -> None:
         wc.update_context(self.fd, "plan", "planning", "extension", "start")
         target = self.fd / ".spec-context.json"
@@ -1041,6 +1050,17 @@ class AppendLogMaterializeTests(unittest.TestCase):
         step_closes = [e for e in ctx["history"] if e["step"] == "implement" and e["kind"] == "complete" and not e.get("task")]
         self.assertEqual(len(step_closes), 1)
         self.assertEqual(ctx["history"][-1].get("task"), None)  # step-close lands last
+
+    def test_append_leaves_shipped_spec_untouched(self) -> None:
+        # A stray --append after the spec shipped must not orphan a line in the log.
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        target = self.fd / ".spec-context.json"
+        ctx0 = json.loads(target.read_text())
+        ctx0["status"] = "completed"
+        target.write_text(json.dumps(ctx0))
+        self.assertIsNone(wc.append_task_log(self.fd, "T999", "ai"))
+        self.assertFalse((self.fd / ".spec-context.events.jsonl").exists(),
+                         "no events line should be appended to a shipped spec")
 
     def test_materialize_no_log_is_noop(self) -> None:
         wc.update_context(self.fd, "implement", "implementing", "extension", "start")

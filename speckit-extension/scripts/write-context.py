@@ -505,6 +505,15 @@ def journal_finish(feature_dir: Path, step: str, by: str, substep: str | None = 
     by hand. Deliberately does NOT touch `status` or `currentStep` (the hooks own
     those) — it only adds the honest finish timestamp. Idempotent on (step, substep);
     best-effort; a genuinely shipped spec (completed/archived) is left untouched."""
+    # A finish is only meaningful for a canonical step; reject a typo'd or omitted
+    # step (which would otherwise default to "specify" and journal a junk complete).
+    if step not in CANONICAL_STEPS:
+        print(
+            f"[companion] Skipping --finish: '{step}' is not a canonical step "
+            f"({', '.join(sorted(CANONICAL_STEPS))}).",
+            file=sys.stderr,
+        )
+        return None
     target = feature_dir / ".spec-context.json"
     ctx = read_ctx(target)
     if ctx.get("status") in CROSS_STEP_TERMINAL:
@@ -674,7 +683,15 @@ def append_task_log(
     The line carries its own `at` timestamp (real finish time) plus `did`/`files`,
     so `--materialize` can fold it later with the task's true duration preserved.
     This path never closes the step or updates status — that happens at fold time.
+    A genuinely shipped spec (completed/archived) is left untouched, so a stray
+    late append can't orphan a post-completion line into the events log.
     """
+    if read_ctx(feature_dir / ".spec-context.json").get("status") in CROSS_STEP_TERMINAL:
+        print(
+            f"[companion] {feature_dir} already shipped; not appending task {task_id}.",
+            file=sys.stderr,
+        )
+        return None
     log_path = feature_dir / ".spec-context.events.jsonl"
     entry: dict = {
         "step": "implement",
