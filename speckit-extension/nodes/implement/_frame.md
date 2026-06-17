@@ -14,4 +14,4 @@ $ARGUMENTS
 
 ## Outline
 
-Execute `tasks.md` phase by phase in dependency order. **Within each phase, build the independent (`[P]`) tasks in parallel: spawn one subagent (Task tool) per `[P]` task, all in a single message, so they run at once — this is the default on a host that has subagents, not an optional optimization. Doing them one at a time yourself is the fallback only when no subagent tool exists.** Each task's finish is logged the moment it completes; then mark the spec complete.
+Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as ordered **waves** (`Wave N — parallel …` blocks split by `⟶ Wait …` join lines). **Build each wave all at once by spawning one subagent (Task tool) per task in that wave, in a single message — that is how a wave runs, not an optional optimization; doing them one at a time yourself is the fallback only when no subagent tool exists. Stop at each `⟶ Wait` line until the wave above finishes, then go on.** Each task's finish is logged as it completes; then mark the spec complete.

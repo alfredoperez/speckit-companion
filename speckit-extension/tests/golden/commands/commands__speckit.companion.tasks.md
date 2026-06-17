@@ -86,19 +86,25 @@ Produce a dependency-ordered task list organized **by user story** into phases (
 This budget governs the step that follows. Where it would produce something the budget skips, omit it.
 1. Read `.specify/feature.json` for the feature directory; load `plan.md` and `spec.md` (required), plus `data-model.md`, `contracts/`, and `research.md` if present.
 
-2. Create `<feature_directory>/tasks.md` organized **by user story**, so each story can be implemented, tested, and delivered as an independent increment. Use the line format `T### [P?] [US#] Description with exact file path`:
-   - `[P]` marks a task that can run in parallel — a different file with no incomplete dependency (advisory; same-file or dependent tasks stay ordered).
+2. Create `<feature_directory>/tasks.md` organized **by user story**, so each story can be implemented, tested, and delivered as an independent increment. Use the line format `- [ ] **T###** [P?] [US#] Description · exact/file/path`:
+   - `[P]` marks a task that runs in parallel with the others **in its wave** — a different file with no incomplete dependency.
    - `[US#]` maps the task to a user story from the spec for traceability.
 
-3. Group the tasks into phases, in this order:
+3. **Make the parallel structure explicit — group each phase's work into ordered waves, never a flat list.** A reader (human or agent) must see at a glance *what runs together* and *where to wait*:
+   - A **wave** is a set of tasks that touch different files and don't depend on each other — meant to be built **at the same time**. Head it with a line like `**Wave 1 — parallel (independent files, build together):**` and tag each of its tasks `[P]`.
+   - Between waves, write an explicit join line — `**⟶ Wait for Wave 1 to finish, then:**` — before the tasks that depend on the previous wave. Those form the next wave (or run singly).
+   - A wave of one is fine — a single task, no `[P]`. Same-file or dependent tasks are **never** in the same wave. Maximize each wave: pull every genuinely-independent task of the phase into one wave so the batch is worth parallelizing.
+   This wave layout **is** the contract implement reads to fan out — it replaces the old scattered-`[P]` list.
+
+4. Group the waves into phases, in this order:
    - **Phase 1: Setup** — project structure, config, and tooling prerequisites shared by everything.
-   - **Phase 2: Foundational** — core infrastructure that BLOCKS all stories (shared models/types, providers, routing, persistence). Note that no user-story work begins until this phase is done.
-   - **Phase 3 onward: one phase per user story**, in priority order (P1 first = the MVP slice). For each story: an optional `### Tests` block (include only when the spec or constitution asks for tests — write them to fail first), then `### Implementation` (models → services → UI → integration), then a **Checkpoint** line stating the story is now independently functional and testable.
+   - **Phase 2: Foundational** — core infrastructure that BLOCKS all stories (shared models/types, providers, routing, persistence). No user-story work begins until this phase is done.
+   - **Phase 3 onward: one phase per user story**, in priority order (P1 first = the MVP slice). For each story: an optional `### Tests` block (include only when the spec or constitution asks for tests — write them to fail first), then `### Implementation` laid out as waves (foundation/models first, then the parallel components/UI wave, then the integration wave), then a **Checkpoint** line stating the story is now independently functional and testable.
    - **Final phase: Polish** — cross-cutting cleanup, docs, and validation against the spec's Success Criteria.
 
-4. End with a **Dependencies & Execution Order** section: the phase dependencies (Setup → Foundational → stories → Polish), the ordering within a story (tests before code; models before services before endpoints), and the parallel opportunities. Each task names the concrete file it creates or edits.
+5. End with a **Dependencies & Execution Order** section: the phase dependencies (Setup → Foundational → stories → Polish) and a one-line restatement of each phase's waves (which wave blocks which). Each task names the concrete file it creates or edits.
 
-**Output**: `<feature_directory>/tasks.md` organized by user story into dependency-ordered phases.
+**Output**: `<feature_directory>/tasks.md` organized by user story into dependency-ordered phases, each phase laid out as explicit parallel waves with join points.
 <!-- speckit-companion:part timing -->
 ## Timing — keep `.spec-context.json` honest
 
@@ -115,13 +121,13 @@ These rules apply to every Companion profile command. The extension records life
 
   `--append` writes **one line** to `.spec-context.events.jsonl` and does **not** read or rewrite the shared `.spec-context.json`, so it never hits the "read the file first" retry and **parallel workers can each append their own finish at the same time without contending** — the line carries its own real timestamp (`date -u` is stamped by the script). The `--did`/`--files` flags ride along so the Activity panel's Tasks card is populated from the script. **Do NOT hand-edit the `- [ ]` checkbox in `tasks.md`** — the script owns it: materialize flips it to `- [x]` from your appended finish, so a fanned-out subagent only appends and never touches the shared `tasks.md`. Do NOT hand-author per-task JSON and do NOT write a per-task `start`.
 
-  Then **fold the appended lines into `.spec-context.json`** — run this after each batch of tasks and again when the step ends:
+  Then **fold the appended lines into `.spec-context.json`** — run this once per wave (after the wave reconciles) and again when the step ends:
 
   ```bash
   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --materialize
   ```
 
-  `--materialize` is the one read-modify-write: it folds the finishes into the panel **and checks off the matching `tasks.md` boxes** for every journaled task, idempotently (re-folding never double-counts), so running it per batch keeps the GUI current without re-serializing the per-task work. The end-of-step hook is a backstop that materializes anything you didn't fold and fills any task you didn't journal. Do NOT defer all journaling to one end-of-step batch: that collapses real durations into a single instant, and the cadence check FAILS a run whose task finishes cluster into a tiny fraction of the step's real duration — append each finish *the moment its task is done* so the per-line timestamps stay honest.
+  `--materialize` is the one read-modify-write: it folds the finishes into the panel **and checks off the matching `tasks.md` boxes** for every journaled task, idempotently (re-folding never double-counts), so running it per wave keeps the GUI current without re-serializing the work. The end-of-step hook is a backstop that materializes anything you didn't fold and fills any task you didn't journal. What's trustworthy here is the **per-task summary** (`did`/`files`) and the order tasks completed, plus the **step-level** start→complete span, which the scripts stamp exactly. The per-task *timestamps* are best-effort — a single agent logs a task right after building it, so they reflect when you recorded it, not a precisely measured duration; that's fine, the summaries are the point. Still, record each finish **as you go, wave by wave** rather than dumping every task at the very end — a per-wave cadence keeps the panel live and the ordering true.
 - **Never write the next step's start.** Only the next command appends the next step's start entry; writing it here makes the viewer render a phantom "Generating <next>…".
 <!-- /speckit-companion:part timing -->
 
