@@ -103,7 +103,7 @@ Auto needs an AI agent that keeps working after each step finishes. On a plain o
 
 ### Familiar spec-kit output, plus right-sizing and completion
 
-Companion's `/speckit.companion.*` commands produce the same shape of artifacts as stock spec-kit, so the output reads the way you already expect: a spec with prioritized user stories, acceptance scenarios, key entities, and edge cases; a plan with a technical context, a constitution check, and the design files (`research.md`, `data-model.md`, `contracts/`); and a task list grouped by user story into phases.
+Companion's `/speckit.companion.*` commands produce the same shape of artifacts as stock spec-kit, so the output reads the way you already expect: a spec with prioritized user stories, acceptance scenarios, key entities, and edge cases; a plan with a summary, a constitution check, the concrete file layout, and the design files (`research.md`, `data-model.md`, `contracts/`); and a task list grouped by user story into phases.
 
 On top of that familiar shape, the Companion pipeline adds three things stock does not have. It **right-sizes** the run, so a small change skips the review pauses and a large one gets extra scrutiny. It **captures lifecycle timing** into `.spec-context.json` as each step and task finishes, which is what lights up the GUI. And it **marks the spec complete** at the end, so the run lands in Completed on its own instead of stopping at "implemented."
 
