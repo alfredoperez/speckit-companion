@@ -675,10 +675,12 @@ def append_task_log(
     feature_dir: Path, task_id: str, by: str,
     did: str | None = None, files: list[str] | None = None,
 ) -> Path | None:
-    """Append ONE task-finish line to `.spec-context.events.jsonl` — no read of the
-    shared `.spec-context.json`, so concurrent workers (subagents) each record
-    themselves without contending on it. A single `O_APPEND` write of a short line
-    is atomic across appenders on POSIX, so parallel finishes never interleave.
+    """Append ONE task-finish line to `.spec-context.events.jsonl`. The only WRITE
+    is the append, so concurrent workers (subagents) each record themselves without
+    contending — a single `O_APPEND` write of a short line is atomic across appenders
+    on POSIX, and parallel finishes never interleave. (It reads `.spec-context.json`
+    once to skip a shipped spec, but never rewrites it — concurrent reads don't
+    contend, and the atomic temp+rename materialize never exposes a partial file.)
 
     The line carries its own `at` timestamp (real finish time) plus `did`/`files`,
     so `--materialize` can fold it later with the task's true duration preserved.
