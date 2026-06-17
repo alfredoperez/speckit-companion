@@ -7,21 +7,60 @@
 // Per folder: clone the app (for src + node_modules), drop the stale spec-kit
 // emissions, `specify init` (current stock spec-kit), then for companion variants
 // `specify extension add` (+ preset + profile). Gitignored; re-run via /bench-sync.
-import { existsSync, writeFileSync, mkdirSync, rmSync, readdirSync } from 'node:fs'
+import { existsSync, writeFileSync, mkdirSync, rmSync, readFileSync, cpSync } from 'node:fs'
 import { join } from 'node:path'
 import { execFileSync } from 'node:child_process'
 
-// A baked cell must NOT carry the bench toolkit — the implementing model would
-// read the acceptance oracle / prompts / past stats and code to the hidden grade.
-// Strip the cell's bench/ down to ONLY vitest.setup.ts (the one file the cell's
-// own src tests need via vitest.config.ts setupFiles). The grader runs from the
-// SOURCE bench dir and injects the oracle into the cell only at scoring time.
-function stripBenchToolkit(dir) {
-  const bench = join(dir, 'bench')
-  if (!existsSync(bench)) return
-  for (const entry of readdirSync(bench)) {
-    if (entry === 'vitest.setup.ts') continue
-    rmSync(join(bench, entry), { recursive: true, force: true })
+// A clean vitest config for the baked cell — no bench framing, setup lifted to
+// the root, only the app's own src tests in the default run. The grader still
+// runs an explicit acceptance path it injects at scoring time (vitest runs an
+// explicit positional path even when it isn't in `include`).
+const CLEAN_VITEST_CONFIG = `import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./vitest.setup.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
+  },
+})
+`
+
+// A baked cell must read as a plain app — NOTHING about the bench anywhere a
+// spec run could see it (the model auto-reads CLAUDE.md and may open config/
+// README). It would otherwise read the acceptance oracle / prompts / past stats
+// and code to the hidden grade, or treat the app as a "bench target." So: lift
+// the one needed setup file to the root, drop bench/ entirely, write a clean
+// vitest config, and strip the bench framing from CLAUDE.md + remove the
+// bench-centric README. The grader runs from the SOURCE bench dir and injects
+// the oracle into the cell only at scoring time.
+function presentAsCleanApp(dir) {
+  const benchSetup = join(dir, 'bench', 'vitest.setup.ts')
+  if (existsSync(benchSetup)) cpSync(benchSetup, join(dir, 'vitest.setup.ts'))
+  rmSync(join(dir, 'bench'), { recursive: true, force: true })
+  writeFileSync(join(dir, 'vitest.config.ts'), CLEAN_VITEST_CONFIG)
+
+  const claudePath = join(dir, 'CLAUDE.md')
+  if (existsSync(claudePath)) {
+    let md = readFileSync(claudePath, 'utf8')
+    md = md.replace(' (the SpecKit Companion bench target)', '')
+    md = md.replace('# Vitest (app tests in src/ + bench oracle in bench/)', '# Vitest (component + unit tests)')
+    // Drop the "## Bench" section (up to the SPECKIT marker, or end of file).
+    md = md.replace(/\n## Bench\n[\s\S]*?(?=\n<!-- SPECKIT START -->|$)/, '\n')
+    writeFileSync(claudePath, md)
+  }
+  rmSync(join(dir, 'README.md'), { force: true })
+
+  const giPath = join(dir, '.gitignore')
+  if (existsSync(giPath)) {
+    const kept = readFileSync(giPath, 'utf8')
+      .split('\n')
+      .filter((l) => !/bench/i.test(l))
+      .join('\n')
+    writeFileSync(giPath, kept)
   }
 }
 import {
@@ -94,7 +133,7 @@ if (process.argv[1] && process.argv[1].endsWith('sync-templates.mjs')) {
     const dir = folderDir(variant)
     process.stdout.write(`• todo-${variant}: clone… `)
     cloneDir(SANDBOX_DIR, dir)
-    stripBenchToolkit(dir) // the model must never see the oracle/prompts/stats
+    presentAsCleanApp(dir) // the model must never see the oracle/prompts/stats or any bench framing
     gitInitCell(dir) // own git root so the capture writer resolves the folder, not the parent repo
     process.stdout.write('specify init… ')
     const initOk = installSpeckit(dir)
