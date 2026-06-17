@@ -73,28 +73,26 @@ For `specify`, branch creation is normally one of these `before_specify` hooks (
 
 ## Outline
 
-Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as ordered **waves** (`Wave N — parallel …` blocks split by `⟶ Wait …` join lines). **Build each wave all at once by spawning one subagent (Task tool) per task in that wave, in a single message — that is how a wave runs, not an optional optimization; doing them one at a time yourself is the fallback only when no subagent tool exists. Stop at each `⟶ Wait` line until the wave above finishes, then go on.** Each task's finish is logged as it completes; then mark the spec complete.
+Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as ordered **waves** split by `⟶ Wait …` join lines — a dependency map where tasks within a wave are independent and a `⟶ Wait` marks where the next tasks depend on what came before. Build each task inline, in turn, stopping at each `⟶ Wait` line until the wave above is done. (A host with subagents *may* parallelize a wave whose tasks are each heavy enough to be worth a separate worker, but inline is the default and usually faster for ordinary edits.) Each task's finish is logged as it completes; then mark the spec complete.
 1. Read `.specify/feature.json` for the feature directory; load `<feature_directory>/tasks.md`, `plan.md`, and `spec.md` (and `data-model.md` / `contracts/` if present). Then record the **implement START** so the step's duration begins now (the script stamps the real clock; do not hand-write implement timing):
    ```bash
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step implement --status implementing --kind start --by extension
    ```
 
-2. Work `tasks.md` **phase by phase, in dependency order**: **Setup**, then **Foundational** (which blocks every story), then each **user-story** phase in priority order (P1 first), then **Polish**. `tasks.md` lays each phase out as ordered **waves** (`**Wave N — parallel …**` blocks separated by `**⟶ Wait …**` join lines) — execute it wave by wave, in order, and **stop at each `⟶ Wait` line until the wave above is done** before starting the next. Halt on a failed task and report the cause.
+2. Work `tasks.md` **phase by phase, in dependency order**: **Setup**, then **Foundational** (which blocks every story), then each **user-story** phase in priority order (P1 first), then **Polish**. `tasks.md` lays each phase out as ordered **waves** separated by `**⟶ Wait …**` join lines. The waves are a **dependency map**: tasks inside one wave are independent of each other (any order is safe), and a `⟶ Wait` line marks where the next tasks depend on everything above it. **Execute wave by wave, in order, and stop at each `⟶ Wait` line until the wave above is done** before starting the next. Halt on a failed task and report the cause.
 
-3. **A wave is built all at once — fan out one subagent per task. This is how you execute a wave, not an optional speed-up.** For each `**Wave N — parallel …**` block, **spawn one subagent (the Task tool) per task in that wave, all in a single message,** so the whole wave runs concurrently. Doing a wave's tasks one-by-one yourself is the fallback *only* when your host has no subagent tool — it is not the normal path. A wave of one is just a single task. Each subagent's brief is tight:
-   - It makes **only its own task's edits** (the one file the task names), touches nothing else, and returns a one-line summary.
-   - When its work is done, it **appends its own finish** to the event log as the closing action of the task — nothing more:
-     ```bash
-     python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --task <TaskID> --kind complete --by ai --did "<one line>" --files "<files>" --append
-     ```
-     `--append` is a single no-read write, so every subagent in the wave can append at the same time without contending. The subagent does **not** edit `tasks.md` and does **not** touch `.spec-context.json` — the script checks the box later.
-   - If a wave's tasks share an interface (a contract pinned in `tasks.md`/`contracts/`), paste that contract into each subagent's brief verbatim so they don't drift.
+3. **Build a wave's tasks yourself, in turn — inline is the default.** Implement each task in the wave directly (write its file), in any order within the wave since they're independent. As you finish each task, **append its finish** to the event log — that single append is the closing action of the task, done the moment its work is complete:
+   ```bash
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --task <TaskID> --kind complete --by ai --did "<one line>" --files "<files>" --append
+   ```
+   `--append` is one no-read write, so it never stalls and never corrupts the shared context. Do **not** hand-edit the `tasks.md` checkbox — the materialize step below checks it off from your appended finish.
+   - *Optional parallelism:* if your host has a subagent/`Task` tool **and** a wave's tasks are each substantial enough that a separate worker would pay for its own startup, you may dispatch one subagent per task instead — each makes only its task's edits and appends its own finish. For the common case (small files, quick edits) this overhead does **not** pay off, so inline is both the default and usually the faster choice. Either way the result is identical.
 
-4. **When the wave returns, reconcile and materialize (main agent), then cross the join line.** Type-check/build the files the wave wrote side by side and fix any seam drift. Then fold the wave with one call — it both updates the panel and checks off the `tasks.md` boxes for every appended finish:
+4. **After each wave, reconcile and materialize, then cross the join line.** Type-check/build the wave's files together and fix any seam drift. Then fold the wave with one call — it updates the panel **and** checks off the `tasks.md` boxes for every appended finish:
    ```bash
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --materialize
    ```
-   You (the main agent) own `tasks.md` only through this `--materialize` call; no subagent edits it, so there is no shared-file race. Now move past the `⟶ Wait` line to the next wave.
+   `tasks.md` is owned only through this `--materialize` call (the script flips the boxes), so it never diverges from the journal. Now move past the `⟶ Wait` line to the next wave.
 
 5. On completion, validate the result against the spec's **Functional Requirements** and **Success Criteria**, and report a short summary of what was built and anything left undone.
 
