@@ -77,8 +77,7 @@ export function parseVerdict(stdout) {
   if (!stdout) return null
   const ok = (obj) => (obj && Array.isArray(obj.verdicts) ? obj : null)
   // Fast path: the judge is told to reply with ONE JSON object and nothing else,
-  // so a clean reply parses directly — this also handles braces inside reason
-  // strings, which the brace-scanner below cannot.
+  // so a clean reply parses directly (the common case).
   try {
     const obj = ok(JSON.parse(stdout.trim()))
     if (obj) return obj

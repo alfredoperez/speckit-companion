@@ -507,7 +507,9 @@ function runAcceptance(cwd, size) {
       `bench/acceptance/${size}.test.tsx`, '--reporter=json', `--outputFile=${out}`],
       { cwd, stdio: 'ignore', timeout: 300000 })
   } catch { /* failing tests still write the json report */ }
-  rmSync(destDir, { recursive: true, force: true }) // never leave the oracle in the cell
+  // Remove the WHOLE bench/ dir (not just acceptance/) — a baked cell must carry
+  // no bench/ at all — plus the throwaway grade config.
+  rmSync(join(cwd, 'bench'), { recursive: true, force: true })
   rmSync(gradeCfg, { force: true })
   const r = readJson(out, {})
   return { passed: r.numPassedTests ?? 0, total: r.numTotalTests ?? 0 }
