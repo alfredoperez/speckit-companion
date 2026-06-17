@@ -1107,5 +1107,40 @@ class AppendLogMaterializeTests(unittest.TestCase):
         self.assertEqual(_ctx(self.fd)["status"], "implemented")
 
 
+class FeatureJsonResolverTests(unittest.TestCase):
+    """resolve_feature_dir accepts both feature.json key shapes (canonical +
+    stock spec-kit's FEATURE_DIR), so a bare call still finds the spec."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        (self.root / "specs" / "001-x").mkdir(parents=True)
+        (self.root / ".specify").mkdir()
+        # Clear env pointers so resolution falls through to feature.json.
+        import os as _os
+        self._saved = {k: _os.environ.pop(k, None) for k in ("SPECIFY_FEATURE_DIRECTORY", "SPECIFY_FEATURE")}
+
+    def tearDown(self) -> None:
+        import os as _os
+        for k, v in self._saved.items():
+            if v is not None:
+                _os.environ[k] = v
+        self._tmp.cleanup()
+
+    def _write_pointer(self, payload: dict) -> None:
+        (self.root / ".specify" / "feature.json").write_text(json.dumps(payload))
+
+    def test_resolves_canonical_feature_directory_key(self) -> None:
+        self._write_pointer({"feature_directory": "specs/001-x"})
+        got = wc.resolve_feature_dir(self.root, None)
+        self.assertEqual(got, self.root / "specs/001-x")
+
+    def test_resolves_stock_FEATURE_DIR_key(self) -> None:
+        # The shape the companion auto-prep / stock create-new-feature.sh writes.
+        self._write_pointer({"FEATURE_DIR": "specs/001-x", "FEATURE_NAME": "001-x"})
+        got = wc.resolve_feature_dir(self.root, None)
+        self.assertEqual(got, self.root / "specs/001-x")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -137,12 +137,16 @@ def resolve_feature_dir(root: Path, explicit: str | None) -> Path | None:
         if hit:
             return hit
 
-    # 4. .specify/feature.json -> feature_directory
+    # 4. .specify/feature.json -> feature directory. Accept both the canonical
+    #    `feature_directory` key and stock spec-kit's `FEATURE_DIR` (the upstream
+    #    create-new-feature.sh shape) so a pointer written either way resolves —
+    #    otherwise a bare call (e.g. --mark-complete with no --feature-dir) fails
+    #    to find the spec even though the pointer is present.
     feature_json = root / ".specify" / "feature.json"
     if feature_json.is_file():
         try:
             data = json.loads(feature_json.read_text(encoding="utf-8"))
-            fd = data.get("feature_directory")
+            fd = data.get("feature_directory") or data.get("FEATURE_DIR")
             if fd:
                 p = Path(fd)
                 return p if p.is_absolute() else root / p
