@@ -75,17 +75,33 @@ Include one entry per scenario number above.`
 // Extract the first balanced {...} JSON object from an LLM reply.
 export function parseVerdict(stdout) {
   if (!stdout) return null
+  const ok = (obj) => (obj && Array.isArray(obj.verdicts) ? obj : null)
+  // Fast path: the judge is told to reply with ONE JSON object and nothing else,
+  // so a clean reply parses directly — this also handles braces inside reason
+  // strings, which the brace-scanner below cannot.
+  try {
+    const obj = ok(JSON.parse(stdout.trim()))
+    if (obj) return obj
+  } catch { /* fall back to extraction when there's surrounding prose */ }
+  // Fallback: extract the first balanced {...} object (string-aware, so a `}`
+  // inside a reason string doesn't close the object early).
   const start = stdout.indexOf('{')
   if (start === -1) return null
-  let depth = 0
+  let depth = 0, inStr = false, esc = false
   for (let i = start; i < stdout.length; i++) {
-    if (stdout[i] === '{') depth++
-    else if (stdout[i] === '}' && --depth === 0) {
+    const c = stdout[i]
+    if (inStr) {
+      if (esc) esc = false
+      else if (c === '\\') esc = true
+      else if (c === '"') inStr = false
+      continue
+    }
+    if (c === '"') inStr = true
+    else if (c === '{') depth++
+    else if (c === '}' && --depth === 0) {
       try {
-        const obj = JSON.parse(stdout.slice(start, i + 1))
-        if (obj && Array.isArray(obj.verdicts)) return obj
+        return ok(JSON.parse(stdout.slice(start, i + 1)))
       } catch { return null }
-      return null
     }
   }
   return null

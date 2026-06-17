@@ -54,6 +54,22 @@ test('parseVerdict extracts the first balanced JSON object', () => {
   assert.equal(v.verdicts[0].pass, true)
 })
 
+test('parseVerdict handles a brace inside a reason string', () => {
+  // A `}` inside the reason must not close the object early.
+  const out = '{"verdicts":[{"n":1,"pass":false,"reason":"missing } close in render"}]}'
+  const v = parseVerdict(out)
+  assert.equal(v.verdicts.length, 1)
+  assert.equal(v.verdicts[0].pass, false)
+  assert.match(v.verdicts[0].reason, /missing/)
+})
+
+test('parseVerdict handles a brace-in-string even with surrounding prose', () => {
+  const out = 'Here:\n{"verdicts":[{"n":1,"pass":true,"reason":"renders } list ok"}]}\ndone'
+  const v = parseVerdict(out)
+  assert.equal(v.verdicts.length, 1)
+  assert.equal(v.verdicts[0].pass, true)
+})
+
 test('parseVerdict returns null on garbage or missing verdicts', () => {
   assert.equal(parseVerdict('no json at all'), null)
   assert.equal(parseVerdict('{"nope":1}'), null)
