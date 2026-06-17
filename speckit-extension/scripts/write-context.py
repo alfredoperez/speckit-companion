@@ -488,6 +488,44 @@ def update_context(
     return target
 
 
+def journal_finish(feature_dir: Path, step: str, by: str, substep: str | None = None) -> Path | None:
+    """Append a single step- or substep-level **finish** to history and nothing else.
+
+    This is the AI's timing self-close for the steps the lifecycle hooks don't
+    close: a step-level finish for plan/tasks/clarify/analyze (substep=None), or a
+    substep boundary (plan: research/design; tasks: generate). The capture hooks
+    write the step START + status; they do NOT write these completes, so the AI
+    has to — and it used to hand-author the JSON, which is what produced a
+    duplicate `status` key. Routing it through the script makes the write atomic
+    (no malformed file possible) and stops the AI ever editing .spec-context.json
+    by hand. Deliberately does NOT touch `status` or `currentStep` (the hooks own
+    those) — it only adds the honest finish timestamp. Idempotent on (step, substep);
+    best-effort; a genuinely shipped spec (completed/archived) is left untouched."""
+    target = feature_dir / ".spec-context.json"
+    ctx = read_ctx(target)
+    if ctx.get("status") in CROSS_STEP_TERMINAL:
+        print(
+            f"[companion] {target} already at status={ctx.get('status')}; "
+            f"not journaling a {step}{('/' + substep) if substep else ''} finish.",
+            file=sys.stderr,
+        )
+        return None
+    branch = _git_branch(_repo_root()) or "main"
+    log = canonical_log(ctx)
+    fill_required(ctx, feature_dir, branch)
+    if not _has_complete(log, step, substep):
+        log.append({
+            "step": step,
+            "substep": substep,
+            "kind": "complete",
+            "by": by,
+            "at": _now_iso(),
+        })
+    commit_log(ctx, log)
+    atomic_write(target, ctx)
+    return target
+
+
 def _upsert_task_summary(
     ctx: dict, task_id: str, did: str | None, files: list[str] | None,
     status: str = "DONE",
@@ -887,6 +925,12 @@ def main() -> int:
              "(the only sanctioned writer of completed; keeps currentStep=implement).",
     )
     parser.add_argument(
+        "--finish", action="store_true",
+        help="Append a pure timing finish for --step (and optional --substep) to history "
+             "without touching status/currentStep — the AI's self-close for plan/tasks/"
+             "clarify/analyze and their substeps. Replaces hand-authored JSON edits.",
+    )
+    parser.add_argument(
         "--did", default=None,
         help="With --task: a one-line summary of what the task did, written to "
              "task_summaries.<id>.did (the Activity panel's Tasks card).",
@@ -906,7 +950,7 @@ def main() -> int:
     # Best-effort guard: a non-canonical step is a no-op, never a host failure.
     # Terminal state belongs in `status`, not `currentStep`. Skipped in task-sync
     # mode, which always operates on the implement step.
-    if not args.tasks_file and not args.task and not args.mark_complete and not args.set_pairs and not args.materialize and (args.step == "done" or args.step not in CANONICAL_STEPS):
+    if not args.tasks_file and not args.task and not args.mark_complete and not args.set_pairs and not args.materialize and not args.finish and (args.step == "done" or args.step not in CANONICAL_STEPS):
         print(
             f"[companion] Skipping: '{args.step}' is not a canonical currentStep "
             f"({', '.join(sorted(CANONICAL_STEPS))}).",
@@ -961,6 +1005,8 @@ def main() -> int:
             target = sync_tasks(feature_dir, tasks_md, final_status, args.by)
         elif args.mark_complete:
             target = mark_spec_complete(feature_dir, args.by)
+        elif args.finish:
+            target = journal_finish(feature_dir, args.step, args.by, args.substep)
         elif args.materialize:
             target = materialize_log(feature_dir, args.by)
         elif args.task:
@@ -984,6 +1030,9 @@ def main() -> int:
             print(f"[companion] Set {', '.join(args.set_pairs)} in {target}")
         elif args.mark_complete:
             print(f"[companion] Marked {target} complete (status=completed, by={args.by})")
+        elif args.finish:
+            _label = f"{args.step}{('/' + args.substep) if args.substep else ''}"
+            print(f"[companion] Journaled {_label} finish in {target} (by={args.by})")
         elif args.materialize:
             print(f"[companion] Materialized append-log into {target}")
         elif args.task and args.append:

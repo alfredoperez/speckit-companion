@@ -23,10 +23,10 @@ These carry **sub-second (ms) precision** because they read the real clock at wr
 
 ### 2. Best-effort AI journaling — coarse, NOT guaranteed
 
-The **timing part** — authored once in `speckit-extension/presets/_parts/timing.md`, assembled into every companion preset command body by `build-commands.py`, and injected into the GUI dispatch preamble by `src/ai-providers/promptBuilder.ts` — *instructs* the AI to append entries with `by: "ai"` using a live `date -u +"%Y-%m-%dT%H:%M:%SZ"`, for the steps the scripts don't own:
+The **timing part** — authored once in `speckit-extension/presets/_parts/timing.md`, assembled into every companion preset command body by `build-commands.py`, and injected into the GUI dispatch preamble by `src/ai-providers/promptBuilder.ts` — has the AI record `by: "ai"` finishes for the steps the lifecycle hooks don't close. **The AI never hand-edits `.spec-context.json`** — it always runs the writer script, which stamps the real clock, writes atomically, and dedups. (Hand-authoring was what corrupted the file in practice — a second top-level `status` key the AI then had to repair.) Two cases:
 
-- **Self-close — plan/tasks/clarify/analyze only.** When one of those step's own work ends, append `{step, substep:null, kind:"complete", by:"ai", at:<date -u>}`. **specify** and **implement** are deliberately excluded — they are closed deterministically by scripts (see §1), so an `ai` complete there would duplicate the script's.
-- **Substeps live.** Each substep boundary (plan: `research`, `design`; tasks: `generate`) appends its own entry the moment it finishes.
+- **Self-close — plan/tasks/clarify/analyze only.** When one of those step's own work ends, the AI runs `write-context.py --step <step> --finish --by ai`. `--finish` (`journal_finish`) appends a single step-level `complete` to `history[]` and touches **nothing else** — `status`/`currentStep` stay owned by the lifecycle hooks. **specify** and **implement** are excluded (closed by scripts in §1).
+- **Substeps.** Each substep boundary (plan: `research`, `design`; tasks: `generate`) is recorded with `write-context.py --step <step> --substep <name> --finish --by ai` the moment it finishes — same script path, idempotent on `(step, substep)`.
 
 Per-task timing is journaled **live by the AI via a script** (finish-only): after each task it runs `write-context.py --task <id> --kind complete --append`, which writes **one** finish line to `.spec-context.events.jsonl` and never reads or rewrites the shared `.spec-context.json`. Because a script stamps each line, this carries **ms precision** and honest deltas (the gap between consecutive finishes is each task's real duration) — not hand-authored JSON. The append-only path exists so the hot loop never hits the "read the file first" retry churn, and so **parallel workers (subagents) can each record their own finish at the same time without contending** on the shared file — a single `O_APPEND` write of a short line is atomic across appenders.
 
@@ -56,7 +56,7 @@ Both gaps the financial-page E2E exposed were closed by moving capture off the A
 - **specify now self-closes.** The specify body calls `write-context.py --kind start` right after it creates the dir and `--kind complete` at the end (`by:extension`, ms precision) → a real begin→end span instead of a `complete` synthesized at plan-start. The late `after_specify` hook-start is collapsed by the broadened start-dedup in `update_context` (a step is started once).
 - **per-task no longer bursts.** The AI stopped hand-authoring per-task JSON; the `after_implement` hook's `sync_tasks()` writes each task with the script's own clock.
 
-The remaining `by:ai` writes are the plan/tasks/clarify/analyze self-closes and substep boundaries. History: `Projects/speckit companion/backlog/specify-duration-and-duplicate-start.md`.
+All remaining `by:ai` writes (the plan/tasks/clarify/analyze self-closes and substep boundaries) now go through `write-context.py --finish`, never a hand-edited JSON file — so the duplicate-`status`-key corruption can't recur. They are the plan/tasks/clarify/analyze self-closes and substep boundaries. History: `Projects/speckit companion/backlog/specify-duration-and-duplicate-start.md`.
 
 ## Finish-only journaling (2026-06-08, v2)
 

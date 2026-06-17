@@ -912,6 +912,72 @@ class MarkCompleteTests(unittest.TestCase):
         self.assertEqual(_ctx(self.fd)["status"], "completed")
 
 
+class JournalFinishTests(unittest.TestCase):
+    """The script-owned timing self-close (--finish) that replaces hand-edited JSON."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.fd = Path(self._tmp.name) / "specs" / "_zzz-test"
+        self.fd.mkdir(parents=True)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_substep_finish_appends_without_touching_status(self) -> None:
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        wc.journal_finish(self.fd, "plan", "ai", substep="research")
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], "planning", "substep finish must NOT change status")
+        self.assertEqual(ctx["currentStep"], "plan", "substep finish must NOT change currentStep")
+        research = [e for e in ctx["history"] if e.get("substep") == "research"]
+        self.assertEqual([e["kind"] for e in research], ["complete"])
+
+    def test_step_level_finish_appends_one_complete(self) -> None:
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        wc.journal_finish(self.fd, "plan", "ai")
+        closes = [e for e in _ctx(self.fd)["history"]
+                  if e["step"] == "plan" and e["kind"] == "complete" and e.get("substep") is None and not e.get("task")]
+        self.assertEqual(len(closes), 1)
+
+    def test_finish_is_idempotent(self) -> None:
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        wc.journal_finish(self.fd, "plan", "ai", substep="research")
+        wc.journal_finish(self.fd, "plan", "ai", substep="research")
+        wc.journal_finish(self.fd, "plan", "ai")
+        wc.journal_finish(self.fd, "plan", "ai")
+        hist = _ctx(self.fd)["history"]
+        self.assertEqual(len([e for e in hist if e.get("substep") == "research"]), 1)
+        self.assertEqual(len([e for e in hist if e["kind"] == "complete" and e.get("substep") is None]), 1)
+
+    def test_finish_leaves_shipped_spec_untouched(self) -> None:
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        target = self.fd / ".spec-context.json"
+        ctx0 = json.loads(target.read_text())
+        ctx0["status"] = "completed"
+        target.write_text(json.dumps(ctx0))
+        self.assertIsNone(wc.journal_finish(self.fd, "plan", "ai", substep="research"))
+        self.assertEqual(_ctx(self.fd)["status"], "completed")
+
+    def test_cli_finish_dispatch_keeps_single_status_key(self) -> None:
+        # The exact corruption we saw in a real run: ensure --finish never adds a
+        # second top-level `status` (the JSON stays valid, single-keyed).
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        orig_root, orig_resolve = wc._repo_root, wc.resolve_feature_dir
+        wc._repo_root = lambda: Path(self._tmp.name)
+        wc.resolve_feature_dir = lambda root, explicit: self.fd
+        orig_argv = sys.argv
+        try:
+            sys.argv = ["write-context.py", "--feature-dir", str(self.fd),
+                        "--step", "plan", "--substep", "research", "--finish", "--by", "ai"]
+            self.assertEqual(wc.main(), 0)
+        finally:
+            sys.argv = orig_argv
+            wc._repo_root, wc.resolve_feature_dir = orig_root, orig_resolve
+        raw = (self.fd / ".spec-context.json").read_text()
+        self.assertEqual(raw.count('"status"'), 1)
+        self.assertEqual(_ctx(self.fd)["status"], "planning")
+
+
 class AppendLogMaterializeTests(unittest.TestCase):
     """The parallel-safe append path + the idempotent materializer (#346)."""
 
