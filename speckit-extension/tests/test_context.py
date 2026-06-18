@@ -338,6 +338,21 @@ class LifecycleCaptureTests(unittest.TestCase):
         distinct = list(dict.fromkeys(t["task"] for t in _ctx(self.fd)["history"] if t.get("task")))
         self.assertEqual(distinct, ["T001"])
 
+    def test_duplicate_id_one_unchecked_is_not_100(self) -> None:
+        # Per-occurrence verdict: the same id checked once and pending once is NOT
+        # 100%, so sync_tasks must leave status implementing and not self-close.
+        tasks_md = self.fd / "tasks.md"
+        tasks_md.write_text(_tasks("- [x] **T001** a", "- [ ] **T001** a (re-listed)"))
+        wc.sync_tasks(self.fd, tasks_md, "implemented", "extension")
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], "implementing")
+        step_completes = [
+            t for t in ctx["history"]
+            if t["step"] == "implement" and t["substep"] is None
+            and t.get("task") is None and t["kind"] == "complete"
+        ]
+        self.assertEqual(step_completes, [], "a duplicate id with one pending marker is not 100%")
+
     def test_kind_complete_appends_step_complete(self) -> None:
         # A `--kind complete` write appends a step-level complete, flips status,
         # and is idempotent (no second complete on a re-run).
@@ -1125,6 +1140,59 @@ class AppendLogMaterializeTests(unittest.TestCase):
             sys.argv = orig_argv
             wc._repo_root, wc.resolve_feature_dir = orig_root, orig_resolve
         self.assertEqual(_ctx(self.fd)["status"], "implemented")
+
+    def test_events_log_kept_after_step_closes_until_complete(self) -> None:
+        # Closing implement folds every appended line but KEEPS the log — under the
+        # per-wave materialize cadence a later wave may still append, so GC waits for
+        # the terminal `completed` transition (the one state that blocks appends).
+        (self.fd / "tasks.md").write_text("- [ ] **T001** a\n- [ ] **T002** b\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.append_task_log(self.fd, "T001", "ai", did="did a")
+        wc.append_task_log(self.fd, "T002", "ai", did="did b")
+        wc.materialize_log(self.fd, "ai")
+        ctx = _ctx(self.fd)
+        # Every appended finish landed in the context.
+        self.assertEqual([e["task"] for e in ctx["history"] if e.get("task")], ["T001", "T002"])
+        self.assertEqual(ctx["status"], "implemented")
+        self.assertTrue((self.fd / ".spec-context.events.jsonl").exists(),
+                        "events log is retained at implement-close; GC happens at mark-complete")
+
+    def test_events_log_kept_while_step_open(self) -> None:
+        # A materialize that does NOT close the step keeps the log (more tasks pending).
+        (self.fd / "tasks.md").write_text("- [ ] **T001** a\n- [ ] **T002** b\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.append_task_log(self.fd, "T001", "ai")
+        wc.materialize_log(self.fd, "ai")
+        self.assertEqual(_ctx(self.fd)["status"], "implementing")
+        self.assertTrue((self.fd / ".spec-context.events.jsonl").exists(),
+                        "events log must survive while the step is still open")
+
+    def test_mark_complete_folds_pending_appends_before_gc(self) -> None:
+        # A finish appended but never materialized must be folded into the context
+        # BEFORE mark-complete GCs the log — otherwise GC would drop it permanently.
+        (self.fd / "tasks.md").write_text("- [x] **T001** a\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.append_task_log(self.fd, "T001", "ai", did="did a")
+        wc.mark_spec_complete(self.fd, "ai")
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], "completed")
+        # The straggler finish survived into history + task_summaries, then the log was GC'd.
+        self.assertIn("T001", [e.get("task") for e in ctx["history"]],
+                      "mark-complete must fold pending appends before GC'ing the events log")
+        self.assertEqual(ctx.get("task_summaries", {}).get("T001", {}).get("did"), "did a")
+        self.assertFalse((self.fd / ".spec-context.events.jsonl").exists())
+
+    def test_close_verdict_uses_post_flip_markers(self) -> None:
+        # The close check derives 100% from markers parsed AFTER the checkboxes flip,
+        # so the last task finishing closes the step in the same materialize pass.
+        (self.fd / "tasks.md").write_text("- [ ] **T001** a\n- [ ] **T002** b\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.append_task_log(self.fd, "T001", "ai")
+        wc.append_task_log(self.fd, "T002", "ai")
+        wc.materialize_log(self.fd, "ai")
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], "implemented")
+        self.assertEqual(ctx["history"][-1].get("task"), None)  # step-close lands last
 
 
 class FeatureJsonResolverTests(unittest.TestCase):

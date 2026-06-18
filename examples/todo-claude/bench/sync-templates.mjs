@@ -38,6 +38,29 @@ export default defineConfig({
 // vitest config, and strip the bench framing from CLAUDE.md + remove the
 // bench-centric README. The grader runs from the SOURCE bench dir and injects
 // the oracle into the cell only at scoring time.
+// Replace the `<!-- name START -->…<!-- name END -->` span (markers included) with `replacement`; throws if the pair is absent.
+export function stripMarkedRange(md, name, { replacement = '', trimSurroundingBlankLines = false } = {}) {
+  const start = `<!-- ${name} START -->`
+  const end = `<!-- ${name} END -->`
+  const s = md.indexOf(start)
+  // Search the end marker after the start so an unrelated earlier END can't trip the guard.
+  const e = s === -1 ? -1 : md.indexOf(end, s + start.length)
+  if (s === -1 || e === -1) {
+    throw new Error(
+      `[bench] CLAUDE.md strip marker '${name}' missing or malformed — the source CLAUDE.md drifted; ` +
+        `re-add the <!-- ${name} START -->…<!-- ${name} END --> markers around the bench framing.`,
+    )
+  }
+  let from = s
+  let to = e + end.length
+  if (trimSurroundingBlankLines) {
+    while (from > 0 && md[from - 1] === '\n') from--
+    while (to < md.length && md[to] === '\n') to++
+  }
+  const joiner = trimSurroundingBlankLines && replacement === '' ? '\n\n' : replacement
+  return md.slice(0, from) + joiner + md.slice(to)
+}
+
 function presentAsCleanApp(dir) {
   const benchSetup = join(dir, 'bench', 'vitest.setup.ts')
   if (existsSync(benchSetup)) cpSync(benchSetup, join(dir, 'vitest.setup.ts'))
@@ -47,10 +70,10 @@ function presentAsCleanApp(dir) {
   const claudePath = join(dir, 'CLAUDE.md')
   if (existsSync(claudePath)) {
     let md = readFileSync(claudePath, 'utf8')
-    md = md.replace(' (the SpecKit Companion bench target)', '')
-    md = md.replace('# Vitest (app tests in src/ + bench oracle in bench/)', '# Vitest (component + unit tests)')
-    // Drop the "## Bench" section (up to the SPECKIT marker, or end of file).
-    md = md.replace(/\n## Bench\n[\s\S]*?(?=\n<!-- SPECKIT START -->|$)/, '\n')
+    // Strip bench framing by explicit source markers (loud failure if they drift), not free-text literals.
+    md = stripMarkedRange(md, 'BENCH-PHRASE', { replacement: '' })
+    md = stripMarkedRange(md, 'BENCH-VITEST', { replacement: 'Vitest (component + unit tests)' })
+    md = stripMarkedRange(md, 'BENCH-SECTION', { replacement: '', trimSurroundingBlankLines: true })
     writeFileSync(claudePath, md)
   }
   rmSync(join(dir, 'README.md'), { force: true })

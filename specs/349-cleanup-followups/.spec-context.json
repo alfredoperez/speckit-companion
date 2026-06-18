@@ -1,0 +1,184 @@
+{
+  "workflow": "speckit",
+  "specName": "cleanup followups",
+  "branch": "349-cleanup-followups",
+  "currentStep": "implement",
+  "status": "implemented",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-18T02:04:15.377Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-18T02:05:31.896Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-18T02:05:31.974Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T02:05:32.053Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-18T02:05:32.128Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T02:05:32.202Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T02:08:18.234Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T02:08:18.295Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T02:08:18.355Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T02:10:05.809Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T02:10:05.887Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T02:10:05.946Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T02:10:06.005Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T02:11:54.818Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-18T02:11:54.894Z"
+    }
+  ],
+  "size": "simple",
+  "currentTask": "T008",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Extract _open_ctx_or_none + append_complete helpers; route journal_finish/update_context/materialize/fold/mark-complete/sync_tasks through them",
+      "files": [
+        "speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Thread parsed tasks.md markers through _fold_task_finish and _maybe_close_implement; close verdict derives from markers, no re-read",
+      "files": [
+        "speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "GC .spec-context.events.jsonl once implement closes (in _maybe_close_implement, mark-complete, sync_tasks), after the final fold",
+      "files": [
+        "speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Wrap bench framing in BENCH-PHRASE/BENCH-VITEST/BENCH-SECTION marker comments in the source CLAUDE.md",
+      "files": [
+        "examples/todo-claude/CLAUDE.md"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "presentAsCleanApp strips between BENCH markers via stripMarkedRange; missing marker throws loudly",
+      "files": [
+        "examples/todo-claude/bench/sync-templates.mjs"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Add python tests: events log GC after close, kept while open, mark-complete GC, post-flip close verdict",
+      "files": [
+        "speckit-extension/tests/test_context.py"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Add bench smoke test: baked cell CLAUDE.md has zero bench refs + missing-marker throws",
+      "files": [
+        "examples/todo-claude/bench/sync-templates.test.mjs"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Full gate green (compile, 1018 jest, golden assemble+parity no re-bless, 117 python, 18 bench); updated capture-and-timing.md, CHANGELOG, extension.yml 0.10.0->0.10.1",
+      "files": [
+        "docs/capture-and-timing.md",
+        "speckit-extension/CHANGELOG.md",
+        "speckit-extension/extension.yml"
+      ]
+    }
+  }
+}
