@@ -5,44 +5,29 @@
  */
 
 .install-banner {
-    container-type: inline-size;
     display: flex;
-    align-items: flex-start;
-    flex-wrap: wrap;
-    gap: 12px;
-    padding: 12px 14px;
-    margin: 0 0 12px 0;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    margin: 0 0 10px 0;
     border: 1px solid var(--vscode-inputValidation-infoBorder, #3794ff);
     border-radius: 6px;
     background: var(--vscode-inputValidation-infoBackground, rgba(55, 148, 255, 0.1));
     color: var(--vscode-foreground);
+    font-size: 12px;
 }
 
 .install-banner__icon {
-    font-size: 18px;
-    line-height: 1.4;
+    font-size: 14px;
     flex: 0 0 auto;
 }
 
 .install-banner__text {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
     flex: 1 1 auto;
     min-width: 0;
-}
-
-.install-banner__text strong {
-    font-size: 13px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    min-width: 0;
-}
-
-.install-banner__text span {
-    font-size: 12px;
-    opacity: 0.9;
 }
 
 .install-banner__text code {
@@ -50,19 +35,12 @@
     font-size: 11px;
 }
 
-.install-banner__actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex: 0 0 auto;
-    flex-wrap: wrap;
-}
-
 .install-banner__btn {
+    flex: 0 0 auto;
     font-size: 12px;
     border: none;
     border-radius: 4px;
-    padding: 6px 12px;
+    padding: 3px 10px;
     cursor: pointer;
 }
 
@@ -78,15 +56,30 @@
 .install-banner__btn--link {
     background: transparent;
     color: var(--vscode-textLink-foreground);
-    padding: 6px 4px;
+    padding: 3px 4px;
 }
 
 .install-banner__btn--link:hover {
     text-decoration: underline;
 }
 
-@container (max-width: 420px) {
-    .install-banner__actions {
-        flex: 1 0 100%;
-    }
+.install-banner__dismiss {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--vscode-foreground);
+    opacity: 0.7;
+    cursor: pointer;
+}
+
+.install-banner__dismiss:hover {
+    opacity: 1;
+    background: var(--vscode-toolbar-hoverBackground, rgba(128, 128, 128, 0.2));
 }

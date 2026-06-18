@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- **The "Install spec-kit extension" prompt is smaller and you can dismiss it for good** (#353): the prompt that suggests installing the companion spec-kit extension used to be a tall card — a rocket icon, a heading, two lines of text, and a button — sitting at the top of Create Spec and the Activity panel on every visit, with no way to make it go away. It's now a single compact line with an Install action, a Learn more link, and an "×" to dismiss it. Dismissing hides it right away and remembers your choice everywhere, so it won't come back in any project or after a reload. It still only appears when the extension isn't installed.
 - **Leaner instructions sent alongside SpecKit Companion commands** (#352): when the editor runs a SpecKit Companion step, the bookkeeping instructions it prepends are now trimmed to just the parts that change each run — the dispatch time, the spec folder, and the "don't get ahead of yourself" note — because the Companion command already carries the full recording protocol. This removes a duplicated block of text that wasted space and could occasionally cause a step to be logged twice. Plain SpecKit steps are unchanged in scope but now use a single, more reliable instruction to mark a step done and move the status forward, instead of a two-step manual edit. You won't see a difference in the spec timeline; runs are just a bit tighter and less error-prone.
 
 ### Added

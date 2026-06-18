@@ -146,7 +146,7 @@ There are **two** installs, and they're independent:
 1. **The VS Code extension** (this product) — the Visual Spec Viewer, inline review comments, the sidebar, and command dispatch. Install it from the VS Code Marketplace (or a `.vsix`). This works on its own.
 2. **The companion spec-kit *CLI* extension** — adds the lean `/speckit.companion.*` pipeline and the lifecycle **capture** hooks that drive the Activity timeline. This is a [spec-kit](https://github.com/github/spec-kit) *CLI* extension, **not** a VS Code Marketplace extension, so it installs through the `specify` CLI.
 
-**One-click from inside the editor.** When the spec-kit extension is missing, an **Install spec-kit extension** banner appears in the Create-Spec and Activity panels, and an install icon appears in the Specs sidebar. Click it and the extension runs the install in an integrated terminal — no copy-paste. (Already have it installed? You'll never see the banner.)
+**One-click from inside the editor.** When the spec-kit extension is missing, a slim single-line **Install spec-kit extension** banner appears in the Create-Spec and Activity panels, and an install icon appears in the Specs sidebar. Click **Install** and the extension runs the install in an integrated terminal — no copy-paste. The banner has an **×** to dismiss it for good — once dismissed it stays hidden in every project and after a reload. (Already have it installed? You'll never see the banner.)
 
 **Manual install.** You need a **github-source** spec-kit CLI first — the stock PyPI `specify-cli` does **not** ship the `extension` subcommand:
 

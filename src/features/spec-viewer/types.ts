@@ -414,6 +414,9 @@ export type ViewerToExtensionMessage =
       }
     | {
           type: 'openReadme';
+      }
+    | {
+          type: 'dismissInstallBanner';
       };
 
 // ============================================

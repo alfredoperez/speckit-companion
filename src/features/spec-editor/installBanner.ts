@@ -5,20 +5,17 @@
  * HTML string injected into the body — the smallest, most testable surface (the
  * visibility decision is the unit-tested `shouldShowInstallPrompt`; this is just the
  * markup). The buttons carry `data-action` attributes; each webview's script posts the
- * matching message to the extension, which runs the install / opens the README.
+ * matching message to the extension, which runs the install, opens the README, or
+ * dismisses the banner for good (a global-state flag re-checked before rendering).
  */
 
-/** Banner copy + the two action buttons (install inline, README fallback link). */
+/** Slim single-row banner: glyph + one line + Install + Learn more + dismiss. */
 const BANNER_BODY = `
-    <div class="install-banner__icon"><span class="codicon codicon-rocket" aria-hidden="true"></span></div>
-    <div class="install-banner__text">
-        <strong title="Install the spec-kit extension to unlock Turbo &amp; Capture">Install the spec-kit extension to unlock Turbo &amp; Capture</strong>
-        <span>The companion spec-kit extension adds the leaner <code>/speckit.companion.*</code> pipeline and lifecycle capture. It's a one-click install — no need to leave the editor.</span>
-    </div>
-    <div class="install-banner__actions">
-        <button class="install-banner__btn install-banner__btn--primary" data-action="installSpecKitExtension">Install spec-kit extension</button>
-        <button class="install-banner__btn install-banner__btn--link" data-action="openReadme">Learn more</button>
-    </div>`;
+    <span class="install-banner__icon codicon codicon-rocket" aria-hidden="true"></span>
+    <span class="install-banner__text">Install the spec-kit extension for the leaner <code>/speckit.companion.*</code> pipeline and capture.</span>
+    <button type="button" class="install-banner__btn install-banner__btn--primary" data-action="installSpecKitExtension">Install</button>
+    <button type="button" class="install-banner__btn install-banner__btn--link" data-action="openReadme">Learn more</button>
+    <button type="button" class="install-banner__dismiss codicon codicon-close" data-action="dismissInstallBanner" aria-label="Dismiss install prompt"></button>`;
 
 /**
  * Render the install banner, or an empty string when it must not appear. Pass the

@@ -174,6 +174,9 @@ export class SpecViewerProvider {
    * projects return `false` — no banner, no regression.
    */
   private computeShowInstallPrompt(): boolean {
+    if (this.context.globalState.get<boolean>(ConfigKeys.globalState.installBannerDismissed, false)) {
+      return false;
+    }
     const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     return shouldShowInstallPrompt(
       readInstallPromptEnabled(),

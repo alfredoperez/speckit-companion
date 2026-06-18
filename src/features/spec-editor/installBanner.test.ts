@@ -9,6 +9,12 @@ describe('renderInstallBannerHtml — gated banner visibility', () => {
         expect(html).toContain('data-action="openReadme"');
     });
 
+    it('renders a dismiss control with an accessible label when visible', () => {
+        const html = renderInstallBannerHtml(true);
+        expect(html).toContain('data-action="dismissInstallBanner"');
+        expect(html).toContain('aria-label="Dismiss install prompt"');
+    });
+
     it('renders nothing when not visible — no banner for installed projects', () => {
         expect(renderInstallBannerHtml(false)).toBe('');
     });

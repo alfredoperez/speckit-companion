@@ -26,7 +26,8 @@ export type SpecEditorToExtensionMessage =
     | { type: 'ready' }
     | { type: 'cancel' }
     | { type: 'installSpecKitExtension' }
-    | { type: 'openReadme' };
+    | { type: 'openReadme' }
+    | { type: 'dismissInstallBanner' };
 
 // ============================================
 // Message Types: Extension → Webview

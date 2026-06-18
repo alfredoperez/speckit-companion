@@ -340,6 +340,9 @@ function setupEventListeners(): void {
                 vscode.postMessage({ type: 'installSpecKitExtension' });
             } else if (action === 'openReadme') {
                 vscode.postMessage({ type: 'openReadme' });
+            } else if (action === 'dismissInstallBanner') {
+                installBanner.remove();
+                vscode.postMessage({ type: 'dismissInstallBanner' });
             }
         });
     }
