@@ -1,6 +1,6 @@
 ---
 allowed-tools: Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(node:*), Bash(python3:*), Bash(code:*), Bash(specify:*), Bash(date:*), Bash(sleep:*), Bash(jq:*), Agent, AskUserQuestion, Read, Write, Edit, Skill, TaskCreate, TaskUpdate
-description: Autonomously fix one or more speckit-companion GitHub issues with the turbo pipeline — clean branch, fix, review, PR, Copilot review, merge, reinstall — then write a manual-verification report. Self-hosting build loop.
+description: Autonomously fix one or more speckit-companion GitHub issues with the SpecKit Companion pipeline — clean branch, fix, review, PR, Copilot review, merge, reinstall — then write a manual-verification report. Self-hosting build loop.
 argument-hint: "<issue numbers e.g. '237 238 241'> | 'open' (all open issues) | <path to backlog .md>"
 ---
 
@@ -8,8 +8,8 @@ argument-hint: "<issue numbers e.g. '237 238 241'> | 'open' (all open issues) | 
 
 A **self-hosting build loop** for `speckit-companion`. For each ticket, in strict sequence:
 
-1. **Clean slate + install-local FIRST** — on `main`, `git fetch && git pull --ff-only`, then run `/install-local` so this ticket is fixed by the freshest build **and the latest `/speckit.companion.*` turbo commands** (the previous ticket's merge lands here). Discard the throwaway version bump, assert a clean tree. Refuse to start dirty.
-2. **Fix (turbo)** — drive the SpecKit Companion turbo pipeline to fix the ticket.
+1. **Clean slate + install-local FIRST** — on `main`, `git fetch && git pull --ff-only`, then run `/install-local` so this ticket is fixed by the freshest build **and the latest `/speckit.companion.*` commands** (the previous ticket's merge lands here). Discard the throwaway version bump, assert a clean tree. Refuse to start dirty.
+2. **Fix** — drive the SpecKit Companion pipeline to fix the ticket.
 3. **Code review** — run `/code-review`, apply findings.
 4. **PR** — open a PR with `/create-pr` conventions.
 5. **Copilot review** — request it, poll ~10 min.
@@ -18,14 +18,14 @@ A **self-hosting build loop** for `speckit-companion`. For each ticket, in stric
 8. **Capture learnings + tick the box** — distill this ticket's review + Copilot findings into `.claude/lessons-learned.md` (so the *next* ticket's fix avoids the same bug class), and check the ticket off in the vault's `Current.md` queue with its PR link.
 9. **Next ticket** — its step 1 `/install-local` installs *this* ticket's merge. After the last ticket, a closing `/install-local` installs the final merge. This is the point of the loop: prove the companion keeps working on itself as it improves.
 
-After all tickets: generate one **themed HTML brief** (via the vault `/html-brief` skill) of everything fixed, in plain language, **flagging UI / manual-test items** so you know exactly what to verify by hand, what was already exercised by turbo (don't re-test), the **new lessons** captured, and any **architecture/skill flags** worth promoting.
+After all tickets: generate one **themed HTML brief** (via the vault `/html-brief` skill) of everything fixed, in plain language, **flagging UI / manual-test items** so you know exactly what to verify by hand, what was already exercised by the pipeline (don't re-test), the **new lessons** captured, and any **architecture/skill flags** worth promoting.
 
 ## Locked defaults
 
 - **Merge:** auto-merge, no per-ticket stop. You review via the final report + manual verification.
 - **Copilot wait:** poll ~10 min, then fall back to our `/code-review` alone.
 - **Sequential only.** Never parallelize — each `install-local` must land before the next ticket starts.
-- **Heavy steps run in subagents** (the turbo fix, the code review, addressing Copilot comments, distilling learnings) so the main orchestration context stays lean. The main loop only does git/gh/decisions and accumulates the report.
+- **Heavy steps run in subagents** (the fix, the code review, addressing Copilot comments, distilling learnings) so the main orchestration context stays lean. The main loop only does git/gh/decisions and accumulates the report.
 - **The loop compounds.** Every ticket reads `.claude/review-checklist.md` (+ the `CLAUDE.md` conventions it points to) before fixing, and routes any new high-signal learning to where it fires (review check → checklist; authoring convention → `CLAUDE.md`; loop-mechanics → this file; gap → an issue). So review/Copilot findings strengthen the *next* fix. Convention/architecture promotions are *proposed* in the report, never auto-applied.
 - **Queue gating honored.** `🔒 Gated` tickets are skipped; `⏸️ Review-gated` tickets pause before merge.
 
@@ -61,10 +61,10 @@ git checkout main && git fetch origin && git pull --ff-only
 ```
 If the tree is dirty, **do not** stash or discard. Stop the whole loop and report — a dirty tree means an earlier ticket left work uncommitted.
 
-Then **install-local before fixing**, so this ticket runs on the freshest build and the latest turbo commands (this installs the *previous* ticket's just-merged work):
+Then **install-local before fixing**, so this ticket runs on the freshest build and the latest commands (this installs the *previous* ticket's just-merged work):
 ```bash
 # Run the repo's /install-local command — it reinstalls BOTH the VS Code .vsix
-# AND the spec-kit extension (re-emits the /speckit.companion.* turbo commands).
+# AND the spec-kit extension (re-emits the /speckit.companion.* commands).
 ```
 Invoke the `/install-local` command (Skill). It bumps `package.json` patch to make a fresh `.vsix` **and** regenerates spec-kit registry artifacts; all of it is throwaway and must not ride the feature PR — discard it to restore a clean tree:
 ```bash
@@ -74,20 +74,20 @@ Invoke the `/install-local` command (Skill). It bumps `package.json` patch to ma
 git restore package.json package-lock.json .specify/
 git status --porcelain                        # MUST be empty again before fixing
 ```
-Rationale: install-local is the **first** step of every ticket so each fix uses the updated companion. The `specify extension add --dev --force` inside it is what makes the *next* ticket actually use the turbo commands you just changed — the dogfooding crux.
+Rationale: install-local is the **first** step of every ticket so each fix uses the updated companion. The `specify extension add --dev --force` inside it is what makes the *next* ticket actually use the commands you just changed — the dogfooding crux.
 
-#### 2. Fix with the turbo pipeline — **subagent**
-Dispatch a `general-purpose` subagent. Its job: fix issue `N` end-to-end using the **turbo** command family, leave everything committed on a feature branch, return a concise structured result.
+#### 2. Fix with the SpecKit Companion pipeline — **subagent**
+Dispatch a `general-purpose` subagent. Its job: fix issue `N` end-to-end using the **SpecKit Companion** command family, leave everything committed on a feature branch, return a concise structured result.
 
 Subagent prompt must include:
 - The issue number, title, and body.
 - **Read `.claude/review-checklist.md` first** (and the `CLAUDE.md` conventions it points to) and honor it — those are bug classes prior tickets' reviews already caught.
 - **VERIFY THE BUG REPRODUCES on current `main` before building.** Backlog tickets go stale — they're frequently already fixed by a later PR, a duplicate, or an already-correct path (this happened to ~3 of 8 tickets in one batch). Have the subagent confirm the defect exists in the current code first; if it's already fixed, STOP and report that with evidence (so the orchestrator closes it as resolved/dup) instead of inventing a change. Deliver only the genuinely-missing part.
-- Instruction to ensure turbo profile is active for this run: `.specify/companion.yml` `templateProfile: turbo` (the companion skills are the `/speckit-companion-*` turbo family).
+- No profile to set — SpecKit Companion is the single workflow (the old `templateProfile: turbo` preset was removed). The companion skills are the `/speckit-companion-*` family.
 - The ordered chain (there is **no** one-shot): run, in order, the skills
   `/speckit-companion-specify` → `/speckit-companion-plan` → `/speckit-companion-tasks` → `/speckit-companion-implement`,
   passing the issue as the feature description. The `before_specify` git hook creates the `NNN-<shortname>` feature branch automatically; do not create one manually. Spec artifacts land in `specs/<NNN>-<slug>/`.
-- After implement: ensure `specs/<NNN>-<slug>/` status is `implemented` (NOT `completed` — that's reserved for the user's final Mark-Completed action; the capture script refuses to write it), all tasks checked, and the `.spec-context.json` `specName` is the real name (not a `[FEATURE NAME]` placeholder). Commit only the real change + spec folder — **do NOT commit `.specify/` regenerated artifacts** (`feature.json`, registry files get swept by `git add -A`); `git checkout origin/main -- .specify/<file>` for any that show modified, then commit `src/`/`webview/`/`package.json` + `specs/<NNN>/`.
+- After implement: **complete the spec.** The SpecKit Companion flow completes a spec at its last node (mark-complete is its terminal node) — that's its advantage over stock, so ensure `specs/<NNN>-<slug>/` status is `completed` (run `python3 speckit-extension/scripts/write-context.py --feature-dir specs/<NNN>-<slug> --mark-complete --by ai` if the flow didn't already). **NEVER revert a Companion-built spec from `completed` back to `implemented`.** Confirm all tasks checked and the `.spec-context.json` `specName` is the real name (not a `[FEATURE NAME]` placeholder). Commit only the real change + spec folder — **do NOT commit `.specify/` regenerated artifacts** (`feature.json`, registry files get swept by `git add -A`); `git checkout origin/main -- .specify/<file>` for any that show modified, then commit `src/`/`webview/`/`package.json` + `specs/<NNN>/`.
 - **Verify before returning:** `npm run compile && npm test`. If `speckit-extension/**` changed, also `python3 speckit-extension/scripts/check-shape-parity.py`. If capture/timing changed, run the capture eval. Fix failures; do not return green if red.
 - Return: `{ branch, specDir, filesChanged[], testsPassed, summary, uiOrManualSurfaces[] }` where `uiOrManualSurfaces` lists anything touching the VS Code UI / webview / sidebar / settings that a human should eyeball.
 
@@ -187,7 +187,7 @@ Generate **one themed HTML brief via the vault `/html-brief` skill** (house dark
 
 - **Per ticket:** issue # + title, one-sentence "what was fixed," PR link, merged / in-review / skipped, new extension version after its `install-local`.
 - **🖐️ Manual verification needed** — a clearly separated section listing the UI / sidebar / webview / settings surfaces from each ticket's `uiOrManualSurfaces[]`. This is the part the user spends their time on. For each: what changed and how to eyeball it.
-- **Already exercised by turbo** — what the re-run of the companion pipeline + tests + CI proved (so the user knows NOT to re-test those).
+- **Already exercised by the pipeline** — what the re-run of the companion pipeline + tests + CI proved (so the user knows NOT to re-test those).
 - **🧠 Lessons captured this run** — new review checks added to `.claude/review-checklist.md` and loop-mechanics tweaks to this command file (with where each landed).
 - **🏗️ Architecture / skill flags** — the promotion candidates accumulated in step 8, each with a one-line "promote to `CLAUDE.md` / ADR / which skill?" suggestion for the user to approve.
 - **Needs attention** — any ticket skipped (and why), PR left in review, or Copilot/CI gap.
