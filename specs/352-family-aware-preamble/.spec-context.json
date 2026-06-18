@@ -1,0 +1,180 @@
+{
+  "workflow": "speckit",
+  "specName": "family aware preamble",
+  "branch": "352-family-aware-preamble",
+  "currentStep": "implement",
+  "status": "implemented",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-18T16:01:16.682Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-18T16:02:02.320Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-18T16:02:14.338Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T16:02:50.488Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T16:03:27.281Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T16:03:27.362Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-18T16:03:43.306Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T16:04:04.599Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T16:04:04.678Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-18T16:04:17.049Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T16:04:52.187Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T16:05:27.485Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T16:06:21.659Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T16:07:03.368Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T16:07:37.316Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T16:07:37.375Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-18T16:07:37.451Z"
+    }
+  ],
+  "size": "normal",
+  "currentTask": "T006",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Wired stock self-close to --advance (specify/plan/tasks) / --finish (clarify/analyze) via selfCloseCmd + ADVANCING_STEPS",
+      "files": [
+        "src/ai-providers/promptPreamble.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added renderSlimCompanionPreamble; renderPreamble branches to it when companionInstalled, dropping schema/lifecycle/shared-rules and keeping dispatch ts + feature dir + next-step guard",
+      "files": [
+        "src/ai-providers/promptPreamble.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added slim/full split to renderLifecycleBody (renderSlimLifecycleBody for companion); stock selfCloseLine now references --advance/--finish; create-spec flow inherits via companionInstalled",
+      "files": [
+        "src/ai-providers/promptPreamble.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added per-family preamble rendering test: 12 assertions covering slim companion / full stock --advance / finish-only clarify / create-spec split",
+      "files": [
+        "tests/unit/ai-providers/promptPreamble.spec.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Documented the slim/full preamble split + --advance modernization in capture-and-timing.md (#352 section)",
+      "files": [
+        "docs/capture-and-timing.md"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added user-facing Unreleased CHANGELOG entry for leaner companion dispatch text + reliable stock status flip",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    }
+  }
+}

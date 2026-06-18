@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **Leaner instructions sent alongside SpecKit Companion commands** (#352): when the editor runs a SpecKit Companion step, the bookkeeping instructions it prepends are now trimmed to just the parts that change each run — the dispatch time, the spec folder, and the "don't get ahead of yourself" note — because the Companion command already carries the full recording protocol. This removes a duplicated block of text that wasted space and could occasionally cause a step to be logged twice. Plain SpecKit steps are unchanged in scope but now use a single, more reliable instruction to mark a step done and move the status forward, instead of a two-step manual edit. You won't see a difference in the spec timeline; runs are just a bit tighter and less error-prone.
+
 ### Added
 
 - **An Auto button builds the whole spec hands-off, right from Create Spec.** Select the **SpecKit Companion** workflow and an **Auto** button appears next to Create Spec: describe what you need and walk away while it runs specify → plan → tasks → implement → completion on its own, with no approval pauses. **Create Spec** still does the normal step-by-step flow, so you choose per spec. Auto only shows for the Companion workflow (it needs the companion spec-kit extension); with stock SpecKit selected, only Create Spec appears, and the step-by-step flow always stays available.
