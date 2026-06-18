@@ -38,10 +38,7 @@ export default defineConfig({
 // vitest config, and strip the bench framing from CLAUDE.md + remove the
 // bench-centric README. The grader runs from the SOURCE bench dir and injects
 // the oracle into the cell only at scoring time.
-// Replace the text between `<!-- <name> START -->` and `<!-- <name> END -->`
-// (markers included) with `replacement`. Throws if the marker pair is absent —
-// a missing marker means the source CLAUDE.md drifted and the strip would have
-// silently leaked bench framing, the exact failure presentAsCleanApp prevents.
+// Replace the `<!-- name START -->…<!-- name END -->` span (markers included) with `replacement`; throws if the pair is absent.
 export function stripMarkedRange(md, name, { replacement = '', trimSurroundingBlankLines = false } = {}) {
   const start = `<!-- ${name} START -->`
   const end = `<!-- ${name} END -->`
@@ -72,9 +69,7 @@ function presentAsCleanApp(dir) {
   const claudePath = join(dir, 'CLAUDE.md')
   if (existsSync(claudePath)) {
     let md = readFileSync(claudePath, 'utf8')
-    // Strip bench framing by its explicit source markers, not free-text literals,
-    // so a wording change in the source CLAUDE.md can't silently leak the framing.
-    // A missing marker is a loud failure (the source drifted) — never a no-op.
+    // Strip bench framing by explicit source markers (loud failure if they drift), not free-text literals.
     md = stripMarkedRange(md, 'BENCH-PHRASE', { replacement: '' })
     md = stripMarkedRange(md, 'BENCH-VITEST', { replacement: 'Vitest (component + unit tests)' })
     md = stripMarkedRange(md, 'BENCH-SECTION', { replacement: '', trimSurroundingBlankLines: true })

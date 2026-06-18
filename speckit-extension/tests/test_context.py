@@ -1126,20 +1126,21 @@ class AppendLogMaterializeTests(unittest.TestCase):
             wc._repo_root, wc.resolve_feature_dir = orig_root, orig_resolve
         self.assertEqual(_ctx(self.fd)["status"], "implemented")
 
-    def test_events_log_removed_after_step_closes(self) -> None:
-        # Once implement closes, the append log is GC'd so a re-run can't re-fold
-        # stale lines — but only after every line has been folded into the context.
+    def test_events_log_kept_after_step_closes_until_complete(self) -> None:
+        # Closing implement folds every appended line but KEEPS the log — under the
+        # per-wave materialize cadence a later wave may still append, so GC waits for
+        # the terminal `completed` transition (the one state that blocks appends).
         (self.fd / "tasks.md").write_text("- [ ] **T001** a\n- [ ] **T002** b\n")
         wc.update_context(self.fd, "implement", "implementing", "extension", "start")
         wc.append_task_log(self.fd, "T001", "ai", did="did a")
         wc.append_task_log(self.fd, "T002", "ai", did="did b")
         wc.materialize_log(self.fd, "ai")
         ctx = _ctx(self.fd)
-        # Every appended finish landed before the log was removed.
+        # Every appended finish landed in the context.
         self.assertEqual([e["task"] for e in ctx["history"] if e.get("task")], ["T001", "T002"])
         self.assertEqual(ctx["status"], "implemented")
-        self.assertFalse((self.fd / ".spec-context.events.jsonl").exists(),
-                         "events log should be gone once the implement step closes")
+        self.assertTrue((self.fd / ".spec-context.events.jsonl").exists(),
+                        "events log is retained at implement-close; GC happens at mark-complete")
 
     def test_events_log_kept_while_step_open(self) -> None:
         # A materialize that does NOT close the step keeps the log (more tasks pending).

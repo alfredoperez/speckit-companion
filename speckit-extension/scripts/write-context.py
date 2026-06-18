@@ -250,7 +250,7 @@ def _open_ctx_or_none(feature_dir: Path, step: str = "") -> tuple[dict, list, st
     primed (required keys filled, log migrated forward), or None for a spec that is
     already shipped (completed/archived) and must be left untouched. The shared
     read + cross-step-terminal guard + canonical_log + fill_required preamble of
-    journal_finish / materialize_log / journal_task_finish / sync_tasks."""
+    journal_finish / journal_task_finish / materialize_log."""
     ctx = read_ctx(feature_dir / ".spec-context.json")
     if ctx.get("status") in CROSS_STEP_TERMINAL:
         suffix = f" (not journaling {step})" if step else ""
@@ -270,10 +270,9 @@ def append_complete(
     log: list, step: str, *, substep: str | None = None, task: str | None = None,
     by: str, at: str,
 ) -> None:
-    """Append a `complete` event for (step, substep|task) unless one already exists.
-    The single home for the `if not _has_complete(...): log.append({...})` pattern.
-    Key order matches the original hand-written entries (a per-task entry carries
-    `task` right after `substep`) so the serialized history stays byte-identical."""
+    """Append a `complete` event for (step, substep|task) unless one already exists —
+    the single home for the `if not _has_complete(...): log.append(...)` pattern.
+    Key order: step, substep, [task], kind, by, at."""
     if not _has_complete(log, step, task if task is not None else substep):
         entry: dict = {"step": step, "substep": substep}
         if task is not None:
@@ -392,9 +391,9 @@ def _feature_tasks_at_100(feature_dir: Path) -> bool:
 
 
 def _gc_events_log(feature_dir: Path) -> None:
-    """Remove `.spec-context.events.jsonl` once the implement step has closed. Only
-    runs after the final fold, so no un-materialized finish is ever dropped; a re-run
-    of the same spec dir then can't re-fold stale lines."""
+    """Remove `.spec-context.events.jsonl` at the terminal `completed` transition —
+    the one state after which CROSS_STEP_TERMINAL blocks every further append, so the
+    file can't be recreated and a re-run of the spec dir can't re-fold stale lines."""
     try:
         (feature_dir / ".spec-context.events.jsonl").unlink(missing_ok=True)
     except OSError:
@@ -605,16 +604,14 @@ def _tasks_at_100(markers: tuple[list[str], list[str]]) -> bool:
 def _fold_task_finish(
     ctx: dict, log: list, feature_dir: Path, task_id: str, by: str,
     did: str | None, files: list[str] | None, at: str,
-    markers: tuple[list[str], list[str]] | None = None,
+    markers: tuple[list[str], list[str]],
 ) -> None:
     """Fold one task's finish into ctx+log in place (no I/O). Shared by the live
     read-modify-write path and the append-log materializer, so both produce an
     identical `history` entry and `task_summaries` row. Idempotent on (implement,
     task_id); stamps the history entry with the supplied `at` so a materialized
-    line keeps its own real finish time, not the fold time. `markers` lets a caller
-    pass the tasks.md parse it already did, so the file isn't re-read per task."""
-    if markers is None:
-        markers = parse_task_markers(feature_dir / "tasks.md")
+    line keeps its own real finish time, not the fold time. `markers` is the caller's
+    single tasks.md parse, threaded through so the file isn't re-read per task."""
     ctx["currentStep"] = "implement"
     ctx["currentTask"] = task_id
     # At 100% tasks land at `implemented`, not `implementing` — re-asserting `implementing` was the race that left a done spec unmarkable.
@@ -626,19 +623,12 @@ def _fold_task_finish(
 
 def _maybe_close_implement(
     ctx: dict, log: list, feature_dir: Path, by: str,
-    markers: tuple[list[str], list[str]] | None = None,
+    markers: tuple[list[str], list[str]],
 ) -> None:
     """Close the implement step once tasks.md is 100% AND every task has a journaled
     finish — never on one signal alone, so a journaled-but-unchecked task can't close
-    the step while status is still implementing. `markers` reuses a caller's tasks.md
-    parse rather than re-reading the file."""
-    tasks_md = feature_dir / "tasks.md"
-    if markers is None:
-        if not tasks_md.is_file():
-            return
-        markers = parse_task_markers(tasks_md)
-    elif not tasks_md.is_file():
-        return
+    the step while status is still implementing. `markers` is the caller's single
+    tasks.md parse (empty when the file is absent), threaded through to avoid a re-read."""
     all_ids = markers[0]
     distinct = list(dict.fromkeys(all_ids))
     all_done = (
@@ -654,11 +644,6 @@ def _maybe_close_implement(
         # (tasks.md wasn't 100% yet); now that the step is closing, it's implemented.
         if ctx.get("status") not in ("completed", "archived"):
             ctx["status"] = "implemented"
-    # GC the append log whenever implement is closed — the caller has folded every
-    # current line by now, so removing it loses nothing and stops a re-run re-folding
-    # stale lines. Idempotent: fires on the closing call and on any later materialize.
-    if all_done and _has_complete(log, "implement", None):
-        _gc_events_log(feature_dir)
 
 
 def journal_task_finish(
@@ -914,8 +899,6 @@ def sync_tasks(feature_dir: Path, tasks_md: Path, final_status: str, by: str) ->
     commit_log(ctx, log)
 
     atomic_write(target, ctx)
-    if all_done:
-        _gc_events_log(feature_dir)
     print(
         f"[companion] Synced {len(fresh)} new task event(s) "
         f"({len(distinct_done)}/{len(distinct_all)} complete) into {target}.",
