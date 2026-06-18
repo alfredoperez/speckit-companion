@@ -12,8 +12,8 @@
 import type { Meta, StoryObj } from '@storybook/preact';
 import { ActivityPanel } from './ActivityPanel';
 import { ActivityErrorBoundary } from './ActivityErrorBoundary';
-import { viewerState } from '../signals';
-import type { ViewerState, TaskSummary, Transition } from '../types';
+import { viewerState, navState } from '../signals';
+import type { ViewerState, TaskSummary, Transition, NavState } from '../types';
 import legacyFixture from '../../../../specs/095-fix-tasks-card-concerns/fixtures/legacy-string-concerns.spec-context.json';
 
 const meta: Meta<typeof ActivityPanel> = {
@@ -44,6 +44,16 @@ const baseState = (overrides: Partial<ViewerState>): ViewerState => ({
     footer: [],
     transitions: [],
     stepHistory: {},
+    ...overrides,
+});
+
+const baseNav = (overrides: Partial<NavState>): NavState => ({
+    coreDocs: [],
+    relatedDocs: [],
+    currentDoc: 'spec',
+    workflowPhase: 'implement',
+    taskCompletionPercent: 0,
+    isViewingRelatedDoc: false,
     ...overrides,
 });
 
@@ -186,4 +196,31 @@ export const ErrorBoundaryFallback: Story = {
             <ThrowingBomb />
         </ActivityErrorBoundary>
     ),
+};
+
+// ── 6. Install banner — slim, shown ────────────────────────────
+// The extension is absent and the banner hasn't been dismissed, so
+// the slim single-row banner (glyph + one line + Install + Learn
+// more + dismiss ×) renders above the activity cards.
+
+export const InstallBannerSlim: Story = {
+    name: 'Install banner — slim, shown',
+    render: () => {
+        navState.value = baseNav({ showInstallPrompt: true });
+        viewerState.value = baseState({ status: 'draft', activeStep: 'specify' });
+        return <ActivityPanel />;
+    },
+};
+
+// ── 7. Install banner — dismissed (hidden) ─────────────────────
+// The user dismissed the banner, so `showInstallPrompt` is false and
+// the banner is absent — only the empty activity state shows.
+
+export const InstallBannerDismissed: Story = {
+    name: 'Install banner — dismissed (hidden)',
+    render: () => {
+        navState.value = baseNav({ showInstallPrompt: false });
+        viewerState.value = baseState({ status: 'draft', activeStep: 'specify' });
+        return <ActivityPanel />;
+    },
 };

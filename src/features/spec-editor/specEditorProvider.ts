@@ -261,6 +261,10 @@ export class SpecEditorProvider {
             case 'openReadme':
                 void vscode.commands.executeCommand('speckit.companion.openReadme');
                 break;
+
+            case 'dismissInstallBanner':
+                void this.context.globalState.update(ConfigKeys.globalState.installBannerDismissed, true);
+                break;
         }
     }
 
@@ -538,7 +542,12 @@ export class SpecEditorProvider {
         // extension is missing — installed projects see nothing (zero-regression).
         // Visibility is the unit-tested gate; the markup is shared with the Activity panel.
         const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        const bannerDismissed = this.context.globalState.get<boolean>(
+            ConfigKeys.globalState.installBannerDismissed,
+            false
+        );
         const installBanner = renderInstallBannerHtml(
+            !bannerDismissed &&
             shouldShowInstallPrompt(
                 readInstallPromptEnabled(),
                 workspaceRoot ? isCompanionInstalled(workspaceRoot) : false

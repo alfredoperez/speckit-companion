@@ -20,15 +20,11 @@ function InstallBanner() {
     if (!navState.value?.showInstallPrompt) return null;
     return (
         <div class="install-banner" id="install-banner" role="region" aria-label="Install spec-kit extension">
-            <div class="install-banner__icon"><span class="codicon codicon-rocket" aria-hidden="true" /></div>
-            <div class="install-banner__text">
-                <strong>Install the spec-kit extension to unlock Turbo & Capture</strong>
-                <span>The companion spec-kit extension adds the leaner <code>/speckit.companion.*</code> pipeline and lifecycle capture. It's a one-click install — no need to leave the editor.</span>
-            </div>
-            <div class="install-banner__actions">
-                <button class="install-banner__btn install-banner__btn--primary" data-action="installSpecKitExtension">Install spec-kit extension</button>
-                <button class="install-banner__btn install-banner__btn--link" data-action="openReadme">Learn more</button>
-            </div>
+            <span class="install-banner__icon codicon codicon-rocket" aria-hidden="true" />
+            <span class="install-banner__text">Install the spec-kit extension for the leaner <code>/speckit.companion.*</code> pipeline and capture.</span>
+            <button class="install-banner__btn install-banner__btn--primary" data-action="installSpecKitExtension">Install</button>
+            <button class="install-banner__btn install-banner__btn--link" data-action="openReadme">Learn more</button>
+            <button class="install-banner__dismiss codicon codicon-close" data-action="dismissInstallBanner" aria-label="Dismiss install prompt" />
         </div>
     );
 }

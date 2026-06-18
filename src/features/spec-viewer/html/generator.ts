@@ -165,6 +165,8 @@ export function generateHtml(
                     vscode.postMessage({ type: 'installSpecKitExtension' });
                 } else if (action === 'openReadme') {
                     vscode.postMessage({ type: 'openReadme' });
+                } else if (action === 'dismissInstallBanner') {
+                    vscode.postMessage({ type: 'dismissInstallBanner' });
                 }
             });
         })();
