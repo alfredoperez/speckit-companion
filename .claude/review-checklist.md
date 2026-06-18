@@ -39,6 +39,7 @@ The review subagent in `/ship-ticket` and `/fix-tickets` reads this **before** r
 
 ## Keys, collisions & identifiers
 
+- **Classify a command by its VERB (first token), not a substring of the whole command+args.** `/companion/i.test(command)` matched a stock command whose arg path contained "companion" (`/speckit.plan specs/123-companion-feature`) and mis-slimmed its preamble, dropping the only capture source. Split the verb off first (`command.trim().split(/\s+/, 1)[0]`) and test that. (#352)
 - **A synthetic/follow-on map entry needs a DISTINCT key.** Reusing `tempFileSet.id` for a staged-images entry clobbered the temp-set entry and leaked its dir; use a derived key (`<id>-staged-images`). (#208)
 - **Guard synthetic list entries against name collision.** Skip + warn when injecting a reserved-named entry (workflow option, etc.) if a user entry already uses that name — else duplicate DOM `<option>`s + last-write-wins `Map` clobber. (#218)
 - **Persist only resolvable identifiers.** Don't write a UI-only synthetic name (`speckit-turbo`) into `.spec-context.json`; persist the resolvable base (`speckit`) + a separate pin (`profile: turbo`). (#218)
