@@ -727,7 +727,7 @@ def append_task_log(
     return log_path
 
 
-def materialize_log(feature_dir: Path, by: str) -> Path | None:
+def materialize_log(feature_dir: Path, by: str, quiet: bool = False) -> Path | None:
     """Fold every appended task-finish line into `.spec-context.json` in one write.
 
     Replays each `.spec-context.events.jsonl` line through `_fold_task_finish`, so the
@@ -771,10 +771,11 @@ def materialize_log(feature_dir: Path, by: str) -> Path | None:
     _maybe_close_implement(ctx, log, feature_dir, by, markers=parse_task_markers(tasks_md))
     commit_log(ctx, log)
     atomic_write(target, ctx)
-    print(
-        f"[companion] Materialized {folded} task line(s) from {log_path.name} into {target}.",
-        file=sys.stderr,
-    )
+    if not quiet:
+        print(
+            f"[companion] Materialized {folded} task line(s) from {log_path.name} into {target}.",
+            file=sys.stderr,
+        )
     return target
 
 
@@ -824,8 +825,9 @@ def mark_spec_complete(feature_dir: Path, by: str) -> Path | None:
 
     # Fold any still-pending appended finishes into the json before the GC below
     # removes the events log — a straggler line appended after step-close would
-    # otherwise be dropped. Idempotent; re-read so the folded entries are in scope.
-    materialize_log(feature_dir, by)
+    # otherwise be dropped. Idempotent and quiet (internal prerequisite); re-read
+    # so the folded entries are in scope.
+    materialize_log(feature_dir, by, quiet=True)
     ctx = read_ctx(target)
 
     log = canonical_log(ctx)

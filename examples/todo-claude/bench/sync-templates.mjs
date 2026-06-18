@@ -43,8 +43,9 @@ export function stripMarkedRange(md, name, { replacement = '', trimSurroundingBl
   const start = `<!-- ${name} START -->`
   const end = `<!-- ${name} END -->`
   const s = md.indexOf(start)
-  const e = md.indexOf(end)
-  if (s === -1 || e === -1 || e < s) {
+  // Search the end marker after the start so an unrelated earlier END can't trip the guard.
+  const e = s === -1 ? -1 : md.indexOf(end, s + start.length)
+  if (s === -1 || e === -1) {
     throw new Error(
       `[bench] CLAUDE.md strip marker '${name}' missing or malformed — the source CLAUDE.md drifted; ` +
         `re-add the <!-- ${name} START -->…<!-- ${name} END --> markers around the bench framing.`,
