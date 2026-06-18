@@ -3,7 +3,7 @@
   "specName": "Single-call finish-and-advance verb for the capture script",
   "branch": "351-advance-status",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",

@@ -3,7 +3,7 @@
   "specName": "family aware preamble",
   "branch": "352-family-aware-preamble",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
