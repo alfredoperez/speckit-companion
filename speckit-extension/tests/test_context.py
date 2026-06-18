@@ -1053,6 +1053,20 @@ class AdvanceTests(unittest.TestCase):
         self.assertEqual(_ctx(self.fd)["status"], "planned")
         self.assertEqual(len(self._completes("plan")), 1, "no second complete on re-run")
 
+    def test_advance_does_not_regress_a_later_spec(self) -> None:
+        # Advancing an earlier step (a re-run, or a double-fired hook) on a spec that
+        # already moved past it records the finish but must NOT drag status/currentStep
+        # backward — the forward-only guard the direct --status path also enforces.
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        wc.journal_advance(self.fd, "plan", "ai")            # -> planned
+        wc.update_context(self.fd, "tasks", "tasking", "extension", "start")
+        wc.journal_advance(self.fd, "tasks", "ai")           # -> ready-to-implement, currentStep=tasks
+        wc.journal_advance(self.fd, "plan", "ai")            # re-advance the EARLIER step
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], "ready-to-implement", "status not dragged back to planned")
+        self.assertEqual(ctx["currentStep"], "tasks", "currentStep not dragged back to plan")
+        self.assertEqual(len(self._completes("plan")), 1, "no duplicate plan complete")
+
     def test_advance_refused_on_terminal_spec(self) -> None:
         for terminal in ("completed", "archived"):
             with self.subTest(status=terminal):

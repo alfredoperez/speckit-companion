@@ -577,12 +577,12 @@ def journal_advance(feature_dir: Path, step: str, by: str) -> Path | None:
 
     The single-call alternative to `--finish` followed by a status write: it appends
     the step's completion (idempotent — like `--finish`, never a duplicate, never a
-    start) and sets `status` to `STEP_COMPLETED_STATUS[step]`. A step with no canonical
-    completed-status (clarify/analyze) records only the finish, leaving status untouched
-    — mirroring how `--finish` treats non-canonical steps. `currentStep` is left as-is
-    (the step being advanced is the step we were on, so the invariant holds). Never
-    touches `update_context`, so the direct-`--status` no-regress guard is unchanged;
-    this is the sanctioned forward flip. Idempotent; a shipped spec is left untouched."""
+    start) and flips `status`/`currentStep` to `STEP_COMPLETED_STATUS[step]`. The flip
+    is forward-only: it reuses `_is_more_advanced` so advancing an earlier step on a
+    spec that already moved past it (a re-run or a double-fired hook) records the finish
+    but never drags status/currentStep backward. A step with no canonical completed-status
+    (clarify/analyze) records only the finish, leaving status untouched — mirroring
+    `--finish`. Idempotent; a shipped spec is left untouched."""
     if step not in CANONICAL_STEPS:
         print(
             f"[companion] Skipping --advance: '{step}' is not a canonical step "
@@ -598,7 +598,15 @@ def journal_advance(feature_dir: Path, step: str, by: str) -> Path | None:
     append_complete(log, step, by=by, at=_now_iso())
     completed_status = STEP_COMPLETED_STATUS.get(step)
     if completed_status is not None:
-        ctx["status"] = completed_status
+        if _is_more_advanced(ctx, step):
+            print(
+                f"[companion] {target} already at currentStep={ctx.get('currentStep')} / "
+                f"status={ctx.get('status')}; recorded the {step} finish without regressing status.",
+                file=sys.stderr,
+            )
+        else:
+            ctx["status"] = completed_status
+            ctx["currentStep"] = step
     commit_log(ctx, log)
     atomic_write(target, ctx)
     return target
