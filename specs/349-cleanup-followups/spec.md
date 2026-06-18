@@ -47,15 +47,15 @@ The benchmark builds a "clean app" copy that must not mention the benchmark anyw
 
 ### User Story 4 - A re-run never replays a stale event log (Priority: P3)
 
-The per-task finishes are appended to a small event log that is folded into the context on every materialize. Today that log is never removed after the implement step closes, so re-running the same spec directory would replay stale lines. After this work the log is removed once the step closes — always after everything in it has been folded, so no finish is ever dropped.
+The per-task finishes are appended to a small event log that is folded into the context on every materialize. Today that log is never removed, so re-running the same spec directory would replay stale lines. After this work the log is removed once the spec is marked complete — the one terminal state after which no further finish can append — always after everything in it has been folded, so no finish is ever dropped.
 
 **Why this priority**: Lowest-impact (a separate reset already clears it on the benchmark), but it removes a genuine re-run hazard.
 
-**Independent Test**: After the implement step closes, the event log file is gone, and every appended finish landed in the context first.
+**Independent Test**: After the spec is marked complete, the event log file is gone, and every appended finish landed in the context first.
 
 **Acceptance Scenarios**:
-1. **Given** an implement step that reaches 100% with appended finishes, **When** the step closes, **Then** every finish is folded into the context AND the event log file no longer exists.
-2. **Given** a spec whose implement step has not closed, **When** materialize runs, **Then** the event log is preserved (only a closed step removes it).
+1. **Given** a spec with appended finishes (even un-materialized ones), **When** it is marked complete, **Then** every finish is folded into the context AND the event log file no longer exists.
+2. **Given** a spec still implementing — or implemented but not yet marked complete — **When** materialize runs, **Then** the event log is preserved (only marking complete removes it).
 
 ## Edge Cases
 
@@ -73,8 +73,8 @@ The per-task finishes are appended to a small event log that is folded into the 
 - **FR-003**: The per-task finish path MUST read the task list once and pass the parsed markers to the implement-close check, which MUST derive its 100% verdict from those markers rather than re-reading the file.
 - **FR-004**: The benchmark baker MUST strip benchmark framing from the baked guidance file using explicit source markers (not free-text literals); a missing expected marker MUST cause a loud failure rather than a silent no-op.
 - **FR-005**: A smoke test MUST assert a baked cell's guidance file contains zero benchmark references.
-- **FR-006**: The per-task event log MUST be removed once the implement step closes, and only after every appended finish has been folded into the context.
-- **FR-007**: A test MUST assert the event log is absent after the implement step closes.
+- **FR-006**: The per-task event log MUST be removed once the spec is marked complete, and only after every appended finish has been folded into the context.
+- **FR-007**: A test MUST assert the event log is retained while implementing and absent after the spec is marked complete.
 - **FR-008**: The golden command outputs MUST stay byte-identical (this is a scripts/bench-only change; node/part text is untouched) and the existing python + bench test suites MUST stay green.
 
 ### Key Entities
@@ -90,7 +90,7 @@ The per-task finishes are appended to a small event log that is folded into the 
 - **SC-001**: All existing python capture tests pass unchanged (no test weakened to pass).
 - **SC-002**: The golden assemble-check and shape-parity gates pass with no re-bless required.
 - **SC-003**: A baked benchmark cell's guidance file has zero benchmark references.
-- **SC-004**: After an implement step closes, the event log file does not exist and no folded finish was lost.
+- **SC-004**: After a spec is marked complete, the event log file does not exist and no folded finish was lost.
 - **SC-005**: The duplicated preamble and completion-append pattern each appear in exactly one shared helper.
 
 ## Assumptions
@@ -102,7 +102,7 @@ The per-task finishes are appended to a small event log that is folded into the 
 
 Files to touch:
 
-- `speckit-extension/scripts/write-context.py` — extract `_open_ctx_or_none(feature_dir)` → `(ctx, log, branch)` (read + cross-step-terminal guard + canonical_log + fill_required) and `append_complete(log, step, *, substep, task, by, at)`; route `journal_finish`, `materialize_log`, `journal_task_finish`/`_fold_task_finish`, `sync_tasks`, `update_context`, `mark_spec_complete`, `_maybe_close_implement` through them. Thread parsed `(all_ids, done_ids)` markers from `_fold_task_finish` into `_maybe_close_implement` so it derives the 100% verdict without re-reading. Remove `.spec-context.events.jsonl` inside `_maybe_close_implement` once the step closes (after the materialize fold) and in the `--mark-complete` path.
+- `speckit-extension/scripts/write-context.py` — extract `_open_ctx_or_none(feature_dir)` → `(ctx, log, branch)` (read + cross-step-terminal guard + canonical_log + fill_required) and `append_complete(log, step, *, substep, task, by, at)`; route `journal_finish`, `materialize_log`, `journal_task_finish`/`_fold_task_finish`, `sync_tasks`, `update_context`, `mark_spec_complete`, `_maybe_close_implement` through them. Thread parsed `(all_ids, done_ids)` markers from `_fold_task_finish` into `_maybe_close_implement` so it derives the 100% verdict without re-reading. Remove `.spec-context.events.jsonl` only in the `--mark-complete` path (the terminal `completed` transition), after folding any pending appended finishes — so a straggler appended after step-close is never dropped.
 - `examples/todo-claude/CLAUDE.md` — wrap the bench framing in `<!-- BENCH START -->` / `<!-- BENCH END -->` markers (mirroring the existing `<!-- SPECKIT START -->` convention) and mark the bench-target phrase + vitest comment.
 - `examples/todo-claude/bench/sync-templates.mjs` — `presentAsCleanApp` strips between the BENCH markers; a missing expected marker throws loudly.
 - `speckit-extension/tests/test_context.py` — tests for the GC (event log absent after close) and the threaded-markers close path.

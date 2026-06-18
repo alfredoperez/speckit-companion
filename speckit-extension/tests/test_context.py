@@ -338,6 +338,21 @@ class LifecycleCaptureTests(unittest.TestCase):
         distinct = list(dict.fromkeys(t["task"] for t in _ctx(self.fd)["history"] if t.get("task")))
         self.assertEqual(distinct, ["T001"])
 
+    def test_duplicate_id_one_unchecked_is_not_100(self) -> None:
+        # Per-occurrence verdict: the same id checked once and pending once is NOT
+        # 100%, so sync_tasks must leave status implementing and not self-close.
+        tasks_md = self.fd / "tasks.md"
+        tasks_md.write_text(_tasks("- [x] **T001** a", "- [ ] **T001** a (re-listed)"))
+        wc.sync_tasks(self.fd, tasks_md, "implemented", "extension")
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], "implementing")
+        step_completes = [
+            t for t in ctx["history"]
+            if t["step"] == "implement" and t["substep"] is None
+            and t.get("task") is None and t["kind"] == "complete"
+        ]
+        self.assertEqual(step_completes, [], "a duplicate id with one pending marker is not 100%")
+
     def test_kind_complete_appends_step_complete(self) -> None:
         # A `--kind complete` write appends a step-level complete, flips status,
         # and is idempotent (no second complete on a re-run).

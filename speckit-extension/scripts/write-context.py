@@ -253,12 +253,14 @@ def _open_ctx_or_none(feature_dir: Path, step: str = "") -> tuple[dict, list, st
     journal_finish / journal_task_finish / materialize_log."""
     ctx = read_ctx(feature_dir / ".spec-context.json")
     if ctx.get("status") in CROSS_STEP_TERMINAL:
-        suffix = f" (not journaling {step})" if step else ""
-        print(
-            f"[companion] {feature_dir / '.spec-context.json'} already at "
-            f"status={ctx.get('status')}{suffix}.",
-            file=sys.stderr,
-        )
+        # Only the journal paths (which pass a step) announce the skip; materialize
+        # passes step="" and stays silent, as it did before this preamble was shared.
+        if step:
+            print(
+                f"[companion] {feature_dir / '.spec-context.json'} already at "
+                f"status={ctx.get('status')} (not journaling {step}).",
+                file=sys.stderr,
+            )
         return None
     branch = _git_branch(_repo_root()) or "main"
     log = canonical_log(ctx)
@@ -884,7 +886,9 @@ def sync_tasks(feature_dir: Path, tasks_md: Path, final_status: str, by: str) ->
 
     fill_required(ctx, feature_dir, branch)
     ctx["currentStep"] = "implement"
-    all_done = bool(distinct_all) and set(distinct_done) >= set(distinct_all)
+    # Per-occurrence verdict (same single source as _maybe_close_implement): a
+    # duplicate id with one marker still unchecked must not read as 100%.
+    all_done = _tasks_at_100((all_ids, done_ids))
     ctx["status"] = final_status if all_done else "implementing"
 
     pending = [tid for tid in distinct_all if tid not in distinct_done]
