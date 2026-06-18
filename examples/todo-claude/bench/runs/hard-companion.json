@@ -2,26 +2,108 @@
   "runId": "hard-companion",
   "size": "hard",
   "mode": "companion",
-  "spec": "001-tags",
-  "specName": "Tags",
+  "spec": "001-todo-tags",
+  "specName": "Todo Tags",
   "startedAt": null,
   "finishedAt": null,
   "wallClockSec": null,
   "captureOverheadSec": null,
   "timing": {
-    "totalSec": 766.03,
+    "totalSec": 2292.697,
     "perStep": {
-      "specify": 108.486,
-      "plan": 87.675,
-      "tasks": 71.077,
-      "implement": 365.887
+      "specify": 216.291,
+      "plan": 264.418,
+      "tasks": 240.303,
+      "implement": 452.776
     }
   },
   "buildPass": true,
-  "acceptancePassed": 1,
-  "acceptanceTotal": 1,
-  "regressionPassed": 16,
-  "regressionTotal": 16,
+  "acceptancePassed": 15,
+  "acceptanceTotal": 15,
+  "acceptanceSource": "behavioral",
+  "behavioralVerdicts": [
+    {
+      "n": 1,
+      "pass": true,
+      "reason": "AddTag→addTag, TagList renders name"
+    },
+    {
+      "n": 2,
+      "pass": true,
+      "reason": "TagList renders every tag name"
+    },
+    {
+      "n": 3,
+      "pass": true,
+      "reason": "Remove button calls removeTag"
+    },
+    {
+      "n": 4,
+      "pass": true,
+      "reason": "Header has Tags link to /tags"
+    },
+    {
+      "n": 5,
+      "pass": true,
+      "reason": "checkbox calls toggleTodoTag on"
+    },
+    {
+      "n": 6,
+      "pass": true,
+      "reason": "same toggle unassigns when checked"
+    },
+    {
+      "n": 7,
+      "pass": true,
+      "reason": "TodoItem maps all tags as checkboxes"
+    },
+    {
+      "n": 8,
+      "pass": true,
+      "reason": "tagIds array holds multiple"
+    },
+    {
+      "n": 9,
+      "pass": true,
+      "reason": "TagFilter shows All plus each tag"
+    },
+    {
+      "n": 10,
+      "pass": true,
+      "reason": "visibleTodos filters by tagId"
+    },
+    {
+      "n": 11,
+      "pass": true,
+      "reason": "All returns all todos"
+    },
+    {
+      "n": 12,
+      "pass": true,
+      "reason": "empty filter yields empty list"
+    },
+    {
+      "n": 13,
+      "pass": true,
+      "reason": "persistence test confirms tags restored"
+    },
+    {
+      "n": 14,
+      "pass": true,
+      "reason": "todo tagIds restored on remount"
+    },
+    {
+      "n": 15,
+      "pass": true,
+      "reason": "removed tag stays gone after reload"
+    }
+  ],
+  "deterministicBaseline": {
+    "passed": 0,
+    "total": 1
+  },
+  "regressionPassed": 29,
+  "regressionTotal": 29,
   "conventions": [],
   "blast": {
     "files": [
@@ -30,39 +112,48 @@
       "components/Header.tsx",
       "components/TagFilter.test.tsx",
       "components/TagFilter.tsx",
+      "components/TagList.tsx",
+      "components/TodoItem.test.tsx",
       "components/TodoItem.tsx",
       "components/TodoList.tsx",
       "pages/TagsPage.test.tsx",
       "pages/TagsPage.tsx",
+      "pages/TodosPage.test.tsx",
       "pages/TodosPage.tsx",
+      "store/persistence.test.tsx",
       "store/tags.test.tsx",
       "store/tags.tsx",
+      "store/todos.test.tsx",
+      "store/todos.tsx",
       "types.ts"
     ],
     "outOfScope": []
   },
   "quality": {
-    "readability": 4.5,
-    "conventions": 4.5,
+    "readability": 5,
+    "conventions": 5,
     "scope": 5,
-    "justification": "Tags store cleanly mirrors the todos slice (reducer + context + storage persistence) with a thorough, behavior-focused test suite and verbatim test ids; only ding is TodoItem swapping the Todo domain type for an inline structural shape. Scope is tight — storage.ts, todos.tsx, and unrelated files are untouched and existing behavior is preserved."
+    "justification": "Clean, well-named reducer/context/hook/page/component split that mirrors the todos slice exactly, with persistence through lib/storage and proper App.tsx provider nesting. Implements every required behavior (tag CRUD on /tags, per-todo toggles, filter row with All, persisted tags + assignments) plus correct cleanup of removed tags from todos, with no scope creep."
   },
   "shape": {
-    "hasUserStories": false,
-    "specLines": 38,
-    "planLines": 66,
-    "tasksLines": 46,
-    "taskCount": 13,
+    "hasUserStories": true,
+    "specLines": 133,
+    "planLines": 54,
+    "tasksLines": 161,
+    "taskCount": 23,
     "sideFiles": [
+      "research.md",
+      "data-model.md",
+      "contracts",
       "checklists"
     ],
-    "artifactFiles": 4,
-    "artifactLines": 184
+    "artifactFiles": 7,
+    "artifactLines": 547
   },
   "diff": {
-    "filesChanged": 13,
-    "locAdded": 425,
-    "locRemoved": 33
+    "filesChanged": 19,
+    "locAdded": 607,
+    "locRemoved": 15
   },
   "capture": {
     "pass": 15,
@@ -77,7 +168,7 @@
       {
         "status": "PASS",
         "id": "canonical-history",
-        "detail": "24 entries"
+        "detail": "34 entries"
       },
       {
         "status": "PASS",
@@ -92,7 +183,7 @@
       {
         "status": "PASS",
         "id": "status-valid",
-        "detail": "status=implemented"
+        "detail": "status=completed"
       },
       {
         "status": "PASS",
@@ -107,7 +198,7 @@
       {
         "status": "PASS",
         "id": "entries-match-format",
-        "detail": "24 entries conform to historyEntry def"
+        "detail": "34 entries conform to historyEntry def"
       },
       {
         "status": "PASS",
@@ -117,12 +208,12 @@
       {
         "status": "INFO",
         "id": "authorship",
-        "detail": "ai=19, extension=5"
+        "detail": "ai=28, extension=6"
       },
       {
         "status": "PASS",
         "id": "hook-or-derive-captured",
-        "detail": "extension=5, derive=0"
+        "detail": "extension=6, derive=0"
       },
       {
         "status": "INFO",
@@ -132,17 +223,17 @@
       {
         "status": "PASS",
         "id": "timestamps-real",
-        "detail": "0/5 deterministic writes look hand-typed (round ms) — all real"
+        "detail": "0/6 deterministic writes look hand-typed (round ms) — all real"
       },
       {
         "status": "PASS",
         "id": "per-task-substeps",
-        "detail": "13 task events; task id present, substep null|==task: True"
+        "detail": "23 task events; task id present, substep null|==task: True"
       },
       {
         "status": "PASS",
         "id": "per-task-matches-tasksmd",
-        "detail": "tasks.md done=13, journaled=13"
+        "detail": "tasks.md done=23, journaled=23"
       },
       {
         "status": "PASS",
@@ -152,19 +243,19 @@
       {
         "status": "PASS",
         "id": "task-cadence-span",
-        "detail": "13 ai finishes span 5.3m = 87.67% of 6.1m implement step (need ≥ 5%)"
+        "detail": "23 ai finishes span 6.4m = 84.24% of 7.5m implement step (need ≥ 5%)"
       },
       {
         "status": "INFO",
         "id": "step-timing",
-        "detail": "specify→plan 2.1m | plan→tasks 2.0m | tasks→implement 2.7m"
+        "detail": "specify→plan 4.9m | plan→tasks 20.8m | tasks→implement 4.9m"
       },
       {
         "status": "INFO",
         "id": "task-cadence",
-        "detail": "13 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 19.7s, 39.0s, 80ms, 81ms, 15.1s, 33.4s, 24.8s, 76ms, 47.7s, 80ms, 83ms, 2.3m"
+        "detail": "23 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 20.7s, 18.6s, 16.8s, 31.5s, 53ms, 26.8s, 51ms, 12.5s, 22.4s, 52ms, 36.0s, 30.5s, 53ms, 17.3s, 12.6s, 14.2s, 61.2s, 56ms, 15.0s, 21.0s, 24.0s, 53ms"
       }
     ]
   },
-  "capturedAt": "2026-06-16T01:36:28.139Z"
+  "capturedAt": "2026-06-18T15:03:12.165Z"
 }

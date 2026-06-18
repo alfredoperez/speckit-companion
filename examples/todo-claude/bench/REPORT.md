@@ -78,34 +78,34 @@ Generated from `bench/stats.jsonl`. Each size shows the latest run per mode: **s
 |---|---|---|
 | Wall-clock | — | — |
 | Capture overhead | — | — |
-| History total | 15m 24s | 12m 46s |
-| · specify | 1m 41s | 1m 48s |
-| · plan | 3m 49s | 1m 28s |
-| · tasks | 1m 54s | 1m 11s |
-| · implement | 5m 23s | 6m 6s |
+| History total | 39m 26s | 38m 13s |
+| · specify | 2m 3s | 3m 36s |
+| · plan | 4m 6s | 4m 24s |
+| · tasks | 2m 49s | 4m |
+| · implement | 8m 27s | 7m 33s |
 | Build | ✓ | ✓ |
-| Acceptance | 1/1 | 1/1 |
-| Regression | 23/23 | 16/16 |
+| Acceptance | 9/9 | 15/15 |
+| Regression | 30/30 | 29/29 |
 | Conventions | ✓ | ✓ |
 | Out-of-scope files | 0 | 0 |
-| Quality (rubric) | 5.0/5 | 4.7/5 |
+| Quality (rubric) | 5.0/5 | 5.0/5 |
 | Capture eval | n/a | 15✓/0✗ |
-| Spec shape | standard (US) | lean (no US) |
-| spec.md lines | 110 | 38 |
-| plan.md lines | 95 | 66 |
-| tasks.md lines | 187 | 46 |
-| Artifact files (all) | 9 | 4 |
-| Artifact total lines | 624 | 184 |
-| Task count | 21 | 13 |
-| Side files | research.md, data-model.md, quickstart.md, contracts, checklists | checklists |
-| Files changed | 12 | 13 |
-| LOC (+/−) | +493/−8 | +425/−33 |
-| **Overall (health)** | 75 | 98 |
-| · vs speckit | base | ▲+23 |
-| · vs last run | = | — |
+| Spec shape | standard (US) | standard (US) |
+| spec.md lines | 108 | 133 |
+| plan.md lines | 96 | 54 |
+| tasks.md lines | 202 | 161 |
+| Artifact files (all) | 10 | 7 |
+| Artifact total lines | 703 | 547 |
+| Task count | 27 | 23 |
+| Side files | research.md, data-model.md, quickstart.md, contracts, checklists | research.md, data-model.md, contracts, checklists |
+| Files changed | 17 | 19 |
+| LOC (+/−) | +655/−34 | +607/−15 |
+| **Overall (health)** | 75 | 100 |
+| · vs speckit | base | ▲+25 |
+| · vs last run | = | ▲+2 |
 
-- **speckit rubric:** Clean, well-named reducer/context slice mirroring todos.tsx with co-located tests and verbatim test ids; persistence flows through lib/storage and the route/nav/store-slice convention is followed exactly. Only feature-relevant files changed (index.html, types, storage untouched), baseline behavior preserved; TodoItem reaching into the store directly is a minor but consistent pattern stretch.
-- **companion rubric:** Tags store cleanly mirrors the todos slice (reducer + context + storage persistence) with a thorough, behavior-focused test suite and verbatim test ids; only ding is TodoItem swapping the Todo domain type for an inline structural shape. Scope is tight — storage.ts, todos.tsx, and unrelated files are untouched and existing behavior is preserved.
+- **speckit rubric:** Clean, idiomatic code with a tags store slice that mirrors todos.tsx exactly and prop-driven components; every requirement is met (tag CRUD on /tags, per-todo toggles, filter row + All, tags and assignments persisting across remount) with thoughtful correctness-completing edge handling (removing a tag untags it everywhere and the active filter self-heals to All) rather than scope creep.
+- **companion rubric:** Clean, well-named reducer/context/hook/page/component split that mirrors the todos slice exactly, with persistence through lib/storage and proper App.tsx provider nesting. Implements every required behavior (tag CRUD on /tags, per-todo toggles, filter row with All, persisted tags + assignments) plus correct cleanup of removed tags from todos, with no scope creep.
 
 ## All runs
 
@@ -124,5 +124,5 @@ Generated from `bench/stats.jsonl`. Each size shows the latest run per mode: **s
 - `hard-companion-fast-path` → companion-fast-path/hard · build ✓ · acceptance 1/1 · capture 14✓/0✗ · —
 - `medium-speckit` → speckit/medium · build ✓ · acceptance 1/1 · capture n/a · —
 - `medium-companion` → companion/medium · build ✓ · acceptance 1/1 · capture 18✓/0✗ · —
-- `hard-speckit` → speckit/hard · build ✓ · acceptance 1/1 · capture n/a · —
-- `hard-companion` → companion/hard · build ✓ · acceptance 1/1 · capture 15✓/0✗ · —
+- `hard-speckit` → speckit/hard · build ✓ · acceptance 9/9 · capture n/a · —
+- `hard-companion` → companion/hard · build ✓ · acceptance 15/15 · capture 15✓/0✗ · —

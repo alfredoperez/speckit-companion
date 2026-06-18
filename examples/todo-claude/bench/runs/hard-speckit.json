@@ -9,34 +9,91 @@
   "wallClockSec": null,
   "captureOverheadSec": null,
   "timing": {
-    "totalSec": 923.96,
+    "totalSec": 2365.803,
     "perStep": {
-      "specify": 100.96,
-      "plan": 229.057,
-      "tasks": 114.089,
-      "implement": 322.951
+      "specify": 122.803,
+      "plan": 245.527,
+      "tasks": 169.067,
+      "implement": 506.908
     }
   },
   "buildPass": true,
-  "acceptancePassed": 1,
-  "acceptanceTotal": 1,
-  "regressionPassed": 23,
-  "regressionTotal": 23,
+  "acceptancePassed": 9,
+  "acceptanceTotal": 9,
+  "acceptanceSource": "behavioral",
+  "behavioralVerdicts": [
+    {
+      "n": 1,
+      "pass": true,
+      "reason": "TagManager create wired to addTag"
+    },
+    {
+      "n": 2,
+      "pass": true,
+      "reason": "handleRemove calls removeTag, list updates"
+    },
+    {
+      "n": 3,
+      "pass": true,
+      "reason": "Header Tags link to /tags route exists"
+    },
+    {
+      "n": 4,
+      "pass": true,
+      "reason": "Per-tag checkbox calls toggleTag on"
+    },
+    {
+      "n": 5,
+      "pass": true,
+      "reason": "Same toggle unassigns the tag"
+    },
+    {
+      "n": 6,
+      "pass": true,
+      "reason": "TodoItem maps a toggle per tag"
+    },
+    {
+      "n": 7,
+      "pass": true,
+      "reason": "TodosPage filters visible by active tag"
+    },
+    {
+      "n": 8,
+      "pass": true,
+      "reason": "All sentinel shows all todos"
+    },
+    {
+      "n": 9,
+      "pass": true,
+      "reason": "TagFilter renders All plus each tag"
+    }
+  ],
+  "deterministicBaseline": {
+    "passed": 0,
+    "total": 1
+  },
+  "regressionPassed": 30,
+  "regressionTotal": 30,
   "conventions": [],
   "blast": {
     "files": [
+      "App.test.tsx",
       "App.tsx",
       "components/Header.tsx",
-      "components/TagFilterBar.tsx",
-      "components/TagToggles.tsx",
-      "components/TodoItem.test.tsx",
+      "components/TagFilter.test.tsx",
+      "components/TagFilter.tsx",
+      "components/TagManager.test.tsx",
+      "components/TagManager.tsx",
       "components/TodoItem.tsx",
+      "components/TodoList.tsx",
       "pages/TagsPage.test.tsx",
       "pages/TagsPage.tsx",
-      "pages/TodosPage.test.tsx",
       "pages/TodosPage.tsx",
       "store/tags.test.tsx",
-      "store/tags.tsx"
+      "store/tags.tsx",
+      "store/todos.test.tsx",
+      "store/todos.tsx",
+      "types.ts"
     ],
     "outOfScope": []
   },
@@ -44,14 +101,14 @@
     "readability": 5,
     "conventions": 5,
     "scope": 5,
-    "justification": "Clean, well-named reducer/context slice mirroring todos.tsx with co-located tests and verbatim test ids; persistence flows through lib/storage and the route/nav/store-slice convention is followed exactly. Only feature-relevant files changed (index.html, types, storage untouched), baseline behavior preserved; TodoItem reaching into the store directly is a minor but consistent pattern stretch."
+    "justification": "Clean, idiomatic code with a tags store slice that mirrors todos.tsx exactly and prop-driven components; every requirement is met (tag CRUD on /tags, per-todo toggles, filter row + All, tags and assignments persisting across remount) with thoughtful correctness-completing edge handling (removing a tag untags it everywhere and the active filter self-heals to All) rather than scope creep."
   },
   "shape": {
     "hasUserStories": true,
-    "specLines": 110,
-    "planLines": 95,
-    "tasksLines": 187,
-    "taskCount": 21,
+    "specLines": 108,
+    "planLines": 96,
+    "tasksLines": 202,
+    "taskCount": 27,
     "sideFiles": [
       "research.md",
       "data-model.md",
@@ -59,14 +116,14 @@
       "contracts",
       "checklists"
     ],
-    "artifactFiles": 9,
-    "artifactLines": 624
+    "artifactFiles": 10,
+    "artifactLines": 703
   },
   "diff": {
-    "filesChanged": 12,
-    "locAdded": 493,
-    "locRemoved": 8
+    "filesChanged": 17,
+    "locAdded": 655,
+    "locRemoved": 34
   },
   "capture": null,
-  "capturedAt": "2026-06-16T01:36:24.778Z"
+  "capturedAt": "2026-06-18T15:02:52.237Z"
 }
