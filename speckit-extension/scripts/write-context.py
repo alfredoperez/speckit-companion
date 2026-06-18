@@ -1122,7 +1122,7 @@ def main() -> int:
             _label = f"{args.step}{('/' + args.substep) if args.substep else ''}"
             print(f"[companion] Journaled {_label} finish in {target} (by={args.by})")
         elif args.advance:
-            print(f"[companion] Advanced {args.step} in {target} (status={read_ctx(target).get('status')}, by={args.by})")
+            print(f"[companion] Advanced {args.step} in {target} (by={args.by})")
         elif args.materialize:
             print(f"[companion] Materialized append-log into {target}")
         elif args.task and args.append:

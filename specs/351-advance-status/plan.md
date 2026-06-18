@@ -32,7 +32,7 @@ A new function that reuses the existing shared preamble and completion helper, s
 - `append_complete(log, step, by=by, at=now())` — idempotent completion, never a duplicate, never a start.
 - Look up `STEP_COMPLETED_STATUS.get(step)`; if present, set `ctx["status"]`. If absent (`clarify`/`analyze`), leave status as-is.
 - `commit_log` + `atomic_write`, same as `journal_finish`.
-- Do NOT touch `currentStep` (keeps the invariant that the last history entry's step equals currentStep, since the step we advance is the step we were on).
+- On a forward flip, set `ctx["currentStep"] = step` alongside the status so the pair stays coherent; on the no-regress path (spec already past the step) leave both untouched. Guard the flip with `_is_more_advanced` so a re-advanced earlier step never drags status/currentStep backward.
 
 ### CLI wiring
 

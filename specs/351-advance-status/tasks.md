@@ -7,7 +7,7 @@ Tasks are grouped by the user stories they serve. Within a group, file-disjoint 
 ## Phase 1 — Core verb (US1, US2, US3)
 
 - [x] **T001** Add the `STEP_COMPLETED_STATUS` map constant next to `CANONICAL_STEPS` in `speckit-extension/scripts/write-context.py` (specify→specified, plan→planned, tasks→ready-to-implement, implement→implemented).
-- [x] **T002** Add the `journal_advance(feature_dir, step, by)` function: reject non-canonical step, open via `_open_ctx_or_none` (inherits the terminal-spec guard → US3), append idempotent completion (no start), set status from the map when present and leave it untouched when absent (clarify/analyze → US2), then `commit_log` + `atomic_write`. Do not touch `currentStep`.
+- [x] **T002** Add the `journal_advance(feature_dir, step, by)` function: reject non-canonical step, open via `_open_ctx_or_none` (inherits the terminal-spec guard → US3), append idempotent completion (no start), then flip status + currentStep from the map forward-only (guarded by `_is_more_advanced`) when present and leave status untouched when absent (clarify/analyze → US2), then `commit_log` + `atomic_write`.
 
 ## Phase 2 — CLI wiring (US1)
 
