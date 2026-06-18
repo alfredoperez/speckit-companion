@@ -254,14 +254,13 @@ export function renderPreamble(step: PromptStep, specDir: string, dispatchUtc: s
 
 /**
  * Slim lifecycle body for a companion run: each `/speckit.companion.*` command
- * carries the full protocol in its own body, so this only names the cross-step
- * rules (self-close verbs + the no-next-step-start guard).
+ * carries the full protocol (incl. self-close) in its own body, so this adds only
+ * the cross-step rules the body can't own.
  */
-function renderSlimLifecycleBody(featureDir: string): string {
+function renderSlimLifecycleBody(_featureDir: string): string {
     return [
-        `Each /speckit.companion.* command in this run carries the full \`.spec-context.json\` capture & timing protocol in its body — schema, status lifecycle, self-close, per-task journaling. Follow each command's body. This preamble adds only the cross-step rules:`,
+        `Each /speckit.companion.* command in this run carries the full \`.spec-context.json\` capture & timing protocol in its body — schema, status lifecycle, self-close, per-task journaling. Follow each command's body for how to close each step (the companion bodies record a finish-only complete and let the lifecycle hooks flip status). This preamble adds only the cross-step rules:`,
         '',
-        `- Close each **plan/tasks/clarify/analyze** step you finish with the writer script (\`write-context.py --feature-dir ${featureDir} --step <step> --advance --by ai\` for plan/tasks, \`--finish\` for clarify/analyze) — never hand-author the JSON. Do NOT self-close **specify** or **implement**: the companion specify command and the implement end-of-step hook close those.`,
         '- Never write a start-entry for the next step when you finish one — that produces a phantom "Generating <next>…". Only the next command seeds its own start.',
         'Invariants: preserve unknown fields; history is append-only.',
     ].join('\n');

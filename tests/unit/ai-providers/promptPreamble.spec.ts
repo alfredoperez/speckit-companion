@@ -75,6 +75,11 @@ describe('renderLifecyclePreamble — per-family split', () => {
         expect(slim).not.toContain(SHARED_RULES_MARKER);
     });
 
+    it('companion run defers self-close to the body — never instructs --advance (the companion path is finish-only, hook-owned status)', () => {
+        const slim = renderLifecyclePreamble(SPEC_DIR, DISPATCH, true);
+        expect(slim).not.toContain('--advance');
+    });
+
     it('stock run gets the full lifecycle body referencing --advance', () => {
         const full = renderLifecyclePreamble(SPEC_DIR, DISPATCH, false);
         expect(full).toContain(SCHEMA_MARKER);
