@@ -172,6 +172,14 @@ describe('buildPrompt', () => {
             expect(out).toContain('--step specify --advance --by ai');
         });
 
+        it('classifies by the command VERB, not its args — a stock command with "companion" in the path stays stock (full preamble)', () => {
+            const out = buildPrompt({ command: '/speckit.plan specs/123-companion-feature', step: 'plan', specDir: 'specs/123-companion-feature' });
+            // Stock → full preamble (the only capture source); must NOT be slimmed.
+            expect(out).toContain("required");
+            expect(out).not.toContain("This command's body carries the full");
+            expect(out).toContain('--step plan --advance --by ai');
+        });
+
         it('returns raw command when step is unknown', () => {
             const out = buildPrompt({
                 command: '/speckit.unknown',

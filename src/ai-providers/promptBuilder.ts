@@ -38,7 +38,10 @@ function nowUtc(): string {
  * existing implies the extension is installed, so the command verb is the signal.
  */
 function companionRecordsSteps(command: string): boolean {
-    return /companion/i.test(command);
+    // Test the command VERB only (first token), not the args — a stock command
+    // whose argument path contains "companion" must not be misread as companion.
+    const verb = command.trim().split(/\s+/, 1)[0] ?? '';
+    return /companion/i.test(verb);
 }
 
 /** Companion extension present in the current workspace (for the create flow, which has no command verb yet). */
