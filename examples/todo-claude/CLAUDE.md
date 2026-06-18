@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for AI assistants working in this example app (the SpecKit Companion bench target).
+Guidance for AI assistants working in this example app<!-- BENCH-PHRASE START --> (the SpecKit Companion bench target)<!-- BENCH-PHRASE END -->.
 
 ## Development Commands
 
@@ -8,7 +8,7 @@ Guidance for AI assistants working in this example app (the SpecKit Companion be
 npm install        # install dependencies
 npm run dev        # Vite dev server
 npm run build      # type-check (tsc) + production build (vite)
-npm test           # Vitest (app tests in src/ + bench oracle in bench/)
+npm test           # <!-- BENCH-VITEST START -->Vitest (app tests in src/ + bench oracle in bench/)<!-- BENCH-VITEST END -->
 npm run preview    # preview the production build
 ```
 
@@ -42,6 +42,8 @@ Routes: `/` → `TodosPage`, `/about` → `AboutPage`. The app title is the `<h1
 - **Test ids**: only add a `data-testid` when a spec explicitly pins one as a verbatim requirement; otherwise prefer role/label/text queries (the app's convention). Don't invent test ids to "pass" — correctness is graded on user-visible behavior, not on specific selectors.
 - **Tests**: co-locate as `*.test.tsx` next to the code (see `src/App.test.tsx`, `src/lib/storage.test.ts`). Render router-dependent components inside `<MemoryRouter>`.
 
+<!-- BENCH-SECTION START -->
 ## Bench
 
 This app doubles as the faithful 2-mode bench target (speckit vs companion). To run it: `/bench-sync` (once) → `/bench-prep <size>` → build in VS Code → `/bench-capture <size>` — see the **Quick start** in `bench/README.md`. Don't edit `bench/stats.jsonl`, `bench/history.jsonl`, or `bench/REPORT.md` (generated).
+<!-- BENCH-SECTION END -->

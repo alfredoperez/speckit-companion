@@ -1126,6 +1126,52 @@ class AppendLogMaterializeTests(unittest.TestCase):
             wc._repo_root, wc.resolve_feature_dir = orig_root, orig_resolve
         self.assertEqual(_ctx(self.fd)["status"], "implemented")
 
+    def test_events_log_removed_after_step_closes(self) -> None:
+        # Once implement closes, the append log is GC'd so a re-run can't re-fold
+        # stale lines — but only after every line has been folded into the context.
+        (self.fd / "tasks.md").write_text("- [ ] **T001** a\n- [ ] **T002** b\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.append_task_log(self.fd, "T001", "ai", did="did a")
+        wc.append_task_log(self.fd, "T002", "ai", did="did b")
+        wc.materialize_log(self.fd, "ai")
+        ctx = _ctx(self.fd)
+        # Every appended finish landed before the log was removed.
+        self.assertEqual([e["task"] for e in ctx["history"] if e.get("task")], ["T001", "T002"])
+        self.assertEqual(ctx["status"], "implemented")
+        self.assertFalse((self.fd / ".spec-context.events.jsonl").exists(),
+                         "events log should be gone once the implement step closes")
+
+    def test_events_log_kept_while_step_open(self) -> None:
+        # A materialize that does NOT close the step keeps the log (more tasks pending).
+        (self.fd / "tasks.md").write_text("- [ ] **T001** a\n- [ ] **T002** b\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.append_task_log(self.fd, "T001", "ai")
+        wc.materialize_log(self.fd, "ai")
+        self.assertEqual(_ctx(self.fd)["status"], "implementing")
+        self.assertTrue((self.fd / ".spec-context.events.jsonl").exists(),
+                        "events log must survive while the step is still open")
+
+    def test_mark_complete_removes_events_log(self) -> None:
+        (self.fd / "tasks.md").write_text("- [x] **T001** a\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.append_task_log(self.fd, "T001", "ai")
+        # A stray events log lingering at mark-complete is cleaned up.
+        wc.mark_spec_complete(self.fd, "ai")
+        self.assertEqual(_ctx(self.fd)["status"], "completed")
+        self.assertFalse((self.fd / ".spec-context.events.jsonl").exists())
+
+    def test_close_verdict_uses_post_flip_markers(self) -> None:
+        # The close check derives 100% from markers parsed AFTER the checkboxes flip,
+        # so the last task finishing closes the step in the same materialize pass.
+        (self.fd / "tasks.md").write_text("- [ ] **T001** a\n- [ ] **T002** b\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.append_task_log(self.fd, "T001", "ai")
+        wc.append_task_log(self.fd, "T002", "ai")
+        wc.materialize_log(self.fd, "ai")
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], "implemented")
+        self.assertEqual(ctx["history"][-1].get("task"), None)  # step-close lands last
+
 
 class FeatureJsonResolverTests(unittest.TestCase):
     """resolve_feature_dir accepts both feature.json key shapes (canonical +
