@@ -106,8 +106,8 @@ function perTaskFinishCmd(featureDir: string): string {
 /**
  * The stock-path self-close command: `--advance` (finish + forward-only status
  * flip in one call) for an advancing step, `--finish` (timing-only) for a step
- * with no canonical advance (clarify/analyze). Matches write-context.py's
- * `STEP_COMPLETED_STATUS` so the preamble can't drift from the script's map.
+ * with no canonical advance (clarify/analyze). `ADVANCING_STEPS` is meant to mirror
+ * write-context.py's `STEP_COMPLETED_STATUS` — keep the two in sync if that map changes.
  */
 function selfCloseCmd(step: PromptStep, featureDir: string): string {
     const dir = featureDir && featureDir !== '<specDir>' ? `--feature-dir ${featureDir} ` : '';
