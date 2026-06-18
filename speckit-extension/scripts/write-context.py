@@ -31,6 +31,15 @@ from pathlib import Path
 # reject the legacy terminal step and to avoid regressing an advanced spec.
 CANONICAL_STEPS = {"specify", "clarify", "plan", "tasks", "analyze", "implement"}
 STEP_ORDER = {"specify": 0, "clarify": 1, "plan": 2, "tasks": 3, "analyze": 4, "implement": 5}
+# The single home for the step -> canonical completed-status map. `--advance`
+# flips status to this when finishing a step; clarify/analyze are absent (no
+# status advance) so the verb records only the finish for them.
+STEP_COMPLETED_STATUS = {
+    "specify": "specified",
+    "plan": "planned",
+    "tasks": "ready-to-implement",
+    "implement": "implemented",
+}
 # A spec at one of these statuses must never be dragged backward by a hook that
 # fires after an earlier step (e.g. after_specify re-resolving to a shipped spec).
 TERMINAL_STATUSES = {"implemented", "completed", "archived"}
@@ -563,6 +572,46 @@ def journal_finish(feature_dir: Path, step: str, by: str, substep: str | None = 
     return target
 
 
+def journal_advance(feature_dir: Path, step: str, by: str) -> Path | None:
+    """Finish a step AND flip status to its canonical completed-status in one write.
+
+    The single-call alternative to `--finish` followed by a status write: it appends
+    the step's completion (idempotent — like `--finish`, never a duplicate, never a
+    start) and flips `status`/`currentStep` to `STEP_COMPLETED_STATUS[step]`. The flip
+    is forward-only: it reuses `_is_more_advanced` so advancing an earlier step on a
+    spec that already moved past it (a re-run or a double-fired hook) records the finish
+    but never drags status/currentStep backward. A step with no canonical completed-status
+    (clarify/analyze) records only the finish, leaving status untouched — mirroring
+    `--finish`. Idempotent; a shipped spec is left untouched."""
+    if step not in CANONICAL_STEPS:
+        print(
+            f"[companion] Skipping --advance: '{step}' is not a canonical step "
+            f"({', '.join(sorted(CANONICAL_STEPS))}).",
+            file=sys.stderr,
+        )
+        return None
+    target = feature_dir / ".spec-context.json"
+    opened = _open_ctx_or_none(feature_dir, f"an {step} advance")
+    if opened is None:
+        return None
+    ctx, log, _branch = opened
+    append_complete(log, step, by=by, at=_now_iso())
+    completed_status = STEP_COMPLETED_STATUS.get(step)
+    if completed_status is not None:
+        if _is_more_advanced(ctx, step):
+            print(
+                f"[companion] {target} already at currentStep={ctx.get('currentStep')} / "
+                f"status={ctx.get('status')}; recorded the {step} finish without regressing status.",
+                file=sys.stderr,
+            )
+        else:
+            ctx["status"] = completed_status
+            ctx["currentStep"] = step
+    commit_log(ctx, log)
+    atomic_write(target, ctx)
+    return target
+
+
 def _upsert_task_summary(
     ctx: dict, task_id: str, did: str | None, files: list[str] | None,
     status: str = "DONE",
@@ -961,6 +1010,13 @@ def main() -> int:
              "clarify/analyze and their substeps. Replaces hand-authored JSON edits.",
     )
     parser.add_argument(
+        "--advance", action="store_true",
+        help="Finish --step AND flip status to that step's canonical completed-status "
+             "(specify->specified, plan->planned, tasks->ready-to-implement, "
+             "implement->implemented) in one atomic write. No start entry; idempotent. "
+             "clarify/analyze record only the finish (no status change).",
+    )
+    parser.add_argument(
         "--did", default=None,
         help="With --task: a one-line summary of what the task did, written to "
              "task_summaries.<id>.did (the Activity panel's Tasks card).",
@@ -980,7 +1036,7 @@ def main() -> int:
     # Best-effort guard: a non-canonical step is a no-op, never a host failure.
     # Terminal state belongs in `status`, not `currentStep`. Skipped in task-sync
     # mode, which always operates on the implement step.
-    if not args.tasks_file and not args.task and not args.mark_complete and not args.set_pairs and not args.materialize and not args.finish and (args.step == "done" or args.step not in CANONICAL_STEPS):
+    if not args.tasks_file and not args.task and not args.mark_complete and not args.set_pairs and not args.materialize and not args.finish and not args.advance and (args.step == "done" or args.step not in CANONICAL_STEPS):
         print(
             f"[companion] Skipping: '{args.step}' is not a canonical currentStep "
             f"({', '.join(sorted(CANONICAL_STEPS))}).",
@@ -1037,6 +1093,8 @@ def main() -> int:
             target = mark_spec_complete(feature_dir, args.by)
         elif args.finish:
             target = journal_finish(feature_dir, args.step, args.by, args.substep)
+        elif args.advance:
+            target = journal_advance(feature_dir, args.step, args.by)
         elif args.materialize:
             target = materialize_log(feature_dir, args.by)
         elif args.task:
@@ -1063,6 +1121,8 @@ def main() -> int:
         elif args.finish:
             _label = f"{args.step}{('/' + args.substep) if args.substep else ''}"
             print(f"[companion] Journaled {_label} finish in {target} (by={args.by})")
+        elif args.advance:
+            print(f"[companion] Advanced {args.step} in {target} (by={args.by})")
         elif args.materialize:
             print(f"[companion] Materialized append-log into {target}")
         elif args.task and args.append:

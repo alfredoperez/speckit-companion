@@ -1002,6 +1002,109 @@ class JournalFinishTests(unittest.TestCase):
         self.assertEqual(_ctx(self.fd)["status"], "planning")
 
 
+class AdvanceTests(unittest.TestCase):
+    """`--advance`: finish a step AND flip status to its canonical completed-status."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.fd = Path(self._tmp.name) / "specs" / "_zzz-adv"
+        self.fd.mkdir(parents=True)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def _completes(self, step: str) -> list:
+        return [
+            e for e in _ctx(self.fd)["history"]
+            if e["step"] == step and e["kind"] == "complete"
+            and e.get("substep") is None and not e.get("task")
+        ]
+
+    def _starts(self, step: str) -> list:
+        return [
+            e for e in _ctx(self.fd)["history"]
+            if e["step"] == step and e["kind"] == "start"
+        ]
+
+    def test_advances_each_canonical_step_to_its_status(self) -> None:
+        cases = [
+            ("specify", "specifying", "specified"),
+            ("plan", "planning", "planned"),
+            ("tasks", "tasking", "ready-to-implement"),
+            ("implement", "implementing", "implemented"),
+        ]
+        for step, mid_status, want in cases:
+            with self.subTest(step=step):
+                self._tmp.cleanup()
+                self._tmp = tempfile.TemporaryDirectory()
+                self.fd = Path(self._tmp.name) / "specs" / "_zzz-adv"
+                self.fd.mkdir(parents=True)
+                wc.update_context(self.fd, step, mid_status, "extension", "start")
+                wc.journal_advance(self.fd, step, "ai")
+                self.assertEqual(_ctx(self.fd)["status"], want)
+                self.assertEqual(len(self._completes(step)), 1, "exactly one complete")
+                # No start entry added by --advance (the only start is the prior setup one).
+                self.assertEqual(len(self._starts(step)), 1)
+
+    def test_advance_is_idempotent(self) -> None:
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        wc.journal_advance(self.fd, "plan", "ai")
+        wc.journal_advance(self.fd, "plan", "ai")
+        self.assertEqual(_ctx(self.fd)["status"], "planned")
+        self.assertEqual(len(self._completes("plan")), 1, "no second complete on re-run")
+
+    def test_advance_does_not_regress_a_later_spec(self) -> None:
+        # Advancing an earlier step (a re-run, or a double-fired hook) on a spec that
+        # already moved past it records the finish but must NOT drag status/currentStep
+        # backward — the forward-only guard the direct --status path also enforces.
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        wc.journal_advance(self.fd, "plan", "ai")            # -> planned
+        wc.update_context(self.fd, "tasks", "tasking", "extension", "start")
+        wc.journal_advance(self.fd, "tasks", "ai")           # -> ready-to-implement, currentStep=tasks
+        wc.journal_advance(self.fd, "plan", "ai")            # re-advance the EARLIER step
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], "ready-to-implement", "status not dragged back to planned")
+        self.assertEqual(ctx["currentStep"], "tasks", "currentStep not dragged back to plan")
+        self.assertEqual(len(self._completes("plan")), 1, "no duplicate plan complete")
+
+    def test_advance_refused_on_terminal_spec(self) -> None:
+        for terminal in ("completed", "archived"):
+            with self.subTest(status=terminal):
+                self._tmp.cleanup()
+                self._tmp = tempfile.TemporaryDirectory()
+                self.fd = Path(self._tmp.name) / "specs" / "_zzz-adv"
+                self.fd.mkdir(parents=True)
+                wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+                target = self.fd / ".spec-context.json"
+                ctx0 = json.loads(target.read_text())
+                ctx0["status"] = terminal
+                target.write_text(json.dumps(ctx0))
+                before = _ctx(self.fd)
+                self.assertIsNone(wc.journal_advance(self.fd, "implement", "ai"))
+                self.assertEqual(_ctx(self.fd), before, "terminal spec left untouched")
+
+    def test_advance_on_non_status_step_records_finish_only(self) -> None:
+        # clarify/analyze have no canonical completed-status: record the finish,
+        # leave status untouched (mirrors --finish on a non-canonical-status step).
+        for step in ("clarify", "analyze"):
+            with self.subTest(step=step):
+                self._tmp.cleanup()
+                self._tmp = tempfile.TemporaryDirectory()
+                self.fd = Path(self._tmp.name) / "specs" / "_zzz-adv"
+                self.fd.mkdir(parents=True)
+                wc.update_context(self.fd, "plan", "planning", "extension", "start")
+                wc.journal_advance(self.fd, step, "ai")
+                self.assertEqual(_ctx(self.fd)["status"], "planning", "status unchanged")
+                self.assertEqual(len(self._completes(step)), 1, "finish recorded")
+
+    def test_advance_rejects_non_canonical_step(self) -> None:
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        self.assertIsNone(wc.journal_advance(self.fd, "buld", "ai"))
+        self.assertFalse(
+            any(e.get("step") == "buld" for e in _ctx(self.fd)["history"]),
+        )
+
+
 class AppendLogMaterializeTests(unittest.TestCase):
     """The parallel-safe append path + the idempotent materializer (#346)."""
 

@@ -1,0 +1,160 @@
+{
+  "workflow": "speckit",
+  "specName": "Single-call finish-and-advance verb for the capture script",
+  "branch": "351-advance-status",
+  "currentStep": "implement",
+  "status": "implemented",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-18T15:35:15.050Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T15:35:46.276Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-18T15:35:51.236Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T15:36:17.993Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-18T15:36:26.836Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T15:36:45.919Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-18T15:36:52.284Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T15:39:21.480Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T15:39:21.558Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T15:39:21.638Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T15:39:21.713Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T15:39:21.788Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T15:39:21.863Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-18T15:39:21.863Z"
+    }
+  ],
+  "currentTask": "T006",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Add STEP_COMPLETED_STATUS map",
+      "files": [
+        "speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Add journal_advance()",
+      "files": [
+        "speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Wire --advance CLI flag, dispatch, print, guard bypass",
+      "files": [
+        "speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "AdvanceTests: per-step flip + single complete, no start",
+      "files": [
+        "speckit-extension/tests/test_context.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "AdvanceTests: idempotent, terminal-refusal, clarify/analyze finish-only",
+      "files": [
+        "speckit-extension/tests/test_context.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "CHANGELOG entry, version bump, capture-and-timing doc",
+      "files": [
+        "speckit-extension/CHANGELOG.md",
+        "speckit-extension/extension.yml",
+        "docs/capture-and-timing.md"
+      ]
+    }
+  }
+}
