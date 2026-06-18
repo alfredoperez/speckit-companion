@@ -869,17 +869,30 @@ class MarkCompleteTests(unittest.TestCase):
         last = _ctx(self.fd)["history"][-1]
         self.assertEqual((last["step"], last["kind"], last.get("task")), ("implement", "complete", None))
 
-    def test_step_does_not_close_when_journaled_but_checkbox_unchecked(self) -> None:
-        # tasks.md still [ ] for the only task: journaling it must NOT close the
-        # implement step (closing it while status stays implementing is inconsistent).
+    def test_journaling_a_task_checks_its_box_and_can_close_the_step(self) -> None:
+        # The script now owns the checkbox: journaling the only task flips its
+        # `- [ ]` → `- [x]` (so tasks.md and the journal can't diverge) and, being
+        # the last task, closes the implement step. This replaces the old
+        # journaled-but-unchecked divergence guard, which the coupling removes.
         (self.fd / "tasks.md").write_text("- [ ] **T001** a\n")
         wc.update_context(self.fd, "implement", "implementing", "extension", "start")
         wc.journal_task_finish(self.fd, "T001", "ai")
         ctx = _ctx(self.fd)
-        self.assertEqual(ctx["status"], "implementing")
+        self.assertIn("- [x] **T001** a", (self.fd / "tasks.md").read_text())
+        self.assertEqual(ctx["status"], "implemented")
+        self.assertEqual(ctx["history"][-1].get("task"), None)  # step-close lands last
+
+    def test_step_does_not_close_when_box_checked_but_not_journaled(self) -> None:
+        # The other half of the guard still holds: a box checked WITHOUT a journaled
+        # finish (e.g. hand-checked) must NOT close the step — close needs both 100%
+        # checked AND every task journaled.
+        (self.fd / "tasks.md").write_text("- [x] **T001** a\n- [ ] **T002** b\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.journal_task_finish(self.fd, "T001", "ai")  # only T001 journaled; T002 still pending
+        ctx = _ctx(self.fd)
         self.assertFalse(
             any(e["step"] == "implement" and e["kind"] == "complete" and not e.get("task") for e in ctx["history"]),
-            "step must not close while tasks.md is below 100%",
+            "step must not close while T002 is neither checked nor journaled",
         )
 
     def test_cli_mark_complete_dispatch(self) -> None:
@@ -897,6 +910,256 @@ class MarkCompleteTests(unittest.TestCase):
             wc._repo_root, wc.resolve_feature_dir = orig_root, orig_resolve
         self.assertEqual(rc, 0)
         self.assertEqual(_ctx(self.fd)["status"], "completed")
+
+
+class JournalFinishTests(unittest.TestCase):
+    """The script-owned timing self-close (--finish) that replaces hand-edited JSON."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.fd = Path(self._tmp.name) / "specs" / "_zzz-test"
+        self.fd.mkdir(parents=True)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_substep_finish_appends_without_touching_status(self) -> None:
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        wc.journal_finish(self.fd, "plan", "ai", substep="research")
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], "planning", "substep finish must NOT change status")
+        self.assertEqual(ctx["currentStep"], "plan", "substep finish must NOT change currentStep")
+        research = [e for e in ctx["history"] if e.get("substep") == "research"]
+        self.assertEqual([e["kind"] for e in research], ["complete"])
+
+    def test_step_level_finish_appends_one_complete(self) -> None:
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        wc.journal_finish(self.fd, "plan", "ai")
+        closes = [e for e in _ctx(self.fd)["history"]
+                  if e["step"] == "plan" and e["kind"] == "complete" and e.get("substep") is None and not e.get("task")]
+        self.assertEqual(len(closes), 1)
+
+    def test_finish_is_idempotent(self) -> None:
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        wc.journal_finish(self.fd, "plan", "ai", substep="research")
+        wc.journal_finish(self.fd, "plan", "ai", substep="research")
+        wc.journal_finish(self.fd, "plan", "ai")
+        wc.journal_finish(self.fd, "plan", "ai")
+        hist = _ctx(self.fd)["history"]
+        self.assertEqual(len([e for e in hist if e.get("substep") == "research"]), 1)
+        self.assertEqual(len([e for e in hist if e["kind"] == "complete" and e.get("substep") is None]), 1)
+
+    def test_finish_rejects_non_canonical_step(self) -> None:
+        # A typo'd / omitted step (would default to "specify") must not journal junk.
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        self.assertIsNone(wc.journal_finish(self.fd, "buld", "ai"))
+        self.assertFalse(
+            any(e.get("step") == "buld" for e in _ctx(self.fd)["history"]),
+            "a non-canonical step must never be journaled",
+        )
+
+    def test_finish_leaves_shipped_spec_untouched(self) -> None:
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        target = self.fd / ".spec-context.json"
+        ctx0 = json.loads(target.read_text())
+        ctx0["status"] = "completed"
+        target.write_text(json.dumps(ctx0))
+        self.assertIsNone(wc.journal_finish(self.fd, "plan", "ai", substep="research"))
+        self.assertEqual(_ctx(self.fd)["status"], "completed")
+
+    def test_cli_finish_dispatch_keeps_single_status_key(self) -> None:
+        # The exact corruption we saw in a real run: ensure --finish never adds a
+        # second top-level `status` (the JSON stays valid, single-keyed).
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        orig_root, orig_resolve = wc._repo_root, wc.resolve_feature_dir
+        wc._repo_root = lambda: Path(self._tmp.name)
+        wc.resolve_feature_dir = lambda root, explicit: self.fd
+        orig_argv = sys.argv
+        try:
+            sys.argv = ["write-context.py", "--feature-dir", str(self.fd),
+                        "--step", "plan", "--substep", "research", "--finish", "--by", "ai"]
+            self.assertEqual(wc.main(), 0)
+        finally:
+            sys.argv = orig_argv
+            wc._repo_root, wc.resolve_feature_dir = orig_root, orig_resolve
+        raw = (self.fd / ".spec-context.json").read_text()
+        self.assertEqual(raw.count('"status"'), 1)
+        self.assertEqual(_ctx(self.fd)["status"], "planning")
+
+
+class AppendLogMaterializeTests(unittest.TestCase):
+    """The parallel-safe append path + the idempotent materializer (#346)."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.fd = Path(self._tmp.name) / "specs" / "_zzz-test"
+        self.fd.mkdir(parents=True)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_append_writes_jsonl_and_does_not_touch_context(self) -> None:
+        # The hot path: --append writes one log line, never reads/writes the json.
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        before = (self.fd / ".spec-context.json").read_text()
+        wc.append_task_log(self.fd, "T001", "ai", did="did a", files=["a.ts"])
+        wc.append_task_log(self.fd, "T002", "ai")
+        # json untouched by the appends (still the start-only snapshot).
+        self.assertEqual((self.fd / ".spec-context.json").read_text(), before)
+        lines = (self.fd / ".spec-context.events.jsonl").read_text().splitlines()
+        self.assertEqual(len(lines), 2)
+        first = json.loads(lines[0])
+        self.assertEqual((first["task"], first["kind"], first["did"]), ("T001", "complete", "did a"))
+        self.assertNotIn("did", json.loads(lines[1]))  # omitted when absent
+
+    def test_materialize_folds_each_line_once_and_is_idempotent(self) -> None:
+        (self.fd / "tasks.md").write_text("- [ ] **T001** a\n- [ ] **T002** b\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.append_task_log(self.fd, "T001", "ai", did="did a", files=["a.ts"])
+        wc.append_task_log(self.fd, "T002", "ai", did="did b")
+        wc.materialize_log(self.fd, "ai")
+        ctx = _ctx(self.fd)
+        finishes = [e for e in ctx["history"] if e.get("task")]
+        self.assertEqual([e["task"] for e in finishes], ["T001", "T002"])
+        self.assertEqual(set(ctx["task_summaries"].keys()), {"T001", "T002"})
+        self.assertEqual(ctx["task_summaries"]["T001"]["did"], "did a")
+        # Re-fold the whole log: dedup on (implement, task) → no growth.
+        wc.materialize_log(self.fd, "ai")
+        self.assertEqual(len([e for e in _ctx(self.fd)["history"] if e.get("task")]), 2)
+
+    def test_materialize_preserves_each_lines_own_timestamp(self) -> None:
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        log = self.fd / ".spec-context.events.jsonl"
+        log.write_text(
+            '{"step":"implement","substep":null,"task":"T001","kind":"complete","by":"ai","at":"2026-01-01T00:00:01Z"}\n'
+            '{"step":"implement","substep":null,"task":"T002","kind":"complete","by":"ai","at":"2026-01-01T00:05:00Z"}\n'
+        )
+        wc.materialize_log(self.fd, "ai")
+        at = {e["task"]: e["at"] for e in _ctx(self.fd)["history"] if e.get("task")}
+        self.assertEqual(at["T001"], "2026-01-01T00:00:01Z")
+        self.assertEqual(at["T002"], "2026-01-01T00:05:00Z")  # real finish time, not fold time
+
+    def test_materialize_closes_step_when_all_tasks_checked(self) -> None:
+        (self.fd / "tasks.md").write_text("- [x] **T001** a\n- [x] **T002** b\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.append_task_log(self.fd, "T001", "ai")
+        wc.append_task_log(self.fd, "T002", "ai")
+        wc.materialize_log(self.fd, "ai")
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], "implemented")
+        step_closes = [e for e in ctx["history"] if e["step"] == "implement" and e["kind"] == "complete" and not e.get("task")]
+        self.assertEqual(len(step_closes), 1)
+        self.assertEqual(ctx["history"][-1].get("task"), None)  # step-close lands last
+
+    def test_append_leaves_shipped_spec_untouched(self) -> None:
+        # A stray --append after the spec shipped must not orphan a line in the log.
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        target = self.fd / ".spec-context.json"
+        ctx0 = json.loads(target.read_text())
+        ctx0["status"] = "completed"
+        target.write_text(json.dumps(ctx0))
+        self.assertIsNone(wc.append_task_log(self.fd, "T999", "ai"))
+        self.assertFalse((self.fd / ".spec-context.events.jsonl").exists(),
+                         "no events line should be appended to a shipped spec")
+
+    def test_materialize_no_log_is_noop(self) -> None:
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        self.assertIsNone(wc.materialize_log(self.fd, "ai"))
+
+    def test_materialize_does_not_regress_shipped_spec(self) -> None:
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.append_task_log(self.fd, "T001", "ai")
+        target = self.fd / ".spec-context.json"
+        ctx0 = json.loads(target.read_text())
+        ctx0["status"] = "completed"
+        target.write_text(json.dumps(ctx0))
+        self.assertIsNone(wc.materialize_log(self.fd, "ai"))
+        self.assertEqual(_ctx(self.fd)["status"], "completed")
+
+    def test_materialize_checks_off_tasks_md_from_the_log(self) -> None:
+        # The script owns the checkboxes: appended finishes flip `- [ ]` → `- [x]`
+        # at materialize, so the model/subagent never edits the shared tasks.md.
+        (self.fd / "tasks.md").write_text("- [ ] **T001** a\n- [ ] **T002** b\n- [ ] **T003** c\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.append_task_log(self.fd, "T001", "ai")
+        wc.append_task_log(self.fd, "T003", "ai")
+        wc.materialize_log(self.fd, "ai")
+        md = (self.fd / "tasks.md").read_text()
+        self.assertIn("- [x] **T001** a", md)
+        self.assertIn("- [ ] **T002** b", md)  # not journaled → stays unchecked
+        self.assertIn("- [x] **T003** c", md)
+
+    def test_mark_tasks_done_is_idempotent_and_never_unmarks(self) -> None:
+        (self.fd / "tasks.md").write_text("- [x] **T001** a\n- [ ] **T002** b\n")
+        # Re-marking an already-checked task is a no-op; marking T002 flips only it.
+        wc._mark_tasks_done(self.fd / "tasks.md", {"T001", "T002"})
+        md = (self.fd / "tasks.md").read_text()
+        self.assertEqual(md, "- [x] **T001** a\n- [x] **T002** b\n")
+        # An id not present changes nothing.
+        wc._mark_tasks_done(self.fd / "tasks.md", {"T999"})
+        self.assertEqual((self.fd / "tasks.md").read_text(), md)
+
+    def test_journal_task_finish_also_checks_tasks_md(self) -> None:
+        (self.fd / "tasks.md").write_text("- [ ] **T001** a\n- [ ] **T002** b\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.journal_task_finish(self.fd, "T001", "ai")
+        md = (self.fd / "tasks.md").read_text()
+        self.assertIn("- [x] **T001** a", md)
+        self.assertIn("- [ ] **T002** b", md)
+
+    def test_cli_append_then_materialize_dispatch(self) -> None:
+        (self.fd / "tasks.md").write_text("- [x] **T001** a\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        orig_root, orig_resolve = wc._repo_root, wc.resolve_feature_dir
+        wc._repo_root = lambda: Path(self._tmp.name)
+        wc.resolve_feature_dir = lambda root, explicit: self.fd
+        orig_argv = sys.argv
+        try:
+            sys.argv = ["write-context.py", "--feature-dir", str(self.fd),
+                        "--task", "T001", "--kind", "complete", "--by", "ai", "--append"]
+            self.assertEqual(wc.main(), 0)
+            self.assertTrue((self.fd / ".spec-context.events.jsonl").is_file())
+            sys.argv = ["write-context.py", "--feature-dir", str(self.fd), "--materialize", "--by", "ai"]
+            self.assertEqual(wc.main(), 0)
+        finally:
+            sys.argv = orig_argv
+            wc._repo_root, wc.resolve_feature_dir = orig_root, orig_resolve
+        self.assertEqual(_ctx(self.fd)["status"], "implemented")
+
+
+class FeatureJsonResolverTests(unittest.TestCase):
+    """resolve_feature_dir accepts both feature.json key shapes (canonical +
+    stock spec-kit's FEATURE_DIR), so a bare call still finds the spec."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        (self.root / "specs" / "001-x").mkdir(parents=True)
+        (self.root / ".specify").mkdir()
+        # Clear env pointers so resolution falls through to feature.json.
+        import os as _os
+        self._saved = {k: _os.environ.pop(k, None) for k in ("SPECIFY_FEATURE_DIRECTORY", "SPECIFY_FEATURE")}
+
+    def tearDown(self) -> None:
+        import os as _os
+        for k, v in self._saved.items():
+            if v is not None:
+                _os.environ[k] = v
+        self._tmp.cleanup()
+
+    def _write_pointer(self, payload: dict) -> None:
+        (self.root / ".specify" / "feature.json").write_text(json.dumps(payload))
+
+    def test_resolves_canonical_feature_directory_key(self) -> None:
+        self._write_pointer({"feature_directory": "specs/001-x"})
+        got = wc.resolve_feature_dir(self.root, None)
+        self.assertEqual(got, self.root / "specs/001-x")
+
+    def test_resolves_stock_FEATURE_DIR_key(self) -> None:
+        # The shape the companion auto-prep / stock create-new-feature.sh writes.
+        self._write_pointer({"FEATURE_DIR": "specs/001-x", "FEATURE_NAME": "001-x"})
+        got = wc.resolve_feature_dir(self.root, None)
+        self.assertEqual(got, self.root / "specs/001-x")
 
 
 if __name__ == "__main__":

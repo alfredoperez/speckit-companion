@@ -1,5 +1,5 @@
 ---
-description: "Companion specify — spec.md with no user-story section"
+description: "Companion specify — spec.md with prioritized user stories"
 ---
 
 ## User Input
@@ -8,19 +8,10 @@ description: "Companion specify — spec.md with no user-story section"
 $ARGUMENTS
 ```
 
+<!-- speckit-companion:part speckit-hooks -->
+
+<!-- /speckit-companion:part speckit-hooks -->
+
 ## Outline
 
-Produce a Companion specification — **no user-story / user-scenario section**. Capture intent as testable requirements, not narrative journeys.
-
-<!-- speckit-companion:part parallel -->
-## Parallel work — use subagents where your provider supports them
-
-If you can spawn subagents or run work concurrently, use that capability across this step:
-
-- **Investigation.** Fan out independent reads across subagents (one per area) and return distilled findings, instead of reading every file serially into the main context.
-- **Tasks.** Mark independent (different-file, no open dependency) tasks `[P]` so they can run together.
-- **Implement.** Run `[P]` batches concurrently via subagents; same-file or dependent tasks stay ordered.
-
-If you cannot spawn subagents, do all of it sequentially — no error, identical output. This is a capability suggestion, not a requirement: a chat-only host simply runs the step the slow way and produces the same artifacts.
-<!-- /speckit-companion:part parallel -->
-
+Produce a feature specification: prioritized user stories with acceptance scenarios, functional requirements, key entities, edge cases, and measurable success criteria, then a quality checklist.

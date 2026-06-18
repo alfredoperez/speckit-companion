@@ -137,12 +137,16 @@ def resolve_feature_dir(root: Path, explicit: str | None) -> Path | None:
         if hit:
             return hit
 
-    # 4. .specify/feature.json -> feature_directory
+    # 4. .specify/feature.json -> feature directory. Accept both the canonical
+    #    `feature_directory` key and stock spec-kit's `FEATURE_DIR` (the upstream
+    #    create-new-feature.sh shape) so a pointer written either way resolves —
+    #    otherwise a bare call (e.g. --mark-complete with no --feature-dir) fails
+    #    to find the spec even though the pointer is present.
     feature_json = root / ".specify" / "feature.json"
     if feature_json.is_file():
         try:
             data = json.loads(feature_json.read_text(encoding="utf-8"))
-            fd = data.get("feature_directory")
+            fd = data.get("feature_directory") or data.get("FEATURE_DIR")
             if fd:
                 p = Path(fd)
                 return p if p.is_absolute() else root / p
@@ -308,6 +312,40 @@ def parse_task_markers(tasks_md: Path) -> tuple[list[str], list[str]]:
     return all_ids, done_ids
 
 
+def _mark_tasks_done(tasks_md: Path, ids: set) -> None:
+    """Flip `- [ ] **<id>**` → `- [x]` in tasks.md for every journaled task id.
+
+    The script owns the checkboxes so the model (and any subagent) never has to
+    edit the shared tasks.md — it only appends its finish to the event log, and
+    this single writer derives the checkboxes from that log. Targeted: only a
+    *pending* line whose captured id is in `ids` is flipped (idempotent — an
+    already-checked line never matches PENDING_TASK_RE), and only that line's
+    first `[ ]` is rewritten, so surrounding text is untouched."""
+    if not ids or not tasks_md.is_file():
+        return
+    try:
+        lines = tasks_md.read_text(encoding="utf-8").splitlines(keepends=True)
+    except OSError:
+        return
+    changed = False
+    for i, line in enumerate(lines):
+        m = PENDING_TASK_RE.match(line)
+        if m and m.group(1) in ids:
+            lines[i] = line.replace("[ ]", "[x]", 1)
+            changed = True
+    if not changed:
+        return
+    tmp = tasks_md.with_suffix(tasks_md.suffix + ".tmp")
+    try:
+        tmp.write_text("".join(lines), encoding="utf-8")
+        os.replace(tmp, tasks_md)
+    except OSError:
+        try:
+            tmp.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
 def _feature_tasks_at_100(feature_dir: Path) -> bool:
     """True when feature_dir/tasks.md exists, has markers, and every one is checked."""
     tasks_md = feature_dir / "tasks.md"
@@ -454,6 +492,53 @@ def update_context(
     return target
 
 
+def journal_finish(feature_dir: Path, step: str, by: str, substep: str | None = None) -> Path | None:
+    """Append a single step- or substep-level **finish** to history and nothing else.
+
+    This is the AI's timing self-close for the steps the lifecycle hooks don't
+    close: a step-level finish for plan/tasks/clarify/analyze (substep=None), or a
+    substep boundary (plan: research/design; tasks: generate). The capture hooks
+    write the step START + status; they do NOT write these completes, so the AI
+    has to — and it used to hand-author the JSON, which is what produced a
+    duplicate `status` key. Routing it through the script makes the write atomic
+    (no malformed file possible) and stops the AI ever editing .spec-context.json
+    by hand. Deliberately does NOT touch `status` or `currentStep` (the hooks own
+    those) — it only adds the honest finish timestamp. Idempotent on (step, substep);
+    best-effort; a genuinely shipped spec (completed/archived) is left untouched."""
+    # A finish is only meaningful for a canonical step; reject a typo'd or omitted
+    # step (which would otherwise default to "specify" and journal a junk complete).
+    if step not in CANONICAL_STEPS:
+        print(
+            f"[companion] Skipping --finish: '{step}' is not a canonical step "
+            f"({', '.join(sorted(CANONICAL_STEPS))}).",
+            file=sys.stderr,
+        )
+        return None
+    target = feature_dir / ".spec-context.json"
+    ctx = read_ctx(target)
+    if ctx.get("status") in CROSS_STEP_TERMINAL:
+        print(
+            f"[companion] {target} already at status={ctx.get('status')}; "
+            f"not journaling a {step}{('/' + substep) if substep else ''} finish.",
+            file=sys.stderr,
+        )
+        return None
+    branch = _git_branch(_repo_root()) or "main"
+    log = canonical_log(ctx)
+    fill_required(ctx, feature_dir, branch)
+    if not _has_complete(log, step, substep):
+        log.append({
+            "step": step,
+            "substep": substep,
+            "kind": "complete",
+            "by": by,
+            "at": _now_iso(),
+        })
+    commit_log(ctx, log)
+    atomic_write(target, ctx)
+    return target
+
+
 def _upsert_task_summary(
     ctx: dict, task_id: str, did: str | None, files: list[str] | None,
     status: str = "DONE",
@@ -487,6 +572,62 @@ def _upsert_task_summary(
     ctx["task_summaries"] = summaries
 
 
+def _fold_task_finish(
+    ctx: dict, log: list, feature_dir: Path, task_id: str, by: str,
+    did: str | None, files: list[str] | None, at: str,
+) -> None:
+    """Fold one task's finish into ctx+log in place (no I/O). Shared by the live
+    read-modify-write path and the append-log materializer, so both produce an
+    identical `history` entry and `task_summaries` row. Idempotent on (implement,
+    task_id); stamps the history entry with the supplied `at` so a materialized
+    line keeps its own real finish time, not the fold time."""
+    ctx["currentStep"] = "implement"
+    ctx["currentTask"] = task_id
+    # At 100% tasks land at `implemented`, not `implementing` — re-asserting `implementing` was the race that left a done spec unmarkable.
+    if ctx.get("status") not in ("implemented", "completed", "archived"):
+        ctx["status"] = "implemented" if _feature_tasks_at_100(feature_dir) else "implementing"
+    if not _has_complete(log, "implement", task_id):
+        log.append({
+            "step": "implement",
+            "substep": None,
+            "task": task_id,
+            "kind": "complete",
+            "by": by,
+            "at": at,
+        })
+    _upsert_task_summary(ctx, task_id, did, files)
+
+
+def _maybe_close_implement(ctx: dict, log: list, feature_dir: Path, by: str) -> None:
+    """Close the implement step once tasks.md is 100% AND every task has a journaled
+    finish — never on one signal alone, so a journaled-but-unchecked task can't close
+    the step while status is still implementing."""
+    tasks_md = feature_dir / "tasks.md"
+    if not tasks_md.is_file():
+        return
+    markers = parse_task_markers(tasks_md)[0]
+    distinct = list(dict.fromkeys(markers))
+    all_done = (
+        bool(markers)
+        and len(distinct) == len(markers)
+        and _feature_tasks_at_100(feature_dir)
+        and set(distinct) <= _journaled_tasks(log)
+    )
+    if all_done and not _has_complete(log, "implement", None):
+        log.append({
+            "step": "implement",
+            "substep": None,
+            "kind": "complete",
+            "by": by,
+            "at": _now_iso(),
+        })
+        # Keep status consistent with the closed step. The fold that ran before
+        # the script checked the boxes may have left status at `implementing`
+        # (tasks.md wasn't 100% yet); now that the step is closing, it's implemented.
+        if ctx.get("status") not in ("completed", "archived"):
+            ctx["status"] = "implemented"
+
+
 def journal_task_finish(
     feature_dir: Path, task_id: str, by: str,
     did: str | None = None, files: list[str] | None = None,
@@ -500,11 +641,13 @@ def journal_task_finish(
     when implement already self-closed to `implemented`; only a genuinely shipped
     spec (completed/archived) is left untouched.
 
+    This is the read-modify-write path. For parallel runs the assistant uses the
+    append path (`--append`) instead, which writes a line to `.spec-context.events.jsonl`
+    with no read, and `--materialize` folds those lines through the same core here.
+
     Also writes `task_summaries.<task_id>` (the field the Activity panel's Tasks card
     reads) in the SAME atomic write, from `--did`/`--files`, so the panel is populated
-    by the script call rather than a separately-skippable AI edit. The summary is
-    upserted on every call (so a re-run can backfill a `did`/`files` it lacked) while
-    the history finish event stays single (idempotent).
+    by the script call rather than a separately-skippable AI edit.
     """
     target = feature_dir / ".spec-context.json"
     ctx = read_ctx(target)
@@ -520,46 +663,103 @@ def journal_task_finish(
 
     log = canonical_log(ctx)
     fill_required(ctx, feature_dir, branch)
-    ctx["currentStep"] = "implement"
-    ctx["currentTask"] = task_id
-    # At 100% tasks land at `implemented`, not `implementing` — re-asserting `implementing` was the race that left a done spec unmarkable.
-    at_100 = _feature_tasks_at_100(feature_dir)
-    if ctx.get("status") not in ("implemented", "completed", "archived"):
-        ctx["status"] = "implemented" if at_100 else "implementing"
-
-    if not _has_complete(log, "implement", task_id):
-        log.append({
-            "step": "implement",
-            "substep": None,
-            "task": task_id,
-            "kind": "complete",
-            "by": by,
-            "at": _now_iso(),
-        })
-    _upsert_task_summary(ctx, task_id, did, files)
-    # Close the implement step only once tasks.md is 100% AND every task has a journaled finish — never on one signal alone, so a journaled-but-unchecked task can't close the step while status is still implementing.
-    tasks_md = feature_dir / "tasks.md"
-    all_done = False
-    if tasks_md.is_file():
-        markers = parse_task_markers(tasks_md)[0]
-        distinct = list(dict.fromkeys(markers))
-        # Duplicate/ambiguous ids: don't auto-close the step from tasks.md.
-        all_done = (
-            bool(markers)
-            and len(distinct) == len(markers)
-            and at_100
-            and set(distinct) <= _journaled_tasks(log)
-        )
-    if all_done and not _has_complete(log, "implement", None):
-        log.append({
-            "step": "implement",
-            "substep": None,
-            "kind": "complete",
-            "by": by,
-            "at": _now_iso(),
-        })
+    _fold_task_finish(ctx, log, feature_dir, task_id, by, did, files, _now_iso())
+    _mark_tasks_done(feature_dir / "tasks.md", {task_id})
+    _maybe_close_implement(ctx, log, feature_dir, by)
     commit_log(ctx, log)
     atomic_write(target, ctx)
+    return target
+
+
+def append_task_log(
+    feature_dir: Path, task_id: str, by: str,
+    did: str | None = None, files: list[str] | None = None,
+) -> Path | None:
+    """Append ONE task-finish line to `.spec-context.events.jsonl`. The only WRITE
+    is the append, so concurrent workers (subagents) each record themselves without
+    contending — a single `O_APPEND` write of a short line is atomic across appenders
+    on POSIX, and parallel finishes never interleave. (It reads `.spec-context.json`
+    once to skip a shipped spec, but never rewrites it — concurrent reads don't
+    contend, and the atomic temp+rename materialize never exposes a partial file.)
+
+    The line carries its own `at` timestamp (real finish time) plus `did`/`files`,
+    so `--materialize` can fold it later with the task's true duration preserved.
+    This path never closes the step or updates status — that happens at fold time.
+    A genuinely shipped spec (completed/archived) is left untouched, so a stray
+    late append can't orphan a post-completion line into the events log.
+    """
+    if read_ctx(feature_dir / ".spec-context.json").get("status") in CROSS_STEP_TERMINAL:
+        print(
+            f"[companion] {feature_dir} already shipped; not appending task {task_id}.",
+            file=sys.stderr,
+        )
+        return None
+    log_path = feature_dir / ".spec-context.events.jsonl"
+    entry: dict = {
+        "step": "implement",
+        "substep": None,
+        "task": task_id,
+        "kind": "complete",
+        "by": by,
+        "at": _now_iso(),
+    }
+    if did:
+        entry["did"] = did
+    if files:
+        entry["files"] = files
+    line = json.dumps(entry, ensure_ascii=False) + "\n"
+    with open(log_path, "a", encoding="utf-8") as fh:
+        fh.write(line)
+    return log_path
+
+
+def materialize_log(feature_dir: Path, by: str) -> Path | None:
+    """Fold every appended task-finish line into `.spec-context.json` in one write.
+
+    Replays each `.spec-context.events.jsonl` line through `_fold_task_finish`, so the
+    materialized `history`/`task_summaries` are byte-identical to what the live path
+    would have produced — only batched into a single read-modify-write instead of one
+    per task. Idempotent: dedup on (implement, task_id) means re-folding the whole log
+    (per batch and again at step close) never double-counts. Leaves a genuinely shipped
+    spec untouched. No log file → nothing to fold."""
+    log_path = feature_dir / ".spec-context.events.jsonl"
+    if not log_path.is_file():
+        return None
+    target = feature_dir / ".spec-context.json"
+    ctx = read_ctx(target)
+    if ctx.get("status") in CROSS_STEP_TERMINAL:
+        return None
+    branch = _git_branch(_repo_root()) or "main"
+    log = canonical_log(ctx)
+    fill_required(ctx, feature_dir, branch)
+    folded = 0
+    for raw in log_path.read_text(encoding="utf-8").splitlines():
+        raw = raw.strip()
+        if not raw:
+            continue
+        try:
+            e = json.loads(raw)
+        except json.JSONDecodeError:
+            continue  # tolerate a torn line; the rest still fold
+        tid = e.get("task")
+        if not tid:
+            continue
+        _fold_task_finish(
+            ctx, log, feature_dir, tid, e.get("by", by),
+            e.get("did"), e.get("files"), e.get("at") or _now_iso(),
+        )
+        folded += 1
+    # The script owns the checkboxes: flip tasks.md `[ ]` → `[x]` for every
+    # journaled task (single writer, so parallel subagents that only append are
+    # race-free). Must run BEFORE the step-close check, which reads tasks.md.
+    _mark_tasks_done(feature_dir / "tasks.md", _journaled_tasks(log))
+    _maybe_close_implement(ctx, log, feature_dir, by)
+    commit_log(ctx, log)
+    atomic_write(target, ctx)
+    print(
+        f"[companion] Materialized {folded} task line(s) from {log_path.name} into {target}.",
+        file=sys.stderr,
+    )
     return target
 
 
@@ -649,6 +849,12 @@ def sync_tasks(feature_dir: Path, tasks_md: Path, final_status: str, by: str) ->
         )
         return None
 
+    # Fold any appended task lines first (idempotent) so a parallel run that used
+    # the append path but skipped --materialize still gets its did/files into the
+    # json before this marker-based backstop fills the rest.
+    materialize_log(feature_dir, by)
+    ctx = read_ctx(target)
+
     all_ids, done_ids = parse_task_markers(tasks_md)
     if not all_ids:
         print(f"[companion] No task markers found in {tasks_md}; nothing to sync.", file=sys.stderr)
@@ -727,9 +933,25 @@ def main() -> int:
         help="Per-task finish (finish-only): append one complete event for this task id.",
     )
     parser.add_argument(
+        "--append", action="store_true",
+        help="With --task: append the finish to .spec-context.events.jsonl (no read of "
+             ".spec-context.json) so parallel workers never contend. Fold later with --materialize.",
+    )
+    parser.add_argument(
+        "--materialize", action="store_true",
+        help="Fold every appended .spec-context.events.jsonl task line into .spec-context.json "
+             "in one write (idempotent). Run after each batch and at step close.",
+    )
+    parser.add_argument(
         "--mark-complete", action="store_true",
         help="Promote a finished spec to the terminal status 'completed' "
              "(the only sanctioned writer of completed; keeps currentStep=implement).",
+    )
+    parser.add_argument(
+        "--finish", action="store_true",
+        help="Append a pure timing finish for --step (and optional --substep) to history "
+             "without touching status/currentStep — the AI's self-close for plan/tasks/"
+             "clarify/analyze and their substeps. Replaces hand-authored JSON edits.",
     )
     parser.add_argument(
         "--did", default=None,
@@ -751,7 +973,7 @@ def main() -> int:
     # Best-effort guard: a non-canonical step is a no-op, never a host failure.
     # Terminal state belongs in `status`, not `currentStep`. Skipped in task-sync
     # mode, which always operates on the implement step.
-    if not args.tasks_file and not args.task and not args.mark_complete and not args.set_pairs and (args.step == "done" or args.step not in CANONICAL_STEPS):
+    if not args.tasks_file and not args.task and not args.mark_complete and not args.set_pairs and not args.materialize and not args.finish and (args.step == "done" or args.step not in CANONICAL_STEPS):
         print(
             f"[companion] Skipping: '{args.step}' is not a canonical currentStep "
             f"({', '.join(sorted(CANONICAL_STEPS))}).",
@@ -806,13 +1028,20 @@ def main() -> int:
             target = sync_tasks(feature_dir, tasks_md, final_status, args.by)
         elif args.mark_complete:
             target = mark_spec_complete(feature_dir, args.by)
+        elif args.finish:
+            target = journal_finish(feature_dir, args.step, args.by, args.substep)
+        elif args.materialize:
+            target = materialize_log(feature_dir, args.by)
         elif args.task:
             files = (
                 [f.strip() for f in args.files.split(",") if f.strip()]
                 if args.files else None
             )
             did = args.did.strip() if args.did else None
-            target = journal_task_finish(feature_dir, args.task, args.by, did, files)
+            if args.append:
+                target = append_task_log(feature_dir, args.task, args.by, did, files)
+            else:
+                target = journal_task_finish(feature_dir, args.task, args.by, did, files)
         else:
             target = update_context(feature_dir, args.step, args.status, args.by, args.kind, args.substep)
     except Exception as exc:  # noqa: BLE001 - best-effort, swallow + report
@@ -824,6 +1053,13 @@ def main() -> int:
             print(f"[companion] Set {', '.join(args.set_pairs)} in {target}")
         elif args.mark_complete:
             print(f"[companion] Marked {target} complete (status=completed, by={args.by})")
+        elif args.finish:
+            _label = f"{args.step}{('/' + args.substep) if args.substep else ''}"
+            print(f"[companion] Journaled {_label} finish in {target} (by={args.by})")
+        elif args.materialize:
+            print(f"[companion] Materialized append-log into {target}")
+        elif args.task and args.append:
+            print(f"[companion] Appended finish for task {args.task} to {target} (by={args.by})")
         elif args.task:
             print(f"[companion] Journaled finish for task {args.task} in {target} (by={args.by})")
         else:

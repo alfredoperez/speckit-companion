@@ -39,7 +39,7 @@ Routes: `/` → `TodosPage`, `/about` → `AboutPage`. The app title is the `<h1
 - **Persistence** always goes through `src/lib/storage.ts` (`load`/`save`) with a string key. A store persists via a `useEffect` that saves on change and seeds its reducer with `load(...)`.
 - **A new feature area** = a new `pages/` component + a `<Route>` in `App.tsx` + a nav `<Link>` in `Header.tsx` (+ a store slice if it owns data).
 - **Components** stay presentational and prop-driven; pages wire them to the store.
-- **Test ids**: when a spec asks for specific `data-testid` values, use them verbatim — the bench grades on them.
+- **Test ids**: only add a `data-testid` when a spec explicitly pins one as a verbatim requirement; otherwise prefer role/label/text queries (the app's convention). Don't invent test ids to "pass" — correctness is graded on user-visible behavior, not on specific selectors.
 - **Tests**: co-locate as `*.test.tsx` next to the code (see `src/App.test.tsx`, `src/lib/storage.test.ts`). Render router-dependent components inside `<MemoryRouter>`.
 
 ## Bench

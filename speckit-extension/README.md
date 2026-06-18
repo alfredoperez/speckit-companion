@@ -101,11 +101,11 @@ Because it runs unattended, auto sets an **`unattended`** signal that project ch
 
 Auto needs an AI agent that keeps working after each step finishes. On a plain one-shot terminal it gracefully falls back to the normal flow: it runs the first step and stops, and the rest is triggered the usual way.
 
-### As fast as your assistant allows
+### Familiar spec-kit output, plus right-sizing and completion
 
-When your AI assistant can work on several things at once, the Companion steps spread the work out automatically — there's nothing to switch on. While investigating, it reads different parts of the codebase side by side instead of one file at a time. When it generates tasks, it flags which ones are independent enough to run together. During implementation, it builds those independent tasks at the same time, while anything that touches the same file or depends on earlier work still runs in order. Assistants that can't run work concurrently simply do each step the usual one-at-a-time way and produce the exact same result — no error, identical output.
+Companion's `/speckit.companion.*` commands produce the same shape of artifacts as stock spec-kit, so the output reads the way you already expect: a spec with prioritized user stories, acceptance scenarios, key entities, and edge cases; a plan with a summary, a constitution check, the concrete file layout, and the design files (`research.md`, `data-model.md`, `contracts/`); and a task list grouped by user story into phases.
 
-A project can also point specific kinds of work at a specialist helper — for example, sending test tasks to a testing specialist — without changing the built-in implementation step.
+On top of that familiar shape, the Companion pipeline adds three things stock does not have. It **right-sizes** the run, so a small change skips the review pauses and a large one gets extra scrutiny. It **captures lifecycle timing** into `.spec-context.json` as each step and task finishes, which is what lights up the GUI. And it **marks the spec complete** at the end, so the run lands in Completed on its own instead of stopping at "implemented."
 
 ## SpecKit Companion workflow — the lean pipeline shape
 
@@ -148,6 +148,8 @@ The workflow's safe default is the full pipeline, so an ambiguous size never dro
 ## Customize the pipeline (`.specify/companion.yml`)
 
 The Companion commands are assembled from composable **nodes** — small sections inside a command. An optional, project-local `.specify/companion.yml` lets you attach your own work before or after any node (run a shell command, add an instruction, or call a reusable node file) and reorder which nodes a command runs — without forking a command. If the file is absent, every command runs exactly as it ships. A worked example (a review → PR → Copilot → merge → reinstall ship tail) is in [`examples/ship-ticket/`](./examples/ship-ticket/). Full reference: [`docs/node-model.md`](./docs/node-model.md).
+
+This is separate from stock spec-kit's own extension hooks (`.specify/extensions.yml`): a Companion run honors those too, so any spec-kit extension you've installed (the git extension and others) fires at the start and end of each step exactly as it would on a stock `/speckit.*` run. Both hook systems run on the same pipeline.
 
 ## Installation
 

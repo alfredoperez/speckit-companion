@@ -5,6 +5,7 @@ order:
   - draft-spec
   - quality-checklist
   - classify-size
+  - persist-size
   - branch
   - finalize
   - handoff

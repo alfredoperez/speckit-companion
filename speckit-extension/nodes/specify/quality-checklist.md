@@ -17,9 +17,9 @@ reads: [draft-spec]
    ## Content Quality
 
    - [ ] No implementation details (languages, frameworks, APIs)
-   - [ ] Focused on user/business value and the change's intent
-   - [ ] Overview states what is delivered and why in 1–3 sentences
-   - [ ] All four sections present (Overview, Functional Requirements, Success Criteria, Assumptions)
+   - [ ] Focused on user value and business needs
+   - [ ] Written for non-technical stakeholders
+   - [ ] All mandatory sections completed (User Scenarios, Requirements, Success Criteria)
 
    ## Requirement Completeness
 
@@ -27,14 +27,16 @@ reads: [draft-spec]
    - [ ] Each Functional Requirement is a single, testable MUST/SHOULD statement
    - [ ] Success criteria are measurable
    - [ ] Success criteria are technology-agnostic (no implementation details)
-   - [ ] Edge cases are folded into Functional Requirements or Assumptions
+   - [ ] All acceptance scenarios are defined
+   - [ ] Edge cases are identified
    - [ ] Scope is clearly bounded
    - [ ] Dependencies and assumptions identified
 
    ## Feature Readiness
 
-   - [ ] Every Functional Requirement maps to at least one Success Criterion
-   - [ ] Overview intent is reflected by the FR list (no orphan goals)
+   - [ ] All functional requirements have clear acceptance criteria
+   - [ ] User scenarios cover primary flows
+   - [ ] Feature meets measurable outcomes defined in Success Criteria
    - [ ] No implementation details leak into the specification
 
    ## Notes

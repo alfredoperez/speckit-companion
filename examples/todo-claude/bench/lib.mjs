@@ -9,8 +9,10 @@ import {
   statSync,
   mkdirSync,
   rmSync,
+  copyFileSync,
 } from 'node:fs'
 import { execFileSync } from 'node:child_process'
+import { judgeBehavior } from './behavioral-judge.mjs'
 
 export const BENCH_DIR = dirname(fileURLToPath(import.meta.url))
 export const SANDBOX_DIR = dirname(BENCH_DIR) // examples/todo-claude
@@ -464,13 +466,51 @@ function buildPasses(cwd) {
   } catch { return false }
 }
 
+// A throwaway vitest config written into the cell only for a grading pass. The
+// cell's committed vitest.config covers `src/**` only (it must read as a plain
+// app), and vitest treats a positional test path as a FILTER over `include` —
+// not an extra include — so without this the injected oracle under
+// bench/acceptance/ would be filtered out and "No test files found" → 0/0.
+const GRADE_VITEST_CONFIG = `import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./vitest.setup.ts'],
+    include: ['bench/acceptance/**/*.test.tsx'],
+  },
+})
+`
+
+// The deterministic testid oracle is NOT baked into the cell — the implementing
+// model would read it and code to the hidden testids. Inject it transiently from
+// the bench source (plus a grade-only vitest config that includes it), run it,
+// then remove both so the cell never carries the oracle or any bench config
+// between runs.
 function runAcceptance(cwd, size) {
   const out = join(cwd, '.last-vitest.json')
   rmSync(out, { force: true })
+  const destDir = join(cwd, 'bench', 'acceptance')
+  const srcDir = join(BENCH_DIR, 'acceptance')
+  const gradeCfg = join(cwd, 'vitest.grade.config.ts')
+  mkdirSync(destDir, { recursive: true })
+  for (const f of [`${size}.test.tsx`, 'harness.tsx']) {
+    const src = join(srcDir, f)
+    if (existsSync(src)) copyFileSync(src, join(destDir, f))
+  }
+  writeFileSync(gradeCfg, GRADE_VITEST_CONFIG)
   try {
-    execFileSync('npm', ['run', 'test', '--', `bench/acceptance/${size}.test.tsx`, '--reporter=json', `--outputFile=${out}`],
+    execFileSync('npm', ['run', 'test', '--', '--config', 'vitest.grade.config.ts',
+      `bench/acceptance/${size}.test.tsx`, '--reporter=json', `--outputFile=${out}`],
       { cwd, stdio: 'ignore', timeout: 300000 })
   } catch { /* failing tests still write the json report */ }
+  // Remove the WHOLE bench/ dir (not just acceptance/) — a baked cell must carry
+  // no bench/ at all — plus the throwaway grade config.
+  rmSync(join(cwd, 'bench'), { recursive: true, force: true })
+  rmSync(gradeCfg, { force: true })
   const r = readJson(out, {})
   return { passed: r.numPassedTests ?? 0, total: r.numTotalTests ?? 0 }
 }
@@ -490,13 +530,21 @@ export function measureCell({ cellDir, size, mode, runId, startedAt, finishedAt,
     : nullTiming()
 
   const buildPass = buildPasses(cellDir)
-  const acceptance = runAcceptance(cellDir, size)
   const regression = runRegression(cellDir)
   const changed = changedSrcFiles(cellDir)
   const conventions = conventionChecks(changed)
   const blast = blastRadius(size, changed)
 
   const specMd = readText(join(specDir || cellDir, 'spec.md'))
+
+  // Correctness is graded on BEHAVIOR (the spec's acceptance scenarios judged
+  // against the built source), not exact data-testids. The prompts no longer
+  // leak testids, so the deterministic testid suite is kept only as a labeled
+  // baseline; the behavioral judge is primary when a judge command is wired.
+  const deterministic = runAcceptance(cellDir, size)
+  const behavioral = judgeBehavior({ specMd, changed, buildPass })
+  const acceptance = behavioral || deterministic
+  const acceptanceSource = behavioral ? 'behavioral' : 'deterministic'
   const planMd = readText(join(specDir || cellDir, 'plan.md'))
   const tasksMd = readText(join(specDir || cellDir, 'tasks.md'))
   const lines = (t) => (t ? t.split('\n').length : 0)
@@ -522,6 +570,9 @@ export function measureCell({ cellDir, size, mode, runId, startedAt, finishedAt,
     buildPass,
     acceptancePassed: acceptance.passed,
     acceptanceTotal: acceptance.total,
+    acceptanceSource,
+    behavioralVerdicts: behavioral?.verdicts || null,
+    deterministicBaseline: { passed: deterministic.passed, total: deterministic.total },
     regressionPassed: regression.passed,
     regressionTotal: regression.total,
     conventions,

@@ -2,4 +2,5 @@
 # nodes: [...] replaces this list.
 order:
   - implement-exec
+  - complete
   - handoff

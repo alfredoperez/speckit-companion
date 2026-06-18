@@ -6,6 +6,22 @@ All notable changes to the **spec-kit extension** (`id: companion`) are document
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/); this extension follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- **The task list now shows which work is independent and where it has to wait.** Instead of scattered "can run in parallel" flags, each phase of the task list is laid out as ordered **waves** — a wave groups tasks that touch different files and don't depend on each other, and an explicit "wait for the wave above" line marks where the next group depends on the last. It reads clearly for a person and gives the assistant an honest dependency map to build against. Per-task notes (what each task did, which files) and the exact step-level timing are what the activity panel leans on; the per-task clock is best-effort, not a precise stopwatch.
+- **Leaner plans — less boilerplate to read.** The plan no longer restates the project's known stack in a "Technical Context" block (your assistant already knows the codebase it's working in), and it stops writing a quickstart file that only repeated the obvious. Plans now lead with a plain-language summary, the constitution check, and the concrete file layout — the parts that actually shape the build. A genuinely non-obvious stack choice still gets a sentence in the summary.
+- **Implementation logs progress without slowing down.** Recording each finished task used to rewrite the whole progress file every time, which the assistant sometimes had to retry and which quietly forced parallel work back into single file. Each finished task is now jotted down instantly to a side log and folded into the progress file in one pass after each batch, so the activity panel still keeps up while several tasks can genuinely build at the same time. Per-task timings stay just as accurate.
+- **Finishing a task is the same action as logging it.** A task now records its own completion the instant its work is done, instead of the assistant doing a separate bookkeeping pass at the end of a phase — so the activity timeline reflects the real order and pace of the work rather than collapsing a whole phase into one moment. Checking the box in the task list is handled for you from that record, so when several tasks build at once none of them fight over the same file.
+- **Companion output now mirrors stock spec-kit.** The `/speckit.companion.*` pipeline produces the familiar spec-kit shape: a spec with prioritized user stories, acceptance scenarios, key entities, and edge cases; a plan with a summary, a constitution check, the concrete file layout, and the design files (`research.md`, `data-model.md`, `contracts/`); and a task list grouped by user story into phases. Same readable shape you already know, with the Companion extras layered on top: lifecycle timing capture, size-based right-sizing, and automatic completion.
+
+### Fixed
+- **Progress tracking can no longer corrupt its own file.** When recording that a planning or task-generation step finished, the assistant used to edit the progress file by hand, which occasionally wrote a malformed file it then had to repair. Those finish marks now go through the same safe writer everything else uses, so the file stays valid every time.
+
+### Added
+- **Runs now finish on their own.** When the last task is done, the spec is marked completed automatically, so a run lands in Completed instead of stopping at "implemented" and waiting for a manual step.
+- **Your installed spec-kit extensions keep working under Companion.** A Companion run now honors the same extension hooks a stock spec-kit run does, so the git extension (and any others you've installed) still fire at the start and end of each step — the branch-on-spec, the commit callouts, whatever they do. Previously those were silently skipped on the Companion pipeline. Companion's own customization hooks run on top of them, unchanged.
+
 ## [0.10.0] - 2026-06-16
 
 ### Added

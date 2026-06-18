@@ -1,5 +1,8 @@
 # Canonical node order — the byte-parity baseline. A recipe's
 # nodes: [...] replaces this list.
+# review-gaps (adversarial gap review) is held out of the faithful baseline —
+# the node file stays in-tree to re-add as a layer.
 order:
+  - size-budget
   - tasks-doc
   - handoff
