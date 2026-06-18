@@ -673,11 +673,11 @@ def journal_task_finish(
         return None
     ctx, log, _branch = opened
     tasks_md = feature_dir / "tasks.md"
-    _fold_task_finish(ctx, log, feature_dir, task_id, by, did, files, _now_iso(),
-                      markers=parse_task_markers(tasks_md))
     _mark_tasks_done(tasks_md, {task_id})
-    # Re-parse after the checkbox flip so the close check sees the just-checked box.
-    _maybe_close_implement(ctx, log, feature_dir, by, markers=parse_task_markers(tasks_md))
+    # One parse after the checkbox flip, shared by the fold's status verdict and the close check.
+    markers = parse_task_markers(tasks_md)
+    _fold_task_finish(ctx, log, feature_dir, task_id, by, did, files, _now_iso(), markers=markers)
+    _maybe_close_implement(ctx, log, feature_dir, by, markers=markers)
     commit_log(ctx, log)
     atomic_write(target, ctx)
     return target
@@ -819,6 +819,12 @@ def mark_spec_complete(feature_dir: Path, by: str) -> Path | None:
             file=sys.stderr,
         )
         return None
+
+    # Fold any still-pending appended finishes into the json before the GC below
+    # removes the events log — a straggler line appended after step-close would
+    # otherwise be dropped. Idempotent; re-read so the folded entries are in scope.
+    materialize_log(feature_dir, by)
+    ctx = read_ctx(target)
 
     log = canonical_log(ctx)
     fill_required(ctx, feature_dir, branch)

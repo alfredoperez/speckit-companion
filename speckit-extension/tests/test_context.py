@@ -1152,13 +1152,19 @@ class AppendLogMaterializeTests(unittest.TestCase):
         self.assertTrue((self.fd / ".spec-context.events.jsonl").exists(),
                         "events log must survive while the step is still open")
 
-    def test_mark_complete_removes_events_log(self) -> None:
+    def test_mark_complete_folds_pending_appends_before_gc(self) -> None:
+        # A finish appended but never materialized must be folded into the context
+        # BEFORE mark-complete GCs the log — otherwise GC would drop it permanently.
         (self.fd / "tasks.md").write_text("- [x] **T001** a\n")
         wc.update_context(self.fd, "implement", "implementing", "extension", "start")
-        wc.append_task_log(self.fd, "T001", "ai")
-        # A stray events log lingering at mark-complete is cleaned up.
+        wc.append_task_log(self.fd, "T001", "ai", did="did a")
         wc.mark_spec_complete(self.fd, "ai")
-        self.assertEqual(_ctx(self.fd)["status"], "completed")
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], "completed")
+        # The straggler finish survived into history + task_summaries, then the log was GC'd.
+        self.assertIn("T001", [e.get("task") for e in ctx["history"]],
+                      "mark-complete must fold pending appends before GC'ing the events log")
+        self.assertEqual(ctx.get("task_summaries", {}).get("T001", {}).get("did"), "did a")
         self.assertFalse((self.fd / ".spec-context.events.jsonl").exists())
 
     def test_close_verdict_uses_post_flip_markers(self) -> None:
