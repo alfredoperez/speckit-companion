@@ -74,23 +74,25 @@ describe('buildPrompt', () => {
             }
         });
 
-        it('emits analyze preamble that finishes at ready-to-implement (sub-phase of tasks, must not regress)', () => {
+        it('closes analyze finish-only via the script — no status advance (clarify/analyze have no canonical advance)', () => {
             const out = buildPrompt({
                 command: '/speckit.analyze specs/001-demo',
                 step: 'analyze',
                 specDir: 'specs/001-demo',
             });
-            expect(out).toContain('Flip status to "ready-to-implement"');
+            expect(out).toContain('--step analyze --finish --by ai');
+            expect(out).not.toContain('--step analyze --advance');
             expect(out).toContain('Done analyzing');
         });
 
-        it('emits clarify preamble that finishes at specified (sub-phase of specify)', () => {
+        it('closes clarify finish-only via the script — no status advance', () => {
             const out = buildPrompt({
                 command: '/speckit.clarify specs/001-demo',
                 step: 'clarify',
                 specDir: 'specs/001-demo',
             });
-            expect(out).toContain('Flip status to "specified"');
+            expect(out).toContain('--step clarify --finish --by ai');
+            expect(out).not.toContain('--step clarify --advance');
             expect(out).toContain('Done clarifying');
         });
 
@@ -157,16 +159,25 @@ describe('buildPrompt', () => {
             expect(out).toContain('--feature-dir specs/001-demo');
         });
 
-        it('companion specify defers self-close — its command records completion', () => {
+        it('companion specify gets a slim preamble — no protocol prose, body records completion', () => {
             const out = buildPrompt({ command: '/speckit.companion.specify x', step: 'specify', specDir: 'specs/001-demo' });
-            expect(out).not.toContain('Flip status to "specified"');
-            expect(out).toContain('do NOT append a step-level "complete" entry for specify');
+            // Slim: the companion command body owns the schema/status/self-close protocol.
+            expect(out).not.toContain('"required": ["workflow"');
+            expect(out).not.toContain('--step specify --advance');
+            expect(out).toContain("This command's body carries the full");
         });
 
-        it('stock specify SELF-closes — no companion command to record it', () => {
+        it('stock specify SELF-closes via --advance — no companion command to record it', () => {
             const out = buildPrompt({ command: '/speckit.specify x', step: 'specify', specDir: 'specs/001-demo' });
-            expect(out).toContain('Flip status to "specified"');
-            expect(out).not.toContain('do NOT append a step-level "complete" entry for specify');
+            expect(out).toContain('--step specify --advance --by ai');
+        });
+
+        it('classifies by the command VERB, not its args — a stock command with "companion" in the path stays stock (full preamble)', () => {
+            const out = buildPrompt({ command: '/speckit.plan specs/123-companion-feature', step: 'plan', specDir: 'specs/123-companion-feature' });
+            // Stock → full preamble (the only capture source); must NOT be slimmed.
+            expect(out).toContain("required");
+            expect(out).not.toContain("This command's body carries the full");
+            expect(out).toContain('--step plan --advance --by ai');
         });
 
         it('returns raw command when step is unknown', () => {
