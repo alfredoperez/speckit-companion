@@ -263,7 +263,7 @@ export class SpecEditorProvider {
                 break;
 
             case 'dismissInstallBanner':
-                void this.context.globalState.update(ConfigKeys.globalState.installBannerDismissed, true);
+                await this.context.globalState.update(ConfigKeys.globalState.installBannerDismissed, true);
                 break;
         }
     }

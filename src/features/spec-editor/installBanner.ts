@@ -13,9 +13,9 @@
 const BANNER_BODY = `
     <span class="install-banner__icon codicon codicon-rocket" aria-hidden="true"></span>
     <span class="install-banner__text">Install the spec-kit extension for the leaner <code>/speckit.companion.*</code> pipeline and capture.</span>
-    <button class="install-banner__btn install-banner__btn--primary" data-action="installSpecKitExtension">Install</button>
-    <button class="install-banner__btn install-banner__btn--link" data-action="openReadme">Learn more</button>
-    <button class="install-banner__dismiss codicon codicon-close" data-action="dismissInstallBanner" aria-label="Dismiss install prompt"></button>`;
+    <button type="button" class="install-banner__btn install-banner__btn--primary" data-action="installSpecKitExtension">Install</button>
+    <button type="button" class="install-banner__btn install-banner__btn--link" data-action="openReadme">Learn more</button>
+    <button type="button" class="install-banner__dismiss codicon codicon-close" data-action="dismissInstallBanner" aria-label="Dismiss install prompt"></button>`;
 
 /**
  * Render the install banner, or an empty string when it must not appear. Pass the
