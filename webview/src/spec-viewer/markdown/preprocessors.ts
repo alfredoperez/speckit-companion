@@ -274,11 +274,18 @@ export function preprocessConstitution(markdown: string): string {
         if (/^##[ \t]+Constitution Check\b/.test(line)) { flush(); inSection = true; continue; }
         if (inSection && /^#{1,6}[ \t]/.test(line)) { inSection = false; flush(); out.push(line); continue; }
         if (inSection) {
-            const m = line.match(/^-[ \t]+\*\*(.+?)\*\*:?[ \t]*(?:[✅❌]\s*)?(PASS|FAIL)\b[ \t]*[—–-]?[ \t]*(.*)$/i);
-            if (m) {
-                const verdict = m[2].toUpperCase();
-                const note = m[3] ? `<span class="con-note">${parseInline(m[3].trim())}</span>` : '';
-                rows.push(`<div class="con-row"><span class="verdict ${verdict.toLowerCase()}">${verdict}</span><span class="con-name">${parseInline(m[1])}</span>${note}</div>`);
+            let name: string | undefined, verdict: string | undefined, note: string | undefined;
+            // Verdict right after the name: `- **Name**: PASS — note`
+            let m = line.match(/^-[ \t]+\*\*(.+?)\*\*:?[ \t]*(?:[✅❌]\s*)?(PASS|FAIL)\b[ \t]*[—–-]?[ \t]*(.*)$/i);
+            if (m) { [, name, verdict, note] = m; }
+            // Verdict at the end of the sentence: `- **Name** — note … PASS.`
+            else if (m = line.match(/^-[ \t]+\*\*(.+?)\*\*[ \t]*[—–:-]?[ \t]*(.*?)[ \t]*(?:[✅❌]\s*)?(PASS|FAIL)\b\.?[ \t]*$/i)) {
+                [, name, note, verdict] = m;
+            }
+            if (name && verdict) {
+                const v = verdict.toUpperCase();
+                const noteHtml = note && note.trim() ? `<span class="con-note">${parseInline(note.trim())}</span>` : '';
+                rows.push(`<div class="con-row"><span class="verdict ${v.toLowerCase()}">${v}</span><span class="con-name">${parseInline(name)}</span>${noteHtml}</div>`);
                 continue;
             }
             if (!line.trim()) { continue; }

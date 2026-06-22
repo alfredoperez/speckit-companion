@@ -90,7 +90,9 @@
     /* Semantic header colors - mapped to VS Code theme variables */
     --header-title: var(--vscode-foreground, #e4e4e4);
     --header-section: var(--vscode-foreground, #e4e4e4);
-    --header-subsection: var(--vscode-descriptionForeground, #858585);
+    /* Readable (was descriptionForeground, below WCAG AA) — hierarchy comes from
+       size/weight, not a muted color. */
+    --header-subsection: var(--text-body, #d0d0d0);
 
     /* Code block backgrounds */
     --bg-code: color-mix(in srgb, var(--vscode-editor-background, #1e1e1e) 95%, black);
