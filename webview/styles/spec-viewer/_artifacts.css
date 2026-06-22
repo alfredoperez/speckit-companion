@@ -206,37 +206,23 @@
   padding: 1px 6px;
 }
 
-/* ── Card hover affordance ──────────────────────────────── */
+/* ── Card hover (terminal): the border flips to the accent, no lift ── */
 #markdown-content .entity-row,
 #markdown-content .decision-card,
 #markdown-content .ck-group,
 #markdown-content .con-row,
 #markdown-content .req-row {
-  transition: border-color var(--transition-fast),
-              box-shadow var(--transition-fast),
-              transform var(--transition-fast);
+  transition: border-color var(--transition-fast) ease;
 }
 
 #markdown-content .entity-row:hover,
 #markdown-content .decision-card:hover,
-#markdown-content .ck-group:hover {
-  border-color: var(--border-accent);
-  box-shadow: var(--shadow-sm);
-  transform: translateY(-1px);
+#markdown-content .ck-group:hover,
+#markdown-content .con-row:hover,
+#markdown-content .req-row:hover {
+  border-color: var(--accent);
 }
 
-#markdown-content .con-row:hover {
-  border-color: var(--border-accent);
-  box-shadow: var(--shadow-sm);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #markdown-content .entity-row:hover,
-  #markdown-content .decision-card:hover,
-  #markdown-content .ck-group:hover {
-    transform: none;
-  }
-}
 
 /* ── Commentable wrapper (keeps the inline "+" affordance) ── */
 #markdown-content .component-line {

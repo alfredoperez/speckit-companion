@@ -27,7 +27,7 @@
     flex-shrink: 0;
     padding: 3px 10px;
     font-size: 11px;
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
     border: 1px solid var(--vscode-editorWarning-foreground, #cca700);
     background: transparent;
     color: var(--vscode-editorWarning-foreground, #cca700);

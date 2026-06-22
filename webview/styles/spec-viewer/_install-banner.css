@@ -11,7 +11,7 @@
     padding: 6px 10px;
     margin: 0 0 10px 0;
     border: 1px solid var(--vscode-inputValidation-infoBorder, #3794ff);
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     background: var(--vscode-inputValidation-infoBackground, rgba(55, 148, 255, 0.1));
     color: var(--vscode-foreground);
     font-size: 12px;
@@ -39,7 +39,7 @@
     flex: 0 0 auto;
     font-size: 12px;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     padding: 3px 10px;
     cursor: pointer;
 }
@@ -72,7 +72,7 @@
     height: 22px;
     padding: 0;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     background: transparent;
     color: var(--vscode-foreground);
     opacity: 0.7;
