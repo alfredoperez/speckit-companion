@@ -3,6 +3,8 @@
  * Handles spec metadata, user stories, and callouts preprocessing
  */
 
+import { parseInline } from './inline';
+
 /**
  * Preprocess spec metadata (Feature Branch, Created, Status, Input) into a compact header.
  * When `stripForContext` is true (spec-context.json data available), the entire metadata
@@ -103,6 +105,222 @@ export function preprocessUserStories(markdown: string): string {
 
         return `<div class="user-story-header"><div class="user-story-meta">${ticketIcon}<span class="story-id">US-${num}</span><span class="meta-separator">·</span><span class="story-priority priority-${priorityClass}"><span class="priority-dot ${priorityClass}"></span>${priorityLabel}</span></div><h3 class="user-story-title">${title.trim()}</h3></div>`;
     });
+}
+
+/**
+ * Preprocess tasks.md "## Phase N: …" headings into styled phase headers, lifting
+ * any MVP marker (🎯 MVP) and priority tag (P1..P5) out of the title into chips.
+ */
+export function preprocessTaskPhases(markdown: string): string {
+    const phasePattern = /^##\s+Phase\s+(\d+)\s*:\s*(.+)$/gm;
+
+    return markdown.replace(phasePattern, (_full, num, rest) => {
+        let title = String(rest);
+        const chips: string[] = [];
+
+        if (/🎯|\bMVP\b/.test(title)) {
+            chips.push('<span class="phase-chip mvp">MVP</span>');
+            title = title.replace(/🎯/g, '').replace(/\bMVP\b/g, '');
+        }
+
+        const prio = title.match(/\((P[1-5])\)/);
+        if (prio) {
+            const p = prio[1].toLowerCase();
+            chips.push(`<span class="phase-chip prio ${p}">${prio[1]}</span>`);
+            title = title.replace(/\((P[1-5])\)/, '');
+        }
+
+        title = title.replace(/\s{2,}/g, ' ').trim();
+
+        return `<div class="phase-header" data-phase="${num}"><div class="phase-header-meta"><span class="phase-num">Phase ${num}</span>${chips.join('')}</div><h2 class="phase-title" id="phase-${num}">${title}</h2></div>`;
+    });
+}
+
+/**
+ * Preprocess requirement / criteria bullets — `- **FR-001** …`, `- **SC-001**: …`,
+ * `- **NFR-002** …` — into styled ID-badged rows. Matches an uppercase prefix +
+ * hyphen + number so plain bullets, key-entity bold labels (`**SpecContext**:`),
+ * and task IDs (`T001`, no hyphen) are left untouched. Inline markdown in the
+ * body (code spans, bold) is rendered via parseInline.
+ */
+export function preprocessRequirements(markdown: string): string {
+    const reqPattern = /^-\s+\*\*([A-Z]{2,5}-\d+)\*\*:?\s*(.+)$/gm;
+
+    return markdown.replace(reqPattern, (_full, id, text) => {
+        const kind = String(id).split('-')[0].toLowerCase();
+        const body = parseInline(String(text).trim());
+        return `<div class="req-row" data-kind="${kind}"><span class="req-badge">${id}</span><span class="req-text">${body}</span></div>`;
+    });
+}
+
+const CHECK_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg>';
+
+/**
+ * Preprocess the `Key Entities` section's `- **Name** (qualifier) — description`
+ * bullets into styled entity rows. Scoped to that one section so bold-led bullets
+ * elsewhere (and the requirement rows above) are left alone.
+ */
+export function preprocessEntities(markdown: string): string {
+    const lines = markdown.split('\n');
+    const out: string[] = [];
+    let inEntities = false;
+    for (const line of lines) {
+        if (/^#{2,3}[ \t]+Key Entities\b/.test(line)) { inEntities = true; out.push(line); continue; }
+        if (inEntities && /^#{1,6}[ \t]/.test(line)) { inEntities = false; }
+        if (inEntities) {
+            const m = line.match(/^-[ \t]+\*\*(.+?)\*\*[ \t]*(\([^)]*\))?[ \t]*[:—–-]?[ \t]*(.*)$/);
+            if (m) {
+                const paren = m[2] ? `<span class="entity-paren">${parseInline(m[2])}</span>` : '';
+                const desc = m[3] ? `<span class="entity-desc">${parseInline(m[3].trim())}</span>` : '';
+                out.push(`<div class="entity-row"><span class="entity-name">${parseInline(m[1])}</span>${paren}${desc}</div>`);
+                continue;
+            }
+        }
+        out.push(line);
+    }
+    return out.join('\n');
+}
+
+/**
+ * Render a spec quality checklist (`# … Checklist`) as grouped pass/fail report
+ * cards — one per `## Section`, each with a pass count. Gated on the H1 naming a
+ * checklist so tasks.md (whose checkboxes live under `## Phase`) is untouched.
+ */
+export function preprocessChecklist(markdown: string): string {
+    const h1 = markdown.match(/^#[ \t]+(.+)$/m);
+    if (!h1 || !/checklist/i.test(h1[1])) return markdown;
+
+    const lines = markdown.split('\n');
+    const out: string[] = [];
+    let group: { name: string; items: string[]; pass: number; total: number } | null = null;
+    const flush = () => {
+        if (group) {
+            out.push(`<div class="ck-group"><div class="ck-group-head"><span class="ck-name">${parseInline(group.name)}</span><span class="ck-count">${group.pass}/${group.total}</span></div>${group.items.join('')}</div>`);
+            group = null;
+        }
+    };
+    for (const line of lines) {
+        let m: RegExpMatchArray | null;
+        if (m = line.match(/^##[ \t]+(.+)$/)) {
+            flush();
+            if (/^notes\b/i.test(m[1])) { out.push(line); }
+            else { group = { name: m[1], items: [], pass: 0, total: 0 }; }
+            continue;
+        }
+        if (group && (m = line.match(/^-[ \t]+\[([ xX])\][ \t]+(.+)$/))) {
+            const ok = m[1].toLowerCase() === 'x';
+            group.total++; if (ok) group.pass++;
+            group.items.push(`<div class="ck-item${ok ? ' ok' : ''}"><span class="ck-box">${ok ? CHECK_SVG : ''}</span><span class="ck-text">${parseInline(m[2])}</span></div>`);
+            continue;
+        }
+        if (group && line.trim()) { flush(); }
+        out.push(line);
+    }
+    flush();
+    return out.join('\n');
+}
+
+/**
+ * Preprocess plan.md's `## Technical Context` section — the `**Key**: value`
+ * lines (Language/Version, Primary Dependencies, …) — into a key/value grid.
+ * Scoped to that one section so other `**Label**: …` lines are untouched.
+ */
+export function preprocessTechnicalContext(markdown: string): string {
+    const lines = markdown.split('\n');
+    const out: string[] = [];
+    let inSection = false;
+    let cells: string[] = [];
+    const flush = () => {
+        if (cells.length) {
+            out.push(`<details class="md-collapsible"><summary class="md-collapsible__summary">Technical Context</summary><div class="tech-grid">${cells.join('')}</div></details>`);
+            cells = [];
+        }
+    };
+    for (const line of lines) {
+        if (/^##[ \t]+Technical Context\b/.test(line)) { flush(); inSection = true; continue; }
+        if (inSection && /^#{1,6}[ \t]/.test(line)) { inSection = false; flush(); out.push(line); continue; }
+        if (inSection) {
+            const m = line.match(/^\*\*(.+?)\*\*:[ \t]*(.+)$/);
+            if (m) {
+                cells.push(`<div class="tech-cell"><span class="tech-key">${parseInline(m[1])}</span><span class="tech-val">${parseInline(m[2].trim())}</span></div>`);
+                continue;
+            }
+            if (!line.trim()) { continue; }
+            flush();
+        }
+        out.push(line);
+    }
+    flush();
+    return out.join('\n');
+}
+
+/**
+ * Preprocess plan.md's `## Constitution Check` bullet list
+ * (`- **I. Name**: PASS — note`) into verdict rows with a PASS/FAIL chip. Scoped
+ * to that section; the table form (used by some plans) renders as a table as-is.
+ */
+export function preprocessConstitution(markdown: string): string {
+    const lines = markdown.split('\n');
+    const out: string[] = [];
+    let inSection = false;
+    let rows: string[] = [];
+    const flush = () => {
+        if (rows.length) {
+            out.push(`<details class="md-collapsible"><summary class="md-collapsible__summary">Constitution Check</summary>${rows.join('')}</details>`);
+            rows = [];
+        }
+    };
+    for (const line of lines) {
+        if (/^##[ \t]+Constitution Check\b/.test(line)) { flush(); inSection = true; continue; }
+        if (inSection && /^#{1,6}[ \t]/.test(line)) { inSection = false; flush(); out.push(line); continue; }
+        if (inSection) {
+            const m = line.match(/^-[ \t]+\*\*(.+?)\*\*:?[ \t]*(?:[✅❌]\s*)?(PASS|FAIL)\b[ \t]*[—–-]?[ \t]*(.*)$/i);
+            if (m) {
+                const verdict = m[2].toUpperCase();
+                const note = m[3] ? `<span class="con-note">${parseInline(m[3].trim())}</span>` : '';
+                rows.push(`<div class="con-row"><span class="verdict ${verdict.toLowerCase()}">${verdict}</span><span class="con-name">${parseInline(m[1])}</span>${note}</div>`);
+                continue;
+            }
+            if (!line.trim()) { continue; }
+            flush();
+        }
+        out.push(line);
+    }
+    flush();
+    return out.join('\n');
+}
+
+/**
+ * Preprocess research.md `## Decision N: Title` blocks into cards. Opens a card
+ * div per decision (letting Rationale/Alternatives render inside) and turns the
+ * `**Decision**` / `**Rationale**` / `**Alternatives**` labels into field rows.
+ */
+export function preprocessDecisions(markdown: string): string {
+    if (!/^##[ \t]+Decision\b/m.test(markdown)) return markdown;
+
+    const lines = markdown.split('\n');
+    const out: string[] = [];
+    let cardOpen = false;
+    const close = () => { if (cardOpen) { out.push('</div>'); cardOpen = false; } };
+    for (const line of lines) {
+        let m: RegExpMatchArray | null;
+        if (m = line.match(/^##[ \t]+Decision\s+(\d+)\s*:\s*(.+)$/)) {
+            close();
+            out.push(`<div class="decision-card"><div class="decision-card__head"><span class="decision-num">Decision ${m[1]}</span><span class="decision-title">${parseInline(m[2])}</span></div>`);
+            cardOpen = true;
+            continue;
+        }
+        if (cardOpen && /^#{1,6}[ \t]/.test(line)) { close(); out.push(line); continue; }
+        if (cardOpen && (m = line.match(/^\*\*(Decision|Rationale|Alternatives)(?:\s+considered)?\*\*:?[ \t]*(.*)$/i))) {
+            const label = m[1];
+            const val = m[2] ? `<span class="decision-val">${parseInline(m[2].trim())}</span>` : '';
+            out.push(`<div class="decision-field"><span class="decision-label decision-label--${label.toLowerCase()}">${label}</span>${val}</div>`);
+            continue;
+        }
+        out.push(line);
+    }
+    close();
+    return out.join('\n');
 }
 
 /**

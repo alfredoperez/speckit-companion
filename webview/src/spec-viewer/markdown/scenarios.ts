@@ -9,6 +9,32 @@ import { escapeHtmlInScenario } from './inline';
 let scenarioListCounter = 0;
 
 /**
+ * Break a scenario sentence into stacked Given / When / Then / And steps so each
+ * clause reads on its own labeled line instead of one run-on sentence. Falls back
+ * to the escaped text inline when no keywords are present.
+ */
+function buildScenarioSteps(content: string): string {
+    const escaped = escapeHtmlInScenario(content);
+    const kwRe = /\*?\*?(Given|When|Then|And|But)\*?\*?\s+/gi;
+    const matches = [...escaped.matchAll(kwRe)];
+    if (matches.length === 0) return escaped;
+
+    const steps: string[] = [];
+    const lead = escaped.slice(0, matches[0].index).trim();
+    if (lead) steps.push(`<span class="gwt-step gwt-step--lead">${lead}</span>`);
+
+    for (let i = 0; i < matches.length; i++) {
+        const kw = matches[i][1];
+        const start = (matches[i].index ?? 0) + matches[i][0].length;
+        const end = i + 1 < matches.length ? (matches[i + 1].index ?? escaped.length) : escaped.length;
+        const clause = escaped.slice(start, end).trim().replace(/[,;]\s*$/, '');
+        const kwClass = /^(given|when|then)$/i.test(kw) ? `keyword-${kw.toLowerCase()}` : 'keyword-and';
+        steps.push(`<span class="gwt-step"><span class="gwt-kw ${kwClass}">${kw}</span><span class="gwt-clause">${clause}</span></span>`);
+    }
+    return steps.join('');
+}
+
+/**
  * Reset the scenario list counter (call before parsing new content)
  */
 export function resetScenarioTableCounter(): void {
@@ -60,13 +86,10 @@ export function parseAcceptanceScenarios(markdown: string): string {
             // Remove numbering (1. 2. etc.)
             const content = line.replace(/^\d+\.\s*/, '').trim();
 
-            // Emphasize Given/When/Then keywords with <strong> tags
-            const emphasized = escapeHtmlInScenario(content)
-                .replace(/\*?\*?(Given)\*?\*?/gi, '<strong class="keyword-given">$1</strong>')
-                .replace(/\*?\*?(When)\*?\*?/gi, '<strong class="keyword-when">$1</strong>')
-                .replace(/\*?\*?(Then)\*?\*?/gi, '<strong class="keyword-then">$1</strong>');
+            // Stack Given/When/Then onto their own lines for readability.
+            const steps = buildScenarioSteps(content);
 
-            return `<li class="scenario-item line" data-line="${lineNum}" data-list-id="${listId}"><button class="line-add-btn" data-line="${lineNum}" data-list-id="${listId}" title="Add comment">${commentIcon}</button><div class="line-content">${emphasized}</div><div class="line-comment-slot"></div></li>`;
+            return `<li class="scenario-item line" data-line="${lineNum}" data-list-id="${listId}"><button class="line-add-btn" data-line="${lineNum}" data-list-id="${listId}" title="Add comment">${commentIcon}</button><div class="line-content">${steps}</div><div class="line-comment-slot"></div></li>`;
         }).join('');
 
         // Output as HTML (not markdown) so label doesn't get wrapped in .line

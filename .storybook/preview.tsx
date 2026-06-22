@@ -3,6 +3,9 @@ import { navState } from '../webview/src/spec-viewer/signals';
 
 // Import all spec-viewer CSS
 import '../webview/styles/spec-viewer/index.css';
+// Codicon font so file-ref icons render in stories (the real viewer loads this
+// from the extension; without it the glyph shows as an empty square).
+import '@vscode/codicons/dist/codicon.css';
 
 // VS Code dark theme defaults for Storybook
 const vscodeDarkTheme: Record<string, string> = {
@@ -36,6 +39,20 @@ const vscodeDarkTheme: Record<string, string> = {
 };
 
 const preview: Preview = {
+    parameters: {
+        options: {
+            // Surface the Markdown Rendering catalog first under Viewer, grouped
+            // by the tab/artifact it appears in.
+            storySort: {
+                order: [
+                    'Viewer',
+                    ['Markdown Rendering', ['Spec', 'Plan', 'Tasks', 'Artifacts']],
+                    'Primitives',
+                    'SpecEditor',
+                ],
+            },
+        },
+    },
     decorators: [
         (Story) => {
             // Reset navState signal before each story

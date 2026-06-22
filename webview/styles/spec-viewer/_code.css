@@ -63,12 +63,21 @@
     font-family: var(--font-mono);
     font-size: 12px; /* Fixed size for consistency with code blocks */
     line-height: var(--leading-normal);
-    color: var(--text-secondary);
+    color: var(--text-body);
     white-space: pre;
     display: block;
     background: transparent;
     border: none;
     padding: 0;
+}
+
+#markdown-content pre.tree-structure .tree-dir {
+    color: var(--accent);
+}
+
+#markdown-content pre.tree-structure .tree-comment {
+    color: var(--text-muted);
+    font-style: italic;
 }
 
 /* Legacy pre blocks (fallback) */

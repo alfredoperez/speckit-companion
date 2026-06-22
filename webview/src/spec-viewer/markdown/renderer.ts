@@ -7,6 +7,13 @@ import { escapeHtml, parseInline } from './inline';
 import {
     preprocessSpecMetadata,
     preprocessUserStories,
+    preprocessTaskPhases,
+    preprocessRequirements,
+    preprocessEntities,
+    preprocessChecklist,
+    preprocessTechnicalContext,
+    preprocessConstitution,
+    preprocessDecisions,
     preprocessCallouts,
     preprocessHtmlComments,
     stripFrontmatter,
@@ -19,6 +26,15 @@ let currentTaskId: string | null = null;
 
 // Whether spec-context.json data is available (controls metadata stripping)
 let hasSpecContext = false;
+
+// Per-task capture summaries (what each task did + files), keyed by task id.
+// Injected from viewerState so the tasks.md document can show captured detail.
+let taskSummaries: Record<string, { did?: string; files?: string[] }> = {};
+
+/** Set the per-task capture summaries used to enrich the tasks.md document. */
+export function setTaskSummaries(map: Record<string, { did?: string; files?: string[] }> | null): void {
+    taskSummaries = map || {};
+}
 
 /**
  * Set the current task ID for in-progress badge rendering
@@ -69,6 +85,19 @@ function isTreeStructure(text: string): boolean {
 }
 
 /**
+ * Light syntax coloring for a file tree: directory tokens (ending in `/`) and
+ * trailing `# comments` get colored spans so the structure reads at a glance.
+ */
+function highlightTree(text: string): string {
+    return escapeHtml(text)
+        .split('\n')
+        .map(line => line
+            .replace(/(#[^\n]*)$/, '<span class="tree-comment">$1</span>')
+            .replace(/([\w.@-]+\/)/g, '<span class="tree-dir">$1</span>'))
+        .join('\n');
+}
+
+/**
  * Wrap content with line action buttons for hover editing
  * Uses single "+" button for GitHub-style inline review
  */
@@ -86,6 +115,33 @@ function wrapWithLineActions(content: string, lineNum: number): string {
 }
 
 /**
+ * Wrap a preprocessed component div as a commentable line — the component sits as
+ * a direct child (not inside `.line-content`, to avoid prose style bleed) so the
+ * inline "+" comment affordance still appears on hover.
+ */
+function wrapComponentLine(componentHtml: string, lineNum: number): string {
+    return `<div class="line component-line" data-line="${lineNum}"><button class="line-add-btn" data-line="${lineNum}" title="Add comment">${COMMENT_ICON_SVG}</button>${componentHtml}<div class="line-comment-slot"></div></div>`;
+}
+
+/**
+ * Split a markdown table row into cells, honoring escaped pipes (`\|`) inside a
+ * cell so a `"a" \| "b"` value stays one cell instead of fragmenting the row.
+ */
+function splitTableRow(row: string): string[] {
+    const cells = row.split(/(?<!\\)\|/).map(c => c.replace(/\\\|/g, '|').trim());
+    if (cells.length && cells[0] === '') cells.shift();
+    if (cells.length && cells[cells.length - 1] === '') cells.pop();
+    return cells;
+}
+
+/** Clamp/pad a row's cells to the header column count so rows can't run ragged. */
+function clampCells(cells: string[], n: number): string[] {
+    const out = cells.slice(0, n);
+    while (out.length < n) out.push('');
+    return out;
+}
+
+/**
  * Render a table from rows
  */
 function renderTable(rows: string[]): string {
@@ -94,7 +150,7 @@ function renderTable(rows: string[]): string {
     let html = '<table>\n';
 
     // Header row
-    const headerCells = rows[0].split('|').filter(c => c.trim());
+    const headerCells = splitTableRow(rows[0]);
     html += '<thead><tr>\n';
     for (const cell of headerCells) {
         html += `<th>${parseInline(cell.trim())}</th>\n`;
@@ -105,7 +161,7 @@ function renderTable(rows: string[]): string {
     if (rows.length > 2) {
         html += '<tbody>\n';
         for (let i = 2; i < rows.length; i++) {
-            const cells = rows[i].split('|').filter(c => c.trim());
+            const cells = clampCells(splitTableRow(rows[i]), headerCells.length);
             html += '<tr>\n';
             for (const cell of cells) {
                 html += `<td>${parseInline(cell.trim())}</td>\n`;
@@ -141,6 +197,13 @@ export function renderMarkdown(markdown: string): string {
     markdown = preprocessHtmlComments(markdown);
     markdown = preprocessSpecMetadata(markdown, hasSpecContext);
     markdown = preprocessUserStories(markdown);
+    markdown = preprocessTaskPhases(markdown);
+    markdown = preprocessRequirements(markdown);
+    markdown = preprocessEntities(markdown);
+    markdown = preprocessChecklist(markdown);
+    markdown = preprocessTechnicalContext(markdown);
+    markdown = preprocessConstitution(markdown);
+    markdown = preprocessDecisions(markdown);
     markdown = parseAcceptanceScenarios(markdown);
     markdown = preprocessCallouts(markdown);
 
@@ -203,8 +266,9 @@ export function renderMarkdown(markdown: string): string {
                     const mermaidId = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
                     html += `<div class="mermaid-container"><pre class="mermaid" id="${mermaidId}">${escapeHtml(codeText)}</pre></div>\n`;
                 } else if (isTreeStructure(codeText) || codeBlockLang === 'text' || codeBlockLang === 'plaintext' || codeBlockLang === '') {
-                    // Tree structure or plain text
-                    html += `<pre class="tree-structure"><code>${escapeHtml(codeText)}</code></pre>\n`;
+                    // Tree structure or plain text — light coloring for real trees.
+                    const body = isTreeStructure(codeText) ? highlightTree(codeText) : escapeHtml(codeText);
+                    html += `<pre class="tree-structure"><code>${body}</code></pre>\n`;
                 } else {
                     // Regular code block with language
                     const langClass = codeBlockLang ? ` class="language-${escapeHtml(codeBlockLang)}"` : '';
@@ -348,10 +412,20 @@ export function renderMarkdown(markdown: string): string {
 
                 const innerText = (usMatch && taskText.match(/\[US\d+\]/)) ? usMatch[2] : taskText;
                 const titleAttr = (usMatch && taskText.match(/\[US\d+\]/)) ? ` title="${usMatch[1]}"` : '';
+                const summary = taskId ? taskSummaries[taskId] : undefined;
+                let captureHtml = '';
+                if (summary && (summary.did || (summary.files && summary.files.length))) {
+                    const didHtml = summary.did ? `<span class="task-item__did">${escapeHtml(summary.did)}</span>` : '';
+                    const filesHtml = (summary.files && summary.files.length)
+                        ? `<span class="task-item__files">${summary.files.map(f => `<code class="task-item__file">${escapeHtml(f)}</code>`).join('')}</span>`
+                        : '';
+                    captureHtml = `<div class="task-item__capture">${didHtml}${filesHtml}</div>`;
+                }
                 html += `<li ${classAttr}${titleAttr} data-line="${sourceLineNum}"${dataTaskAttr}>` +
                     `<button class="line-add-btn" data-line="${sourceLineNum}" title="Add comment">${COMMENT_ICON_SVG}</button>` +
                     `<input type="checkbox" ${checked} data-line="${sourceLineNum}">` +
                     `<span class="task-text line-content">${innerText}</span>` +
+                    captureHtml +
                     `<div class="line-comment-slot"></div>` +
                     `</li>\n`;
             } else {
@@ -400,10 +474,29 @@ export function renderMarkdown(markdown: string): string {
             continue;
         }
 
+        // Per-item components keep the inline-comment "+" affordance: wrap them as
+        // a commentable line (they replaced list items / headings that had it).
+        if (line.includes('<div class="req-row') ||
+            line.includes('<div class="entity-row') ||
+            line.includes('<div class="con-row') ||
+            line.includes('<div class="phase-header') ||
+            line.includes('<div class="user-story-header')) {
+            html += wrapComponentLine(line, sourceLineNum) + '\n';
+            continue;
+        }
+
         // Check if line is preprocessed HTML (callouts, user stories, metadata, scenario tables)
         // Match any line containing our custom class patterns or HTML structure elements
         if (line.includes('<div class="callout') ||
             line.includes('<div class="user-story-header') ||
+            line.includes('<div class="phase-header') ||
+            line.includes('<div class="req-row') ||
+            line.includes('<div class="entity-row') ||
+            line.includes('<div class="ck-group') ||
+            line.includes('<div class="tech-grid') ||
+            line.includes('<div class="con-row') ||
+            line.includes('<div class="decision-card') ||
+            line.includes('<div class="decision-field') ||
             line.includes('<div class="spec-meta') ||
             line.includes('<div class="spec-input') ||
             line.includes('<p class="scenario-label') ||
