@@ -33,6 +33,7 @@ aside.spec-toc {
 }
 
 .spec-toc-label {
+    font-family: var(--font-mono);
     font-size: var(--text-xs);
     font-weight: 600;
     text-transform: uppercase;
@@ -100,10 +101,9 @@ aside.spec-toc.spec-toc--empty {
     padding: 4px 8px;
     color: var(--text-secondary);
     text-decoration: none;
-    border-left: 2px solid transparent;
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    border-radius: var(--radius-sm);
     line-height: 1.4;
-    transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+    transition: color var(--transition-fast), background var(--transition-fast);
     cursor: pointer;
 }
 
@@ -117,10 +117,17 @@ aside.spec-toc.spec-toc--empty {
     padding-left: var(--space-4);
 }
 
+/* Active item (terminal): a `❯` prompt marker + accent text + subtle fill,
+   replacing the old border-left side-stripe. */
 .spec-toc-link[aria-current="location"] {
     color: var(--accent);
-    border-left-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
     font-weight: 600;
+}
+
+.spec-toc-link[aria-current="location"]::before {
+    content: "\276F\00a0"; /* ❯ + nbsp */
+    color: var(--accent);
 }
 
 .spec-toc-link:focus-visible {

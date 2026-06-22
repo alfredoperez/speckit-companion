@@ -49,6 +49,9 @@
 
     /* Accent colors - mapped to VS Code theme variables */
     --accent: var(--vscode-focusBorder, #007fd4);
+    /* The vivid action blue (button bg) — focusBorder reads muted as a thin line,
+       so active highlights use this stronger accent. */
+    --accent-strong: var(--vscode-button-background, var(--accent));
     --accent-hover: var(--vscode-button-hoverBackground, #0062a3);
     --accent-subtle: color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 10%, transparent);
     --accent-glow: 0 0 20px color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 30%, transparent);

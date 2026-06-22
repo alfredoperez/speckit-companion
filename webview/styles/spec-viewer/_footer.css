@@ -37,7 +37,7 @@
     border-radius: var(--radius-sm);
     cursor: pointer;
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 12.5px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -52,9 +52,9 @@
 }
 
 .actions button.primary {
-    background: var(--accent);
+    background: var(--accent-strong);
     color: var(--vscode-button-foreground, #ffffff);
-    border: 1px solid var(--accent);
+    border: 1px solid var(--accent-strong);
     padding: 8px 24px;
 }
 

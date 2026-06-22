@@ -23,7 +23,8 @@
   font-size: var(--text-xs);
   font-weight: 600;
   color: var(--accent);
-  background: var(--accent-subtle);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
   padding: 1px var(--space-2);
   border-radius: var(--radius-sm);
   white-space: nowrap;
@@ -31,7 +32,8 @@
 
 #markdown-content .req-row[data-kind="sc"] .req-badge {
   color: var(--success);
-  background: var(--success-subtle);
+  background: color-mix(in srgb, var(--success) 14%, transparent);
+  border-color: color-mix(in srgb, var(--success) 55%, transparent);
 }
 
 #markdown-content .req-text {

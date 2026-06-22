@@ -9,7 +9,8 @@
 
 #markdown-content {
     font-family: var(--font-family);
-    font-size: calc(var(--font-size) + 1px);
+    /* A bit larger than the editor font for comfortable reading in the panel. */
+    font-size: calc(var(--font-size) + 2px);
     line-height: var(--leading-loose);
     color: var(--text-body);
     max-width: 72ch;
@@ -249,10 +250,12 @@ body[data-has-spec-context="true"] #markdown-content h1:first-of-type {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     padding: 2px 8px;
-    background: color-mix(in srgb, var(--purple, #9a6dd7) 10%, transparent);
-    border: 1px solid color-mix(in srgb, var(--purple, #9a6dd7) 35%, transparent);
+    /* Neutral terminal metadata — the old --purple (symbolIcon color) renders
+       off-theme (orange) in many themes. */
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    color: var(--purple, #9a6dd7);
+    color: var(--text-secondary);
     display: inline-flex;
     align-items: center;
     gap: 4px;

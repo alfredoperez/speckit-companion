@@ -60,7 +60,10 @@ export function NavigationBar() {
         ? viewingRelatedDoc?.parentStep
         : currentDoc;
     const parentStepDoc = coreDocs.find(d => d.type === parentStepType);
-    const showChildrenRow = displayRelatedDocs.length > 0 && parentStepDoc;
+    // Always render the sub-nav row (the parent doc tab is always shown, related
+    // docs appear after it when present) so the nav height stays constant and the
+    // content below doesn't jump when switching between steps with/without docs.
+    const showChildrenRow = !!parentStepDoc;
 
     const activityActive = activityVisible.value;
     const activityEnabled = ns.activityPanelEnabled ?? true;
