@@ -38,6 +38,8 @@
     gap: 10px;
     padding: 8px 16px;
     border: none;
+    /* Transparent underline reserved so the current state doesn't shift height. */
+    border-bottom: 2px solid transparent;
     background: transparent;
     color: var(--text-secondary);
     cursor: pointer;
@@ -46,7 +48,7 @@
     font-family: inherit;
     white-space: nowrap;
     transition: all var(--transition-fast);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 }
 
 .step-tab:hover:not(:disabled):not(.current) {
@@ -88,12 +90,11 @@
    Inset ring + accent-tinted fill so the highlight wraps the whole tab as one
    contiguous chip — including when the step is also in-flight (the pulse stays
    inside the ring instead of visually overflowing an outer outline). */
-/* Current step (terminal): a sharp squared accent box (inset so it doesn't shift
-   layout) with a `❯` prompt marker, instead of the soft accent-tint + glow ring. */
+/* Current step (terminal): a `❯` prompt marker + accent underline — the same
+   active language the sub-tabs use, so the whole nav reads as one system. */
 .step-tab.current {
     background: transparent;
-    box-shadow: inset 0 0 0 2px var(--accent-strong);
-    border-radius: var(--radius-sm);
+    border-bottom-color: var(--accent-strong);
 }
 
 .step-tab.current::before {

@@ -187,39 +187,54 @@
     font-variant-numeric: tabular-nums;
 }
 
-/* Horizontal timeline: phases laid out as a row of segments */
+/* Vertical timeline: phases stacked top-to-bottom on a left spine, one node each */
 .phases-track {
     display: flex;
-    gap: var(--space-3);
-    overflow-x: auto;
-    padding-bottom: var(--space-2);
+    flex-direction: column;
 }
 
 .phases-step {
     position: relative;
-    flex: 1 1 0;
-    min-width: 9.5rem;
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
-    padding: var(--space-3);
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    gap: var(--space-1, 4px);
+    padding: 0 0 var(--space-4) var(--space-5);
 }
 
+.phases-step:last-child {
+    padding-bottom: 0;
+}
+
+/* Spine segment — one per step; consecutive steps form a continuous line. */
 .phases-step::before {
     content: '';
     position: absolute;
-    inset-inline: 0;
+    left: 5px;
     top: 0;
-    height: 3px;
-    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-    background: var(--success);
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
 }
 
-.phases-step.is-in-flight::before {
+.phases-step:first-child::before { top: 0.4em; }
+.phases-step:last-child::before { bottom: auto; height: 0.4em; }
+
+/* Node dot centered on the spine. */
+.phases-step::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.3em;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 3px var(--bg-elevated);
+}
+
+.phases-step.is-in-flight::after {
     background: var(--accent);
+    animation: phases-pulse 2s ease-in-out infinite;
 }
 
 .phases-step__heading {
@@ -228,25 +243,6 @@
     justify-content: space-between;
     gap: var(--space-3);
     margin: 0;
-    position: relative;
-    padding-left: 16px;
-}
-
-.phases-step__heading::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0.4em;
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: var(--success);
-    box-shadow: 0 0 0 3px var(--bg-elevated);
-}
-
-.phases-step.is-in-flight .phases-step__heading::before {
-    background: var(--accent);
-    animation: phases-pulse 2s ease-in-out infinite;
 }
 
 @keyframes phases-pulse {
@@ -274,12 +270,12 @@
     color: var(--accent);
 }
 
-/* Muted subline under the name (multi-day start date); aligns past the dot */
+/* Muted subline under the name (multi-day start date) */
 .phases-step__sub {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2);
-    margin: 2px 0 var(--space-1, 4px) 16px;
+    margin: 2px 0 var(--space-1, 4px) 0;
     font-size: 0.7rem;
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
