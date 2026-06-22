@@ -89,11 +89,17 @@ function isTreeStructure(text: string): boolean {
  * trailing `# comments` get colored spans so the structure reads at a glance.
  */
 function highlightTree(text: string): string {
+    const colorDirs = (s: string) =>
+        s.replace(/([\w.@-]+\/)/g, '<span class="tree-dir">$1</span>');
     return escapeHtml(text)
         .split('\n')
-        .map(line => line
-            .replace(/(#[^\n]*)$/, '<span class="tree-comment">$1</span>')
-            .replace(/([\w.@-]+\/)/g, '<span class="tree-dir">$1</span>'))
+        .map(line => {
+            // Split off a trailing comment first so dir-coloring never reaches into it.
+            const m = line.match(/^(.*?)(#[^\n]*)$/);
+            return m
+                ? `${colorDirs(m[1])}<span class="tree-comment">${m[2]}</span>`
+                : colorDirs(line);
+        })
         .join('\n');
 }
 
@@ -488,13 +494,8 @@ export function renderMarkdown(markdown: string): string {
         // Check if line is preprocessed HTML (callouts, user stories, metadata, scenario tables)
         // Match any line containing our custom class patterns or HTML structure elements
         if (line.includes('<div class="callout') ||
-            line.includes('<div class="user-story-header') ||
-            line.includes('<div class="phase-header') ||
-            line.includes('<div class="req-row') ||
-            line.includes('<div class="entity-row') ||
             line.includes('<div class="ck-group') ||
             line.includes('<div class="tech-grid') ||
-            line.includes('<div class="con-row') ||
             line.includes('<div class="decision-card') ||
             line.includes('<div class="decision-field') ||
             line.includes('<div class="spec-meta') ||

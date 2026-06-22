@@ -51,6 +51,8 @@ export interface TimelineEventModel {
     completedAt: string | null;
     source: TimelineEventSource;
     by?: string;
+    /** Task id when this event is a per-task entry (T001…), else null. */
+    task?: string | null;
 }
 
 export function buildHistoryIndex(
@@ -93,6 +95,7 @@ export function mergeStepEvents(
             completedAt: sub.completedAt ?? null,
             source: 'tracked',
             by: tx?.by,
+            task: tx && isPerTaskEntry(tx) ? tx.task : null,
         });
     }
 

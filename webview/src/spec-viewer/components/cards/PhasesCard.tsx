@@ -155,9 +155,7 @@ export function PhasesCard({ state }: PhasesCardProps) {
                             new Date(group.startedAt).toDateString() !== specStartDay;
                         // Per-task rows (T001…) are noise here — show the phase
                         // time and any named substeps (e.g. fast-path), not each task.
-                        const events = dedupeEvents(group.events).filter(
-                            e => !/^t\d+$/i.test(e.name.trim())
-                        );
+                        const events = dedupeEvents(group.events).filter(e => !e.task);
                         return (
                             <div
                                 key={group.step}

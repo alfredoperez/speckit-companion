@@ -103,7 +103,7 @@ export function preprocessUserStories(markdown: string): string {
         // Compact single-line HTML to avoid markdown parser splitting issues
         const ticketIcon = `<svg class="meta-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 3A1.5 1.5 0 0 0 0 4.5v1.384c.63.313 1.033.95 1.033 1.616 0 .666-.403 1.303-1.033 1.616V10.5A1.5 1.5 0 0 0 1.5 12h13a1.5 1.5 0 0 0 1.5-1.5V9.116c-.63-.313-1.033-.95-1.033-1.616 0-.666.403-1.303 1.033-1.616V4.5A1.5 1.5 0 0 0 14.5 3h-13z"/></svg>`;
 
-        return `<div class="user-story-header"><div class="user-story-meta">${ticketIcon}<span class="story-id">US-${num}</span><span class="meta-separator">·</span><span class="story-priority priority-${priorityClass}"><span class="priority-dot ${priorityClass}"></span>${priorityLabel}</span></div><h3 class="user-story-title">${title.trim()}</h3></div>`;
+        return `<div class="user-story-header"><div class="user-story-meta">${ticketIcon}<span class="story-id">US-${num}</span><span class="meta-separator">·</span><span class="story-priority priority-${priorityClass}"><span class="priority-dot ${priorityClass}"></span>${priorityLabel}</span></div><h3 class="user-story-title">${parseInline(title.trim())}</h3></div>`;
     });
 }
 
@@ -132,7 +132,7 @@ export function preprocessTaskPhases(markdown: string): string {
 
         title = title.replace(/\s{2,}/g, ' ').trim();
 
-        return `<div class="phase-header" data-phase="${num}"><div class="phase-header-meta"><span class="phase-num">Phase ${num}</span>${chips.join('')}</div><h2 class="phase-title" id="phase-${num}">${title}</h2></div>`;
+        return `<div class="phase-header" data-phase="${num}"><div class="phase-header-meta"><span class="phase-num">Phase ${num}</span>${chips.join('')}</div><h2 class="phase-title" id="phase-${num}">${parseInline(title)}</h2></div>`;
     });
 }
 
