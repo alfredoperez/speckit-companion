@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-06-23
+
 ### Changed
 
 - **A cleaner, more readable spec viewer.** Body text is bigger and section headings stand out, so long specs are easier to scan; the top step nav is refreshed and clearly marks the step you're on; the Activity "Phases" timeline is now a vertical timeline; and badges and callouts are calmer and higher-contrast. The viewer's font also renders correctly now (text had been silently falling back to a system font).

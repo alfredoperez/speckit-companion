@@ -20,9 +20,9 @@ A spec workspace that turns AI-assisted, spec-driven development into something 
 
 ## Recently Shipped
 
+- **v0.25.0** Specs render as rich, structured pages — requirements as labeled rows, acceptance scenarios as flowing Given/When/Then sentences, key entities and research decisions as cards, phased tasks, and the plan's Technical Context + Constitution inline · a cleaner, more readable viewer (bigger type, clearer headings, a refreshed step nav, a vertical Activity timeline, calmer badges) · an **Auto** button builds the whole spec hands-off from Create Spec
 - **v0.24.0** Stock specs advance past Specify on their own (no more stuck "specifying") · one switch turns on the whole SpecKit Companion experience and a single workflow choice replaces the old beta toggles · the Completed group lists only specs you've actually finished, with a sidebar **Mark as Completed** action and a distinct icon for implemented-but-unconfirmed · viewer polish — the footer follows the spec's own workflow, task checkboxes align at any font size, the install banner stays readable in narrow panels, faded Create-Spec placeholder · opt-in PII-free telemetry
 - **v0.23.0** One-click install + graceful degradation for the companion spec-kit extension (detection, banners, sidebar action) · a finished implementation reliably shows as done — the viewer auto-refreshes and the in-flight spinner is consolidated onto the step tab · in-app update notifications work again and install links resolve · the in-editor "Install/Update spec-kit Extension" always pulls the newest build · Beta Features simplified to on/off and ordered by adoption · per-spec **SpecKit Companion** pipeline pick in *Create New Spec* (beta) · higher-contrast text on dark + sidebar polish
-- **v0.22.0** Status + Resume — each active spec row shows its current step and last transition with an inline **Resume** action that continues the pipeline from where it stopped; live per-task journaling on implement (real per-task timing, not one end-of-run burst); malformed-`.spec-context.json` recovery with a reset action
 - [Full changelog →](./CHANGELOG.md)
 
 ## Why it exists
