@@ -38,7 +38,7 @@
 
 #markdown-content .req-text {
   color: var(--text-body);
-  line-height: var(--leading-snug);
+  line-height: var(--leading-normal);
 }
 
 #markdown-content .req-text code {

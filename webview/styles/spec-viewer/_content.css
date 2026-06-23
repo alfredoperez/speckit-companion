@@ -9,8 +9,9 @@
 
 #markdown-content {
     font-family: var(--font-family);
-    /* A bit larger than the editor font for comfortable reading in the panel. */
-    font-size: calc(var(--font-size) + 2px);
+    /* Floor at 16px (matches VS Code's native markdown preview) so the panel
+       stays readable regardless of a small editor font; scales up beyond that. */
+    font-size: max(16px, calc(var(--font-size) + 1px));
     line-height: var(--leading-loose);
     color: var(--text-body);
     max-width: 72ch;

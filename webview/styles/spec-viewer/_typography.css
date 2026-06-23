@@ -9,7 +9,7 @@
 
 /* Headings with professional document typography */
 #markdown-content h1 {
-    font-size: 1.8rem;
+    font-size: 2rem;
     font-weight: 700;
     line-height: var(--leading-tight);
     letter-spacing: -0.02em;
@@ -18,29 +18,29 @@
 }
 
 #markdown-content h2 {
-    font-size: 1.15rem;
+    font-size: 1.5rem;
     font-weight: 600;
     line-height: var(--leading-snug);
     letter-spacing: -0.01em;
-    margin: 24px 0 16px 0;
+    margin: 28px 0 16px 0;
     color: var(--header-section);
 }
 
 #markdown-content h3 {
-    font-size: 1rem;
+    font-size: 1.2rem;
     font-weight: 600;
     line-height: 1.4;
-    margin: 18px 0 10px 0;
+    margin: 20px 0 10px 0;
     color: var(--header-subsection);
 }
 
 #markdown-content h4,
 #markdown-content h5,
 #markdown-content h6 {
-    font-size: var(--text-base);
+    font-size: 1.05rem;
     font-weight: 600;
     line-height: var(--leading-normal);
-    margin: 12px 0 4px 0;
+    margin: 14px 0 4px 0;
     color: var(--header-subsection);
 }
 
@@ -75,8 +75,8 @@
 }
 
 #markdown-content li {
-    margin-bottom: 2px;
-    line-height: var(--leading-normal);
+    margin-bottom: 4px;
+    line-height: var(--leading-relaxed);
     color: var(--text-body);
 }
 
