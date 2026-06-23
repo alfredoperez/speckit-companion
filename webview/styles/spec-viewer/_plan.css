@@ -1,0 +1,113 @@
+/**
+ * SpecKit Companion - Plan Renderings
+ * Technical Context key/value grid and Constitution Check verdict rows,
+ * emitted by preprocessTechnicalContext / preprocessConstitution.
+ */
+
+/* ── Collapsible section (Technical Context, Constitution) ── */
+#markdown-content details.md-collapsible {
+  margin: var(--space-4) 0;
+}
+
+#markdown-content details.md-collapsible > summary.md-collapsible__summary {
+  cursor: pointer;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: var(--space-2) 0;
+  list-style: none;
+}
+
+#markdown-content details.md-collapsible > summary::-webkit-details-marker {
+  display: none;
+}
+
+#markdown-content details.md-collapsible > summary.md-collapsible__summary::before {
+  content: "\25B8"; /* ▸ */
+  display: inline-block;
+  width: 1em;
+  margin-right: var(--space-1);
+  color: var(--text-muted);
+  transition: transform var(--transition-fast, 150ms);
+}
+
+#markdown-content details.md-collapsible[open] > summary.md-collapsible__summary::before {
+  transform: rotate(90deg);
+}
+
+/* ── Technical Context grid ─────────────────────────────── */
+#markdown-content .tech-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1px;
+  margin: var(--space-3) 0;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+#markdown-content .tech-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--bg-secondary);
+  padding: var(--space-3) var(--space-4);
+}
+
+#markdown-content .tech-key {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+#markdown-content .tech-val {
+  font-size: var(--text-sm);
+  color: var(--text-body);
+  line-height: var(--leading-snug);
+}
+
+/* ── Constitution Check verdict rows ────────────────────── */
+#markdown-content .con-row {
+  display: grid;
+  grid-template-columns: max-content max-content 1fr;
+  gap: var(--space-3);
+  align-items: baseline;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  margin: var(--space-2) 0;
+}
+
+#markdown-content .con-name {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+#markdown-content .verdict {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 1px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+#markdown-content .verdict.pass {
+  color: var(--success);
+  background: var(--success-subtle);
+}
+
+#markdown-content .verdict.fail {
+  color: var(--error);
+  background: var(--error-subtle);
+}
+
+#markdown-content .con-note {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: var(--leading-snug);
+}

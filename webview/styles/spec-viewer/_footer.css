@@ -36,50 +36,50 @@
     padding: 6px 14px;
     border-radius: var(--radius-sm);
     cursor: pointer;
-    font-size: 13px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
     display: flex;
     align-items: center;
     gap: 5px;
-    transition: all var(--transition-fast) ease;
+    transition: background var(--transition-fast) ease,
+                color var(--transition-fast) ease,
+                border-color var(--transition-fast) ease;
     white-space: nowrap;
     flex-shrink: 0;
 }
 
 .actions button.primary {
-    background: var(--accent);
-    color: white;
-    border: none;
+    background: var(--accent-strong);
+    color: var(--vscode-button-foreground, #ffffff);
+    border: 1px solid var(--accent-strong);
     padding: 8px 24px;
-    font-size: 13px;
-    font-weight: 600;
-    border-radius: var(--radius-sm);
-    box-shadow: var(--shadow-sm);
 }
 
 .actions button.primary:hover {
     background: var(--accent-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--accent-glow);
+    border-color: var(--accent-hover);
 }
 
+/* Color-flip: outline at rest, fills with the accent on hover. */
 .actions button.secondary {
     background: transparent;
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border);
     color: var(--text-secondary);
 }
 
 .actions button.secondary:hover {
-    color: var(--text-primary);
-    background: var(--bg-hover);
-    border-color: var(--border-hover);
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--vscode-button-foreground, #ffffff);
 }
 
 .actions button.enhancement {
     background: var(--bg-elevated);
     border: 1px solid var(--border);
     color: var(--text-primary);
-    font-weight: 500;
 }
 
 .actions button.enhancement .icon {
@@ -87,9 +87,9 @@
 }
 
 .actions button.enhancement:hover {
-    background: var(--bg-hover);
-    border-color: var(--border-hover);
-    color: var(--text-primary);
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--vscode-button-foreground, #ffffff);
 }
 
 /* Disabled state for all footer buttons (e.g. while a step is running) */

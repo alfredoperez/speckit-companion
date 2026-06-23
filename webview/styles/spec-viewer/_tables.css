@@ -188,22 +188,19 @@
 .scenario-table th.col-given {
     width: 30%;
     color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 5%, transparent);
-    border-left: 3px solid var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 .scenario-table th.col-when {
     width: 30%;
     color: var(--warning);
-    background: color-mix(in srgb, var(--warning) 5%, transparent);
-    border-left: 3px solid var(--warning);
+    background: color-mix(in srgb, var(--warning) 8%, transparent);
 }
 
 .scenario-table th.col-then {
     width: 40%;
     color: var(--success);
-    background: color-mix(in srgb, var(--success) 5%, transparent);
-    border-left: 3px solid var(--success);
+    background: color-mix(in srgb, var(--success) 8%, transparent);
 }
 
 .scenario-table tbody td {
@@ -215,15 +212,15 @@
 }
 
 .scenario-table td.col-given {
-    border-left: 3px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    background: color-mix(in srgb, var(--accent) 4%, transparent);
 }
 
 .scenario-table td.col-when {
-    border-left: 3px solid color-mix(in srgb, var(--warning) 30%, transparent);
+    background: color-mix(in srgb, var(--warning) 4%, transparent);
 }
 
 .scenario-table td.col-then {
-    border-left: 3px solid color-mix(in srgb, var(--success) 30%, transparent);
+    background: color-mix(in srgb, var(--success) 4%, transparent);
 }
 
 .scenario-table tbody tr:hover td {
@@ -319,7 +316,7 @@
 }
 
 .scenario-row.has-refinement td.col-num {
-    border-left: 3px solid var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
 }
 
 /* Editing state for scenario row */
@@ -340,7 +337,7 @@
 .inline-editor-row .inline-editor {
     margin: 0;
     border-radius: 0;
-    border-left: 3px solid var(--accent);
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
 }
 
 /* Comment row for scenario table */
@@ -386,20 +383,15 @@
 }
 
 .scenario-item {
-    margin: var(--space-1) 0;
+    margin: var(--space-3) 0;
     padding: 3px 8px 3px 0;
     list-style-position: outside;
 }
 
+/* Each scenario reads as one flowing sentence with the Given/When/Then
+   keywords emphasized inline. */
 .scenario-item .line-content {
-    display: inline;
-}
-
-/* Keyword emphasis colors */
-.scenario-item .keyword-given,
-.scenario-item .keyword-when,
-.scenario-item .keyword-then {
-    font-weight: 600;
+    color: var(--text-body);
 }
 
 #markdown-content .scenario-item .keyword-given {
@@ -412,9 +404,4 @@
 
 #markdown-content .scenario-item .keyword-then {
     color: #73c991;
-}
-
-/* Brighten scenario item body text */
-.scenario-item .line-content {
-    color: var(--text-body);
 }

@@ -153,7 +153,9 @@ export function PhasesCard({ state }: PhasesCardProps) {
                         const duration = formatElapsed(activeDurationMs(activityPoints(group)));
                         const showStepDate =
                             new Date(group.startedAt).toDateString() !== specStartDay;
-                        const events = dedupeEvents(group.events);
+                        // Per-task rows (T001…) are noise here — show the phase
+                        // time and any named substeps (e.g. fast-path), not each task.
+                        const events = dedupeEvents(group.events).filter(e => !e.task);
                         return (
                             <div
                                 key={group.step}

@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Spec Viewer · HTML Rendering PoC</title>
+<style>
+/* ============================================================
+   PoC: rich-HTML rendering for the SpecKit Companion viewer.
+   One PoC, four step documents (Specify / Plan / Tasks / Implement),
+   each rendered as structured HTML instead of flowed markdown.
+   Tokens mirror webview/styles/tokens.css — every color resolves
+   from a --vscode-* theme variable first, with a baked fallback
+   so the file also stands alone in a plain browser.
+   ============================================================ */
+
+:root {
+  --text-xs: .694rem; --text-sm: .833rem; --text-base: 1rem;
+  --text-lg: 1.2rem; --text-xl: 1.44rem; --text-2xl: 1.728rem; --text-3xl: 2.074rem;
+  --leading-snug: 1.375; --leading-normal: 1.5; --leading-relaxed: 1.625;
+
+  --space-1: .25rem; --space-2: .5rem; --space-3: .75rem; --space-4: 1rem;
+  --space-5: 1.5rem; --space-6: 2rem; --space-8: 3rem;
+
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-pill: 999px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.3);
+  --shadow-md: 0 4px 14px rgba(0,0,0,.35);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,.45);
+
+  --transition-fast: 150ms; --transition-normal: 200ms;
+  --ease: cubic-bezier(.22,1,.36,1);
+
+  --font-family: 'Geist', var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', sans-serif);
+  --font-mono: var(--vscode-editor-font-family, 'JetBrains Mono', 'SF Mono', 'Consolas', 'Menlo', monospace);
+
+  --content-max: 860px;
+}
+
+body, body.vscode-dark {
+  --bg-primary: var(--vscode-editor-background, #1e1e1e);
+  --bg-secondary: var(--vscode-sideBar-background, #252526);
+  --bg-elevated: var(--vscode-editorWidget-background, #252526);
+  --bg-hover: var(--vscode-list-hoverBackground, #2a2d2e);
+  --bg-inset: color-mix(in srgb, var(--vscode-editor-background, #1e1e1e) 80%, #000);
+
+  --text-primary: var(--vscode-editor-foreground, #e6e6e6);
+  --text-body: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 88%, transparent);
+  --text-secondary: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 68%, transparent);
+  --text-muted: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 48%, transparent);
+
+  --accent: var(--vscode-focusBorder, #3794ff);
+  --accent-subtle: color-mix(in srgb, var(--vscode-focusBorder, #3794ff) 14%, transparent);
+  --accent-line: color-mix(in srgb, var(--vscode-focusBorder, #3794ff) 45%, transparent);
+
+  --success: var(--vscode-testing-iconPassed, #4ec973);
+  --success-subtle: color-mix(in srgb, var(--vscode-testing-iconPassed, #4ec973) 15%, transparent);
+  --warning: var(--vscode-editorWarning-foreground, #cca700);
+  --warning-subtle: color-mix(in srgb, var(--vscode-editorWarning-foreground, #cca700) 16%, transparent);
+  --danger: var(--vscode-editorError-foreground, #f14c4c);
+  --danger-subtle: color-mix(in srgb, var(--vscode-editorError-foreground, #f14c4c) 14%, transparent);
+  --purple: #b07ce8;
+  --purple-subtle: color-mix(in srgb, #b07ce8 16%, transparent);
+
+  --border: var(--vscode-panel-border, #3a3a3a);
+  --border-soft: color-mix(in srgb, var(--vscode-panel-border, #3a3a3a) 60%, transparent);
+}
+
+body.vscode-light {
+  --bg-primary: var(--vscode-editor-background, #ffffff);
+  --bg-secondary: var(--vscode-sideBar-background, #f3f3f3);
+  --bg-elevated: var(--vscode-editorWidget-background, #f8f8f8);
+  --bg-hover: var(--vscode-list-hoverBackground, #ececec);
+  --bg-inset: color-mix(in srgb, var(--vscode-editor-background, #ffffff) 92%, #000);
+
+  --text-primary: var(--vscode-editor-foreground, #1f1f1f);
+  --text-body: color-mix(in srgb, var(--vscode-editor-foreground, #1f1f1f) 90%, transparent);
+  --text-secondary: color-mix(in srgb, var(--vscode-editor-foreground, #1f1f1f) 66%, transparent);
+  --text-muted: color-mix(in srgb, var(--vscode-editor-foreground, #1f1f1f) 48%, transparent);
+
+  --accent: var(--vscode-focusBorder, #005fb8);
+  --accent-subtle: color-mix(in srgb, var(--vscode-focusBorder, #005fb8) 10%, transparent);
+  --accent-line: color-mix(in srgb, var(--vscode-focusBorder, #005fb8) 35%, transparent);
+
+  --success: var(--vscode-testing-iconPassed, #1a7f37);
+  --success-subtle: color-mix(in srgb, var(--vscode-testing-iconPassed, #1a7f37) 10%, transparent);
+  --warning: var(--vscode-editorWarning-foreground, #9a6700);
+  --warning-subtle: color-mix(in srgb, var(--vscode-editorWarning-foreground, #9a6700) 12%, transparent);
+  --danger: var(--vscode-editorError-foreground, #cf222e);
+  --danger-subtle: color-mix(in srgb, var(--vscode-editorError-foreground, #cf222e) 9%, transparent);
+  --purple: #8250df;
+  --purple-subtle: color-mix(in srgb, #8250df 10%, transparent);
+
+  --border: var(--vscode-panel-border, #d8d8d8);
+  --border-soft: color-mix(in srgb, var(--vscode-panel-border, #d8d8d8) 70%, transparent);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--text-body);
+  background: var(--bg-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   Top bar + step tabs (the tabs double as the stepper)
+   ============================================================ */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  background: color-mix(in srgb, var(--bg-secondary) 90%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-row {
+  max-width: var(--content-max); margin: 0 auto;
+  padding: var(--space-3) var(--space-5);
+  display: flex; align-items: center; gap: var(--space-3);
+}
+.crumb { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--text-secondary); min-width: 0; }
+.crumb .sep { color: var(--text-muted); }
+.crumb .here { color: var(--text-primary); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.workflow-chip { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-xs); color: var(--text-secondary); padding: 2px var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-pill); white-space: nowrap; }
+.workflow-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+.status-pill {
+  margin-left: auto;
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  font-size: var(--text-sm); font-weight: 600;
+  padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill);
+  color: var(--accent); background: var(--accent-subtle); border: 1px solid var(--accent-line);
+  white-space: nowrap;
+}
+.status-pill .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 2s var(--ease) infinite; }
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); }
+  70% { box-shadow: 0 0 0 7px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.theme-toggle { font: inherit; font-size: var(--text-xs); color: var(--text-secondary); background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-1) var(--space-2); cursor: pointer; transition: color var(--transition-fast), border-color var(--transition-fast); }
+.theme-toggle:hover { color: var(--text-primary); border-color: var(--accent-line); }
+
+/* ---- Step tabs ---- */
+.step-tabs {
+  max-width: var(--content-max); margin: 0 auto;
+  padding: 0 var(--space-3);
+  display: flex; gap: 2px;
+}
+.step-tab {
+  appearance: none; font: inherit; cursor: pointer;
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-3) var(--space-3) calc(var(--space-3) - 2px);
+  background: transparent; border: 0; border-bottom: 2px solid transparent;
+  color: var(--text-muted); font-size: var(--text-sm);
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+.step-tab:hover { color: var(--text-secondary); }
+.step-tab .node {
+  width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 11px; font-weight: 700; flex: 0 0 auto;
+  border: 1.5px solid var(--border); color: var(--text-muted); background: var(--bg-primary);
+}
+.step-tab.is-done { color: var(--text-secondary); }
+.step-tab.is-done .node { background: var(--success-subtle); border-color: var(--success); color: var(--success); }
+.step-tab.is-active .node { border-color: var(--accent); color: var(--accent); background: var(--accent-subtle); animation: pulse 2s var(--ease) infinite; }
+.step-tab[aria-selected="true"] { color: var(--text-primary); font-weight: 600; border-bottom-color: var(--accent); }
+.step-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: var(--radius-sm); }
+
+/* ============================================================
+   Document column + panels
+   ============================================================ */
+.poc-note { max-width: var(--content-max); margin: var(--space-5) auto 0; padding: 0 var(--space-5); }
+.poc-note .inner { font-size: var(--text-xs); color: var(--text-muted); border: 1px dashed var(--border); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); display: flex; gap: var(--space-2); align-items: baseline; }
+.poc-note strong { color: var(--text-secondary); }
+
+.doc { max-width: var(--content-max); margin: 0 auto; padding: var(--space-6) var(--space-5) var(--space-8); }
+.panel { display: none; }
+.panel.active { display: block; }
+
+.reveal { opacity: 0; transform: translateY(10px); transition: opacity .5s var(--ease), transform .5s var(--ease); }
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+
+/* ---- shared section scaffolding ---- */
+section.block { margin-top: var(--space-8); scroll-margin-top: 120px; }
+section.block:first-child { margin-top: 0; }
+.section-head { display: flex; align-items: baseline; gap: var(--space-3); margin-bottom: var(--space-4); }
+.section-head h2 { font-size: var(--text-xl); margin: 0; color: var(--text-primary); letter-spacing: -.01em; }
+.section-head .count { font-size: var(--text-xs); font-family: var(--font-mono); color: var(--text-muted); padding-top: 4px; }
+.mandatory { font-size: var(--text-xs); color: var(--warning); background: var(--warning-subtle); border-radius: var(--radius-sm); padding: 1px var(--space-2); }
+p { color: var(--text-body); line-height: var(--leading-relaxed); max-width: 72ch; }
+code { font-family: var(--font-mono); }
+.icode { font-size: .9em; background: var(--bg-hover); padding: 1px 5px; border-radius: var(--radius-sm); color: var(--text-primary); }
+
+/* ---- Hero (shared) ---- */
+.spec-hero { margin-bottom: var(--space-6); }
+.spec-hero h1 { font-size: var(--text-3xl); line-height: 1.15; letter-spacing: -.02em; margin: 0 0 var(--space-2); color: var(--text-primary); text-wrap: balance; }
+.spec-hero .doc-kind { font-size: var(--text-sm); color: var(--text-secondary); margin: 0 0 var(--space-4); }
+.spec-hero .doc-kind b { color: var(--accent); font-weight: 600; }
+.meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-3) var(--space-5); padding: var(--space-4) var(--space-5); background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); }
+.meta-item { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.meta-key { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); }
+.meta-val { font-size: var(--text-sm); color: var(--text-body); word-break: break-word; }
+.meta-val.mono { font-family: var(--font-mono); color: var(--text-primary); }
+
+/* ---- callout ---- */
+.callout { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-secondary); padding: var(--space-4) var(--space-5); margin-top: var(--space-4); }
+.callout p:first-child { margin-top: 0; }
+.evidence { display: grid; gap: var(--space-2); margin-top: var(--space-4); }
+.evidence-item { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-3); align-items: start; padding: var(--space-3); border-radius: var(--radius-sm); background: var(--bg-inset); border: 1px solid var(--border-soft); }
+.evidence-id { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--accent); white-space: nowrap; }
+.evidence-text { font-size: var(--text-sm); color: var(--text-body); }
+
+/* ============================================================
+   SPECIFY panel — user story cards
+   ============================================================ */
+.story { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-secondary); overflow: hidden; margin-top: var(--space-5); transition: border-color var(--transition-normal), box-shadow var(--transition-normal), transform var(--transition-normal); }
+.story:hover { border-color: var(--accent-line); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+@media (prefers-reduced-motion: reduce) { .story:hover { transform: none; } }
+.story-head { padding: var(--space-4) var(--space-5) var(--space-3); }
+.story-meta { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); flex-wrap: wrap; }
+.story-id { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-secondary); }
+.story-meta .sep { color: var(--text-muted); }
+.prio { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-xs); font-weight: 600; padding: 2px var(--space-2); border-radius: var(--radius-pill); }
+.prio .dot { width: 7px; height: 7px; border-radius: 50%; }
+.prio.p1 { color: var(--danger); background: var(--danger-subtle); } .prio.p1 .dot { background: var(--danger); }
+.prio.p2 { color: var(--warning); background: var(--warning-subtle); } .prio.p2 .dot { background: var(--warning); }
+.prio.p3 { color: var(--accent); background: var(--accent-subtle); } .prio.p3 .dot { background: var(--accent); }
+.story-title { font-size: var(--text-lg); margin: 0; color: var(--text-primary); line-height: var(--leading-snug); }
+.story-narrative { margin: var(--space-3) 0 0; font-size: var(--text-base); color: var(--text-body); line-height: var(--leading-relaxed); }
+.story-narrative .role { color: var(--text-primary); font-weight: 600; }
+.story-notes { display: grid; gap: var(--space-2); padding: 0 var(--space-5) var(--space-4); }
+.note { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-3); font-size: var(--text-sm); align-items: baseline; }
+.note .label { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); white-space: nowrap; padding-top: 2px; }
+.note.why .label { color: var(--warning); }
+.note.test .label { color: var(--success); }
+.note .body { color: var(--text-body); line-height: var(--leading-snug); }
+.scenarios { border-top: 1px solid var(--border); background: var(--bg-inset); padding: var(--space-4) var(--space-5) var(--space-5); }
+.scenarios-label { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .07em; color: var(--text-secondary); margin: 0 0 var(--space-3); }
+.gwt { display: grid; gap: var(--space-3); }
+.gwt-card { border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--bg-primary); overflow: hidden; }
+.gwt-card .num { display: inline-block; font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-muted); padding: var(--space-2) var(--space-3) 0; }
+.gwt-row { display: grid; grid-template-columns: 64px 1fr; gap: var(--space-3); padding: var(--space-2) var(--space-3); align-items: baseline; }
+.gwt-row + .gwt-row { border-top: 1px solid var(--border-soft); }
+.kw { font-size: var(--text-xs); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; text-align: right; padding-top: 1px; }
+.kw.given { color: var(--text-secondary); }
+.kw.when { color: var(--accent); }
+.kw.then { color: var(--success); }
+.gwt-row .clause { font-size: var(--text-sm); color: var(--text-body); line-height: var(--leading-snug); }
+
+.edge-list { display: grid; gap: var(--space-2); margin-top: var(--space-4); padding: 0; list-style: none; }
+.edge-list li { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-3); align-items: start; padding: var(--space-3) var(--space-4); border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--bg-secondary); font-size: var(--text-sm); color: var(--text-body); line-height: var(--leading-snug); }
+.edge-list li::before { content: "›"; color: var(--accent); font-weight: 700; }
+
+.req-table { width: 100%; border-collapse: collapse; margin-top: var(--space-4); font-size: var(--text-sm); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+.req-table thead th { text-align: left; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); background: var(--bg-secondary); padding: var(--space-3) var(--space-4); font-weight: 600; }
+.req-table tbody tr { border-top: 1px solid var(--border-soft); }
+.req-table tbody tr:hover { background: var(--bg-hover); }
+.req-table td { padding: var(--space-3) var(--space-4); vertical-align: top; color: var(--text-body); line-height: var(--leading-snug); }
+.req-id { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--accent); white-space: nowrap; }
+.tag { font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 1px 6px; border-radius: var(--radius-sm); white-space: nowrap; }
+.tag.must { color: var(--danger); background: var(--danger-subtle); }
+.tag.may { color: var(--text-secondary); background: var(--bg-hover); }
+
+.entities { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-3); margin-top: var(--space-4); }
+.entity { padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-secondary); }
+.entity-name { display: inline-flex; align-items: center; gap: var(--space-2); font-family: var(--font-mono); font-size: var(--text-sm); font-weight: 600; color: var(--purple); margin-bottom: var(--space-2); }
+.entity-name::before { content: ""; width: 8px; height: 8px; border-radius: 2px; background: var(--purple); }
+.entity-desc { font-size: var(--text-sm); color: var(--text-body); line-height: var(--leading-snug); }
+
+.sc-grid { display: grid; gap: var(--space-2); margin-top: var(--space-4); }
+.sc { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-3); align-items: start; padding: var(--space-3) var(--space-4); border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--bg-secondary); }
+.sc-check { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--success); color: var(--success); display: grid; place-items: center; flex: 0 0 auto; margin-top: 1px; }
+.sc-check svg { width: 11px; height: 11px; }
+.sc-body { font-size: var(--text-sm); color: var(--text-body); line-height: var(--leading-snug); }
+.sc-id { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--success); margin-right: var(--space-2); }
+
+.two-up { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-5); margin-top: var(--space-4); }
+.mini { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-secondary); padding: var(--space-4) var(--space-5); }
+.mini h3 { font-size: var(--text-base); margin: 0 0 var(--space-3); color: var(--text-primary); }
+.mini ul { margin: 0; padding-left: 1.1em; display: grid; gap: var(--space-2); }
+.mini li { font-size: var(--text-sm); color: var(--text-body); line-height: var(--leading-snug); }
+.mini.scope h3 { color: var(--danger); }
+
+/* ============================================================
+   PLAN panel
+   ============================================================ */
+.tech-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1px; margin-top: var(--space-4); background: var(--border-soft); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+.tech-cell { background: var(--bg-secondary); padding: var(--space-3) var(--space-4); }
+.tech-key { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: 2px; }
+.tech-val { font-size: var(--text-sm); color: var(--text-body); }
+.tech-val code { font-size: .9em; color: var(--text-primary); }
+
+.constitution { display: grid; gap: var(--space-2); margin-top: var(--space-4); }
+.con-row { display: grid; grid-template-columns: max-content max-content 1fr; gap: var(--space-3); align-items: baseline; padding: var(--space-3) var(--space-4); border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--bg-secondary); }
+.con-name { font-size: var(--text-sm); font-weight: 600; color: var(--text-primary); }
+.verdict { font-size: 10px; font-weight: 700; letter-spacing: .05em; padding: 1px 7px; border-radius: var(--radius-pill); }
+.verdict.pass { color: var(--success); background: var(--success-subtle); }
+.con-note { font-size: var(--text-sm); color: var(--text-secondary); line-height: var(--leading-snug); }
+
+.filetree { margin-top: var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-inset); overflow: hidden; }
+.filetree-head { font-size: var(--text-xs); color: var(--text-muted); padding: var(--space-2) var(--space-4); border-bottom: 1px solid var(--border-soft); background: var(--bg-secondary); font-family: var(--font-mono); }
+.filetree pre { margin: 0; padding: var(--space-4); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.7; color: var(--text-body); overflow-x: auto; }
+.filetree pre .dir { color: var(--accent); }
+.filetree pre .cmt { color: var(--text-muted); }
+.filetree pre .new { color: var(--success); }
+
+/* ============================================================
+   TASKS panel
+   ============================================================ */
+.progress-summary { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) var(--space-5); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-secondary); margin-bottom: var(--space-5); }
+.progress-summary .pct { font-size: var(--text-2xl); font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.progress-summary .meta { font-size: var(--text-sm); color: var(--text-secondary); }
+.progress-track { flex: 1; height: 8px; border-radius: var(--radius-pill); background: var(--bg-inset); overflow: hidden; border: 1px solid var(--border-soft); }
+.progress-fill { height: 100%; border-radius: var(--radius-pill); background: var(--success); }
+
+.phase { margin-top: var(--space-6); }
+.phase-head { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-1); }
+.phase-head h3 { font-size: var(--text-lg); margin: 0; color: var(--text-primary); }
+.phase-badge { font-size: var(--text-xs); padding: 1px var(--space-2); border-radius: var(--radius-pill); font-weight: 600; }
+.phase-badge.done { color: var(--success); background: var(--success-subtle); }
+.phase-badge.active { color: var(--accent); background: var(--accent-subtle); }
+.phase-badge.mvp { color: var(--warning); background: var(--warning-subtle); }
+.phase-goal { font-size: var(--text-sm); color: var(--text-secondary); margin: 0 0 var(--space-3); line-height: var(--leading-snug); }
+.task-list { display: grid; gap: 6px; }
+.task-row { display: grid; grid-template-columns: max-content max-content 1fr; gap: var(--space-3); align-items: start; padding: var(--space-3) var(--space-4); border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--bg-secondary); transition: border-color var(--transition-fast); }
+.task-row:hover { border-color: var(--border); }
+.task-check { width: 18px; height: 18px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); display: grid; place-items: center; flex: 0 0 auto; margin-top: 1px; }
+.task-row.done .task-check { background: var(--success-subtle); border-color: var(--success); color: var(--success); }
+.task-row.done .task-desc { color: var(--text-secondary); }
+.task-check svg { width: 11px; height: 11px; }
+.task-id { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-muted); padding-top: 2px; white-space: nowrap; }
+.task-desc { font-size: var(--text-sm); color: var(--text-body); line-height: var(--leading-snug); }
+.task-desc code { font-size: .9em; }
+.chip { font-size: 10px; font-weight: 700; letter-spacing: .03em; padding: 0 5px; border-radius: var(--radius-sm); margin-right: 4px; vertical-align: 1px; }
+.chip.p { color: var(--accent); background: var(--accent-subtle); }
+.chip.us { color: var(--purple); background: var(--purple-subtle); }
+.checkpoint { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-3); padding: var(--space-2) var(--space-4); border-radius: var(--radius-md); background: var(--success-subtle); color: var(--success); font-size: var(--text-sm); border: 1px solid color-mix(in srgb, var(--success) 30%, transparent); }
+
+/* ============================================================
+   IMPLEMENT panel — execution view
+   ============================================================ */
+.exec-head { padding: var(--space-5); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-secondary); margin-bottom: var(--space-5); }
+.exec-head .title { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-base); color: var(--text-primary); font-weight: 600; margin-bottom: var(--space-3); }
+.exec-head .runner { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); animation: pulse 2s var(--ease) infinite; }
+.exec-stats { display: flex; gap: var(--space-6); flex-wrap: wrap; }
+.exec-stat { display: flex; flex-direction: column; gap: 2px; }
+.exec-stat .n { font-size: var(--text-xl); font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.exec-stat .l { font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+.exec-stat .n.ok { color: var(--success); }
+.exec-stat .n.run { color: var(--accent); }
+
+.exec-list { display: grid; gap: 4px; }
+.exec-row { display: grid; grid-template-columns: max-content 1fr max-content; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--bg-secondary); }
+.exec-row.running { border-color: var(--accent-line); background: color-mix(in srgb, var(--accent-subtle) 40%, var(--bg-secondary)); }
+.exec-ic { width: 18px; height: 18px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 50%; }
+.exec-ic.done { color: var(--success); border: 1.5px solid var(--success); background: var(--success-subtle); }
+.exec-ic.done svg { width: 11px; height: 11px; }
+.exec-ic.run { border: 2px solid var(--accent-line); border-top-color: var(--accent); animation: spin 0.8s linear infinite; }
+.exec-ic.queue { border: 1.5px dashed var(--border); }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .exec-ic.run { animation: none; border-top-color: var(--accent-line); } .status-pill .pulse, .step-tab.is-active .node, .exec-head .runner { animation: none; } }
+.exec-task { min-width: 0; }
+.exec-task .id { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-muted); margin-right: var(--space-2); }
+.exec-task .d { font-size: var(--text-sm); color: var(--text-body); }
+.exec-row.queue .exec-task .d { color: var(--text-muted); }
+.exec-dur { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-muted); white-space: nowrap; }
+.exec-dur.live { color: var(--accent); }
+.exec-phase-label { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin: var(--space-5) 0 var(--space-2); }
+
+.step-tab.is-view .node-view { width: 8px; height: 8px; border: 0; border-radius: 50%; background: var(--text-muted); }
+.step-tab.is-view[aria-selected="true"] .node-view { background: var(--accent); }
+
+/* ---- Segmented toggle (Plan checklist vs Build run) ---- */
+.seg { display: inline-flex; padding: 3px; gap: 2px; background: var(--bg-inset); border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: var(--space-5); }
+.seg button { appearance: none; font: inherit; font-size: var(--text-sm); cursor: pointer; border: 0; background: transparent; color: var(--text-secondary); padding: var(--space-2) var(--space-4); border-radius: var(--radius-sm); display: flex; align-items: center; gap: var(--space-2); transition: background var(--transition-fast), color var(--transition-fast); }
+.seg button:hover { color: var(--text-primary); }
+.seg button[aria-pressed="true"] { background: var(--bg-elevated); color: var(--text-primary); box-shadow: var(--shadow-sm); }
+.seg .seg-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); }
+.seg button[aria-pressed="true"] .seg-dot.run { background: var(--accent); animation: pulse 2s var(--ease) infinite; }
+.subview { display: none; }
+.subview.active { display: block; }
+
+/* ---- Subpage rail (related design docs under a step) ---- */
+.subnav { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; margin-bottom: var(--space-5); padding-bottom: var(--space-3); border-bottom: 1px solid var(--border); }
+.subnav-label { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-right: var(--space-2); }
+.subnav button { appearance: none; font: inherit; font-size: var(--text-sm); cursor: pointer; border: 1px solid transparent; background: transparent; color: var(--text-secondary); padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); display: inline-flex; align-items: center; gap: var(--space-2); transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast); }
+.subnav button:hover { color: var(--text-primary); background: var(--bg-hover); }
+.subnav button[aria-pressed="true"] { color: var(--text-primary); background: var(--accent-subtle); border-color: var(--accent-line); }
+.subnav button .ext { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-muted); }
+.subnav button[aria-pressed="true"] .ext { color: var(--accent); }
+
+/* ============================================================
+   ACTIVITY panel — timeline from .spec-context.json
+   ============================================================ */
+.timeline { position: relative; margin-top: var(--space-5); padding-left: var(--space-6); }
+.timeline::before { content: ""; position: absolute; left: 9px; top: 6px; bottom: 6px; width: 2px; background: var(--border-soft); }
+.tl-event { position: relative; padding: 0 0 var(--space-5) 0; }
+.tl-event:last-child { padding-bottom: 0; }
+.tl-dot { position: absolute; left: calc(-1 * var(--space-6) + 3px); top: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--bg-primary); border: 2px solid var(--border); display: grid; place-items: center; }
+.tl-dot svg { width: 8px; height: 8px; }
+.tl-event.done .tl-dot { border-color: var(--success); color: var(--success); background: var(--success-subtle); }
+.tl-event.start .tl-dot { border-color: var(--accent); background: var(--accent-subtle); }
+.tl-event.running .tl-dot { border-color: var(--accent); background: var(--accent-subtle); animation: pulse 2s var(--ease) infinite; }
+.tl-event.sub .tl-dot { width: 10px; height: 10px; left: calc(-1 * var(--space-6) + 5px); top: 4px; border-color: var(--border-hover, var(--border)); }
+.tl-head { display: flex; align-items: baseline; gap: var(--space-2); flex-wrap: wrap; }
+.tl-title { font-size: var(--text-sm); color: var(--text-primary); font-weight: 600; }
+.tl-event.sub .tl-title { font-weight: 400; color: var(--text-body); }
+.tl-by { font-size: var(--text-xs); padding: 0 6px; border-radius: var(--radius-pill); }
+.tl-by.you { color: var(--accent); background: var(--accent-subtle); }
+.tl-by.ext { color: var(--purple); background: var(--purple-subtle); }
+.tl-by.cli { color: var(--text-secondary); background: var(--bg-hover); }
+.tl-time { margin-left: auto; font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-muted); white-space: nowrap; }
+.tl-meta { font-size: var(--text-xs); color: var(--text-secondary); margin-top: 2px; }
+.activity-empty-note { font-size: var(--text-sm); color: var(--text-muted); margin-top: var(--space-4); }
+
+@media (max-width: 560px) {
+  .gwt-row { grid-template-columns: 52px 1fr; }
+  .note, .evidence-item, .sc { grid-template-columns: 1fr; gap: var(--space-1); }
+  .doc { padding: var(--space-5) var(--space-4); }
+  .con-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body class="vscode-dark">
+
+<header class="topbar">
+  <div class="topbar-row">
+    <nav class="crumb" aria-label="Breadcrumb">
+      <span>Specs</span><span class="sep">/</span>
+      <span class="here">060 · Spec-Context Tracking</span>
+    </nav>
+    <span class="workflow-chip"><span class="dot"></span>SpecKit Companion</span>
+    <span class="status-pill"><span class="pulse"></span>Planning</span>
+    <button class="theme-toggle" id="themeToggle" type="button">Light theme</button>
+  </div>
+  <div class="step-tabs" role="tablist" aria-label="Spec step documents">
+    <button class="step-tab is-done" role="tab" aria-selected="false" data-panel="specify"><span class="node" aria-hidden="true">✓</span>Specify</button>
+    <button class="step-tab is-active" role="tab" aria-selected="true" data-panel="plan"><span class="node" aria-hidden="true">2</span>Plan</button>
+    <button class="step-tab" role="tab" aria-selected="false" data-panel="tasks"><span class="node" aria-hidden="true">3</span>Tasks &amp; Build</button>
+    <button class="step-tab is-view" role="tab" aria-selected="false" data-panel="activity"><span class="node node-view" aria-hidden="true"></span>Activity</button>
+  </div>
+</header>
+
+<div class="poc-note">
+  <div class="inner"><strong>PoC.</strong>&nbsp;Four step documents from spec 060, each rendered as structured HTML instead of flowed markdown. Use the step tabs above to switch pages; the toggle previews the standalone fallback palette.</div>
+</div>
+
+<main class="doc">
+
+<!-- ====================================================== -->
+<!-- SPECIFY                                                -->
+<!-- ====================================================== -->
+<div class="panel" id="panel-specify" role="tabpanel" aria-label="Specify">
+  <div class="spec-hero reveal">
+    <h1>Spec-Context Tracking &amp; Viewer Status Feedback</h1>
+    <p class="doc-kind"><b>spec.md</b> · the what and the why</p>
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-key">Feature Branch</span><span class="meta-val mono">060-spec-context-tracking</span></div>
+      <div class="meta-item"><span class="meta-key">Created</span><span class="meta-val">April 13, 2026</span></div>
+      <div class="meta-item"><span class="meta-key">Status</span><span class="meta-val">Draft</span></div>
+      <div class="meta-item" style="grid-column: 1 / -1;"><span class="meta-key">Input</span><span class="meta-val">Improve how SpecKit Companion records spec lifecycle state in <code class="icode">.spec-context.json</code> and how the viewer reflects that state, so users get accurate, consistent, real-time feedback about what is happening in a spec.</span></div>
+    </div>
+  </div>
+
+  <section class="block reveal">
+    <div class="section-head"><h2>Problem Context</h2></div>
+    <div class="callout">
+      <p style="margin-top:0">Today <code class="icode">.spec-context.json</code> is inconsistently populated across workflows. The viewer derives step status partly from file existence, which produces false positives, like a <code class="icode">plan.md</code> existing from a template being treated as "planned." The stepper, header badge, footer buttons, and pulse indicators drift out of sync with reality. Users cannot trust what the viewer tells them.</p>
+      <div class="evidence">
+        <div class="evidence-item"><span class="evidence-id">054</span><span class="evidence-text"><em>archive-button-left</em> · Companion-driven: reached <code class="icode">completed</code> after only specify + plan, with noisy back-and-forth transitions.</span></div>
+        <div class="evidence-item"><span class="evidence-id">055</span><span class="evidence-text"><em>fix-bullet-rendering</em> · Terminal-only: context is just <code class="icode">{ "status": "completed" }</code> with no lifecycle data.</span></div>
+        <div class="evidence-item"><span class="evidence-id">056</span><span class="evidence-text"><em>fix-list-spacing</em> · SDD Fast: created all files in one run, but context only records <code class="icode">specify</code> started.</span></div>
+        <div class="evidence-item"><span class="evidence-id">058</span><span class="evidence-text"><em>floating-toast</em> · SDD: <code class="icode">status: completed</code> while <code class="icode">tasks.completedAt</code> is null (contradictory).</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="section-head reveal"><h2>User Scenarios &amp; Testing</h2><span class="mandatory">mandatory</span><span class="count">7 stories</span></div>
+
+    <article class="story reveal">
+      <div class="story-head">
+        <div class="story-meta"><span class="story-id">US-1</span><span class="sep">·</span><span class="prio p1"><span class="dot"></span>P1 · Critical</span></div>
+        <h3 class="story-title">Trustworthy single spec status</h3>
+        <p class="story-narrative">As a <span class="role">spec author</span>, when I open a spec I see one overall status (Draft → Specifying → Planning → Tasking → Implementing → Completed → Archived) that is the same across the sidebar, header, and stepper, regardless of which step tab I am viewing.</p>
+      </div>
+      <div class="story-notes">
+        <div class="note why"><span class="label">Why P1</span><span class="body">The per-step status in the header is the primary source of confusion. Fixing this is the foundation for every other improvement.</span></div>
+        <div class="note test"><span class="label">Test</span><span class="body">Open any spec. Sidebar, header badge, and stepper must match. Switching step tabs must not change the overall status.</span></div>
+      </div>
+      <div class="scenarios">
+        <p class="scenarios-label">Acceptance Scenarios</p>
+        <div class="gwt">
+          <div class="gwt-card"><span class="num">01</span>
+            <div class="gwt-row"><span class="kw given">Given</span><span class="clause">a spec whose current step is <code class="icode">plan</code> and whose plan step is in progress</span></div>
+            <div class="gwt-row"><span class="kw when">When</span><span class="clause">I switch between the Specify and Plan tabs</span></div>
+            <div class="gwt-row"><span class="kw then">Then</span><span class="clause">the header badge continues to read "Planning" (not "Specified" on the Specify tab)</span></div>
+          </div>
+          <div class="gwt-card"><span class="num">02</span>
+            <div class="gwt-row"><span class="kw given">Given</span><span class="clause">a spec with <code class="icode">status: completed</code></span></div>
+            <div class="gwt-row"><span class="kw when">When</span><span class="clause">I view any step</span></div>
+            <div class="gwt-row"><span class="kw then">Then</span><span class="clause">every surface reads "Completed" and no pulse animation is shown</span></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="story reveal">
+      <div class="story-head">
+        <div class="story-meta"><span class="story-id">US-2</span><span class="sep">·</span><span class="prio p1"><span class="dot"></span>P1 · Critical</span></div>
+        <h3 class="story-title">Step progression driven by explicit events, not file existence</h3>
+        <p class="story-narrative">As a <span class="role">spec author</span>, I want the stepper to advance only when a step has actually been executed by the workflow, not merely because a file exists on disk.</p>
+      </div>
+      <div class="story-notes">
+        <div class="note why"><span class="label">Why P1</span><span class="body">The "<code class="icode">plan.md</code> exists therefore planned" heuristic is the root cause of false progress indicators.</span></div>
+        <div class="note test"><span class="label">Test</span><span class="body">Manually create an empty <code class="icode">plan.md</code> without running the plan step. The stepper must not mark plan as started or completed.</span></div>
+      </div>
+      <div class="scenarios">
+        <p class="scenarios-label">Acceptance Scenarios</p>
+        <div class="gwt">
+          <div class="gwt-card"><span class="num">01</span>
+            <div class="gwt-row"><span class="kw given">Given</span><span class="clause">a directory where only <code class="icode">spec.md</code> is filled and <code class="icode">plan.md</code> is just a template scaffold</span></div>
+            <div class="gwt-row"><span class="kw when">When</span><span class="clause">the viewer loads</span></div>
+            <div class="gwt-row"><span class="kw then">Then</span><span class="clause">the Plan step shows as "Not started"</span></div>
+          </div>
+          <div class="gwt-card"><span class="num">02</span>
+            <div class="gwt-row"><span class="kw given">Given</span><span class="clause">the <code class="icode">/speckit.plan</code> command runs to completion</span></div>
+            <div class="gwt-row"><span class="kw when">When</span><span class="clause">the run ends</span></div>
+            <div class="gwt-row"><span class="kw then">Then</span><span class="clause"><code class="icode">plan.startedAt</code> and <code class="icode">completedAt</code> are both set and the stepper reflects "Plan: completed"</span></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="story reveal">
+      <div class="story-head">
+        <div class="story-meta"><span class="story-id">US-4</span><span class="sep">·</span><span class="prio p2"><span class="dot"></span>P2 · Important</span></div>
+        <h3 class="story-title">Substep tracking for long steps</h3>
+        <p class="story-narrative">As a <span class="role">user of Companion-driven workflows</span>, I want substeps (e.g. <code class="icode">plan.research</code>, <code class="icode">implement.run-tests</code>) recorded so the viewer can show fine-grained progress and I can tell whether a step is stuck.</p>
+      </div>
+      <div class="story-notes">
+        <div class="note test"><span class="label">Test</span><span class="body">Run a specify command with outline → draft → validate. Afterward, history lists each substep with its own timestamps.</span></div>
+      </div>
+      <div class="scenarios">
+        <p class="scenarios-label">Acceptance Scenarios</p>
+        <div class="gwt">
+          <div class="gwt-card"><span class="num">01</span>
+            <div class="gwt-row"><span class="kw given">Given</span><span class="clause">a substep is running</span></div>
+            <div class="gwt-row"><span class="kw when">When</span><span class="clause">I view the stepper</span></div>
+            <div class="gwt-row"><span class="kw then">Then</span><span class="clause">the active step shows the substep label under it (e.g. "Specifying · validating checklist")</span></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <p style="margin-top:var(--space-4); font-size:var(--text-sm); color:var(--text-muted)">US-3, US-5, US-6, US-7 follow the same card shape (omitted here for brevity).</p>
+  </section>
+
+  <section class="block reveal">
+    <div class="section-head"><h2>Functional Requirements</h2><span class="mandatory">mandatory</span><span class="count">13 reqs</span></div>
+    <table class="req-table">
+      <thead><tr><th style="width:64px">ID</th><th>Requirement</th><th style="width:64px">Level</th></tr></thead>
+      <tbody>
+        <tr><td class="req-id">FR-001</td><td>Treat <code class="icode">.spec-context.json</code> as the single source of truth; never infer step completion from file existence alone.</td><td><span class="tag must">MUST</span></td></tr>
+        <tr><td class="req-id">FR-003</td><td><code class="icode">status</code> is a spec-wide value from a defined set, displayed identically across sidebar, header, and any step tab.</td><td><span class="tag must">MUST</span></td></tr>
+        <tr><td class="req-id">FR-004</td><td><code class="icode">stepHistory.&lt;step&gt;</code> records <code class="icode">startedAt</code> and <code class="icode">completedAt</code> and may record a <code class="icode">substeps</code> array.</td><td><span class="tag may">MAY</span></td></tr>
+        <tr><td class="req-id">FR-007</td><td>Derive step badges solely from history; the active pulse is on exactly the step with <code class="icode">startedAt</code> set and <code class="icode">completedAt</code> null.</td><td><span class="tag must">MUST</span></td></tr>
+        <tr><td class="req-id">FR-013</td><td>Tolerate and preserve unknown fields across writes.</td><td><span class="tag must">MUST</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="block reveal">
+    <div class="section-head"><h2>Success Criteria</h2><span class="mandatory">mandatory</span><span class="count">6 outcomes</span></div>
+    <div class="sc-grid">
+      <div class="sc"><span class="sc-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></span><span class="sc-body"><span class="sc-id">SC-001</span>100% of specs from any of the four workflows produce a context file matching the canonical schema.</span></div>
+      <div class="sc"><span class="sc-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></span><span class="sc-body"><span class="sc-id">SC-002</span>Zero cases where the stepper marks a step started or completed from file existence alone.</span></div>
+      <div class="sc"><span class="sc-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></span><span class="sc-body"><span class="sc-id">SC-004</span>After <code class="icode">status: completed</code>, no step pulses in any view.</span></div>
+    </div>
+  </section>
+</div>
+
+<!-- ====================================================== -->
+<!-- PLAN                                                   -->
+<!-- ====================================================== -->
+<div class="panel" id="panel-plan" role="tabpanel" aria-label="Plan">
+  <div class="spec-hero reveal">
+    <h1>Implementation Plan</h1>
+    <p class="doc-kind"><b>plan.md</b> · the how, with research and design artifacts</p>
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-key">Branch</span><span class="meta-val mono">060-spec-context-tracking</span></div>
+      <div class="meta-item"><span class="meta-key">Date</span><span class="meta-val">April 13, 2026</span></div>
+      <div class="meta-item"><span class="meta-key">Project Type</span><span class="meta-val">VS Code extension with webview</span></div>
+    </div>
+  </div>
+
+  <nav class="subnav reveal" aria-label="Plan design documents">
+    <span class="subnav-label">Plan docs</span>
+    <button type="button" data-sub="main" aria-pressed="true">Plan <span class="ext">plan.md</span></button>
+    <button type="button" data-sub="research" aria-pressed="false">Research <span class="ext">research.md</span></button>
+    <button type="button" data-sub="datamodel" aria-pressed="false">Data Model <span class="ext">data-model.md</span></button>
+    <button type="button" data-sub="quickstart" aria-pressed="false">Quickstart <span class="ext">quickstart.md</span></button>
+    <button type="button" data-sub="contracts" aria-pressed="false">Schema <span class="ext">contracts/</span></button>
+  </nav>
+
+  <div class="subview active" id="plan-main">
+  <section class="block reveal">
+    <div class="section-head"><h2>Summary</h2></div>
+    <div class="callout"><p style="margin-top:0">Make <code class="icode">.spec-context.json</code> the single source of truth for spec lifecycle state, with a canonical schema. All four workflows write the same shape via standardized prompt blocks. The viewer derives badges, pulse, highlight, and footer button visibility solely from this context, never from file existence.</p></div>
+  </section>
+
+  <section class="block reveal">
+    <div class="section-head"><h2>Technical Context</h2></div>
+    <div class="tech-grid">
+      <div class="tech-cell"><div class="tech-key">Language / Version</div><div class="tech-val">TypeScript 5.3+ (ES2022, strict)</div></div>
+      <div class="tech-cell"><div class="tech-key">Primary Dependencies</div><div class="tech-val"><code class="icode">@types/vscode ^1.84.0</code>, Preact</div></div>
+      <div class="tech-cell"><div class="tech-key">Storage</div><div class="tech-val">File-based · one <code class="icode">.spec-context.json</code> per spec dir</div></div>
+      <div class="tech-cell"><div class="tech-key">Testing</div><div class="tech-val">Jest with <code class="icode">ts-jest</code>, BDD describe/it</div></div>
+      <div class="tech-cell"><div class="tech-key">Target Platform</div><div class="tech-val">VS Code 1.84+ (desktop)</div></div>
+      <div class="tech-cell"><div class="tech-key">Performance Goal</div><div class="tech-val">Viewer state updates &lt;100ms after context change</div></div>
+      <div class="tech-cell"><div class="tech-key">Constraints</div><div class="tech-val">Tolerate unknown fields, never overwrite user edits, append-only transitions</div></div>
+      <div class="tech-cell"><div class="tech-key">Scale / Scope</div><div class="tech-val">~7 viewer files + ~6 prompt skills + 1 schema module</div></div>
+    </div>
+  </section>
+
+  <section class="block reveal">
+    <div class="section-head"><h2>Constitution Check</h2><span class="count">no violations</span></div>
+    <div class="constitution">
+      <div class="con-row"><span class="con-name">I. Extensibility</span><span class="verdict pass">PASS</span><span class="con-note">Schema accepts unknown fields; workflows pluggable.</span></div>
+      <div class="con-row"><span class="con-name">II. Spec-Driven Workflow</span><span class="verdict pass">PASS</span><span class="con-note">Reinforces explicit lifecycle, removes heuristic inference.</span></div>
+      <div class="con-row"><span class="con-name">III. Visual &amp; Interactive</span><span class="verdict pass">PASS</span><span class="con-note">Fixes pulse, highlight, and badge correctness in the viewer.</span></div>
+      <div class="con-row"><span class="con-name">IV. Modular Architecture</span><span class="verdict pass">PASS</span><span class="con-note">Schema, reader/writer, and derivation kept as separate modules.</span></div>
+    </div>
+  </section>
+
+  <section class="block reveal">
+    <div class="section-head"><h2>Source Structure</h2></div>
+    <div class="filetree">
+      <div class="filetree-head">repository root</div>
+<pre><span class="dir">src/core/types/</span>
+  specContext.ts            <span class="new">+ canonical SpecContext types</span>
+<span class="dir">src/features/specs/</span>
+  specContextReader.ts      <span class="new">+ read, tolerate unknown fields</span>
+  specContextWriter.ts      <span class="new">+ atomic write, append-only</span>
+  specContextBackfill.ts    <span class="new">+ minimal context for terminal-only</span>
+<span class="dir">src/features/spec-viewer/</span>
+  stateDerivation.ts        <span class="new">+ status/badge/pulse from context only</span>
+  footerActions.ts          <span class="new">+ scope + visibility rules</span>
+  messageHandlers.ts        <span class="cmt"># (modify) wire context updates</span>
+<span class="dir">tests/</span>
+  unit/specs/specContext.spec.ts
+  unit/spec-viewer/stateDerivation.spec.ts
+  integration/specContextWorkflows.spec.ts</pre>
+    </div>
+  </section>
+
+  <section class="block reveal">
+    <div class="section-head"><h2>Linked Design Artifacts</h2></div>
+    <div class="entities">
+      <div class="entity"><div class="entity-name">research.md</div><div class="entity-desc">Decisions on schema shape, terminal-state vocabulary, and back-fill policy.</div></div>
+      <div class="entity"><div class="entity-name">data-model.md</div><div class="entity-desc">Entity definitions and derived view-model rules (status passthrough, pulse, highlights).</div></div>
+      <div class="entity"><div class="entity-name">contracts/</div><div class="entity-desc">The canonical <code class="icode">spec-context.schema.json</code> used for runtime validation.</div></div>
+      <div class="entity"><div class="entity-name">quickstart.md</div><div class="entity-desc">How to exercise the four workflows and diff the resulting context files.</div></div>
+    </div>
+  </section>
+  </div><!-- /plan-main -->
+
+  <!-- research.md -->
+  <div class="subview" id="plan-research">
+    <section class="block reveal">
+      <div class="section-head"><h2>Research</h2><span class="count">key decisions</span></div>
+      <div class="entities">
+        <div class="entity"><div class="entity-name">Decision · single status field</div><div class="entity-desc"><b>Chosen:</b> one spec-wide <code class="icode">status</code> over per-step statuses.<br><b>Why:</b> per-step status is the root of the "viewer feels wrong" reports.<br><b>Alternatives:</b> per-tab status (rejected — drift), derived-only (rejected — can't represent draft).</div></div>
+        <div class="entity"><div class="entity-name">Decision · append-only transitions</div><div class="entity-desc"><b>Chosen:</b> never mutate prior transition entries.<br><b>Why:</b> preserves an auditable lifecycle even across regenerates.<br><b>Alternatives:</b> last-write-wins (rejected — loses history).</div></div>
+        <div class="entity"><div class="entity-name">Decision · back-fill minimal context</div><div class="entity-desc"><b>Chosen:</b> on first open of a terminal-only spec, write only what's verifiable.<br><b>Why:</b> terminal runs can't be intercepted; never infer completion.<br><b>Alternatives:</b> infer from files (rejected — the original bug).</div></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- data-model.md -->
+  <div class="subview" id="plan-datamodel">
+    <section class="block reveal">
+      <div class="section-head"><h2>Data Model</h2><span class="count">4 entities</span></div>
+      <table class="req-table">
+        <thead><tr><th>Entity</th><th>Key fields</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td class="req-id">SpecContext</td><td><code class="icode">workflow, specName, branch, currentStep, status, history[]</code></td><td>One per spec dir</td></tr>
+          <tr><td class="req-id">StepHistoryEntry</td><td><code class="icode">step, startedAt, completedAt, substeps[]</code></td><td>Derived in-memory</td></tr>
+          <tr><td class="req-id">Transition</td><td><code class="icode">step, substep, from, by, at</code></td><td>Append-only</td></tr>
+          <tr><td class="req-id">FooterAction</td><td><code class="icode">label, scope, visibleWhen, tooltip</code></td><td>scope = spec | step</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <!-- quickstart.md -->
+  <div class="subview" id="plan-quickstart">
+    <section class="block reveal">
+      <div class="section-head"><h2>Quickstart</h2><span class="count">verify the schema</span></div>
+      <div class="sc-grid">
+        <div class="sc"><span class="sc-id">1</span><span class="sc-body">Run each of the four workflows end-to-end against a scratch spec.</span></div>
+        <div class="sc"><span class="sc-id">2</span><span class="sc-body">Diff the resulting <code class="icode">.spec-context.json</code> files — key set and semantics must match.</span></div>
+        <div class="sc"><span class="sc-id">3</span><span class="sc-body">Open each in the viewer; confirm sidebar, header, and stepper agree.</span></div>
+        <div class="sc"><span class="sc-id">4</span><span class="sc-body">Pre-create a template <code class="icode">plan.md</code>; confirm Plan stays "Not started".</span></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- contracts/spec-context.schema.json -->
+  <div class="subview" id="plan-contracts">
+    <section class="block reveal">
+      <div class="section-head"><h2>Schema</h2><span class="count">contracts/</span></div>
+      <div class="filetree">
+        <div class="filetree-head">spec-context.schema.json</div>
+<pre>{
+  <span class="cmt">"$schema"</span>: "http://json-schema.org/draft-07/schema#",
+  <span class="cmt">"type"</span>: "object",
+  <span class="cmt">"required"</span>: ["workflow", "specName", "status", "history"],
+  <span class="cmt">"properties"</span>: {
+    "status": { "enum": ["draft", "specifying", "specified",
+      "planning", "planned", "tasking", "ready-to-implement",
+      "implementing", "completed", "archived"] },
+    "history": { "type": "array", "items": { "$ref": "#/$defs/event" } }
+  }
+}</pre>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ====================================================== -->
+<!-- TASKS                                                  -->
+<!-- ====================================================== -->
+<div class="panel" id="panel-tasks" role="tabpanel" aria-label="Tasks">
+  <div class="spec-hero reveal">
+    <h1>Tasks</h1>
+    <p class="doc-kind"><b>tasks.md</b> · dependency-ordered work, grouped by user story</p>
+  </div>
+
+  <div class="seg reveal" role="group" aria-label="Tasks view">
+    <button type="button" data-view="plan" aria-pressed="true"><span class="seg-dot"></span>Checklist</button>
+    <button type="button" data-view="build" aria-pressed="false"><span class="seg-dot run"></span>Build</button>
+  </div>
+
+  <div class="subview active" id="tasks-plan" role="tabpanel" aria-label="Checklist">
+  <div class="progress-summary reveal">
+    <div><div class="pct">100%</div><div class="meta">all phases complete</div></div>
+    <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+    <div style="text-align:right"><div class="meta" style="color:var(--text-primary); font-weight:600">42 / 42</div><div class="meta">tasks done</div></div>
+  </div>
+
+  <div class="phase reveal">
+    <div class="phase-head"><h3>Phase 1 · Setup</h3><span class="phase-badge done">done</span></div>
+    <p class="phase-goal">Shared infrastructure: schema copy and fixtures.</p>
+    <div class="task-list">
+      <div class="task-row done"><span class="task-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></span><span class="task-id">T002</span><span class="task-desc"><span class="chip p">P</span>Copy canonical JSON Schema into <code class="icode">src/core/types/spec-context.schema.json</code> for runtime validation.</span></div>
+      <div class="task-row done"><span class="task-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></span><span class="task-id">T003</span><span class="task-desc"><span class="chip p">P</span>Add schema fixtures mirroring the four sample specs from Problem Context.</span></div>
+    </div>
+  </div>
+
+  <div class="phase reveal">
+    <div class="phase-head"><h3>Phase 2 · Foundational</h3><span class="phase-badge done">done</span></div>
+    <p class="phase-goal">Types, reader/writer, and derivation scaffolding used by every user story. All later phases depend on this.</p>
+    <div class="task-list">
+      <div class="task-row done"><span class="task-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></span><span class="task-id">T004</span><span class="task-desc">Define canonical types (<code class="icode">SpecContext</code>, <code class="icode">Status</code>, <code class="icode">Transition</code>, …) per data-model.md.</span></div>
+      <div class="task-row done"><span class="task-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></span><span class="task-id">T006</span><span class="task-desc">Implement <code class="icode">writeSpecContext</code> with temp-file + atomic rename, append-only transitions.</span></div>
+      <div class="task-row done"><span class="task-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></span><span class="task-id">T008</span><span class="task-desc">Implement <code class="icode">backfillMinimalContext</code> for terminal-only specs; never infer step completion.</span></div>
+    </div>
+    <div class="checkpoint"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg>Checkpoint: reader / writer / backfill usable; user stories can proceed in parallel.</div>
+  </div>
+
+  <div class="phase reveal">
+    <div class="phase-head"><h3>Phase 3 · User Story 1</h3><span class="phase-badge mvp">🎯 MVP</span><span class="phase-badge done">done</span></div>
+    <p class="phase-goal">Sidebar, header, and stepper all display one spec-wide status, consistent across tab switches.</p>
+    <div class="task-list">
+      <div class="task-row done"><span class="task-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></span><span class="task-id">T010</span><span class="task-desc"><span class="chip p">P</span><span class="chip us">US1</span>Unit test: <code class="icode">deriveViewerState</code> returns a single status with no per-tab variance.</span></div>
+      <div class="task-row done"><span class="task-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></span><span class="task-id">T012</span><span class="task-desc"><span class="chip us">US1</span>Implement <code class="icode">deriveViewerState(ctx)</code> per data-model.md (status passthrough, pulse rules, highlights).</span></div>
+      <div class="task-row done"><span class="task-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></span><span class="task-id">T014</span><span class="task-desc"><span class="chip us">US1</span>Update header badge renderer to consume <code class="icode">ViewerState.status</code>, invariant across tab selection.</span></div>
+    </div>
+    <div class="checkpoint"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg>Checkpoint: US1 passes its independent test.</div>
+  </div>
+
+  <div class="phase reveal">
+    <div class="phase-head"><h3>Phase 4 · User Story 2</h3><span class="phase-badge done">done</span></div>
+    <p class="phase-goal">Stepper advances only when history has explicit timestamps; file existence is ignored.</p>
+    <div class="task-list">
+      <div class="task-row done"><span class="task-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></span><span class="task-id">T016</span><span class="task-desc"><span class="chip p">P</span><span class="chip us">US2</span>Unit test: <code class="icode">plan.md</code> present but no history entry ⇒ <code class="icode">steps.plan === "not-started"</code>.</span></div>
+      <div class="task-row done"><span class="task-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></span><span class="task-id">T019</span><span class="task-desc"><span class="chip us">US2</span>Remove file-existence checks for step state; route through <code class="icode">stateDerivation</code>.</span></div>
+    </div>
+    <div class="checkpoint"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg>Checkpoint: template files no longer cause false progress.</div>
+  </div>
+
+  <p class="reveal" style="margin-top:var(--space-5); font-size:var(--text-sm); color:var(--text-muted)">Phases 5–9 (US3–US7) follow the same structure: tests, implementation, checkpoint. 42 tasks total.</p>
+  </div><!-- /tasks-plan -->
+
+  <div class="subview" id="tasks-build" role="tabpanel" aria-label="Build">
+  <div class="exec-head reveal">
+    <div class="title"><span class="runner"></span>Running · Phase 4, User Story 2</div>
+    <div class="exec-stats">
+      <div class="exec-stat"><span class="n ok">9</span><span class="l">completed</span></div>
+      <div class="exec-stat"><span class="n run">1</span><span class="l">running</span></div>
+      <div class="exec-stat"><span class="n">32</span><span class="l">queued</span></div>
+      <div class="exec-stat"><span class="n">4m 12s</span><span class="l">elapsed</span></div>
+    </div>
+  </div>
+
+  <p class="exec-phase-label reveal">Now running · T019</p>
+  <div class="exec-list reveal">
+    <div class="exec-row"><span class="exec-ic done"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></span><span class="exec-task"><span class="id">T016</span><span class="d">Unit test: <code class="icode">plan.md</code> present, no history, expect not-started</span></span><span class="exec-dur">19s</span></div>
+    <div class="exec-row running"><span class="exec-ic run" aria-label="running"></span><span class="exec-task"><span class="id">T019</span><span class="d">Remove file-existence checks; route through <code class="icode">stateDerivation</code></span></span><span class="exec-dur live">0m 27s</span></div>
+    <div class="exec-row queue"><span class="exec-ic queue" aria-hidden="true"></span><span class="exec-task"><span class="id">T020</span><span class="d">Update webview stepper to consume <code class="icode">ViewerState.steps[step]</code></span></span><span class="exec-dur">queued</span></div>
+    <div class="exec-row queue"><span class="exec-ic queue" aria-hidden="true"></span><span class="exec-task"><span class="id">T021</span><span class="d">Standardized context-update block across the four workflow prompts</span></span><span class="exec-dur">queued</span></div>
+  </div>
+  </div><!-- /tasks-build -->
+</div>
+
+<!-- ====================================================== -->
+<!-- ACTIVITY                                               -->
+<!-- ====================================================== -->
+<div class="panel" id="panel-activity" role="tabpanel" aria-label="Activity">
+  <div class="spec-hero reveal">
+    <h1>Activity</h1>
+    <p class="doc-kind"><b>not a document</b> · rendered from <code class="icode" style="font-size:.85em">.spec-context.json</code> history, no markdown involved</p>
+  </div>
+
+  <div class="timeline reveal">
+    <div class="tl-event running">
+      <span class="tl-dot"></span>
+      <div class="tl-head"><span class="tl-title">Plan · in progress</span><span class="tl-by ext">extension</span><span class="tl-time">2:41 PM</span></div>
+      <div class="tl-meta">substep: design · started 6m ago</div>
+    </div>
+    <div class="tl-event sub">
+      <span class="tl-dot"></span>
+      <div class="tl-head"><span class="tl-title">plan · research substep completed</span><span class="tl-time">2:39 PM</span></div>
+    </div>
+    <div class="tl-event start">
+      <span class="tl-dot"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l7 5-7 5z"/></svg></span>
+      <div class="tl-head"><span class="tl-title">Plan started</span><span class="tl-by you">you</span><span class="tl-time">2:35 PM</span></div>
+      <div class="tl-meta">advanced from Specify via the Plan footer button</div>
+    </div>
+    <div class="tl-event done">
+      <span class="tl-dot"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></span>
+      <div class="tl-head"><span class="tl-title">Specify completed</span><span class="tl-by ext">extension</span><span class="tl-time">2:31 PM</span></div>
+      <div class="tl-meta">spec.md written · 7 user stories, 13 requirements · status → Specified</div>
+    </div>
+    <div class="tl-event sub">
+      <span class="tl-dot"></span>
+      <div class="tl-head"><span class="tl-title">specify · validate-checklist substep completed</span><span class="tl-time">2:30 PM</span></div>
+    </div>
+    <div class="tl-event sub">
+      <span class="tl-dot"></span>
+      <div class="tl-head"><span class="tl-title">specify · draft substep completed</span><span class="tl-time">2:22 PM</span></div>
+    </div>
+    <div class="tl-event start">
+      <span class="tl-dot"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l7 5-7 5z"/></svg></span>
+      <div class="tl-head"><span class="tl-title">Specify started</span><span class="tl-by you">you</span><span class="tl-time">2:14 PM</span></div>
+      <div class="tl-meta">workflow: SpecKit Companion · branch 060-spec-context-tracking</div>
+    </div>
+    <div class="tl-event done">
+      <span class="tl-dot"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 4v4l2.5 1.5"/><circle cx="8" cy="8" r="6.2"/></svg></span>
+      <div class="tl-head"><span class="tl-title">Spec selected</span><span class="tl-by cli">cli</span><span class="tl-time">2:14 PM</span></div>
+      <div class="tl-meta">minimal context created · status: draft</div>
+    </div>
+  </div>
+
+  <p class="activity-empty-note reveal">Every entry above is one record in the <code class="icode">history[]</code> array. The same data drives the header badge, the step-tab pulse, and the green completion highlights.</p>
+</div>
+
+</main>
+
+<script>
+  // Theme toggle — swaps the two baked fallback palettes so the file
+  // is previewable outside a VS Code webview. Inside the webview, the
+  // host sets body.vscode-* and --vscode-* vars win regardless.
+  (function () {
+    var btn = document.getElementById('themeToggle');
+    btn.addEventListener('click', function () {
+      var light = document.body.classList.toggle('vscode-light');
+      document.body.classList.toggle('vscode-dark', !light);
+      btn.textContent = light ? 'Dark theme' : 'Light theme';
+    });
+  })();
+
+  // Step-tab switching. Reveals inside a hidden panel can't be observed
+  // (display:none pauses transitions), so on activation we mark that
+  // panel's reveals visible immediately — content never ships blank.
+  (function () {
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var tabs = Array.prototype.slice.call(document.querySelectorAll('.step-tab'));
+
+    function showPanel(name) {
+      document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('active'); });
+      var panel = document.getElementById('panel-' + name);
+      if (!panel) return;
+      panel.classList.add('active');
+      var reveals = Array.prototype.slice.call(panel.querySelectorAll('.reveal'));
+      reveals.forEach(function (el, i) {
+        if (reduce) { el.classList.add('in'); return; }
+        el.classList.remove('in');
+        // stagger the entrance of the freshly shown panel
+        window.requestAnimationFrame(function () {
+          setTimeout(function () { el.classList.add('in'); }, Math.min(i * 45, 360));
+        });
+      });
+      window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+    }
+
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        tabs.forEach(function (t) { t.setAttribute('aria-selected', 'false'); });
+        tab.setAttribute('aria-selected', 'true');
+        showPanel(tab.dataset.panel);
+      });
+    });
+
+    // Initial panel = the selected tab (Plan, the in-progress step).
+    var selected = document.querySelector('.step-tab[aria-selected="true"]') || tabs[0];
+    showPanel(selected.dataset.panel);
+  })();
+
+  // Sub-view toggles within a panel: the Tasks segmented control (Checklist /
+  // Build) and the Plan subpage rail (plan.md / research / data-model / …).
+  // Each button group shows one sibling .subview that shares its id prefix.
+  (function () {
+    function wire(selector, prefix, attr) {
+      document.querySelectorAll(selector).forEach(function (group) {
+        var btns = Array.prototype.slice.call(group.querySelectorAll('button'));
+        btns.forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            btns.forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+            btn.setAttribute('aria-pressed', 'true');
+            document.querySelectorAll('.subview[id^="' + prefix + '"]').forEach(function (v) { v.classList.remove('active'); });
+            var target = document.getElementById(prefix + btn.dataset[attr]);
+            if (target) target.classList.add('active');
+          });
+        });
+      });
+    }
+    wire('.seg', 'tasks-', 'view');
+    wire('.subnav', 'plan-', 'sub');
+  })();
+</script>
+</body>
+</html>

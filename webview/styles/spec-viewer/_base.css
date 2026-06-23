@@ -84,7 +84,7 @@ body {
 
 .content-area::-webkit-scrollbar-thumb {
     background: var(--border);
-    border-radius: 5px;
+    border-radius: var(--radius-sm);
 }
 
 .content-area::-webkit-scrollbar-thumb:hover {

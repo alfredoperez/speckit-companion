@@ -120,7 +120,7 @@ export function generateHtml(
         font-style: normal;
         font-display: swap;
         font-weight: 100 900;
-        src: url('${geistFontUri}') format('woff2-variations');
+        src: url('${geistFontUri}') format('woff2');
       }
     </style>
     <link href="${styleUri}" rel="stylesheet">

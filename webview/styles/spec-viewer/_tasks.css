@@ -66,7 +66,9 @@
   margin: 0;
   background: transparent;
   border: none;
-  transition: all var(--transition-fast);
+  /* Only the background animates — animating the hover margin/padding (the bleed
+     trick below) shifts the row under the cursor and causes a hover flicker. */
+  transition: background-color var(--transition-fast);
   list-style: none;
   font-size: inherit;
   line-height: 1.5;

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Activity · driven by real .spec-context.json</title>
+<style>
+:root {
+  --text-xs: .694rem; --text-sm: .833rem; --text-lg: 1.2rem; --text-xl: 1.44rem; --text-2xl: 1.728rem;
+  --space-1: .25rem; --space-2: .5rem; --space-3: .75rem; --space-4: 1rem; --space-5: 1.5rem; --space-6: 2rem;
+  --radius-sm: 4px; --radius-md: 8px; --radius-pill: 999px;
+  --ease: cubic-bezier(.22,1,.36,1);
+  --font: 'Geist', var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+  --mono: var(--vscode-editor-font-family, 'JetBrains Mono', 'SF Mono', Consolas, monospace);
+  --max: 820px;
+}
+body, body.vscode-dark {
+  --bg: var(--vscode-editor-background, #1e1e1e);
+  --bg2: var(--vscode-sideBar-background, #252526);
+  --inset: color-mix(in srgb, var(--vscode-editor-background, #1e1e1e) 80%, #000);
+  --hover: var(--vscode-list-hoverBackground, #2a2d2e);
+  --fg: var(--vscode-editor-foreground, #e6e6e6);
+  --body: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 88%, transparent);
+  --sec: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 66%, transparent);
+  --muted: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 46%, transparent);
+  --accent: var(--vscode-focusBorder, #3794ff);
+  --accent-sub: color-mix(in srgb, var(--vscode-focusBorder, #3794ff) 15%, transparent);
+  --accent-line: color-mix(in srgb, var(--vscode-focusBorder, #3794ff) 45%, transparent);
+  --ok: var(--vscode-testing-iconPassed, #4ec973);
+  --ok-sub: color-mix(in srgb, var(--vscode-testing-iconPassed, #4ec973) 15%, transparent);
+  --purple: #b07ce8; --purple-sub: color-mix(in srgb, #b07ce8 16%, transparent);
+  --border: var(--vscode-panel-border, #3a3a3a);
+  --soft: color-mix(in srgb, var(--vscode-panel-border, #3a3a3a) 55%, transparent);
+}
+body.vscode-light {
+  --bg: #fff; --bg2: #f3f3f3; --inset: #ececec; --hover: #ececec;
+  --fg: #1f1f1f; --body: #2b2b2b; --sec: #565656; --muted: #767676;
+  --accent: #005fb8; --accent-sub: color-mix(in srgb, #005fb8 10%, transparent); --accent-line: color-mix(in srgb, #005fb8 35%, transparent);
+  --ok: #1a7f37; --ok-sub: color-mix(in srgb, #1a7f37 10%, transparent);
+  --purple: #8250df; --purple-sub: color-mix(in srgb, #8250df 10%, transparent);
+  --border: #d8d8d8; --soft: #e2e2e2;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font); color: var(--body); background: var(--bg); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: var(--max); margin: 0 auto; padding: var(--space-6) var(--space-5) var(--space-6); }
+
+.note { font-size: var(--text-xs); color: var(--muted); border: 1px dashed var(--border); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-5); }
+.note b { color: var(--sec); }
+.note code { font-family: var(--mono); }
+.toggle { float: right; font: inherit; font-size: var(--text-xs); color: var(--sec); background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 2px 8px; cursor: pointer; }
+
+/* meta header */
+.meta { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg2); padding: var(--space-4) var(--space-5); margin-bottom: var(--space-5); }
+.meta h1 { font-size: var(--text-xl); margin: 0 0 var(--space-1); color: var(--fg); letter-spacing: -.01em; }
+.meta .chips { display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center; margin-top: var(--space-3); }
+.chip { font-size: var(--text-xs); padding: 1px var(--space-2); border-radius: var(--radius-pill); display: inline-flex; align-items: center; gap: 5px; }
+.chip.flow { color: var(--purple); background: var(--purple-sub); }
+.chip.state { color: var(--ok); background: var(--ok-sub); font-weight: 600; }
+.chip.dim { color: var(--sec); background: var(--hover); font-family: var(--mono); }
+.chip .d { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+.section-label { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: var(--space-5) 0 var(--space-3); }
+
+/* lifecycle timeline */
+.tl { position: relative; padding-left: 26px; }
+.tl::before { content: ""; position: absolute; left: 10px; top: 8px; bottom: 8px; width: 2px; background: var(--soft); }
+.step { position: relative; margin-bottom: var(--space-4); }
+.step:last-child { margin-bottom: 0; }
+.dot { position: absolute; left: -26px; top: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--bg); border: 2px solid var(--ok); color: var(--ok); display: grid; place-items: center; }
+.dot svg { width: 12px; height: 12px; }
+.step-row { display: flex; align-items: baseline; gap: var(--space-2); flex-wrap: wrap; }
+.step-name { font-size: var(--text-lg); color: var(--fg); font-weight: 600; text-transform: capitalize; }
+.by { font-size: var(--text-xs); padding: 0 7px; border-radius: var(--radius-pill); }
+.by.extension { color: var(--purple); background: var(--purple-sub); }
+.by.ai { color: var(--accent); background: var(--accent-sub); }
+.by.user { color: var(--ok); background: var(--ok-sub); }
+.dur { margin-left: auto; font-family: var(--mono); font-size: var(--text-xs); color: var(--muted); white-space: nowrap; }
+.fastpath { font-size: var(--text-xs); color: var(--sec); margin-top: 2px; }
+
+/* per-task cards under implement */
+.tasks { margin-top: var(--space-3); display: grid; gap: var(--space-2); }
+.task { border: 1px solid var(--soft); border-radius: var(--radius-md); background: var(--bg2); padding: var(--space-3) var(--space-4); }
+.task-top { display: flex; align-items: baseline; gap: var(--space-2); }
+.task-id { font-family: var(--mono); font-size: var(--text-xs); color: var(--ok); }
+.task-state { font-size: 10px; font-weight: 700; letter-spacing: .04em; color: var(--ok); background: var(--ok-sub); padding: 0 6px; border-radius: var(--radius-sm); }
+.task-dur { margin-left: auto; font-family: var(--mono); font-size: var(--text-xs); color: var(--muted); }
+.task-did { font-size: var(--text-sm); color: var(--body); line-height: 1.45; margin-top: var(--space-2); }
+.task-files { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-2); }
+.file { font-family: var(--mono); font-size: var(--text-xs); color: var(--sec); background: var(--inset); border: 1px solid var(--soft); border-radius: var(--radius-sm); padding: 1px 6px; }
+
+.empty { color: var(--muted); font-size: var(--text-sm); }
+</style>
+</head>
+<body class="vscode-dark">
+<div class="wrap">
+  <div class="note">
+    <button class="toggle" id="themeToggle" type="button">Light</button>
+    <b>Activity, generated from data.</b> Nothing below is hand-written markup. The page holds the <i>real</i> <code>specs/327-install-banner-responsive/.spec-context.json</code> and a renderer turns it into this view — durations computed from the <code>at</code> timestamps, actors from <code>by</code>, the per-task detail from <code>task_summaries</code>.
+  </div>
+  <div id="activity"></div>
+</div>
+
+<script>
+// ── The real .spec-context.json for spec 327 (verbatim) ───────────────
+const CONTEXT = {
+  "workflow": "companion",
+  "specName": "Install Banner Responsive",
+  "branch": "main",
+  "selectedAt": "2026-06-15T19:58:10.242Z",
+  "currentStep": "implement",
+  "status": "implemented",
+  "history": [
+    { "step": "specify", "substep": null, "kind": "start", "by": "extension", "at": "2026-06-15T19:58:10.242Z" },
+    { "step": "specify", "substep": null, "kind": "complete", "by": "extension", "at": "2026-06-15T20:00:35.514Z" },
+    { "step": "plan", "substep": "fast-path", "kind": "start", "by": "ai", "at": "2026-06-15T20:00:35.595Z" },
+    { "step": "plan", "substep": "fast-path", "kind": "complete", "by": "ai", "at": "2026-06-15T20:00:35.678Z" },
+    { "step": "tasks", "substep": "fast-path", "kind": "start", "by": "ai", "at": "2026-06-15T20:00:35.770Z" },
+    { "step": "tasks", "substep": "fast-path", "kind": "complete", "by": "ai", "at": "2026-06-15T20:00:35.858Z" },
+    { "step": "tasks", "substep": null, "kind": "complete", "by": "extension", "at": "2026-06-15T20:06:18.244Z" },
+    { "step": "implement", "substep": null, "kind": "start", "by": "extension", "at": "2026-06-15T20:06:18.246Z" },
+    { "step": "implement", "substep": null, "task": "T001", "kind": "complete", "by": "ai", "at": "2026-06-15T20:07:21.744Z" },
+    { "step": "implement", "substep": null, "task": "T002", "kind": "complete", "by": "ai", "at": "2026-06-15T20:07:32.152Z" },
+    { "step": "implement", "substep": null, "task": "T003", "kind": "complete", "by": "ai", "at": "2026-06-15T20:07:46.000Z" },
+    { "step": "implement", "substep": null, "task": "T004", "kind": "complete", "by": "ai", "at": "2026-06-15T20:08:01.198Z" },
+    { "step": "implement", "substep": null, "task": "T005", "kind": "complete", "by": "ai", "at": "2026-06-15T20:08:21.271Z" },
+    { "step": "implement", "substep": null, "kind": "complete", "by": "ai", "at": "2026-06-15T20:08:21.272Z" }
+  ],
+  "currentTask": "T005",
+  "task_summaries": {
+    "T001": { "status": "DONE", "did": "Made .install-banner a query container (container-type: inline-size) and added flex-wrap: wrap", "files": ["webview/styles/spec-viewer/_install-banner.css"] },
+    "T002": { "status": "DONE", "did": "Added @container (max-width: 420px) rule giving .install-banner__actions a full-width basis so it stacks below the text", "files": ["webview/styles/spec-viewer/_install-banner.css"] },
+    "T003": { "status": "DONE", "did": "Applied ellipsis trio (white-space: nowrap + overflow: hidden + text-overflow: ellipsis + min-width: 0) to .install-banner__text strong; body span left wrapping", "files": ["webview/styles/spec-viewer/_install-banner.css"] },
+    "T004": { "status": "DONE", "did": "Added a title attribute carrying the full heading text to the banner <strong> so the truncated heading is recoverable via tooltip", "files": ["src/features/spec-editor/installBanner.ts"] },
+    "T005": { "status": "DONE", "did": "Statically verified the responsive CSS/markup (TS compiles, container-query + ellipsis trio + title applied); live visual pass at narrow/medium/wide in both panels still needs a human in VS Code", "files": ["webview/styles/spec-viewer/_install-banner.css", "src/features/spec-editor/installBanner.ts"] }
+  }
+};
+
+// ── Pure helpers: derive everything from the data ─────────────────────
+const STEPS = ["specify", "plan", "tasks", "implement"];
+const t = s => new Date(s).getTime();
+
+function fmtDur(ms) {
+  if (ms < 1000) return "instant";
+  const s = Math.round(ms / 1000);
+  if (s < 60) return s + "s";
+  const m = Math.floor(s / 60), r = s % 60;
+  return r ? `${m}m ${r}s` : `${m}m`;
+}
+function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+const CHECK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg>';
+const BY_LABEL = { extension: "Companion", ai: "AI", user: "you" };
+
+function stepModel(step, history) {
+  const ev = history.filter(h => h.step === step);
+  const start = ev.find(e => e.kind === "start" && e.task == null && e.substep == null)
+             || ev.find(e => e.kind === "start");
+  const done = [...ev].reverse().find(e => e.kind === "complete" && e.task == null && e.substep == null);
+  const fast = ev.some(e => e.substep === "fast-path");
+  const by = (done || start || {}).by;
+  const dur = (start && done) ? t(done.at) - t(start.at) : null;
+  return { start, done, fast, by, dur, ev };
+}
+
+function implementTasks(history, summaries) {
+  const startEv = history.find(h => h.step === "implement" && h.kind === "start" && h.task == null);
+  const finishes = history
+    .filter(h => h.step === "implement" && h.task && h.kind === "complete")
+    .sort((a, b) => t(a.at) - t(b.at));
+  let cursor = startEv ? t(startEv.at) : (finishes[0] ? t(finishes[0].at) : 0);
+  return finishes.map(f => {
+    const dur = t(f.at) - cursor; cursor = t(f.at);
+    const sum = summaries[f.task] || {};
+    return { id: f.task, by: f.by, dur, did: sum.did, files: sum.files || [], status: sum.status || "DONE" };
+  });
+}
+
+// ── Render ────────────────────────────────────────────────────────────
+function render(ctx) {
+  const totalMs = t(ctx.history[ctx.history.length - 1].at) - t(ctx.history[0].at);
+  const tasks = implementTasks(ctx.history, ctx.task_summaries || {});
+
+  let out = `<div class="meta">
+    <h1>${esc(ctx.specName)}</h1>
+    <div class="chips">
+      <span class="chip flow"><span class="d"></span>${esc(ctx.workflow)}</span>
+      <span class="chip state">${CHECK}${esc(ctx.status)}</span>
+      <span class="chip dim">${esc(ctx.branch)}</span>
+      <span class="chip dim">${tasks.length} tasks</span>
+      <span class="chip dim">${fmtDur(totalMs)} total</span>
+    </div>
+  </div>`;
+
+  out += `<div class="section-label">Lifecycle</div><div class="tl">`;
+  for (const step of STEPS) {
+    const m = stepModel(step, ctx.history);
+    if (!m.start && !m.done) continue;
+    out += `<div class="step">
+      <span class="dot">${CHECK}</span>
+      <div class="step-row">
+        <span class="step-name">${step}</span>
+        ${m.by ? `<span class="by ${m.by}">${BY_LABEL[m.by] || m.by}</span>` : ""}
+        <span class="dur">${m.dur != null ? fmtDur(m.dur) : ""}</span>
+      </div>
+      ${m.fast ? `<div class="fastpath">fast-path · small change, planned and tasked in one pass</div>` : ""}`;
+
+    if (step === "implement" && tasks.length) {
+      out += `<div class="tasks">`;
+      for (const k of tasks) {
+        out += `<div class="task">
+          <div class="task-top">
+            <span class="task-id">${esc(k.id)}</span>
+            <span class="task-state">${esc(k.status)}</span>
+            ${k.by ? `<span class="by ${k.by}">${BY_LABEL[k.by] || k.by}</span>` : ""}
+            <span class="task-dur">${fmtDur(k.dur)}</span>
+          </div>
+          ${k.did ? `<div class="task-did">${esc(k.did)}</div>` : ""}
+          ${k.files.length ? `<div class="task-files">${k.files.map(f => `<span class="file">${esc(f)}</span>`).join("")}</div>` : ""}
+        </div>`;
+      }
+      out += `</div>`;
+    }
+    out += `</div>`;
+  }
+  out += `</div>`;
+  return out;
+}
+
+document.getElementById("activity").innerHTML = render(CONTEXT);
+
+// theme toggle
+(function () {
+  var b = document.getElementById("themeToggle");
+  b.addEventListener("click", function () {
+    var light = document.body.classList.toggle("vscode-light");
+    document.body.classList.toggle("vscode-dark", !light);
+    b.textContent = light ? "Dark" : "Light";
+  });
+})();
+</script>
+</body>
+</html>

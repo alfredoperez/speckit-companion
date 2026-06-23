@@ -60,7 +60,8 @@ export function parseAcceptanceScenarios(markdown: string): string {
             // Remove numbering (1. 2. etc.)
             const content = line.replace(/^\d+\.\s*/, '').trim();
 
-            // Emphasize Given/When/Then keywords with <strong> tags
+            // Keep each scenario as one flowing sentence; just emphasize the
+            // Given/When/Then keywords inline (no stacking, no line breaks).
             const emphasized = escapeHtmlInScenario(content)
                 .replace(/\*?\*?(Given)\*?\*?/gi, '<strong class="keyword-given">$1</strong>')
                 .replace(/\*?\*?(When)\*?\*?/gi, '<strong class="keyword-when">$1</strong>')

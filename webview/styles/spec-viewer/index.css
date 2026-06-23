@@ -18,6 +18,10 @@
 @import '_tables.css';
 @import '_callouts.css';
 @import '_tasks.css';
+@import '_task-phases.css';
+@import '_requirements.css';
+@import '_artifacts.css';
+@import '_plan.css';
 @import '_line-actions.css';
 @import '_editor.css';
 @import '_refinements.css';

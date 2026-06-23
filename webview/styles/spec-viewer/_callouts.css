@@ -7,12 +7,16 @@
    Callout Blocks
    ============================================ */
 
+/* Full hairline border + faint tint keyed to the callout type (--callout-c),
+   instead of a left-edge accent stripe. The colored uppercase label carries the
+   type signal. */
 .callout {
+    --callout-c: var(--border);
     padding: 8px 14px;
     margin: 0 0 10px 0;
-    border-radius: 0;
-    border-left: 4px solid;
-    background: color-mix(in srgb, var(--border) 15%, transparent);
+    border-radius: var(--radius-sm);
+    border: 1px solid color-mix(in srgb, var(--callout-c) 40%, transparent);
+    background: color-mix(in srgb, var(--callout-c) 8%, transparent);
 }
 
 .callout-icon {
@@ -31,70 +35,16 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 4px;
+    color: var(--callout-c);
 }
 
-/* Purpose callout - Blue/Info (key info) */
-.callout-purpose {
-    border-left-color: var(--accent);
-}
-
-.callout-purpose .callout-label {
-    color: var(--accent);
-}
-
-/* Note callout - Purple (secondary info) */
-.callout-note {
-    border-left-color: var(--purple);
-}
-
-.callout-note .callout-label {
-    color: var(--purple);
-}
-
-/* Tip callout - Green */
-.callout-tip {
-    border-left-color: var(--success);
-}
-
-.callout-tip .callout-label {
-    color: var(--success);
-}
-
-/* Checkpoint callout - Green/Success */
-.callout-checkpoint {
-    border-left-color: var(--success);
-}
-
-.callout-checkpoint .callout-label {
-    color: var(--success);
-}
-
-/* Warning callout - Yellow/Orange */
-.callout-warning {
-    border-left-color: var(--warning);
-}
-
-.callout-warning .callout-label {
-    color: var(--warning);
-}
-
-/* Important callout - Orange */
-.callout-important {
-    border-left-color: var(--warning);
-}
-
-.callout-important .callout-label {
-    color: var(--warning);
-}
-
-/* Critical callout - Red/Error */
-.callout-critical {
-    border-left-color: var(--error);
-}
-
-.callout-critical .callout-label {
-    color: var(--error);
-}
+.callout-purpose    { --callout-c: var(--accent); }
+.callout-note       { --callout-c: var(--purple); }
+.callout-tip        { --callout-c: var(--success); }
+.callout-checkpoint { --callout-c: var(--success); }
+.callout-warning    { --callout-c: var(--warning); }
+.callout-important  { --callout-c: var(--warning); }
+.callout-critical   { --callout-c: var(--error); }
 
 /* ============================================
    Template Instructions (collapsed HTML comments)
@@ -103,11 +53,11 @@
 details.template-instructions {
     margin: var(--space-1) 0 var(--space-2) 0;
     padding: var(--space-2) var(--space-3);
-    border-left: 3px solid var(--text-muted);
+    border: 1px solid var(--border);
     font-size: var(--text-sm);
     color: var(--text-secondary);
     background: color-mix(in srgb, var(--border) 10%, transparent);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    border-radius: var(--radius-sm);
 }
 
 details.template-instructions summary {

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Spec views · rendered from real spec files</title>
+<style>
+:root {
+  --xs:.694rem; --sm:.833rem; --lg:1.2rem; --xl:1.44rem; --xxl:1.728rem;
+  --s1:.25rem; --s2:.5rem; --s3:.75rem; --s4:1rem; --s5:1.5rem; --s6:2rem;
+  --r-sm:4px; --r-md:8px; --r-lg:12px; --pill:999px;
+  --font:'Geist', var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+  --mono:var(--vscode-editor-font-family, 'JetBrains Mono', 'SF Mono', Consolas, monospace);
+  --max:840px;
+}
+body, body.vscode-dark {
+  --bg:var(--vscode-editor-background,#1e1e1e); --bg2:var(--vscode-sideBar-background,#252526);
+  --inset:color-mix(in srgb, var(--vscode-editor-background,#1e1e1e) 80%,#000);
+  --hover:var(--vscode-list-hoverBackground,#2a2d2e);
+  --fg:var(--vscode-editor-foreground,#e6e6e6);
+  --body:color-mix(in srgb,var(--vscode-editor-foreground,#d4d4d4) 88%,transparent);
+  --sec:color-mix(in srgb,var(--vscode-editor-foreground,#d4d4d4) 66%,transparent);
+  --muted:color-mix(in srgb,var(--vscode-editor-foreground,#d4d4d4) 46%,transparent);
+  --accent:var(--vscode-focusBorder,#3794ff);
+  --accent-sub:color-mix(in srgb,var(--vscode-focusBorder,#3794ff) 15%,transparent);
+  --accent-line:color-mix(in srgb,var(--vscode-focusBorder,#3794ff) 45%,transparent);
+  --ok:var(--vscode-testing-iconPassed,#4ec973); --ok-sub:color-mix(in srgb,var(--vscode-testing-iconPassed,#4ec973) 15%,transparent);
+  --warn:var(--vscode-editorWarning-foreground,#cca700); --warn-sub:color-mix(in srgb,var(--vscode-editorWarning-foreground,#cca700) 16%,transparent);
+  --err:var(--vscode-editorError-foreground,#f14c4c); --err-sub:color-mix(in srgb,var(--vscode-editorError-foreground,#f14c4c) 14%,transparent);
+  --purple:#b07ce8; --purple-sub:color-mix(in srgb,#b07ce8 16%,transparent);
+  --border:var(--vscode-panel-border,#3a3a3a); --soft:color-mix(in srgb,var(--vscode-panel-border,#3a3a3a) 55%,transparent);
+}
+body.vscode-light {
+  --bg:#fff; --bg2:#f3f3f3; --inset:#ececec; --hover:#ececec;
+  --fg:#1f1f1f; --body:#2b2b2b; --sec:#565656; --muted:#767676;
+  --accent:#005fb8; --accent-sub:color-mix(in srgb,#005fb8 10%,transparent); --accent-line:color-mix(in srgb,#005fb8 35%,transparent);
+  --ok:#1a7f37; --ok-sub:color-mix(in srgb,#1a7f37 10%,transparent);
+  --warn:#9a6700; --warn-sub:color-mix(in srgb,#9a6700 12%,transparent);
+  --err:#cf222e; --err-sub:color-mix(in srgb,#cf222e 9%,transparent);
+  --purple:#8250df; --purple-sub:color-mix(in srgb,#8250df 10%,transparent);
+  --border:#d8d8d8; --soft:#e2e2e2;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:var(--font);color:var(--body);background:var(--bg);-webkit-font-smoothing:antialiased;line-height:1.5;}
+code{font-family:var(--mono);font-size:.9em;background:var(--hover);padding:1px 5px;border-radius:var(--r-sm);color:var(--fg);}
+a{color:var(--accent);}
+
+.bar{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg2) 92%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);}
+.bar-row{max-width:var(--max);margin:0 auto;padding:var(--s3) var(--s5);display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap;}
+.switch{display:inline-flex;padding:3px;gap:2px;background:var(--inset);border:1px solid var(--border);border-radius:var(--r-md);}
+.switch button{appearance:none;font:inherit;font-size:var(--sm);cursor:pointer;border:0;background:transparent;color:var(--sec);padding:var(--s1) var(--s3);border-radius:var(--r-sm);}
+.switch button[aria-pressed="true"]{background:var(--bg2);color:var(--fg);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.3);}
+.flowchip{font-size:var(--xs);color:var(--sec);border:1px solid var(--border);border-radius:var(--pill);padding:2px var(--s3);}
+.theme{margin-left:auto;font:inherit;font-size:var(--xs);color:var(--sec);background:transparent;border:1px solid var(--border);border-radius:var(--r-sm);padding:2px 8px;cursor:pointer;}
+.tabs{max-width:var(--max);margin:0 auto;padding:0 var(--s5);display:flex;gap:2px;}
+.tab{appearance:none;font:inherit;font-size:var(--sm);cursor:pointer;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--muted);padding:var(--s3) var(--s3) calc(var(--s3) - 2px);display:flex;align-items:center;gap:var(--s2);}
+.tab:hover{color:var(--sec);}
+.tab[aria-selected="true"]{color:var(--fg);font-weight:600;border-bottom-color:var(--accent);}
+.tab .node{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:700;background:var(--ok-sub);border:1.5px solid var(--ok);color:var(--ok);}
+.tab.view .node{background:none;border:0;}.tab.view .vdot{width:7px;height:7px;border-radius:50%;background:var(--muted);}
+.tab.view[aria-selected="true"] .vdot{background:var(--accent);}
+
+/* sub-rail (related artifacts under a step) */
+.subnav{max-width:var(--max);margin:0 auto;padding:var(--s2) var(--s5) 0;display:flex;align-items:center;gap:2px;flex-wrap:wrap;}
+.subnav-label{font-size:var(--xs);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-right:var(--s2);}
+.subnav button{appearance:none;font:inherit;font-size:var(--sm);cursor:pointer;border:1px solid transparent;background:transparent;color:var(--sec);padding:2px var(--s3);border-radius:var(--pill);display:inline-flex;align-items:center;gap:6px;}
+.subnav button:hover{color:var(--fg);background:var(--hover);}
+.subnav button[aria-pressed="true"]{color:var(--fg);background:var(--accent-sub);border-color:var(--accent-line);}
+.subnav .ext{font-family:var(--mono);font-size:var(--xs);color:var(--muted);}
+.subnav button[aria-pressed="true"] .ext{color:var(--accent);}
+
+.wrap{max-width:var(--max);margin:0 auto;padding:var(--s5) var(--s5) var(--s6);}
+.note{font-size:var(--xs);color:var(--muted);border:1px dashed var(--border);border-radius:var(--r-md);padding:var(--s3) var(--s4);margin-bottom:var(--s5);}
+.note b{color:var(--sec);}
+
+.doc-h1{font-size:var(--xxl);letter-spacing:-.02em;color:var(--fg);margin:0 0 var(--s4);line-height:1.15;}
+.doc-h2{font-size:var(--xl);color:var(--fg);margin:var(--s6) 0 var(--s3);letter-spacing:-.01em;}
+.doc-h3{font-size:var(--lg);color:var(--fg);margin:var(--s5) 0 var(--s2);}
+.doc-p{color:var(--body);margin:var(--s3) 0;max-width:72ch;}
+.md-ul{margin:var(--s3) 0;padding-left:1.2em;display:grid;gap:var(--s2);}
+.md-ul li{color:var(--body);}
+.md-label{font-size:var(--xs);text-transform:uppercase;letter-spacing:.06em;color:var(--sec);margin:var(--s3) 0 var(--s1);}
+.md-note{display:grid;grid-template-columns:max-content 1fr;gap:var(--s3);margin:var(--s2) 0;font-size:var(--sm);align-items:baseline;}
+.md-note-k{font-size:var(--xs);text-transform:uppercase;letter-spacing:.05em;color:var(--muted);white-space:nowrap;}
+.md-note-v{color:var(--body);}
+.callout{border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg2);padding:var(--s3) var(--s4);margin:var(--s3) 0;color:var(--body);font-size:var(--sm);}
+
+.req-row{display:grid;grid-template-columns:max-content 1fr;gap:var(--s3);align-items:baseline;padding:var(--s2) var(--s3);border-bottom:1px solid var(--soft);}
+.req-row:hover{background:var(--hover);}
+.req-badge{font-family:var(--mono);font-size:var(--xs);font-weight:600;color:var(--accent);background:var(--accent-sub);padding:1px var(--s2);border-radius:var(--r-sm);white-space:nowrap;}
+.req-row[data-kind="sc"] .req-badge{color:var(--ok);background:var(--ok-sub);}
+.req-text{color:var(--body);font-size:var(--sm);line-height:1.45;}
+
+.story{border:1px solid var(--border);border-radius:var(--r-lg);background:var(--bg2);padding:var(--s4) var(--s5);margin:var(--s4) 0;}
+.story-meta{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s2);}
+.story-id{font-family:var(--mono);font-size:var(--xs);color:var(--sec);}
+.prio{display:inline-flex;align-items:center;gap:5px;font-size:var(--xs);font-weight:600;padding:1px var(--s2);border-radius:var(--pill);}
+.prio .pdot{width:7px;height:7px;border-radius:50%;}
+.prio.p1{color:var(--err);background:var(--err-sub);}.prio.p1 .pdot{background:var(--err);}
+.prio.p2{color:var(--warn);background:var(--warn-sub);}.prio.p2 .pdot{background:var(--warn);}
+.prio.p3{color:var(--accent);background:var(--accent-sub);}.prio.p3 .pdot{background:var(--accent);}
+.story-title{font-size:var(--lg);color:var(--fg);margin:0 0 var(--s2);line-height:1.3;}
+.gwt-card{border:1px solid var(--soft);border-radius:var(--r-md);background:var(--bg);margin:var(--s2) 0;overflow:hidden;}
+.gwt-row{display:grid;grid-template-columns:54px 1fr;gap:var(--s3);padding:var(--s2) var(--s3);align-items:baseline;}
+.gwt-row+.gwt-row{border-top:1px solid var(--soft);}
+.kw{font-size:var(--xs);font-weight:700;text-transform:uppercase;text-align:right;}
+.kw.given{color:var(--sec);}.kw.when{color:var(--accent);}.kw.then{color:var(--ok);}
+.gwt-row .clause{font-size:var(--sm);color:var(--body);}
+.entity{display:flex;flex-direction:column;gap:2px;padding:var(--s3) var(--s4);border:1px solid var(--soft);border-radius:var(--r-md);background:var(--bg2);margin:var(--s2) 0;}
+.entity-name{font-family:var(--mono);font-size:var(--sm);font-weight:600;color:var(--purple);}
+.entity-desc{font-size:var(--sm);color:var(--body);}
+
+/* tasks merged with capture */
+.task-card{border:1px solid var(--soft);border-radius:var(--r-md);background:var(--bg2);padding:var(--s3) var(--s4);margin:var(--s2) 0;}
+.task-top{display:flex;align-items:baseline;gap:var(--s2);}
+.task-check{width:18px;height:18px;border-radius:var(--r-sm);border:1.5px solid var(--soft);display:grid;place-items:center;flex:0 0 auto;align-self:flex-start;margin-top:1px;}
+.task-card.done .task-check{background:var(--ok-sub);border-color:var(--ok);color:var(--ok);}
+.task-check svg{width:11px;height:11px;}
+.task-id{font-family:var(--mono);font-size:var(--xs);color:var(--ok);white-space:nowrap;}
+.chip.p{font-size:10px;font-weight:700;color:var(--accent);background:var(--accent-sub);padding:0 5px;border-radius:var(--r-sm);}
+.task-plan{font-size:var(--sm);color:var(--body);line-height:1.4;}
+.task-dur{margin-left:auto;font-family:var(--mono);font-size:var(--xs);color:var(--muted);white-space:nowrap;}
+.task-actual{display:grid;grid-template-columns:max-content 1fr;gap:var(--s3);margin-top:var(--s3);padding-top:var(--s3);border-top:1px dashed var(--soft);align-items:baseline;}
+.actual-label{font-size:var(--xs);text-transform:uppercase;letter-spacing:.05em;color:var(--ok);}
+.actual-did{font-size:var(--sm);color:var(--sec);line-height:1.4;}
+.task-files{display:flex;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s2);padding-left:calc(18px + var(--s2));}
+.file{font-family:var(--mono);font-size:var(--xs);color:var(--sec);background:var(--inset);border:1px solid var(--soft);border-radius:var(--r-sm);padding:1px 6px;}
+
+/* checklist (quality report) */
+.ck-group{border:1px solid var(--soft);border-radius:var(--r-md);background:var(--bg2);margin:var(--s3) 0;overflow:hidden;}
+.ck-group-head{display:flex;align-items:center;justify-content:space-between;padding:var(--s2) var(--s4);background:var(--inset);border-bottom:1px solid var(--soft);}
+.ck-name{font-size:var(--sm);font-weight:600;color:var(--fg);}
+.ck-count{font-family:var(--mono);font-size:var(--xs);color:var(--ok);background:var(--ok-sub);padding:1px 8px;border-radius:var(--pill);}
+.ck-item{display:grid;grid-template-columns:max-content 1fr;gap:var(--s3);align-items:start;padding:var(--s2) var(--s4);font-size:var(--sm);color:var(--body);}
+.ck-item+.ck-item{border-top:1px solid var(--soft);}
+.ck-box{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--ok);color:var(--ok);background:var(--ok-sub);display:grid;place-items:center;margin-top:1px;}
+.ck-box svg{width:10px;height:10px;}
+.ck-item:not(.ok) .ck-box{border-color:var(--muted);color:transparent;background:none;}
+
+/* json / contract */
+.filetree{border:1px solid var(--border);border-radius:var(--r-md);background:var(--inset);overflow:hidden;margin:var(--s3) 0;}
+.filetree-head{font-family:var(--mono);font-size:var(--xs);color:var(--muted);padding:var(--s2) var(--s4);border-bottom:1px solid var(--soft);background:var(--bg2);}
+.filetree pre{margin:0;padding:var(--s4);font-family:var(--mono);font-size:var(--sm);line-height:1.6;color:var(--body);overflow-x:auto;white-space:pre;}
+
+/* activity */
+.meta-head{border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg2);padding:var(--s4) var(--s5);margin-bottom:var(--s5);}
+.meta-head h1{font-size:var(--xl);margin:0 0 var(--s1);color:var(--fg);}
+.meta-chips{display:flex;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s3);}
+.mchip{font-size:var(--xs);padding:1px var(--s2);border-radius:var(--pill);display:inline-flex;align-items:center;gap:5px;}
+.mchip.flow{color:var(--purple);background:var(--purple-sub);}
+.mchip.state{color:var(--ok);background:var(--ok-sub);font-weight:600;}
+.mchip.dim{color:var(--sec);background:var(--hover);font-family:var(--mono);}
+.mchip svg{width:11px;height:11px;}
+.section-label{font-size:var(--xs);text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:var(--s5) 0 var(--s3);}
+.tl{position:relative;padding-left:26px;}
+.tl::before{content:"";position:absolute;left:10px;top:8px;bottom:8px;width:2px;background:var(--soft);}
+.step{position:relative;margin-bottom:var(--s4);}
+.dot{position:absolute;left:-26px;top:0;width:22px;height:22px;border-radius:50%;background:var(--bg);border:2px solid var(--ok);color:var(--ok);display:grid;place-items:center;}
+.dot svg{width:12px;height:12px;}
+.step-row{display:flex;align-items:baseline;gap:var(--s2);flex-wrap:wrap;}
+.step-name{font-size:var(--lg);color:var(--fg);font-weight:600;text-transform:capitalize;}
+.by{font-size:var(--xs);padding:0 7px;border-radius:var(--pill);}
+.by.extension{color:var(--purple);background:var(--purple-sub);}
+.by.ai{color:var(--accent);background:var(--accent-sub);}
+.by.user{color:var(--ok);background:var(--ok-sub);}
+.dur{margin-left:auto;font-family:var(--mono);font-size:var(--xs);color:var(--muted);}
+.fastpath{font-size:var(--xs);color:var(--sec);margin-top:2px;}
+.tasks{margin-top:var(--s3);display:grid;gap:var(--s2);}
+.empty{color:var(--muted);font-size:var(--sm);padding:var(--s4) 0;}
+
+@media (max-width:560px){.gwt-row{grid-template-columns:44px 1fr;}.md-note,.task-actual,.req-row,.ck-item{grid-template-columns:1fr;gap:var(--s1);}}
+</style>
+</head>
+<body class="vscode-dark">
+
+<div class="bar">
+  <div class="bar-row">
+    <div class="switch" id="switch" role="group" aria-label="Spec"></div>
+    <span class="flowchip" id="flowchip"></span>
+    <button class="theme" id="themeToggle" type="button">Light</button>
+  </div>
+  <div class="tabs" id="tabs" role="tablist">
+    <button class="tab" role="tab" data-tab="spec" aria-selected="true"><span class="node">✓</span>Spec</button>
+    <button class="tab" role="tab" data-tab="plan" aria-selected="false"><span class="node">✓</span>Plan</button>
+    <button class="tab" role="tab" data-tab="tasks" aria-selected="false"><span class="node">✓</span>Tasks</button>
+    <button class="tab view" role="tab" data-tab="activity" aria-selected="false"><span class="node"><span class="vdot"></span></span>Activity</button>
+  </div>
+  <div class="subnav" id="subnav"></div>
+</div>
+
+<div class="wrap">
+  <div class="note"><b>Rendered from the real spec files.</b> A generator read each spec's <code>spec.md</code> / <code>plan.md</code> / <code>tasks.md</code>, its design artifacts (research, data-model, quickstart, contracts), the spec checklist, and <code>.spec-context.json</code> — embedded below and parsed at load. The sub-rail under each step lists that step's related artifacts; the <b>Tasks</b> tab merges the plan with what was actually captured.</div>
+  <div id="panel"></div>
+</div>
+
+<script>window.SPECS = __DATA__; window.ORDER = __ORDER__;</script>
+<script>
+const SPECS = window.SPECS, ORDER = window.ORDER;
+function esc(s){ const d=document.createElement('div'); d.textContent=String(s==null?'':s); return d.innerHTML; }
+function inline(s){
+  s = esc(s);
+  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+  return s;
+}
+const CHECK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg>';
+const t = s => new Date(s).getTime();
+function fmtDur(ms){ if(ms<1000) return 'instant'; const s=Math.round(ms/1000); if(s<60) return s+'s'; const m=Math.floor(s/60),r=s%60; return r?`${m}m ${r}s`:`${m}m`; }
+const BY = { extension:'Companion', ai:'AI', user:'you', cli:'cli' };
+
+function renderScenario(text){
+  const re=/\*\*(Given|When|Then)\*\*\s*([\s\S]*?)(?=,?\s*\*\*(?:Given|When|Then)\*\*|$)/g;
+  let m, rows='';
+  while(m=re.exec(text)){
+    const clause=m[2].replace(/^,\s*/,'').replace(/[,.\s]+$/,'').trim();
+    rows+=`<div class="gwt-row"><span class="kw ${m[1].toLowerCase()}">${m[1]}</span><span class="clause">${inline(clause)}</span></div>`;
+  }
+  return `<div class="gwt-card">${rows}</div>`;
+}
+
+function mdRender(md){
+  const lines = (md||'').split('\n');
+  let h='', section='', storyOpen=false, ul=false, fm=false;
+  const closeUl=()=>{ if(ul){ h+='</ul>'; ul=false; } };
+  const closeStory=()=>{ if(storyOpen){ h+='</div>'; storyOpen=false; } };
+  for(let i=0;i<lines.length;i++){
+    const line = lines[i].replace(/\s+$/,'');
+    if(i===0 && line==='---'){ fm=true; continue; }            // skip YAML frontmatter
+    if(fm){ if(line==='---') fm=false; continue; }
+    if(!line.trim()){ closeUl(); continue; }
+    let m;
+    if(m=line.match(/^#\s+(.+)/)){ closeUl(); closeStory(); h+=`<h1 class="doc-h1">${inline(m[1])}</h1>`; continue; }
+    if(m=line.match(/^##\s+(.+)/)){ closeUl(); closeStory(); section=m[1]; h+=`<h2 class="doc-h2">${inline(m[1])}</h2>`; continue; }
+    if(m=line.match(/^###\s+User Story\s+(\d+)\s*[-–]\s*(.+?)\s*\(Priority:\s*(P\d)\)/)){
+      closeUl(); closeStory();
+      h+=`<div class="story"><div class="story-meta"><span class="story-id">US-${m[1]}</span><span class="prio ${m[3].toLowerCase()}"><span class="pdot"></span>${m[3]}</span></div><h3 class="story-title">${inline(m[2])}</h3>`;
+      storyOpen=true; section='story'; continue;
+    }
+    if(m=line.match(/^###\s+(.+)/)){ closeUl(); closeStory(); section=m[1]; h+=`<h3 class="doc-h3">${inline(m[1])}</h3>`; continue; }
+    if(m=line.match(/^-\s+\*\*([A-Z]{2,5}-\d+)\*\*:?\s*(.+)/)){
+      closeUl(); h+=`<div class="req-row" data-kind="${m[1].split('-')[0].toLowerCase()}"><span class="req-badge">${m[1]}</span><span class="req-text">${inline(m[2])}</span></div>`; continue;
+    }
+    if(m=line.match(/^\d+\.\s+(.*\*\*Given\*\*[\s\S]*)/i)){ closeUl(); h+=renderScenario(m[1]); continue; }
+    if(/Key Entit/i.test(section) && (m=line.match(/^-\s+\*\*(.+?)\*\*\s*(.*)/))){
+      closeUl(); h+=`<div class="entity"><span class="entity-name">${inline(m[1])}</span><span class="entity-desc">${inline(m[2].replace(/^[—\-–]\s*/,''))}</span></div>`; continue;
+    }
+    if(m=line.match(/^\*\*([^*]+?)\*\*:\s*(.+)/)){
+      closeUl(); h+=`<div class="md-note"><span class="md-note-k">${esc(m[1].replace(/:$/,''))}</span><span class="md-note-v">${inline(m[2])}</span></div>`; continue;
+    }
+    if(m=line.match(/^\*\*([^*]+?)\*\*:?\s*$/)){ closeUl(); h+=`<div class="md-label">${esc(m[1].replace(/:$/,''))}</div>`; continue; }
+    if(m=line.match(/^>\s*(.+)/)){ closeUl(); h+=`<div class="callout">${inline(m[1])}</div>`; continue; }
+    if(m=line.match(/^```/)){ // fenced code block
+      const lang=line.slice(3).trim(); const buf=[]; i++;
+      while(i<lines.length && !lines[i].startsWith('```')){ buf.push(lines[i]); i++; }
+      closeUl(); h+=`<div class="filetree"><div class="filetree-head">${esc(lang||'text')}</div><pre>${esc(buf.join('\n'))}</pre></div>`; continue;
+    }
+    if(m=line.match(/^[-*]\s+(.+)/)){ if(!ul){ h+='<ul class="md-ul">'; ul=true; } h+=`<li>${inline(m[1])}</li>`; continue; }
+    closeUl(); h+=`<p class="doc-p">${inline(line)}</p>`;
+  }
+  closeUl(); closeStory();
+  return h;
+}
+
+function renderChecklist(md){
+  const lines=(md||'').split('\n');
+  let h='', group=null, items=[], pass=0, total=0, notes=false;
+  const flush=()=>{ if(group!==null){ h+=`<div class="ck-group"><div class="ck-group-head"><span class="ck-name">${inline(group)}</span><span class="ck-count">${pass}/${total}</span></div>${items.join('')}</div>`; } group=null; items=[]; pass=0; total=0; };
+  for(const raw of lines){
+    const line=raw.replace(/\s+$/,''); if(!line.trim()) continue;
+    let m;
+    if(m=line.match(/^#\s+(.+)/)){ flush(); h+=`<h1 class="doc-h1">${inline(m[1])}</h1>`; continue; }
+    if(m=line.match(/^\*\*([^*]+?)\*\*:\s*(.+)/)){ flush(); h+=`<div class="md-note"><span class="md-note-k">${esc(m[1])}</span><span class="md-note-v">${inline(m[2])}</span></div>`; continue; }
+    if(m=line.match(/^##\s+(.+)/)){ flush(); if(/^notes/i.test(m[1])){ notes=true; h+=`<h3 class="doc-h3">${inline(m[1])}</h3>`; } else { notes=false; group=m[1]; } continue; }
+    if(m=line.match(/^-\s+\[([ xX])\]\s+(.+)/)){ const ok=m[1].toLowerCase()==='x'; total++; if(ok)pass++; items.push(`<div class="ck-item ${ok?'ok':''}"><span class="ck-box">${ok?CHECK:''}</span><span class="ck-text">${inline(m[2])}</span></div>`); continue; }
+    if(m=line.match(/^-\s+(.+)/)){ flush(); h+=`<p class="doc-p">${inline(m[1])}</p>`; continue; }
+    flush(); h+=`<p class="doc-p">${inline(line)}</p>`;
+  }
+  flush();
+  return h;
+}
+
+function renderJson(name, content){
+  return `<div class="filetree"><div class="filetree-head">${esc(name)}</div><pre>${esc(content)}</pre></div>`;
+}
+
+function taskDurations(ctx){
+  const h=ctx.history||[];
+  const start=h.find(e=>e.step==='implement'&&e.kind==='start'&&e.task==null);
+  const fin=h.filter(e=>e.step==='implement'&&e.task&&e.kind==='complete').sort((a,b)=>t(a.at)-t(b.at));
+  let cur=start?t(start.at):(fin[0]?t(fin[0].at):0); const map={};
+  for(const f of fin){ map[f.task]=t(f.at)-cur; cur=t(f.at); }
+  return map;
+}
+function renderTasks(md, ctx){
+  const sums=(ctx&&ctx.task_summaries)||{}, durs=ctx?taskDurations(ctx):{};
+  let h='';
+  for(const raw of (md||'').split('\n')){
+    const line=raw.replace(/\s+$/,''); if(!line.trim()) continue;
+    let m;
+    if(m=line.match(/^#\s+(.+)/)){ h+=`<h1 class="doc-h1">${inline(m[1])}</h1>`; continue; }
+    if(m=line.match(/^##\s+(.+)/)){ h+=`<h2 class="doc-h2">${inline(m[1])}</h2>`; continue; }
+    if(m=line.match(/^-\s+\[([ xX])\]\s+(.+)/)){
+      const checked=m[1].toLowerCase()==='x'; let body=m[2];
+      const id=(body.match(/\*\*(T\d+)\*\*/)||[])[1]||'';
+      const par=/\[P\]/.test(body);
+      let desc=body.replace(/\*\*T\d+\*\*\s*/,'').replace(/\[P\]\s*/,'').replace(/\[US\d+\]\s*/,'');
+      const planFiles=[]; desc=desc.replace(/\s*\+\s+(\S[^+]*?)\s*$/,(x,p)=>{ planFiles.push(p.trim()); return ''; });
+      const sum=sums[id]||{}; const files=(sum.files&&sum.files.length)?sum.files:planFiles;
+      const dur=durs[id];
+      h+=`<div class="task-card ${checked?'done':''}"><div class="task-top">
+        <span class="task-check">${checked?CHECK:''}</span><span class="task-id">${esc(id)}</span>
+        ${par?'<span class="chip p">P</span>':''}<span class="task-plan">${inline(desc.trim())}</span>
+        ${dur!=null?`<span class="task-dur">${fmtDur(dur)}</span>`:''}</div>
+        ${sum.did?`<div class="task-actual"><span class="actual-label">did</span><span class="actual-did">${esc(sum.did)}</span></div>`:''}
+        ${files.length?`<div class="task-files">${files.map(f=>`<span class="file">${esc(f)}</span>`).join('')}</div>`:''}
+      </div>`;
+      continue;
+    }
+    h+=`<p class="doc-p">${inline(line)}</p>`;
+  }
+  return h;
+}
+
+const STEPS=['specify','plan','tasks','implement'];
+function stepModel(step, history){
+  const ev=history.filter(h=>h.step===step);
+  const start=ev.find(e=>e.kind==='start'&&e.task==null&&e.substep==null)||ev.find(e=>e.kind==='start');
+  const done=[...ev].reverse().find(e=>e.kind==='complete'&&e.task==null&&e.substep==null);
+  return {start,done,fast:ev.some(e=>e.substep==='fast-path'),by:(done||start||{}).by,dur:(start&&done)?t(done.at)-t(start.at):null};
+}
+function renderActivity(ctx){
+  const hist=ctx.history||[];
+  if(!hist.length) return `<div class="meta-head"><h1>${esc(ctx.specName||'')}</h1><div class="meta-chips"><span class="mchip flow">${esc(ctx.workflow||'')}</span><span class="mchip dim">${esc(ctx.status||'')}</span></div></div><div class="empty">No lifecycle events captured for this spec.</div>`;
+  const total=t(hist[hist.length-1].at)-t(hist[0].at);
+  const durs=taskDurations(ctx);
+  const finishes=hist.filter(e=>e.step==='implement'&&e.task&&e.kind==='complete').sort((a,b)=>t(a.at)-t(b.at));
+  let out=`<div class="meta-head"><h1>${esc(ctx.specName||'')}</h1><div class="meta-chips">
+    <span class="mchip flow">${esc(ctx.workflow||'')}</span>
+    <span class="mchip state">${CHECK}${esc(ctx.status||'')}</span>
+    <span class="mchip dim">${esc(ctx.branch||'')}</span>
+    ${finishes.length?`<span class="mchip dim">${finishes.length} tasks</span>`:''}
+    <span class="mchip dim">${fmtDur(total)} total</span></div></div>`;
+  out+=`<div class="section-label">Lifecycle</div><div class="tl">`;
+  for(const step of STEPS){
+    const md=stepModel(step, hist);
+    if(!md.start&&!md.done) continue;
+    out+=`<div class="step"><span class="dot">${CHECK}</span><div class="step-row">
+      <span class="step-name">${step}</span>
+      ${md.by?`<span class="by ${md.by}">${BY[md.by]||md.by}</span>`:''}
+      <span class="dur">${md.dur!=null?fmtDur(md.dur):''}</span></div>
+      ${md.fast?'<div class="fastpath">fast-path · planned and tasked in one pass</div>':''}`;
+    if(step==='implement'&&finishes.length){
+      out+=`<div class="tasks">`;
+      for(const f of finishes){
+        const s=(ctx.task_summaries||{})[f.task]||{};
+        out+=`<div class="task-card done"><div class="task-top">
+          <span class="task-check">${CHECK}</span><span class="task-id">${esc(f.task)}</span>
+          ${f.by?`<span class="by ${f.by}">${BY[f.by]||f.by}</span>`:''}
+          <span class="task-dur">${fmtDur(durs[f.task]||0)}</span></div>
+          ${s.did?`<div class="task-actual"><span class="actual-label">did</span><span class="actual-did">${esc(s.did)}</span></div>`:''}
+          ${(s.files||[]).length?`<div class="task-files">${s.files.map(x=>`<span class="file">${esc(x)}</span>`).join('')}</div>`:''}
+        </div>`;
+      }
+      out+=`</div>`;
+    }
+    out+=`</div>`;
+  }
+  return out+`</div>`;
+}
+
+// ── artifact routing ───────────────────────────────────────────────────
+function stepDocs(spec, step){
+  const keys=Object.keys(SPECS[spec].docs);
+  if(step==='spec')  return keys.filter(k=>k==='spec.md'||k.startsWith('checklists/'));
+  if(step==='plan')  return keys.filter(k=>k==='plan.md'||['research.md','data-model.md','quickstart.md'].includes(k)||k.startsWith('contracts/'));
+  if(step==='tasks') return keys.filter(k=>k==='tasks.md');
+  return [];
+}
+function docLabel(key){
+  if(key==='spec.md')return 'Spec'; if(key==='plan.md')return'Plan'; if(key==='tasks.md')return'Tasks';
+  if(key==='research.md')return'Research'; if(key==='data-model.md')return'Data model'; if(key==='quickstart.md')return'Quickstart';
+  if(key.startsWith('checklists/'))return'Checklist'; if(key.startsWith('contracts/'))return'Schema';
+  return key;
+}
+function renderDoc(spec, key){
+  const md=SPECS[spec].docs[key];
+  if(key==='tasks.md') return renderTasks(md, SPECS[spec].context);
+  if(key.startsWith('checklists/')) return renderChecklist(md);
+  if(key.startsWith('contracts/')) return renderJson(key.split('/').pop(), md);
+  return mdRender(md);
+}
+
+// ── orchestration ──────────────────────────────────────────────────────
+let specId=ORDER[0], tab='spec', doc=null;
+const panel=document.getElementById('panel');
+const subnavEl=document.getElementById('subnav');
+
+function buildSwitch(){
+  document.getElementById('switch').innerHTML = ORDER.map((id,i)=>
+    `<button data-spec="${id}" aria-pressed="${i===0}">${esc(id)} · ${esc(SPECS[id].title)}</button>`).join('');
+  document.querySelectorAll('#switch button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#switch button').forEach(x=>x.setAttribute('aria-pressed','false'));
+    b.setAttribute('aria-pressed','true'); specId=b.dataset.spec; doc=null; paint();
+  }));
+}
+function buildSubnav(){
+  if(tab==='activity'){ subnavEl.innerHTML=''; subnavEl.style.display='none'; return; }
+  const docs=stepDocs(specId, tab);
+  if(docs.length<=1){ subnavEl.innerHTML=''; subnavEl.style.display='none'; return; }
+  subnavEl.style.display='flex';
+  subnavEl.innerHTML = `<span class="subnav-label">${tab} docs</span>` + docs.map(k=>
+    `<button data-doc="${esc(k)}" aria-pressed="${k===doc}">${esc(docLabel(k))} <span class="ext">${esc(k.split('/').pop())}</span></button>`).join('');
+  subnavEl.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ doc=b.dataset.doc; paint(); }));
+}
+function paint(){
+  const ctx=SPECS[specId].context;
+  document.getElementById('flowchip').textContent=ctx.workflow||'';
+  if(tab!=='activity'){
+    const docs=stepDocs(specId, tab);
+    if(!doc || !docs.includes(doc)) doc = docs[0] || null;
+  }
+  buildSubnav();
+  panel.innerHTML = tab==='activity' ? renderActivity(ctx)
+                  : doc ? renderDoc(specId, doc)
+                  : `<div class="empty">No ${tab} document for this spec.</div>`;
+  window.scrollTo({top:0});
+}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected','false'));
+  b.setAttribute('aria-selected','true'); tab=b.dataset.tab; doc=null; paint();
+}));
+document.getElementById('themeToggle').addEventListener('click',function(){
+  const light=document.body.classList.toggle('vscode-light');
+  document.body.classList.toggle('vscode-dark',!light);
+  this.textContent=light?'Dark':'Light';
+});
+buildSwitch();
+paint();
+</script>
+</body>
+</html>
