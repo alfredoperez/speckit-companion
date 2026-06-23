@@ -37,7 +37,7 @@ A spec workspace that turns AI-assisted, spec-driven development into something 
 
 ### Visual Spec Viewer
 
-Guide your features through structured phases with a dedicated viewer that renders markdown specs, shows phase progress, and provides one-click actions for each step. Mermaid diagrams render inline with zoom controls for navigating complex diagrams. After each action, a toast confirms the result and the viewer auto-advances to the next phase.
+Guide your features through structured phases with a dedicated viewer that renders specs as rich, structured pages — requirements as labeled rows, acceptance scenarios as clean Given/When/Then sentences, key entities and research decisions as cards, and tasks grouped under their phases — shows phase progress, and provides one-click actions for each step. Mermaid diagrams render inline with zoom controls for navigating complex diagrams. After each action, a toast confirms the result and the viewer auto-advances to the next phase.
 
 ![Spec viewer](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/viewer.png)
 *The spec viewer. Step tabs, sub-document chips, an inline diagram, and a footer button that advances Specify → Plan → Tasks → Done. Markdown stays in your repo, never on a server.*
@@ -91,7 +91,7 @@ The spec viewer is built for fast scanning of long-form specs:
 Toggle **Activity** in the viewer's nav bar to swap the markdown pane for a card-stack overview of everything `.spec-context.json` carries:
 
 - **Approach** — one-line strategy, status pill, PR link, and commit/PR checkpoints.
-- **Phases** — a horizontal timeline reporting **active time** per step and substep (idle gaps are capped, so an overnight pause doesn't inflate a step); the in-flight step pulses and the terminal phase finalizes.
+- **Phases** — a vertical timeline reporting **active time** per step and substep (idle gaps are capped, so an overnight pause doesn't inflate a step); the in-flight step pulses and the terminal phase finalizes.
 - **Tasks** — per-`T###` status, summary, file chips, and inline concerns.
 - **Decisions**, **Concerns**, **Review comments** (every persisted comment grouped by document, with jump-to-line and a per-document **Run refinement** button), and **Files touched** (clickable).
 
