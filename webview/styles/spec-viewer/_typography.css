@@ -49,13 +49,13 @@
    ============================================ */
 
 #markdown-content p {
-    margin: 0 0 var(--space-3) 0;
+    margin: 0 0 var(--space-5) 0;
     line-height: var(--leading-loose);
     color: var(--text-body);
 }
 
 #markdown-content p + p {
-    margin-top: var(--space-2);
+    margin-top: var(--space-3);
 }
 
 /* ============================================
