@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-06-23
+
 ### Changed
 - **Finishing a step and moving it forward now happens in one clean step.** When a pipeline step wraps up, marking it done and bumping the spec to its next status used to take a few separate calls plus a quick re-check to be sure nothing got recorded twice or out of order. That now happens as a single, safe action: the step is recorded as finished and the spec advances to the right status together, with no stray bookkeeping. Running it again changes nothing, and a spec that's already finished or archived is left untouched.
 - **Re-running a spec folder no longer replays stale task progress.** When a spec is marked complete, the small per-task progress log it keeps while building is cleaned up — always after everything in it has been recorded, so nothing is ever lost. Before, that log lingered, and starting the same spec folder over could fold in finishes from the previous run. Behavior during a normal run is unchanged; this is an internal tidy-up surfaced by a code review, with no setting or command change.

@@ -76,7 +76,7 @@ The whole flow is automated by the `/publish-speckit-ext` skill.
 ```yaml
 id: companion
 name: SpecKit Companion
-version: 0.8.0
+version: 0.11.0
 description: "Live spec-driven progress for SpecKit Companion — lifecycle capture, status, and resume."
 author: alfredoperez
 repository: https://github.com/alfredoperez/speckit-companion
