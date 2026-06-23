@@ -244,6 +244,25 @@ describe('preprocessConstitution', () => {
         expect(preprocessConstitution(md)).toBe(md);
     });
 
+    it('keeps the heading for a table-form Constitution Check (no bullets)', () => {
+        const md = [
+            '## Constitution Check',
+            '',
+            '| Principle | Status |',
+            '| --- | --- |',
+            '| I. Extensibility | PASS |',
+            '',
+            '## Project Structure',
+        ].join('\n');
+        const out = preprocessConstitution(md);
+
+        // No verdict rows are emitted for the table form, but the section header
+        // must survive (it used to be stripped, leaving the table headerless).
+        expect(out).not.toContain('class="con-row"');
+        expect(out).toContain('## Constitution Check');
+        expect(out).toContain('| I. Extensibility | PASS |');
+    });
+
     it('renders the real 060 plan.md grid + verdict rows through the pipeline', () => {
         const root = join(__dirname, '../../../..');
         const plan = readFileSync(join(root, 'specs/060-spec-context-tracking/plan.md'), 'utf8');

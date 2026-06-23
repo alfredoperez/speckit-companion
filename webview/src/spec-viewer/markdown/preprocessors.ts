@@ -263,16 +263,24 @@ export function preprocessConstitution(markdown: string): string {
     const lines = markdown.split('\n');
     const out: string[] = [];
     let inSection = false;
+    let headingLine = '';
     let rows: string[] = [];
-    const flush = () => {
+    // Close the section: emit the collapsible when verdict rows were collected,
+    // otherwise restore the original heading — a table-form (or other non-bullet)
+    // Constitution Check must keep its section header instead of vanishing.
+    const endSection = () => {
         if (rows.length) {
             out.push(`<details class="md-collapsible"><summary class="md-collapsible__summary">Constitution Check</summary>${rows.join('')}</details>`);
-            rows = [];
+        } else if (headingLine) {
+            out.push(headingLine, '');
         }
+        rows = [];
+        headingLine = '';
+        inSection = false;
     };
     for (const line of lines) {
-        if (/^##[ \t]+Constitution Check\b/.test(line)) { flush(); inSection = true; continue; }
-        if (inSection && /^#{1,6}[ \t]/.test(line)) { inSection = false; flush(); out.push(line); continue; }
+        if (/^##[ \t]+Constitution Check\b/.test(line)) { endSection(); inSection = true; headingLine = line; continue; }
+        if (inSection && /^#{1,6}[ \t]/.test(line)) { endSection(); out.push(line); continue; }
         if (inSection) {
             let name: string | undefined, verdict: string | undefined, note: string | undefined;
             // Verdict right after the name: `- **Name**: PASS — note`
@@ -289,11 +297,14 @@ export function preprocessConstitution(markdown: string): string {
                 continue;
             }
             if (!line.trim()) { continue; }
-            flush();
+            // Non-bullet content (e.g. a table) — restore the heading, keep the line.
+            endSection();
+            out.push(line);
+            continue;
         }
         out.push(line);
     }
-    flush();
+    endSection();
     return out.join('\n');
 }
 
