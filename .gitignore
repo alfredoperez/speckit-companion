@@ -69,3 +69,6 @@ specs/_*/
 !specs/_00_demo-specified/
 !specs/_01_demo-planned/
 !specs/_02_demo-tasked/
+
+# Local telemetry workbook (not shipped)
+docs/telemetry-workbook.json
