@@ -89,7 +89,7 @@ export function parseAcceptanceScenarios(markdown: string): string {
             // Stack Given/When/Then onto their own lines for readability.
             const steps = buildScenarioSteps(content);
 
-            return `<li class="scenario-item line" data-line="${lineNum}" data-list-id="${listId}"><button class="line-add-btn" data-line="${lineNum}" data-list-id="${listId}" title="Add comment">${commentIcon}</button><div class="line-content">${steps}</div><div class="line-comment-slot"></div></li>`;
+            return `<li class="scenario-item line" data-line="${lineNum}" data-list-id="${listId}"><button class="line-add-btn" data-line="${lineNum}" data-list-id="${listId}" title="Add comment">${commentIcon}</button><div class="line-content"><span class="scenario-num">${lineNum}</span>${steps}</div><div class="line-comment-slot"></div></li>`;
         }).join('');
 
         // Output as HTML (not markdown) so label doesn't get wrapped in .line

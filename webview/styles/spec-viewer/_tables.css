@@ -379,13 +379,34 @@
 
 .acceptance-scenarios {
     margin: var(--space-2) 0 var(--space-4) 0;
-    padding-left: var(--space-5);
+    padding-left: 0;
+    list-style: none;
 }
 
+/* Each scenario is a self-contained card. */
 .scenario-item {
-    margin: var(--space-3) 0;
-    padding: 3px 8px 3px 0;
-    list-style-position: outside;
+    margin: var(--space-2) 0;
+    padding: var(--space-3) var(--space-4);
+    list-style: none;
+    border: 1px solid var(--border);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    /* Compact rows — don't inherit the looser body list line-height. */
+    line-height: var(--leading-normal);
+}
+
+/* Scenario number as a chip header (the <ol> marker is gone). */
+.scenario-item .scenario-num {
+    display: inline-block;
+    margin-bottom: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    padding: 1px var(--space-2);
+    border-radius: var(--radius-sm);
 }
 
 /* Stacked Given/When/Then steps — one clause per line. */
@@ -397,7 +418,7 @@
 .scenario-item .gwt-step {
     display: flex;
     gap: var(--space-2);
-    padding: 1px 0;
+    padding: 0;
     align-items: baseline;
 }
 
