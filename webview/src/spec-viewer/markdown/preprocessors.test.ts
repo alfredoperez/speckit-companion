@@ -300,14 +300,17 @@ describe('preprocessDecisions', () => {
     });
 });
 
-describe('acceptance scenarios stacking', () => {
-    it('breaks Given/When/Then into stacked steps', () => {
+describe('acceptance scenarios', () => {
+    it('keeps the scenario as one flowing sentence with inline keyword emphasis', () => {
         const md = ['**Acceptance Scenarios**:', '', '1. **Given** a spec, **When** I open it, **Then** it loads.', ''].join('\n');
         const html = renderMarkdown(md);
 
-        expect((html.match(/class="gwt-step"/g) ?? []).length).toBe(3);
-        expect(html).toContain('gwt-kw keyword-given');
-        expect(html).toContain('gwt-kw keyword-then');
+        // Inline <strong> keywords, not stacked .gwt-step rows.
+        expect(html).not.toContain('gwt-step');
+        expect(html).toContain('<strong class="keyword-given">Given</strong>');
+        expect(html).toContain('<strong class="keyword-then">Then</strong>');
+        // The sentence text stays intact (no per-clause line splitting).
+        expect(html).toContain('a spec,');
     });
 });
 

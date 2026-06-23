@@ -379,64 +379,19 @@
 
 .acceptance-scenarios {
     margin: var(--space-2) 0 var(--space-4) 0;
-    padding-left: 0;
-    list-style: none;
+    padding-left: var(--space-5);
 }
 
-/* Each scenario is a self-contained card. */
 .scenario-item {
-    margin: var(--space-2) 0;
-    padding: var(--space-3) var(--space-4);
-    list-style: none;
-    border: 1px solid var(--border);
-    background: var(--bg-elevated);
-    border-radius: var(--radius-sm);
-    /* Compact rows — don't inherit the looser body list line-height. */
-    line-height: var(--leading-normal);
+    margin: var(--space-3) 0;
+    padding: 3px 8px 3px 0;
+    list-style-position: outside;
 }
 
-/* Scenario number as a chip header (the <ol> marker is gone). */
-.scenario-item .scenario-num {
-    display: inline-block;
-    margin-bottom: var(--space-2);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    font-weight: 600;
-    color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 14%, transparent);
-    border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
-    padding: 1px var(--space-2);
-    border-radius: var(--radius-sm);
-}
-
-/* Stacked Given/When/Then steps — one clause per line. */
+/* Each scenario reads as one flowing sentence with the Given/When/Then
+   keywords emphasized inline. */
 .scenario-item .line-content {
-    display: block;
     color: var(--text-body);
-}
-
-.scenario-item .gwt-step {
-    display: flex;
-    gap: var(--space-2);
-    padding: 0;
-    align-items: baseline;
-}
-
-.scenario-item .gwt-step--lead {
-    color: var(--text-secondary);
-}
-
-.scenario-item .gwt-kw {
-    flex: 0 0 3.4em;
-    font-weight: 600;
-    font-size: var(--text-xs);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-.scenario-item .gwt-clause {
-    flex: 1 1 auto;
-    min-width: 0;
 }
 
 #markdown-content .scenario-item .keyword-given {
@@ -449,8 +404,4 @@
 
 #markdown-content .scenario-item .keyword-then {
     color: #73c991;
-}
-
-#markdown-content .scenario-item .keyword-and {
-    color: var(--text-muted);
 }
