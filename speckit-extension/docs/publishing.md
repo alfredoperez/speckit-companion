@@ -17,13 +17,19 @@ v0.2.0                  ❌  matches v* → would publish the WRONG thing to the
 2. **Update** `speckit-extension/CHANGELOG.md` — new dated section; keep prior versions.
 3. **Verify** the pre-submit checklist below.
 4. **Commit** to `main` (e.g. `chore(speckit-ext): release v0.2.0`).
-5. **Build the archive** — a **`.zip`** (the installer rejects `.tar.gz` with `BadZipFile`) with a **single top-level dir** `companion-<X.Y.Z>/` holding `extension.yml` at its root. The repo source-archive does **not** work, because the extension lives in a subdir (`extension.yml` wouldn't be at the archive root):
+5. **Build the archive** — a **`.zip`** (the installer rejects `.tar.gz` with `BadZipFile`) with a **single top-level dir** `companion-<X.Y.Z>/` holding `extension.yml` at its root. The repo source-archive does **not** work, because the extension lives in a subdir (`extension.yml` wouldn't be at the archive root). The package is an **allow-list of runtime files only** — copy just what the installed extension runs, not the whole source tree:
    ```bash
    V=0.2.0
-   rm -rf /tmp/cb && mkdir -p /tmp/cb/companion-$V
-   ( cd speckit-extension && tar cf - --exclude=tests --exclude=assets . ) | ( cd /tmp/cb/companion-$V && tar xf - )
+   rm -rf /tmp/cb && mkdir -p /tmp/cb/companion-$V/scripts
+   cd speckit-extension
+   cp extension.yml LICENSE /tmp/cb/companion-$V/
+   cp -R commands workflows /tmp/cb/companion-$V/
+   cp scripts/write-context.py scripts/status-context.py scripts/derive-from-files.py /tmp/cb/companion-$V/scripts/
+   cd - >/dev/null
    ( cd /tmp/cb && zip -rq companion-$V.zip companion-$V )
    ```
+
+   **What ships (and what doesn't).** The package carries `extension.yml`, `LICENSE`, `commands/`, `workflows/`, and exactly three scripts: `write-context.py`, `status-context.py`, `derive-from-files.py` (the only ones reached at runtime — commands call the first two; `status-context.py` imports `derive-from-files.py`, which imports `write-context.py`). It deliberately **omits** README, CHANGELOG, ROADMAP, `docs/`, `examples/`, the build-only `nodes/`+`presets/` sources, the six build/test scripts, `tests/`, and `assets/`. The catalog page renders README/CHANGELOG from the GitHub blob URLs below — they're not needed inside the zip. Keep this an allow-list; don't swap it back to a `tar --exclude` deny-list, or new docs/sources will silently bloat the package again.
 6. **Create the GitHub release** with a **prefixed tag** (`speckit-ext-v0.2.0`) and attach the version-named zip (archival):
    ```bash
    gh release create speckit-ext-v$V /tmp/cb/companion-$V.zip --title "..." --notes-file <CHANGELOG [X.Y.Z]> --target main
