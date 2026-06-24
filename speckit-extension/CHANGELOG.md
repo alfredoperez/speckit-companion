@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-06-24
+
+### Changed
+- **Slimmer install.** Installing the extension now pulls down only the files it actually needs to run, instead of also carrying along docs, examples, and build-time sources. The download drops from roughly 600 KB to about 72 KB, so installs and updates are quicker. Nothing about how the extension behaves changes.
+
 ## [0.11.0] - 2026-06-23
 
 ### Changed
