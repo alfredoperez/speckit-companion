@@ -28,9 +28,12 @@ function baseState(over: Partial<ViewerState> = {}): ViewerState {
     };
 }
 
+const mounted: HTMLDivElement[] = [];
+
 function renderCard(state: ViewerState): HTMLDivElement {
     const container = document.createElement('div');
     document.body.appendChild(container);
+    mounted.push(container);
     render(<LivingSpecsCard state={state} />, container);
     return container;
 }
@@ -41,6 +44,12 @@ function cleanup(container: HTMLDivElement) {
 }
 
 describe('LivingSpecsCard', () => {
+    // Unmount every rendered container even if an assertion throws first, so a
+    // failing test can't leak mounted DOM into later tests.
+    afterEach(() => {
+        while (mounted.length) cleanup(mounted.pop()!);
+    });
+
     it('lists loaded capabilities and no folded-back marker when nothing synced', () => {
         const c = renderCard(baseState({ livingSpecs: { loaded: ['checkout', 'cart'], synced: [] } }));
         const names = Array.from(c.querySelectorAll('.living-specs-list__name')).map(n => n.textContent);
