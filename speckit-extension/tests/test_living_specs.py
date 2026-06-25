@@ -327,6 +327,13 @@ class RecordLoadedLivingSpecsTests(unittest.TestCase):
             ["checkout-cart", "checkout", "todos"],
         )
 
+    def test_normalizes_pre_existing_duplicates(self) -> None:
+        # A record that already carries duplicates (older version / manual edit)
+        # is normalized on the next write, not just guarded against new dupes.
+        d = make_ctx_dir({"livingSpecs": {"loaded": ["checkout", "checkout", "todos"]}})
+        wc.set_living_specs_loaded(d, ["checkout"])
+        self.assertEqual(self._read(d)["livingSpecs"]["loaded"], ["checkout", "todos"])
+
     def test_merges_without_dropping_other_fields(self) -> None:
         d = make_ctx_dir({"size": "normal", "history": [{"step": "specify", "kind": "start"}]})
         wc.set_living_specs_loaded(d, ["checkout"])

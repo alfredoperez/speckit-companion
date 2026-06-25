@@ -351,8 +351,10 @@ def set_living_specs_loaded(feature_dir: Path, names: list[str]) -> Path | None:
     if not isinstance(block, dict):
         block = {}
     prior = block.get("loaded")
-    merged = list(prior) if isinstance(prior, list) else []
-    for n in cleaned:
+    # De-dupe the FULL list (prior + new), preserving first-occurrence order, so a
+    # record carrying pre-existing duplicates is normalized too (truly idempotent).
+    merged: list = []
+    for n in (list(prior) if isinstance(prior, list) else []) + list(cleaned):
         if n not in merged:
             merged.append(n)
     block["loaded"] = merged
