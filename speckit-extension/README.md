@@ -151,6 +151,51 @@ The Companion commands are assembled from composable **nodes** — small section
 
 This is separate from stock spec-kit's own extension hooks (`.specify/extensions.yml`): a Companion run honors those too, so any spec-kit extension you've installed (the git extension and others) fires at the start and end of each step exactly as it would on a stock `/speckit.*` run. Both hook systems run on the same pipeline.
 
+## Living specs — map your code to durable capability specs (opt-in)
+
+Most specs describe one change and then go quiet. **Living specs** are the opposite: a durable spec per *capability* — checkout, auth, billing, todos — that stays current as the code evolves. You declare which files belong to each capability and where its spec lives, and a resolver answers "which capabilities does this change touch?" so the right specs can be kept in sync.
+
+The feature is **off by default**. With no `livingSpecs` block (or `enabled: false`), nothing changes — every command behaves exactly as it does today. To turn it on, add a `livingSpecs` block to `.specify/companion.yml`:
+
+```yaml
+livingSpecs:
+  enabled: true
+  capabilities:
+    - name: checkout
+      match: ["src/checkout/**"]        # files that belong to this capability
+      exclude: ["src/checkout/**/*.test.ts"]   # optional — subtracted from membership
+    - name: checkout-cart
+      match: ["src/checkout/cart/**"]
+      # spec defaults to capabilities/checkout-cart/spec.md
+    - name: billing
+      match: ["src/billing/**"]
+      spec: src/billing/billing.spec.md  # colocated — lives next to the code
+```
+
+Each capability has a `name`, the `match` globs that define which files belong to it, an optional `exclude`, and where its living spec lives. By default a capability's spec is **centralized** at `capabilities/<name>/spec.md`; give an explicit `spec` path to **colocate** it next to the code. A spec file uses the `.spec.md` extension (the hot tier loaded today); the reserved `.arch.md` / `.coverage.md` siblings are recognized and never flagged as stray.
+
+The resolver ships as `resolve-spec-paths.py` and runs in three modes. By default it prints a concise human list; add `--json` for the full machine-readable object (names, resolved paths, locations, existence):
+
+```bash
+# Which capabilities own a changed file? (most-specific first)
+python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --changed src/checkout/cart/x.ts
+#   [checkout-cart, checkout]
+
+# Every capability + any stray .spec.md on disk (orphans)
+python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --all
+#   capabilities: [checkout, checkout-cart, todos]
+#   orphans: []
+
+# Just the orphans — .spec.md files no capability claims or owns
+python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --orphans
+#   []
+
+# Add --json for the full record the sync/fold/drift steps consume
+python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --changed src/checkout/cart/x.ts --json
+```
+
+An orphan is a `.spec.md` that no capability claims **and** that does not live inside a configured capability's spec directory — so another file under `capabilities/checkout/` (or a reserved `.arch.md` / `.coverage.md` sibling) is never flagged as stray.
+
 ## Installation
 
 Requires a **github-source** spec-kit — the stock PyPI `specify-cli` has no `extension` subsystem:
