@@ -1,0 +1,143 @@
+{
+  "workflow": "speckit",
+  "specName": "install banner beta decouple",
+  "branch": "354-install-banner-beta-decouple",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-25T15:50:31.989Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-25T15:51:25.792Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-25T15:51:25.865Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-25T15:51:25.945Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-25T15:51:26.024Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-25T15:51:26.101Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-25T15:51:38.545Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-25T15:53:40.684Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-25T15:53:40.739Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-25T15:53:40.790Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-25T15:53:40.844Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-25T15:54:40.681Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-25T15:54:40.762Z"
+    }
+  ],
+  "size": "simple",
+  "currentTask": "T005",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Removed isCompanionWorkflowEnabled short-circuit from readInstallPromptEnabled; updated JSDoc to describe beta-independent gating",
+      "files": [
+        "src/speckit/specKitExtensionInstall.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Dropped now-unused isCompanionWorkflowEnabled import",
+      "files": [
+        "src/speckit/specKitExtensionInstall.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Re-derived stale installPromptGate.spec.ts to the decoupled contract (beta off + prompt on -> true; prompt off -> false regardless of beta)",
+      "files": [
+        "tests/unit/core/installPromptGate.spec.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Confirmed both render sites gate via shared helper (no change); corrected README, package.json description, and CHANGELOG for decoupled gating",
+      "files": [
+        "README.md",
+        "package.json",
+        "CHANGELOG.md"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "npm run compile && npm test both green (1064 tests pass)"
+    }
+  }
+}

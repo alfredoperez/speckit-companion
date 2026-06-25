@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { isCompanionInstalled } from '../features/settings/companionPresetReconciler';
-import { coerceLegacyBoolean, isCompanionWorkflowEnabled } from '../core/settingsMigration';
+import { coerceLegacyBoolean } from '../core/settingsMigration';
 
 /**
  * One-click install / update of the Companion **spec-kit CLI extension**.
@@ -77,17 +77,15 @@ export function shouldShowInstallPrompt(
 }
 
 /**
- * Resolve whether the install prompt is enabled. The prompt offers to install the
- * companion spec-kit extension, which only matters once the SpecKit Companion
- * Workflow is on — so it is gated on that workflow being enabled AND the prompt's
- * own setting. With the workflow off, no install prompt regardless of the prompt
- * setting. Both reads tolerate a legacy tri-state string until migration rewrites it.
+ * Resolve whether the install prompt is enabled — gated only on its own
+ * `speckit.companion.installPrompt` preference (default `true`), independent of the
+ * Companion workflow beta. The extension is what powers the workflow, so the prompt to
+ * install it must reach users who have not opted into beta — that audience needs the
+ * discovery nudge most. The read tolerates a legacy tri-state string until migration
+ * rewrites it. Whether the banner actually shows is `shouldShowInstallPrompt(readInstallPromptEnabled(), installed)`.
  */
 export function readInstallPromptEnabled(): boolean {
     const config = vscode.workspace.getConfiguration('speckit');
-    if (!isCompanionWorkflowEnabled(config)) {
-        return false;
-    }
     return coerceLegacyBoolean(config.get<unknown>('companion.installPrompt', true), true);
 }
 
