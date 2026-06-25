@@ -76,7 +76,7 @@ Companion rides your **existing** spec-kit commands via lifecycle hooks — you 
 
 ## Commands
 
-Four capture commands run automatically as lifecycle hooks; two are yours to run.
+Four capture commands run automatically as lifecycle hooks; the rest are yours to run.
 
 | Command | Runs | What it does |
 |---------|------|--------------|
@@ -90,6 +90,7 @@ Four capture commands run automatically as lifecycle hooks; two are yours to run
 | `speckit.companion.classify` | workflow routing step | Emit a `small \| normal \| oversized` size signal so the Companion workflow can right-size the pipeline (thresholds live here, not in a setting) |
 | `speckit.companion.mark-complete` | workflow terminal step | Write `status: completed` to `.spec-context.json` — the Companion workflow's final step (the command writes it; the AI never hand-writes `completed`) |
 | `/speckit.companion.auto` | you | Run the whole pipeline hands-off — specify → plan → tasks → implement → completed, no approval pauses. The Run button in Create Spec triggers the same flow |
+| `/speckit.companion.adopt` | you | Brownfield adoption wizard — draft a living spec for one code area surface-first (`[DRAFT]`, observed/inferred tags, `## Uncovered`) and register the capability (opt-in, incremental) |
 
 Full reference: [docs/commands.md](./docs/commands.md).
 
@@ -221,6 +222,14 @@ Write the deltas as top-level sections in the feature's `spec.md`, using the req
 The same four section types are recognized — `## ADDED Requirements`, `## MODIFIED Requirements`, `## REMOVED Requirements`, and `## RENAMED Requirements` (a rename reads `### Old name -> New name`). At completion, Companion resolves which capability the change touched and applies the deltas to its `capabilities/<name>/spec.md`: adds append, modifies replace, removes delete, renames rewrite the heading. When several capabilities are in scope it writes only the **most-specific** one, unless a delta section carries a `<!-- capability: <name> -->` marker naming a different or additional target.
 
 This stays **opt-in and safe**: with living specs off there is no fold. A feature spec with no delta section is a clean no-op (the common additive case leaves the living spec byte-for-byte unchanged), and re-running completion folds nothing already there — it's idempotent. The synced capability names are recorded on the spec's context under `livingSpecs.synced` (additive metadata, never a lifecycle field). The whole step is best-effort and never fails completion.
+
+### Adopting an existing code area into a living spec
+
+Starting living specs on a codebase you didn't grow this way is the slow part — you'd normally hand-write one spec per area. The **adoption wizard** does the first draft for you, one area at a time. You point `/speckit.companion.adopt` at a single code area (say the billing module); it reads that area's surface, proposes a small set of capabilities for *just that area*, and drafts a living spec for each from what the code already exposes.
+
+Because the read is surface-first — exported functions, routes, props, signatures, not a deep behavioral study — every draft wears its limits openly. The whole spec is marked `[DRAFT]`, each requirement is tagged `observed` (drawn straight from the code surface) or `inferred` (an educated guess), genuinely uncertain items carry an inline `[NEEDS CLARIFICATION: …]`, and any file the assistant couldn't read is listed under a `## Uncovered` heading so nobody mistakes a quick draft for a verified spec. You review and confirm, and the wizard registers the capability into your `livingSpecs` block so the resolver immediately recognizes it.
+
+Adoption is **opt-in and incremental**: you run it deliberately for the area you care about, it appends one capability at a time (never a whole-repo bootstrap), re-running it for an area that's already registered is a safe no-op, and it changes no other command's behavior. Registration goes through a small helper that reuses the same config reader the resolver does, so it never corrupts a `companion.yml` it can't fully parse.
 
 ## Installation
 

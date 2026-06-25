@@ -540,4 +540,109 @@ export function capabilitiesTree(root) {
   return out.sort()
 }
 
+// --- LS·5: brownfield adoption wizard ---------------------------------------
+//
+// The wizard's drafting is a live AI step (read code surface → write prose), out
+// of this harness's scope — that part is marked INCONCLUSIVE, never faked. What
+// runs REAL here is the deterministic half: the registry-append helper lands a
+// `billing` capability in companion.yml and the shipped resolver then recognizes
+// `src/billing/x.ts`; and the STRUCTURE of a drafted spec is asserted against a
+// SEEDED draft (authored as the test input, clearly not model output).
+
+export const REGISTER = join(REPO_ROOT, 'speckit-extension', 'scripts', 'register-capability.py')
+
+// Arrange — bake a brownfield repo with a real `src/billing/` area and NO living
+// specs config yet (the adoption starting point). enabled defaults to off; the
+// register helper creates the block on first append.
+export function bakeLs5Repo(name = 'ls-5') {
+  const root = join(SANDBOX_ROOT, name)
+  rmSync(root, { recursive: true, force: true })
+  mkdirSync(root, { recursive: true })
+
+  // A small but real billing surface — exports the wizard would read.
+  write(root, join('src', 'billing', 'index.ts'),
+    'export { createInvoice } from "./invoice"\nexport { applyDiscount } from "./discount"\n')
+  write(root, join('src', 'billing', 'invoice.ts'),
+    'export function createInvoice(amount: number) { return { amount, paid: false } }\n')
+  write(root, join('src', 'billing', 'discount.ts'),
+    'export function applyDiscount(total: number, pct: number) { return total * (1 - pct) }\n')
+
+  gitInitCell(root)
+  gitCommitCellBaseline(root)
+  return root
+}
+
+// Act — run the real register-capability.py against the sandbox via --root,
+// capturing real stdout + exit (never paraphrased). Mirrors runResolver's shape.
+export function runRegister(root, args) {
+  let stdout = ''
+  let exit = 0
+  try {
+    stdout = execFileSync('python3', [REGISTER, '--root', root, ...args], { encoding: 'utf8' })
+  } catch (e) {
+    stdout = (e.stdout || '') + (e.stderr || '')
+    exit = typeof e.status === 'number' ? e.status : 1
+  }
+  return {
+    cwd: rel(root),
+    cmd: `python3 ${rel(REGISTER)} --root ${rel(root)} ${args.join(' ')}`,
+    exit,
+    stdout: stdout.trim(),
+    stdoutTail: stdout.trim().split('\n').slice(-20).join('\n'),
+  }
+}
+
+// Read the registry block from the sandbox's companion.yml (raw text), so the
+// evidence can show the appended capability verbatim.
+export function readConfig(root) {
+  const p = join(root, '.specify', 'companion.yml')
+  return existsSync(p) ? readFileSync(p, 'utf8') : ''
+}
+
+// Seed a drafted living spec — the STRUCTURE under test. This is a fixture the
+// demo authors as the input to the structure check; it stands in for what the
+// live wizard would write, and is labeled `mode: seeded` so it is never passed
+// off as model output. It carries every required element so a PASS proves the
+// check recognizes a well-formed draft (a real wizard draft must match it).
+export function seedDraftedSpec(root, name = 'billing') {
+  const body = [
+    `# ${name[0].toUpperCase() + name.slice(1)} — Living Spec`,
+    '',
+    '> [DRAFT] Surface-first draft from existing code — review before trusting.',
+    '',
+    '## Requirements',
+    '',
+    '- **FR-001** Users can create an invoice for a given amount. [observed]',
+    '- **FR-002** Users can apply a percentage discount to a total. [observed]',
+    '- **FR-003** An invoice starts unpaid until settled. [inferred] [NEEDS CLARIFICATION: no settle path is exported — is payment handled elsewhere?]',
+    '',
+    '## Uncovered',
+    '',
+    '- src/billing/legacy.bin (binary — not read)',
+    '',
+  ].join('\n')
+  write(root, join('capabilities', name, 'spec.md'), body)
+  return body
+}
+
+// Deterministic structure check over a drafted spec's text. Returns the same
+// {checks:[{id,status,detail}], failed} shape check_living_spec.py uses, so the
+// evidence reads uniformly. Asserts the four required draft elements.
+export function checkDraftStructure(text) {
+  const checks = []
+  const add = (id, ok, detail) => checks.push({ id, status: ok ? 'PASS' : 'FAIL', detail })
+  const firstLine = (text.split('\n')[0] || '').trim()
+  add('title-wellformed', /^#\s+\S/.test(firstLine) && /## Requirements/.test(text),
+    `title "${firstLine}" + ## Requirements present`)
+  add('draft-banner', /\[DRAFT\]/.test(text), 'whole spec marked [DRAFT]')
+  const hasObserved = /\[observed\]/.test(text)
+  const hasInferred = /\[inferred\]/.test(text)
+  add('observed-and-inferred-tags', hasObserved && hasInferred,
+    `observed=${hasObserved}, inferred=${hasInferred}`)
+  add('needs-clarification', /\[NEEDS CLARIFICATION:[^\]]*\]/.test(text),
+    'low-confidence requirement flagged inline')
+  add('uncovered-section', /##\s+Uncovered/.test(text), '## Uncovered section present')
+  return { checks, failed: checks.filter((c) => c.status === 'FAIL').length }
+}
+
 export { readText }
