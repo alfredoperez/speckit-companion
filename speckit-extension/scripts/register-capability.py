@@ -74,6 +74,38 @@ def _render_living_specs(enabled: bool, capabilities: list[dict]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _is_top_level_key(line: str) -> bool:
+    """True for a column-0 mapping key (`livingSpecs:`, `commands:`) — the start
+    of a sibling top-level block. Comments and blanks are not block boundaries."""
+    return bool(line) and not line[0].isspace() and not line.lstrip().startswith("#")
+
+
+def _splice_living_specs(original: str, rendered_block: str) -> str:
+    """Replace the existing `livingSpecs:` block in `original` with `rendered_block`,
+    leaving every sibling top-level block and comment untouched.
+
+    The block runs from its `livingSpecs:` line through the line before the next
+    top-level key (its own indented body plus any trailing blanks/comments). If no
+    `livingSpecs:` block exists, the rendered block is appended at the end."""
+    lines = original.splitlines(keepends=True)
+    start = None
+    for i, ln in enumerate(lines):
+        if _is_top_level_key(ln) and ln.split(":", 1)[0].strip() == "livingSpecs":
+            start = i
+            break
+    if start is None:
+        if not original.strip():
+            return rendered_block
+        prefix = original if original.endswith("\n") else original + "\n"
+        return prefix + "\n" + rendered_block
+    end = len(lines)
+    for j in range(start + 1, len(lines)):
+        if _is_top_level_key(lines[j]):
+            end = j
+            break
+    return "".join(lines[:start]) + rendered_block + "".join(lines[end:])
+
+
 def _default_spec(name: str) -> str:
     return f"{cc.DEFAULT_CAPABILITY_ROOT}/{name}/spec.md"
 
@@ -108,6 +140,7 @@ def register(root: str, name: str, match: list[str], exclude: list[str],
         raise ValueError(warnings[0])
 
     living = cc.load_living_specs(cfg)
+    had_block = isinstance(cfg.get("livingSpecs"), dict)
     capabilities = _normalize_existing(living)
     spec_path = spec or _default_spec(name)
 
@@ -127,7 +160,15 @@ def register(root: str, name: str, match: list[str], exclude: list[str],
         new_cap["spec"] = spec_path
     capabilities.append(new_cap)
 
-    rendered = _render_living_specs(living.get("enabled", True) or not existed, capabilities)
+    # Preserve an existing block's enabled flag; a fresh block (new file, or a
+    # config with no livingSpecs yet) is born enabled so the registered capability
+    # actually resolves — that is the whole point of the adoption wizard.
+    enabled = living["enabled"] if had_block else True
+    rendered = _render_living_specs(enabled, capabilities)
+    if existed:
+        with open(config_path, encoding="utf-8") as fh:
+            original = fh.read()
+        rendered = _splice_living_specs(original, rendered)
     os.makedirs(os.path.dirname(config_path), exist_ok=True)
     with open(config_path, "w", encoding="utf-8") as fh:
         fh.write(rendered)

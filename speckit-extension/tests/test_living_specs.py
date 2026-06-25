@@ -727,6 +727,51 @@ class RegisterCapabilityTests(unittest.TestCase):
     def test_cli_requires_match(self) -> None:
         self.assertEqual(regcap.main(["--name", "x", "--root", tempfile.mkdtemp()]), 2)
 
+    def test_sibling_config_blocks_are_preserved(self) -> None:
+        # A companion.yml carrying other top-level blocks (recipes, hooks) keeps
+        # every one of them when a capability is appended — the writer splices the
+        # livingSpecs block in place instead of re-emitting the whole file.
+        yaml = (
+            "# project recipes\n"
+            "commands:\n  speckit.plan:\n    nodes: [\"a\", \"b\"]\n"
+            "livingSpecs:\n  enabled: true\n  capabilities:\n"
+            "    - name: checkout\n      match: [\"src/checkout/**\"]\n"
+            "hooks:\n  after_specify:\n    - run: foo\n"
+        )
+        root = make_repo(yaml)
+        regcap.register(str(root), "billing", ["src/billing/**"], [], None)
+        out = self._config(root)
+        self.assertIn("commands:", out)
+        self.assertIn("nodes:", out)
+        self.assertIn("hooks:", out)
+        self.assertIn("after_specify:", out)
+        # And the appended capability still resolves through the real reader.
+        names = [c["name"] for c in rsp.load_living(str(root))["capabilities"]]
+        self.assertEqual(names, ["checkout", "billing"])
+        cfg, warnings = cc.load_config(str(root / ".specify" / "companion.yml"))
+        self.assertEqual(warnings, [])
+
+    def test_appends_livingspecs_block_to_config_without_one(self) -> None:
+        # A companion.yml that has recipes but no livingSpecs block: the block is
+        # appended (other config kept) and born ENABLED so the capability resolves.
+        yaml = "commands:\n  speckit.plan:\n    nodes: [\"a\"]\n"
+        root = make_repo(yaml)
+        regcap.register(str(root), "billing", ["src/billing/**"], [], None)
+        self.assertIn("commands:", self._config(root))
+        living = rsp.load_living(str(root))
+        self.assertTrue(living["enabled"])
+        self.assertEqual([c["name"] for c in living["capabilities"]], ["billing"])
+        matched = rsp.match_changed(["src/billing/charge.ts"], living, str(root))
+        self.assertEqual([m["name"] for m in matched], ["billing"])
+
+    def test_existing_disabled_block_stays_disabled_on_append(self) -> None:
+        # An opt-out (enabled:false) livingSpecs block is not silently re-enabled
+        # by an append — the user's flag is preserved.
+        yaml = CHECKOUT_YAML.replace("enabled: true", "enabled: false")
+        root = make_repo(yaml)
+        regcap.register(str(root), "billing", ["src/billing/**"], [], None)
+        self.assertFalse(rsp.load_living(str(root))["enabled"])
+
 
 if __name__ == "__main__":
     unittest.main()
