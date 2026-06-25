@@ -29,7 +29,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import fnmatch
 import json
 import os
 import re
@@ -50,7 +49,7 @@ def load_living(root: str) -> dict:
 
 
 def _posix(p: str) -> str:
-    return p.replace(os.sep, "/")
+    return p.replace("\\", "/").replace(os.sep, "/")
 
 
 def _literal_prefix(glob_pat: str) -> str:
@@ -67,11 +66,11 @@ def _literal_prefix(glob_pat: str) -> str:
 
 
 def _glob_to_regex(pat: str) -> str:
-    """Translate a glob with cross-directory `**` into a regex.
+    """Translate a glob into a regex with POSIX-path semantics.
 
-    `**` matches any depth (incl. zero), `*` matches within one segment, `?` one
-    char. A trailing `/**` also matches the directory itself (`src/checkout/**`
-    matches `src/checkout`).
+    `**` matches any depth (incl. zero), `*` matches within one segment (never
+    crosses `/`), `?` one non-slash char. A trailing `/**` also matches the
+    directory itself (`src/checkout/**` matches `src/checkout`).
     """
     out = ["^"]
     i, n = 0, len(pat)
@@ -79,7 +78,14 @@ def _glob_to_regex(pat: str) -> str:
         c = pat[i]
         if c == "*":
             if i + 1 < n and pat[i + 1] == "*":
-                # `**` — consume an optional following slash; match any depth.
+                if i + 2 == n and out and out[-1].endswith("/"):
+                    # trailing `/**` — also match the bare directory: drop the
+                    # `/` we already emitted and make the whole tail optional.
+                    out[-1] = out[-1][:-1]
+                    out.append("(?:/.*)?")
+                    i += 2
+                    continue
+                # `**/` — consume the following slash; match any depth (incl. zero).
                 if i + 2 < n and pat[i + 2] == "/":
                     out.append("(?:.*/)?")
                     i += 3
@@ -99,15 +105,13 @@ def _glob_to_regex(pat: str) -> str:
 
 
 def _glob_matches(pat: str, f: str) -> bool:
-    """Glob match supporting cross-directory `**`.
+    """Glob match with POSIX-path semantics (`*` never crosses `/`).
 
     `src/checkout/**` matches `src/checkout/cart/x.ts` AND `src/checkout` itself;
-    `src/checkout/**/*.test.ts` matches only files ending `.test.ts` at any depth.
-    Falls back to plain fnmatch when the pattern has no `**`.
+    `src/checkout/**/*.test.ts` matches only files ending `.test.ts` at any depth;
+    `src/*.ts` matches only direct children, never nested files.
     """
     pat, f = _posix(pat), _posix(f)
-    if "**" not in pat:
-        return fnmatch.fnmatch(f, pat)
     return re.match(_glob_to_regex(pat), f) is not None
 
 

@@ -97,6 +97,19 @@ class MembershipTests(unittest.TestCase):
         self.assertTrue(rsp.matches(cap, "src/checkout/cart.ts"))
         self.assertFalse(rsp.matches(cap, "src/checkout/cart.test.ts"))
 
+    def test_single_star_does_not_cross_directories(self) -> None:
+        cap = {"name": "top", "match": ["src/*.ts"]}
+        self.assertTrue(rsp.matches(cap, "src/index.ts"))
+        self.assertFalse(rsp.matches(cap, "src/checkout/nested.ts"))
+
+    def test_trailing_double_star_matches_bare_directory(self) -> None:
+        self.assertTrue(rsp._glob_matches("src/checkout/**", "src/checkout"))
+        self.assertTrue(rsp._glob_matches("src/checkout/**", "src/checkout/cart/x.ts"))
+
+    def test_backslash_changed_path_is_normalized(self) -> None:
+        cap = {"name": "checkout", "match": ["src/checkout/**"]}
+        self.assertTrue(rsp.matches(cap, "src\\checkout\\cart\\x.ts"))
+
 
 class ChangedOrderingTests(unittest.TestCase):
     def test_most_specific_first(self) -> None:
@@ -172,8 +185,10 @@ class OptInTests(unittest.TestCase):
         root = make_repo(self.DISABLED)
         living = rsp.load_living(str(root))
         self.assertFalse(living["enabled"])
-        self.assertEqual(rsp.match_changed(["src/checkout/cart/x.ts"], living, str(root))
-                         if living["enabled"] else [], [])
+        # The opt-in gate lives in main(): a disabled config emits an empty match
+        # list without ever consulting the capabilities.
+        rc = rsp.main(["--root", str(root), "--changed", "src/checkout/cart/x.ts", "--json"])
+        self.assertEqual(rc, 0)
 
     def test_disabled_main_returns_empty_exit_zero(self) -> None:
         root = make_repo(self.DISABLED)
