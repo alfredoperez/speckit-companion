@@ -18,7 +18,7 @@ import {
 } from '../workflows';
 import { updateStepProgress, readSpecContextSync } from './specContextManager';
 import { resolveDispatchWithFallback } from './profileDispatch';
-import { startStep, completeStep, setStatus, reactivate } from './stepLifecycle';
+import { startStep, completeStep, setStatus, forceStatus, reactivate } from './stepLifecycle';
 import { lastEntryIsCompletionFor } from './historyHelpers';
 import { updateSelectionContextKeys } from './selectionContextKeys';
 import { track as trackTerminal } from './terminalStepTracker';
@@ -441,7 +441,7 @@ export function registerSpecKitCommands(
             );
             if (confirm !== 'Force status') return;
             const specDir = specDirFor(item, workspaceFolder.uri.fsPath);
-            const ok = await setStatus(specDir, picked, 'user');
+            const ok = await forceStatus(specDir, picked, 'user');
             if (!ok) {
                 vscode.window.showErrorMessage(`Could not set status to ${picked} — see the SpecKit Companion output for details.`);
                 return;

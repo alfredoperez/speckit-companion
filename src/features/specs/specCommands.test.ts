@@ -41,6 +41,7 @@ jest.mock('../workflows', () => ({
 jest.mock('./stepLifecycle', () => ({
     startStep: jest.fn(),
     setStatus: jest.fn().mockResolvedValue(true),
+    forceStatus: jest.fn().mockResolvedValue(true),
     reactivate: jest.fn().mockResolvedValue(undefined),
 }));
 
@@ -52,7 +53,7 @@ jest.mock('./specContextManager', () => ({
     readSpecContextSync: jest.fn(),
 }));
 
-import { setStatus, reactivate } from './stepLifecycle';
+import { setStatus, forceStatus, reactivate } from './stepLifecycle';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import { readSpecContextSync } from './specContextManager';
 
@@ -337,7 +338,7 @@ describe('speckit.specs.setStatus command handler', () => {
         expect(handlers.has('speckit.specs.setStatus')).toBe(true);
     });
 
-    it('on pick + confirm: writes the chosen status through setStatus authored by:user, then refreshes', async () => {
+    it('on pick + confirm: writes the chosen status through forceStatus authored by:user, then refreshes', async () => {
         const context = createMockContext();
         const handlers = captureCommandHandlers(context);
         const handler = handlers.get('speckit.specs.setStatus')!;
@@ -347,8 +348,8 @@ describe('speckit.specs.setStatus command handler', () => {
 
         await handler(makeItem('stuck'));
 
-        expect(setStatus).toHaveBeenCalledTimes(1);
-        expect(setStatus).toHaveBeenCalledWith(
+        expect(forceStatus).toHaveBeenCalledTimes(1);
+        expect(forceStatus).toHaveBeenCalledWith(
             expect.stringContaining('specs/stuck'),
             'planned',
             'user'
@@ -359,14 +360,14 @@ describe('speckit.specs.setStatus command handler', () => {
         );
     });
 
-    it('when setStatus fails: shows an error, does not refresh or toast success', async () => {
+    it('when forceStatus fails: shows an error, does not refresh or toast success', async () => {
         const context = createMockContext();
         const handlers = captureCommandHandlers(context);
         const handler = handlers.get('speckit.specs.setStatus')!;
 
         (mockWindow.showQuickPick as jest.Mock).mockResolvedValueOnce('planned');
         (mockWindow.showWarningMessage as jest.Mock).mockResolvedValueOnce('Force status');
-        (setStatus as jest.Mock).mockResolvedValueOnce(false);
+        (forceStatus as jest.Mock).mockResolvedValueOnce(false);
 
         await handler(makeItem('stuck'));
 
@@ -404,7 +405,7 @@ describe('speckit.specs.setStatus command handler', () => {
         await handler(makeItem('stuck'));
 
         expect(mockWindow.showWarningMessage).not.toHaveBeenCalled();
-        expect(setStatus).not.toHaveBeenCalled();
+        expect(forceStatus).not.toHaveBeenCalled();
         expect(lastMockExplorer.refresh).not.toHaveBeenCalled();
     });
 
