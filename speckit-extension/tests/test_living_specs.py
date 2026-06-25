@@ -717,6 +717,20 @@ class RegisterCapabilityTests(unittest.TestCase):
             regcap.register(str(root), "billing", ['src/"weird"/**'], [], None)
         self.assertEqual(self._config(root), before)  # file untouched
 
+    def test_inter_block_comment_and_sibling_block_survive_splice(self) -> None:
+        yaml = (
+            "livingSpecs:\n  enabled: true\n  capabilities:\n"
+            "    - name: checkout\n      match: [\"src/checkout/**\"]\n"
+            "\n# downstream hooks (keep me)\nhooks:\n  after_specify: noop\n"
+        )
+        root = make_repo(yaml)
+        regcap.register(str(root), "billing", ["src/billing/**"], [], None)
+        after = self._config(root)
+        self.assertIn("# downstream hooks (keep me)", after)
+        self.assertIn("hooks:", after)
+        self.assertIn("after_specify: noop", after)
+        self.assertIn("billing", after)
+
     def test_appended_capability_is_resolved(self) -> None:
         root = make_repo(CHECKOUT_YAML)
         regcap.register(str(root), "billing", ["src/billing/**"], [], None)

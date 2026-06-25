@@ -84,9 +84,10 @@ def _splice_living_specs(original: str, rendered_block: str) -> str:
     """Replace the existing `livingSpecs:` block in `original` with `rendered_block`,
     leaving every sibling top-level block and comment untouched.
 
-    The block runs from its `livingSpecs:` line through the line before the next
-    top-level key (its own indented body plus any trailing blanks/comments). If no
-    `livingSpecs:` block exists, the rendered block is appended at the end."""
+    The block runs from its `livingSpecs:` line through its own indented body.
+    Trailing column-0 comments / blank lines before the next top-level key are
+    inter-block spacing and are PRESERVED (not swallowed into the replacement).
+    If no `livingSpecs:` block exists, the rendered block is appended at the end."""
     lines = original.splitlines(keepends=True)
     start = None
     for i, ln in enumerate(lines):
@@ -102,6 +103,20 @@ def _splice_living_specs(original: str, rendered_block: str) -> str:
     for j in range(start + 1, len(lines)):
         if _is_top_level_key(lines[j]):
             end = j
+            break
+    # Don't swallow column-0 comments / blank lines sitting between this block
+    # and the next — they're inter-block spacing, not livingSpecs body. Shrink
+    # the replaced region back to the last indented body line so they survive.
+    while end > start + 1:
+        prev = lines[end - 1]
+        is_blank = prev.strip() == ""
+        is_col0_comment = (
+            prev.lstrip().startswith("#")
+            and not (prev.startswith(" ") or prev.startswith("\t"))
+        )
+        if is_blank or is_col0_comment:
+            end -= 1
+        else:
             break
     return "".join(lines[:start]) + rendered_block + "".join(lines[end:])
 
