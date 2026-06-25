@@ -571,7 +571,7 @@ def _initial_living_spec(capability_name: str) -> str:
     return f"# {title} — Living Spec\n\n## Requirements\n"
 
 
-def _git_changed_files(root: Path, branch: str) -> list[str]:
+def _git_changed_files(root: Path) -> list[str]:
     """Files this feature branch changed vs its merge-base with the default branch.
 
     Best-effort: returns [] if git can't answer (detached/odd checkout, no
@@ -624,8 +624,7 @@ def _resolve_fold_targets(rsp, living: dict, root: Path, deltas: dict) -> list[d
     markered capabilities (never fans out to every durable spec) — the conservative
     choice for a write path; the no-changed-files fallback is logged so the
     markers-only narrowing is observable rather than a silent no-op."""
-    branch = _git_branch(root) or "main"
-    changed = _git_changed_files(root, branch)
+    changed = _git_changed_files(root)
     if not changed:
         print(
             "[companion] Living-spec fold: could not determine changed files; "
@@ -1535,7 +1534,7 @@ def main() -> int:
         return 0
 
     if target is None and args.fold_living_spec:
-        print("[companion] Living-spec fold: nothing to fold (no delta block, feature off, or no capability resolved).", file=sys.stderr)
+        print("[companion] Living-spec fold: nothing to fold (no delta block, feature off, no capability resolved, or the living spec is already up to date).", file=sys.stderr)
 
     if target is not None and not args.tasks_file:
         if args.set_pairs:
