@@ -260,7 +260,7 @@ Drift is **read-only and never halts** — it always exits success, so a surroun
 
 ### Coverage and architecture tiers
 
-A living spec is more than its requirements. Next to a capability's requirements file (`<spec>.spec.md`) you can keep two colder siblings — an **architecture** file (`<spec>.arch.md`, structure and the decisions behind the area's shape) and a **coverage** file (`<spec>.coverage.md`, a requirement-to-tests map). Both are recognized but otherwise reserved until you use them; nothing forces you to write either.
+A living spec is more than its requirements. Next to a capability's requirements file (centralized `capabilities/<name>/spec.md`, or a colocated `<base>.spec.md`) you can keep two colder siblings sharing that base name — an **architecture** file (`spec.arch.md` / `<base>.arch.md`, structure and the decisions behind the area's shape) and a **coverage** file (`spec.coverage.md` / `<base>.coverage.md`, a requirement-to-tests map). Both are recognized but otherwise reserved until you use them; nothing forces you to write either.
 
 **Architecture loads lazily, only when the change warrants it.** When you plan a change, Companion already reads the requirements of the capabilities it touches. For an architecture-significant change — a `normal` or `oversized` plan, not a small fast-path one — it *also* pulls those capabilities' `.arch.md` files into context, so the plan is briefed on how the area is built. A small change never drags in the cold architecture tier. The resolver derives the tier paths, so you never hardcode a filename, and a capability with no `.arch.md` is simply skipped.
 

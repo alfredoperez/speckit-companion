@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Report requirement→test coverage for a Companion living spec (LS·8).
 
-A capability's hot spec (`<base>.spec.md`) lists requirements; its reserved
-coverage tier (`<base>.coverage.md`) maps each requirement to the test(s) that
-exercise it. This checker reads both, reuses the LS·1 resolver for the tier
+A capability's hot spec (centralized `capabilities/<name>/spec.md`, or a
+colocated `<base>.spec.md`) lists requirements; its reserved coverage-tier
+sibling (the `*.coverage.md` next to that spec) maps each requirement to the
+test(s) that exercise it. This checker reads both, reuses the LS·1 resolver for the tier
 paths, and reports — per requirement — whether it is covered (has a coverage
 entry) or uncovered. It is the conformance ON-RAMP, not a gate:
 
