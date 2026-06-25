@@ -12,7 +12,7 @@ reads: [resolve-dir]
      python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --changed <in-scope files…> --json
      ```
      The resolver is inert when the feature is off, so a non-empty `matched` list already means living specs apply. Read each match's `spec` path.
-   - **Read the living specs, leaf first.** For each matched capability, read its `capabilities/<name>/spec.md` into your working context **in the resolver's order — most-specific first**: the leaf capability is the **primary** frame for this change, a parent capability is the surrounding **context**. Skip any whose spec file does not exist on disk; load the rest. These living specs are background you must honor while drafting — they describe how the area already behaves.
+   - **Read the living specs, leaf first.** For each matched capability, read the `spec` path the resolver returned for it (centralized capabilities resolve to `capabilities/<name>/spec.md`; colocated ones carry their own path) into your working context **in the resolver's order — most-specific first**: the leaf capability is the **primary** frame for this change, a parent capability is the surrounding **context**. Skip any the resolver marked `"exists": false` (or that is missing on disk); load the rest. These living specs are background you must honor while drafting — they describe how the area already behaves.
    - **Record what you loaded** so the later `plan` step reuses it instead of re-resolving (run once, listing every capability you actually read, leaf-first):
      ```bash
      python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --living-specs <leaf> --living-specs <parent> …
