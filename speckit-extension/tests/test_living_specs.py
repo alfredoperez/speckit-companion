@@ -32,6 +32,11 @@ _reg_spec = importlib.util.spec_from_file_location(
 regcap = importlib.util.module_from_spec(_reg_spec)
 _reg_spec.loader.exec_module(regcap)
 
+# drift.py (LS·6) — imported by file path (no hyphen, but kept consistent).
+_drift_spec = importlib.util.spec_from_file_location("drift", SCRIPTS / "drift.py")
+drift = importlib.util.module_from_spec(_drift_spec)
+_drift_spec.loader.exec_module(drift)
+
 
 def make_repo(yaml_text: str, files=(), spec_files=()) -> Path:
     """Bake a throwaway repo with a companion.yml and optional planted files."""
@@ -89,6 +94,18 @@ class ConfigReaderTests(unittest.TestCase):
         )
         living = cc.load_living_specs(cc.load_yaml(yaml))
         self.assertEqual(living["capabilities"][0]["match"], ["src/auth/login.ts"])
+
+    def test_exempt_defaults_when_absent(self) -> None:
+        living = cc.load_living_specs(cc.load_yaml(CHECKOUT_YAML))
+        self.assertEqual(living["exempt"], cc.DEFAULT_EXEMPT_GLOBS)
+
+    def test_exempt_override_is_read(self) -> None:
+        yaml = (
+            "livingSpecs:\n  enabled: true\n  exempt: [\"**/*.gen.ts\"]\n"
+            "  capabilities:\n    - name: auth\n      match: [\"src/auth/**\"]\n"
+        )
+        living = cc.load_living_specs(cc.load_yaml(yaml))
+        self.assertEqual(living["exempt"], ["**/*.gen.ts"])
 
 
 class MembershipTests(unittest.TestCase):
@@ -802,6 +819,237 @@ class RegisterCapabilityTests(unittest.TestCase):
         root = make_repo(yaml)
         regcap.register(str(root), "billing", ["src/billing/**"], [], None)
         self.assertFalse(rsp.load_living(str(root))["enabled"])
+
+
+import subprocess  # noqa: E402
+
+
+def _git(root: Path, *args: str) -> None:
+    subprocess.run(
+        ["git", "-C", str(root), "-c", "user.email=t@t", "-c", "user.name=t", *args],
+        check=True, capture_output=True, text=True,
+    )
+
+
+def _commit_all(root: Path, msg: str) -> None:
+    _git(root, "add", "-A")
+    _git(root, "commit", "-q", "-m", msg)
+
+
+def _bake_drift_repo(yaml_text: str) -> Path:
+    root = Path(tempfile.mkdtemp())
+    (root / ".specify").mkdir(parents=True)
+    (root / ".specify" / "companion.yml").write_text(yaml_text, encoding="utf-8")
+    _git(root, "init", "-q", "-b", "main", ".")
+    return root
+
+
+def _write(root: Path, rel: str, body: str) -> None:
+    p = root / rel
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(body, encoding="utf-8")
+
+
+class DriftTests(unittest.TestCase):
+    """Drift detection runs the REAL drift.py against a real git sandbox."""
+
+    YAML = (
+        "livingSpecs:\n  enabled: true\n  capabilities:\n"
+        "    - name: todos\n      match: [\"src/todos/**\"]\n"
+        "    - name: about\n      match: [\"src/about/**\"]\n"
+    )
+
+    def _run(self, root: Path) -> dict:
+        living = drift.rsp.load_living(str(root))
+        return drift.compute_drift(str(root), living)
+
+    def test_disabled_renders_nothing(self) -> None:
+        # Opt-in: a disabled feature produces NO human output (not even a banner).
+        disabled = self.YAML.replace("enabled: true", "enabled: false")
+        root = _bake_drift_repo(disabled)
+        result = self._run(root)
+        self.assertFalse(result["enabled"])
+        self.assertEqual(drift.render_human(result), "")
+
+    def test_unspeced_change_after_committed_spec(self) -> None:
+        root = _bake_drift_repo(self.YAML)
+        _write(root, "capabilities/todos/spec.md", "# Todos\n")
+        _write(root, "capabilities/about/spec.md", "# About\n")
+        _write(root, "src/todos/list.ts", "// todos\n")
+        _write(root, "src/about/page.ts", "// about\n")
+        _commit_all(root, "baseline")
+        _write(root, "src/todos/list.ts", "// todos\n// changed outside\n")
+        _commit_all(root, "change todos")
+
+        result = self._run(root)
+        todos = next(c for c in result["capabilities"] if c["name"] == "todos")
+        about = next(c for c in result["capabilities"] if c["name"] == "about")
+        self.assertEqual(
+            [(d["file"], d["severity"]) for d in todos["drifted"]],
+            [("src/todos/list.ts", "unspeced")],
+        )
+        self.assertTrue(about["inSync"])  # about unchanged since its spec
+
+    def test_tracked_change_from_spec_context(self) -> None:
+        root = _bake_drift_repo(self.YAML)
+        _write(root, "capabilities/todos/spec.md", "# Todos\n")
+        _write(root, "src/todos/list.ts", "// todos\n")
+        _commit_all(root, "baseline")
+        _write(root, "src/todos/list.ts", "// changed via pipeline\n")
+        _write(
+            root, "specs/001-x/.spec-context.json",
+            '{"files_modified": ["src/todos/list.ts"], "status": "implemented"}\n',
+        )
+        _commit_all(root, "pipeline change")
+
+        result = self._run(root)
+        todos = next(c for c in result["capabilities"] if c["name"] == "todos")
+        self.assertEqual(
+            [(d["file"], d["severity"]) for d in todos["drifted"]],
+            [("src/todos/list.ts", "tracked")],
+        )
+
+    def test_old_pre_spec_context_change_is_unspeced_not_tracked(self) -> None:
+        # A file recorded in a .spec-context.json committed BEFORE the capability
+        # spec, then changed off-pipeline AFTER the spec, must read `unspeced` —
+        # the old context predates the spec commit, so it can't make it `tracked`.
+        root = _bake_drift_repo(self.YAML)
+        _write(
+            root, "specs/000-old/.spec-context.json",
+            '{"files_modified": ["src/todos/list.ts"], "status": "implemented"}\n',
+        )
+        _write(root, "src/todos/list.ts", "// todos\n")
+        _commit_all(root, "old pipeline context")
+        _write(root, "capabilities/todos/spec.md", "# Todos\n")
+        _commit_all(root, "adopt todos")  # spec commit comes AFTER the context
+        _write(root, "src/todos/list.ts", "// todos\n// changed off-pipeline\n")
+        _commit_all(root, "off-pipeline edit")
+
+        result = self._run(root)
+        todos = next(c for c in result["capabilities"] if c["name"] == "todos")
+        self.assertEqual(
+            [(d["file"], d["severity"]) for d in todos["drifted"]],
+            [("src/todos/list.ts", "unspeced")],
+        )
+
+    def test_context_recorded_since_spec_commit_is_tracked(self) -> None:
+        # A .spec-context.json recorded in a commit AFTER the spec commit makes
+        # its files `tracked` — a recent pipeline sync not yet folded back.
+        root = _bake_drift_repo(self.YAML)
+        _write(root, "capabilities/todos/spec.md", "# Todos\n")
+        _write(root, "src/todos/list.ts", "// todos\n")
+        _commit_all(root, "adopt todos")
+        _write(root, "src/todos/list.ts", "// changed via pipeline\n")
+        _write(
+            root, "specs/002-recent/.spec-context.json",
+            '{"files_modified": ["src/todos/list.ts"], "status": "implemented"}\n',
+        )
+        _commit_all(root, "recent pipeline sync")  # context AFTER the spec commit
+
+        result = self._run(root)
+        todos = next(c for c in result["capabilities"] if c["name"] == "todos")
+        self.assertEqual(
+            [(d["file"], d["severity"]) for d in todos["drifted"]],
+            [("src/todos/list.ts", "tracked")],
+        )
+
+    def test_git_unavailable_skip_reason_differs_from_untracked_spec(self) -> None:
+        # When --root is not a git repo, the skip reason names git unavailability,
+        # NOT "spec.md not yet committed" (which means an uncommitted spec).
+        root = Path(tempfile.mkdtemp())
+        (root / ".specify").mkdir(parents=True)
+        (root / ".specify" / "companion.yml").write_text(self.YAML, encoding="utf-8")
+        _write(root, "capabilities/todos/spec.md", "# Todos\n")  # no git init
+
+        result = self._run(root)
+        todos_skip = next(s for s in result["skipped"] if s["name"] == "todos")
+        self.assertIn("git", todos_skip["reason"].lower())
+        self.assertNotEqual(todos_skip["reason"], "spec.md not yet committed")
+        self.assertEqual(result["capabilities"], [])
+
+    def test_exempt_file_is_filtered_out(self) -> None:
+        root = _bake_drift_repo(self.YAML)
+        _write(root, "capabilities/todos/spec.md", "# Todos\n")
+        _write(root, "src/todos/list.ts", "// todos\n")
+        _commit_all(root, "baseline")
+        _write(root, "src/todos/list.test.ts", "// test\n")  # exempt *.test.*
+        _commit_all(root, "add test")
+
+        result = self._run(root)
+        todos = next(c for c in result["capabilities"] if c["name"] == "todos")
+        self.assertTrue(todos["inSync"])
+        self.assertIn("All capabilities in sync", drift.render_human(result))
+
+    def test_uncommitted_spec_is_skipped_not_drift(self) -> None:
+        root = _bake_drift_repo(self.YAML)
+        _write(root, "src/todos/list.ts", "// todos\n")  # no spec committed
+        _commit_all(root, "code only")
+
+        result = self._run(root)
+        skipped_names = [s["name"] for s in result["skipped"]]
+        self.assertIn("todos", skipped_names)
+        self.assertEqual(result["capabilities"], [])
+
+    def test_in_sync_reports_single_all_clear(self) -> None:
+        yaml = (
+            "livingSpecs:\n  enabled: true\n  capabilities:\n"
+            "    - name: todos\n      match: [\"src/todos/**\"]\n"
+        )
+        root = _bake_drift_repo(yaml)
+        _write(root, "capabilities/todos/spec.md", "# Todos\n")
+        _write(root, "src/todos/list.ts", "// todos\n")
+        _commit_all(root, "baseline")
+
+        result = self._run(root)
+        self.assertEqual(drift.render_human(result), "✓ All capabilities in sync.")
+
+    def test_disabled_is_inert_and_exits_zero(self) -> None:
+        root = _bake_drift_repo(self.YAML.replace("enabled: true", "enabled: false"))
+        _write(root, "capabilities/todos/spec.md", "# Todos\n")
+        _write(root, "src/todos/list.ts", "// todos\n")
+        _commit_all(root, "baseline")
+        _write(root, "src/todos/list.ts", "// changed\n")
+        _commit_all(root, "change")
+
+        living = drift.rsp.load_living(str(root))
+        result = drift.compute_drift(str(root), living)
+        self.assertFalse(result["enabled"])
+        self.assertEqual(result["capabilities"], [])
+        self.assertEqual(drift.main(["--root", str(root)]), 0)
+
+    def test_colocated_spec_tier_siblings_are_not_drift(self) -> None:
+        # A colocated capability's `match` globs claim its own area, so an edit to
+        # its spec.md / reserved-tier sibling (.arch.md / .coverage.md) must NOT be
+        # reported as drifted CODE — the spec documents ARE the spec.
+        yaml = (
+            "livingSpecs:\n  enabled: true\n  capabilities:\n"
+            "    - name: billing\n      match: [\"src/billing/**\"]\n"
+            "      spec: src/billing/billing.spec.md\n"
+        )
+        root = _bake_drift_repo(yaml)
+        _write(root, "src/billing/billing.spec.md", "# billing\n")
+        _write(root, "src/billing/billing.arch.md", "# arch\n")
+        _write(root, "src/billing/charge.ts", "// code\n")
+        _commit_all(root, "baseline")
+        _write(root, "src/billing/billing.arch.md", "# arch\n# v2\n")
+        _write(root, "src/billing/charge.ts", "// code\n// edited\n")
+        _commit_all(root, "edits")
+
+        result = self._run(root)
+        billing = next(c for c in result["capabilities"] if c["name"] == "billing")
+        self.assertEqual(
+            [d["file"] for d in billing["drifted"]],
+            ["src/billing/charge.ts"],  # arch sibling + the spec itself excluded
+        )
+
+    def test_always_exits_zero_even_with_drift(self) -> None:
+        root = _bake_drift_repo(self.YAML)
+        _write(root, "capabilities/todos/spec.md", "# Todos\n")
+        _write(root, "src/todos/list.ts", "// todos\n")
+        _commit_all(root, "baseline")
+        _write(root, "src/todos/list.ts", "// drift\n")
+        _commit_all(root, "drift")
+        self.assertEqual(drift.main(["--root", str(root)]), 0)
 
 
 if __name__ == "__main__":

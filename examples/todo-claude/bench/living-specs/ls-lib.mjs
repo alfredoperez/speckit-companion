@@ -645,4 +645,103 @@ export function checkDraftStructure(text) {
   return { checks, failed: checks.filter((c) => c.status === 'FAIL').length }
 }
 
+// --------------------------------------------------------------------------- #
+// LS·6 — drift command. Deterministic: pure git + the shipped resolver, no AI.
+// We bake a repo where the todos capability's spec is COMMITTED, then commit
+// changes AFTER it (a drifted source file, an exempt file, and a file recorded
+// in a .spec-context.json so it classifies `tracked`) and run the real drift.py.
+// --------------------------------------------------------------------------- #
+
+export const DRIFT = join(REPO_ROOT, 'speckit-extension', 'scripts', 'drift.py')
+
+// Make one more commit in the sandbox (after the baseline) so a change lands
+// strictly after the living spec's commit. Reuses git's add+commit; isolated to
+// the sandbox's own repo, never the parent.
+export function gitCommitSandbox(root, msg) {
+  try {
+    execFileSync('git', ['-C', root, 'add', '-A'], { encoding: 'utf8' })
+    execFileSync('git', ['-C', root, '-c', 'user.email=bench@local', '-c', 'user.name=bench',
+      'commit', '-q', '-m', msg], { encoding: 'utf8' })
+  } catch { /* git absent or nothing to commit */ }
+}
+
+// Arrange — bake the LS·6 sandbox in two commits:
+//   commit 1 (baseline): companion.yml (todos + about), both committed living
+//     specs, and the source files as they stand at spec time.
+//   commit 2 (post-spec): a real edit to src/todos/list.ts (unspeced), an exempt
+//     src/todos/list.test.ts, a pipeline-recorded src/todos/store.ts edit (a
+//     specs/*/.spec-context.json names it → tracked). `about` is left untouched
+//     so it reads in-sync.
+export function bakeLs6Repo(name = 'ls-6') {
+  const root = join(SANDBOX_ROOT, name)
+  rmSync(root, { recursive: true, force: true })
+  mkdirSync(root, { recursive: true })
+
+  write(root, join('.specify', 'companion.yml'), [
+    'livingSpecs:',
+    '  enabled: true',
+    '  capabilities:',
+    '    - name: todos',
+    '      match: ["src/todos/**"]',
+    '    - name: about',
+    '      match: ["src/about/**"]',
+    '',
+  ].join('\n'))
+
+  write(root, join('capabilities', 'todos', 'spec.md'), '# Todos — Living Spec\n\nThe todos area.\n')
+  write(root, join('capabilities', 'about', 'spec.md'), '# About — Living Spec\n\nThe about area.\n')
+  write(root, join('src', 'todos', 'list.ts'), '// todos list\n')
+  write(root, join('src', 'todos', 'store.ts'), '// todos store\n')
+  write(root, join('src', 'about', 'page.ts'), '// about page\n')
+
+  gitInitCell(root)
+  gitCommitCellBaseline(root)            // commit 1 — the living specs are now committed
+
+  // commit 2 — changes strictly AFTER the spec commit
+  write(root, join('src', 'todos', 'list.ts'), '// todos list\n// edited outside the pipeline\n')
+  write(root, join('src', 'todos', 'list.test.ts'), '// a test — exempt by *.test.*\n')
+  write(root, join('src', 'todos', 'store.ts'), '// todos store\n// edited via the pipeline\n')
+  // A feature spec-context that recorded the store edit → classifies it `tracked`.
+  write(root, join('specs', '001-todos-store', '.spec-context.json'),
+    JSON.stringify({ files_modified: ['src/todos/store.ts'], status: 'implemented' }, null, 2) + '\n')
+  gitCommitSandbox(root, 'post-spec changes')
+
+  return root
+}
+
+// A second arrangement for the opt-out case: same shape, enabled:false.
+export function bakeLs6OptOutRepo(name = 'ls-6-optout') {
+  const root = bakeLs6Repo(name)
+  write(root, join('.specify', 'companion.yml'), [
+    'livingSpecs:',
+    '  enabled: false',
+    '  capabilities:',
+    '    - name: todos',
+    '      match: ["src/todos/**"]',
+    '',
+  ].join('\n'))
+  gitCommitSandbox(root, 'opt out')
+  return root
+}
+
+// Act — run the shipped drift.py against the sandbox via --root, capturing real
+// stdout + exit (never paraphrased). Mirrors runResolver's shape.
+export function runDrift(root, args = []) {
+  let stdout = ''
+  let exit = 0
+  try {
+    stdout = execFileSync('python3', [DRIFT, '--root', root, ...args], { encoding: 'utf8' })
+  } catch (e) {
+    stdout = (e.stdout || '') + (e.stderr || '')
+    exit = typeof e.status === 'number' ? e.status : 1
+  }
+  return {
+    cwd: rel(root),
+    cmd: `python3 ${rel(DRIFT)} --root ${rel(root)} ${args.join(' ')}`.trim(),
+    exit,
+    stdout: stdout.trim(),
+    stdoutTail: stdout.trim().split('\n').slice(-40).join('\n'),
+  }
+}
+
 export { readText }

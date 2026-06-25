@@ -19,3 +19,9 @@
 {"ticket":"LS5","ranAt":"2026-06-25T19:55:37.293Z","mode":"deterministic","verdict":"PASS"}
 {"ticket":"LS5","ranAt":"2026-06-25T20:05:32.782Z","mode":"deterministic","verdict":"PASS"}
 {"ticket":"LS5","ranAt":"2026-06-25T20:13:38.552Z","mode":"deterministic","verdict":"PASS"}
+{"ticket":"LS6","ranAt":"2026-06-25T20:26:03.807Z","mode":"deterministic","verdict":"PASS"}
+{"ticket":"LS6","ranAt":"2026-06-25T20:28:00.354Z","mode":"deterministic","verdict":"PASS"}
+{"ticket":"LS6","ranAt":"2026-06-25T20:35:34.436Z","mode":"deterministic","verdict":"PASS"}
+{"ticket":"LS6","ranAt":"2026-06-25T20:45:49.935Z","mode":"deterministic","verdict":"PASS"}
+{"ticket":"LS6","ranAt":"2026-06-25T20:48:03.178Z","mode":"deterministic","verdict":"PASS"}
+{"ticket":"LS6","ranAt":"2026-06-25T21:01:05.738Z","mode":"deterministic","verdict":"PASS"}
