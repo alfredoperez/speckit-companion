@@ -15,11 +15,14 @@ export function LivingSpecsCard({ state }: LivingSpecsCardProps) {
     if (!ls) return null;
 
     const synced = new Set(ls.synced);
-    // Show every capability that was loaded or synced; a name in `synced` but
-    // not `loaded` is still folded back, so include it.
-    const names = [...ls.loaded];
-    for (const s of ls.synced) {
-        if (!names.includes(s)) names.push(s);
+    // Show every capability that was loaded or synced, de-duplicated; a name in
+    // `synced` but not `loaded` is still folded back, so include it.
+    const names: string[] = [];
+    const seen = new Set<string>();
+    for (const n of [...ls.loaded, ...ls.synced]) {
+        if (seen.has(n)) continue;
+        seen.add(n);
+        names.push(n);
     }
     if (names.length === 0) return null;
 

@@ -66,6 +66,14 @@ describe('LivingSpecsCard', () => {
         cleanup(c);
     });
 
+    it('de-duplicates a capability listed in both loaded and synced', () => {
+        const c = renderCard(baseState({ livingSpecs: { loaded: ['checkout', 'cart'], synced: ['checkout', 'cart'] } }));
+        const names = Array.from(c.querySelectorAll('.living-specs-list__name')).map(n => n.textContent);
+        expect(names).toEqual(['checkout', 'cart']);
+        expect(c.querySelectorAll('.living-specs-list__item')).toHaveLength(2);
+        cleanup(c);
+    });
+
     it('renders nothing when there is no livingSpecs data', () => {
         const c = renderCard(baseState());
         expect(c.querySelector('.activity-card--living-specs')).toBeNull();

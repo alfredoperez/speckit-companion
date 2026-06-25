@@ -657,9 +657,14 @@
 }
 
 .living-specs-list__name {
+    flex: 1 1 auto;
+    min-width: 0;
     font-family: var(--font-mono);
     font-size: 0.82rem;
     color: var(--text-body);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .living-specs-list__synced {

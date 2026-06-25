@@ -44,6 +44,27 @@ export const LoadedAndSynced: Story = {
     ),
 };
 
+// A capability folded back but not loaded this run — still listed, marked.
+export const SyncedNotLoaded: Story = {
+    render: () => (
+        <LivingSpecsCard state={baseState({ livingSpecs: { loaded: ['cart'], synced: ['checkout'] } })} />
+    ),
+};
+
+// A very long capability name must truncate with an ellipsis, not overflow.
+export const LongName: Story = {
+    render: () => (
+        <LivingSpecsCard
+            state={baseState({
+                livingSpecs: {
+                    loaded: ['checkout-payment-fraud-detection-and-risk-scoring-pipeline'],
+                    synced: ['checkout-payment-fraud-detection-and-risk-scoring-pipeline'],
+                },
+            })}
+        />
+    ),
+};
+
 // No living-specs data → the card renders nothing.
 export const None: Story = {
     render: () => <LivingSpecsCard state={baseState({})} />,
