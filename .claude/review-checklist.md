@@ -71,6 +71,9 @@ The review subagent in `/ship-ticket` and `/fix-tickets` reads this **before** r
 
 ## Spec-context & lifecycle state
 
+- **A script that takes a `--feature-dir`/`--dir` targeting a (possibly different) repo must derive git context — branch, repo root, changed files — from THAT path, not from cwd.** Deriving from `_repo_root()`/cwd silently records the wrong repo's branch when the target is a sandbox or sibling repo; use the path-anchored helper (`_repo_root_for(dir)`). (#363)
+- **A write path that creates a missing artifact must create it well-formed, not a headerless fragment** (e.g. fold-back seeds a new living spec with a title + `## Requirements`, not an empty file) — and decide create-vs-skip deliberately against the feature's accumulation story. (#363)
+
 - **Overriding a spec's `status` is not enough — realign the fields the UI actually derives from.** The viewer footer/step-tab key on `currentStep` + the derived `stepHistory`, NOT on `status` (`footerActions.ts`, `docs/viewer-states.md`). A writer that sets `status` to an in-progress phase but leaves `currentStep`/history on the old step yields an incoherent, still-stranded spec and a misleading "X completed" event. When forcing/overriding state, map the target to its owning step and record an honest `start`/`complete` boundary. (#347)
 - **A shared lifecycle writer reused for a new case must not change byte-behavior for existing callers** — branch the new behavior (e.g. `forceStatus` for non-terminal overrides) and keep terminal `completed`/`archived` routing through the unchanged path; assert parity in a test. (#347)
 
