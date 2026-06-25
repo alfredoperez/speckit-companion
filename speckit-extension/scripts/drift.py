@@ -32,10 +32,8 @@ import json
 import os
 import subprocess
 import sys
-from glob import glob
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import companion_config as cc  # noqa: E402
 
 
 def _load_resolver():
@@ -206,7 +204,7 @@ def compute_drift(root: str, living: dict) -> dict:
 
 def render_human(result: dict) -> str:
     if not result["enabled"]:
-        return "✓ Living specs disabled — nothing to check."
+        return ""  # opt-in: disabled feature reports nothing in human mode
 
     lines: list[str] = []
     for sk in result["skipped"]:
@@ -248,7 +246,12 @@ def main(argv=None) -> int:
 
     living = rsp.load_living(args.root)
     result = compute_drift(args.root, living)
-    print(json.dumps(result, indent=2) if args.json else render_human(result))
+    if args.json:
+        print(json.dumps(result, indent=2))
+    else:
+        text = render_human(result)
+        if text:  # no blank line when disabled / nothing to say
+            print(text)
     return 0  # never halts
 
 

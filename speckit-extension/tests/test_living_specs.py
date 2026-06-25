@@ -863,6 +863,14 @@ class DriftTests(unittest.TestCase):
         living = drift.rsp.load_living(str(root))
         return drift.compute_drift(str(root), living)
 
+    def test_disabled_renders_nothing(self) -> None:
+        # Opt-in: a disabled feature produces NO human output (not even a banner).
+        disabled = self.YAML.replace("enabled: true", "enabled: false")
+        root = _bake_drift_repo(disabled)
+        result = self._run(root)
+        self.assertFalse(result["enabled"])
+        self.assertEqual(drift.render_human(result), "")
+
     def test_unspeced_change_after_committed_spec(self) -> None:
         root = _bake_drift_repo(self.YAML)
         _write(root, "capabilities/todos/spec.md", "# Todos\n")
