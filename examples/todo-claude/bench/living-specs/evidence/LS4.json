@@ -1,0 +1,126 @@
+{
+  "ticket": "LS4",
+  "issue": 364,
+  "title": "end-to-end sandbox validation gate (LS·4)",
+  "ranAt": "2026-06-25T19:13:09.128Z",
+  "mode": "real+seeded-spec",
+  "runModes": {
+    "accumulation": "real+seeded-spec",
+    "optOut": "deterministic"
+  },
+  "sandbox": "examples/bench-sandboxes/ls-4",
+  "commands": [
+    {
+      "cwd": "examples/bench-sandboxes/ls-4",
+      "cmd": "python3 speckit-extension/scripts/write-context.py --feature-dir specs/001-clear-completed --fold-living-spec --by ai",
+      "exit": 0,
+      "stdoutTail": ""
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-4",
+      "cmd": "python3 speckit-extension/scripts/write-context.py --feature-dir specs/002-add-due-dates --fold-living-spec --by ai",
+      "exit": 0,
+      "stdoutTail": "[companion] Folded feature deltas into living spec(s): todos (examples/bench-sandboxes/ls-4/specs/002-add-due-dates/.spec-context.json)"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-4-optout",
+      "cmd": "python3 speckit-extension/scripts/write-context.py --feature-dir specs/002-add-due-dates --fold-living-spec --by ai",
+      "exit": 0,
+      "stdoutTail": ""
+    },
+    {
+      "cwd": ".",
+      "cmd": "python3 -m pytest speckit-extension/tests/test_living_specs.py -q",
+      "exit": 0,
+      "stdoutTail": "........................................................                 [100%]\n56 passed in 2.13s"
+    }
+  ],
+  "fileTree": {
+    "added": [
+      ".specify/companion.yml",
+      "capabilities/todos/spec.md",
+      "specs/001-clear-completed/spec.md",
+      "specs/001-clear-completed/.spec-context.json",
+      "specs/002-add-due-dates/spec.md",
+      "specs/002-add-due-dates/.spec-context.json",
+      "src/todos/list.ts"
+    ],
+    "modified": [
+      "capabilities/todos/spec.md",
+      "specs/002-add-due-dates/.spec-context.json"
+    ],
+    "removed": []
+  },
+  "config": "livingSpecs:\n  enabled: true\n  capabilities:\n    - name: todos\n      match: [\"src/todos/**\"]",
+  "accumulation": {
+    "livingSpecPath": "capabilities/todos/spec.md",
+    "before": "# Todos capability\n\n### Users can add a todo\n\n#### Scenario: add a todo\n- WHEN a user types text and submits\n- THEN a todo appears in the list\n",
+    "afterA": "# Todos capability\n\n### Users can add a todo\n\n#### Scenario: add a todo\n- WHEN a user types text and submits\n- THEN a todo appears in the list\n",
+    "afterB": "# Todos capability\n\n### Users can add a todo\n\n#### Scenario: add a todo\n- WHEN a user types text and submits\n- THEN a todo appears in the list\n\n### Users can set a due date on a todo\n\n#### Scenario: set a due date\n- WHEN a user picks a date for a todo\n- THEN the todo shows the due date\n\n#### Scenario: clear a due date\n- WHEN a user clears the date\n- THEN the todo shows no due date\n",
+    "diffBeforeA": "",
+    "diffBeforeB": "diff --git abefore.md bafter.md\nindex 3021866..68c58cc 100644\n--- abefore.md\n+++ bafter.md\n@@ -5,3 +5,13 @@\n #### Scenario: add a todo\n - WHEN a user types text and submits\n - THEN a todo appears in the list\n+\n+### Users can set a due date on a todo\n+\n+#### Scenario: set a due date\n+- WHEN a user picks a date for a todo\n+- THEN the todo shows the due date\n+\n+#### Scenario: clear a due date\n+- WHEN a user clears the date\n+- THEN the todo shows no due date\n",
+    "syncedAfterB": [
+      "todos"
+    ]
+  },
+  "optOut": {
+    "sandbox": "examples/bench-sandboxes/ls-4-optout",
+    "specByteIdentical": true,
+    "capabilitiesTreeBefore": [
+      "capabilities/todos/spec.md"
+    ],
+    "capabilitiesTreeAfter": [
+      "capabilities/todos/spec.md"
+    ],
+    "newCapabilityFiles": [],
+    "recordedLivingSpecs": null
+  },
+  "assertions": [
+    {
+      "id": "additive-feature-noop",
+      "status": "PASS",
+      "detail": "feature A (no delta) left capabilities/todos/spec.md byte-identical"
+    },
+    {
+      "id": "delta-feature-folds",
+      "status": "PASS",
+      "detail": "feature B's ADDED requirement present after fold"
+    },
+    {
+      "id": "no-clobber",
+      "status": "PASS",
+      "detail": "original requirement still present after feature B fold (no clobber)"
+    },
+    {
+      "id": "monotonic-growth",
+      "status": "PASS",
+      "detail": "living spec grew 143 → 384 bytes, prior content preserved as prefix"
+    },
+    {
+      "id": "records-synced-B-only",
+      "status": "PASS",
+      "detail": "livingSpecs.synced after B -> [todos]"
+    },
+    {
+      "id": "opt-out-byte-identical",
+      "status": "PASS",
+      "detail": "enabled:false -> capabilities/todos/spec.md byte-identical before/after"
+    },
+    {
+      "id": "opt-out-no-new-files",
+      "status": "PASS",
+      "detail": "enabled:false -> no new capabilities/** files, no livingSpecs.synced"
+    },
+    {
+      "id": "pytest-green",
+      "status": "PASS",
+      "detail": "pytest exit 0"
+    }
+  ],
+  "pytest": {
+    "runner": "pytest",
+    "exit": 0,
+    "tail": "........................................................                 [100%]\n56 passed in 2.13s"
+  },
+  "verdict": "PASS"
+}
