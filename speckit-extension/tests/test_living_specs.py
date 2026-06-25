@@ -574,6 +574,73 @@ class FoldLivingSpecTests(unittest.TestCase):
     def test_synced_is_not_a_protected_lifecycle_key(self) -> None:
         self.assertNotIn("livingSpecs", wc.PROTECTED_SET_KEYS)
 
+    def test_missing_living_spec_is_created_with_header(self) -> None:
+        # A capability whose spec.md doesn't exist yet is born well-formed from
+        # its first ADDED fold: a title header + a ## Requirements section, NOT a
+        # headerless fragment.
+        root = _git_repo(ENABLED_TODOS_YAML, {}, code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+        result = wc.fold_living_spec(fdir, "ai")
+        self.assertIsNotNone(result)
+        created = self._living(root)
+        self.assertIn("# Todos — Living Spec", created)
+        self.assertIn("## Requirements", created)
+        self.assertIn("### Due dates", created)
+        self.assertEqual(self._ctx(fdir)["livingSpecs"]["synced"], ["todos"])
+
+    def test_subsequent_fold_appends_without_re_adding_header(self) -> None:
+        root = _git_repo(ENABLED_TODOS_YAML, {}, code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+        wc.fold_living_spec(fdir, "ai")
+        # A second feature adds another requirement to the now-existing spec.
+        fdir2 = _write_feature(root, "002-feat",
+            "# Feat2\n\n## ADDED Requirements\n\n### Reminders\n\n#### Scenario: s\n- b\n")
+        wc.fold_living_spec(fdir2, "ai")
+        body = self._living(root)
+        self.assertEqual(body.count("# Todos — Living Spec"), 1)
+        self.assertEqual(body.count("## Requirements"), 1)
+        self.assertIn("### Due dates", body)
+        self.assertIn("### Reminders", body)
+
+
+class FoldBranchFallbackTests(unittest.TestCase):
+    """#1: the branch fallback in the living-specs recorders derives from the
+    FEATURE-DIR's repo (via _repo_root_for), not the process cwd, so a write into
+    another/sandbox repo records that repo's branch."""
+
+    def _ctx(self, fdir: Path) -> dict:
+        return _json.loads((fdir / ".spec-context.json").read_text(encoding="utf-8"))
+
+    def test_synced_branch_fallback_uses_feature_dir_repo(self) -> None:
+        # A sandbox git repo on a distinctive branch, with a feature dir whose
+        # .spec-context.json carries NO branch — the recorder must fill it from the
+        # sandbox's branch, not whatever branch the test process's cwd is on.
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        # _git_repo leaves the sandbox on the "feat" branch.
+        fdir = root / "specs" / "001-feat"
+        fdir.mkdir(parents=True, exist_ok=True)
+        (fdir / ".spec-context.json").write_text(_json.dumps({
+            "workflow": "speckit", "specName": "001-feat",
+            "currentStep": "implement", "status": "implemented", "history": [],
+        }), encoding="utf-8")
+        wc.set_living_specs_synced(fdir, ["todos"])
+        self.assertEqual(self._ctx(fdir)["branch"], "feat")
+
+    def test_loaded_branch_fallback_uses_feature_dir_repo(self) -> None:
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = root / "specs" / "001-feat"
+        fdir.mkdir(parents=True, exist_ok=True)
+        (fdir / ".spec-context.json").write_text(_json.dumps({
+            "workflow": "speckit", "specName": "001-feat",
+            "currentStep": "specify", "status": "specified", "history": [],
+        }), encoding="utf-8")
+        wc.set_living_specs_loaded(fdir, ["todos"])
+        self.assertEqual(self._ctx(fdir)["branch"], "feat")
+
 
 class RecordSyncedTests(unittest.TestCase):
     def _read(self, d: Path) -> dict:

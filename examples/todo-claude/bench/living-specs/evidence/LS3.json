@@ -2,7 +2,7 @@
   "ticket": "LS3",
   "issue": 363,
   "title": "fold feature-spec deltas into the durable living spec at mark-complete (LS·3)",
-  "ranAt": "2026-06-25T18:36:07.499Z",
+  "ranAt": "2026-06-25T18:53:18.179Z",
   "mode": "real+seeded-spec",
   "sandbox": "examples/bench-sandboxes/ls-3",
   "commands": [
@@ -28,7 +28,7 @@
       "cwd": ".",
       "cmd": "python3 -m pytest speckit-extension/tests/test_living_specs.py -q",
       "exit": 0,
-      "stdoutTail": "....................................................                     [100%]\n52 passed in 1.38s"
+      "stdoutTail": "........................................................                 [100%]\n56 passed in 2.20s"
     }
   ],
   "fileTree": {
@@ -125,7 +125,7 @@
   "pytest": {
     "runner": "pytest",
     "exit": 0,
-    "tail": "....................................................                     [100%]\n52 passed in 1.38s"
+    "tail": "........................................................                 [100%]\n56 passed in 2.20s"
   },
   "verdict": "PASS"
 }

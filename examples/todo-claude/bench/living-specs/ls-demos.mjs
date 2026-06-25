@@ -19,7 +19,6 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 
 import { join as pjoin } from 'node:path'
-import { readFileSync } from 'node:fs'
 
 import { REPO_ROOT } from '../lib.mjs'
 import {

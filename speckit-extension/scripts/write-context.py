@@ -72,7 +72,8 @@ def _repo_root() -> Path:
 def _repo_root_for(path: Path) -> Path:
     """Repo root that contains `path`, anchoring git on that directory rather than
     cwd — so a write into a sandbox spec dir resolves the sandbox's root, not the
-    process cwd. Falls back to the cwd-based root, then path's parent."""
+    process cwd. Falls back to the cwd-based root (`_repo_root()`) when git can't
+    answer for `path`."""
     try:
         out = subprocess.run(
             ["git", "-C", str(path), "rev-parse", "--show-toplevel"],
@@ -360,7 +361,7 @@ def set_living_specs_loaded(feature_dir: Path, names: list[str]) -> Path | None:
     if not cleaned:
         return None
     target = feature_dir / ".spec-context.json"
-    branch = _git_branch(_repo_root()) or "main"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
     ctx = read_ctx(target)
     fill_required(ctx, feature_dir, branch)
     block = ctx.get("livingSpecs")
@@ -391,7 +392,7 @@ def set_living_specs_synced(feature_dir: Path, names: list[str]) -> Path | None:
     if not cleaned:
         return None
     target = feature_dir / ".spec-context.json"
-    branch = _git_branch(_repo_root()) or "main"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
     ctx = read_ctx(target)
     fill_required(ctx, feature_dir, branch)
     block = ctx.get("livingSpecs")
@@ -556,11 +557,28 @@ def apply_deltas(living_text: str, deltas: dict) -> str:
     return appended
 
 
+def _initial_living_spec(capability_name: str) -> str:
+    """A minimal well-formed living-spec scaffold for a capability whose spec.md
+    doesn't exist yet, so the first ADDED fold creates a titled, sectioned spec
+    (the accumulation story LS·4 relies on) rather than a headerless fragment.
+    The slug is humanized into a title; ADDED requirements append under
+    `## Requirements`."""
+    title = capability_name.replace("-", " ").replace("_", " ").strip()
+    if title:
+        title = title[0].upper() + title[1:]
+    else:
+        title = capability_name
+    return f"# {title} — Living Spec\n\n## Requirements\n"
+
+
 def _git_changed_files(root: Path, branch: str) -> list[str]:
     """Files this feature branch changed vs its merge-base with the default branch.
 
-    Best-effort: returns [] if git can't answer (the caller then falls back to the
-    full capability set), so the fold never fails on a detached/odd checkout."""
+    Best-effort: returns [] if git can't answer (detached/odd checkout, no
+    merge-base). On the write-side fold, an empty result means the caller
+    (`_resolve_fold_targets`) folds ONLY capabilities named by an explicit
+    `<!-- capability: ... -->` marker and never fans out to every durable spec —
+    the conservative choice for a write path."""
     for base in ("origin/main", "main", "origin/master", "master"):
         try:
             mb = subprocess.run(
@@ -602,9 +620,18 @@ def _resolve_fold_targets(rsp, living: dict, root: Path, deltas: dict) -> list[d
     Write-most-specific: from the (most-specific-first) matched list keep only the
     head. Markered targets are added by name from the full capability set, so a
     block can route to a different/additional capability than the code change
-    resolves to."""
+    resolves to. When git can't determine the changed files, this folds ONLY the
+    markered capabilities (never fans out to every durable spec) — the conservative
+    choice for a write path; the no-changed-files fallback is logged so the
+    markers-only narrowing is observable rather than a silent no-op."""
     branch = _git_branch(root) or "main"
     changed = _git_changed_files(root, branch)
+    if not changed:
+        print(
+            "[companion] Living-spec fold: could not determine changed files; "
+            "folding markered capabilities only (no fan-out to all durable specs).",
+            file=sys.stderr,
+        )
     matched = rsp.match_changed(changed, living, str(root)) if changed else []
     targets: list[dict] = []
     seen: set[str] = set()
@@ -681,7 +708,7 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
             continue
         living_path = root / spec_rel
         try:
-            before = living_path.read_text(encoding="utf-8") if living_path.exists() else ""
+            before = living_path.read_text(encoding="utf-8") if living_path.exists() else _initial_living_spec(cap.get("name") or living_path.parent.name)
         except OSError:
             continue
         after = apply_deltas(before, deltas)
