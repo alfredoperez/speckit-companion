@@ -1202,6 +1202,20 @@ class CoverageReportTests(unittest.TestCase):
         root = _bake_coverage_repo()
         only = coverage.run(str(root), "billing")["capabilities"]
         self.assertEqual([c["name"] for c in only], ["billing"])
+
+    def test_disabled_renders_nothing(self) -> None:
+        # Opt-in: a disabled feature produces NO human output (mirrors drift).
+        root = _bake_coverage_repo(yaml=BILLING_YAML.replace("enabled: true", "enabled: false"))
+        result = coverage.run(str(root), None)
+        self.assertFalse(result["enabled"])
+        self.assertEqual(coverage.render_human(result), "")
+
+    def test_orphan_specs_are_not_in_the_coverage_report(self) -> None:
+        # Only CONFIGURED capabilities are reported; a stray *.spec.md is ignored.
+        root = _bake_coverage_repo()
+        _write(root, "notes/random.spec.md", "# Random\n## Requirements\n### FR-9 Stray\n")
+        names = [c["name"] for c in coverage.run(str(root), None)["capabilities"]]
+        self.assertEqual(names, ["billing"])
         self.assertEqual(coverage.run(str(root), "nope")["capabilities"], [])
 
     def test_disabled_reports_nothing(self) -> None:

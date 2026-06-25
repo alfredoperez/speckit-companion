@@ -146,7 +146,14 @@ def run(root: str, capability: str | None) -> dict:
     if not living["enabled"]:
         return {"enabled": False, "capabilities": []}
 
-    entries = rsp.discover_all(living, root)
+    # Only CONFIGURED capabilities (not orphan *.spec.md); skip a capability whose
+    # colocated spec path is unresolvable rather than raising (read-only, never-fail).
+    entries = []
+    for cap in living["capabilities"]:
+        try:
+            entries.append(rsp._entry(cap, root))
+        except ValueError:
+            continue
     if capability:
         entries = [e for e in entries if e["name"] == capability]
 
@@ -160,7 +167,7 @@ def run(root: str, capability: str | None) -> dict:
 
 def render_human(result: dict) -> str:
     if not result["enabled"]:
-        return "living specs disabled — no coverage to report"
+        return ""  # opt-in: disabled feature reports nothing in human mode
     if not result["capabilities"]:
         return "no living specs with a spec file to check"
     lines = ["📊 Coverage report"]
@@ -187,7 +194,12 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
 
     result = run(args.root, args.capability)
-    print(json.dumps(result, indent=2) if args.json else render_human(result))
+    if args.json:
+        print(json.dumps(result, indent=2))
+    else:
+        text = render_human(result)
+        if text:  # no blank line when disabled / nothing to say
+            print(text)
     return 0  # never fails — informational, like drift.
 
 
