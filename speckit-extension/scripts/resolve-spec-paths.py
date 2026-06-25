@@ -40,10 +40,12 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import companion_config as cc  # noqa: E402
 
 CONFIG = os.path.join(".specify", "companion.yml")
-RESERVED_TIERS = (".arch.md", ".coverage.md")
 
 # Map a tier key to the sibling suffix that replaces the hot `.spec.md` tail.
+# Single source of truth for the reserved-tier filenames — RESERVED_TIERS (the
+# orphan/drift exemption set) derives from it so the suffixes live in one place.
 TIER_SUFFIXES = {"arch": ".arch.md", "coverage": ".coverage.md"}
+RESERVED_TIERS = tuple(TIER_SUFFIXES.values())
 
 
 def load_living(root: str) -> dict:

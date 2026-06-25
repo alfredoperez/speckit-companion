@@ -1088,6 +1088,13 @@ class TierPathTests(unittest.TestCase):
         self.assertTrue(tiers["arch"]["exists"])
         self.assertFalse(tiers["coverage"]["exists"])
 
+    def test_reserved_tiers_derive_from_tier_suffixes(self) -> None:
+        # RESERVED_TIERS (orphan/drift exemption) and TIER_SUFFIXES (tier_paths)
+        # must stay in lockstep — the suffix literals live in one place.
+        self.assertEqual(set(rsp.RESERVED_TIERS), set(rsp.TIER_SUFFIXES.values()))
+        for entry in rsp.tier_paths("capabilities/x/spec.md").values():
+            self.assertTrue(any(entry["path"].endswith(t) for t in rsp.RESERVED_TIERS))
+
     def test_entry_carries_tiers_in_json(self) -> None:
         root = make_repo(
             CHECKOUT_YAML,
@@ -1161,6 +1168,14 @@ class CoverageParseTests(unittest.TestCase):
     def test_coverage_line_without_a_test_is_not_coverage(self) -> None:
         cmap = coverage.coverage_map("- FR-001 — still TODO\n")
         self.assertEqual(cmap.get("FR-1", []), [])
+
+    def test_fr_token_inside_a_test_path_is_not_a_requirement_id(self) -> None:
+        # `fr-2` buried in the test PATH must not register FR-2 as covered — only
+        # the requirement id authored outside the test reference counts (LS·3).
+        cmap = coverage.coverage_map("| FR-001 | src/feature-fr-2/charge.test.ts |\n")
+        self.assertIn("FR-1", cmap)
+        self.assertEqual(cmap["FR-1"], ["src/feature-fr-2/charge.test.ts"])
+        self.assertNotIn("FR-2", cmap)
 
 
 class CoverageReportTests(unittest.TestCase):

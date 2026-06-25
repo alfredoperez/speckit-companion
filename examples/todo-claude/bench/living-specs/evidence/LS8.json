@@ -2,7 +2,7 @@
   "ticket": "LS8",
   "issue": 368,
   "title": "tiered consumption — arch (lazy) + coverage (LS·8)",
-  "ranAt": "2026-06-25T21:41:33.467Z",
+  "ranAt": "2026-06-25T21:47:00.032Z",
   "mode": "deterministic",
   "sandbox": "examples/bench-sandboxes/ls-8",
   "optOutSandbox": "examples/bench-sandboxes/ls-8-optout",
@@ -36,7 +36,7 @@
       "cwd": ".",
       "cmd": "python3 -m pytest speckit-extension/tests/test_living_specs.py -q",
       "exit": 0,
-      "stdoutTail": "........................................................................ [ 74%]\n.........................                                                [100%]\n97 passed in 3.57s"
+      "stdoutTail": "........................................................................ [ 72%]\n...........................                                              [100%]\n99 passed in 3.72s"
     }
   ],
   "fileTree": {
@@ -151,7 +151,7 @@
   "pytest": {
     "runner": "pytest",
     "exit": 0,
-    "tail": "........................................................................ [ 74%]\n.........................                                                [100%]\n97 passed in 3.57s"
+    "tail": "........................................................................ [ 72%]\n...........................                                              [100%]\n99 passed in 3.72s"
   },
   "verdict": "PASS"
 }

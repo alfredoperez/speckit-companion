@@ -91,10 +91,14 @@ def coverage_map(text: str) -> dict[str, list[str]]:
     """Map requirement id -> list of test references found on its line(s)."""
     out: dict[str, list[str]] = {}
     for line in text.splitlines():
-        ids = {_norm_id(m.group("id")) for m in REQ_ANY.finditer(line)}
+        tests = TEST_TOKEN.findall(line)
+        # Harvest ids only from the line MINUS its test references, so an `fr-N`
+        # buried inside a test path (`src/feature-fr-2/x.test.ts`) can't register
+        # as a covered requirement (the LS·3 substring lesson).
+        id_text = TEST_TOKEN.sub(" ", line)
+        ids = {_norm_id(m.group("id")) for m in REQ_ANY.finditer(id_text)}
         if not ids:
             continue
-        tests = TEST_TOKEN.findall(line)
         for rid in ids:
             bucket = out.setdefault(rid, [])
             for t in tests:
