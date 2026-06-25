@@ -74,7 +74,12 @@ The review subagent in `/ship-ticket` and `/fix-tickets` reads this **before** r
 - **Overriding a spec's `status` is not enough — realign the fields the UI actually derives from.** The viewer footer/step-tab key on `currentStep` + the derived `stepHistory`, NOT on `status` (`footerActions.ts`, `docs/viewer-states.md`). A writer that sets `status` to an in-progress phase but leaves `currentStep`/history on the old step yields an incoherent, still-stranded spec and a misleading "X completed" event. When forcing/overriding state, map the target to its owning step and record an honest `start`/`complete` boundary. (#347)
 - **A shared lifecycle writer reused for a new case must not change byte-behavior for existing callers** — branch the new behavior (e.g. `forceStatus` for non-terminal overrides) and keep terminal `completed`/`archived` routing through the unchanged path; assert parity in a test. (#347)
 
+## Paths & globs
+
+- **A single `*` in a glob must not cross `/`.** Python `fnmatch` (and naive translations) let `*` match path separators, so `src/*.ts` wrongly claims `src/a/deep/x.ts`. Compile globs so `*`→`[^/]*` and `**`→`.*`, and make a trailing `/**` also match the bare directory. Normalize backslash inputs to `/` before matching. (#361)
+
 ## Tests & PR hygiene
+- **Committed evidence / fixtures must not embed absolute or home paths or a username** (`/Users/<name>/…`) — record commands and paths **repo-relative**; it's noisy across machines and leaks local info. Regenerate captured artifacts from a real run, never hand-edit them to fake a result. (#361)
 - **A test must exercise the REAL code path, not re-implement the condition under test.** A test that re-derives the predicate inline (e.g. recomputing a guard's boolean) passes even if the production guard is broken — false confidence. Extract the predicate into a named function and have both the production caller and the test call it. (#310)
 - **A `jest.mock` of a lifecycle/util module must export every symbol the module-under-test imports** — a missing export (e.g. `completeStep`) is `undefined` at call time and crashes only the path that reaches it, passing until that path is exercised. (#347)
 
