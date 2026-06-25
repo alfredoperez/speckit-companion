@@ -93,6 +93,7 @@ Toggle **Activity** in the viewer's nav bar to swap the markdown pane for a card
 - **Approach** — one-line strategy, status pill, PR link, and commit/PR checkpoints.
 - **Phases** — a vertical timeline reporting **active time** per step and substep (idle gaps are capped, so an overnight pause doesn't inflate a step); the in-flight step pulses and the terminal phase finalizes.
 - **Tasks** — per-`T###` status, summary, file chips, and inline concerns.
+- **Living specs** — when a feature touches durable capability specs, this card lists the ones it loaded into context and marks the ones it folded its changes back into (Companion's lightweight answer to the OpenSpec Dashboard). Read-only; appears only when the spec carries living-specs context.
 - **Decisions**, **Concerns**, **Review comments** (every persisted comment grouped by document, with jump-to-line and a per-document **Run refinement** button), and **Files touched** (clickable).
 
 Each card hides itself when its data is missing, so a minimal speckit-style spec collapses to just *Phases*. Visibility is gated by `speckit.viewer.activityPanel` — `"off"`, `"beta"` (default; toggle shows a *beta* pill), or `"on"`.

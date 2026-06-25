@@ -180,4 +180,46 @@ describe('deriveViewerState', () => {
         expect(state.highlights).toContain('plan');
         expect(state.pulse).toBeNull();
     });
+
+    describe('livingSpecs derivation', () => {
+        it('exposes loaded + synced when present', () => {
+            const ctx = makeContext({
+                livingSpecs: { loaded: ['checkout', 'cart'], synced: ['checkout'] },
+            });
+            expect(deriveViewerState(ctx).livingSpecs).toEqual({
+                loaded: ['checkout', 'cart'],
+                synced: ['checkout'],
+            });
+        });
+
+        it('defaults synced to [] when only loaded is present', () => {
+            const ctx = makeContext({ livingSpecs: { loaded: ['checkout'] } });
+            expect(deriveViewerState(ctx).livingSpecs).toEqual({
+                loaded: ['checkout'],
+                synced: [],
+            });
+        });
+
+        it('is undefined when no livingSpecs field', () => {
+            expect(deriveViewerState(makeContext()).livingSpecs).toBeUndefined();
+        });
+
+        it('is undefined when both lists are empty', () => {
+            const ctx = makeContext({ livingSpecs: { loaded: [], synced: [] } });
+            expect(deriveViewerState(ctx).livingSpecs).toBeUndefined();
+        });
+
+        it('coerces a malformed shape to safe trimmed string arrays', () => {
+            const ctx = makeContext({
+                livingSpecs: {
+                    loaded: ['  checkout  ', 42, null, '', 'cart'] as unknown as string[],
+                    synced: 'checkout' as unknown as string[],
+                },
+            });
+            expect(deriveViewerState(ctx).livingSpecs).toEqual({
+                loaded: ['checkout', 'cart'],
+                synced: [],
+            });
+        });
+    });
 });

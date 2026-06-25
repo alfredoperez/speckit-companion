@@ -7,6 +7,7 @@ import { DecisionsCard } from './cards/DecisionsCard';
 import { ConcernsCard } from './cards/ConcernsCard';
 import { FilesCard } from './cards/FilesCard';
 import { CommentsCard } from './cards/CommentsCard';
+import { LivingSpecsCard } from './cards/LivingSpecsCard';
 
 /**
  * The viewer install banner, rendered INSIDE the Activity panel (#255 — it used
@@ -36,6 +37,7 @@ function hasAnyData(state: ViewerState): boolean {
     if (state.concerns && state.concerns.length > 0) return true;
     if (state.filesModified && state.filesModified.length > 0) return true;
     if (state.reviewComments && state.reviewComments.length > 0) return true;
+    if (state.livingSpecs) return true;
     if (state.history && state.history.length > 0) return true;
     if (state.stepHistory && Object.keys(state.stepHistory).length > 0) return true;
     return false;
@@ -58,6 +60,7 @@ export function ActivityPanel() {
             <InstallBanner />
             <ApproachCard state={state} />
             <PhasesCard state={state} />
+            <LivingSpecsCard state={state} />
             <TasksCard state={state} />
             <DecisionsCard state={state} />
             <ConcernsCard state={state} />
