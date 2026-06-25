@@ -18,11 +18,11 @@ import {
 } from '../workflows';
 import { updateStepProgress, readSpecContextSync } from './specContextManager';
 import { resolveDispatchWithFallback } from './profileDispatch';
-import { startStep, completeStep, setStatus, reactivate } from './stepLifecycle';
+import { startStep, completeStep, setStatus, forceStatus, reactivate } from './stepLifecycle';
 import { lastEntryIsCompletionFor } from './historyHelpers';
 import { updateSelectionContextKeys } from './selectionContextKeys';
 import { track as trackTerminal } from './terminalStepTracker';
-import type { HistoryEntry, StepName } from '../../core/types/specContext';
+import type { HistoryEntry, StepName, Status } from '../../core/types/specContext';
 import { SpecsFilterState } from './specsFilterState';
 import { SpecsSortState } from './specsSortState';
 import { ALL_SORT_MODES, DEFAULT_SORT_MODE, SortMode } from './specsSortMode';
@@ -46,6 +46,18 @@ const LIFECYCLE_STEPS: ReadonlySet<string> = new Set([
     'clarify',
     'analyze',
 ]);
+
+// Statuses the force-status picker offers; the transient `tasking` and the out-of-band `draft`/`archived` are excluded.
+const FORCE_STATUS_CHOICES: Status[] = [
+    'specifying',
+    'specified',
+    'planning',
+    'planned',
+    'ready-to-implement',
+    'implementing',
+    'implemented',
+    'completed',
+];
 
 // `lastEntryIsCompletionFor` is shared with messageHandlers (Approve button
 // path) — lifted into a stdlib-only helper module to avoid the duplicate.
@@ -408,6 +420,34 @@ export function registerSpecKitCommands(
                 'moved to active',
                 s => s !== SpecStatuses.COMPLETED && s !== SpecStatuses.ARCHIVED
             );
+        })
+    );
+
+    // Force-override a spec's lifecycle status via the sanctioned forceStatus() writer, authored by:user.
+    context.subscriptions.push(
+        vscode.commands.registerCommand('speckit.specs.setStatus', async (item: SpecTreeItem) => {
+            const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+            if (!workspaceFolder || !item) return;
+            const choice = await vscode.window.showQuickPick(FORCE_STATUS_CHOICES, {
+                title: 'Set status',
+                placeHolder: 'Force this spec to a lifecycle status',
+            });
+            const picked = FORCE_STATUS_CHOICES.find(s => s === choice);
+            if (!picked) return;
+            const confirm = await vscode.window.showWarningMessage(
+                `Force status to ${picked}?`,
+                { modal: true },
+                'Force status'
+            );
+            if (confirm !== 'Force status') return;
+            const specDir = specDirFor(item, workspaceFolder.uri.fsPath);
+            const ok = await forceStatus(specDir, picked, 'user');
+            if (!ok) {
+                vscode.window.showErrorMessage(`Could not set status to ${picked} — see the SpecKit Companion output for details.`);
+                return;
+            }
+            specExplorer.refresh();
+            NotificationUtils.showAutoDismissNotification(`Status set to ${picked}`);
         })
     );
 

@@ -102,7 +102,7 @@ export async function setStatus(
     specDir: string,
     status: Status,
     by: TransitionBy = 'extension'
-): Promise<void> {
+): Promise<boolean> {
     try {
         await updateSpecContext(
             specDir,
@@ -122,11 +122,78 @@ export async function setStatus(
             },
             buildFallback(specDir, 'specify')
         );
+        return true;
     } catch (err) {
         logError(`setStatus(${path.basename(specDir)}, ${status})`, err);
+        return false;
     }
 }
 
+
+/**
+ * The step that owns each non-terminal status, plus whether that status
+ * represents the step in flight (`start`) or settled (`complete`). Drives
+ * `forceStatus`, which must realign `currentStep` to the chosen status so the
+ * viewer's footer/step-tab (keyed on `currentStep` + history, not `status`)
+ * recovers coherently rather than spinning on a stale step.
+ */
+const STATUS_OWNING_STEP: Record<
+    Exclude<Status, 'draft' | 'completed' | 'archived'>,
+    { step: StepName; settled: boolean }
+> = {
+    specifying: { step: 'specify', settled: false },
+    specified: { step: 'specify', settled: true },
+    planning: { step: 'plan', settled: false },
+    planned: { step: 'plan', settled: true },
+    tasking: { step: 'tasks', settled: false },
+    'ready-to-implement': { step: 'tasks', settled: true },
+    implementing: { step: 'implement', settled: false },
+    implemented: { step: 'implement', settled: true },
+};
+
+/**
+ * Force-override a spec's status as a manual recovery escape hatch (#347).
+ *
+ * Unlike `setStatus` (which only writes a terminal status and a `complete`
+ * boundary for the spec's *existing* `currentStep`), this realigns
+ * `currentStep` to the forced status's owning step and records an honest
+ * override: `start` for an in-flight status, `complete` for a settled one. That
+ * keeps `currentStep`/`status`/`history[]` coherent so the viewer recovers from
+ * the forced status instead of staying stranded on the prior step.
+ *
+ * Terminal statuses (`completed`/`archived`) route through the unchanged
+ * `setStatus`, so the mark-complete/archive/bulk callers are untouched.
+ */
+export async function forceStatus(
+    specDir: string,
+    status: Status,
+    by: TransitionBy = 'user'
+): Promise<boolean> {
+    if (status === 'completed' || status === 'archived') {
+        return setStatus(specDir, status, by);
+    }
+    const owning = STATUS_OWNING_STEP[status as keyof typeof STATUS_OWNING_STEP];
+    if (!owning) {
+        // `draft` and any unmapped value: fall back to the plain status write.
+        return setStatus(specDir, status, by);
+    }
+    try {
+        await updateSpecContext(
+            specDir,
+            ctx => {
+                const aligned: SpecContext = { ...ctx, currentStep: owning.step };
+                return owning.settled
+                    ? setStepCompleted(aligned, owning.step, by)
+                    : setStepStarted(aligned, owning.step, by);
+            },
+            buildFallback(specDir, owning.step)
+        );
+        return true;
+    } catch (err) {
+        logError(`forceStatus(${path.basename(specDir)}, ${status})`, err);
+        return false;
+    }
+}
 
 /** Reactivate: derive in-progress status from `currentStep`. */
 export async function reactivate(

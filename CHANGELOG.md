@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **Recover a stranded spec with "Set status…"** (#347): an out-of-order or double click could leave a spec in a state where the lifecycle buttons wouldn't let you continue, and the only fix was hand-editing a JSON file. Every spec in the sidebar now has a **Set status…** action — on the right-click menu and as a hover gear — that lets you force the spec to any lifecycle status (specifying through completed) after a `"Force status to X?"` confirm. The override is recorded just like any other lifecycle change and the sidebar updates immediately, so a mis-click is no longer a dead end.
+
 ### Fixed
 
 - **The "Install spec-kit extension" banner no longer hides behind the beta setting** (#369): the prompt that offers to install the companion spec-kit extension used to appear only after you'd turned on the SpecKit Companion Workflow beta — which meant the people most likely to want the extension never saw the nudge to get it. The banner now shows on its own merits: whenever the extension is missing and you haven't dismissed it or turned its setting off, no matter how the workflow toggle is set. Installing the extension, dismissing the banner, and turning off its `speckit.companion.installPrompt` setting all still hide it exactly as before.
