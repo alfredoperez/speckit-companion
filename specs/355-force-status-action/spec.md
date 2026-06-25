@@ -49,7 +49,7 @@ A developer who prefers hovering over right-clicking sees a small inline action 
 - **FR-002**: The system MUST surface the same "Set status…" action as a hover/inline action on the spec row.
 - **FR-003**: Choosing the action MUST show a picker listing the eight canonical lifecycle statuses: specifying, specified, planning, planned, ready-to-implement, implementing, implemented, completed.
 - **FR-004**: After a status is picked, the system MUST show a confirm prompt worded "Force status to X?" before writing.
-- **FR-005**: On confirm, the system MUST write the chosen status through the sanctioned status writer (the existing `setStatus` path that wraps `specContextWriter`), never by hand-editing `.spec-context.json`.
+- **FR-005**: On confirm, the system MUST write the chosen status through the sanctioned status writer (the existing `forceStatus` path that wraps `specContextWriter`), never by hand-editing `.spec-context.json`.
 - **FR-006**: The write MUST append a history event authored by the user (`by: user`).
 - **FR-007**: After a successful write, the system MUST refresh the sidebar tree provider so the spec reflects the new status.
 - **FR-008**: The action MUST NOT auto-downgrade a `completed` spec; any status change away from completed happens only by the user's explicit pick.
@@ -66,7 +66,7 @@ A developer who prefers hovering over right-clicking sees a small inline action 
 ## Assumptions
 
 - The canonical statuses offered in the picker are the eight from the issue's decided list (specifying through completed); `draft` and `archived` are not offered — archive has its own dedicated command and `draft` is the implicit pre-creation state.
-- The existing `setStatus(specDir, status, by)` helper in `stepLifecycle.ts` already appends a history event via `specContextWriter`; this feature passes `by: 'user'` and the chosen status to it.
+- The existing `forceStatus(specDir, status, by)` helper in `stepLifecycle.ts` already appends a history event via `specContextWriter`; this feature passes `by: 'user'` and the chosen status to it.
 
 ## Verbatim Constraints
 
@@ -77,7 +77,7 @@ A developer who prefers hovering over right-clicking sees a small inline action 
 ## Approach
 
 - **`package.json`** — add a `speckit.specs.setStatus` command under `contributes.commands` (title `Set status…`, an icon), and two menu entries under `contributes.menus`: a `view/item/context` item and an inline (`group: inline`) item, both `when`-keyed on the spec lifecycle contextValues (`spec-active`, `spec-completed`, `spec-archived`).
-- **`src/features/specs/specCommands.ts`** — register the `speckit.specs.setStatus` handler: resolve the spec dir from the tree item, show a QuickPick of the eight statuses, show a `showWarningMessage` confirm ("Force status to X?"), then call the existing `setStatus(specDir, chosen, 'user')` and `specExplorer.refresh()`. No-op on cancel at either prompt.
-- **`src/features/specs/specCommands.test.ts`** — add a unit test asserting the handler calls `setStatus` with the chosen status and `'user'`, refreshes once, and writes nothing when cancelled.
+- **`src/features/specs/specCommands.ts`** — register the `speckit.specs.setStatus` handler: resolve the spec dir from the tree item, show a QuickPick of the eight statuses, show a `showWarningMessage` confirm ("Force status to X?"), then call the existing `forceStatus(specDir, chosen, 'user')` and `specExplorer.refresh()`. No-op on cancel at either prompt.
+- **`src/features/specs/specCommands.test.ts`** — add a unit test asserting the handler calls `forceStatus` with the chosen status and `'user'`, refreshes once, and writes nothing when cancelled.
 
-Reuses the sanctioned `setStatus` writer (which appends a history event via `specContextWriter`/`appendTransition`) — no new JSON-writing path.
+Reuses the sanctioned `forceStatus` writer (which appends a history event via `specContextWriter`/`appendTransition`) — no new JSON-writing path.

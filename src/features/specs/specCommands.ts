@@ -423,7 +423,7 @@ export function registerSpecKitCommands(
         })
     );
 
-    // Force-override a spec's lifecycle status via the sanctioned setStatus() writer, authored by:user.
+    // Force-override a spec's lifecycle status via the sanctioned forceStatus() writer, authored by:user.
     context.subscriptions.push(
         vscode.commands.registerCommand('speckit.specs.setStatus', async (item: SpecTreeItem) => {
             const workspaceFolder = vscode.workspace.workspaceFolders?.[0];

@@ -40,6 +40,7 @@ jest.mock('../workflows', () => ({
 
 jest.mock('./stepLifecycle', () => ({
     startStep: jest.fn(),
+    completeStep: jest.fn(),
     setStatus: jest.fn().mockResolvedValue(true),
     forceStatus: jest.fn().mockResolvedValue(true),
     reactivate: jest.fn().mockResolvedValue(undefined),

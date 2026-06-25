@@ -99,7 +99,7 @@
   "task_summaries": {
     "T001": {
       "status": "DONE",
-      "did": "Registered speckit.specs.setStatus handler: QuickPick of 8 canonical statuses, Force-status confirm, calls setStatus(specDir, picked, user) then refresh",
+      "did": "Registered speckit.specs.setStatus handler: QuickPick of 8 canonical statuses, Force-status confirm, calls forceStatus(specDir, picked, user) then refresh",
       "files": [
         "src/features/specs/specCommands.ts"
       ]
