@@ -10,7 +10,7 @@ Path: `speckit-extension/scripts/resolve-spec-paths.py`. Stdlib-only. Reads `liv
 | `--changed <file>...` | capabilities owning the given files, most-specific first |
 | `--all` | union of configured capabilities + on-disk `*.spec.md`, de-duped, plus orphans |
 | `--orphans` | orphan `*.spec.md` files only |
-| `--json` | machine-readable output (default-on for `--changed`/`--all`) |
+| `--json` | emit the machine-readable JSON object; default (without `--json`) is a concise human list |
 
 ## Output shapes (`--json`)
 

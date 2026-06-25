@@ -201,6 +201,16 @@ class ColocatedErrorTests(unittest.TestCase):
         rc = rsp.main(["--root", str(root), "--changed", "src/broken/x.ts"])
         self.assertEqual(rc, 2)
 
+    def test_colocated_without_spec_path_errors_in_orphans_mode(self) -> None:
+        # --orphans must surface the same config error as --changed/--all (it
+        # used to skip empty-spec capabilities and exit 0).
+        yaml = (
+            "livingSpecs:\n  enabled: true\n  capabilities:\n"
+            "    - name: broken\n      match: [\"src/broken/**\"]\n      spec: \"\"\n"
+        )
+        root = make_repo(yaml, files=["src/broken/x.ts"])
+        self.assertEqual(rsp.main(["--root", str(root), "--orphans"]), 2)
+
 
 class OptInTests(unittest.TestCase):
     DISABLED = CHECKOUT_YAML.replace("enabled: true", "enabled: false")

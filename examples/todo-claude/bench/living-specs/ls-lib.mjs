@@ -120,7 +120,7 @@ export function runPytest() {
   return {
     runner: res.mod,
     cwd: '.',
-    cmd: `python3 -m ${res.mod} ${res.mod === 'pytest' ? rel(TEST_FILE) + ' -q' : 'speckit-extension.tests.test_living_specs -v'}`,
+    cmd: `python3 -m ${res.mod} ${res.mod === 'pytest' ? rel(TEST_FILE) + ' -q' : '-v speckit-extension.tests.test_living_specs'}`,
     exit: res.exit,
     stdout: res.stdout,
     stdoutTail: res.stdout.split('\n').slice(-12).join('\n'),

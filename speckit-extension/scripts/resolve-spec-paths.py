@@ -207,8 +207,9 @@ def find_orphans(living: dict, root: str) -> list[str]:
     differently-named spec elsewhere stays an orphan. `specs/` (feature specs)
     is always excluded.
     """
-    claimed = {os.path.normpath(c.get("spec") or "")
-               for c in living["capabilities"] if c.get("spec")}
+    # _resolve_spec raises on an empty/missing spec, so --orphans surfaces the
+    # same config error the --changed/--all paths do (the CLI contract).
+    claimed = {os.path.normpath(_resolve_spec(c)) for c in living["capabilities"]}
     owned_dirs = {os.path.dirname(c) for c in claimed if os.path.dirname(c)}
     orphans = []
     for sp in glob(os.path.join(root, "**", "*.spec.md"), recursive=True):
