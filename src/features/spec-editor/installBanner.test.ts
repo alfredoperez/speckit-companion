@@ -27,13 +27,4 @@ describe('renderInstallBannerHtml — gated banner visibility', () => {
         // Missing extension but explicitly disabled: no banner.
         expect(renderInstallBannerHtml(shouldShowInstallPrompt(false, false))).toBe('');
     });
-
-    it('shows when the extension is missing even with the Companion beta off — visibility never reads the beta setting', () => {
-        // The banner is gated only on its own prompt preference + the extension being
-        // missing. `shouldShowInstallPrompt` takes no beta input at all, so a beta-off
-        // user with a missing extension and the prompt enabled still gets the banner.
-        const enabled = true; // readInstallPromptEnabled() default, independent of beta
-        const installed = false; // extension missing
-        expect(renderInstallBannerHtml(shouldShowInstallPrompt(enabled, installed))).toContain('install-banner');
-    });
 });

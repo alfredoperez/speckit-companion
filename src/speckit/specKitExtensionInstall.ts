@@ -82,7 +82,7 @@ export function shouldShowInstallPrompt(
  * Companion workflow beta. The extension is what powers the workflow, so the prompt to
  * install it must reach users who have not opted into beta — that audience needs the
  * discovery nudge most. The read tolerates a legacy tri-state string until migration
- * rewrites it. Whether the banner actually shows is `shouldShowInstallPrompt(this, installed)`.
+ * rewrites it. Whether the banner actually shows is `shouldShowInstallPrompt(readInstallPromptEnabled(), installed)`.
  */
 export function readInstallPromptEnabled(): boolean {
     const config = vscode.workspace.getConfiguration('speckit');
