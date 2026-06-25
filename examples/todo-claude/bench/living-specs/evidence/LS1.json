@@ -1,0 +1,98 @@
+{
+  "ticket": "LS1",
+  "issue": 361,
+  "title": "capability resolver, config + sandbox harness (LS·1)",
+  "ranAt": "2026-06-25T17:06:07.482Z",
+  "mode": "deterministic",
+  "sandbox": "examples/bench-sandboxes/ls-1",
+  "commands": [
+    {
+      "cwd": "examples/bench-sandboxes/ls-1",
+      "cmd": "python3 /Users/alfredoperez/dev/GitHub/speckit-companion/speckit-extension/scripts/resolve-spec-paths.py --root /Users/alfredoperez/dev/GitHub/speckit-companion/examples/bench-sandboxes/ls-1 --changed src/checkout/cart/x.ts --json",
+      "exit": 0,
+      "stdoutTail": "{\n  \"changed\": [\n    \"src/checkout/cart/x.ts\"\n  ],\n  \"matched\": [\n    {\n      \"name\": \"checkout-cart\",\n      \"spec\": \"capabilities/checkout-cart/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": false,\n      \"specificity\": 17\n    },\n    {\n      \"name\": \"checkout\",\n      \"spec\": \"capabilities/checkout/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": false,\n      \"specificity\": 12\n    }\n  ]\n}"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-1",
+      "cmd": "python3 /Users/alfredoperez/dev/GitHub/speckit-companion/speckit-extension/scripts/resolve-spec-paths.py --root /Users/alfredoperez/dev/GitHub/speckit-companion/examples/bench-sandboxes/ls-1 --all --json",
+      "exit": 0,
+      "stdoutTail": "{\n  \"capabilities\": [\n    {\n      \"name\": \"checkout\",\n      \"spec\": \"capabilities/checkout/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": false\n    },\n    {\n      \"name\": \"checkout-cart\",\n      \"spec\": \"capabilities/checkout-cart/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": false\n    },\n    {\n      \"name\": \"notes\",\n      \"spec\": \"notes/stray.spec.md\",\n      \"location\": \"colocated\",\n      \"exists\": true\n    },\n    {\n      \"name\": \"todos\",\n      \"spec\": \"capabilities/todos/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": true\n    }\n  ],\n  \"orphans\": [\n    \"notes/stray.spec.md\"\n  ]\n}"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-1",
+      "cmd": "python3 /Users/alfredoperez/dev/GitHub/speckit-companion/speckit-extension/scripts/resolve-spec-paths.py --root /Users/alfredoperez/dev/GitHub/speckit-companion/examples/bench-sandboxes/ls-1 --orphans --json",
+      "exit": 0,
+      "stdoutTail": "{\n  \"orphans\": [\n    \"notes/stray.spec.md\"\n  ]\n}"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-1-optout",
+      "cmd": "python3 /Users/alfredoperez/dev/GitHub/speckit-companion/speckit-extension/scripts/resolve-spec-paths.py --root /Users/alfredoperez/dev/GitHub/speckit-companion/examples/bench-sandboxes/ls-1-optout --changed src/checkout/cart/x.ts --json",
+      "exit": 0,
+      "stdoutTail": "{\n  \"changed\": [\n    \"src/checkout/cart/x.ts\"\n  ],\n  \"matched\": []\n}"
+    },
+    {
+      "cwd": ".",
+      "cmd": "python3 -m pytest /Users/alfredoperez/dev/GitHub/speckit-companion/speckit-extension/tests/test_living_specs.py -q",
+      "exit": 0,
+      "stdoutTail": ".................                                                        [100%]\n17 passed in 0.02s"
+    }
+  ],
+  "fileTree": {
+    "added": [
+      ".specify/companion.yml",
+      "capabilities/todos/spec.md",
+      "capabilities/todos/spec.arch.md",
+      "src/checkout/index.ts",
+      "src/checkout/cart/cart.ts",
+      "src/todos/list.ts",
+      "notes/stray.spec.md"
+    ],
+    "modified": [],
+    "removed": []
+  },
+  "config": "livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n      match: [\"src/checkout/**\"]\n      exclude: [\"src/checkout/**/*.test.ts\"]\n    - name: checkout-cart\n      match: [\"src/checkout/cart/**\"]\n    - name: todos\n      match: [\"src/todos/**\"]",
+  "resolverOutputs": {
+    "changed": "{\n  \"changed\": [\n    \"src/checkout/cart/x.ts\"\n  ],\n  \"matched\": [\n    {\n      \"name\": \"checkout-cart\",\n      \"spec\": \"capabilities/checkout-cart/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": false,\n      \"specificity\": 17\n    },\n    {\n      \"name\": \"checkout\",\n      \"spec\": \"capabilities/checkout/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": false,\n      \"specificity\": 12\n    }\n  ]\n}",
+    "all": "{\n  \"capabilities\": [\n    {\n      \"name\": \"checkout\",\n      \"spec\": \"capabilities/checkout/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": false\n    },\n    {\n      \"name\": \"checkout-cart\",\n      \"spec\": \"capabilities/checkout-cart/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": false\n    },\n    {\n      \"name\": \"notes\",\n      \"spec\": \"notes/stray.spec.md\",\n      \"location\": \"colocated\",\n      \"exists\": true\n    },\n    {\n      \"name\": \"todos\",\n      \"spec\": \"capabilities/todos/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": true\n    }\n  ],\n  \"orphans\": [\n    \"notes/stray.spec.md\"\n  ]\n}",
+    "orphans": "{\n  \"orphans\": [\n    \"notes/stray.spec.md\"\n  ]\n}",
+    "optOut": "{\n  \"changed\": [\n    \"src/checkout/cart/x.ts\"\n  ],\n  \"matched\": []\n}"
+  },
+  "assertions": [
+    {
+      "id": "changed-order",
+      "status": "PASS",
+      "detail": "--changed src/checkout/cart/x.ts -> [checkout-cart, checkout]"
+    },
+    {
+      "id": "all-union",
+      "status": "PASS",
+      "detail": "--all capabilities -> [checkout, checkout-cart, notes, todos]"
+    },
+    {
+      "id": "orphan-flagged",
+      "status": "PASS",
+      "detail": "orphans -> [notes/stray.spec.md]"
+    },
+    {
+      "id": "tier-not-orphan",
+      "status": "PASS",
+      "detail": "reserved .arch.md tier excluded from orphans"
+    },
+    {
+      "id": "opt-out-inert",
+      "status": "PASS",
+      "detail": "enabled:false -> matched=[], exit 0"
+    },
+    {
+      "id": "pytest-green",
+      "status": "PASS",
+      "detail": "pytest exit 0"
+    }
+  ],
+  "pytest": {
+    "runner": "pytest",
+    "exit": 0,
+    "tail": ".................                                                        [100%]\n17 passed in 0.02s"
+  },
+  "verdict": "PASS"
+}

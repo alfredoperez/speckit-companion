@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Added
+- **Living specs — keep a durable spec per capability (opt-in).** You can now declare the *capabilities* in your codebase — checkout, auth, billing, todos — and say which files belong to each and where its long-lived spec lives, either in a central folder or right next to the code. Given a set of changed files, Companion resolves which capabilities they touch (most-specific first), and can list every capability plus any stray spec file no capability claims. It's **off by default**: with no `livingSpecs` block in `.specify/companion.yml` (or `enabled: false`), nothing changes and every command behaves exactly as before. This first release ships the resolver and the config; later releases fold change deltas back into the living specs as you work. See the new "Living specs" section in the README.
+
 ## [0.11.1] - 2026-06-24
 
 ### Changed

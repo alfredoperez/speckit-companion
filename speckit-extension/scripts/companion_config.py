@@ -251,3 +251,54 @@ def validate_reads(active_meta: dict):
                 raise ConfigError(
                     f"node '{node_id}' reads dropped node '{dep}' — recipe broke the pipeline"
                 )
+
+
+# --------------------------------------------------------------------------- #
+# Living Specs accessor (opt-in capability registry)
+# --------------------------------------------------------------------------- #
+DEFAULT_CAPABILITY_ROOT = "capabilities"
+
+
+def _as_list(value) -> list:
+    """Coerce a scalar/None/list into a list of non-empty strings."""
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [str(v) for v in value if v not in (None, "")]
+    return [str(value)] if value != "" else []
+
+
+def load_living_specs(config: dict) -> dict:
+    """Read the `livingSpecs` block into a normalized, typed shape.
+
+    Returns {"enabled": bool, "capabilities": [{name, match, exclude, spec}]}.
+    `enabled` defaults to False (opt-in). Each capability normalizes `match`/`exclude`
+    to string lists and defaults `spec` to `capabilities/<name>/spec.md`. A capability
+    whose `spec` is declared but empty keeps "" so the resolver can flag the bad path.
+    """
+    block = (config or {}).get("livingSpecs") or {}
+    if not isinstance(block, dict):
+        return {"enabled": False, "capabilities": []}
+    enabled = bool(block.get("enabled", False))
+    raw = block.get("capabilities") or []
+    capabilities = []
+    for entry in raw if isinstance(raw, list) else []:
+        if not isinstance(entry, dict):
+            continue
+        name = entry.get("name")
+        if not name:
+            continue
+        name = str(name)
+        if "spec" in entry:
+            spec = "" if entry.get("spec") in (None, "") else str(entry["spec"])
+        else:
+            spec = f"{DEFAULT_CAPABILITY_ROOT}/{name}/spec.md"
+        capabilities.append(
+            {
+                "name": name,
+                "match": _as_list(entry.get("match")),
+                "exclude": _as_list(entry.get("exclude")),
+                "spec": spec,
+            }
+        )
+    return {"enabled": enabled, "capabilities": capabilities}
