@@ -313,6 +313,133 @@ describe('bulk status command handlers', () => {
     });
 });
 
+describe('speckit.specs.setStatus command handler', () => {
+    const originalWorkspaceFolders = (vscode.workspace as any).workspaceFolders;
+    const mockWindow = vscode.window as jest.Mocked<typeof vscode.window>;
+
+    beforeEach(() => {
+        (vscode.workspace as any).workspaceFolders = [{ uri: { fsPath: '/ws' } }];
+    });
+
+    afterEach(() => {
+        (vscode.workspace as any).workspaceFolders = originalWorkspaceFolders;
+    });
+
+    const makeItem = (name: string, contextValue: string = 'spec-active') => ({
+        label: name,
+        specPath: `specs/${name}`,
+        contextValue,
+    });
+
+    it('registers the command', () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        expect(handlers.has('speckit.specs.setStatus')).toBe(true);
+    });
+
+    it('on pick + confirm: writes the chosen status through setStatus authored by:user, then refreshes', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.setStatus')!;
+
+        (mockWindow.showQuickPick as jest.Mock).mockResolvedValueOnce('planned');
+        (mockWindow.showWarningMessage as jest.Mock).mockResolvedValueOnce('Force status');
+
+        await handler(makeItem('stuck'));
+
+        expect(setStatus).toHaveBeenCalledTimes(1);
+        expect(setStatus).toHaveBeenCalledWith(
+            expect.stringContaining('specs/stuck'),
+            'planned',
+            'user'
+        );
+        expect(lastMockExplorer.refresh).toHaveBeenCalledTimes(1);
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledWith(
+            expect.stringContaining('planned')
+        );
+    });
+
+    it('confirm prompt is worded "Force status to X?"', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.setStatus')!;
+
+        (mockWindow.showQuickPick as jest.Mock).mockResolvedValueOnce('implementing');
+        (mockWindow.showWarningMessage as jest.Mock).mockResolvedValueOnce('Force status');
+
+        await handler(makeItem('stuck'));
+
+        expect(mockWindow.showWarningMessage).toHaveBeenCalledWith(
+            'Force status to implementing?',
+            { modal: true },
+            'Force status'
+        );
+    });
+
+    it('writes nothing when the picker is cancelled', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.setStatus')!;
+
+        (mockWindow.showQuickPick as jest.Mock).mockResolvedValueOnce(undefined);
+
+        await handler(makeItem('stuck'));
+
+        expect(mockWindow.showWarningMessage).not.toHaveBeenCalled();
+        expect(setStatus).not.toHaveBeenCalled();
+        expect(lastMockExplorer.refresh).not.toHaveBeenCalled();
+    });
+
+    it('writes nothing when the confirm is cancelled', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.setStatus')!;
+
+        (mockWindow.showQuickPick as jest.Mock).mockResolvedValueOnce('completed');
+        (mockWindow.showWarningMessage as jest.Mock).mockResolvedValueOnce(undefined);
+
+        await handler(makeItem('stuck'));
+
+        expect(setStatus).not.toHaveBeenCalled();
+        expect(lastMockExplorer.refresh).not.toHaveBeenCalled();
+    });
+
+    it('offers the eight canonical statuses and excludes draft/archived', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.setStatus')!;
+
+        (mockWindow.showQuickPick as jest.Mock).mockResolvedValueOnce(undefined);
+
+        await handler(makeItem('stuck'));
+
+        const choices = (mockWindow.showQuickPick as jest.Mock).mock.calls[0][0];
+        expect(choices).toEqual([
+            'specifying',
+            'specified',
+            'planning',
+            'planned',
+            'ready-to-implement',
+            'implementing',
+            'implemented',
+            'completed',
+        ]);
+        expect(choices).not.toContain('draft');
+        expect(choices).not.toContain('archived');
+    });
+
+    it('does nothing when item is undefined', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.setStatus')!;
+
+        await handler(undefined);
+
+        expect(mockWindow.showQuickPick).not.toHaveBeenCalled();
+        expect(setStatus).not.toHaveBeenCalled();
+    });
+});
+
 describe('speckit.specs.reveal command handler', () => {
     const originalWorkspaceFolders = (vscode.workspace as any).workspaceFolders;
     const mockWindow = vscode.window as jest.Mocked<typeof vscode.window>;

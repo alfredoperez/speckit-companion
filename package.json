@@ -252,6 +252,12 @@
         "icon": "$(play)"
       },
       {
+        "command": "speckit.specs.setStatus",
+        "title": "Set status…",
+        "category": "SpecKit",
+        "icon": "$(settings-gear)"
+      },
+      {
         "command": "speckit.group.markAllCompleted",
         "title": "Mark all as Completed",
         "category": "SpecKit",
@@ -540,6 +546,16 @@
           "group": "inline"
         },
         {
+          "command": "speckit.specs.setStatus",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
+          "group": "inline"
+        },
+        {
+          "command": "speckit.specs.setStatus",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
+          "group": "7_modification"
+        },
+        {
           "command": "speckit.markCompleted",
           "when": "view == speckit.views.explorer && (viewItem == spec-active || viewItem == spec-tasks-done || viewItem == spec-implemented)",
           "group": "7_modification"
@@ -686,6 +702,10 @@
         },
         {
           "command": "speckit.specs.resume",
+          "when": "false"
+        },
+        {
+          "command": "speckit.specs.setStatus",
           "when": "false"
         }
       ]
