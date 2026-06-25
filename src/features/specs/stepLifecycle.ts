@@ -102,7 +102,7 @@ export async function setStatus(
     specDir: string,
     status: Status,
     by: TransitionBy = 'extension'
-): Promise<void> {
+): Promise<boolean> {
     try {
         await updateSpecContext(
             specDir,
@@ -122,8 +122,10 @@ export async function setStatus(
             },
             buildFallback(specDir, 'specify')
         );
+        return true;
     } catch (err) {
         logError(`setStatus(${path.basename(specDir)}, ${status})`, err);
+        return false;
     }
 }
 

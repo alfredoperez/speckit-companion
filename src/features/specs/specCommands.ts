@@ -428,10 +428,11 @@ export function registerSpecKitCommands(
         vscode.commands.registerCommand('speckit.specs.setStatus', async (item: SpecTreeItem) => {
             const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
             if (!workspaceFolder || !item) return;
-            const picked = (await vscode.window.showQuickPick(FORCE_STATUS_CHOICES, {
+            const choice = await vscode.window.showQuickPick(FORCE_STATUS_CHOICES, {
                 title: 'Set status',
                 placeHolder: 'Force this spec to a lifecycle status',
-            })) as Status | undefined;
+            });
+            const picked = FORCE_STATUS_CHOICES.find(s => s === choice);
             if (!picked) return;
             const confirm = await vscode.window.showWarningMessage(
                 `Force status to ${picked}?`,
@@ -440,7 +441,11 @@ export function registerSpecKitCommands(
             );
             if (confirm !== 'Force status') return;
             const specDir = specDirFor(item, workspaceFolder.uri.fsPath);
-            await setStatus(specDir, picked, 'user');
+            const ok = await setStatus(specDir, picked, 'user');
+            if (!ok) {
+                vscode.window.showErrorMessage(`Could not set status to ${picked} — see the SpecKit Companion output for details.`);
+                return;
+            }
             specExplorer.refresh();
             NotificationUtils.showAutoDismissNotification(`Status set to ${picked}`);
         })

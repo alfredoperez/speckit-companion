@@ -40,7 +40,7 @@ jest.mock('../workflows', () => ({
 
 jest.mock('./stepLifecycle', () => ({
     startStep: jest.fn(),
-    setStatus: jest.fn().mockResolvedValue(undefined),
+    setStatus: jest.fn().mockResolvedValue(true),
     reactivate: jest.fn().mockResolvedValue(undefined),
 }));
 
@@ -357,6 +357,24 @@ describe('speckit.specs.setStatus command handler', () => {
         expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledWith(
             expect.stringContaining('planned')
         );
+    });
+
+    it('when setStatus fails: shows an error, does not refresh or toast success', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.setStatus')!;
+
+        (mockWindow.showQuickPick as jest.Mock).mockResolvedValueOnce('planned');
+        (mockWindow.showWarningMessage as jest.Mock).mockResolvedValueOnce('Force status');
+        (setStatus as jest.Mock).mockResolvedValueOnce(false);
+
+        await handler(makeItem('stuck'));
+
+        expect(mockWindow.showErrorMessage).toHaveBeenCalledWith(
+            expect.stringContaining('Could not set status')
+        );
+        expect(lastMockExplorer.refresh).not.toHaveBeenCalled();
+        expect(NotificationUtils.showAutoDismissNotification).not.toHaveBeenCalled();
     });
 
     it('confirm prompt is worded "Force status to X?"', async () => {
