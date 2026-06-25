@@ -174,19 +174,27 @@ livingSpecs:
 
 Each capability has a `name`, the `match` globs that define which files belong to it, an optional `exclude`, and where its living spec lives. By default a capability's spec is **centralized** at `capabilities/<name>/spec.md`; give an explicit `spec` path to **colocate** it next to the code. A spec file uses the `.spec.md` extension (the hot tier loaded today); the reserved `.arch.md` / `.coverage.md` siblings are recognized and never flagged as stray.
 
-The resolver ships as `resolve-spec-paths.py` and runs in three modes:
+The resolver ships as `resolve-spec-paths.py` and runs in three modes. By default it prints a concise human list; add `--json` for the full machine-readable object (names, resolved paths, locations, existence):
 
 ```bash
 # Which capabilities own a changed file? (most-specific first)
 python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --changed src/checkout/cart/x.ts
-#   → [checkout-cart, checkout]
+#   [checkout-cart, checkout]
 
 # Every capability + any stray .spec.md on disk (orphans)
 python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --all
+#   capabilities: [checkout, checkout-cart, todos]
+#   orphans: []
 
-# Just the orphans — .spec.md files no capability claims
+# Just the orphans — .spec.md files no capability claims or owns
 python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --orphans
+#   []
+
+# Add --json for the full record the sync/fold/drift steps consume
+python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --changed src/checkout/cart/x.ts --json
 ```
+
+An orphan is a `.spec.md` that no capability claims **and** that does not live inside a configured capability's spec directory — so another file under `capabilities/checkout/` (or a reserved `.arch.md` / `.coverage.md` sibling) is never flagged as stray.
 
 ## Installation
 

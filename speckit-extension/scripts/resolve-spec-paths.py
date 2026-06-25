@@ -24,7 +24,8 @@ Usage:
   resolve-spec-paths.py --changed <file>...   # capabilities in scope (ordered)
   resolve-spec-paths.py --all                 # every capability (union) + orphans
   resolve-spec-paths.py --orphans             # orphan *.spec.md files only
-  add --json for machine-readable output (default for --changed/--all).
+  add --json for the machine-readable object; the default is a concise human
+  list (capability names / orphan paths).
 """
 from __future__ import annotations
 
@@ -184,29 +185,31 @@ def discover_all(living: dict, root: str) -> list[dict]:
         entry = _entry(cap, root)
         out.append(entry)
         seen.add(os.path.normpath(entry["spec"]))
-    for sp in sorted(glob(os.path.join(root, "**", "*.spec.md"), recursive=True)):
-        rel = os.path.normpath(os.path.relpath(sp, root))
-        if rel in seen:
+    for rel in find_orphans(living, root):
+        norm = os.path.normpath(rel)
+        if norm in seen:
             continue
-        top = rel.split(os.sep, 1)[0]
-        if top == "specs":
-            continue
-        name = os.path.basename(os.path.dirname(rel)) or os.path.basename(rel)
-        out.append({"name": name, "spec": _posix(rel), "location": "colocated",
+        name = os.path.basename(os.path.dirname(norm)) or os.path.basename(norm)
+        out.append({"name": name, "spec": _posix(norm), "location": "colocated",
                     "exists": True})
-        seen.add(rel)
+        seen.add(norm)
     out.sort(key=lambda e: e["name"])
     return out
 
 
 def find_orphans(living: dict, root: str) -> list[str]:
-    """`*.spec.md` on disk not claimed by any capability spec path.
+    """`*.spec.md` on disk not claimed by — and not owned by — any capability.
 
-    `.arch.md` / `.coverage.md` are reserved tiers, never orphans. Excludes
-    `specs/` (feature specs) and any configured `capabilities/<name>` spec.
+    A spec is NOT an orphan when it is: the exact claimed `spec` path of a
+    capability; a reserved-tier sibling (`.arch.md` / `.coverage.md`); or any
+    `*.spec.md` living inside a configured capability's resolved spec directory
+    (e.g. another file under `capabilities/checkout/`). A genuinely-unclaimed,
+    differently-named spec elsewhere stays an orphan. `specs/` (feature specs)
+    is always excluded.
     """
     claimed = {os.path.normpath(c.get("spec") or "")
                for c in living["capabilities"] if c.get("spec")}
+    owned_dirs = {os.path.dirname(c) for c in claimed if os.path.dirname(c)}
     orphans = []
     for sp in glob(os.path.join(root, "**", "*.spec.md"), recursive=True):
         rel = os.path.normpath(os.path.relpath(sp, root))
@@ -214,9 +217,34 @@ def find_orphans(living: dict, root: str) -> list[str]:
             continue
         if any(rel.endswith(t) for t in RESERVED_TIERS):
             continue
-        if rel not in claimed:
-            orphans.append(_posix(rel))
+        if rel in claimed:
+            continue
+        if any(rel == d or rel.startswith(d + os.sep) for d in owned_dirs):
+            continue
+        orphans.append(_posix(rel))
     return sorted(orphans)
+
+
+def _fmt_list(items: list[str]) -> str:
+    """Concise human list: `[a, b]` (matches the README examples)."""
+    return "[" + ", ".join(items) + "]"
+
+
+def render_human(result: dict) -> str:
+    """Concise human-readable view of a result object.
+
+    --changed -> `[name, name]` (most-specific first)
+    --orphans -> `[path, path]`
+    --all     -> capability names line + orphans line
+    Empty modes print `[]` (no error), matching the inert/opt-out contract.
+    """
+    if "matched" in result:
+        return _fmt_list([m["name"] for m in result["matched"]])
+    if "capabilities" in result:
+        caps = _fmt_list([c["name"] for c in result["capabilities"]])
+        orphans = _fmt_list(result.get("orphans", []))
+        return f"capabilities: {caps}\norphans: {orphans}"
+    return _fmt_list(result.get("orphans", []))
 
 
 def main(argv=None) -> int:
@@ -225,10 +253,14 @@ def main(argv=None) -> int:
     ap.add_argument("--changed", nargs="*", help="changed files -> capabilities in scope")
     ap.add_argument("--all", action="store_true", help="every capability (union) + orphans")
     ap.add_argument("--orphans", action="store_true", help="orphan *.spec.md files")
-    ap.add_argument("--json", action="store_true", help="machine-readable output")
+    ap.add_argument("--json", action="store_true",
+                    help="emit the machine-readable JSON object (default: a concise human list)")
     args = ap.parse_args(argv)
     root = args.root
     living = load_living(root)
+
+    def emit(result: dict) -> None:
+        print(json.dumps(result, indent=2) if args.json else render_human(result))
 
     if not living["enabled"]:
         if args.orphans:
@@ -237,7 +269,7 @@ def main(argv=None) -> int:
             result = {"capabilities": [], "orphans": []}
         else:
             result = {"changed": args.changed or [], "matched": []}
-        print(json.dumps(result, indent=2))
+        emit(result)
         return 0
 
     try:
@@ -252,7 +284,7 @@ def main(argv=None) -> int:
     except ValueError as exc:
         sys.stderr.write(f"resolve-spec-paths: {exc}\n")
         return 2
-    print(json.dumps(result, indent=2))
+    emit(result)
     return 0
 
 

@@ -2,39 +2,39 @@
   "ticket": "LS1",
   "issue": 361,
   "title": "capability resolver, config + sandbox harness (LS·1)",
-  "ranAt": "2026-06-25T17:06:07.482Z",
+  "ranAt": "2026-06-25T17:27:42.006Z",
   "mode": "deterministic",
   "sandbox": "examples/bench-sandboxes/ls-1",
   "commands": [
     {
       "cwd": "examples/bench-sandboxes/ls-1",
-      "cmd": "python3 /Users/alfredoperez/dev/GitHub/speckit-companion/speckit-extension/scripts/resolve-spec-paths.py --root /Users/alfredoperez/dev/GitHub/speckit-companion/examples/bench-sandboxes/ls-1 --changed src/checkout/cart/x.ts --json",
+      "cmd": "python3 speckit-extension/scripts/resolve-spec-paths.py --root examples/bench-sandboxes/ls-1 --changed src/checkout/cart/x.ts --json",
       "exit": 0,
       "stdoutTail": "{\n  \"changed\": [\n    \"src/checkout/cart/x.ts\"\n  ],\n  \"matched\": [\n    {\n      \"name\": \"checkout-cart\",\n      \"spec\": \"capabilities/checkout-cart/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": false,\n      \"specificity\": 17\n    },\n    {\n      \"name\": \"checkout\",\n      \"spec\": \"capabilities/checkout/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": false,\n      \"specificity\": 12\n    }\n  ]\n}"
     },
     {
       "cwd": "examples/bench-sandboxes/ls-1",
-      "cmd": "python3 /Users/alfredoperez/dev/GitHub/speckit-companion/speckit-extension/scripts/resolve-spec-paths.py --root /Users/alfredoperez/dev/GitHub/speckit-companion/examples/bench-sandboxes/ls-1 --all --json",
+      "cmd": "python3 speckit-extension/scripts/resolve-spec-paths.py --root examples/bench-sandboxes/ls-1 --all --json",
       "exit": 0,
       "stdoutTail": "{\n  \"capabilities\": [\n    {\n      \"name\": \"checkout\",\n      \"spec\": \"capabilities/checkout/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": false\n    },\n    {\n      \"name\": \"checkout-cart\",\n      \"spec\": \"capabilities/checkout-cart/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": false\n    },\n    {\n      \"name\": \"notes\",\n      \"spec\": \"notes/stray.spec.md\",\n      \"location\": \"colocated\",\n      \"exists\": true\n    },\n    {\n      \"name\": \"todos\",\n      \"spec\": \"capabilities/todos/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": true\n    }\n  ],\n  \"orphans\": [\n    \"notes/stray.spec.md\"\n  ]\n}"
     },
     {
       "cwd": "examples/bench-sandboxes/ls-1",
-      "cmd": "python3 /Users/alfredoperez/dev/GitHub/speckit-companion/speckit-extension/scripts/resolve-spec-paths.py --root /Users/alfredoperez/dev/GitHub/speckit-companion/examples/bench-sandboxes/ls-1 --orphans --json",
+      "cmd": "python3 speckit-extension/scripts/resolve-spec-paths.py --root examples/bench-sandboxes/ls-1 --orphans --json",
       "exit": 0,
       "stdoutTail": "{\n  \"orphans\": [\n    \"notes/stray.spec.md\"\n  ]\n}"
     },
     {
       "cwd": "examples/bench-sandboxes/ls-1-optout",
-      "cmd": "python3 /Users/alfredoperez/dev/GitHub/speckit-companion/speckit-extension/scripts/resolve-spec-paths.py --root /Users/alfredoperez/dev/GitHub/speckit-companion/examples/bench-sandboxes/ls-1-optout --changed src/checkout/cart/x.ts --json",
+      "cmd": "python3 speckit-extension/scripts/resolve-spec-paths.py --root examples/bench-sandboxes/ls-1-optout --changed src/checkout/cart/x.ts --json",
       "exit": 0,
       "stdoutTail": "{\n  \"changed\": [\n    \"src/checkout/cart/x.ts\"\n  ],\n  \"matched\": []\n}"
     },
     {
       "cwd": ".",
-      "cmd": "python3 -m pytest /Users/alfredoperez/dev/GitHub/speckit-companion/speckit-extension/tests/test_living_specs.py -q",
+      "cmd": "python3 -m pytest speckit-extension/tests/test_living_specs.py -q",
       "exit": 0,
-      "stdoutTail": ".................                                                        [100%]\n17 passed in 0.02s"
+      "stdoutTail": "...........................                                              [100%]\n27 passed in 0.04s"
     }
   ],
   "fileTree": {
@@ -92,7 +92,7 @@
   "pytest": {
     "runner": "pytest",
     "exit": 0,
-    "tail": ".................                                                        [100%]\n17 passed in 0.02s"
+    "tail": "...........................                                              [100%]\n27 passed in 0.04s"
   },
   "verdict": "PASS"
 }

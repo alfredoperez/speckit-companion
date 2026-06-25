@@ -6,7 +6,7 @@
 // so it does not install spec-kit — it points the real shipped resolver at the
 // sandbox via --root.
 import { mkdirSync, writeFileSync, existsSync, rmSync } from 'node:fs'
-import { join, dirname } from 'node:path'
+import { join, dirname, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execFileSync } from 'node:child_process'
 
@@ -22,6 +22,12 @@ function write(root, rel, body) {
   const p = join(root, rel)
   mkdirSync(dirname(p), { recursive: true })
   writeFileSync(p, body)
+}
+
+// Repo-relative path for the recorded `cmd` strings + evidence — never leak an
+// absolute home path or username into committed evidence.
+function rel(p) {
+  return relative(REPO_ROOT, p)
 }
 
 // Arrange — bake a throwaway repo for the LS·1 demo. checkout + checkout-cart
@@ -87,8 +93,8 @@ export function runResolver(root, args) {
     exit = typeof e.status === 'number' ? e.status : 1
   }
   return {
-    cwd: root,
-    cmd: `python3 ${RESOLVER} --root ${root} ${args.join(' ')}`,
+    cwd: rel(root),
+    cmd: `python3 ${rel(RESOLVER)} --root ${rel(root)} ${args.join(' ')}`,
     exit,
     stdout: stdout.trim(),
     stdoutTail: stdout.trim().split('\n').slice(-40).join('\n'),
@@ -113,8 +119,8 @@ export function runPytest() {
   }
   return {
     runner: res.mod,
-    cwd: REPO_ROOT,
-    cmd: `python3 -m ${res.mod} ${res.mod === 'pytest' ? TEST_FILE + ' -q' : 'speckit-extension.tests.test_living_specs -v'}`,
+    cwd: '.',
+    cmd: `python3 -m ${res.mod} ${res.mod === 'pytest' ? rel(TEST_FILE) + ' -q' : 'speckit-extension.tests.test_living_specs -v'}`,
     exit: res.exit,
     stdout: res.stdout,
     stdoutTail: res.stdout.split('\n').slice(-12).join('\n'),

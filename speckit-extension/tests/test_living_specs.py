@@ -166,6 +166,30 @@ class AllAndOrphanTests(unittest.TestCase):
         living = rsp.load_living(str(root))
         self.assertEqual(rsp.find_orphans(living, str(root)), [])
 
+    def test_sibling_spec_in_owned_capability_dir_is_not_orphan(self) -> None:
+        # A differently-named *.spec.md under a configured capability's spec
+        # directory belongs to that capability — not a stray orphan.
+        root = make_repo(
+            CHECKOUT_YAML,
+            spec_files=["capabilities/checkout/spec.md",
+                        "capabilities/checkout/legacy.spec.md"],
+        )
+        living = rsp.load_living(str(root))
+        orphans = rsp.find_orphans(living, str(root))
+        self.assertNotIn("capabilities/checkout/legacy.spec.md", orphans)
+        self.assertEqual(orphans, [])
+        # discover_all must not synthesize a phantom capability for the sibling.
+        allres = rsp.discover_all(living, str(root))
+        self.assertNotIn("capabilities/checkout/legacy.spec.md",
+                         {e["spec"] for e in allres})
+
+    def test_unrelated_named_spec_outside_owned_dir_stays_orphan(self) -> None:
+        # A spec that is neither claimed nor under any capability dir is an orphan.
+        root = make_repo(CHECKOUT_YAML, spec_files=["docs/wandering.spec.md"])
+        living = rsp.load_living(str(root))
+        self.assertEqual(rsp.find_orphans(living, str(root)),
+                         ["docs/wandering.spec.md"])
+
 
 class ColocatedErrorTests(unittest.TestCase):
     def test_colocated_without_spec_path_errors(self) -> None:
@@ -199,6 +223,51 @@ class OptInTests(unittest.TestCase):
         root = Path(tempfile.mkdtemp())
         rc = rsp.main(["--root", str(root), "--all"])
         self.assertEqual(rc, 0)
+
+
+class OutputFormatTests(unittest.TestCase):
+    """--json emits the JSON object; the default is a concise human list."""
+
+    def _run(self, argv) -> tuple[int, str]:
+        import contextlib
+        import io
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rc = rsp.main(argv)
+        return rc, buf.getvalue()
+
+    def test_changed_default_is_human_name_list(self) -> None:
+        root = make_repo(CHECKOUT_YAML)
+        rc, out = self._run(["--root", str(root), "--changed", "src/checkout/cart/x.ts"])
+        self.assertEqual(rc, 0)
+        self.assertEqual(out.strip(), "[checkout-cart, checkout]")
+
+    def test_changed_json_emits_object(self) -> None:
+        root = make_repo(CHECKOUT_YAML)
+        rc, out = self._run(["--root", str(root), "--changed", "src/checkout/cart/x.ts", "--json"])
+        self.assertEqual(rc, 0)
+        import json
+        obj = json.loads(out)
+        self.assertEqual([m["name"] for m in obj["matched"]], ["checkout-cart", "checkout"])
+
+    def test_orphans_default_is_human_path_list(self) -> None:
+        root = make_repo(CHECKOUT_YAML, spec_files=["notes/random.spec.md"])
+        rc, out = self._run(["--root", str(root), "--orphans"])
+        self.assertEqual(rc, 0)
+        self.assertEqual(out.strip(), "[notes/random.spec.md]")
+
+    def test_all_default_has_capabilities_and_orphans_lines(self) -> None:
+        root = make_repo(CHECKOUT_YAML, spec_files=["notes/random.spec.md"])
+        rc, out = self._run(["--root", str(root), "--all"])
+        self.assertEqual(rc, 0)
+        lines = out.strip().splitlines()
+        self.assertTrue(lines[0].startswith("capabilities: ["))
+        self.assertEqual(lines[1], "orphans: [notes/random.spec.md]")
+
+    def test_human_render_does_not_emit_json_braces(self) -> None:
+        root = make_repo(CHECKOUT_YAML)
+        _, out = self._run(["--root", str(root), "--all"])
+        self.assertNotIn("{", out)
 
 
 if __name__ == "__main__":
