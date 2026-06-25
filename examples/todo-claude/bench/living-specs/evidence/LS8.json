@@ -1,0 +1,157 @@
+{
+  "ticket": "LS8",
+  "issue": 368,
+  "title": "tiered consumption — arch (lazy) + coverage (LS·8)",
+  "ranAt": "2026-06-25T21:41:33.467Z",
+  "mode": "deterministic",
+  "sandbox": "examples/bench-sandboxes/ls-8",
+  "optOutSandbox": "examples/bench-sandboxes/ls-8-optout",
+  "selectionNote": "arch-tier SELECTION (which paths a plan loads per size) is deterministic and asserted here; the AI actually consuming .arch.md inside a live plan run is out of this harness and is NOT claimed as proven.",
+  "commands": [
+    {
+      "cwd": "examples/bench-sandboxes/ls-8",
+      "cmd": "python3 speckit-extension/scripts/resolve-spec-paths.py --root examples/bench-sandboxes/ls-8 --all --json",
+      "exit": 0,
+      "stdoutTail": "{\n  \"capabilities\": [\n    {\n      \"name\": \"billing\",\n      \"spec\": \"capabilities/billing/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": true,\n      \"tiers\": {\n        \"arch\": {\n          \"path\": \"capabilities/billing/spec.arch.md\",\n          \"exists\": true\n        },\n        \"coverage\": {\n          \"path\": \"capabilities/billing/spec.coverage.md\",\n          \"exists\": true\n        }\n      }\n    }\n  ],\n  \"orphans\": []\n}"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-8",
+      "cmd": "python3 speckit-extension/scripts/check-coverage.py --root examples/bench-sandboxes/ls-8",
+      "exit": 0,
+      "stdoutTail": "📊 Coverage report\n\n📁 billing — 2/3 requirements covered\n   ✓ FR-1 → src/billing/charge.test.ts\n   ✓ FR-2 → tests/billing/refund_test.py\n   ✗ FR-3 — uncovered"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-8",
+      "cmd": "python3 speckit-extension/scripts/check-coverage.py --root examples/bench-sandboxes/ls-8 --json",
+      "exit": 0,
+      "stdoutTail": "{\n  \"enabled\": true,\n  \"capabilities\": [\n    {\n      \"name\": \"billing\",\n      \"spec\": \"capabilities/billing/spec.md\",\n      \"coverage\": \"capabilities/billing/spec.coverage.md\",\n      \"hasCoverage\": true,\n      \"total\": 3,\n      \"covered\": 2,\n      \"uncovered\": 1,\n      \"requirements\": [\n        {\n          \"id\": \"FR-1\",\n          \"covered\": true,\n          \"tests\": [\n            \"src/billing/charge.test.ts\"\n          ]\n        },\n        {\n          \"id\": \"FR-2\",\n          \"covered\": true,\n          \"tests\": [\n            \"tests/billing/refund_test.py\"\n          ]\n        },\n        {\n          \"id\": \"FR-3\",\n          \"covered\": false,\n          \"tests\": []\n        }\n      ]\n    }\n  ]\n}"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-8-optout",
+      "cmd": "python3 speckit-extension/scripts/check-coverage.py --root examples/bench-sandboxes/ls-8-optout --json",
+      "exit": 0,
+      "stdoutTail": "{\n  \"enabled\": false,\n  \"capabilities\": []\n}"
+    },
+    {
+      "cwd": ".",
+      "cmd": "python3 -m pytest speckit-extension/tests/test_living_specs.py -q",
+      "exit": 0,
+      "stdoutTail": "........................................................................ [ 74%]\n.........................                                                [100%]\n97 passed in 3.57s"
+    }
+  ],
+  "fileTree": {
+    "added": [
+      ".specify/companion.yml",
+      "capabilities/billing/spec.md",
+      "capabilities/billing/spec.arch.md",
+      "capabilities/billing/spec.coverage.md",
+      "src/billing/charge.ts"
+    ],
+    "modified": [],
+    "removed": []
+  },
+  "config": "livingSpecs:\n  enabled: true\n  capabilities:\n    - name: billing\n      match: [\"src/billing/**\"]\n",
+  "resolverTiers": {
+    "arch": {
+      "path": "capabilities/billing/spec.arch.md",
+      "exists": true
+    },
+    "coverage": {
+      "path": "capabilities/billing/spec.coverage.md",
+      "exists": true
+    }
+  },
+  "coverageReport": "📊 Coverage report\n\n📁 billing — 2/3 requirements covered\n   ✓ FR-1 → src/billing/charge.test.ts\n   ✓ FR-2 → tests/billing/refund_test.py\n   ✗ FR-3 — uncovered",
+  "coverageJson": {
+    "enabled": true,
+    "capabilities": [
+      {
+        "name": "billing",
+        "spec": "capabilities/billing/spec.md",
+        "coverage": "capabilities/billing/spec.coverage.md",
+        "hasCoverage": true,
+        "total": 3,
+        "covered": 2,
+        "uncovered": 1,
+        "requirements": [
+          {
+            "id": "FR-1",
+            "covered": true,
+            "tests": [
+              "src/billing/charge.test.ts"
+            ]
+          },
+          {
+            "id": "FR-2",
+            "covered": true,
+            "tests": [
+              "tests/billing/refund_test.py"
+            ]
+          },
+          {
+            "id": "FR-3",
+            "covered": false,
+            "tests": []
+          }
+        ]
+      }
+    ]
+  },
+  "optOutJson": {
+    "enabled": false,
+    "capabilities": []
+  },
+  "assertions": [
+    {
+      "id": "arch-tier-resolves",
+      "status": "PASS",
+      "detail": "resolver derives arch path + exists (capabilities/billing/spec.arch.md exists=true)"
+    },
+    {
+      "id": "coverage-tier-resolves",
+      "status": "PASS",
+      "detail": "resolver derives coverage path + exists (capabilities/billing/spec.coverage.md exists=true)"
+    },
+    {
+      "id": "arch-selected-for-significant-plan",
+      "status": "PASS",
+      "detail": "arch tier selected for normal (true) and oversized (true) plans"
+    },
+    {
+      "id": "arch-skipped-for-small-plan",
+      "status": "PASS",
+      "detail": "arch tier NOT selected for a simple/fast-path change (selected=false)"
+    },
+    {
+      "id": "requirement-mapped-to-test",
+      "status": "PASS",
+      "detail": "FR-001 maps to its test (src/billing/charge.test.ts)"
+    },
+    {
+      "id": "uncovered-requirement-flagged",
+      "status": "PASS",
+      "detail": "FR-003 (no coverage entry) flagged uncovered (covered=false)"
+    },
+    {
+      "id": "coverage-exits-success",
+      "status": "PASS",
+      "detail": "check-coverage.py exit 0 (json 0) — read-only, never halts"
+    },
+    {
+      "id": "opt-out-inert",
+      "status": "PASS",
+      "detail": "enabled:false → coverage reports nothing, exit 0"
+    },
+    {
+      "id": "pytest-green",
+      "status": "PASS",
+      "detail": "pytest exit 0"
+    }
+  ],
+  "pytest": {
+    "runner": "pytest",
+    "exit": 0,
+    "tail": "........................................................................ [ 74%]\n.........................                                                [100%]\n97 passed in 3.57s"
+  },
+  "verdict": "PASS"
+}

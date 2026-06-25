@@ -3,7 +3,7 @@ schema_version: "1.0"
 extension:
   id: companion
   name: "SpecKit Companion"
-  version: "0.16.0"
+  version: "0.17.0"
   description: "Live spec-driven progress for SpecKit Companion — lifecycle capture, status, and resume."
   author: alfredoperez
   repository: https://github.com/alfredoperez/speckit-companion
@@ -70,6 +70,9 @@ provides:
     - name: speckit.companion.drift
       file: commands/speckit.companion.drift.md
       description: "Report living-spec drift — per capability, source files changed since the spec was last committed, classified tracked vs unspeced (opt-in, never halts)"
+    - name: speckit.companion.coverage
+      file: commands/speckit.companion.coverage.md
+      description: "Report living-spec requirement→test coverage — per requirement, whether its coverage tier maps a test (opt-in, read-only, never halts)"
 
 hooks:
   after_specify:

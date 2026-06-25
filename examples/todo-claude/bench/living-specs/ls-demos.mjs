@@ -40,6 +40,10 @@ import {
   bakeLs6Repo,
   bakeLs6OptOutRepo,
   runDrift,
+  bakeLs8Repo,
+  bakeLs8OptOutRepo,
+  runCoverage,
+  archTierSelected,
   capabilitiesTree,
   runResolver,
   runRecordWrite,
@@ -726,7 +730,147 @@ function runLs6() {
   }
 }
 
-const RUNNERS = { LS1: runLs1, LS2: runLs2, LS3: runLs3, LS4: runLs4, LS5: runLs5, LS6: runLs6 }
+function runLs8() {
+  const commands = []
+  const assertions = []
+
+  // --- arrange: a billing capability with all three tiers committed ----------
+  const root = bakeLs8Repo()
+  const optRoot = bakeLs8OptOutRepo()
+
+  // --- act (deterministic, REAL): resolver tier paths + coverage checker ------
+  const resolved = runResolver(root, ['--all', '--json'])
+  const resolvedJson = parseJson(resolved.stdout)
+  const cov = runCoverage(root)
+  const covJson = runCoverage(root, ['--json'])
+  const coverage = parseJson(covJson.stdout)
+  const optCov = runCoverage(optRoot, ['--json'])
+  const optCovJson = parseJson(optCov.stdout)
+  const pytest = runPytest()
+
+  commands.push(
+    { cwd: resolved.cwd, cmd: resolved.cmd, exit: resolved.exit, stdoutTail: resolved.stdoutTail },
+    { cwd: cov.cwd, cmd: cov.cmd, exit: cov.exit, stdoutTail: cov.stdoutTail },
+    { cwd: covJson.cwd, cmd: covJson.cmd, exit: covJson.exit, stdoutTail: covJson.stdoutTail },
+    { cwd: optCov.cwd, cmd: optCov.cmd, exit: optCov.exit, stdoutTail: optCov.stdoutTail },
+    { cwd: '.', cmd: pytest.cmd, exit: pytest.exit, stdoutTail: pytest.stdoutTail },
+  )
+
+  // --- assert (a): resolver derives + exists-flags the arch + coverage tiers --
+  const billing = resolvedJson
+    ? resolvedJson.capabilities.find((c) => c.name === 'billing')
+    : null
+  const tiers = billing ? billing.tiers : null
+  assertions.push(assert(
+    'arch-tier-resolves',
+    tiers != null
+      && tiers.arch.path === 'capabilities/billing/spec.arch.md'
+      && tiers.arch.exists === true,
+    `resolver derives arch path + exists (${tiers ? tiers.arch.path + ' exists=' + tiers.arch.exists : 'no billing entry'})`,
+  ))
+  assertions.push(assert(
+    'coverage-tier-resolves',
+    tiers != null
+      && tiers.coverage.path === 'capabilities/billing/spec.coverage.md'
+      && tiers.coverage.exists === true,
+    `resolver derives coverage path + exists (${tiers ? tiers.coverage.path + ' exists=' + tiers.coverage.exists : 'no billing entry'})`,
+  ))
+
+  // --- assert (b): deterministic tier-SELECTION — arch loads for normal/  -----
+  //     oversized, NOT for a small (simple) change. The actual AI reading of
+  //     the file is the live part (out of scope) — this proves the selection.
+  const selNormal = archTierSelected('normal')
+  const selOversized = archTierSelected('oversized')
+  const selSimple = archTierSelected('simple')
+  assertions.push(assert(
+    'arch-selected-for-significant-plan',
+    selNormal === true && selOversized === true,
+    `arch tier selected for normal (${selNormal}) and oversized (${selOversized}) plans`,
+  ))
+  assertions.push(assert(
+    'arch-skipped-for-small-plan',
+    selSimple === false,
+    `arch tier NOT selected for a simple/fast-path change (selected=${selSimple})`,
+  ))
+
+  // --- assert (c): coverage maps a requirement to its test + flags uncovered --
+  const billingCov = coverage
+    ? coverage.capabilities.find((c) => c.name === 'billing')
+    : null
+  const reqs = billingCov ? Object.fromEntries(billingCov.requirements.map((r) => [r.id, r])) : {}
+  assertions.push(assert(
+    'requirement-mapped-to-test',
+    reqs['FR-1'] != null
+      && reqs['FR-1'].covered === true
+      && reqs['FR-1'].tests.includes('src/billing/charge.test.ts'),
+    `FR-001 maps to its test (${reqs['FR-1'] ? reqs['FR-1'].tests.join(', ') : 'missing'})`,
+  ))
+  assertions.push(assert(
+    'uncovered-requirement-flagged',
+    reqs['FR-3'] != null && reqs['FR-3'].covered === false,
+    `FR-003 (no coverage entry) flagged uncovered (covered=${reqs['FR-3'] ? reqs['FR-3'].covered : 'missing'})`,
+  ))
+  assertions.push(assert(
+    'coverage-exits-success',
+    cov.exit === 0 && covJson.exit === 0,
+    `check-coverage.py exit ${cov.exit} (json ${covJson.exit}) — read-only, never halts`,
+  ))
+
+  // --- assert (d): opt-out is inert -------------------------------------------
+  assertions.push(assert(
+    'opt-out-inert',
+    optCov.exit === 0 && optCovJson != null && optCovJson.enabled === false
+      && optCovJson.capabilities.length === 0,
+    'enabled:false → coverage reports nothing, exit 0',
+  ))
+  assertions.push(assert(
+    'pytest-green',
+    pytest.exit === 0,
+    `${pytest.runner} exit ${pytest.exit}`,
+  ))
+
+  const ran = resolved.exit === 0 && cov.exit === 0 && covJson.exit === 0 && optCov.exit === 0
+  const allPass = assertions.every((a) => a.status === 'PASS')
+  const verdict = !ran ? 'INCONCLUSIVE' : allPass ? 'PASS' : 'FAIL'
+
+  return {
+    ticket: 'LS8',
+    issue: 368,
+    title: 'tiered consumption — arch (lazy) + coverage (LS·8)',
+    ranAt: new Date().toISOString(),
+    // Pure resolver + the shipped coverage checker. The arch-tier ASSERTION is
+    // deterministic SELECTION; the AI's actual reading of the file is live and
+    // out of scope (noted in selectionNote) — never a fabricated pass.
+    mode: 'deterministic',
+    sandbox: relative(REPO_ROOT, root),
+    optOutSandbox: relative(REPO_ROOT, optRoot),
+    selectionNote:
+      'arch-tier SELECTION (which paths a plan loads per size) is deterministic and asserted here; '
+      + 'the AI actually consuming .arch.md inside a live plan run is out of this harness and is NOT claimed as proven.',
+    commands,
+    fileTree: {
+      added: fileTree(root, [
+        '.specify/companion.yml',
+        'capabilities/billing/spec.md',
+        'capabilities/billing/spec.arch.md',
+        'capabilities/billing/spec.coverage.md',
+        'src/billing/charge.ts',
+      ]),
+      modified: [],
+      removed: [],
+    },
+    config: readConfig(root),
+    resolverTiers: tiers,
+    coverageReport: cov.stdout,
+    coverageJson: coverage,
+    optOutJson: optCovJson,
+    assertions,
+    pytest: { runner: pytest.runner, exit: pytest.exit, tail: pytest.stdoutTail },
+    verdict,
+  }
+}
+
+const RUNNERS = { LS1: runLs1, LS2: runLs2, LS3: runLs3, LS4: runLs4, LS5: runLs5, LS6: runLs6, LS8: runLs8 }
 
 function main() {
   const ticket = (process.argv[2] || 'LS1').toUpperCase()

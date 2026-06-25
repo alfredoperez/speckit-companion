@@ -744,4 +744,103 @@ export function runDrift(root, args = []) {
   }
 }
 
+// --- LS·8: tiered consumption — arch (lazy) + coverage -----------------------
+//
+// LS·8 turns on the two reserved tiers. Mode is `deterministic`: every captured
+// value comes from the shipped resolver (tier-path derivation) and the shipped
+// coverage checker (requirement→test mapping) pointed at a baked sandbox via
+// --root. The ONLY live part is the AI actually reading the loaded `.arch.md`
+// inside a real plan run — out of this harness's scope, so the arch-tier
+// assertion proves the deterministic *selection* (which paths the plan WOULD
+// load for each size) and marks the consumption itself honestly.
+
+export const COVERAGE = join(REPO_ROOT, 'speckit-extension', 'scripts', 'check-coverage.py')
+
+const LS8_SPEC = [
+  '# Billing capability', '',
+  '## Requirements', '',
+  '- **FR-001** Charge a card.',
+  '- **FR-002** Refund a charge.',
+  '- **FR-003** Email a receipt.', '',
+].join('\n')
+
+const LS8_ARCH = [
+  '# Billing — architecture', '',
+  'Stripe adapter behind a `BillingPort`; charges are idempotent by key.', '',
+].join('\n')
+
+const LS8_COVERAGE = [
+  '# Billing coverage', '',
+  '| Requirement | Test |',
+  '| --- | --- |',
+  '| FR-001 | src/billing/charge.test.ts |',
+  '| FR-002 | tests/billing/refund_test.py |', '',
+].join('\n')
+
+// Arrange — a `billing` capability with ALL three tiers committed on disk.
+export function bakeLs8Repo(name = 'ls-8') {
+  const root = join(SANDBOX_ROOT, name)
+  rmSync(root, { recursive: true, force: true })
+  mkdirSync(root, { recursive: true })
+
+  write(root, join('.specify', 'companion.yml'), [
+    'livingSpecs:',
+    '  enabled: true',
+    '  capabilities:',
+    '    - name: billing',
+    '      match: ["src/billing/**"]',
+    '',
+  ].join('\n'))
+
+  write(root, join('capabilities', 'billing', 'spec.md'), LS8_SPEC)
+  write(root, join('capabilities', 'billing', 'spec.arch.md'), LS8_ARCH)
+  write(root, join('capabilities', 'billing', 'spec.coverage.md'), LS8_COVERAGE)
+  write(root, join('src', 'billing', 'charge.ts'), '// charge\n')
+
+  gitInitCell(root)
+  gitCommitCellBaseline(root)
+  return root
+}
+
+// Opt-out: same shape, enabled:false.
+export function bakeLs8OptOutRepo(name = 'ls-8-optout') {
+  const root = bakeLs8Repo(name)
+  write(root, join('.specify', 'companion.yml'), [
+    'livingSpecs:',
+    '  enabled: false',
+    '  capabilities:',
+    '    - name: billing',
+    '      match: ["src/billing/**"]',
+    '',
+  ].join('\n'))
+  return root
+}
+
+export function runCoverage(root, args = []) {
+  let stdout = ''
+  let exit = 0
+  try {
+    stdout = execFileSync('python3', [COVERAGE, '--root', root, ...args], { encoding: 'utf8' })
+  } catch (e) {
+    stdout = (e.stdout || '') + (e.stderr || '')
+    exit = typeof e.status === 'number' ? e.status : 1
+  }
+  return {
+    cwd: rel(root),
+    cmd: `python3 ${rel(COVERAGE)} --root ${rel(root)} ${args.join(' ')}`.trim(),
+    exit,
+    stdout: stdout.trim(),
+    stdoutTail: stdout.trim().split('\n').slice(-40).join('\n'),
+  }
+}
+
+// The deterministic tier-selection rule, mirroring the plan node's contract:
+// the arch tier loads ONLY for an architecture-significant plan (size normal /
+// oversized), never for a small fast-path change (simple). This is the
+// selection logic the demo asserts; the AI's actual reading of the file is the
+// live part, out of scope here.
+export function archTierSelected(size) {
+  return size === 'normal' || size === 'oversized'
+}
+
 export { readText }

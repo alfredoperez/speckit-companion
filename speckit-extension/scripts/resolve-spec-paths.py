@@ -42,6 +42,9 @@ import companion_config as cc  # noqa: E402
 CONFIG = os.path.join(".specify", "companion.yml")
 RESERVED_TIERS = (".arch.md", ".coverage.md")
 
+# Map a tier key to the sibling suffix that replaces the hot `.spec.md` tail.
+TIER_SUFFIXES = {"arch": ".arch.md", "coverage": ".coverage.md"}
+
 
 def load_living(root: str) -> dict:
     """Load + normalize the livingSpecs block from <root>/.specify/companion.yml."""
@@ -156,6 +159,35 @@ def _resolve_spec(cap: dict) -> str:
     return spec
 
 
+def tier_paths(spec: str, root: str | None = None) -> dict:
+    """Derive a capability's reserved-tier sibling paths from its `spec` path.
+
+    `capabilities/x/spec.md` -> arch `capabilities/x/spec.arch.md`,
+    coverage `capabilities/x/spec.coverage.md`. Each entry carries the POSIX path
+    and (when `root` is given) on-disk existence. Single source of truth for the
+    tier filenames — the plan node and coverage checker reuse this rather than
+    re-deriving `.arch.md`/`.coverage.md`.
+    """
+    spec = _posix(spec)
+    # `<base>.spec.md` -> `<base>` (colocated `billing.spec.md` -> `billing`);
+    # a plain `spec.md` (centralized `capabilities/x/spec.md`) keeps `spec` as
+    # the base, so its siblings are `spec.arch.md` / `spec.coverage.md`.
+    if spec.endswith(".spec.md"):
+        base = spec[: -len(".spec.md")]
+    elif spec.endswith(".md"):
+        base = spec[: -len(".md")]
+    else:
+        base = spec
+    out = {}
+    for key, suffix in TIER_SUFFIXES.items():
+        path = base + suffix
+        entry = {"path": path}
+        if root is not None:
+            entry["exists"] = os.path.isfile(os.path.join(root, path))
+        out[key] = entry
+    return out
+
+
 def _entry(cap: dict, root: str) -> dict:
     spec = _resolve_spec(cap)
     return {
@@ -163,6 +195,7 @@ def _entry(cap: dict, root: str) -> dict:
         "spec": spec,
         "location": _location(cap),
         "exists": os.path.isfile(os.path.join(root, spec)),
+        "tiers": tier_paths(spec, root),
     }
 
 
@@ -191,7 +224,7 @@ def discover_all(living: dict, root: str) -> list[dict]:
             continue
         name = os.path.basename(os.path.dirname(norm)) or os.path.basename(norm)
         out.append({"name": name, "spec": _posix(norm), "location": "colocated",
-                    "exists": True})
+                    "exists": True, "tiers": tier_paths(_posix(norm), root)})
         seen.add(norm)
     out.sort(key=lambda e: e["name"])
     return out
