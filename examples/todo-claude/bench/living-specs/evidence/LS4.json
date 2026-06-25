@@ -2,7 +2,7 @@
   "ticket": "LS4",
   "issue": 364,
   "title": "end-to-end sandbox validation gate (LS·4)",
-  "ranAt": "2026-06-25T19:18:15.492Z",
+  "ranAt": "2026-06-25T19:28:43.137Z",
   "mode": "real+seeded-spec",
   "runModes": {
     "accumulation": "real+seeded-spec",
@@ -32,7 +32,7 @@
       "cwd": ".",
       "cmd": "python3 -m pytest speckit-extension/tests/test_living_specs.py -q",
       "exit": 0,
-      "stdoutTail": "........................................................                 [100%]\n56 passed in 2.15s"
+      "stdoutTail": "........................................................                 [100%]\n56 passed in 2.21s"
     }
   ],
   "fileTree": {
@@ -120,7 +120,15 @@
   "pytest": {
     "runner": "pytest",
     "exit": 0,
-    "tail": "........................................................                 [100%]\n56 passed in 2.15s"
+    "tail": "........................................................                 [100%]\n56 passed in 2.21s"
+  },
+  "captureEval": {
+    "pass": 7,
+    "fail": 2,
+    "failing": [
+      "canonical-history",
+      "hook-or-derive-captured"
+    ]
   },
   "verdict": "PASS"
 }

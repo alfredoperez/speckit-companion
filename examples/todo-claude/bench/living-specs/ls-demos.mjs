@@ -25,7 +25,7 @@ import { join, relative } from 'node:path'
 
 import { join as pjoin } from 'node:path'
 
-import { REPO_ROOT } from '../lib.mjs'
+import { REPO_ROOT, runCaptureEval } from '../lib.mjs'
 import {
   EVIDENCE_DIR,
   bakeLs1Repo,
@@ -444,6 +444,13 @@ function runLs4() {
   const allPass = assertions.every((a) => a.status === 'PASS')
   const verdict = !ran ? 'INCONCLUSIVE' : allPass ? 'PASS' : 'FAIL'
 
+  // Lifecycle-capture eval on the delta feature's spec dir (per the ticket's
+  // evidence contract). The fold writes livingSpecs.synced onto this context;
+  // the demo drives the fold directly (not a full pipeline), so capture may be
+  // limited/informational — recorded as-is, never gating the verdict.
+  const captureEval = runCaptureEval(join(root, 'specs/002-add-due-dates')) ||
+    { pass: 0, fail: 0, failing: [], error: 'no .spec-context.json' }
+
   return {
     ticket: 'LS4',
     issue: 364,
@@ -489,6 +496,7 @@ function runLs4() {
     },
     assertions,
     pytest: { runner: pytest.runner, exit: pytest.exit, tail: pytest.stdoutTail },
+    captureEval: { pass: captureEval.pass, fail: captureEval.fail, failing: captureEval.failing },
     verdict,
   }
 }
