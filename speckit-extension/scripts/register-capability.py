@@ -133,6 +133,15 @@ def register(root: str, name: str, match: list[str], exclude: list[str],
     config_path = os.path.join(root, CONFIG_REL)
     existed = os.path.isfile(config_path)
 
+    # The constrained YAML emitter double-quotes scalars and the reader can't
+    # unescape; a value with a quote/newline would emit invalid YAML and risk
+    # corrupting the file. Reject up-front (CLI maps ValueError to exit 2).
+    for val in [name, spec or "", *match, *(exclude or [])]:
+        if val and ('"' in val or "\n" in val or "\r" in val):
+            raise ValueError(
+                f"unsupported character (quote/newline) in value: {val!r}"
+            )
+
     cfg, warnings = cc.load_config(config_path)
     # load_config degrades a malformed file to ({}, [warning]) — refuse rather
     # than overwrite a file we couldn't parse (would drop the user's content).
@@ -144,12 +153,15 @@ def register(root: str, name: str, match: list[str], exclude: list[str],
     capabilities = _normalize_existing(living)
     spec_path = spec or _default_spec(name)
 
-    if any(c["name"] == name for c in capabilities):
+    existing = next((c for c in capabilities if c["name"] == name), None)
+    if existing is not None:
+        # Idempotent: report what's ACTUALLY on disk, not the requested inputs
+        # (a custom spec/match already registered must not be misreported).
         return {
             "name": name,
             "action": "already-registered",
-            "spec": spec_path,
-            "match": match,
+            "spec": existing.get("spec") or _default_spec(name),
+            "match": existing.get("match", []),
             "configPath": CONFIG_REL,
         }
 

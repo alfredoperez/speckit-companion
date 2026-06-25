@@ -2,7 +2,7 @@
   "ticket": "LS5",
   "issue": 365,
   "title": "brownfield adoption wizard (LS·5)",
-  "ranAt": "2026-06-25T19:55:37.293Z",
+  "ranAt": "2026-06-25T20:05:32.782Z",
   "mode": "deterministic",
   "liveDraftRun": "INCONCLUSIVE — live AI surface-extraction not executed (no live-AI step in this harness); structure proven against a seeded draft",
   "sandbox": "examples/bench-sandboxes/ls-5",
@@ -29,7 +29,7 @@
       "cwd": ".",
       "cmd": "python3 -m pytest speckit-extension/tests/test_living_specs.py -q",
       "exit": 0,
-      "stdoutTail": "..................................................................       [100%]\n66 passed in 1.96s"
+      "stdoutTail": "....................................................................     [100%]\n68 passed in 1.98s"
     }
   ],
   "fileTree": {
@@ -121,7 +121,7 @@
   "pytest": {
     "runner": "pytest",
     "exit": 0,
-    "tail": "..................................................................       [100%]\n66 passed in 1.96s"
+    "tail": "....................................................................     [100%]\n68 passed in 1.98s"
   },
   "verdict": "PASS"
 }

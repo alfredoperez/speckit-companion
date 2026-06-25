@@ -700,6 +700,23 @@ class RegisterCapabilityTests(unittest.TestCase):
         self.assertEqual(result["action"], "already-registered")
         self.assertEqual(self._config(root), before)  # byte-identical
 
+    def test_already_registered_reports_on_disk_values_not_requested(self) -> None:
+        root = make_repo(CHECKOUT_YAML)
+        regcap.register(str(root), "billing", ["src/billing/**"], [], "custom/billing.spec.md")
+        # Re-register with DIFFERENT requested values; result must reflect what's
+        # actually on disk, not the new request.
+        result = regcap.register(str(root), "billing", ["src/other/**"], [], None)
+        self.assertEqual(result["action"], "already-registered")
+        self.assertEqual(result["spec"], "custom/billing.spec.md")
+        self.assertEqual(result["match"], ["src/billing/**"])
+
+    def test_rejects_unsupported_characters(self) -> None:
+        root = make_repo(CHECKOUT_YAML)
+        before = self._config(root)
+        with self.assertRaises(ValueError):
+            regcap.register(str(root), "billing", ['src/"weird"/**'], [], None)
+        self.assertEqual(self._config(root), before)  # file untouched
+
     def test_appended_capability_is_resolved(self) -> None:
         root = make_repo(CHECKOUT_YAML)
         regcap.register(str(root), "billing", ["src/billing/**"], [], None)
