@@ -91,6 +91,7 @@ Four capture commands run automatically as lifecycle hooks; the rest are yours t
 | `speckit.companion.mark-complete` | workflow terminal step | Write `status: completed` to `.spec-context.json` — the Companion workflow's final step (the command writes it; the AI never hand-writes `completed`) |
 | `/speckit.companion.auto` | you | Run the whole pipeline hands-off — specify → plan → tasks → implement → completed, no approval pauses. The Run button in Create Spec triggers the same flow |
 | `/speckit.companion.adopt` | you | Brownfield adoption wizard — draft a living spec for one code area surface-first (`[DRAFT]`, observed/inferred tags, `## Uncovered`) and register the capability (opt-in, incremental) |
+| `/speckit.companion.drift` | you | Per-capability report of source files changed since the living spec was last committed, classified `tracked` vs `unspeced` (opt-in, read-only, never halts) |
 
 Full reference: [docs/commands.md](./docs/commands.md).
 
@@ -230,6 +231,31 @@ Starting living specs on a codebase you didn't grow this way is the slow part �
 Because the read is surface-first — exported functions, routes, props, signatures, not a deep behavioral study — every draft wears its limits openly. The whole spec is marked `[DRAFT]`, each requirement is tagged `observed` (drawn straight from the code surface) or `inferred` (an educated guess), genuinely uncertain items carry an inline `[NEEDS CLARIFICATION: …]`, and any file the assistant couldn't read is listed under a `## Uncovered` heading so nobody mistakes a quick draft for a verified spec. You review and confirm, and the wizard registers the capability into your `livingSpecs` block so the resolver immediately recognizes it.
 
 Adoption is **opt-in and incremental**: you run it deliberately for the area you care about, it appends one capability at a time (never a whole-repo bootstrap), re-running it for an area that's already registered is a safe no-op, and it changes no other command's behavior. Registration goes through a small helper that reuses the same config reader the resolver does, so it never corrupts a `companion.yml` it can't fully parse.
+
+### Spotting drift
+
+A living spec only stays honest if changes to its area keep flowing back into it — and in practice code keeps moving while the spec sits still. `/speckit.companion.drift` is the cheap way to notice. For each capability it lists the source files that changed *since the living spec was last committed*, and tells you how each one slipped:
+
+- **`tracked`** — the file went through the Companion pipeline (it shows up in a feature's `.spec-context.json` changed set) but was never folded back into the living spec. A missed sync.
+- **`unspeced`** — the file changed entirely outside the pipeline. The living spec never saw it at all — the more concerning of the two.
+
+```bash
+/speckit.companion.drift          # human-readable report
+/speckit.companion.drift --json   # the same data for tooling / CI
+```
+
+Files you don't want tracked — generated code, tests, migrations — are filtered out by an exempt list. It defaults to `*.config.*`, `*.test.*`, and `**/migrations/**`, and you can override it with a `livingSpecs.exempt` glob list:
+
+```yaml
+livingSpecs:
+  enabled: true
+  exempt: ["**/*.gen.ts", "**/migrations/**"]
+  capabilities:
+    - name: checkout
+      match: ["src/checkout/**"]
+```
+
+Drift is **read-only and never halts** — it always exits success, so a surrounding workflow or CI may treat `unspeced` rows as a gate, but the command itself never blocks a run. A capability whose spec isn't committed yet is skipped with a note, when every capability is in sync it prints a single all-clear line, and with living specs off it reports nothing.
 
 ## Installation
 

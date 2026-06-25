@@ -1,0 +1,128 @@
+{
+  "ticket": "LS6",
+  "issue": 366,
+  "title": "drift command (LS·6)",
+  "ranAt": "2026-06-25T20:28:00.354Z",
+  "mode": "deterministic",
+  "sandbox": "examples/bench-sandboxes/ls-6",
+  "optOutSandbox": "examples/bench-sandboxes/ls-6-optout",
+  "commands": [
+    {
+      "cwd": "examples/bench-sandboxes/ls-6",
+      "cmd": "python3 speckit-extension/scripts/drift.py --root examples/bench-sandboxes/ls-6",
+      "exit": 0,
+      "stdoutTail": "🔍 Spec drift report\n✓ about — in sync\n\n📁 capabilities/todos/spec.md  (last committed 58d6b105)\n   2 files changed since spec was last committed:\n   tracked  src/todos/store.ts  — changed via pipeline, never folded back\n   unspeced src/todos/list.ts  — changed outside the pipeline\n\n👉 Fold these into the living spec (e.g. /speckit.companion.adopt) or add the path to livingSpecs.exempt."
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-6",
+      "cmd": "python3 speckit-extension/scripts/drift.py --root examples/bench-sandboxes/ls-6 --json",
+      "exit": 0,
+      "stdoutTail": "{\n  \"enabled\": true,\n  \"capabilities\": [\n    {\n      \"name\": \"about\",\n      \"spec\": \"capabilities/about/spec.md\",\n      \"commit\": \"58d6b105\",\n      \"drifted\": [],\n      \"inSync\": true\n    },\n    {\n      \"name\": \"todos\",\n      \"spec\": \"capabilities/todos/spec.md\",\n      \"commit\": \"58d6b105\",\n      \"drifted\": [\n        {\n          \"file\": \"src/todos/store.ts\",\n          \"severity\": \"tracked\"\n        },\n        {\n          \"file\": \"src/todos/list.ts\",\n          \"severity\": \"unspeced\"\n        }\n      ],\n      \"inSync\": false\n    }\n  ],\n  \"skipped\": []\n}"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-6-optout",
+      "cmd": "python3 speckit-extension/scripts/drift.py --root examples/bench-sandboxes/ls-6-optout --json",
+      "exit": 0,
+      "stdoutTail": "{\n  \"enabled\": false,\n  \"capabilities\": [],\n  \"skipped\": []\n}"
+    },
+    {
+      "cwd": ".",
+      "cmd": "python3 -m pytest speckit-extension/tests/test_living_specs.py -q",
+      "exit": 0,
+      "stdoutTail": "........................................................................ [ 92%]\n......                                                                   [100%]\n78 passed in 2.66s"
+    }
+  ],
+  "fileTree": {
+    "added": [
+      ".specify/companion.yml",
+      "capabilities/todos/spec.md",
+      "capabilities/about/spec.md",
+      "src/todos/list.ts",
+      "src/todos/list.test.ts",
+      "src/todos/store.ts",
+      "src/about/page.ts",
+      "specs/001-todos-store/.spec-context.json"
+    ],
+    "modified": [],
+    "removed": []
+  },
+  "config": "livingSpecs:\n  enabled: true\n  capabilities:\n    - name: todos\n      match: [\"src/todos/**\"]\n    - name: about\n      match: [\"src/about/**\"]\n",
+  "driftReport": "🔍 Spec drift report\n✓ about — in sync\n\n📁 capabilities/todos/spec.md  (last committed 58d6b105)\n   2 files changed since spec was last committed:\n   tracked  src/todos/store.ts  — changed via pipeline, never folded back\n   unspeced src/todos/list.ts  — changed outside the pipeline\n\n👉 Fold these into the living spec (e.g. /speckit.companion.adopt) or add the path to livingSpecs.exempt.",
+  "driftJson": {
+    "enabled": true,
+    "capabilities": [
+      {
+        "name": "about",
+        "spec": "capabilities/about/spec.md",
+        "commit": "58d6b105",
+        "drifted": [],
+        "inSync": true
+      },
+      {
+        "name": "todos",
+        "spec": "capabilities/todos/spec.md",
+        "commit": "58d6b105",
+        "drifted": [
+          {
+            "file": "src/todos/store.ts",
+            "severity": "tracked"
+          },
+          {
+            "file": "src/todos/list.ts",
+            "severity": "unspeced"
+          }
+        ],
+        "inSync": false
+      }
+    ],
+    "skipped": []
+  },
+  "optOutJson": {
+    "enabled": false,
+    "capabilities": [],
+    "skipped": []
+  },
+  "assertions": [
+    {
+      "id": "unspeced-drift-reported",
+      "status": "PASS",
+      "detail": "todos drift includes src/todos/list.ts as unspeced (got [tracked:src/todos/store.ts, unspeced:src/todos/list.ts])"
+    },
+    {
+      "id": "exits-success",
+      "status": "PASS",
+      "detail": "drift.py exit 0 (human 0)"
+    },
+    {
+      "id": "in-sync-capability-clear",
+      "status": "PASS",
+      "detail": "about (unchanged since its spec) reports inSync"
+    },
+    {
+      "id": "exempt-file-filtered",
+      "status": "PASS",
+      "detail": "src/todos/list.test.ts (*.test.*) filtered out of drift"
+    },
+    {
+      "id": "tracked-classification",
+      "status": "PASS",
+      "detail": "src/todos/store.ts (recorded in a .spec-context.json) classified tracked"
+    },
+    {
+      "id": "opt-out-inert",
+      "status": "PASS",
+      "detail": "enabled:false → drift reports nothing, exit 0"
+    },
+    {
+      "id": "pytest-green",
+      "status": "PASS",
+      "detail": "pytest exit 0"
+    }
+  ],
+  "pytest": {
+    "runner": "pytest",
+    "exit": 0,
+    "tail": "........................................................................ [ 92%]\n......                                                                   [100%]\n78 passed in 2.66s"
+  },
+  "verdict": "PASS"
+}

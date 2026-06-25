@@ -257,6 +257,7 @@ def validate_reads(active_meta: dict):
 # Living Specs accessor (opt-in capability registry)
 # --------------------------------------------------------------------------- #
 DEFAULT_CAPABILITY_ROOT = "capabilities"
+DEFAULT_EXEMPT_GLOBS = ["*.config.*", "*.test.*", "**/migrations/**"]
 
 
 def _as_list(value) -> list:
@@ -271,15 +272,17 @@ def _as_list(value) -> list:
 def load_living_specs(config: dict) -> dict:
     """Read the `livingSpecs` block into a normalized, typed shape.
 
-    Returns {"enabled": bool, "capabilities": [{name, match, exclude, spec}]}.
-    `enabled` defaults to False (opt-in). Each capability normalizes `match`/`exclude`
+    Returns {"enabled": bool, "exempt": [glob], "capabilities": [{name, match, exclude, spec}]}.
+    `enabled` defaults to False (opt-in). `exempt` is the drift exempt-glob list,
+    defaulting to DEFAULT_EXEMPT_GLOBS when unset. Each capability normalizes `match`/`exclude`
     to string lists and defaults `spec` to `capabilities/<name>/spec.md`. A capability
     whose `spec` is declared but empty keeps "" so the resolver can flag the bad path.
     """
     block = (config or {}).get("livingSpecs") or {}
     if not isinstance(block, dict):
-        return {"enabled": False, "capabilities": []}
+        return {"enabled": False, "exempt": list(DEFAULT_EXEMPT_GLOBS), "capabilities": []}
     enabled = bool(block.get("enabled", False))
+    exempt = _as_list(block.get("exempt")) if "exempt" in block else list(DEFAULT_EXEMPT_GLOBS)
     raw = block.get("capabilities") or []
     capabilities = []
     for entry in raw if isinstance(raw, list) else []:
@@ -301,4 +304,4 @@ def load_living_specs(config: dict) -> dict:
                 "spec": spec,
             }
         )
-    return {"enabled": enabled, "capabilities": capabilities}
+    return {"enabled": enabled, "exempt": exempt, "capabilities": capabilities}

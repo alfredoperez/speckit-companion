@@ -37,6 +37,9 @@ import {
   bakeLs4Repo,
   bakeLs4OptOutRepo,
   bakeLs5Repo,
+  bakeLs6Repo,
+  bakeLs6OptOutRepo,
+  runDrift,
   capabilitiesTree,
   runResolver,
   runRecordWrite,
@@ -621,7 +624,109 @@ function runLs5() {
   }
 }
 
-const RUNNERS = { LS1: runLs1, LS2: runLs2, LS3: runLs3, LS4: runLs4, LS5: runLs5 }
+function runLs6() {
+  const commands = []
+  const assertions = []
+
+  // --- arrange: a repo whose todos living spec is COMMITTED, then changed -----
+  const root = bakeLs6Repo()
+  const optRoot = bakeLs6OptOutRepo()
+
+  // --- act (deterministic, REAL): run the shipped drift.py ---------------------
+  const human = runDrift(root)
+  const drift = runDrift(root, ['--json'])
+  const driftJson = parseJson(drift.stdout)
+  const optOut = runDrift(optRoot, ['--json'])
+  const optJson = parseJson(optOut.stdout)
+  const pytest = runPytest()
+
+  commands.push(
+    { cwd: human.cwd, cmd: human.cmd, exit: human.exit, stdoutTail: human.stdoutTail },
+    { cwd: drift.cwd, cmd: drift.cmd, exit: drift.exit, stdoutTail: drift.stdoutTail },
+    { cwd: optOut.cwd, cmd: optOut.cmd, exit: optOut.exit, stdoutTail: optOut.stdoutTail },
+    { cwd: '.', cmd: pytest.cmd, exit: pytest.exit, stdoutTail: pytest.stdoutTail },
+  )
+
+  // --- assert (against the real captured drift.py output) ----------------------
+  const todos = driftJson ? driftJson.capabilities.find((c) => c.name === 'todos') : null
+  const about = driftJson ? driftJson.capabilities.find((c) => c.name === 'about') : null
+  const todosFiles = todos ? todos.drifted.map((d) => `${d.severity}:${d.file}`) : []
+
+  assertions.push(assert(
+    'unspeced-drift-reported',
+    todos != null && todos.drifted.some((d) => d.file === 'src/todos/list.ts' && d.severity === 'unspeced'),
+    `todos drift includes src/todos/list.ts as unspeced (got [${todosFiles.join(', ')}])`,
+  ))
+  assertions.push(assert(
+    'exits-success',
+    drift.exit === 0 && human.exit === 0,
+    `drift.py exit ${drift.exit} (human ${human.exit})`,
+  ))
+  assertions.push(assert(
+    'in-sync-capability-clear',
+    about != null && about.inSync === true,
+    'about (unchanged since its spec) reports inSync',
+  ))
+  assertions.push(assert(
+    'exempt-file-filtered',
+    todos != null && !todos.drifted.some((d) => d.file === 'src/todos/list.test.ts'),
+    'src/todos/list.test.ts (*.test.*) filtered out of drift',
+  ))
+  assertions.push(assert(
+    'tracked-classification',
+    todos != null && todos.drifted.some((d) => d.file === 'src/todos/store.ts' && d.severity === 'tracked'),
+    'src/todos/store.ts (recorded in a .spec-context.json) classified tracked',
+  ))
+  assertions.push(assert(
+    'opt-out-inert',
+    optOut.exit === 0 && optJson != null && optJson.enabled === false && optJson.capabilities.length === 0,
+    'enabled:false → drift reports nothing, exit 0',
+  ))
+  assertions.push(assert(
+    'pytest-green',
+    pytest.exit === 0,
+    `${pytest.runner} exit ${pytest.exit}`,
+  ))
+
+  const ran = drift.exit === 0 && human.exit === 0 && optOut.exit === 0
+  const allPass = assertions.every((a) => a.status === 'PASS')
+  const verdict = !ran ? 'INCONCLUSIVE' : allPass ? 'PASS' : 'FAIL'
+
+  return {
+    ticket: 'LS6',
+    issue: 366,
+    title: 'drift command (LS·6)',
+    ranAt: new Date().toISOString(),
+    // Pure git + the shipped resolver — no AI surface anywhere in drift.
+    mode: 'deterministic',
+    sandbox: relative(REPO_ROOT, root),
+    optOutSandbox: relative(REPO_ROOT, optRoot),
+    commands,
+    fileTree: {
+      added: fileTree(root, [
+        '.specify/companion.yml',
+        'capabilities/todos/spec.md',
+        'capabilities/about/spec.md',
+        'src/todos/list.ts',
+        'src/todos/list.test.ts',
+        'src/todos/store.ts',
+        'src/about/page.ts',
+        'specs/001-todos-store/.spec-context.json',
+      ]),
+      modified: [],
+      removed: [],
+    },
+    config: readConfig(root),
+    driftReport: human.stdout,
+    driftJson,
+    optOutJson: optJson,
+    assertions,
+    pytest: { runner: pytest.runner, exit: pytest.exit, tail: pytest.stdoutTail },
+    verdict,
+  }
+}
+
+const RUNNERS = { LS1: runLs1, LS2: runLs2, LS3: runLs3, LS4: runLs4, LS5: runLs5, LS6: runLs6 }
 
 function main() {
   const ticket = (process.argv[2] || 'LS1').toUpperCase()
