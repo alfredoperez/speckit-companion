@@ -951,6 +951,31 @@ class DriftTests(unittest.TestCase):
         self.assertEqual(result["capabilities"], [])
         self.assertEqual(drift.main(["--root", str(root)]), 0)
 
+    def test_colocated_spec_tier_siblings_are_not_drift(self) -> None:
+        # A colocated capability's `match` globs claim its own area, so an edit to
+        # its spec.md / reserved-tier sibling (.arch.md / .coverage.md) must NOT be
+        # reported as drifted CODE — the spec documents ARE the spec.
+        yaml = (
+            "livingSpecs:\n  enabled: true\n  capabilities:\n"
+            "    - name: billing\n      match: [\"src/billing/**\"]\n"
+            "      spec: src/billing/billing.spec.md\n"
+        )
+        root = _bake_drift_repo(yaml)
+        _write(root, "src/billing/billing.spec.md", "# billing\n")
+        _write(root, "src/billing/billing.arch.md", "# arch\n")
+        _write(root, "src/billing/charge.ts", "// code\n")
+        _commit_all(root, "baseline")
+        _write(root, "src/billing/billing.arch.md", "# arch\n# v2\n")
+        _write(root, "src/billing/charge.ts", "// code\n// edited\n")
+        _commit_all(root, "edits")
+
+        result = self._run(root)
+        billing = next(c for c in result["capabilities"] if c["name"] == "billing")
+        self.assertEqual(
+            [d["file"] for d in billing["drifted"]],
+            ["src/billing/charge.ts"],  # arch sibling + the spec itself excluded
+        )
+
     def test_always_exits_zero_even_with_drift(self) -> None:
         root = _bake_drift_repo(self.YAML)
         _write(root, "capabilities/todos/spec.md", "# Todos\n")

@@ -101,6 +101,21 @@ def _tracked_files(root: str) -> set[str]:
     return out
 
 
+def _is_own_spec_doc(fp: str, spec_posix: str) -> bool:
+    """True for the capability's own living-spec documents — the spec itself or a
+    reserved-tier sibling (`.arch.md` / `.coverage.md`) in the spec's directory.
+
+    A colocated capability's `match` globs claim its own area, so without this a
+    `src/billing/billing.arch.md` edit would be reported as drifted *code*. The
+    spec documents ARE the spec, not drift — mirror the resolver's tier hygiene.
+    """
+    if fp == spec_posix:
+        return True
+    spec_dir = spec_posix.rsplit("/", 1)[0] if "/" in spec_posix else ""
+    file_dir = fp.rsplit("/", 1)[0] if "/" in fp else ""
+    return file_dir == spec_dir and any(fp.endswith(t) for t in rsp.RESERVED_TIERS)
+
+
 def _exempt(file: str, exempt_globs: list[str]) -> bool:
     """A file is exempt if any glob matches its full path OR its basename.
 
@@ -139,7 +154,7 @@ def compute_drift(root: str, living: dict) -> dict:
         drifted = []
         for f in _changed_since(root, commit):
             fp = rsp._posix(f)
-            if fp == spec_posix:
+            if _is_own_spec_doc(fp, spec_posix):
                 continue
             if not rsp.matches(cap, fp):
                 continue
