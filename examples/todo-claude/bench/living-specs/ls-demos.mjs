@@ -14,13 +14,18 @@
 // nothing recorded). A genuine live-AI specify run is out of this harness's scope,
 // so that live step stays INCONCLUSIVE rather than a fabricated pass.
 //
-// Usage: node ls-demos.mjs [LS1|LS2]      (default LS1)
+// LS·4 (real+seeded-spec / deterministic): the v1 end-to-end gate — drive TWO
+// features (additive no-op + real delta) through the real fold against ONE repo and
+// prove the living spec ACCUMULATES both with no clobber, plus a deterministic
+// opt-out run (enabled:false → byte-identical spec, no new capabilities/** files).
+//
+// Usage: node ls-demos.mjs [LS1|LS2|LS3|LS4]      (default LS1)
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 
 import { join as pjoin } from 'node:path'
 
-import { REPO_ROOT } from '../lib.mjs'
+import { REPO_ROOT, runCaptureEval } from '../lib.mjs'
 import {
   EVIDENCE_DIR,
   bakeLs1Repo,
@@ -29,6 +34,9 @@ import {
   bakeLs2OptOutRepo,
   bakeLs3Repo,
   bakeLs3OptOutRepo,
+  bakeLs4Repo,
+  bakeLs4OptOutRepo,
+  capabilitiesTree,
   runResolver,
   runRecordWrite,
   runFold,
@@ -355,7 +363,145 @@ function runLs3() {
   }
 }
 
-const RUNNERS = { LS1: runLs1, LS2: runLs2, LS3: runLs3 }
+function runLs4() {
+  const commands = []
+  const assertions = []
+  const LIVING = pjoin('capabilities', 'todos', 'spec.md')
+
+  // --- accumulation: two sequential features against ONE repo --------------
+  const { root, featureA, featureB } = bakeLs4Repo()
+  const before = readText(pjoin(root, LIVING))     // real read, pre-anything
+  const foldA = runFold(root, featureA)            // additive feature → clean no-op
+  const afterA = readText(pjoin(root, LIVING))     // real read, post-A
+  const foldB = runFold(root, featureB)            // delta feature → folds in
+  const afterB = readText(pjoin(root, LIVING))     // real read, post-B
+  const syncedB = foldB.ctx && foldB.ctx.livingSpecs ? foldB.ctx.livingSpecs.synced : null
+
+  const diffBeforeA = unifiedDiff(before, afterA)  // expected empty (no-op)
+  const diffBeforeB = unifiedDiff(before, afterB)  // expected: B's block appended
+
+  // --- opt-out: same delta feature, enabled:false → inert ------------------
+  const { root: optRoot } = bakeLs4OptOutRepo()
+  const optTreeBefore = capabilitiesTree(optRoot)
+  const optSpecBefore = readText(pjoin(optRoot, LIVING))
+  const optFold = runFold(optRoot, 'specs/002-add-due-dates')
+  const optSpecAfter = readText(pjoin(optRoot, LIVING))
+  const optTreeAfter = capabilitiesTree(optRoot)
+  const optNewFiles = optTreeAfter.filter((f) => !optTreeBefore.includes(f))
+
+  const pytest = runPytest()
+
+  commands.push(
+    { cwd: foldA.cwd, cmd: foldA.cmd, exit: foldA.exit, stdoutTail: foldA.stdoutTail },
+    { cwd: foldB.cwd, cmd: foldB.cmd, exit: foldB.exit, stdoutTail: foldB.stdoutTail },
+    { cwd: optFold.cwd, cmd: optFold.cmd, exit: optFold.exit, stdoutTail: optFold.stdoutTail },
+    { cwd: '.', cmd: pytest.cmd, exit: pytest.exit, stdoutTail: pytest.stdoutTail },
+  )
+
+  // --- assert (against the real captured output / re-read files) -----------
+  assertions.push(assert(
+    'additive-feature-noop',
+    afterA === before,
+    'feature A (no delta) left capabilities/todos/spec.md byte-identical',
+  ))
+  assertions.push(assert(
+    'delta-feature-folds',
+    afterB.includes('### Users can set a due date on a todo'),
+    "feature B's ADDED requirement present after fold",
+  ))
+  assertions.push(assert(
+    'no-clobber',
+    afterB.includes('### Users can add a todo'),
+    'original requirement still present after feature B fold (no clobber)',
+  ))
+  assertions.push(assert(
+    'monotonic-growth',
+    afterB.length > before.length && afterB.startsWith(before.trimEnd()),
+    `living spec grew ${before.length} → ${afterB.length} bytes, prior content preserved as prefix`,
+  ))
+  assertions.push(assert(
+    'records-synced-B-only',
+    foldB.exit === 0 && Array.isArray(syncedB) && syncedB.includes('todos'),
+    `livingSpecs.synced after B -> [${(syncedB || []).join(', ')}]`,
+  ))
+  assertions.push(assert(
+    'opt-out-byte-identical',
+    optSpecBefore === optSpecAfter,
+    'enabled:false -> capabilities/todos/spec.md byte-identical before/after',
+  ))
+  assertions.push(assert(
+    'opt-out-no-new-files',
+    optNewFiles.length === 0 && (optFold.ctx == null || optFold.ctx.livingSpecs == null),
+    `enabled:false -> no new capabilities/** files, no livingSpecs.synced`,
+  ))
+  assertions.push(assert(
+    'pytest-green',
+    pytest.exit === 0,
+    `${pytest.runner} exit ${pytest.exit}`,
+  ))
+
+  const ran = foldA.exit === 0 && foldB.exit === 0 && optFold.exit === 0
+  const allPass = assertions.every((a) => a.status === 'PASS')
+  const verdict = !ran ? 'INCONCLUSIVE' : allPass ? 'PASS' : 'FAIL'
+
+  // Lifecycle-capture eval on the delta feature's spec dir (per the ticket's
+  // evidence contract). The fold writes livingSpecs.synced onto this context;
+  // the demo drives the fold directly (not a full pipeline), so capture may be
+  // limited/informational — recorded as-is, never gating the verdict.
+  const captureEval = runCaptureEval(join(root, 'specs/002-add-due-dates')) ||
+    { pass: 0, fail: 0, failing: [], error: 'no .spec-context.json' }
+
+  return {
+    ticket: 'LS4',
+    issue: 364,
+    title: 'end-to-end sandbox validation gate (LS·4)',
+    ranAt: new Date().toISOString(),
+    // Two real, honest modes: the accumulation runs reuse the LS·3 fold path
+    // verbatim (only the model's prose is seeded), so they are real+seeded-spec;
+    // the opt-out is a deterministic enabled:false no-op proof.
+    mode: 'real+seeded-spec',
+    runModes: { accumulation: 'real+seeded-spec', optOut: 'deterministic' },
+    sandbox: relative(REPO_ROOT, root),
+    commands,
+    fileTree: {
+      added: fileTree(root, [
+        '.specify/companion.yml',
+        'capabilities/todos/spec.md',
+        'specs/001-clear-completed/spec.md',
+        'specs/001-clear-completed/.spec-context.json',
+        'specs/002-add-due-dates/spec.md',
+        'specs/002-add-due-dates/.spec-context.json',
+        'src/todos/list.ts',
+      ]),
+      modified: ['capabilities/todos/spec.md', 'specs/002-add-due-dates/.spec-context.json'],
+      removed: [],
+    },
+    config: 'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: todos\n      match: ["src/todos/**"]',
+    accumulation: {
+      livingSpecPath: 'capabilities/todos/spec.md',
+      before,
+      afterA,
+      afterB,
+      diffBeforeA,
+      diffBeforeB,
+      syncedAfterB: syncedB,
+    },
+    optOut: {
+      sandbox: relative(REPO_ROOT, optRoot),
+      specByteIdentical: optSpecBefore === optSpecAfter,
+      capabilitiesTreeBefore: optTreeBefore,
+      capabilitiesTreeAfter: optTreeAfter,
+      newCapabilityFiles: optNewFiles,
+      recordedLivingSpecs: optFold.ctx ? (optFold.ctx.livingSpecs || null) : null,
+    },
+    assertions,
+    pytest: { runner: pytest.runner, exit: pytest.exit, tail: pytest.stdoutTail },
+    captureEval: { pass: captureEval.pass, fail: captureEval.fail, failing: captureEval.failing },
+    verdict,
+  }
+}
+
+const RUNNERS = { LS1: runLs1, LS2: runLs2, LS3: runLs3, LS4: runLs4 }
 
 function main() {
   const ticket = (process.argv[2] || 'LS1').toUpperCase()

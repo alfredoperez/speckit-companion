@@ -5,7 +5,7 @@
 // place to capture real resolver/pytest output. LS·1 is `deterministic` (no AI),
 // so it does not install spec-kit — it points the real shipped resolver at the
 // sandbox via --root.
-import { mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from 'node:fs'
+import { mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, readdirSync, statSync } from 'node:fs'
 import { join, dirname, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execFileSync } from 'node:child_process'
@@ -405,6 +405,139 @@ export function runCheckLivingSpec(featureSpecPath, beforeText, afterText) {
   let report = null
   try { report = JSON.parse(stdout) } catch { report = null }
   return { exit, report, stdout: stdout.trim() }
+}
+
+// --- LS·4: the end-to-end accumulation gate ----------------------------------
+//
+// LS·4 is the v1 "done" gate: it proves the whole loop works by driving TWO
+// features through the real fold against ONE repo and confirming the living spec
+// ACCUMULATES both. Feature A is additive (its spec carries NO delta block) so its
+// fold is a clean no-op; feature B carries a real `## ADDED Requirements` delta so
+// it folds in. The accumulation runs reuse the LS·3 fold path verbatim (real
+// write-context.py --fold-living-spec, real readFileSync), so this is the same
+// `real+seeded-spec` mode — only the model's prose is seeded. The opt-out run is
+// `deterministic`: enabled:false → the fold is inert, asserted by byte-equality +
+// an empty capabilities/** file-tree diff.
+
+// The two feature deltas, reused by the opt-out repo so the disabled fold has a
+// real delta to (not) apply.
+const LS4_FEATURE_A_SPEC = [
+  '# Add a clear-completed button',
+  '',
+  'Adds a button that removes all completed todos. Purely additive — no change to',
+  'the capability\'s requirements, so no delta block.',
+  '',
+].join('\n')
+
+const LS4_FEATURE_B_SPEC = [
+  '# Add due dates',
+  '',
+  'Lets a user attach a due date to a todo.',
+  '',
+  '## ADDED Requirements',
+  '',
+  '### Users can set a due date on a todo',
+  '',
+  '#### Scenario: set a due date',
+  '- WHEN a user picks a date for a todo',
+  '- THEN the todo shows the due date',
+  '',
+  '#### Scenario: clear a due date',
+  '- WHEN a user clears the date',
+  '- THEN the todo shows no due date',
+  '',
+].join('\n')
+
+const LS4_LIVING_SPEC = [
+  '# Todos capability',
+  '',
+  '### Users can add a todo',
+  '',
+  '#### Scenario: add a todo',
+  '- WHEN a user types text and submits',
+  '- THEN a todo appears in the list',
+  '',
+].join('\n')
+
+function finishedContext(name) {
+  return JSON.stringify({
+    workflow: 'speckit',
+    specName: name,
+    branch: name,
+    currentStep: 'implement',
+    status: 'implemented',
+    history: [],
+  }) + '\n'
+}
+
+// Arrange — bake a real git repo with one `todos` capability + a real living spec,
+// feature A (additive, no delta) and feature B (real ADDED delta). Each feature dir
+// gets a finished .spec-context.json (the state mark-complete folds from), and each
+// feature lands an in-scope src/todos/** change on its own branch so the fold's
+// merge-base diff yields files the resolver claims. Returns { root, featureA, featureB }.
+export function bakeLs4Repo(name = 'ls-4', { enabled = true } = {}) {
+  const root = join(SANDBOX_ROOT, name)
+  rmSync(root, { recursive: true, force: true })
+  mkdirSync(root, { recursive: true })
+
+  write(root, join('.specify', 'companion.yml'), [
+    'livingSpecs:',
+    `  enabled: ${enabled}`,
+    '  capabilities:',
+    '    - name: todos',
+    '      match: ["src/todos/**"]',
+    '',
+  ].join('\n'))
+
+  write(root, join('capabilities', 'todos', 'spec.md'), LS4_LIVING_SPEC)
+  const featureA = 'specs/001-clear-completed'
+  const featureB = 'specs/002-add-due-dates'
+  write(root, join(featureA, 'spec.md'), LS4_FEATURE_A_SPEC)
+  write(root, join(featureA, '.spec-context.json'), finishedContext('001-clear-completed'))
+  write(root, join(featureB, 'spec.md'), LS4_FEATURE_B_SPEC)
+  write(root, join(featureB, '.spec-context.json'), finishedContext('002-add-due-dates'))
+  write(root, join('src', 'todos', 'list.ts'), '// todos\n')
+
+  gitInitCell(root)
+  gitCommitCellBaseline(root)
+
+  // Feature A's branch + in-scope change (merge-base diff yields src/todos/**).
+  execFileSync('git', ['checkout', '-q', '-b', '001-clear-completed'], { cwd: root })
+  writeFileSync(join(root, 'src', 'todos', 'list.ts'), '// todos — clear completed\n')
+  execFileSync('git', ['add', '-A'], { cwd: root })
+  execFileSync('git', ['commit', '-qm', 'clear completed'], { cwd: root })
+  execFileSync('git', ['checkout', '-q', 'main'], { cwd: root })
+
+  // Feature B's branch + in-scope change.
+  execFileSync('git', ['checkout', '-q', '-b', '002-add-due-dates'], { cwd: root })
+  writeFileSync(join(root, 'src', 'todos', 'list.ts'), '// todos — due dates\n')
+  execFileSync('git', ['add', '-A'], { cwd: root })
+  execFileSync('git', ['commit', '-qm', 'add due dates'], { cwd: root })
+
+  return { root, featureA, featureB }
+}
+
+// Opt-out arrangement: identical shape, enabled:false, with feature B's real delta
+// present so the disabled fold has a genuine delta to (not) apply.
+export function bakeLs4OptOutRepo(name = 'ls-4-optout') {
+  return bakeLs4Repo(name, { enabled: false })
+}
+
+// List the relative paths of every file under capabilities/** (sorted), so the
+// opt-out's file-tree diff can assert no new capability files were created.
+export function capabilitiesTree(root) {
+  const base = join(root, 'capabilities')
+  if (!existsSync(base)) return []
+  const out = []
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir).sort()) {
+      const p = join(dir, entry)
+      if (statSync(p).isDirectory()) walk(p)
+      else out.push(relative(root, p))
+    }
+  }
+  walk(base)
+  return out.sort()
 }
 
 export { readText }
