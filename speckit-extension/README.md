@@ -196,6 +196,12 @@ python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --changed sr
 
 An orphan is a `.spec.md` that no capability claims **and** that does not live inside a configured capability's spec directory — so another file under `capabilities/checkout/` (or a reserved `.arch.md` / `.coverage.md` sibling) is never flagged as stray.
 
+### Auto-loading living specs into specify & plan
+
+When living specs are turned on, you stop re-explaining the codebase. As you start a feature, Companion looks at the files the change touches, finds the capabilities they belong to, and reads those capabilities' living specs into the assistant's context **before it drafts** — most-specific first, so the leaf capability is the primary frame and any parent capability sits behind it as context. The `specify` step records which capabilities it loaded, and the `plan` step reuses that record instead of resolving again.
+
+This stays **opt-in by presence and never blocks a run**: with no `livingSpecs` block or `enabled: false`, specify and plan behave exactly as they do today — no load, no recording. A capability that matches but whose spec file isn't written yet is silently skipped, and specify/plan are strictly read-only — they never create or edit a living spec. The loaded capability names are stored on the spec's context under a `livingSpecs.loaded` list (additive metadata, never a lifecycle field), which is what lets `plan` reuse them.
+
 ## Installation
 
 Requires a **github-source** spec-kit — the stock PyPI `specify-cli` has no `extension` subsystem:

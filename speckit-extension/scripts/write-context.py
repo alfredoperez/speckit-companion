@@ -333,6 +333,34 @@ def set_fields(feature_dir: Path, pairs: list[str]) -> Path | None:
     return target
 
 
+def set_living_specs_loaded(feature_dir: Path, names: list[str]) -> Path | None:
+    """Record the capability names whose living specs were loaded into context.
+
+    Merges onto ctx["livingSpecs"]["loaded"] preserving the resolver's
+    most-specific-first order and de-duplicating, never rebuilding the record and
+    never touching lifecycle keys (livingSpecs is additive metadata the strict
+    schema already permits). With no names it is a no-op — opt-out writes nothing."""
+    cleaned = [n.strip() for n in names if n and n.strip()]
+    if not cleaned:
+        return None
+    target = feature_dir / ".spec-context.json"
+    branch = _git_branch(_repo_root()) or "main"
+    ctx = read_ctx(target)
+    fill_required(ctx, feature_dir, branch)
+    block = ctx.get("livingSpecs")
+    if not isinstance(block, dict):
+        block = {}
+    prior = block.get("loaded")
+    merged = list(prior) if isinstance(prior, list) else []
+    for n in cleaned:
+        if n not in merged:
+            merged.append(n)
+    block["loaded"] = merged
+    ctx["livingSpecs"] = block
+    atomic_write(target, ctx)
+    return target
+
+
 # `**` is optional: matches the turbo/companion bold form `- [x] **T001**` AND the
 # standard tasks-template plain form `- [x] T001 …`. A `T\d+` is still required right
 # after the checkbox, so non-task checkboxes never false-match.
@@ -1031,12 +1059,18 @@ def main() -> int:
         help="Merge a top-level key=value onto .spec-context.json (e.g. --set unattended=true). "
              "Repeatable. Lifecycle keys (history/status/currentStep) are refused.",
     )
+    parser.add_argument(
+        "--living-specs", dest="living_specs", action="append", default=None, metavar="NAME",
+        help="Record a loaded living-specs capability name onto livingSpecs.loaded "
+             "(most-specific-first order, de-duped). Repeatable. Additive metadata; "
+             "never a lifecycle key.",
+    )
     args = parser.parse_args()
 
     # Best-effort guard: a non-canonical step is a no-op, never a host failure.
     # Terminal state belongs in `status`, not `currentStep`. Skipped in task-sync
     # mode, which always operates on the implement step.
-    if not args.tasks_file and not args.task and not args.mark_complete and not args.set_pairs and not args.materialize and not args.finish and not args.advance and (args.step == "done" or args.step not in CANONICAL_STEPS):
+    if not args.tasks_file and not args.task and not args.mark_complete and not args.set_pairs and not args.living_specs and not args.materialize and not args.finish and not args.advance and (args.step == "done" or args.step not in CANONICAL_STEPS):
         print(
             f"[companion] Skipping: '{args.step}' is not a canonical currentStep "
             f"({', '.join(sorted(CANONICAL_STEPS))}).",
@@ -1081,6 +1115,8 @@ def main() -> int:
     try:
         if args.set_pairs:
             target = set_fields(feature_dir, args.set_pairs)
+        elif args.living_specs:
+            target = set_living_specs_loaded(feature_dir, args.living_specs)
         elif args.tasks_file:
             tasks_md = Path(args.tasks_file)
             if not tasks_md.is_absolute():
@@ -1116,6 +1152,8 @@ def main() -> int:
     if target is not None and not args.tasks_file:
         if args.set_pairs:
             print(f"[companion] Set {', '.join(args.set_pairs)} in {target}")
+        elif args.living_specs:
+            print(f"[companion] Recorded loaded living specs ({', '.join(args.living_specs)}) in {target}")
         elif args.mark_complete:
             print(f"[companion] Marked {target} complete (status=completed, by={args.by})")
         elif args.finish:

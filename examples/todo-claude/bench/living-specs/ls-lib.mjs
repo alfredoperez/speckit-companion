@@ -5,7 +5,7 @@
 // place to capture real resolver/pytest output. LS·1 is `deterministic` (no AI),
 // so it does not install spec-kit — it points the real shipped resolver at the
 // sandbox via --root.
-import { mkdirSync, writeFileSync, existsSync, rmSync } from 'node:fs'
+import { mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from 'node:fs'
 import { join, dirname, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execFileSync } from 'node:child_process'
@@ -15,6 +15,7 @@ import { REPO_ROOT, gitInitCell, gitCommitCellBaseline, readText } from '../lib.
 export const LS_DIR = dirname(fileURLToPath(import.meta.url))
 export const EVIDENCE_DIR = join(LS_DIR, 'evidence')
 export const RESOLVER = join(REPO_ROOT, 'speckit-extension', 'scripts', 'resolve-spec-paths.py')
+export const WRITE_CONTEXT = join(REPO_ROOT, 'speckit-extension', 'scripts', 'write-context.py')
 export const TEST_FILE = join(REPO_ROOT, 'speckit-extension', 'tests', 'test_living_specs.py')
 export const SANDBOX_ROOT = join(REPO_ROOT, 'examples', 'bench-sandboxes')
 
@@ -124,6 +125,108 @@ export function runPytest() {
     exit: res.exit,
     stdout: res.stdout,
     stdoutTail: res.stdout.split('\n').slice(-12).join('\n'),
+  }
+}
+
+// --- LS·2: the read-path demo ------------------------------------------------
+//
+// LS·2 wires the LS·1 resolver into specify/plan: a change touching a configured
+// capability auto-loads that capability's living spec and records the loaded
+// names onto .spec-context.json (livingSpecs.loaded). This demo is `deterministic`
+// — it proves the two halves the node prose orchestrates with real exec/read:
+//   (1) the resolver resolves the capability for the sandbox's changed files, and
+//   (2) the recording write path (write-context.py --living-specs) produces the
+//       livingSpecs.loaded field on a real .spec-context.json.
+// A genuine live-AI specify run is out of scope for this harness, so any live step
+// stays INCONCLUSIVE rather than a fabricated pass.
+
+// Arrange — a sandbox with a `todos` capability (populated spec) + nested
+// `todos-items`, enabled:true, and a feature dir holding a minimal
+// .spec-context.json the recorder writes onto. Mirrors the #362 acceptance shape
+// (a change touching the capability area loads its spec).
+export function bakeLs2Repo(name = 'ls-2') {
+  const root = join(SANDBOX_ROOT, name)
+  rmSync(root, { recursive: true, force: true })
+  mkdirSync(root, { recursive: true })
+
+  write(root, join('.specify', 'companion.yml'), [
+    'livingSpecs:',
+    '  enabled: true',
+    '  capabilities:',
+    '    - name: todos',
+    '      match: ["src/todos/**"]',
+    '    - name: todos-items',
+    '      match: ["src/todos/items/**"]',
+    '',
+  ].join('\n'))
+
+  write(root, join('capabilities', 'todos', 'spec.md'),
+    '# Todos capability\n\nThe todos area owns the task list, its store, and persistence.\n')
+  write(root, join('capabilities', 'todos-items', 'spec.md'),
+    '# Todos items capability\n\nThe item row, its toggle + delete affordances.\n')
+  write(root, join('src', 'todos', 'list.ts'), '// todos\n')
+  write(root, join('src', 'todos', 'items', 'item.ts'), '// item\n')
+
+  // The feature dir the recorder writes onto — a minimal valid context.
+  write(root, join('specs', '001-add-due-dates', '.spec-context.json'), JSON.stringify({
+    workflow: 'speckit',
+    specName: '001-add-due-dates',
+    branch: '001-add-due-dates',
+    currentStep: 'specify',
+    status: 'specified',
+    history: [],
+  }) + '\n')
+
+  gitInitCell(root)
+  gitCommitCellBaseline(root)
+  return root
+}
+
+// Opt-out arrangement: same shape, enabled:false — nothing should resolve.
+export function bakeLs2OptOutRepo(name = 'ls-2-optout') {
+  const root = bakeLs2Repo(name)
+  write(root, join('.specify', 'companion.yml'), [
+    'livingSpecs:',
+    '  enabled: false',
+    '  capabilities:',
+    '    - name: todos',
+    '      match: ["src/todos/**"]',
+    '',
+  ].join('\n'))
+  return root
+}
+
+// Act — run the real recording write path against the sandbox feature dir, then
+// re-read the .spec-context.json it wrote. Every value captured from real exec +
+// readFileSync (never paraphrased).
+export function runRecordWrite(root, featureRel, names) {
+  const flags = names.flatMap((n) => ['--living-specs', n])
+  let stdout = ''
+  let exit = 0
+  try {
+    stdout = execFileSync(
+      'python3',
+      [WRITE_CONTEXT, '--feature-dir', join(root, featureRel), ...flags],
+      { encoding: 'utf8', cwd: root },
+    )
+  } catch (e) {
+    stdout = (e.stdout || '') + (e.stderr || '')
+    exit = typeof e.status === 'number' ? e.status : 1
+  }
+  let ctx = null
+  try {
+    ctx = JSON.parse(readFileSync(join(root, featureRel, '.spec-context.json'), 'utf8'))
+  } catch { ctx = null }
+  // The writer echoes an absolute target path; strip the home/repo prefix so the
+  // committed evidence stays repo-relative (no /Users/<name>/ leak — LS·1 lesson).
+  const clean = stdout.trim().split(`${REPO_ROOT}/`).join('')
+  return {
+    cwd: rel(root),
+    cmd: `python3 ${rel(WRITE_CONTEXT)} --feature-dir ${featureRel} ${flags.join(' ')}`,
+    exit,
+    stdout: clean,
+    stdoutTail: clean.split('\n').slice(-12).join('\n'),
+    ctx,
   }
 }
 

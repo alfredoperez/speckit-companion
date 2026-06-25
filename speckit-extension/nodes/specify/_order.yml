@@ -2,6 +2,7 @@
 # nodes: [...] replaces this list.
 order:
   - resolve-dir
+  - load-living-specs
   - draft-spec
   - quality-checklist
   - classify-size
