@@ -3,7 +3,7 @@ schema_version: "1.0"
 extension:
   id: companion
   name: "SpecKit Companion"
-  version: "0.14.0"
+  version: "0.15.0"
   description: "Live spec-driven progress for SpecKit Companion — lifecycle capture, status, and resume."
   author: alfredoperez
   repository: https://github.com/alfredoperez/speckit-companion
@@ -64,6 +64,9 @@ provides:
     - name: speckit.companion.auto
       file: commands/speckit.companion.auto.md
       description: "Run the whole Companion pipeline hands-off (specify → plan → tasks → implement → mark-complete), no approval pauses"
+    - name: speckit.companion.adopt
+      file: commands/speckit.companion.adopt.md
+      description: "Brownfield adoption wizard — draft a living spec for ONE code area surface-first and register the capability (opt-in)"
 
 hooks:
   after_specify:

@@ -25,6 +25,13 @@ _spec = importlib.util.spec_from_file_location(
 rsp = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(rsp)
 
+# register-capability.py (LS·5 adoption) — hyphenated, imported by file path.
+_reg_spec = importlib.util.spec_from_file_location(
+    "register_capability", SCRIPTS / "register-capability.py"
+)
+regcap = importlib.util.module_from_spec(_reg_spec)
+_reg_spec.loader.exec_module(regcap)
+
 
 def make_repo(yaml_text: str, files=(), spec_files=()) -> Path:
     """Bake a throwaway repo with a companion.yml and optional planted files."""
@@ -663,6 +670,62 @@ class RecordSyncedTests(unittest.TestCase):
         ctx = self._read(d)
         self.assertEqual(ctx["livingSpecs"]["loaded"], ["todos"])
         self.assertEqual(ctx["livingSpecs"]["synced"], ["todos"])
+
+
+class RegisterCapabilityTests(unittest.TestCase):
+    """LS·5 registry-append helper: idempotent, incremental, non-destructive."""
+
+    def _config(self, root: Path) -> str:
+        return (root / ".specify" / "companion.yml").read_text(encoding="utf-8")
+
+    def test_absent_config_creates_minimal_block(self) -> None:
+        root = Path(tempfile.mkdtemp())  # no .specify/companion.yml
+        result = regcap.register(str(root), "billing", ["src/billing/**"], [], None)
+        self.assertEqual(result["action"], "created")
+        living = rsp.load_living(str(root))
+        self.assertTrue(living["enabled"])
+        self.assertEqual([c["name"] for c in living["capabilities"]], ["billing"])
+
+    def test_append_preserves_existing_capabilities(self) -> None:
+        root = make_repo(CHECKOUT_YAML)
+        regcap.register(str(root), "billing", ["src/billing/**"], [], None)
+        names = [c["name"] for c in rsp.load_living(str(root))["capabilities"]]
+        self.assertEqual(names, ["checkout", "checkout-cart", "billing"])
+
+    def test_append_is_idempotent_by_name(self) -> None:
+        root = make_repo(CHECKOUT_YAML)
+        regcap.register(str(root), "billing", ["src/billing/**"], [], None)
+        before = self._config(root)
+        result = regcap.register(str(root), "billing", ["src/billing/**"], [], None)
+        self.assertEqual(result["action"], "already-registered")
+        self.assertEqual(self._config(root), before)  # byte-identical
+
+    def test_appended_capability_is_resolved(self) -> None:
+        root = make_repo(CHECKOUT_YAML)
+        regcap.register(str(root), "billing", ["src/billing/**"], [], None)
+        living = rsp.load_living(str(root))
+        matched = rsp.match_changed(["src/billing/charge.ts"], living, str(root))
+        self.assertEqual([m["name"] for m in matched], ["billing"])
+
+    def test_malformed_config_is_refused_not_overwritten(self) -> None:
+        root = Path(tempfile.mkdtemp())
+        (root / ".specify").mkdir(parents=True)
+        bad = "- just\n- a list\n"  # top-level seq — not a mapping
+        (root / ".specify" / "companion.yml").write_text(bad, encoding="utf-8")
+        with self.assertRaises(ValueError):
+            regcap.register(str(root), "x", ["src/x/**"], [], None)
+        self.assertEqual(self._config(root), bad)  # untouched
+
+    def test_exclude_and_custom_spec_round_trip(self) -> None:
+        root = make_repo(CHECKOUT_YAML)
+        regcap.register(str(root), "todos", ["src/todos/**"],
+                        ["src/todos/**/*.test.ts"], "docs/todos.spec.md")
+        cap = next(c for c in rsp.load_living(str(root))["capabilities"] if c["name"] == "todos")
+        self.assertEqual(cap["exclude"], ["src/todos/**/*.test.ts"])
+        self.assertEqual(cap["spec"], "docs/todos.spec.md")
+
+    def test_cli_requires_match(self) -> None:
+        self.assertEqual(regcap.main(["--name", "x", "--root", tempfile.mkdtemp()]), 2)
 
 
 if __name__ == "__main__":

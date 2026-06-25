@@ -1,0 +1,127 @@
+{
+  "ticket": "LS5",
+  "issue": 365,
+  "title": "brownfield adoption wizard (LS·5)",
+  "ranAt": "2026-06-25T19:51:41.157Z",
+  "mode": "deterministic",
+  "liveDraftRun": "INCONCLUSIVE — live AI surface-extraction not executed (no live-AI step in this harness); structure proven against a seeded draft",
+  "sandbox": "examples/bench-sandboxes/ls-5",
+  "commands": [
+    {
+      "cwd": "examples/bench-sandboxes/ls-5",
+      "cmd": "python3 speckit-extension/scripts/register-capability.py --root examples/bench-sandboxes/ls-5 --name billing --match src/billing/** --json",
+      "exit": 0,
+      "stdoutTail": "{\n  \"name\": \"billing\",\n  \"action\": \"created\",\n  \"spec\": \"capabilities/billing/spec.md\",\n  \"match\": [\n    \"src/billing/**\"\n  ],\n  \"configPath\": \".specify/companion.yml\"\n}"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-5",
+      "cmd": "python3 speckit-extension/scripts/resolve-spec-paths.py --root examples/bench-sandboxes/ls-5 --changed src/billing/invoice.ts --json",
+      "exit": 0,
+      "stdoutTail": "{\n  \"changed\": [\n    \"src/billing/invoice.ts\"\n  ],\n  \"matched\": [\n    {\n      \"name\": \"billing\",\n      \"spec\": \"capabilities/billing/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": false,\n      \"specificity\": 11\n    }\n  ]\n}"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-5",
+      "cmd": "python3 speckit-extension/scripts/register-capability.py --root examples/bench-sandboxes/ls-5 --name billing --match src/billing/**",
+      "exit": 0,
+      "stdoutTail": ""
+    },
+    {
+      "cwd": ".",
+      "cmd": "python3 -m pytest speckit-extension/tests/test_living_specs.py -q",
+      "exit": 0,
+      "stdoutTail": "...............................................................          [100%]\n63 passed in 2.09s"
+    }
+  ],
+  "fileTree": {
+    "added": [
+      "src/billing/index.ts",
+      "src/billing/invoice.ts",
+      "src/billing/discount.ts",
+      ".specify/companion.yml",
+      "capabilities/billing/spec.md"
+    ],
+    "modified": [],
+    "removed": []
+  },
+  "config": "livingSpecs:\n  enabled: true\n  capabilities:\n    - name: billing\n      match: [\"src/billing/**\"]\n",
+  "registerResult": {
+    "name": "billing",
+    "action": "created",
+    "spec": "capabilities/billing/spec.md",
+    "match": [
+      "src/billing/**"
+    ],
+    "configPath": ".specify/companion.yml"
+  },
+  "resolverOutput": "{\n  \"changed\": [\n    \"src/billing/invoice.ts\"\n  ],\n  \"matched\": [\n    {\n      \"name\": \"billing\",\n      \"spec\": \"capabilities/billing/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": false,\n      \"specificity\": 11\n    }\n  ]\n}",
+  "draftedSpec": {
+    "path": "capabilities/billing/spec.md",
+    "mode": "seeded",
+    "text": "# Billing — Living Spec\n\n> [DRAFT] Surface-first draft from existing code — review before trusting.\n\n## Requirements\n\n- **FR-001** Users can create an invoice for a given amount. [observed]\n- **FR-002** Users can apply a percentage discount to a total. [observed]\n- **FR-003** An invoice starts unpaid until settled. [inferred] [NEEDS CLARIFICATION: no settle path is exported — is payment handled elsewhere?]\n\n## Uncovered\n\n- src/billing/legacy.bin (binary — not read)\n"
+  },
+  "structureChecks": [
+    {
+      "id": "title-wellformed",
+      "status": "PASS",
+      "detail": "title \"# Billing — Living Spec\" + ## Requirements present"
+    },
+    {
+      "id": "draft-banner",
+      "status": "PASS",
+      "detail": "whole spec marked [DRAFT]"
+    },
+    {
+      "id": "observed-and-inferred-tags",
+      "status": "PASS",
+      "detail": "observed=true, inferred=true"
+    },
+    {
+      "id": "needs-clarification",
+      "status": "PASS",
+      "detail": "low-confidence requirement flagged inline"
+    },
+    {
+      "id": "uncovered-section",
+      "status": "PASS",
+      "detail": "## Uncovered section present"
+    }
+  ],
+  "assertions": [
+    {
+      "id": "registers-capability",
+      "status": "PASS",
+      "detail": "register-capability -> action=created, name=billing"
+    },
+    {
+      "id": "resolver-recognizes-append",
+      "status": "PASS",
+      "detail": "--changed src/billing/invoice.ts -> [billing]"
+    },
+    {
+      "id": "append-is-incremental",
+      "status": "PASS",
+      "detail": "no config before; billing block present after (created, not whole-repo bootstrap)"
+    },
+    {
+      "id": "register-idempotent",
+      "status": "PASS",
+      "detail": "re-register left companion.yml byte-identical"
+    },
+    {
+      "id": "drafted-spec-structure",
+      "status": "PASS",
+      "detail": "seeded draft -> 5 structure checks, 0 fail"
+    },
+    {
+      "id": "pytest-green",
+      "status": "PASS",
+      "detail": "pytest exit 0"
+    }
+  ],
+  "pytest": {
+    "runner": "pytest",
+    "exit": 0,
+    "tail": "...............................................................          [100%]\n63 passed in 2.09s"
+  },
+  "verdict": "PASS"
+}

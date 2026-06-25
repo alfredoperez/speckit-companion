@@ -36,10 +36,15 @@ import {
   bakeLs3OptOutRepo,
   bakeLs4Repo,
   bakeLs4OptOutRepo,
+  bakeLs5Repo,
   capabilitiesTree,
   runResolver,
   runRecordWrite,
   runFold,
+  runRegister,
+  readConfig,
+  seedDraftedSpec,
+  checkDraftStructure,
   unifiedDiff,
   runCheckLivingSpec,
   runPytest,
@@ -501,7 +506,122 @@ function runLs4() {
   }
 }
 
-const RUNNERS = { LS1: runLs1, LS2: runLs2, LS3: runLs3, LS4: runLs4 }
+function runLs5() {
+  const commands = []
+  const assertions = []
+  const LIVING = pjoin('capabilities', 'billing', 'spec.md')
+
+  // --- arrange: a brownfield repo with a real src/billing/ area, no config yet -
+  const root = bakeLs5Repo()
+  const configBefore = readConfig(root)                  // expected empty (no block yet)
+
+  // --- act (deterministic, REAL): register the billing capability -------------
+  const register = runRegister(root, ['--name', 'billing', '--match', 'src/billing/**', '--json'])
+  const configAfter = readConfig(root)
+  // the resolver now recognizes a changed file under the adopted area
+  const resolved = runResolver(root, ['--changed', 'src/billing/invoice.ts', '--json'])
+  const resolvedJson = parseJson(resolved.stdout)
+  const matchedNames = resolvedJson ? resolvedJson.matched.map((m) => m.name) : []
+  // idempotent re-register — config must stay byte-identical
+  const reregister = runRegister(root, ['--name', 'billing', '--match', 'src/billing/**'])
+  const configReregister = readConfig(root)
+
+  // --- act (structure, SEEDED): assert a drafted spec's required structure ----
+  // The live AI extraction is NOT run here — this draft is a seeded fixture
+  // standing in for the wizard's output, so the structure contract is proven
+  // without faking a model draft.
+  const draftText = seedDraftedSpec(root, 'billing')
+  const structure = checkDraftStructure(draftText)
+
+  const pytest = runPytest()
+
+  commands.push(
+    { cwd: register.cwd, cmd: register.cmd, exit: register.exit, stdoutTail: register.stdoutTail },
+    { cwd: relative(REPO_ROOT, root), cmd: resolved.cmd, exit: resolved.exit, stdoutTail: resolved.stdoutTail },
+    { cwd: reregister.cwd, cmd: reregister.cmd, exit: reregister.exit, stdoutTail: reregister.stdoutTail },
+    { cwd: '.', cmd: pytest.cmd, exit: pytest.exit, stdoutTail: pytest.stdoutTail },
+  )
+
+  // --- assert (against the real captured output / re-read files) --------------
+  const registerJson = parseJson(register.stdout)
+  assertions.push(assert(
+    'registers-capability',
+    register.exit === 0 && registerJson != null && registerJson.action === 'created' &&
+      registerJson.name === 'billing',
+    `register-capability -> action=${registerJson ? registerJson.action : '?'}, name=billing`,
+  ))
+  assertions.push(assert(
+    'resolver-recognizes-append',
+    resolved.exit === 0 && JSON.stringify(matchedNames) === JSON.stringify(['billing']),
+    `--changed src/billing/invoice.ts -> [${matchedNames.join(', ')}]`,
+  ))
+  assertions.push(assert(
+    'append-is-incremental',
+    configBefore === '' && /name: billing/.test(configAfter),
+    'no config before; billing block present after (created, not whole-repo bootstrap)',
+  ))
+  assertions.push(assert(
+    'register-idempotent',
+    reregister.exit === 0 && configReregister === configAfter,
+    're-register left companion.yml byte-identical',
+  ))
+  const sFailed = structure.failed
+  assertions.push(assert(
+    'drafted-spec-structure',
+    sFailed === 0,
+    `seeded draft -> ${structure.checks.length} structure checks, ${sFailed} fail`,
+  ))
+  assertions.push(assert(
+    'pytest-green',
+    pytest.exit === 0,
+    `${pytest.runner} exit ${pytest.exit}`,
+  ))
+
+  // The deterministic half ran fully real; the live AI drafting did not run in
+  // this harness, so it stays INCONCLUSIVE (never a fabricated pass).
+  const ran = register.exit === 0 && resolved.exit === 0 && reregister.exit === 0
+  const allPass = assertions.every((a) => a.status === 'PASS')
+  const verdict = !ran ? 'INCONCLUSIVE' : allPass ? 'PASS' : 'FAIL'
+
+  return {
+    ticket: 'LS5',
+    issue: 365,
+    title: 'brownfield adoption wizard (LS·5)',
+    ranAt: new Date().toISOString(),
+    // The registry-append + resolver recognition run fully real on disk
+    // (deterministic). The drafted-spec STRUCTURE is proven against a seeded
+    // draft. The live AI extraction itself is out of harness scope.
+    mode: 'deterministic',
+    liveDraftRun: 'INCONCLUSIVE — live AI surface-extraction not executed (no live-AI step in this harness); structure proven against a seeded draft',
+    sandbox: relative(REPO_ROOT, root),
+    commands,
+    fileTree: {
+      added: fileTree(root, [
+        'src/billing/index.ts',
+        'src/billing/invoice.ts',
+        'src/billing/discount.ts',
+        '.specify/companion.yml',
+        'capabilities/billing/spec.md',
+      ]),
+      modified: [],
+      removed: [],
+    },
+    config: configAfter,
+    registerResult: registerJson,
+    resolverOutput: resolved.stdout,
+    draftedSpec: {
+      path: 'capabilities/billing/spec.md',
+      mode: 'seeded',
+      text: draftText,
+    },
+    structureChecks: structure.checks,
+    assertions,
+    pytest: { runner: pytest.runner, exit: pytest.exit, tail: pytest.stdoutTail },
+    verdict,
+  }
+}
+
+const RUNNERS = { LS1: runLs1, LS2: runLs2, LS3: runLs3, LS4: runLs4, LS5: runLs5 }
 
 function main() {
   const ticket = (process.argv[2] || 'LS1').toUpperCase()

@@ -13,3 +13,6 @@
 {"ticket":"LS4","ranAt":"2026-06-25T19:13:09.128Z","mode":"real+seeded-spec","verdict":"PASS"}
 {"ticket":"LS4","ranAt":"2026-06-25T19:18:15.492Z","mode":"real+seeded-spec","verdict":"PASS"}
 {"ticket":"LS4","ranAt":"2026-06-25T19:28:43.137Z","mode":"real+seeded-spec","verdict":"PASS"}
+{"ticket":"LS5","ranAt":"2026-06-25T19:48:06.858Z","mode":"deterministic","verdict":"PASS"}
+{"ticket":"LS5","ranAt":"2026-06-25T19:49:28.641Z","mode":"deterministic","verdict":"PASS"}
+{"ticket":"LS5","ranAt":"2026-06-25T19:51:41.157Z","mode":"deterministic","verdict":"PASS"}
