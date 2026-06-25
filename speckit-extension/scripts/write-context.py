@@ -69,6 +69,23 @@ def _repo_root() -> Path:
     return Path.cwd()
 
 
+def _repo_root_for(path: Path) -> Path:
+    """Repo root that contains `path`, anchoring git on that directory rather than
+    cwd — so a write into a sandbox spec dir resolves the sandbox's root, not the
+    process cwd. Falls back to the cwd-based root (`_repo_root()`) when git can't
+    answer for `path`."""
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(path), "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+        if out:
+            return Path(out)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
+    return _repo_root()
+
+
 def _git_branch(root: Path) -> str | None:
     try:
         out = subprocess.run(
@@ -344,7 +361,7 @@ def set_living_specs_loaded(feature_dir: Path, names: list[str]) -> Path | None:
     if not cleaned:
         return None
     target = feature_dir / ".spec-context.json"
-    branch = _git_branch(_repo_root()) or "main"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
     ctx = read_ctx(target)
     fill_required(ctx, feature_dir, branch)
     block = ctx.get("livingSpecs")
@@ -361,6 +378,362 @@ def set_living_specs_loaded(feature_dir: Path, names: list[str]) -> Path | None:
     ctx["livingSpecs"] = block
     atomic_write(target, ctx)
     return target
+
+
+def set_living_specs_synced(feature_dir: Path, names: list[str]) -> Path | None:
+    """Record the capability names whose living specs were folded into on completion.
+
+    Mirrors set_living_specs_loaded: merges onto ctx["livingSpecs"]["synced"]
+    de-duplicating and preserving first-seen order, never rebuilding the record
+    and never touching lifecycle keys (livingSpecs is additive metadata kept OUT
+    of the strict capture schema). With no names it is a no-op — opt-out and the
+    no-delta case write nothing."""
+    cleaned = [n.strip() for n in names if n and n.strip()]
+    if not cleaned:
+        return None
+    target = feature_dir / ".spec-context.json"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
+    ctx = read_ctx(target)
+    fill_required(ctx, feature_dir, branch)
+    block = ctx.get("livingSpecs")
+    if not isinstance(block, dict):
+        block = {}
+    prior = block.get("synced")
+    merged: list = []
+    for n in (list(prior) if isinstance(prior, list) else []) + list(cleaned):
+        if n not in merged:
+            merged.append(n)
+    block["synced"] = merged
+    ctx["livingSpecs"] = block
+    atomic_write(target, ctx)
+    return target
+
+
+# --- Living-spec fold-back (LS·3) -------------------------------------------
+#
+# At mark-complete, fold the feature spec's requirement deltas into the durable
+# living spec for the resolved capability. The feature spec was the proposal; the
+# living spec becomes the record. Opt-in (livingSpecs.enabled), best-effort, and
+# a clean no-op when the feature spec carries no delta block.
+
+# A top-level delta block header: `## ADDED Requirements` (case-insensitive verb).
+_DELTA_HEADER_RE = re.compile(
+    r"^##\s+(ADDED|MODIFIED|REMOVED|RENAMED)\s+Requirements\s*$", re.IGNORECASE
+)
+# A per-block target marker: `<!-- capability: todos -->`.
+_CAP_MARKER_RE = re.compile(r"<!--\s*capability:\s*([^\s>]+)\s*-->", re.IGNORECASE)
+# A requirement heading inside a block (OpenSpec requirement + scenario shape).
+_REQ_HEADING_RE = re.compile(r"^###\s+(.+?)\s*$")
+# RENAMED uses `### FROM -> TO` (or `→`) to express the heading rename.
+_RENAME_RE = re.compile(r"^(.*?)\s*(?:->|→)\s*(.+)$")
+
+
+def _split_requirements(block_body: str) -> list[tuple[str, str]]:
+    """Split a delta block body into (heading, full_section_text) requirement units.
+
+    A requirement is a `### <heading>` line plus everything up to the next `###`.
+    Returns the heading text and the section text (heading line included)."""
+    lines = block_body.splitlines()
+    reqs: list[tuple[str, str]] = []
+    cur_head: str | None = None
+    cur_lines: list[str] = []
+    for line in lines:
+        m = _REQ_HEADING_RE.match(line)
+        if m:
+            if cur_head is not None:
+                reqs.append((cur_head, "\n".join(cur_lines).rstrip() + "\n"))
+            cur_head = m.group(1).strip()
+            cur_lines = [line]
+        elif cur_head is not None:
+            cur_lines.append(line)
+    if cur_head is not None:
+        reqs.append((cur_head, "\n".join(cur_lines).rstrip() + "\n"))
+    return reqs
+
+
+def parse_spec_deltas(spec_text: str) -> dict:
+    """Parse top-level delta blocks from a feature spec.
+
+    Returns {"added": [...], "modified": [...], "removed": [...],
+    "renamed": [...], "markers": {verb: capability_name}} where each verb list
+    holds (heading, section_text) requirement units (REMOVED/RENAMED carry only
+    the heading). An empty result (no recognized block) means a clean no-op."""
+    out: dict = {"added": [], "modified": [], "removed": [], "renamed": [], "markers": {}}
+    lines = spec_text.splitlines()
+    cur_verb: str | None = None
+    buf: list[str] = []
+
+    def flush() -> None:
+        if cur_verb is None:
+            return
+        body = "\n".join(buf)
+        marker = _CAP_MARKER_RE.search(body)
+        if marker:
+            out["markers"][cur_verb] = marker.group(1).strip()
+        if cur_verb == "removed":
+            for head, _ in _split_requirements(body):
+                out["removed"].append((head, ""))
+        elif cur_verb == "renamed":
+            for head, _ in _split_requirements(body):
+                rm = _RENAME_RE.match(head)
+                if rm:
+                    out["renamed"].append((rm.group(1).strip(), rm.group(2).strip()))
+        else:
+            out[cur_verb].extend(_split_requirements(body))
+
+    for line in lines:
+        hm = _DELTA_HEADER_RE.match(line)
+        if hm:
+            flush()
+            cur_verb = hm.group(1).lower()
+            buf = []
+            continue
+        # A new top-level `## ` heading (not a delta header) closes the block.
+        if line.startswith("## ") and cur_verb is not None:
+            flush()
+            cur_verb = None
+            buf = []
+            continue
+        if cur_verb is not None:
+            buf.append(line)
+    flush()
+    return out
+
+
+def _has_deltas(deltas: dict) -> bool:
+    return any(deltas[k] for k in ("added", "modified", "removed", "renamed"))
+
+
+def _living_requirement_span(living_lines: list[str], heading: str) -> tuple[int, int] | None:
+    """Find the [start, end) line span of a `### <heading>` requirement in a living
+    spec, end being the next `###`/`##` or EOF. Heading match is exact (stripped)."""
+    start = None
+    for i, line in enumerate(living_lines):
+        m = _REQ_HEADING_RE.match(line)
+        if m and m.group(1).strip() == heading:
+            start = i
+            break
+    if start is None:
+        return None
+    end = len(living_lines)
+    for j in range(start + 1, len(living_lines)):
+        s = living_lines[j]
+        if s.startswith("### ") or s.startswith("## "):
+            end = j
+            break
+    return start, end
+
+
+def apply_deltas(living_text: str, deltas: dict) -> str:
+    """Apply ADDED/MODIFIED/REMOVED/RENAMED deltas to a living-spec text.
+
+    ADDED appends a requirement (idempotent — skipped when its heading already
+    exists), MODIFIED replaces the matching requirement in place, REMOVED deletes
+    it, RENAMED rewrites the matching heading's name. Unmatched MODIFIED/REMOVED/
+    RENAMED targets are skipped (best-effort)."""
+    lines = living_text.splitlines()
+
+    for old_head, new_head in deltas["renamed"]:
+        span = _living_requirement_span(lines, old_head)
+        if span:
+            i = span[0]
+            lines[i] = re.sub(r"^(###\s+).+$", lambda m: m.group(1) + new_head, lines[i])
+
+    for head, _ in deltas["removed"]:
+        span = _living_requirement_span(lines, head)
+        if span:
+            del lines[span[0]:span[1]]
+
+    for head, section in deltas["modified"]:
+        span = _living_requirement_span(lines, head)
+        if span:
+            lines[span[0]:span[1]] = section.rstrip("\n").splitlines()
+
+    appended = "\n".join(lines).rstrip() + "\n"
+    for head, section in deltas["added"]:
+        if _living_requirement_span(appended.splitlines(), head) is not None:
+            continue  # idempotent — already present
+        appended = appended.rstrip() + "\n\n" + section.rstrip() + "\n"
+    return appended
+
+
+def _initial_living_spec(capability_name: str) -> str:
+    """A minimal well-formed living-spec scaffold for a capability whose spec.md
+    doesn't exist yet, so the first ADDED fold creates a titled, sectioned spec
+    (the accumulation story LS·4 relies on) rather than a headerless fragment.
+    The slug is humanized into a title; ADDED requirements append under
+    `## Requirements`."""
+    title = capability_name.replace("-", " ").replace("_", " ").strip()
+    if title:
+        title = title[0].upper() + title[1:]
+    else:
+        title = capability_name
+    return f"# {title} — Living Spec\n\n## Requirements\n"
+
+
+def _git_changed_files(root: Path) -> list[str]:
+    """Files this feature branch changed vs its merge-base with the default branch.
+
+    Best-effort: returns [] if git can't answer (detached/odd checkout, no
+    merge-base). On the write-side fold, an empty result means the caller
+    (`_resolve_fold_targets`) folds ONLY capabilities named by an explicit
+    `<!-- capability: ... -->` marker and never fans out to every durable spec —
+    the conservative choice for a write path."""
+    for base in ("origin/main", "main", "origin/master", "master"):
+        try:
+            mb = subprocess.run(
+                ["git", "merge-base", base, "HEAD"], cwd=str(root),
+                capture_output=True, text=True, check=True,
+            ).stdout.strip()
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            continue
+        if not mb:
+            continue
+        try:
+            out = subprocess.run(
+                ["git", "diff", "--name-only", mb, "HEAD"], cwd=str(root),
+                capture_output=True, text=True, check=True,
+            ).stdout
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            return []
+        return [f.strip() for f in out.splitlines() if f.strip()]
+    return []
+
+
+def _load_resolver():
+    """Import the LS·1 resolver (hyphenated filename) by file path, or None."""
+    try:
+        import importlib.util
+        path = Path(__file__).resolve().parent / "resolve-spec-paths.py"
+        spec = importlib.util.spec_from_file_location("resolve_spec_paths", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    except Exception:  # noqa: BLE001 - best-effort
+        return None
+
+
+def _resolve_fold_targets(rsp, living: dict, root: Path, deltas: dict) -> list[dict]:
+    """Capabilities to fold into: the most-specific match for the change surface,
+    plus any capability explicitly named by a `<!-- capability: <name> -->` marker.
+
+    Write-most-specific: from the (most-specific-first) matched list keep only the
+    head. Markered targets are added by name from the full capability set, so a
+    block can route to a different/additional capability than the code change
+    resolves to. When git can't determine the changed files, this folds ONLY the
+    markered capabilities (never fans out to every durable spec) — the conservative
+    choice for a write path; the no-changed-files fallback is logged so the
+    markers-only narrowing is observable rather than a silent no-op."""
+    changed = _git_changed_files(root)
+    if not changed:
+        print(
+            "[companion] Living-spec fold: could not determine changed files; "
+            "folding markered capabilities only (no fan-out to all durable specs).",
+            file=sys.stderr,
+        )
+    matched = rsp.match_changed(changed, living, str(root)) if changed else []
+    targets: list[dict] = []
+    seen: set[str] = set()
+    if matched:
+        head = matched[0]
+        targets.append(head)
+        seen.add(head["name"])
+
+    marker_names = {v for v in deltas.get("markers", {}).values() if v}
+    if marker_names:
+        by_name = {c["name"]: c for c in living["capabilities"]}
+        all_entries = rsp.discover_all(living, str(root))
+        entry_by_name = {e["name"]: e for e in all_entries}
+        for name in marker_names:
+            if name in seen:
+                continue
+            entry = entry_by_name.get(name)
+            if entry is None and name in by_name:
+                try:
+                    entry = rsp._entry(by_name[name], str(root))
+                except Exception:  # noqa: BLE001
+                    entry = None
+            if entry is not None:
+                targets.append(entry)
+                seen.add(name)
+    return targets
+
+
+def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
+    """Fold the feature spec's requirement deltas into the resolved living spec(s).
+
+    Opt-in (livingSpecs.enabled) and best-effort: any miss (feature off, no
+    config, no resolver, no delta block, no spec file) is a clean no-op that
+    returns None and writes nothing. On a real fold, applies the deltas to each
+    target's capabilities/<name>/spec.md, records the synced names onto
+    livingSpecs.synced, logs a one-line per-capability summary, and returns the
+    updated .spec-context.json path. Idempotent: re-running folds nothing new."""
+    root = _repo_root_for(feature_dir)
+    rsp = _load_resolver()
+    if rsp is None:
+        return None
+    try:
+        living = rsp.load_living(str(root))
+    except Exception:  # noqa: BLE001
+        return None
+    if not living.get("enabled"):
+        return None
+
+    spec_md = feature_dir / "spec.md"
+    try:
+        spec_text = spec_md.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    deltas = parse_spec_deltas(spec_text)
+    if not _has_deltas(deltas):
+        return None  # common additive case — clean no-op
+
+    try:
+        targets = _resolve_fold_targets(rsp, living, root, deltas)
+    except Exception:  # noqa: BLE001
+        targets = []
+    if not targets:
+        print(
+            "[companion] Living-spec fold: no capability resolved for this change; "
+            "nothing folded.",
+            file=sys.stderr,
+        )
+        return None
+
+    synced: list[str] = []
+    for cap in targets:
+        spec_rel = cap.get("spec")
+        if not spec_rel:
+            continue
+        living_path = root / spec_rel
+        try:
+            before = living_path.read_text(encoding="utf-8") if living_path.exists() else _initial_living_spec(cap.get("name") or living_path.parent.name)
+        except OSError:
+            continue
+        after = apply_deltas(before, deltas)
+        if after == before:
+            print(
+                f"[companion] Living-spec fold: {cap['name']} already up to date "
+                f"({spec_rel}); no change.",
+                file=sys.stderr,
+            )
+            continue
+        try:
+            living_path.parent.mkdir(parents=True, exist_ok=True)
+            living_path.write_text(after, encoding="utf-8")
+        except OSError as exc:
+            print(f"[companion] Living-spec fold: could not write {spec_rel}: {exc}", file=sys.stderr)
+            continue
+        synced.append(cap["name"])
+        counts = (
+            f"+{len(deltas['added'])} added, ~{len(deltas['modified'])} modified, "
+            f"-{len(deltas['removed'])} removed, ↻{len(deltas['renamed'])} renamed"
+        )
+        print(f"[companion] Living-spec fold: {cap['name']} ← {counts} ({spec_rel})", file=sys.stderr)
+
+    if not synced:
+        return None
+    return set_living_specs_synced(feature_dir, synced)
 
 
 # `**` is optional: matches the turbo/companion bold form `- [x] **T001**` AND the
@@ -1067,12 +1440,19 @@ def main() -> int:
              "(most-specific-first order, de-duped). Repeatable. Additive metadata; "
              "never a lifecycle key.",
     )
+    parser.add_argument(
+        "--fold-living-spec", dest="fold_living_spec", action="store_true",
+        help="Fold this feature spec's ADDED/MODIFIED/REMOVED/RENAMED requirement "
+             "deltas into the resolved capability's living spec (LS·3 archive-as-merge). "
+             "Opt-in (livingSpecs.enabled), best-effort, no-op without a delta block, "
+             "idempotent. Records synced names onto livingSpecs.synced.",
+    )
     args = parser.parse_args()
 
     # Best-effort guard: a non-canonical step is a no-op, never a host failure.
     # Terminal state belongs in `status`, not `currentStep`. Skipped in task-sync
     # mode, which always operates on the implement step.
-    if not args.tasks_file and not args.task and not args.mark_complete and not args.set_pairs and not args.living_specs and not args.materialize and not args.finish and not args.advance and (args.step == "done" or args.step not in CANONICAL_STEPS):
+    if not args.tasks_file and not args.task and not args.mark_complete and not args.set_pairs and not args.living_specs and not args.fold_living_spec and not args.materialize and not args.finish and not args.advance and (args.step == "done" or args.step not in CANONICAL_STEPS):
         print(
             f"[companion] Skipping: '{args.step}' is not a canonical currentStep "
             f"({', '.join(sorted(CANONICAL_STEPS))}).",
@@ -1119,6 +1499,8 @@ def main() -> int:
             target = set_fields(feature_dir, args.set_pairs)
         elif args.living_specs:
             target = set_living_specs_loaded(feature_dir, args.living_specs)
+        elif args.fold_living_spec:
+            target = fold_living_spec(feature_dir, args.by)
         elif args.tasks_file:
             tasks_md = Path(args.tasks_file)
             if not tasks_md.is_absolute():
@@ -1151,11 +1533,18 @@ def main() -> int:
         print(f"[companion] Warning: skipped .spec-context.json write: {exc}", file=sys.stderr)
         return 0
 
+    if target is None and args.fold_living_spec:
+        print("[companion] Living-spec fold: nothing to fold (no delta block, feature off, no capability resolved, or the living spec is already up to date).", file=sys.stderr)
+
     if target is not None and not args.tasks_file:
         if args.set_pairs:
             print(f"[companion] Set {', '.join(args.set_pairs)} in {target}")
         elif args.living_specs:
             print(f"[companion] Recorded loaded living specs ({', '.join(args.living_specs)}) in {target}")
+        elif args.fold_living_spec:
+            ctx = read_ctx(target)
+            synced = ((ctx.get("livingSpecs") or {}).get("synced")) or []
+            print(f"[companion] Folded feature deltas into living spec(s): {', '.join(synced)} ({target})")
         elif args.mark_complete:
             print(f"[companion] Marked {target} complete (status=completed, by={args.by})")
         elif args.finish:

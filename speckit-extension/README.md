@@ -202,6 +202,26 @@ When living specs are turned on, you stop re-explaining the codebase. As you sta
 
 This stays **opt-in by presence and never blocks a run**: with no `livingSpecs` block or `enabled: false`, specify and plan behave exactly as they do today — no load, no recording. A capability that matches but whose spec file isn't written yet is silently skipped, and specify/plan are strictly read-only — they never create or edit a living spec. The loaded capability names are stored on the spec's context under a `livingSpecs.loaded` list (additive metadata, never a lifecycle field), which is what lets `plan` reuse them.
 
+### Folding feature deltas back into the living spec on completion
+
+A feature spec is a one-time proposal. When you finish a feature, the change it described should become part of the durable record. If your feature spec includes a delta section describing how it changes a capability — what it adds, modifies, removes, or renames — those changes **fold into the capability's living spec** the moment you mark the spec complete. The feature spec was the proposal; the living spec becomes the record. (This is OpenSpec's "archive" step.)
+
+Write the deltas as top-level sections in the feature's `spec.md`, using the requirement-and-scenario shape:
+
+```markdown
+## ADDED Requirements
+
+### Users can set a due date on a todo
+
+#### Scenario: set a due date
+- WHEN a user picks a date for a todo
+- THEN the todo shows the due date
+```
+
+The same four section types are recognized — `## ADDED Requirements`, `## MODIFIED Requirements`, `## REMOVED Requirements`, and `## RENAMED Requirements` (a rename reads `### Old name -> New name`). At completion, Companion resolves which capability the change touched and applies the deltas to its `capabilities/<name>/spec.md`: adds append, modifies replace, removes delete, renames rewrite the heading. When several capabilities are in scope it writes only the **most-specific** one, unless a delta section carries a `<!-- capability: <name> -->` marker naming a different or additional target.
+
+This stays **opt-in and safe**: with living specs off there is no fold. A feature spec with no delta section is a clean no-op (the common additive case leaves the living spec byte-for-byte unchanged), and re-running completion folds nothing already there — it's idempotent. The synced capability names are recorded on the spec's context under `livingSpecs.synced` (additive metadata, never a lifecycle field). The whole step is best-effort and never fails completion.
+
 ## Installation
 
 Requires a **github-source** spec-kit — the stock PyPI `specify-cli` has no `extension` subsystem:

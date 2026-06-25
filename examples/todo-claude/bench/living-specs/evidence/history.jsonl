@@ -6,3 +6,6 @@
 {"ticket":"LS2","ranAt":"2026-06-25T17:58:46.965Z","mode":"deterministic","verdict":"PASS"}
 {"ticket":"LS2","ranAt":"2026-06-25T17:59:16.887Z","mode":"deterministic","verdict":"PASS"}
 {"ticket":"LS2","ranAt":"2026-06-25T18:03:43.033Z","mode":"deterministic","verdict":"PASS"}
+{"ticket":"LS3","ranAt":"2026-06-25T18:31:19.126Z","mode":"real+seeded-spec","verdict":"PASS"}
+{"ticket":"LS3","ranAt":"2026-06-25T18:36:07.499Z","mode":"real+seeded-spec","verdict":"PASS"}
+{"ticket":"LS3","ranAt":"2026-06-25T18:53:18.179Z","mode":"real+seeded-spec","verdict":"PASS"}

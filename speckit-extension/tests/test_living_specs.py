@@ -363,5 +363,307 @@ class RecordLoadedLivingSpecsTests(unittest.TestCase):
             self.assertIn(k, wc.PROTECTED_SET_KEYS)
 
 
+# LS·3 — the write path (archive-as-merge): write-context.py --fold-living-spec
+# parses the feature spec's requirement deltas and folds them into the resolved
+# capability's living spec on mark-complete. Covers ADDED/MODIFIED/REMOVED/RENAMED,
+# write-most-specific, the <!-- capability --> marker, no-delta no-op, idempotency,
+# and opt-out. Exercises the REAL functions, never re-deriving the logic inline.
+
+import os as _os  # noqa: E402
+import subprocess as _sp  # noqa: E402
+
+
+def _git_repo(yaml_text: str, caps: dict, code_files=()) -> Path:
+    """Bake a real git repo with a companion.yml, capability specs, and code, with
+    a feature branch carrying a change so the fold's git merge-base diff yields files.
+    `caps` maps a capabilities/<name>/spec.md relative path to its body."""
+    root = Path(tempfile.mkdtemp())
+    (root / ".specify").mkdir(parents=True)
+    (root / ".specify" / "companion.yml").write_text(yaml_text, encoding="utf-8")
+    for rel, body in caps.items():
+        p = root / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(body, encoding="utf-8")
+    for f in code_files:
+        p = root / f
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text("// code\n", encoding="utf-8")
+    env = {**_os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t",
+           "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t"}
+    _sp.run(["git", "init", "-q"], cwd=root, check=True, env=env)
+    _sp.run(["git", "add", "-A"], cwd=root, check=True, env=env)
+    _sp.run(["git", "commit", "-qm", "base"], cwd=root, check=True, env=env)
+    _sp.run(["git", "checkout", "-q", "-b", "feat"], cwd=root, check=True, env=env)
+    for f in (code_files or ["src/x.ts"]):
+        (root / f).write_text("// changed\n", encoding="utf-8")
+    _sp.run(["git", "add", "-A"], cwd=root, check=True, env=env)
+    _sp.run(["git", "commit", "-qm", "change"], cwd=root, check=True, env=env)
+    return root
+
+
+def _write_feature(root: Path, slug: str, spec_body: str) -> Path:
+    fdir = root / "specs" / slug
+    fdir.mkdir(parents=True, exist_ok=True)
+    (fdir / "spec.md").write_text(spec_body, encoding="utf-8")
+    (fdir / ".spec-context.json").write_text(_json.dumps({
+        "workflow": "speckit", "specName": slug, "branch": "feat",
+        "currentStep": "implement", "status": "implemented", "history": [],
+    }), encoding="utf-8")
+    return fdir
+
+
+TODOS_LIVING = (
+    "# Todos capability\n\n"
+    "### Users can add a todo\n\n"
+    "#### Scenario: add\n- WHEN a user submits text\n- THEN a todo appears\n"
+)
+
+ENABLED_TODOS_YAML = (
+    "livingSpecs:\n  enabled: true\n  capabilities:\n"
+    "    - name: todos\n      match: [\"src/todos/**\"]\n"
+)
+
+
+class DeltaParserTests(unittest.TestCase):
+    def test_parses_added_modified_removed_renamed(self) -> None:
+        spec = (
+            "# Feat\n\n"
+            "## ADDED Requirements\n\n### New thing\n\n#### Scenario: s\n- a\n\n"
+            "## MODIFIED Requirements\n\n### Old thing\n\n#### Scenario: s2\n- b\n\n"
+            "## REMOVED Requirements\n\n### Dead thing\n\n"
+            "## RENAMED Requirements\n\n### From name -> To name\n\n"
+            "## Other section\n\nprose\n"
+        )
+        d = wc.parse_spec_deltas(spec)
+        self.assertEqual([h for h, _ in d["added"]], ["New thing"])
+        self.assertEqual([h for h, _ in d["modified"]], ["Old thing"])
+        self.assertEqual([h for h, _ in d["removed"]], ["Dead thing"])
+        self.assertEqual(d["renamed"], [("From name", "To name")])
+
+    def test_no_delta_block_is_empty(self) -> None:
+        d = wc.parse_spec_deltas("# Feat\n\nJust prose, no blocks.\n")
+        self.assertFalse(wc._has_deltas(d))
+
+    def test_capability_marker_is_captured(self) -> None:
+        spec = (
+            "## ADDED Requirements\n<!-- capability: billing -->\n\n"
+            "### Pay\n\n#### Scenario: s\n- a\n"
+        )
+        d = wc.parse_spec_deltas(spec)
+        self.assertEqual(d["markers"].get("added"), "billing")
+
+
+class ApplyDeltasTests(unittest.TestCase):
+    def test_added_appends_idempotently(self) -> None:
+        d = wc.parse_spec_deltas(
+            "## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+        once = wc.apply_deltas(TODOS_LIVING, d)
+        self.assertIn("### Due dates", once)
+        twice = wc.apply_deltas(once, d)
+        self.assertEqual(once, twice)  # idempotent
+
+    def test_modified_replaces_body(self) -> None:
+        d = wc.parse_spec_deltas(
+            "## MODIFIED Requirements\n\n### Users can add a todo\n\n"
+            "#### Scenario: add\n- WHEN submitted\n- THEN it persists\n")
+        out = wc.apply_deltas(TODOS_LIVING, d)
+        self.assertIn("THEN it persists", out)
+        self.assertNotIn("THEN a todo appears", out)
+
+    def test_removed_deletes_requirement(self) -> None:
+        d = wc.parse_spec_deltas(
+            "## REMOVED Requirements\n\n### Users can add a todo\n")
+        out = wc.apply_deltas(TODOS_LIVING, d)
+        self.assertNotIn("### Users can add a todo", out)
+
+    def test_renamed_renames_heading_keeps_body(self) -> None:
+        d = wc.parse_spec_deltas(
+            "## RENAMED Requirements\n\n### Users can add a todo -> Users can create a todo\n")
+        out = wc.apply_deltas(TODOS_LIVING, d)
+        self.assertIn("### Users can create a todo", out)
+        self.assertNotIn("### Users can add a todo", out)
+        self.assertIn("THEN a todo appears", out)  # body preserved
+
+
+class FoldLivingSpecTests(unittest.TestCase):
+    def _living(self, root: Path, rel="capabilities/todos/spec.md") -> str:
+        return (root / rel).read_text(encoding="utf-8")
+
+    def _ctx(self, fdir: Path) -> dict:
+        return _json.loads((fdir / ".spec-context.json").read_text(encoding="utf-8"))
+
+    def test_added_folds_and_records_synced(self) -> None:
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+        result = wc.fold_living_spec(fdir, "ai")
+        self.assertIsNotNone(result)
+        self.assertIn("### Due dates", self._living(root))
+        self.assertEqual(self._ctx(fdir)["livingSpecs"]["synced"], ["todos"])
+
+    def test_no_delta_block_is_byte_identical_noop(self) -> None:
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat", "# Feat\n\nNo deltas here.\n")
+        before = self._living(root)
+        self.assertIsNone(wc.fold_living_spec(fdir, "ai"))
+        self.assertEqual(self._living(root), before)  # byte-identical
+        self.assertNotIn("livingSpecs", self._ctx(fdir))
+
+    def test_idempotent_refold(self) -> None:
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+        wc.fold_living_spec(fdir, "ai")
+        after_first = self._living(root)
+        wc.fold_living_spec(fdir, "ai")
+        self.assertEqual(self._living(root), after_first)  # second fold = no change
+
+    def test_opt_out_disabled_leaves_living_untouched(self) -> None:
+        disabled = ENABLED_TODOS_YAML.replace("enabled: true", "enabled: false")
+        root = _git_repo(disabled, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+        before = self._living(root)
+        self.assertIsNone(wc.fold_living_spec(fdir, "ai"))
+        self.assertEqual(self._living(root), before)
+        self.assertNotIn("livingSpecs", self._ctx(fdir))
+
+    def test_writes_most_specific_capability_only(self) -> None:
+        yaml = (
+            "livingSpecs:\n  enabled: true\n  capabilities:\n"
+            "    - name: todos\n      match: [\"src/todos/**\"]\n"
+            "    - name: todos-items\n      match: [\"src/todos/items/**\"]\n"
+        )
+        caps = {
+            "capabilities/todos/spec.md": "# Todos\n",
+            "capabilities/todos-items/spec.md": "# Todos items\n",
+        }
+        root = _git_repo(yaml, caps, code_files=["src/todos/items/item.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n### Item due date\n\n#### Scenario: s\n- a\n")
+        wc.fold_living_spec(fdir, "ai")
+        self.assertIn("### Item due date", self._living(root, "capabilities/todos-items/spec.md"))
+        # The parent (less-specific) capability is NOT written.
+        self.assertNotIn("### Item due date", self._living(root, "capabilities/todos/spec.md"))
+        self.assertEqual(self._ctx(fdir)["livingSpecs"]["synced"], ["todos-items"])
+
+    def test_capability_marker_redirects_target(self) -> None:
+        yaml = (
+            "livingSpecs:\n  enabled: true\n  capabilities:\n"
+            "    - name: todos\n      match: [\"src/todos/**\"]\n"
+            "    - name: billing\n      match: [\"src/billing/**\"]\n"
+        )
+        caps = {
+            "capabilities/todos/spec.md": "# Todos\n",
+            "capabilities/billing/spec.md": "# Billing\n",
+        }
+        # The code change touches todos, but the marker routes the block to billing too.
+        root = _git_repo(yaml, caps, code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n<!-- capability: billing -->\n\n"
+            "### Invoice export\n\n#### Scenario: s\n- a\n")
+        wc.fold_living_spec(fdir, "ai")
+        synced = set(self._ctx(fdir)["livingSpecs"]["synced"])
+        self.assertIn("billing", synced)
+        self.assertIn("### Invoice export", self._living(root, "capabilities/billing/spec.md"))
+
+    def test_synced_is_not_a_protected_lifecycle_key(self) -> None:
+        self.assertNotIn("livingSpecs", wc.PROTECTED_SET_KEYS)
+
+    def test_missing_living_spec_is_created_with_header(self) -> None:
+        # A capability whose spec.md doesn't exist yet is born well-formed from
+        # its first ADDED fold: a title header + a ## Requirements section, NOT a
+        # headerless fragment.
+        root = _git_repo(ENABLED_TODOS_YAML, {}, code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+        result = wc.fold_living_spec(fdir, "ai")
+        self.assertIsNotNone(result)
+        created = self._living(root)
+        self.assertIn("# Todos — Living Spec", created)
+        self.assertIn("## Requirements", created)
+        self.assertIn("### Due dates", created)
+        self.assertEqual(self._ctx(fdir)["livingSpecs"]["synced"], ["todos"])
+
+    def test_subsequent_fold_appends_without_re_adding_header(self) -> None:
+        root = _git_repo(ENABLED_TODOS_YAML, {}, code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+        wc.fold_living_spec(fdir, "ai")
+        # A second feature adds another requirement to the now-existing spec.
+        fdir2 = _write_feature(root, "002-feat",
+            "# Feat2\n\n## ADDED Requirements\n\n### Reminders\n\n#### Scenario: s\n- b\n")
+        wc.fold_living_spec(fdir2, "ai")
+        body = self._living(root)
+        self.assertEqual(body.count("# Todos — Living Spec"), 1)
+        self.assertEqual(body.count("## Requirements"), 1)
+        self.assertIn("### Due dates", body)
+        self.assertIn("### Reminders", body)
+
+
+class FoldBranchFallbackTests(unittest.TestCase):
+    """#1: the branch fallback in the living-specs recorders derives from the
+    FEATURE-DIR's repo (via _repo_root_for), not the process cwd, so a write into
+    another/sandbox repo records that repo's branch."""
+
+    def _ctx(self, fdir: Path) -> dict:
+        return _json.loads((fdir / ".spec-context.json").read_text(encoding="utf-8"))
+
+    def test_synced_branch_fallback_uses_feature_dir_repo(self) -> None:
+        # A sandbox git repo on a distinctive branch, with a feature dir whose
+        # .spec-context.json carries NO branch — the recorder must fill it from the
+        # sandbox's branch, not whatever branch the test process's cwd is on.
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        # _git_repo leaves the sandbox on the "feat" branch.
+        fdir = root / "specs" / "001-feat"
+        fdir.mkdir(parents=True, exist_ok=True)
+        (fdir / ".spec-context.json").write_text(_json.dumps({
+            "workflow": "speckit", "specName": "001-feat",
+            "currentStep": "implement", "status": "implemented", "history": [],
+        }), encoding="utf-8")
+        wc.set_living_specs_synced(fdir, ["todos"])
+        self.assertEqual(self._ctx(fdir)["branch"], "feat")
+
+    def test_loaded_branch_fallback_uses_feature_dir_repo(self) -> None:
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = root / "specs" / "001-feat"
+        fdir.mkdir(parents=True, exist_ok=True)
+        (fdir / ".spec-context.json").write_text(_json.dumps({
+            "workflow": "speckit", "specName": "001-feat",
+            "currentStep": "specify", "status": "specified", "history": [],
+        }), encoding="utf-8")
+        wc.set_living_specs_loaded(fdir, ["todos"])
+        self.assertEqual(self._ctx(fdir)["branch"], "feat")
+
+
+class RecordSyncedTests(unittest.TestCase):
+    def _read(self, d: Path) -> dict:
+        return _json.loads((d / ".spec-context.json").read_text(encoding="utf-8"))
+
+    def test_records_and_dedups(self) -> None:
+        d = make_ctx_dir()
+        wc.set_living_specs_synced(d, ["todos"])
+        wc.set_living_specs_synced(d, ["todos", "billing"])
+        self.assertEqual(self._read(d)["livingSpecs"]["synced"], ["todos", "billing"])
+
+    def test_no_names_is_noop(self) -> None:
+        d = make_ctx_dir()
+        self.assertIsNone(wc.set_living_specs_synced(d, []))
+        self.assertNotIn("livingSpecs", self._read(d))
+
+    def test_synced_does_not_clobber_loaded(self) -> None:
+        d = make_ctx_dir({"livingSpecs": {"loaded": ["todos"]}})
+        wc.set_living_specs_synced(d, ["todos"])
+        ctx = self._read(d)
+        self.assertEqual(ctx["livingSpecs"]["loaded"], ["todos"])
+        self.assertEqual(ctx["livingSpecs"]["synced"], ["todos"])
+
+
 if __name__ == "__main__":
     unittest.main()
