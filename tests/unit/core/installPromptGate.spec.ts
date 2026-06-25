@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { readInstallPromptEnabled, shouldShowInstallPrompt } from '../../../src/speckit/specKitExtensionInstall';
 
-describe('readInstallPromptEnabled — gated on the Companion workflow', () => {
+describe('readInstallPromptEnabled — gated only on its own prompt setting, not the beta', () => {
     const getConfigSpy = vscode.workspace.getConfiguration as jest.Mock;
 
     const configWith = (values: Record<string, unknown>) => ({
@@ -13,33 +13,40 @@ describe('readInstallPromptEnabled — gated on the Companion workflow', () => {
         getConfigSpy.mockReturnValue({ get: jest.fn().mockReturnValue(['specs']) });
     });
 
-    it('returns false when the Companion workflow is off, even if the prompt is on', () => {
+    it('returns true with the Companion workflow OFF and the prompt on — decoupled from beta', () => {
         getConfigSpy.mockReturnValue(
             configWith({ 'companion.speckitCompanionWorkflow': false, 'companion.installPrompt': true })
         );
-        expect(readInstallPromptEnabled()).toBe(false);
-    });
-
-    it('returns false when the workflow setting is unset (defaults off)', () => {
-        getConfigSpy.mockReturnValue(configWith({ 'companion.installPrompt': true }));
-        expect(readInstallPromptEnabled()).toBe(false);
-    });
-
-    it('returns true when the workflow is on and the prompt is on (default)', () => {
-        getConfigSpy.mockReturnValue(configWith({ 'companion.speckitCompanionWorkflow': true }));
         expect(readInstallPromptEnabled()).toBe(true);
     });
 
-    it('returns false when the workflow is on but the prompt is explicitly off', () => {
+    it('returns true when the workflow setting is unset (beta off) and the prompt defaults on', () => {
+        getConfigSpy.mockReturnValue(configWith({ 'companion.installPrompt': true }));
+        expect(readInstallPromptEnabled()).toBe(true);
+    });
+
+    it('defaults to true when neither the workflow nor the prompt is set', () => {
+        getConfigSpy.mockReturnValue(configWith({}));
+        expect(readInstallPromptEnabled()).toBe(true);
+    });
+
+    it('returns false when the prompt is explicitly off, regardless of the workflow', () => {
         getConfigSpy.mockReturnValue(
             configWith({ 'companion.speckitCompanionWorkflow': true, 'companion.installPrompt': false })
         );
         expect(readInstallPromptEnabled()).toBe(false);
     });
 
-    it('honors a legacy tri-state opt-in on the workflow key', () => {
-        getConfigSpy.mockReturnValue(configWith({ 'companion.speckitCompanionWorkflow': 'on' }));
-        expect(readInstallPromptEnabled()).toBe(true);
+    it('still false when the prompt is off even with the workflow off', () => {
+        getConfigSpy.mockReturnValue(
+            configWith({ 'companion.speckitCompanionWorkflow': false, 'companion.installPrompt': false })
+        );
+        expect(readInstallPromptEnabled()).toBe(false);
+    });
+
+    it('honors a legacy tri-state opt-out on the prompt key', () => {
+        getConfigSpy.mockReturnValue(configWith({ 'companion.installPrompt': 'off' }));
+        expect(readInstallPromptEnabled()).toBe(false);
     });
 });
 

@@ -1050,7 +1050,7 @@
             "default": true,
             "scope": "window",
             "order": 6,
-            "markdownDescription": "Offer a one-click banner to install the companion spec-kit extension when it's missing. Only applies while the **SpecKit Companion Workflow** is on."
+            "markdownDescription": "Offer a one-click banner to install the companion spec-kit extension when it's missing. Independent of the **SpecKit Companion Workflow** toggle — the banner shows whenever the extension is missing and you haven't turned this off or dismissed it."
           },
           "speckit.viewer.activityPanel": {
             "type": "boolean",
