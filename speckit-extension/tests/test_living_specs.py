@@ -901,6 +901,64 @@ class DriftTests(unittest.TestCase):
             [("src/todos/list.ts", "tracked")],
         )
 
+    def test_old_pre_spec_context_change_is_unspeced_not_tracked(self) -> None:
+        # A file recorded in a .spec-context.json committed BEFORE the capability
+        # spec, then changed off-pipeline AFTER the spec, must read `unspeced` —
+        # the old context predates the spec commit, so it can't make it `tracked`.
+        root = _bake_drift_repo(self.YAML)
+        _write(
+            root, "specs/000-old/.spec-context.json",
+            '{"files_modified": ["src/todos/list.ts"], "status": "implemented"}\n',
+        )
+        _write(root, "src/todos/list.ts", "// todos\n")
+        _commit_all(root, "old pipeline context")
+        _write(root, "capabilities/todos/spec.md", "# Todos\n")
+        _commit_all(root, "adopt todos")  # spec commit comes AFTER the context
+        _write(root, "src/todos/list.ts", "// todos\n// changed off-pipeline\n")
+        _commit_all(root, "off-pipeline edit")
+
+        result = self._run(root)
+        todos = next(c for c in result["capabilities"] if c["name"] == "todos")
+        self.assertEqual(
+            [(d["file"], d["severity"]) for d in todos["drifted"]],
+            [("src/todos/list.ts", "unspeced")],
+        )
+
+    def test_context_recorded_since_spec_commit_is_tracked(self) -> None:
+        # A .spec-context.json recorded in a commit AFTER the spec commit makes
+        # its files `tracked` — a recent pipeline sync not yet folded back.
+        root = _bake_drift_repo(self.YAML)
+        _write(root, "capabilities/todos/spec.md", "# Todos\n")
+        _write(root, "src/todos/list.ts", "// todos\n")
+        _commit_all(root, "adopt todos")
+        _write(root, "src/todos/list.ts", "// changed via pipeline\n")
+        _write(
+            root, "specs/002-recent/.spec-context.json",
+            '{"files_modified": ["src/todos/list.ts"], "status": "implemented"}\n',
+        )
+        _commit_all(root, "recent pipeline sync")  # context AFTER the spec commit
+
+        result = self._run(root)
+        todos = next(c for c in result["capabilities"] if c["name"] == "todos")
+        self.assertEqual(
+            [(d["file"], d["severity"]) for d in todos["drifted"]],
+            [("src/todos/list.ts", "tracked")],
+        )
+
+    def test_git_unavailable_skip_reason_differs_from_untracked_spec(self) -> None:
+        # When --root is not a git repo, the skip reason names git unavailability,
+        # NOT "spec.md not yet committed" (which means an uncommitted spec).
+        root = Path(tempfile.mkdtemp())
+        (root / ".specify").mkdir(parents=True)
+        (root / ".specify" / "companion.yml").write_text(self.YAML, encoding="utf-8")
+        _write(root, "capabilities/todos/spec.md", "# Todos\n")  # no git init
+
+        result = self._run(root)
+        todos_skip = next(s for s in result["skipped"] if s["name"] == "todos")
+        self.assertIn("git", todos_skip["reason"].lower())
+        self.assertNotEqual(todos_skip["reason"], "spec.md not yet committed")
+        self.assertEqual(result["capabilities"], [])
+
     def test_exempt_file_is_filtered_out(self) -> None:
         root = _bake_drift_repo(self.YAML)
         _write(root, "capabilities/todos/spec.md", "# Todos\n")

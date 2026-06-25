@@ -5,9 +5,11 @@ For each configured capability, report the source files that changed SINCE the
 capability's living spec (`capabilities/<name>/spec.md`) was last committed, and
 classify each:
 
-  - `tracked`   — the file appears in some `specs/*/.spec-context.json` changed
-                  set (a change that went THROUGH the pipeline but was never
-                  folded back into the living spec → a missed sync).
+  - `tracked`   — the file appears in a `specs/*/.spec-context.json` recorded
+                  SINCE the capability spec's last commit (a change that went
+                  THROUGH the pipeline but was never folded back → a missed
+                  recent sync). Scoped to context files changed in
+                  `commit..HEAD`; degrades to `unspeced` if git can't scope it.
   - `unspeced`  — the file changed entirely outside the pipeline (the living
                   spec never saw it at all). More concerning than `tracked`.
 
@@ -60,6 +62,12 @@ def _git(root: str, args: list[str]) -> tuple[int, str]:
         return 1, ""
 
 
+def _is_git_repo(root: str) -> bool:
+    """True when <root> is inside a git work tree and git is runnable."""
+    code, out = _git(root, ["rev-parse", "--is-inside-work-tree"])
+    return code == 0 and out.strip() == "true"
+
+
 def _spec_commit(root: str, spec: str) -> str | None:
     """The last commit that modified <spec>, or None if untracked / no commits."""
     code, out = _git(root, ["log", "-n", "1", "--format=%H", "--", spec])
@@ -67,37 +75,53 @@ def _spec_commit(root: str, spec: str) -> str | None:
     return sha if code == 0 and sha else None
 
 
-def _changed_since(root: str, commit: str) -> list[str]:
-    code, out = _git(root, ["diff", "--name-only", f"{commit}..HEAD"])
+def _changed_since(root: str, commit: str, pathspec: str | None = None) -> list[str]:
+    args = ["diff", "--name-only", f"{commit}..HEAD"]
+    if pathspec is not None:
+        args += ["--", pathspec]
+    code, out = _git(root, args)
     if code != 0:
         return []
     return [ln.strip() for ln in out.splitlines() if ln.strip()]
 
 
-def _tracked_files(root: str) -> set[str]:
-    """Every file recorded in any specs/*/.spec-context.json changed set.
+def _read_context_files(path: str) -> set[str]:
+    """Files recorded in one `.spec-context.json` (canonical + legacy schema)."""
+    out: set[str] = set()
+    try:
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (OSError, ValueError):
+        return out
+    if not isinstance(data, dict):
+        return out
+    for f in data.get("files_modified") or []:
+        if isinstance(f, str):
+            out.add(rsp._posix(f))
+    for entry in data.get("history") or []:
+        if isinstance(entry, dict):
+            for f in entry.get("files") or []:
+                if isinstance(f, str):
+                    out.add(rsp._posix(f))
+    return out
 
-    Reads both the canonical `history[].files` and the legacy top-level
-    `files_modified` so a file that went through the pipeline is recognized
-    regardless of which schema captured it.
+
+def _tracked_files_since(root: str, commit: str) -> set[str]:
+    """Files recorded in a `specs/*/.spec-context.json` that itself changed in
+    `commit..HEAD` — i.e. a pipeline sync recorded SINCE the capability spec's
+    last commit (FR-002: "...changed/modified set since the spec's commit").
+
+    Scoping to context files changed in `commit..HEAD` is the git-based read
+    consistent with the rest of drift. It degrades conservatively: if git can't
+    scope it (no diff output / non-repo), the set is empty, so an ambiguous file
+    is labeled `unspeced` rather than a false `tracked`.
     """
     out: set[str] = set()
-    for ctx in glob(os.path.join(root, "specs", "*", ".spec-context.json")):
-        try:
-            with open(ctx, encoding="utf-8") as fh:
-                data = json.load(fh)
-        except (OSError, ValueError):
+    for rel in _changed_since(root, commit, "specs/"):
+        rel = rsp._posix(rel)
+        if not rel.endswith("/.spec-context.json"):
             continue
-        if not isinstance(data, dict):
-            continue
-        for f in data.get("files_modified") or []:
-            if isinstance(f, str):
-                out.add(rsp._posix(f))
-        for entry in data.get("history") or []:
-            if isinstance(entry, dict):
-                for f in entry.get("files") or []:
-                    if isinstance(f, str):
-                        out.add(rsp._posix(f))
+        out |= _read_context_files(os.path.join(root, rel))
     return out
 
 
@@ -136,7 +160,7 @@ def compute_drift(root: str, living: dict) -> dict:
         return {"enabled": False, "capabilities": [], "skipped": []}
 
     exempt_globs = living.get("exempt") or []
-    tracked = _tracked_files(root)
+    git_ok = _is_git_repo(root)
     caps_out: list[dict] = []
     skipped: list[dict] = []
 
@@ -145,12 +169,17 @@ def compute_drift(root: str, living: dict) -> dict:
         if not spec:
             skipped.append({"name": cap["name"], "reason": "no resolvable spec path"})
             continue
+        if not git_ok:
+            skipped.append({"name": cap["name"],
+                            "reason": "git unavailable or --root is not a git repo"})
+            continue
         commit = _spec_commit(root, spec)
         if commit is None:
             skipped.append({"name": cap["name"], "reason": "spec.md not yet committed"})
             continue
 
         spec_posix = rsp._posix(spec)
+        tracked = _tracked_files_since(root, commit)
         drifted = []
         for f in _changed_since(root, commit):
             fp = rsp._posix(f)

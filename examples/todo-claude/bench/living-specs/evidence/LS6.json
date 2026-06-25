@@ -2,7 +2,7 @@
   "ticket": "LS6",
   "issue": 366,
   "title": "drift command (LS·6)",
-  "ranAt": "2026-06-25T20:35:34.436Z",
+  "ranAt": "2026-06-25T20:48:03.178Z",
   "mode": "deterministic",
   "sandbox": "examples/bench-sandboxes/ls-6",
   "optOutSandbox": "examples/bench-sandboxes/ls-6-optout",
@@ -11,13 +11,13 @@
       "cwd": "examples/bench-sandboxes/ls-6",
       "cmd": "python3 speckit-extension/scripts/drift.py --root examples/bench-sandboxes/ls-6",
       "exit": 0,
-      "stdoutTail": "🔍 Spec drift report\n✓ about — in sync\n\n📁 capabilities/todos/spec.md  (last committed e6736e50)\n   2 files changed since spec was last committed:\n   tracked  src/todos/store.ts  — changed via pipeline, never folded back\n   unspeced src/todos/list.ts  — changed outside the pipeline\n\n👉 Fold these into the living spec (e.g. /speckit.companion.adopt) or add the path to livingSpecs.exempt."
+      "stdoutTail": "🔍 Spec drift report\n✓ about — in sync\n\n📁 capabilities/todos/spec.md  (last committed 61587703)\n   2 files changed since spec was last committed:\n   tracked  src/todos/store.ts  — changed via pipeline, never folded back\n   unspeced src/todos/list.ts  — changed outside the pipeline\n\n👉 Fold these into the living spec (e.g. /speckit.companion.adopt) or add the path to livingSpecs.exempt."
     },
     {
       "cwd": "examples/bench-sandboxes/ls-6",
       "cmd": "python3 speckit-extension/scripts/drift.py --root examples/bench-sandboxes/ls-6 --json",
       "exit": 0,
-      "stdoutTail": "{\n  \"enabled\": true,\n  \"capabilities\": [\n    {\n      \"name\": \"about\",\n      \"spec\": \"capabilities/about/spec.md\",\n      \"commit\": \"e6736e50\",\n      \"drifted\": [],\n      \"inSync\": true\n    },\n    {\n      \"name\": \"todos\",\n      \"spec\": \"capabilities/todos/spec.md\",\n      \"commit\": \"e6736e50\",\n      \"drifted\": [\n        {\n          \"file\": \"src/todos/store.ts\",\n          \"severity\": \"tracked\"\n        },\n        {\n          \"file\": \"src/todos/list.ts\",\n          \"severity\": \"unspeced\"\n        }\n      ],\n      \"inSync\": false\n    }\n  ],\n  \"skipped\": []\n}"
+      "stdoutTail": "{\n  \"enabled\": true,\n  \"capabilities\": [\n    {\n      \"name\": \"about\",\n      \"spec\": \"capabilities/about/spec.md\",\n      \"commit\": \"61587703\",\n      \"drifted\": [],\n      \"inSync\": true\n    },\n    {\n      \"name\": \"todos\",\n      \"spec\": \"capabilities/todos/spec.md\",\n      \"commit\": \"61587703\",\n      \"drifted\": [\n        {\n          \"file\": \"src/todos/store.ts\",\n          \"severity\": \"tracked\"\n        },\n        {\n          \"file\": \"src/todos/list.ts\",\n          \"severity\": \"unspeced\"\n        }\n      ],\n      \"inSync\": false\n    }\n  ],\n  \"skipped\": []\n}"
     },
     {
       "cwd": "examples/bench-sandboxes/ls-6-optout",
@@ -29,7 +29,7 @@
       "cwd": ".",
       "cmd": "python3 -m pytest speckit-extension/tests/test_living_specs.py -q",
       "exit": 0,
-      "stdoutTail": "........................................................................ [ 91%]\n.......                                                                  [100%]\n79 passed in 2.86s"
+      "stdoutTail": "........................................................................ [ 87%]\n..........                                                               [100%]\n82 passed in 3.80s"
     }
   ],
   "fileTree": {
@@ -47,21 +47,21 @@
     "removed": []
   },
   "config": "livingSpecs:\n  enabled: true\n  capabilities:\n    - name: todos\n      match: [\"src/todos/**\"]\n    - name: about\n      match: [\"src/about/**\"]\n",
-  "driftReport": "🔍 Spec drift report\n✓ about — in sync\n\n📁 capabilities/todos/spec.md  (last committed e6736e50)\n   2 files changed since spec was last committed:\n   tracked  src/todos/store.ts  — changed via pipeline, never folded back\n   unspeced src/todos/list.ts  — changed outside the pipeline\n\n👉 Fold these into the living spec (e.g. /speckit.companion.adopt) or add the path to livingSpecs.exempt.",
+  "driftReport": "🔍 Spec drift report\n✓ about — in sync\n\n📁 capabilities/todos/spec.md  (last committed 61587703)\n   2 files changed since spec was last committed:\n   tracked  src/todos/store.ts  — changed via pipeline, never folded back\n   unspeced src/todos/list.ts  — changed outside the pipeline\n\n👉 Fold these into the living spec (e.g. /speckit.companion.adopt) or add the path to livingSpecs.exempt.",
   "driftJson": {
     "enabled": true,
     "capabilities": [
       {
         "name": "about",
         "spec": "capabilities/about/spec.md",
-        "commit": "e6736e50",
+        "commit": "61587703",
         "drifted": [],
         "inSync": true
       },
       {
         "name": "todos",
         "spec": "capabilities/todos/spec.md",
-        "commit": "e6736e50",
+        "commit": "61587703",
         "drifted": [
           {
             "file": "src/todos/store.ts",
@@ -122,7 +122,7 @@
   "pytest": {
     "runner": "pytest",
     "exit": 0,
-    "tail": "........................................................................ [ 91%]\n.......                                                                  [100%]\n79 passed in 2.86s"
+    "tail": "........................................................................ [ 87%]\n..........                                                               [100%]\n82 passed in 3.80s"
   },
   "verdict": "PASS"
 }
