@@ -82,7 +82,8 @@ def run_checks(feature_spec: str, before: str, after: str) -> Report:
     deltas = wc.parse_spec_deltas(feature_spec)
     r = Report()
 
-    before_heads = set(_headings(before))
+    before_list = _headings(before)
+    before_heads = set(before_list)
     after_heads = _headings(after)
     after_set = set(after_heads)
 
@@ -140,12 +141,14 @@ def run_checks(feature_spec: str, before: str, after: str) -> Report:
     )
 
     # count-delta — expected change = added − removed (renames/mods are count-neutral).
+    # Count headings positionally on both sides (a duplicate heading must count twice
+    # on each side too) so the delta isn't skewed by collapsing one side to a set.
     expected = len(added_heads) - len(removed_heads)
-    actual = len(after_heads) - len(before_heads)
+    actual = len(after_heads) - len(before_list)
     r.add(
         expected == actual,
         "count-delta",
-        f"{len(before_heads)} → {len(after_heads)} (Δ {actual:+d}, expected {expected:+d})",
+        f"{len(before_list)} → {len(after_heads)} (Δ {actual:+d}, expected {expected:+d})",
     )
 
     # idempotent — re-folding the deltas onto the after-spec changes nothing.
