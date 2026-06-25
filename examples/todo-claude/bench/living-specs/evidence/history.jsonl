@@ -3,3 +3,6 @@
 {"ticket":"LS1","ranAt":"2026-06-25T17:26:12.330Z","mode":"deterministic","verdict":"PASS"}
 {"ticket":"LS1","ranAt":"2026-06-25T17:27:42.006Z","mode":"deterministic","verdict":"PASS"}
 {"ticket":"LS1","ranAt":"2026-06-25T17:38:01.183Z","mode":"deterministic","verdict":"PASS"}
+{"ticket":"LS2","ranAt":"2026-06-25T17:58:46.965Z","mode":"deterministic","verdict":"PASS"}
+{"ticket":"LS2","ranAt":"2026-06-25T17:59:16.887Z","mode":"deterministic","verdict":"PASS"}
+{"ticket":"LS2","ranAt":"2026-06-25T18:03:43.033Z","mode":"deterministic","verdict":"PASS"}

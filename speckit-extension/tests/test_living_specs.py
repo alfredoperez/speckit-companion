@@ -280,5 +280,88 @@ class OutputFormatTests(unittest.TestCase):
         self.assertNotIn("{", out)
 
 
+# LS·2 — the recording write path: write-context.py records the loaded capability
+# names onto livingSpecs.loaded so plan can reuse them. Import the hyphenated
+# script by file path the same way the resolver is imported above.
+import json as _json  # noqa: E402
+
+_wc_spec = importlib.util.spec_from_file_location(
+    "write_context", SCRIPTS / "write-context.py"
+)
+wc = importlib.util.module_from_spec(_wc_spec)
+_wc_spec.loader.exec_module(wc)
+
+
+def make_ctx_dir(initial: dict | None = None) -> Path:
+    """A throwaway feature dir with a minimal valid .spec-context.json."""
+    root = Path(tempfile.mkdtemp())
+    base = {
+        "workflow": "speckit",
+        "specName": "demo",
+        "branch": "b",
+        "currentStep": "specify",
+        "status": "specified",
+        "history": [],
+    }
+    if initial:
+        base.update(initial)
+    (root / ".spec-context.json").write_text(_json.dumps(base), encoding="utf-8")
+    return root
+
+
+class RecordLoadedLivingSpecsTests(unittest.TestCase):
+    def _read(self, d: Path) -> dict:
+        return _json.loads((d / ".spec-context.json").read_text(encoding="utf-8"))
+
+    def test_records_names_in_order(self) -> None:
+        d = make_ctx_dir()
+        wc.set_living_specs_loaded(d, ["checkout-cart", "checkout"])
+        self.assertEqual(self._read(d)["livingSpecs"]["loaded"], ["checkout-cart", "checkout"])
+
+    def test_dedups_across_calls_preserving_first_seen_order(self) -> None:
+        d = make_ctx_dir()
+        wc.set_living_specs_loaded(d, ["checkout-cart", "checkout"])
+        wc.set_living_specs_loaded(d, ["checkout", "todos"])
+        self.assertEqual(
+            self._read(d)["livingSpecs"]["loaded"],
+            ["checkout-cart", "checkout", "todos"],
+        )
+
+    def test_normalizes_pre_existing_duplicates(self) -> None:
+        # A record that already carries duplicates (older version / manual edit)
+        # is normalized on the next write, not just guarded against new dupes.
+        d = make_ctx_dir({"livingSpecs": {"loaded": ["checkout", "checkout", "todos"]}})
+        wc.set_living_specs_loaded(d, ["checkout"])
+        self.assertEqual(self._read(d)["livingSpecs"]["loaded"], ["checkout", "todos"])
+
+    def test_merges_without_dropping_other_fields(self) -> None:
+        d = make_ctx_dir({"size": "normal", "history": [{"step": "specify", "kind": "start"}]})
+        wc.set_living_specs_loaded(d, ["checkout"])
+        ctx = self._read(d)
+        self.assertEqual(ctx["size"], "normal")
+        self.assertEqual(ctx["status"], "specified")
+        self.assertEqual(len(ctx["history"]), 1)
+        self.assertEqual(ctx["livingSpecs"]["loaded"], ["checkout"])
+
+    def test_no_names_is_a_noop_no_field_written(self) -> None:
+        d = make_ctx_dir()
+        result = wc.set_living_specs_loaded(d, [])
+        self.assertIsNone(result)
+        self.assertNotIn("livingSpecs", self._read(d))
+
+    def test_blank_names_are_filtered(self) -> None:
+        d = make_ctx_dir()
+        result = wc.set_living_specs_loaded(d, ["  ", ""])
+        self.assertIsNone(result)
+        self.assertNotIn("livingSpecs", self._read(d))
+
+    def test_living_specs_is_not_a_protected_lifecycle_key(self) -> None:
+        # The field setter refuses lifecycle keys; livingSpecs must NOT be one,
+        # so the additive metadata can be written while status/history stay locked.
+        self.assertNotIn("livingSpecs", wc.PROTECTED_SET_KEYS)
+        for k in ("history", "status", "currentStep", "transitions"):
+            self.assertIn(k, wc.PROTECTED_SET_KEYS)
+
+
 if __name__ == "__main__":
     unittest.main()

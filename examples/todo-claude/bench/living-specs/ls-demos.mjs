@@ -7,7 +7,14 @@
 // evidence to evidence/<LS>.json per the evidence contract; if a step can't run
 // the verdict becomes INCONCLUSIVE rather than a fabricated pass.
 //
-// Usage: node ls-demos.mjs [LS1]      (default LS1)
+// LS·2 (deterministic): prove the read path's two real halves — (1) the resolver
+// resolves the configured capability for the sandbox's changed files, and (2) the
+// recording write path (write-context.py --living-specs) produces livingSpecs.loaded
+// on a real .spec-context.json — plus the opt-out (enabled:false → nothing resolves,
+// nothing recorded). A genuine live-AI specify run is out of this harness's scope,
+// so that live step stays INCONCLUSIVE rather than a fabricated pass.
+//
+// Usage: node ls-demos.mjs [LS1|LS2]      (default LS1)
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 
@@ -16,7 +23,10 @@ import {
   EVIDENCE_DIR,
   bakeLs1Repo,
   bakeOptOutRepo,
+  bakeLs2Repo,
+  bakeLs2OptOutRepo,
   runResolver,
+  runRecordWrite,
   runPytest,
   fileTree,
 } from './ls-lib.mjs'
@@ -134,13 +144,109 @@ function runLs1() {
   }
 }
 
+function runLs2() {
+  const commands = []
+  const assertions = []
+  const FEATURE = join('specs', '001-add-due-dates')
+
+  // --- arrange + act -------------------------------------------------------
+  const root = bakeLs2Repo()
+  // (1) resolver resolves the capability for the change's files (leaf-first).
+  const changed = runResolver(root, ['--changed', 'src/todos/items/item.ts', '--json'])
+  const changedJson = parseJson(changed.stdout)
+  const matchedNames = changedJson ? changedJson.matched.map((m) => m.name) : []
+
+  // (2) the recording write path produces livingSpecs.loaded on a real context.
+  const record = runRecordWrite(root, FEATURE, matchedNames.length ? matchedNames : ['todos-items', 'todos'])
+  const loaded = record.ctx && record.ctx.livingSpecs ? record.ctx.livingSpecs.loaded : null
+
+  // opt-out — enabled:false resolves nothing, so nothing is recorded.
+  const optOutRoot = bakeLs2OptOutRepo()
+  const optOut = runResolver(optOutRoot, ['--changed', 'src/todos/items/item.ts', '--json'])
+  const optOutJson = parseJson(optOut.stdout)
+
+  const pytest = runPytest()
+
+  commands.push(
+    { cwd: relative(REPO_ROOT, root), cmd: changed.cmd, exit: changed.exit, stdoutTail: changed.stdoutTail },
+    { cwd: relative(REPO_ROOT, root), cmd: record.cmd, exit: record.exit, stdoutTail: record.stdoutTail },
+    { cwd: relative(REPO_ROOT, optOutRoot), cmd: optOut.cmd, exit: optOut.exit, stdoutTail: optOut.stdoutTail },
+    { cwd: '.', cmd: pytest.cmd, exit: pytest.exit, stdoutTail: pytest.stdoutTail },
+  )
+
+  // --- assert (against the real captured stdout / re-read context) ---------
+  assertions.push(assert(
+    'resolves-capability-for-changed-file',
+    changedJson != null && JSON.stringify(matchedNames) === JSON.stringify(['todos-items', 'todos']),
+    `--changed src/todos/items/item.ts -> [${matchedNames.join(', ')}]`,
+  ))
+  assertions.push(assert(
+    'records-loaded-capabilities',
+    record.exit === 0 && Array.isArray(loaded) && JSON.stringify(loaded) === JSON.stringify(['todos-items', 'todos']),
+    `livingSpecs.loaded -> [${(loaded || []).join(', ')}]`,
+  ))
+  assertions.push(assert(
+    'record-merge-keeps-lifecycle',
+    record.ctx != null && record.ctx.status === 'specified' && record.ctx.currentStep === 'specify' && Array.isArray(record.ctx.history),
+    `status=${record.ctx && record.ctx.status}, currentStep=${record.ctx && record.ctx.currentStep} preserved`,
+  ))
+  assertions.push(assert(
+    'opt-out-resolves-nothing',
+    optOut.exit === 0 && optOutJson != null && optOutJson.matched.length === 0,
+    `enabled:false -> matched=[], exit ${optOut.exit}`,
+  ))
+  assertions.push(assert(
+    'pytest-green',
+    pytest.exit === 0,
+    `${pytest.runner} exit ${pytest.exit}`,
+  ))
+
+  const ran = changed.exit === 0 && record.exit === 0 && optOut.exit === 0
+  const allPass = assertions.every((a) => a.status === 'PASS')
+  const verdict = !ran ? 'INCONCLUSIVE' : allPass ? 'PASS' : 'FAIL'
+
+  return {
+    ticket: 'LS2',
+    issue: 362,
+    title: 'auto-load living specs into specify & plan (LS·2)',
+    ranAt: new Date().toISOString(),
+    // The two halves the node prose orchestrates are exercised with real exec +
+    // readFileSync; a genuine live-AI specify run is out of this harness's scope.
+    mode: 'deterministic',
+    liveSpecifyRun: 'INCONCLUSIVE — not executed (no live-AI step in this harness)',
+    sandbox: relative(REPO_ROOT, root),
+    commands,
+    fileTree: {
+      added: fileTree(root, [
+        '.specify/companion.yml',
+        'capabilities/todos/spec.md',
+        'capabilities/todos-items/spec.md',
+        'src/todos/list.ts',
+        'src/todos/items/item.ts',
+        'specs/001-add-due-dates/.spec-context.json',
+      ]),
+      modified: ['specs/001-add-due-dates/.spec-context.json'],
+      removed: [],
+    },
+    config: 'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: todos\n      match: ["src/todos/**"]\n    - name: todos-items\n      match: ["src/todos/items/**"]',
+    resolverOutputs: { changed: changed.stdout, optOut: optOut.stdout },
+    recordedContext: record.ctx,
+    assertions,
+    pytest: { runner: pytest.runner, exit: pytest.exit, tail: pytest.stdoutTail },
+    verdict,
+  }
+}
+
+const RUNNERS = { LS1: runLs1, LS2: runLs2 }
+
 function main() {
   const ticket = (process.argv[2] || 'LS1').toUpperCase()
-  if (ticket !== 'LS1') {
-    console.error(`[ls-demos] unknown ticket ${ticket} — only LS1 is implemented`)
+  const runner = RUNNERS[ticket]
+  if (!runner) {
+    console.error(`[ls-demos] unknown ticket ${ticket} — known: ${Object.keys(RUNNERS).join(', ')}`)
     process.exit(2)
   }
-  const evidence = runLs1()
+  const evidence = runner()
   mkdirSync(EVIDENCE_DIR, { recursive: true })
   const out = join(EVIDENCE_DIR, `${ticket}.json`)
   writeFileSync(out, JSON.stringify(evidence, null, 2) + '\n')
