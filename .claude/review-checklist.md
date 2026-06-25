@@ -69,8 +69,14 @@ The review subagent in `/ship-ticket` and `/fix-tickets` reads this **before** r
 - **An invariant that must hold on every run needs idempotent re-assertion, not set-once-at-create** (e.g. `--prerelease` re-applied via `release edit` after an upsert). (#273)
 - **Swapping a convenience endpoint for a list endpoint drops what it did for free** — `/releases/latest` → `/releases` loses draft/prerelease filtering, pagination, and incidental headers (`User-Agent`); re-add each. (#274)
 
+## Spec-context & lifecycle state
+
+- **Overriding a spec's `status` is not enough — realign the fields the UI actually derives from.** The viewer footer/step-tab key on `currentStep` + the derived `stepHistory`, NOT on `status` (`footerActions.ts`, `docs/viewer-states.md`). A writer that sets `status` to an in-progress phase but leaves `currentStep`/history on the old step yields an incoherent, still-stranded spec and a misleading "X completed" event. When forcing/overriding state, map the target to its owning step and record an honest `start`/`complete` boundary. (#347)
+- **A shared lifecycle writer reused for a new case must not change byte-behavior for existing callers** — branch the new behavior (e.g. `forceStatus` for non-terminal overrides) and keep terminal `completed`/`archived` routing through the unchanged path; assert parity in a test. (#347)
+
 ## Tests & PR hygiene
 - **A test must exercise the REAL code path, not re-implement the condition under test.** A test that re-derives the predicate inline (e.g. recomputing a guard's boolean) passes even if the production guard is broken — false confidence. Extract the predicate into a named function and have both the production caller and the test call it. (#310)
+- **A `jest.mock` of a lifecycle/util module must export every symbol the module-under-test imports** — a missing export (e.g. `completeStep`) is `undefined` at call time and crashes only the path that reaches it, passing until that path is exercised. (#347)
 
 - **Green a stale test by re-deriving the fixture from the current contract — never weaken it to pass.** It must still fail on a real regression (verify by simulating one); append-only tests assert prior entries are byte-for-byte unchanged. Gate the suite in CI (no `|| true`). (#263)
 - **When you broaden a change's scope mid-PR, update the spec/PR-description constraint in the SAME commit** — a diff that contradicts its own stated constraint is flagged immediately. (#273)
