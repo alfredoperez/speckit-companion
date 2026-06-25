@@ -47,7 +47,7 @@ const LIFECYCLE_STEPS: ReadonlySet<string> = new Set([
     'analyze',
 ]);
 
-// Statuses the force-status picker offers; `draft`/`archived` are excluded.
+// Statuses the force-status picker offers; the transient `tasking` and the out-of-band `draft`/`archived` are excluded.
 const FORCE_STATUS_CHOICES: Status[] = [
     'specifying',
     'specified',
