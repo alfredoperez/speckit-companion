@@ -35,6 +35,23 @@ Pass `--feature-dir specs/<NNN>-<slug>` when you already know it.
 completed`, preserving the canonical invariant that the last `history` entry's step equals
 `currentStep`. It is the only sanctioned writer of `completed`.
 
+### Fold living-spec deltas (opt-in, best-effort)
+
+After the completion write succeeds, fold this feature spec's requirement deltas into the durable
+living spec for the capability it changed — OpenSpec's "archive" step. Run from the repository root:
+
+```bash
+python3 .specify/extensions/companion/scripts/write-context.py --fold-living-spec --by ai
+```
+
+This parses the feature spec for `## ADDED / MODIFIED / REMOVED / RENAMED Requirements` blocks and
+applies them to the resolved `capabilities/<name>/spec.md` (most-specific capability, unless a block
+carries a `<!-- capability: <name> -->` marker). It is **opt-in** (only acts when
+`.specify/companion.yml` sets `livingSpecs.enabled: true`), a **clean no-op** when the spec carries
+no delta block (the common additive case), **idempotent** on re-run, and records the synced
+capability names onto `livingSpecs.synced` in `.spec-context.json`. Best-effort — it never fails the
+host command.
+
 ## Graceful Degradation
 
 Best-effort and idempotent:

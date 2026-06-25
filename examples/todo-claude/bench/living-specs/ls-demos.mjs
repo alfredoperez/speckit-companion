@@ -18,6 +18,9 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 
+import { join as pjoin } from 'node:path'
+import { readFileSync } from 'node:fs'
+
 import { REPO_ROOT } from '../lib.mjs'
 import {
   EVIDENCE_DIR,
@@ -25,10 +28,16 @@ import {
   bakeOptOutRepo,
   bakeLs2Repo,
   bakeLs2OptOutRepo,
+  bakeLs3Repo,
+  bakeLs3OptOutRepo,
   runResolver,
   runRecordWrite,
+  runFold,
+  unifiedDiff,
+  runCheckLivingSpec,
   runPytest,
   fileTree,
+  readText,
 } from './ls-lib.mjs'
 
 function parseJson(stdout) {
@@ -237,7 +246,117 @@ function runLs2() {
   }
 }
 
-const RUNNERS = { LS1: runLs1, LS2: runLs2 }
+function runLs3() {
+  const commands = []
+  const assertions = []
+  const FEATURE = pjoin('specs', '001-add-due-dates')
+  const LIVING = pjoin('capabilities', 'todos', 'spec.md')
+
+  // --- arrange + act -------------------------------------------------------
+  const root = bakeLs3Repo()
+  const before = readText(pjoin(root, LIVING))           // real read, pre-fold
+  const fold = runFold(root, FEATURE)                    // the REAL fold script
+  const after = readText(pjoin(root, LIVING))            // real read, post-fold
+  const synced = fold.ctx && fold.ctx.livingSpecs ? fold.ctx.livingSpecs.synced : null
+
+  // Idempotency — a second fold must change nothing on disk.
+  const refold = runFold(root, FEATURE)
+  const afterRefold = readText(pjoin(root, LIVING))
+
+  // The real unified diff + the real check_living_spec.py report.
+  const diff = unifiedDiff(before, after)
+  const cls = runCheckLivingSpec(pjoin(root, FEATURE, 'spec.md'), before, after)
+
+  // Opt-out — enabled:false leaves the living spec byte-identical.
+  const optRoot = bakeLs3OptOutRepo()
+  const optBefore = readText(pjoin(optRoot, LIVING))
+  const optFold = runFold(optRoot, FEATURE)
+  const optAfter = readText(pjoin(optRoot, LIVING))
+
+  const pytest = runPytest()
+
+  commands.push(
+    { cwd: fold.cwd, cmd: fold.cmd, exit: fold.exit, stdoutTail: fold.stdoutTail },
+    { cwd: refold.cwd, cmd: refold.cmd, exit: refold.exit, stdoutTail: refold.stdoutTail },
+    { cwd: optFold.cwd, cmd: optFold.cmd, exit: optFold.exit, stdoutTail: optFold.stdoutTail },
+    { cwd: '.', cmd: pytest.cmd, exit: pytest.exit, stdoutTail: pytest.stdoutTail },
+  )
+
+  // --- assert (against the real captured output / re-read files) -----------
+  assertions.push(assert(
+    'added-folded',
+    after.includes('### Users can set a due date on a todo'),
+    'ADDED requirement present in capabilities/todos/spec.md after fold',
+  ))
+  assertions.push(assert(
+    'records-synced',
+    fold.exit === 0 && Array.isArray(synced) && synced.includes('todos'),
+    `livingSpecs.synced -> [${(synced || []).join(', ')}]`,
+  ))
+  assertions.push(assert(
+    'idempotent',
+    afterRefold === after,
+    're-running the fold left capabilities/todos/spec.md byte-identical',
+  ))
+  const clsFailed = cls.report ? cls.report.failed : -1
+  assertions.push(assert(
+    'check-living-spec-green',
+    cls.exit === 0 && clsFailed === 0,
+    `check_living_spec.py -> ${cls.report ? cls.report.checks.length : 0} checks, ${clsFailed} fail`,
+  ))
+  assertions.push(assert(
+    'opt-out-byte-identical',
+    optBefore === optAfter && (optFold.ctx == null || optFold.ctx.livingSpecs == null),
+    `enabled:false -> living spec unchanged, no livingSpecs.synced`,
+  ))
+  assertions.push(assert(
+    'pytest-green',
+    pytest.exit === 0,
+    `${pytest.runner} exit ${pytest.exit}`,
+  ))
+
+  const ran = fold.exit === 0 && refold.exit === 0 && optFold.exit === 0
+  const allPass = assertions.every((a) => a.status === 'PASS')
+  const verdict = !ran ? 'INCONCLUSIVE' : allPass ? 'PASS' : 'FAIL'
+
+  return {
+    ticket: 'LS3',
+    issue: 363,
+    title: 'fold feature-spec deltas into the durable living spec at mark-complete (LS·3)',
+    ranAt: new Date().toISOString(),
+    // The fold (the unit under test) runs fully real on disk; only the model's
+    // prose is seeded (a real feature spec + delta), removing AI variability from
+    // the part not under test.
+    mode: 'real+seeded-spec',
+    sandbox: relative(REPO_ROOT, root),
+    commands,
+    fileTree: {
+      added: fileTree(root, [
+        '.specify/companion.yml',
+        'capabilities/todos/spec.md',
+        'specs/001-add-due-dates/spec.md',
+        'specs/001-add-due-dates/.spec-context.json',
+        'src/todos/list.ts',
+      ]),
+      modified: ['capabilities/todos/spec.md', 'specs/001-add-due-dates/.spec-context.json'],
+      removed: [],
+    },
+    config: 'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: todos\n      match: ["src/todos/**"]',
+    livingSpec: {
+      path: 'capabilities/todos/spec.md',
+      before,
+      after,
+      unifiedDiff: diff,
+    },
+    syncedCapabilities: synced,
+    assertions,
+    checkLivingSpec: cls.report,
+    pytest: { runner: pytest.runner, exit: pytest.exit, tail: pytest.stdoutTail },
+    verdict,
+  }
+}
+
+const RUNNERS = { LS1: runLs1, LS2: runLs2, LS3: runLs3 }
 
 function main() {
   const ticket = (process.argv[2] || 'LS1').toUpperCase()

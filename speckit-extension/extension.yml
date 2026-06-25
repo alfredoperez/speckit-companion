@@ -3,7 +3,7 @@ schema_version: "1.0"
 extension:
   id: companion
   name: "SpecKit Companion"
-  version: "0.13.0"
+  version: "0.14.0"
   description: "Live spec-driven progress for SpecKit Companion — lifecycle capture, status, and resume."
   author: alfredoperez
   repository: https://github.com/alfredoperez/speckit-companion

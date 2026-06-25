@@ -1,0 +1,131 @@
+{
+  "ticket": "LS3",
+  "issue": 363,
+  "title": "fold feature-spec deltas into the durable living spec at mark-complete (LS·3)",
+  "ranAt": "2026-06-25T18:36:07.499Z",
+  "mode": "real+seeded-spec",
+  "sandbox": "examples/bench-sandboxes/ls-3",
+  "commands": [
+    {
+      "cwd": "examples/bench-sandboxes/ls-3",
+      "cmd": "python3 speckit-extension/scripts/write-context.py --feature-dir specs/001-add-due-dates --fold-living-spec --by ai",
+      "exit": 0,
+      "stdoutTail": "[companion] Folded feature deltas into living spec(s): todos (examples/bench-sandboxes/ls-3/specs/001-add-due-dates/.spec-context.json)"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-3",
+      "cmd": "python3 speckit-extension/scripts/write-context.py --feature-dir specs/001-add-due-dates --fold-living-spec --by ai",
+      "exit": 0,
+      "stdoutTail": ""
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-3-optout",
+      "cmd": "python3 speckit-extension/scripts/write-context.py --feature-dir specs/001-add-due-dates --fold-living-spec --by ai",
+      "exit": 0,
+      "stdoutTail": ""
+    },
+    {
+      "cwd": ".",
+      "cmd": "python3 -m pytest speckit-extension/tests/test_living_specs.py -q",
+      "exit": 0,
+      "stdoutTail": "....................................................                     [100%]\n52 passed in 1.38s"
+    }
+  ],
+  "fileTree": {
+    "added": [
+      ".specify/companion.yml",
+      "capabilities/todos/spec.md",
+      "specs/001-add-due-dates/spec.md",
+      "specs/001-add-due-dates/.spec-context.json",
+      "src/todos/list.ts"
+    ],
+    "modified": [
+      "capabilities/todos/spec.md",
+      "specs/001-add-due-dates/.spec-context.json"
+    ],
+    "removed": []
+  },
+  "config": "livingSpecs:\n  enabled: true\n  capabilities:\n    - name: todos\n      match: [\"src/todos/**\"]",
+  "livingSpec": {
+    "path": "capabilities/todos/spec.md",
+    "before": "# Todos capability\n\n### Users can add a todo\n\n#### Scenario: add a todo\n- WHEN a user types text and submits\n- THEN a todo appears in the list\n",
+    "after": "# Todos capability\n\n### Users can add a todo\n\n#### Scenario: add a todo\n- WHEN a user types text and submits\n- THEN a todo appears in the list\n\n### Users can set a due date on a todo\n\n#### Scenario: set a due date\n- WHEN a user picks a date for a todo\n- THEN the todo shows the due date\n\n#### Scenario: clear a due date\n- WHEN a user clears the date\n- THEN the todo shows no due date\n",
+    "unifiedDiff": "diff --git abefore.md bafter.md\nindex 3021866..68c58cc 100644\n--- abefore.md\n+++ bafter.md\n@@ -5,3 +5,13 @@\n #### Scenario: add a todo\n - WHEN a user types text and submits\n - THEN a todo appears in the list\n+\n+### Users can set a due date on a todo\n+\n+#### Scenario: set a due date\n+- WHEN a user picks a date for a todo\n+- THEN the todo shows the due date\n+\n+#### Scenario: clear a due date\n+- WHEN a user clears the date\n+- THEN the todo shows no due date\n"
+  },
+  "syncedCapabilities": [
+    "todos"
+  ],
+  "assertions": [
+    {
+      "id": "added-folded",
+      "status": "PASS",
+      "detail": "ADDED requirement present in capabilities/todos/spec.md after fold"
+    },
+    {
+      "id": "records-synced",
+      "status": "PASS",
+      "detail": "livingSpecs.synced -> [todos]"
+    },
+    {
+      "id": "idempotent",
+      "status": "PASS",
+      "detail": "re-running the fold left capabilities/todos/spec.md byte-identical"
+    },
+    {
+      "id": "check-living-spec-green",
+      "status": "PASS",
+      "detail": "check_living_spec.py -> 6 checks, 0 fail"
+    },
+    {
+      "id": "opt-out-byte-identical",
+      "status": "PASS",
+      "detail": "enabled:false -> living spec unchanged, no livingSpecs.synced"
+    },
+    {
+      "id": "pytest-green",
+      "status": "PASS",
+      "detail": "pytest exit 0"
+    }
+  ],
+  "checkLivingSpec": {
+    "checks": [
+      {
+        "status": "PASS",
+        "id": "added-folded",
+        "detail": "1 ADDED present"
+      },
+      {
+        "status": "PASS",
+        "id": "removed-gone",
+        "detail": "0 REMOVED gone"
+      },
+      {
+        "status": "PASS",
+        "id": "modified-changed",
+        "detail": "0 MODIFIED applied"
+      },
+      {
+        "status": "PASS",
+        "id": "renamed-applied",
+        "detail": "0 RENAMED applied"
+      },
+      {
+        "status": "PASS",
+        "id": "count-delta",
+        "detail": "1 → 2 (Δ +1, expected +1)"
+      },
+      {
+        "status": "PASS",
+        "id": "idempotent",
+        "detail": "re-applying deltas to the after-spec is a byte no-op"
+      }
+    ],
+    "failed": 0
+  },
+  "pytest": {
+    "runner": "pytest",
+    "exit": 0,
+    "tail": "....................................................                     [100%]\n52 passed in 1.38s"
+  },
+  "verdict": "PASS"
+}

@@ -234,4 +234,177 @@ export function fileTree(root, rels) {
   return rels.filter((r) => existsSync(join(root, r)))
 }
 
+// --- LS·3: the write path (archive-as-merge / fold-back) ---------------------
+//
+// LS·3 folds the feature spec's requirement deltas into the durable living spec
+// at mark-complete. Mode is `real+seeded-spec`: the fold logic — the unit under
+// test — runs fully real on disk (real write-context.py --fold-living-spec, real
+// readFileSync of before/after), with only the model's prose seeded (a real
+// feature spec carrying a genuine `## ADDED Requirements` delta) so the part NOT
+// under test (the AI's authoring variability) is removed.
+
+export const CHECK_LIVING_SPEC = join(
+  REPO_ROOT, '.claude', 'skills', 'eval-speckit-extension', 'check_living_spec.py')
+
+// Arrange — bake a real git repo: a real centralized `todos` capability spec, a
+// real feature spec carrying a genuine ADDED Requirements delta, code under the
+// capability's area, and a feature branch with a change so the fold's git
+// merge-base diff yields in-scope files.
+export function bakeLs3Repo(name = 'ls-3') {
+  const root = join(SANDBOX_ROOT, name)
+  rmSync(root, { recursive: true, force: true })
+  mkdirSync(root, { recursive: true })
+
+  write(root, join('.specify', 'companion.yml'), [
+    'livingSpecs:',
+    '  enabled: true',
+    '  capabilities:',
+    '    - name: todos',
+    '      match: ["src/todos/**"]',
+    '',
+  ].join('\n'))
+
+  // The REAL living spec the fold writes into (OpenSpec requirement + scenario shape).
+  write(root, join('capabilities', 'todos', 'spec.md'), [
+    '# Todos capability',
+    '',
+    '### Users can add a todo',
+    '',
+    '#### Scenario: add a todo',
+    '- WHEN a user types text and submits',
+    '- THEN a todo appears in the list',
+    '',
+  ].join('\n'))
+
+  // The REAL feature spec carrying a genuine ADDED Requirements delta (seeded prose).
+  write(root, join('specs', '001-add-due-dates', 'spec.md'), [
+    '# Add due dates',
+    '',
+    'Lets a user attach a due date to a todo.',
+    '',
+    '## ADDED Requirements',
+    '',
+    '### Users can set a due date on a todo',
+    '',
+    '#### Scenario: set a due date',
+    '- WHEN a user picks a date for a todo',
+    '- THEN the todo shows the due date',
+    '',
+    '#### Scenario: clear a due date',
+    '- WHEN a user clears the date',
+    '- THEN the todo shows no due date',
+    '',
+  ].join('\n'))
+
+  // A finished feature context — the state mark-complete folds from.
+  write(root, join('specs', '001-add-due-dates', '.spec-context.json'), JSON.stringify({
+    workflow: 'speckit',
+    specName: '001-add-due-dates',
+    branch: '001-add-due-dates',
+    currentStep: 'implement',
+    status: 'implemented',
+    history: [],
+  }) + '\n')
+
+  write(root, join('src', 'todos', 'list.ts'), '// todos\n')
+
+  gitInitCell(root)
+  gitCommitCellBaseline(root)
+  // A feature branch with a change so `git diff` (merge-base) yields in-scope files.
+  execFileSync('git', ['checkout', '-q', '-b', '001-add-due-dates'], { cwd: root })
+  writeFileSync(join(root, 'src', 'todos', 'list.ts'), '// todos — due dates\n')
+  execFileSync('git', ['add', '-A'], { cwd: root })
+  execFileSync('git', ['commit', '-qm', 'add due dates'], { cwd: root })
+  return root
+}
+
+// An opt-out arrangement: identical shape, enabled:false — the fold must be inert.
+export function bakeLs3OptOutRepo(name = 'ls-3-optout') {
+  const root = bakeLs3Repo(name)
+  write(root, join('.specify', 'companion.yml'), [
+    'livingSpecs:',
+    '  enabled: false',
+    '  capabilities:',
+    '    - name: todos',
+    '      match: ["src/todos/**"]',
+    '',
+  ].join('\n'))
+  execFileSync('git', ['add', '-A'], { cwd: root })
+  execFileSync('git', ['commit', '-qm', 'opt out'], { cwd: root })
+  return root
+}
+
+// Act — run the REAL fold script against the sandbox feature dir, capturing real
+// stdout + exit. The fold resolves the capability, applies the delta to the real
+// capability spec on disk, and records livingSpecs.synced.
+export function runFold(root, featureRel) {
+  let stdout = ''
+  let exit = 0
+  try {
+    stdout = execFileSync('python3', [WRITE_CONTEXT, '--feature-dir', join(root, featureRel),
+      '--fold-living-spec', '--by', 'ai'], { encoding: 'utf8', cwd: root })
+  } catch (e) {
+    stdout = (e.stdout || '') + (e.stderr || '')
+    exit = typeof e.status === 'number' ? e.status : 1
+  }
+  const clean = stdout.trim().split(`${REPO_ROOT}/`).join('').split(`${root}/`).join('')
+  let ctx = null
+  try {
+    ctx = JSON.parse(readFileSync(join(root, featureRel, '.spec-context.json'), 'utf8'))
+  } catch { ctx = null }
+  return {
+    cwd: rel(root),
+    cmd: `python3 ${rel(WRITE_CONTEXT)} --feature-dir ${featureRel} --fold-living-spec --by ai`,
+    exit,
+    stdout: clean,
+    stdoutTail: clean.split('\n').slice(-12).join('\n'),
+    ctx,
+  }
+}
+
+// Act — a real `git diff --no-index` unified diff of the living spec before/after
+// (captured to two temp files), repo-relative labels only.
+export function unifiedDiff(beforeText, afterText) {
+  const tmp = join(SANDBOX_ROOT, '.diff-tmp')
+  mkdirSync(tmp, { recursive: true })
+  const a = join(tmp, 'before.md')
+  const b = join(tmp, 'after.md')
+  writeFileSync(a, beforeText)
+  writeFileSync(b, afterText)
+  let out = ''
+  try {
+    out = execFileSync('git', ['diff', '--no-index', '--', a, b], { encoding: 'utf8' })
+  } catch (e) {
+    // git diff --no-index exits 1 when files differ — that's the normal case.
+    out = (e.stdout || '')
+  }
+  rmSync(tmp, { recursive: true, force: true })
+  // Strip absolute temp paths from the diff labels so committed evidence is clean.
+  return out.split(`${tmp}/`).join('').split(`${SANDBOX_ROOT}/`).join('')
+}
+
+// Act — run the real check_living_spec.py over before/after + the feature spec,
+// capturing its --json report (real exec, never paraphrased).
+export function runCheckLivingSpec(featureSpecPath, beforeText, afterText) {
+  const tmp = join(SANDBOX_ROOT, '.cls-tmp')
+  mkdirSync(tmp, { recursive: true })
+  const a = join(tmp, 'before.md')
+  const b = join(tmp, 'after.md')
+  writeFileSync(a, beforeText)
+  writeFileSync(b, afterText)
+  let stdout = ''
+  let exit = 0
+  try {
+    stdout = execFileSync('python3', [CHECK_LIVING_SPEC, '--feature-spec', featureSpecPath,
+      '--before', a, '--after', b, '--json'], { encoding: 'utf8' })
+  } catch (e) {
+    stdout = (e.stdout || '') + (e.stderr || '')
+    exit = typeof e.status === 'number' ? e.status : 1
+  }
+  rmSync(tmp, { recursive: true, force: true })
+  let report = null
+  try { report = JSON.parse(stdout) } catch { report = null }
+  return { exit, report, stdout: stdout.trim() }
+}
+
 export { readText }
