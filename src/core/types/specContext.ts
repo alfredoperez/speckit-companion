@@ -146,6 +146,22 @@ export interface ReviewComment {
 }
 
 /**
+ * Living-specs context (LS·2/LS·3): which durable capability specs a feature
+ * loaded into context at specify time and which it folded its changes back
+ * into at completion. Written by the spec-kit side; read-only here.
+ */
+export interface LivingSpecsContext {
+    loaded?: string[];
+    synced?: string[];
+}
+
+/** Normalized living-specs view exposed on `ViewerState` (coerced string arrays). */
+export interface LivingSpecsView {
+    loaded: string[];
+    synced: string[];
+}
+
+/**
  * Canonical `.spec-context.json` document. Unknown top-level fields MUST be
  * preserved across writes (FR-013).
  */
@@ -186,6 +202,8 @@ export interface SpecContext {
     task_summaries?: Record<string, unknown>;
     /** Per-step summaries (specify/plan/etc., skill-authored). */
     step_summaries?: Record<string, Record<string, unknown>>;
+    /** Living specs this feature loaded/synced (LS·2/LS·3). Read-only here. */
+    livingSpecs?: LivingSpecsContext;
     // Unknown / legacy fields tolerated and preserved.
     [key: string]: unknown;
 }
@@ -258,6 +276,8 @@ export interface ViewerState {
     stepSummaries?: Record<string, Record<string, unknown>>;
     /** Persisted inline review comments, surfaced for restore + Activity. */
     reviewComments?: ReviewComment[];
+    /** Living specs loaded/synced for this feature (LS·7). Absent when none. */
+    livingSpecs?: LivingSpecsView;
 }
 
 /** Canonical list of substep names used by Companion prompts. */

@@ -217,6 +217,14 @@ export interface ViewerState {
     stepSummaries?: Record<string, Record<string, unknown>>;
     /** Persisted inline review comments, for restore + the Activity list. */
     reviewComments?: ReviewComment[];
+    /** Living specs this feature loaded/synced (LS·7). Absent when none. */
+    livingSpecs?: LivingSpecsView;
+}
+
+/** Normalized living-specs view: loaded into context + folded back at completion. */
+export interface LivingSpecsView {
+    loaded: string[];
+    synced: string[];
 }
 
 // ============================================

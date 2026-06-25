@@ -23,6 +23,7 @@ import {
     ConcernEntry,
     CheckpointStatus,
     ReviewComment,
+    LivingSpecsView,
 } from '../../core/types/specContext';
 import { getFooterActions } from './footerActions';
 import { deriveStepHistory } from '../specs/stepHistoryDerivation';
@@ -50,6 +51,27 @@ function pickStringArray(ctx: SpecContext, key: string): string[] | undefined {
     if (!Array.isArray(v)) return undefined;
     const filtered = v.filter((x): x is string => typeof x === 'string');
     return filtered.length > 0 ? filtered : undefined;
+}
+
+function coerceNameList(v: unknown): string[] {
+    if (!Array.isArray(v)) return [];
+    const out: string[] = [];
+    for (const x of v) {
+        if (typeof x !== 'string') continue;
+        const t = x.trim();
+        if (t.length > 0) out.push(t);
+    }
+    return out;
+}
+
+function pickLivingSpecs(ctx: SpecContext): LivingSpecsView | undefined {
+    const v = (ctx as Record<string, unknown>)['livingSpecs'];
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
+    const ls = v as Record<string, unknown>;
+    const loaded = coerceNameList(ls.loaded);
+    const synced = coerceNameList(ls.synced);
+    if (loaded.length === 0 && synced.length === 0) return undefined;
+    return { loaded, synced };
 }
 
 function pickRecord<T>(ctx: SpecContext, key: string): Record<string, T> | undefined {
@@ -227,5 +249,6 @@ export function deriveViewerState(
         checkpointStatus: pickCheckpointStatus(ctx),
         stepSummaries: pickRecord<Record<string, unknown>>(ctx, 'step_summaries'),
         reviewComments: pickReviewComments(ctx),
+        livingSpecs: pickLivingSpecs(ctx),
     };
 }
