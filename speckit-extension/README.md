@@ -92,6 +92,7 @@ Four capture commands run automatically as lifecycle hooks; the rest are yours t
 | `/speckit.companion.auto` | you | Run the whole pipeline hands-off — specify → plan → tasks → implement → completed, no approval pauses. The Run button in Create Spec triggers the same flow |
 | `/speckit.companion.adopt` | you | Brownfield adoption wizard — draft a living spec for one code area surface-first (`[DRAFT]`, observed/inferred tags, `## Uncovered`) and register the capability (opt-in, incremental) |
 | `/speckit.companion.drift` | you | Per-capability report of source files changed since the living spec was last committed, classified `tracked` vs `unspeced` (opt-in, read-only, never halts) |
+| `/speckit.companion.coverage` | you | Per-capability requirement→test report — which requirements in the living spec have a test mapped in its `.coverage.md` tier and which are uncovered (opt-in, read-only, never halts) |
 
 Full reference: [docs/commands.md](./docs/commands.md).
 
@@ -256,6 +257,22 @@ livingSpecs:
 ```
 
 Drift is **read-only and never halts** — it always exits success, so a surrounding workflow or CI may treat `unspeced` rows as a gate, but the command itself never blocks a run. A capability whose spec isn't committed yet is skipped with a note, when every capability is in sync it prints a single all-clear line, and with living specs off it reports nothing.
+
+### Coverage and architecture tiers
+
+A living spec is more than its requirements. Next to a capability's requirements file (centralized `capabilities/<name>/spec.md`, or a colocated `<base>.spec.md`) you can keep two colder siblings sharing that base name — an **architecture** file (`spec.arch.md` / `<base>.arch.md`, structure and the decisions behind the area's shape) and a **coverage** file (`spec.coverage.md` / `<base>.coverage.md`, a requirement-to-tests map). Both are recognized but otherwise reserved until you use them; nothing forces you to write either.
+
+**Architecture loads lazily, only when the change warrants it.** When you plan a change, Companion already reads the requirements of the capabilities it touches. For an architecture-significant change — a `normal` or `oversized` plan, not a small fast-path one — it *also* pulls those capabilities' `.arch.md` files into context, so the plan is briefed on how the area is built. A small change never drags in the cold architecture tier. The resolver derives the tier paths, so you never hardcode a filename, and a capability with no `.arch.md` is simply skipped.
+
+**Coverage tells you which requirements have a test.** `/speckit.companion.coverage` reads a capability's requirements and its `.coverage.md` map and reports, per requirement, whether a test is mapped:
+
+```bash
+/speckit.companion.coverage                 # human-readable report, all capabilities
+/speckit.companion.coverage --capability billing
+/speckit.companion.coverage --json          # the same data for tooling / CI
+```
+
+A requirement counts as covered when its id (`FR-001`, `NFR-2`, …) appears in the coverage file on a line that also names a test (a `.test.` / `.spec.` path, a `tests/…` reference, or a `file::TestCase` nodeid). Like drift, it's **read-only and never halts** — a signal you act on, not a gate. A capability that ships only its requirements file reports every requirement uncovered (never an error), and with living specs off it reports nothing.
 
 ## Installation
 

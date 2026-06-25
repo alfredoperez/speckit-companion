@@ -37,6 +37,13 @@ _drift_spec = importlib.util.spec_from_file_location("drift", SCRIPTS / "drift.p
 drift = importlib.util.module_from_spec(_drift_spec)
 _drift_spec.loader.exec_module(drift)
 
+# check-coverage.py (LS·8 coverage tier) — hyphenated, imported by file path.
+_cov_spec = importlib.util.spec_from_file_location(
+    "check_coverage", SCRIPTS / "check-coverage.py"
+)
+coverage = importlib.util.module_from_spec(_cov_spec)
+_cov_spec.loader.exec_module(coverage)
+
 
 def make_repo(yaml_text: str, files=(), spec_files=()) -> Path:
     """Bake a throwaway repo with a companion.yml and optional planted files."""
@@ -1050,6 +1057,180 @@ class DriftTests(unittest.TestCase):
         _write(root, "src/todos/list.ts", "// drift\n")
         _commit_all(root, "drift")
         self.assertEqual(drift.main(["--root", str(root)]), 0)
+
+
+class TierPathTests(unittest.TestCase):
+    """LS·8 — the resolver derives the reserved-tier sibling paths."""
+
+    def test_tier_paths_derive_from_spec(self) -> None:
+        tiers = rsp.tier_paths("capabilities/billing/spec.md")
+        self.assertEqual(tiers["arch"]["path"], "capabilities/billing/spec.arch.md")
+        self.assertEqual(
+            tiers["coverage"]["path"], "capabilities/billing/spec.coverage.md"
+        )
+        # no root → no existence probe
+        self.assertNotIn("exists", tiers["arch"])
+
+    def test_tier_paths_colocated_spec(self) -> None:
+        tiers = rsp.tier_paths("src/billing/billing.spec.md")
+        self.assertEqual(tiers["arch"]["path"], "src/billing/billing.arch.md")
+        self.assertEqual(
+            tiers["coverage"]["path"], "src/billing/billing.coverage.md"
+        )
+
+    def test_tier_paths_flag_existence_against_root(self) -> None:
+        root = make_repo(
+            CHECKOUT_YAML,
+            spec_files=["capabilities/checkout/spec.md",
+                        "capabilities/checkout/spec.arch.md"],
+        )
+        tiers = rsp.tier_paths("capabilities/checkout/spec.md", str(root))
+        self.assertTrue(tiers["arch"]["exists"])
+        self.assertFalse(tiers["coverage"]["exists"])
+
+    def test_reserved_tiers_derive_from_tier_suffixes(self) -> None:
+        # RESERVED_TIERS (orphan/drift exemption) and TIER_SUFFIXES (tier_paths)
+        # must stay in lockstep — the suffix literals live in one place.
+        self.assertEqual(set(rsp.RESERVED_TIERS), set(rsp.TIER_SUFFIXES.values()))
+        for entry in rsp.tier_paths("capabilities/x/spec.md").values():
+            self.assertTrue(any(entry["path"].endswith(t) for t in rsp.RESERVED_TIERS))
+
+    def test_entry_carries_tiers_in_json(self) -> None:
+        root = make_repo(
+            CHECKOUT_YAML,
+            spec_files=["capabilities/checkout/spec.md",
+                        "capabilities/checkout/spec.arch.md"],
+        )
+        living = rsp.load_living(str(root))
+        entry = next(e for e in rsp.discover_all(living, str(root))
+                     if e["name"] == "checkout")
+        self.assertIn("tiers", entry)
+        self.assertTrue(entry["tiers"]["arch"]["exists"])
+        self.assertEqual(
+            entry["tiers"]["arch"]["path"], "capabilities/checkout/spec.arch.md"
+        )
+
+
+BILLING_YAML = """\
+livingSpecs:
+  enabled: true
+  capabilities:
+    - name: billing
+      match: ["src/billing/**"]
+"""
+
+BILLING_SPEC = """\
+# Billing
+## Requirements
+- **FR-001** Charge a card.
+- **FR-002** Refund a charge.
+- **FR-003** Email a receipt.
+"""
+
+BILLING_COVERAGE = """\
+# Billing coverage
+- FR-001 → src/billing/charge.test.ts
+- FR-002 → tests/billing/refund_test.py
+"""
+
+
+def _bake_coverage_repo(yaml=BILLING_YAML, spec=BILLING_SPEC, cov=BILLING_COVERAGE):
+    root = make_repo(yaml)
+    _write(root, "capabilities/billing/spec.md", spec)
+    if cov is not None:
+        _write(root, "capabilities/billing/spec.coverage.md", cov)
+    return root
+
+
+class CoverageParseTests(unittest.TestCase):
+    """LS·8 — requirement extraction + coverage-map parsing (pure functions)."""
+
+    def test_requirements_from_bullets_and_headings(self) -> None:
+        reqs = coverage.spec_requirements(BILLING_SPEC)
+        self.assertEqual(reqs, ["FR-1", "FR-2", "FR-3"])
+
+    def test_requirement_id_normalized_strips_padding(self) -> None:
+        self.assertEqual(coverage._norm_id("FR001"), "FR-1")
+        self.assertEqual(coverage._norm_id("fr-007"), "FR-7")
+        self.assertEqual(coverage._norm_id("NFR4"), "NFR-4")
+
+    def test_prose_mention_is_not_a_requirement(self) -> None:
+        # An FR id inside a sentence (not a bullet/heading) must not register.
+        text = "# Spec\nThis honors FR-001 from the parent.\n- **FR-002** Real.\n"
+        self.assertEqual(coverage.spec_requirements(text), ["FR-2"])
+
+    def test_coverage_map_links_ids_to_tests(self) -> None:
+        cmap = coverage.coverage_map(BILLING_COVERAGE)
+        self.assertEqual(cmap["FR-1"], ["src/billing/charge.test.ts"])
+        self.assertEqual(cmap["FR-2"], ["tests/billing/refund_test.py"])
+        self.assertNotIn("FR-3", cmap)
+
+    def test_coverage_line_without_a_test_is_not_coverage(self) -> None:
+        cmap = coverage.coverage_map("- FR-001 — still TODO\n")
+        self.assertEqual(cmap.get("FR-1", []), [])
+
+    def test_fr_token_inside_a_test_path_is_not_a_requirement_id(self) -> None:
+        # `fr-2` buried in the test PATH must not register FR-2 as covered — only
+        # the requirement id authored outside the test reference counts (LS·3).
+        cmap = coverage.coverage_map("| FR-001 | src/feature-fr-2/charge.test.ts |\n")
+        self.assertIn("FR-1", cmap)
+        self.assertEqual(cmap["FR-1"], ["src/feature-fr-2/charge.test.ts"])
+        self.assertNotIn("FR-2", cmap)
+
+
+class CoverageReportTests(unittest.TestCase):
+    """LS·8 — the read-only, never-failing coverage report."""
+
+    def test_maps_requirement_to_its_test_and_flags_uncovered(self) -> None:
+        root = _bake_coverage_repo()
+        result = coverage.run(str(root), None)
+        cap = result["capabilities"][0]
+        by_id = {r["id"]: r for r in cap["requirements"]}
+        self.assertTrue(by_id["FR-1"]["covered"])
+        self.assertEqual(by_id["FR-1"]["tests"], ["src/billing/charge.test.ts"])
+        self.assertFalse(by_id["FR-3"]["covered"])
+        self.assertEqual((cap["covered"], cap["total"]), (2, 3))
+
+    def test_capability_with_no_coverage_file_reports_all_uncovered(self) -> None:
+        root = _bake_coverage_repo(cov=None)
+        cap = coverage.run(str(root), None)["capabilities"][0]
+        self.assertFalse(cap["hasCoverage"])
+        self.assertEqual(cap["covered"], 0)
+        self.assertTrue(all(not r["covered"] for r in cap["requirements"]))
+
+    def test_restrict_to_one_capability(self) -> None:
+        root = _bake_coverage_repo()
+        only = coverage.run(str(root), "billing")["capabilities"]
+        self.assertEqual([c["name"] for c in only], ["billing"])
+
+    def test_disabled_renders_nothing(self) -> None:
+        # Opt-in: a disabled feature produces NO human output (mirrors drift).
+        root = _bake_coverage_repo(yaml=BILLING_YAML.replace("enabled: true", "enabled: false"))
+        result = coverage.run(str(root), None)
+        self.assertFalse(result["enabled"])
+        self.assertEqual(coverage.render_human(result), "")
+
+    def test_orphan_specs_are_not_in_the_coverage_report(self) -> None:
+        # Only CONFIGURED capabilities are reported; a stray *.spec.md is ignored.
+        root = _bake_coverage_repo()
+        _write(root, "notes/random.spec.md", "# Random\n## Requirements\n### FR-9 Stray\n")
+        names = [c["name"] for c in coverage.run(str(root), None)["capabilities"]]
+        self.assertEqual(names, ["billing"])
+        self.assertEqual(coverage.run(str(root), "nope")["capabilities"], [])
+
+    def test_disabled_reports_nothing(self) -> None:
+        root = make_repo("livingSpecs:\n  enabled: false\n")
+        result = coverage.run(str(root), None)
+        self.assertFalse(result["enabled"])
+        self.assertEqual(result["capabilities"], [])
+
+    def test_always_exits_zero(self) -> None:
+        root = _bake_coverage_repo()
+        self.assertEqual(coverage.main(["--root", str(root)]), 0)
+        self.assertEqual(coverage.main(["--root", str(root), "--json"]), 0)
+        # opt-out path also exits 0
+        off = make_repo("livingSpecs:\n  enabled: false\n")
+        self.assertEqual(coverage.main(["--root", str(off)]), 0)
 
 
 if __name__ == "__main__":
