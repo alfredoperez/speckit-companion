@@ -81,6 +81,8 @@ The review subagent in `/ship-ticket` and `/fix-tickets` reads this **before** r
 ## Paths & globs
 
 - **A single `*` in a glob must not cross `/`.** Python `fnmatch` (and naive translations) let `*` match path separators, so `src/*.ts` wrongly claims `src/a/deep/x.ts`. Compile globs so `*`→`[^/]*` and `**`→`.*`, and make a trailing `/**` also match the bare directory. Normalize backslash inputs to `/` before matching. (#361)
+- **A user-authored relative path joined onto a root for `fs`/`vscode.open` must be validated within that root.** A `spec:`/path from config or a discovered filename joined via `path.join(root, rel)` escapes the workspace when `rel` is absolute or contains `..` (`statSync`/open on `/etc/passwd` or `../secret.md`). Reject with a within-root check (`path.relative(root, path.resolve(root, rel))` must not be absolute or start with `..`); DROP the offending entry from the listing rather than crash, and refuse to open it. (#380)
+- **A tree item's `collapsibleState` must reflect what `getChildren()` actually returns, not a proxy field.** Keying "expandable?" on a sibling count (e.g. `tiers.length`) when the node always has an extra child (a "Spec" entry) makes a real-child node non-expandable and its children unreachable. Gate collapsibility on the true child count. (#380)
 
 ## Tests & PR hygiene
 - **Committed evidence / fixtures must not embed absolute or home paths or a username** (`/Users/<name>/…`) — record commands and paths **repo-relative**; it's noisy across machines and leaks local info. Regenerate captured artifacts from a real run, never hand-edit them to fake a result. (#361)
