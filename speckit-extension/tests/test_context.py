@@ -1250,7 +1250,9 @@ class ImplementCloseSingleCompleteTests(unittest.TestCase):
         # 1. live per-task path: the second finish takes tasks to 100% and self-closes.
         wc.journal_task_finish(self.fd, "T001", "ai")
         wc.journal_task_finish(self.fd, "T002", "ai")
-        # 2. after_implement end-of-step hook (update_context complete branch).
+        # 2. after_implement end-of-step hook: live-first means status is already
+        # `implemented`, so this call no-ops at the regression guard rather than
+        # re-closing — the hook's own complete branch is driven by the hook-first test.
         wc.update_context(self.fd, "implement", "implemented", "extension", "complete")
         # 3. --materialize fold of an appended finish.
         wc.append_task_log(self.fd, "T002", "ai")
