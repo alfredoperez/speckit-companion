@@ -1,0 +1,267 @@
+{
+  "workflow": "speckit",
+  "specName": "companion steering view",
+  "branch": "382-companion-steering-view",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-26T16:36:09.809Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-26T16:37:14.453Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-26T16:37:43.340Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T16:38:13.114Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T16:38:56.304Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T16:38:56.390Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-26T16:39:09.706Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T16:39:48.628Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T16:39:48.713Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-26T16:39:59.894Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T16:40:29.333Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T16:40:42.226Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T16:41:06.052Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T16:43:11.555Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T16:43:11.615Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T16:43:11.678Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T16:43:11.742Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T16:43:11.805Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T16:44:46.783Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T16:44:46.846Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T16:44:46.909Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T16:45:19.093Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-26T16:45:19.182Z"
+    }
+  ],
+  "size": "normal",
+  "currentTask": "T012",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Authored moss-sprite SVG icon (round moss creature + sprouting leaf, flat shapes, 16px-legible)",
+      "files": [
+        "assets/icons/moss.svg"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added companion-* TreeItemContext values (header, config group/item, commands group/command)",
+      "files": [
+        "src/core/constants.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Created companionSteering.ts: config-group + manifest-command readers and within-root path guard, all degrade to [] on absent/malformed",
+      "files": [
+        "src/features/steering/companionSteering.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added Companion root node to Steering tree; install-state gates moss icon vs warning+Not installed and collapsible only when it has children",
+      "files": [
+        "src/features/steering/steeringExplorerProvider.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added inline install menu entry gated on viewItem==companion-header && !speckit.companion.installed",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Configuration group: setting-group children from companion.yml top-level keys, each opens the file, guarded within workspace root",
+      "files": [
+        "src/features/steering/steeringExplorerProvider.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Commands group: children from installed manifest provides.commands, name label + description tooltip, discovery-only",
+      "files": [
+        "src/features/steering/steeringExplorerProvider.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Added companion file watchers for companion.yml + installed manifest that refresh the tree on change/install",
+      "files": [
+        "src/features/steering/steeringExplorerProvider.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Added companionSteering unit tests: config-groups, manifest commands, malformed/absent fallbacks, within-root guard (12 cases)",
+      "files": [
+        "src/features/steering/companionSteering.test.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Added Companion-group Steering section to docs/sidebar.md",
+      "files": [
+        "docs/sidebar.md"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Noted the Steering Companion group in README Sidebar at a Glance",
+      "files": [
+        "README.md"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Verified npm run compile clean and full suite green (91 suites / 1120 tests)"
+    }
+  }
+}
