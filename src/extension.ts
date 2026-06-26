@@ -6,7 +6,7 @@ import { IAIProvider, AIProviderFactory, isProviderConfigured, promptForProvider
 
 // Features
 import { SteeringManager, SteeringExplorerProvider, registerSteeringCommands } from './features/steering';
-import { SpecExplorerProvider, registerSpecKitCommands, updateSelectionContextKeys, createSpecsSidebarState } from './features/specs';
+import { SpecExplorerProvider, LivingSpecsExplorerProvider, registerSpecKitCommands, updateSelectionContextKeys, createSpecsSidebarState } from './features/specs';
 import { register as registerTerminalStepTracker } from './features/specs/terminalStepTracker';
 import { setLifecycleOutputChannel } from './features/specs/stepLifecycle';
 import { OverviewProvider } from './features/settings';
@@ -184,6 +184,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const sidebarState = createSpecsSidebarState(context, () => specExplorer.refresh());
     specExplorer = new SpecExplorerProvider(context, outputChannel, sidebarState.filter, sidebarState.sort);
     const steeringExplorer = new SteeringExplorerProvider(context);
+    const livingSpecsExplorer = new LivingSpecsExplorerProvider(context, outputChannel);
 
     // Restore filter/sort from workspace state and sync the matching context
     // keys so title-bar menu visibility matches reality on activation.
@@ -207,6 +208,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.window.registerTreeDataProvider(Views.settings, overviewProvider),
         specsTreeView,
+        vscode.window.registerTreeDataProvider(Views.livingSpecs, livingSpecsExplorer),
         vscode.window.registerTreeDataProvider(Views.steering, steeringExplorer)
     );
 
@@ -335,10 +337,22 @@ export async function activate(context: vscode.ExtensionContext) {
             const refresh = (): void => {
                 void refreshCompanionInstalledContext(root);
                 ensureStandardWhenInstalled();
+                livingSpecsExplorer.refresh();
             };
             extWatcher.onDidCreate(refresh);
             extWatcher.onDidDelete(refresh);
             context.subscriptions.push(extWatcher);
+
+            // Refresh the Spec Explorer when the living-specs config or the
+            // capabilities tree changes on disk (no reload needed).
+            const livingSpecsWatcher = vscode.workspace.createFileSystemWatcher(
+                new vscode.RelativePattern(root, '{.specify/companion.yml,capabilities/**,**/*.spec.md}')
+            );
+            const refreshLivingSpecs = (): void => livingSpecsExplorer.refresh();
+            livingSpecsWatcher.onDidCreate(refreshLivingSpecs);
+            livingSpecsWatcher.onDidChange(refreshLivingSpecs);
+            livingSpecsWatcher.onDidDelete(refreshLivingSpecs);
+            context.subscriptions.push(livingSpecsWatcher);
         }
     }
 }

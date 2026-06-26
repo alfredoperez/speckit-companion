@@ -58,6 +58,12 @@
           "name": "Specs"
         },
         {
+          "id": "speckit.views.livingSpecs",
+          "name": "Spec Explorer",
+          "visibility": "collapsed",
+          "when": "!(workbenchState == empty || workspaceFolderCount == 0) && speckit.companion.installed"
+        },
+        {
           "id": "speckit.views.steering",
           "name": "Steering",
           "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.views.steering.visible"

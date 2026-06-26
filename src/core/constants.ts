@@ -181,6 +181,7 @@ export const TreeItemContext = {
  */
 export const Views = {
     explorer: 'speckit.views.explorer',
+    livingSpecs: 'speckit.views.livingSpecs',
     steering: 'speckit.views.steering',
     settings: 'speckit.views.settings',
 } as const;
