@@ -109,3 +109,16 @@ Every canonical status is mapped to a distinct color treatment so badges read at
 ## Running steps
 
 When a workflow step command is running for a spec, the spec node displays a spinning progress indicator instead of its default icon. Running steps also show a live elapsed timer (e.g. `3m 22s`) beneath the step label in the viewer, and a notification fires when a dispatched step finishes — toggle via `speckit.notifications.stepComplete`.
+
+## Spec Explorer (living specs)
+
+The **Spec Explorer** view is a project-wide home for *living specs* — the long-lived capability documents that describe how a part of your codebase behaves, separate from the per-feature specs in the Specs view above. It appears in the SpecKit activity-bar container **only when the companion spec-kit extension is installed** (`.specify/extensions/companion/` exists on disk); projects that don't use living specs never see it. It starts collapsed.
+
+The tree has two groups:
+
+- **Capabilities** — one node per capability defined in the `livingSpecs` block of `.specify/companion.yml`. Each node is labelled with the capability name and, as its description, where its spec lives: **centralized** (the default `capabilities/<name>/spec.md`) or **colocated** (an explicit `spec` path next to the code). A capability whose spec file doesn't exist yet is still listed, shown with a hollow icon and a `not created` note — it has no open action rather than a broken click. Expanding a capability reveals its **tiers**: the **Spec** itself, plus an **Architecture** and a **Coverage** child, each shown only when that sibling file exists on disk.
+- **Orphans** — `*.spec.md` files in the project that no capability claims. The feature `specs/` folder, reserved tier siblings (`*.arch.md` / `*.coverage.md`), claimed spec paths, and any file inside a configured capability's folder are excluded, so only genuinely-unowned specs appear here. The group is omitted entirely when there are none.
+
+Clicking any capability spec, tier, or orphan opens that file in the editor.
+
+**Empty and hidden states.** When living specs are turned off (`livingSpecs.enabled` is not `true`) the view shows a calm `Living specs are turned off` message; when they're on but no capabilities or orphans are found it shows `No living specs yet`. Neither is an error. The view refreshes automatically when `.specify/companion.yml`, the `capabilities/` tree, or any `*.spec.md` changes on disk, and when the companion extension is installed or removed — no window reload required.
