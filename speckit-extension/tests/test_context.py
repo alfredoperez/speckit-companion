@@ -1217,6 +1217,72 @@ class AppendLogMaterializeTests(unittest.TestCase):
         wc._mark_tasks_done(self.fd / "tasks.md", {"T999"})
         self.assertEqual((self.fd / "tasks.md").read_text(), md)
 
+
+class ImplementCloseSingleCompleteTests(unittest.TestCase):
+    """The implement step is closed from four independent paths — the live per-task
+    path (`journal_task_finish`/`_maybe_close_implement`), the `after_implement`
+    end-of-step hook (`update_context` complete branch), the `--materialize` fold,
+    and `--mark-complete`. Every one routes its step-level close through the single
+    de-duped writer `append_complete`, so driving all four in one run must leave
+    exactly ONE step-level implement complete — even when they disagree on `by`
+    (a dogfood run once recorded four, a mix of ai/extension). (#357)"""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.fd = Path(self._tmp.name) / "specs" / "_zzz-test"
+        self.fd.mkdir(parents=True)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def _step_completes(self) -> list:
+        return [
+            e for e in _ctx(self.fd)["history"]
+            if e["step"] == "implement" and e.get("substep") is None
+            and e.get("task") is None and e["kind"] == "complete"
+        ]
+
+    def test_all_four_close_paths_yield_one_step_complete(self) -> None:
+        # Live per-task close first (ai), then the hook, the fold, and mark-complete —
+        # every later path must dedup against the marker the live path already wrote.
+        (self.fd / "tasks.md").write_text("- [ ] **T001** a\n- [ ] **T002** b\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        # 1. live per-task path: the second finish takes tasks to 100% and self-closes.
+        wc.journal_task_finish(self.fd, "T001", "ai")
+        wc.journal_task_finish(self.fd, "T002", "ai")
+        # 2. after_implement end-of-step hook: live-first means status is already
+        # `implemented`, so this call no-ops at the regression guard rather than
+        # re-closing — the hook's own complete branch is driven by the hook-first test.
+        wc.update_context(self.fd, "implement", "implemented", "extension", "complete")
+        # 3. --materialize fold of an appended finish.
+        wc.append_task_log(self.fd, "T002", "ai")
+        wc.materialize_log(self.fd, "ai", quiet=True)
+        # 4. --mark-complete (also folds + closes internally).
+        wc.mark_spec_complete(self.fd, "ai")
+        self.assertEqual(len(self._step_completes()), 1)
+        self.assertEqual(_ctx(self.fd)["status"], "completed")
+
+    def test_dedup_is_robust_to_by_when_hook_closes_first(self) -> None:
+        # Reverse the order so the hook (by=extension) closes the step BEFORE the
+        # later ai paths run: an `ai` and an `extension` step complete are the same
+        # event, so the ai paths must NOT append a second marker. The surviving
+        # marker is the first writer's (extension), proving the dedup ignores `by`.
+        (self.fd / "tasks.md").write_text("- [ ] **T001** a\n- [ ] **T002** b\n")
+        wc.update_context(self.fd, "implement", "implementing", "extension", "start")
+        wc.journal_task_finish(self.fd, "T001", "ai")
+        # Hook closes the step first, attributed to the extension.
+        wc.update_context(self.fd, "implement", "implemented", "extension", "complete")
+        # Later ai paths see a step complete already present and must dedup against it.
+        wc.journal_task_finish(self.fd, "T002", "ai")
+        wc.append_task_log(self.fd, "T002", "ai")
+        wc.materialize_log(self.fd, "ai", quiet=True)
+        wc.mark_spec_complete(self.fd, "extension")
+        completes = self._step_completes()
+        self.assertEqual(len(completes), 1)
+        self.assertEqual(completes[0]["by"], "extension",
+                         "the first writer's marker survives; differing `by` is not a new event")
+        self.assertEqual(_ctx(self.fd)["status"], "completed")
+
     def test_journal_task_finish_also_checks_tasks_md(self) -> None:
         (self.fd / "tasks.md").write_text("- [ ] **T001** a\n- [ ] **T002** b\n")
         wc.update_context(self.fd, "implement", "implementing", "extension", "start")

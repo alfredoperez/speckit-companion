@@ -1,0 +1,129 @@
+{
+  "workflow": "speckit",
+  "specName": "dedupe implement complete",
+  "branch": "380-dedupe-implement-complete",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-26T15:15:10.595Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-26T15:17:07.825Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-26T15:17:08.631Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T15:17:09.407Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-06-26T15:17:10.314Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T15:17:11.956Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-06-26T15:17:50.265Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T15:19:20.234Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T15:19:20.805Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T15:20:44.263Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-06-26T15:20:45.756Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-06-26T15:20:48.264Z"
+    }
+  ],
+  "size": "simple",
+  "currentTask": "T004",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Multi-path regression test: all four close paths yield one step-level implement complete",
+      "files": [
+        "speckit-extension/tests/test_context.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "By-robustness test: hook closes first (extension), later ai paths dedup to one marker",
+      "files": [
+        "speckit-extension/tests/test_context.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Ran the test suite + shape parity; green — dedup already hardened, no production code change needed",
+      "files": [
+        "speckit-extension/tests/test_context.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added user-facing CHANGELOG line: implement step recorded complete exactly once",
+      "files": [
+        "speckit-extension/CHANGELOG.md"
+      ]
+    }
+  }
+}
