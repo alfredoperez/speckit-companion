@@ -9,6 +9,8 @@ import { BaseTreeDataProvider } from '../../core/providers';
 import { AgentManager, AgentInfo } from '../agents/agentManager';
 import { SkillManager, SkillInfo, SkillType } from '../skills/skillManager';
 import { AIProviders, TreeItemContext } from '../../core/constants';
+import { isCompanionInstalled } from '../settings/companionPresetReconciler';
+import { readCompanionConfigGroups, readCompanionCommands, isWithinRoot, COMPANION_STEERING_PATHS } from './companionSteering';
 
 export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem> {
     private steeringManager!: SteeringManager;
@@ -19,9 +21,12 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
     private skillProjectWatcher: vscode.FileSystemWatcher | undefined;
     private skillUserWatcher: vscode.FileSystemWatcher | undefined;
     private skillPluginsWatcher: vscode.FileSystemWatcher | undefined;
+    private companionConfigWatcher: vscode.FileSystemWatcher | undefined;
+    private companionInstallWatcher: vscode.FileSystemWatcher | undefined;
 
     constructor(context: vscode.ExtensionContext) {
         super(context, { name: 'SteeringExplorerProvider' });
+        this.setupCompanionFileWatchers();
     }
 
     setSteeringManager(steeringManager: SteeringManager) {
@@ -104,12 +109,33 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
         }
     }
 
+    private setupCompanionFileWatchers(): void {
+        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+        if (!workspaceFolder) {
+            return;
+        }
+        this.companionConfigWatcher = vscode.workspace.createFileSystemWatcher(
+            new vscode.RelativePattern(workspaceFolder, COMPANION_STEERING_PATHS.config)
+        );
+        this.companionConfigWatcher.onDidCreate(() => this._onDidChangeTreeData.fire());
+        this.companionConfigWatcher.onDidChange(() => this._onDidChangeTreeData.fire());
+        this.companionConfigWatcher.onDidDelete(() => this._onDidChangeTreeData.fire());
+
+        this.companionInstallWatcher = vscode.workspace.createFileSystemWatcher(
+            new vscode.RelativePattern(workspaceFolder, COMPANION_STEERING_PATHS.manifest)
+        );
+        this.companionInstallWatcher.onDidCreate(() => this._onDidChangeTreeData.fire());
+        this.companionInstallWatcher.onDidDelete(() => this._onDidChangeTreeData.fire());
+    }
+
     dispose(): void {
         this.agentProjectWatcher?.dispose();
         this.agentUserWatcher?.dispose();
         this.skillProjectWatcher?.dispose();
         this.skillUserWatcher?.dispose();
         this.skillPluginsWatcher?.dispose();
+        this.companionConfigWatcher?.dispose();
+        this.companionInstallWatcher?.dispose();
         super.dispose();
     }
 
@@ -181,6 +207,12 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                 '',
                 this.context
             ));
+
+            // Companion group — install state, configuration, and command discovery
+            const companionNode = this.buildCompanionHeaderNode();
+            if (companionNode) {
+                items.push(companionNode);
+            }
 
             // Add create buttons for missing files (only providers that own a steering file)
             if (providerPaths.globalSteeringFile && !globalExists) {
@@ -256,6 +288,12 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             return this.getAgentsForScope(element.groupType as string);
         } else if (element.contextValue === TreeItemContext.providerSkillsGroup) {
             return this.getSkillsForScope(element.groupType as string);
+        } else if (element.contextValue === TreeItemContext.companionHeader) {
+            return this.getCompanionHeaderChildren();
+        } else if (element.contextValue === TreeItemContext.companionConfigGroup) {
+            return this.getCompanionConfigChildren();
+        } else if (element.contextValue === TreeItemContext.companionCommandsGroup) {
+            return this.getCompanionCommandChildren();
         }
 
         return [];
@@ -765,7 +803,117 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
         });
     }
 
+    private companionWorkspaceRoot(): string | undefined {
+        return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    }
 
+    /** Root Companion node; icon/description reflect install state, collapsible only when it has children. */
+    private buildCompanionHeaderNode(): SteeringItem | undefined {
+        const root = this.companionWorkspaceRoot();
+        if (!root) {
+            return undefined;
+        }
+        const installed = isCompanionInstalled(root);
+        const hasChildren = installed &&
+            (readCompanionConfigGroups(root).length > 0 || readCompanionCommands(root).length > 0);
+
+        const item = new SteeringItem(
+            'Companion',
+            hasChildren ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
+            TreeItemContext.companionHeader,
+            '',
+            this.context
+        );
+
+        if (installed) {
+            item.iconPath = vscode.Uri.joinPath(this.context.extensionUri, 'assets/icons/moss.svg');
+            item.tooltip = 'SpecKit Companion configuration and commands';
+        } else {
+            item.iconPath = new vscode.ThemeIcon('warning');
+            item.description = 'Not installed';
+            item.tooltip = 'SpecKit Companion extension is not installed in this project';
+        }
+        return item;
+    }
+
+    /** Configuration group (when the config has setting groups) and Commands group (when the manifest lists commands). */
+    private getCompanionHeaderChildren(): SteeringItem[] {
+        const root = this.companionWorkspaceRoot();
+        if (!root || !isCompanionInstalled(root)) {
+            return [];
+        }
+        const items: SteeringItem[] = [];
+
+        const configPath = path.join(root, COMPANION_STEERING_PATHS.config);
+        if (readCompanionConfigGroups(root).length > 0 && isWithinRoot(root, configPath)) {
+            items.push(new SteeringItem(
+                'Configuration',
+                vscode.TreeItemCollapsibleState.Collapsed,
+                TreeItemContext.companionConfigGroup,
+                configPath,
+                this.context
+            ));
+        }
+
+        if (readCompanionCommands(root).length > 0) {
+            items.push(new SteeringItem(
+                'Commands',
+                vscode.TreeItemCollapsibleState.Collapsed,
+                TreeItemContext.companionCommandsGroup,
+                '',
+                this.context
+            ));
+        }
+
+        return items;
+    }
+
+    /** Setting-group entries from `.specify/companion.yml`; each opens the config file. */
+    private getCompanionConfigChildren(): SteeringItem[] {
+        const root = this.companionWorkspaceRoot();
+        if (!root) {
+            return [];
+        }
+        const configPath = path.join(root, COMPANION_STEERING_PATHS.config);
+        if (!isWithinRoot(root, configPath)) {
+            return [];
+        }
+        return readCompanionConfigGroups(root).map(group => {
+            const item = new SteeringItem(
+                group,
+                vscode.TreeItemCollapsibleState.None,
+                TreeItemContext.companionConfigItem,
+                configPath,
+                this.context,
+                {
+                    command: 'vscode.open',
+                    title: 'Open Companion Configuration',
+                    arguments: [vscode.Uri.file(configPath)]
+                }
+            );
+            item.tooltip = `companion.yml › ${group}`;
+            return item;
+        });
+    }
+
+    /** Command entries from the installed manifest's `provides.commands`; discovery-only, description on tooltip. */
+    private getCompanionCommandChildren(): SteeringItem[] {
+        const root = this.companionWorkspaceRoot();
+        if (!root) {
+            return [];
+        }
+        return readCompanionCommands(root).map(cmd => {
+            const item = new SteeringItem(
+                cmd.name,
+                vscode.TreeItemCollapsibleState.None,
+                TreeItemContext.companionCommand,
+                '',
+                this.context
+            );
+            item.tooltip = cmd.description || cmd.name;
+            return item;
+        });
+    }
 }
 
 class SteeringItem extends vscode.TreeItem {
@@ -855,6 +1003,14 @@ class SteeringItem extends vscode.TreeItem {
         } else if (contextValue === C.providerSettings) {
             this.iconPath = new vscode.ThemeIcon('settings-gear');
             this.tooltip = `Settings: ${resourcePath}`;
+        } else if (contextValue === C.companionConfigGroup) {
+            this.iconPath = new vscode.ThemeIcon('settings-gear');
+        } else if (contextValue === C.companionConfigItem) {
+            this.iconPath = new vscode.ThemeIcon('gear');
+        } else if (contextValue === C.companionCommandsGroup) {
+            this.iconPath = new vscode.ThemeIcon('symbol-event');
+        } else if (contextValue === C.companionCommand) {
+            this.iconPath = new vscode.ThemeIcon('terminal');
         } else if (contextValue === C.agent) {
             this.iconPath = new vscode.ThemeIcon('robot');
         } else if (contextValue === C.skill) {

@@ -612,6 +612,11 @@
           "group": "navigation@99"
         },
         {
+          "command": "speckit.companion.installSpecKitExtension",
+          "when": "view == speckit.views.steering && viewItem == companion-header && !speckit.companion.installed",
+          "group": "inline"
+        },
+        {
           "command": "speckit.steering.refine",
           "when": "view == speckit.views.steering && viewItem == steering-document",
           "group": "inline"
