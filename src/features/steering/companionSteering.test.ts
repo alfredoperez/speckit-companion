@@ -100,5 +100,13 @@ describe('companionSteering', () => {
         it('rejects an absolute path outside the root', () => {
             expect(isWithinRoot(root, '/etc/passwd')).toBe(false);
         });
+
+        it('accepts an in-root name that merely starts with .. (not traversal)', () => {
+            expect(isWithinRoot(root, path.join(root, '..config.yml'))).toBe(true);
+        });
+
+        it('accepts the root itself', () => {
+            expect(isWithinRoot(root, root)).toBe(true);
+        });
     });
 });

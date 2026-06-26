@@ -50,7 +50,9 @@ export function readCompanionCommands(workspaceRoot: string): CompanionCommand[]
 /** True when `candidatePath` resolves inside `workspaceRoot` (guards `..`/absolute escapes). */
 export function isWithinRoot(workspaceRoot: string, candidatePath: string): boolean {
     const rel = path.relative(workspaceRoot, path.resolve(workspaceRoot, candidatePath));
-    return rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
+    // `rel === ''` is the root itself (within). Reject only real parent traversal
+    // (`..` or `../…`), not an in-root name that merely starts with `..` (`..config`).
+    return rel !== '..' && !rel.startsWith('..' + path.sep) && !path.isAbsolute(rel);
 }
 
 export const COMPANION_STEERING_PATHS = {

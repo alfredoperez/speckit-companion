@@ -125,6 +125,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             new vscode.RelativePattern(workspaceFolder, COMPANION_STEERING_PATHS.manifest)
         );
         this.companionInstallWatcher.onDidCreate(() => this._onDidChangeTreeData.fire());
+        this.companionInstallWatcher.onDidChange(() => this._onDidChangeTreeData.fire());
         this.companionInstallWatcher.onDidDelete(() => this._onDidChangeTreeData.fire());
     }
 
