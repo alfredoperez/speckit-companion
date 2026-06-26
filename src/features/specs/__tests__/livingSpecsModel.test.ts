@@ -152,6 +152,22 @@ describe('readLivingSpecs', () => {
         expect(listing.orphans).toEqual(['src/payments/payments.spec.md']);
     });
 
+    it('drops a capability whose spec path is absolute', () => {
+        const root = ws(
+            { 'capabilities/x/spec.md': '# x' },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: evil\n      spec: /etc/passwd\n'
+        );
+        expect(readLivingSpecs(root).capabilities).toEqual([]);
+    });
+
+    it('drops a capability whose spec path escapes the workspace root', () => {
+        const root = ws(
+            { 'capabilities/x/spec.md': '# x' },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: evil\n      spec: ../escape.md\n'
+        );
+        expect(readLivingSpecs(root).capabilities).toEqual([]);
+    });
+
     describe('glob semantics — a single * never crosses /', () => {
         it('matches direct children only for src/*.ts', () => {
             expect(globMatches('src/*.ts', 'src/a.ts')).toBe(true);

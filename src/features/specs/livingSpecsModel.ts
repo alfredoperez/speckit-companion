@@ -182,7 +182,23 @@ function tierPaths(spec: string, root: string): Tier[] {
     });
 }
 
+/**
+ * True when `relPath` is repo-relative and resolves inside `root`. Rejects
+ * absolute paths and any `..` traversal that escapes the workspace. Spec and
+ * orphan paths are always treated as repo-relative.
+ */
+export function isPathWithinRoot(root: string, relPath: string): boolean {
+    if (path.isAbsolute(relPath)) {
+        return false;
+    }
+    const rel = path.relative(root, path.resolve(root, relPath));
+    return rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
+}
+
 function fileExists(root: string, relPath: string): boolean {
+    if (!isPathWithinRoot(root, relPath)) {
+        return false;
+    }
     try {
         return fs.statSync(path.join(root, relPath)).isFile();
     } catch {
@@ -264,6 +280,9 @@ export function readLivingSpecs(workspaceRoot: string): LivingSpecsListing {
             continue; // colocated capability with no resolvable path — skip gracefully
         }
         const specPosix = posix(cap.spec);
+        if (!isPathWithinRoot(workspaceRoot, specPosix)) {
+            continue; // reject a spec path that escapes the workspace root
+        }
         if (seen.has(specPosix)) {
             continue; // de-dupe by resolved spec path
         }

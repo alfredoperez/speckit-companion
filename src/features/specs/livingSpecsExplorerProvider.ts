@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { BaseTreeDataProvider } from '../../core/providers';
-import { readLivingSpecs, LivingSpecsListing, ResolvedCapability } from './livingSpecsModel';
+import { readLivingSpecs, isPathWithinRoot, LivingSpecsListing, ResolvedCapability } from './livingSpecsModel';
 
 type LivingSpecContextValue =
     | 'living-specs-empty'
@@ -23,7 +23,10 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         super(context, { name: 'LivingSpecsExplorerProvider', outputChannel });
     }
 
+    private cached?: LivingSpecsListing;
+
     refresh(): void {
+        this.cached = undefined;
         this._onDidChangeTreeData.fire();
     }
 
@@ -32,21 +35,25 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
     }
 
     private read(): LivingSpecsListing {
+        if (this.cached) {
+            return this.cached;
+        }
         const root = this.workspaceRoot;
         if (!root) {
             return { enabled: false, capabilities: [], orphans: [] };
         }
         try {
-            return readLivingSpecs(root);
+            this.cached = readLivingSpecs(root);
         } catch {
             this.log('Failed to read living specs');
-            return { enabled: false, capabilities: [], orphans: [] };
+            this.cached = { enabled: false, capabilities: [], orphans: [] };
         }
+        return this.cached;
     }
 
     private openCommand(relPath: string): vscode.Command | undefined {
         const root = this.workspaceRoot;
-        if (!root) {
+        if (!root || !isPathWithinRoot(root, relPath)) {
             return undefined;
         }
         return {
@@ -106,7 +113,7 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
     }
 
     private capabilityItem(cap: ResolvedCapability): LivingSpecItem {
-        const hasChildren = cap.exists && cap.tiers.length > 0;
+        const hasChildren = cap.exists && this.tierChildren(cap).length > 0;
         const item = new LivingSpecItem(
             cap.name,
             hasChildren
