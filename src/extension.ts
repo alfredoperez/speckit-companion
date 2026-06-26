@@ -348,11 +348,25 @@ export async function activate(context: vscode.ExtensionContext) {
             const livingSpecsWatcher = vscode.workspace.createFileSystemWatcher(
                 new vscode.RelativePattern(root, '{.specify/companion.yml,capabilities/**,**/*.spec.md}')
             );
-            const refreshLivingSpecs = (): void => livingSpecsExplorer.refresh();
+            // Debounce: a rapid save sequence across the watched glob would
+            // otherwise re-run the full `**/*.spec.md` scan per event.
+            let refreshTimer: ReturnType<typeof setTimeout> | undefined;
+            const refreshLivingSpecs = (): void => {
+                if (refreshTimer) {
+                    clearTimeout(refreshTimer);
+                }
+                refreshTimer = setTimeout(() => livingSpecsExplorer.refresh(), 150);
+            };
             livingSpecsWatcher.onDidCreate(refreshLivingSpecs);
             livingSpecsWatcher.onDidChange(refreshLivingSpecs);
             livingSpecsWatcher.onDidDelete(refreshLivingSpecs);
-            context.subscriptions.push(livingSpecsWatcher);
+            context.subscriptions.push(livingSpecsWatcher, {
+                dispose: () => {
+                    if (refreshTimer) {
+                        clearTimeout(refreshTimer);
+                    }
+                },
+            });
         }
     }
 }

@@ -220,6 +220,12 @@ function globSpecFiles(root: string): string[] {
             if (entry.name.startsWith('.') || entry.name === 'node_modules') {
                 continue;
             }
+            // `specs/` (feature specs) is excluded from orphans anyway; skip the
+            // top-level one so its tree is never walked. Mirrors the resolver,
+            // which only excludes a leading `specs` segment, not a nested one.
+            if (entry.isDirectory() && rel === '' && entry.name === 'specs') {
+                continue;
+            }
             const childRel = rel ? `${rel}/${entry.name}` : entry.name;
             if (entry.isDirectory()) {
                 walk(path.join(dir, entry.name), childRel);
