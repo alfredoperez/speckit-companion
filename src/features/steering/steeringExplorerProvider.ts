@@ -815,12 +815,12 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             return undefined;
         }
         const installed = isCompanionInstalled(root);
-        const hasChildren = installed &&
-            (readCompanionConfigGroups(root).length > 0 || readCompanionCommands(root).length > 0);
 
+        // When installed the node always offers Configuration + Commands, so it's
+        // collapsible without reading any file to decide; not installed = badge only.
         const item = new SteeringItem(
             'Companion',
-            hasChildren ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
+            installed ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
             TreeItemContext.companionHeader,
             '',
             this.context
@@ -843,10 +843,12 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
         if (!root || !isCompanionInstalled(root)) {
             return [];
         }
+        // Always surface both groups when installed (matches the documented
+        // structure); an empty group simply expands to nothing.
         const items: SteeringItem[] = [];
 
         const configPath = path.join(root, COMPANION_STEERING_PATHS.config);
-        if (readCompanionConfigGroups(root).length > 0 && isWithinRoot(root, configPath)) {
+        if (isWithinRoot(root, configPath)) {
             items.push(new SteeringItem(
                 'Configuration',
                 vscode.TreeItemCollapsibleState.Collapsed,
@@ -856,15 +858,13 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             ));
         }
 
-        if (readCompanionCommands(root).length > 0) {
-            items.push(new SteeringItem(
-                'Commands',
-                vscode.TreeItemCollapsibleState.Collapsed,
-                TreeItemContext.companionCommandsGroup,
-                '',
-                this.context
-            ));
-        }
+        items.push(new SteeringItem(
+            'Commands',
+            vscode.TreeItemCollapsibleState.Collapsed,
+            TreeItemContext.companionCommandsGroup,
+            '',
+            this.context
+        ));
 
         return items;
     }
