@@ -8,6 +8,8 @@ const COMPANION_MANIFEST_REL = '.specify/extensions/companion/extension.yml';
 export interface CompanionCommand {
     name: string;
     description: string;
+    /** Manifest `file:` for the command body, relative to the extension dir (e.g. `commands/x.md`); `''` when absent. */
+    file: string;
 }
 
 /** Top-level setting groups of `.specify/companion.yml`; `[]` when absent or unparseable. */
@@ -36,11 +38,12 @@ export function readCompanionCommands(workspaceRoot: string): CompanionCommand[]
             return [];
         }
         return commands
-            .filter((c): c is { name: string; description?: unknown } =>
+            .filter((c): c is { name: string; description?: unknown; file?: unknown } =>
                 !!c && typeof c === 'object' && typeof (c as { name?: unknown }).name === 'string')
             .map(c => ({
                 name: c.name,
                 description: typeof c.description === 'string' ? c.description : '',
+                file: typeof c.file === 'string' ? c.file : '',
             }));
     } catch {
         return [];
@@ -53,6 +56,19 @@ export function isWithinRoot(workspaceRoot: string, candidatePath: string): bool
     // `rel === ''` is the root itself (within). Reject only real parent traversal
     // (`..` or `../…`), not an in-root name that merely starts with `..` (`..config`).
     return rel !== '..' && !rel.startsWith('..' + path.sep) && !path.isAbsolute(rel);
+}
+
+/** Absolute path to a command's body file under the installed extension dir, or `undefined` if absent/escaping/missing. */
+export function companionCommandFilePath(workspaceRoot: string, file: string): string | undefined {
+    if (!file) {
+        return undefined;
+    }
+    const extDir = path.dirname(COMPANION_MANIFEST_REL);
+    const abs = path.join(workspaceRoot, extDir, file);
+    if (!isWithinRoot(workspaceRoot, abs) || !fs.existsSync(abs)) {
+        return undefined;
+    }
+    return abs;
 }
 
 export const COMPANION_STEERING_PATHS = {
