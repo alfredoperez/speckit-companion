@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **Specs grow in the sidebar** (#389): the spec list now tells each spec's progress as a little growth story instead of tinted lab beakers — a seed for a brand-new spec, a seedling once it's in progress, a yellow bud once it's implemented and waiting for your sign-off, and a green leaf-check when it's done. The Active, Completed, and Archived group headers get matching plant-themed icons. (First pass: the spec list; other sidebar views keep their current icons for now.)
+
 ### Added
 
 - **Recover a stranded spec with "Set status…"** (#347): an out-of-order or double click could leave a spec in a state where the lifecycle buttons wouldn't let you continue, and the only fix was hand-editing a JSON file. Every spec in the sidebar now has a **Set status…** action — on the right-click menu and as a hover gear — that lets you force the spec to any lifecycle status (specifying through completed) after a `"Force status to X?"` confirm. The override is recorded just like any other lifecycle change and the sidebar updates immediately, so a mis-click is no longer a dead end.

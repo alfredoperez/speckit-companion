@@ -650,9 +650,9 @@ class SpecItem extends vscode.TreeItem {
             this.tooltip = 'Loading specs...';
         } else if (isSpecGroupItem(contextValue)) {
             const groupIcons: Record<string, string> = {
-                'Active': 'pulse',
-                'Completed': 'check',
-                'Archived': 'archive',
+                'Active': 'group-active.svg',
+                'Completed': 'bloom.svg',
+                'Archived': 'group-archived.svg',
             };
             const groupTooltips: Record<string, string> = {
                 'Active': 'Specs in progress',
@@ -660,19 +660,22 @@ class SpecItem extends vscode.TreeItem {
                 'Archived': 'Archived specs',
             };
             const baseLabel = label.split(' (')[0];
-            this.iconPath = new vscode.ThemeIcon(groupIcons[baseLabel] || 'pulse');
+            const groupIcon = groupIcons[baseLabel];
+            this.iconPath = groupIcon
+                ? this.specIcon(groupIcon)
+                : new vscode.ThemeIcon('pulse');
             this.tooltip = groupTooltips[baseLabel] || label;
         } else if (isSpecLifecycleItem(contextValue)) {
             if (isActive) {
                 this.iconPath = new vscode.ThemeIcon('sync~spin');
             } else if (specContext?.status === SpecStatuses.COMPLETED) {
-                this.iconPath = new vscode.ThemeIcon('beaker', new vscode.ThemeColor('testing.iconPassed'));
+                this.iconPath = this.specIcon('bloom.svg');
             } else if (specContext?.status === SpecStatuses.IMPLEMENTED) {
-                this.iconPath = new vscode.ThemeIcon('beaker', new vscode.ThemeColor('charts.yellow'));
+                this.iconPath = this.specIcon('bud.svg');
             } else if (specContext?.currentStep) {
-                this.iconPath = new vscode.ThemeIcon('beaker', new vscode.ThemeColor('charts.blue'));
+                this.iconPath = this.specIcon('seedling.svg');
             } else {
-                this.iconPath = new vscode.ThemeIcon('beaker');
+                this.iconPath = this.specIcon('seed.svg');
             }
             // Trim the row description to ONLY what the per-document step icons
             // (Specification / Plan / Tasks) don't already convey (#238). The step
@@ -746,5 +749,9 @@ class SpecItem extends vscode.TreeItem {
             // the label inward so sub-files clearly nest under their parent.
             this.tooltip = `Related: ${label}.md`;
         }
+    }
+
+    private specIcon(file: string): vscode.Uri {
+        return vscode.Uri.joinPath(this.extContext.extensionUri, 'assets', 'icons', 'specs', file);
     }
 }

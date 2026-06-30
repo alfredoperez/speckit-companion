@@ -99,9 +99,15 @@ Every canonical status is mapped to a distinct color treatment so badges read at
 
 ## Spec tree icons
 
-- Green beaker icon — confirmed-completed spec
-- Yellow beaker icon — implemented spec (pipeline finished implement, awaiting your Mark-as-Completed confirmation); it sits in the Active group, where the tint distinguishes it from still-in-progress specs
-- Blue beaker icon — spec with an active workflow step
+Each spec node shows where it is in its life as a small growth-stage icon, so the list reads like a garden at a glance:
+
+- Seed — a new spec with no recorded step yet (specified)
+- Seedling — a spec with an active workflow step (in progress)
+- Bud (yellow) — implemented spec (pipeline finished implement, awaiting your Mark-as-Completed confirmation); it sits in the Active group, where the icon distinguishes it from still-in-progress specs
+- Bloom (green leaf-check) — confirmed-completed spec
+
+The group headers follow the same theme: a cluster of sprouts for **Active**, the bloom leaf-check for **Completed**, and a storage box for **Archived**.
+
 - Green check — completed step (requires the step's file to exist on disk; a hand-crafted or out-of-sync `.spec-context.json` that claims completion without the file shows the default empty icon instead)
 - Green pulsing glow — step actively being worked on
 - Blue dot — current step
