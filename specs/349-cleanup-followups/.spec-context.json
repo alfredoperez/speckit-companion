@@ -3,7 +3,7 @@
   "specName": "cleanup followups",
   "branch": "349-cleanup-followups",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",

@@ -10,7 +10,7 @@ import { AgentManager, AgentInfo } from '../agents/agentManager';
 import { SkillManager, SkillInfo, SkillType } from '../skills/skillManager';
 import { AIProviders, TreeItemContext } from '../../core/constants';
 import { isCompanionInstalled } from '../settings/companionPresetReconciler';
-import { readCompanionConfigGroups, readCompanionCommands, isWithinRoot, COMPANION_STEERING_PATHS } from './companionSteering';
+import { readCompanionConfigGroups, readCompanionCommands, isWithinRoot, companionCommandFilePath, COMPANION_STEERING_PATHS } from './companionSteering';
 
 export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem> {
     private steeringManager!: SteeringManager;
@@ -209,11 +209,9 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                 this.context
             ));
 
-            // Companion group — install state, configuration, and command discovery
+            // Companion group — install state, configuration, and command discovery.
+            // Positioned as the second top-level entry (spliced in below).
             const companionNode = this.buildCompanionHeaderNode();
-            if (companionNode) {
-                items.push(companionNode);
-            }
 
             // Add create buttons for missing files (only providers that own a steering file)
             if (providerPaths.globalSteeringFile && !globalExists) {
@@ -242,6 +240,11 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                         title: `Create Project ${providerPaths.steeringFile}`
                     }
                 ));
+            }
+
+            if (companionNode) {
+                // Second top-level entry when anything precedes it, else first.
+                items.splice(Math.min(1, items.length), 0, companionNode);
             }
 
             return items;
@@ -897,19 +900,23 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
         });
     }
 
-    /** Command entries from the installed manifest's `provides.commands`; discovery-only, description on tooltip. */
+    /** Command entries from the installed manifest's `provides.commands`; each opens its command body file. */
     private getCompanionCommandChildren(): SteeringItem[] {
         const root = this.companionWorkspaceRoot();
         if (!root) {
             return [];
         }
         return readCompanionCommands(root).map(cmd => {
+            const filePath = companionCommandFilePath(root, cmd.file);
             const item = new SteeringItem(
                 cmd.name,
                 vscode.TreeItemCollapsibleState.None,
                 TreeItemContext.companionCommand,
-                '',
-                this.context
+                filePath ?? '',
+                this.context,
+                filePath
+                    ? { command: 'vscode.open', title: `Open ${cmd.name}`, arguments: [vscode.Uri.file(filePath)] }
+                    : undefined
             );
             item.tooltip = cmd.description || cmd.name;
             return item;

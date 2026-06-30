@@ -131,13 +131,13 @@ Clicking any capability spec, tier, or orphan opens that file in the editor.
 
 ## Companion group (Steering view)
 
-The **Steering** view has a dedicated **Companion** node — marked with the moss-sprite icon — that gives SpecKit Companion a home alongside your steering docs, agents, and skills. It answers three questions at a glance: is the companion extension installed, where does its configuration live, and which commands does it provide.
+The **Steering** view has a dedicated **Companion** node — marked with the moss-sprite icon, positioned as the second top-level entry — that gives SpecKit Companion a home alongside your steering docs, agents, and skills. It answers three questions at a glance: is the companion extension installed, where does its configuration live, and which commands does it provide.
 
 **Not installed.** When the companion spec-kit extension is absent from the project (no `.specify/extensions/companion/` directory), the Companion node shows a warning icon and a **Not installed** label, and offers an inline **install** action on hover. Clicking it runs the same install flow surfaced elsewhere in the extension; once it finishes, the node switches to the moss icon and its children populate — no window reload needed.
 
 **Installed.** When the extension is present the node expands into two groups:
 
 - **Configuration** — one entry per top-level setting group in `.specify/companion.yml` (for example `commands`, `hooks`, `livingSpecs`). Clicking any entry opens the configuration file. The group is omitted entirely when the file is absent, and the open target is validated to stay inside the workspace.
-- **Commands** — the full `/speckit.companion.*` set, listed for discovery with each command's description on hover. The list is read live from the installed extension's manifest, so commands the extension adds later appear automatically with no update to the GUI.
+- **Commands** — the full `/speckit.companion.*` set, with each command's description on hover. Clicking a command opens its body file (the prompt the command runs) from the installed extension; the open target is validated to stay inside the workspace. The list is read live from the installed extension's manifest, so commands the extension adds later appear automatically with no update to the GUI.
 
 The Companion node refreshes on its own when the extension is installed or removed, or when `.specify/companion.yml` changes.
