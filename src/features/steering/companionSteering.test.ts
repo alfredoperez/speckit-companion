@@ -152,6 +152,12 @@ describe('companionSteering', () => {
         it('returns undefined for a traversal that escapes the root', () => {
             expect(companionCommandFilePath(root, '../../../../etc/passwd')).toBeUndefined();
         });
+
+        it('returns undefined for a file that escapes the extension dir but stays in the workspace', () => {
+            // A real file inside the workspace but outside .specify/extensions/companion.
+            fs.writeFileSync(path.join(root, 'secret.md'), '# not a command');
+            expect(companionCommandFilePath(root, '../../../secret.md')).toBeUndefined();
+        });
     });
 
     describe('isWithinRoot', () => {

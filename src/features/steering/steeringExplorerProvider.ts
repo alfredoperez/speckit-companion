@@ -1070,23 +1070,25 @@ class SteeringItem extends vscode.TreeItem {
 
     private providerIcon(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } {
         const p = (f: string) => vscode.Uri.joinPath(this.extContext.extensionUri, 'assets', 'icons', 'providers', f);
-        const id = vscode.workspace.getConfiguration('speckit').get<string>('aiProvider') || 'claude';
+        const mono = (name: string) => ({ light: p(`${name}-light.svg`), dark: p(`${name}-dark.svg`) });
+        let id = vscode.workspace.getConfiguration('speckit').get<string>('aiProvider') || 'claude';
+        // IDE Chat routes to the host editor's own chat — show that editor's brand.
+        if (id === 'ide-chat') {
+            const app = (vscode.env.appName || '').toLowerCase();
+            id = app.includes('cursor') ? 'cursor' : app.includes('windsurf') ? 'windsurf' : 'copilot';
+        }
         const colorful: Record<string, string> = {
             claude: 'claude.svg',
             'claude-vscode': 'claude.svg',
             gemini: 'gemini.svg',
             qwen: 'qwen.svg',
         };
-        const monochrome: Record<string, string> = {
-            copilot: 'copilot',
-            codex: 'codex',
-            opencode: 'opencode',
-        };
+        const monochrome = new Set(['copilot', 'codex', 'opencode', 'cursor', 'windsurf']);
         if (colorful[id]) {
             return p(colorful[id]);
         }
-        if (monochrome[id]) {
-            return { light: p(`${monochrome[id]}-light.svg`), dark: p(`${monochrome[id]}-dark.svg`) };
+        if (monochrome.has(id)) {
+            return mono(id);
         }
         return this.steerIcon('agents.svg');
     }

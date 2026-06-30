@@ -63,9 +63,11 @@ export function companionCommandFilePath(workspaceRoot: string, file: string): s
     if (!file) {
         return undefined;
     }
-    const extDir = path.dirname(COMPANION_MANIFEST_REL);
-    const abs = path.join(workspaceRoot, extDir, file);
-    if (!isWithinRoot(workspaceRoot, abs) || !fs.existsSync(abs)) {
+    const extRoot = path.join(workspaceRoot, path.dirname(COMPANION_MANIFEST_REL));
+    const abs = path.join(extRoot, file);
+    // Confine to the extension dir itself, not just the workspace — a manifest
+    // `file: ../foo.md` stays inside the workspace but must not escape the ext dir.
+    if (!isWithinRoot(extRoot, abs) || !fs.existsSync(abs)) {
         return undefined;
     }
     return abs;
