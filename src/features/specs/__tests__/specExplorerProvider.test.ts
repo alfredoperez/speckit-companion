@@ -319,45 +319,50 @@ describe('SpecExplorerProvider', () => {
             expect((specs[0].iconPath as vscode.ThemeIcon).id).toBe('sync~spin');
         });
 
-        it('should use the seed icon when spec is not active and has no context', async () => {
+        it('should use a plain beaker when spec is not active and has no context', async () => {
             const specs = await getSpecItems('my-feature', false);
-            expect(specs[0].iconPath).toBeInstanceOf(vscode.Uri);
-            expect((specs[0].iconPath as vscode.Uri).fsPath).toMatch(/assets\/icons\/specs\/spec-specified\.svg$/);
+            expect(specs[0].iconPath).toBeInstanceOf(vscode.ThemeIcon);
+            expect((specs[0].iconPath as vscode.ThemeIcon).id).toBe('beaker');
         });
 
-        it('should use the check icon when spec status is completed', async () => {
+        it('should use a green beaker when spec status is completed', async () => {
             const specs = await getSpecItems('my-feature', false, {
                 status: 'completed',
                 workflow: 'default',
                 selectedAt: '2026-01-01',
             });
-            expect((specs[0].iconPath as vscode.Uri).fsPath).toMatch(/assets\/icons\/specs\/spec-completed\.svg$/);
+            const icon = specs[0].iconPath as vscode.ThemeIcon;
+            expect(icon.id).toBe('beaker');
+            expect((icon.color as vscode.ThemeColor).id).toBe('testing.iconPassed');
         });
 
-        it('should use the in-progress icon when spec has a currentStep', async () => {
+        it('should use a blue beaker when spec has a currentStep', async () => {
             const specs = await getSpecItems('my-feature', false, {
                 status: 'active',
                 currentStep: 'plan',
                 workflow: 'default',
                 selectedAt: '2026-01-01',
             });
-            expect((specs[0].iconPath as vscode.Uri).fsPath).toMatch(/assets\/icons\/specs\/spec-inprogress\.svg$/);
+            const icon = specs[0].iconPath as vscode.ThemeIcon;
+            expect(icon.id).toBe('beaker');
+            expect((icon.color as vscode.ThemeColor).id).toBe('charts.blue');
         });
 
-        it('should use the package icon for implemented specs, distinct from completed and in-progress', async () => {
+        it('should use a yellow beaker for implemented specs, distinct from green completed and blue in-progress', async () => {
             const specs = await getSpecItems('my-feature', false, {
                 status: 'implemented',
                 currentStep: 'implement',
                 workflow: 'default',
                 selectedAt: '2026-01-01',
             });
-            const fsPath = (specs[0].iconPath as vscode.Uri).fsPath;
-            expect(fsPath).toMatch(/assets\/icons\/specs\/spec-implemented\.svg$/);
-            expect(fsPath).not.toMatch(/spec-completed\.svg$/);
-            expect(fsPath).not.toMatch(/spec-inprogress\.svg$/);
+            const icon = specs[0].iconPath as vscode.ThemeIcon;
+            expect(icon.id).toBe('beaker');
+            expect((icon.color as vscode.ThemeColor).id).toBe('charts.yellow');
+            expect((icon.color as vscode.ThemeColor).id).not.toBe('testing.iconPassed');
+            expect((icon.color as vscode.ThemeColor).id).not.toBe('charts.blue');
         });
 
-        it('should prefer sync~spin over the growth-stage icon when spec is active', async () => {
+        it('should prefer sync~spin over the colored beaker when spec is active', async () => {
             const specs = await getSpecItems('my-feature', true, {
                 status: 'active',
                 currentStep: 'plan',

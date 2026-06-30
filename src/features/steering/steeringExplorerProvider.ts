@@ -1013,21 +1013,18 @@ class SteeringItem extends vscode.TreeItem {
         } else if (contextValue === C.speckitConstitution) {
             this.iconPath = this.steerIcon('constitution.svg');
             this.tooltip = `Project Constitution: ${resourcePath}`;
-            this.description = filename;
         } else if (contextValue === C.speckitScriptsCategory) {
             this.iconPath = this.steerIcon('scripts.svg');
             this.tooltip = 'SpecKit automation scripts';
         } else if (contextValue === C.speckitScript) {
-            this.iconPath = this.steerIcon('doc.svg');
+            this.iconPath = undefined;
             this.tooltip = `Script: ${resourcePath}`;
-            this.description = filename;
         } else if (contextValue === C.speckitTemplatesCategory) {
             this.iconPath = this.steerIcon('templates.svg');
             this.tooltip = 'SpecKit document templates';
         } else if (contextValue === C.speckitTemplate) {
-            this.iconPath = this.steerIcon('doc.svg');
+            this.iconPath = undefined;
             this.tooltip = `Template: ${resourcePath}`;
-            this.description = filename;
         } else if (contextValue === C.providerHeader) {
             this.iconPath = this.providerIcon();
             this.tooltip = `${label} configuration files`;
@@ -1049,19 +1046,19 @@ class SteeringItem extends vscode.TreeItem {
         } else if (contextValue === C.companionConfigGroup) {
             this.iconPath = this.steerIcon('settings.svg');
         } else if (contextValue === C.companionConfigItem) {
-            this.iconPath = this.steerIcon('settings.svg');
+            this.iconPath = undefined;
         } else if (contextValue === C.companionCommandsGroup) {
             this.iconPath = this.steerIcon('commands.svg');
         } else if (contextValue === C.companionCommand) {
-            this.iconPath = this.steerIcon('doc.svg');
+            this.iconPath = undefined;
         } else if (contextValue === C.companionTemplatesGroup) {
             this.iconPath = this.steerIcon('templates.svg');
         } else if (contextValue === C.companionTemplate) {
-            this.iconPath = this.steerIcon('doc.svg');
+            this.iconPath = undefined;
         } else if (contextValue === C.agent) {
-            this.iconPath = this.steerIcon('agents.svg');
+            this.iconPath = undefined;
         } else if (contextValue === C.skill) {
-            this.iconPath = this.steerIcon('skills.svg');
+            this.iconPath = undefined;
         } else if (contextValue === C.skillWarning) {
             this.iconPath = this.steerIcon('warning.svg');
         }

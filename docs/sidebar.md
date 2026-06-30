@@ -99,14 +99,14 @@ Every canonical status is mapped to a distinct color treatment so badges read at
 
 ## Spec tree icons
 
-Each spec node shows where it is in its lifecycle with a small colorful icon, so the list reads at a glance:
+Each spec node shows where it is in its lifecycle with a color-tinted beaker, so the list reads at a glance:
 
-- Memo (document) — a new spec with no recorded step yet (specified)
-- Gear — a spec with an active workflow step (in progress)
-- Package — implemented spec (pipeline finished implement, awaiting your Mark-as-Completed confirmation); it sits in the Active group, where the icon distinguishes it from still-in-progress specs
-- Green check — confirmed-completed spec
+- Plain beaker — a new spec with no recorded step yet (specified)
+- Blue beaker — a spec with an active workflow step (in progress)
+- Yellow beaker — implemented spec (pipeline finished implement, awaiting your Mark-as-Completed confirmation); it sits in the Active group, where the tint distinguishes it from still-in-progress specs
+- Green beaker — confirmed-completed spec
 
-The group headers are colorful too: an open folder for **Active**, the green check for **Completed**, and a file cabinet for **Archived**.
+The group headers are colorful: a construction sign for **Active**, a green check for **Completed**, and a file cabinet for **Archived**.
 
 - Green check — completed step (requires the step's file to exist on disk; a hand-crafted or out-of-sync `.spec-context.json` that claims completion without the file shows the default empty icon instead)
 - Green pulsing glow — step actively being worked on

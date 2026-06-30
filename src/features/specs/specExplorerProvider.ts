@@ -669,13 +669,13 @@ class SpecItem extends vscode.TreeItem {
             if (isActive) {
                 this.iconPath = new vscode.ThemeIcon('sync~spin');
             } else if (specContext?.status === SpecStatuses.COMPLETED) {
-                this.iconPath = this.specIcon('spec-completed.svg');
+                this.iconPath = new vscode.ThemeIcon('beaker', new vscode.ThemeColor('testing.iconPassed'));
             } else if (specContext?.status === SpecStatuses.IMPLEMENTED) {
-                this.iconPath = this.specIcon('spec-implemented.svg');
+                this.iconPath = new vscode.ThemeIcon('beaker', new vscode.ThemeColor('charts.yellow'));
             } else if (specContext?.currentStep) {
-                this.iconPath = this.specIcon('spec-inprogress.svg');
+                this.iconPath = new vscode.ThemeIcon('beaker', new vscode.ThemeColor('charts.blue'));
             } else {
-                this.iconPath = this.specIcon('spec-specified.svg');
+                this.iconPath = new vscode.ThemeIcon('beaker');
             }
             // Trim the row description to ONLY what the per-document step icons
             // (Specification / Plan / Tasks) don't already convey (#238). The step
