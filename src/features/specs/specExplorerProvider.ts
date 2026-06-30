@@ -651,7 +651,7 @@ class SpecItem extends vscode.TreeItem {
         } else if (isSpecGroupItem(contextValue)) {
             const groupIcons: Record<string, string> = {
                 'Active': 'group-active.svg',
-                'Completed': 'bloom.svg',
+                'Completed': 'spec-completed.svg',
                 'Archived': 'group-archived.svg',
             };
             const groupTooltips: Record<string, string> = {
@@ -669,13 +669,13 @@ class SpecItem extends vscode.TreeItem {
             if (isActive) {
                 this.iconPath = new vscode.ThemeIcon('sync~spin');
             } else if (specContext?.status === SpecStatuses.COMPLETED) {
-                this.iconPath = this.specIcon('bloom.svg');
+                this.iconPath = this.specIcon('spec-completed.svg');
             } else if (specContext?.status === SpecStatuses.IMPLEMENTED) {
-                this.iconPath = this.specIcon('bud.svg');
+                this.iconPath = this.specIcon('spec-implemented.svg');
             } else if (specContext?.currentStep) {
-                this.iconPath = this.specIcon('seedling.svg');
+                this.iconPath = this.specIcon('spec-inprogress.svg');
             } else {
-                this.iconPath = this.specIcon('seed.svg');
+                this.iconPath = this.specIcon('spec-specified.svg');
             }
             // Trim the row description to ONLY what the per-document step icons
             // (Specification / Plan / Tasks) don't already convey (#238). The step

@@ -71,6 +71,32 @@ export function companionCommandFilePath(workspaceRoot: string, file: string): s
     return abs;
 }
 
+/** Preset command-body templates the Companion preset ships, relative to the extension dir. */
+const COMPANION_TEMPLATES_SUBDIR = 'presets/companion-standard/commands';
+
+export interface CompanionTemplate {
+    name: string;
+    /** Path relative to the extension dir, for `companionCommandFilePath`. */
+    file: string;
+}
+
+/** Preset command templates from the installed extension; `[]` when the dir is absent or escapes the workspace. */
+export function readCompanionTemplates(workspaceRoot: string): CompanionTemplate[] {
+    const extDir = path.dirname(COMPANION_MANIFEST_REL);
+    const dir = path.join(workspaceRoot, extDir, COMPANION_TEMPLATES_SUBDIR);
+    try {
+        if (!isWithinRoot(workspaceRoot, dir) || !fs.existsSync(dir)) {
+            return [];
+        }
+        return fs.readdirSync(dir)
+            .filter(f => f.endsWith('.md'))
+            .sort()
+            .map(f => ({ name: f.replace(/\.md$/, ''), file: path.posix.join(COMPANION_TEMPLATES_SUBDIR, f) }));
+    } catch {
+        return [];
+    }
+}
+
 export const COMPANION_STEERING_PATHS = {
     config: COMPANION_CONFIG_REL,
     manifest: COMPANION_MANIFEST_REL,

@@ -99,14 +99,14 @@ Every canonical status is mapped to a distinct color treatment so badges read at
 
 ## Spec tree icons
 
-Each spec node shows where it is in its life as a small growth-stage icon, so the list reads like a garden at a glance:
+Each spec node shows where it is in its lifecycle with a small colorful icon, so the list reads at a glance:
 
-- Seed — a new spec with no recorded step yet (specified)
-- Seedling — a spec with an active workflow step (in progress)
-- Bud (yellow) — implemented spec (pipeline finished implement, awaiting your Mark-as-Completed confirmation); it sits in the Active group, where the icon distinguishes it from still-in-progress specs
-- Bloom (green leaf-check) — confirmed-completed spec
+- Memo (document) — a new spec with no recorded step yet (specified)
+- Gear — a spec with an active workflow step (in progress)
+- Package — implemented spec (pipeline finished implement, awaiting your Mark-as-Completed confirmation); it sits in the Active group, where the icon distinguishes it from still-in-progress specs
+- Green check — confirmed-completed spec
 
-The group headers follow the same theme: a cluster of sprouts for **Active**, the bloom leaf-check for **Completed**, and a storage box for **Archived**.
+The group headers are colorful too: an open folder for **Active**, the green check for **Completed**, and a file cabinet for **Archived**.
 
 - Green check — completed step (requires the step's file to exist on disk; a hand-crafted or out-of-sync `.spec-context.json` that claims completion without the file shows the default empty icon instead)
 - Green pulsing glow — step actively being worked on
@@ -135,9 +135,14 @@ The **Steering** view has a dedicated **Companion** node — marked with the mos
 
 **Not installed.** When the companion spec-kit extension is absent from the project (no `.specify/extensions/companion/` directory), the Companion node shows a warning icon and a **Not installed** label, and offers an inline **install** action on hover. Clicking it runs the same install flow surfaced elsewhere in the extension; once it finishes, the node switches to the moss icon and its children populate — no window reload needed.
 
-**Installed.** When the extension is present the node expands into two groups:
+**Installed.** When the extension is present the node expands into up to three groups:
 
 - **Configuration** — one entry per top-level setting group in `.specify/companion.yml` (for example `commands`, `hooks`, `livingSpecs`). Clicking any entry opens the configuration file. The group is omitted entirely when the file is absent, and the open target is validated to stay inside the workspace.
 - **Commands** — the full `/speckit.companion.*` set, with each command's description on hover. Clicking a command opens its body file (the prompt the command runs) from the installed extension; the open target is validated to stay inside the workspace. The list is read live from the installed extension's manifest, so commands the extension adds later appear automatically with no update to the GUI.
+- **Templates** — the prompt templates the Companion preset ships (the per-step command bodies it installs over stock SpecKit). Clicking one opens the template file. Mirrors the **Templates** group under **SpecKit Files**, and is shown only when the installed extension actually carries preset templates; the open target is validated to stay inside the workspace.
 
 The Companion node refreshes on its own when the extension is installed or removed, or when `.specify/companion.yml` changes.
+
+## Colorful tree icons
+
+The Specs, Spec Explorer, and Steering trees use a small colorful icon set (sourced from the MIT-licensed Fluent Emoji and Lobe Icons; see [`NOTICE.md`](../NOTICE.md)) rather than monochrome glyphs. Spec rows show their lifecycle (see [Spec tree icons](#spec-tree-icons)); steering documents, scripts, templates, agents, skills, and settings each get a recognizable colored icon. The Steering view's **provider** node shows the brand logo of your configured AI provider (Claude, Gemini, GitHub Copilot, Codex, Qwen, OpenCode, Cursor, or Windsurf). The brand marks that have no inherent color ship light/dark variants so they stay legible on both themes.

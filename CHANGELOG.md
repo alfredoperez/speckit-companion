@@ -6,10 +6,12 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- **Specs grow in the sidebar** (#389): the spec list now tells each spec's progress as a little growth story instead of tinted lab beakers — a seed for a brand-new spec, a seedling once it's in progress, a yellow bud once it's implemented and waiting for your sign-off, and a green leaf-check when it's done. The Active, Completed, and Archived group headers get matching plant-themed icons. (First pass: the spec list; other sidebar views keep their current icons for now.)
+- **A colorful sidebar** (#389): the Specs, Spec Explorer, and Steering trees now use full-color icons instead of flat monochrome glyphs. Specs show their lifecycle at a glance — a document for a new spec, a gear while it's in progress, a package once it's implemented and waiting for your sign-off, and a green check when it's done — and the Active, Completed, and Archived headers are colored too. In the Steering view, steering docs, scripts, templates, agents, skills, and settings each get a recognizable icon, and the provider node now shows your AI provider's actual brand logo (Claude, Gemini, GitHub Copilot, Codex, Qwen, OpenCode, Cursor, or Windsurf). Icons come from the open-source Fluent Emoji and Lobe Icons sets.
+- **Companion commands now open, and the Companion node moved up** (#389): in the Steering view, the entries under Companion → Commands used to do nothing when clicked — each now opens the command's prompt body. The Companion node also moves to the second spot in the Steering view so it's easier to find.
 
 ### Added
 
+- **Companion templates in the Steering view** (#389): the Companion node now has a **Templates** group listing the prompt templates the Companion preset ships (the per-step command bodies it layers over stock SpecKit), the same way SpecKit Files lists its templates. Click one to open it. It appears only when the installed Companion extension actually carries templates.
 - **Recover a stranded spec with "Set status…"** (#347): an out-of-order or double click could leave a spec in a state where the lifecycle buttons wouldn't let you continue, and the only fix was hand-editing a JSON file. Every spec in the sidebar now has a **Set status…** action — on the right-click menu and as a hover gear — that lets you force the spec to any lifecycle status (specifying through completed) after a `"Force status to X?"` confirm. The override is recorded just like any other lifecycle change and the sidebar updates immediately, so a mis-click is no longer a dead end.
 
 ### Fixed

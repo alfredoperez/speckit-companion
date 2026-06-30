@@ -269,7 +269,7 @@ describe('SpecExplorerProvider', () => {
             expect((activeGroup.iconPath as vscode.Uri).fsPath).toMatch(/assets\/icons\/specs\/group-active\.svg$/);
         });
 
-        it('should use the bloom icon for Completed group', async () => {
+        it('should use the check icon for Completed group', async () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'feature', path: 'specs/feature' },
             ]);
@@ -277,7 +277,7 @@ describe('SpecExplorerProvider', () => {
 
             const children = await provider.getChildren();
 
-            expect((children[0].iconPath as vscode.Uri).fsPath).toMatch(/assets\/icons\/specs\/bloom\.svg$/);
+            expect((children[0].iconPath as vscode.Uri).fsPath).toMatch(/assets\/icons\/specs\/spec-completed\.svg$/);
         });
 
         it('should use the archived-box icon for Archived group', async () => {
@@ -322,29 +322,29 @@ describe('SpecExplorerProvider', () => {
         it('should use the seed icon when spec is not active and has no context', async () => {
             const specs = await getSpecItems('my-feature', false);
             expect(specs[0].iconPath).toBeInstanceOf(vscode.Uri);
-            expect((specs[0].iconPath as vscode.Uri).fsPath).toMatch(/assets\/icons\/specs\/seed\.svg$/);
+            expect((specs[0].iconPath as vscode.Uri).fsPath).toMatch(/assets\/icons\/specs\/spec-specified\.svg$/);
         });
 
-        it('should use the bloom icon when spec status is completed', async () => {
+        it('should use the check icon when spec status is completed', async () => {
             const specs = await getSpecItems('my-feature', false, {
                 status: 'completed',
                 workflow: 'default',
                 selectedAt: '2026-01-01',
             });
-            expect((specs[0].iconPath as vscode.Uri).fsPath).toMatch(/assets\/icons\/specs\/bloom\.svg$/);
+            expect((specs[0].iconPath as vscode.Uri).fsPath).toMatch(/assets\/icons\/specs\/spec-completed\.svg$/);
         });
 
-        it('should use the seedling icon when spec has a currentStep', async () => {
+        it('should use the in-progress icon when spec has a currentStep', async () => {
             const specs = await getSpecItems('my-feature', false, {
                 status: 'active',
                 currentStep: 'plan',
                 workflow: 'default',
                 selectedAt: '2026-01-01',
             });
-            expect((specs[0].iconPath as vscode.Uri).fsPath).toMatch(/assets\/icons\/specs\/seedling\.svg$/);
+            expect((specs[0].iconPath as vscode.Uri).fsPath).toMatch(/assets\/icons\/specs\/spec-inprogress\.svg$/);
         });
 
-        it('should use the bud icon for implemented specs, distinct from completed and in-progress', async () => {
+        it('should use the package icon for implemented specs, distinct from completed and in-progress', async () => {
             const specs = await getSpecItems('my-feature', false, {
                 status: 'implemented',
                 currentStep: 'implement',
@@ -352,9 +352,9 @@ describe('SpecExplorerProvider', () => {
                 selectedAt: '2026-01-01',
             });
             const fsPath = (specs[0].iconPath as vscode.Uri).fsPath;
-            expect(fsPath).toMatch(/assets\/icons\/specs\/bud\.svg$/);
-            expect(fsPath).not.toMatch(/bloom\.svg$/);
-            expect(fsPath).not.toMatch(/seedling\.svg$/);
+            expect(fsPath).toMatch(/assets\/icons\/specs\/spec-implemented\.svg$/);
+            expect(fsPath).not.toMatch(/spec-completed\.svg$/);
+            expect(fsPath).not.toMatch(/spec-inprogress\.svg$/);
         });
 
         it('should prefer sync~spin over the growth-stage icon when spec is active', async () => {

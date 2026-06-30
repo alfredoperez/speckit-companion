@@ -4,6 +4,7 @@ import * as path from 'path';
 import {
     readCompanionConfigGroups,
     readCompanionCommands,
+    readCompanionTemplates,
     companionCommandFilePath,
     isWithinRoot,
 } from './companionSteering';
@@ -88,6 +89,42 @@ describe('companionSteering', () => {
         it('returns [] when provides.commands is missing or not a list', () => {
             writeManifest('provides:\n  commands: not-a-list\n');
             expect(readCompanionCommands(root)).toEqual([]);
+        });
+    });
+
+    describe('readCompanionTemplates', () => {
+        const writeTemplate = (name: string): void => {
+            const dir = path.join(root, '.specify', 'extensions', 'companion', 'presets', 'companion-standard', 'commands');
+            fs.mkdirSync(dir, { recursive: true });
+            fs.writeFileSync(path.join(dir, name), '# template');
+        };
+
+        it('lists preset command templates sorted, with ext-relative file paths', () => {
+            writeTemplate('speckit.tasks.md');
+            writeTemplate('speckit.plan.md');
+            expect(readCompanionTemplates(root)).toEqual([
+                { name: 'speckit.plan', file: 'presets/companion-standard/commands/speckit.plan.md' },
+                { name: 'speckit.tasks', file: 'presets/companion-standard/commands/speckit.tasks.md' },
+            ]);
+        });
+
+        it('the returned file resolves through companionCommandFilePath', () => {
+            writeTemplate('speckit.specify.md');
+            const [tpl] = readCompanionTemplates(root);
+            expect(companionCommandFilePath(root, tpl.file)).toBe(
+                path.join(root, '.specify', 'extensions', 'companion', 'presets', 'companion-standard', 'commands', 'speckit.specify.md')
+            );
+        });
+
+        it('ignores non-markdown files', () => {
+            writeTemplate('speckit.plan.md');
+            const dir = path.join(root, '.specify', 'extensions', 'companion', 'presets', 'companion-standard', 'commands');
+            fs.writeFileSync(path.join(dir, 'preset.yml'), 'x: 1');
+            expect(readCompanionTemplates(root).map(t => t.name)).toEqual(['speckit.plan']);
+        });
+
+        it('returns [] when the templates dir is absent', () => {
+            expect(readCompanionTemplates(root)).toEqual([]);
         });
     });
 

@@ -174,6 +174,8 @@ export const TreeItemContext = {
     companionConfigItem: 'companion-config-item',
     companionCommandsGroup: 'companion-commands-group',
     companionCommand: 'companion-command',
+    companionTemplatesGroup: 'companion-templates-group',
+    companionTemplate: 'companion-template',
     skill: 'skill',
     skillWarning: 'skill-warning',
     createGlobal: 'create-global-claude',

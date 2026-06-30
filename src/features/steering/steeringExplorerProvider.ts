@@ -10,7 +10,7 @@ import { AgentManager, AgentInfo } from '../agents/agentManager';
 import { SkillManager, SkillInfo, SkillType } from '../skills/skillManager';
 import { AIProviders, TreeItemContext } from '../../core/constants';
 import { isCompanionInstalled } from '../settings/companionPresetReconciler';
-import { readCompanionConfigGroups, readCompanionCommands, isWithinRoot, companionCommandFilePath, COMPANION_STEERING_PATHS } from './companionSteering';
+import { readCompanionConfigGroups, readCompanionCommands, readCompanionTemplates, isWithinRoot, companionCommandFilePath, COMPANION_STEERING_PATHS } from './companionSteering';
 
 export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem> {
     private steeringManager!: SteeringManager;
@@ -298,6 +298,8 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             return this.getCompanionConfigChildren();
         } else if (element.contextValue === TreeItemContext.companionCommandsGroup) {
             return this.getCompanionCommandChildren();
+        } else if (element.contextValue === TreeItemContext.companionTemplatesGroup) {
+            return this.getCompanionTemplateChildren();
         }
 
         return [];
@@ -869,6 +871,16 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             this.context
         ));
 
+        if (readCompanionTemplates(root).length > 0) {
+            items.push(new SteeringItem(
+                'Templates',
+                vscode.TreeItemCollapsibleState.Collapsed,
+                TreeItemContext.companionTemplatesGroup,
+                '',
+                this.context
+            ));
+        }
+
         return items;
     }
 
@@ -922,6 +934,29 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             return item;
         });
     }
+
+    /** Preset command-body templates the Companion ships; each opens its template file. */
+    private getCompanionTemplateChildren(): SteeringItem[] {
+        const root = this.companionWorkspaceRoot();
+        if (!root) {
+            return [];
+        }
+        return readCompanionTemplates(root).map(tpl => {
+            const filePath = companionCommandFilePath(root, tpl.file);
+            const item = new SteeringItem(
+                tpl.name,
+                vscode.TreeItemCollapsibleState.None,
+                TreeItemContext.companionTemplate,
+                filePath ?? '',
+                this.context,
+                filePath
+                    ? { command: 'vscode.open', title: `Open ${tpl.name}`, arguments: [vscode.Uri.file(filePath)] }
+                    : undefined
+            );
+            item.tooltip = `Companion template: ${tpl.name}`;
+            return item;
+        });
+    }
 }
 
 class SteeringItem extends vscode.TreeItem {
@@ -946,85 +981,116 @@ class SteeringItem extends vscode.TreeItem {
             this.iconPath = new vscode.ThemeIcon('sync~spin');
             this.tooltip = 'Loading steering documents...';
         } else if (contextValue === C.steeringFile) {
-            this.iconPath = new vscode.ThemeIcon('markdown');
+            this.iconPath = this.steerIcon('doc.svg');
             this.tooltip = resourcePath;
         } else if (contextValue === C.createGlobal) {
-            this.iconPath = new vscode.ThemeIcon('globe');
+            this.iconPath = this.steerIcon('globe.svg');
             this.tooltip = 'Click to create Global CLAUDE.md';
         } else if (contextValue === C.createProject) {
-            this.iconPath = new vscode.ThemeIcon('root-folder');
+            this.iconPath = this.steerIcon('folder.svg');
             this.tooltip = 'Click to create Project CLAUDE.md';
         } else if (contextValue === C.separator) {
             this.iconPath = undefined;
             this.description = undefined;
         } else if (contextValue === C.steeringHeader) {
-            this.iconPath = new vscode.ThemeIcon('folder-library');
+            this.iconPath = this.steerIcon('folder.svg');
             this.tooltip = 'Generated project steering documents';
         } else if (contextValue === C.steeringDocument) {
             if (label === 'product') {
-                this.iconPath = new vscode.ThemeIcon('lightbulb-empty');
+                this.iconPath = this.steerIcon('product.svg');
             } else if (label === 'tech') {
-                this.iconPath = new vscode.ThemeIcon('circuit-board');
+                this.iconPath = this.steerIcon('tech.svg');
             } else if (label === 'structure') {
-                this.iconPath = new vscode.ThemeIcon('list-tree');
+                this.iconPath = this.steerIcon('structure.svg');
             } else {
-                this.iconPath = new vscode.ThemeIcon('file');
+                this.iconPath = this.steerIcon('doc.svg');
             }
             this.tooltip = `Steering document: ${resourcePath}`;
             this.description = filename;
         } else if (contextValue === C.speckitHeader) {
-            this.iconPath = new vscode.ThemeIcon('package');
+            this.iconPath = this.steerIcon('library.svg');
             this.tooltip = 'SpecKit project configuration files';
         } else if (contextValue === C.speckitConstitution) {
-            this.iconPath = new vscode.ThemeIcon('law');
+            this.iconPath = this.steerIcon('constitution.svg');
             this.tooltip = `Project Constitution: ${resourcePath}`;
             this.description = filename;
         } else if (contextValue === C.speckitScriptsCategory) {
-            this.iconPath = new vscode.ThemeIcon('code');
+            this.iconPath = this.steerIcon('scripts.svg');
             this.tooltip = 'SpecKit automation scripts';
         } else if (contextValue === C.speckitScript) {
-            this.iconPath = new vscode.ThemeIcon('terminal');
+            this.iconPath = this.steerIcon('doc.svg');
             this.tooltip = `Script: ${resourcePath}`;
             this.description = filename;
         } else if (contextValue === C.speckitTemplatesCategory) {
-            this.iconPath = new vscode.ThemeIcon('note');
+            this.iconPath = this.steerIcon('templates.svg');
             this.tooltip = 'SpecKit document templates';
         } else if (contextValue === C.speckitTemplate) {
-            this.iconPath = new vscode.ThemeIcon('file');
+            this.iconPath = this.steerIcon('doc.svg');
             this.tooltip = `Template: ${resourcePath}`;
             this.description = filename;
         } else if (contextValue === C.providerHeader) {
-            this.iconPath = new vscode.ThemeIcon('hubot');
+            this.iconPath = this.providerIcon();
             this.tooltip = `${label} configuration files`;
         } else if (contextValue === C.providerProjectGroup) {
-            this.iconPath = new vscode.ThemeIcon('root-folder');
+            this.iconPath = this.steerIcon('folder.svg');
             this.tooltip = 'Project-scoped configuration files';
         } else if (contextValue === C.providerUserGroup) {
-            this.iconPath = new vscode.ThemeIcon('globe');
+            this.iconPath = this.steerIcon('globe.svg');
             this.tooltip = 'User-scoped configuration files';
         } else if (contextValue === C.providerAgentsGroup) {
-            this.iconPath = new vscode.ThemeIcon('robot');
+            this.iconPath = this.steerIcon('agents.svg');
             this.tooltip = 'Agents';
         } else if (contextValue === C.providerSkillsGroup) {
-            this.iconPath = new vscode.ThemeIcon('symbol-misc');
+            this.iconPath = this.steerIcon('skills.svg');
             this.tooltip = 'Skills';
         } else if (contextValue === C.providerSettings) {
-            this.iconPath = new vscode.ThemeIcon('settings-gear');
+            this.iconPath = this.steerIcon('settings.svg');
             this.tooltip = `Settings: ${resourcePath}`;
         } else if (contextValue === C.companionConfigGroup) {
-            this.iconPath = new vscode.ThemeIcon('settings-gear');
+            this.iconPath = this.steerIcon('settings.svg');
         } else if (contextValue === C.companionConfigItem) {
-            this.iconPath = new vscode.ThemeIcon('gear');
+            this.iconPath = this.steerIcon('settings.svg');
         } else if (contextValue === C.companionCommandsGroup) {
-            this.iconPath = new vscode.ThemeIcon('symbol-event');
+            this.iconPath = this.steerIcon('commands.svg');
         } else if (contextValue === C.companionCommand) {
-            this.iconPath = new vscode.ThemeIcon('terminal');
+            this.iconPath = this.steerIcon('doc.svg');
+        } else if (contextValue === C.companionTemplatesGroup) {
+            this.iconPath = this.steerIcon('templates.svg');
+        } else if (contextValue === C.companionTemplate) {
+            this.iconPath = this.steerIcon('doc.svg');
         } else if (contextValue === C.agent) {
-            this.iconPath = new vscode.ThemeIcon('robot');
+            this.iconPath = this.steerIcon('agents.svg');
         } else if (contextValue === C.skill) {
-            this.iconPath = new vscode.ThemeIcon('symbol-misc');
+            this.iconPath = this.steerIcon('skills.svg');
         } else if (contextValue === C.skillWarning) {
-            this.iconPath = new vscode.ThemeIcon('warning');
+            this.iconPath = this.steerIcon('warning.svg');
         }
+    }
+
+    private steerIcon(file: string): vscode.Uri {
+        return vscode.Uri.joinPath(this.extContext.extensionUri, 'assets', 'icons', 'steering', file);
+    }
+
+    private providerIcon(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } {
+        const p = (f: string) => vscode.Uri.joinPath(this.extContext.extensionUri, 'assets', 'icons', 'providers', f);
+        const id = vscode.workspace.getConfiguration('speckit').get<string>('aiProvider') || 'claude';
+        const colorful: Record<string, string> = {
+            claude: 'claude.svg',
+            'claude-vscode': 'claude.svg',
+            gemini: 'gemini.svg',
+            qwen: 'qwen.svg',
+        };
+        const monochrome: Record<string, string> = {
+            copilot: 'copilot',
+            codex: 'codex',
+            opencode: 'opencode',
+        };
+        if (colorful[id]) {
+            return p(colorful[id]);
+        }
+        if (monochrome[id]) {
+            return { light: p(`${monochrome[id]}-light.svg`), dark: p(`${monochrome[id]}-dark.svg`) };
+        }
+        return this.steerIcon('agents.svg');
     }
 }
