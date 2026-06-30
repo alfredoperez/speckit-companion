@@ -266,7 +266,7 @@ describe('SpecExplorerProvider', () => {
             const activeGroup = children[0];
 
             expect(activeGroup.iconPath).toBeInstanceOf(vscode.Uri);
-            expect((activeGroup.iconPath as vscode.Uri).fsPath).toMatch(/assets\/icons\/specs\/group-active\.svg$/);
+            expect((activeGroup.iconPath as vscode.Uri).path).toMatch(/assets\/icons\/specs\/group-active\.svg$/);
         });
 
         it('should use the check icon for Completed group', async () => {
@@ -277,7 +277,7 @@ describe('SpecExplorerProvider', () => {
 
             const children = await provider.getChildren();
 
-            expect((children[0].iconPath as vscode.Uri).fsPath).toMatch(/assets\/icons\/specs\/spec-completed\.svg$/);
+            expect((children[0].iconPath as vscode.Uri).path).toMatch(/assets\/icons\/specs\/spec-completed\.svg$/);
         });
 
         it('should use the archived-box icon for Archived group', async () => {
@@ -288,7 +288,7 @@ describe('SpecExplorerProvider', () => {
 
             const children = await provider.getChildren();
 
-            expect((children[0].iconPath as vscode.Uri).fsPath).toMatch(/assets\/icons\/specs\/group-archived\.svg$/);
+            expect((children[0].iconPath as vscode.Uri).path).toMatch(/assets\/icons\/specs\/group-archived\.svg$/);
         });
     });
 
