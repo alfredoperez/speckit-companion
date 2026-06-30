@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **Support the project from inside the editor** (#388): if SpecKit Companion saves you time, there's now an easy way to chip in. A "Sponsor" button appears on the Marketplace listing and the extension details view, the Specs sidebar welcome screen has a "Support this project" link, and there's a "Sponsor SpecKit Companion" command in the Command Palette. All of them open the project's GitHub Sponsors page. Nothing changes if you'd rather not — it's entirely optional.
 - **Recover a stranded spec with "Set status…"** (#347): an out-of-order or double click could leave a spec in a state where the lifecycle buttons wouldn't let you continue, and the only fix was hand-editing a JSON file. Every spec in the sidebar now has a **Set status…** action — on the right-click menu and as a hover gear — that lets you force the spec to any lifecycle status (specifying through completed) after a `"Force status to X?"` confirm. The override is recorded just like any other lifecycle change and the sidebar updates immediately, so a mis-click is no longer a dead end.
 
 ### Fixed
