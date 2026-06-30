@@ -722,6 +722,10 @@ npm run package
 
 PRs welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, the `F5` dev-host loop, test conventions, the Conventional Commit style this repo uses, and the README docs map you should follow before opening a PR.
 
+## Support
+
+SpecKit Companion is free and open source. If it saves you time, you can support its development through [GitHub Sponsors](https://github.com/sponsors/alfredoperez). You'll also find a "Sponsor" button on the Marketplace listing and a "Support this project" link in the Specs sidebar.
+
 ## Acknowledgments
 
 This project started from the amazing work at https://github.com/notdp/kiro-for-cc
