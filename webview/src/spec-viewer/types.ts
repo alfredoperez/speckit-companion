@@ -173,6 +173,34 @@ export interface CheckpointStatus {
     pr?: boolean;
 }
 
+/** Normalized reasoning-trail entries (mirror of the extension's Viewer* types). */
+export interface ViewerDecision {
+    decision: string;
+    why?: string;
+    rejected?: string;
+}
+
+export interface ViewerVerification {
+    what: string;
+    result?: string;
+    command?: string;
+    warnings?: string[];
+}
+
+export interface ViewerCoverageRow {
+    req: string;
+    title?: string;
+    tasks: string[];
+    tests: string[];
+}
+
+export interface ClassificationEntry {
+    projectedFiles?: number;
+    projectedTasks?: number;
+    scopeSignal?: string;
+    verdict: string;
+}
+
 // ============================================
 // Persisted review comments
 // ============================================
@@ -208,7 +236,8 @@ export interface ViewerState {
     approach?: string;
     lastAction?: string;
     taskSummaries?: Record<string, TaskSummary>;
-    decisions?: string[];
+    /** Normalized: legacy string entries arrive as `{decision}`. */
+    decisions?: ViewerDecision[];
     concerns?: ConcernEntry[];
     filesModified?: string[];
     prUrl?: string;
@@ -219,6 +248,12 @@ export interface ViewerState {
     reviewComments?: ReviewComment[];
     /** Living specs this feature loaded/synced (LS·7). Absent when none. */
     livingSpecs?: LivingSpecsView;
+    /** Reasoning-trail capture, normalized for rendering. */
+    intent?: string;
+    expectations?: string[];
+    verified?: ViewerVerification[];
+    coverage?: ViewerCoverageRow[];
+    classification?: ClassificationEntry;
 }
 
 /** Normalized living-specs view: loaded into context + folded back at completion. */

@@ -54,9 +54,9 @@ export function CommentsCard({ state }: CommentsCardProps) {
 
     return (
         <section class="activity-card activity-card--comments">
-            <header class="activity-card__title">
+            <h3 class="activity-card__title">
                 Review comments <span class="activity-card__count">({items.length})</span>
-            </header>
+            </h3>
             <div class="activity-card__body">
                 {sortDocs(Object.keys(byDoc)).map(doc => {
                     const docComments = byDoc[doc];

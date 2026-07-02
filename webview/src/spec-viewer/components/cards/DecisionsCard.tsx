@@ -10,13 +10,19 @@ export function DecisionsCard({ state }: DecisionsCardProps) {
 
     return (
         <section class="activity-card activity-card--decisions">
-            <header class="activity-card__title">
+            <h3 class="activity-card__title">
                 Decisions <span class="activity-card__count">({items.length})</span>
-            </header>
+            </h3>
             <div class="activity-card__body">
                 <ul class="activity-list">
                     {items.map((d, i) => (
-                        <li key={i}>{d}</li>
+                        <li key={i}>
+                            <span>{d.decision}</span>
+                            {d.why && <div class="activity-detail"><span class="activity-inline-label">Why</span> {d.why}</div>}
+                            {d.rejected && (
+                                <div class="activity-detail"><span class="activity-inline-label">Rejected</span> {d.rejected}</div>
+                            )}
+                        </li>
                     ))}
                 </ul>
             </div>

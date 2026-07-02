@@ -315,6 +315,27 @@ export interface CheckpointStatus {
     pr?: boolean;
 }
 
+/** Normalized reasoning-trail entries for the Activity panel (derived; both raw shapes fold in). */
+export interface ViewerDecision {
+    decision: string;
+    why?: string;
+    rejected?: string;
+}
+
+export interface ViewerVerification {
+    what: string;
+    result?: string;
+    command?: string;
+    warnings?: string[];
+}
+
+export interface ViewerCoverageRow {
+    req: string;
+    title?: string;
+    tasks: string[];
+    tests: string[];
+}
+
 export interface ViewerState {
     status: Status;
     activeStep: StepName;
@@ -329,13 +350,20 @@ export interface ViewerState {
     approach?: string;
     lastAction?: string;
     taskSummaries?: Record<string, TaskSummary>;
-    decisions?: string[];
+    /** Normalized: legacy string entries fold into `{decision}`. */
+    decisions?: ViewerDecision[];
     concerns?: ConcernEntry[];
     filesModified?: string[];
     prUrl?: string;
     prNumber?: number;
     checkpointStatus?: CheckpointStatus;
     stepSummaries?: Record<string, Record<string, unknown>>;
+    /** Reasoning-trail capture, normalized for rendering. */
+    intent?: string;
+    expectations?: string[];
+    verified?: ViewerVerification[];
+    coverage?: ViewerCoverageRow[];
+    classification?: ClassificationEntry;
     /** Persisted inline review comments, surfaced for restore + Activity. */
     reviewComments?: ReviewComment[];
     /** Living specs loaded/synced for this feature (LS·7). Absent when none. */

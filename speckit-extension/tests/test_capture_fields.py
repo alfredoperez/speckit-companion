@@ -116,11 +116,23 @@ class CaptureFieldTests(unittest.TestCase):
     def test_coverage_blank_req_is_a_noop(self) -> None:
         self.assertIsNone(wc.upsert_coverage(self.fd, "  ", ["T001"], None))
 
-    def test_coverage_with_no_tasks_and_no_tests_is_a_noop(self) -> None:
+    def test_coverage_with_no_tasks_tests_or_title_is_a_noop(self) -> None:
         # A bare --coverage-req must not fake an empty {} coverage entry.
         self.assertIsNone(wc.upsert_coverage(self.fd, "FR-001", None, None))
-        self.assertIsNone(wc.upsert_coverage(self.fd, "FR-001", [], []))
+        self.assertIsNone(wc.upsert_coverage(self.fd, "FR-001", [], [], "  "))
         self.assertFalse((self.fd / ".spec-context.json").exists())
+
+    def test_coverage_title_upserts_and_composes_with_lists(self) -> None:
+        wc.upsert_coverage(self.fd, "FR-001", ["T001"], None, "Capability nodes offer a drift action")
+        wc.upsert_coverage(self.fd, "FR-001", None, ["a.test.ts::case"])
+        entry = _ctx(self.fd)["coverage"]["FR-001"]
+        self.assertEqual(entry["title"], "Capability nodes offer a drift action")
+        self.assertEqual(entry["tasks"], ["T001"])
+        self.assertEqual(entry["tests"], ["a.test.ts::case"])
+
+    def test_coverage_title_alone_is_recordable(self) -> None:
+        wc.upsert_coverage(self.fd, "FR-002", None, None, "Titled but unmapped requirement")
+        self.assertEqual(_ctx(self.fd)["coverage"]["FR-002"], {"title": "Titled but unmapped requirement"})
 
     # --- step summaries -----------------------------------------------------
 

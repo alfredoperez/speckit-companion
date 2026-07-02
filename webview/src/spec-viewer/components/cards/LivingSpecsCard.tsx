@@ -28,9 +28,9 @@ export function LivingSpecsCard({ state }: LivingSpecsCardProps) {
 
     return (
         <section class="activity-card activity-card--living-specs">
-            <header class="activity-card__title">
+            <h3 class="activity-card__title">
                 Living specs <span class="activity-card__count">({names.length})</span>
-            </header>
+            </h3>
             <div class="activity-card__body">
                 <ul class="living-specs-list">
                     {names.map(name => (

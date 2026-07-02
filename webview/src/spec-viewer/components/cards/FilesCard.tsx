@@ -18,9 +18,9 @@ export function FilesCard({ state }: FilesCardProps) {
 
     return (
         <section class="activity-card activity-card--files">
-            <header class="activity-card__title">
+            <h3 class="activity-card__title">
                 Files touched <span class="activity-card__count">({sorted.length})</span>
-            </header>
+            </h3>
             <div class="activity-card__body">
                 <ul class="activity-files">
                     {sorted.map(f => (

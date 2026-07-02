@@ -681,3 +681,68 @@
     background: color-mix(in srgb, var(--accent) 12%, transparent);
     line-height: 1.4;
 }
+
+/* --- Reasoning-trail cards (Goal / Decisions detail / Verified / Coverage) --- */
+
+.activity-detail {
+    margin-top: 2px;
+    font-size: 0.82rem;
+    color: var(--text-body);
+}
+
+.activity-detail--warning {
+    color: var(--warning);
+}
+
+/* Inline label token: the prefix recedes, the value reads. */
+.activity-inline-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    margin-right: 2px;
+}
+
+/* Native disclosure for the full coverage mapping. */
+.activity-disclosure {
+    margin-top: 6px;
+}
+
+.activity-disclosure summary {
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: var(--text-body);
+}
+
+.activity-detail-label {
+    display: block;
+    margin-bottom: 2px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+}
+
+.activity-intent__text {
+    margin: 0 0 6px;
+    color: var(--text-primary);
+}
+
+.activity-intent__fence {
+    margin-top: 4px;
+}
+
+.activity-list--compact li {
+    padding: 2px 0;
+}
+
+.activity-verified__result {
+    color: var(--text-body);
+}
+
+.activity-coverage__title {
+    margin-left: 6px;
+    color: var(--text-body);
+}

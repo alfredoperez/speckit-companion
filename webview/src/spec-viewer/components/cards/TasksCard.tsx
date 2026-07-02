@@ -39,9 +39,9 @@ export function TasksCard({ state }: TasksCardProps) {
 
     return (
         <section class="activity-card activity-card--tasks">
-            <header class="activity-card__title">
+            <h3 class="activity-card__title">
                 Tasks <span class="activity-card__count">({ids.length})</span>
-            </header>
+            </h3>
             <div class="activity-card__body">
                 {ids.map(id => {
                     const t: TaskSummary = summaries[id];

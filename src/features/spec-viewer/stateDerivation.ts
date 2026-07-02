@@ -19,6 +19,10 @@ import {
     StepBadgeState,
     STEP_NAMES,
     ViewerState,
+    ViewerDecision,
+    ViewerVerification,
+    ViewerCoverageRow,
+    ClassificationEntry,
     TaskSummary,
     ConcernEntry,
     CheckpointStatus,
@@ -78,6 +82,87 @@ function pickRecord<T>(ctx: SpecContext, key: string): Record<string, T> | undef
     const v = (ctx as Record<string, unknown>)[key];
     if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
     return v as Record<string, T>;
+}
+
+/**
+ * Normalize a JSON-or-text capture list: bare strings wrap under the identity
+ * key, objects carrying it pass through (extra keys kept), anything else is
+ * skipped. Mirrors the writer's tolerance so legacy and structured entries
+ * render side by side.
+ */
+function pickEntryList<T extends Record<string, unknown>>(
+    ctx: SpecContext,
+    key: string,
+    identityKey: string,
+): T[] | undefined {
+    const v = (ctx as Record<string, unknown>)[key];
+    if (!Array.isArray(v) || v.length === 0) return undefined;
+    const out: T[] = [];
+    for (const entry of v) {
+        if (typeof entry === 'string' && entry.trim().length > 0) {
+            out.push({ [identityKey]: entry } as T);
+        } else if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+            const e = entry as Record<string, unknown>;
+            if (typeof e[identityKey] === 'string' && (e[identityKey] as string).trim().length > 0) {
+                out.push(e as T);
+            }
+        }
+    }
+    return out.length > 0 ? out : undefined;
+}
+
+/** Keep an optional field only when it's a non-empty string — a malformed capture must not reach the renderer. */
+function optString(v: unknown): string | undefined {
+    return typeof v === 'string' && v.trim().length > 0 ? v : undefined;
+}
+
+function pickDecisions(ctx: SpecContext): ViewerDecision[] | undefined {
+    const raw = pickEntryList<Record<string, unknown>>(ctx, 'decisions', 'decision');
+    return raw?.map(e => ({
+        decision: e.decision as string,
+        why: optString(e.why),
+        rejected: optString(e.rejected),
+    }));
+}
+
+function pickVerified(ctx: SpecContext): ViewerVerification[] | undefined {
+    const raw = pickEntryList<Record<string, unknown>>(ctx, 'verified', 'what');
+    return raw?.map(e => {
+        const warnings = coerceNameList(e.warnings);
+        return {
+            what: e.what as string,
+            result: optString(e.result),
+            command: optString(e.command),
+            warnings: warnings.length > 0 ? warnings : undefined,
+        };
+    });
+}
+
+function pickCoverage(ctx: SpecContext): ViewerCoverageRow[] | undefined {
+    const v = (ctx as Record<string, unknown>)['coverage'];
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
+    const rows: ViewerCoverageRow[] = [];
+    for (const [req, entry] of Object.entries(v as Record<string, unknown>)) {
+        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
+        const e = entry as Record<string, unknown>;
+        rows.push({
+            req,
+            title: typeof e.title === 'string' && e.title.trim() ? e.title : undefined,
+            tasks: coerceNameList(e.tasks),
+            tests: coerceNameList(e.tests),
+        });
+    }
+    if (rows.length === 0) return undefined;
+    rows.sort((a, b) => a.req.localeCompare(b.req, undefined, { numeric: true }));
+    return rows;
+}
+
+function pickClassification(ctx: SpecContext): ClassificationEntry | undefined {
+    const v = (ctx as Record<string, unknown>)['classification'];
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
+    const e = v as Record<string, unknown>;
+    if (typeof e.verdict !== 'string') return undefined;
+    return e as unknown as ClassificationEntry;
 }
 
 function pickConcerns(ctx: SpecContext): ConcernEntry[] | undefined {
@@ -241,7 +326,7 @@ export function deriveViewerState(
         approach: pickString(ctx, 'approach'),
         lastAction: pickString(ctx, 'last_action'),
         taskSummaries: pickRecord<TaskSummary>(ctx, 'task_summaries'),
-        decisions: pickStringArray(ctx, 'decisions'),
+        decisions: pickDecisions(ctx),
         concerns: pickConcerns(ctx),
         filesModified: pickStringArray(ctx, 'files_modified'),
         prUrl: pickString(ctx, 'prUrl'),
@@ -250,5 +335,10 @@ export function deriveViewerState(
         stepSummaries: pickRecord<Record<string, unknown>>(ctx, 'step_summaries'),
         reviewComments: pickReviewComments(ctx),
         livingSpecs: pickLivingSpecs(ctx),
+        intent: pickString(ctx, 'intent'),
+        expectations: pickStringArray(ctx, 'expectations'),
+        verified: pickVerified(ctx),
+        coverage: pickCoverage(ctx),
+        classification: pickClassification(ctx),
     };
 }

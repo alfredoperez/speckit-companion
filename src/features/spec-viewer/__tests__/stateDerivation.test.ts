@@ -223,3 +223,111 @@ describe('deriveViewerState', () => {
         });
     });
 });
+
+describe('reasoning-trail normalization', () => {
+    describe('decisions', () => {
+        it('normalizes legacy string decisions into {decision}', () => {
+            const state = deriveViewerState(makeContext({ decisions: ['use the store', 'disable not hide'] } as never));
+            expect(state.decisions).toEqual([
+                { decision: 'use the store' },
+                { decision: 'disable not hide' },
+            ]);
+        });
+
+        it('keeps structured decisions with why/rejected intact', () => {
+            const entry = { decision: 'map over array', why: 'one-lookup queries', rejected: 'array scan' };
+            const state = deriveViewerState(makeContext({ decisions: [entry] } as never));
+            expect(state.decisions).toEqual([entry]);
+        });
+
+        it('renders mixed shapes in order and skips malformed entries', () => {
+            const state = deriveViewerState(makeContext({
+                decisions: ['legacy', { decision: 'structured', why: 'w' }, { why: 'no identity' }, 42, null],
+            } as never));
+            expect(state.decisions).toEqual([
+                { decision: 'legacy' },
+                { decision: 'structured', why: 'w' },
+            ]);
+        });
+    });
+
+    describe('verified', () => {
+        it('normalizes strings and keeps structured entries with warnings', () => {
+            const state = deriveViewerState(makeContext({
+                verified: ['build clean', { what: 'jest', result: '20/20', command: 'npm test', warnings: ['w1'] }],
+            } as never));
+            expect(state.verified).toEqual([
+                { what: 'build clean' },
+                { what: 'jest', result: '20/20', command: 'npm test', warnings: ['w1'] },
+            ]);
+        });
+    });
+
+    describe('coverage', () => {
+        it('turns the map into rows sorted by requirement id with titles', () => {
+            const state = deriveViewerState(makeContext({
+                coverage: {
+                    'FR-010': { tasks: ['T009'], tests: ['a.test.ts'] },
+                    'FR-002': { title: 'Second req', tasks: ['T001'] },
+                },
+            } as never));
+            expect(state.coverage).toEqual([
+                { req: 'FR-002', title: 'Second req', tasks: ['T001'], tests: [] },
+                { req: 'FR-010', title: undefined, tasks: ['T009'], tests: ['a.test.ts'] },
+            ]);
+        });
+
+        it('skips malformed entries and yields absent for an empty map', () => {
+            expect(deriveViewerState(makeContext({ coverage: {} } as never)).coverage).toBeUndefined();
+            const state = deriveViewerState(makeContext({ coverage: { 'FR-001': 'not-an-object' } } as never));
+            expect(state.coverage).toBeUndefined();
+        });
+    });
+
+    describe('intent / expectations / classification', () => {
+        it('passes intent and expectations through', () => {
+            const state = deriveViewerState(makeContext({
+                intent: 'the goal', expectations: ['no undo', 'no redesign'],
+            } as never));
+            expect(state.intent).toBe('the goal');
+            expect(state.expectations).toEqual(['no undo', 'no redesign']);
+        });
+
+        it('keeps classification only when it carries a verdict', () => {
+            const good = deriveViewerState(makeContext({
+                classification: { projectedFiles: 9, projectedTasks: 11, scopeSignal: 'none', verdict: 'normal' },
+            } as never));
+            expect(good.classification?.verdict).toBe('normal');
+            const bad = deriveViewerState(makeContext({ classification: { projectedFiles: 9 } } as never));
+            expect(bad.classification).toBeUndefined();
+        });
+    });
+
+    it('a pre-capture context yields every new field absent (legacy identical)', () => {
+        const state = deriveViewerState(makeContext());
+        expect(state.decisions).toBeUndefined();
+        expect(state.verified).toBeUndefined();
+        expect(state.coverage).toBeUndefined();
+        expect(state.intent).toBeUndefined();
+        expect(state.expectations).toBeUndefined();
+        expect(state.classification).toBeUndefined();
+    });
+});
+
+describe('malformed optional fields are coerced, never crash the renderer', () => {
+    it('drops a non-array warnings value instead of passing a string through', () => {
+        const state = deriveViewerState(makeContext({
+            verified: [{ what: 'jest', warnings: 'a bare string, not an array' }],
+        } as never));
+        expect(state.verified).toEqual([{ what: 'jest', result: undefined, command: undefined, warnings: undefined }]);
+    });
+
+    it('drops non-string why/rejected/result/command values', () => {
+        const state = deriveViewerState(makeContext({
+            decisions: [{ decision: 'keep', why: 42, rejected: { nested: true } }],
+            verified: [{ what: 'build', result: 7, command: null }],
+        } as never));
+        expect(state.decisions).toEqual([{ decision: 'keep', why: undefined, rejected: undefined }]);
+        expect(state.verified?.[0]).toEqual({ what: 'build', result: undefined, command: undefined, warnings: undefined });
+    });
+});
