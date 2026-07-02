@@ -67,6 +67,7 @@ Companion rides your **existing** spec-kit commands via lifecycle hooks — you 
 |---|---|---|
 | **Lifecycle progress capture** | ✅ Shipped | Every spec-kit step (specify → plan → tasks → implement) is recorded into `.spec-context.json` as it happens — the GUI lights up on your existing flow, no new commands. |
 | **Per-task implement history** | ✅ Shipped | Implement journals each task as it completes, so the GUI shows real per-task progress, not just "in progress." |
+| **Reasoning-trail capture** | ✅ Shipped | Each step also records *why*: the goal and out-of-scope fence at specify, the approach and decisions (with rejected alternatives) at plan, requirement→task coverage at tasks, and what was verified (tests, results, dismissed warnings) plus any friction at implement — all additive and repeat-safe in `.spec-context.json`, so resume/handoff/audit read the reasoning, not just the timeline. |
 | **Honest state recovery** | ✅ Shipped | When a hook didn't fire, `derive-from-files.py` reconstructs state from the artifacts on disk — the GUI reflects reality, never a half-truth. |
 | **`/speckit.companion.status`** | ✅ Shipped | One command prints where the active spec stands — step, status, recorded decisions, and the next action. |
 | **`/speckit.companion.resume`** | ✅ Shipped | Pick up where you left off — carries recorded decisions into scope and dispatches the next command in the family the spec has been running. |

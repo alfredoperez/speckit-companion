@@ -67,6 +67,14 @@ export interface StepHistoryEntry {
     startedAt: string;
     completedAt: string | null;
     substeps?: SubstepEntry[];
+    /**
+     * True only when BOTH boundaries were stamped by the extension's own clock
+     * (`by: 'extension'`). AI/cli-journaled timestamps order events correctly but
+     * reflect when the write ran, not when the work happened — so a duration
+     * computed from them is fiction. Renderers must not show an elapsed time
+     * for an untrusted span.
+     */
+    durationTrusted?: boolean;
 }
 
 export interface HistoryEntryFrom {
@@ -155,6 +163,43 @@ export interface LivingSpecsContext {
     synced?: string[];
 }
 
+/** A choice made during the run, with the reasoning and the road not taken. */
+export interface DecisionEntry {
+    decision: string;
+    why?: string;
+    rejected?: string;
+}
+
+/** Proof a step's work is sound: what was checked, how, and the outcome. */
+export interface VerificationEntry {
+    what: string;
+    result?: string;
+    command?: string;
+    warnings?: string[];
+}
+
+/** Traceability for one requirement: the tasks that build it, the tests that cover it. */
+export interface CoverageEntry {
+    tasks?: string[];
+    tests?: string[];
+}
+
+/** The size decision's inputs, not just its verdict (mirrors the scalar `size`). */
+export interface ClassificationEntry {
+    projectedFiles?: number;
+    projectedTasks?: number;
+    scopeSignal?: 'larger' | 'smaller' | 'none';
+    verdict: 'simple' | 'normal' | 'oversized';
+}
+
+/** A per-step rollup written at that step's close. */
+export interface StepSummaryEntry {
+    summary: string;
+    key_finding?: string;
+    risks?: string[];
+    [key: string]: unknown;
+}
+
 /** Normalized living-specs view exposed on `ViewerState` (coerced string arrays). */
 export interface LivingSpecsView {
     loaded: string[];
@@ -200,10 +245,27 @@ export interface SpecContext {
      * the viewer exposes the strongly-typed form via `ViewerState.taskSummaries`.
      */
     task_summaries?: Record<string, unknown>;
-    /** Per-step summaries (specify/plan/etc., skill-authored). */
+    /** Per-step summaries (specify/plan/etc.), script-written at each step close. */
     step_summaries?: Record<string, Record<string, unknown>>;
     /** Living specs this feature loaded/synced (LS·2/LS·3). Read-only here. */
     livingSpecs?: LivingSpecsContext;
+    // Reasoning-trail capture — all additive and optional.
+    /** The distilled goal, recorded at specify complete. */
+    intent?: string;
+    /** Explicit non-goals / out-of-scope items, de-duped append. */
+    expectations?: string[];
+    /** How-summary recorded at plan complete. */
+    approach?: string;
+    /** Decisions with rationale; bare strings tolerated from weaker emitters. */
+    decisions?: Array<DecisionEntry | string>;
+    /** Friction/workarounds (or an explicit clean-run assertion). */
+    concerns?: Array<ConcernEntry | string>;
+    /** What was verified at implement close (tests, builds, manual checks). */
+    verified?: Array<VerificationEntry | string>;
+    /** Requirement id → tasks/tests covering it. Upserted per requirement. */
+    coverage?: Record<string, CoverageEntry>;
+    /** The size classification's inputs + verdict. */
+    classification?: ClassificationEntry;
     // Unknown / legacy fields tolerated and preserved.
     [key: string]: unknown;
 }

@@ -383,4 +383,53 @@ describe('deriveStepHistory', () => {
             expect(findRunningStep(sh)).toEqual({ step: 'plan', startedAt: '2026-05-20T20:05:00Z' });
         });
     });
+
+    describe('duration honesty: durationTrusted only from extension-stamped boundaries', () => {
+        it('trusts a span whose start and close are both extension-stamped', () => {
+            const history: Transition[] = [
+                tx({ step: 'specify', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
+                tx({ step: 'specify', kind: 'complete', by: 'extension', at: '2026-07-01T10:05:00Z' }),
+            ];
+            const sh = deriveStepHistory(history, 'specify', 'specified');
+            expect(sh.specify.durationTrusted).toBe(true);
+        });
+
+        it('does not trust a span closed by an ai-journaled finish', () => {
+            const history: Transition[] = [
+                tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
+                tx({ step: 'plan', kind: 'complete', by: 'ai', at: '2026-07-01T10:00:00.100Z' }),
+            ];
+            const sh = deriveStepHistory(history, 'plan', 'planned');
+            expect(sh.plan.completedAt).toBe('2026-07-01T10:00:00.100Z');
+            expect(sh.plan.durationTrusted).toBe(false);
+        });
+
+        it('does not trust a span whose start was ai-journaled (fast-path fold)', () => {
+            const history: Transition[] = [
+                tx({ step: 'plan', kind: 'start', by: 'ai', substep: 'fast-path', at: '2026-07-01T10:00:00Z' }),
+                tx({ step: 'plan', kind: 'complete', by: 'ai', substep: 'fast-path', at: '2026-07-01T10:00:00.094Z' }),
+            ];
+            const sh = deriveStepHistory(history, 'plan', 'planned');
+            expect(sh.plan.durationTrusted).toBe(false);
+        });
+
+        it('trusts an extension-closed boundary via the next step\'s extension start', () => {
+            const history: Transition[] = [
+                tx({ step: 'specify', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
+                tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-01T10:06:00Z' }),
+            ];
+            const sh = deriveStepHistory(history, 'plan', 'planning');
+            expect(sh.specify.completedAt).toBe('2026-07-01T10:06:00Z');
+            expect(sh.specify.durationTrusted).toBe(true);
+        });
+
+        it('an in-flight extension-started step stays trusted until an untrusted close arrives', () => {
+            const history: Transition[] = [
+                tx({ step: 'implement', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
+            ];
+            const sh = deriveStepHistory(history, 'implement', 'implementing');
+            expect(sh.implement.completedAt).toBeNull();
+            expect(sh.implement.durationTrusted).toBe(true);
+        });
+    });
 });

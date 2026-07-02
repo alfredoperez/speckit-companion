@@ -304,7 +304,23 @@ export function deriveStepHistory(
 
         const substeps = buildSubsteps(g.transitions, completedAt, startedAt);
 
+        // Duration honesty: a span is a measured duration only when BOTH
+        // boundaries were stamped by the extension's own clock. AI/cli-journaled
+        // timestamps record when the write ran, not when the work happened —
+        // ordering-true, duration-false. Renderers must not show elapsed time
+        // for an untrusted span.
+        const startTrusted = g.transitions[0].by === 'extension';
+        let endTrusted = false;
+        if (g.nextStepFirstIdx !== -1) {
+            endTrusted = deduped[g.nextStepFirstIdx].by === 'extension';
+        } else if (lastOwnIsCompletion) {
+            endTrusted = lastStepLevel!.by === 'extension';
+        } else if (completedAt !== null) {
+            endTrusted = g.transitions[g.transitions.length - 1].by === 'extension';
+        }
+
         const entry: StepHistoryEntry = { startedAt, completedAt };
+        entry.durationTrusted = startTrusted && (completedAt === null || endTrusted);
         if (substeps.length > 0) entry.substeps = substeps;
         out[g.step] = entry;
     }

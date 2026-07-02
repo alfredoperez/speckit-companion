@@ -84,7 +84,10 @@ Produce a feature specification: prioritized user stories with acceptance scenar
 
 **Load living specs — arrive pre-briefed (best-effort, opt-in, read-only).** Before drafting, check whether this project keeps **living specs** for the areas this change touches, and if so fold them into your context so you are not re-learning the codebase from scratch. This whole step is **opt-in by presence** and must **never** fail or slow the command — on any miss (no config, feature off, no resolver, no spec file) skip silently and draft as usual. It is strictly **read-only**: never create or edit a `capabilities/<name>/spec.md` from here.
 
-   - **Gate first.** If `.specify/companion.yml` is absent, or its `livingSpecs.enabled` is not true, there is nothing to load — continue to the spec draft without a word.
+   - **Gate first.** If `.specify/companion.yml` is absent, or its `livingSpecs.enabled` is not true, there is nothing to load — continue to the spec draft. Leave the one-line audit breadcrumb so a later reader can tell "correctly did nothing" from "capture broke" (best-effort, then move on without a word):
+     ```bash
+     python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --set last_action="living specs evaluated — skipped (not configured)"
+     ```
    - **Resolve the capabilities in scope.** From the files this change will touch (the surface you've identified for the feature; if none are known yet, skip the load), ask the shipped resolver which capabilities own them, in most-specific-first order:
      ```bash
      python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --changed <in-scope files…> --json
@@ -186,6 +189,11 @@ The two constants (5 files / 10 tasks) are the same guardrail the old `complexit
    python3 .specify/extensions/companion/scripts/write-context.py --set size=<simple|normal|oversized>
    ```
    Write `simple` when the change is the small, fast-trackable size; `oversized` when it crossed the guardrail; otherwise `normal`. This only writes a plain `size` field — it never touches the lifecycle log. Best-effort: if `python3` is unavailable, skip without failing the command.
+
+   Also record the classification's **inputs**, not just its verdict, so a later resume can judge whether the call was borderline or clear-cut (same best-effort rule):
+   ```bash
+   python3 .specify/extensions/companion/scripts/write-context.py --classification '{"projectedFiles": <n>, "projectedTasks": <n>, "scopeSignal": "<larger|smaller|none>", "verdict": "<simple|normal|oversized>"}'
+   ```
 6. **Branch on the verdict.**
 
    - **`simple` — minimal mode.** Write **three lean files** in this one pass so the file-driven views (top stepper, sidebar, implement progress) reconcile with the history-driven fold — never a single combined `spec.md`:
@@ -199,6 +207,13 @@ The two constants (5 files / 10 tasks) are the same guardrail the old `complexit
    - **`normal` — full pipeline.** Write `spec.md` only (no appended Approach section, no `plan.md` / `tasks.md` here, no lifecycle fold). The existing pipeline continues unchanged: plan and tasks are produced and recorded by their own `/speckit.companion.plan` and `/speckit.companion.tasks` runs.
 
 **Output**: `<feature_directory>/spec.md` + `<feature_directory>/checklists/requirements.md`. In **simple** mode, `spec.md` additionally carries an **Approach** section, and two lean files are emitted alongside it — `plan.md` (a pointer to that Approach) and `tasks.md` (the real `- [ ] **T001** …` checklist; the task list lives here, not in `spec.md`); in **normal** mode, `spec.md` holds the four sections only and no `plan.md` / `tasks.md` are written here.
+
+**Capture the goal and the fence.** Before closing the step, persist the spec's distilled intent (one sentence — what this feature is *for*) and each explicit non-goal / out-of-scope item, so a resume or a colliding future spec can read them without re-reading the spec (best-effort; skip silently if `python3` is unavailable):
+```bash
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --set intent="<one-line goal>"
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --expectation "<out-of-scope item>" --expectation "<another>"
+```
+Omit the `--expectation` call when the spec declares no non-goals — never invent them.
 
 **Record completion.** After `spec.md` is written, close the specify step — the extension stamps the real end (do **not** hand-write an `ai` complete for specify):
 ```bash

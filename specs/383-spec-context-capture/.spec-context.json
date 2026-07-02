@@ -1,0 +1,522 @@
+{
+  "workflow": "speckit",
+  "specName": "spec context capture",
+  "branch": "383-spec-context-capture",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-02T17:36:43.951Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-02T17:38:21.415Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-02T17:39:50.836Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-02T17:42:21.617Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-02T17:43:21.229Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-02T17:43:32.741Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-02T17:43:46.429Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-02T17:44:55.461Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-02T17:44:55.550Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-02T17:45:09.403Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-02T17:52:04.912Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-02T17:52:04.974Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-02T17:52:05.034Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-02T17:52:05.095Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-02T17:52:05.154Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-02T17:52:05.214Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-02T17:52:05.273Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-02T17:52:05.332Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-02T17:57:10.215Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-02T17:57:10.273Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-02T17:57:10.330Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-02T17:57:10.384Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-02T17:58:44.416Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-02T18:01:56.939Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-02T18:01:56.997Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-02T18:03:17.543Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-02T18:03:17.618Z"
+    }
+  ],
+  "size": "normal",
+  "unattended": true,
+  "intent": "Persist the run's reasoning trail (decisions, verifications, intent, coverage) into .spec-context.json so resume/handoff/audit can read it",
+  "approach": "Add JSON-or-text append/upsert flags to write-context.py cloning the living-specs and task-summary writers; emit from node fragments; fix duration derivation to trust extension boundaries only",
+  "currentTask": "T016",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Declared intent/expectations/verified/coverage/classification + entity types; durationTrusted on StepHistoryEntry",
+      "files": [
+        "src/core/types/specContext.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Declared all new capture fields in the JSON schema (additive, anyOf string|object entries)",
+      "files": [
+        "src/core/types/spec-context.schema.json"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added JSON-or-text coercion + de-duped append + coverage/step-summary upserts + classification validator",
+      "files": [
+        "speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added --expectation flag + dispatch; pytest covers append/de-dupe/no-op",
+      "files": [
+        "speckit-extension/scripts/write-context.py",
+        "speckit-extension/tests/test_capture_fields.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added --decision flag (JSON-or-text, de-dupe on decision text, first-seen wins)",
+      "files": [
+        "speckit-extension/scripts/write-context.py",
+        "speckit-extension/tests/test_capture_fields.py"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Added --verified and --concern flags with shared coercion; 18 tests green",
+      "files": [
+        "speckit-extension/scripts/write-context.py",
+        "speckit-extension/tests/test_capture_fields.py"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Added --coverage-req/--tasks/--tests keyed non-destructive upsert (two-phase merge verified)",
+      "files": [
+        "speckit-extension/scripts/write-context.py",
+        "speckit-extension/tests/test_capture_fields.py"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Added --step-summary upsert + --classification validated object (exit 2 on caller error)",
+      "files": [
+        "speckit-extension/scripts/write-context.py",
+        "speckit-extension/tests/test_capture_fields.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Specify now emits intent + expectations before completion; skip-marker at the living-specs gate",
+      "files": [
+        "speckit-extension/nodes/specify/finalize.md",
+        "speckit-extension/nodes/specify/load-living-specs.md"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Plan emits approach/decisions/step-summary; implement emits verified/decisions/concerns at close",
+      "files": [
+        "speckit-extension/nodes/plan/side-files.md",
+        "speckit-extension/nodes/implement/implement-exec.md"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Tasks emits req→tasks coverage; implement fills req→tests at close",
+      "files": [
+        "speckit-extension/nodes/tasks/tasks-doc.md",
+        "speckit-extension/nodes/implement/implement-exec.md"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Classification inputs at sizing, step summaries + last_action at closes, skip-markers at gates; commands reassembled + goldens refreshed, 241 tests green",
+      "files": [
+        "speckit-extension/nodes/specify/persist-size.md",
+        "speckit-extension/commands",
+        "speckit-extension/tests/golden/commands"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "durationTrusted derived per step: true only when both boundaries extension-stamped; 5 new jest cases, 31/31 green",
+      "files": [
+        "src/features/specs/stepHistoryDerivation.ts",
+        "src/features/specs/__tests__/stepHistoryDerivation.test.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Docs: reasoning-trail WHEN map + JSON-or-text syntax in capture-and-timing; field table + duration honesty in schema doc",
+      "files": [
+        "docs/capture-and-timing.md",
+        "docs/spec-context-schema.md"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Spec-kit ext CHANGELOG (2 entries) + README capability row + version 0.17.0→0.18.0; root CHANGELOG duration-honesty entry",
+      "files": [
+        "speckit-extension/CHANGELOG.md",
+        "speckit-extension/README.md",
+        "speckit-extension/extension.yml",
+        "CHANGELOG.md"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Full gate: 241 python, 1136 jest, parity OK, tsc clean; success criteria validated",
+      "files": [
+        "(verification)"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "spec-kit extension python suite",
+      "command": "python3 -m unittest discover -s speckit-extension/tests",
+      "result": "241/241 pass"
+    },
+    {
+      "what": "node-assembly golden parity",
+      "command": "assemble-nodes.py --check",
+      "result": "5 command bodies match goldens"
+    },
+    {
+      "what": "TypeScript compile",
+      "command": "npm run compile",
+      "result": "clean, no errors"
+    },
+    {
+      "what": "full jest suite",
+      "command": "npm test",
+      "result": "1136/1136 pass across 91 suites"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "JSON-or-plain-text coercion on every entry flag",
+      "why": "weak CLI emitters still capture the signal; JSON unlocks the full shape",
+      "rejected": "strict JSON-only (brittle) and paired flags (ambiguous when repeated)"
+    },
+    {
+      "decision": "coverage stored as a map keyed by requirement id",
+      "why": "two-phase upsert (tasks then tests) and one-lookup queries",
+      "rejected": "array of objects (needs a scan to upsert)"
+    },
+    {
+      "decision": "durationTrusted derived from by-field, no new on-disk flag",
+      "why": "authorship is already persisted per entry; avoids migrating old files",
+      "rejected": "nonDurational flag on every history line"
+    }
+  ],
+  "coverage": {
+    "FR-001": {
+      "tasks": [
+        "T005"
+      ],
+      "tests": [
+        "test_capture_fields.py::test_capture_writers_never_touch_lifecycle_keys"
+      ]
+    },
+    "FR-002": {
+      "tasks": [
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "test_capture_fields.py::test_expectations_string_list_dedupes_preserving_order"
+      ]
+    },
+    "FR-003": {
+      "tasks": [
+        "T006",
+        "T008"
+      ],
+      "tests": [
+        "test_capture_fields.py::test_dedupes_on_identity_even_when_why_reworded"
+      ]
+    },
+    "FR-004": {
+      "tasks": [
+        "T007",
+        "T008"
+      ],
+      "tests": [
+        "test_capture_fields.py::test_bare_text_wraps_under_identity_key",
+        "test_capture_fields.py::test_prior_bare_string_participates_in_dedup"
+      ]
+    },
+    "FR-005": {
+      "tasks": [
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "test_capture_fields.py::test_coverage_two_phase_merge_is_non_destructive"
+      ]
+    },
+    "FR-006": {
+      "tasks": [
+        "T007",
+        "T012"
+      ],
+      "tests": [
+        "test_capture_fields.py::test_malformed_json_falls_back_to_text_wrap"
+      ]
+    },
+    "FR-007": {
+      "tasks": [
+        "T012"
+      ],
+      "tests": [
+        "test_capture_fields.py::test_capture_writers_never_touch_lifecycle_keys"
+      ]
+    },
+    "FR-008": {
+      "tasks": [
+        "T011",
+        "T012"
+      ],
+      "tests": [
+        "test_capture_fields.py::test_step_summary_text_wraps_and_json_merges"
+      ]
+    },
+    "FR-009": {
+      "tasks": [
+        "T011",
+        "T012"
+      ],
+      "tests": [
+        "test_capture_fields.py::test_classification_stores_valid_object",
+        "test_capture_fields.py::test_classification_rejects_bad_json_and_bad_verdict"
+      ]
+    },
+    "FR-010": {
+      "tasks": [
+        "T013"
+      ],
+      "tests": [
+        "stepHistoryDerivation.test.ts::duration honesty"
+      ]
+    },
+    "FR-011": {
+      "tasks": [
+        "T005",
+        "T012"
+      ],
+      "tests": [
+        "manual: skip-marker emission in node bodies"
+      ]
+    },
+    "FR-012": {
+      "tasks": [
+        "T001",
+        "T002",
+        "T003"
+      ],
+      "tests": [
+        "test_capture_fields.py::test_unknown_top_level_fields_preserved_across_capture"
+      ]
+    },
+    "FR-013": {
+      "tasks": [
+        "T003"
+      ],
+      "tests": [
+        "test_capture_fields.py (17 cases over the three writer patterns)"
+      ]
+    },
+    "FR-014": {
+      "tasks": [
+        "T001",
+        "T002",
+        "T014"
+      ],
+      "tests": [
+        "npm run compile + docs updated"
+      ]
+    }
+  },
+  "step_summaries": {
+    "implement": {
+      "summary": "10 capture flags + emissions in 4 node fragments + durationTrusted derivation; 241 py + 1136 jest green",
+      "key_finding": "all five previously-unwritten slots had real content to fill; coverage-as-map made two-phase emission trivial"
+    }
+  },
+  "last_action": "T016 complete — 241 python + 1136 jest + parity + compile all green"
+}

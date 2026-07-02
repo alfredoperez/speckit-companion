@@ -409,6 +409,175 @@ def set_living_specs_synced(feature_dir: Path, names: list[str]) -> Path | None:
     return target
 
 
+# --- Reasoning-trail capture --------------------------------------------------
+#
+# Additive, de-duped, best-effort writers for the run's reasoning trail:
+# decisions/verified/concerns (JSON-or-text entry lists), expectations (string
+# list), coverage (per-requirement upsert), step_summaries (per-step upsert),
+# classification (one object). None touch lifecycle keys; all are idempotent.
+
+
+def _coerce_entry(raw: str, identity_key: str) -> dict | None:
+    """JSON-or-plain-text coercion: a JSON object carrying `identity_key` is kept
+    as-is (unknown keys preserved); anything else wraps the raw text under the
+    identity key so a weak emitter still captures the signal."""
+    text = raw.strip()
+    if not text:
+        return None
+    if text.startswith("{"):
+        try:
+            obj = json.loads(text)
+        except json.JSONDecodeError:
+            obj = None
+        if isinstance(obj, dict):
+            ident = obj.get(identity_key)
+            if isinstance(ident, str) and ident.strip():
+                return obj
+    return {identity_key: text}
+
+
+def _entry_identity(item, identity_key: str) -> str | None:
+    """The de-dup key for a stored entry: dicts key on identity_key, bare strings on themselves."""
+    if isinstance(item, dict):
+        v = item.get(identity_key)
+        return v.strip() if isinstance(v, str) else None
+    if isinstance(item, str):
+        return item.strip()
+    return None
+
+
+def append_capture_entries(
+    feature_dir: Path, field: str, identity_key: str, raws: list[str],
+) -> Path | None:
+    """De-duped additive append onto ctx[field] (decisions/verified/concerns).
+
+    Mirrors set_living_specs_loaded: preserves first-seen order, normalizes
+    pre-existing duplicates, never touches lifecycle keys. Bare strings already
+    stored (hand-authored) participate in de-dup via their text."""
+    entries = [e for e in (_coerce_entry(r, identity_key) for r in raws) if e]
+    if not entries:
+        return None
+    target = feature_dir / ".spec-context.json"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
+    ctx = read_ctx(target)
+    fill_required(ctx, feature_dir, branch)
+    prior = ctx.get(field)
+    merged: list = []
+    seen: set[str] = set()
+    for item in (list(prior) if isinstance(prior, list) else []) + entries:
+        ident = _entry_identity(item, identity_key)
+        if ident is not None:
+            if ident in seen:
+                continue
+            seen.add(ident)
+        merged.append(item)
+    ctx[field] = merged
+    atomic_write(target, ctx)
+    return target
+
+
+def append_string_list(feature_dir: Path, field: str, values: list[str]) -> Path | None:
+    """De-duped additive append of plain strings onto ctx[field] (expectations)."""
+    cleaned = [v.strip() for v in values if v and v.strip()]
+    if not cleaned:
+        return None
+    target = feature_dir / ".spec-context.json"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
+    ctx = read_ctx(target)
+    fill_required(ctx, feature_dir, branch)
+    prior = ctx.get(field)
+    merged: list = []
+    for v in (list(prior) if isinstance(prior, list) else []) + cleaned:
+        if v not in merged:
+            merged.append(v)
+    ctx[field] = merged
+    atomic_write(target, ctx)
+    return target
+
+
+def upsert_coverage(
+    feature_dir: Path, req: str, tasks: list[str] | None, tests: list[str] | None,
+) -> Path | None:
+    """Upsert ctx["coverage"][req] non-destructively (clone of _upsert_task_summary):
+    only a supplied list replaces its slot, so the tasks-complete write (tasks) and
+    the implement-close write (tests) compose without erasing each other."""
+    req = req.strip()
+    if not req:
+        return None
+    if not tasks and not tests:
+        # Nothing to record — writing {} would fake a coverage entry.
+        return None
+    target = feature_dir / ".spec-context.json"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
+    ctx = read_ctx(target)
+    fill_required(ctx, feature_dir, branch)
+    coverage = ctx.get("coverage")
+    if not isinstance(coverage, dict):
+        coverage = {}
+    existing = coverage.get(req)
+    entry: dict = dict(existing) if isinstance(existing, dict) else {}
+    if tasks:
+        entry["tasks"] = tasks
+    if tests:
+        entry["tests"] = tests
+    coverage[req] = entry
+    ctx["coverage"] = coverage
+    atomic_write(target, ctx)
+    return target
+
+
+def upsert_step_summary(feature_dir: Path, step: str, raw: str) -> Path | None:
+    """Upsert ctx["step_summaries"][step] from a JSON-or-text value keyed on `summary`."""
+    if step not in CANONICAL_STEPS:
+        print(
+            f"[companion] Skipping --step-summary: '{step}' is not a canonical step "
+            f"({', '.join(sorted(CANONICAL_STEPS))}).",
+            file=sys.stderr,
+        )
+        return None
+    entry = _coerce_entry(raw, "summary")
+    if entry is None:
+        return None
+    target = feature_dir / ".spec-context.json"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
+    ctx = read_ctx(target)
+    fill_required(ctx, feature_dir, branch)
+    summaries = ctx.get("step_summaries")
+    if not isinstance(summaries, dict):
+        summaries = {}
+    existing = summaries.get(step)
+    merged: dict = dict(existing) if isinstance(existing, dict) else {}
+    merged.update(entry)
+    summaries[step] = merged
+    ctx["step_summaries"] = summaries
+    atomic_write(target, ctx)
+    return target
+
+
+CLASSIFICATION_VERDICTS = frozenset({"simple", "normal", "oversized"})
+
+
+def set_classification(feature_dir: Path, raw: str) -> Path:
+    """Store the size classification's inputs + verdict as one object.
+    Raises ValueError on an unparseable value or missing/unknown verdict —
+    the one caller-error case (main maps it to exit 2)."""
+    try:
+        obj = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"--classification is not valid JSON: {exc}") from exc
+    if not isinstance(obj, dict) or obj.get("verdict") not in CLASSIFICATION_VERDICTS:
+        raise ValueError(
+            "--classification requires a JSON object with a verdict of simple|normal|oversized."
+        )
+    target = feature_dir / ".spec-context.json"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
+    ctx = read_ctx(target)
+    fill_required(ctx, feature_dir, branch)
+    ctx["classification"] = obj
+    atomic_write(target, ctx)
+    return target
+
+
 # --- Living-spec fold-back (LS·3) -------------------------------------------
 #
 # At mark-complete, fold the feature spec's requirement deltas into the durable
@@ -1447,12 +1616,58 @@ def main() -> int:
              "Opt-in (livingSpecs.enabled), best-effort, no-op without a delta block, "
              "idempotent. Records synced names onto livingSpecs.synced.",
     )
+    parser.add_argument(
+        "--decision", dest="decisions", action="append", default=None, metavar="JSON|TEXT",
+        help="Append a decision to decisions[] (de-duped on the decision text). "
+             "JSON object with a 'decision' key (plus why/rejected), or bare text. Repeatable.",
+    )
+    parser.add_argument(
+        "--verified", dest="verified", action="append", default=None, metavar="JSON|TEXT",
+        help="Append a verification to verified[] (de-duped on 'what'). "
+             "JSON object with a 'what' key (plus result/command/warnings), or bare text. Repeatable.",
+    )
+    parser.add_argument(
+        "--concern", dest="concerns", action="append", default=None, metavar="JSON|TEXT",
+        help="Append a concern to concerns[] (de-duped on 'note'). "
+             "JSON object with a 'note' key (plus step/kind), or bare text. Repeatable.",
+    )
+    parser.add_argument(
+        "--expectation", dest="expectations", action="append", default=None, metavar="TEXT",
+        help="Append an out-of-scope/non-goal string to expectations[] (de-duped). Repeatable.",
+    )
+    parser.add_argument(
+        "--coverage-req", dest="coverage_req", default=None, metavar="REQ_ID",
+        help="Upsert coverage.<REQ_ID> with --tasks and/or --tests (non-destructive merge: "
+             "only a supplied list replaces its slot).",
+    )
+    parser.add_argument(
+        "--tests", dest="coverage_tests", default=None,
+        help="With --coverage-req: comma-separated test refs covering the requirement.",
+    )
+    parser.add_argument(
+        "--tasks", dest="coverage_tasks", default=None,
+        help="With --coverage-req: comma-separated task ids covering the requirement.",
+    )
+    parser.add_argument(
+        "--step-summary", dest="step_summary", default=None, metavar="JSON|TEXT",
+        help="Upsert step_summaries.<--step> from a JSON object with a 'summary' key "
+             "(plus key_finding/risks) or bare text.",
+    )
+    parser.add_argument(
+        "--classification", dest="classification", default=None, metavar="JSON",
+        help="Store the size classification object {projectedFiles, projectedTasks, "
+             "scopeSignal, verdict}; verdict (simple|normal|oversized) is required.",
+    )
     args = parser.parse_args()
 
     # Best-effort guard: a non-canonical step is a no-op, never a host failure.
     # Terminal state belongs in `status`, not `currentStep`. Skipped in task-sync
     # mode, which always operates on the implement step.
-    if not args.tasks_file and not args.task and not args.mark_complete and not args.set_pairs and not args.living_specs and not args.fold_living_spec and not args.materialize and not args.finish and not args.advance and (args.step == "done" or args.step not in CANONICAL_STEPS):
+    capture_mode = bool(
+        args.decisions or args.verified or args.concerns or args.expectations
+        or args.coverage_req or args.step_summary or args.classification
+    )
+    if not args.tasks_file and not args.task and not args.mark_complete and not args.set_pairs and not args.living_specs and not args.fold_living_spec and not args.materialize and not args.finish and not args.advance and not capture_mode and (args.step == "done" or args.step not in CANONICAL_STEPS):
         print(
             f"[companion] Skipping: '{args.step}' is not a canonical currentStep "
             f"({', '.join(sorted(CANONICAL_STEPS))}).",
@@ -1493,10 +1708,41 @@ def main() -> int:
         )
         return 0  # best-effort: never fail the host command
 
+    # Caller-error validation for --classification (exit 2, per the capture contract):
+    # a malformed classification is a bug in the emitting body, not a runtime miss.
+    if args.classification:
+        try:
+            target = set_classification(feature_dir, args.classification)
+        except ValueError as exc:
+            print(f"[companion] {exc}", file=sys.stderr)
+            return 2
+        print(f"[companion] Recorded classification in {target}")
+        return 0
+
     # Never let a bookkeeping write fail the host spec-kit command.
     try:
         if args.set_pairs:
             target = set_fields(feature_dir, args.set_pairs)
+        elif args.decisions:
+            target = append_capture_entries(feature_dir, "decisions", "decision", args.decisions)
+        elif args.verified:
+            target = append_capture_entries(feature_dir, "verified", "what", args.verified)
+        elif args.concerns:
+            target = append_capture_entries(feature_dir, "concerns", "note", args.concerns)
+        elif args.expectations:
+            target = append_string_list(feature_dir, "expectations", args.expectations)
+        elif args.coverage_req:
+            cov_tasks = (
+                [t.strip() for t in args.coverage_tasks.split(",") if t.strip()]
+                if args.coverage_tasks else None
+            )
+            cov_tests = (
+                [t.strip() for t in args.coverage_tests.split(",") if t.strip()]
+                if args.coverage_tests else None
+            )
+            target = upsert_coverage(feature_dir, args.coverage_req, cov_tasks, cov_tests)
+        elif args.step_summary:
+            target = upsert_step_summary(feature_dir, args.step, args.step_summary)
         elif args.living_specs:
             target = set_living_specs_loaded(feature_dir, args.living_specs)
         elif args.fold_living_spec:
@@ -1539,6 +1785,18 @@ def main() -> int:
     if target is not None and not args.tasks_file:
         if args.set_pairs:
             print(f"[companion] Set {', '.join(args.set_pairs)} in {target}")
+        elif args.decisions:
+            print(f"[companion] Recorded {len(args.decisions)} decision(s) in {target}")
+        elif args.verified:
+            print(f"[companion] Recorded {len(args.verified)} verification(s) in {target}")
+        elif args.concerns:
+            print(f"[companion] Recorded {len(args.concerns)} concern(s) in {target}")
+        elif args.expectations:
+            print(f"[companion] Recorded {len(args.expectations)} expectation(s) in {target}")
+        elif args.coverage_req:
+            print(f"[companion] Upserted coverage for {args.coverage_req} in {target}")
+        elif args.step_summary:
+            print(f"[companion] Recorded {args.step} step summary in {target}")
         elif args.living_specs:
             print(f"[companion] Recorded loaded living specs ({', '.join(args.living_specs)}) in {target}")
         elif args.fold_living_spec:
