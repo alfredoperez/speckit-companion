@@ -6,7 +6,7 @@ import { IAIProvider, AIProviderFactory, isProviderConfigured, promptForProvider
 
 // Features
 import { SteeringManager, SteeringExplorerProvider, registerSteeringCommands } from './features/steering';
-import { SpecExplorerProvider, LivingSpecsExplorerProvider, registerSpecKitCommands, updateSelectionContextKeys, createSpecsSidebarState } from './features/specs';
+import { SpecExplorerProvider, LivingSpecsExplorerProvider, registerSpecKitCommands, registerLivingSpecsCommands, updateSelectionContextKeys, createSpecsSidebarState } from './features/specs';
 import { register as registerTerminalStepTracker } from './features/specs/terminalStepTracker';
 import { setLifecycleOutputChannel } from './features/specs/stepLifecycle';
 import { OverviewProvider } from './features/settings';
@@ -234,6 +234,7 @@ export async function activate(context: vscode.ExtensionContext) {
     registerSpecKitExtensionInstallCommands(context);
     registerSteeringCommands(context, steeringManager, steeringExplorer, outputChannel);
     registerSpecKitCommands(context, specExplorer, outputChannel, specsTreeView, sidebarState.filter, sidebarState.sort);
+    registerLivingSpecsCommands(context, livingSpecsExplorer, outputChannel);
     registerUtilityCommands(context, updateChecker, outputChannel);
 
     // Spec viewer needs to exist before setupFileWatchers so the .spec-context.json

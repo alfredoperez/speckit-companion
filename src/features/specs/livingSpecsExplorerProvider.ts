@@ -1,7 +1,14 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { BaseTreeDataProvider } from '../../core/providers';
-import { readLivingSpecs, isPathWithinRoot, LivingSpecsListing, ResolvedCapability } from './livingSpecsModel';
+import {
+    readLivingSpecs,
+    readCapabilityHealth,
+    isPathWithinRoot,
+    CapabilityHealth,
+    LivingSpecsListing,
+    ResolvedCapability,
+} from './livingSpecsModel';
 
 type LivingSpecContextValue =
     | 'living-specs-empty'
@@ -24,9 +31,11 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
     }
 
     private cached?: LivingSpecsListing;
+    private healthCache = new Map<string, CapabilityHealth>();
 
     refresh(): void {
         this.cached = undefined;
+        this.healthCache.clear();
         this._onDidChangeTreeData.fire();
     }
 
@@ -63,7 +72,7 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         };
     }
 
-    getChildren(element?: LivingSpecItem): LivingSpecItem[] {
+    getChildren(element?: LivingSpecItem): Promise<LivingSpecItem[]> | LivingSpecItem[] {
         const listing = this.read();
 
         if (!element) {
@@ -90,7 +99,12 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         }
 
         if (element.contextValue === 'living-specs-group' && element.groupId === 'living-specs-capabilities') {
-            return listing.capabilities.map(cap => this.capabilityItem(cap));
+            // Health is async (one time-bounded git call per capability) and
+            // best-effort — a failed/absent computation renders the row as before.
+            return Promise.all(listing.capabilities.map(async cap => {
+                const health = await this.health(cap);
+                return this.capabilityItem(cap, health);
+            }));
         }
 
         if (element.contextValue === 'living-specs-group' && element.groupId === 'living-specs-orphans') {
@@ -112,7 +126,25 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         return [];
     }
 
-    private capabilityItem(cap: ResolvedCapability): LivingSpecItem {
+    private async health(cap: ResolvedCapability): Promise<CapabilityHealth | undefined> {
+        const root = this.workspaceRoot;
+        if (!root) {
+            return undefined;
+        }
+        const cached = this.healthCache.get(cap.spec);
+        if (cached) {
+            return cached;
+        }
+        try {
+            const health = await readCapabilityHealth(root, cap);
+            this.healthCache.set(cap.spec, health);
+            return health;
+        } catch {
+            return undefined;
+        }
+    }
+
+    private capabilityItem(cap: ResolvedCapability, health?: CapabilityHealth): LivingSpecItem {
         const hasChildren = cap.exists && this.tierChildren(cap).length > 0;
         const item = new LivingSpecItem(
             cap.name,
@@ -121,9 +153,26 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
                 : vscode.TreeItemCollapsibleState.None,
             cap.exists ? 'living-specs-capability' : 'living-specs-capability-missing'
         );
-        item.description = cap.exists ? cap.location : `${cap.location} · not created`;
-        item.iconPath = new vscode.ThemeIcon(cap.exists ? 'symbol-namespace' : 'circle-outline');
-        item.tooltip = `${cap.name} (${cap.location}) — ${cap.spec}`;
+        const base = cap.exists ? cap.location : `${cap.location} · not created`;
+        const suffixes: string[] = [];
+        const tooltipLines = [`${cap.name} (${cap.location}) — ${cap.spec}`];
+        if (health?.coverage) {
+            suffixes.push(`${health.coverage.covered}/${health.coverage.total} covered`);
+            tooltipLines.push(`${health.coverage.covered} of ${health.coverage.total} requirements have a mapped test`);
+        }
+        if (health?.drifted) {
+            suffixes.push('● drift');
+            tooltipLines.push("Source files changed since the living spec's last commit");
+        }
+        item.description = suffixes.length > 0 ? `${base} · ${suffixes.join(' · ')}` : base;
+        if (health?.drifted) {
+            item.iconPath = new vscode.ThemeIcon('symbol-namespace', new vscode.ThemeColor('list.warningForeground'));
+        } else if (cap.exists) {
+            item.iconPath = new vscode.ThemeIcon('symbol-namespace');
+        } else {
+            item.iconPath = new vscode.ThemeIcon('circle-outline');
+        }
+        item.tooltip = tooltipLines.join('\n');
         item.capability = cap;
         if (cap.exists) {
             item.command = this.openCommand(cap.spec);
