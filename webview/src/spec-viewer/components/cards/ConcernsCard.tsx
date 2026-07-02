@@ -10,9 +10,9 @@ export function ConcernsCard({ state }: ConcernsCardProps) {
 
     return (
         <section class="activity-card activity-card--concerns">
-            <header class="activity-card__title">
+            <h3 class="activity-card__title">
                 Concerns <span class="activity-card__count">({items.length})</span>
-            </header>
+            </h3>
             <div class="activity-card__body">
                 <ul class="activity-list">
                     {items.map((c, i) => (

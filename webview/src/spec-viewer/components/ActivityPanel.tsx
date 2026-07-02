@@ -1,9 +1,12 @@
 import type { ViewerState } from '../types';
 import { viewerState, navState } from '../signals';
 import { ApproachCard } from './cards/ApproachCard';
+import { IntentCard } from './cards/IntentCard';
 import { PhasesCard } from './cards/PhasesCard';
 import { TasksCard } from './cards/TasksCard';
 import { DecisionsCard } from './cards/DecisionsCard';
+import { VerifiedCard } from './cards/VerifiedCard';
+import { CoverageCard } from './cards/CoverageCard';
 import { ConcernsCard } from './cards/ConcernsCard';
 import { FilesCard } from './cards/FilesCard';
 import { CommentsCard } from './cards/CommentsCard';
@@ -34,6 +37,9 @@ function hasAnyData(state: ViewerState): boolean {
     if (state.approach || state.lastAction || state.prUrl) return true;
     if (state.taskSummaries && Object.keys(state.taskSummaries).length > 0) return true;
     if (state.decisions && state.decisions.length > 0) return true;
+    if (state.intent || (state.expectations && state.expectations.length > 0)) return true;
+    if (state.verified && state.verified.length > 0) return true;
+    if (state.coverage && state.coverage.length > 0) return true;
     if (state.concerns && state.concerns.length > 0) return true;
     if (state.filesModified && state.filesModified.length > 0) return true;
     if (state.reviewComments && state.reviewComments.length > 0) return true;
@@ -58,11 +64,14 @@ export function ActivityPanel() {
     return (
         <div class="activity-panel">
             <InstallBanner />
+            <IntentCard state={state} />
             <ApproachCard state={state} />
+            <DecisionsCard state={state} />
             <PhasesCard state={state} />
             <LivingSpecsCard state={state} />
             <TasksCard state={state} />
-            <DecisionsCard state={state} />
+            <VerifiedCard state={state} />
+            <CoverageCard state={state} />
             <ConcernsCard state={state} />
             <CommentsCard state={state} />
             <FilesCard state={state} />

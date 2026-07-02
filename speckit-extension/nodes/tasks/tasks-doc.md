@@ -25,9 +25,9 @@ reads: []
 
 5. End with a **Dependencies & Execution Order** section: the phase dependencies (Setup → Foundational → stories → Polish) and a one-line restatement of each phase's waves (which wave blocks which). Each task names the concrete file it creates or edits.
 
-6. **Capture the requirement→task map** so "which tasks cover FR-X?" is answerable from the context file (best-effort; one call per requirement; skip silently if `python3` is unavailable — the implement step fills each requirement's tests later):
+6. **Capture the requirement→task map** so "which tasks cover FR-X?" is answerable from the context file (best-effort; one call per requirement; skip silently if `python3` is unavailable — the implement step fills each requirement's tests later). Carry each requirement's one-line text via `--title` so the requirement is captured as readable content, not just an id:
    ```bash
-   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --coverage-req FR-001 --tasks "T001,T004"
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --coverage-req FR-001 --title "<the requirement's one-line text>" --tasks "T001,T004"
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step tasks --step-summary '{"summary": "<task count + phase shape in one line>"}'
    ```
 

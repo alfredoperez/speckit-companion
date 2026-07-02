@@ -90,11 +90,15 @@ The spec viewer is built for fast scanning of long-form specs:
 
 Toggle **Activity** in the viewer's nav bar to swap the markdown pane for a card-stack overview of everything `.spec-context.json` carries:
 
-- **Approach** — one-line strategy, status pill, PR link, and commit/PR checkpoints.
+- **Goal** — the spec's distilled intent, plus its out-of-scope fence (the things it deliberately isn't).
+- **Approach** — one-line strategy, how the pipeline sized the change (projected files/tasks → verdict), status pill, PR link, and commit/PR checkpoints.
 - **Phases** — a vertical timeline reporting **active time** per step and substep (idle gaps are capped, so an overnight pause doesn't inflate a step); the in-flight step pulses and the terminal phase finalizes.
 - **Tasks** — per-`T###` status, summary, file chips, and inline concerns.
 - **Living specs** — when a feature touches durable capability specs, this card lists the ones it loaded into context and marks the ones it folded its changes back into (Companion's lightweight answer to the OpenSpec Dashboard). Read-only; appears only when the spec carries living-specs context.
-- **Decisions**, **Concerns**, **Review comments** (every persisted comment grouped by document, with jump-to-line and a per-document **Run refinement** button), and **Files touched** (clickable).
+- **Decisions** — each choice with its reasoning and the alternative that was rejected.
+- **Verified** — the checks that proved the work: what was checked, the command, the result, and any warnings that were seen and dismissed.
+- **Coverage** — every requirement with the tasks that built it and the tests that cover it, with a covered/total rollup — "is FR-7 tested?" answered at a glance.
+- **Concerns**, **Review comments** (every persisted comment grouped by document, with jump-to-line and a per-document **Run refinement** button), and **Files touched** (clickable).
 
 Each card hides itself when its data is missing, so a minimal speckit-style spec collapses to just *Phases*. Visibility is gated by `speckit.viewer.activityPanel` — `"off"`, `"beta"` (default; toggle shows a *beta* pill), or `"on"`.
 

@@ -497,14 +497,16 @@ def append_string_list(feature_dir: Path, field: str, values: list[str]) -> Path
 
 def upsert_coverage(
     feature_dir: Path, req: str, tasks: list[str] | None, tests: list[str] | None,
+    title: str | None = None,
 ) -> Path | None:
     """Upsert ctx["coverage"][req] non-destructively (clone of _upsert_task_summary):
-    only a supplied list replaces its slot, so the tasks-complete write (tasks) and
-    the implement-close write (tests) compose without erasing each other."""
+    only a supplied value replaces its slot, so the tasks-complete write (title +
+    tasks) and the implement-close write (tests) compose without erasing each other."""
     req = req.strip()
     if not req:
         return None
-    if not tasks and not tests:
+    title = title.strip() if title else None
+    if not tasks and not tests and not title:
         # Nothing to record — writing {} would fake a coverage entry.
         return None
     target = feature_dir / ".spec-context.json"
@@ -516,6 +518,8 @@ def upsert_coverage(
         coverage = {}
     existing = coverage.get(req)
     entry: dict = dict(existing) if isinstance(existing, dict) else {}
+    if title:
+        entry["title"] = title
     if tasks:
         entry["tasks"] = tasks
     if tests:
@@ -1649,6 +1653,11 @@ def main() -> int:
         help="With --coverage-req: comma-separated task ids covering the requirement.",
     )
     parser.add_argument(
+        "--title", dest="coverage_title", default=None,
+        help="With --coverage-req: the requirement's one-line text, so requirements "
+             "are captured as readable content, not just ids.",
+    )
+    parser.add_argument(
         "--step-summary", dest="step_summary", default=None, metavar="JSON|TEXT",
         help="Upsert step_summaries.<--step> from a JSON object with a 'summary' key "
              "(plus key_finding/risks) or bare text.",
@@ -1740,7 +1749,7 @@ def main() -> int:
                 [t.strip() for t in args.coverage_tests.split(",") if t.strip()]
                 if args.coverage_tests else None
             )
-            target = upsert_coverage(feature_dir, args.coverage_req, cov_tasks, cov_tests)
+            target = upsert_coverage(feature_dir, args.coverage_req, cov_tasks, cov_tests, args.coverage_title)
         elif args.step_summary:
             target = upsert_step_summary(feature_dir, args.step, args.step_summary)
         elif args.living_specs:

@@ -58,7 +58,7 @@ The run's reasoning trail, written through `write-context.py` capture flags by t
 | `decisions` | `{decision, why?, rejected?}[]` (bare strings tolerated) | plan complete + implement close | `--decision` (JSON-or-text, de-duped on `decision`) |
 | `verified` | `{what, result?, command?, warnings?}[]` | implement complete | `--verified` (JSON-or-text, de-duped on `what`) |
 | `concerns` | `{note, step?, kind?}[]` | any step, on friction | `--concern` (JSON-or-text, de-duped on `note`) |
-| `coverage` | `Record<reqId, {tasks?, tests?}>` | tasks complete (tasks) + implement close (tests) | `--coverage-req <id> --tasks/--tests` (non-destructive upsert) |
+| `coverage` | `Record<reqId, {title?, tasks?, tests?}>` | tasks complete (title + tasks) + implement close (tests) | `--coverage-req <id> --title/--tasks/--tests` (non-destructive upsert) |
 | `classification` | `{projectedFiles?, projectedTasks?, scopeSignal?, verdict}` | specify sizing | `--classification '<json>'` (verdict required; exit 2 on caller error) |
 | `step_summaries` | `Record<step, {summary, key_finding?, risks?}>` | each step close | `--step-summary` (keyed by `--step`) |
 | `last_action` | `string` | step closes + skip-markers | `--set last_action=…` |

@@ -1,29 +1,33 @@
 import type { ViewerState } from '../../types';
-import { Badge } from '../../../shared/components/Badge';
 
 export interface ApproachCardProps {
     state: ViewerState;
 }
 
-export function ApproachCard({ state }: ApproachCardProps) {
-    const { approach, lastAction, status, prUrl, prNumber, checkpointStatus } = state;
+function classificationLine(c: NonNullable<ViewerState['classification']>): string {
+    const parts: string[] = [];
+    if (typeof c.projectedFiles === 'number') parts.push(`${c.projectedFiles} files`);
+    if (typeof c.projectedTasks === 'number') parts.push(`${c.projectedTasks} tasks`);
+    const inputs = parts.join(', ');
+    const signal = c.scopeSignal && c.scopeSignal !== 'none' ? `, ${c.scopeSignal} scope signal` : '';
+    return inputs ? `Sized as ${c.verdict} — ${inputs} projected${signal}.` : `Sized as ${c.verdict}.`;
+}
 
-    const hasContent = !!(approach || lastAction || prUrl || checkpointStatus?.commit || checkpointStatus?.pr);
+export function ApproachCard({ state }: ApproachCardProps) {
+    const { approach, lastAction, status, prUrl, prNumber, checkpointStatus, classification } = state;
+
+    const hasContent = !!(approach || lastAction || prUrl || checkpointStatus?.commit || checkpointStatus?.pr || classification);
     if (!hasContent) return null;
 
     return (
         <section class="activity-card activity-card--approach">
-            <header class="activity-card__title">Approach</header>
+            <h3 class="activity-card__title">Approach</h3>
             <div class="activity-card__body">
                 {approach && <p class="activity-approach__text">{approach}</p>}
+                {classification && (
+                    <p class="activity-detail">{classificationLine(classification)}</p>
+                )}
                 <div class="activity-approach__meta">
-                    {status && (
-                        <Badge
-                            variant="passthrough"
-                            text={status}
-                            class={`activity-status-pill is-${status}`}
-                        />
-                    )}
                     {checkpointStatus?.commit && (
                         <span class="activity-checkpoint" title="Commit landed">✓ committed</span>
                     )}
@@ -36,7 +40,7 @@ export function ApproachCard({ state }: ApproachCardProps) {
                         </a>
                     )}
                 </div>
-                {lastAction && (
+                {lastAction && status !== 'completed' && status !== 'archived' && (
                     <p class="activity-approach__last-action">
                         <span class="activity-approach__last-action-label">Last action:</span>{' '}
                         {lastAction}

@@ -144,7 +144,7 @@ Beyond the lifecycle timeline, the Companion command bodies capture the run's **
 | specify complete (`finalize`) | specify | `--set intent=…` + `--expectation` per non-goal |
 | living-specs / hook gate skipped | specify | `--set last_action="… evaluated — skipped (…)"` (the audit breadcrumb) |
 | plan complete (`side-files`) | plan | `--set approach=…` + `--decision` per Phase-0 choice + `--step-summary` |
-| tasks complete (`tasks-doc`) | tasks | `--coverage-req <FR> --tasks <csv>` per requirement + `--step-summary` |
+| tasks complete (`tasks-doc`) | tasks | `--coverage-req <FR> --title "<requirement text>" --tasks <csv>` per requirement + `--step-summary` |
 | implement close (`implement-exec`) | implement | `--verified` per check (incl. dismissed warnings) + `--decision` + `--concern` (only on real friction) + `--coverage-req <FR> --tests <csv>` + `--step-summary` + `--set last_action=…` |
 
 Value syntax is **JSON-or-plain-text**: a JSON object carrying the field's identity key (`decision`/`what`/`note`/`summary`) is stored as-is; anything else wraps as `{<identity>: <text>}` so a weak emitter still captures the signal. De-dup keys on the identity value, first-seen wins. `--classification` is the one caller-validated flag (exit 2 on bad JSON / missing verdict); everything else follows the best-effort rule.

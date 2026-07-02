@@ -117,7 +117,7 @@ export function PhasesCard({ state }: PhasesCardProps) {
 
     return (
         <section class="activity-card activity-card--phases">
-            <header class="activity-card__title">
+            <h3 class="activity-card__title">
                 Phases
                 {startAuthor && (
                     <Badge
@@ -126,7 +126,7 @@ export function PhasesCard({ state }: PhasesCardProps) {
                         class={`activity-actor-badge is-${startAuthor}`}
                     />
                 )}
-            </header>
+            </h3>
             <div class="activity-card__body">
                 <div class="phases-overall">
                     <div class="phases-overall__stat">
