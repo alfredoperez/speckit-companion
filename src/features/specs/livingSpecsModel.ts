@@ -344,17 +344,21 @@ const TEST_REF_RE = /(\.test\.|\.spec\.|(^|[\s`(])tests\/|::)/;
 /** Injectable git runner so tests never need a real repository. */
 export type GitRunner = (args: string[], cwd: string) => Promise<string>;
 
-function defaultGitRunner(args: string[], cwd: string): Promise<string> {
-    const { execFile } = require('child_process');
-    return new Promise((resolve, reject) => {
-        execFile('git', args, { cwd, timeout: 1500 }, (err: Error | null, stdout: string) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(stdout);
-            }
+/** Default runner factory: the process timeout matches the caller's timeoutMs,
+ * so a timed-out race never leaves git running in the background. */
+function makeDefaultGitRunner(timeoutMs: number): GitRunner {
+    return (args: string[], cwd: string): Promise<string> => {
+        const { execFile } = require('child_process');
+        return new Promise((resolve, reject) => {
+            execFile('git', args, { cwd, timeout: timeoutMs }, (err: Error | null, stdout: string) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(stdout);
+                }
+            });
         });
-    });
+    };
 }
 
 function readCoverageCount(root: string, cap: ResolvedCapability): CapabilityHealth['coverage'] {
@@ -428,7 +432,7 @@ export async function readCapabilityHealth(
     // Typed loosely because tsc and ts-jest resolve setTimeout against different libs.
     let timer: unknown;
     const drifted = await Promise.race([
-        readDrifted(workspaceRoot, cap, opts?.git ?? defaultGitRunner),
+        readDrifted(workspaceRoot, cap, opts?.git ?? makeDefaultGitRunner(timeoutMs)),
         new Promise<undefined>(resolve => { timer = setTimeout(resolve, timeoutMs); }),
     ])
         .catch(() => undefined)
