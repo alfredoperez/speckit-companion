@@ -4,7 +4,7 @@
   "branch": "326-fade-spec-placeholder",
   "selectedAt": "2026-06-15T18:36:11.969Z",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
@@ -138,35 +138,54 @@
     "T001": {
       "status": "DONE",
       "did": "Confirmed the placeholder rule used --text-body with opacity 0.85 and that --text-secondary is a theme-adaptive 70% color-mix defined for both light and dark.",
-      "files": ["webview/styles/spec-editor.css", "webview/styles/tokens.css"]
+      "files": [
+        "webview/styles/spec-editor.css",
+        "webview/styles/tokens.css"
+      ]
     },
     "T002": {
       "status": "DONE",
       "did": "Swapped the .spec-editor-textarea::placeholder color to var(--text-secondary) and removed the stacked opacity declaration.",
-      "files": ["webview/styles/spec-editor.css"]
+      "files": [
+        "webview/styles/spec-editor.css"
+      ]
     },
     "T003": {
       "status": "DONE_WITH_CONCERNS",
       "did": "Rebuilt the webview bundle and confirmed the faded placeholder color landed in dist/webview/spec-editor.css.",
-      "files": ["dist/webview/spec-editor.css"],
-      "concerns": ["Live Extension Development Host eyeballing of empty vs typed contrast is left for the user; verified at the build/code level only."]
+      "files": [
+        "dist/webview/spec-editor.css"
+      ],
+      "concerns": [
+        "Live Extension Development Host eyeballing of empty vs typed contrast is left for the user; verified at the build/code level only."
+      ]
     },
     "T004": {
       "status": "DONE_WITH_CONCERNS",
       "did": "Verified --text-secondary is defined for the dark theme as a 70% foreground color-mix (WCAG-AA documented), distinct from the disabled token.",
-      "files": ["webview/styles/tokens.css"],
-      "concerns": ["Interactive dark-theme EDH check is the user's to confirm visually."]
+      "files": [
+        "webview/styles/tokens.css"
+      ],
+      "concerns": [
+        "Interactive dark-theme EDH check is the user's to confirm visually."
+      ]
     },
     "T005": {
       "status": "DONE_WITH_CONCERNS",
       "did": "Verified --text-secondary is defined for the light theme as a 70% foreground color-mix, distinct from the disabled token.",
-      "files": ["webview/styles/tokens.css"],
-      "concerns": ["Interactive light-theme EDH check is the user's to confirm visually."]
+      "files": [
+        "webview/styles/tokens.css"
+      ],
+      "concerns": [
+        "Interactive light-theme EDH check is the user's to confirm visually."
+      ]
     },
     "T006": {
       "status": "DONE",
       "did": "Confirmed the Empty story still represents the intended empty-placeholder baseline; it picks up the CSS automatically with no code change.",
-      "files": ["webview/src/spec-editor/__stories__/CreateSpec.stories.tsx"]
+      "files": [
+        "webview/src/spec-editor/__stories__/CreateSpec.stories.tsx"
+      ]
     }
   }
 }

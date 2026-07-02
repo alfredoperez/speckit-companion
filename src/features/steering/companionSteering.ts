@@ -8,6 +8,8 @@ const COMPANION_MANIFEST_REL = '.specify/extensions/companion/extension.yml';
 export interface CompanionCommand {
     name: string;
     description: string;
+    /** Manifest `file:` for the command body, relative to the extension dir (e.g. `commands/x.md`); `''` when absent. */
+    file: string;
 }
 
 /** Top-level setting groups of `.specify/companion.yml`; `[]` when absent or unparseable. */
@@ -36,11 +38,12 @@ export function readCompanionCommands(workspaceRoot: string): CompanionCommand[]
             return [];
         }
         return commands
-            .filter((c): c is { name: string; description?: unknown } =>
+            .filter((c): c is { name: string; description?: unknown; file?: unknown } =>
                 !!c && typeof c === 'object' && typeof (c as { name?: unknown }).name === 'string')
             .map(c => ({
                 name: c.name,
                 description: typeof c.description === 'string' ? c.description : '',
+                file: typeof c.file === 'string' ? c.file : '',
             }));
     } catch {
         return [];
@@ -53,6 +56,47 @@ export function isWithinRoot(workspaceRoot: string, candidatePath: string): bool
     // `rel === ''` is the root itself (within). Reject only real parent traversal
     // (`..` or `../…`), not an in-root name that merely starts with `..` (`..config`).
     return rel !== '..' && !rel.startsWith('..' + path.sep) && !path.isAbsolute(rel);
+}
+
+/** Absolute path to a command's body file under the installed extension dir, or `undefined` if absent/escaping/missing. */
+export function companionCommandFilePath(workspaceRoot: string, file: string): string | undefined {
+    if (!file) {
+        return undefined;
+    }
+    const extRoot = path.join(workspaceRoot, path.dirname(COMPANION_MANIFEST_REL));
+    const abs = path.join(extRoot, file);
+    // Confine to the extension dir itself, not just the workspace — a manifest
+    // `file: ../foo.md` stays inside the workspace but must not escape the ext dir.
+    if (!isWithinRoot(extRoot, abs) || !fs.existsSync(abs)) {
+        return undefined;
+    }
+    return abs;
+}
+
+/** Preset command-body templates the Companion preset ships, relative to the extension dir. */
+const COMPANION_TEMPLATES_SUBDIR = 'presets/companion-standard/commands';
+
+export interface CompanionTemplate {
+    name: string;
+    /** Path relative to the extension dir, for `companionCommandFilePath`. */
+    file: string;
+}
+
+/** Preset command templates from the installed extension; `[]` when the dir is absent or escapes the workspace. */
+export function readCompanionTemplates(workspaceRoot: string): CompanionTemplate[] {
+    const extDir = path.dirname(COMPANION_MANIFEST_REL);
+    const dir = path.join(workspaceRoot, extDir, COMPANION_TEMPLATES_SUBDIR);
+    try {
+        if (!isWithinRoot(workspaceRoot, dir) || !fs.existsSync(dir)) {
+            return [];
+        }
+        return fs.readdirSync(dir)
+            .filter(f => f.endsWith('.md'))
+            .sort()
+            .map(f => ({ name: f.replace(/\.md$/, ''), file: path.posix.join(COMPANION_TEMPLATES_SUBDIR, f) }));
+    } catch {
+        return [];
+    }
 }
 
 export const COMPANION_STEERING_PATHS = {

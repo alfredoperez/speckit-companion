@@ -4,9 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **A colorful sidebar** (#389): the Steering view now uses full-color icons instead of flat monochrome glyphs — steering docs, the constitution, and section headers each get a recognizable icon, and the provider node shows your AI provider's actual brand logo (Claude, Gemini, GitHub Copilot, Codex, Qwen, OpenCode, Cursor, or Windsurf). The spec list keeps its familiar color-tinted beakers (blue in progress, yellow implemented, green done), and the Active/Completed/Archived group headers are now colorful too. Repeated leaf icons (every script, template, agent, and skill row) and the dimmed file paths on SpecKit Files rows were dropped to cut visual noise. Icons come from the open-source Fluent Emoji and Lobe Icons sets.
+- **Companion commands now open, and the Companion node moved up** (#389): in the Steering view, the entries under Companion → Commands used to do nothing when clicked — each now opens the command's prompt body. The Companion node also moves to the second spot in the Steering view so it's easier to find.
+
 ### Added
 
 - **Support the project from inside the editor** (#388): if SpecKit Companion saves you time, there's now an easy way to chip in. A "Sponsor" button appears on the Marketplace listing and the extension details view, the Specs sidebar welcome screen has a "Support this project" link, and there's a "Sponsor SpecKit Companion" command in the Command Palette. All of them open the project's GitHub Sponsors page. Nothing changes if you'd rather not — it's entirely optional.
+- **Companion templates in the Steering view** (#389): the Companion node now has a **Templates** group listing the prompt templates the Companion preset ships (the per-step command bodies it layers over stock SpecKit), the same way SpecKit Files lists its templates. Click one to open it. It appears only when the installed Companion extension actually carries templates.
 - **Recover a stranded spec with "Set status…"** (#347): an out-of-order or double click could leave a spec in a state where the lifecycle buttons wouldn't let you continue, and the only fix was hand-editing a JSON file. Every spec in the sidebar now has a **Set status…** action — on the right-click menu and as a hover gear — that lets you force the spec to any lifecycle status (specifying through completed) after a `"Force status to X?"` confirm. The override is recorded just like any other lifecycle change and the sidebar updates immediately, so a mis-click is no longer a dead end.
 
 ### Fixed

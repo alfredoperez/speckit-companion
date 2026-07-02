@@ -4,6 +4,8 @@ import * as path from 'path';
 import {
     readCompanionConfigGroups,
     readCompanionCommands,
+    readCompanionTemplates,
+    companionCommandFilePath,
     isWithinRoot,
 } from './companionSteering';
 
@@ -49,32 +51,34 @@ describe('companionSteering', () => {
     });
 
     describe('readCompanionCommands', () => {
-        it('returns provides.commands as name/description pairs', () => {
+        it('returns provides.commands as name/description/file triples', () => {
             writeManifest([
                 'provides:',
                 '  commands:',
                 '    - name: speckit.companion.specify',
                 '      description: Companion specify',
+                '      file: commands/speckit.companion.specify.md',
                 '    - name: speckit.companion.plan',
                 '      description: Companion plan',
+                '      file: commands/speckit.companion.plan.md',
             ].join('\n'));
             expect(readCompanionCommands(root)).toEqual([
-                { name: 'speckit.companion.specify', description: 'Companion specify' },
-                { name: 'speckit.companion.plan', description: 'Companion plan' },
+                { name: 'speckit.companion.specify', description: 'Companion specify', file: 'commands/speckit.companion.specify.md' },
+                { name: 'speckit.companion.plan', description: 'Companion plan', file: 'commands/speckit.companion.plan.md' },
             ]);
         });
 
-        it('defaults a missing description to an empty string', () => {
+        it('defaults a missing description and file to empty strings', () => {
             writeManifest('provides:\n  commands:\n    - name: speckit.companion.status\n');
             expect(readCompanionCommands(root)).toEqual([
-                { name: 'speckit.companion.status', description: '' },
+                { name: 'speckit.companion.status', description: '', file: '' },
             ]);
         });
 
         it('skips entries without a string name', () => {
             writeManifest('provides:\n  commands:\n    - description: orphan\n    - name: speckit.companion.resume\n');
             expect(readCompanionCommands(root)).toEqual([
-                { name: 'speckit.companion.resume', description: '' },
+                { name: 'speckit.companion.resume', description: '', file: '' },
             ]);
         });
 
@@ -85,6 +89,74 @@ describe('companionSteering', () => {
         it('returns [] when provides.commands is missing or not a list', () => {
             writeManifest('provides:\n  commands: not-a-list\n');
             expect(readCompanionCommands(root)).toEqual([]);
+        });
+    });
+
+    describe('readCompanionTemplates', () => {
+        const writeTemplate = (name: string): void => {
+            const dir = path.join(root, '.specify', 'extensions', 'companion', 'presets', 'companion-standard', 'commands');
+            fs.mkdirSync(dir, { recursive: true });
+            fs.writeFileSync(path.join(dir, name), '# template');
+        };
+
+        it('lists preset command templates sorted, with ext-relative file paths', () => {
+            writeTemplate('speckit.tasks.md');
+            writeTemplate('speckit.plan.md');
+            expect(readCompanionTemplates(root)).toEqual([
+                { name: 'speckit.plan', file: 'presets/companion-standard/commands/speckit.plan.md' },
+                { name: 'speckit.tasks', file: 'presets/companion-standard/commands/speckit.tasks.md' },
+            ]);
+        });
+
+        it('the returned file resolves through companionCommandFilePath', () => {
+            writeTemplate('speckit.specify.md');
+            const [tpl] = readCompanionTemplates(root);
+            expect(companionCommandFilePath(root, tpl.file)).toBe(
+                path.join(root, '.specify', 'extensions', 'companion', 'presets', 'companion-standard', 'commands', 'speckit.specify.md')
+            );
+        });
+
+        it('ignores non-markdown files', () => {
+            writeTemplate('speckit.plan.md');
+            const dir = path.join(root, '.specify', 'extensions', 'companion', 'presets', 'companion-standard', 'commands');
+            fs.writeFileSync(path.join(dir, 'preset.yml'), 'x: 1');
+            expect(readCompanionTemplates(root).map(t => t.name)).toEqual(['speckit.plan']);
+        });
+
+        it('returns [] when the templates dir is absent', () => {
+            expect(readCompanionTemplates(root)).toEqual([]);
+        });
+    });
+
+    describe('companionCommandFilePath', () => {
+        const writeCommandFile = (rel: string): string => {
+            const abs = path.join(root, '.specify', 'extensions', 'companion', rel);
+            fs.mkdirSync(path.dirname(abs), { recursive: true });
+            fs.writeFileSync(abs, '# command');
+            return abs;
+        };
+
+        it('resolves an existing command body under the extension dir', () => {
+            const abs = writeCommandFile('commands/speckit.companion.capture.md');
+            expect(companionCommandFilePath(root, 'commands/speckit.companion.capture.md')).toBe(abs);
+        });
+
+        it('returns undefined when the file does not exist on disk', () => {
+            expect(companionCommandFilePath(root, 'commands/missing.md')).toBeUndefined();
+        });
+
+        it('returns undefined for an empty file field', () => {
+            expect(companionCommandFilePath(root, '')).toBeUndefined();
+        });
+
+        it('returns undefined for a traversal that escapes the root', () => {
+            expect(companionCommandFilePath(root, '../../../../etc/passwd')).toBeUndefined();
+        });
+
+        it('returns undefined for a file that escapes the extension dir but stays in the workspace', () => {
+            // A real file inside the workspace but outside .specify/extensions/companion.
+            fs.writeFileSync(path.join(root, 'secret.md'), '# not a command');
+            expect(companionCommandFilePath(root, '../../../secret.md')).toBeUndefined();
         });
     });
 

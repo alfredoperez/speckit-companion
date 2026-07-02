@@ -256,7 +256,7 @@ describe('SpecExplorerProvider', () => {
     });
 
     describe('spec-group icons', () => {
-        it('should use pulse icon for Active group', async () => {
+        it('should use the active-cluster sprout icon for Active group', async () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'feature', path: 'specs/feature' },
             ]);
@@ -265,11 +265,11 @@ describe('SpecExplorerProvider', () => {
             const children = await provider.getChildren();
             const activeGroup = children[0];
 
-            expect(activeGroup.iconPath).toBeInstanceOf(vscode.ThemeIcon);
-            expect((activeGroup.iconPath as vscode.ThemeIcon).id).toBe('pulse');
+            expect(activeGroup.iconPath).toBeInstanceOf(vscode.Uri);
+            expect((activeGroup.iconPath as vscode.Uri).path).toMatch(/assets\/icons\/specs\/group-active\.svg$/);
         });
 
-        it('should use check icon for Completed group', async () => {
+        it('should use the check icon for Completed group', async () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'feature', path: 'specs/feature' },
             ]);
@@ -277,10 +277,10 @@ describe('SpecExplorerProvider', () => {
 
             const children = await provider.getChildren();
 
-            expect((children[0].iconPath as vscode.ThemeIcon).id).toBe('check');
+            expect((children[0].iconPath as vscode.Uri).path).toMatch(/assets\/icons\/specs\/spec-completed\.svg$/);
         });
 
-        it('should use archive icon for Archived group', async () => {
+        it('should use the archived-box icon for Archived group', async () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'feature', path: 'specs/feature' },
             ]);
@@ -288,7 +288,7 @@ describe('SpecExplorerProvider', () => {
 
             const children = await provider.getChildren();
 
-            expect((children[0].iconPath as vscode.ThemeIcon).id).toBe('archive');
+            expect((children[0].iconPath as vscode.Uri).path).toMatch(/assets\/icons\/specs\/group-archived\.svg$/);
         });
     });
 
@@ -319,13 +319,13 @@ describe('SpecExplorerProvider', () => {
             expect((specs[0].iconPath as vscode.ThemeIcon).id).toBe('sync~spin');
         });
 
-        it('should use beaker icon when spec is not active and has no context', async () => {
+        it('should use a plain beaker when spec is not active and has no context', async () => {
             const specs = await getSpecItems('my-feature', false);
             expect(specs[0].iconPath).toBeInstanceOf(vscode.ThemeIcon);
             expect((specs[0].iconPath as vscode.ThemeIcon).id).toBe('beaker');
         });
 
-        it('should use green beaker icon when spec status is completed', async () => {
+        it('should use a green beaker when spec status is completed', async () => {
             const specs = await getSpecItems('my-feature', false, {
                 status: 'completed',
                 workflow: 'default',
@@ -333,11 +333,10 @@ describe('SpecExplorerProvider', () => {
             });
             const icon = specs[0].iconPath as vscode.ThemeIcon;
             expect(icon.id).toBe('beaker');
-            expect(icon.color).toBeInstanceOf(vscode.ThemeColor);
             expect((icon.color as vscode.ThemeColor).id).toBe('testing.iconPassed');
         });
 
-        it('should use blue beaker icon when spec has a currentStep', async () => {
+        it('should use a blue beaker when spec has a currentStep', async () => {
             const specs = await getSpecItems('my-feature', false, {
                 status: 'active',
                 currentStep: 'plan',
@@ -346,11 +345,10 @@ describe('SpecExplorerProvider', () => {
             });
             const icon = specs[0].iconPath as vscode.ThemeIcon;
             expect(icon.id).toBe('beaker');
-            expect(icon.color).toBeInstanceOf(vscode.ThemeColor);
             expect((icon.color as vscode.ThemeColor).id).toBe('charts.blue');
         });
 
-        it('should use a yellow beaker icon for implemented specs, distinct from green completed and blue in-progress', async () => {
+        it('should use a yellow beaker for implemented specs, distinct from green completed and blue in-progress', async () => {
             const specs = await getSpecItems('my-feature', false, {
                 status: 'implemented',
                 currentStep: 'implement',
@@ -359,13 +357,12 @@ describe('SpecExplorerProvider', () => {
             });
             const icon = specs[0].iconPath as vscode.ThemeIcon;
             expect(icon.id).toBe('beaker');
-            expect(icon.color).toBeInstanceOf(vscode.ThemeColor);
             expect((icon.color as vscode.ThemeColor).id).toBe('charts.yellow');
             expect((icon.color as vscode.ThemeColor).id).not.toBe('testing.iconPassed');
             expect((icon.color as vscode.ThemeColor).id).not.toBe('charts.blue');
         });
 
-        it('should prefer sync~spin over colored beaker when spec is active', async () => {
+        it('should prefer sync~spin over the colored beaker when spec is active', async () => {
             const specs = await getSpecItems('my-feature', true, {
                 status: 'active',
                 currentStep: 'plan',

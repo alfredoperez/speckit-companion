@@ -650,9 +650,9 @@ class SpecItem extends vscode.TreeItem {
             this.tooltip = 'Loading specs...';
         } else if (isSpecGroupItem(contextValue)) {
             const groupIcons: Record<string, string> = {
-                'Active': 'pulse',
-                'Completed': 'check',
-                'Archived': 'archive',
+                'Active': 'group-active.svg',
+                'Completed': 'spec-completed.svg',
+                'Archived': 'group-archived.svg',
             };
             const groupTooltips: Record<string, string> = {
                 'Active': 'Specs in progress',
@@ -660,7 +660,10 @@ class SpecItem extends vscode.TreeItem {
                 'Archived': 'Archived specs',
             };
             const baseLabel = label.split(' (')[0];
-            this.iconPath = new vscode.ThemeIcon(groupIcons[baseLabel] || 'pulse');
+            const groupIcon = groupIcons[baseLabel];
+            this.iconPath = groupIcon
+                ? this.specIcon(groupIcon)
+                : new vscode.ThemeIcon('pulse');
             this.tooltip = groupTooltips[baseLabel] || label;
         } else if (isSpecLifecycleItem(contextValue)) {
             if (isActive) {
@@ -746,5 +749,9 @@ class SpecItem extends vscode.TreeItem {
             // the label inward so sub-files clearly nest under their parent.
             this.tooltip = `Related: ${label}.md`;
         }
+    }
+
+    private specIcon(file: string): vscode.Uri {
+        return vscode.Uri.joinPath(this.extContext.extensionUri, 'assets', 'icons', 'specs', file);
     }
 }
