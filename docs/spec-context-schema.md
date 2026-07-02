@@ -46,24 +46,37 @@ The writer no longer emits a `from` pointer (it is fully derivable from the prev
 | `createdAt` | `string` | ISO timestamp when spec was first created |
 | `checkpointStatus` | `Record<CheckpointId, CheckpointStatus>` | Checkpoint states (`commit`, `pr`) |
 
+### Reasoning trail (optional, script-written — #392)
+
+The run's reasoning trail, written through `write-context.py` capture flags by the Companion command bodies at their lifecycle points. All additive, de-duped/upserted, and best-effort — a missing value is "not captured", never an error.
+
+| Field | Type | Written at | Flag |
+|---|---|---|---|
+| `intent` | `string` | specify complete | `--set intent=…` |
+| `expectations` | `string[]` | specify complete | `--expectation` (repeatable, de-duped) |
+| `approach` | `string` | plan complete | `--set approach=…` |
+| `decisions` | `{decision, why?, rejected?}[]` (bare strings tolerated) | plan complete + implement close | `--decision` (JSON-or-text, de-duped on `decision`) |
+| `verified` | `{what, result?, command?, warnings?}[]` | implement complete | `--verified` (JSON-or-text, de-duped on `what`) |
+| `concerns` | `{note, step?, kind?}[]` | any step, on friction | `--concern` (JSON-or-text, de-duped on `note`) |
+| `coverage` | `Record<reqId, {tasks?, tests?}>` | tasks complete (tasks) + implement close (tests) | `--coverage-req <id> --tasks/--tests` (non-destructive upsert) |
+| `classification` | `{projectedFiles?, projectedTasks?, scopeSignal?, verdict}` | specify sizing | `--classification '<json>'` (verdict required; exit 2 on caller error) |
+| `step_summaries` | `Record<step, {summary, key_finding?, risks?}>` | each step close | `--step-summary` (keyed by `--step`) |
+| `last_action` | `string` | step closes + skip-markers | `--set last_action=…` |
+
+Skip-markers keep audits honest: a gated-off path (living specs, hooks) records `last_action = "<what> evaluated — skipped (<why>)"` so "correctly did nothing" is distinguishable from "capture broke".
+
 ### Skill-enriched (optional)
 
-Skill-authored fields. The extension reads them but does not write them.
+Remaining skill-authored fields the extension reads but no script writes:
 
 | Field | Type | Description |
 |---|---|---|
-| `approach` | `string` | Implementation approach summary |
-| `last_action` | `string` | Short description of last completed action |
-| `task_summaries` | `Record<string, object>` | Per-task summaries with `status`, `did`, `files`, `concerns` |
-| `step_summaries` | `Record<string, object>` | Per-step summaries (specify, plan complexity/risks) |
+| `task_summaries` | `Record<string, object>` | Per-task summaries with `status`, `did`, `files`, `concerns` (script-written per task) |
 | `files_modified` | `string[]` | Deduplicated list of all files modified during implementation |
-| `decisions` | `array` | Non-trivial decisions made during implementation |
-| `concerns` | `array` | Flagged issues from implementation |
 
-The three viewer-relevant skill-authored fields — `last_action`,
-`task_summaries`, `step_summaries` — are formally **declared** (optional) in
-the canonical `SpecContext` type and `spec-context.schema.json`; remaining
-skill fields stay tolerated via `additionalProperties: true`.
+All declared fields are formally **declared** (optional) in the canonical
+`SpecContext` type and `spec-context.schema.json`; remaining skill fields
+stay tolerated via `additionalProperties: true`.
 
 ### Derived in-memory (never persisted)
 
@@ -73,12 +86,20 @@ The viewer computes per-step timing from `history[]` on every render:
 stepHistory: Record<string, {
   startedAt: string,
   completedAt: string | null,
-  substeps?: { name, startedAt, completedAt }[]
+  substeps?: { name, startedAt, completedAt }[],
+  durationTrusted?: boolean
 }>
 ```
 
 This is what badges, the running-step pulse, the activity timeline, and
 elapsed-timer notifications consume. It is **not** written to disk.
+
+**Duration honesty (#392):** `durationTrusted` is true only when *both* span
+boundaries were stamped by the extension's own clock (`by: 'extension'`).
+AI/cli-journaled timestamps order events correctly but record when the write
+ran, not when the work happened — so renderers must not present an elapsed
+time for an untrusted span (fast-path folds and back-to-back task journals
+are the canonical false-duration cases).
 
 ## Example
 

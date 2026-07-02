@@ -104,6 +104,12 @@ This budget governs the step that follows. Where it would produce something the 
 
 5. End with a **Dependencies & Execution Order** section: the phase dependencies (Setup → Foundational → stories → Polish) and a one-line restatement of each phase's waves (which wave blocks which). Each task names the concrete file it creates or edits.
 
+6. **Capture the requirement→task map** so "which tasks cover FR-X?" is answerable from the context file (best-effort; one call per requirement; skip silently if `python3` is unavailable — the implement step fills each requirement's tests later):
+   ```bash
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --coverage-req FR-001 --tasks "T001,T004"
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step tasks --step-summary '{"summary": "<task count + phase shape in one line>"}'
+   ```
+
 **Output**: `<feature_directory>/tasks.md` organized by user story into dependency-ordered phases, each phase laid out as explicit waves with join points.
 <!-- speckit-companion:part timing -->
 ## Timing — keep `.spec-context.json` honest

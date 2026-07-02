@@ -134,6 +134,23 @@ The one new write is the **unattended signal**. Auto runs `write-context.py --se
 
 The flag is a **convention for checkpoint hook authors**, not enforced by the script: a project checkpoint `prompt` hook reads `unattended` and records-and-continues instead of pausing for a person. Background / review / PR hooks are unaffected — only the human pause is skipped. On a one-shot terminal auto can't chain steps, so it degrades to the normal one-step flow (it still sets the flag; there's just no further dispatch to carry it into).
 
+## Reasoning-trail capture (#392)
+
+Beyond the lifecycle timeline, the Companion command bodies capture the run's **reasoning trail** through dedicated `write-context.py` flags — all additive, de-duped/upserted, best-effort (a missed call loses one entry, never the run). The WHEN map:
+
+| Lifecycle point | Emitting node | Captures |
+|---|---|---|
+| specify sizing (`persist-size`) | specify | `--classification` (the size call's inputs + verdict, not just the scalar `size`) |
+| specify complete (`finalize`) | specify | `--set intent=…` + `--expectation` per non-goal |
+| living-specs / hook gate skipped | specify | `--set last_action="… evaluated — skipped (…)"` (the audit breadcrumb) |
+| plan complete (`side-files`) | plan | `--set approach=…` + `--decision` per Phase-0 choice + `--step-summary` |
+| tasks complete (`tasks-doc`) | tasks | `--coverage-req <FR> --tasks <csv>` per requirement + `--step-summary` |
+| implement close (`implement-exec`) | implement | `--verified` per check (incl. dismissed warnings) + `--decision` + `--concern` (only on real friction) + `--coverage-req <FR> --tests <csv>` + `--step-summary` + `--set last_action=…` |
+
+Value syntax is **JSON-or-plain-text**: a JSON object carrying the field's identity key (`decision`/`what`/`note`/`summary`) is stored as-is; anything else wraps as `{<identity>: <text>}` so a weak emitter still captures the signal. De-dup keys on the identity value, first-seen wins. `--classification` is the one caller-validated flag (exit 2 on bad JSON / missing verdict); everything else follows the best-effort rule.
+
+**Timing honesty rider:** the derived `stepHistory` now carries `durationTrusted` — true only when both span boundaries are `by: extension`. AI-journaled finishes (fast-path folds, back-to-back task journals) are ordering-true but duration-false, and renderers must not show elapsed time for them. See `docs/spec-context-schema.md`.
+
 ## Preset / command-override mechanism
 
 The document *shape* (stock SpecKit vs Companion) and the timing partial both live in **command-body overrides**, not template files — core commands embed their own structure, and template overrides don't reach `specify` (it copies its template by literal path).

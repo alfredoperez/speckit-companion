@@ -35,7 +35,86 @@
     "profile": { "type": "string", "enum": ["standard", "turbo"] },
     "telemetryInstanceId": { "type": "string" },
     "task_summaries": { "type": "object" },
-    "step_summaries": { "type": "object" }
+    "step_summaries": { "type": "object" },
+    "intent": { "type": "string" },
+    "approach": { "type": "string" },
+    "expectations": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "required": ["decision"],
+            "properties": {
+              "decision": { "type": "string", "minLength": 1 },
+              "why": { "type": "string" },
+              "rejected": { "type": "string" }
+            }
+          }
+        ]
+      }
+    },
+    "concerns": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "required": ["note"],
+            "properties": {
+              "note": { "type": "string", "minLength": 1 },
+              "step": { "type": "string" },
+              "kind": { "type": "string" },
+              "task": { "type": "string" }
+            }
+          }
+        ]
+      }
+    },
+    "verified": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "required": ["what"],
+            "properties": {
+              "what": { "type": "string", "minLength": 1 },
+              "result": { "type": "string" },
+              "command": { "type": "string" },
+              "warnings": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        ]
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "tasks": { "type": "array", "items": { "type": "string" } },
+          "tests": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "classification": {
+      "type": "object",
+      "required": ["verdict"],
+      "properties": {
+        "projectedFiles": { "type": "integer", "minimum": 0 },
+        "projectedTasks": { "type": "integer", "minimum": 0 },
+        "scopeSignal": { "type": "string", "enum": ["larger", "smaller", "none"] },
+        "verdict": { "type": "string", "enum": ["simple", "normal", "oversized"] }
+      }
+    }
   },
   "$defs": {
     "reviewComment": {
