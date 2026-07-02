@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { readLivingSpecs, __test } from '../livingSpecsModel';
+import { readLivingSpecs, readCapabilityHealth, __test } from '../livingSpecsModel';
 
 const { globMatches } = __test;
 
@@ -179,5 +179,86 @@ describe('readLivingSpecs', () => {
             expect(globMatches('src/checkout/**', 'src/checkout')).toBe(true);
             expect(globMatches('src/checkout/**', 'src/other/x.ts')).toBe(false);
         });
+    });
+});
+
+describe('readCapabilityHealth', () => {
+    const created: string[] = [];
+    afterAll(() => {
+        for (const root of created) {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+
+    const YML = 'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n      match: ["src/checkout/**"]\n';
+
+    function capFor(root: string) {
+        const listing = readLivingSpecs(root);
+        return listing.capabilities[0];
+    }
+
+    it('counts covered/total requirements from the coverage tier (CLI rule)', async () => {
+        const root = makeWorkspace(
+            {
+                'capabilities/checkout/spec.md': '# Checkout\n\nFR-001 add\nFR-002 remove\nFR-003 persist\n',
+                'capabilities/checkout/spec.coverage.md': '- FR-001 → src/cart.test.ts::adds\n- FR-003 covered by tests/persist.test.ts\n- FR-002 planned, no test yet\n',
+            },
+            YML
+        );
+        created.push(root);
+        const health = await readCapabilityHealth(root, capFor(root), { git: async () => '' });
+        expect(health.coverage).toEqual({ covered: 2, total: 3 });
+    });
+
+    it('omits coverage when there is no coverage tier', async () => {
+        const root = makeWorkspace({ 'capabilities/checkout/spec.md': '# Checkout\nFR-001\n' }, YML);
+        created.push(root);
+        const health = await readCapabilityHealth(root, capFor(root), { git: async () => '' });
+        expect(health.coverage).toBeUndefined();
+    });
+
+    it('reports drift when a matched file changed since the spec commit', async () => {
+        const root = makeWorkspace(
+            { 'capabilities/checkout/spec.md': '# Checkout\nFR-001\n' },
+            YML
+        );
+        created.push(root);
+        const git = async (args: string[]) =>
+            args[0] === 'log' ? 'abc123\n' : 'src/checkout/cart.ts\nREADME.md\n';
+        const health = await readCapabilityHealth(root, capFor(root), { git });
+        expect(health.drifted).toBe(true);
+    });
+
+    it('does not report drift for excluded/exempt/own-spec files', async () => {
+        const root = makeWorkspace(
+            { 'capabilities/checkout/spec.md': '# Checkout\nFR-001\n' },
+            YML
+        );
+        created.push(root);
+        const git = async (args: string[]) =>
+            args[0] === 'log'
+                ? 'abc123\n'
+                : 'src/checkout/cart.test.ts\ncapabilities/checkout/spec.md\nREADME.md\n';
+        const health = await readCapabilityHealth(root, capFor(root), { git });
+        expect(health.drifted).toBe(false);
+    });
+
+    it('omits drift entirely when git fails or the spec was never committed', async () => {
+        const root = makeWorkspace({ 'capabilities/checkout/spec.md': '# Checkout\nFR-001\n' }, YML);
+        created.push(root);
+        const failing = await readCapabilityHealth(root, capFor(root), {
+            git: async () => { throw new Error('not a repo'); },
+        });
+        expect(failing.drifted).toBeUndefined();
+        const uncommitted = await readCapabilityHealth(root, capFor(root), { git: async () => '' });
+        expect(uncommitted.drifted).toBeUndefined();
+    });
+
+    it('never rejects — total failure yields an empty health object', async () => {
+        const root = makeWorkspace({}, YML); // spec file itself missing
+        created.push(root);
+        const cap = { ...capFor(root) };
+        await expect(readCapabilityHealth(root, cap, { git: async () => { throw new Error('boom'); } }))
+            .resolves.toEqual({});
     });
 });

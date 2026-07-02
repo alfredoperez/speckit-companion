@@ -38,6 +38,21 @@ export interface ResolvedCapability {
     exists: boolean;
     /** Architecture/coverage siblings that exist on disk (in arch, coverage order). */
     tiers: Tier[];
+    /** Membership globs, carried for health computation. */
+    match: string[];
+    exclude: string[];
+}
+
+/**
+ * Per-capability derived health for the Spec Explorer row. Fields are absent
+ * (not zeroed) whenever they cannot be computed — a missing count must be
+ * indistinguishable from "no coverage tier".
+ */
+export interface CapabilityHealth {
+    /** From the coverage tier: requirements with a mapped test / total. */
+    coverage?: { covered: number; total: number };
+    /** True when files matching the capability changed since its spec's last commit. */
+    drifted?: boolean;
 }
 
 export interface LivingSpecsListing {
@@ -299,6 +314,8 @@ export function readLivingSpecs(workspaceRoot: string): LivingSpecsListing {
             location: capLocation(cap),
             exists: fileExists(workspaceRoot, specPosix),
             tiers: tierPaths(specPosix, workspaceRoot).filter(t => t.exists),
+            match: cap.match,
+            exclude: cap.exclude,
         });
     }
     resolved.sort((a, b) => a.name.localeCompare(b.name));
@@ -308,6 +325,118 @@ export function readLivingSpecs(workspaceRoot: string): LivingSpecsListing {
         capabilities: resolved,
         orphans: findOrphans(capabilities, workspaceRoot),
     };
+}
+
+// --- Capability health (coverage count + drift) ------------------------------
+//
+// TS mirrors of the CLI rules in `check-coverage.py` and `drift.py`, kept
+// best-effort: any read/parse/git failure yields an absent field, never a
+// zeroed or guessed one, so the tree renders exactly as before on any miss.
+
+/** Drift exempt-globs mirroring the CLI defaults. */
+const DEFAULT_EXEMPT_GLOBS = ['*.config.*', '*.test.*', '**/migrations/**'];
+
+const REQUIREMENT_ID_RE = /\bN?FR-\d+\b/g;
+
+/** A coverage line "names a test" per the CLI rule. */
+const TEST_REF_RE = /(\.test\.|\.spec\.|(^|[\s`(])tests\/|::)/;
+
+/** Injectable git runner so tests never need a real repository. */
+export type GitRunner = (args: string[], cwd: string) => Promise<string>;
+
+function defaultGitRunner(args: string[], cwd: string): Promise<string> {
+    const { execFile } = require('child_process');
+    return new Promise((resolve, reject) => {
+        execFile('git', args, { cwd, timeout: 1500 }, (err: Error | null, stdout: string) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(stdout);
+            }
+        });
+    });
+}
+
+function readCoverageCount(root: string, cap: ResolvedCapability): CapabilityHealth['coverage'] {
+    const coverageTier = tierPaths(cap.spec, root).find(t => t.kind === 'coverage');
+    if (!coverageTier?.exists || !cap.exists) {
+        return undefined;
+    }
+    try {
+        const specText = fs.readFileSync(path.join(root, cap.spec), 'utf-8');
+        const ids = [...new Set(specText.match(REQUIREMENT_ID_RE) ?? [])];
+        if (ids.length === 0) {
+            return undefined;
+        }
+        const coverageLines = fs
+            .readFileSync(path.join(root, coverageTier.path), 'utf-8')
+            .split('\n')
+            .filter(line => TEST_REF_RE.test(line));
+        const covered = ids.filter(id => coverageLines.some(line => line.includes(id))).length;
+        return { covered, total: ids.length };
+    } catch {
+        return undefined;
+    }
+}
+
+async function readDrifted(
+    root: string,
+    cap: ResolvedCapability,
+    git: GitRunner,
+): Promise<boolean | undefined> {
+    if (!cap.exists || cap.match.length === 0) {
+        return undefined;
+    }
+    try {
+        const commit = (await git(['log', '-1', '--format=%H', '--', cap.spec], root)).trim();
+        if (!commit) {
+            return undefined; // spec never committed — drift is undefined, not false
+        }
+        const changed = (await git(['diff', '--name-only', `${commit}..HEAD`], root))
+            .split('\n')
+            .map(f => f.trim())
+            .filter(Boolean);
+        const ownFiles = new Set([cap.spec, ...tierPaths(cap.spec, root).map(t => t.path)]);
+        const drifted = changed.some(file =>
+            cap.match.some(g => globMatches(g, file)) &&
+            !cap.exclude.some(g => globMatches(g, file)) &&
+            !DEFAULT_EXEMPT_GLOBS.some(g => globMatches(g, file) || globMatches(`**/${g}`, file)) &&
+            !ownFiles.has(posix(file))
+        );
+        return drifted;
+    } catch {
+        return undefined; // no git, not a repo, timeout — silently absent
+    }
+}
+
+/**
+ * Compute a capability's row health: coverage count (filesystem only) and a
+ * drift boolean (one time-bounded git call). Never rejects — every failure
+ * path resolves with the field absent.
+ */
+export async function readCapabilityHealth(
+    workspaceRoot: string,
+    cap: ResolvedCapability,
+    opts?: { timeoutMs?: number; git?: GitRunner },
+): Promise<CapabilityHealth> {
+    const health: CapabilityHealth = {};
+    const coverage = readCoverageCount(workspaceRoot, cap);
+    if (coverage) {
+        health.coverage = coverage;
+    }
+    const timeoutMs = opts?.timeoutMs ?? 1500;
+    // Typed loosely because tsc and ts-jest resolve setTimeout against different libs.
+    let timer: unknown;
+    const drifted = await Promise.race([
+        readDrifted(workspaceRoot, cap, opts?.git ?? defaultGitRunner),
+        new Promise<undefined>(resolve => { timer = setTimeout(resolve, timeoutMs); }),
+    ])
+        .catch(() => undefined)
+        .finally(() => clearTimeout(timer as ReturnType<typeof setTimeout>));
+    if (drifted !== undefined) {
+        health.drifted = drifted;
+    }
+    return health;
 }
 
 /** Exposed for membership-rule tests; not used by the listing path directly. */

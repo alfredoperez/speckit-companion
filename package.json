@@ -489,6 +489,30 @@
         "command": "speckit.specs.copyName",
         "title": "Copy Name",
         "category": "SpecKit"
+      },
+      {
+        "command": "speckit.livingSpecs.drift",
+        "title": "Check Living-Spec Drift",
+        "category": "SpecKit",
+        "icon": "$(git-compare)"
+      },
+      {
+        "command": "speckit.livingSpecs.coverage",
+        "title": "Check Requirement Coverage",
+        "category": "SpecKit",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "speckit.livingSpecs.adopt",
+        "title": "Adopt Code Area into Living Spec",
+        "category": "SpecKit",
+        "icon": "$(wand)"
+      },
+      {
+        "command": "speckit.livingSpecs.refresh",
+        "title": "Refresh Spec Explorer",
+        "category": "SpecKit",
+        "icon": "$(refresh)"
       }
     ],
     "menus": {
@@ -542,6 +566,16 @@
           "command": "speckit.companion.installSpecKitExtension",
           "when": "view == speckit.views.explorer && (speckit.detected || speckit.cliInstalled) && !speckit.companion.installed",
           "group": "navigation@3"
+        },
+        {
+          "command": "speckit.livingSpecs.refresh",
+          "when": "view == speckit.views.livingSpecs",
+          "group": "navigation@1"
+        },
+        {
+          "command": "speckit.livingSpecs.adopt",
+          "when": "view == speckit.views.livingSpecs",
+          "group": "navigation@2"
         }
       ],
       "view/item/context": [
@@ -649,6 +683,16 @@
           "command": "speckit.specs.copyName",
           "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
           "group": "9_clipboard@2"
+        },
+        {
+          "command": "speckit.livingSpecs.drift",
+          "when": "view == speckit.views.livingSpecs && viewItem == living-specs-capability",
+          "group": "livingSpecs@1"
+        },
+        {
+          "command": "speckit.livingSpecs.coverage",
+          "when": "view == speckit.views.livingSpecs && viewItem == living-specs-capability",
+          "group": "livingSpecs@2"
         }
       ],
       "commandPalette": [
@@ -729,6 +773,14 @@
         },
         {
           "command": "speckit.specs.setStatus",
+          "when": "false"
+        },
+        {
+          "command": "speckit.livingSpecs.drift",
+          "when": "false"
+        },
+        {
+          "command": "speckit.livingSpecs.coverage",
           "when": "false"
         }
       ]
