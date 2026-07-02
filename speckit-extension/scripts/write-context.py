@@ -504,6 +504,9 @@ def upsert_coverage(
     req = req.strip()
     if not req:
         return None
+    if not tasks and not tests:
+        # Nothing to record — writing {} would fake a coverage entry.
+        return None
     target = feature_dir / ".spec-context.json"
     branch = _git_branch(_repo_root_for(feature_dir)) or "main"
     ctx = read_ctx(target)
@@ -525,6 +528,13 @@ def upsert_coverage(
 
 def upsert_step_summary(feature_dir: Path, step: str, raw: str) -> Path | None:
     """Upsert ctx["step_summaries"][step] from a JSON-or-text value keyed on `summary`."""
+    if step not in CANONICAL_STEPS:
+        print(
+            f"[companion] Skipping --step-summary: '{step}' is not a canonical step "
+            f"({', '.join(sorted(CANONICAL_STEPS))}).",
+            file=sys.stderr,
+        )
+        return None
     entry = _coerce_entry(raw, "summary")
     if entry is None:
         return None

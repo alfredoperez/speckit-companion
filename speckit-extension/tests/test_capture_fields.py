@@ -116,6 +116,12 @@ class CaptureFieldTests(unittest.TestCase):
     def test_coverage_blank_req_is_a_noop(self) -> None:
         self.assertIsNone(wc.upsert_coverage(self.fd, "  ", ["T001"], None))
 
+    def test_coverage_with_no_tasks_and_no_tests_is_a_noop(self) -> None:
+        # A bare --coverage-req must not fake an empty {} coverage entry.
+        self.assertIsNone(wc.upsert_coverage(self.fd, "FR-001", None, None))
+        self.assertIsNone(wc.upsert_coverage(self.fd, "FR-001", [], []))
+        self.assertFalse((self.fd / ".spec-context.json").exists())
+
     # --- step summaries -----------------------------------------------------
 
     def test_step_summary_text_wraps_and_json_merges(self) -> None:
@@ -132,6 +138,11 @@ class CaptureFieldTests(unittest.TestCase):
         wc.upsert_step_summary(self.fd, "implement", "implement summary")
         summaries = _ctx(self.fd)["step_summaries"]
         self.assertEqual(sorted(summaries.keys()), ["implement", "plan"])
+
+    def test_step_summary_rejects_non_canonical_step(self) -> None:
+        # A typo'd --step must no-op, not pollute step_summaries with an invalid key.
+        self.assertIsNone(wc.upsert_step_summary(self.fd, "plann", "typo step"))
+        self.assertFalse((self.fd / ".spec-context.json").exists())
 
     # --- classification -----------------------------------------------------
 
