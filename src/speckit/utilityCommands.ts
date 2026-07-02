@@ -29,6 +29,7 @@ export function registerUtilityCommands(
         bugReport: 'https://github.com/alfredoperez/speckit-companion/issues/new?template=bug_report.md',
         featureRequest: 'https://github.com/alfredoperez/speckit-companion/issues/new?labels=enhancement&template=feature_request.md',
         review: 'https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion&ssr=false#review-details',
+        sponsor: 'https://github.com/sponsors/alfredoperez',
     } as const;
 
     context.subscriptions.push(
@@ -40,6 +41,9 @@ export function registerUtilityCommands(
         }),
         vscode.commands.registerCommand('speckit.feedback.review', async () => {
             await vscode.env.openExternal(vscode.Uri.parse(FEEDBACK_URLS.review));
+        }),
+        vscode.commands.registerCommand('speckit.sponsor', async () => {
+            await vscode.env.openExternal(vscode.Uri.parse(FEEDBACK_URLS.sponsor));
         })
     );
 }
