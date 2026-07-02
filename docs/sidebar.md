@@ -127,6 +127,10 @@ The tree has two groups:
 
 Clicking any capability spec, tier, or orphan opens that file in the editor.
 
+**Actions.** The view is not just a file list — it can run the living-specs workflows. Right-clicking a capability offers **Check Living-Spec Drift** and **Check Requirement Coverage**; each sends the matching `/speckit.companion.{drift,coverage}` command (scoped to that capability) to your configured AI assistant, exactly like any other Companion command — the extension dispatches, the AI session runs the report. The view's title bar carries **Adopt Code Area into Living Spec** (starts the brownfield adoption wizard, useful from the empty state as the on-ramp) and a **Refresh** button that recomputes the tree and its health signals.
+
+**Row health.** Each capability row carries a lightweight health readout, computed by the extension itself without dispatching anything: when the capability has a coverage tier, the description shows how many requirements have a mapped test (e.g. `3/5 covered`); when files matching the capability changed since its living spec's last commit, the row gains a `● drift` marker and the capability icon turns the warning color, with the tooltip explaining both. The computation is best-effort and time-bounded — no git, missing files, or a slow repo simply renders the row exactly as before, never an error or a stall. The **Refresh** title action recomputes it on demand.
+
 **Empty and hidden states.** When living specs are turned off (`livingSpecs.enabled` is not `true`) the view shows a calm `Living specs are turned off` message; when they're on but no capabilities or orphans are found it shows `No living specs yet`. Neither is an error. The view refreshes automatically when `.specify/companion.yml`, the `capabilities/` tree, or any `*.spec.md` changes on disk, and when the companion extension is installed or removed — no window reload required.
 
 ## Companion group (Steering view)

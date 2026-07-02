@@ -55,9 +55,9 @@
       "installed_at": "2026-05-21T18:09:23.850204+00:00"
     },
     "companion": {
-      "version": "0.3.0",
+      "version": "0.18.0",
       "source": "local",
-      "manifest_hash": "sha256:44155284927cbd8472eeb5d97dddc364283403e3ec29f407e3a4ac440367f3f8",
+      "manifest_hash": "sha256:795a5a26d67e63e9e508686a4a097c71562782afb61302cdc7e510749a5e5ec2",
       "enabled": true,
       "priority": 10,
       "registered_commands": {
@@ -71,7 +71,13 @@
           "speckit.companion.specify",
           "speckit.companion.plan",
           "speckit.companion.tasks",
-          "speckit.companion.implement"
+          "speckit.companion.implement",
+          "speckit.companion.classify",
+          "speckit.companion.mark-complete",
+          "speckit.companion.auto",
+          "speckit.companion.adopt",
+          "speckit.companion.drift",
+          "speckit.companion.coverage"
         ],
         "claude": [
           "speckit.companion.capture",
@@ -83,7 +89,13 @@
           "speckit.companion.specify",
           "speckit.companion.plan",
           "speckit.companion.tasks",
-          "speckit.companion.implement"
+          "speckit.companion.implement",
+          "speckit.companion.classify",
+          "speckit.companion.mark-complete",
+          "speckit.companion.auto",
+          "speckit.companion.adopt",
+          "speckit.companion.drift",
+          "speckit.companion.coverage"
         ],
         "codex": [
           "speckit.companion.capture",
@@ -95,7 +107,13 @@
           "speckit.companion.specify",
           "speckit.companion.plan",
           "speckit.companion.tasks",
-          "speckit.companion.implement"
+          "speckit.companion.implement",
+          "speckit.companion.classify",
+          "speckit.companion.mark-complete",
+          "speckit.companion.auto",
+          "speckit.companion.adopt",
+          "speckit.companion.drift",
+          "speckit.companion.coverage"
         ],
         "copilot": [
           "speckit.companion.capture",
@@ -107,7 +125,13 @@
           "speckit.companion.specify",
           "speckit.companion.plan",
           "speckit.companion.tasks",
-          "speckit.companion.implement"
+          "speckit.companion.implement",
+          "speckit.companion.classify",
+          "speckit.companion.mark-complete",
+          "speckit.companion.auto",
+          "speckit.companion.adopt",
+          "speckit.companion.drift",
+          "speckit.companion.coverage"
         ],
         "cursor-agent": [
           "speckit.companion.capture",
@@ -119,7 +143,13 @@
           "speckit.companion.specify",
           "speckit.companion.plan",
           "speckit.companion.tasks",
-          "speckit.companion.implement"
+          "speckit.companion.implement",
+          "speckit.companion.classify",
+          "speckit.companion.mark-complete",
+          "speckit.companion.auto",
+          "speckit.companion.adopt",
+          "speckit.companion.drift",
+          "speckit.companion.coverage"
         ],
         "gemini": [
           "speckit.companion.capture",
@@ -131,7 +161,13 @@
           "speckit.companion.specify",
           "speckit.companion.plan",
           "speckit.companion.tasks",
-          "speckit.companion.implement"
+          "speckit.companion.implement",
+          "speckit.companion.classify",
+          "speckit.companion.mark-complete",
+          "speckit.companion.auto",
+          "speckit.companion.adopt",
+          "speckit.companion.drift",
+          "speckit.companion.coverage"
         ],
         "qwen": [
           "speckit.companion.capture",
@@ -143,7 +179,13 @@
           "speckit.companion.specify",
           "speckit.companion.plan",
           "speckit.companion.tasks",
-          "speckit.companion.implement"
+          "speckit.companion.implement",
+          "speckit.companion.classify",
+          "speckit.companion.mark-complete",
+          "speckit.companion.auto",
+          "speckit.companion.adopt",
+          "speckit.companion.drift",
+          "speckit.companion.coverage"
         ],
         "windsurf": [
           "speckit.companion.capture",
@@ -155,11 +197,17 @@
           "speckit.companion.specify",
           "speckit.companion.plan",
           "speckit.companion.tasks",
-          "speckit.companion.implement"
+          "speckit.companion.implement",
+          "speckit.companion.classify",
+          "speckit.companion.mark-complete",
+          "speckit.companion.auto",
+          "speckit.companion.adopt",
+          "speckit.companion.drift",
+          "speckit.companion.coverage"
         ]
       },
       "registered_skills": [],
-      "installed_at": "2026-06-12T22:15:45.863949+00:00"
+      "installed_at": "2026-07-02T18:52:24.441320+00:00"
     }
   }
 }
