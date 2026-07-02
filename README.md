@@ -91,7 +91,7 @@ The spec viewer is built for fast scanning of long-form specs:
 Toggle **Activity** in the viewer's nav bar to swap the markdown pane for a card-stack overview of everything `.spec-context.json` carries:
 
 - **Goal** — the spec's distilled intent, plus its out-of-scope fence (the things it deliberately isn't).
-- **Approach** — one-line strategy, how the pipeline sized the change (projected files/tasks → verdict), status pill, PR link, and commit/PR checkpoints.
+- **Approach** — one-line strategy, how the pipeline sized the change (projected files/tasks → verdict), PR link, and commit/PR checkpoints. (The status badge lives in the always-visible spec header, so the card no longer repeats it.)
 - **Phases** — a vertical timeline reporting **active time** per step and substep (idle gaps are capped, so an overnight pause doesn't inflate a step); the in-flight step pulses and the terminal phase finalizes.
 - **Tasks** — per-`T###` status, summary, file chips, and inline concerns.
 - **Living specs** — when a feature touches durable capability specs, this card lists the ones it loaded into context and marks the ones it folded its changes back into (Companion's lightweight answer to the OpenSpec Dashboard). Read-only; appears only when the spec carries living-specs context.

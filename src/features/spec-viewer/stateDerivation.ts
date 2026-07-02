@@ -111,12 +111,31 @@ function pickEntryList<T extends Record<string, unknown>>(
     return out.length > 0 ? out : undefined;
 }
 
+/** Keep an optional field only when it's a non-empty string — a malformed capture must not reach the renderer. */
+function optString(v: unknown): string | undefined {
+    return typeof v === 'string' && v.trim().length > 0 ? v : undefined;
+}
+
 function pickDecisions(ctx: SpecContext): ViewerDecision[] | undefined {
-    return pickEntryList<ViewerDecision & Record<string, unknown>>(ctx, 'decisions', 'decision');
+    const raw = pickEntryList<Record<string, unknown>>(ctx, 'decisions', 'decision');
+    return raw?.map(e => ({
+        decision: e.decision as string,
+        why: optString(e.why),
+        rejected: optString(e.rejected),
+    }));
 }
 
 function pickVerified(ctx: SpecContext): ViewerVerification[] | undefined {
-    return pickEntryList<ViewerVerification & Record<string, unknown>>(ctx, 'verified', 'what');
+    const raw = pickEntryList<Record<string, unknown>>(ctx, 'verified', 'what');
+    return raw?.map(e => {
+        const warnings = coerceNameList(e.warnings);
+        return {
+            what: e.what as string,
+            result: optString(e.result),
+            command: optString(e.command),
+            warnings: warnings.length > 0 ? warnings : undefined,
+        };
+    });
 }
 
 function pickCoverage(ctx: SpecContext): ViewerCoverageRow[] | undefined {

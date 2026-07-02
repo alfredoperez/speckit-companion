@@ -17,7 +17,7 @@ Identifiers tests, stories, and the emitting body code against.
 | Coverage | `CoverageCard` | `activity-card--coverage` | no coverage rows |
 | Approach (changed) | `ApproachCard` | unchanged | classification line only when `classification` present |
 
-- Panel order: Intent → Approach → Phases → LivingSpecs → Tasks → Decisions → Verified → Coverage → Concerns → Comments → Files.
+- Panel order (post-critique, why-first): Intent → Approach → Decisions → Phases → LivingSpecs → Tasks → Verified → Coverage → Concerns → Comments → Files.
 - Coverage header rollup: `Coverage (covered/total)` where covered = row with ≥1 test.
 - All user strings render as JSX text nodes; `title`-attribute tooltips set via JSX props only.
 - `hasAnyData` additionally returns true for: `intent`, `expectations`, `verified`, `coverage`.

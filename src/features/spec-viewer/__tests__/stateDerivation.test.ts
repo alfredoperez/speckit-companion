@@ -313,3 +313,21 @@ describe('reasoning-trail normalization', () => {
         expect(state.classification).toBeUndefined();
     });
 });
+
+describe('malformed optional fields are coerced, never crash the renderer', () => {
+    it('drops a non-array warnings value instead of passing a string through', () => {
+        const state = deriveViewerState(makeContext({
+            verified: [{ what: 'jest', warnings: 'a bare string, not an array' }],
+        } as never));
+        expect(state.verified).toEqual([{ what: 'jest', result: undefined, command: undefined, warnings: undefined }]);
+    });
+
+    it('drops non-string why/rejected/result/command values', () => {
+        const state = deriveViewerState(makeContext({
+            decisions: [{ decision: 'keep', why: 42, rejected: { nested: true } }],
+            verified: [{ what: 'build', result: 7, command: null }],
+        } as never));
+        expect(state.decisions).toEqual([{ decision: 'keep', why: undefined, rejected: undefined }]);
+        expect(state.verified?.[0]).toEqual({ what: 'build', result: undefined, command: undefined, warnings: undefined });
+    });
+});
