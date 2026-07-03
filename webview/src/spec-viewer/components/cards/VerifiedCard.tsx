@@ -15,20 +15,26 @@ export function VerifiedCard({ state }: VerifiedCardProps) {
                 Verified <span class="activity-card__count">({items.length})</span>
             </h3>
             <div class="activity-card__body">
-                <ul class="activity-list">
-                    {items.map((v, i) => (
-                        <li key={i}>
-                            <span>{v.what}</span>
-                            {v.result && <span class="activity-verified__result"> — {v.result}</span>}
-                            {v.command && <div class="activity-detail"><code>{v.command}</code></div>}
-                            {v.warnings && v.warnings.length > 0 && (
-                                <div class="activity-detail activity-detail--warning">
-                                    <span class="activity-inline-label">Warnings</span> {v.warnings.join('; ')}
-                                </div>
-                            )}
-                        </li>
-                    ))}
-                </ul>
+                <div class="activity-pill-grid">
+                    {items.map((v, i) => {
+                        const warned = !!(v.warnings && v.warnings.length > 0);
+                        return (
+                            <div key={i} class={warned ? 'activity-pill activity-pill--warning' : 'activity-pill activity-pill--pass'}>
+                                <span class="activity-pill__mark" aria-hidden="true">{warned ? '⚠' : '✓'}</span>
+                                <span class="activity-pill__body">
+                                    <span class="activity-pill__what">{v.what}</span>
+                                    {v.result && <span class="activity-pill__result"> · {v.result}</span>}
+                                    {v.command && <div class="activity-detail"><code>{v.command}</code></div>}
+                                    {warned && (
+                                        <div class="activity-detail activity-detail--warning">
+                                            <span class="activity-inline-label">Warnings</span> {v.warnings!.join('; ')}
+                                        </div>
+                                    )}
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
         </section>
     );

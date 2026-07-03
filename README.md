@@ -88,19 +88,17 @@ The spec viewer is built for fast scanning of long-form specs:
 
 ### Activity Panel
 
-Toggle **Activity** in the viewer's nav bar to swap the markdown pane for a card-stack overview of everything `.spec-context.json` carries:
+Toggle **Activity** in the viewer's nav bar to swap the markdown pane for a **brief** of everything `.spec-context.json` carries — built to orient you in two seconds:
 
-- **Goal** — the spec's distilled intent, plus its out-of-scope fence (the things it deliberately isn't).
-- **Approach** — one-line strategy, how the pipeline sized the change (projected files/tasks → verdict), PR link, and commit/PR checkpoints. (The status badge lives in the always-visible spec header, so the card no longer repeats it.)
-- **Phases** — a vertical timeline reporting **active time** per step and substep (idle gaps are capped, so an overnight pause doesn't inflate a step); the in-flight step pulses and the terminal phase finalizes.
-- **Tasks** — per-`T###` status, summary, file chips, and inline concerns.
-- **Living specs** — when a feature touches durable capability specs, this card lists the ones it loaded into context and marks the ones it folded its changes back into (Companion's lightweight answer to the OpenSpec Dashboard). Read-only; appears only when the spec carries living-specs context.
-- **Decisions** — each choice with its reasoning and the alternative that was rejected.
-- **Verified** — the checks that proved the work: what was checked, the command, the result, and any warnings that were seen and dismissed.
-- **Coverage** — every requirement with the tasks that built it and the tests that cover it, with a covered/total rollup — "is FR-7 tested?" answered at a glance.
-- **Concerns**, **Review comments** (every persisted comment grouped by document, with jump-to-line and a per-document **Run refinement** button), and **Files touched** (clickable).
+- **The hero strip** — how the run stands at a glance: status, how the pipeline sized the change, honestly-measured active time, plus big-numeral chips for tasks done, requirements covered (with a coverage donut), checks passed, and open concerns (with a pulsing warning dot). Each chip jumps to its detail tab.
+- **The plan** — always visible below the hero: the spec's distilled goal as a lede, the **context** the run worked from (living specs, areas, constraints), the out-of-scope fence, and the approach — the full Intent/Context/Expectations picture in one block.
+- **Four tabs** hold the rest, with count badges and keyboard navigation; empty tabs simply don't appear:
+  - **Decisions** — each choice as a numbered entry with its reasoning and the rejected alternative.
+  - **Work** — the phase timeline (with duration bars proportional to genuinely measured spans), per-task summaries, and files touched.
+  - **Proof** — verifications as green/amber pass pills (including dismissed warnings), and the requirement coverage map: uncovered requirements lead, each requirement chip tinted by its covered state, the full mapping behind a disclosure. When anything is uncovered or concerning, Proof opens first.
+  - **Notes** — concerns, persisted review comments (grouped by document, jump-to-line, per-document **Run refinement**), and living-specs context.
 
-Each card hides itself when its data is missing, so a minimal speckit-style spec collapses to just *Phases*. Visibility is gated by `speckit.viewer.activityPanel` — `"off"`, `"beta"` (default; toggle shows a *beta* pill), or `"on"`.
+Old specs without the newer capture degrade gracefully — the hero shows what exists and only populated tabs render. Visibility is gated by `speckit.viewer.activityPanel` — `"off"`, `"beta"` (default; toggle shows a *beta* pill), or `"on"`.
 
 ![Activity Panel](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/activity.png)
 *Activity panel. The Phases timeline plus Approach, Tasks, and Review-comments cards — one overview of everything the spec's context file tracks.*
