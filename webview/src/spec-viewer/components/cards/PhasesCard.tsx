@@ -58,22 +58,6 @@ function buildGroups(stepHistory: ViewerState['stepHistory'], history: HistoryEn
 }
 
 /**
- * Collapse consecutive events that share the same name — an implement loop
- * writes the same substep (e.g. `phase1`) several times in a row. Keeps the
- * first of each run so its real `startedAt` is preserved; distinct substeps are
- * untouched.
- */
-function dedupeEvents(events: TimelineEventModel[]): TimelineEventModel[] {
-    const out: TimelineEventModel[] = [];
-    for (const e of events) {
-        const prev = out[out.length - 1];
-        if (prev && prev.name === e.name) continue;
-        out.push(e);
-    }
-    return out;
-}
-
-/**
  * All recorded activity timestamps for a step, in no particular order:
  * the step start, every event boundary, and the completion (when present).
  * Feeds `activeDurationMs`, which sorts them and sums the gaps with long idle
@@ -150,8 +134,13 @@ export function PhasesCard({ state }: PhasesCardProps) {
                 <div class="phases-strip" role="list">
                     {groups.map((group, idx) => {
                         const inFlight = group.completedAt === null;
+                        // Timing honesty: a step shows elapsed time only when its span
+                        // was extension-stamped; journaled steps render name-only.
+                        const trusted = state.stepHistory?.[group.step]?.durationTrusted === true;
                         // Elapsed = active time (idle gaps capped), not wall-clock.
-                        const duration = formatElapsed(activeDurationMs(activityPoints(group)));
+                        const duration = trusted || inFlight
+                            ? formatElapsed(activeDurationMs(activityPoints(group)))
+                            : null;
                         const showStepDate =
                             new Date(group.startedAt).toDateString() !== specStartDay;
                         return (
@@ -165,7 +154,7 @@ export function PhasesCard({ state }: PhasesCardProps) {
                                 {idx > 0 && <span class="phases-strip__connector" aria-hidden="true" />}
                                 <span class="phases-strip__dot" aria-hidden="true" />
                                 <span class="phases-strip__name">{group.step}</span>
-                                <span class="phases-strip__time">{duration}</span>
+                                {duration && <span class="phases-strip__time">{duration}</span>}
                             </div>
                         );
                     })}
