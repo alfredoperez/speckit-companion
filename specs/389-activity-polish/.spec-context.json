@@ -1,0 +1,74 @@
+{
+  "workflow": "speckit",
+  "specName": "activity polish",
+  "branch": "main",
+  "currentStep": "specify",
+  "status": "specified",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-03T12:08:21.231Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-03T12:10:52.699Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "living specs evaluated — skipped (not configured)",
+  "coverage": {
+    "FR-001": {
+      "title": "Active tab shows only the accent underline on click; visible focus ring on keyboard focus only"
+    },
+    "FR-002": {
+      "title": "Coverage donut renders once (hero chip); Coverage heading carries no count"
+    },
+    "FR-003": {
+      "title": "Proof/Notes badges are warning-tinted attention counts (uncovered/concerns) or absent; Decisions/Work keep counts"
+    },
+    "FR-004": {
+      "title": "Checks render as content-width wrapping pills under the heading Checks — no grid holes"
+    },
+    "FR-005": {
+      "title": "Section headings Title Case at readable size; uppercase stays only on inline metadata prefixes"
+    },
+    "FR-006": {
+      "title": "Coverage rows drop the list bullet; the FR chip is the marker"
+    },
+    "FR-007": {
+      "title": "Metadata label color derives from theme foreground via color-mix"
+    },
+    "FR-008": {
+      "title": "Viewer header renders the spec name in Title Case"
+    },
+    "FR-009": {
+      "title": "Stories cover new badge states + pill layout; tab-model logic unit-tested"
+    },
+    "FR-010": {
+      "title": "Token-driven, theme-safe styling; no capture or schema changes"
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 11,
+    "projectedTasks": 9,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "context": [
+    "area: webview/src/spec-viewer/components (ActivityTabs, VerifiedCard, CoverageCard, PlanSection) + webview/styles/spec-viewer/_activity.css",
+    "constraint: taste findings from issue #405 screenshot review; impeccable source pass already clean",
+    "constraint: no capture/schema changes; hero status + header badge pairing stays"
+  ],
+  "intent": "Make the Activity panel read as designed: one deliberate focus treatment, each number once, checks as pills, headings with hierarchy",
+  "expectations": [
+    "hero status + viewer header badge pairing stays (page chrome vs panel summary)",
+    "no capture or schema changes"
+  ]
+}
