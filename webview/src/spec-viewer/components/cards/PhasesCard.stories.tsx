@@ -174,62 +174,12 @@ export const OverallHeaderSpan: Story = {
 // should render its own real duration (not just an offset),
 // because tracked substeps carry both timestamps.
 
-export const PerSubstepTiming: Story = {
-    name: 'Per-substep timing (tracked durations)',
-    render: () => (
-        <PhasesCard
-            state={baseState({
-                status: 'planning',
-                activeStep: 'plan',
-                stepHistory: {
-                    plan: {
-                        startedAt: iso(600_000),
-                        completedAt: iso(120_000),
-                        substeps: [
-                            { name: 'research', startedAt: iso(590_000), completedAt: iso(450_000) },
-                            { name: 'design', startedAt: iso(450_000), completedAt: iso(240_000) },
-                            { name: 'data-model', startedAt: iso(240_000), completedAt: iso(120_000) },
-                        ],
-                    },
-                },
-                transitions: [
-                    { step: 'plan', substep: 'research', from: null, by: 'cli', at: iso(590_000) },
-                    { step: 'plan', substep: 'design', from: { step: 'plan', substep: 'research' }, by: 'cli', at: iso(450_000) },
-                    { step: 'plan', substep: 'data-model', from: { step: 'plan', substep: 'design' }, by: 'cli', at: iso(240_000) },
-                ],
-            })}
-        />
-    ),
-};
-
 // ── Duplicate-row collapse ────────────────────────────
 // An `implement` phase whose transitions repeat the same substep
 // name (`phase1` ×4) interspersed-then-followed by a distinct
 // `code-review`. After sort, the four `phase1` events are
 // consecutive and collapse to a single `phase1` row; `code-review`
 // remains its own row. Expect exactly two substep rows.
-
-export const DuplicateRowCollapse: Story = {
-    name: 'Duplicate-row collapse (phase1 ×4 → 1 row)',
-    render: () => (
-        <PhasesCard
-            state={baseState({
-                status: 'implementing',
-                activeStep: 'implement',
-                stepHistory: {
-                    implement: { startedAt: iso(600_000), completedAt: null },
-                },
-                transitions: [
-                    { step: 'implement', substep: 'phase1', from: null, by: 'cli', at: iso(590_000) },
-                    { step: 'implement', substep: 'phase1', from: { step: 'implement', substep: 'phase1' }, by: 'cli', at: iso(540_000) },
-                    { step: 'implement', substep: 'phase1', from: { step: 'implement', substep: 'phase1' }, by: 'cli', at: iso(480_000) },
-                    { step: 'implement', substep: 'phase1', from: { step: 'implement', substep: 'phase1' }, by: 'cli', at: iso(420_000) },
-                    { step: 'implement', substep: 'code-review', from: { step: 'implement', substep: 'phase1' }, by: 'cli', at: iso(120_000) },
-                ],
-            })}
-        />
-    ),
-};
 
 // ── Author-at-start ───────────────────────────────────
 // Multiple substeps authored by the same actor (`cli`). The actor

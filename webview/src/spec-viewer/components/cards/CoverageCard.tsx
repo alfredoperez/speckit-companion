@@ -37,25 +37,8 @@ export function CoverageCard({ state }: CoverageCardProps) {
 
     const uncovered = rows.filter(r => r.tests.length === 0);
     const covered = rows.length - uncovered.length;
-
-    let summary;
-    if (covered === 0) {
-        summary = (
-            <p class="activity-detail">
-                No tests mapped yet — {rows.length} requirement{rows.length === 1 ? '' : 's'} tracked.
-            </p>
-        );
-    } else if (uncovered.length > 0) {
-        summary = (
-            <ul class="activity-list">
-                {uncovered.map(r => (
-                    <CoverageRow key={r.req} row={r} />
-                ))}
-            </ul>
-        );
-    } else {
-        summary = <p class="activity-detail">Every requirement has a mapped test.</p>;
-    }
+    // Uncovered requirements lead — the gaps are the signal.
+    const ordered = [...uncovered, ...rows.filter(r => r.tests.length > 0)];
 
     return (
         <section class="activity-card activity-card--coverage">
@@ -64,17 +47,19 @@ export function CoverageCard({ state }: CoverageCardProps) {
                 <span class="activity-card__count">({covered}/{rows.length})</span>
             </h3>
             <div class="activity-card__body">
-                {summary}
-                {covered > 0 && (
-                    <details class="activity-disclosure">
-                        <summary>Show all {rows.length} requirements</summary>
-                        <ul class="activity-list">
-                            {rows.map(r => (
-                                <CoverageRow key={r.req} row={r} />
-                            ))}
-                        </ul>
-                    </details>
+                {covered === 0 && (
+                    <p class="activity-detail">
+                        No tests mapped yet — {rows.length} requirement{rows.length === 1 ? '' : 's'} tracked.
+                    </p>
                 )}
+                <details class="activity-disclosure" open>
+                    <summary>{rows.length} requirement{rows.length === 1 ? '' : 's'}</summary>
+                    <ul class="activity-list">
+                        {ordered.map(r => (
+                            <CoverageRow key={r.req} row={r} />
+                        ))}
+                    </ul>
+                </details>
             </div>
         </section>
     );

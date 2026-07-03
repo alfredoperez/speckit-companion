@@ -1078,3 +1078,94 @@
 .activity-detail {
     max-width: 72ch;
 }
+
+/* ============================================
+   Phases strip + one-surface tabs
+   ============================================ */
+
+.phases-strip {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    row-gap: var(--space-2);
+    margin-top: var(--space-3);
+}
+
+.phases-strip__node {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.phases-strip__connector {
+    display: inline-block;
+    width: 24px;
+    height: 1px;
+    margin: 0 var(--space-2);
+    background: var(--border);
+    align-self: center;
+}
+
+.phases-strip__dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--success);
+    align-self: center;
+    flex: none;
+}
+
+.phases-strip__node.is-in-flight .phases-strip__dot {
+    background: var(--accent);
+    animation: activity-dot-pulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .phases-strip__node.is-in-flight .phases-strip__dot { animation: none; }
+}
+
+.phases-strip__name {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: capitalize;
+}
+
+.phases-strip__time {
+    font-size: 0.78rem;
+    color: var(--text-body);
+    font-variant-numeric: tabular-nums;
+}
+
+/* One surface per tab: the panel carries the chrome, inner cards flatten. */
+
+.activity-tabs__panel {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+    padding: var(--space-4) var(--space-5);
+    gap: var(--space-5);
+}
+
+.activity-tabs__panel .activity-card {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    overflow: visible;
+}
+
+.activity-tabs__panel .activity-card__title {
+    padding: 0 0 var(--space-2);
+    background: transparent;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: var(--space-3);
+}
+
+.activity-tabs__panel .activity-card__body {
+    padding: 0;
+}
+
+/* A tab with a single section: the tab label already names it — drop the title. */
+.activity-tabs__panel > .activity-card:only-of-type .activity-card__title {
+    display: none;
+}
