@@ -13,9 +13,10 @@ const STEP_ORDER = ['specify', 'clarify', 'plan', 'tasks', 'analyze', 'implement
 const KNOWN_ACTORS = new Set(['extension', 'cli', 'ai', 'user']);
 
 /** Span length in ms, but only for extension-stamped (trusted) steps; 0 otherwise. */
-function trustedDurationMs(entry: StepHistoryEntry | undefined): number {
-    if (!entry?.durationTrusted || !entry.completedAt) return 0;
-    return new Date(entry.completedAt).getTime() - new Date(entry.startedAt).getTime();
+function trustedDurationMs(entry: { durationTrusted?: boolean; completedAt: string | null; startedAt: string }): number {
+    if (!entry.durationTrusted || !entry.completedAt) return 0;
+    const span = new Date(entry.completedAt).getTime() - new Date(entry.startedAt).getTime();
+    return Number.isFinite(span) && span > 0 ? span : 0;
 }
 
 interface StepGroup {

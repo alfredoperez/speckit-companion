@@ -1,3 +1,4 @@
+import type { ComponentChildren } from 'preact';
 import type { ViewerState } from '../types';
 import type { ActivityTabId } from '../activityTabsModel';
 import { heroStats, formatActiveTime } from '../activityHeroModel';
@@ -32,7 +33,7 @@ interface ChipProps {
     tab: ActivityTabId;
     onJump: (tab: ActivityTabId) => void;
     warning?: boolean;
-    icon?: preact.ComponentChildren;
+    icon?: ComponentChildren;
 }
 
 function Chip({ value, label, tab, onJump, warning, icon }: ChipProps) {

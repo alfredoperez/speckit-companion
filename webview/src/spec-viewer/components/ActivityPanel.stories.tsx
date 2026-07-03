@@ -12,7 +12,7 @@
 import type { Meta, StoryObj } from '@storybook/preact';
 import { ActivityPanel } from './ActivityPanel';
 import { ActivityErrorBoundary } from './ActivityErrorBoundary';
-import { viewerState, navState } from '../signals';
+import { viewerState, navState, activityTab } from '../signals';
 import type { ViewerState, TaskSummary, Transition, NavState } from '../types';
 import legacyFixture from '../../../../specs/095-fix-tasks-card-concerns/fixtures/legacy-string-concerns.spec-context.json';
 
@@ -279,6 +279,7 @@ const richReasoningState: ViewerState = {
 // The full redesign with an ICE-complete payload: hero, plan, four tabs.
 export const RedesignRich: Story = {
     render: () => {
+        activityTab.value = null;
         viewerState.value = richReasoningState;
         navState.value = { showInstallPrompt: false } as NavState;
         return <div style="max-width: 900px;"><ActivityPanel /></div>;
@@ -288,6 +289,7 @@ export const RedesignRich: Story = {
 // Mid-pipeline: nothing covered yet, one concern — Proof opens by default.
 export const RedesignMidPipeline: Story = {
     render: () => {
+        activityTab.value = null;
         viewerState.value = {
             ...richReasoningState,
             status: 'implementing',
