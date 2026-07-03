@@ -337,6 +337,7 @@ export function deriveViewerState(
         livingSpecs: pickLivingSpecs(ctx),
         intent: pickString(ctx, 'intent'),
         expectations: pickStringArray(ctx, 'expectations'),
+        context: pickStringArray(ctx, 'context'),
         verified: pickVerified(ctx),
         coverage: pickCoverage(ctx),
         classification: pickClassification(ctx),

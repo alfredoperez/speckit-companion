@@ -196,5 +196,35 @@ class CaptureFieldTests(unittest.TestCase):
         self.assertEqual(_ctx(self.fd)["custom_marker"], "keep-me")
 
 
+class ContextCaptureTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.fd = Path(self._tmp.name) / "specs" / "_zzz-context"
+        self.fd.mkdir(parents=True)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_context_appends_deduped_preserving_order(self) -> None:
+        wc.append_string_list(self.fd, "context", ["living spec: checkout", "area: src/features/specs"])
+        wc.append_string_list(self.fd, "context", ["living spec: checkout", "constraint: isolation rule"])
+        self.assertEqual(
+            _ctx(self.fd)["context"],
+            ["living spec: checkout", "area: src/features/specs", "constraint: isolation rule"],
+        )
+
+    def test_context_empty_values_are_a_noop(self) -> None:
+        self.assertIsNone(wc.append_string_list(self.fd, "context", ["", "  "]))
+        self.assertFalse((self.fd / ".spec-context.json").exists())
+
+    def test_context_never_touches_lifecycle(self) -> None:
+        wc.update_context(self.fd, "specify", "specified", "extension", kind="complete")
+        before = _ctx(self.fd)
+        wc.append_string_list(self.fd, "context", ["area: webview"])
+        after = _ctx(self.fd)
+        self.assertEqual(after["history"], before["history"])
+        self.assertEqual(after["status"], before["status"])
+
+
 if __name__ == "__main__":
     unittest.main()

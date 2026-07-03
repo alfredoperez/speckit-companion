@@ -20,4 +20,9 @@ reads: [resolve-dir]
    - **Assumptions** — the informed defaults you chose for anything the description left open.
    - **Verbatim Constraints** *(include only when the request pins exact, must-match values)* — when the user's description gives a **literal identifier or string that the result must match exactly** — a `data-testid`, a route path, an API endpoint/method, a CLI flag, an env var name, a config key, exact UI copy, a column name — record it here **verbatim, in backticks, exactly as written**. These are *requirements the user pinned*, not implementation details you may rephrase, so they are the one place exact identifiers belong in the spec. Do **not** paraphrase, normalize casing, pluralize, or invent a "nicer" name; downstream steps and the implementation MUST use these exact strings. If the request pins none, omit this section.
 
+**Log the requirements as they're born.** The moment the Functional Requirements are written, record each one into the spec's context — one call per requirement, its one-line text as the title — so requirements exist as readable, queryable entries from the first step (tasks and implement fill in coverage later; best-effort, skip silently if `python3` is unavailable):
+```bash
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --coverage-req FR-001 --title "<the requirement's one-line text>"
+```
+
 3. Keep it business-readable. Every vague requirement should fail a "testable and unambiguous" check — tighten it. Remove a section that genuinely does not apply rather than leaving it as "N/A". The one exception to "no implementation detail" is **Verbatim Constraints**: an exact value the *user* specified is a requirement, and dropping it (forcing a later step to guess) is a defect.

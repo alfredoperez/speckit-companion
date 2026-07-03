@@ -42,6 +42,10 @@
       "type": "array",
       "items": { "type": "string" }
     },
+    "context": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
     "decisions": {
       "type": "array",
       "items": {

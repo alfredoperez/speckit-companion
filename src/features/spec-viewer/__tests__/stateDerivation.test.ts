@@ -331,3 +331,16 @@ describe('malformed optional fields are coerced, never crash the renderer', () =
         expect(state.verified?.[0]).toEqual({ what: 'build', result: undefined, command: undefined, warnings: undefined });
     });
 });
+
+describe('context (ICE C) passthrough', () => {
+    it('passes context strings through and drops non-strings', () => {
+        const state = deriveViewerState(makeContext({
+            context: ['living spec: checkout', 42, 'area: nodes/specify', null],
+        } as never));
+        expect(state.context).toEqual(['living spec: checkout', 'area: nodes/specify']);
+    });
+
+    it('is absent when the field is missing', () => {
+        expect(deriveViewerState(makeContext()).context).toBeUndefined();
+    });
+});

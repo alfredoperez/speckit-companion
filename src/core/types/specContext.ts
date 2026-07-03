@@ -254,6 +254,8 @@ export interface SpecContext {
     intent?: string;
     /** Explicit non-goals / out-of-scope items, de-duped append. */
     expectations?: string[];
+    /** What the run worked from: living specs loaded, areas investigated, constraints (ICE's C). */
+    context?: string[];
     /** How-summary recorded at plan complete. */
     approach?: string;
     /** Decisions with rationale; bare strings tolerated from weaker emitters. */
@@ -361,6 +363,7 @@ export interface ViewerState {
     /** Reasoning-trail capture, normalized for rendering. */
     intent?: string;
     expectations?: string[];
+    context?: string[];
     verified?: ViewerVerification[];
     coverage?: ViewerCoverageRow[];
     classification?: ClassificationEntry;
