@@ -18,6 +18,27 @@
       "kind": "complete",
       "by": "extension",
       "at": "2026-07-03T12:10:52.699Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T12:15:32.280Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T12:16:25.214Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T12:16:25.840Z"
     }
   ],
   "unattended": true,
@@ -70,5 +91,34 @@
   "expectations": [
     "hero status + viewer header badge pairing stays (page chrome vs panel summary)",
     "no capture or schema changes"
-  ]
+  ],
+  "approach": "Presentation-layer pass over the shipped Activity panel: one model edit (tab badges become attention-only with a warning tone) plus CSS/markup fixes — focus-visible tabs, single donut, flex-wrap check pills, Title Case headings, no coverage bullets, a derived --text-label token, and a capitalized header title.",
+  "decisions": [
+    {
+      "decision": "focus-visible ring + suppressed plain-click outline on tabs",
+      "why": "keeps the keyboard affordance while removing the three-sided box artifact",
+      "rejected": "outline: none unconditionally (kills keyboard a11y)"
+    },
+    {
+      "decision": "tab badges keep count field, gain warning flag; Proof/Notes badge only attention counts",
+      "why": "smallest model change; presence and default-tab rules untouched",
+      "rejected": "badge object {value, tone} — more churn for two fields"
+    },
+    {
+      "decision": "Title Case headings via explicit strings, not text-transform: capitalize",
+      "why": "capitalize mangles mid-title words; explicit strings are exact",
+      "rejected": "CSS capitalize on card titles"
+    },
+    {
+      "decision": "new --text-label token derived from theme foreground via color-mix",
+      "why": "descriptionForeground is below AA on dark; follows the #254 direction",
+      "rejected": "--text-body (labels stop receding) or hardcoded gray (theme-unsafe)"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan + research + data-model + UI contract for the 8-finding polish; one model edit, rest CSS/markup",
+      "key_finding": "the focus artifact is the default webview outline colliding with the active-tab underline — solvable with :focus-visible alone"
+    }
+  }
 }
