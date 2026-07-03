@@ -228,6 +228,8 @@ body[data-has-spec-context="true"] .meta-branch {
     color: var(--header-title);
     line-height: 1.2;
     letter-spacing: -0.015em;
+    /* Spec names arrive as lowercase dir slugs; presentation-only casing. */
+    text-transform: capitalize;
 }
 
 /* Glance-metadata cluster: badge · branch · date all flow inline at the same

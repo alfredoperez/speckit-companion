@@ -1,0 +1,474 @@
+{
+  "workflow": "speckit",
+  "specName": "activity polish",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-03T12:08:21.231Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-03T12:10:52.699Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T12:15:32.280Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T12:16:25.214Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T12:16:25.840Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T12:17:37.092Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T12:17:38.165Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-03T12:18:00.220Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T16:50:46.226Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T16:51:13.503Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T16:51:54.523Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T16:54:01.023Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T16:54:38.108Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T16:54:38.171Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T16:55:21.487Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T16:55:21.553Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T16:57:12.670Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T16:57:12.732Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T16:57:12.793Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T16:58:51.545Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T17:00:03.708Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T17:05:05.274Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-03T17:05:05.360Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "14/14 tasks done — 1176/1176 jest, both tsc clean, focus states proven in-browser",
+  "coverage": {
+    "FR-001": {
+      "title": "Active tab shows only the accent underline on click; visible focus ring on keyboard focus only",
+      "tasks": [
+        "T004"
+      ],
+      "tests": [
+        "playwright click/keyboard screenshots (389-clicked-tab",
+        "389-keyboard-focus)"
+      ]
+    },
+    "FR-002": {
+      "title": "Coverage donut renders once (hero chip); Coverage heading carries no count",
+      "tasks": [
+        "T005"
+      ],
+      "tests": [
+        "rich story screenshot: single hero donut",
+        "count-free headings"
+      ]
+    },
+    "FR-003": {
+      "title": "Proof/Notes badges are warning-tinted attention counts (uncovered/concerns) or absent; Decisions/Work keep counts",
+      "tasks": [
+        "T002",
+        "T003",
+        "T006"
+      ],
+      "tests": [
+        "activityModels.test.ts::activityTabs (warning badges",
+        "clean = no badge)"
+      ]
+    },
+    "FR-004": {
+      "title": "Checks render as content-width wrapping pills under the heading Checks — no grid holes",
+      "tasks": [
+        "T007",
+        "T008"
+      ],
+      "tests": [
+        "OddCountPacksWithoutHoles story screenshot"
+      ]
+    },
+    "FR-005": {
+      "title": "Section headings Title Case at readable size; uppercase stays only on inline metadata prefixes",
+      "tasks": [
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "rich/work story screenshots: Plan/Checks/Coverage cased headings"
+      ]
+    },
+    "FR-006": {
+      "title": "Coverage rows drop the list bullet; the FR chip is the marker",
+      "tasks": [
+        "T009"
+      ],
+      "tests": [
+        "rich story screenshot: bullet-free coverage rows"
+      ]
+    },
+    "FR-007": {
+      "title": "Metadata label color derives from theme foreground via color-mix",
+      "tasks": [
+        "T001",
+        "T009"
+      ],
+      "tests": [
+        "tokens.css --text-label across 4 theme blocks; screenshots"
+      ]
+    },
+    "FR-008": {
+      "title": "Viewer header renders the spec name in Title Case",
+      "tasks": [
+        "T011"
+      ],
+      "tests": [
+        "spec-header capitalize (presentation-only CSS)"
+      ]
+    },
+    "FR-009": {
+      "title": "Stories cover new badge states + pill layout; tab-model logic unit-tested",
+      "tasks": [
+        "T003",
+        "T012"
+      ],
+      "tests": [
+        "activityModels.test.ts",
+        "RedesignCleanNoBadges+OddCountPacksWithoutHoles stories"
+      ]
+    },
+    "FR-010": {
+      "title": "Token-driven, theme-safe styling; no capture or schema changes",
+      "tasks": [
+        "T001",
+        "T009",
+        "T014"
+      ],
+      "tests": [
+        "token-only diff; jest+tsc green"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 11,
+    "projectedTasks": 9,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "context": [
+    "area: webview/src/spec-viewer/components (ActivityTabs, VerifiedCard, CoverageCard, PlanSection) + webview/styles/spec-viewer/_activity.css",
+    "constraint: taste findings from issue #405 screenshot review; impeccable source pass already clean",
+    "constraint: no capture/schema changes; hero status + header badge pairing stays"
+  ],
+  "intent": "Make the Activity panel read as designed: one deliberate focus treatment, each number once, checks as pills, headings with hierarchy",
+  "expectations": [
+    "hero status + viewer header badge pairing stays (page chrome vs panel summary)",
+    "no capture or schema changes"
+  ],
+  "approach": "Presentation-layer pass over the shipped Activity panel: one model edit (tab badges become attention-only with a warning tone) plus CSS/markup fixes — focus-visible tabs, single donut, flex-wrap check pills, Title Case headings, no coverage bullets, a derived --text-label token, and a capitalized header title.",
+  "decisions": [
+    {
+      "decision": "focus-visible ring + suppressed plain-click outline on tabs",
+      "why": "keeps the keyboard affordance while removing the three-sided box artifact",
+      "rejected": "outline: none unconditionally (kills keyboard a11y)"
+    },
+    {
+      "decision": "tab badges keep count field, gain warning flag; Proof/Notes badge only attention counts",
+      "why": "smallest model change; presence and default-tab rules untouched",
+      "rejected": "badge object {value, tone} — more churn for two fields"
+    },
+    {
+      "decision": "Title Case headings via explicit strings, not text-transform: capitalize",
+      "why": "capitalize mangles mid-title words; explicit strings are exact",
+      "rejected": "CSS capitalize on card titles"
+    },
+    {
+      "decision": "new --text-label token derived from theme foreground via color-mix",
+      "why": "descriptionForeground is below AA on dark; follows the #254 direction",
+      "rejected": "--text-body (labels stop receding) or hardcoded gray (theme-unsafe)"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan + research + data-model + UI contract for the 8-finding polish; one model edit, rest CSS/markup",
+      "key_finding": "the focus artifact is the default webview outline colliding with the active-tab underline — solvable with :focus-visible alone"
+    },
+    "tasks": {
+      "summary": "14 tasks across 7 phases: foundational token+badge model, 4 story phases (focus, dedupe, pills, headings), polish (stories/docs/verify); _activity.css serialized T004→T008→T009"
+    },
+    "implement": {
+      "summary": "All 8 findings fixed: focus-visible tabs, single donut, attention badges, packed pills, cased headings, no bullets, --text-label token, capitalized header — 1176 tests green"
+    }
+  },
+  "currentTask": "T014",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added --text-label token (82% foreground mix; full foreground in high-contrast) across all four theme blocks; corrected research premise (secondary already 70% since spec 148)",
+      "files": [
+        "webview/styles/tokens.css",
+        "specs/389-activity-polish/research.md"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "ActivityTab gains warning flag; Proof badges uncovered count, Notes badges concern count, only when >0; Decisions/Work unchanged",
+      "files": [
+        "webview/src/spec-viewer/activityTabsModel.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Badge model tests: warning attention badges on Proof/Notes, badge-free when clean, comments don't badge Notes",
+      "files": [
+        "webview/src/spec-viewer/__tests__/activityModels.test.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "focus-visible accent ring on tabs, suppressed plain-click outline, warning-tinted count badge modifier",
+      "files": [
+        "webview/styles/spec-viewer/_activity.css"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "CoverageCard heading is plain 'Coverage' — header donut and count span removed (hero chip is the single donut)",
+      "files": [
+        "webview/src/spec-viewer/components/cards/CoverageCard.tsx"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Tab count badge renders --warning modifier when the model flags attention",
+      "files": [
+        "webview/src/spec-viewer/components/ActivityTabs.tsx"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "VerifiedCard heading is 'Checks' (matches hero chip word); count span removed",
+      "files": [
+        "webview/src/spec-viewer/components/cards/VerifiedCard.tsx"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Check pills pack as wrapping flex tags — auto-fit grid (ghost cells, height mismatch) removed",
+      "files": [
+        "webview/styles/spec-viewer/_activity.css"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Card/plan headings Title Case at 0.95rem (uppercase transform removed); micro-labels point at --text-label; coverage list bullets removed",
+      "files": [
+        "webview/styles/spec-viewer/_activity.css"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Plan section heading reads 'Plan'",
+      "files": [
+        "webview/src/spec-viewer/components/PlanSection.tsx"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Viewer header title capitalizes the slug-derived spec name (presentation-only)",
+      "files": [
+        "webview/styles/spec-viewer/_content.css"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Stories: RedesignCleanNoBadges (attention badges absent when covered+calm) and OddCountPacksWithoutHoles (pill wrap); existing stories still exercise warning badges via rich/mid payloads",
+      "files": [
+        "webview/src/spec-viewer/components/ActivityPanel.stories.tsx",
+        "webview/src/spec-viewer/components/cards/VerifiedCard.stories.tsx"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Root changelog entry (#405) + README Activity section reworded: attention-only badges, checks-as-pills",
+      "files": [
+        "CHANGELOG.md",
+        "README.md"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Verified: 1176/1176 jest, both tsc clean, click/keyboard focus states proven via browser automation, 5 story screenshots reviewed, impeccable clean on new surface (2 pre-existing advisories out of scope)"
+    }
+  },
+  "verified": [
+    {
+      "what": "full jest suite",
+      "command": "npx jest",
+      "result": "1176/1176 pass"
+    },
+    {
+      "what": "both tsc configs",
+      "command": "tsc --noEmit -p tsconfig.json / tsconfig.webview.json",
+      "result": "clean"
+    },
+    {
+      "what": "focus states via browser automation",
+      "command": "playwright click + ArrowRight on the tab bar",
+      "result": "click = underline only (no box); keyboard = accent ring"
+    },
+    {
+      "what": "impeccable on rendered rich story + changed styles",
+      "command": "npx impeccable detect",
+      "result": "0 findings on the changed surface",
+      "warnings": [
+        "pre-existing: Geist overused-font advisory (deliberate, bundled in #402)",
+        "pre-existing: blockquote border-left in _content.css (content pane, not Activity)"
+      ]
+    },
+    {
+      "what": "screenshot review of rich/clean/mid/work stories",
+      "command": "playwright screenshot x5",
+      "result": "one donut, attention-only badges, packed pills, Title Case headings, no bullets"
+    }
+  ]
+}

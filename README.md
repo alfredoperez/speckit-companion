@@ -92,10 +92,10 @@ Toggle **Activity** in the viewer's nav bar to swap the markdown pane for a **br
 
 - **The hero strip** — how the run stands at a glance: status, how the pipeline sized the change, honestly-measured active time, plus big-numeral chips for tasks done, requirements covered (with a coverage donut), checks passed, and open concerns (with a pulsing warning dot). Each chip jumps to its detail tab.
 - **The plan** — always visible below the hero: the spec's distilled goal as a lede, the **context** the run worked from (living specs, areas, constraints), the out-of-scope fence, and the approach — the full Intent/Context/Expectations picture in one block.
-- **Four tabs** hold the rest, with count badges and keyboard navigation; empty tabs simply don't appear:
+- **Four tabs** hold the rest, with keyboard navigation; empty tabs simply don't appear. Decisions and Work carry plain count badges, while Proof and Notes badge only what needs attention — uncovered requirements and open concerns, warning-tinted — and stay badge-free when everything is covered and calm:
   - **Decisions** — each choice as a numbered entry with its reasoning and the rejected alternative.
   - **Work** — the phase timeline (with duration bars proportional to genuinely measured spans), per-task summaries, and files touched.
-  - **Proof** — verifications as green/amber pass pills (including dismissed warnings), and the requirement coverage map: uncovered requirements lead, each requirement chip tinted by its covered state, the full mapping behind a disclosure. When anything is uncovered or concerning, Proof opens first.
+  - **Proof** — checks as green/amber pass pills that pack like tags (including dismissed warnings), and the requirement coverage map: uncovered requirements lead, each requirement chip tinted by its covered state, the full mapping behind a disclosure. When anything is uncovered or concerning, Proof opens first.
   - **Notes** — concerns, persisted review comments (grouped by document, jump-to-line, per-document **Run refinement**), and living-specs context.
 
 Old specs without the newer capture degrade gracefully — the hero shows what exists and only populated tabs render. Visibility is gated by `speckit.viewer.activityPanel` — `"off"`, `"beta"` (default; toggle shows a *beta* pill), or `"on"`.
