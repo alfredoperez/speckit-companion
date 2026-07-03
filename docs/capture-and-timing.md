@@ -141,7 +141,8 @@ Beyond the lifecycle timeline, the Companion command bodies capture the run's **
 | Lifecycle point | Emitting node | Captures |
 |---|---|---|
 | specify sizing (`persist-size`) | specify | `--classification` (the size call's inputs + verdict, not just the scalar `size`) |
-| specify complete (`finalize`) | specify | `--set intent=…` + `--expectation` per non-goal |
+| requirements drafted (`draft-spec`) | specify | `--coverage-req <FR> --title "<requirement text>"` per requirement (titles exist before tasks/coverage run) |
+| specify complete (`finalize`) | specify | `--set intent=…` + `--expectation` per non-goal + `--context` per thing the run worked from (living specs, areas, constraints) |
 | living-specs / hook gate skipped | specify | `--set last_action="… evaluated — skipped (…)"` (the audit breadcrumb) |
 | plan complete (`side-files`) | plan | `--set approach=…` + `--decision` per Phase-0 choice + `--step-summary` |
 | tasks complete (`tasks-doc`) | tasks | `--coverage-req <FR> --title "<requirement text>" --tasks <csv>` per requirement + `--step-summary` |

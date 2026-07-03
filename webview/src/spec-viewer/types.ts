@@ -251,6 +251,7 @@ export interface ViewerState {
     /** Reasoning-trail capture, normalized for rendering. */
     intent?: string;
     expectations?: string[];
+    context?: string[];
     verified?: ViewerVerification[];
     coverage?: ViewerCoverageRow[];
     classification?: ClassificationEntry;

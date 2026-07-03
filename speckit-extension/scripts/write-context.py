@@ -1640,6 +1640,11 @@ def main() -> int:
         help="Append an out-of-scope/non-goal string to expectations[] (de-duped). Repeatable.",
     )
     parser.add_argument(
+        "--context", dest="context_entries", action="append", default=None, metavar="TEXT",
+        help="Append a context entry to context[] — what the run worked from (a loaded "
+             "living spec, an investigated area, a constraint). De-duped. Repeatable.",
+    )
+    parser.add_argument(
         "--coverage-req", dest="coverage_req", default=None, metavar="REQ_ID",
         help="Upsert coverage.<REQ_ID> with --tasks and/or --tests (non-destructive merge: "
              "only a supplied list replaces its slot).",
@@ -1674,7 +1679,7 @@ def main() -> int:
     # mode, which always operates on the implement step.
     capture_mode = bool(
         args.decisions or args.verified or args.concerns or args.expectations
-        or args.coverage_req or args.step_summary or args.classification
+        or args.coverage_req or args.step_summary or args.classification or args.context_entries
     )
     if not args.tasks_file and not args.task and not args.mark_complete and not args.set_pairs and not args.living_specs and not args.fold_living_spec and not args.materialize and not args.finish and not args.advance and not capture_mode and (args.step == "done" or args.step not in CANONICAL_STEPS):
         print(
@@ -1740,6 +1745,8 @@ def main() -> int:
             target = append_capture_entries(feature_dir, "concerns", "note", args.concerns)
         elif args.expectations:
             target = append_string_list(feature_dir, "expectations", args.expectations)
+        elif args.context_entries:
+            target = append_string_list(feature_dir, "context", args.context_entries)
         elif args.coverage_req:
             cov_tasks = (
                 [t.strip() for t in args.coverage_tasks.split(",") if t.strip()]
@@ -1802,6 +1809,8 @@ def main() -> int:
             print(f"[companion] Recorded {len(args.concerns)} concern(s) in {target}")
         elif args.expectations:
             print(f"[companion] Recorded {len(args.expectations)} expectation(s) in {target}")
+        elif args.context_entries:
+            print(f"[companion] Recorded {len(args.context_entries)} context entr(y/ies) in {target}")
         elif args.coverage_req:
             print(f"[companion] Upserted coverage for {args.coverage_req} in {target}")
         elif args.step_summary:
