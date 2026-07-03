@@ -39,40 +39,92 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-07-03T12:16:25.840Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T12:17:37.092Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T12:17:38.165Z"
     }
   ],
   "unattended": true,
   "last_action": "living specs evaluated — skipped (not configured)",
   "coverage": {
     "FR-001": {
-      "title": "Active tab shows only the accent underline on click; visible focus ring on keyboard focus only"
+      "title": "Active tab shows only the accent underline on click; visible focus ring on keyboard focus only",
+      "tasks": [
+        "T004"
+      ]
     },
     "FR-002": {
-      "title": "Coverage donut renders once (hero chip); Coverage heading carries no count"
+      "title": "Coverage donut renders once (hero chip); Coverage heading carries no count",
+      "tasks": [
+        "T005"
+      ]
     },
     "FR-003": {
-      "title": "Proof/Notes badges are warning-tinted attention counts (uncovered/concerns) or absent; Decisions/Work keep counts"
+      "title": "Proof/Notes badges are warning-tinted attention counts (uncovered/concerns) or absent; Decisions/Work keep counts",
+      "tasks": [
+        "T002",
+        "T003",
+        "T006"
+      ]
     },
     "FR-004": {
-      "title": "Checks render as content-width wrapping pills under the heading Checks — no grid holes"
+      "title": "Checks render as content-width wrapping pills under the heading Checks — no grid holes",
+      "tasks": [
+        "T007",
+        "T008"
+      ]
     },
     "FR-005": {
-      "title": "Section headings Title Case at readable size; uppercase stays only on inline metadata prefixes"
+      "title": "Section headings Title Case at readable size; uppercase stays only on inline metadata prefixes",
+      "tasks": [
+        "T009",
+        "T010"
+      ]
     },
     "FR-006": {
-      "title": "Coverage rows drop the list bullet; the FR chip is the marker"
+      "title": "Coverage rows drop the list bullet; the FR chip is the marker",
+      "tasks": [
+        "T009"
+      ]
     },
     "FR-007": {
-      "title": "Metadata label color derives from theme foreground via color-mix"
+      "title": "Metadata label color derives from theme foreground via color-mix",
+      "tasks": [
+        "T001",
+        "T009"
+      ]
     },
     "FR-008": {
-      "title": "Viewer header renders the spec name in Title Case"
+      "title": "Viewer header renders the spec name in Title Case",
+      "tasks": [
+        "T011"
+      ]
     },
     "FR-009": {
-      "title": "Stories cover new badge states + pill layout; tab-model logic unit-tested"
+      "title": "Stories cover new badge states + pill layout; tab-model logic unit-tested",
+      "tasks": [
+        "T003",
+        "T012"
+      ]
     },
     "FR-010": {
-      "title": "Token-driven, theme-safe styling; no capture or schema changes"
+      "title": "Token-driven, theme-safe styling; no capture or schema changes",
+      "tasks": [
+        "T001",
+        "T009",
+        "T014"
+      ]
     }
   },
   "size": "normal",
@@ -119,6 +171,9 @@
     "plan": {
       "summary": "Plan + research + data-model + UI contract for the 8-finding polish; one model edit, rest CSS/markup",
       "key_finding": "the focus artifact is the default webview outline colliding with the active-tab underline — solvable with :focus-visible alone"
+    },
+    "tasks": {
+      "summary": "14 tasks across 7 phases: foundational token+badge model, 4 story phases (focus, dedupe, pills, headings), polish (stories/docs/verify); _activity.css serialized T004→T008→T009"
     }
   }
 }
