@@ -14,17 +14,18 @@ export function DecisionsCard({ state }: DecisionsCardProps) {
                 Decisions <span class="activity-card__count">({items.length})</span>
             </h3>
             <div class="activity-card__body">
-                <ul class="activity-list">
+                <ol class="activity-list activity-list--ordinals">
                     {items.map((d, i) => (
                         <li key={i}>
-                            <span>{d.decision}</span>
+                            <span class="activity-ordinal" aria-hidden="true">{i + 1}</span>
+                            <span class="activity-decision__text">{d.decision}</span>
                             {d.why && <div class="activity-detail"><span class="activity-inline-label">Why</span> {d.why}</div>}
                             {d.rejected && (
                                 <div class="activity-detail"><span class="activity-inline-label">Rejected</span> {d.rejected}</div>
                             )}
                         </li>
                     ))}
-                </ul>
+                </ol>
             </div>
         </section>
     );

@@ -1,4 +1,4 @@
-import type { ViewerState, HistoryEntry } from '../../types';
+import type { ViewerState, HistoryEntry, StepHistoryEntry } from '../../types';
 import { mergeStepEvents, buildHistoryIndex, TimelineEventModel } from '../../timelineEvents';
 import { Badge } from '../../../shared/components/Badge';
 import {
@@ -11,6 +11,12 @@ import {
 
 const STEP_ORDER = ['specify', 'clarify', 'plan', 'tasks', 'analyze', 'implement'];
 const KNOWN_ACTORS = new Set(['extension', 'cli', 'ai', 'user']);
+
+/** Span length in ms, but only for extension-stamped (trusted) steps; 0 otherwise. */
+function trustedDurationMs(entry: StepHistoryEntry | undefined): number {
+    if (!entry?.durationTrusted || !entry.completedAt) return 0;
+    return new Date(entry.completedAt).getTime() - new Date(entry.startedAt).getTime();
+}
 
 interface StepGroup {
     step: string;
@@ -90,6 +96,10 @@ function activityPoints(group: StepGroup): string[] {
 
 export function PhasesCard({ state }: PhasesCardProps) {
     const groups = buildGroups(state.stepHistory ?? {}, state.history ?? []);
+    const maxTrustedMs = Math.max(
+        0,
+        ...Object.values(state.stepHistory ?? {}).map(trustedDurationMs)
+    );
     if (groups.length === 0) return null;
 
     // Overall: the whole-spec start (absolute), end (absolute or in-flight), and
@@ -149,6 +159,9 @@ export function PhasesCard({ state }: PhasesCardProps) {
                 <div class="phases-track">
                     {groups.map(group => {
                         const inFlight = group.completedAt === null;
+                        // Duration bar: only for extension-trusted spans, scaled to
+                        // the longest trusted step so relative effort is visible.
+                        const trustedMs = trustedDurationMs(state.stepHistory?.[group.step]);
                         // Elapsed = active time (idle gaps capped), not wall-clock.
                         const duration = formatElapsed(activeDurationMs(activityPoints(group)));
                         const showStepDate =
@@ -166,6 +179,14 @@ export function PhasesCard({ state }: PhasesCardProps) {
                                     <span class="phases-step__name">{group.step}</span>
                                     <span class="phases-step__time">{duration}</span>
                                 </h4>
+                                {trustedMs > 0 && maxTrustedMs > 0 && (
+                                    <div class="phases-step__bar" aria-hidden="true">
+                                        <div
+                                            class="phases-step__bar-fill"
+                                            style={`width: ${Math.max(4, Math.round((trustedMs / maxTrustedMs) * 100))}%`}
+                                        />
+                                    </div>
+                                )}
                                 {/* start date only on a multi-day spec */}
                                 {showStepDate && (
                                     <div class="phases-step__sub">

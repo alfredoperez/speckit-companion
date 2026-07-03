@@ -1,7 +1,9 @@
 import type { ViewerState } from '../types';
-import { viewerState, navState } from '../signals';
-import { ApproachCard } from './cards/ApproachCard';
-import { IntentCard } from './cards/IntentCard';
+import { viewerState, navState, activityTab } from '../signals';
+import { activityTabs, defaultActivityTab, ActivityTabId } from '../activityTabsModel';
+import { ActivityHero } from './ActivityHero';
+import { PlanSection } from './PlanSection';
+import { ActivityTabs } from './ActivityTabs';
 import { PhasesCard } from './cards/PhasesCard';
 import { TasksCard } from './cards/TasksCard';
 import { DecisionsCard } from './cards/DecisionsCard';
@@ -61,20 +63,43 @@ export function ActivityPanel() {
         );
     }
 
+    const tabs = activityTabs(state);
+    const fallback = defaultActivityTab(state);
+    const chosen = activityTab.value;
+    const active: ActivityTabId | null =
+        chosen && tabs.some(t => t.id === chosen) ? chosen : fallback;
+    const select = (id: ActivityTabId) => { activityTab.value = id; };
+
     return (
         <div class="activity-panel">
             <InstallBanner />
-            <IntentCard state={state} />
-            <ApproachCard state={state} />
-            <DecisionsCard state={state} />
-            <PhasesCard state={state} />
-            <LivingSpecsCard state={state} />
-            <TasksCard state={state} />
-            <VerifiedCard state={state} />
-            <CoverageCard state={state} />
-            <ConcernsCard state={state} />
-            <CommentsCard state={state} />
-            <FilesCard state={state} />
+            <ActivityHero state={state} onJump={select} />
+            <PlanSection state={state} />
+            {active && (
+                <ActivityTabs tabs={tabs} active={active} onSelect={select}>
+                    {active === 'decisions' && <DecisionsCard state={state} />}
+                    {active === 'work' && (
+                        <>
+                            <PhasesCard state={state} />
+                            <TasksCard state={state} />
+                            <FilesCard state={state} />
+                        </>
+                    )}
+                    {active === 'proof' && (
+                        <>
+                            <VerifiedCard state={state} />
+                            <CoverageCard state={state} />
+                        </>
+                    )}
+                    {active === 'notes' && (
+                        <>
+                            <ConcernsCard state={state} />
+                            <CommentsCard state={state} />
+                            <LivingSpecsCard state={state} />
+                        </>
+                    )}
+                </ActivityTabs>
+            )}
         </div>
     );
 }

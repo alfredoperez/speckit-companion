@@ -154,6 +154,8 @@ export interface StepHistoryEntry {
     completedAt: string | null;
     /** Array form on some specs, Record form on others — normalize at consumer. */
     substeps?: SubstepEntry[] | Record<string, { startedAt: string; completedAt: string | null }>;
+    /** True only when both boundaries were extension-stamped — spans safe to present as durations. */
+    durationTrusted?: boolean;
 }
 
 export interface TaskSummary {

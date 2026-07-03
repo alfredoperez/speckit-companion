@@ -12,6 +12,11 @@ export const navState = signal<NavState | null>(null);
 /** Derived viewer state (pulse, highlights, footer, substep). */
 export const viewerState = signal<ViewerState | null>(null);
 
+import type { ActivityTabId } from './activityTabsModel';
+
+/** Active Activity-panel detail tab; null = use the default-tab rule. */
+export const activityTab = signal<ActivityTabId | null>(null);
+
 /** Pending refinements for GitHub-style review */
 export const pendingRefinements = signal<Refinement[]>([]);
 

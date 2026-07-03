@@ -26,7 +26,8 @@
   height: 100%;
   background: var(--accent);
   border-radius: 2px;
-  transition: width var(--transition-normal) ease;
+  /* width transitions thrash layout; the fill snaps instead. */
+  transition: none;
 }
 
 #markdown-content .section-progress-fill.complete {

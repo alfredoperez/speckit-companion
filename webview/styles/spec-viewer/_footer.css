@@ -202,7 +202,8 @@
     bottom: 0;
     height: 2px;
     background: var(--accent);
-    transition: width 100ms linear;
+    /* width transitions thrash layout; the fill snaps instead. */
+    transition: none;
 }
 
 .action-toast.hiding {
