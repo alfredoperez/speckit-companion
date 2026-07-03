@@ -49,6 +49,22 @@ export const LegacyString: Story = {
     render: () => <VerifiedCard state={baseState({ verified: [{ what: 'build clean' }] })} />,
 };
 
+// Odd count + varied lengths: pills pack content-width and wrap — no ghost
+// grid cell, no height mismatch between siblings.
+export const OddCountPacksWithoutHoles: Story = {
+    render: () => (
+        <VerifiedCard
+            state={baseState({
+                verified: [
+                    { what: 'impeccable on rendered stories + changed source', result: '0 findings everywhere' },
+                    { what: 'full jest + both tsc', result: '1173/1173, clean' },
+                    { what: 'screenshot review of Proof + Work tabs', result: 'matches the sketch; strip reads in one line' },
+                ],
+            })}
+        />
+    ),
+};
+
 export const Absent: Story = {
     render: () => <VerifiedCard state={baseState({})} />,
 };

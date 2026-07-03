@@ -26,8 +26,8 @@
 
 ## Decision 5 — Label color: a derived `--text-label` token
 
-**Decision**: Add `--text-label` to `tokens.css` as `color-mix(in srgb, var(--vscode-foreground) 62%, transparent)` and point the metadata-label classes at it.
-**Rationale**: `--text-secondary` maps to VS Code's `descriptionForeground`, documented in this repo as below WCAG AA on dark; deriving from the theme foreground keeps the recede-but-legible intent across themes and follows the direction already tracked for the secondary tokens (#254).
+**Decision**: Add `--text-label` to `tokens.css` as an 82% theme-foreground `color-mix` (full foreground in high-contrast) and point the metadata-label classes at it.
+**Rationale**: `--text-secondary` already derives from the theme foreground at 70% (spec 148 fixed the old `descriptionForeground` mapping), but at 0.7rem uppercase that 70% mix still reads faint — small type costs apparent contrast. Labels need a stronger mix than secondary while staying subordinate to values; subordination comes from size/weight, not dimness.
 **Alternatives considered**: Using `--text-body` — rejected, labels stop receding and compete with values; hardcoding a gray — rejected, breaks light theme and the token rule.
 
 ## Decision 6 — Header title casing: CSS `text-transform: capitalize`

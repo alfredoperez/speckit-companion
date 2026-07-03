@@ -46,6 +46,9 @@
        staying subordinate and theme-adaptive. See spec 148. */
     --text-secondary: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 70%, transparent);
     --text-muted: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 50%, transparent);
+    /* Tiny uppercase metadata labels: small size costs apparent contrast, so this
+       mixes stronger than --text-secondary while staying subordinate to values. */
+    --text-label: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 82%, transparent);
 
     /* Accent colors - mapped to VS Code theme variables */
     --accent: var(--vscode-focusBorder, #007fd4);
@@ -153,6 +156,7 @@ body.vscode-light {
     --text-secondary: color-mix(in srgb, var(--vscode-editor-foreground, #333333) 70%, transparent);
     --text-body: #4a4a4a;
     --text-muted: color-mix(in srgb, var(--vscode-editor-foreground, #333333) 50%, transparent);
+    --text-label: color-mix(in srgb, var(--vscode-editor-foreground, #333333) 82%, transparent);
     --border: var(--vscode-panel-border, #e0e0e0);
     --border-hover: var(--vscode-contrastBorder, #c0c0c0);
 
@@ -185,6 +189,7 @@ body.vscode-dark {
        and muted clears ~3:1 against the dark editor bg. See spec 148. */
     --text-secondary: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 70%, transparent);
     --text-muted: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 50%, transparent);
+    --text-label: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 82%, transparent);
     --border: var(--vscode-panel-border, #3c3c3c);
     --border-hover: var(--vscode-contrastBorder, #6c6c6c);
 }
@@ -201,6 +206,7 @@ body.vscode-high-contrast {
     --text-secondary: var(--vscode-editor-foreground, #ffffff);
     --text-body: var(--vscode-editor-foreground, #ffffff);
     --text-muted: color-mix(in srgb, var(--vscode-editor-foreground, #ffffff) 70%, transparent);
+    --text-label: var(--vscode-editor-foreground, #ffffff);
     --border: var(--vscode-contrastBorder, #ffffff);
     --border-hover: var(--vscode-contrastBorder, #ffffff);
     --accent: var(--vscode-focusBorder, #f38518);

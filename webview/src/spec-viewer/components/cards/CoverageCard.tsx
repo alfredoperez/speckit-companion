@@ -1,5 +1,4 @@
 import type { ViewerState, ViewerCoverageRow } from '../../types';
-import { Donut } from '../ActivityHero';
 
 export interface CoverageCardProps {
     state: ViewerState;
@@ -42,10 +41,7 @@ export function CoverageCard({ state }: CoverageCardProps) {
 
     return (
         <section class="activity-card activity-card--coverage">
-            <h3 class="activity-card__title">
-                <Donut covered={covered} total={rows.length} /> Coverage{' '}
-                <span class="activity-card__count">({covered}/{rows.length})</span>
-            </h3>
+            <h3 class="activity-card__title">Coverage</h3>
             <div class="activity-card__body">
                 {covered === 0 && (
                     <p class="activity-detail">

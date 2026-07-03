@@ -25,7 +25,7 @@ export function PlanSection({ state }: PlanSectionProps) {
 
     return (
         <section class="activity-plan" aria-label="Plan">
-            <h2 class="activity-plan__heading">The plan</h2>
+            <h2 class="activity-plan__heading">Plan</h2>
             {intent && <p class="activity-plan__lede">{intent}</p>}
             {context && context.length > 0 && (
                 <div class="activity-plan__row">

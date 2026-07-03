@@ -286,6 +286,24 @@ export const RedesignRich: Story = {
     },
 };
 
+// Fully covered, no concerns: Proof and Notes render without badges (the
+// badge is an attention signal, not a content count) and Decisions opens.
+export const RedesignCleanNoBadges: Story = {
+    render: () => {
+        activityTab.value = null;
+        viewerState.value = {
+            ...richReasoningState,
+            concerns: undefined,
+            coverage: richReasoningState.coverage!.map(r => ({
+                ...r,
+                tests: r.tests.length > 0 ? r.tests : ['activityPanel.test.ts::planSection'],
+            })),
+        };
+        navState.value = { showInstallPrompt: false } as NavState;
+        return <div style="max-width: 900px;"><ActivityPanel /></div>;
+    },
+};
+
 // Mid-pipeline: nothing covered yet, one concern — Proof opens by default.
 export const RedesignMidPipeline: Story = {
     render: () => {

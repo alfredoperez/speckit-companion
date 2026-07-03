@@ -16,7 +16,7 @@ const base = (overrides: Partial<ViewerState> = {}): ViewerState => ({
 });
 
 describe('activityTabs', () => {
-    it('renders only non-empty tabs, in canonical order, with counts', () => {
+    it('renders only non-empty tabs, in canonical order', () => {
         const tabs = activityTabs(base({
             decisions: [{ decision: 'a' }],
             taskSummaries: { T001: { status: 'DONE' }, T002: { status: 'DONE' } },
@@ -27,7 +27,50 @@ describe('activityTabs', () => {
         expect(tabs.map(t => t.id)).toEqual(['decisions', 'work', 'proof', 'notes']);
         expect(tabs[0].count).toBe(1);
         expect(tabs[1].count).toBe(2);
-        expect(tabs[2].count).toBe(2);
+    });
+
+    it('badges Proof with the uncovered count as a warning', () => {
+        const tabs = activityTabs(base({
+            verified: [{ what: 'jest' }],
+            coverage: [
+                { req: 'FR-001', tasks: [], tests: [] },
+                { req: 'FR-002', tasks: [], tests: [] },
+                { req: 'FR-003', tasks: [], tests: ['a.test.ts'] },
+            ],
+        }));
+        const proof = tabs.find(t => t.id === 'proof')!;
+        expect(proof.count).toBe(2);
+        expect(proof.warning).toBe(true);
+    });
+
+    it('renders Proof without a badge when everything is covered', () => {
+        const tabs = activityTabs(base({
+            verified: [{ what: 'jest' }],
+            coverage: [{ req: 'FR-001', tasks: [], tests: ['a.test.ts'] }],
+        }));
+        const proof = tabs.find(t => t.id === 'proof')!;
+        expect(proof.count).toBeUndefined();
+        expect(proof.warning).toBeUndefined();
+    });
+
+    it('badges Notes only for open concerns, not comments', () => {
+        const comment = {
+            id: 'c1',
+            doc: 'spec' as const,
+            anchor: { heading: null, blockText: 'b', line: 1 },
+            comment: 'c',
+            status: 'pending' as const,
+            createdAt: '2026-07-03T10:00:00Z',
+        };
+        const withConcern = activityTabs(base({ concerns: [{ note: 'x' }], reviewComments: [comment] }));
+        const notes = withConcern.find(t => t.id === 'notes')!;
+        expect(notes.count).toBe(1);
+        expect(notes.warning).toBe(true);
+
+        const commentsOnly = activityTabs(base({ reviewComments: [comment] }));
+        const calmNotes = commentsOnly.find(t => t.id === 'notes')!;
+        expect(calmNotes.count).toBeUndefined();
+        expect(calmNotes.warning).toBeUndefined();
     });
 
     it('yields no tabs for an empty state', () => {

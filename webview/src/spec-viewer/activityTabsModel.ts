@@ -13,6 +13,8 @@ export interface ActivityTab {
     label: string;
     /** Count badge; undefined renders no badge. */
     count?: number;
+    /** Attention badge (uncovered/concerns) — renders with warning treatment. */
+    warning?: boolean;
 }
 
 function hasWork(state: ViewerState): boolean {
@@ -36,6 +38,11 @@ function notesCount(state: ViewerState): number {
     );
 }
 
+/** A count badge that renders with warning treatment, or nothing when there's nothing to flag. */
+function attentionBadge(count: number): Pick<ActivityTab, 'count' | 'warning'> {
+    return count > 0 ? { count, warning: true } : {};
+}
+
 /** The tabs that have content for this state, in canonical order. */
 export function activityTabs(state: ViewerState): ActivityTab[] {
     const tabs: ActivityTab[] = [];
@@ -47,10 +54,13 @@ export function activityTabs(state: ViewerState): ActivityTab[] {
         tabs.push({ id: 'work', label: 'Work', count: tasks > 0 ? tasks : undefined });
     }
     if (proofCount(state) > 0) {
-        tabs.push({ id: 'proof', label: 'Proof', count: proofCount(state) });
+        // Proof mixes checks + requirements, so the badge flags only the actionable count: uncovered requirements.
+        const uncovered = (state.coverage ?? []).filter(r => r.tests.length === 0).length;
+        tabs.push({ id: 'proof', label: 'Proof', ...attentionBadge(uncovered) });
     }
     if (notesCount(state) > 0) {
-        tabs.push({ id: 'notes', label: 'Notes', count: notesCount(state) });
+        const concerns = state.concerns?.length ?? 0;
+        tabs.push({ id: 'notes', label: 'Notes', ...attentionBadge(concerns) });
     }
     return tabs;
 }

@@ -47,7 +47,11 @@ export function ActivityTabs({ tabs, active, onSelect, children }: ActivityTabsP
                         onClick={() => onSelect(tab.id)}
                     >
                         {tab.label}
-                        {tab.count !== undefined && <span class="activity-tabs__count">{tab.count}</span>}
+                        {tab.count !== undefined && (
+                            <span class={tab.warning ? 'activity-tabs__count activity-tabs__count--warning' : 'activity-tabs__count'}>
+                                {tab.count}
+                            </span>
+                        )}
                     </button>
                 ))}
             </div>

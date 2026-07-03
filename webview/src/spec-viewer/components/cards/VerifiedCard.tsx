@@ -11,9 +11,7 @@ export function VerifiedCard({ state }: VerifiedCardProps) {
 
     return (
         <section class="activity-card activity-card--verified">
-            <h3 class="activity-card__title">
-                Verified <span class="activity-card__count">({items.length})</span>
-            </h3>
+            <h3 class="activity-card__title">Checks</h3>
             <div class="activity-card__body">
                 <div class="activity-pill-grid">
                     {items.map((v, i) => {
