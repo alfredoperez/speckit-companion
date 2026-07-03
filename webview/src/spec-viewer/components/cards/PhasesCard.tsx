@@ -13,12 +13,6 @@ const STEP_ORDER = ['specify', 'clarify', 'plan', 'tasks', 'analyze', 'implement
 const KNOWN_ACTORS = new Set(['extension', 'cli', 'ai', 'user']);
 
 /** Span length in ms, but only for extension-stamped (trusted) steps; 0 otherwise. */
-function trustedDurationMs(entry: { durationTrusted?: boolean; completedAt: string | null; startedAt: string }): number {
-    if (!entry.durationTrusted || !entry.completedAt) return 0;
-    const span = new Date(entry.completedAt).getTime() - new Date(entry.startedAt).getTime();
-    return Number.isFinite(span) && span > 0 ? span : 0;
-}
-
 interface StepGroup {
     step: string;
     startedAt: string;
@@ -97,10 +91,6 @@ function activityPoints(group: StepGroup): string[] {
 
 export function PhasesCard({ state }: PhasesCardProps) {
     const groups = buildGroups(state.stepHistory ?? {}, state.history ?? []);
-    const maxTrustedMs = Math.max(
-        0,
-        ...Object.values(state.stepHistory ?? {}).map(trustedDurationMs)
-    );
     if (groups.length === 0) return null;
 
     // Overall: the whole-spec start (absolute), end (absolute or in-flight), and
@@ -157,71 +147,25 @@ export function PhasesCard({ state }: PhasesCardProps) {
                         </span>
                     </div>
                 </div>
-                <div class="phases-track">
-                    {groups.map(group => {
+                <div class="phases-strip" role="list">
+                    {groups.map((group, idx) => {
                         const inFlight = group.completedAt === null;
-                        // Duration bar: only for extension-trusted spans, scaled to
-                        // the longest trusted step so relative effort is visible.
-                        const trustedMs = trustedDurationMs(state.stepHistory?.[group.step]);
                         // Elapsed = active time (idle gaps capped), not wall-clock.
                         const duration = formatElapsed(activeDurationMs(activityPoints(group)));
                         const showStepDate =
                             new Date(group.startedAt).toDateString() !== specStartDay;
-                        // Per-task rows (T001…) are noise here — show the phase
-                        // time and any named substeps (e.g. fast-path), not each task.
-                        const events = dedupeEvents(group.events).filter(e => !e.task);
                         return (
                             <div
                                 key={group.step}
-                                class={`phases-step${inFlight ? ' is-in-flight' : ''}`}
+                                role="listitem"
+                                class={`phases-strip__node${inFlight ? ' is-in-flight' : ''}`}
                                 data-step={group.step}
+                                title={showStepDate ? formatAbsolute(group.startedAt) : undefined}
                             >
-                                <h4 class="phases-step__heading">
-                                    <span class="phases-step__name">{group.step}</span>
-                                    <span class="phases-step__time">{duration}</span>
-                                </h4>
-                                {trustedMs > 0 && maxTrustedMs > 0 && (
-                                    <div class="phases-step__bar" aria-hidden="true">
-                                        <div
-                                            class="phases-step__bar-fill"
-                                            style={`width: ${Math.max(4, Math.round((trustedMs / maxTrustedMs) * 100))}%`}
-                                        />
-                                    </div>
-                                )}
-                                {/* start date only on a multi-day spec */}
-                                {showStepDate && (
-                                    <div class="phases-step__sub">
-                                        <span class="phases-step__date">
-                                            {formatAbsolute(group.startedAt)}
-                                        </span>
-                                    </div>
-                                )}
-                                {events.length === 0 ? (
-                                    <div class="phases-event phases-event--empty">no substeps recorded</div>
-                                ) : (
-                                    events.map((event, i) => {
-                                        // Per-substep time: active duration for tracked
-                                        // substeps (idle gap to the next event capped),
-                                        // otherwise the offset from the step start.
-                                        const subTime = event.completedAt
-                                            ? formatElapsed(
-                                                  Math.min(
-                                                      new Date(event.completedAt).getTime() -
-                                                          new Date(event.startedAt).getTime(),
-                                                      IDLE_GAP_CAP_MS
-                                                  )
-                                              )
-                                            : formatStepOffset(group.startedAt, event.startedAt);
-                                        return (
-                                            <div key={`${event.name}-${i}`} class="phases-event">
-                                                <span class="phases-event__name">{event.name}</span>
-                                                <span class="phases-event__time">
-                                                    {subTime}
-                                                </span>
-                                            </div>
-                                        );
-                                    })
-                                )}
+                                {idx > 0 && <span class="phases-strip__connector" aria-hidden="true" />}
+                                <span class="phases-strip__dot" aria-hidden="true" />
+                                <span class="phases-strip__name">{group.step}</span>
+                                <span class="phases-strip__time">{duration}</span>
                             </div>
                         );
                     })}

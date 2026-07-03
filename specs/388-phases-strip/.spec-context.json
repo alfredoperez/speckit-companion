@@ -1,0 +1,243 @@
+{
+  "workflow": "speckit",
+  "specName": "phases strip",
+  "branch": "388-phases-strip",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-03T11:13:32.619Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-03T11:14:20.473Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-03T11:14:20.564Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T11:14:20.652Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-03T11:14:20.738Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T11:14:20.824Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-03T11:14:47.100Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T11:20:22.784Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T11:20:22.847Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T11:20:22.907Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T11:20:22.967Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T11:20:23.030Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-03T11:20:23.091Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-03T11:20:24.271Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "gate green — impeccable 0/0/0/0, 1173 jest",
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 3,
+    "projectedTasks": 4,
+    "scopeSignal": "smaller",
+    "verdict": "simple"
+  },
+  "intent": "Collapse the Phases card to one horizontal step-time strip — kill the empty substep rows and lighten the Work tab",
+  "expectations": [
+    "substep timing detail intentionally dropped from the card (stays in the context file)",
+    "no capture changes"
+  ],
+  "context": [
+    "area: webview/src/spec-viewer/components/cards/PhasesCard.tsx",
+    "constraint: user feedback on the shipped redesign (screenshot review)"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Steps render as one horizontal dot+name+time strip with summary row kept",
+      "tests": [
+        "screenshot work-v2 + existing PhasesCard stories"
+      ]
+    },
+    "FR-002": {
+      "title": "Substep rows and per-step bars removed",
+      "tests": [
+        "substep stories removed; strip has no bars"
+      ]
+    },
+    "FR-003": {
+      "title": "Times only for measured spans; in-flight distinct",
+      "tests": [
+        "in-flight pulse story (SpecifyInFlight)"
+      ]
+    },
+    "FR-004": {
+      "title": "Stories cover completed/in-flight/single-step",
+      "tests": [
+        "PhasesCard stories + RedesignWorkTab"
+      ]
+    },
+    "FR-005": {
+      "title": "Coverage list expanded by default with a visible collapse control",
+      "tests": [
+        "rich-v2 shot: list open",
+        "uncovered first"
+      ]
+    },
+    "FR-006": {
+      "title": "Each tab reads as one surface (panel-level card, flattened sections)",
+      "tests": [
+        "work-v2 shot: one surface",
+        "section dividers"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "impeccable on rich/work/mid rendered + changed source",
+      "result": "0 findings everywhere"
+    },
+    {
+      "what": "full jest + both tsc",
+      "result": "1173/1173, clean"
+    },
+    {
+      "what": "screenshot review of Proof + Work one-surface tabs",
+      "result": "matches the user sketch; strip reads in one line"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "tab-panel-level chrome via CSS descendant overrides",
+      "why": "zero component changes; cards stay reusable outside tabs",
+      "rejected": "restructuring every card component"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "phases strip + one-surface tabs + coverage open-default; impeccable 0, all suites green"
+    }
+  },
+  "currentTask": "T006",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "PhasesCard body → horizontal strip; substeps + bars removed; multi-day date via tooltip",
+      "files": [
+        "webview/src/spec-viewer/components/cards/PhasesCard.tsx"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Strip CSS: nodes/connectors/wrap/in-flight pulse (reduced-motion guarded)",
+      "files": [
+        "webview/styles/spec-viewer/_activity.css"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Stories: strip renders in existing states; two substep-behavior stories removed (behavior gone by design); RedesignWorkTab added",
+      "files": [
+        "webview/src/spec-viewer/components/cards/PhasesCard.stories.tsx",
+        "webview/src/spec-viewer/components/ActivityPanel.stories.tsx"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Gate: impeccable 0 on 3 rendered stories + source; 1173 jest; both tsc",
+      "files": [
+        "(verification)"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Coverage list open by default, uncovered-first, visible collapse summary",
+      "files": [
+        "webview/src/spec-viewer/components/cards/CoverageCard.tsx"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "One surface per tab: panel carries chrome, cards flatten to sections, sole-section titles hidden",
+      "files": [
+        "webview/styles/spec-viewer/_activity.css"
+      ]
+    }
+  }
+}

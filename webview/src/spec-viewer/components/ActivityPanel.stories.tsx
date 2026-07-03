@@ -309,3 +309,13 @@ export const RedesignMidPipeline: Story = {
         return <div style="max-width: 900px;"><ActivityPanel /></div>;
     },
 };
+
+// Work tab preset: the phases strip + tasks + files as one surface.
+export const RedesignWorkTab: Story = {
+    render: () => {
+        activityTab.value = 'work';
+        viewerState.value = richReasoningState;
+        navState.value = { showInstallPrompt: false } as NavState;
+        return <div style="max-width: 900px;"><ActivityPanel /></div>;
+    },
+};
