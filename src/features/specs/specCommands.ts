@@ -284,7 +284,7 @@ export function registerSpecKitCommands(
                     '[SpecKit] Resume unavailable — spec-kit extension not installed; no stock equivalent, skipping.'
                 );
                 void vscode.window.showWarningMessage(
-                    'Resume needs the companion spec-kit extension, which is not installed.',
+                    'Resume needs the companion spec-kit extension, which is not installed — install it, then resume the spec from where it left off.',
                     'Install spec-kit Extension'
                 ).then(choice => {
                     if (choice === 'Install spec-kit Extension') {
