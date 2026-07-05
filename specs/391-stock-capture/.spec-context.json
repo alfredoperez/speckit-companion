@@ -1,0 +1,72 @@
+{
+  "workflow": "speckit",
+  "specName": "stock capture",
+  "branch": "main",
+  "currentStep": "specify",
+  "status": "specified",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-05T19:56:34.147Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-05T19:58:36.851Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "living specs evaluated — skipped (not configured)",
+  "coverage": {
+    "FR-001": {
+      "title": "Writer ships inside the .vsix, copied at build time from the spec-kit ext source (single source of truth)"
+    },
+    "FR-002": {
+      "title": "Stock preamble references the bundled writer by quoted absolute extension path, never the workspace path"
+    },
+    "FR-003": {
+      "title": "Self-contradictory stock-mode prose corrected to the new mechanism"
+    },
+    "FR-004": {
+      "title": "Stock specify captures intent, expectations, context, per-requirement titles"
+    },
+    "FR-005": {
+      "title": "Stock plan captures approach/decisions/step summary; stock implement journals tasks, checks, coverage tests"
+    },
+    "FR-006": {
+      "title": "Capture stays best-effort (no python3 = silent skip); companion slim preambles unchanged"
+    },
+    "FR-007": {
+      "title": "Preamble builders unit-tested: bundled path, quoting, ICE instructions per step"
+    },
+    "FR-008": {
+      "title": "Sandbox eval: companion-free stock run with forced GUI preamble asserts context outcomes"
+    },
+    "FR-009": {
+      "title": "capture-and-timing doc stock-mode section + root changelog updated in-change"
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 10,
+    "projectedTasks": 11,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "context": [
+    "area: src/ai-providers/promptPreamble.ts + promptBuilder.ts (stock vs slim branches) + packaging",
+    "constraint: extension-isolation — prompt text built by shipped code is the sanctioned surface; never depend on workspace .specify",
+    "constraint: single source of truth speckit-extension/scripts/write-context.py; companion slim preamble byte-identical"
+  ],
+  "intent": "Make stock-mode GUI dispatches capture reliably (bundled writer) and richly (ICE/decisions/checks/coverage) so the Activity panel works without the spec-kit extension",
+  "expectations": [
+    "no Activity panel changes — it already renders these fields",
+    "companion-mode capture protocol unchanged (command bodies keep owning it)",
+    "eval not wired into jest — committed re-runnable script"
+  ]
+}
