@@ -140,7 +140,7 @@ describe('buildPrompt', () => {
             // no per-task start, no hand-authored JSON.
             expect(out).toContain('finish-only');
             expect(out).toContain('--task <TaskID> --kind complete --by ai');
-            expect(out).toContain('--feature-dir specs/001-demo');
+            expect(out).toContain('--feature-dir "specs/001-demo"');
             expect(out).toContain('task_summaries');
             // implement still does not self-close the STEP — the hook closes it.
             expect(out).not.toContain('Flip status to "implemented"');
@@ -156,7 +156,7 @@ describe('buildPrompt', () => {
         it('the multi-step lifecycle prompt journals per-task finishes via the script', () => {
             const out = buildLifecyclePrompt('/sdd:auto x', 'specs/001-demo');
             expect(out).toContain('--task <TaskID> --kind complete --by ai');
-            expect(out).toContain('--feature-dir specs/001-demo');
+            expect(out).toContain('--feature-dir "specs/001-demo"');
         });
 
         it('companion specify gets a slim preamble — no protocol prose, body records completion', () => {

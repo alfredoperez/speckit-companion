@@ -100,9 +100,9 @@ function featureDirFromTarget(target: string): string {
  */
 export const WORKSPACE_WRITER_PATH = '.specify/extensions/companion/scripts/write-context.py';
 
-// Always quoted: extension install paths routinely contain spaces.
+// Always quoted: extension install paths (and workspace spec dirs) can contain spaces.
 function writerInvocation(writerPath: string, featureDir: string): string {
-    const dir = featureDir && featureDir !== '<specDir>' ? ` --feature-dir ${featureDir}` : '';
+    const dir = featureDir && featureDir !== '<specDir>' ? ` --feature-dir "${featureDir}"` : '';
     return `python3 "${writerPath}"${dir}`;
 }
 

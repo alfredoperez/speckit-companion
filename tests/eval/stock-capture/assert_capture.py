@@ -21,7 +21,11 @@ def main() -> int:
     if not ctx_path.exists():
         print(f"FAIL: {ctx_path} does not exist — the run never wrote the context file")
         return 1
-    ctx = json.loads(ctx_path.read_text())
+    try:
+        ctx = json.loads(ctx_path.read_text())
+    except (OSError, json.JSONDecodeError) as err:
+        print(f"FAIL: {ctx_path} is unreadable or malformed JSON — {err}")
+        return 1
 
     failures: list[str] = []
 
