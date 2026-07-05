@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import {
     PromptStep,
     MARKER_CLOSE,
@@ -6,6 +7,7 @@ import {
     renderPreamble,
     renderLifecyclePreamble,
     renderSpecifyCreationLifecyclePreamble,
+    WORKSPACE_WRITER_PATH,
 } from './promptPreamble';
 import { isCompanionInstalled } from '../features/settings/companionPresetReconciler';
 
@@ -54,11 +56,29 @@ function companionInstalledHere(): boolean {
     }
 }
 
+/**
+ * Absolute path to the context writer bundled inside this extension — the copy
+ * every stock-mode preamble references, so capture works without the workspace
+ * spec-kit extension. Falls back to the workspace-relative companion path only
+ * when the extension can't resolve its own install dir.
+ */
+export function bundledWriterPath(): string {
+    try {
+        const ext = vscode.extensions.getExtension('alfredoperez.speckit-companion');
+        if (ext?.extensionPath) {
+            return path.join(ext.extensionPath, 'speckit-extension', 'scripts', 'write-context.py');
+        }
+    } catch {
+        // fall through to the workspace fallback
+    }
+    return WORKSPACE_WRITER_PATH;
+}
+
 export function buildPrompt(options: BuildPromptOptions): string {
     const { command, step, specDir } = options;
     if (!isContextInstructionsEnabled()) return command;
     if (!isKnownStep(step)) return command;
-    const preamble = renderPreamble(step as PromptStep, specDir ?? '', nowUtc(), companionRecordsSteps(command));
+    const preamble = renderPreamble(step as PromptStep, specDir ?? '', nowUtc(), companionRecordsSteps(command), bundledWriterPath());
     return `${preamble}\n\n${command}`;
 }
 
@@ -68,7 +88,7 @@ export function buildPrompt(options: BuildPromptOptions): string {
  */
 export function buildLifecyclePrompt(command: string, specDir?: string | null): string {
     if (!isContextInstructionsEnabled()) return command;
-    const preamble = renderLifecyclePreamble(specDir ?? '', nowUtc(), companionRecordsSteps(command));
+    const preamble = renderLifecyclePreamble(specDir ?? '', nowUtc(), companionRecordsSteps(command), bundledWriterPath());
     return `${preamble}\n\n${command}`;
 }
 
@@ -93,7 +113,7 @@ export function buildSpecifyCreationPreamble(
     // specify is self-recorded only when the companion workflow runs AND its
     // extension is installed; otherwise the AI must close specify itself (#332).
     const companionRecords = workflowName === 'companion' && companionInstalledHere();
-    return renderSpecifyCreationLifecyclePreamble(workflowName, specDir ?? null, nowUtc(), companionRecords);
+    return renderSpecifyCreationLifecyclePreamble(workflowName, specDir ?? null, nowUtc(), companionRecords, bundledWriterPath());
 }
 
 /**

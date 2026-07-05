@@ -47,6 +47,9 @@ examples/**
 specs/**
 bench/**
 speckit-extension/**
+# Ship the context writer inside the .vsix: the stock-mode prompt preamble
+# references it by the extension's install path (see promptBuilder).
+!speckit-extension/scripts/write-context.py
 .specify/**
 .opencode/**
 .serena/**

@@ -140,7 +140,7 @@ describe('buildPrompt', () => {
             // no per-task start, no hand-authored JSON.
             expect(out).toContain('finish-only');
             expect(out).toContain('--task <TaskID> --kind complete --by ai');
-            expect(out).toContain('--feature-dir specs/001-demo');
+            expect(out).toContain('--feature-dir "specs/001-demo"');
             expect(out).toContain('task_summaries');
             // implement still does not self-close the STEP — the hook closes it.
             expect(out).not.toContain('Flip status to "implemented"');
@@ -156,7 +156,7 @@ describe('buildPrompt', () => {
         it('the multi-step lifecycle prompt journals per-task finishes via the script', () => {
             const out = buildLifecyclePrompt('/sdd:auto x', 'specs/001-demo');
             expect(out).toContain('--task <TaskID> --kind complete --by ai');
-            expect(out).toContain('--feature-dir specs/001-demo');
+            expect(out).toContain('--feature-dir "specs/001-demo"');
         });
 
         it('companion specify gets a slim preamble — no protocol prose, body records completion', () => {
@@ -428,5 +428,96 @@ describe('buildSpecifyCreationPreamble', () => {
         mockConfig(true);
         expect(buildSpecifyCreationPreamble('companion', null)).toContain('"workflow": "companion"');
         expect(buildSpecifyCreationPreamble('speckit', null)).toContain('"workflow": "speckit"');
+    });
+});
+
+describe('bundled writer path in stock preambles (#408)', () => {
+    const originalGetConfig = vscode.workspace.getConfiguration;
+    const originalGetExtension = vscode.extensions.getExtension;
+
+    function mockConfig(enabled: boolean): void {
+        (vscode.workspace as unknown as { getConfiguration: unknown }).getConfiguration = jest
+            .fn()
+            .mockReturnValue({ get: jest.fn().mockReturnValue(enabled) });
+    }
+
+    function mockExtensionPath(p: string | undefined): void {
+        (vscode.extensions as unknown as { getExtension: unknown }).getExtension = jest
+            .fn()
+            .mockReturnValue(p ? { extensionPath: p } : undefined);
+    }
+
+    beforeEach(() => mockConfig(true));
+    afterEach(() => {
+        (vscode.workspace as unknown as { getConfiguration: unknown }).getConfiguration = originalGetConfig;
+        (vscode.extensions as unknown as { getExtension: unknown }).getExtension = originalGetExtension;
+    });
+
+    it('references the quoted bundled writer, never the bare workspace path (spaces in install dir survive)', () => {
+        mockExtensionPath('/Users/dev/.vscode/extensions/alfredoperez.speckit-companion-1.0.0');
+        const out = buildPrompt({ command: '/speckit.plan specs/001-demo', step: 'plan', specDir: 'specs/001-demo' });
+        expect(out).toContain('python3 "/Users/dev/.vscode/extensions/alfredoperez.speckit-companion-1.0.0/speckit-extension/scripts/write-context.py"');
+        expect(out).not.toContain('python3 .specify/extensions/companion/scripts/write-context.py');
+    });
+
+    it('falls back to the workspace-relative path when the extension cannot resolve itself', () => {
+        mockExtensionPath(undefined);
+        const out = buildPrompt({ command: '/speckit.plan specs/001-demo', step: 'plan', specDir: 'specs/001-demo' });
+        expect(out).toContain('python3 ".specify/extensions/companion/scripts/write-context.py"');
+    });
+
+    it('stock specify instructs the ICE capture: intent, expectations, context, requirement titles', () => {
+        mockExtensionPath('/ext/home');
+        const out = buildPrompt({ command: '/speckit.specify specs/001-demo', step: 'specify', specDir: 'specs/001-demo' });
+        expect(out).toContain('--set intent=');
+        expect(out).toContain('--expectation');
+        expect(out).toContain('--context');
+        expect(out).toContain('--coverage-req FR-NNN --title');
+        expect(out).toContain('CAPTURE THE REASONING');
+        expect(out).toContain('skip silently');
+    });
+
+    it('stock plan/tasks/implement instruct their capture blocks', () => {
+        mockExtensionPath('/ext/home');
+        const plan = buildPrompt({ command: '/speckit.plan specs/001-demo', step: 'plan', specDir: 'specs/001-demo' });
+        expect(plan).toContain('--set approach=');
+        expect(plan).toContain('--decision');
+        expect(plan).toContain('--step plan --step-summary');
+
+        const tasks = buildPrompt({ command: '/speckit.tasks specs/001-demo', step: 'tasks', specDir: 'specs/001-demo' });
+        expect(tasks).toContain('--coverage-req FR-NNN --tasks');
+
+        const impl = buildPrompt({ command: '/speckit.implement specs/001-demo', step: 'implement', specDir: 'specs/001-demo' });
+        expect(impl).toContain('--verified');
+        expect(impl).toContain('--coverage-req FR-NNN --tests');
+        expect(impl).toContain('--step implement --step-summary');
+    });
+
+    it('the lifecycle preamble carries the per-step capture map and the corrected prose', () => {
+        mockExtensionPath('/ext/home');
+        const out = buildLifecyclePrompt('/speckit.implement "specs/001"', 'specs/001');
+        expect(out).toContain('CAPTURE THE REASONING');
+        expect(out).toContain('- specify: ');
+        expect(out).toContain('- implement: ');
+        expect(out).toContain('it ships with the SpecKit Companion editor extension');
+        expect(out).not.toContain('There is no companion extension here');
+    });
+
+    it('companion slim preambles are unchanged: no capture block, no writer path', () => {
+        mockExtensionPath('/ext/home');
+        const slim = buildPrompt({ command: '/speckit.companion.plan specs/001-demo', step: 'plan', specDir: 'specs/001-demo' });
+        expect(slim).toContain("This command's body carries the full");
+        expect(slim).not.toContain('CAPTURE THE REASONING');
+        expect(slim).not.toContain('write-context.py');
+
+        const slimLifecycle = buildLifecyclePrompt('/speckit.companion.implement "specs/001"', 'specs/001');
+        expect(slimLifecycle).toContain('carries the full `.spec-context.json` capture & timing protocol in its body');
+        expect(slimLifecycle).not.toContain('CAPTURE THE REASONING');
+    });
+
+    it('clarify keeps no capture block (nothing step-specific to record)', () => {
+        mockExtensionPath('/ext/home');
+        const out = buildPrompt({ command: '/speckit.clarify specs/001-demo', step: 'clarify', specDir: 'specs/001-demo' });
+        expect(out).not.toContain('CAPTURE THE REASONING');
     });
 });
