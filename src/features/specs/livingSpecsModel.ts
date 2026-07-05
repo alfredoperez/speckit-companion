@@ -287,7 +287,10 @@ function findOrphans(caps: RawCapability[], root: string): string[] {
  * Returns an inert, empty listing (no throw) when the config is missing,
  * malformed, or `livingSpecs.enabled` is not true.
  */
-export function readLivingSpecs(workspaceRoot: string): LivingSpecsListing {
+export function readLivingSpecs(
+    workspaceRoot: string,
+    options?: { withOrphans?: boolean }
+): LivingSpecsListing {
     const configPath = path.join(workspaceRoot, '.specify', 'companion.yml');
     const { enabled, capabilities } = parseLivingSpecs(configPath);
     if (!enabled) {
@@ -323,7 +326,9 @@ export function readLivingSpecs(workspaceRoot: string): LivingSpecsListing {
     return {
         enabled: true,
         capabilities: resolved,
-        orphans: findOrphans(capabilities, workspaceRoot),
+        // Orphan discovery walks the workspace — callers that only need name
+        // resolution (the viewer's per-render enrichment) skip it.
+        orphans: options?.withOrphans === false ? [] : findOrphans(capabilities, workspaceRoot),
     };
 }
 

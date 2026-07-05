@@ -49,6 +49,9 @@ export function parseCapabilitySpec(md: string): { purpose?: string; requirement
     const intro = firstParagraph(introLines);
     if (intro) purpose = stripInlineMarkdown(intro);
 
+    // Requirement rows live only under `## Requirements` — a `###` heading in
+    // any other section (Scenarios, Notes) is not a requirement.
+    let inRequirements = false;
     let current: { id: string; body: string[] } | null = null;
     const flush = () => {
         if (!current) return;
@@ -57,14 +60,16 @@ export function parseCapabilitySpec(md: string): { purpose?: string; requirement
         current = null;
     };
     for (const line of lines) {
+        if (line.startsWith('## ')) {
+            flush();
+            inRequirements = /^##\s+Requirements\s*$/i.test(line);
+            continue;
+        }
+        if (!inRequirements) continue;
         const m = REQ_HEADING_RE.exec(line);
         if (m) {
             flush();
             current = { id: m[1].trim(), body: [] };
-            continue;
-        }
-        if (line.startsWith('## ')) {
-            flush();
             continue;
         }
         if (current) current.body.push(line);
@@ -152,7 +157,8 @@ export function enrichLivingSpecs(
     featureSpecPath?: string
 ): LivingSpecsView {
     try {
-        const listing = readLivingSpecs(workspaceRoot);
+        // Skip orphan discovery — it walks the workspace and this runs per render.
+        const listing = readLivingSpecs(workspaceRoot, { withOrphans: false });
         const byName = new Map<string, ResolvedCapability>(listing.capabilities.map(c => [c.name, c]));
         const synced = new Set(view.synced);
 
@@ -180,7 +186,8 @@ export function enrichLivingSpecs(
                 ...base,
                 available: true,
                 ...(parsed.purpose ? { purpose: parsed.purpose } : {}),
-                requirements: parsed.requirements,
+                // Absent over empty: an empty list is omitted like every optional field.
+                ...(parsed.requirements.length > 0 ? { requirements: parsed.requirements } : {}),
             };
         });
 

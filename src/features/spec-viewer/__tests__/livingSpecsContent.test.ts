@@ -59,6 +59,22 @@ describe('parseCapabilitySpec', () => {
         ]);
     });
 
+    it('ignores ### headings outside the Requirements section', () => {
+        const md = [
+            '# Cap — Living Spec',
+            '',
+            '## Requirements',
+            '### Real requirement',
+            'Body.',
+            '',
+            '## Scenarios',
+            '### Not a requirement',
+            'Scenario body.',
+        ].join('\n');
+        const parsed = parseCapabilitySpec(md);
+        expect(parsed.requirements.map(r => r.id)).toEqual(['Real requirement']);
+    });
+
     it('handles a spec with no intro and no requirements', () => {
         const parsed = parseCapabilitySpec('# Bare — Living Spec\n\n## Requirements\n');
         expect(parsed.purpose).toBeUndefined();
