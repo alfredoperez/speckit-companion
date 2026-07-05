@@ -39,37 +39,90 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-07-05T23:16:00.689Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T23:17:02.482Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T23:17:03.461Z"
     }
   ],
   "unattended": true,
   "last_action": "living specs evaluated — skipped (not configured)",
   "coverage": {
     "FR-001": {
-      "title": "Viewer state carries structured capability content (name, purpose, requirement rows) parsed extension-side"
+      "title": "Viewer state carries structured capability content (name, purpose, requirement rows) parsed extension-side",
+      "tasks": [
+        "T001",
+        "T002",
+        "T003",
+        "T005"
+      ]
     },
     "FR-002": {
-      "title": "Capability resolution reuses the Spec Explorer's config rules — no second resolver"
+      "title": "Capability resolution reuses the Spec Explorer's config rules — no second resolver",
+      "tasks": [
+        "T003",
+        "T004"
+      ]
     },
     "FR-003": {
-      "title": "Card renders open per-capability disclosures with purpose + plain-text requirement rows"
+      "title": "Card renders open per-capability disclosures with purpose + plain-text requirement rows",
+      "tasks": [
+        "T006",
+        "T007"
+      ]
     },
     "FR-004": {
-      "title": "Fold-back stays visible per capability, extended with delta counts when delta blocks exist"
+      "title": "Fold-back stays visible per capability, extended with delta counts when delta blocks exist",
+      "tasks": [
+        "T003",
+        "T008",
+        "T009"
+      ]
     },
     "FR-005": {
-      "title": "Best-effort content loading: missing/unreadable/oversized degrade to name + unavailable note"
+      "title": "Best-effort content loading: missing/unreadable/oversized degrade to name + unavailable note",
+      "tasks": [
+        "T003",
+        "T010"
+      ]
     },
     "FR-006": {
-      "title": "Injection-safe text nodes; token-driven theme-safe styling"
+      "title": "Injection-safe text nodes; token-driven theme-safe styling",
+      "tasks": [
+        "T006",
+        "T007"
+      ]
     },
     "FR-007": {
-      "title": "Stories cover rich/sparse/unavailable; parsing + derivation unit-tested"
+      "title": "Stories cover rich/sparse/unavailable; parsing + derivation unit-tested",
+      "tasks": [
+        "T004",
+        "T008",
+        "T010",
+        "T012"
+      ]
     },
     "FR-008": {
-      "title": "Committed demo fixture exercises the card without enabling living specs in this repo"
+      "title": "Committed demo fixture exercises the card without enabling living specs in this repo",
+      "tasks": [
+        "T011"
+      ]
     },
     "FR-009": {
-      "title": "README Activity section + root changelog updated in-change"
+      "title": "README Activity section + root changelog updated in-change",
+      "tasks": [
+        "T013"
+      ]
     }
   },
   "size": "normal",
@@ -117,6 +170,9 @@
     "plan": {
       "summary": "Plan + research + data model + UI contract; provider-seam loader, writer-aligned parser, counts-only deltas, split fixtures",
       "key_finding": "the living-spec document shape is pinned by write-context.py (_REQ_HEADING_RE / span rules) — the TS parser mirrors it so both ends agree"
+    },
+    "tasks": {
+      "summary": "15 tasks / 6 phases: types → loader → card+styles+provider, delta pass, degradation pass, fixtures+stories+docs; test file and card serialized"
     }
   }
 }
