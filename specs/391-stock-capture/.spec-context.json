@@ -18,6 +18,27 @@
       "kind": "complete",
       "by": "extension",
       "at": "2026-07-05T19:58:36.851Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T20:01:30.713Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T20:02:21.404Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T20:02:22.022Z"
     }
   ],
   "unattended": true,
@@ -68,5 +89,34 @@
     "no Activity panel changes — it already renders these fields",
     "companion-mode capture protocol unchanged (command bodies keep owning it)",
     "eval not wired into jest — committed re-runnable script"
-  ]
+  ],
+  "approach": "Ship write-context.py inside the .vsix via a .vscodeignore negation (no copy step — the dev host and the package resolve the same relative path), thread a quoted bundled-writer path from promptBuilder into the pure preamble functions, and add a compact per-step capture block to the stock preamble reusing the writer's existing flags. Prove it with a committed sandbox eval that forces the exact preamble on a headless AI in a companion-free workspace.",
+  "decisions": [
+    {
+      "decision": "ship the script by un-ignoring it in .vscodeignore",
+      "why": "stdlib-only single file; byte-identical by construction; dev host resolves the same relative path",
+      "rejected": "build-time copy (wiring + drift risk) or a committed duplicate"
+    },
+    {
+      "decision": "path lookup in promptBuilder via vscode.extensions, path parameter into pure promptPreamble",
+      "why": "keeps the preamble module vscode-free and unit-testable; builder is the existing impure seam",
+      "rejected": "threading ExtensionContext or module-level mutable state"
+    },
+    {
+      "decision": "bundled path always in stock mode, even with the companion ext installed",
+      "why": "one code path, trivially assertable, same file by construction",
+      "rejected": "prefer-workspace-copy branching (stale copy could win)"
+    },
+    {
+      "decision": "eval = real headless AI on the forced preamble in a temp sandbox, outside jest",
+      "why": "only honest test of instruction-following; text snapshots cannot catch a model misreading",
+      "rejected": "preamble snapshot tests alone, or a full spec-kit-init sandbox (tests the wrong layer)"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan + research + data-model + preamble contract; no schema changes, one manifest negation, one threaded parameter, one committed eval",
+      "key_finding": "write-context.py is stdlib-only and self-contained, so a .vscodeignore negation ships it byte-identical with zero build wiring"
+    }
+  }
 }
