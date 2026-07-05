@@ -251,13 +251,14 @@ npm run test:watch    # Watch mode
 
 ### Demo testing specs (fixed baseline — don't commit *test-time* edits)
 
-`specs/_00_demo-specified/`, `specs/_01_demo-planned/`, and `specs/_02_demo-tasked/` are **committed manual-testing fixtures**, each pinned to one viewer state:
+`specs/_00_demo-specified/`, `specs/_01_demo-planned/`, `specs/_02_demo-tasked/`, and `specs/_03_demo-living/` are **committed manual-testing fixtures**, each pinned to one viewer state:
 
 | Dir | State | Files present | Footer button it surfaces |
 |-----|-------|---------------|---------------------------|
 | `_00_demo-specified` | `specified` | `spec.md` | **Plan** |
 | `_01_demo-planned` | `planned` | `spec.md`, `plan.md` | **Tasks** |
 | `_02_demo-tasked` | `ready-to-implement` | `spec.md`, `plan.md`, `tasks.md` | **Implement** |
+| `_03_demo-living` | `completed` | `spec.md` (with a delta block) | *(none — exercises the Activity panel's Living Specs card: names + unavailable note here, full content where the capabilities resolve)* |
 
 They exist so the viewer can be opened against a known state during development. Each baseline `.spec-context.json` uses the canonical `history[]` schema (a `start`+`complete` pair per step up to the spec's `currentStep`) — that's what makes `deriveViewerState`/`shouldShowApprove` surface the footer button. **Don't commit the *incidental* mutations you cause by exercising them** — clicking through the viewer rewrites `.spec-context.json`/files; `git restore` those, never `git add` them. **The exception is a deliberate baseline correction:** if you intentionally change what state a fixture represents (e.g. migrating it to a new schema), commit that. To restore the baseline after playing around: `git restore specs/_00_demo-specified specs/_01_demo-planned specs/_02_demo-tasked` (or `git checkout -- …`). Other `specs/_*/` dirs remain gitignored (local-only).
 
