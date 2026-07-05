@@ -1,0 +1,72 @@
+{
+  "workflow": "speckit",
+  "specName": "living specs viewer",
+  "branch": "main",
+  "currentStep": "specify",
+  "status": "specified",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-05T23:09:46.506Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-05T23:12:03.371Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "living specs evaluated — skipped (not configured)",
+  "coverage": {
+    "FR-001": {
+      "title": "Viewer state carries structured capability content (name, purpose, requirement rows) parsed extension-side"
+    },
+    "FR-002": {
+      "title": "Capability resolution reuses the Spec Explorer's config rules — no second resolver"
+    },
+    "FR-003": {
+      "title": "Card renders open per-capability disclosures with purpose + plain-text requirement rows"
+    },
+    "FR-004": {
+      "title": "Fold-back stays visible per capability, extended with delta counts when delta blocks exist"
+    },
+    "FR-005": {
+      "title": "Best-effort content loading: missing/unreadable/oversized degrade to name + unavailable note"
+    },
+    "FR-006": {
+      "title": "Injection-safe text nodes; token-driven theme-safe styling"
+    },
+    "FR-007": {
+      "title": "Stories cover rich/sparse/unavailable; parsing + derivation unit-tested"
+    },
+    "FR-008": {
+      "title": "Committed demo fixture exercises the card without enabling living specs in this repo"
+    },
+    "FR-009": {
+      "title": "README Activity section + root changelog updated in-change"
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 12,
+    "projectedTasks": 11,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "context": [
+    "area: src/features/spec-viewer stateDerivation + livingSpecsModel reuse + webview LivingSpecsCard",
+    "constraint: fixtures-only verification (user decision) — this repo's companion.yml and tree untouched",
+    "constraint: injection safety (text nodes), token theming, panel one-surface/disclosure design language"
+  ],
+  "intent": "Make the Activity panel show what the touched living specs actually say — purpose, requirements, and fold-back result — without opening raw files",
+  "expectations": [
+    "scenario-tree rendering deferred — requirements-level content only this pass",
+    "no livingSpecs enablement or capabilities/ dir in this repo",
+    "no file watcher on capability specs this pass"
+  ]
+}
