@@ -102,4 +102,17 @@ describe('resolveDispatchForRoot — root-based variant (new-spec dispatch)', ()
         expect(r.command).toBe('speckit.specify');
         expect(r.fellBack).toBe(true);
     });
+
+    it('suppresses resume (no stock twin) when the extension is missing — the sidebar Resume guard', () => {
+        const r = resolveDispatchForRoot('speckit.companion.resume', wsRoot);
+        expect(r.command).toBeNull();
+        expect(r.fellBack).toBe(true);
+    });
+
+    it('keeps resume when the extension is installed', () => {
+        installExtension(wsRoot);
+        const r = resolveDispatchForRoot('speckit.companion.resume', wsRoot);
+        expect(r.command).toBe('speckit.companion.resume');
+        expect(r.fellBack).toBe(false);
+    });
 });

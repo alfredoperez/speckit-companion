@@ -2,8 +2,8 @@
   "workflow": "speckit",
   "specName": "resume guard",
   "branch": "main",
-  "currentStep": "tasks",
-  "status": "ready-to-implement",
+  "currentStep": "implement",
+  "status": "implemented",
   "history": [
     {
       "step": "specify",
@@ -46,22 +46,88 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-07-05T19:43:16.382Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-05T19:43:34.684Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T19:45:51.057Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T19:45:51.118Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T19:46:23.870Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T19:47:40.573Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T19:48:24.915Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-05T19:48:25.003Z"
     }
   ],
   "unattended": true,
-  "last_action": "living specs evaluated — skipped (not configured)",
+  "last_action": "5/5 tasks done — 1178/1178 jest, both tsc clean",
   "coverage": {
     "FR-001": {
-      "title": "Resume button visible only when resume enabled AND companion extension installed"
+      "title": "Resume button visible only when resume enabled AND companion extension installed",
+      "tests": [
+        "package.json when-clause (inspectable); manual"
+      ]
     },
     "FR-002": {
-      "title": "Resume handler routes through the dispatch fallback: suppress + install warning when extension missing"
+      "title": "Resume handler routes through the dispatch fallback: suppress + install warning when extension missing",
+      "tests": [
+        "profileDispatch.test.ts::suppresses resume (no stock twin)"
+      ]
     },
     "FR-003": {
-      "title": "With the extension installed, resume behavior is byte-for-byte unchanged"
+      "title": "With the extension installed, resume behavior is byte-for-byte unchanged",
+      "tests": [
+        "profileDispatch.test.ts::keeps resume when the extension is installed"
+      ]
     },
     "FR-004": {
-      "title": "Suppression path unit-tested alongside existing dispatch-guard tests"
+      "title": "Suppression path unit-tested alongside existing dispatch-guard tests",
+      "tests": [
+        "profileDispatch.test.ts (13/13 suite green)"
+      ]
     }
   },
   "size": "simple",
@@ -79,5 +145,65 @@
   "expectations": [
     "no new detection mechanism — the existing installed context key drives visibility",
     "command-palette entry stays hidden as today"
-  ]
+  ],
+  "currentTask": "T005",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Resume menu when-clause now also requires speckit.companion.installed",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Resume handler resolves via resolveDispatchForRoot(workspace root); fellBack suppresses dispatch + shows install warning",
+      "files": [
+        "src/features/specs/specCommands.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Suppression + installed-pass tests for speckit.companion.resume in the root-variant suite",
+      "files": [
+        "src/features/specs/profileDispatch.test.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "sidebar.md Resume section notes the extension requirement; changelog Fixed entry for #407",
+      "files": [
+        "docs/sidebar.md",
+        "CHANGELOG.md"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "1178/1178 jest, both tsc clean, package.json parses; FR-001..004 validated"
+    }
+  },
+  "verified": [
+    {
+      "what": "full jest suite",
+      "command": "npx jest",
+      "result": "1178/1178 pass (2 new resume-guard cases)"
+    },
+    {
+      "what": "both tsc configs + package.json parse",
+      "command": "tsc --noEmit x2; json.load",
+      "result": "clean"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "resolveDispatchForRoot with the workspace folder path instead of the spec-dir walk",
+      "why": "item.specPath is workspace-relative; path.resolve against extension-host cwd would be wrong",
+      "rejected": "resolveDispatchWithFallback(relativePath)"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "Resume gated on companion.installed + handler suppresses via dispatch guard with install warning; 1178 tests green"
+    }
+  }
 }
