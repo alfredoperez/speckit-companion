@@ -39,37 +39,88 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-07-05T20:02:22.022Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T20:03:23.448Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T20:03:24.422Z"
     }
   ],
   "unattended": true,
   "last_action": "living specs evaluated — skipped (not configured)",
   "coverage": {
     "FR-001": {
-      "title": "Writer ships inside the .vsix, copied at build time from the spec-kit ext source (single source of truth)"
+      "title": "Writer ships inside the .vsix, copied at build time from the spec-kit ext source (single source of truth)",
+      "tasks": [
+        "T001",
+        "T013"
+      ]
     },
     "FR-002": {
-      "title": "Stock preamble references the bundled writer by quoted absolute extension path, never the workspace path"
+      "title": "Stock preamble references the bundled writer by quoted absolute extension path, never the workspace path",
+      "tasks": [
+        "T002",
+        "T003",
+        "T006"
+      ]
     },
     "FR-003": {
-      "title": "Self-contradictory stock-mode prose corrected to the new mechanism"
+      "title": "Self-contradictory stock-mode prose corrected to the new mechanism",
+      "tasks": [
+        "T004"
+      ]
     },
     "FR-004": {
-      "title": "Stock specify captures intent, expectations, context, per-requirement titles"
+      "title": "Stock specify captures intent, expectations, context, per-requirement titles",
+      "tasks": [
+        "T005",
+        "T006"
+      ]
     },
     "FR-005": {
-      "title": "Stock plan captures approach/decisions/step summary; stock implement journals tasks, checks, coverage tests"
+      "title": "Stock plan captures approach/decisions/step summary; stock implement journals tasks, checks, coverage tests",
+      "tasks": [
+        "T005",
+        "T006"
+      ]
     },
     "FR-006": {
-      "title": "Capture stays best-effort (no python3 = silent skip); companion slim preambles unchanged"
+      "title": "Capture stays best-effort (no python3 = silent skip); companion slim preambles unchanged",
+      "tasks": [
+        "T005",
+        "T006"
+      ]
     },
     "FR-007": {
-      "title": "Preamble builders unit-tested: bundled path, quoting, ICE instructions per step"
+      "title": "Preamble builders unit-tested: bundled path, quoting, ICE instructions per step",
+      "tasks": [
+        "T006"
+      ]
     },
     "FR-008": {
-      "title": "Sandbox eval: companion-free stock run with forced GUI preamble asserts context outcomes"
+      "title": "Sandbox eval: companion-free stock run with forced GUI preamble asserts context outcomes",
+      "tasks": [
+        "T007",
+        "T008",
+        "T009",
+        "T010"
+      ]
     },
     "FR-009": {
-      "title": "capture-and-timing doc stock-mode section + root changelog updated in-change"
+      "title": "capture-and-timing doc stock-mode section + root changelog updated in-change",
+      "tasks": [
+        "T011",
+        "T012"
+      ]
     }
   },
   "size": "normal",
@@ -117,6 +168,9 @@
     "plan": {
       "summary": "Plan + research + data-model + preamble contract; no schema changes, one manifest negation, one threaded parameter, one committed eval",
       "key_finding": "write-context.py is stdlib-only and self-contained, so a .vscodeignore negation ships it byte-identical with zero build wiring"
+    },
+    "tasks": {
+      "summary": "13 tasks across 6 phases: manifest negation, threaded writerPath, prose fix, capture block, unit tests, 3-file eval harness + real run, docs; promptPreamble serialized T002→T004→T005"
     }
   }
 }
