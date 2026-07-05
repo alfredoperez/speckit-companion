@@ -30,7 +30,64 @@ const baseState = (overrides: Partial<ViewerState>): ViewerState => ({
     ...overrides,
 });
 
+// Full readable content: purpose + requirement rows per capability, one synced
+// with fold-back delta counts.
+export const RichContent: Story = {
+    render: () => (
+        <LivingSpecsCard
+            state={baseState({
+                livingSpecs: {
+                    loaded: ['todos', 'notes-ui'],
+                    synced: ['todos'],
+                    capabilities: [
+                        {
+                            name: 'todos',
+                            available: true,
+                            synced: true,
+                            delta: { added: 1, modified: 2 },
+                            purpose: 'Task list behavior: everything the todos area guarantees today.',
+                            requirements: [
+                                { id: 'A note can carry one tag', text: 'Each note stores at most one tag, editable from the note form.' },
+                                { id: 'Notes can be filtered by tag', text: 'The list view filters by tag and remembers the choice per session.' },
+                            ],
+                        },
+                        {
+                            name: 'notes-ui',
+                            available: true,
+                            synced: false,
+                            purpose: 'Rendering rules for the notes surface.',
+                            requirements: [
+                                { id: 'Notes render newest first', text: 'The default sort is creation time, descending.' },
+                            ],
+                        },
+                    ],
+                },
+            })}
+        />
+    ),
+};
+
+// Content could not be loaded (unresolved name / missing file / oversized) —
+// names render with the quiet unavailable note.
+export const ContentUnavailable: Story = {
+    render: () => (
+        <LivingSpecsCard
+            state={baseState({
+                livingSpecs: {
+                    loaded: ['todos', 'notes-ui'],
+                    synced: ['todos'],
+                    capabilities: [
+                        { name: 'todos', available: false, synced: true },
+                        { name: 'notes-ui', available: false, synced: false },
+                    ],
+                },
+            })}
+        />
+    ),
+};
+
 // Capabilities loaded into context at specify time, none folded back yet.
+// (Names-only legacy payload — no `capabilities` field — keeps the chip list.)
 export const LoadedOnly: Story = {
     render: () => (
         <LivingSpecsCard state={baseState({ livingSpecs: { loaded: ['checkout', 'cart'], synced: [] } })} />

@@ -2,8 +2,8 @@
   "workflow": "speckit",
   "specName": "living specs viewer",
   "branch": "main",
-  "currentStep": "specify",
-  "status": "specified",
+  "currentStep": "implement",
+  "status": "implemented",
   "history": [
     {
       "step": "specify",
@@ -53,10 +53,144 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-07-05T23:17:03.461Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-05T23:17:33.656Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T23:18:24.290Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T23:18:24.352Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T23:19:32.026Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T23:23:46.523Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T23:23:46.585Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T23:23:46.645Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T23:23:46.706Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T23:24:05.919Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T23:24:05.980Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T23:24:06.041Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T23:24:33.667Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T23:26:23.593Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T23:26:23.654Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T23:26:23.714Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T23:28:11.375Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-05T23:28:11.461Z"
     }
   ],
   "unattended": true,
-  "last_action": "living specs evaluated — skipped (not configured)",
+  "last_action": "15/15 tasks done — 1197/1197 jest, stories screenshot-reviewed",
   "coverage": {
     "FR-001": {
       "title": "Viewer state carries structured capability content (name, purpose, requirement rows) parsed extension-side",
@@ -65,6 +199,9 @@
         "T002",
         "T003",
         "T005"
+      ],
+      "tests": [
+        "livingSpecsContent.test.ts::enrichLivingSpecs loads/parses/orders"
       ]
     },
     "FR-002": {
@@ -72,6 +209,9 @@
       "tasks": [
         "T003",
         "T004"
+      ],
+      "tests": [
+        "livingSpecsContent.test.ts (readLivingSpecs resolution via tmp config)"
       ]
     },
     "FR-003": {
@@ -79,6 +219,9 @@
       "tasks": [
         "T006",
         "T007"
+      ],
+      "tests": [
+        "RichContent story screenshot; stripInlineMarkdown test"
       ]
     },
     "FR-004": {
@@ -87,6 +230,9 @@
         "T003",
         "T008",
         "T009"
+      ],
+      "tests": [
+        "livingSpecsContent.test.ts::delta cases; RichContent story"
       ]
     },
     "FR-005": {
@@ -94,6 +240,9 @@
       "tasks": [
         "T003",
         "T010"
+      ],
+      "tests": [
+        "livingSpecsContent.test.ts::degradation cases; ContentUnavailable story"
       ]
     },
     "FR-006": {
@@ -101,6 +250,9 @@
       "tasks": [
         "T006",
         "T007"
+      ],
+      "tests": [
+        "JSX text nodes only (review); token-driven CSS"
       ]
     },
     "FR-007": {
@@ -110,18 +262,27 @@
         "T008",
         "T010",
         "T012"
+      ],
+      "tests": [
+        "12-case loader suite + 2 new stories"
       ]
     },
     "FR-008": {
       "title": "Committed demo fixture exercises the card without enabling living specs in this repo",
       "tasks": [
         "T011"
+      ],
+      "tests": [
+        "specs/_03_demo-living fixture (gitignore whitelisted)"
       ]
     },
     "FR-009": {
       "title": "README Activity section + root changelog updated in-change",
       "tasks": [
         "T013"
+      ],
+      "tests": [
+        "README Notes line + CHANGELOG Added entry in diff"
       ]
     }
   },
@@ -164,6 +325,11 @@
       "decision": "demo fixture carries the degraded path; Storybook carries the rich states",
       "why": "config-less repo (user decision) makes degraded the only honestly reachable real-viewer state",
       "rejected": "enabling living specs here (declined) or a nonexistent spec-local config"
+    },
+    {
+      "decision": "disclosure marker stays hidden (flex summary), sections open by default",
+      "why": "matches the coverage-list convention the user set: leave it open, no collapse chrome",
+      "rejected": "visible caret markers per capability"
     }
   ],
   "step_summaries": {
@@ -173,6 +339,139 @@
     },
     "tasks": {
       "summary": "15 tasks / 6 phases: types → loader → card+styles+provider, delta pass, degradation pass, fixtures+stories+docs; test file and card serialized"
+    },
+    "implement": {
+      "summary": "Living specs render readably: loader+parser+provider seam, disclosure card with delta counts, demo fixture — 1197 tests green"
     }
-  }
+  },
+  "currentTask": "T015",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "LivingSpecsView gains capabilities[] + CapabilityContentView (extension copy)",
+      "files": [
+        "src/core/types/specContext.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Webview mirror of the LivingSpecsView change",
+      "files": [
+        "webview/src/spec-viewer/types.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "livingSpecsContent loader: readLivingSpecs resolution, capped reads, writer-aligned parser (purpose + ### requirement rows, marker-stripped), fold-rule delta counts",
+      "files": [
+        "src/features/spec-viewer/livingSpecsContent.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "12 loader tests: parser (purpose/rows/stripping), delta counts (marker + default), degradation (missing/oversized/config-less), dedupe/order",
+      "files": [
+        "src/features/spec-viewer/__tests__/livingSpecsContent.test.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Provider enriches livingSpecs at the seam (workspace root + feature spec.md path)",
+      "files": [
+        "src/features/spec-viewer/specViewerProvider.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Card renders capabilities[] as open disclosures (purpose, requirement rows, unavailable note); names-only fallback preserved",
+      "files": [
+        "webview/src/spec-viewer/components/cards/LivingSpecsCard.tsx"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Token-driven styles: cap disclosures with hairline separators, purpose/req rows at 72ch, delta label, unavailable note",
+      "files": [
+        "webview/styles/spec-viewer/_activity.css"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Delta cases in the loader suite: marker-targeted, most-specific default, empty map when no blocks, unsynced never gets delta",
+      "files": [
+        "src/features/spec-viewer/__tests__/livingSpecsContent.test.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Card shows folded-back tag + per-kind delta counts (present kinds only)",
+      "files": [
+        "webview/src/spec-viewer/components/cards/LivingSpecsCard.tsx"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Degradation cases: missing file, unresolved name, oversized cap, config-less workspace, synced-not-loaded dedupe",
+      "files": [
+        "src/features/spec-viewer/__tests__/livingSpecsContent.test.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "specs/_03_demo-living fixture: completed context with loaded/synced names + a delta block — degraded path in this repo, rich path where capabilities resolve",
+      "files": [
+        "specs/_03_demo-living/.spec-context.json",
+        "specs/_03_demo-living/spec.md"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Stories: RichContent (content + deltas) and ContentUnavailable added; existing names-only stories serve the legacy payload",
+      "files": [
+        "webview/src/spec-viewer/components/cards/LivingSpecsCard.stories.tsx"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "README Notes-tab line rewritten; root changelog Added entry (#394)",
+      "files": [
+        "README.md",
+        "CHANGELOG.md"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "CLAUDE.md fixture table row + intro updated for _03_demo-living; gitignore whitelist",
+      "files": [
+        "CLAUDE.md",
+        ".gitignore"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "1197/1197 jest, both tsc clean, 3 story screenshots reviewed (rich/unavailable/legacy names), SC-001..004 validated (repo config untouched)"
+    }
+  },
+  "verified": [
+    {
+      "what": "full jest suite",
+      "command": "npx jest",
+      "result": "1197/1197 pass (12 new loader tests)"
+    },
+    {
+      "what": "both tsc configs",
+      "command": "tsc --noEmit x2",
+      "result": "clean"
+    },
+    {
+      "what": "screenshot review of RichContent / ContentUnavailable / LoadedAndSynced stories",
+      "command": "playwright screenshot x3",
+      "result": "purpose + requirement rows readable, delta counts beside the folded-back tag, quiet unavailable note, legacy chips intact"
+    },
+    {
+      "what": "repo isolation (SC-004)",
+      "command": "git status on .specify/companion.yml + capabilities/",
+      "result": "untouched — no livingSpecs enablement, no capabilities dir"
+    }
+  ]
 }

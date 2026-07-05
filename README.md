@@ -96,7 +96,7 @@ Toggle **Activity** in the viewer's nav bar to swap the markdown pane for a **br
   - **Decisions** — each choice as a numbered entry with its reasoning and the rejected alternative.
   - **Work** — the phase timeline (with duration bars proportional to genuinely measured spans), per-task summaries, and files touched.
   - **Proof** — checks as green/amber pass pills that pack like tags (including dismissed warnings), and the requirement coverage map: uncovered requirements lead, each requirement chip tinted by its covered state, the full mapping behind a disclosure. When anything is uncovered or concerning, Proof opens first.
-  - **Notes** — concerns, persisted review comments (grouped by document, jump-to-line, per-document **Run refinement**), and living-specs context.
+  - **Notes** — concerns, persisted review comments (grouped by document, jump-to-line, per-document **Run refinement**), and the living specs the feature touched — each capability readable inline (its purpose and requirements, plus fold-back change counts on completion) instead of bare names, degrading gracefully when the content isn't available in the workspace.
 
 Old specs without the newer capture degrade gracefully — the hero shows what exists and only populated tabs render. Visibility is gated by `speckit.viewer.activityPanel` — `"off"`, `"beta"` (default; toggle shows a *beta* pill), or `"on"`.
 

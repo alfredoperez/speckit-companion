@@ -1,0 +1,23 @@
+{
+  "workflow": "speckit-companion",
+  "specName": "Demo — Living Specs",
+  "branch": "demo/living",
+  "selectedAt": "2026-07-01T14:00:00.000Z",
+  "currentStep": "implement",
+  "status": "completed",
+  "intent": "Demo fixture: a completed spec that loaded two living specs and folded back into one",
+  "livingSpecs": {
+    "loaded": ["todos", "notes-ui"],
+    "synced": ["todos"]
+  },
+  "history": [
+    { "step": "specify", "substep": null, "kind": "start", "by": "extension", "at": "2026-07-01T14:00:00.000Z" },
+    { "step": "specify", "substep": null, "kind": "complete", "by": "extension", "at": "2026-07-01T14:06:00.000Z" },
+    { "step": "plan", "substep": null, "kind": "start", "by": "extension", "at": "2026-07-01T14:06:30.000Z" },
+    { "step": "plan", "substep": null, "kind": "complete", "by": "ai", "at": "2026-07-01T14:14:00.000Z" },
+    { "step": "tasks", "substep": null, "kind": "start", "by": "extension", "at": "2026-07-01T14:14:30.000Z" },
+    { "step": "tasks", "substep": null, "kind": "complete", "by": "ai", "at": "2026-07-01T14:17:00.000Z" },
+    { "step": "implement", "substep": null, "kind": "start", "by": "extension", "at": "2026-07-01T14:17:30.000Z" },
+    { "step": "implement", "substep": null, "kind": "complete", "by": "extension", "at": "2026-07-01T14:40:00.000Z" }
+  ]
+}

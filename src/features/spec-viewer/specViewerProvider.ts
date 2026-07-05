@@ -58,6 +58,7 @@ import { reconcileAndPersist } from "../specs/specContextReconciler";
 import { isCompanionInstalled } from "../settings/companionPresetReconciler";
 import { shouldShowInstallPrompt, readInstallPromptEnabled } from "../../speckit/specKitExtensionInstall";
 import { deriveViewerState, isStepCompleted, findRunningStep } from "./stateDerivation";
+import { enrichLivingSpecs } from "./livingSpecsContent";
 import { StepCompletionNotifier, NotifierContext } from "./stepCompletionNotifier";
 import { StepName, STEP_NAMES, Status, ViewerState as CoreViewerState } from "../../core/types/specContext";
 import {
@@ -938,6 +939,18 @@ export class SpecViewerProvider {
           : 'specify';
         const wfSteps = await this.resolveWorkflowSteps(specDirectory);
         const derivedVs = deriveViewerState(specCtx, active, wfSteps);
+        // Living-specs content is filesystem-derived, so it's enriched here at
+        // the provider seam rather than inside the pure derivation.
+        if (derivedVs.livingSpecs) {
+          const wsRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+          if (wsRoot) {
+            derivedVs.livingSpecs = enrichLivingSpecs(
+              derivedVs.livingSpecs,
+              wsRoot,
+              path.join(specDirectory, "spec.md")
+            );
+          }
+        }
         viewerState = {
           ...derivedVs,
           footer: derivedVs.footer.map(a => ({

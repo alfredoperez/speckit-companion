@@ -682,6 +682,83 @@
     line-height: 1.4;
 }
 
+/* Per-capability readable content: open disclosure, purpose, requirement rows */
+
+.living-specs-cap {
+    padding: var(--space-2) 0;
+}
+
+.living-specs-cap + .living-specs-cap {
+    border-top: 1px solid var(--border);
+}
+
+.living-specs-cap__summary {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    cursor: pointer;
+    font-size: 0.86rem;
+}
+
+.living-specs-cap__name {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.living-specs-cap__delta {
+    font-size: 0.74rem;
+    color: var(--text-label);
+    font-variant-numeric: tabular-nums;
+}
+
+.living-specs-cap__body {
+    padding: var(--space-2) 0 0 var(--space-4);
+}
+
+.living-specs-cap__purpose {
+    margin: 0 0 var(--space-2);
+    font-size: 0.82rem;
+    color: var(--text-body);
+    max-width: 72ch;
+}
+
+.living-specs-req-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1, 4px);
+}
+
+.living-specs-req {
+    font-size: 0.82rem;
+    max-width: 72ch;
+}
+
+.living-specs-req__id {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.living-specs-req__text {
+    color: var(--text-body);
+}
+
+.living-specs-req__id + .living-specs-req__text::before {
+    content: ' — ';
+    color: var(--text-muted);
+}
+
+.living-specs-cap__unavailable {
+    margin: var(--space-1, 4px) 0 0 var(--space-4);
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
 /* --- Reasoning-trail cards (Goal / Decisions detail / Verified / Coverage) --- */
 
 .activity-detail {
