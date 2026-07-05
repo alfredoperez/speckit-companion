@@ -1,0 +1,83 @@
+{
+  "workflow": "speckit",
+  "specName": "resume guard",
+  "branch": "main",
+  "currentStep": "tasks",
+  "status": "ready-to-implement",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-05T19:40:03.961Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-05T19:43:16.026Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-05T19:43:16.118Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T19:43:16.206Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-05T19:43:16.294Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T19:43:16.382Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "living specs evaluated — skipped (not configured)",
+  "coverage": {
+    "FR-001": {
+      "title": "Resume button visible only when resume enabled AND companion extension installed"
+    },
+    "FR-002": {
+      "title": "Resume handler routes through the dispatch fallback: suppress + install warning when extension missing"
+    },
+    "FR-003": {
+      "title": "With the extension installed, resume behavior is byte-for-byte unchanged"
+    },
+    "FR-004": {
+      "title": "Suppression path unit-tested alongside existing dispatch-guard tests"
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 5,
+    "projectedTasks": 5,
+    "scopeSignal": "smaller",
+    "verdict": "simple"
+  },
+  "context": [
+    "area: src/features/specs/specCommands.ts resume handler + profileDispatch guard + package.json menus",
+    "constraint: reuse the existing resolveDispatchWithFallback + install-warning pattern; no new detection"
+  ],
+  "intent": "Close the last unguarded dispatch: Resume hides without the companion extension and never sends an unresolvable command",
+  "expectations": [
+    "no new detection mechanism — the existing installed context key drives visibility",
+    "command-palette entry stays hidden as today"
+  ]
+}
