@@ -18,6 +18,27 @@
       "kind": "complete",
       "by": "extension",
       "at": "2026-07-05T23:12:03.371Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T23:15:01.669Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T23:16:00.049Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T23:16:00.689Z"
     }
   ],
   "unattended": true,
@@ -68,5 +89,34 @@
     "scenario-tree rendering deferred — requirements-level content only this pass",
     "no livingSpecs enablement or capabilities/ dir in this repo",
     "no file watcher on capability specs this pass"
-  ]
+  ],
+  "approach": "Provider-side enrichment: a new livingSpecsContent loader resolves names through readLivingSpecs, reads capped spec files, parses the fold-writer's own document shape into structured rows, and merges into the derived state; the card renders per-capability open disclosures with requirement rows, folded-back tags, and delta counts. Derivation stays pure; rich states are Storybook fixtures, the committed demo spec proves the degraded real-viewer path.",
+  "decisions": [
+    {
+      "decision": "enrich at the provider seam, derivation stays pure",
+      "why": "existing injected-impure-data pattern; derivation tests stay fs-free",
+      "rejected": "reader threaded into deriveViewerState or webview-side fetching"
+    },
+    {
+      "decision": "parse the fold-writers own shape (### heading blocks) via readLivingSpecs resolution",
+      "why": "one resolver (FR-002), parser aligned with the formats only writer",
+      "rejected": "general markdown rendering or a second resolver"
+    },
+    {
+      "decision": "delta = per-kind counts from the feature specs delta blocks",
+      "why": "answers what-changed at a glance, matches fold targeting rules",
+      "rejected": "full before/after diffs or git archaeology"
+    },
+    {
+      "decision": "demo fixture carries the degraded path; Storybook carries the rich states",
+      "why": "config-less repo (user decision) makes degraded the only honestly reachable real-viewer state",
+      "rejected": "enabling living specs here (declined) or a nonexistent spec-local config"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan + research + data model + UI contract; provider-seam loader, writer-aligned parser, counts-only deltas, split fixtures",
+      "key_finding": "the living-spec document shape is pinned by write-context.py (_REQ_HEADING_RE / span rules) — the TS parser mirrors it so both ends agree"
+    }
+  }
 }
