@@ -4,15 +4,15 @@
 
 ## Phase 1: Setup
 
-- [ ] **T001** Un-ignore the writer so the package ships it: add `!speckit-extension/scripts/write-context.py` after the `speckit-extension/**` exclusion · .vscodeignore
+- [x] **T001** Un-ignore the writer so the package ships it: add `!speckit-extension/scripts/write-context.py` after the `speckit-extension/**` exclusion · .vscodeignore
 
 ## Phase 2: Foundational
 
-- [ ] **T002** Thread `writerPath` through the pure preamble functions (`renderPreamble`, `renderLifecyclePreamble`, `renderSpecifyCreationLifecyclePreamble`, `perTaskFinishCmd`, `selfCloseCmd`, `renderLifecycleBody`) — quoted in every rendered command; slim companion branches ignore it · src/ai-providers/promptPreamble.ts
+- [x] **T002** Thread `writerPath` through the pure preamble functions (`renderPreamble`, `renderLifecyclePreamble`, `renderSpecifyCreationLifecyclePreamble`, `perTaskFinishCmd`, `selfCloseCmd`, `renderLifecycleBody`) — quoted in every rendered command; slim companion branches ignore it · src/ai-providers/promptPreamble.ts
 
 **⟶ Wait for T002 to finish, then:**
 
-- [ ] **T003** `bundledWriterPath()` in the builder: `vscode.extensions.getExtension('alfredoperez.speckit-companion')` install path joined to the script's relative path, workspace-path fallback; thread into all three render calls · src/ai-providers/promptBuilder.ts
+- [x] **T003** `bundledWriterPath()` in the builder: `vscode.extensions.getExtension('alfredoperez.speckit-companion')` install path joined to the script's relative path, workspace-path fallback; thread into all three render calls · src/ai-providers/promptBuilder.ts
 
 ## Phase 3: User Story 1 — Stock specs stop sticking (P1)
 
@@ -22,7 +22,7 @@
 
 ### Implementation
 
-- [ ] **T004** [US1] Correct the stock-mode prose in `selfCloseLine` and the closing-instruction blocks to the bundled-writer mechanism (drop the self-contradiction) · src/ai-providers/promptPreamble.ts *(after T002 — same file)*
+- [x] **T004** [US1] Correct the stock-mode prose in `selfCloseLine` and the closing-instruction blocks to the bundled-writer mechanism (drop the self-contradiction) · src/ai-providers/promptPreamble.ts *(after T002 — same file)*
 
 **Checkpoint**: stock preambles reference only the bundled writer, coherently.
 
@@ -32,11 +32,11 @@
 
 ### Implementation
 
-- [ ] **T005** [US2] Add the capture block to the stock branch: specify → intent/expectation/context/`--coverage-req --title`; plan → approach/decision/step-summary; tasks → `--coverage-req --tasks`/step-summary; implement → verified/`--coverage-req --tests`/step-summary alongside per-task journaling; all best-effort (skip silently without python3) · src/ai-providers/promptPreamble.ts *(after T004 — same file)*
+- [x] **T005** [US2] Add the capture block to the stock branch: specify → intent/expectation/context/`--coverage-req --title`; plan → approach/decision/step-summary; tasks → `--coverage-req --tasks`/step-summary; implement → verified/`--coverage-req --tests`/step-summary alongside per-task journaling; all best-effort (skip silently without python3) · src/ai-providers/promptPreamble.ts *(after T004 — same file)*
 
 **⟶ Wait for Wave above, then:**
 
-- [ ] **T006** [US1+US2] Unit tests: bundled-path reference + quoting; zero bare workspace-path occurrences in stock output; ICE capture lines present per step; companion slim output byte-identical to before · src/ai-providers/__tests__/promptBuilder.test.ts
+- [x] **T006** [US1+US2] Unit tests: bundled-path reference + quoting; zero bare workspace-path occurrences in stock output; ICE capture lines present per step; companion slim output byte-identical to before · src/ai-providers/__tests__/promptBuilder.test.ts
 
 **Checkpoint**: stock preamble contract fully unit-asserted.
 
@@ -46,13 +46,13 @@
 
 **Wave 1 — independent (different files):**
 
-- [ ] **T007** [P] [US3] `run.mjs`: temp sandbox (git init, `specs/`, marker `.specify/`, NO companion ext), compose the real stock preamble from compiled output pointing at this repo's writer, prepend a small 2-FR feature instruction, drive the headless AI CLI, then invoke the asserter · tests/eval/stock-capture/run.mjs
-- [ ] **T008** [P] [US3] `assert_capture.py`: non-zero exit unless status advanced, intent non-empty, ≥1 expectation, ≥1 context, all coverage titled, all tasks journaled, ≥1 verified · tests/eval/stock-capture/assert_capture.py
-- [ ] **T009** [P] [US3] README: what the eval proves, prerequisites, how to run · tests/eval/stock-capture/README.md
+- [x] **T007** [P] [US3] `run.mjs`: temp sandbox (git init, `specs/`, marker `.specify/`, NO companion ext), compose the real stock preamble from compiled output pointing at this repo's writer, prepend a small 2-FR feature instruction, drive the headless AI CLI, then invoke the asserter · tests/eval/stock-capture/run.mjs
+- [x] **T008** [P] [US3] `assert_capture.py`: non-zero exit unless status advanced, intent non-empty, ≥1 expectation, ≥1 context, all coverage titled, all tasks journaled, ≥1 verified · tests/eval/stock-capture/assert_capture.py
+- [x] **T009** [P] [US3] README: what the eval proves, prerequisites, how to run · tests/eval/stock-capture/README.md
 
 **⟶ Wait for Wave 1 to finish, then:**
 
-- [ ] **T010** [US3] Run the eval for real against the built output; fix preamble text until the asserter passes; record the transcript location · (eval run)
+- [x] **T010** [US3] Run the eval for real against the built output; fix preamble text until the asserter passes; record the transcript location · (eval run)
 
 **Checkpoint**: a real model following the real forced preamble produces a passing context file.
 
@@ -60,12 +60,12 @@
 
 **Wave 1 — independent (different files):**
 
-- [ ] **T011** [P] Docs: stock-mode section of the capture model doc (bundled writer, enriched capture, eval pointer) · docs/capture-and-timing.md
-- [ ] **T012** [P] Root changelog entry (#408, user-facing voice) · CHANGELOG.md
+- [x] **T011** [P] Docs: stock-mode section of the capture model doc (bundled writer, enriched capture, eval pointer) · docs/capture-and-timing.md
+- [x] **T012** [P] Root changelog entry (#408, user-facing voice) · CHANGELOG.md
 
 **⟶ Wait for Wave 1 to finish, then:**
 
-- [ ] **T013** Verify: full jest + both tsc; `npm run package` and confirm the `.vsix` contains the writer byte-identical to source; validate SC-001…SC-004 · (no new files)
+- [x] **T013** Verify: full jest + both tsc; `npm run package` and confirm the `.vsix` contains the writer byte-identical to source; validate SC-001…SC-004 · (no new files)
 
 ## Dependencies & Execution Order
 

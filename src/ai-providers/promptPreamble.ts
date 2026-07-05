@@ -94,13 +94,25 @@ function featureDirFromTarget(target: string): string {
 }
 
 /**
+ * Fallback writer location when the caller can't resolve the extension's own
+ * install path — the copy the companion spec-kit extension installs into the
+ * workspace. The builder normally passes the bundled path instead.
+ */
+export const WORKSPACE_WRITER_PATH = '.specify/extensions/companion/scripts/write-context.py';
+
+// Always quoted: extension install paths routinely contain spaces.
+function writerInvocation(writerPath: string, featureDir: string): string {
+    const dir = featureDir && featureDir !== '<specDir>' ? ` --feature-dir ${featureDir}` : '';
+    return `python3 "${writerPath}"${dir}`;
+}
+
+/**
  * The finish-only per-task journaling command the AI runs as it finishes each
  * implement task — a script call (reliable, ms precision) instead of hand-authored
  * JSON. Passes `--feature-dir` when known; otherwise the script self-resolves.
  */
-function perTaskFinishCmd(featureDir: string): string {
-    const dir = featureDir && featureDir !== '<specDir>' ? `--feature-dir ${featureDir} ` : '';
-    return `python3 .specify/extensions/companion/scripts/write-context.py ${dir}--task <TaskID> --kind complete --by ai`;
+function perTaskFinishCmd(featureDir: string, writerPath: string): string {
+    return `${writerInvocation(writerPath, featureDir)} --task <TaskID> --kind complete --by ai`;
 }
 
 /**
@@ -109,10 +121,49 @@ function perTaskFinishCmd(featureDir: string): string {
  * with no canonical advance (clarify/analyze). `ADVANCING_STEPS` is meant to mirror
  * write-context.py's `STEP_COMPLETED_STATUS` — keep the two in sync if that map changes.
  */
-function selfCloseCmd(step: PromptStep, featureDir: string): string {
-    const dir = featureDir && featureDir !== '<specDir>' ? `--feature-dir ${featureDir} ` : '';
+function selfCloseCmd(step: PromptStep, featureDir: string, writerPath: string): string {
     const verb = ADVANCING_STEPS.has(step) ? '--advance' : '--finish';
-    return `python3 .specify/extensions/companion/scripts/write-context.py ${dir}--step ${step} ${verb} --by ai`;
+    return `${writerInvocation(writerPath, featureDir)} --step ${step} ${verb} --by ai`;
+}
+
+/**
+ * The per-step reasoning-capture block for stock mode — the same writer flags the
+ * companion command bodies teach, so the Activity panel (intent, out-of-scope,
+ * context, decisions, checks, coverage) fills on stock runs too. Empty for steps
+ * with nothing step-specific to capture (clarify).
+ */
+function captureBlock(step: PromptStep, featureDir: string, writerPath: string): string[] {
+    const base = writerInvocation(writerPath, featureDir);
+    const lines: Record<PromptStep, string[]> = {
+        specify: [
+            `- As you draft each requirement: \`${base} --coverage-req FR-NNN --title "<the requirement's one-line text>"\` (one call per requirement).`,
+            `- Before closing: \`${base} --set intent="<one-line goal>"\`, one \`--expectation "<out-of-scope item>"\` per explicit non-goal (never invent them), and one \`--context "<area or constraint worked from>"\` per entry.`,
+        ],
+        clarify: [],
+        plan: [
+            `- \`${base} --set approach="<2-3 sentence how-summary>"\`.`,
+            `- One \`${base} --decision '{"decision": "…", "why": "…", "rejected": "…"}'\` per genuine design choice — skip trivia.`,
+            `- \`${base} --step plan --step-summary '{"summary": "<one-line rollup>"}'\`.`,
+        ],
+        tasks: [
+            `- \`${base} --coverage-req FR-NNN --tasks "T001,T004"\` per requirement (which tasks cover it).`,
+            `- \`${base} --step tasks --step-summary '{"summary": "<task count + shape>"}'\`.`,
+        ],
+        analyze: [
+            `- One \`${base} --concern '{"note": "<finding>", "step": "analyze"}'\` per genuine issue found — none on a clean pass.`,
+        ],
+        implement: [
+            `- One \`${base} --verified '{"what": "<check>", "command": "<cmd>", "result": "<outcome>"}'\` per real check (tests, build, manual pass).`,
+            `- \`${base} --coverage-req FR-NNN --tests "<test file or evidence>"\` per requirement a check covers.`,
+            `- \`${base} --step implement --step-summary '{"summary": "<what shipped in one line>"}'\`.`,
+        ],
+    };
+    const body = lines[step];
+    if (body.length === 0) return [];
+    return [
+        'CAPTURE THE REASONING (best-effort: if python3 is unavailable, skip silently — never block the step; the writer de-dupes, so re-runs are safe):',
+        ...body,
+    ];
 }
 
 const COMPLETED_STATUS_BY_STEP: Record<PromptStep, string> = {
@@ -165,7 +216,7 @@ function aiSelfClosesStep(step: PromptStep, companionInstalled: boolean): boolea
 
 function renderClosingInstruction(
     step: PromptStep, completedStatus: string, donePhrase: string, specDir: string,
-    companionInstalled: boolean
+    companionInstalled: boolean, writerPath: string
 ): string[] {
     if (aiSelfClosesStep(step, companionInstalled)) {
         const advances = ADVANCING_STEPS.has(step);
@@ -177,7 +228,7 @@ function renderClosingInstruction(
             '║  MANDATORY FINAL WRITE — DO THIS BEFORE YOUR TURN ENDS          ║',
             '╚══════════════════════════════════════════════════════════════════╝',
             `Run this script to close ${step} — it ${effect}:`,
-            `    ${selfCloseCmd(step, specDir)}`,
+            `    ${selfCloseCmd(step, specDir, writerPath)}`,
             'Never hand-author the JSON or hand-flip the status — the script stamps the real clock and writes atomically.',
             `Then print "${donePhrase}" as the final terminal line.`,
             '',
@@ -191,7 +242,7 @@ function renderClosingInstruction(
     return [
         `DONE: do NOT flip the status yourself and do NOT append a step-level "complete" entry for ${step} — ${recorder} with a real script timestamp; a hand-written "ai" complete would duplicate it.`,
         ...(step === 'implement'
-            ? [`Per-task timing is finish-only via a script: as you finish each task, mark it \`- [x] **<TaskID>**\` in tasks.md, append task_summaries.<TaskID>, then run \`${perTaskFinishCmd(specDir)}\` — that stamps ONE finish event from the real clock (no per-task start, no hand-authored JSON). Run it the moment each task completes, not in one end-of-step batch: clustering every finish into a tiny window FAILS the cadence check. The hook backfills any task you don't journal.`]
+            ? [`Per-task timing is finish-only via a script: as you finish each task, mark it \`- [x] **<TaskID>**\` in tasks.md, append task_summaries.<TaskID>, then run \`${perTaskFinishCmd(specDir, writerPath)}\` — that stamps ONE finish event from the real clock (no per-task start, no hand-authored JSON). Run it the moment each task completes, not in one end-of-step batch: clustering every finish into a tiny window FAILS the cadence check. The hook backfills any task you don't journal.`]
             : []),
         `Print "${donePhrase}" as the final terminal line.`,
     ];
@@ -217,7 +268,7 @@ function renderSlimCompanionPreamble(step: PromptStep, target: string, dispatchU
     ].join('\n');
 }
 
-export function renderPreamble(step: PromptStep, specDir: string, dispatchUtc: string, companionInstalled = false): string {
+export function renderPreamble(step: PromptStep, specDir: string, dispatchUtc: string, companionInstalled = false, writerPath: string = WORKSPACE_WRITER_PATH): string {
     const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
     if (companionInstalled) {
         return renderSlimCompanionPreamble(step, target, dispatchUtc);
@@ -228,6 +279,7 @@ export function renderPreamble(step: PromptStep, specDir: string, dispatchUtc: s
         : `Canonical substeps for ${step}: ${substepsList.join(', ')}. For each substep boundary append a SINGLE finish entry { step, substep: "<name>", kind: "complete", by: "ai", at } the moment it ends (fresh \`date -u\`) — one per substep, never two sharing a timestamp, never a separate start. The delta between finishes is each substep's duration.`;
     const completedStatus = COMPLETED_STATUS_BY_STEP[step];
     const donePhrase = DONE_PHRASE_BY_STEP[step];
+    const capture = captureBlock(step, specDir, writerPath);
     return [
         MARKER_OPEN,
         `Before and after this step runs, update ${target}. Schema:`,
@@ -241,7 +293,8 @@ export function renderPreamble(step: PromptStep, specDir: string, dispatchUtc: s
         '',
         substepsLine,
         '',
-        ...renderClosingInstruction(step, completedStatus, donePhrase, specDir, companionInstalled),
+        ...(capture.length > 0 ? [...capture, ''] : []),
+        ...renderClosingInstruction(step, completedStatus, donePhrase, specDir, companionInstalled, writerPath),
         '',
         NEXT_STEP_GUARD(step),
         '',
@@ -266,15 +319,23 @@ function renderSlimLifecycleBody(_featureDir: string): string {
     ].join('\n');
 }
 
-export function renderLifecycleBody(target: string, dispatchUtc: string, companionInstalled = false): string {
+export function renderLifecycleBody(target: string, dispatchUtc: string, companionInstalled = false, writerPath: string = WORKSPACE_WRITER_PATH): string {
     const featureDir = featureDirFromTarget(target);
     // The companion command bodies carry the full protocol, so a companion run
     // only needs the slim cross-step rules. Stock has no such body → full body.
     if (companionInstalled) {
         return renderSlimLifecycleBody(featureDir);
     }
+    const writerBase = writerInvocation(writerPath, featureDir);
     // Stock: specify has no companion command to record it, so it self-closes too.
-    const selfCloseLine = '2. When you FINISH a **specify, plan, tasks, clarify, or analyze** step, close it with the writer script — run `python3 .specify/extensions/companion/scripts/write-context.py --feature-dir ' + featureDir + ' --step <step> --advance --by ai` for **specify/plan/tasks** (it appends the complete AND flips status forward-only in one atomic write), or the same command with `--finish` in place of `--advance` for **clarify/analyze** (which have no canonical advance). Never hand-author the JSON or hand-flip the status. There is no companion extension here, so closing specify is YOUR job — skip it and the spec sticks on `specifying` with the next-step button hidden. Do NOT self-close **implement**: the end-of-step watcher closes it when every task is checked.';
+    const selfCloseLine = `2. When you FINISH a **specify, plan, tasks, clarify, or analyze** step, close it with the context writer (it ships with the SpecKit Companion editor extension — the quoted path below always exists) — run \`${writerBase} --step <step> --advance --by ai\` for **specify/plan/tasks** (it appends the complete AND flips status forward-only in one atomic write), or the same command with \`--finish\` in place of \`--advance\` for **clarify/analyze** (which have no canonical advance). Never hand-author the JSON or hand-flip the status. The stock pipeline has no command that records specify's completion, so closing specify is YOUR job — skip it and the spec sticks on \`specifying\` with the next-step button hidden. Do NOT self-close **implement**: the end-of-step watcher closes it when every task is checked.`;
+    const captureLines = [
+        'CAPTURE THE REASONING as each step produces it (best-effort: if python3 is unavailable, skip silently — never block a step; the writer de-dupes, so re-runs are safe):',
+        `- specify: \`${writerBase} --coverage-req FR-NNN --title "<one-line requirement text>"\` per requirement as you draft it; then \`--set intent="<one-line goal>"\`, one \`--expectation "<out-of-scope item>"\` per explicit non-goal, one \`--context "<area or constraint worked from>"\` per entry.`,
+        `- plan: \`${writerBase} --set approach="<2-3 sentence how>"\`; one \`--decision '{"decision": "…", "why": "…", "rejected": "…"}'\` per genuine choice; \`--step plan --step-summary '{"summary": "<one line>"}'\`.`,
+        `- tasks: \`${writerBase} --coverage-req FR-NNN --tasks "T001,T004"\` per requirement; \`--step tasks --step-summary '{"summary": "<count + shape>"}'\`.`,
+        `- implement: one \`${writerBase} --verified '{"what": "…", "command": "…", "result": "…"}'\` per real check; \`--coverage-req FR-NNN --tests "<evidence>"\` per covered requirement; \`--step implement --step-summary '{"summary": "<what shipped>"}'\`.`,
+    ];
     return [
         `Throughout this run, keep ${target} up to date as you move through steps. Schema:`,
         '',
@@ -287,7 +348,9 @@ export function renderLifecycleBody(target: string, dispatchUtc: string, compani
         selfCloseLine,
         '3. For each substep boundary append a SINGLE finish entry { step, substep: "<name>", kind: "complete", by: "ai", at: <date -u> } the moment it ends — one per substep, never two sharing a timestamp, never a separate start.',
         '',
-        `Implement (finish-only per task): as you finish each task, mark it \`- [x] **<TaskID>**\` in tasks.md, append task_summaries.<TaskID>, then run \`${perTaskFinishCmd(featureDir)}\` — ONE finish event from the real clock, no per-task start, no hand-authored JSON. Run it the moment each task completes, not in one end-of-step batch: clustering every finish into a tiny window FAILS the cadence check. The end-of-step hook backfills any task you miss and closes the step.`,
+        ...captureLines,
+        '',
+        `Implement (finish-only per task): as you finish each task, mark it \`- [x] **<TaskID>**\` in tasks.md, append task_summaries.<TaskID>, then run \`${perTaskFinishCmd(featureDir, writerPath)}\` — ONE finish event from the real clock, no per-task start, no hand-authored JSON. Run it the moment each task completes, not in one end-of-step batch: clustering every finish into a tiny window FAILS the cadence check. The end-of-step hook backfills any task you miss and closes the step.`,
         '',
         'Do NOT preemptively write a start-entry for the next step at completion time. The start-entry must coincide with you actually beginning that step (item 1 above), not with you finishing the previous one. Writing a { step: "<next>", kind: "start" } entry as part of the completion write produces a phantom "Generating <next>…" state in the viewer when in fact no one is generating anything.',
         '',
@@ -299,11 +362,11 @@ export function renderLifecycleBody(target: string, dispatchUtc: string, compani
     ].join('\n');
 }
 
-export function renderLifecyclePreamble(specDir: string, dispatchUtc: string, companionInstalled = false): string {
+export function renderLifecyclePreamble(specDir: string, dispatchUtc: string, companionInstalled = false, writerPath: string = WORKSPACE_WRITER_PATH): string {
     const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
     return [
         MARKER_OPEN,
-        renderLifecycleBody(target, dispatchUtc, companionInstalled),
+        renderLifecycleBody(target, dispatchUtc, companionInstalled, writerPath),
         MARKER_CLOSE,
     ].join('\n');
 }
@@ -312,7 +375,8 @@ export function renderSpecifyCreationLifecyclePreamble(
     workflowName: string,
     specDir: string | null,
     dispatchUtc: string,
-    companionInstalled = false
+    companionInstalled = false,
+    writerPath: string = WORKSPACE_WRITER_PATH
 ): string {
     const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
     return [
@@ -358,7 +422,7 @@ export function renderSpecifyCreationLifecyclePreamble(
         '- The seed history entry is attributed to `"extension"` because this lifecycle was initiated by the SpecKit Companion extension dispatching the command, even though you are the one transcribing it into the file.',
         '- Only update the `.spec-context.json` for the spec being created. Do NOT touch other spec dirs.',
         '',
-        renderLifecycleBody(target, dispatchUtc, companionInstalled),
+        renderLifecycleBody(target, dispatchUtc, companionInstalled, writerPath),
         MARKER_CLOSE,
     ].join('\n');
 }

@@ -2,8 +2,8 @@
   "workflow": "speckit",
   "specName": "stock capture",
   "branch": "main",
-  "currentStep": "specify",
-  "status": "specified",
+  "currentStep": "implement",
+  "status": "implemented",
   "history": [
     {
       "step": "specify",
@@ -53,16 +53,137 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-07-05T20:03:24.422Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-05T20:03:43.669Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T20:07:35.747Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T20:07:35.809Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T20:07:35.869Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T20:07:35.932Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T20:07:35.992Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T20:08:55.211Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T20:10:14.579Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T20:10:14.642Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T20:10:14.703Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T20:12:24.612Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T20:12:24.674Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T20:21:38.573Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-05T20:21:38.634Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-05T20:21:38.717Z"
     }
   ],
   "unattended": true,
-  "last_action": "living specs evaluated — skipped (not configured)",
+  "last_action": "13/13 tasks done — eval passed 10/10 on attempt 2 (harness permission fix)",
   "coverage": {
     "FR-001": {
       "title": "Writer ships inside the .vsix, copied at build time from the spec-kit ext source (single source of truth)",
       "tasks": [
         "T001",
         "T013"
+      ],
+      "tests": [
+        "vsce ls (writer in package); dev host same relative path"
       ]
     },
     "FR-002": {
@@ -71,12 +192,18 @@
         "T002",
         "T003",
         "T006"
+      ],
+      "tests": [
+        "promptBuilder.test.ts::references the quoted bundled writer"
       ]
     },
     "FR-003": {
       "title": "Self-contradictory stock-mode prose corrected to the new mechanism",
       "tasks": [
         "T004"
+      ],
+      "tests": [
+        "promptBuilder.test.ts::lifecycle preamble carries corrected prose"
       ]
     },
     "FR-004": {
@@ -84,6 +211,9 @@
       "tasks": [
         "T005",
         "T006"
+      ],
+      "tests": [
+        "promptBuilder.test.ts::stock specify ICE capture; eval assertions"
       ]
     },
     "FR-005": {
@@ -91,6 +221,9 @@
       "tasks": [
         "T005",
         "T006"
+      ],
+      "tests": [
+        "promptBuilder.test.ts::plan/tasks/implement capture blocks; eval assertions"
       ]
     },
     "FR-006": {
@@ -98,12 +231,18 @@
       "tasks": [
         "T005",
         "T006"
+      ],
+      "tests": [
+        "promptBuilder.test.ts::companion slim unchanged + clarify empty"
       ]
     },
     "FR-007": {
       "title": "Preamble builders unit-tested: bundled path, quoting, ICE instructions per step",
       "tasks": [
         "T006"
+      ],
+      "tests": [
+        "promptBuilder.test.ts (49/49 suite)"
       ]
     },
     "FR-008": {
@@ -113,6 +252,9 @@
         "T008",
         "T009",
         "T010"
+      ],
+      "tests": [
+        "tests/eval/stock-capture run 2: 10/10 pass"
       ]
     },
     "FR-009": {
@@ -120,6 +262,9 @@
       "tasks": [
         "T011",
         "T012"
+      ],
+      "tests": [
+        "docs/capture-and-timing.md stock-mode section + CHANGELOG entry in diff"
       ]
     }
   },
@@ -162,6 +307,11 @@
       "decision": "eval = real headless AI on the forced preamble in a temp sandbox, outside jest",
       "why": "only honest test of instruction-following; text snapshots cannot catch a model misreading",
       "rejected": "preamble snapshot tests alone, or a full spec-kit-init sandbox (tests the wrong layer)"
+    },
+    {
+      "decision": "eval harness allows Bash(python3/date/git/node) explicitly",
+      "why": "acceptEdits auto-denies Bash in -p mode, which silently forces hand-edit degradation — the exact failure mode the eval exists to catch",
+      "rejected": "--dangerously-skip-permissions (broader than needed)"
     }
   ],
   "step_summaries": {
@@ -171,6 +321,126 @@
     },
     "tasks": {
       "summary": "13 tasks across 6 phases: manifest negation, threaded writerPath, prose fix, capture block, unit tests, 3-file eval harness + real run, docs; promptPreamble serialized T002→T004→T005"
+    },
+    "implement": {
+      "summary": "Bundled writer + quoted extension-path preamble + per-step ICE capture block; 1185 tests green; sandbox eval 10/10 on a real model"
     }
-  }
+  },
+  "currentTask": "T013",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "vscodeignore negation ships write-context.py inside the .vsix",
+      "files": [
+        ".vscodeignore"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "writerPath threaded through all pure preamble functions; every rendered command quotes the path",
+      "files": [
+        "src/ai-providers/promptPreamble.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "bundledWriterPath() via vscode.extensions with workspace fallback; threaded into all three render calls",
+      "files": [
+        "src/ai-providers/promptBuilder.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "stock prose corrected: writer ships with the editor extension, quoted path always exists; self-contradiction removed",
+      "files": [
+        "src/ai-providers/promptPreamble.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "per-step capture block (specify ICE+titles, plan approach/decisions/summary, tasks coverage-tasks, implement verified/tests/summary) in both single-step and lifecycle stock preambles, best-effort",
+      "files": [
+        "src/ai-providers/promptPreamble.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "7 contract tests: quoted bundled path, no bare workspace path, fallback, per-step ICE blocks, slim byte-behavior unchanged, clarify empty",
+      "files": [
+        "src/ai-providers/__tests__/promptBuilder.test.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "run.mjs: sandbox scaffold, real preamble from dist (stock branch, repo writer path), headless claude drive, asserter invoke",
+      "files": [
+        "tests/eval/stock-capture/run.mjs"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "assert_capture.py: 10 assertions over the produced context (status/ICE/titles/journaling/checks/history shape)",
+      "files": [
+        "tests/eval/stock-capture/assert_capture.py"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "README: what the eval proves, prereqs, run + rerun guidance",
+      "files": [
+        "tests/eval/stock-capture/README.md"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "capture-and-timing doc: new stock-mode section (bundled writer, capture block, eval pointer)",
+      "files": [
+        "docs/capture-and-timing.md"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "root changelog Fixed entry for #408, user-facing voice",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Eval run 2 passes 10/10 (run 1 caught acceptEdits auto-denying Bash — model degraded to hand-edits exactly as instructed; harness now allows python3/date/git/node)",
+      "files": [
+        "tests/eval/stock-capture/run.mjs",
+        "tests/eval/stock-capture/assert_capture.py"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "1185/1185 jest, both tsc clean, vsce ls shows the writer in the package; SC-001..004 validated"
+    }
+  },
+  "verified": [
+    {
+      "what": "full jest suite",
+      "command": "npx jest",
+      "result": "1185/1185 pass (7 new preamble contract tests)"
+    },
+    {
+      "what": "both tsc configs",
+      "command": "tsc --noEmit x2",
+      "result": "clean"
+    },
+    {
+      "what": "writer ships in the package",
+      "command": "npx @vscode/vsce ls | grep write-context",
+      "result": "speckit-extension/scripts/write-context.py listed (same file as source — byte-identical by construction)"
+    },
+    {
+      "what": "forced-preamble sandbox eval, companion-free workspace, real headless model",
+      "command": "node tests/eval/stock-capture/run.mjs",
+      "result": "10/10 assertions pass: status advanced, ICE present, requirements titled, tasks journaled, check recorded",
+      "warnings": [
+        "run 1 failed 5/10 — acceptEdits auto-denied Bash so the model hand-maintained the lifecycle exactly as the degradation prose instructs; harness fixed to allow the writer"
+      ]
+    }
+  ]
 }
