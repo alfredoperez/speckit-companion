@@ -17,7 +17,7 @@ import {
     WorkflowConfig,
 } from '../workflows';
 import { updateStepProgress, readSpecContextSync } from './specContextManager';
-import { resolveDispatchWithFallback } from './profileDispatch';
+import { resolveDispatchWithFallback, resolveDispatchForRoot } from './profileDispatch';
 import { startStep, completeStep, setStatus, forceStatus, reactivate } from './stepLifecycle';
 import { lastEntryIsCompletionFor } from './historyHelpers';
 import { updateSelectionContextKeys } from './selectionContextKeys';
@@ -276,6 +276,23 @@ export function registerSpecKitCommands(
         vscode.commands.registerCommand('speckit.specs.resume', async (item: SpecTreeItem) => {
             if (!item) return;
             const relativePath = item.specPath || `specs/${item.label}`;
+            // Resume has no stock twin — without the extension, suppress rather than dispatch unresolvably.
+            const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+            const resolution = resolveDispatchForRoot('speckit.companion.resume', workspaceRoot);
+            if (resolution.fellBack) {
+                outputChannel.appendLine(
+                    '[SpecKit] Resume unavailable — spec-kit extension not installed; no stock equivalent, skipping.'
+                );
+                void vscode.window.showWarningMessage(
+                    'Resume needs the companion spec-kit extension, which is not installed — install it, then resume the spec from where it left off.',
+                    'Install spec-kit Extension'
+                ).then(choice => {
+                    if (choice === 'Install spec-kit Extension') {
+                        void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
+                    }
+                });
+                return;
+            }
             outputChannel.appendLine(`[SpecKit] Resume triggered for: ${relativePath}`);
             await getAIProvider().executeSlashCommand(
                 `/speckit.companion.resume ${relativePath}`,

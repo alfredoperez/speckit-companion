@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **The sidebar Resume button no longer clicks into the void without the spec-kit extension** (#407): with the SpecKit Companion Workflow enabled but the companion spec-kit extension not installed, Resume used to stay visible and a click silently sent a command your AI CLI couldn't resolve — nothing happened, no explanation. The button now hides when the extension is missing, and if the command runs anyway you get the standard warning with an **Install spec-kit Extension** action instead of a dead dispatch.
 - **The "Install spec-kit extension" banner no longer hides behind the beta setting** (#369): the prompt that offers to install the companion spec-kit extension used to appear only after you'd turned on the SpecKit Companion Workflow beta — which meant the people most likely to want the extension never saw the nudge to get it. The banner now shows on its own merits: whenever the extension is missing and you haven't dismissed it or turned its setting off, no matter how the workflow toggle is set. Installing the extension, dismissing the banner, and turning off its `speckit.companion.installPrompt` setting all still hide it exactly as before.
 
 ## [0.25.0] - 2026-06-23
