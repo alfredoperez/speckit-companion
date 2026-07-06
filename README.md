@@ -101,7 +101,7 @@ Toggle **Activity** in the viewer's nav bar to swap the markdown pane for a **br
 Old specs without the newer capture degrade gracefully — the hero shows what exists and only populated tabs render. Visibility is gated by `speckit.viewer.activityPanel` — `"off"`, `"beta"` (default; toggle shows a *beta* pill), or `"on"`.
 
 ![Activity Panel](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/activity.png)
-*Activity panel. The Phases timeline plus Approach, Tasks, and Review-comments cards — one overview of everything the spec's context file tracks.*
+*Activity panel. The hero answers "how did the run stand" at a glance — status, honest active time, tasks, coverage, checks — and the Plan states the intent, the context the run worked from, and what was explicitly out of scope.*
 
 ### Custom Workflows & Commands
 
