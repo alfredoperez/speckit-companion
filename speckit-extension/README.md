@@ -157,7 +157,7 @@ This is separate from stock spec-kit's own extension hooks (`.specify/extensions
 
 ## Living specs — map your code to durable capability specs (opt-in)
 
-Most specs describe one change and then go quiet. **Living specs** are the opposite: a durable spec per *capability* — checkout, auth, billing, todos — that stays current as the code evolves. You declare which files belong to each capability and where its spec lives, and a resolver answers "which capabilities does this change touch?" so the right specs can be kept in sync.
+Most specs describe one change and then go quiet. **Living specs** are the opposite: a durable spec per *capability* — checkout, auth, billing, todos — that stays current as the code evolves. This is how Companion moves a team from spec-first to spec-anchored, with a road to spec-as-source: the living spec is the artifact, spec-anchored is the practice. You declare which files belong to each capability and where its spec lives, and a resolver answers "which capabilities does this change touch?" so the right specs can be kept in sync.
 
 The feature is **off by default**. With no `livingSpecs` block (or `enabled: false`), nothing changes — every command behaves exactly as it does today. To turn it on, add a `livingSpecs` block to `.specify/companion.yml`:
 
