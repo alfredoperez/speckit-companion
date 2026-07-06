@@ -6,7 +6,7 @@ All notable changes to the **spec-kit extension** (`id: companion`) are document
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/); this extension follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.18.0] - 2026-07-06
 
 ### Added
 - **The living-specs story now has names for its levels.** The README describes the maturity ladder the feature moves you along: spec-first (a spec that dies at ship), spec-anchored (a durable spec per capability that deltas fold back into, with drift detection - what living specs deliver), and spec-as-source (the machine-validated direction the drift check points at). Docs only, no behavior change.
@@ -24,10 +24,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ### Fixed
 - **A finished implement step is now recorded as complete exactly once.** Implement can be closed from several places — as each task finishes, by an end-of-step hook, by a batch fold of parallel work, and by the final completion step — and a past run logged the same "implement finished" event four times. Those completions are now recognized as the same event regardless of who recorded it, so the activity timeline shows a single, clean completion marker. A regression test drives all four paths in one run to keep it that way.
 
-## [0.11.1] - 2026-06-24
-
 ### Changed
+
 - **Slimmer install.** Installing the extension now pulls down only the files it actually needs to run, instead of also carrying along docs, examples, and build-time sources. The download drops from roughly 600 KB to about 72 KB, so installs and updates are quicker. Nothing about how the extension behaves changes.
+
 
 ## [0.11.0] - 2026-06-23
 
