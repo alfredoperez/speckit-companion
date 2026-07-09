@@ -1,0 +1,23 @@
+{
+  "workflow": "speckit",
+  "specName": "wibey provider support",
+  "branch": "393-wibey-provider-support",
+  "currentStep": "specify",
+  "status": "specified",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-09T00:00:00.000Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-09T00:00:01.000Z"
+    }
+  ]
+}
