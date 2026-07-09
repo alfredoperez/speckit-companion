@@ -83,8 +83,15 @@ Plus webview handler for `prefillInput` to set the chat input value.
 
 ---
 
-## Pending verification (during implementation)
+## Additional findings from genaica/wibey-cli source code
 
-1. **`steeringFile` name**: `WIBEY.md` is assumed (fits the naming pattern CLAUDE.md, GEMINI.md, QWEN.md). Wibey CLI is built on Claude Agent SDK and may also read `CLAUDE.md`. Verify by checking what file `wibey` scans at startup.
-2. **`--append-system-prompt` support**: Wibey CLI is built on Claude Agent SDK which supports this flag. Assumed supported but not confirmed from docs. If supported, `WibeyCliProvider` should override `prepareDispatch` like `ClaudeCodeProvider` for proper context-preamble separation.
-3. **`wibey --version`** command: `CliTerminalProvider.isInstalled()` calls `<binary> --version`. Confirm Wibey CLI supports this flag.
+Verified from `src/constants/paths.ts`:
+
+- **`steeringFile: 'AGENTS.md'`** — confirmed via `FILE_NAMES = { AGENTS: 'AGENTS.md', CLAUDE_MD: 'CLAUDE.md', ... }`. The `hasProjectConfig()` function checks for both `AGENTS.md` and `CLAUDE.md`.
+- **`globalSteeringFile: null`** — no global `AGENTS.md`; `~/.wibey/RULES.md` exists at `WIBEY_PATHS.RULES` but serves a different purpose (global rules, not project memory).
+- **`mcpConfigPath: '.wibey/.mcp.json'`** — confirmed via `PROJECT_PATHS.getMcpConfigPath()` → `.wibey/.mcp.json` (dot prefix).
+- **`agentsDir: '.wibey/agents'`** — confirmed via `PROJECT_PATHS.getAgentsDir()`.
+- **`skillsDir: '.wibey/skills'`** — confirmed via `PROJECT_PATHS.getSkillsDir()`.
+- **`--version` flag** — confirmed in CLI help text at line 79.
+- **`--append-system-prompt` NOT supported** — confirmed absent from the full CLI flags list; no equivalent flag exists.
+- **`--prompt-file / -f` flag** — discovered: reads prompt from a file path directly (mutually exclusive with `-p`). Phase 1.5 optimization: override `prepareDispatch` to use `wibey -f "/tmp/prompt.md"` instead of `wibey -p "$(cat ...)"` for shell-agnostic dispatch.

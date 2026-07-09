@@ -100,23 +100,23 @@ Add to `_PROVIDER_PATHS_RAW` after the `CLAUDE_VSCODE` entry:
 
 ```typescript
 [AIProviders.WIBEY]: {
-    steeringFile: 'WIBEY.md',            // ⚠️ verify during impl: may be CLAUDE.md
-    globalSteeringFile: '.wibey/WIBEY.md',
-    steeringDir: '.wibey/steering',
-    steeringPattern: '*.md',
-    agentsDir: '.wibey/agents',
+    steeringFile: 'AGENTS.md',           // confirmed: FILE_NAMES.AGENTS in paths.ts
+    globalSteeringFile: null,            // no global AGENTS.md; ~/.wibey/RULES.md serves a different purpose
+    steeringDir: '',                     // steering file lives at project root, no subdirectory
+    steeringPattern: 'AGENTS.md',
+    agentsDir: '.wibey/agents',          // confirmed: PROJECT_PATHS.getAgentsDir()
     agentsPattern: '*.md',
-    skillsDir: '.wibey/skills',
+    skillsDir: '.wibey/skills',          // confirmed: PROJECT_PATHS.getSkillsDir()
     skillsPattern: '*/SKILL.md',         // confirmed from active .wibey/ in this project
-    mcpConfigPath: '.wibey/mcp.json',
+    mcpConfigPath: '.wibey/.mcp.json',   // confirmed: PROJECT_PATHS.getMcpConfigPath() → .wibey/.mcp.json
     configDir: '.wibey',
-    supportsHooks: true,                  // confirmed: .wibey/hooks/hooks.json
+    supportsHooks: true,                  // confirmed: WIBEY_PATHS.HOOKS_CONFIG = ~/.wibey/hooks/hooks.json
     displayName: 'Wibey CLI',
     commandFormat: 'dash',               // confirmed: /speckit-specify, /flux-commit, etc.
     quickPickIcon: '$(hubot)',
     quickPickDescription: "Walmart's built-in AI coding assistant — terminal mode with full SDD support",
     supportsInteractivePermissions: true,
-    autoApproveFlag: '',                  // no CLI flag; permission via ~/.wibey/settings.json
+    autoApproveFlag: '',                  // no CLI flag; --append-system-prompt NOT supported; permission via settings.json
 },
 ```
 
@@ -213,6 +213,7 @@ Open an issue on `genaica/wibey-vscode-extension`:
 ## Implementation notes
 
 - `validateProviderRegistry` runs at module load and throws `ProviderRegistryError` on invalid `commandFormat`, empty `displayName`, or `autoApproveFlag` without trailing space. The new entry must pass all checks (`commandFormat: 'dash'`, non-empty `displayName`, `autoApproveFlag: ''`).
-- **Verify `steeringFile`**: run `wibey` in a project with no config files and check which file it creates or reads. If `CLAUDE.md`, update `steeringFile` and `globalSteeringFile` accordingly.
-- **Verify `wibey --version`**: confirm the install-check command succeeds; if Wibey uses a different flag (e.g., `--version` outputs error), override `isInstalled()` in `WibeyCliProvider`.
-- **Optional Phase 1.5**: If Wibey CLI supports `--append-system-prompt`, override `prepareDispatch` like `ClaudeCodeProvider` to separate the `.spec-context.json` preamble from the user command for cleaner terminal output.
+- **`steeringFile: 'AGENTS.md'`** — confirmed from `src/constants/paths.ts` `FILE_NAMES.AGENTS`. No verification needed; `hasProjectConfig()` also checks `CLAUDE.md` so both files are recognized.
+- **`wibey --version`** — confirmed supported in CLI help text. No override of `isInstalled()` needed.
+- **`--append-system-prompt` NOT supported** — confirmed absent from Wibey CLI flags list. The default `prepareDispatch` (no override) is correct for Phase 1.
+- **Phase 1.5 optimization**: Wibey CLI supports `--prompt-file / -f` which reads the prompt directly from a file path. Override `prepareDispatch` to emit `wibey -f "/tmp/prompt.md"` instead of `wibey -p "$(cat "/tmp/prompt.md")"` — shell-agnostic and cmd.exe-safe without special escaping.

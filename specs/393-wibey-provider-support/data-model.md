@@ -8,15 +8,15 @@ Defined in `src/ai-providers/aiProvider.ts`. All fields are pre-existing; this f
 
 | Field | Type | Wibey CLI value | Notes |
 |---|---|---|---|
-| `steeringFile` | `string` | `'WIBEY.md'` | ⚠️ verify; may be `CLAUDE.md` |
-| `globalSteeringFile` | `string \| null` | `'.wibey/WIBEY.md'` | relative to home dir |
-| `steeringDir` | `string` | `'.wibey/steering'` | |
-| `steeringPattern` | `string` | `'*.md'` | |
-| `agentsDir` | `string` | `'.wibey/agents'` | |
+| `steeringFile` | `string` | `'AGENTS.md'` | confirmed: `FILE_NAMES.AGENTS` in `paths.ts` |
+| `globalSteeringFile` | `string \| null` | `null` | no global AGENTS.md; `~/.wibey/RULES.md` serves different purpose |
+| `steeringDir` | `string` | `''` | steering file at project root, no subdir |
+| `steeringPattern` | `string` | `'AGENTS.md'` | |
+| `agentsDir` | `string` | `'.wibey/agents'` | confirmed: `PROJECT_PATHS.getAgentsDir()` |
 | `agentsPattern` | `string` | `'*.md'` | |
-| `skillsDir` | `string` | `'.wibey/skills'` | confirmed in this project |
+| `skillsDir` | `string` | `'.wibey/skills'` | confirmed in this project + `getSkillsDir()` |
 | `skillsPattern` | `string` | `'*/SKILL.md'` | confirmed in this project |
-| `mcpConfigPath` | `string` | `'.wibey/mcp.json'` | relative to home dir |
+| `mcpConfigPath` | `string` | `'.wibey/.mcp.json'` | confirmed: `PROJECT_PATHS.getMcpConfigPath()` |
 | `configDir` | `string` | `'.wibey'` | workspace-relative |
 | `supportsHooks` | `boolean` | `true` | confirmed: `.wibey/hooks/hooks.json` |
 | `displayName` | `string` | `'Wibey CLI'` | shown in all UI surfaces |
