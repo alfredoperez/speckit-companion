@@ -822,7 +822,8 @@
               "qwen",
               "opencode",
               "ide-chat",
-              "wibey"
+              "wibey",
+              "wibey-vscode"
             ],
             "enumItemLabels": [
               "Claude Code",
@@ -833,7 +834,8 @@
               "Qwen Code",
               "OpenCode",
               "IDE Chat (Copilot · Cursor · Windsurf)",
-              "Wibey CLI"
+              "Wibey CLI",
+              "Wibey (VS Code)"
             ],
             "enumDescriptions": [
               "Claude Code - Full feature support (steering, agents, skills, hooks)",
@@ -844,7 +846,8 @@
               "Qwen Code - Steering support",
               "OpenCode - Steering and agents support (AGENTS.md)",
               "IDE Chat - Routes prompts to the host editor's built-in AI chat (Copilot / Cursor / Windsurf)",
-              "Wibey CLI - Walmart's built-in AI coding assistant (dispatches SpecKit commands to the wibey CLI in a VS Code terminal)"
+              "Wibey CLI - Walmart's built-in AI coding assistant (dispatches SpecKit commands to the wibey CLI in a VS Code terminal)",
+              "Wibey (VS Code) - Opens the Wibey chat panel and pre-fills the command (uses wibey.sendPrompt when available, clipboard fallback otherwise)"
             ],
             "scope": "machine",
             "order": 2,

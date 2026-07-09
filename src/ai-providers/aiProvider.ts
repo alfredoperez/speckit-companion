@@ -375,6 +375,32 @@ const _PROVIDER_PATHS_RAW: Record<AIProviderType, ProviderPaths> = {
         supportsInteractivePermissions: true,
         autoApproveFlag: '',
     },
+    // Wibey in VS Code — dispatches to the Wibey VS Code chat panel
+    // (wibey.wibey-vscode-extension). Dispatch strategy (in priority order):
+    //   1. wibey.sendPrompt(text) — preferred; requires issue #442 to be
+    //      resolved in genaica/wibey-vscode-extension.
+    //   2. Clipboard fallback — copies the command + opens the panel; user
+    //      presses ⌘V / Ctrl+V and Enter. Works today with v1.0.19.
+    // Config paths mirror the CLI provider (both share .wibey/).
+    [AIProviders.WIBEY_VSCODE]: {
+        steeringFile: 'AGENTS.md',
+        globalSteeringFile: null,
+        steeringDir: '',
+        steeringPattern: 'AGENTS.md',
+        agentsDir: '.wibey/agents',
+        agentsPattern: '*.md',
+        skillsDir: '.wibey/skills',
+        skillsPattern: '*/SKILL.md',
+        mcpConfigPath: '.wibey/.mcp.json',
+        configDir: '.wibey',
+        supportsHooks: true,
+        displayName: 'Wibey (VS Code)',
+        commandFormat: 'dash',
+        quickPickIcon: '$(window)',
+        quickPickDescription: "Walmart's built-in AI coding assistant — opens the Wibey chat panel (no terminal)",
+        supportsInteractivePermissions: true,
+        autoApproveFlag: '',
+    },
     // Wibey CLI — Walmart's first-party AI coding assistant.
     // Built on the Claude Agent SDK; uses `-p` for non-interactive dispatch
     // (same flag as the base CliTerminalProvider default). No CLI flag for

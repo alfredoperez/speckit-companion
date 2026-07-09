@@ -68,6 +68,7 @@ describe('docs consistency', () => {
         opencode: 'openCodeProvider.ts',
         'ide-chat': 'ideChatProvider.ts',
         wibey: 'wibeyCliProvider.ts',
+        'wibey-vscode': 'wibeyPanelProvider.ts',
       };
       for (const id of enumValues) {
         const file = idToFile[id];
