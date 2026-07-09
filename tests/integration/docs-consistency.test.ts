@@ -67,6 +67,7 @@ describe('docs consistency', () => {
         qwen: 'qwenCliProvider.ts',
         opencode: 'openCodeProvider.ts',
         'ide-chat': 'ideChatProvider.ts',
+        wibey: 'wibeyCliProvider.ts',
       };
       for (const id of enumValues) {
         const file = idToFile[id];

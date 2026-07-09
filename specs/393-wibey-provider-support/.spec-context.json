@@ -2,8 +2,8 @@
   "workflow": "speckit",
   "specName": "wibey provider support",
   "branch": "393-wibey-provider-support",
-  "currentStep": "tasks",
-  "status": "ready-to-implement",
+  "currentStep": "implement",
+  "status": "implemented",
   "history": [
     {
       "step": "specify",

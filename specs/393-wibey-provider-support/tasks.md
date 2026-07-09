@@ -21,7 +21,7 @@
 
 **⚠️ CRITICAL**: T001 must complete before any other task begins.
 
-- [ ] T001 Add `WIBEY: 'wibey'` to the `AIProviders` const object in `src/core/constants.ts` (insert after the `CLAUDE_VSCODE` entry)
+- [x] T001 Add `WIBEY: 'wibey'` to the `AIProviders` const object in `src/core/constants.ts` (insert after the `CLAUDE_VSCODE` entry)
 
 **Checkpoint**: `AIProviders.WIBEY` is exported; `AIProviderType` automatically includes `'wibey'` via the mapped type.
 
@@ -33,13 +33,13 @@
 
 **Independent Test**: Set `speckit.aiProvider` to `wibey`. Click any workflow step button. Verify terminal titled `SpecKit - Wibey` opens and `wibey -p "…"` executes. See `quickstart.md` Scenarios 1–4.
 
-- [ ] T002 [P] [US2] Add `[AIProviders.WIBEY]` entry to `_PROVIDER_PATHS_RAW` in `src/ai-providers/aiProvider.ts` (insert after the `CLAUDE_VSCODE` entry) using the confirmed values: `steeringFile: 'AGENTS.md'`, `globalSteeringFile: null`, `steeringDir: ''`, `steeringPattern: 'AGENTS.md'`, `agentsDir: '.wibey/agents'`, `agentsPattern: '*.md'`, `skillsDir: '.wibey/skills'`, `skillsPattern: '*/SKILL.md'`, `mcpConfigPath: '.wibey/.mcp.json'`, `configDir: '.wibey'`, `supportsHooks: true`, `displayName: 'Wibey CLI'`, `commandFormat: 'dash'`, `quickPickIcon: '$(hubot)'`, `quickPickDescription: "Walmart's built-in AI coding assistant — terminal mode with full SDD support"`, `supportsInteractivePermissions: true`, `autoApproveFlag: ''`
+- [x] T002 [P] [US2] Add `[AIProviders.WIBEY]` entry to `_PROVIDER_PATHS_RAW` in `src/ai-providers/aiProvider.ts` (insert after the `CLAUDE_VSCODE` entry) using the confirmed values: `steeringFile: 'AGENTS.md'`, `globalSteeringFile: null`, `steeringDir: ''`, `steeringPattern: 'AGENTS.md'`, `agentsDir: '.wibey/agents'`, `agentsPattern: '*.md'`, `skillsDir: '.wibey/skills'`, `skillsPattern: '*/SKILL.md'`, `mcpConfigPath: '.wibey/.mcp.json'`, `configDir: '.wibey'`, `supportsHooks: true`, `displayName: 'Wibey CLI'`, `commandFormat: 'dash'`, `quickPickIcon: '$(hubot)'`, `quickPickDescription: "Walmart's built-in AI coding assistant — terminal mode with full SDD support"`, `supportsInteractivePermissions: true`, `autoApproveFlag: ''`
 
-- [ ] T003 [P] [US2] Create new file `src/ai-providers/wibeyCliProvider.ts` — class `WibeyCliProvider` extending `CliTerminalProvider` with `name='Wibey CLI'`, `type=AIProviders.WIBEY`, `cliBinary='wibey'`, `installHint={displayName:'Wibey CLI', installCommand:'curl -sSL https://wibey.walmart.com/cli/setup | bash'}`, `defaultTerminalTitle='SpecKit - Wibey'`, `headlessTerminalName='Wibey Background'`, `logPrefix='WibeyCliProvider'`; no method overrides (default `-p` flag matches Wibey CLI interface)
+- [x] T003 [P] [US2] Create new file `src/ai-providers/wibeyCliProvider.ts` — class `WibeyCliProvider` extending `CliTerminalProvider` with `name='Wibey CLI'`, `type=AIProviders.WIBEY`, `cliBinary='wibey'`, `installHint={displayName:'Wibey CLI', installCommand:'curl -sSL https://wibey.walmart.com/cli/setup | bash'}`, `defaultTerminalTitle='SpecKit - Wibey'`, `headlessTerminalName='Wibey Background'`, `logPrefix='WibeyCliProvider'`; no method overrides (default `-p` flag matches Wibey CLI interface)
 
-- [ ] T004 [US2] Add `import { WibeyCliProvider } from './wibeyCliProvider'` and `[AIProviders.WIBEY]: (ctx, out) => new WibeyCliProvider(ctx, out)` to `PROVIDER_CONSTRUCTORS` in `src/ai-providers/aiProviderFactory.ts` (depends on T003)
+- [x] T004 [US2] Add `import { WibeyCliProvider } from './wibeyCliProvider'` and `[AIProviders.WIBEY]: (ctx, out) => new WibeyCliProvider(ctx, out)` to `PROVIDER_CONSTRUCTORS` in `src/ai-providers/aiProviderFactory.ts` (depends on T003)
 
-- [ ] T005 [P] [US2] Append to all three arrays in `contributes.configuration["speckit.aiProvider"]` in `package.json`: add `"wibey"` to `enum` (line 824), `"Wibey CLI"` to `enumItemLabels` (line 834), `"Wibey CLI - Walmart's built-in AI coding assistant (dispatches SpecKit commands to the wibey CLI in a VS Code terminal)"` to `enumDescriptions` (line 844)
+- [x] T005 [P] [US2] Append to all three arrays in `contributes.configuration["speckit.aiProvider"]` in `package.json`: add `"wibey"` to `enum` (line 824), `"Wibey CLI"` to `enumItemLabels` (line 834), `"Wibey CLI - Walmart's built-in AI coding assistant (dispatches SpecKit commands to the wibey CLI in a VS Code terminal)"` to `enumDescriptions` (line 844)
 
 **Checkpoint**: Compile (`npm run compile`) + `npm test` must pass. Setting `speckit.aiProvider: 'wibey'` and clicking Refine or a workflow step should dispatch to a terminal running the `wibey` CLI.
 
@@ -51,7 +51,7 @@
 
 **Independent Test**: Set `speckit.aiProvider` to `wibey`. Open the SpecKit sidebar → steering explorer. Verify it shows "Wibey CLI" as the provider header and lists AGENTS.md + .wibey/skills/ contents. See `quickstart.md` Scenario 5.
 
-- [ ] T006 [US3] Verify `src/features/steering/steeringExplorerProvider.ts` renders correctly for the `wibey` provider: (1) the provider header reads "Wibey CLI" via `getProviderDisplayName()`, (2) project steering file shows `AGENTS.md`, (3) skills list shows `.wibey/skills/` contents, (4) the empty `steeringDir: ''` case is handled gracefully (mirrors `opencode` provider which also uses `steeringDir: ''`). Apply fixes only if the explorer mishandles the empty `steeringDir` case.
+- [x] T006 [US3] Verify `src/features/steering/steeringExplorerProvider.ts` renders correctly for the `wibey` provider: (1) the provider header reads "Wibey CLI" via `getProviderDisplayName()`, (2) project steering file shows `AGENTS.md`, (3) skills list shows `.wibey/skills/` contents, (4) the empty `steeringDir: ''` case is handled gracefully (mirrors `opencode` provider which also uses `steeringDir: ''`). Apply fixes only if the explorer mishandles the empty `steeringDir` case.
 
 **Checkpoint**: Steering explorer shows correct Wibey paths with no errors in the output channel.
 
@@ -59,9 +59,9 @@
 
 ## Phase 4: Polish & Cross-Cutting Concerns
 
-- [ ] T007 [P] Open InnerSource issue on `genaica/wibey-vscode-extension` requesting `wibey.sendPrompt(text: string)` command to unblock the `wibey-vscode` panel provider (Phase 2). Issue body: explain SpecKit Companion's dispatch model, the gap in the current API, and the proposed implementation (see plan.md "Phase 2 Gate" section). Link the issue URL in a comment on PR #416.
+- [x] T007 [P] Open InnerSource issue on `genaica/wibey-vscode-extension` requesting `wibey.sendPrompt(text: string)` command to unblock the `wibey-vscode` panel provider (Phase 2). Issue body: explain SpecKit Companion's dispatch model, the gap in the current API, and the proposed implementation (see plan.md "Phase 2 Gate" section). Link the issue URL in a comment on PR #416.
 
-- [ ] T008 Run `npm run compile` (zero TypeScript errors) and `npm test` (all existing tests pass — no new test files needed since `WibeyCliProvider` has zero logic beyond the base class contract). Confirm `validateProviderRegistry` passes at module load.
+- [x] T008 Run `npm run compile` (zero TypeScript errors) and `npm test` (all existing tests pass — no new test files needed since `WibeyCliProvider` has zero logic beyond the base class contract). Confirm `validateProviderRegistry` passes at module load.
 
 ---
 

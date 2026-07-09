@@ -269,6 +269,7 @@ export const AIProviders = {
     OPENCODE: 'opencode',
     IDE_CHAT: 'ide-chat',
     CLAUDE_VSCODE: 'claude-vscode',
+    WIBEY: 'wibey',
 } as const;
 
 /**

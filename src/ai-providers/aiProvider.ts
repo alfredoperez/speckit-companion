@@ -375,6 +375,32 @@ const _PROVIDER_PATHS_RAW: Record<AIProviderType, ProviderPaths> = {
         supportsInteractivePermissions: true,
         autoApproveFlag: '',
     },
+    // Wibey CLI — Walmart's first-party AI coding assistant.
+    // Built on the Claude Agent SDK; uses `-p` for non-interactive dispatch
+    // (same flag as the base CliTerminalProvider default). No CLI flag for
+    // auto-approve — permission mode is managed via ~/.wibey/settings.json.
+    // Steering lives at the project root (AGENTS.md), not in a subdirectory.
+    // Note: wibey-vscode panel provider deferred to Phase 2, pending
+    // wibey.sendPrompt(text) being added to genaica/wibey-vscode-extension.
+    [AIProviders.WIBEY]: {
+        steeringFile: 'AGENTS.md',
+        globalSteeringFile: null,
+        steeringDir: '',
+        steeringPattern: 'AGENTS.md',
+        agentsDir: '.wibey/agents',
+        agentsPattern: '*.md',
+        skillsDir: '.wibey/skills',
+        skillsPattern: '*/SKILL.md',
+        mcpConfigPath: '.wibey/.mcp.json',
+        configDir: '.wibey',
+        supportsHooks: true,
+        displayName: 'Wibey CLI',
+        commandFormat: 'dash',
+        quickPickIcon: '$(hubot)',
+        quickPickDescription: "Walmart's built-in AI coding assistant — terminal mode with full SDD support",
+        supportsInteractivePermissions: true,
+        autoApproveFlag: '',
+    },
 };
 
 /**
