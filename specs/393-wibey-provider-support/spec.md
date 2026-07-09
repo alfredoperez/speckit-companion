@@ -73,7 +73,7 @@ A developer using either Wibey provider can view and edit their Wibey-specific s
 ### Functional Requirements
 
 - **FR-001**: The extension MUST expose two new selectable AI provider options: one for the Wibey VS Code chat panel (`wibey-vscode`) and one for the Wibey CLI terminal (`wibey`)
-- **FR-002**: When `wibey-vscode` is active, all SpecKit prompt dispatches (workflow steps, Refine, inline comment resolution) MUST open the Wibey VS Code extension's chat panel with the prompt pre-filled, without spawning a terminal
+- **FR-002**: When `wibey-vscode` is active, all SpecKit prompt dispatches (workflow steps, Refine, inline comment resolution) MUST open the Wibey VS Code extension's chat panel with the prompt pre-filled, without spawning a terminal. **NOTE — Phase 2 only**: `wibey.wibey-vscode-extension` v1.0.19 exposes no prompt-injection API (no URI handler, no `sendPrompt` command). This FR is deferred until an InnerSource contribution adds `wibey.sendPrompt(text: string)` to the Wibey extension. Phase 1 of this feature implements `wibey` (CLI) only.
 - **FR-003**: When `wibey` is active, all SpecKit prompt dispatches MUST route to the Wibey CLI in a VS Code terminal, following the same lifecycle used by Claude Code and Gemini CLI (install check, terminal reuse, command dispatch, temp-file cleanup)
 - **FR-004**: Both providers MUST appear in the AI Provider selection dropdown with friendly display labels ("Wibey (VS Code)" and "Wibey CLI") — the raw enum keys MUST NOT be shown to users
 - **FR-005**: The steering explorer in the SpecKit sidebar MUST correctly resolve and display Wibey's config directory, steering file, and (where supported) agents and skills directories when either Wibey provider is active
