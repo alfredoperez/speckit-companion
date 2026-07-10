@@ -43,7 +43,8 @@ export function generateHtml(
     currentStep?: string | null,
     stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>,
     activityPanelEnabled: boolean = true,
-    showInstallPrompt: boolean = false
+    showInstallPrompt: boolean = false,
+    livingMode: boolean = false
 ): string {
     // Get URIs for resources
     const styleUri = webview.asWebviewUri(
@@ -101,6 +102,7 @@ export function generateHtml(
         docTypeLabel: getDocTypeLabel(currentStep ?? currentDocType),
         activityPanelEnabled,
         showInstallPrompt,
+        livingMode,
     };
 
     return `<!DOCTYPE html>

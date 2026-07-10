@@ -21,7 +21,7 @@ describe('getSpecDirectoryFromPath', () => {
     });
 
     it('walks up to the spec root for a doc nested in a step subDir', () => {
-        // Matt Pocock layout: .scratch/<feature>/issues/NN-*.md
+        // Ticket-based layout: .scratch/<feature>/issues/NN-*.md
         const specDir = path.join(root, '.scratch', 'todo-priority-levels');
         fs.mkdirSync(path.join(specDir, 'issues'), { recursive: true });
         fs.writeFileSync(path.join(specDir, '.spec-context.json'), '{}');

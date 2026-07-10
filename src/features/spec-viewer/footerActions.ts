@@ -76,7 +76,7 @@ function isSpecDone(ctx: SpecContext): boolean {
  * Ordered step names for the active workflow. Lifecycle steps always resolve
  * against the canonical `STEP_NAMES` so the spec-kit / Companion paths are
  * byte-for-byte unchanged. Only a genuinely custom step name (one not in
- * `STEP_NAMES`, e.g. Matt Pocock's `tickets`) falls back to the custom
+ * `STEP_NAMES`, e.g. `tickets`) falls back to the custom
  * workflow's own declared order so "is there a later step" is answered from
  * the workflow, not the lifecycle.
  */

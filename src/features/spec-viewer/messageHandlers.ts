@@ -325,8 +325,8 @@ async function handleApprove(
   const steps = await deps.resolveWorkflowSteps();
   const navSteps = steps.filter((s) => !s.actionOnly);
 
-  // Custom workflows don't emit capture context, so ctx.currentStep is a stub
-  // stuck at "specify". Reconstruct the real position from the step output
+  // Custom workflows don't emit capture context, so ctx.currentStep can lag the
+  // files their commands produced. Reconstruct the real position from the step output
   // files so Approve dispatches the correct next command (no-op otherwise).
   const ctx = synthesizeCustomProgress(
     readSpecContextSync(specDirectory),

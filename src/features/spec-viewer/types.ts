@@ -133,6 +133,13 @@ export interface SpecViewerState {
     /** Display name of the spec (derived from folder name) */
     specName: string;
 
+    /**
+     * Living-spec document mode: the panel renders a capability's living spec
+     * (and its tier siblings) with no workflow chrome — no stepper, no footer
+     * actions, no `.spec-context.json` reads or backfills.
+     */
+    living?: boolean;
+
     /** Absolute path to the spec directory */
     specDirectory: string;
 
@@ -217,6 +224,8 @@ export type StalenessMap = Record<DocumentType, StalenessInfo>;
  * `enhancementButtons`.
  */
 export interface NavState {
+    /** Living-spec mode: webview hides the workflow stepper and footer. */
+    livingMode?: boolean;
     /** Core documents with existence state */
     coreDocs: SpecDocument[];
     /** Related documents */

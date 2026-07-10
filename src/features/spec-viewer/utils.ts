@@ -80,7 +80,7 @@ export function getDocumentTypeFromPath(filePath: string, steps?: WorkflowStepCo
 export function getSpecDirectoryFromPath(filePath: string): string {
     const start = path.dirname(filePath);
     // Resolve to the actual spec ROOT, not just the file's parent. A document
-    // can live in a step subDir (Matt Pocock's `issues/NN-*.md`) or a related-doc
+    // can live in a step subDir (`issues/NN-*.md`) or a related-doc
     // folder — `path.dirname` alone points at that subfolder, so the viewer would
     // read a nonexistent `.spec-context.json` there and backfill a bogus "draft"
     // spec with the wrong name, losing the stepper state and forward button.

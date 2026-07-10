@@ -3,8 +3,8 @@
  *
  * Built-in spec-kit / Companion workflows advance because their commands emit
  * capture context (`startStep`/`completeStep` writing `.spec-context.json`).
- * A user's own workflow — Matt Pocock's skills, GSD, anything wired through
- * `speckit.customWorkflows` — runs commands that just write markdown to disk
+ * A user's own workflow — any skill set wired through `speckit.customWorkflows` —
+ * runs commands that just write markdown to disk
  * and never touch the context file. Its `.spec-context.json` is a stub the
  * extension wrote on first selection (`currentStep: "specify"`, `history: []`)
  * and never updates, so the spec viewer's forward button never appears and the
@@ -36,7 +36,7 @@ export function isCustomWorkflow(steps: WorkflowStepConfig[] | undefined): boole
 /**
  * Has this step produced its output on disk? Mirrors the existence rules the
  * Spec Explorer already uses: the step's own `file`, any explicit `subFiles`,
- * or any `.md` under its `subDir` (Matt's `issues/NN-*.md`, for instance).
+ * or any `.md` under its `subDir` (a tickets step's `issues/NN-*.md`, for instance).
  * `actionOnly` steps (no output file, e.g. implement) always read false.
  */
 export function stepHasOutput(specDir: string, step: WorkflowStepConfig): boolean {
@@ -71,9 +71,17 @@ export function stepHasOutput(specDir: string, step: WorkflowStepConfig): boolea
  *
  * Returns `ctx` unchanged when:
  *  - the workflow isn't custom (built-in lifecycle — untouched), or
- *  - the context already carries real history (a capturing custom workflow
- *    wins — we never overwrite genuine progression), or
- *  - no step output exists yet (nothing to advance to).
+ *  - no step output exists yet (nothing to advance to), or
+ *  - the recorded `currentStep` is already at or past the furthest produced
+ *    step (a capturing custom workflow, or nothing new on disk — we never
+ *    regress or override genuine progression).
+ *
+ * We advance only when the files on disk are FURTHER ALONG than the context.
+ * This matters because the extension's own forward button writes lifecycle
+ * bookkeeping (e.g. a lone `specify complete`) but never records the custom
+ * steps a third-party command produced — so `currentStep` sticks at `specify`
+ * even after the tickets folder fills up. History being non-empty is therefore
+ * NOT a signal to leave it alone.
  *
  * The synthesized `history` is a sequence of `start` transitions, one per
  * produced navigable step in order. `deriveStepHistory` turns that into the
@@ -87,7 +95,7 @@ export function synthesizeCustomProgress<T extends SpecContext | null>(
     hasOutput: (step: WorkflowStepConfig) => boolean
 ): T {
     if (!ctx || !steps || !isCustomWorkflow(steps)) return ctx;
-    if ((ctx.history?.length ?? 0) > 0) return ctx;
+    const base = ctx as SpecContext;
 
     const nav = steps.filter(s => !s.actionOnly);
     let lastProduced = -1;
@@ -95,8 +103,17 @@ export function synthesizeCustomProgress<T extends SpecContext | null>(
         if (hasOutput(nav[i])) lastProduced = i;
     }
     if (lastProduced < 0) return ctx;
-    // narrowed to non-null SpecContext past the guards above
-    const base = ctx as SpecContext;
+
+    // Synthesize when disk is AHEAD of the recorded position, or when the
+    // context has no history at all (a selection stub — without a synthetic
+    // start entry the entry step could never surface its forward button).
+    // A capturing workflow at the same position keeps its real history.
+    // A currentStep that isn't a nav step (findIndex -1) counts as "behind
+    // everything", so any produced output moves it forward.
+    const currentIdx = nav.findIndex(s => s.name === base.currentStep);
+    const hasHistory = (base.history?.length ?? 0) > 0;
+    if (lastProduced <= currentIdx && hasHistory) return ctx;
+    if (lastProduced < currentIdx) return ctx;
 
     // Deterministic synthetic timestamps — order is what deriveStepHistory
     // reads, not wall-clock; a fixed epoch keeps renders reproducible.

@@ -4,8 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [0.27.0] - 2026-07-10
 
+### Added
+
+- **Living specs open in the rendered viewer.** Clicking a capability in the Spec Explorer used to dump you into raw markdown, lint squiggles and all. It now opens the same rendered reading experience as feature specs — minus the workflow stepper and footer, because a living spec has no phases — with the capability's tiers (Spec, Architecture, Coverage) as tabs when they exist.
+- **Custom workflows start from their own first step.** The Create Spec dialog assumed every workflow begins with `specify` and quietly dispatched the stock command for workflows that don't. A workflow shaped `discuss → plan → execute → verify` now dispatches its own first command from the dialog.
+
 ### Fixed
 
+- **Custom workflows keep advancing after the extension's own bookkeeping.** The file-driven progression now compares the files on disk against the recorded position instead of bailing whenever any history exists — so clicking the forward button once no longer freezes the workflow at its previous step.
 - **The forward button now works for your own workflows too.** Bring-your-own workflows wired through `speckit.customWorkflows` (Matt Pocock's skills, GSD, anything that runs commands and writes markdown) never advanced in the viewer: after the first step, the button to run the next one simply never appeared, and the spec sat stuck at "specify." The reason was that a custom workflow's commands don't emit the capture context the built-in pipeline relies on, so the extension couldn't tell the run had progressed. Companion now reconstructs a custom workflow's position from the step output files on disk — the spec it wrote, the tickets folder it filled — so the forward button lights up and dispatches the right next command, step after step, exactly like the built-in flow. Built-in and context-emitting workflows are unaffected.
 
 ### Examples

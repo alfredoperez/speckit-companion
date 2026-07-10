@@ -12,6 +12,29 @@ export function NavigationBar() {
         taskCompletionPercent, isViewingRelatedDoc, activeStep,
         currentStep, stepHistory, stalenessMap } = ns;
 
+    // Living-spec mode: no workflow phases to step through — render only a
+    // flat tier tab strip (Spec / Architecture / Coverage).
+    if (ns.livingMode) {
+        const tiers = coreDocs.filter(d => d.exists);
+        if (tiers.length <= 1) return null;
+        return (
+            <div class="step-children" aria-label="Living spec tiers">
+                <div class="step-children-tabs">
+                    {tiers.map(doc => (
+                        <button
+                            key={doc.type}
+                            class={`step-child ${doc.type === currentDoc ? 'active' : ''}`}
+                            data-doc={doc.type}
+                            onClick={() => vscode.postMessage({ type: 'switchDocument', documentType: doc.type })}
+                        >
+                            {doc.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
     const viewingRelatedDoc = isViewingRelatedDoc
         ? relatedDocs.find(d => d.type === currentDoc)
         : undefined;
