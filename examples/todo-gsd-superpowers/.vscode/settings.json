@@ -1,7 +1,7 @@
 {
   "speckit.aiProvider": "claude",
   "speckit.defaultWorkflow": "gsd-superpowers",
-  "speckit.specDirectories": [".planning", ".planning/phases/*"],
+  "speckit.specDirectories": [".planning/phases/*"],
   "speckit.customWorkflows": [
     {
       "name": "gsd-superpowers",

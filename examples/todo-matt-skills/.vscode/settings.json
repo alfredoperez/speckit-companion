@@ -28,6 +28,12 @@
           "label": "Implement",
           "command": "implement",
           "actionOnly": true
+        },
+        {
+          "name": "review",
+          "label": "Code Review",
+          "command": "code-review",
+          "actionOnly": true
         }
       ]
     }
@@ -39,13 +45,6 @@
       "command": "/grill-with-docs",
       "step": "specify",
       "tooltip": "Sharpen the idea before writing the spec"
-    },
-    {
-      "name": "code-review",
-      "title": "Code Review",
-      "command": "/code-review",
-      "step": "implement",
-      "tooltip": "Two-axis review: standards vs spec"
     }
   ]
 }
