@@ -8,6 +8,7 @@ type Action =
   | { type: 'add'; text: string }
   | { type: 'toggle'; id: string }
   | { type: 'delete'; id: string }
+  | { type: 'clearCompleted' }
 
 export function todosReducer(state: Todo[], action: Action): Todo[] {
   switch (action.type) {
@@ -20,6 +21,8 @@ export function todosReducer(state: Todo[], action: Action): Todo[] {
       return state.map((t) => (t.id === action.id ? { ...t, completed: !t.completed } : t))
     case 'delete':
       return state.filter((t) => t.id !== action.id)
+    case 'clearCompleted':
+      return state.filter((t) => !t.completed)
     default:
       return state
   }
@@ -30,6 +33,7 @@ interface TodosContextValue {
   addTodo: (text: string) => void
   toggleTodo: (id: string) => void
   deleteTodo: (id: string) => void
+  clearCompleted: () => void
 }
 
 const TodosContext = createContext<TodosContextValue | null>(null)
@@ -46,6 +50,7 @@ export function TodosProvider({ children }: { children: ReactNode }) {
     addTodo: (text) => dispatch({ type: 'add', text }),
     toggleTodo: (id) => dispatch({ type: 'toggle', id }),
     deleteTodo: (id) => dispatch({ type: 'delete', id }),
+    clearCompleted: () => dispatch({ type: 'clearCompleted' }),
   }
 
   return <TodosContext.Provider value={value}>{children}</TodosContext.Provider>

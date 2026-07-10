@@ -1,0 +1,6 @@
+livingSpecs:
+  enabled: true
+  capabilities:
+    - name: todos
+      match: ["src/**"]
+      exclude: ["src/**/*.test.*"]

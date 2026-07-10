@@ -1,0 +1,378 @@
+---
+name: speckit-specify
+description: Create or update the feature specification from a natural language feature
+  description.
+compatibility: Requires spec-kit project structure with .specify/ directory
+metadata:
+  author: github-spec-kit
+  source: preset:companion-standard
+user-invocable: true
+disable-model-invocation: false
+---
+
+# Speckit Specify Skill
+
+## User Input
+
+```text
+$ARGUMENTS
+```
+
+You **MUST** consider the user input before proceeding (if not empty).
+
+## Pre-Execution Checks
+
+**Check for extension hooks (before specification)**:
+- Check if `.specify/extensions.yml` exists in the project root.
+- If it exists, read it and look for entries under the `hooks.before_specify` key
+- If the YAML cannot be parsed or is invalid, skip hook checking silently and continue normally
+- Filter out hooks where `enabled` is explicitly `false`. Treat hooks without an `enabled` field as enabled by default.
+- For each remaining hook, do **not** attempt to interpret or evaluate hook `condition` expressions:
+  - If the hook has no `condition` field, or it is null/empty, treat the hook as executable
+  - If the hook defines a non-empty `condition`, skip the hook and leave condition evaluation to the HookExecutor implementation
+- When constructing slash commands from hook command names, replace dots (`.`) with hyphens (`-`). For example, `speckit.git.commit` → `/speckit-git-commit`.
+- For each executable hook, output the following based on its `optional` flag:
+  - **Optional hook** (`optional: true`):
+    ```
+    ## Extension Hooks
+
+    **Optional Pre-Hook**: {extension}
+    Command: `/{command}`
+    Description: {description}
+
+    Prompt: {prompt}
+    To execute: `/{command}`
+    ```
+  - **Mandatory hook** (`optional: false`):
+    ```
+    ## Extension Hooks
+
+    **Automatic Pre-Hook**: {extension}
+    Executing: `/{command}`
+    EXECUTE_COMMAND: {command}
+
+    Wait for the result of the hook command before proceeding to the Outline.
+    ```
+- If no hooks are registered or `.specify/extensions.yml` does not exist, skip silently
+
+## Outline
+
+The text the user typed after `/speckit-specify` in the triggering message **is** the feature description. Assume you always have it available in this conversation even if `$ARGUMENTS` appears literally below. Do not ask the user to repeat it unless they provided an empty command.
+
+Given that feature description, do this:
+
+1. **Generate a concise short name** (2-4 words) for the feature:
+   - Analyze the feature description and extract the most meaningful keywords
+   - Create a 2-4 word short name that captures the essence of the feature
+   - Use action-noun format when possible (e.g., "add-user-auth", "fix-payment-bug")
+   - Preserve technical terms and acronyms (OAuth2, API, JWT, etc.)
+   - Keep it concise but descriptive enough to understand the feature at a glance
+   - Examples:
+     - "I want to add user authentication" → "user-auth"
+     - "Implement OAuth2 integration for the API" → "oauth2-api-integration"
+     - "Create a dashboard for analytics" → "analytics-dashboard"
+     - "Fix payment processing timeout bug" → "fix-payment-timeout"
+
+2. **Branch creation** (optional, via hook):
+
+   If a `before_specify` hook ran successfully in the Pre-Execution Checks above, it will have created/switched to a git branch and output JSON containing `BRANCH_NAME` and `FEATURE_NUM`. Note these values for reference, but the branch name does **not** dictate the spec directory name.
+
+   If the user explicitly provided `GIT_BRANCH_NAME`, pass it through to the hook so the branch script uses the exact value as the branch name (bypassing all prefix/suffix generation).
+
+3. **Create the spec feature directory**:
+
+   Specs live under the default `specs/` directory unless the user explicitly provides `SPECIFY_FEATURE_DIRECTORY`.
+
+   **Resolution order for `SPECIFY_FEATURE_DIRECTORY`**:
+   1. If the user explicitly provided `SPECIFY_FEATURE_DIRECTORY` (e.g., via environment variable, argument, or configuration), use it as-is
+   2. Otherwise, auto-generate it under `specs/`:
+      - Check `.specify/init-options.json` for `branch_numbering`
+      - If `"timestamp"`: prefix is `YYYYMMDD-HHMMSS` (current timestamp)
+      - If `"sequential"` or absent: prefix is `NNN` (next available 3-digit number after scanning existing directories in `specs/`)
+      - Construct the directory name: `<prefix>-<short-name>` (e.g., `003-user-auth` or `20260319-143022-user-auth`)
+      - Set `SPECIFY_FEATURE_DIRECTORY` to `specs/<directory-name>`
+
+   **Create the directory and spec file**:
+   - `mkdir -p SPECIFY_FEATURE_DIRECTORY`
+   - Copy `.specify/templates/spec-template.md` to `SPECIFY_FEATURE_DIRECTORY/spec.md` as the starting point
+   - Set `SPEC_FILE` to `SPECIFY_FEATURE_DIRECTORY/spec.md`
+   - Record the **specify START** so the step's duration begins now (the script stamps the real clock — do not hand-write this):
+     ```bash
+     python3 .specify/extensions/companion/scripts/write-context.py --feature-dir SPECIFY_FEATURE_DIRECTORY --step specify --status specifying --kind start --by extension
+     ```
+   - Persist the resolved path to `.specify/feature.json`:
+     ```json
+     {
+       "feature_directory": "<resolved feature dir>"
+     }
+     ```
+     Write the actual resolved directory path value (for example, `specs/003-user-auth`), not the literal string `SPECIFY_FEATURE_DIRECTORY`.
+     This allows downstream commands (`/speckit-plan`, `/speckit-tasks`, etc.) to locate the feature directory without relying on git branch name conventions.
+
+   **IMPORTANT**:
+   - You must only create one feature per `/speckit-specify` invocation
+   - The spec directory name and the git branch name are independent — they may be the same but that is the user's choice
+   - The spec directory and file are always created by this command, never by the hook
+
+4. Load `.specify/templates/spec-template.md` to understand required sections.
+
+5. Follow this execution flow:
+    1. Parse user description from arguments
+       If empty: ERROR "No feature description provided"
+    2. Extract key concepts from description
+       Identify: actors, actions, data, constraints
+    3. For unclear aspects:
+       - Make informed guesses based on context and industry standards
+       - Only mark with [NEEDS CLARIFICATION: specific question] if:
+         - The choice significantly impacts feature scope or user experience
+         - Multiple reasonable interpretations exist with different implications
+         - No reasonable default exists
+       - **LIMIT: Maximum 3 [NEEDS CLARIFICATION] markers total**
+       - Prioritize clarifications by impact: scope > security/privacy > user experience > technical details
+    4. Fill User Scenarios & Testing section
+       If no clear user flow: ERROR "Cannot determine user scenarios"
+    5. Generate Functional Requirements
+       Each requirement must be testable
+       Use reasonable defaults for unspecified details (document assumptions in Assumptions section)
+    6. Define Success Criteria
+       Create measurable, technology-agnostic outcomes
+       Include both quantitative metrics (time, performance, volume) and qualitative measures (user satisfaction, task completion)
+       Each criterion must be verifiable without implementation details
+    7. Identify Key Entities (if data involved)
+    8. Return: SUCCESS (spec ready for planning)
+
+6. Write the specification to SPEC_FILE using the template structure, replacing placeholders with concrete details derived from the feature description (arguments) while preserving section order and headings.
+
+7. **Specification Quality Validation**: After writing the initial spec, validate it against quality criteria:
+
+   a. **Create Spec Quality Checklist**: Generate a checklist file at `SPECIFY_FEATURE_DIRECTORY/checklists/requirements.md` using the checklist template structure with these validation items:
+
+      ```markdown
+      # Specification Quality Checklist: [FEATURE NAME]
+      
+      **Purpose**: Validate specification completeness and quality before proceeding to planning
+      **Created**: [DATE]
+      **Feature**: [Link to spec.md]
+      
+      ## Content Quality
+      
+      - [ ] No implementation details (languages, frameworks, APIs)
+      - [ ] Focused on user value and business needs
+      - [ ] Written for non-technical stakeholders
+      - [ ] All mandatory sections completed
+      
+      ## Requirement Completeness
+      
+      - [ ] No [NEEDS CLARIFICATION] markers remain
+      - [ ] Requirements are testable and unambiguous
+      - [ ] Success criteria are measurable
+      - [ ] Success criteria are technology-agnostic (no implementation details)
+      - [ ] All acceptance scenarios are defined
+      - [ ] Edge cases are identified
+      - [ ] Scope is clearly bounded
+      - [ ] Dependencies and assumptions identified
+      
+      ## Feature Readiness
+      
+      - [ ] All functional requirements have clear acceptance criteria
+      - [ ] User scenarios cover primary flows
+      - [ ] Feature meets measurable outcomes defined in Success Criteria
+      - [ ] No implementation details leak into specification
+      
+      ## Notes
+      
+      - Items marked incomplete require spec updates before `/speckit-clarify` or `/speckit-plan`
+      ```
+
+   b. **Run Validation Check**: Review the spec against each checklist item:
+      - For each item, determine if it passes or fails
+      - Document specific issues found (quote relevant spec sections)
+
+   c. **Handle Validation Results**:
+
+      - **If all items pass**: Mark checklist complete and proceed to step 8
+
+      - **If items fail (excluding [NEEDS CLARIFICATION])**:
+        1. List the failing items and specific issues
+        2. Update the spec to address each issue
+        3. Re-run validation until all items pass (max 3 iterations)
+        4. If still failing after 3 iterations, document remaining issues in checklist notes and warn user
+
+      - **If [NEEDS CLARIFICATION] markers remain**:
+        1. Extract all [NEEDS CLARIFICATION: ...] markers from the spec
+        2. **LIMIT CHECK**: If more than 3 markers exist, keep only the 3 most critical (by scope/security/UX impact) and make informed guesses for the rest
+        3. For each clarification needed (max 3), present options to user in this format:
+
+           ```markdown
+           ## Question [N]: [Topic]
+           
+           **Context**: [Quote relevant spec section]
+           
+           **What we need to know**: [Specific question from NEEDS CLARIFICATION marker]
+           
+           **Suggested Answers**:
+           
+           | Option | Answer | Implications |
+           |--------|--------|--------------|
+           | A      | [First suggested answer] | [What this means for the feature] |
+           | B      | [Second suggested answer] | [What this means for the feature] |
+           | C      | [Third suggested answer] | [What this means for the feature] |
+           | Custom | Provide your own answer | [Explain how to provide custom input] |
+           
+           **Your choice**: _[Wait for user response]_
+           ```
+
+        4. **CRITICAL - Table Formatting**: Ensure markdown tables are properly formatted:
+           - Use consistent spacing with pipes aligned
+           - Each cell should have spaces around content: `| Content |` not `|Content|`
+           - Header separator must have at least 3 dashes: `|--------|`
+           - Test that the table renders correctly in markdown preview
+        5. Number questions sequentially (Q1, Q2, Q3 - max 3 total)
+        6. Present all questions together before waiting for responses
+        7. Wait for user to respond with their choices for all questions (e.g., "Q1: A, Q2: Custom - [details], Q3: B")
+        8. Update the spec by replacing each [NEEDS CLARIFICATION] marker with the user's selected or provided answer
+        9. Re-run validation after all clarifications are resolved
+
+   d. **Update Checklist**: After each validation iteration, update the checklist file with current pass/fail status
+
+8. **Report completion** to the user with:
+   - `SPECIFY_FEATURE_DIRECTORY` — the feature directory path
+   - `SPEC_FILE` — the spec file path
+   - Checklist results summary
+   - Readiness for the next phase (`/speckit-clarify` or `/speckit-plan`)
+   - Then record the **specify COMPLETE** — the extension stamps the real end (do **not** hand-write an `ai` complete for specify):
+     ```bash
+     python3 .specify/extensions/companion/scripts/write-context.py --feature-dir SPECIFY_FEATURE_DIRECTORY --step specify --status specified --kind complete --by extension
+     ```
+
+9. **Check for extension hooks**: After reporting completion, check if `.specify/extensions.yml` exists in the project root.
+   - If it exists, read it and look for entries under the `hooks.after_specify` key
+   - If the YAML cannot be parsed or is invalid, skip hook checking silently and continue normally
+   - Filter out hooks where `enabled` is explicitly `false`. Treat hooks without an `enabled` field as enabled by default.
+   - For each remaining hook, do **not** attempt to interpret or evaluate hook `condition` expressions:
+     - If the hook has no `condition` field, or it is null/empty, treat the hook as executable
+     - If the hook defines a non-empty `condition`, skip the hook and leave condition evaluation to the HookExecutor implementation
+   - When constructing slash commands from hook command names, replace dots (`.`) with hyphens (`-`). For example, `speckit.git.commit` → `/speckit-git-commit`.
+   - For each executable hook, output the following based on its `optional` flag:
+     - **Optional hook** (`optional: true`):
+       ```
+       ## Extension Hooks
+
+       **Optional Hook**: {extension}
+       Command: `/{command}`
+       Description: {description}
+
+       Prompt: {prompt}
+       To execute: `/{command}`
+       ```
+     - **Mandatory hook** (`optional: false`):
+       ```
+       ## Extension Hooks
+
+       **Automatic Hook**: {extension}
+       Executing: `/{command}`
+       EXECUTE_COMMAND: {command}
+       ```
+   - If no hooks are registered or `.specify/extensions.yml` does not exist, skip silently
+
+**NOTE:** Branch creation is handled by the `before_specify` hook (git extension). Spec directory and file creation are always handled by this core command.
+
+## Quick Guidelines
+
+- Focus on **WHAT** users need and **WHY**.
+- Avoid HOW to implement (no tech stack, APIs, code structure).
+- Written for business stakeholders, not developers.
+- DO NOT create any checklists that are embedded in the spec. That will be a separate command.
+
+### Section Requirements
+
+- **Mandatory sections**: Must be completed for every feature
+- **Optional sections**: Include only when relevant to the feature
+- When a section doesn't apply, remove it entirely (don't leave as "N/A")
+
+### For AI Generation
+
+When creating this spec from a user prompt:
+
+1. **Make informed guesses**: Use context, industry standards, and common patterns to fill gaps
+2. **Document assumptions**: Record reasonable defaults in the Assumptions section
+3. **Limit clarifications**: Maximum 3 [NEEDS CLARIFICATION] markers - use only for critical decisions that:
+   - Significantly impact feature scope or user experience
+   - Have multiple reasonable interpretations with different implications
+   - Lack any reasonable default
+4. **Prioritize clarifications**: scope > security/privacy > user experience > technical details
+5. **Think like a tester**: Every vague requirement should fail the "testable and unambiguous" checklist item
+6. **Common areas needing clarification** (only if no reasonable default exists):
+   - Feature scope and boundaries (include/exclude specific use cases)
+   - User types and permissions (if multiple conflicting interpretations possible)
+   - Security/compliance requirements (when legally/financially significant)
+
+**Examples of reasonable defaults** (don't ask about these):
+
+- Data retention: Industry-standard practices for the domain
+- Performance targets: Standard web/mobile app expectations unless specified
+- Error handling: User-friendly messages with appropriate fallbacks
+- Authentication method: Standard session-based or OAuth2 for web apps
+- Integration patterns: Use project-appropriate patterns (REST/GraphQL for web services, function calls for libraries, CLI args for tools, etc.)
+
+### Success Criteria Guidelines
+
+Success criteria must be:
+
+1. **Measurable**: Include specific metrics (time, percentage, count, rate)
+2. **Technology-agnostic**: No mention of frameworks, languages, databases, or tools
+3. **User-focused**: Describe outcomes from user/business perspective, not system internals
+4. **Verifiable**: Can be tested/validated without knowing implementation details
+
+**Good examples**:
+
+- "Users can complete checkout in under 3 minutes"
+- "System supports 10,000 concurrent users"
+- "95% of searches return results in under 1 second"
+- "Task completion rate improves by 40%"
+
+**Bad examples** (implementation-focused):
+
+- "API response time is under 200ms" (too technical, use "Users see results instantly")
+- "Database can handle 1000 TPS" (implementation detail, use user-facing metric)
+- "React components render efficiently" (framework-specific)
+- "Redis cache hit rate above 80%" (technology-specific)
+
+
+<!-- speckit-companion:part timing -->
+## Timing — keep `.spec-context.json` honest
+
+These rules apply to every Companion profile command. The extension records lifecycle timing with its own scripts wherever it can; these rules keep anything you append consistent with that and accurate for any dispatcher (terminal, IDE chat, or the GUI). The model is **finish-only**: each task and each substep records a *single* finish event, and its duration is the gap to the previous finish (or the step's start). Never a `start`+`complete` pair for a task or substep — a pair stamped at one instant is what produces `0s` ticks and bursts.
+
+- **Never hand-edit `.spec-context.json`.** Record every finish by **running the writer script**, never by editing the JSON file yourself — a hand-authored edit is what corrupts the file (a duplicated `status` key). The script stamps the real clock, writes atomically, and is idempotent. The commands below are the only way you touch timing.
+- **Self-close — but not specify or implement.** When your own work for **plan, tasks, clarify, or analyze** ends, record the step finish (feature dir from `.specify/feature.json`):
+
+  ```bash
+  python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --step <this step> --finish --by ai
+  ```
+
+  `--finish` appends a single step-level complete and touches **nothing else** (it leaves `status`/`currentStep` to the lifecycle hooks). Do NOT self-close **specify** or **implement**: the extension closes those itself (specify from its own command, implement from the end-of-step hook), so an `ai` complete there would duplicate it.
+- **Substeps — one finish each, via the script.** For each substep boundary (plan: `research`, `design`; tasks: `generate`), the moment that substep ends, run:
+
+  ```bash
+  python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --step <step> --substep <name> --finish --by ai
+  ```
+
+  One call per substep, each stamped with its own real clock at the moment it finishes — never two substeps in one batch, never a separate `start`. The delta between consecutive finishes is each substep's duration.
+- **Implement — finishing a task *is* logging it (finish-only).** Recording a task's finish is the **closing action of that task**, done the instant its work is complete and before you start the next one — not a bookkeeping pass you batch at the end of a phase. The closing action is a single append (feature dir from `.specify/feature.json`):
+
+  ```bash
+  python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --task <TaskID> --kind complete --by ai --did "<one-line summary of what this task did>" --files "<comma,separated,files,touched>" --append
+  ```
+
+  `--append` writes **one line** to `.spec-context.events.jsonl` and does **not** read or rewrite the shared `.spec-context.json`, so it never hits the "read the file first" retry and **parallel workers can each append their own finish at the same time without contending** — the line carries its own real timestamp (`date -u` is stamped by the script). The `--did`/`--files` flags ride along so the Activity panel's Tasks card is populated from the script. **Do NOT hand-edit the `- [ ]` checkbox in `tasks.md`** — the script owns it: materialize flips it to `- [x]` from your appended finish, so a fanned-out subagent only appends and never touches the shared `tasks.md`. Do NOT hand-author per-task JSON and do NOT write a per-task `start`.
+
+  Then **fold the appended lines into `.spec-context.json`** — run this once per wave (after the wave reconciles) and again when the step ends:
+
+  ```bash
+  python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --materialize
+  ```
+
+  `--materialize` is the one read-modify-write: it folds the finishes into the panel **and checks off the matching `tasks.md` boxes** for every journaled task, idempotently (re-folding never double-counts), so running it per wave keeps the GUI current without re-serializing the work. The end-of-step hook is a backstop that materializes anything you didn't fold and fills any task you didn't journal. What's trustworthy here is the **per-task summary** (`did`/`files`) and the order tasks completed, plus the **step-level** start→complete span, which the scripts stamp exactly. The per-task *timestamps* are best-effort — a single agent logs a task right after building it, so they reflect when you recorded it, not a precisely measured duration; that's fine, the summaries are the point. Still, record each finish **as you go, wave by wave** rather than dumping every task at the very end — a per-wave cadence keeps the panel live and the ordering true.
+- **Never write the next step's start.** Only the next command appends the next step's start entry; writing it here makes the viewer render a phantom "Generating <next>…".
+<!-- /speckit-companion:part timing -->
