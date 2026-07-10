@@ -140,6 +140,13 @@ export interface SpecViewerState {
      */
     living?: boolean;
 
+    /**
+     * The tier file the living panel was opened from. Tier siblings are
+     * derived from this path, not from the directory — a colocated spec
+     * (`storage.spec.md`) has no `spec.md` in its directory.
+     */
+    livingSourcePath?: string;
+
     /** Absolute path to the spec directory */
     specDirectory: string;
 

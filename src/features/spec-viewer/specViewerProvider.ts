@@ -286,6 +286,13 @@ export class SpecViewerProvider {
 
     const existing = this.panels.get(specDirectory);
     if (existing?.state.living) {
+      // Re-anchor: two colocated capabilities can share a directory (the
+      // panel key), so the clicked file decides which family renders.
+      existing.state = {
+        ...existing.state,
+        livingSourcePath: filePath,
+        specName: livingCapabilityName(filePath),
+      };
       await this.updateLivingContent(specDirectory, documentType);
       existing.panel.reveal(vscode.ViewColumn.One);
       return;
@@ -465,6 +472,7 @@ export class SpecViewerProvider {
       specName,
       specDirectory,
       living: !!living,
+      livingSourcePath: living?.sourcePath,
       currentDocument: documentType,
       availableDocuments: [],
       lastUpdated: Date.now(),
@@ -541,7 +549,8 @@ export class SpecViewerProvider {
     const instance = this.panels.get(specDirectory);
     if (!instance?.state.living) return;
 
-    const anchor = instance.state.availableDocuments.find(d => d.type === 'spec')?.filePath
+    const anchor = instance.state.livingSourcePath
+      ?? instance.state.availableDocuments.find(d => d.type === 'spec')?.filePath
       ?? path.join(specDirectory, 'spec.md');
     const documents = livingTierDocuments(anchor);
     const doc = documents.find(d => d.type === documentType && d.exists)
