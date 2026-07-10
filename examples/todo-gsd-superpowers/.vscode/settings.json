@@ -1,0 +1,55 @@
+{
+  "speckit.aiProvider": "claude",
+  "speckit.defaultWorkflow": "gsd-superpowers",
+  "speckit.specDirectories": [".planning", ".planning/phases/*"],
+  "speckit.customWorkflows": [
+    {
+      "name": "gsd-superpowers",
+      "displayName": "GSD × Superpowers",
+      "description": "Eric's light flow: GSD plans the phase, Superpowers executes it with TDD subagents, GSD verifies",
+      "supportedAiProviders": ["claude"],
+      "steps": [
+        {
+          "name": "discuss",
+          "label": "Discuss",
+          "command": "/gsd-discuss-phase",
+          "actionOnly": true
+        },
+        {
+          "name": "plan",
+          "label": "Plan Phase",
+          "command": "/gsd-plan-phase",
+          "includeRelatedDocs": true
+        },
+        {
+          "name": "execute",
+          "label": "Execute (Superpowers)",
+          "command": "Take the current GSD phase plan in .planning/ and hand it to Superpowers: use the writing-plans skill to turn it into a Superpowers implementation plan, then execute that plan with subagent-driven-development (TDD, fresh subagent per task). Do NOT use /gsd-execute-phase.",
+          "actionOnly": true
+        },
+        {
+          "name": "verify",
+          "label": "Verify",
+          "command": "/gsd-verify-work",
+          "actionOnly": true
+        }
+      ]
+    }
+  ],
+  "speckit.customCommands": [
+    {
+      "name": "new-project",
+      "title": "GSD New Project",
+      "command": "/gsd-new-project",
+      "step": "discuss",
+      "tooltip": "One-time: creates .planning/ with PROJECT.md, ROADMAP.md, STATE.md"
+    },
+    {
+      "name": "gap-check",
+      "title": "Plan Gaps",
+      "command": "/gsd-plan-phase --gaps",
+      "step": "verify",
+      "tooltip": "Generate gap-fix plans, then hand them to Superpowers like a normal phase"
+    }
+  ]
+}

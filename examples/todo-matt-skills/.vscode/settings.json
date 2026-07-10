@@ -1,0 +1,51 @@
+{
+  "speckit.aiProvider": "claude",
+  "speckit.defaultWorkflow": "matt-skills",
+  "speckit.specDirectories": [".scratch"],
+  "speckit.customWorkflows": [
+    {
+      "name": "matt-skills",
+      "displayName": "Matt Pocock Skills",
+      "description": "grill → spec → tickets → implement (TDD + code review baked in)",
+      "supportedAiProviders": ["claude"],
+      "steps": [
+        {
+          "name": "specify",
+          "label": "Spec",
+          "command": "/to-spec",
+          "file": "spec.md"
+        },
+        {
+          "name": "tickets",
+          "label": "Tickets",
+          "command": "/to-tickets",
+          "file": "tickets.md",
+          "subDir": "issues",
+          "includeRelatedDocs": true
+        },
+        {
+          "name": "implement",
+          "label": "Implement",
+          "command": "/implement",
+          "actionOnly": true
+        }
+      ]
+    }
+  ],
+  "speckit.customCommands": [
+    {
+      "name": "grill",
+      "title": "Grill",
+      "command": "/grill-with-docs",
+      "step": "specify",
+      "tooltip": "Sharpen the idea before writing the spec"
+    },
+    {
+      "name": "code-review",
+      "title": "Code Review",
+      "command": "/code-review",
+      "step": "implement",
+      "tooltip": "Two-axis review: standards vs spec"
+    }
+  ]
+}
