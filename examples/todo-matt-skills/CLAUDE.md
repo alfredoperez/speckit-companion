@@ -24,3 +24,8 @@ with `/code-review` before committing.
 - Specs live at `.scratch/<feature-slug>/spec.md`
 - Tickets live at `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered in dependency order
 - Run tests with `npm test`; dev server with `npm run dev`
+
+<!-- SPECKIT START -->
+For additional context about technologies to be used, project structure,
+shell commands, and other important information, read the current plan
+<!-- SPECKIT END -->

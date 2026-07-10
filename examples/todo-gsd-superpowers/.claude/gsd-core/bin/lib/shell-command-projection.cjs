@@ -1,0 +1,630 @@
+"use strict";
+/**
+ * Shell Command Projection Module
+ *
+ * Tracer-bullet seam for runtime-aware projection of serialized command text
+ * that GSD writes into runtime config or prints for copy/paste. This module
+ * does NOT execute commands; it only renders command text for external shells
+ * and runtimes.
+ *
+ * ADR-457 build-at-publish: the hand-written bin/lib/shell-command-projection.cjs
+ * collapsed to a TypeScript source of truth. Behaviour is preserved byte-for-behaviour
+ * from the prior hand-written .cjs; only types are added.
+ */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.hookCommandNeedsPowerShellCallOperator = hookCommandNeedsPowerShellCallOperator;
+exports.formatHookCommandForRuntime = formatHookCommandForRuntime;
+exports.shellHookOmitsBashRunner = shellHookOmitsBashRunner;
+exports.buildLocalShellHookCommand = buildLocalShellHookCommand;
+exports.formatManagedHookScriptToken = formatManagedHookScriptToken;
+exports.projectLocalHookPrefix = projectLocalHookPrefix;
+exports.projectPortableHookBaseDir = projectPortableHookBaseDir;
+exports.projectShellCommandText = projectShellCommandText;
+exports.projectManagedHookCommand = projectManagedHookCommand;
+exports.isManagedHookBasename = isManagedHookBasename;
+exports.isManagedHookCommand = isManagedHookCommand;
+exports.projectLegacySettingsHookCommand = projectLegacySettingsHookCommand;
+exports.escapeTomlDoubleQuotedString = escapeTomlDoubleQuotedString;
+exports.projectCodexHookTomlCommand = projectCodexHookTomlCommand;
+exports.escapePowerShellSingleQuoted = escapePowerShellSingleQuoted;
+exports.escapePosixDoubleQuoted = escapePosixDoubleQuoted;
+exports.escapeSingleQuotedShellLiteral = escapeSingleQuotedShellLiteral;
+exports.renderShellActionLines = renderShellActionLines;
+exports.projectPathActionProjection = projectPathActionProjection;
+exports.projectPersistentPathExportActions = projectPersistentPathExportActions;
+exports.execGit = execGit;
+exports.execNpm = execNpm;
+exports.execTool = execTool;
+exports.probeTty = probeTty;
+exports.normalizeContent = normalizeContent;
+exports.platformWriteSync = platformWriteSync;
+exports.platformReadSync = platformReadSync;
+exports.platformEnsureDir = platformEnsureDir;
+const node_path_1 = __importDefault(require("node:path"));
+const node_fs_1 = __importDefault(require("node:fs"));
+// Use non-destructured namespace import so test-time mock.method(childProcess, 'spawnSync')
+// can intercept calls from this seam — destructured imports capture references
+// at load time and become un-mockable.
+const node_child_process_1 = __importDefault(require("node:child_process"));
+/**
+ * Return true when a managed hook command must be prefixed with PowerShell's
+ * call operator so a quoted executable token is invokable by the target
+ * runtime/shell combination.
+ *
+ * Current evidence-backed policy:
+ * - Gemini on Windows requires `& ` for quoted node/bash runners.
+ * - Claude Code on Windows does NOT: its hook commands execute under bash/Git
+ *   Bash and `& ` breaks there (#3413).
+ *
+ * Keep the policy conservative until another runtime has a verified need.
+ */
+function hookCommandNeedsPowerShellCallOperator(opts = {}) {
+    const platform = opts.platform || process.platform;
+    const runtime = opts.runtime || 'generic';
+    return platform === 'win32' && runtime === 'gemini';
+}
+/**
+ * Project a fully-assembled hook command string for the target runtime.
+ */
+function formatHookCommandForRuntime(command, opts = {}) {
+    return hookCommandNeedsPowerShellCallOperator(opts) ? `& ${command}` : command;
+}
+// #166/#580: Claude Code on Windows executes hook command strings inside Git
+// Bash. A `.sh` hook wrapped with an explicit bash.exe path makes bash try to
+// exec bash itself ("C:/.../bash.exe: cannot execute binary file"). Both install
+// paths — global (buildHookCommand) and local (buildLocalShellHookCommand) — must
+// drop the bash runner in this case and emit only the anchored script path.
+// Centralized here so the two paths cannot silently drift apart again: the local
+// path missed this guard and reintroduced the #166/#377 failure (#580).
+function shellHookOmitsBashRunner({ platform, runtime = 'generic', isShellHook = false } = {}) {
+    const p = platform ?? process.platform;
+    return p === 'win32' && runtime === 'claude' && isShellHook;
+}
+// Builds the command string for a local-install managed `.sh` hook. Mirrors the
+// global buildHookCommand path but uses the $CLAUDE_PROJECT_DIR-anchored prefix
+// instead of an absolute configDir. On Claude/Windows the bash runner is dropped
+// (see shellHookOmitsBashRunner) and the anchored script path is emitted alone —
+// matching the global path. Elsewhere the resolved bash runner is required; a
+// null runner yields null so callers skip registration instead of emitting a
+// broken hook (#3393).
+function buildLocalShellHookCommand({ localPrefix, hookFile, bashRunner, runtime = 'generic', platform = process.platform }) {
+    if (!localPrefix || !hookFile)
+        return null;
+    const scriptPath = `${localPrefix}/hooks/${hookFile}`;
+    if (shellHookOmitsBashRunner({ platform, runtime, isShellHook: true })) {
+        return formatHookCommandForRuntime(scriptPath, { platform, runtime });
+    }
+    if (!bashRunner)
+        return null;
+    return projectShellCommandText({
+        runnerToken: bashRunner,
+        argTokens: [scriptPath],
+        runtime,
+        platform,
+    });
+}
+/**
+ * Project a managed hook script path token for serialized shell commands.
+ * Windows managed hook commands normalize to forward slashes so the same path
+ * survives JSON/TOML/config surfaces consistently.
+ */
+function formatManagedHookScriptToken(scriptPath, opts = {}) {
+    const platform = opts.platform || process.platform;
+    if (platform !== 'win32')
+        return null;
+    return JSON.stringify(scriptPath.replace(/\\/g, '/'));
+}
+function projectLocalHookPrefix({ runtime = 'claude', dirName }) {
+    if (!dirName)
+        return dirName;
+    return (runtime === 'gemini' || runtime === 'antigravity')
+        ? dirName
+        : `"$CLAUDE_PROJECT_DIR"/${dirName}`;
+}
+function projectPortableHookBaseDir({ configDir, homeDir }) {
+    const normalizedConfigDir = String(configDir || '').replace(/\\/g, '/');
+    const normalizedHome = String(homeDir || '').replace(/\\/g, '/');
+    if (!normalizedConfigDir || !normalizedHome)
+        return normalizedConfigDir;
+    return normalizedConfigDir.startsWith(normalizedHome)
+        ? '$HOME' + normalizedConfigDir.slice(normalizedHome.length)
+        : normalizedConfigDir;
+}
+function projectShellCommandText({ runnerToken, argTokens = [], runtime = 'generic', platform = process.platform, }) {
+    if (!runnerToken)
+        return null;
+    const parts = [runnerToken, ...argTokens.filter(Boolean)];
+    return formatHookCommandForRuntime(parts.join(' '), { platform, runtime });
+}
+function projectManagedHookCommand({ absoluteRunner, scriptPath, runtime = 'generic', platform = process.platform }) {
+    if (!absoluteRunner || !scriptPath)
+        return null;
+    const normalizedScriptPath = platform === 'win32' ? scriptPath.replace(/\\/g, '/') : scriptPath;
+    return projectShellCommandText({
+        runnerToken: absoluteRunner,
+        argTokens: [JSON.stringify(normalizedScriptPath)],
+        runtime,
+        platform,
+    });
+}
+const MANAGED_HOOK_BASENAMES_BY_SURFACE = {
+    'settings-json': new Set([
+        'gsd-check-update.js',
+        'gsd-config-reload.js',
+        'gsd-statusline.js',
+        'gsd-context-monitor.js',
+        'gsd-prompt-guard.js',
+        'gsd-read-guard.js',
+        'gsd-read-injection-scanner.js',
+        'gsd-update-banner.js',
+        'gsd-workflow-guard.js',
+    ]),
+    'codex-toml': new Set([
+        'gsd-check-update.js',
+    ]),
+};
+const MANAGED_HOOK_COMMAND_BASENAMES_BY_SURFACE = {
+    'settings-json': new Set([
+        'gsd-check-update.js',
+        'gsd-config-reload.js',
+        'gsd-statusline.js',
+        'gsd-context-monitor.js',
+        'gsd-prompt-guard.js',
+        'gsd-read-guard.js',
+        'gsd-read-injection-scanner.js',
+        'gsd-update-banner.js',
+        'gsd-workflow-guard.js',
+        'gsd-session-state.sh',
+        'gsd-validate-commit.sh',
+        'gsd-phase-boundary.sh',
+    ]),
+    'codex-toml': new Set([
+        'gsd-check-update.js',
+    ]),
+    'codex-hooks-json': new Set([
+        'gsd-check-update.js',
+        // #3426: Windows .cmd shim for Codex hook — must be treated as managed so
+        // reconcileCodexHooksJsonSessionStart can replace stale node-runner commands
+        // with the .cmd shim on reinstall (and vice-versa on cross-platform moves).
+        'gsd-check-update.cmd',
+        // #772: context-monitor is now registered for Codex SubagentStart/Stop/PostToolUse.
+        'gsd-context-monitor.js',
+        // #772: Windows .cmd shim for gsd-context-monitor — same #3426 pattern.
+        'gsd-context-monitor.cmd',
+    ]),
+};
+const LEGACY_MANAGED_HOOK_ALIASES_BY_SURFACE = {
+    'codex-toml': new Set([
+        'gsd-update-check.js',
+    ]),
+    'codex-hooks-json': new Set([
+        'gsd-update-check.js',
+    ]),
+};
+function managedHookSurfaceSet(surface = 'settings-json') {
+    return MANAGED_HOOK_BASENAMES_BY_SURFACE[surface] || MANAGED_HOOK_BASENAMES_BY_SURFACE['settings-json'];
+}
+function isManagedHookBasename(scriptPathOrBasename, opts = {}) {
+    if (!scriptPathOrBasename)
+        return false;
+    const surface = opts.surface || 'settings-json';
+    const basename = String(scriptPathOrBasename).split(/[\\/]/).pop() || '';
+    return managedHookSurfaceSet(surface).has(basename);
+}
+function managedHookCommandSurfaceSet(surface = 'settings-json', includeLegacyAliases = false) {
+    const base = MANAGED_HOOK_COMMAND_BASENAMES_BY_SURFACE[surface]
+        || MANAGED_HOOK_COMMAND_BASENAMES_BY_SURFACE['settings-json'];
+    if (!includeLegacyAliases)
+        return base;
+    const aliases = LEGACY_MANAGED_HOOK_ALIASES_BY_SURFACE[surface];
+    if (!aliases || aliases.size === 0)
+        return base;
+    return new Set([...base, ...aliases]);
+}
+function isManagedHookCommand(commandText, opts = {}) {
+    if (typeof commandText !== 'string')
+        return false;
+    const surface = opts.surface || 'settings-json';
+    const includeLegacyAliases = opts.includeLegacyAliases === true;
+    const managedBasenames = managedHookCommandSurfaceSet(surface, includeLegacyAliases);
+    if (!managedBasenames || managedBasenames.size === 0)
+        return false;
+    // args-form check: the managed hook filename may appear in args[] rather than
+    // in command when a windowless launcher wraps the Node invocation. (#976)
+    // Only treat as managed when an arg basename matches the managed hook set —
+    // prevents false-positives for non-GSD entries that happen to share a path segment.
+    if (Array.isArray(opts.args) && opts.args.length > 0) {
+        for (const arg of opts.args) {
+            if (typeof arg !== 'string')
+                continue;
+            const argBasename = arg.replace(/\\/g, '/').split('/').pop() || '';
+            if (isManagedHookBasename(argBasename, { surface }))
+                return true;
+        }
+    }
+    const normalizedCommand = commandText.replace(/\\/g, '/');
+    if (typeof opts.configDir === 'string' && opts.configDir.length > 0) {
+        const normalizedHooksDir = `${node_path_1.default.join(opts.configDir, 'hooks').replace(/\\/g, '/')}/`;
+        if (!normalizedCommand.includes(normalizedHooksDir))
+            return false;
+    }
+    for (const basename of managedBasenames) {
+        const escapedBasename = basename.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const pattern = new RegExp(`(^|[\\\\/\\s"'` + '`' + `])${escapedBasename}(?=$|[\\s"'` + '`' + `])`);
+        if (pattern.test(normalizedCommand))
+            return true;
+    }
+    return false;
+}
+/**
+ * Detect a `"$VAR"/rest` anchored hook-script token — a path whose leading
+ * shell variable is already double-quoted with the remainder left bare (the
+ * shape `projectLocalHookPrefix` emits for local installs, e.g.
+ * `"$CLAUDE_PROJECT_DIR"/.claude/hooks/gsd-x.js`). Such a token is ALREADY a
+ * valid, correctly-quoted shell argument and must never be re-quoted.
+ */
+const ANCHORED_HOOK_SCRIPT_TOKEN = /^"\$[A-Za-z_][A-Za-z0-9_]*"\//;
+/**
+ * Projection helper for legacy settings.json hook rewrites.
+ *
+ * Non-Windows keeps the original script token shape when provided (single
+ * quote / bareword / quoted), while Windows normalizes to double-quoted
+ * forward-slash path tokens for stable cross-shell behavior.
+ */
+function projectLegacySettingsHookCommand({ absoluteRunner, scriptPath, scriptToken, runtime = 'generic', platform = process.platform, }) {
+    if (!absoluteRunner || !scriptPath)
+        return null;
+    const normalizedScriptPath = platform === 'win32' ? scriptPath.replace(/\\/g, '/') : scriptPath;
+    // #1693: a script path already carrying a `"$CLAUDE_PROJECT_DIR"`-anchored
+    // quoted prefix (local installs) is already a valid shell token — only the
+    // variable is quoted, the rest is bare. JSON.stringify-ing it on Windows
+    // yields `"\"$CLAUDE_PROJECT_DIR\"/..."` (escaped quotes inside an outer
+    // quote); node then receives an argument that *starts* with a `"`, treats it
+    // as relative, and dies with MODULE_NOT_FOUND. Emit anchored tokens verbatim;
+    // only bare absolute paths (which may contain spaces, e.g. "Program Files")
+    // need the JSON.stringify quoting. Scoped to win32: the non-Windows branch
+    // already preserves the caller's `scriptToken` (which is the bare anchored
+    // token for these inputs), so it never had the double-quote bug.
+    const commandScriptToken = platform === 'win32'
+        ? (ANCHORED_HOOK_SCRIPT_TOKEN.test(normalizedScriptPath)
+            ? normalizedScriptPath
+            : JSON.stringify(normalizedScriptPath))
+        : (scriptToken || JSON.stringify(normalizedScriptPath));
+    return projectShellCommandText({
+        runnerToken: absoluteRunner,
+        argTokens: [commandScriptToken],
+        runtime,
+        platform,
+    });
+}
+function escapeTomlDoubleQuotedString(value) {
+    return String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+function projectCodexHookTomlCommand({ absoluteRunner, scriptPath, platform = process.platform }) {
+    const command = projectManagedHookCommand({
+        absoluteRunner,
+        scriptPath,
+        runtime: 'codex',
+        platform,
+    });
+    return command === null ? null : escapeTomlDoubleQuotedString(command);
+}
+function escapePowerShellSingleQuoted(value) {
+    return String(value).replace(/'/g, "''");
+}
+function escapePosixDoubleQuoted(value) {
+    return String(value).replace(/[\\$"`]/g, '\\$&');
+}
+function escapeSingleQuotedShellLiteral(value) {
+    return String(value).replace(/'/g, "'\\''");
+}
+function renderShellActionLines(shellActions = []) {
+    return shellActions.map((action) => {
+        if (!action || !action.command)
+            return '';
+        return action.label ? `${action.label}: ${action.command}` : action.command;
+    }).filter(Boolean);
+}
+function projectPathActionProjection({ mode = 'repair', targetDir, platform = process.platform, }) {
+    if (!targetDir)
+        return { shellActions: [], actionLines: [] };
+    const isWin32 = platform === 'win32';
+    let shellActions;
+    if (isWin32) {
+        const psTargetDir = escapePowerShellSingleQuoted(targetDir);
+        const bashTargetDir = escapeSingleQuotedShellLiteral(String(targetDir).replace(/\\/g, '/'));
+        shellActions = [
+            {
+                label: 'PowerShell',
+                shell: 'powershell',
+                command: `[Environment]::SetEnvironmentVariable('PATH', '${psTargetDir};' + [Environment]::GetEnvironmentVariable('PATH', 'User'), 'User')`,
+            },
+            {
+                label: 'cmd.exe',
+                shell: 'cmd',
+                command: `powershell -Command "[Environment]::SetEnvironmentVariable('PATH', '${psTargetDir};' + [Environment]::GetEnvironmentVariable('PATH', 'User'), 'User')"`,
+            },
+            {
+                label: 'Git Bash',
+                shell: 'bash',
+                command: `echo 'export PATH="${bashTargetDir}:$PATH"' >> ~/.bashrc`,
+            },
+        ];
+    }
+    else if (mode === 'persist') {
+        const bashTargetDir = escapeSingleQuotedShellLiteral(String(targetDir));
+        shellActions = [
+            {
+                label: 'zsh',
+                shell: 'zsh',
+                command: `echo 'export PATH="${bashTargetDir}:$PATH"' >> ~/.zshrc`,
+            },
+            {
+                label: 'bash',
+                shell: 'bash',
+                command: `echo 'export PATH="${bashTargetDir}:$PATH"' >> ~/.bashrc`,
+            },
+            // #323: fish has no `export`/`$PATH`-list syntax. `fish_add_path` is the
+            // fish-native API (>= fish 3.2, 2021) that persists to the universal
+            // variable store and de-duplicates. The directory is single-quoted with
+            // the same POSIX literal escaping as the zsh/bash siblings — `'\''` is
+            // also a valid escaped single quote in fish between quote spans.
+            {
+                label: 'fish',
+                shell: 'fish',
+                command: `fish_add_path '${bashTargetDir}'`,
+            },
+        ];
+    }
+    else {
+        const posixTargetDir = escapePosixDoubleQuoted(targetDir);
+        shellActions = [
+            {
+                label: null,
+                shell: 'posix',
+                command: `export PATH="${posixTargetDir}:$PATH"`,
+            },
+        ];
+    }
+    return {
+        shellActions,
+        actionLines: renderShellActionLines(shellActions),
+    };
+}
+function projectPersistentPathExportActions({ targetDir, platform = process.platform }) {
+    const projected = projectPathActionProjection({
+        mode: 'persist',
+        targetDir,
+        platform,
+    });
+    return { shellActions: projected.shellActions };
+}
+function _spawnResult(result, program) {
+    if (result.error && result.error.code === 'ENOENT') {
+        return { exitCode: 127, stdout: '', stderr: `${program}: not found`, signal: null, error: result.error };
+    }
+    return {
+        exitCode: result.status ?? 1,
+        stdout: (result.stdout ?? '').toString().trim(),
+        stderr: (result.stderr ?? '').toString().trim(),
+        signal: result.signal ?? null,
+        error: result.error ?? null,
+    };
+}
+function execGit(args, opts = {}) {
+    // Non-interactive defaults: a hung credential prompt or terminal-input
+    // probe must surface as a timeout, not block the tool forever. Callers
+    // can override via opts.env.
+    const env = {
+        ...process.env,
+        GIT_TERMINAL_PROMPT: '0',
+        GCM_INTERACTIVE: 'never',
+        ...(opts.env || {}),
+    };
+    const result = node_child_process_1.default.spawnSync('git', args, {
+        cwd: opts.cwd,
+        env,
+        encoding: 'utf-8',
+        stdio: 'pipe',
+        timeout: opts.timeout ?? 10_000,
+        windowsHide: true,
+    });
+    return _spawnResult(result, 'git');
+}
+function execNpm(args, opts = {}) {
+    const result = node_child_process_1.default.spawnSync('npm', args, {
+        cwd: opts.cwd,
+        shell: process.platform === 'win32',
+        encoding: 'utf-8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+        timeout: opts.timeout ?? 15_000,
+        windowsHide: true,
+    });
+    return _spawnResult(result, 'npm');
+}
+function execTool(program, args, opts = {}) {
+    const result = node_child_process_1.default.spawnSync(program, args, {
+        cwd: opts.cwd,
+        env: opts.env ? { ...process.env, ...opts.env } : undefined,
+        encoding: 'utf-8',
+        stdio: 'pipe',
+        timeout: opts.timeout ?? 30_000,
+        windowsHide: true,
+    });
+    return _spawnResult(result, program);
+}
+function probeTty(opts = {}) {
+    const platform = opts.platform ?? process.platform;
+    if (platform === 'win32')
+        return null;
+    try {
+        const ttyPath = node_child_process_1.default.execFileSync('tty', [], {
+            encoding: 'utf-8',
+            stdio: ['inherit', 'pipe', 'ignore'],
+        }).trim();
+        if (!ttyPath || ttyPath === 'not a tty')
+            return null;
+        return ttyPath;
+    }
+    catch {
+        return null;
+    }
+}
+// ─── Platform file I/O ────────────────────────────────────────────────────────
+function _normalizeMd(content) {
+    if (!content || typeof content !== 'string')
+        return content;
+    let text = content.replace(/\r\n/g, '\n');
+    const lines = text.split('\n');
+    const result = [];
+    const fenceRegex = /^```/;
+    const insideFence = new Array(lines.length);
+    let fenceOpen = false;
+    for (let i = 0; i < lines.length; i++) {
+        if (fenceRegex.test(lines[i].trimEnd())) {
+            if (fenceOpen) {
+                insideFence[i] = false;
+                fenceOpen = false;
+            }
+            else {
+                insideFence[i] = false;
+                fenceOpen = true;
+            }
+        }
+        else {
+            insideFence[i] = fenceOpen;
+        }
+    }
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const prev = i > 0 ? lines[i - 1] : '';
+        const prevTrimmed = prev.trimEnd();
+        const trimmed = line.trimEnd();
+        const isFenceLine = fenceRegex.test(trimmed);
+        if (/^#{1,6}\s/.test(trimmed) && i > 0 && prevTrimmed !== '' && prevTrimmed !== '---')
+            result.push('');
+        if (isFenceLine && i > 0 && prevTrimmed !== '' && !insideFence[i] && (i === 0 || !insideFence[i - 1] || isFenceLine)) {
+            if (i === 0 || !insideFence[i - 1])
+                result.push('');
+        }
+        if (/^(\s*[-*+]\s|\s*\d+\.\s)/.test(line) && i > 0 && prevTrimmed !== '' && !/^(\s*[-*+]\s|\s*\d+\.\s)/.test(prev) && prevTrimmed !== '---')
+            result.push('');
+        result.push(line);
+        if (/^#{1,6}\s/.test(trimmed) && i < lines.length - 1 && (lines[i + 1] ?? '').trimEnd() !== '')
+            result.push('');
+        if (/^```\s*$/.test(trimmed) && i > 0 && insideFence[i - 1] && i < lines.length - 1 && (lines[i + 1] ?? '').trimEnd() !== '')
+            result.push('');
+        if (/^(\s*[-*+]\s|\s*\d+\.\s)/.test(line) && i < lines.length - 1) {
+            const next = lines[i + 1];
+            if (next !== undefined && next.trimEnd() !== '' && !/^(\s*[-*+]\s|\s*\d+\.\s)/.test(next) && !/^\s/.test(next))
+                result.push('');
+        }
+    }
+    text = result.join('\n');
+    text = text.replace(/\n{3,}/g, '\n\n');
+    text = text.replace(/\n*$/, '\n');
+    return text;
+}
+function normalizeContent(filePath, content, opts = {}) {
+    const encoding = opts.encoding ?? 'utf-8';
+    const isMd = node_path_1.default.extname(filePath).toLowerCase() === '.md';
+    let normalized;
+    if (isMd) {
+        normalized = _normalizeMd(content);
+    }
+    else {
+        normalized = (content ?? '').replace(/\r\n/g, '\n').replace(/\n*$/, '\n');
+    }
+    return { content: normalized, encoding };
+}
+// Rename errnos that are transient on Windows: a concurrent reader (or an AV
+// scanner / indexer) holding the target open makes renameSync fail briefly.
+// Same idiom as capability-ledger.cts / capability-consent.cts.
+const RENAME_RETRY_ERRNOS = new Set(['EPERM', 'EBUSY', 'EACCES']);
+const RENAME_MAX_ATTEMPTS = 3;
+const RENAME_RETRY_BACKOFF_MS = 50;
+/** Synchronous best-effort backoff sleep (Atomics.wait — same idiom as io.cts). */
+let _renameSleepBuf = null;
+function renameBackoff() {
+    if (_renameSleepBuf === null)
+        _renameSleepBuf = new Int32Array(new SharedArrayBuffer(4));
+    Atomics.wait(_renameSleepBuf, 0, 0, RENAME_RETRY_BACKOFF_MS);
+}
+/**
+ * Atomic publish with bounded retry on transient Windows lock errnos.
+ * Returns null on success, or the final error if every attempt failed.
+ */
+function atomicRenameWithRetry(tmpPath, filePath) {
+    let renameErr = null;
+    for (let attempt = 1; attempt <= RENAME_MAX_ATTEMPTS; attempt++) {
+        try {
+            node_fs_1.default.renameSync(tmpPath, filePath);
+            return null;
+        }
+        catch (err) {
+            renameErr = err;
+            if (attempt < RENAME_MAX_ATTEMPTS && RENAME_RETRY_ERRNOS.has(renameErr.code ?? '')) {
+                renameBackoff();
+                continue;
+            }
+            break;
+        }
+    }
+    return renameErr;
+}
+function platformWriteSync(filePath, content, opts = {}) {
+    const { content: normalized, encoding } = normalizeContent(filePath, content, opts);
+    node_fs_1.default.mkdirSync(node_path_1.default.dirname(filePath), { recursive: true });
+    const tmpPath = filePath + '.tmp.' + process.pid;
+    // Step 1: write the sibling tmp file. If THIS fails, nothing was published, so a
+    // direct fallback write cannot truncate a concurrent reader of an existing file.
+    try {
+        node_fs_1.default.writeFileSync(tmpPath, normalized, encoding);
+    }
+    catch {
+        try {
+            node_fs_1.default.unlinkSync(tmpPath);
+        }
+        catch { /* already gone */ }
+        node_fs_1.default.writeFileSync(filePath, normalized, encoding);
+        return;
+    }
+    // Step 2: atomic publish, retrying transient Windows locks.
+    const renameErr = atomicRenameWithRetry(tmpPath, filePath);
+    if (renameErr === null)
+        return;
+    try {
+        node_fs_1.default.unlinkSync(tmpPath);
+    }
+    catch { /* already gone */ }
+    if (RENAME_RETRY_ERRNOS.has(renameErr.code ?? '')) {
+        // A live reader still holds the target open after every retry. A non-atomic
+        // direct write here would truncate that reader (the exact corruption this seam
+        // exists to prevent), so surface the error instead of falling back.
+        throw renameErr;
+    }
+    // Atomic publish is genuinely impossible here (e.g. EXDEV cross-device move):
+    // fall back to a direct write to preserve write availability.
+    node_fs_1.default.writeFileSync(filePath, normalized, encoding);
+}
+function platformReadSync(filePath, opts = {}) {
+    const encoding = opts.encoding ?? 'utf-8';
+    try {
+        return node_fs_1.default.readFileSync(filePath, encoding);
+    }
+    catch (err) {
+        const e = err;
+        if (e.code === 'ENOENT') {
+            if (opts.required)
+                throw err;
+            return null;
+        }
+        throw err;
+    }
+}
+function platformEnsureDir(dirPath) {
+    node_fs_1.default.mkdirSync(dirPath, { recursive: true });
+}

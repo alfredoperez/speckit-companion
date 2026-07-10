@@ -12,25 +12,25 @@
         {
           "name": "discuss",
           "label": "Discuss",
-          "command": "/gsd-discuss-phase",
+          "command": "gsd-discuss-phase",
           "actionOnly": true
         },
         {
           "name": "plan",
           "label": "Plan Phase",
-          "command": "/gsd-plan-phase",
+          "command": "gsd-plan-phase",
           "includeRelatedDocs": true
         },
         {
           "name": "execute",
           "label": "Execute (Superpowers)",
-          "command": "Take the current GSD phase plan in .planning/ and hand it to Superpowers: use the writing-plans skill to turn it into a Superpowers implementation plan, then execute that plan with subagent-driven-development (TDD, fresh subagent per task). Do NOT use /gsd-execute-phase.",
+          "command": "superpowers-execute",
           "actionOnly": true
         },
         {
           "name": "verify",
           "label": "Verify",
-          "command": "/gsd-verify-work",
+          "command": "gsd-verify-work",
           "actionOnly": true
         }
       ]

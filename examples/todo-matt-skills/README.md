@@ -24,9 +24,10 @@ so we only spend tokens on ONE small feature, not a greenfield build.
 
 1. `npm install`, then open this folder in VS Code (SpecKit Companion installed,
    provider: Claude).
-2. New Spec → workflow `Matt Pocock Skills` → paste the feature prompt (small,
-   e.g. priority levels on todos).
-3. Optionally hit **Grill** first (`/grill-with-docs`) to sharpen the idea.
+2. In the Companion terminal, describe the feature in chat first (small, e.g.
+   priority levels on todos) — `/to-spec` distills the CONVERSATION into a spec,
+   so it needs one. Or hit **Grill** (`/grill-with-docs`) and answer tersely.
+   Skip the New Spec dialog here: it passes a temp-file path `/to-spec` ignores.
 4. **Spec** runs `/to-spec` → `.scratch/<feature>/spec.md` appears in the viewer.
 5. **Tickets** runs `/to-tickets` → numbered tickets appear under `issues/`.
 6. **Implement** runs `/implement` per ticket — TDD red/green/refactor, then

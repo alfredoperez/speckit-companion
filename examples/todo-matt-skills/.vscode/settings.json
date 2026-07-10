@@ -12,13 +12,13 @@
         {
           "name": "specify",
           "label": "Spec",
-          "command": "/to-spec",
+          "command": "to-spec",
           "file": "spec.md"
         },
         {
           "name": "tickets",
           "label": "Tickets",
-          "command": "/to-tickets",
+          "command": "to-tickets",
           "file": "tickets.md",
           "subDir": "issues",
           "includeRelatedDocs": true
@@ -26,7 +26,7 @@
         {
           "name": "implement",
           "label": "Implement",
-          "command": "/implement",
+          "command": "implement",
           "actionOnly": true
         }
       ]

@@ -1,0 +1,389 @@
+"use strict";
+/**
+ * Planning Workspace — .planning path resolution + active workstream routing.
+ *
+ * This module owns the planning workspace seam:
+ * - planningDir/planningRoot/planningPaths
+ * - planning lock semantics
+ *
+ * Active workstream pointer policy/session identity lives in
+ * active-workstream-store.cjs and is consumed here via thin adapters.
+ *
+ * ADR-457 build-at-publish: the hand-written bin/lib/planning-workspace.cjs collapsed
+ * to a TypeScript source of truth. Behaviour is preserved byte-for-behaviour from
+ * the prior hand-written .cjs; only types are added.
+ */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+const node_fs_1 = __importDefault(require("node:fs"));
+const node_path_1 = __importDefault(require("node:path"));
+const shell_command_projection_cjs_1 = require("./shell-command-projection.cjs");
+const clock_cjs_1 = require("./clock.cjs");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const activeWorkstreamStore = require("./active-workstream-store.cjs");
+const { createSharedPointerAdapter, createSessionScopedPointerAdapter, createMemoryPointerAdapter, getActiveWorkstream: getStoredActiveWorkstream, setActiveWorkstream: setStoredActiveWorkstream, clearActiveWorkstream: clearStoredActiveWorkstream, } = activeWorkstreamStore;
+// Track .planning/.lock files held by this process so they can be removed on exit.
+const _heldPlanningLocks = new Set();
+process.on('exit', () => {
+    for (const lockPath of _heldPlanningLocks) {
+        try {
+            node_fs_1.default.unlinkSync(lockPath);
+        }
+        catch { /* already gone */ }
+    }
+});
+// ---------------------------------------------------------------------------
+// Lock liveness probe (test seam) — audit M1
+//
+// mtime is a leaky proxy for "the holder is alive". The prior withPlanningLock
+// timeout fallback unconditionally unlinked WHATEVER lock existed — even a fresh,
+// live holder's — and re-acquired it, force-stealing a live writer's critical
+// section. We backport capability-lock.cts's pid-liveness gate: a dead holder is
+// stolen promptly inside the polite loop; a live holder is waited on. The
+// indirection lets unit tests inject a deterministic isPidAlive without real pids.
+// ---------------------------------------------------------------------------
+/** Is `pid` a live process? process.kill(pid, 0) succeeds for a live (signalable) process. */
+function _realIsPidAlive(pid) {
+    try {
+        process.kill(pid, 0);
+        return true; // signalable → alive
+    }
+    catch (err) {
+        // EPERM = process exists but we cannot signal it (still ALIVE). ESRCH = gone.
+        return err.code === 'EPERM';
+    }
+}
+const _planningLockProbes = { isPidAlive: _realIsPidAlive };
+function _planningLockIsPidAlive(pid) {
+    return _planningLockProbes.isPidAlive(pid);
+}
+const _planningLockTestHooks = {};
+// Monotonic sequence for unique stale-steal rename targets (no crypto dependency).
+let _planningStealSeq = 0;
+/**
+ * Is the holder recorded in the .lock body VERIFIED-LIVE? The body is JSON
+ * { pid, cwd, acquired }. Returns true ONLY when the body parses AND the recorded
+ * pid signals alive. A garbage / pid-less / unreadable body (or a dead pid) is NOT
+ * verified-live, so the lock stays stealable — corrupt locks never block forever,
+ * and a live holder is never force-stolen.
+ */
+function _planningHolderVerifiedLive(lockPath) {
+    let parsed;
+    try {
+        parsed = JSON.parse(node_fs_1.default.readFileSync(lockPath, 'utf-8'));
+    }
+    catch {
+        return false; // unreadable / unparseable body → cannot verify → not verified-live
+    }
+    const pid = parsed?.pid;
+    if (typeof pid !== 'number' || !Number.isInteger(pid) || pid <= 0)
+        return false;
+    return _planningLockIsPidAlive(pid);
+}
+// Transient errno codes that indicate a temporary filesystem condition under
+// concurrent O_EXCL races — Docker overlay-fs (ENOENT/EINVAL/EIO), NFS
+// (ESTALE), and OS-level interrupt/retry signals (EAGAIN/EINTR).  These are
+// recoverable; withPlanningLock retries instead of propagating them.
+// Truly fatal codes (EMFILE, ENOSPC, EROFS, EACCES) are NOT in this set and
+// will still throw immediately.
+const PLANNING_LOCK_RETRY_ERRNOS = new Set([
+    'EPERM', // Windows / macOS AV scanner holds the file open during delete
+    'EBUSY', // Windows: file in use by another process
+    'EAGAIN', // POSIX: resource temporarily unavailable
+    'EINTR', // POSIX: syscall interrupted by signal
+    'EINVAL', // Docker overlay-fs: transient during concurrent O_EXCL creation
+    'EIO', // Docker overlay-fs / NFS: transient I/O error
+    'ENOENT', // Docker overlay-fs: parent dir transiently missing during race
+    'ESTALE', // NFS: stale file handle (self-resolves on retry)
+]);
+function planningDir(cwd, ws, project) {
+    if (project === undefined)
+        project = process.env['GSD_PROJECT'] ?? null;
+    if (ws === undefined)
+        ws = process.env['GSD_WORKSTREAM'] ?? null;
+    // Reject path separators and traversal components in project/workstream names
+    const BAD_SEGMENT = /[/\\]|\.\./;
+    if (project && BAD_SEGMENT.test(project)) {
+        throw new Error(`GSD_PROJECT contains invalid path characters: ${project}`);
+    }
+    if (ws && BAD_SEGMENT.test(ws)) {
+        throw new Error(`GSD_WORKSTREAM contains invalid path characters: ${ws}`);
+    }
+    let base = node_path_1.default.join(cwd, '.planning');
+    if (project)
+        base = node_path_1.default.join(base, project);
+    if (ws)
+        base = node_path_1.default.join(base, 'workstreams', ws);
+    return base;
+}
+function planningRoot(cwd) {
+    return node_path_1.default.join(cwd, '.planning');
+}
+function planningPaths(cwd, ws) {
+    const base = planningDir(cwd, ws);
+    return {
+        planning: base,
+        state: node_path_1.default.join(base, 'STATE.md'),
+        roadmap: node_path_1.default.join(base, 'ROADMAP.md'),
+        project: node_path_1.default.join(base, 'PROJECT.md'),
+        config: node_path_1.default.join(base, 'config.json'),
+        phases: node_path_1.default.join(base, 'phases'),
+        requirements: node_path_1.default.join(base, 'REQUIREMENTS.md'),
+    };
+}
+/**
+ * @param cwd
+ * @param fn - callback to run while holding the lock
+ * @param clock
+ *   Optional clock seam for testing. Defaults to realClock (Date.now + Atomics.wait).
+ *   Pass a fake clock from tests/helpers/clock.cjs to drive timeout/stale logic
+ *   without real wall-clock waits.
+ */
+function withPlanningLock(cwd, fn, clock) {
+    if (clock === undefined)
+        clock = clock_cjs_1.realClock;
+    const lockPath = node_path_1.default.join(planningDir(cwd), '.lock');
+    const lockTimeout = 10000; // 10 seconds
+    // Deadman ceiling (audit M1 / R4-FIX) — set ABOVE lockTimeout so a holder that reads
+    // as alive but is actually a pid-reuse alias (the .lock body has no startTime, so
+    // liveness alone cannot detect reuse) is still recovered once its lock ages past this
+    // absolute ceiling. Without it, a false-alive holder would make withPlanningLock throw
+    // on every call with no self-heal. Mirrors acquireStateLock's deadmanCeilingMs.
+    const deadmanCeilingMs = 60000;
+    const start = clock.now();
+    // Ensure .planning/ exists
+    try {
+        (0, shell_command_projection_cjs_1.platformEnsureDir)(planningDir(cwd));
+    }
+    catch { /* ok */ }
+    function acquireLock() {
+        // Atomic create — fails if file exists
+        node_fs_1.default.writeFileSync(lockPath, JSON.stringify({
+            pid: process.pid,
+            cwd,
+            acquired: new Date().toISOString(),
+        }), { flag: 'wx' });
+        _heldPlanningLocks.add(lockPath);
+    }
+    function runWithHeldLock() {
+        try {
+            return fn();
+        }
+        finally {
+            _heldPlanningLocks.delete(lockPath);
+            try {
+                node_fs_1.default.unlinkSync(lockPath);
+            }
+            catch { /* already released */ }
+        }
+    }
+    while (clock.now() - start < lockTimeout) {
+        let lockWasAcquired = false;
+        try {
+            acquireLock();
+            lockWasAcquired = true;
+            return runWithHeldLock();
+        }
+        catch (err) {
+            // Transient filesystem errors (Docker overlay-fs, NFS, OS signals, AV scanners)
+            // are recoverable — wait and retry rather than propagating.
+            // See PLANNING_LOCK_RETRY_ERRNOS for the full list and rationale.
+            if (lockWasAcquired)
+                throw err;
+            const nodeErr = err;
+            if (PLANNING_LOCK_RETRY_ERRNOS.has(nodeErr.code ?? '')) {
+                clock.sleep(100);
+                continue;
+            }
+            if (nodeErr.code === 'EEXIST') {
+                // Liveness-gated steal (audit M1). Steal the lock PROMPTLY only when its
+                // recorded holder is NOT verified-live (crashed/dead pid or garbage body).
+                // A verified-live holder is waited on — never force-stolen — because nuking
+                // a slow-but-live writer's lock corrupts the .planning/ critical section.
+                // The steal is an ATOMIC rename-then-recreate guarded by an identity re-confirm
+                // so a racer that recreates a fresh lock in the decision→steal gap never has
+                // its replacement deleted (audit M2 / PR #1532 review, window b). The body is
+                // written atomically (writeFileSync …{flag:'wx'}) so there is no empty-body
+                // create window here — only the double-steal needs hardening.
+                try {
+                    const decisionStat = node_fs_1.default.statSync(lockPath);
+                    // Snapshot the decision-time body too: (dev, ino) alone is defeated by inode
+                    // REUSE (a racer's unlink+recreate can land on the same inode), so the body
+                    // content binds the identity as well — mirrors capability-lock.cts's (dev,
+                    // ino, ts) re-confirm.
+                    let decisionBody;
+                    try {
+                        decisionBody = node_fs_1.default.readFileSync(lockPath, 'utf-8');
+                    }
+                    catch {
+                        decisionBody = null;
+                    }
+                    let stealable = !_planningHolderVerifiedLive(lockPath);
+                    if (!stealable) {
+                        // Verified-live, but recover anyway once the lock crosses the absolute
+                        // deadman ceiling — defeats a pid-reuse false-alive that would otherwise
+                        // block forever (R4-FIX; mtime age is from lock creation, not this call).
+                        const age = clock.now() - decisionStat.mtimeMs;
+                        stealable = age > deadmanCeilingMs;
+                    }
+                    if (stealable) {
+                        if (_planningLockTestHooks.beforeSteal)
+                            _planningLockTestHooks.beforeSteal({ lockPath });
+                        // Identity re-confirm immediately before the steal: a racer that stole +
+                        // recreated a fresh lock in the decision→steal gap changes (dev, ino) → do
+                        // NOT delete the replacement; back off and re-evaluate.
+                        let confirmStat;
+                        try {
+                            confirmStat = node_fs_1.default.statSync(lockPath);
+                        }
+                        catch {
+                            continue; // vanished between decision and steal — retry the create.
+                        }
+                        let confirmBody;
+                        try {
+                            confirmBody = node_fs_1.default.readFileSync(lockPath, 'utf-8');
+                        }
+                        catch {
+                            confirmBody = null;
+                        }
+                        const sameInstance = typeof decisionStat.dev === 'number' && typeof decisionStat.ino === 'number' &&
+                            confirmStat.dev === decisionStat.dev && confirmStat.ino === decisionStat.ino &&
+                            decisionBody !== null && confirmBody === decisionBody;
+                        if (!sameInstance) {
+                            clock.sleep(100); // a racer won the steal + recreated — re-evaluate, don't delete it.
+                            continue;
+                        }
+                        // Atomic steal: rename the inode aside, then remove it. Only ONE racer can
+                        // win the rename; a failed rename means another process already stole it, so
+                        // we must NOT fall through to a delete — back off and retry the create.
+                        const stolen = lockPath + '.stale-' + process.pid + '-' + clock.now() + '-' + (_planningStealSeq++);
+                        let renamed = false;
+                        try {
+                            node_fs_1.default.renameSync(lockPath, stolen);
+                            renamed = true;
+                        }
+                        catch { /* another racer won */ }
+                        if (renamed) {
+                            try {
+                                node_fs_1.default.rmSync(stolen, { force: true });
+                            }
+                            catch { /* best-effort */ }
+                            continue; // dead/garbage/expired holder freed — retry immediately to grab it.
+                        }
+                        clock.sleep(100); // lost the steal race — back off and retry.
+                        continue;
+                    }
+                }
+                catch {
+                    continue;
+                }
+                // Live holder — wait and retry (cross-platform, no shell dependency).
+                clock.sleep(100);
+                continue;
+            }
+            throw err;
+        }
+    }
+    // Timeout against a holder still present at budget exhaustion. The polite loop
+    // already stole any DEAD holder; reaching here means the holder is verified-live
+    // (or a pid-reuse alias we must not corrupt). Do NOT force-steal — the prior
+    // unconditional `unlinkSync(lockPath); acquireLock()` here (audit M1) robbed live
+    // writers, and its re-acquire sat OUTSIDE any try so a concurrent re-create raced
+    // a raw EEXIST out of the helper (audit M2). Surface a clear timeout error instead.
+    const timeoutErr = new Error('withPlanningLock: ' + lockPath + ' held by a live process for ' +
+        (clock.now() - start) + 'ms (exceeded ' + lockTimeout + 'ms budget)');
+    timeoutErr.lockTimeout = true;
+    throw timeoutErr;
+}
+function createPlanningWorkspace(cwd, opts = {}) {
+    return {
+        paths: {
+            dir(ws, project) {
+                return planningDir(cwd, ws, project);
+            },
+            root() {
+                return planningRoot(cwd);
+            },
+            all(ws) {
+                return planningPaths(cwd, ws);
+            },
+        },
+        activeWorkstream: {
+            get() {
+                return getStoredActiveWorkstream(cwd, opts);
+            },
+            set(name) {
+                setStoredActiveWorkstream(cwd, name, opts);
+            },
+            clear() {
+                clearStoredActiveWorkstream(cwd, opts);
+            },
+        },
+    };
+}
+function getActiveWorkstream(cwd) {
+    return getStoredActiveWorkstream(cwd);
+}
+function setActiveWorkstream(cwd, name) {
+    setStoredActiveWorkstream(cwd, name);
+}
+/**
+ * Locate the CONTEXT.md file in a phase directory, handling both the bare
+ * form (`CONTEXT.md`) and the padded-prefix convention (`NN-CONTEXT.md`,
+ * `NN.N-CONTEXT.md`, etc.) used by gsd-discuss-phase output.
+ *
+ * Returns the filename (not the full path) of the first match, or null if
+ * no CONTEXT.md exists in the directory.
+ *
+ * Canonical dual-form predicate extracted here to eliminate the 5-site
+ * duplication that previously existed across init.cjs, roadmap.cjs,
+ * core.cjs, gap-checker.cjs (#3739).
+ *
+ * @param absDirOrFiles - Absolute path to the phase directory,
+ *   OR an already-read files array (avoids a redundant readdirSync at call sites
+ *   that already hold a directory listing).
+ */
+function findContextMdIn(absDirOrFiles) {
+    try {
+        const files = Array.isArray(absDirOrFiles)
+            ? absDirOrFiles
+            : node_fs_1.default.readdirSync(absDirOrFiles);
+        if (files.includes('CONTEXT.md'))
+            return 'CONTEXT.md';
+        return files.find((f) => f.endsWith('-CONTEXT.md')) ?? null;
+    }
+    catch {
+        return null;
+    }
+}
+module.exports = {
+    createPlanningWorkspace,
+    createSharedPointerAdapter,
+    createSessionScopedPointerAdapter,
+    createMemoryPointerAdapter,
+    planningDir,
+    planningRoot,
+    planningPaths,
+    withPlanningLock,
+    getActiveWorkstream,
+    setActiveWorkstream,
+    findContextMdIn,
+    // Test seam (audit M1): inject a deterministic isPidAlive so the liveness-gated
+    // steal decision is exercised without real pids. Mirrors capability-lock.cts.
+    _setLockProbes(probes) {
+        if (typeof probes.isPidAlive === 'function')
+            _planningLockProbes.isPidAlive = probes.isPidAlive;
+    },
+    _resetLockProbes() {
+        _planningLockProbes.isPidAlive = _realIsPidAlive;
+    },
+    // Test seam (PR #1532 review): script the steal decision→steal gap (window b).
+    _setPlanningLockTestHooks(hooks) {
+        if ('beforeSteal' in hooks)
+            _planningLockTestHooks.beforeSteal = hooks.beforeSteal;
+    },
+    _resetPlanningLockTestHooks() {
+        delete _planningLockTestHooks.beforeSteal;
+    },
+};

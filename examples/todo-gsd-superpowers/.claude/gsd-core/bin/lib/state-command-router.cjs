@@ -1,0 +1,172 @@
+"use strict";
+/**
+ * Manifest-backed state subcommand router.
+ * Keeps gsd-tools.cjs thin while preserving existing command semantics.
+ *
+ * Phase 5.1: handlers that have SDK equivalents are dispatched via
+ * executeForCjs (the sync bridge). CJS fallback is retained for:
+ * - complete-phase: no SDK counterpart.
+ * - Any command when GSD_WORKSTREAM is active (GSDTransport forces subprocess
+ *   for workstream requests; subprocess is disabled in the sync bridge worker).
+ * - Any command when the SDK is not available (build not present).
+ *
+ * ADR-457 build-at-publish: the hand-written bin/lib/state-command-router.cjs
+ * collapsed to a TypeScript source of truth. Behaviour is preserved byte-for-behaviour
+ * from the prior hand-written .cjs; only types are added.
+ */
+const command_aliases_cjs_1 = require("./command-aliases.cjs");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const cjsCommandRouterAdapter = require("./cjs-command-router-adapter.cjs");
+const { routeHubCommandFamily } = cjsCommandRouterAdapter;
+const command_arg_projection_cjs_1 = require("./command-arg-projection.cjs");
+// ─── Types ────────────────────────────────────────────────────────────────────
+// Helper: extract string-only named arg value (value flags never return boolean).
+function strArg(opts, key) {
+    const v = opts[key];
+    if (typeof v === 'boolean')
+        return undefined;
+    return v;
+}
+// ─── Implementation ───────────────────────────────────────────────────────────
+function routeStateCommand({ state, args, cwd, raw, error }) {
+    const parsePlans = (plans) => {
+        const parsedPlans = plans == null ? null : Number.parseInt(plans, 10);
+        if (plans != null && Number.isNaN(parsedPlans)) {
+            error('Invalid --plans value. Expected an integer.');
+            return null;
+        }
+        return parsedPlans;
+    };
+    routeHubCommandFamily({
+        family: 'state',
+        args,
+        subcommands: ['load', 'complete-phase', ...command_aliases_cjs_1.STATE_SUBCOMMANDS.filter((s) => s !== 'load')],
+        defaultSubcommand: 'load',
+        // No SDK-only state subcommands remain: add-roadmap-evolution was the last
+        // holdout after the SDK retirement (ADR-0174) and is now implemented in CJS
+        // (handler below). See #1140.
+        unsupported: {},
+        error,
+        cwd,
+        raw,
+        unknownMessage: (subcommand, available) => `Unknown state subcommand: "${subcommand}". Available: ${available.join(', ')}`,
+        handlers: {
+            load: () => state.cmdStateLoad(cwd, raw),
+            json: () => state.cmdStateJson(cwd, raw),
+            get: () => state.cmdStateGet(cwd, args[2], raw),
+            update: () => state.cmdStateUpdate(cwd, args[2], args[3]),
+            patch: () => {
+                const patches = {};
+                if (args.length === 3 && typeof args[2] === 'string' && args[2].trim().startsWith('{')) {
+                    let parsed;
+                    try {
+                        parsed = JSON.parse(args[2]);
+                    }
+                    catch (err) {
+                        error(`state patch: invalid JSON object: ${err.message}`);
+                        return;
+                    }
+                    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                        error('state patch: JSON input must be an object of field/value pairs.');
+                        return;
+                    }
+                    for (const [key, value] of Object.entries(parsed)) {
+                        if (key && value !== undefined) {
+                            // eslint-disable-next-line @typescript-eslint/no-base-to-string
+                            patches[key] = String(value);
+                        }
+                    }
+                }
+                else {
+                    for (let i = 2; i < args.length; i += 2) {
+                        const key = args[i].replace(/^--/, '');
+                        const value = args[i + 1];
+                        if (key && value !== undefined) {
+                            patches[key] = value;
+                        }
+                    }
+                }
+                state.cmdStatePatch(cwd, patches, raw);
+            },
+            'advance-plan': () => state.cmdStateAdvancePlan(cwd, raw),
+            'record-metric': () => {
+                const a = (0, command_arg_projection_cjs_1.parseNamedArgs)(args, ['phase', 'plan', 'duration', 'tasks', 'files']);
+                state.cmdStateRecordMetric(cwd, {
+                    phase: strArg(a, 'phase'),
+                    plan: strArg(a, 'plan'),
+                    duration: strArg(a, 'duration'),
+                    tasks: strArg(a, 'tasks'),
+                    files: strArg(a, 'files'),
+                }, raw);
+            },
+            'update-progress': () => state.cmdStateUpdateProgress(cwd, raw),
+            'add-decision': () => {
+                const a = (0, command_arg_projection_cjs_1.parseNamedArgs)(args, ['phase', 'summary', 'summary-file', 'rationale', 'rationale-file']);
+                state.cmdStateAddDecision(cwd, {
+                    phase: strArg(a, 'phase'),
+                    summary: strArg(a, 'summary'),
+                    summary_file: strArg(a, 'summary-file'),
+                    rationale: strArg(a, 'rationale') || '',
+                    rationale_file: strArg(a, 'rationale-file'),
+                }, raw);
+            },
+            'add-blocker': () => {
+                const a = (0, command_arg_projection_cjs_1.parseNamedArgs)(args, ['text', 'text-file']);
+                state.cmdStateAddBlocker(cwd, { text: strArg(a, 'text'), text_file: strArg(a, 'text-file') }, raw);
+            },
+            'add-roadmap-evolution': () => {
+                const a = (0, command_arg_projection_cjs_1.parseNamedArgs)(args, ['phase', 'action', 'after', 'note', 'note-file'], ['urgent']);
+                state.cmdStateAddRoadmapEvolution(cwd, {
+                    phase: strArg(a, 'phase'),
+                    action: strArg(a, 'action'),
+                    after: strArg(a, 'after'),
+                    note: strArg(a, 'note'),
+                    note_file: strArg(a, 'note-file'),
+                    urgent: a['urgent'] === true,
+                }, raw);
+            },
+            'resolve-blocker': () => state.cmdStateResolveBlocker(cwd, strArg((0, command_arg_projection_cjs_1.parseNamedArgs)(args, ['text']), 'text'), raw),
+            'record-session': () => {
+                const a = (0, command_arg_projection_cjs_1.parseNamedArgs)(args, ['stopped-at', 'resume-file']);
+                // Pass resume_file as-is (undefined when --resume-file was not provided) so
+                // cmdStateRecordSession can distinguish "caller explicitly passed a value" from
+                // "option was not supplied" and apply the template-default-only replacement guard.
+                state.cmdStateRecordSession(cwd, { stopped_at: strArg(a, 'stopped-at'), resume_file: strArg(a, 'resume-file') }, raw);
+            },
+            'begin-phase': () => {
+                const a = (0, command_arg_projection_cjs_1.parseNamedArgs)(args, ['phase', 'name', 'plans']);
+                state.cmdStateBeginPhase(cwd, strArg(a, 'phase'), strArg(a, 'name'), parsePlans(strArg(a, 'plans')), raw);
+            },
+            'signal-waiting': () => {
+                const a = (0, command_arg_projection_cjs_1.parseNamedArgs)(args, ['type', 'question', 'options', 'phase']);
+                state.cmdSignalWaiting(cwd, strArg(a, 'type'), strArg(a, 'question'), strArg(a, 'options'), strArg(a, 'phase'), raw);
+            },
+            'signal-resume': () => state.cmdSignalResume(cwd, raw),
+            'planned-phase': () => {
+                const a = (0, command_arg_projection_cjs_1.parseNamedArgs)(args, ['phase', 'name', 'plans']);
+                state.cmdStatePlannedPhase(cwd, strArg(a, 'phase'), parsePlans(strArg(a, 'plans')), raw);
+            },
+            validate: () => state.cmdStateValidate(cwd, raw),
+            sync: () => {
+                const a = (0, command_arg_projection_cjs_1.parseNamedArgs)(args, [], ['verify']);
+                state.cmdStateSync(cwd, { verify: a['verify'] }, raw);
+            },
+            prune: () => {
+                const a = (0, command_arg_projection_cjs_1.parseNamedArgs)(args, ['keep-recent'], ['dry-run']);
+                state.cmdStatePrune(cwd, { keepRecent: strArg(a, 'keep-recent') || '3', dryRun: a['dry-run'] === true }, raw);
+            },
+            // complete-phase: CJS-only — no SDK counterpart.
+            'complete-phase': () => {
+                const a = (0, command_arg_projection_cjs_1.parseNamedArgs)(args, ['phase']);
+                state.cmdStateCompletePhase(cwd, raw, strArg(a, 'phase') || args[2]);
+            },
+            'milestone-switch': () => {
+                const a = (0, command_arg_projection_cjs_1.parseNamedArgs)(args, ['milestone', 'name']);
+                state.cmdStateMilestoneSwitch(cwd, strArg(a, 'milestone'), strArg(a, 'name'), raw);
+            },
+        },
+    });
+}
+module.exports = {
+    routeStateCommand,
+};
