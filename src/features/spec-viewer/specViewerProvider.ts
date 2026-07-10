@@ -1055,7 +1055,7 @@ export class SpecViewerProvider {
         // progression reconstructed from the step output files on disk, so the
         // forward button lights up. No-op for built-in / capturing workflows.
         specCtx = synthesizeCustomProgress(specCtx, wfSteps, (s) =>
-          stepHasOutput(specDirectory, s)
+          stepHasOutput(specDirectory, s, wfSteps)
         );
         const active: StepName = STEP_NAMES.includes(specCtx.currentStep as StepName)
           ? (specCtx.currentStep as StepName)

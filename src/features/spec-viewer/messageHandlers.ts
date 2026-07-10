@@ -331,7 +331,7 @@ async function handleApprove(
   const ctx = synthesizeCustomProgress(
     readSpecContextSync(specDirectory),
     steps,
-    (s) => stepHasOutput(specDirectory, s),
+    (s) => stepHasOutput(specDirectory, s, steps),
   );
 
   // Dispatch routes off ctx.currentStep so a past stepper tab can't

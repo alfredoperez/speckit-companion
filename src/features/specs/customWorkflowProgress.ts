@@ -33,13 +33,61 @@ export function isCustomWorkflow(steps: WorkflowStepConfig[] | undefined): boole
     return steps.some(s => !s.actionOnly && !STEP_NAMES.includes(s.name as StepName));
 }
 
+const CORE_DOCS = ['spec.md', 'plan.md', 'tasks.md'];
+
+/**
+ * Every `.md` in the spec dir (recursively, hidden dirs skipped) that no step
+ * claims as its own file and isn't a lifecycle core doc. This is the same
+ * "related docs" set the Spec Explorer computes — the files a step marked
+ * `includeRelatedDocs` produces when its output doesn't match a fixed name
+ * (GSD's `gsd-plan-phase` writes `01-01-PLAN.md`, not `plan.md`).
+ */
+function relatedDocsPresent(specDir: string, allSteps: WorkflowStepConfig[]): boolean {
+    const claimed = new Set<string>();
+    for (const s of allSteps) {
+        claimed.add(getStepFile(s));
+        for (const f of s.subFiles ?? []) claimed.add(f);
+    }
+    let found = false;
+    const scan = (dir: string, rel: string): void => {
+        let entries: fs.Dirent[];
+        try {
+            entries = fs.readdirSync(dir, { withFileTypes: true });
+        } catch { return; }
+        for (const e of entries) {
+            if (found) return;
+            if (e.name.startsWith('.')) continue;
+            const entryRel = rel ? `${rel}/${e.name}` : e.name;
+            if (e.isDirectory()) {
+                scan(path.join(dir, e.name), entryRel);
+            } else if (e.isFile() && e.name.endsWith('.md')) {
+                if (!rel && (CORE_DOCS.includes(e.name) || claimed.has(e.name))) continue;
+                if (claimed.has(entryRel)) continue;
+                found = true;
+                return;
+            }
+        }
+    };
+    scan(specDir, '');
+    return found;
+}
+
 /**
  * Has this step produced its output on disk? Mirrors the existence rules the
  * Spec Explorer already uses: the step's own `file`, any explicit `subFiles`,
- * or any `.md` under its `subDir` (a tickets step's `issues/NN-*.md`, for instance).
+ * any `.md` under its `subDir` (a tickets step's `issues/NN-*.md`), or — when the
+ * step is marked `includeRelatedDocs` — any related `.md` in the spec dir that no
+ * step claims (GSD's plan phase writes `01-01-PLAN.md`, not `plan.md`).
  * `actionOnly` steps (no output file, e.g. implement) always read false.
+ *
+ * `allSteps` is needed only to resolve related-doc ownership; it may be omitted
+ * for the file/subFile/subDir checks.
  */
-export function stepHasOutput(specDir: string, step: WorkflowStepConfig): boolean {
+export function stepHasOutput(
+    specDir: string,
+    step: WorkflowStepConfig,
+    allSteps?: WorkflowStepConfig[]
+): boolean {
     if (step.actionOnly) return false;
     try {
         if (fs.existsSync(path.join(specDir, getStepFile(step)))) return true;
@@ -60,6 +108,9 @@ export function stepHasOutput(specDir: string, step: WorkflowStepConfig): boolea
                 }
             }
         } catch { /* skip */ }
+    }
+    if (step.includeRelatedDocs && allSteps && relatedDocsPresent(specDir, allSteps)) {
+        return true;
     }
     return false;
 }

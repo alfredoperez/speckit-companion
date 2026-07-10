@@ -1,6 +1,10 @@
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import {
     isCustomWorkflow,
     synthesizeCustomProgress,
+    stepHasOutput,
 } from '../customWorkflowProgress';
 import { getFooterActions } from '../../spec-viewer/footerActions';
 import { FooterActionIds } from '../../../core/constants';
@@ -113,5 +117,44 @@ describe('synthesizeCustomProgress', () => {
 
     it('passes null through', () => {
         expect(synthesizeCustomProgress(null, TICKET_WORKFLOW_STEPS, () => true)).toBeNull();
+    });
+});
+
+describe('stepHasOutput', () => {
+    // GSD-shaped workflow: the plan step names no `file` and relies on
+    // includeRelatedDocs, because `gsd-plan-phase` writes `NN-NN-PLAN.md`.
+    const GSD_STEPS: WorkflowStepConfig[] = [
+        { name: 'discuss', command: 'gsd-discuss-phase', actionOnly: true },
+        { name: 'plan', command: 'gsd-plan-phase', includeRelatedDocs: true },
+        { name: 'execute', command: 'superpowers-execute', actionOnly: true },
+        { name: 'verify', command: 'gsd-verify-work', actionOnly: true },
+    ];
+    let dir: string;
+    beforeEach(() => {
+        dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-'));
+    });
+    afterEach(() => {
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    const plan = GSD_STEPS[1];
+
+    it('is false when no related doc exists yet (only ctx + steering present)', () => {
+        expect(stepHasOutput(dir, plan, GSD_STEPS)).toBe(false);
+    });
+
+    it('counts a related-doc output that matches no fixed filename', () => {
+        fs.writeFileSync(path.join(dir, '01-01-PLAN.md'), '# plan');
+        expect(stepHasOutput(dir, plan, GSD_STEPS)).toBe(true);
+    });
+
+    it('ignores lifecycle core docs when deciding related-doc presence', () => {
+        fs.writeFileSync(path.join(dir, 'spec.md'), '# spec');
+        expect(stepHasOutput(dir, plan, GSD_STEPS)).toBe(false);
+    });
+
+    it('needs allSteps to resolve related-doc ownership', () => {
+        fs.writeFileSync(path.join(dir, '01-01-PLAN.md'), '# plan');
+        expect(stepHasOutput(dir, plan)).toBe(false);
     });
 });

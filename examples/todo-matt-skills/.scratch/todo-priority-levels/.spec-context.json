@@ -80,5 +80,10 @@
         "Priority sorting describe blocks)"
       ]
     }
+  },
+  "step_summaries": {
+    "implement": {
+      "summary": "Added priority levels (low/medium/high) to todos: add-form selector, colored badges, high-to-low display sort with stable same-priority order, and legacy-todo normalization to medium; both tickets closed with passing App-level RTL tests and a clean typecheck."
+    }
   }
 }
