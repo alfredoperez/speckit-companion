@@ -8,6 +8,8 @@ import { QwenCliProvider } from './qwenCliProvider';
 import { OpenCodeProvider } from './openCodeProvider';
 import { IdeChatProvider } from './ideChatProvider';
 import { ClaudePanelProvider } from './claudePanelProvider';
+import { WibeyCliProvider } from './wibeyCliProvider';
+import { WibeyPanelProvider } from './wibeyPanelProvider';
 import { AIProviders } from '../core/constants';
 
 type ProviderConstructor = (
@@ -24,6 +26,8 @@ const PROVIDER_CONSTRUCTORS: Record<AIProviderType, ProviderConstructor> = {
     [AIProviders.OPENCODE]: (ctx, out) => new OpenCodeProvider(ctx, out),
     [AIProviders.IDE_CHAT]: (ctx, out) => new IdeChatProvider(ctx, out),
     [AIProviders.CLAUDE_VSCODE]: (ctx, out) => new ClaudePanelProvider(ctx, out),
+    [AIProviders.WIBEY]: (ctx, out) => new WibeyCliProvider(ctx, out),
+    [AIProviders.WIBEY_VSCODE]: (ctx, out) => new WibeyPanelProvider(ctx, out),
 };
 
 /**

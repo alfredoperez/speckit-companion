@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "VS Code companion for GitHub SpecKit - spec-driven development with AI assistants, from spec-first to spec-anchored with living specs",
-  "version": "0.27.0",
+  "version": "0.26.0",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",
@@ -821,7 +821,9 @@
               "codex",
               "qwen",
               "opencode",
-              "ide-chat"
+              "ide-chat",
+              "wibey",
+              "wibey-vscode"
             ],
             "enumItemLabels": [
               "Claude Code",
@@ -831,7 +833,9 @@
               "Codex CLI",
               "Qwen Code",
               "OpenCode",
-              "IDE Chat (Copilot · Cursor · Windsurf)"
+              "IDE Chat (Copilot · Cursor · Windsurf)",
+              "Wibey CLI",
+              "Wibey (VS Code)"
             ],
             "enumDescriptions": [
               "Claude Code - Full feature support (steering, agents, skills, hooks)",
@@ -841,7 +845,9 @@
               "Codex CLI - Steering and skills support",
               "Qwen Code - Steering support",
               "OpenCode - Steering and agents support (AGENTS.md)",
-              "IDE Chat - Routes prompts to the host editor's built-in AI chat (Copilot / Cursor / Windsurf)"
+              "IDE Chat - Routes prompts to the host editor's built-in AI chat (Copilot / Cursor / Windsurf)",
+              "Wibey CLI - Walmart's built-in AI coding assistant (dispatches SpecKit commands to the wibey CLI in a VS Code terminal)",
+              "Wibey (VS Code) - Opens the Wibey chat panel and pre-fills the command (uses wibey.sendPrompt when available, clipboard fallback otherwise)"
             ],
             "scope": "machine",
             "order": 2,
