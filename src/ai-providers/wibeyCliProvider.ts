@@ -20,9 +20,9 @@ import { CliTerminalProvider } from './cliTerminalProvider';
  * Permission mode is managed via `~/.wibey/settings.json` (`bypassPermissions`)
  * — there is no CLI flag equivalent, so `autoApproveFlag` is `''`.
  *
- * NOTE — Phase 2: A `WibeyPanelProvider` for the `wibey-vscode` key is
- * deferred until `genaica/wibey-vscode-extension` exposes a
- * `wibey.sendPrompt(text: string)` command.
+ * NOTE: The `wibey-vscode` provider is implemented by `WibeyPanelProvider` (see wibeyPanelProvider.ts);
+ * it progressively enhances to `wibey.sendPrompt(text)`/URI dispatch when available and otherwise falls back
+ * to clipboard + `wibey.openChat`.
  */
 export class WibeyCliProvider extends CliTerminalProvider {
     public readonly name = 'Wibey CLI';
