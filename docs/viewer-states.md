@@ -113,6 +113,20 @@
 > `completedAt` is set — at `implemented` the spec-scope
 > `Mark Completed` is the right surface, not `Approve`.
 >
+> **Rollback recovery (#414)**: "a later step started" is judged by
+> `history[]` *order*, not by "ever started". When an interrupted run
+> leaves a dangling step start (e.g. implement dispatched, AI died) and
+> the user forces an earlier status via the sidebar gear, the forced
+> boundary becomes the newest step-level entry — the stale start now
+> precedes it, so it no longer suppresses `Approve` and the forward
+> button (e.g. **Implement**) comes back. Derivation follows the same
+> rule: a rolled-back attempt that never completed is dropped from
+> `stepHistory` (its tab reads not-started, no phantom pulse, no
+> back-filled end time), while a step that genuinely completed before
+> the rollback keeps its own completion. The interrupted attempt stays
+> in the append-only `history[]` for the activity feed; recovery never
+> requires deleting `.spec-context.json`.
+>
 > **In-flight indicator consolidated onto the step tab (#277 Child 4)**:
 > There is no longer a "Generating…" footer pill. The single source of
 > in-flight motion is the **spinning step tab**. While the current step
@@ -258,6 +272,8 @@ footer always reflects the true workflow stage, not the viewed tab). While a ste
 is in flight the `CatalogFooter` suppresses its forward-motion button and keeps
 `Regenerate` (plus any closure/refine actions); the moment `status` settles, the
 forward button reappears — it never leaves the action bar empty.
+
+A status recovered via the sidebar gear maps to the **same row** as its normal pause stage: forcing `ready-to-implement` after an interrupted implement run restores Approve → **Implement**, and forcing `planned` restores Approve → **Tasks** — the stale start left by the interrupted run does not suppress the forward button (#414, "Rollback recovery" above). The oracle rows in `footerMatrix.fixtures.ts` pin these recovered states alongside the normal ones.
 
 The source-tab **Refine** button (`✨ Refine (N)`) still appears dynamically
 when pending inline comments are collected. Each comment is persisted to

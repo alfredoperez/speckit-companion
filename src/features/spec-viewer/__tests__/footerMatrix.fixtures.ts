@@ -34,6 +34,10 @@ function start(step: StepName, from: StepName | null): HistoryEntry {
 function complete(step: StepName): HistoryEntry {
     return { step, substep: null, kind: 'complete', by: 'extension', at: T };
 }
+/** The gear's force-status rollback boundary (`forceStatus` → `setStepCompleted(step, 'user')`). */
+function forcedComplete(step: StepName): HistoryEntry {
+    return { step, substep: null, kind: 'complete', by: 'user', at: T };
+}
 
 /** Append-only history for every step up to (and including completion of) `through`. */
 function historyThrough(through: StepName): HistoryEntry[] {
@@ -90,6 +94,51 @@ export const FOOTER_MATRIX: FooterMatrixRow[] = [
         left: ['regenerate'],
         right: ['approve'],
         approveLabel: 'Implement',
+    },
+    {
+        // implement dispatched, run interrupted (dangling start), user forces
+        // ready-to-implement via the gear — the Implement button must come back.
+        name: 'ready-to-implement (recovered after interrupted implement)',
+        status: 'ready-to-implement',
+        currentStep: 'tasks',
+        history: [...historyThrough('tasks'), start('implement', 'tasks'), forcedComplete('tasks')],
+        left: ['regenerate'],
+        right: ['approve'],
+        approveLabel: 'Implement',
+    },
+    {
+        name: 'planned (recovered after interrupted implement)',
+        status: 'planned',
+        currentStep: 'plan',
+        history: [...historyThrough('tasks'), start('implement', 'tasks'), forcedComplete('plan')],
+        left: ['regenerate'],
+        right: ['approve'],
+        approveLabel: 'Tasks',
+    },
+    {
+        name: 'ready-to-implement (recovered twice after repeated interruptions)',
+        status: 'ready-to-implement',
+        currentStep: 'tasks',
+        history: [
+            ...historyThrough('tasks'),
+            start('implement', 'tasks'),
+            forcedComplete('tasks'),
+            start('implement', 'tasks'),
+            forcedComplete('tasks'),
+        ],
+        left: ['regenerate'],
+        right: ['approve'],
+        approveLabel: 'Implement',
+    },
+    {
+        // Guard rail: a LATER step genuinely ahead (its start follows this step's
+        // last boundary — no rollback in between) must still hide Approve.
+        name: 'tasks tab while implement is genuinely ahead (stale currentStep)',
+        status: 'ready-to-implement',
+        currentStep: 'tasks',
+        history: [...historyThrough('tasks'), start('implement', 'tasks')],
+        left: ['regenerate'],
+        right: [],
     },
     {
         name: 'implemented',
