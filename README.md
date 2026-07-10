@@ -20,9 +20,9 @@ A spec workspace that turns AI-assisted, spec-driven development into something 
 
 ## Recently Shipped
 
+- **v0.26.1** The Implement button comes back after an interrupted run: forcing a status with the sidebar gear now genuinely rewinds the workflow — the forward button reappears, the interrupted step stops falsely showing as completed, and no one has to delete `.spec-context.json` to recover
 - **v0.26.0** The Activity panel became a **brief**: a hero with honest timing and stat chips, the plan's intent/context/out-of-scope always visible, and tabs for decisions (with the rejected alternatives), work, proof (checks + per-requirement coverage), and notes · living specs render readably in the viewer and the Spec Explorer can run **drift/coverage/adopt** with per-row health · stock-workflow runs stop sticking at "specifying" and now capture the full reasoning trail · colorful sidebar icons with real provider logos · recover any stranded spec with **Set status…** · a Sponsor link if Companion saves you time
 - **v0.25.0** Specs render as rich, structured pages — requirements as labeled rows, acceptance scenarios as flowing Given/When/Then sentences, key entities and research decisions as cards, phased tasks, and the plan's Technical Context + Constitution inline · a cleaner, more readable viewer (bigger type, clearer headings, a refreshed step nav, a vertical Activity timeline, calmer badges) · an **Auto** button builds the whole spec hands-off from Create Spec
-- **v0.24.0** Stock specs advance past Specify on their own (no more stuck "specifying") · one switch turns on the whole SpecKit Companion experience and a single workflow choice replaces the old beta toggles · the Completed group lists only specs you've actually finished, with a sidebar **Mark as Completed** action and a distinct icon for implemented-but-unconfirmed · viewer polish — the footer follows the spec's own workflow, task checkboxes align at any font size, the install banner stays readable in narrow panels, faded Create-Spec placeholder · opt-in PII-free telemetry
 - [Full changelog →](./CHANGELOG.md)
 
 ## Why it exists
