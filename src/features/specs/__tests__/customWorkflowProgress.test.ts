@@ -46,6 +46,15 @@ describe('isCustomWorkflow', () => {
     it('is false for an all-lifecycle workflow', () => {
         expect(isCustomWorkflow(LIFECYCLE_STEPS)).toBe(false);
     });
+    it('is true when the only navigable step reuses a lifecycle name but action-only siblings are custom (GSD: discuss/plan/execute/verify)', () => {
+        const gsd: WorkflowStepConfig[] = [
+            { name: 'discuss', command: 'gsd-discuss-phase', actionOnly: true },
+            { name: 'plan', command: 'gsd-plan-phase', includeRelatedDocs: true },
+            { name: 'execute', command: 'superpowers-execute', actionOnly: true },
+            { name: 'verify', command: 'gsd-verify-work', actionOnly: true },
+        ];
+        expect(isCustomWorkflow(gsd)).toBe(true);
+    });
     it('is false for undefined', () => {
         expect(isCustomWorkflow(undefined)).toBe(false);
     });

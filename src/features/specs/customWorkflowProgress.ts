@@ -24,13 +24,18 @@ import type { WorkflowStepConfig } from '../workflows/types';
 import { getStepFile } from '../workflows/workflowManager';
 
 /**
- * A workflow is "custom" for progression purposes when it has a navigable step
- * whose name isn't one of the spec-kit lifecycle steps. Built-in workflows use
- * only lifecycle names and are left entirely to the capture-context machinery.
+ * A workflow is "custom" for progression purposes when ANY of its steps —
+ * navigable or action-only — carries a name outside the spec-kit lifecycle set.
+ * Action-only steps count too: a workflow like GSD (discuss → plan → execute →
+ * verify) has custom action-only steps (discuss/execute/verify) but its one
+ * navigable step reuses the lifecycle name `plan`. Looking only at navigable
+ * steps would misread that as a built-in workflow and strand its progression.
+ * Built-in workflows use lifecycle names for every step, so they stay non-custom
+ * and are left entirely to the capture-context machinery.
  */
 export function isCustomWorkflow(steps: WorkflowStepConfig[] | undefined): boolean {
     if (!steps) return false;
-    return steps.some(s => !s.actionOnly && !STEP_NAMES.includes(s.name as StepName));
+    return steps.some(s => !STEP_NAMES.includes(s.name as StepName));
 }
 
 const CORE_DOCS = ['spec.md', 'plan.md', 'tasks.md'];

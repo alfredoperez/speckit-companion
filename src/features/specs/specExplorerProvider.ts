@@ -579,6 +579,10 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 }
             }
 
+            // Whether the step's own file is on disk — decides if the row itself
+            // is clickable (a related-docs-only step has no main file to open).
+            const hasMainFile = status !== 'empty';
+
             // Determine sub-files for this step
             const subFiles = this.getStepSubFiles(specFullPath, step);
 
@@ -592,6 +596,14 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             if (step.includeRelatedDocs) {
                 // Attach non-step related docs to this step per workflow config
                 relatedForStep = allRelatedDocs.filter(d => !stepFiles.has(d) && !allSubFiles.has(d));
+            }
+
+            // A related-docs step whose output isn't a fixed filename (GSD's plan
+            // phase writes `01-01-PLAN.md`, not `plan.md`) is still created once
+            // those docs exist — otherwise the row reads "not created" while its
+            // own output hangs beneath it.
+            if (status === 'empty' && relatedForStep.length > 0) {
+                status = 'complete';
             }
 
             const childDocs = [...subFiles, ...relatedForStep];
@@ -608,7 +620,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 this.context,
                 specName,
                 step.name,
-                status === 'empty' ? undefined : createOpenCommand(resolvedFilePath, `Open ${label}`),
+                hasMainFile ? createOpenCommand(resolvedFilePath, `Open ${label}`) : undefined,
                 relativeFilePath,
                 specPath,
                 status,
