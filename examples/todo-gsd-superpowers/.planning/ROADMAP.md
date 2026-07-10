@@ -24,7 +24,8 @@ This is a single-feature slice on an existing todo app: add a priority level (lo
   2. A newly created todo appears with medium priority by default — PRIO-02
   3. The todo list is always ordered high-to-low priority (high first, low last) — PRIO-04
   4. Existing todo behaviors (add, toggle, delete, clear-completed, localStorage persistence) continue to work correctly, confirmed by updated tests across the store, types, and components — PRIO-05
-**Plans**: TBD
+**Plans**: 1 plan
+- [ ] 01-01-PLAN.md — Priority type + Todo.priority field, store default (medium) + high-to-low sort, PriorityBadge, AddTodo priority selector, updated store/component/integration tests
 **UI hint**: yes
 
 ## Progress
@@ -34,4 +35,4 @@ Single phase: 1
 
 | Phase | Plans Complete | Status | Completed |
 |-------|-----------------|--------|-----------|
-| 1. Priority Levels | 0/TBD | Not started | - |
+| 1. Priority Levels | 0/1 | Not started | - |
