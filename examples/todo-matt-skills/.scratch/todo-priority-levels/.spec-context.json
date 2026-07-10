@@ -4,6 +4,15 @@
   "branch": "todo-priority-levels",
   "selectedAt": "2026-07-10T19:39:23.096Z",
   "currentStep": "specify",
-  "status": "draft",
-  "history": []
+  "status": "specified",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-10T20:15:57.383Z"
+    }
+  ],
+  "telemetryInstanceId": "40c4be6b-5329-4586-bf4a-de54798cf4b4"
 }
