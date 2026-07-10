@@ -1,11 +1,11 @@
 import { createContext, useContext, useEffect, useReducer, ReactNode } from 'react'
-import { Todo } from '../types'
+import { Priority, Todo } from '../types'
 import { load, save } from '../lib/storage'
 
 const STORAGE_KEY = 'todos'
 
 type Action =
-  | { type: 'add'; text: string }
+  | { type: 'add'; text: string; priority?: Priority }
   | { type: 'toggle'; id: string }
   | { type: 'delete'; id: string }
   | { type: 'clearCompleted' }
@@ -15,7 +15,13 @@ export function todosReducer(state: Todo[], action: Action): Todo[] {
     case 'add':
       return [
         ...state,
-        { id: crypto.randomUUID(), text: action.text, completed: false, createdAt: new Date().toISOString() },
+        {
+          id: crypto.randomUUID(),
+          text: action.text,
+          completed: false,
+          priority: action.priority ?? 'medium',
+          createdAt: new Date().toISOString(),
+        },
       ]
     case 'toggle':
       return state.map((t) => (t.id === action.id ? { ...t, completed: !t.completed } : t))
@@ -30,7 +36,7 @@ export function todosReducer(state: Todo[], action: Action): Todo[] {
 
 interface TodosContextValue {
   todos: Todo[]
-  addTodo: (text: string) => void
+  addTodo: (text: string, priority?: Priority) => void
   toggleTodo: (id: string) => void
   deleteTodo: (id: string) => void
   clearCompleted: () => void
@@ -38,8 +44,13 @@ interface TodosContextValue {
 
 const TodosContext = createContext<TodosContextValue | null>(null)
 
+// Todos persisted before priorities existed lack the field — treat them as medium.
+function normalizeTodo(todo: Todo): Todo {
+  return { ...todo, priority: todo.priority ?? 'medium' }
+}
+
 export function TodosProvider({ children }: { children: ReactNode }) {
-  const [todos, dispatch] = useReducer(todosReducer, [], () => load<Todo[]>(STORAGE_KEY, []))
+  const [todos, dispatch] = useReducer(todosReducer, [], () => load<Todo[]>(STORAGE_KEY, []).map(normalizeTodo))
 
   useEffect(() => {
     save(STORAGE_KEY, todos)
@@ -47,7 +58,7 @@ export function TodosProvider({ children }: { children: ReactNode }) {
 
   const value: TodosContextValue = {
     todos,
-    addTodo: (text) => dispatch({ type: 'add', text }),
+    addTodo: (text, priority) => dispatch({ type: 'add', text, priority }),
     toggleTodo: (id) => dispatch({ type: 'toggle', id }),
     deleteTodo: (id) => dispatch({ type: 'delete', id }),
     clearCompleted: () => dispatch({ type: 'clearCompleted' }),

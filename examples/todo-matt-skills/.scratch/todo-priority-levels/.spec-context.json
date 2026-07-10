@@ -3,8 +3,8 @@
   "specName": "todo-priority-levels",
   "branch": "todo-priority-levels",
   "selectedAt": "2026-07-10T19:39:23.096Z",
-  "currentStep": "specify",
-  "status": "specified",
+  "currentStep": "implement",
+  "status": "implementing",
   "history": [
     {
       "step": "specify",
@@ -12,7 +12,73 @@
       "kind": "complete",
       "by": "extension",
       "at": "2026-07-10T20:15:57.383Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-10T21:10:11.531Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "01-set-and-show-priority",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-10T21:13:48.696Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "02-sort-by-priority",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-10T21:15:18.448Z"
     }
   ],
-  "telemetryInstanceId": "40c4be6b-5329-4586-bf4a-de54798cf4b4"
+  "telemetryInstanceId": "40c4be6b-5329-4586-bf4a-de54798cf4b4",
+  "verified": [
+    {
+      "what": "Ticket 01 priority set/show/persist/legacy tests",
+      "command": "npx tsc --noEmit && npx vitest run src/App.test.tsx",
+      "result": "typecheck clean; 13/13 App tests pass incl. 6 new priority tests"
+    },
+    {
+      "what": "Ticket 02 priority sort helper + reorder-after-actions tests",
+      "command": "npx tsc --noEmit && npx vitest run",
+      "result": "typecheck clean; full suite 24/24 passing"
+    }
+  ],
+  "currentTask": "02-sort-by-priority",
+  "task_summaries": {
+    "01-set-and-show-priority": {
+      "status": "DONE",
+      "did": "Added a required priority field to todos with an add-form selector defaulting to Medium, colored badges per level, localStorage persistence, and medium-normalization for pre-feature todos.",
+      "files": [
+        "src/types.ts",
+        "src/store/todos.tsx",
+        "src/components/AddTodo.tsx",
+        "src/components/TodoItem.tsx",
+        "src/App.test.tsx"
+      ]
+    },
+    "02-sort-by-priority": {
+      "status": "DONE",
+      "did": "Added a pure sortByPriority helper (stable high->medium->low) applied once at render in TodosPage, leaving the reducer's stored insertion order untouched.",
+      "files": [
+        "src/lib/sortByPriority.ts",
+        "src/pages/TodosPage.tsx",
+        "src/App.test.tsx"
+      ]
+    }
+  },
+  "coverage": {
+    "FR-priority": {
+      "tests": [
+        "src/App.test.tsx (Priority badges",
+        "Priority sorting describe blocks)"
+      ]
+    }
+  }
 }

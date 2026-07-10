@@ -1,9 +1,11 @@
 import { useTodos } from '../store/todos'
 import { AddTodo } from '../components/AddTodo'
 import { TodoList } from '../components/TodoList'
+import { sortByPriority } from '../lib/sortByPriority'
 
 export function TodosPage() {
   const { todos, addTodo, toggleTodo, deleteTodo, clearCompleted } = useTodos()
+  const sortedTodos = sortByPriority(todos)
   const hasCompleted = todos.some((t) => t.completed)
   return (
     <section>
@@ -17,7 +19,7 @@ export function TodosPage() {
           Clear completed
         </button>
       </div>
-      <TodoList todos={todos} onToggle={toggleTodo} onDelete={deleteTodo} />
+      <TodoList todos={sortedTodos} onToggle={toggleTodo} onDelete={deleteTodo} />
     </section>
   )
 }

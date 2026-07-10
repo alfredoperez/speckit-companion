@@ -4,12 +4,12 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `Todo` gains a required `priority` field: `'low' | 'medium' | 'high'`.
-- [ ] The add action accepts an optional priority and defaults to `'medium'` when omitted, so existing callers keep working.
-- [ ] The add form has a priority selector (native `<select>`, matching the app's inline-style / plain-HTML approach) defaulting to Medium, and passes the chosen value through when adding.
-- [ ] Each todo renders a small colored badge for its priority next to the text, using the existing inline-style pattern (no new CSS module/classes). Colors are visually distinct across the three levels (high warm, low cool).
-- [ ] Priority persists across reloads (localStorage round-trip).
-- [ ] Todos persisted before this feature (missing the `priority` key) load as `'medium'` and render a normal badge — no crash, no blank/unstyled badge. Normalization lives in the todos store, not in the generic storage helper.
-- [ ] App-level tests (RTL, driving the real UI) cover: adding without touching the selector yields a Medium badge; adding each of the three priorities shows the right badge; toggling and deleting don't change a todo's badge; priority survives an unmount/remount; a pre-feature todo seeded into localStorage (no `priority` key) renders with a Medium badge.
+- [x] `Todo` gains a required `priority` field: `'low' | 'medium' | 'high'`.
+- [x] The add action accepts an optional priority and defaults to `'medium'` when omitted, so existing callers keep working.
+- [x] The add form has a priority selector (native `<select>`, matching the app's inline-style / plain-HTML approach) defaulting to Medium, and passes the chosen value through when adding.
+- [x] Each todo renders a small colored badge for its priority next to the text, using the existing inline-style pattern (no new CSS module/classes). Colors are visually distinct across the three levels (high warm, low cool).
+- [x] Priority persists across reloads (localStorage round-trip).
+- [x] Todos persisted before this feature (missing the `priority` key) load as `'medium'` and render a normal badge — no crash, no blank/unstyled badge. Normalization lives in the todos store, not in the generic storage helper.
+- [x] App-level tests (RTL, driving the real UI) cover: adding without touching the selector yields a Medium badge; adding each of the three priorities shows the right badge; toggling and deleting don't change a todo's badge; priority survives an unmount/remount; a pre-feature todo seeded into localStorage (no `priority` key) renders with a Medium badge.
