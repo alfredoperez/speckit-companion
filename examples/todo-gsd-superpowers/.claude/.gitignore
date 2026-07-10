@@ -1,0 +1,8 @@
+# GSD local install payload — reproduce with:
+#   npx -y @opengsd/gsd-core@latest --local --claude
+# (see the example README). Only our own command wrappers are tracked.
+*
+!.gitignore
+!commands/
+commands/*
+!commands/superpowers-execute.md
