@@ -51,6 +51,7 @@ import { deriveChangeRoot } from "../../core/specDirectoryResolver";
 import { deriveSpecName } from "../specs/specContextManager";
 import { readSpecContext, SPEC_CONTEXT_FILENAME, SpecContextParseError } from "../specs/specContextReader";
 import { writeSpecContext } from "../specs/specContextWriter";
+import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
 import { deriveStepHistory } from "../specs/stepHistoryDerivation";
 import { backfillMinimalContext } from "../specs/specContextBackfill";
 import { resetMalformedContext } from "../specs/specContextReset";
@@ -934,10 +935,16 @@ export class SpecViewerProvider {
       let specCtx = await readSpecContext(specDirectory);
       if (specCtx) {
         specCtx = await reconcileAndPersist(specDirectory, specCtx, (m) => this.outputChannel.appendLine(m));
+        const wfSteps = await this.resolveWorkflowSteps(specDirectory);
+        // Custom workflows whose commands don't emit capture context get their
+        // progression reconstructed from the step output files on disk, so the
+        // forward button lights up. No-op for built-in / capturing workflows.
+        specCtx = synthesizeCustomProgress(specCtx, wfSteps, (s) =>
+          stepHasOutput(specDirectory, s)
+        );
         const active: StepName = STEP_NAMES.includes(specCtx.currentStep as StepName)
           ? (specCtx.currentStep as StepName)
-          : 'specify';
-        const wfSteps = await this.resolveWorkflowSteps(specDirectory);
+          : (specCtx.currentStep as StepName) || 'specify';
         const derivedVs = deriveViewerState(specCtx, active, wfSteps);
         // Living-specs content is filesystem-derived, so it's enriched here at
         // the provider seam rather than inside the pure derivation.

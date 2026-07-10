@@ -72,10 +72,29 @@ function isSpecDone(ctx: SpecContext): boolean {
  * final step (`implement`) has its `completedAt` — at that point the
  * spec-scope `Mark Completed` is the right surface, not Approve.
  */
+/**
+ * Ordered step names for the active workflow. Lifecycle steps always resolve
+ * against the canonical `STEP_NAMES` so the spec-kit / Companion paths are
+ * byte-for-byte unchanged. Only a genuinely custom step name (one not in
+ * `STEP_NAMES`, e.g. Matt Pocock's `tickets`) falls back to the custom
+ * workflow's own declared order so "is there a later step" is answered from
+ * the workflow, not the lifecycle.
+ */
+function stepOrder(
+    step: StepName,
+    workflowSteps: WorkflowStepConfig[] | undefined
+): string[] {
+    if (STEP_NAMES.includes(step) || !workflowSteps) {
+        return STEP_NAMES;
+    }
+    return workflowSteps.map(s => s.name);
+}
+
 function shouldShowApprove(
     ctx: SpecContext,
     step: StepName,
-    stepHistory: DerivedHistory
+    stepHistory: DerivedHistory,
+    workflowSteps?: WorkflowStepConfig[]
 ): boolean {
     // Implement step closure is owned by `Mark Completed` (gated on
     // `isSpecDone(ctx)`). Approve here would surface a duplicate
@@ -88,13 +107,14 @@ function shouldShowApprove(
     if (step !== ctx.currentStep) return false;
     const entry = stepHistory[step];
     if (!entry?.startedAt) return false;
-    const idx = STEP_NAMES.indexOf(step);
+    const order = stepOrder(step, workflowSteps);
+    const idx = order.indexOf(step);
     if (idx < 0) return false;
-    if (laterStepIsAhead(ctx, step, idx, stepHistory)) return false;
+    if (laterStepIsAhead(ctx, step, idx, stepHistory, order)) return false;
     // Step in flight → always show.
     if (!entry.completedAt) return true;
     // Step is done → only show if there's a later step left to dispatch.
-    return idx < STEP_NAMES.length - 1;
+    return idx < order.length - 1;
 }
 
 /**
@@ -109,12 +129,13 @@ function laterStepIsAhead(
     ctx: SpecContext,
     step: StepName,
     idx: number,
-    stepHistory: DerivedHistory
+    stepHistory: DerivedHistory,
+    order: string[] = STEP_NAMES
 ): boolean {
     const history = ctx.history ?? [];
     if (history.length === 0) {
-        for (let i = idx + 1; i < STEP_NAMES.length; i++) {
-            if (stepHistory[STEP_NAMES[i]]?.startedAt) return true;
+        for (let i = idx + 1; i < order.length; i++) {
+            if (stepHistory[order[i]]?.startedAt) return true;
         }
         return false;
     }
@@ -127,7 +148,7 @@ function laterStepIsAhead(
         }
     }
     for (let j = history.length - 1; j > lastOwnIdx; j--) {
-        const jIdx = STEP_NAMES.indexOf(history[j].step as StepName);
+        const jIdx = order.indexOf(history[j].step as string);
         if (jIdx > idx) return true;
     }
     return false;
@@ -194,9 +215,12 @@ export const FOOTER_ACTIONS: FooterAction[] = [
         label: 'Approve',
         scope: 'step',
         tooltip: 'Approve this step and continue',
-        visibleWhen: (ctx, step, stepHistory) => {
+        visibleWhen: (ctx, step, stepHistory, workflowSteps) => {
             if (isTerminal(ctx.status)) return false;
-            return shouldShowApprove(ctx, step, stepHistory);
+            return shouldShowApprove(
+                ctx, step, stepHistory,
+                workflowSteps as WorkflowStepConfig[] | undefined
+            );
         },
     },
 ];
@@ -207,7 +231,7 @@ export function getFooterActions(
     workflowSteps?: WorkflowStepConfig[],
     stepHistory: DerivedHistory = deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status)
 ): FooterAction[] {
-    const visible = FOOTER_ACTIONS.filter(a => a.visibleWhen(ctx, step, stepHistory));
+    const visible = FOOTER_ACTIONS.filter(a => a.visibleWhen(ctx, step, stepHistory, workflowSteps));
     return visible.map(a =>
         a.id === FooterActionIds.APPROVE
             ? { ...a, label: getApproveLabel(step, workflowSteps) }

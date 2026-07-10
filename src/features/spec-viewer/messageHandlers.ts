@@ -26,6 +26,7 @@ import {
   readSpecContextSync,
 } from "../specs/specContextReader";
 import { updateSpecContext } from "../specs/specContextWriter";
+import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
 import { resolveDispatchWithFallback } from "../specs/profileDispatch";
 import { lastEntryIsCompletionFor } from "../specs/historyHelpers";
 import {
@@ -321,9 +322,17 @@ async function handleApprove(
   const instance = deps.getInstance(specDirectory);
   if (!instance) return;
 
-  const ctx = readSpecContextSync(specDirectory);
   const steps = await deps.resolveWorkflowSteps();
   const navSteps = steps.filter((s) => !s.actionOnly);
+
+  // Custom workflows don't emit capture context, so ctx.currentStep is a stub
+  // stuck at "specify". Reconstruct the real position from the step output
+  // files so Approve dispatches the correct next command (no-op otherwise).
+  const ctx = synthesizeCustomProgress(
+    readSpecContextSync(specDirectory),
+    steps,
+    (s) => stepHasOutput(specDirectory, s),
+  );
 
   // Dispatch routes off ctx.currentStep so a past stepper tab can't
   // misdirect the action. Fall back to docType only when currentStep

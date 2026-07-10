@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.27.0] - 2026-07-10
+
+### Fixed
+
+- **The forward button now works for your own workflows too.** Bring-your-own workflows wired through `speckit.customWorkflows` (Matt Pocock's skills, GSD, anything that runs commands and writes markdown) never advanced in the viewer: after the first step, the button to run the next one simply never appeared, and the spec sat stuck at "specify." The reason was that a custom workflow's commands don't emit the capture context the built-in pipeline relies on, so the extension couldn't tell the run had progressed. Companion now reconstructs a custom workflow's position from the step output files on disk — the spec it wrote, the tickets folder it filled — so the forward button lights up and dispatches the right next command, step after step, exactly like the built-in flow. Built-in and context-emitting workflows are unaffected.
+
+### Examples
+
+- Added runnable demo projects under `examples/` for custom and mixed workflows (Matt Pocock skills, GSD × Superpowers) and for living specs in both the default folder and colocated next to the code, each on a full spec-kit + constitution + Companion base.
+
 ## [0.26.1] - 2026-07-10
 
 ### Fixed
