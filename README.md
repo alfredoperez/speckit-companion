@@ -9,6 +9,8 @@ The spec workspace for developers running AI agents through Spec-Driven Developm
 
 ![SpecKit Companion: Spec-driven development, visualized. Specify, Plan, Tasks, Done.](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/hero.jpg)
 
+**See it in motion:** a 38-second walkthrough of the spec viewer — one spec, every phase, rendered and navigable. [▶ Watch the walkthrough](./docs/media/walkthrough.mp4)
+
 ## What you get
 
 A spec workspace that turns AI-assisted, spec-driven development into something you can actually see and steer — without leaving VS Code:
