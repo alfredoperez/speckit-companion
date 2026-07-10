@@ -1,0 +1,259 @@
+{
+  "workflow": "speckit",
+  "specName": "implement button lost",
+  "branch": "393-implement-button-lost",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-10T09:48:39.255Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-10T09:54:20.501Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-10T09:54:20.588Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-10T09:54:20.673Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-10T09:54:20.759Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-10T09:54:20.843Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-10T10:00:18.793Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-10T10:03:00.035Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-10T10:03:00.098Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-10T10:04:48.452Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-10T10:04:48.518Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-10T10:05:53.934Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-10T10:07:05.021Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-10T10:07:05.111Z"
+    }
+  ],
+  "last_action": "all 6 tasks done — 1211/1211 tests pass, tsc clean",
+  "coverage": {
+    "FR-001": {
+      "title": "Forcing status back to a settled earlier stage restores that stage's forward-motion button",
+      "tests": [
+        "src/features/spec-viewer/__tests__/footerMatrix.test.ts::recovered rows"
+      ]
+    },
+    "FR-002": {
+      "title": "A rolled-back step's dangling start must not suppress the current step's forward button",
+      "tests": [
+        "src/features/spec-viewer/__tests__/footerMatrix.test.ts::recovered rows",
+        "src/features/spec-viewer/__tests__/stateDerivation.test.ts::rollback recovery (#414)"
+      ]
+    },
+    "FR-003": {
+      "title": "An interrupted step must not display as completed after a rollback",
+      "tests": [
+        "src/features/spec-viewer/__tests__/stateDerivation.test.ts::rollback recovery (#414)"
+      ]
+    },
+    "FR-004": {
+      "title": "Recovery works without deleting/hand-editing .spec-context.json; history stays append-only",
+      "tests": [
+        "src/features/spec-viewer/__tests__/stateDerivation.test.ts::rollback recovery (#414)"
+      ]
+    },
+    "FR-005": {
+      "title": "Normal forward flow unchanged: past tabs still hide the forward button when genuinely advanced",
+      "tests": [
+        "src/features/spec-viewer/__tests__/footerMatrix.test.ts::genuinely ahead row + full matrix"
+      ]
+    },
+    "FR-006": {
+      "title": "Re-dispatch after recovery records a fresh attempt distinguishable from the interrupted one",
+      "tests": [
+        "src/features/spec-viewer/__tests__/stateDerivation.test.ts::keeps a completed retry after recovery as completed"
+      ]
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 4,
+    "projectedTasks": 6,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "context": [
+    "area: src/features/spec-viewer/footerActions.ts (shouldShowApprove later-step check)",
+    "area: src/features/specs/stepHistoryDerivation.ts (deriveStepHistory back-fill)",
+    "area: src/features/specs/stepLifecycle.ts (forceStatus gear recovery, #347)",
+    "constraint: history[] is append-only — fix must live in derivation, not data rewrites",
+    "evidence: bug reproduced via throwaway jest test on main — footer showed only [regenerate], implement badge falsely completed"
+  ],
+  "intent": "Make the forward-motion (Implement) button recover after an interrupted run, so the gear force-status escape hatch actually works and nobody has to delete .spec-context.json",
+  "expectations": [
+    "No new recovery UI — the existing gear force-status stays the manual recovery surface",
+    "No migration or rewriting of stored .spec-context.json data",
+    "No change to the documented forward-flow button matrix for genuinely advanced specs"
+  ],
+  "currentTask": "T006",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added failing footer-matrix oracle rows for the #414 recovery: forced ready-to-implement, forced planned, and repeated interruptions",
+      "files": [
+        "src/features/spec-viewer/__tests__/footerMatrix.fixtures.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added failing rollback-recovery derivation tests: interrupted implement not completed, no back-filled end, no phantom pulse, retry-after-recovery honored",
+      "files": [
+        "src/features/spec-viewer/__tests__/stateDerivation.test.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "shouldShowApprove now derives the workflow frontier from history[] order — a rolled-back dangling start no longer strands the forward button",
+      "files": [
+        "src/features/spec-viewer/footerActions.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "deriveStepHistory no longer finalizes an interrupted step from an earlier step's rollback boundary; rolled-back attempts derive as not-started, trust flag follows the real close entry",
+      "files": [
+        "src/features/specs/stepHistoryDerivation.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Guard-rail tests: genuinely-ahead later step still hides Approve; re-running an earlier step keeps a completed later step completed; repeat interruption covered by the twice-recovered matrix row",
+      "files": [
+        "src/features/spec-viewer/__tests__/footerMatrix.fixtures.ts",
+        "src/features/spec-viewer/__tests__/stateDerivation.test.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Documented rollback recovery in the viewer state machine doc (Approve advance window + footer matrix note); full suite 1211/1211 green",
+      "files": [
+        "docs/viewer-states.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "Full unit suite incl. 10 new #414 regression/guard tests",
+      "command": "npx jest",
+      "result": "1211 passed, 0 failed"
+    },
+    {
+      "what": "TypeScript strict compile",
+      "command": "npx tsc --noEmit",
+      "result": "no errors"
+    },
+    {
+      "what": "Bug reproduced on main before fixing (footer showed only regenerate, implement badge falsely completed), same scenarios now pass",
+      "command": "npx jest src/features/spec-viewer",
+      "result": "182 passed"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Judge the workflow frontier by history[] array order (newest step-level entry wins)",
+      "why": "Array order is trustworthy even when AI-written timestamps are not; forceStatus already appends the realigning boundary",
+      "rejected": "Comparing timestamps across entries — unreliable for hand-typed AI times"
+    },
+    {
+      "decision": "Drop a rolled-back never-completed attempt from derived stepHistory entirely (reads not-started)",
+      "why": "Leaving it in-flight would fake a running pulse; back-filling an end fakes completion; the attempt stays in raw history[] for audit",
+      "rejected": "Adding an interrupted flag to StepHistoryEntry — would ripple through every renderer for the same outcome"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Task rows journaled during a rolled-back implement attempt disappear from the implement tab (the group is dropped); they remain in history[]/activity feed",
+      "step": "implement"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "Rollback-aware footer + derivation: forced status after an interrupted run restores the Implement button; interrupted attempts stop reading as completed"
+    }
+  }
+}

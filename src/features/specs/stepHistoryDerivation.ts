@@ -265,6 +265,8 @@ export function deriveStepHistory(
         const startedAt = g.transitions[0].at;
 
         let completedAt: string | null = null;
+        // The entry whose clock closed the span — drives `durationTrusted`.
+        let closeEntry: HistoryEntry | null = null;
         // A "completion" entry is one whose `from.step` matches its own
         // `step` — that's how setStepCompleted writes the close-boundary.
         // If the most recent entry for this step is a completion, the step
@@ -278,20 +280,35 @@ export function deriveStepHistory(
         const lastOwnIsCompletion = lastStepLevel?.kind === 'complete';
 
         if (g.nextStepFirstIdx !== -1) {
-            // A later step exists in transitions — that step's first transition
-            // is this step's real boundary. Index refers to the de-duplicated
-            // array that `groupStepsInOrder` walked.
-            completedAt = deduped[g.nextStepFirstIdx].at;
+            // Another step's transition follows this group — normally that is
+            // this step's real close boundary. But when that boundary belongs to
+            // an EARLIER step (a force-status rollback), it must not
+            // finalize this step: close at this step's own last completion, or —
+            // if the trailing attempt never completed — treat the attempt as
+            // rolled back and emit no entry at all (the step reads not-started).
+            const boundary = deduped[g.nextStepFirstIdx];
+            const gIdx = STEP_NAMES.indexOf(g.step as StepName);
+            const bIdx = STEP_NAMES.indexOf(boundary.step as StepName);
+            const rolledBack = gIdx >= 0 && bIdx >= 0 && bIdx < gIdx && isStepLevelEntry(boundary);
+            if (rolledBack) {
+                if (!lastOwnIsCompletion) continue;
+                closeEntry = lastStepLevel!;
+            } else {
+                closeEntry = boundary;
+            }
+            completedAt = closeEntry.at;
         } else if (lastOwnIsCompletion) {
             // No later step yet, but this step has a real completion entry —
             // honor it (covers `setStepCompleted` calls before the user has
             // clicked the next-phase button).
-            completedAt = lastStepLevel!.at;
+            closeEntry = lastStepLevel!;
+            completedAt = closeEntry.at;
         } else if (isLastSeen && isCurrent && isTerminal) {
             // Most recently seen step, currentStep matches, AND the spec is in
             // a terminal status → finalize to this step's last real transition
             // instead of leaving it in flight.
-            completedAt = g.transitions[g.transitions.length - 1].at;
+            closeEntry = g.transitions[g.transitions.length - 1];
+            completedAt = closeEntry.at;
         } else if (isLastSeen && isCurrent) {
             // Most recently seen step, and currentStep matches → in flight.
             completedAt = null;
@@ -299,7 +316,8 @@ export function deriveStepHistory(
             // Last seen step but we've already moved past it (currentStep
             // points elsewhere or is undefined). Best fallback: the last
             // transition for that step.
-            completedAt = g.transitions[g.transitions.length - 1].at;
+            closeEntry = g.transitions[g.transitions.length - 1];
+            completedAt = closeEntry.at;
         }
 
         const substeps = buildSubsteps(g.transitions, completedAt, startedAt);
@@ -310,14 +328,7 @@ export function deriveStepHistory(
         // ordering-true, duration-false. Renderers must not show elapsed time
         // for an untrusted span.
         const startTrusted = g.transitions[0].by === 'extension';
-        let endTrusted = false;
-        if (g.nextStepFirstIdx !== -1) {
-            endTrusted = deduped[g.nextStepFirstIdx].by === 'extension';
-        } else if (lastOwnIsCompletion) {
-            endTrusted = lastStepLevel!.by === 'extension';
-        } else if (completedAt !== null) {
-            endTrusted = g.transitions[g.transitions.length - 1].by === 'extension';
-        }
+        const endTrusted = closeEntry?.by === 'extension';
 
         const entry: StepHistoryEntry = { startedAt, completedAt };
         entry.durationTrusted = startTrusted && (completedAt === null || endTrusted);

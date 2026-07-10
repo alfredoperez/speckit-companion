@@ -23,6 +23,7 @@ import {
 } from '../../core/types/specContext';
 import { SpecStatuses, FooterActionIds } from '../../core/constants';
 import { deriveStepHistory } from '../specs/stepHistoryDerivation';
+import { isStepLevelEntry } from '../specs/historyHelpers';
 import type { WorkflowStepConfig } from '../workflows/types';
 
 type DerivedHistory = Record<string, StepHistoryEntry>;
@@ -62,8 +63,8 @@ function isSpecDone(ctx: SpecContext): boolean {
  *
  * Visible when:
  * - the step has been started, AND
- * - no later step in `STEP_NAMES` has acquired a `startedAt` (the
- *   workflow has not moved past this tab), AND
+ * - no later step is ahead of this one in `history[]` order (the
+ *   workflow has not moved past this tab — see `laterStepIsAhead`), AND
  * - either the step is in flight (no `completedAt`) OR there's still
  *   a later step in the workflow to advance to.
  *
@@ -89,14 +90,47 @@ function shouldShowApprove(
     if (!entry?.startedAt) return false;
     const idx = STEP_NAMES.indexOf(step);
     if (idx < 0) return false;
-    // Any later step started → workflow has moved past this tab.
-    for (let i = idx + 1; i < STEP_NAMES.length; i++) {
-        if (stepHistory[STEP_NAMES[i]]?.startedAt) return false;
-    }
+    if (laterStepIsAhead(ctx, step, idx, stepHistory)) return false;
     // Step in flight → always show.
     if (!entry.completedAt) return true;
     // Step is done → only show if there's a later step left to dispatch.
     return idx < STEP_NAMES.length - 1;
+}
+
+/**
+ * "Has the workflow moved past this tab?" — a later step blocks Approve only
+ * when its activity is newer than the current step's latest step-level boundary
+ * in the append-only `history[]`. A dangling start left by an interrupted run
+ * that the user rolled back via force-status precedes that boundary, so
+ * it no longer strands the forward button. Contexts without a usable history
+ * fall back to the historical "any later step ever started" rule.
+ */
+function laterStepIsAhead(
+    ctx: SpecContext,
+    step: StepName,
+    idx: number,
+    stepHistory: DerivedHistory
+): boolean {
+    const history = ctx.history ?? [];
+    if (history.length === 0) {
+        for (let i = idx + 1; i < STEP_NAMES.length; i++) {
+            if (stepHistory[STEP_NAMES[i]]?.startedAt) return true;
+        }
+        return false;
+    }
+    let lastOwnIdx = -1;
+    for (let i = history.length - 1; i >= 0; i--) {
+        const e = history[i];
+        if (e.step === step && isStepLevelEntry(e)) {
+            lastOwnIdx = i;
+            break;
+        }
+    }
+    for (let j = history.length - 1; j > lastOwnIdx; j--) {
+        const jIdx = STEP_NAMES.indexOf(history[j].step as StepName);
+        if (jIdx > idx) return true;
+    }
+    return false;
 }
 
 /**

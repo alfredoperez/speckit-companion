@@ -332,6 +332,83 @@ describe('malformed optional fields are coerced, never crash the renderer', () =
     });
 });
 
+describe('rollback recovery (#414) — interrupted step after a forced status', () => {
+    // implement dispatched, run interrupted (dangling start), user forces
+    // ready-to-implement via the gear (forceStatus realigns currentStep=tasks
+    // and appends a user tasks-complete).
+    function strandedThenForced(): SpecContext {
+        return makeContext({
+            currentStep: 'tasks',
+            status: 'ready-to-implement',
+            history: [
+                { step: 'specify', substep: null, kind: 'start', by: 'extension', at: '2026-07-09T10:00:00Z' },
+                { step: 'specify', substep: null, kind: 'complete', by: 'extension', at: '2026-07-09T10:05:00Z' },
+                { step: 'plan', substep: null, kind: 'start', by: 'extension', at: '2026-07-09T10:06:00Z' },
+                { step: 'plan', substep: null, kind: 'complete', by: 'extension', at: '2026-07-09T10:15:00Z' },
+                { step: 'tasks', substep: null, kind: 'start', by: 'extension', at: '2026-07-09T10:16:00Z' },
+                { step: 'tasks', substep: null, kind: 'complete', by: 'extension', at: '2026-07-09T10:20:00Z' },
+                { step: 'implement', substep: null, kind: 'start', by: 'extension', at: '2026-07-09T10:21:00Z' },
+                { step: 'tasks', substep: null, kind: 'complete', by: 'user', at: '2026-07-09T11:00:00Z' },
+            ],
+        });
+    }
+
+    it('does not display the interrupted implement step as completed', () => {
+        const badges = deriveStepBadges(strandedThenForced());
+        expect(badges['implement']).toBe('not-started');
+        expect(badges['tasks']).toBe('completed');
+    });
+
+    it('does not back-fill the interrupted attempt\'s end from the rollback boundary', () => {
+        const state = deriveViewerState(strandedThenForced(), 'tasks');
+        expect(state.stepHistory['implement']).toBeUndefined();
+    });
+
+    it('does not pulse the rolled-back step as if it were running', () => {
+        expect(derivePulse(strandedThenForced())).toBeNull();
+    });
+
+    it('keeps a completed retry after recovery as completed', () => {
+        const ctx = strandedThenForced();
+        ctx.history = [
+            ...ctx.history,
+            { step: 'implement', substep: null, kind: 'start', by: 'extension', at: '2026-07-09T11:05:00Z' },
+            { step: 'implement', substep: null, kind: 'complete', by: 'extension', at: '2026-07-09T11:30:00Z' },
+        ];
+        ctx.currentStep = 'implement';
+        ctx.status = 'implemented';
+        const badges = deriveStepBadges(ctx);
+        expect(badges['implement']).toBe('completed');
+    });
+
+    it('re-running an earlier step keeps a genuinely completed later step completed', () => {
+        // late clarify after plan finished — a rollback only trims *incomplete* attempts
+        const ctx = makeContext({
+            currentStep: 'clarify',
+            status: 'specifying',
+            history: [
+                { step: 'specify', substep: null, kind: 'start', by: 'extension', at: '2026-07-09T10:00:00Z' },
+                { step: 'specify', substep: null, kind: 'complete', by: 'extension', at: '2026-07-09T10:05:00Z' },
+                { step: 'plan', substep: null, kind: 'start', by: 'extension', at: '2026-07-09T10:06:00Z' },
+                { step: 'plan', substep: null, kind: 'complete', by: 'extension', at: '2026-07-09T10:15:00Z' },
+                { step: 'clarify', substep: null, kind: 'start', by: 'extension', at: '2026-07-09T10:20:00Z' },
+            ],
+        });
+        const state = deriveViewerState(ctx, 'clarify');
+        expect(state.stepHistory['plan']?.completedAt).toBe('2026-07-09T10:15:00Z');
+        expect(deriveStepBadges(ctx)['plan']).toBe('completed');
+    });
+
+    it('keeps a genuinely in-flight current step in flight (no rollback involved)', () => {
+        const ctx = strandedThenForced();
+        ctx.history = ctx.history.slice(0, 7); // ends at the dangling implement start
+        ctx.currentStep = 'implement';
+        ctx.status = 'implementing';
+        expect(derivePulse(ctx)).toBe('implement');
+        expect(deriveStepBadges(ctx)['implement']).toBe('in-progress');
+    });
+});
+
 describe('context (ICE C) passthrough', () => {
     it('passes context strings through and drops non-strings', () => {
         const state = deriveViewerState(makeContext({

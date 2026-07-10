@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- **The Implement button comes back after an interrupted run** (#414): if the AI died partway through implementation (a network drop, a closed terminal), the dead run's leftover "started" record permanently hid the Implement button — forcing the status back with the sidebar gear looked like it did nothing, and the only workaround was deleting `.spec-context.json` and losing the spec's history. Forcing an earlier status now genuinely rewinds the workflow position: the forward button (Implement, or Tasks when rolling back to planned) reappears, the interrupted step stops falsely showing as completed, and the aborted attempt stays visible in the spec's history. No files to delete, recovery in two clicks.
+
 ## [0.26.0] - 2026-07-06
 
 ### Changed
