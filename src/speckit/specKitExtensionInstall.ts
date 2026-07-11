@@ -52,15 +52,19 @@ export const README_FALLBACK_URL =
     'https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension';
 
 /**
- * Build the `specify extension add` command for the install/update action. `--force`
- * makes it an idempotent install-or-update. Uses the by-name form once the catalog
- * lists it (see {@link USE_BY_NAME_INSTALL}); the release URL form until then.
+ * Build the `specify extension add` command for the install/update action. Uses the
+ * by-name form once the catalog lists it (see {@link USE_BY_NAME_INSTALL}); the
+ * release URL form until then.
+ *
+ * No `--force`: the spec-kit CLI's `extension add` does not accept that flag and
+ * errors out with "No such option '--force'" (issue #420). `extension add` is already
+ * an install-or-update against the same target, so the flag was never needed here.
  */
 export function buildInstallCommand(): string {
     if (USE_BY_NAME_INSTALL) {
-        return `specify extension add ${BY_NAME_INSTALL} --force`;
+        return `specify extension add ${BY_NAME_INSTALL}`;
     }
-    return `specify extension add ${BY_NAME_INSTALL} --from ${RELEASE_URL} --force`;
+    return `specify extension add ${BY_NAME_INSTALL} --from ${RELEASE_URL}`;
 }
 
 /**

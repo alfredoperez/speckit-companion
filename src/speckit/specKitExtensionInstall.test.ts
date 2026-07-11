@@ -11,14 +11,17 @@ import {
 
 describe('specKitExtensionInstall', () => {
     describe('buildInstallCommand', () => {
-        it('installs from the release URL with --force while the catalog form is off', () => {
+        it('installs from the release URL while the catalog form is off', () => {
             // Guard the launch-time invariant: until the catalog lists the extension,
             // install must go through the published release asset, not the by-name form.
             expect(USE_BY_NAME_INSTALL).toBe(false);
             const cmd = buildInstallCommand();
-            expect(cmd).toBe(`specify extension add ${BY_NAME_INSTALL} --from ${RELEASE_URL} --force`);
+            expect(cmd).toBe(`specify extension add ${BY_NAME_INSTALL} --from ${RELEASE_URL}`);
             expect(cmd).toContain('--from https://github.com/alfredoperez/speckit-companion/releases/');
-            expect(cmd).toContain('--force');
+        });
+
+        it('does not pass --force to `extension add` (spec-kit CLI rejects it — issue #420)', () => {
+            expect(buildInstallCommand()).not.toContain('--force');
         });
 
         it('exposes the github-source CLI prereq (stock PyPI lacks `extension`)', () => {
