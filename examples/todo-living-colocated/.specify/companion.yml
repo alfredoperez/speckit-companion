@@ -1,0 +1,9 @@
+livingSpecs:
+  enabled: true
+  capabilities:
+    - name: todos-store
+      match: ["src/store/**"]
+      spec: src/store/todos.spec.md
+    - name: storage
+      match: ["src/lib/**"]
+      spec: src/lib/storage.spec.md

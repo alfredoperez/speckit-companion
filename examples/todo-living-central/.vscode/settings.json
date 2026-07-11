@@ -1,0 +1,4 @@
+{
+  "speckit.aiProvider": "claude",
+  "speckit.defaultWorkflow": "companion"
+}

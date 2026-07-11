@@ -62,6 +62,8 @@ export type StalenessMap = Record<DocumentType, StalenessInfo>;
  * navigation/document concerns plus the workflow-derived `enhancementButtons`.
  */
 export interface NavState {
+    /** Living-spec mode: hide the workflow stepper and footer. */
+    livingMode?: boolean;
     coreDocs: SpecDocument[];
     relatedDocs: SpecDocument[];
     currentDoc: DocumentType;

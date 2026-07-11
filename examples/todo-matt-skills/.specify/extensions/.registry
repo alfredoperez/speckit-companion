@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "extensions": {
+    "agent-context": {
+      "version": "1.0.0",
+      "source": "local",
+      "manifest_hash": "sha256:9a1dc02d2d0139bb03860392ecacef79183be2c442feda2f9ccaa4e5907b1e47",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "claude": [
+          "speckit.agent-context.update"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-07-01T19:21:12.009888+00:00"
+    },
+    "companion": {
+      "version": "0.17.0",
+      "source": "local",
+      "manifest_hash": "sha256:dbb7a6216f0e8faaded0deaf0209ce2a51bb3830b5c43513a911cd29b4ac1f47",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "claude": [
+          "speckit.companion.capture",
+          "speckit.companion.capture-plan",
+          "speckit.companion.capture-tasks",
+          "speckit.companion.capture-implement",
+          "speckit.companion.status",
+          "speckit.companion.resume",
+          "speckit.companion.specify",
+          "speckit.companion.plan",
+          "speckit.companion.tasks",
+          "speckit.companion.implement",
+          "speckit.companion.classify",
+          "speckit.companion.mark-complete",
+          "speckit.companion.auto",
+          "speckit.companion.adopt",
+          "speckit.companion.drift",
+          "speckit.companion.coverage"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-07-01T19:22:10.377981+00:00"
+    }
+  }
+}

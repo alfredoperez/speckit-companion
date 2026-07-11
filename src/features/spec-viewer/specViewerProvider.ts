@@ -51,6 +51,8 @@ import { deriveChangeRoot } from "../../core/specDirectoryResolver";
 import { deriveSpecName } from "../specs/specContextManager";
 import { readSpecContext, SPEC_CONTEXT_FILENAME, SpecContextParseError } from "../specs/specContextReader";
 import { writeSpecContext } from "../specs/specContextWriter";
+import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
+import { livingTierType, livingCapabilityName, livingTierDocuments, readLivingDoc } from "./livingDocs";
 import { deriveStepHistory } from "../specs/stepHistoryDerivation";
 import { backfillMinimalContext } from "../specs/specContextBackfill";
 import { resetMalformedContext } from "../specs/specContextReset";
@@ -230,7 +232,10 @@ export class SpecViewerProvider {
   /**
    * Show the spec viewer with the specified document
    */
-  public async show(filePath: string): Promise<void> {
+  public async show(filePath: string, opts?: { living?: boolean }): Promise<void> {
+    if (opts?.living) {
+      return this.showLiving(filePath);
+    }
     let specDirectory = getSpecDirectoryFromPath(filePath);
     let documentType = getDocumentTypeFromPath(filePath);
 
@@ -271,6 +276,31 @@ export class SpecViewerProvider {
   }
 
   /**
+   * Open a living-spec capability document in the viewer (no workflow chrome).
+   * The panel is keyed by the tier file's own directory; tier siblings
+   * (spec / arch / coverage) become the tab strip.
+   */
+  private async showLiving(filePath: string): Promise<void> {
+    const specDirectory = path.dirname(filePath);
+    const documentType = livingTierType(path.basename(filePath));
+
+    const existing = this.panels.get(specDirectory);
+    if (existing?.state.living) {
+      // Re-anchor: two colocated capabilities can share a directory (the
+      // panel key), so the clicked file decides which family renders.
+      existing.state = {
+        ...existing.state,
+        livingSourcePath: filePath,
+        specName: livingCapabilityName(filePath),
+      };
+      await this.updateLivingContent(specDirectory, documentType);
+      existing.panel.reveal(vscode.ViewColumn.One);
+      return;
+    }
+    await this.createPanel(specDirectory, documentType, { living: true, sourcePath: filePath });
+  }
+
+  /**
    * Get panel instance for a spec directory
    */
   private getInstance(specDirectory: string): PanelInstance | undefined {
@@ -291,6 +321,11 @@ export class SpecViewerProvider {
     this.outputChannel.appendLine(
       `[SpecViewer] Refreshing due to file change: ${filePath}`,
     );
+
+    if (instance.state.living) {
+      await this.updateLivingContent(specDirectory, instance.state.currentDocument);
+      return;
+    }
 
     // Auto-navigate to newly created file
     const docType = getDocumentTypeFromPath(filePath);
@@ -316,7 +351,7 @@ export class SpecViewerProvider {
   public async refreshContextIfDisplaying(specContextPath: string): Promise<void> {
     const specDir = path.dirname(specContextPath);
     const instance = this.panels.get(specDir);
-    if (!instance) return;
+    if (!instance || instance.state.living) return;
 
     try {
       const built = await this.buildViewerPayload(specDir, instance.state.currentDocument, {
@@ -412,8 +447,11 @@ export class SpecViewerProvider {
   private async createPanel(
     specDirectory: string,
     documentType: DocumentType,
+    living?: { living: true; sourcePath: string },
   ): Promise<void> {
-    const specName = path.basename(specDirectory);
+    const specName = living
+      ? livingCapabilityName(living.sourcePath)
+      : path.basename(specDirectory);
 
     const panel = vscode.window.createWebviewPanel(
       "speckit.specViewer",
@@ -433,6 +471,8 @@ export class SpecViewerProvider {
     const initialState: SpecViewerState = {
       specName,
       specDirectory,
+      living: !!living,
+      livingSourcePath: living?.sourcePath,
       currentDocument: documentType,
       availableDocuments: [],
       lastUpdated: Date.now(),
@@ -498,6 +538,74 @@ export class SpecViewerProvider {
   }
 
   /**
+   * Render a living-spec tier in the panel: rendered markdown, tier tabs,
+   * LIVING badge — and none of the workflow machinery (no context read or
+   * backfill, no phases, no footer actions).
+   */
+  private async updateLivingContent(
+    specDirectory: string,
+    documentType: DocumentType,
+  ): Promise<void> {
+    const instance = this.panels.get(specDirectory);
+    if (!instance?.state.living) return;
+
+    const anchor = instance.state.livingSourcePath
+      ?? instance.state.availableDocuments.find(d => d.type === 'spec')?.filePath
+      ?? path.join(specDirectory, 'spec.md');
+    const documents = livingTierDocuments(anchor);
+    const doc = documents.find(d => d.type === documentType && d.exists)
+      ?? documents.find(d => d.exists)
+      ?? documents[0];
+    if (!doc) return;
+
+    const content = doc.exists ? await readLivingDoc(doc.filePath) : '';
+    const specName = instance.state.specName;
+
+    instance.state = {
+      ...instance.state,
+      currentDocument: doc.type,
+      availableDocuments: documents,
+      lastUpdated: Date.now(),
+      phases: [],
+      currentPhase: 1,
+      taskCompletionPercent: 0,
+    };
+    instance.firstOpenComplete = true;
+    instance.panel.title = `Living Spec: ${specName}`;
+
+    instance.panel.webview.html = generateHtml(
+      instance.panel.webview,
+      this.context.extensionUri,
+      content,
+      'This tier has not been written yet.',
+      documents,
+      doc.type,
+      specName,
+      [],            // phases — no stepper
+      0,             // taskCompletionPercent
+      SpecStatuses.ACTIVE,
+      [],            // enhancementButtons
+      {},            // stalenessMap
+      null,          // activeStep
+      'LIVING',      // badgeText
+      null,
+      null,
+      specName,      // contextSpecName (header title)
+      null,          // branch
+      doc.filePath,
+      null,          // currentStep
+      {},            // stepHistory
+      false,         // activity panel off — no run to narrate
+      false,         // no install prompt
+      true,          // livingMode
+    );
+
+    this.outputChannel.appendLine(
+      `[SpecViewer] Updated living content: ${specName}/${doc.type}`,
+    );
+  }
+
+  /**
    * Update content in the panel
    */
   private async updateContent(
@@ -506,6 +614,9 @@ export class SpecViewerProvider {
   ): Promise<void> {
     const instance = this.panels.get(specDirectory);
     if (!instance) return;
+    if (instance.state.living) {
+      return this.updateLivingContent(specDirectory, documentType);
+    }
 
     try {
       // Compute change root for two-level layouts
@@ -755,6 +866,11 @@ export class SpecViewerProvider {
   ): Promise<void> {
     const instance = this.panels.get(specDirectory);
     if (!instance) return;
+    if (instance.state.living) {
+      // Living panels re-render whole-page; there is no context-driven
+      // viewerState to diff against.
+      return this.updateLivingContent(specDirectory, documentType);
+    }
 
     try {
       const built = await this.buildViewerPayload(specDirectory, documentType);
@@ -934,10 +1050,16 @@ export class SpecViewerProvider {
       let specCtx = await readSpecContext(specDirectory);
       if (specCtx) {
         specCtx = await reconcileAndPersist(specDirectory, specCtx, (m) => this.outputChannel.appendLine(m));
+        const wfSteps = await this.resolveWorkflowSteps(specDirectory);
+        // Custom workflows whose commands don't emit capture context get their
+        // progression reconstructed from the step output files on disk, so the
+        // forward button lights up. No-op for built-in / capturing workflows.
+        specCtx = synthesizeCustomProgress(specCtx, wfSteps, (s) =>
+          stepHasOutput(specDirectory, s, wfSteps)
+        );
         const active: StepName = STEP_NAMES.includes(specCtx.currentStep as StepName)
           ? (specCtx.currentStep as StepName)
-          : 'specify';
-        const wfSteps = await this.resolveWorkflowSteps(specDirectory);
+          : (specCtx.currentStep as StepName) || 'specify';
         const derivedVs = deriveViewerState(specCtx, active, wfSteps);
         // Living-specs content is filesystem-derived, so it's enriched here at
         // the provider seam rather than inside the pure derivation.

@@ -1,0 +1,159 @@
+{
+  "workflow": "speckit",
+  "specName": "clear completed",
+  "branch": "001-clear-completed",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-01T19:25:36.820Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-01T19:27:03.374Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-01T19:27:11.999Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-01T19:27:12.093Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-01T19:27:12.194Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-01T19:27:12.289Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-01T19:27:31.960Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-01T19:27:54.475Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-01T19:27:54.537Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-01T19:28:07.952Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-01T19:29:44.475Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-01T19:29:44.543Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-01T19:30:09.155Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-01T19:30:09.249Z"
+    }
+  ],
+  "size": "simple",
+  "currentTask": "T006",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added clearCompleted action type + reducer case filtering out completed todos",
+      "files": [
+        "src/store/todos.tsx"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Exposed clearCompleted() on context value and useTodos()",
+      "files": [
+        "src/store/todos.tsx"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Rendered Clear completed button in TodosPage, disabled when no completed todos, wired to clearCompleted",
+      "files": [
+        "src/pages/TodosPage.tsx"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Unit tests for clearCompleted reducer case (removes completed, keeps active, no-op empty, empties all-completed)",
+      "files": [
+        "src/store/todos.test.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Integration tests: clears completed, disabled when none, empty state, persists across remount",
+      "files": [
+        "src/App.test.tsx"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Verified: npm test 13/13 pass, npm run build clean (tsc + vite)",
+      "files": [
+        "(verification)"
+      ]
+    }
+  }
+}

@@ -308,7 +308,11 @@ export type FooterScope = 'spec' | 'step';
 export type FooterVisibleWhen = (
     ctx: SpecContext,
     step: StepName,
-    stepHistory: Record<string, StepHistoryEntry>
+    stepHistory: Record<string, StepHistoryEntry>,
+    // Ordered active-workflow steps, structural to avoid a core→feature import.
+    // Lets step-scoped actions answer "is there a later step" from the custom
+    // workflow's own order rather than the hardcoded lifecycle.
+    workflowSteps?: readonly { name: string }[]
 ) => boolean;
 
 export interface FooterAction {

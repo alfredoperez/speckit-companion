@@ -65,6 +65,15 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         if (!root || !isPathWithinRoot(root, relPath)) {
             return undefined;
         }
+        // Markdown tiers open in the rendered spec viewer (stepper-less living
+        // mode); anything else falls back to the plain editor.
+        if (relPath.endsWith('.md')) {
+            return {
+                command: 'speckit.viewSpecDocument',
+                title: `Open ${relPath}`,
+                arguments: [path.join(root, relPath), { living: true }],
+            };
+        }
         return {
             command: 'vscode.open',
             title: `Open ${relPath}`,

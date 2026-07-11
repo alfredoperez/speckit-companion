@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.27.0] - 2026-07-10
+
+### Added
+
+- **Living specs open in the rendered viewer.** Clicking a capability in the Spec Explorer used to dump you into raw markdown, lint squiggles and all. It now opens the same rendered reading experience as feature specs — minus the workflow stepper and footer, because a living spec has no phases — with the capability's tiers (Spec, Architecture, Coverage) as tabs when they exist.
+- **Custom workflows start from their own first step.** The Create Spec dialog assumed every workflow begins with `specify` and quietly dispatched the stock command for workflows that don't. A workflow shaped `discuss → plan → execute → verify` now dispatches its own first command from the dialog.
+
+### Fixed
+
+- **No fake timestamps in the activity summary.** A custom workflow whose progression is reconstructed from files on disk has no real run clock, but the Phases summary was rendering the placeholder start as a literal date ("Started Dec 31, 07:00 PM · 1s active"). The wall-clock summary now appears only when a step carries an extension-stamped time; otherwise the phase names show without invented timing.
+- **Custom workflows are recognized even when a step reuses a built-in name.** A workflow whose only navigable step happens to be called `plan` (like GSD: discuss → plan → execute → verify, where discuss/execute/verify are action-only) was misread as a built-in workflow, so its progression never ran and the next-step button never appeared. Custom detection now considers every step, including action-only ones, so these workflows advance correctly.
+- **A related-docs step reads as created in the sidebar.** The Specs tree showed "not created" next to a step whose output isn't a fixed filename (GSD's plan phase writes `01-01-PLAN.md`), even while that document hung right beneath it. The row now reflects that the step is created, and stays expandable to its documents.
+- **Custom workflows advance on related-doc output too.** A step that produces numbered or free-named files instead of a fixed one (GSD's plan phase writes `01-01-PLAN.md`, not `plan.md`) was never seen as "done," so the forward button to the next step never appeared. When a step is marked to include related docs, Companion now counts any spec-folder document it produced as its output — the Execute step surfaces once the plan is written.
+- **Colocated living specs render their content.** The living viewer anchored tier lookup on `spec.md` in the file's directory, which only exists in the centralized layout — a colocated spec like `src/lib/storage.spec.md` opened to a header with an empty body. The viewer now anchors on the file that was actually clicked, so both layouts render, and two colocated capabilities sharing a folder each open their own family of tiers.
+- **Custom workflows keep advancing after the extension's own bookkeeping.** The file-driven progression now compares the files on disk against the recorded position instead of bailing whenever any history exists — so clicking the forward button once no longer freezes the workflow at its previous step.
+- **The forward button now works for your own workflows too.** Bring-your-own workflows wired through `speckit.customWorkflows` (Matt Pocock's skills, GSD, anything that runs commands and writes markdown) never advanced in the viewer: after the first step, the button to run the next one simply never appeared, and the spec sat stuck at "specify." The reason was that a custom workflow's commands don't emit the capture context the built-in pipeline relies on, so the extension couldn't tell the run had progressed. Companion now reconstructs a custom workflow's position from the step output files on disk — the spec it wrote, the tickets folder it filled — so the forward button lights up and dispatches the right next command, step after step, exactly like the built-in flow. Built-in and context-emitting workflows are unaffected.
+
+### Examples
+
+- Added runnable demo projects under `examples/` for custom and mixed workflows (Matt Pocock skills, GSD × Superpowers) and for living specs in both the default folder and colocated next to the code, each on a full spec-kit + constitution + Companion base.
+
+## [0.26.1] - 2026-07-10
+
+### Fixed
+
+- **The Implement button comes back after an interrupted run** (#414): if the AI died partway through implementation (a network drop, a closed terminal), the dead run's leftover "started" record permanently hid the Implement button — forcing the status back with the sidebar gear looked like it did nothing, and the only workaround was deleting `.spec-context.json` and losing the spec's history. Forcing an earlier status now genuinely rewinds the workflow position: the forward button (Implement, or Tasks when rolling back to planned) reappears, the interrupted step stops falsely showing as completed, and the aborted attempt stays visible in the spec's history. No files to delete, recovery in two clicks.
+
 ## [0.26.0] - 2026-07-06
 
 ### Changed

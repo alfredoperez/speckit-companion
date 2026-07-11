@@ -13,9 +13,12 @@ export function registerSpecViewerCommands(
 
     // Register command to view spec documents
     context.subscriptions.push(
-        vscode.commands.registerCommand('speckit.viewSpecDocument', (filePath: string) => {
-            provider.show(filePath);
-        })
+        vscode.commands.registerCommand(
+            'speckit.viewSpecDocument',
+            (filePath: string, opts?: { living?: boolean }) => {
+                provider.show(filePath, opts);
+            },
+        )
     );
 
     outputChannel.appendLine('[SpecViewer] Commands registered');

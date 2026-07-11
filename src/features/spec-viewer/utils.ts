@@ -4,10 +4,12 @@
  */
 
 import * as path from 'path';
+import * as fs from 'fs';
 import * as vscode from 'vscode';
 import { CORE_DOCUMENT_FILES, CoreDocumentType, DocumentType } from './types';
 import type { WorkflowStepConfig } from '../workflows/types';
 import { isInsideSpecDirectory } from '../../core/specDirectoryResolver';
+import { SPEC_CONTEXT_FILENAME } from '../specs/specContextReader';
 
 /**
  * Generates a random nonce for CSP
@@ -76,7 +78,32 @@ export function getDocumentTypeFromPath(filePath: string, steps?: WorkflowStepCo
  * Get spec directory from file path
  */
 export function getSpecDirectoryFromPath(filePath: string): string {
-    return path.dirname(filePath);
+    const start = path.dirname(filePath);
+    // Resolve to the actual spec ROOT, not just the file's parent. A document
+    // can live in a step subDir (`issues/NN-*.md`) or a related-doc
+    // folder — `path.dirname` alone points at that subfolder, so the viewer would
+    // read a nonexistent `.spec-context.json` there and backfill a bogus "draft"
+    // spec with the wrong name, losing the stepper state and forward button.
+    // Walk up to the nearest ancestor that actually holds the spec (its
+    // `.spec-context.json` or `spec.md`), bounded so a stray path can't loop.
+    let dir = start;
+    for (let i = 0; i < 8; i++) {
+        try {
+            if (
+                fs.existsSync(path.join(dir, SPEC_CONTEXT_FILENAME)) ||
+                fs.existsSync(path.join(dir, 'spec.md'))
+            ) {
+                return dir;
+            }
+        } catch {
+            /* ignore and keep walking */
+        }
+        const parent = path.dirname(dir);
+        if (parent === dir) break; // reached filesystem root
+        dir = parent;
+    }
+    // No spec-root marker found — preserve the original behavior.
+    return start;
 }
 
 /**

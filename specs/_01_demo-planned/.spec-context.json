@@ -42,5 +42,31 @@
       "by": "ai",
       "at": "2026-05-20T20:10:00.000Z"
     }
+  ],
+  "reviewComments": [
+    {
+      "id": "ref-1783722541658-k6fne",
+      "doc": "spec",
+      "anchor": {
+        "heading": "Requirements",
+        "blockText": "- **R002** (MUST): The export respects the active filter and sort.",
+        "line": 13
+      },
+      "comment": "🗑️ Remove this line",
+      "status": "pending",
+      "createdAt": "2026-07-10T22:29:01.661Z"
+    },
+    {
+      "id": "ref-1783722566892-0n28i",
+      "doc": "spec",
+      "anchor": {
+        "heading": "Summary",
+        "blockText": "Let users export the current table view to a CSV file.",
+        "line": 8
+      },
+      "comment": "need mor details on how are we going to support this",
+      "status": "pending",
+      "createdAt": "2026-07-10T22:29:26.895Z"
+    }
   ]
 }

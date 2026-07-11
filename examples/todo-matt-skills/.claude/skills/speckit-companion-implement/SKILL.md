@@ -1,0 +1,1 @@
+../../../.specify/extensions/companion/.specify-dev/agent-commands/claude/speckit-companion-implement/SKILL.md

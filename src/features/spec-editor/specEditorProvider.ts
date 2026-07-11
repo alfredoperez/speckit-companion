@@ -98,15 +98,24 @@ export class SpecEditorProvider {
                 && wf.name !== COMPANION_WORKFLOW_NAME
                 && isWorkflowSupportedForProvider(wf, activeProvider)) {
                 const normalized = normalizeWorkflowConfig(wf);
+                // A custom workflow's entry point is its FIRST navigable step,
+                // whatever it's named — not necessarily `specify`. A workflow
+                // like discuss → plan → execute → verify must dispatch its own
+                // first command from the Create Spec dialog, not fall back to
+                // the stock speckit.specify.
+                const entryStep = normalized.steps?.find(s => !s.actionOnly);
+                const entryName = entryStep?.name ?? WorkflowSteps.SPECIFY;
+                const entryCommand = entryStep?.command
+                    ?? resolveStepCommand(normalized, WorkflowSteps.SPECIFY);
                 workflows.push({
                     name: wf.name,
                     displayName: wf.displayName || wf.name,
                     description: wf.description,
-                    stepSpecify: `/${formatCommandForProvider(resolveStepCommand(normalized, WorkflowSteps.SPECIFY))}`,
+                    stepSpecify: `/${formatCommandForProvider(entryCommand)}`,
                     stepPlan: formatCommandForProvider(wf[WorkflowSteps.CONFIG_PLAN] || (normalized.steps?.find(s => s.name === WorkflowSteps.PLAN)?.command) || 'speckit.plan'),
                     stepImplement: formatCommandForProvider(wf[WorkflowSteps.CONFIG_IMPLEMENT] || (normalized.steps?.find(s => s.name === WorkflowSteps.IMPLEMENT)?.command) || 'speckit.implement'),
                     specifyCommands: (wf.commands || [])
-                        .filter(c => c.step === WorkflowSteps.SPECIFY)
+                        .filter(c => c.step === entryName || c.step === WorkflowSteps.SPECIFY)
                         .map(c => ({ name: c.name, title: c.title || c.name, command: c.command, tooltip: c.tooltip })),
                 });
             }
