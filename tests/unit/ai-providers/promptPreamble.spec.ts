@@ -87,6 +87,32 @@ describe('renderLifecyclePreamble — per-family split', () => {
     });
 });
 
+describe('renderLifecyclePreamble — unattended auto finishes to completed (no approval gate)', () => {
+    const AUTO_MARKER = 'UNATTENDED AUTO RUN';
+
+    it('stock auto run is told to mark-complete itself', () => {
+        const auto = renderLifecyclePreamble(SPEC_DIR, DISPATCH, false, undefined, true);
+        expect(auto).toContain(AUTO_MARKER);
+        expect(auto).toContain('--mark-complete --by ai');
+    });
+
+    it('companion auto run also carries the finish clause (slim body + finish)', () => {
+        const auto = renderLifecyclePreamble(SPEC_DIR, DISPATCH, true, undefined, true);
+        expect(auto).toContain(AUTO_MARKER);
+        expect(auto).toContain('--mark-complete --by ai');
+    });
+
+    it('a NON-auto (attended) run keeps the final gate — no self-complete instruction', () => {
+        expect(renderLifecyclePreamble(SPEC_DIR, DISPATCH, false)).not.toContain(AUTO_MARKER);
+        expect(renderLifecyclePreamble(SPEC_DIR, DISPATCH, true)).not.toContain(AUTO_MARKER);
+    });
+
+    it('the single-step Create dispatch never self-completes', () => {
+        expect(renderSpecifyCreationLifecyclePreamble('speckit', SPEC_DIR, DISPATCH, false)).not.toContain(AUTO_MARKER);
+        expect(renderSpecifyCreationLifecyclePreamble('companion', SPEC_DIR, DISPATCH, true)).not.toContain(AUTO_MARKER);
+    });
+});
+
 describe('renderSpecifyCreationLifecyclePreamble — install-state split', () => {
     it('companion-installed create dispatch gets the slim lifecycle body', () => {
         const slim = renderSpecifyCreationLifecyclePreamble('companion', SPEC_DIR, DISPATCH, true);

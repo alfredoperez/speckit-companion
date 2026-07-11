@@ -319,12 +319,36 @@ function renderSlimLifecycleBody(_featureDir: string): string {
     ].join('\n');
 }
 
-export function renderLifecycleBody(target: string, dispatchUtc: string, companionInstalled = false, writerPath: string = WORKSPACE_WRITER_PATH): string {
+/**
+ * The finish clause appended to an UNATTENDED auto run (`:auto`). A normal
+ * step-at-a-time run reserves `completed` for the user's Mark-Completed click,
+ * but an auto run has no user watching, so it finishes the whole lifecycle
+ * itself — the one sanctioned place `completed` is written outside that click.
+ */
+function renderAutoFinishClause(featureDir: string, writerPath: string): string {
+    const writerBase = writerInvocation(writerPath, featureDir);
+    return [
+        'UNATTENDED AUTO RUN — FINISH THE LIFECYCLE, DO NOT STOP AT `implemented`.',
+        'This is a hands-off `:auto` run: no one is waiting to click "Mark Completed",',
+        'so the final approval gate does not apply here. Once the implement step is',
+        'closed at `implemented` (every task checked), promote the spec to `completed`',
+        'yourself — run this exactly once, last:',
+        `    ${writerBase} --mark-complete --by ai`,
+        'It refuses unless the spec is already `implemented`, closes the implement step,',
+        'and keeps `currentStep` on `implement`. This is the ONLY place an auto run',
+        'writes `completed`, and it overrides the single-step rule above that reserves',
+        '`completed` for the user — that rule is for manual runs, not auto.',
+    ].join('\n');
+}
+
+export function renderLifecycleBody(target: string, dispatchUtc: string, companionInstalled = false, writerPath: string = WORKSPACE_WRITER_PATH, unattended = false): string {
     const featureDir = featureDirFromTarget(target);
     // The companion command bodies carry the full protocol, so a companion run
     // only needs the slim cross-step rules. Stock has no such body → full body.
     if (companionInstalled) {
-        return renderSlimLifecycleBody(featureDir);
+        return unattended
+            ? `${renderSlimLifecycleBody(featureDir)}\n\n${renderAutoFinishClause(featureDir, writerPath)}`
+            : renderSlimLifecycleBody(featureDir);
     }
     const writerBase = writerInvocation(writerPath, featureDir);
     // Stock: specify has no companion command to record it, so it self-closes too.
@@ -342,6 +366,7 @@ export function renderLifecycleBody(target: string, dispatchUtc: string, compani
         SPEC_CONTEXT_SCHEMA,
         '',
         STATUS_LIFECYCLE,
+        ...(unattended ? ['', renderAutoFinishClause(featureDir, writerPath)] : []),
         '',
         'For EACH step you work on (specify, clarify, plan, tasks, analyze, implement):',
         '1. When you START a step on your own initiative (mid-run, not the initial seed): set currentStep = "<step>" and status = in-progress form. Append a history entry { step: "<step>", substep: null, kind: "start", by: "ai", at: <real timestamp from `date -u`> }.',
@@ -362,11 +387,11 @@ export function renderLifecycleBody(target: string, dispatchUtc: string, compani
     ].join('\n');
 }
 
-export function renderLifecyclePreamble(specDir: string, dispatchUtc: string, companionInstalled = false, writerPath: string = WORKSPACE_WRITER_PATH): string {
+export function renderLifecyclePreamble(specDir: string, dispatchUtc: string, companionInstalled = false, writerPath: string = WORKSPACE_WRITER_PATH, unattended = false): string {
     const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
     return [
         MARKER_OPEN,
-        renderLifecycleBody(target, dispatchUtc, companionInstalled, writerPath),
+        renderLifecycleBody(target, dispatchUtc, companionInstalled, writerPath, unattended),
         MARKER_CLOSE,
     ].join('\n');
 }

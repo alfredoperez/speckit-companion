@@ -88,7 +88,9 @@ export function buildPrompt(options: BuildPromptOptions): string {
  */
 export function buildLifecyclePrompt(command: string, specDir?: string | null): string {
     if (!isContextInstructionsEnabled()) return command;
-    const preamble = renderLifecyclePreamble(specDir ?? '', nowUtc(), companionRecordsSteps(command), bundledWriterPath());
+    // A multi-step command (only `:auto` reaches here) is an unattended run — it
+    // finishes the whole lifecycle to `completed` with no user approval gate.
+    const preamble = renderLifecyclePreamble(specDir ?? '', nowUtc(), companionRecordsSteps(command), bundledWriterPath(), /* unattended */ true);
     return `${preamble}\n\n${command}`;
 }
 
