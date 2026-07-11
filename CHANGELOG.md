@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **Wibey joins the AI provider list (CLI + VS Code panel).** You can now pick Wibey — Walmart's built-in AI coding assistant — as your provider, in two shapes: the `wibey` command line (dispatches SpecKit commands to a terminal) and the Wibey VS Code chat panel. The panel doesn't wait on any pending Wibey feature: it tries the in-editor send command first, then a deep link, then falls back to copying the command onto your clipboard, so it works today and gets smoother as Wibey adds support.
 - **Living specs open in the rendered viewer.** Clicking a capability in the Spec Explorer used to dump you into raw markdown, lint squiggles and all. It now opens the same rendered reading experience as feature specs — minus the workflow stepper and footer, because a living spec has no phases — with the capability's tiers (Spec, Architecture, Coverage) as tabs when they exist.
 - **Custom workflows start from their own first step.** The Create Spec dialog assumed every workflow begins with `specify` and quietly dispatched the stock command for workflows that don't. A workflow shaped `discuss → plan → execute → verify` now dispatches its own first command from the dialog.
 
