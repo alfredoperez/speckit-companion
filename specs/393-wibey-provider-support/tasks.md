@@ -65,6 +65,20 @@
 
 ---
 
+## Phase 5: Wibey VS Code — full prompt injection (blocked on genaica/wibey-vscode-extension#442)
+
+**Blocked by**: genaica/wibey-vscode-extension#442  
+**Current state**: `wibey-vscode` provider works via clipboard fallback — copies the command and shows "Paste in Wibey (⌘V) and press Enter". Manual step required.  
+**Goal**: Zero-manual-step experience — Wibey panel opens with command pre-filled, user presses Enter.
+
+- [ ] T009 [US1] When `genaica/wibey-vscode-extension#442` lands **with Option A (`wibey.sendPrompt` command)**: verify `WibeyPanelProvider` Path 1 auto-activates without code changes (Path 1 already probes `vscode.commands.getCommands()` at dispatch time). Run `npm run install-local`, set `speckit.aiProvider: wibey-vscode`, click Refine — confirm Wibey panel opens with command pre-filled and no clipboard notification appears.
+
+- [ ] T010 [US1] When `genaica/wibey-vscode-extension#442` lands **with Option B (URI handler)**: re-enable the commented-out URI handler block in `src/ai-providers/wibeyPanelProvider.ts` (lines ~114–138). Add a detection mechanism (e.g., a sentinel command or extension version check) to avoid the silent-`true` bug that disabled this path. Test that `openExternal` now correctly dispatches the prompt to the Wibey panel.
+
+- [ ] T011 [US1] Once either T009 or T010 is confirmed working: remove the clipboard fallback notification ("Paste in Wibey…") since it will no longer be the active path. Update `quickstart.md` Scenario 2 (wibey-vscode) to reflect the new UX.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
