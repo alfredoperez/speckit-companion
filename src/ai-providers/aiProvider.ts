@@ -376,10 +376,13 @@ const _PROVIDER_PATHS_RAW: Record<AIProviderType, ProviderPaths> = {
         autoApproveFlag: '',
     },
     // Wibey in VS Code — dispatches to the Wibey VS Code chat panel
-    // (wibey.wibey-vscode-extension). Dispatch strategy (in priority order):
+    // (wibey.wibey-vscode-extension) via WibeyPanelProvider's runtime
+    // waterfall (probed in priority order every dispatch):
     //   1. wibey.sendPrompt(text) — preferred; requires issue #442 to be
     //      resolved in genaica/wibey-vscode-extension.
-    //   2. Clipboard fallback — copies the command + opens the panel; user
+    //   2. URI handler (deep link) — vscode://<ext>/... via openExternal;
+    //      falls through when no handler is registered.
+    //   3. Clipboard fallback — copies the command + opens the panel; user
     //      presses ⌘V / Ctrl+V and Enter. Works today with v1.0.19.
     // Config paths mirror the CLI provider (both share .wibey/).
     [AIProviders.WIBEY_VSCODE]: {
@@ -406,8 +409,8 @@ const _PROVIDER_PATHS_RAW: Record<AIProviderType, ProviderPaths> = {
     // (same flag as the base CliTerminalProvider default). No CLI flag for
     // auto-approve — permission mode is managed via ~/.wibey/settings.json.
     // Steering lives at the project root (AGENTS.md), not in a subdirectory.
-    // Note: wibey-vscode panel provider deferred to Phase 2, pending
-    // wibey.sendPrompt(text) being added to genaica/wibey-vscode-extension.
+    // The companion wibey-vscode panel key is served by WibeyPanelProvider
+    // (see the WIBEY_VSCODE entry above for its dispatch waterfall).
     [AIProviders.WIBEY]: {
         steeringFile: 'AGENTS.md',
         globalSteeringFile: null,

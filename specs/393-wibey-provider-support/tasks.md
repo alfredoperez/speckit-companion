@@ -4,9 +4,9 @@
 
 **Prerequisites**: plan.md ✅ | spec.md ✅ | research.md ✅ | data-model.md ✅ | quickstart.md ✅
 
-**Scope**: Phase 1 (this PR) = Wibey CLI (`wibey`) only. `wibey-vscode` panel provider is deferred to Phase 2 (blocked on `wibey.sendPrompt` in `genaica/wibey-vscode-extension`).
+**Scope**: This PR ships both the Wibey CLI (`wibey`) provider and the `wibey-vscode` panel provider. The panel provider does not wait on `wibey.sendPrompt` — it degrades gracefully through a runtime waterfall (`wibey.sendPrompt` command → URI handler → clipboard), so it works today on Wibey v1.0.19+ and light-up improves as `genaica/wibey-vscode-extension` adds the command/handler.
 
-**User Stories addressed**: US2 (P2 → promoted to P1 since US1 is deferred), US3 (P3)
+**User Stories addressed**: US1 (Wibey VS Code panel), US2 (Wibey CLI provider), US3 (Steering explorer)
 
 ## Format: `[ID] [P?] [Story] Description`
 
