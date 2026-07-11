@@ -89,6 +89,21 @@ export interface WorkflowConfig {
      * workflow is only surfaced while the active provider id is in the list.
      */
     supportedAiProviders?: string[];
+    /**
+     * Reference-doc folders/files this workflow reads but that are NOT specs
+     * (e.g. GSD's `.planning/codebase/`). They surface under the Steering view
+     * and are excluded from spec detection, so they never show up as an
+     * un-created spec with a phantom phase-stepper. (Issue #425)
+     */
+    steering?: WorkflowSteeringSource[];
+}
+
+/** A per-workflow reference-doc source shown under Steering, excluded from spec detection. */
+export interface WorkflowSteeringSource {
+    /** Display label under the Steering view (defaults to the path's basename). */
+    label?: string;
+    /** Workspace-relative folder or file, e.g. ".planning/codebase". */
+    path: string;
 }
 
 /**

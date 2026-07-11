@@ -260,3 +260,45 @@ describe('hasDuplicateNames', () => {
         expect(dupes).toEqual(new Set(['auth']));
     });
 });
+
+describe('per-workflow steering exclusion (issue #425)', () => {
+    // Key-aware config: specDirectories vs customWorkflows return different values.
+    function mockConfigWithSteering(specDirectories: string[], steeringPaths: string[]) {
+        mockWorkspace.getConfiguration.mockReturnValue({
+            get: jest.fn().mockImplementation((key: string, def?: unknown) => {
+                if (key === 'specDirectories') return specDirectories;
+                if (key === 'customWorkflows') return [{ name: 'gsd', steering: steeringPaths.map(p => ({ path: p })) }];
+                return def;
+            }),
+        } as any);
+    }
+
+    it('drops a discovered spec folder that is declared as a steering source', async () => {
+        mockConfigWithSteering(['specs'], ['specs/reference']);
+        // reference/ is excluded before its content is read, so only auth/ is scanned.
+        (mockWorkspace.fs.readDirectory as jest.Mock)
+            .mockResolvedValueOnce([
+                ['auth', vscode.FileType.Directory],
+                ['reference', vscode.FileType.Directory],
+            ])
+            .mockResolvedValueOnce([['spec.md', vscode.FileType.File]]);  // auth/
+
+        const result = await resolveSpecDirectories(WORKSPACE);
+        expect(result).toEqual([{ name: 'auth', path: 'specs/auth' }]);
+    });
+
+    it('isInsideSpecDirectory returns undefined for a file under a steering source', () => {
+        mockConfigWithSteering(['specs'], ['specs/reference']);
+        expect(isInsideSpecDirectory('/workspace/specs/reference/notes.md', WORKSPACE)).toBeUndefined();
+        expect(isInsideSpecDirectory('/workspace/specs/auth/spec.md', WORKSPACE)).toBe('specs/auth');
+    });
+
+    it('no steering configured leaves discovery unchanged', async () => {
+        mockConfigWithSteering(['specs'], []);
+        (mockWorkspace.fs.readDirectory as jest.Mock)
+            .mockResolvedValueOnce([['auth', vscode.FileType.Directory]])
+            .mockResolvedValueOnce([['spec.md', vscode.FileType.File]]);
+        const result = await resolveSpecDirectories(WORKSPACE);
+        expect(result).toEqual([{ name: 'auth', path: 'specs/auth' }]);
+    });
+});

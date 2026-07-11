@@ -1200,6 +1200,27 @@
                     ]
                   },
                   "description": "AI provider ids this workflow supports. Omit or leave empty to support all providers. When set, the workflow is hidden unless the active speckit.aiProvider is in this list (e.g. [\"claude\"] for a Claude-only workflow)."
+                },
+                "steering": {
+                  "type": "array",
+                  "description": "Reference-doc folders/files this workflow reads but that are NOT specs (e.g. GSD's '.planning/codebase'). They appear under the Steering view and are excluded from spec detection, so they never show up as an un-created spec with a phantom phase-stepper.",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "path"
+                    ],
+                    "properties": {
+                      "label": {
+                        "type": "string",
+                        "description": "Display label under the Steering view (defaults to the path's folder/file name)."
+                      },
+                      "path": {
+                        "type": "string",
+                        "description": "Workspace-relative folder or file, e.g. '.planning/codebase'."
+                      }
+                    },
+                    "additionalProperties": false
+                  }
                 }
               },
               "additionalProperties": false

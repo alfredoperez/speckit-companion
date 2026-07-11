@@ -200,6 +200,19 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                 ));
             }
 
+            // Per-workflow reference-doc sources (issue #425). These are folders a
+            // custom workflow reads but that are not specs — they surface here rather
+            // than in the Specs tree.
+            if (this.getWorkflowReferenceSources().length > 0) {
+                items.push(new SteeringItem(
+                    'References',
+                    vscode.TreeItemCollapsibleState.Collapsed,
+                    TreeItemContext.referencesHeader,
+                    '',
+                    this.context
+                ));
+            }
+
             // AI Provider section — CLAUDE.md, agents, skills, settings under provider name
             items.push(new SteeringItem(
                 getProviderDisplayName(getConfiguredProviderType()),
@@ -276,6 +289,16 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             }
 
             return items;
+        } else if (element.contextValue === TreeItemContext.referencesHeader) {
+            return this.getWorkflowReferenceSources().map(src => new SteeringItem(
+                src.label,
+                vscode.TreeItemCollapsibleState.Collapsed,
+                TreeItemContext.referencesSource,
+                src.absPath,
+                this.context
+            ));
+        } else if (element.contextValue === TreeItemContext.referencesSource) {
+            return this.getReferenceSourceFiles(element.resourcePath);
         } else if (element.contextValue === 'speckit-header') {
             return this.getSpecKitHeaderChildren();
         } else if (element.contextValue === 'speckit-scripts-category') {
@@ -362,6 +385,55 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                     name: name.replace('.md', '').replace('.instructions', ''),
                     path: path.join(steeringPath, name)
                 }));
+        } catch {
+            return [];
+        }
+    }
+
+    /**
+     * Reference-doc sources declared by any custom workflow's `steering` array
+     * (issue #425). Only sources that exist on disk are returned. Deduped by
+     * absolute path. Synchronous so the root render can decide whether to show
+     * the References section without an await.
+     */
+    private getWorkflowReferenceSources(): Array<{ label: string; absPath: string }> {
+        const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        if (!root) return [];
+        const workflows = vscode.workspace.getConfiguration('speckit')
+            .get<Array<{ steering?: Array<{ label?: string; path?: string }> }>>('customWorkflows', []) ?? [];
+        const out: Array<{ label: string; absPath: string }> = [];
+        const seen = new Set<string>();
+        for (const wf of workflows) {
+            for (const src of wf?.steering ?? []) {
+                const rel = src?.path;
+                if (typeof rel !== 'string' || !rel.trim()) continue;
+                const absPath = path.join(root, rel);
+                if (seen.has(absPath) || !isWithinRoot(root, absPath) || !fs.existsSync(absPath)) continue;
+                seen.add(absPath);
+                out.push({ label: src.label?.trim() || path.basename(rel.replace(/\/+$/, '')), absPath });
+            }
+        }
+        return out;
+    }
+
+    /** Files under a reference source (the .md files in a folder, or the file itself). */
+    private getReferenceSourceFiles(absPath: string): SteeringItem[] {
+        const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '';
+        const openItem = (filePath: string): SteeringItem => new SteeringItem(
+            path.basename(filePath),
+            vscode.TreeItemCollapsibleState.None,
+            'steering-document',
+            filePath,
+            this.context,
+            { command: 'vscode.open', title: 'Open Reference', arguments: [vscode.Uri.file(filePath)] },
+            path.relative(root, filePath)
+        );
+        try {
+            if (fs.statSync(absPath).isFile()) return [openItem(absPath)];
+            return fs.readdirSync(absPath, { withFileTypes: true })
+                .filter(e => e.isFile() && e.name.endsWith('.md'))
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map(e => openItem(path.join(absPath, e.name)));
         } catch {
             return [];
         }

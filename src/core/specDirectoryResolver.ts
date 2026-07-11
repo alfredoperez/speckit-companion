@@ -45,6 +45,35 @@ function getConfiguredPatterns(): string[] {
 }
 
 /**
+ * Reference-doc paths declared by any custom workflow's `steering` array. These
+ * are folders a workflow reads (e.g. GSD's `.planning/codebase`) but that are
+ * NOT specs, so spec detection must skip them — otherwise a reference folder
+ * that happens to sit under a configured spec pattern shows up as an un-created
+ * spec with a phantom phase-stepper. Collected across ALL custom workflows so
+ * the exclusion holds regardless of which workflow a given spec selected. (#425)
+ */
+export function getSteeringExclusionPaths(): string[] {
+    const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
+    const workflows = config.get<Array<{ steering?: Array<{ path?: string }> }>>('customWorkflows', []) ?? [];
+    const paths: string[] = [];
+    for (const wf of workflows) {
+        for (const source of wf?.steering ?? []) {
+            const p = source?.path;
+            if (typeof p === 'string' && p.trim()) {
+                paths.push(p.replace(/\\/g, '/').replace(/\/+$/, ''));
+            }
+        }
+    }
+    return paths;
+}
+
+/** True when `relativePath` IS a steering source or lives inside one. */
+function isSteeringExcluded(relativePath: string, exclusions: string[]): boolean {
+    const p = relativePath.replace(/\\/g, '/').replace(/\/+$/, '');
+    return exclusions.some(ex => p === ex || p.startsWith(`${ex}/`));
+}
+
+/**
  * Check if a directory contains at least one .md file in its immediate children.
  */
 async function directoryHasMarkdown(dirPath: string): Promise<boolean> {
@@ -75,6 +104,7 @@ async function directoryHasSpecContext(dirPath: string): Promise<boolean> {
  */
 export async function resolveSpecDirectories(workspaceRoot: string): Promise<SpecDirectoryInfo[]> {
     const patterns = getConfiguredPatterns();
+    const steeringExclusions = getSteeringExclusionPaths();
     const specs: SpecDirectoryInfo[] = [];
     const seenPaths = new Set<string>();
 
@@ -83,7 +113,7 @@ export async function resolveSpecDirectories(workspaceRoot: string): Promise<Spe
             // Glob pattern: each match is a spec folder
             const matches = await expandGlobPattern(workspaceRoot, pattern);
             for (const match of matches) {
-                if (!seenPaths.has(match.path)) {
+                if (!seenPaths.has(match.path) && !isSteeringExcluded(match.path, steeringExclusions)) {
                     seenPaths.add(match.path);
                     specs.push(match);
                 }
@@ -96,7 +126,7 @@ export async function resolveSpecDirectories(workspaceRoot: string): Promise<Spe
                 for (const [name, type] of entries) {
                     if (type === vscode.FileType.Directory) {
                         const specPath = `${pattern}/${name}`;
-                        if (!seenPaths.has(specPath)) {
+                        if (!seenPaths.has(specPath) && !isSteeringExcluded(specPath, steeringExclusions)) {
                             const childPath = path.join(dirPath, name);
                             const hasContent = await directoryHasMarkdown(childPath) || await directoryHasSpecContext(childPath);
                             if (hasContent) {
@@ -296,6 +326,11 @@ function matchGlobAsPrefix(relativePath: string, pattern: string): boolean {
 export function isInsideSpecDirectory(filePath: string, workspaceRoot: string): string | undefined {
     const patterns = getConfiguredPatterns();
     const relativePath = toRelativePath(filePath, workspaceRoot);
+
+    // A file inside a workflow's steering (reference-doc) source is never a spec file.
+    if (isSteeringExcluded(relativePath, getSteeringExclusionPaths())) {
+        return undefined;
+    }
 
     for (const pattern of patterns) {
         if (hasGlob(pattern)) {
