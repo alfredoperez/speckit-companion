@@ -780,7 +780,12 @@ async function executeWorkflowStep(
         step,
         specDir: toWorkspaceRelative(targetDir),
     });
-    const terminal = await getAIProvider().executeInTerminal(wrapped, `SpecKit - ${title}`);
+    // Per-step model/effort (Claude Code only; other providers ignore it).
+    const stepConfig = normalized.steps?.find(s => s.name === step);
+    const dispatchOptions = stepConfig && (stepConfig.model || stepConfig.effort)
+        ? { model: stepConfig.model, effort: stepConfig.effort }
+        : undefined;
+    const terminal = await getAIProvider().executeInTerminal(wrapped, `SpecKit - ${title}`, dispatchOptions);
     if (LIFECYCLE_STEPS.has(step)) {
         trackTerminal(terminal, targetDir, step as StepName);
     }

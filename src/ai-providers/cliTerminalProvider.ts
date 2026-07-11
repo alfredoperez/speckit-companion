@@ -35,6 +35,14 @@ export interface DispatchPlan {
  */
 export type DispatchMode = 'terminal' | 'slash' | 'headless';
 
+/** Per-dispatch overrides that a step can carry (Claude-provider only today). */
+export interface DispatchOptions {
+    /** Claude Code model, emitted as `--model <model>`. */
+    model?: string;
+    /** Claude Code reasoning effort, emitted as `--effort <effort>`. */
+    effort?: string;
+}
+
 export interface DispatchContext {
     mode: DispatchMode;
     /** Raw prompt as received by the public method. */
@@ -45,6 +53,8 @@ export interface DispatchContext {
     cliPath: string;
     /** Cached permission flag string for this dispatch. */
     permissionFlag: string;
+    /** Optional per-step dispatch overrides (model/effort). Providers that don't support them ignore it. */
+    dispatchOptions?: DispatchOptions;
 }
 
 /**
@@ -103,8 +113,8 @@ export abstract class CliTerminalProvider implements IAIProvider {
         return getPermissionFlagForProvider(this.type);
     }
 
-    async executeInTerminal(prompt: string, title?: string): Promise<vscode.Terminal> {
-        return this.runVisible({ mode: 'terminal', prompt, slashCommand: null }, title ?? this.defaultTerminalTitle, true);
+    async executeInTerminal(prompt: string, title?: string, options?: DispatchOptions): Promise<vscode.Terminal> {
+        return this.runVisible({ mode: 'terminal', prompt, slashCommand: null, dispatchOptions: options }, title ?? this.defaultTerminalTitle, true);
     }
 
     async executeSlashCommand(command: string, title?: string, autoExecute: boolean = true): Promise<vscode.Terminal> {

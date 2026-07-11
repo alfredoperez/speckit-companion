@@ -1166,6 +1166,19 @@
                       "includeRelatedDocs": {
                         "type": "boolean",
                         "description": "When true, unassigned related .md files in the spec folder are grouped under this step"
+                      },
+                      "model": {
+                        "type": "string",
+                        "description": "Claude Code model for this step, e.g. 'opus', 'sonnet', or a full model id. Passed as `claude --model <model>`. Applies only when the active AI provider is Claude Code; ignored by other providers."
+                      },
+                      "effort": {
+                        "type": "string",
+                        "enum": [
+                          "low",
+                          "medium",
+                          "high"
+                        ],
+                        "description": "Claude Code reasoning effort for this step. Passed as `claude --effort <level>`. Applies only when the active AI provider is Claude Code; ignored by other providers."
                       }
                     },
                     "additionalProperties": false

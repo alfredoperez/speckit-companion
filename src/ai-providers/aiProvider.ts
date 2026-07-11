@@ -128,10 +128,12 @@ export interface IAIProvider {
      * Execute a prompt in a visible terminal (split view)
      * @param prompt The prompt to send to the AI
      * @param title The terminal title
+     * @param options Optional per-step dispatch overrides (model/effort). Providers
+     *                that don't support them ignore it.
      * @returns The terminal instance, or undefined for providers that dispatch
      *          somewhere other than a terminal (e.g. the IDE Chat provider)
      */
-    executeInTerminal(prompt: string, title?: string): Promise<vscode.Terminal | undefined>;
+    executeInTerminal(prompt: string, title?: string, options?: { model?: string; effort?: string }): Promise<vscode.Terminal | undefined>;
 
     /**
      * Execute a prompt in headless/background mode

@@ -19,6 +19,26 @@ function buildSystemPromptFlag(shell: Shell, systemPromptFilePath: string | null
 }
 
 /**
+ * Per-step model/effort flags for `claude`. Both are real Claude Code CLI flags
+ * (`--model <model>`, `--effort <level>`). Values are validated to a safe shape
+ * (single shell-safe token) so a stray config value can't inject extra flags.
+ */
+export function buildModelEffortFlags(options?: { model?: string; effort?: string }): string {
+    if (!options) return '';
+    const safe = (v: string | undefined): string | null => {
+        if (!v) return null;
+        const trimmed = v.trim();
+        return /^[A-Za-z0-9._-]+$/.test(trimmed) ? trimmed : null;
+    };
+    const parts: string[] = [];
+    const model = safe(options.model);
+    if (model) parts.push(`--model ${model}`);
+    const effort = safe(options.effort);
+    if (effort) parts.push(`--effort ${effort}`);
+    return parts.length ? `${parts.join(' ')} ` : '';
+}
+
+/**
  * Claude Code provider.
  *
  * Two divergences from the default `CliTerminalProvider` dispatch:
@@ -59,10 +79,11 @@ export class ClaudeCodeProvider extends CliTerminalProvider {
             : null;
 
         const permissionFlag = this.getPermissionFlag();
+        const modelEffortFlags = buildModelEffortFlags(ctx.dispatchOptions);
         const shell = detectShell();
         const commandLine = buildPromptDispatchCommand({
             cliInvocation: 'claude',
-            flags: `${buildSystemPromptFlag(shell, systemPromptFilePath)}${permissionFlag}`,
+            flags: `${modelEffortFlags}${buildSystemPromptFlag(shell, systemPromptFilePath)}${permissionFlag}`,
             promptFilePath,
             promptText: command,
             shell,

@@ -51,6 +51,16 @@ export interface WorkflowStepConfig {
     subDir?: string;
     /** If true, unattached related docs are shown as children of this step */
     includeRelatedDocs?: boolean;
+    /**
+     * Claude Code model for this step (e.g. "opus", "sonnet", or a full model id).
+     * Emitted as `claude --model <model>`. Claude-provider only; ignored by others.
+     */
+    model?: string;
+    /**
+     * Claude Code reasoning effort for this step (e.g. "low", "medium", "high").
+     * Emitted as `claude --effort <effort>`. Claude-provider only; ignored by others.
+     */
+    effort?: string;
 }
 
 /**
