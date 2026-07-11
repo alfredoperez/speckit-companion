@@ -112,30 +112,23 @@ export class WibeyPanelProvider implements IAIProvider {
             }
 
             // ── Path 2: URI handler deep link (Option B) ─────────────────────────
-            // vscode://wibey.wibey-vscode-extension/open?prompt=<encoded>
-            // openExternal returns false when no URI handler is registered,
-            // so we fall through cleanly. uriScheme adapts to Cursor/Windsurf/etc.
-            // Available when genaica/wibey-vscode-extension#442 Option B lands.
-            try {
-                const uri = vscode.Uri.parse(
-                    `${vscode.env.uriScheme}://${WIBEY_EXTENSION_ID}/${WIBEY_URI_PATH}` +
-                    `?prompt=${encodeURIComponent(chatQuery)}`
-                );
-                this.outputChannel.appendLine(
-                    `[WibeyPanelProvider] Path 2 — URI handler: ${uri.toString()}`
-                );
-                const opened = await vscode.env.openExternal(uri);
-                if (opened) {
-                    return true;
-                }
-                this.outputChannel.appendLine(
-                    '[WibeyPanelProvider] Path 2 — openExternal returned false, trying clipboard fallback'
-                );
-            } catch (uriErr) {
-                this.outputChannel.appendLine(
-                    `[WibeyPanelProvider] Path 2 failed (${uriErr}), trying clipboard fallback`
-                );
-            }
+            // DISABLED: vscode.env.openExternal with a vscode://extension-id/...
+            // URI activates the target extension even when it has no registered
+            // UriHandler, and returns `true` in that case — silently swallowing
+            // the dispatch and preventing Path 3 (clipboard fallback) from running.
+            //
+            // Re-enable this block once genaica/wibey-vscode-extension#442 ships
+            // and Wibey registers a URI handler. Detection: call getCommands() for
+            // a sentinel command that the URI handler adds, or check extension version.
+            //
+            // try {
+            //     const uri = vscode.Uri.parse(
+            //         `${vscode.env.uriScheme}://${WIBEY_EXTENSION_ID}/${WIBEY_URI_PATH}` +
+            //         `?prompt=${encodeURIComponent(chatQuery)}`
+            //     );
+            //     const opened = await vscode.env.openExternal(uri);
+            //     if (opened) return true;
+            // } catch { /* fall through */ }
 
             // ── Path 3: clipboard fallback (works with Wibey v1.0.19+) ───────────
             // Same pattern as IdeChatProvider for Windsurf/Cascade.
