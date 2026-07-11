@@ -1069,7 +1069,7 @@
                       },
                       "command": {
                         "type": "string",
-                        "description": "Command to execute for this step (e.g., 'speckit.specify')"
+                        "description": "Command to execute for this step, written WITHOUT a leading slash (e.g. 'speckit.specify' or 'to-spec', not '/to-spec'). A leading slash is added automatically at dispatch; if you include one it is stripped."
                       },
                       "file": {
                         "type": "string",

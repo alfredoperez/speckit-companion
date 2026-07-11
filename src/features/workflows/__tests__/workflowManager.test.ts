@@ -11,6 +11,7 @@ import {
     getWorkflows,
     getWorkflow,
     isWorkflowSupportedForProvider,
+    resolveStepCommand,
     validateWorkflow,
 } from '../workflowManager';
 
@@ -203,5 +204,25 @@ describe('getWorkflow resolves regardless of active provider', () => {
 
         expect(getWorkflows().map(w => w.name)).not.toContain('my-custom-flow'); // hidden from selection
         expect(getWorkflow('my-custom-flow')?.name).toBe('my-custom-flow');       // but still resolvable
+    });
+});
+
+describe('resolveStepCommand strips a leading slash (issue #419)', () => {
+    const workflow = (command: string) => ({
+        name: 'slash-flow',
+        steps: [{ name: 'discuss', command }],
+    });
+
+    it('returns the bare command when the config wrote a leading slash', () => {
+        expect(resolveStepCommand(workflow('/to-spec') as never, 'discuss' as never)).toBe('to-spec');
+    });
+
+    it('leaves a slash-free command untouched', () => {
+        expect(resolveStepCommand(workflow('to-spec') as never, 'discuss' as never)).toBe('to-spec');
+    });
+
+    it('normalizes slash and no-slash to the same value', () => {
+        expect(resolveStepCommand(workflow('/speckit.specify') as never, 'discuss' as never))
+            .toBe(resolveStepCommand(workflow('speckit.specify') as never, 'discuss' as never));
     });
 });

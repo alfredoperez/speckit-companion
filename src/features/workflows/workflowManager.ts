@@ -432,7 +432,7 @@ export function resolveStepCommand(workflow: WorkflowConfig, step: WorkflowStep)
     if (normalized.steps) {
         const found = normalized.steps.find(s => s.name === step);
         if (found) {
-            return found.command;
+            return stripLeadingSlash(found.command);
         }
     }
 
@@ -441,12 +441,25 @@ export function resolveStepCommand(workflow: WorkflowConfig, step: WorkflowStep)
     const customCommand = workflow[stepKey] as string | undefined;
 
     if (customCommand && customCommand.trim()) {
-        return customCommand;
+        return stripLeadingSlash(customCommand);
     }
 
     // Fall back to default workflow commands
     const defaultStep = DEFAULT_WORKFLOW.steps?.find(s => s.name === step);
     return defaultStep?.command ?? `speckit.${step}`;
+}
+
+/**
+ * Normalize a workflow step command to a bare command id. Users may write a
+ * step command either as `to-spec` or `/to-spec` (matching how they'd type a
+ * slash command); the dispatch sites prepend the leading `/` themselves, so a
+ * stored leading slash would produce `//to-spec`. Strip it here — the single
+ * point every step command is resolved through. Mirrors the normalization in
+ * `customCommandConfig.ts`. (Issue #419)
+ */
+function stripLeadingSlash(command: string): string {
+    const trimmed = command.trim();
+    return trimmed.startsWith('/') ? trimmed.slice(1) : trimmed;
 }
 
 /**
