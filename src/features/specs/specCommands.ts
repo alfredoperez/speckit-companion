@@ -249,6 +249,50 @@ export function registerSpecKitCommands(
         })
     );
 
+    // Generic reveal — works from ANY SpecKit tree (Specs, Spec Explorer, Steering).
+    // Each tree stores its item's path differently, so resolve a URI from whatever
+    // field is present, then hand off to VS Code's built-in reveal commands. Pre-stats
+    // so a missing target surfaces an error rather than the silent no-op revealFileInOS
+    // gives on some Linux desktops. (Issue #422)
+    const resolveTreeItemUri = (item: any): vscode.Uri | undefined => {
+        if (!item) return undefined;
+        const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        if (item.resourceUri instanceof vscode.Uri) return item.resourceUri;
+        if (typeof item.resourcePath === 'string' && path.isAbsolute(item.resourcePath)) {
+            return vscode.Uri.file(item.resourcePath);
+        }
+        const rel = item.filePath || item.specPath;
+        if (typeof rel === 'string' && root) return vscode.Uri.file(path.join(root, rel));
+        const arg = item.command?.arguments?.[0];
+        if (arg instanceof vscode.Uri) return arg;
+        if (typeof arg === 'string') {
+            return vscode.Uri.file(path.isAbsolute(arg) ? arg : root ? path.join(root, arg) : arg);
+        }
+        return undefined;
+    };
+    const revealVia = async (item: any, builtin: 'revealInExplorer' | 'revealFileInOS'): Promise<void> => {
+        const uri = resolveTreeItemUri(item);
+        if (!uri) {
+            vscode.window.showErrorMessage('Nothing to reveal for this item.');
+            return;
+        }
+        try {
+            await vscode.workspace.fs.stat(uri);
+        } catch {
+            vscode.window.showErrorMessage(`Cannot reveal: ${uri.fsPath} does not exist`);
+            return;
+        }
+        try {
+            await vscode.commands.executeCommand(builtin, uri);
+        } catch (err: any) {
+            vscode.window.showErrorMessage(err?.message ?? String(err));
+        }
+    };
+    context.subscriptions.push(
+        vscode.commands.registerCommand('speckit.revealItemInExplorer', item => revealVia(item, 'revealInExplorer')),
+        vscode.commands.registerCommand('speckit.revealItemInOS', item => revealVia(item, 'revealFileInOS'))
+    );
+
     // Copy the spec's workspace-relative path (e.g. "specs/089-copy-spec-path-name") to the clipboard.
     context.subscriptions.push(
         vscode.commands.registerCommand('speckit.specs.copyPath', async (item: SpecTreeItem) => {

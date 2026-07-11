@@ -18,6 +18,12 @@ type LivingSpecContextValue =
     | 'living-specs-tier'
     | 'living-specs-orphan';
 
+/** Folder of a posix relative spec path, or '' when it sits at the root. */
+function posixDirname(specPath: string): string {
+    const dir = path.posix.dirname(specPath);
+    return dir === '.' || dir === '' ? '' : dir;
+}
+
 /**
  * Tree view that lists the project's living specs — capabilities (with their
  * architecture/coverage tiers) and orphan `*.spec.md` files. Visibility is
@@ -162,9 +168,19 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
                 : vscode.TreeItemCollapsibleState.None,
             cap.exists ? 'living-specs-capability' : 'living-specs-capability-missing'
         );
-        const base = cap.exists ? cap.location : `${cap.location} · not created`;
+        // Plain-language location: "colocated" reads as jargon in the tree, so
+        // for a spec that lives next to the code we show its folder instead, and
+        // for a central spec we say "central". The exact path + a full-sentence
+        // explanation move to the tooltip. (Issue #421)
+        const locationLabel = cap.location === 'colocated'
+            ? (posixDirname(cap.spec) || 'next to code')
+            : 'central';
+        const base = cap.exists ? locationLabel : `${locationLabel} · not created`;
+        const locationSentence = cap.location === 'colocated'
+            ? 'Lives next to the code it describes'
+            : 'Lives in the central specs folder';
         const suffixes: string[] = [];
-        const tooltipLines = [`${cap.name} (${cap.location}) — ${cap.spec}`];
+        const tooltipLines = [`${cap.name} — ${cap.spec}`, locationSentence];
         if (health?.coverage) {
             suffixes.push(`${health.coverage.covered}/${health.coverage.total} covered`);
             tooltipLines.push(`${health.coverage.covered} of ${health.coverage.total} requirements have a mapped test`);
