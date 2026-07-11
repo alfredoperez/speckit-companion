@@ -3,7 +3,16 @@
   "specName": "01-priority-levels",
   "branch": "01-priority-levels",
   "selectedAt": "2026-07-10T21:31:24.754Z",
-  "currentStep": "specify",
-  "status": "draft",
-  "history": []
+  "currentStep": "plan",
+  "status": "planned",
+  "history": [
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-10T22:16:40.684Z"
+    }
+  ],
+  "telemetryInstanceId": "3b6eaed1-fbb2-4783-9a26-e2fe22846d93"
 }
