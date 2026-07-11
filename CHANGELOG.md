@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.28.0] - 2026-07-10
+
+### Added
+
+- **Hands-off runs now finish on their own.** Auto mode used to run everything and then stop at the very end, waiting for you to click "Mark Completed." Since an auto run is unattended by definition, it now carries the spec all the way to completed with no clicks. Manual, step-at-a-time runs are unchanged and still keep that final confirmation for you.
+- **Pick a model and effort per step.** A custom workflow step can now say which Claude Code model and reasoning effort to use, so an easy step can run cheap and fast while a hard one gets the heavier model. Set it on the step in your settings; it applies only when Claude Code is your assistant.
+- **Reference docs that are not specs finally have a home.** A workflow can now point at folders it reads for context (for example a planning or codebase folder) as "reference" sources. Those show up under the Steering view instead of cluttering the Specs list, and they no longer get mistaken for an un-started spec with a phantom progress bar.
+- **A gentle nudge when a run goes quiet.** If a step looks like it is running but nothing has changed on disk for a while, the spec view shows a small "still running?" strip with Resume and Set status buttons. It never changes anything on its own, it just gives you a quick way to pick things back up.
+- **Reveal and reach files from more places.** "Reveal in File Explorer" and "Reveal in Explorer View" now work from the Spec Explorer and Steering trees, not just the Specs list. Each spec row also gets a single "..." menu that gathers status, lifecycle, copy, reveal, and delete instead of a crowded row of icons.
+
+### Changed
+
+- **The Specs toolbar is easier to scan.** Install sits on the far left, the view controls (filter, sort, collapse) group in the middle, and the "new spec" plus button moves to the far right.
+- **Plainer wording in the Spec Explorer.** A capability that lives next to its code now shows its folder instead of the word "colocated," with the full detail moved to the tooltip.
+
+### Fixed
+
+- **A slash in a custom step command no longer breaks it.** Writing a step command as `/to-spec` used to turn into `//to-spec` and fail. A leading slash is now handled cleanly, so both forms behave the same.
+- **The "Install spec-kit Extension" button works again.** It was passing a `--force` flag the current spec-kit CLI does not accept, so the install failed. That flag is gone.
+
 ## [0.27.0] - 2026-07-10
 
 ### Added
