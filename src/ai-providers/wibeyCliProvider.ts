@@ -1,20 +1,19 @@
 import { AIProviders } from '../core/constants';
 import { AIProviderType } from './aiProvider';
-import { CliTerminalProvider } from './cliTerminalProvider';
+import { CliTerminalProvider, DispatchContext, DispatchPlan } from './cliTerminalProvider';
+import { createTempFile } from '../core/utils/tempFileUtils';
 
 /**
  * Wibey CLI provider — dispatches SpecKit commands to the Wibey CLI
- * (`wibey -p "…"`) in a VS Code terminal.
+ * (`wibey -f <file>`) in a VS Code terminal.
  *
  * Wibey CLI is Walmart's first-party AI coding assistant, built on the
- * Claude Agent SDK. It uses the same `-p` flag for non-interactive prompt
- * dispatch as the base `CliTerminalProvider` default (`cliPromptFlag()`
- * returns `'-p '`), so no method overrides are required.
+ * Claude Agent SDK.
  *
  * The base class handles the full lifecycle:
  *   - Install check: `wibey --version`
  *   - Terminal create/reuse
- *   - Temp-file dispatch: `wibey -p "$(cat /tmp/prompt.md)"`
+ *   - Temp-file dispatch: `wibey -f "/path/to/prompt.md"` (--prompt-file; no shell expansion)
  *   - Scheduled temp-file cleanup
  *
  * Permission mode is managed via `~/.wibey/settings.json` (`bypassPermissions`)
@@ -37,7 +36,35 @@ export class WibeyCliProvider extends CliTerminalProvider {
     protected readonly headlessTerminalName = 'Wibey Background';
     protected readonly logPrefix = 'WibeyCliProvider';
 
-    // No method overrides needed.
-    // Dispatch produces: wibey -p "$(cat /tmp/prompt.md)"
-    // Slash commands:    wibey -p "/speckit-specify $(cat /tmp/prompt.md)"
+    /**
+     * Override to use `wibey -f <file>` instead of `wibey -p "$(cat <file>)"`.
+     *
+     * The default base-class dispatch (`-p "$(cat "path")"`) breaks when the
+     * temp-file path contains spaces — macOS stores VS Code extension storage
+     * under `~/Library/Application Support/...`, which the shell sometimes
+     * passes as a literal `$(cat ...)` string to the CLI rather than expanding
+     * it, causing Wibey to reject it with "Invalid command format".
+     *
+     * Wibey CLI supports `--prompt-file / -f` (confirmed in wibey-cli source):
+     *   `wibey -f "/path with spaces/prompt.md"`
+     * This reads the file directly — no shell expansion, no nested quoting,
+     * works on macOS, Linux, and Windows (WSL path conversion via
+     * `convertTempFilePathForWSL` still applies).
+     */
+    protected async prepareDispatch(
+        ctx: Omit<DispatchContext, 'cliPath' | 'permissionFlag'>,
+    ): Promise<DispatchPlan> {
+        const promptText = this.preprocessPrompt(ctx);
+        const filePrefix = ctx.mode === 'headless' ? 'background-prompt' : 'prompt';
+        const tempFilePath = await createTempFile(
+            this.context,
+            promptText,
+            filePrefix,
+            this.convertTempFilePathForWSL,
+        );
+        const permissionFlag = this.getPermissionFlag(); // '' for Wibey (no auto-approve flag)
+        const commandLine = `${this.cliBinary} ${permissionFlag}-f "${tempFilePath}"`;
+        this.outputChannel.appendLine(`[WibeyCliProvider] dispatch: ${commandLine}`);
+        return { commandLine, tempFiles: [tempFilePath] };
+    }
 }
