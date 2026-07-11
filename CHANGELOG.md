@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.28.1] - 2026-07-11
+
+### Fixed
+
+- **Wibey CLI: "Invalid command format" error on macOS.** The previous dispatch used `wibey -p "$(cat "path")"`, which breaks when the temp-file path contains spaces (macOS stores VS Code extension storage under `~/Library/Application Support/…`). Switched to interactive TUI mode: SpecKit now starts `wibey` in an interactive session, waits for the TUI to initialise, then sends the command as typed text — no shell expansion, no quoting issues.
+- **Wibey CLI: new terminal opened on every dispatch.** Each SpecKit action was creating a fresh terminal instead of reusing an existing Wibey session. The provider now scans `vscode.window.terminals` for a live "SpecKit - Wibey" terminal and reuses it; a new one is created only when none is found.
+- **Wibey CLI: TUI closed after each task.** Running `wibey -f/-p` in headless mode caused Wibey to exit once the task finished. The interactive approach keeps Wibey running after each task so the developer can continue working in the same session.
+- **Wibey (VS Code): provider appeared to do nothing.** The URI-handler dispatch path (`vscode.env.openExternal` with a `vscode://` scheme) returns `true` even when the target extension has no registered URI handler, silently swallowing the dispatch. This blocked the clipboard fallback (the only path that works today) from running. The URI-handler path is now disabled until `genaica/wibey-vscode-extension#442` ships.
+
 ## [0.28.0] - 2026-07-10
 
 ### Added
