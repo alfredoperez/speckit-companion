@@ -780,6 +780,40 @@ export class SpecViewerProvider {
     return buttons;
   }
 
+  /**
+   * Newest mtime (ms epoch) across the spec's activity files — `.spec-context.json`,
+   * `.spec-context.events.jsonl`, and the top-level spec `*.md` files. Used by the
+   * run-recovery affordance (#418) to tell whether an in-flight run has gone quiet.
+   * Computed on demand at render (no watcher/polling). Returns undefined when
+   * nothing readable is found.
+   */
+  private async computeNewestActivityMs(specDirectory: string): Promise<number | undefined> {
+    const candidates: string[] = [
+      path.join(specDirectory, ".spec-context.json"),
+      path.join(specDirectory, ".spec-context.events.jsonl"),
+    ];
+    try {
+      const entries = await vscode.workspace.fs.readDirectory(vscode.Uri.file(specDirectory));
+      for (const [name, type] of entries) {
+        if (type === vscode.FileType.File && name.endsWith(".md")) {
+          candidates.push(path.join(specDirectory, name));
+        }
+      }
+    } catch {
+      // Directory unreadable — fall back to the two context files below.
+    }
+    let newest: number | undefined;
+    for (const file of candidates) {
+      try {
+        const stat = await vscode.workspace.fs.stat(vscode.Uri.file(file));
+        if (newest === undefined || stat.mtime > newest) newest = stat.mtime;
+      } catch {
+        // Missing file — skip.
+      }
+    }
+    return newest;
+  }
+
   /** Tab id of the in-flight step (for the active-step indicator), or null when idle. */
   private deriveRunningStepInfo(
     stepHistory: Record<string, { startedAt?: string; completedAt?: string | null }> | undefined,
@@ -991,8 +1025,9 @@ export class SpecViewerProvider {
 
     const enhancementButtons = this.resolveEnhancementButtons(resolvedType);
 
+    const newestActivityMs = await this.computeNewestActivityMs(specDirectory);
     const derived = computePanelDerivedState(
-      { documents: instance.state.availableDocuments, doc, tasksContent, featureCtx },
+      { documents: instance.state.availableDocuments, doc, tasksContent, featureCtx, newestActivityMs, nowMs: Date.now() },
       enhancementButtons,
     );
 
@@ -1035,6 +1070,7 @@ export class SpecViewerProvider {
       currentStep: featureCtx?.currentStep ?? resolvedType ?? null,
       filePath: doc?.filePath ?? null,
       docTypeLabel: getDocTypeLabel(featureCtx?.currentStep ?? resolvedType),
+      runRecovery: derived.runRecovery,
       activityPanelEnabled: this.readActivityPanelEnabled(),
       // Must be re-sent on every update: the webview replaces the whole navState
       // object, so omitting this would make the relocated Activity-panel banner

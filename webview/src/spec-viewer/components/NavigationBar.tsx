@@ -94,8 +94,33 @@ export function NavigationBar() {
         activityVisible.value = !activityVisible.value;
     };
 
+    const recovery = ns.runRecovery;
+
     return (
         <>
+            {recovery?.show && (
+                <div class="run-recovery" role="status">
+                    <span class="run-recovery__msg">{recovery.message}</span>
+                    <div class="run-recovery__actions">
+                        <button
+                            type="button"
+                            class="run-recovery__btn run-recovery__btn--primary"
+                            title="Resume the pipeline from where it left off"
+                            onClick={() => vscode.postMessage({ type: 'resumeRun' })}
+                        >
+                            Resume
+                        </button>
+                        <button
+                            type="button"
+                            class="run-recovery__btn"
+                            title="Force this spec to a lifecycle status"
+                            onClick={() => vscode.postMessage({ type: 'setStatus' })}
+                        >
+                            Set status…
+                        </button>
+                    </div>
+                </div>
+            )}
             <div class="nav-primary">
                 <div class="step-tabs">
                     {coreDocs.map((doc, i) => {

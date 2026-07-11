@@ -88,6 +88,8 @@ export interface NavState {
     activityPanelEnabled?: boolean;
     /** Whether to render the install banner inside the Activity panel (viewer only). */
     showInstallPrompt?: boolean;
+    /** Run-recovery affordance for a quiet in-flight run (issue #418). */
+    runRecovery?: { show: boolean; message: string; minutesQuiet: number };
 }
 
 // ============================================
@@ -312,6 +314,9 @@ export type ViewerToExtensionMessage =
     | { type: 'completeSpec' }
     | { type: 'archiveSpec' }
     | { type: 'reactivateSpec' }
+    // Run-recovery affordance (issue #418) — quiet in-flight run
+    | { type: 'resumeRun' }
+    | { type: 'setStatus' }
     // Stepper navigation
     | { type: 'stepperClick'; phase: string }
     // Persisted review comments — written to .spec-context.json on each mutation

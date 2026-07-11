@@ -316,3 +316,47 @@
     font-style: italic;
 }
 
+
+/* Run-recovery strip (issue #418) — a quiet in-flight run's "still running?" affordance. */
+.run-recovery {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 8px 0;
+    padding: 8px 12px;
+    border: 1px solid color-mix(in srgb, var(--accent-strong) 45%, var(--border));
+    border-left: 3px solid var(--accent-strong);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--accent-strong) 8%, var(--bg-secondary));
+    font-size: 0.85rem;
+}
+
+.run-recovery__msg {
+    color: var(--text-primary);
+}
+
+.run-recovery__actions {
+    display: flex;
+    gap: 8px;
+}
+
+.run-recovery__btn {
+    padding: 3px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.run-recovery__btn:hover {
+    background: var(--bg-hover);
+}
+
+.run-recovery__btn--primary {
+    border-color: var(--accent-strong);
+    background: color-mix(in srgb, var(--accent-strong) 22%, transparent);
+}

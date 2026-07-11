@@ -105,6 +105,12 @@ const FOOTER_ACTION_HANDLERS: Record<
  * Adding a new message type fails the build until an adapter is added —
  * that's the whole point of `DispatcherMap`'s indexed-access type.
  */
+/** Workspace-relative spec path for a synthetic tree-command item (falls back to the abs path). */
+function toWorkspaceRelativeSpecPath(specDirectory: string): string {
+  const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  return root ? path.relative(root, specDirectory) : specDirectory;
+}
+
 function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, MessageHandlerDependencies]> {
   return {
     switchDocument: (msg, dir, deps) => handleSwitchDocument(dir, msg.documentType, deps),
@@ -132,6 +138,15 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
     completeSpec: (_msg, dir, deps) => handleLifecycleAction(dir, SpecStatuses.COMPLETED, deps),
     archiveSpec: (_msg, dir, deps) => handleLifecycleAction(dir, SpecStatuses.ARCHIVED, deps),
     reactivateSpec: (_msg, dir, deps) => handleLifecycleAction(dir, SpecStatuses.ACTIVE, deps),
+    // Run-recovery affordance (#418). Both reuse the existing tree commands via a
+    // synthetic { specPath } item — resume carries its own install-missing fallback,
+    // and setStatus opens the force-status picker (user-driven; never automatic).
+    resumeRun: async (_msg, dir, _deps) => {
+      await vscode.commands.executeCommand('speckit.specs.resume', { specPath: toWorkspaceRelativeSpecPath(dir) });
+    },
+    setStatus: async (_msg, dir, _deps) => {
+      await vscode.commands.executeCommand('speckit.specs.setStatus', { specPath: toWorkspaceRelativeSpecPath(dir) });
+    },
     openFile: (msg, _dir, deps) => handleOpenFile(msg.filename, deps),
     webviewError: async (msg, _dir, deps) => {
       deps.outputChannel.appendLine(

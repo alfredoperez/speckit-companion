@@ -38,6 +38,7 @@ import {
     mapStepToTab,
 } from "./phaseCalculation";
 import { isStepCompleted } from "./stateDerivation";
+import { computeRunRecovery, RunRecoveryState } from "./runRecovery";
 import type { FeatureWorkflowContext } from "../workflows/types";
 import { deriveStepHistory, getSpecStatus } from "../specs/stepHistoryDerivation";
 import { StepName, Status } from "../../core/types/specContext";
@@ -113,6 +114,14 @@ export interface PanelStateInputs {
     tasksContent: string;
     /** Parsed `.spec-context.json` (undefined when the file is missing/unreadable). */
     featureCtx: FeatureWorkflowContext | undefined;
+    /**
+     * Newest mtime (ms epoch) across the spec's activity files (spec-context,
+     * events log, spec `*.md`). The provider computes this I/O and passes it so
+     * run-recovery derivation stays pure. Undefined disables the affordance.
+     */
+    newestActivityMs?: number;
+    /** Now, ms epoch. The provider injects `Date.now()`; tests inject a fixed clock. */
+    nowMs?: number;
 }
 
 export interface PanelDerivedState {
@@ -141,6 +150,9 @@ export interface PanelDerivedState {
 
     /** Footer approve-button state (the "advance to next phase" affordance). */
     footer: { showApproveButton: boolean; approveText: string };
+
+    /** Run-recovery affordance state (the "still running?" strip). Issue #418. */
+    runRecovery: RunRecoveryState;
 }
 
 /**
@@ -151,7 +163,7 @@ export function computePanelDerivedState(
     inputs: PanelStateInputs,
     enhancementButtons: EnhancementButton[],
 ): PanelDerivedState {
-    const { documents, doc, tasksContent, featureCtx } = inputs;
+    const { documents, doc, tasksContent, featureCtx, newestActivityMs, nowMs } = inputs;
 
     const derivedStepHistory = featureCtx
         ? deriveStepHistory(
@@ -187,6 +199,13 @@ export function computePanelDerivedState(
 
     const footer = computeApproveFooter(coreDocs, relatedDocs, docType, isViewingRelatedDoc, taskCompletionPercent);
 
+    const runRecovery = computeRunRecovery({
+        currentStep: featureCtx?.currentStep,
+        status: featureCtx?.status,
+        newestActivityMs,
+        nowMs: nowMs ?? 0,
+    });
+
     // `enhancementButtons` is passed through unchanged — it's an input here
     // because resolving customCommands needs vscode.workspace.getConfiguration,
     // which is I/O the provider owns. We return it alongside derived state
@@ -209,6 +228,7 @@ export function computePanelDerivedState(
         relatedDocs,
         isViewingRelatedDoc,
         footer,
+        runRecovery,
     };
 }
 
