@@ -169,13 +169,13 @@ There are **two** installs, and they're independent:
 # 1. github-source spec-kit CLI (required: stock PyPI specify-cli lacks `extension`)
 uv tool install specify-cli --from git+https://github.com/github/spec-kit.git --force
 
-# 2. the companion spec-kit extension (installs/updates; --force is idempotent)
-specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force
+# 2. the companion spec-kit extension (installs/updates)
+specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip
 ```
 
-> The `companion-latest/companion.zip` URL is a stable rolling asset — it always serves the newest build, so the same command installs **and** updates (re-run with `--force`). Once the extension is listed in the spec-kit catalog, it shortens to `specify extension add companion --force`.
+> The `companion-latest/companion.zip` URL is a stable rolling asset — it always serves the newest build, so the same command installs **and** updates. Once the extension is listed in the spec-kit catalog, it shortens to `specify extension add companion`.
 
-**Update it later** from the Specs view **Upgrade…** menu → *Update spec-kit Extension* (runs the same install with `--force`).
+**Update it later** from the Specs view **Upgrade…** menu → *Update spec-kit Extension* (runs the same install command).
 
 ![What installing the spec-kit extension unlocks: live progress capture, status, resume, the lean Companion pipeline, the complexity fast-path, and honest state recovery](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/install-banner.jpg)
 
