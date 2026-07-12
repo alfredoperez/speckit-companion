@@ -22,9 +22,9 @@ A spec workspace that turns AI-assisted, spec-driven development into something 
 
 ## Recently Shipped
 
-- **v0.26.1** The Implement button comes back after an interrupted run: forcing a status with the sidebar gear now genuinely rewinds the workflow — the forward button reappears, the interrupted step stops falsely showing as completed, and no one has to delete `.spec-context.json` to recover
-- **v0.26.0** The Activity panel became a **brief**: a hero with honest timing and stat chips, the plan's intent/context/out-of-scope always visible, and tabs for decisions (with the rejected alternatives), work, proof (checks + per-requirement coverage), and notes · living specs render readably in the viewer and the Spec Explorer can run **drift/coverage/adopt** with per-row health · stock-workflow runs stop sticking at "specifying" and now capture the full reasoning trail · colorful sidebar icons with real provider logos · recover any stranded spec with **Set status…** · a Sponsor link if Companion saves you time
-- **v0.25.0** Specs render as rich, structured pages — requirements as labeled rows, acceptance scenarios as flowing Given/When/Then sentences, key entities and research decisions as cards, phased tasks, and the plan's Technical Context + Constitution inline · a cleaner, more readable viewer (bigger type, clearer headings, a refreshed step nav, a vertical Activity timeline, calmer badges) · an **Auto** button builds the whole spec hands-off from Create Spec
+- **v0.28.1** Wibey dispatch actually works on macOS: SpecKit commands now go to an interactive `wibey` session (no more "Invalid command format"), the same terminal is reused across actions instead of opening a new one each time, and the session stays alive after each task
+- **v0.28.0** Hands-off **Auto** runs now carry a spec all the way to completed with no final click · custom workflow steps can pick their own Claude Code **model and effort** (cheap fast steps, heavy hard ones) · workflows can point at **reference-doc folders** that show up under Steering instead of posing as phantom specs · a **recovery affordance** when a running step goes quiet
+- **v0.27.0** **Wibey** joins the provider list (CLI + VS Code panel) · living specs open in the **rendered viewer** with their tiers as tabs · bring-your-own workflows (GSD, Matt Pocock skills) finally **advance step after step** — Companion reconstructs their position from the files they write · runnable demo projects under `examples/`
 - [Full changelog →](./CHANGELOG.md)
 
 ## Why it exists
