@@ -6,7 +6,13 @@
 
 ## Summary
 
-Register **Wibey CLI** (`wibey`) as a first-class AI provider in SpecKit Companion so Walmart developers can use Wibey natively for all SpecKit actions (Refine, workflow steps, inline comment resolution). Wibey CLI is built on the Claude Agent SDK, uses the `-p` prompt flag, and requires zero method overrides on `CliTerminalProvider`. A companion `wibey-vscode` panel provider is scoped out of Phase 1: `genaica/wibey-vscode-extension` v1.0.19 exposes no prompt-injection API — an InnerSource issue is opened as part of this work to request `wibey.sendPrompt(text)`.
+Register **Wibey CLI** (`wibey`) and **Wibey (VS Code)** (`wibey-vscode`) as first-class AI providers in SpecKit Companion.
+
+**Wibey CLI** — implements `IAIProvider` directly (outside the `CliTerminalProvider` hierarchy, same pattern as `GeminiCliProvider`). Starts `wibey` in interactive TUI mode, waits 6 seconds for the TUI to initialise, then sends the command as text. Reuses an existing "SpecKit - Wibey" terminal via `vscode.window.terminals` scan when available, avoiding a new process per dispatch.
+
+**Wibey (VS Code)** — panel provider dispatching via a two-step runtime waterfall: (1) `wibey.sendPrompt(text)` command (auto-detected, requires genaica/wibey-vscode-extension#442); (2) clipboard + `wibey.openChat` fallback (works today). A URI-handler path was prototyped but disabled — `vscode.env.openExternal` returns `true` silently even without a registered handler, blocking the fallback.
+
+> **Note**: The original design planned `WibeyCliProvider` to extend `CliTerminalProvider` with the `-p` flag and zero overrides. Real-world testing on macOS showed the headless `-p/-f` approach fails due to spaces in `~/Library/Application Support/...` paths, and also exits Wibey after each task. The interactive TUI approach was adopted instead (matching how `GeminiCliProvider` works).
 
 ## Technical Context
 
@@ -125,37 +131,30 @@ Add to `_PROVIDER_PATHS_RAW` after the `CLAUDE_VSCODE` entry:
 ### Change 3 — `src/ai-providers/wibeyCliProvider.ts`: New provider class
 
 ```typescript
-import { AIProviders } from '../core/constants';
-import { AIProviderType } from './aiProvider';
-import { CliTerminalProvider } from './cliTerminalProvider';
-
-/**
- * Wibey CLI provider — dispatches SpecKit commands to the Wibey CLI
- * (`wibey -p "…"`) in a VS Code terminal.
- *
- * Wibey CLI is built on the Claude Agent SDK and uses the same `-p` flag
- * for non-interactive prompt dispatch, so no method overrides are required.
- * The base CliTerminalProvider handles: install check (`wibey --version`),
- * terminal lifecycle (create/reuse), temp-file dispatch, and cleanup.
- *
- * NOTE — Phase 2: A WibeyPanelProvider for the `wibey-vscode` key is deferred
- * until genaica/wibey-vscode-extension exposes wibey.sendPrompt(text: string).
- */
-export class WibeyCliProvider extends CliTerminalProvider {
+// Implements IAIProvider directly (not CliTerminalProvider).
+// Interactive TUI mode: starts `wibey`, waits 6s for TUI to load,
+// then sends the command as text. Reuses existing "SpecKit - Wibey"
+// terminal via vscode.window.terminals scan.
+export class WibeyCliProvider implements IAIProvider {
     public readonly name = 'Wibey CLI';
-    public readonly type: AIProviderType = AIProviders.WIBEY;
+    public readonly type = AIProviders.WIBEY;
+    private static readonly TERMINAL_TITLE = 'SpecKit - Wibey';
+    private static readonly INIT_DELAY_MS = 6000;
 
-    protected readonly cliBinary = 'wibey';
-    protected readonly installHint = {
-        displayName: 'Wibey CLI',
-        installCommand: 'curl -sSL https://wibey.walmart.com/cli/setup | bash',
-    };
-    protected readonly defaultTerminalTitle = 'SpecKit - Wibey';
-    protected readonly headlessTerminalName = 'Wibey Background';
-    protected readonly logPrefix = 'WibeyCliProvider';
+    private findOrCreateTerminal() { /* scans vscode.window.terminals */ }
 
-    // No method overrides needed.
-    // Dispatch: wibey -p "$(cat /tmp/prompt.md)"
+    async executeInTerminal(prompt: string): Promise<vscode.Terminal> {
+        const { terminal, isNew } = this.findOrCreateTerminal();
+        if (isNew) {
+            terminal.sendText('wibey', true);
+            setTimeout(() => terminal.sendText(command, false), 6000);
+            setTimeout(() => terminal.sendText('', true), 6200);
+        } else {
+            terminal.sendText(command, false);
+            setTimeout(() => terminal.sendText('', true), 200);
+        }
+        return terminal;
+    }
 }
 ```
 

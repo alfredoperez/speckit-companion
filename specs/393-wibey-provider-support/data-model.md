@@ -45,14 +45,13 @@ Derived type `AIProviderType` (`typeof AIProviders[keyof typeof AIProviders]`) a
 |---|---|
 | `name` | `'Wibey CLI'` |
 | `type` | `AIProviders.WIBEY` (`'wibey'`) |
-| `cliBinary` | `'wibey'` |
-| `installHint.displayName` | `'Wibey CLI'` |
-| `installHint.installCommand` | `'curl -sSL https://wibey.walmart.com/cli/setup \| bash'` |
-| `defaultTerminalTitle` | `'SpecKit - Wibey'` |
-| `headlessTerminalName` | `'Wibey Background'` |
-| `logPrefix` | `'WibeyCliProvider'` |
-| Dispatch pattern | `wibey -p "$(cat /tmp/prompt.md)"` |
-| Slash command pattern | `wibey -p "/speckit-specify $(cat /tmp/prompt.md)"` |
+| Base class | `IAIProvider` directly (not `CliTerminalProvider`) |
+| Terminal title | `'SpecKit - Wibey'` |
+| Init delay | 6000 ms (TUI startup on new terminal) |
+| Reuse strategy | Scan `vscode.window.terminals` for live "SpecKit - Wibey" terminal |
+| Dispatch pattern | Start `wibey` interactively → `sendText(command, false)` → `sendText('', true)` |
+| Slash command pattern | Same as dispatch — send `/speckit-specify` as text to the TUI input |
+| ⚠️ Original design | `extends CliTerminalProvider` with `wibey -p "$(cat ...)"` — changed after macOS path-spaces bug and exit-on-complete issue |
 
 ---
 

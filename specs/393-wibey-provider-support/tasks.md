@@ -35,7 +35,7 @@
 
 - [x] T002 [P] [US2] Add `[AIProviders.WIBEY]` entry to `_PROVIDER_PATHS_RAW` in `src/ai-providers/aiProvider.ts` (insert after the `CLAUDE_VSCODE` entry) using the confirmed values: `steeringFile: 'AGENTS.md'`, `globalSteeringFile: null`, `steeringDir: ''`, `steeringPattern: 'AGENTS.md'`, `agentsDir: '.wibey/agents'`, `agentsPattern: '*.md'`, `skillsDir: '.wibey/skills'`, `skillsPattern: '*/SKILL.md'`, `mcpConfigPath: '.wibey/.mcp.json'`, `configDir: '.wibey'`, `supportsHooks: true`, `displayName: 'Wibey CLI'`, `commandFormat: 'dash'`, `quickPickIcon: '$(hubot)'`, `quickPickDescription: "Walmart's built-in AI coding assistant — terminal mode with full SDD support"`, `supportsInteractivePermissions: true`, `autoApproveFlag: ''`
 
-- [x] T003 [P] [US2] Create new file `src/ai-providers/wibeyCliProvider.ts` — class `WibeyCliProvider` extending `CliTerminalProvider` with `name='Wibey CLI'`, `type=AIProviders.WIBEY`, `cliBinary='wibey'`, `installHint={displayName:'Wibey CLI', installCommand:'curl -sSL https://wibey.walmart.com/cli/setup | bash'}`, `defaultTerminalTitle='SpecKit - Wibey'`, `headlessTerminalName='Wibey Background'`, `logPrefix='WibeyCliProvider'`; no method overrides (default `-p` flag matches Wibey CLI interface)
+- [x] T003 [P] [US2] Create new file `src/ai-providers/wibeyCliProvider.ts` — class `WibeyCliProvider` implementing `IAIProvider` directly (not extending `CliTerminalProvider`; same pattern as `GeminiCliProvider`). Interactive TUI mode: starts `wibey` interactively, waits 6 seconds for TUI to initialise, sends command as typed text. Reuses existing "SpecKit - Wibey" terminal via `vscode.window.terminals` scan. ⚠️ *Original plan was to extend `CliTerminalProvider` with `-p` flag; changed after real-world testing showed headless mode fails on macOS paths with spaces and exits Wibey after each task.*
 
 - [x] T004 [US2] Add `import { WibeyCliProvider } from './wibeyCliProvider'` and `[AIProviders.WIBEY]: (ctx, out) => new WibeyCliProvider(ctx, out)` to `PROVIDER_CONSTRUCTORS` in `src/ai-providers/aiProviderFactory.ts` (depends on T003)
 
@@ -62,6 +62,20 @@
 - [x] T007 [P] Open InnerSource issue on `genaica/wibey-vscode-extension` requesting `wibey.sendPrompt(text: string)` command to unblock the `wibey-vscode` panel provider (Phase 2). Issue body: explain SpecKit Companion's dispatch model, the gap in the current API, and the proposed implementation (see plan.md "Phase 2 Gate" section). Link the issue URL in a comment on PR #416.
 
 - [x] T008 Run `npm run compile` (zero TypeScript errors) and `npm test` (all existing tests pass — no new test files needed since `WibeyCliProvider` has zero logic beyond the base class contract). Confirm `validateProviderRegistry` passes at module load.
+
+---
+
+## Phase 5: Wibey VS Code — full prompt injection (blocked on genaica/wibey-vscode-extension#442)
+
+**Blocked by**: genaica/wibey-vscode-extension#442  
+**Current state**: `wibey-vscode` provider works via clipboard fallback — copies the command and shows "Paste in Wibey (⌘V) and press Enter". Manual step required.  
+**Goal**: Zero-manual-step experience — Wibey panel opens with command pre-filled, user presses Enter.
+
+- [ ] T009 [US1] When `genaica/wibey-vscode-extension#442` lands **with Option A (`wibey.sendPrompt` command)**: verify `WibeyPanelProvider` Path 1 auto-activates without code changes (Path 1 already probes `vscode.commands.getCommands()` at dispatch time). Run `npm run install-local`, set `speckit.aiProvider: wibey-vscode`, click Refine — confirm Wibey panel opens with command pre-filled and no clipboard notification appears.
+
+- [ ] T010 [US1] When `genaica/wibey-vscode-extension#442` lands **with Option B (URI handler)**: re-enable the commented-out URI handler block in `src/ai-providers/wibeyPanelProvider.ts` (lines ~114–138). Add a detection mechanism (e.g., a sentinel command or extension version check) to avoid the silent-`true` bug that disabled this path. Test that `openExternal` now correctly dispatches the prompt to the Wibey panel.
+
+- [ ] T011 [US1] Once either T009 or T010 is confirmed working: remove the clipboard fallback notification ("Paste in Wibey…") since it will no longer be the active path. Update `quickstart.md` Scenario 2 (wibey-vscode) to reflect the new UX.
 
 ---
 

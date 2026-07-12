@@ -24,9 +24,10 @@
 1. Set `speckit.aiProvider` to `wibey`
 2. Open a spec in the SpecKit sidebar
 3. Click the **Specify** (or any) workflow step button
-4. **Verify**: A VS Code terminal titled `SpecKit - Wibey` opens (or is reused)
-5. **Verify**: The terminal shows `wibey -p "…"` executing (or the prompt being sent)
-6. **Verify**: No error toast, no crash
+4. **Verify**: A VS Code terminal titled `SpecKit - Wibey` opens and runs `wibey` in interactive TUI mode
+5. **Verify**: After ~6 seconds the TUI loads and the SpecKit command is sent as text input
+6. **Verify**: Wibey stays open after the task completes (TUI remains active)
+7. **Verify**: Clicking a second action reuses the same terminal (no new terminal opened)
 
 ---
 
@@ -34,7 +35,7 @@
 
 1. Set `speckit.aiProvider` to `wibey`
 2. Open a spec in the viewer → hover over a section → click **Refine**
-3. **Verify**: Terminal `SpecKit - Wibey` opens with the refinement prompt
+3. **Verify**: Terminal `SpecKit - Wibey` opens (or is reused) and the refinement command is sent to the Wibey TUI
 4. **Verify**: The command format is `/speckit-*` (dash form), not `/speckit.*` (dot form)
 
 ---
