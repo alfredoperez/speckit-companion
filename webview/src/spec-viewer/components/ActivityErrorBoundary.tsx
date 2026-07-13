@@ -9,6 +9,7 @@ interface Props {
 
 interface State {
     hasError: boolean;
+    message?: string;
 }
 
 /**
@@ -19,8 +20,9 @@ interface State {
 export class ActivityErrorBoundary extends Component<Props, State> {
     state: State = { hasError: false };
 
-    static getDerivedStateFromError(): State {
-        return { hasError: true };
+    static getDerivedStateFromError(error: unknown): State {
+        const message = error instanceof Error ? error.message : String(error);
+        return { hasError: true, message };
     }
 
     componentDidCatch(error: Error): void {
@@ -42,6 +44,7 @@ export class ActivityErrorBoundary extends Component<Props, State> {
             return (
                 <div class="activity-error">
                     Activity panel hit an error — see the SpecKit Companion output channel.
+                    {this.state.message && <code class="activity-error__detail"> {this.state.message}</code>}
                 </div>
             );
         }

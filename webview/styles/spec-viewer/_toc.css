@@ -62,9 +62,9 @@ aside.spec-toc {
 }
 
 .spec-toc-toggle:hover {
-    color: var(--accent);
-    border-color: var(--accent);
-    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+    background: var(--bg-elevated);
 }
 
 .spec-toc-toggle[aria-pressed="true"] {
@@ -98,7 +98,7 @@ aside.spec-toc.spec-toc--empty {
 
 .spec-toc-link {
     display: block;
-    padding: 4px 8px;
+    padding: 6px 10px;
     color: var(--text-secondary);
     text-decoration: none;
     border-radius: var(--radius-sm);
@@ -109,7 +109,7 @@ aside.spec-toc.spec-toc--empty {
 
 .spec-toc-link:hover {
     color: var(--text-primary);
-    background: var(--bg-secondary);
+    background: var(--bg-elevated);
     text-decoration: none;
 }
 
@@ -117,17 +117,13 @@ aside.spec-toc.spec-toc--empty {
     padding-left: var(--space-4);
 }
 
-/* Active item (terminal): a `❯` prompt marker + accent text + subtle fill,
-   replacing the old border-left side-stripe. */
+/* Active item speaks the rail-button language: a lifted surface,
+   primary ink, no prompt glyphs or accent fills. */
 .spec-toc-link[aria-current="location"] {
-    color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    box-shadow: var(--shadow-sm);
     font-weight: 600;
-}
-
-.spec-toc-link[aria-current="location"]::before {
-    content: "\276F\00a0"; /* ❯ + nbsp */
-    color: var(--accent);
 }
 
 .spec-toc-link:focus-visible {

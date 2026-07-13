@@ -1270,3 +1270,82 @@
 .activity-tabs__panel > .activity-card:only-of-type .activity-card__title {
     display: none;
 }
+
+/* ============================================
+   Latest-activity feed (Overview)
+   ============================================ */
+
+.activity-feed {
+    margin: var(--space-4) 0 0;
+}
+
+.activity-feed__label {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--text-label);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.activity-feed ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.activity-feed li {
+    display: grid;
+    grid-template-columns: 8px minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: baseline;
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+}
+
+.activity-feed__mark {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    align-self: center;
+}
+
+.activity-feed__text {
+    color: var(--text-body);
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.activity-feed time {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Progressive disclosure for the approach prose */
+.activity-plan__disclosure {
+    margin-top: var(--space-2);
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--bg-elevated);
+}
+
+.activity-plan__disclosure summary {
+    padding: 10px 12px;
+    color: var(--text-primary);
+    font-size: 12.5px;
+    font-weight: 650;
+    cursor: pointer;
+    user-select: none;
+}
+
+.activity-plan__disclosure .activity-plan__approach {
+    margin: 0;
+    padding: 0 12px 12px;
+}

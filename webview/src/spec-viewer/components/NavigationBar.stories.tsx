@@ -6,7 +6,7 @@ import { mockDoc, mockNavState, mockRelatedDoc, stalePlan } from './__stories__/
 const meta: Meta<typeof NavigationBar> = {
     title: 'Viewer/NavigationBar',
     component: NavigationBar,
-    decorators: [(Story) => <nav class="compact-nav"><Story /></nav>],
+    decorators: [(Story) => <div style="max-width: 240px;"><Story /></div>],
 };
 export default meta;
 
@@ -137,3 +137,31 @@ export const SpecWithoutChildren: Story = {
     },
 };
 
+
+// ── Custom workflow: the rail is generated from workflow data, not a
+//    canonical four-step assumption (FR-007) ─────────────────────────
+export const CustomWorkflowSevenSteps: Story = {
+    name: 'Custom workflow · 7 steps + free-named artifacts',
+    render: () => {
+        navState.value = mockNavState({
+            coreDocs: [
+                mockDoc('discover', true, 'Discovery'),
+                mockDoc('spec', true, 'Specification'),
+                mockDoc('plan', true, 'Plan'),
+                mockDoc('security-review', false, 'Security Review'),
+                mockDoc('tickets', false, 'Create Tickets'),
+                mockDoc('implement', false, 'Implement'),
+                mockDoc('release', false, 'Release'),
+            ],
+            relatedDocs: [
+                mockRelatedDoc('threat-model', 'security-review', 'threat-model.md'),
+                mockRelatedDoc('01-01-PLAN', 'plan', '01-01-PLAN.md'),
+                mockRelatedDoc('research', 'plan', 'Research'),
+            ],
+            currentDoc: 'plan',
+            workflowPhase: 'plan',
+            activeStep: 'plan',
+        });
+        return <NavigationBar />;
+    },
+};

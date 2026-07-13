@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- **The spec viewer got its redesign.** The viewer now runs the design that won the multi-provider redesign investigation: a spec with recorded activity opens on its **Overview** — progress, intent, decisions, latest activity, and proof up front — with an **Overview / Documents** switch in the header replacing the old Activity toggle. Documents live on a left rail where the highlight shows what you're reading and separate marks show how far the run is; a run-facts column keeps status, phase, current task, and progress in view; and the footer becomes a floating action pill led by a context line naming the next step, with workflow-provided commands under **Other actions**.
+- **A theme you can actually read, in both modes.** The viewer now ships its own tested light and dark palette (statuses, surfaces, syntax) instead of inheriting whatever the editor theme happens to define — every text/surface pair clears WCAG AA in both modes, and code blocks render on a dark surface that stays readable even in light themes. Typography follows your editor font.
+- Custom workflows, living specs, inline review comments, and every lifecycle state behave exactly as before — the redesign changes how the viewer looks and lands, not what it does.
+
 ## [0.28.1] - 2026-07-11
 
 ### Fixed

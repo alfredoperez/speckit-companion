@@ -1,5 +1,5 @@
 import type { ViewerState } from '../types';
-import { viewerState, navState, activityTab } from '../signals';
+import { viewerState, navState, activityTab, historyEntries } from '../signals';
 import { activityTabs, defaultActivityTab, ActivityTabId } from '../activityTabsModel';
 import { ActivityHero } from './ActivityHero';
 import { PlanSection } from './PlanSection';
@@ -35,7 +35,7 @@ function InstallBanner() {
     );
 }
 
-function hasAnyData(state: ViewerState): boolean {
+export function hasAnyData(state: ViewerState): boolean {
     if (state.approach || state.lastAction || state.prUrl) return true;
     if (state.taskSummaries && Object.keys(state.taskSummaries).length > 0) return true;
     if (state.decisions && state.decisions.length > 0) return true;
@@ -49,6 +49,37 @@ function hasAnyData(state: ViewerState): boolean {
     if (state.history && state.history.length > 0) return true;
     if (state.stepHistory && Object.keys(state.stepHistory).length > 0) return true;
     return false;
+}
+
+/** The last few recorded finishes, newest first — the Overview's pulse line. */
+function LatestFeed() {
+    const entries = historyEntries.value
+        .filter(entry => entry.kind === 'complete')
+        .slice(-3)
+        .reverse();
+    if (entries.length === 0) return null;
+    const fmtTime = (iso: string) => {
+        const d = new Date(iso);
+        return isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
+    return (
+        <section class="activity-feed" aria-label="Latest activity">
+            <span class="activity-feed__label">Latest activity</span>
+            <ul>
+                {entries.map((entry, i) => (
+                    <li key={`${entry.step}-${entry.at}-${i}`}>
+                        <span class="activity-feed__mark" aria-hidden="true"></span>
+                        <span class="activity-feed__text">
+                            {entry.task
+                                ? `${entry.task} finished`
+                                : `${entry.step}${entry.substep ? ` · ${entry.substep}` : ''} complete`}
+                        </span>
+                        <time>{fmtTime(entry.at)}</time>
+                    </li>
+                ))}
+            </ul>
+        </section>
+    );
 }
 
 export function ActivityPanel() {
@@ -75,6 +106,7 @@ export function ActivityPanel() {
             <InstallBanner />
             <ActivityHero state={state} onJump={select} />
             <PlanSection state={state} />
+            <LatestFeed />
             {active && (
                 <ActivityTabs tabs={tabs} active={active} onSelect={select}>
                     {active === 'decisions' && <DecisionsCard state={state} />}

@@ -5,24 +5,25 @@
  * preprocessChecklist and the task-item renderer.
  */
 
-/* ── Key entities ───────────────────────────────────────── */
+/* ── Key entities — hairline list rows, not cards ── */
 #markdown-content .entity-row {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg-secondary);
-  margin: var(--space-2) 0;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  margin: 0;
 }
 
 #markdown-content .entity-name {
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--purple);
+  color: var(--text-primary);
 }
 
 #markdown-content .entity-paren {
@@ -52,7 +53,8 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--space-2) var(--space-4);
-  background: var(--bg-code-header);
+  /* Surface tint, NOT the code-header token — that one is always-dark now. */
+  background: var(--bg-elevated);
   border-bottom: 1px solid var(--border);
 }
 
@@ -66,10 +68,10 @@
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   color: var(--success);
-  background: color-mix(in srgb, var(--success) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--success) 55%, transparent);
-  padding: 1px var(--space-2);
-  border-radius: var(--radius-sm);
+  background: var(--success-subtle);
+  border: none;
+  padding: 2px var(--space-2);
+  border-radius: 999px;
 }
 
 #markdown-content .ck-item {
@@ -115,8 +117,8 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--bg-secondary);
-  padding: var(--space-3) var(--space-4);
-  margin: var(--space-3) 0;
+  padding: var(--space-4) var(--space-5);
+  margin: var(--space-4) 0;
 }
 
 #markdown-content .decision-card__head {
@@ -132,9 +134,9 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
-  padding: 1px var(--space-2);
+  background: var(--accent-subtle);
+  border: none;
+  padding: 2px var(--space-2);
   border-radius: var(--radius-sm);
   white-space: nowrap;
 }
@@ -154,6 +156,7 @@
 }
 
 #markdown-content .decision-label {
+  font-family: var(--font-mono);
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -202,27 +205,23 @@
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   color: var(--text-secondary);
-  background: var(--bg-code);
+  /* Surface tint, not the always-dark code token (light-theme readability). */
+  background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 1px 6px;
 }
 
-/* ── Card hover (terminal): the border flips to the accent, no lift ── */
-#markdown-content .entity-row,
+/* ── Card hover: a quiet border strengthen — accent-flip hover reads as
+   decoration against dense document content (docs/DESIGN.md). ── */
 #markdown-content .decision-card,
-#markdown-content .ck-group,
-#markdown-content .con-row,
-#markdown-content .req-row {
+#markdown-content .ck-group {
   transition: border-color var(--transition-fast) ease;
 }
 
-#markdown-content .entity-row:hover,
 #markdown-content .decision-card:hover,
-#markdown-content .ck-group:hover,
-#markdown-content .con-row:hover,
-#markdown-content .req-row:hover {
-  border-color: var(--accent);
+#markdown-content .ck-group:hover {
+  border-color: var(--border-hover);
 }
 
 

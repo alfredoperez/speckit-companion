@@ -19,7 +19,7 @@
 import type { Meta, StoryObj } from '@storybook/preact';
 import { useEffect, useState } from 'preact/hooks';
 import { App } from './App';
-import { navState, viewerState, markdownHtml, historyEntries, activityVisible } from './signals';
+import { navState, viewerState, markdownHtml, historyEntries, viewerMode } from './signals';
 import type { NavState, ViewerState, DocumentType, HistoryEntry, SerializedFooterAction } from './types';
 import { renderMarkdown, setCurrentTask, setHasSpecContext, setTaskSummaries } from './markdown';
 import { applyHighlighting } from './highlighting';
@@ -177,11 +177,13 @@ interface FullViewerProps {
     md: string;
     nav: NavState;
     vs: ViewerState;
+    /** Pin the shell view; omit to exercise the real landing-view default. */
+    view?: 'overview' | 'document';
 }
 
 /** Mounts the real App exactly as index.tsx does: signals in, then the
  *  same post-paint pass (highlighting + TOC build) updateContent runs. */
-function FullViewer({ md, nav, vs }: FullViewerProps) {
+function FullViewer({ md, nav, vs, view }: FullViewerProps) {
     navState.value = nav;
     viewerState.value = vs;
     historyEntries.value = vs.history ?? [];
@@ -191,11 +193,11 @@ function FullViewer({ md, nav, vs }: FullViewerProps) {
     markdownHtml.value = renderMarkdown(md);
 
     useEffect(() => {
-        activityVisible.value = false;
+        viewerMode.value = view ?? null;
         return () => {
-            activityVisible.value = false;
+            viewerMode.value = null;
         };
-    }, []);
+    }, [view]);
 
     useEffect(() => {
         const id = requestAnimationFrame(() => {
@@ -222,11 +224,12 @@ interface InteractiveViewerProps {
     initialDoc: string;
     vs: ViewerState;
     extraNav?: Partial<NavState>;
+    view?: 'overview' | 'document';
 }
 
 /** FullViewer + working navigation: answers the nav's `stepperClick` /
  *  `switchDocument` messages in-story, standing in for messageHandlers.ts. */
-function InteractiveViewer({ ctx, docs, initialDoc, vs, extraNav }: InteractiveViewerProps) {
+function InteractiveViewer({ ctx, docs, initialDoc, vs, extraNav, view }: InteractiveViewerProps) {
     const [doc, setDoc] = useState(initialDoc);
 
     useEffect(() => {
@@ -255,7 +258,7 @@ function InteractiveViewer({ ctx, docs, initialDoc, vs, extraNav }: InteractiveV
         ...extraNav,
     });
 
-    return <FullViewer md={docs[doc].md} nav={nav} vs={vs} />;
+    return <FullViewer md={docs[doc].md} nav={nav} vs={vs} view={view} />;
 }
 
 const meta: Meta = {
@@ -315,6 +318,7 @@ export const Implementing172: Story = {
             ctx={ctx172}
             docs={docs172}
             initialDoc="tasks"
+            view="document"
             extraNav={{
                 specStatus: 'implementing',
                 badgeText: 'IMPLEMENTING',

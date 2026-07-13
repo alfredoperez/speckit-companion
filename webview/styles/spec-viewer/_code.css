@@ -49,10 +49,11 @@
     border: none;
 }
 
-/* Tree structure blocks */
+/* Tree structure blocks — same owned dark surface as code, so the colored
+   text must come from the code palette, never the theme accent. */
 #markdown-content pre.tree-structure {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
+    background: var(--bg-code);
+    border: 1px solid var(--border-code);
     border-radius: var(--radius-md);
     padding: var(--space-4);
     margin: var(--space-4) 0;
@@ -63,7 +64,7 @@
     font-family: var(--font-mono);
     font-size: 12px; /* Fixed size for consistency with code blocks */
     line-height: var(--leading-normal);
-    color: var(--text-body);
+    color: var(--code-text);
     white-space: pre;
     display: block;
     background: transparent;
@@ -72,11 +73,11 @@
 }
 
 #markdown-content pre.tree-structure .tree-dir {
-    color: var(--accent);
+    color: var(--code-type);
 }
 
 #markdown-content pre.tree-structure .tree-comment {
-    color: var(--text-muted);
+    color: var(--code-comment);
     font-style: italic;
 }
 
@@ -84,8 +85,8 @@
 #markdown-content pre:not(.code-block):not(.tree-structure):not(.mermaid) {
     margin: var(--space-4) 0;
     padding: var(--space-4);
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
+    background: var(--bg-code);
+    border: 1px solid var(--border-code);
     border-radius: var(--radius-md);
     overflow-x: auto;
 }
@@ -95,7 +96,7 @@
     font-size: var(--text-sm);
     line-height: var(--leading-normal);
     display: block;
-    color: var(--text-secondary);
+    color: var(--code-text);
     background: none;
     border: none;
     padding: 0;
@@ -163,6 +164,47 @@
 /* Ensure code blocks have proper padding when hljs is applied */
 pre.code-block code.hljs {
     padding: var(--space-4);
+}
+
+/* Token-driven syntax roles on the owned dark surface (both themes) —
+   overrides the CDN theme so the palette stays in tokens.css. */
+#markdown-content .hljs-keyword,
+#markdown-content .hljs-selector-tag,
+#markdown-content .hljs-literal {
+    color: var(--code-keyword);
+}
+
+#markdown-content .hljs-string,
+#markdown-content .hljs-attr,
+#markdown-content .hljs-regexp {
+    color: var(--code-string);
+}
+
+#markdown-content .hljs-title,
+#markdown-content .hljs-function,
+#markdown-content .hljs-name {
+    color: var(--code-function);
+}
+
+#markdown-content .hljs-comment,
+#markdown-content .hljs-quote {
+    color: var(--code-comment);
+}
+
+#markdown-content .hljs-number,
+#markdown-content .hljs-symbol {
+    color: var(--code-number);
+}
+
+#markdown-content .hljs-variable,
+#markdown-content .hljs-template-variable {
+    color: var(--code-variable);
+}
+
+#markdown-content .hljs-type,
+#markdown-content .hljs-built_in,
+#markdown-content .hljs-class {
+    color: var(--code-type);
 }
 
 /* ============================================

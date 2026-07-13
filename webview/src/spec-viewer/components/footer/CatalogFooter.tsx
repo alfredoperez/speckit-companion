@@ -1,4 +1,5 @@
-import { Button } from '../../../shared/components/Button';
+import { useState } from 'preact/hooks';
+import { Button, type ButtonVariant } from '../../../shared/components/Button';
 import { Toast } from '../../../shared/components/Toast';
 import type {
     EnhancementButton,
@@ -17,6 +18,12 @@ const SCOPE_SUFFIX: Record<'spec' | 'step', string> = {
 
 function withScopeSuffix(a: SerializedFooterAction): string {
     return `${a.tooltip} (${SCOPE_SUFFIX[a.scope]})`;
+}
+
+function actionVariant(id: string): ButtonVariant {
+    if (id === 'refine') return 'enhancement';
+    if (id === 'approve' || id === 'complete' || id === 'reactivate') return 'primary';
+    return 'secondary';
 }
 
 export interface CatalogFooterProps {
@@ -47,6 +54,7 @@ export interface CatalogFooterProps {
 export function CatalogFooter({ vs, isActive, stepInFlight = false, enhancementButtons }: CatalogFooterProps) {
     const send = (msg: ViewerToExtensionMessage) => () => vscode.postMessage(msg);
     const sendFooter = (id: string) => () => vscode.postMessage({ type: 'footerAction', id });
+    const [menuOpen, setMenuOpen] = useState(false);
 
     const visible = vs.footer;
     const LEFT_IDS = new Set(['regenerate']);
@@ -65,35 +73,65 @@ export function CatalogFooter({ vs, isActive, stepInFlight = false, enhancementB
     // on the footer's actual closure actions rather than the status string.
     const specClosureReady = visible.some((a) => a.id === 'complete' || a.id === 'reactivate');
 
-    const renderAction = (a: SerializedFooterAction) => {
-        const isPrimary = a.id === 'approve' || a.id === 'complete' || a.id === 'reactivate';
-        const isRefine = a.id === 'refine';
-        return (
-            <Button
-                key={a.id}
-                label={a.label}
-                variant={isRefine ? 'enhancement' : (isPrimary ? 'primary' : 'secondary')}
-                title={withScopeSuffix(a)}
-                onClick={sendFooter(a.id)}
-            />
-        );
-    };
+    const renderAction = (a: SerializedFooterAction) => (
+        <Button
+            key={a.id}
+            label={a.label}
+            variant={actionVariant(a.id)}
+            title={withScopeSuffix(a)}
+            onClick={sendFooter(a.id)}
+        />
+    );
+
+    // Context line: one sentence naming the forward motion,
+    // derived from the same catalog the buttons render from.
+    const forward = rightActions.find(
+        (a) => a.id === 'approve' || a.id === 'start' || a.id === 'complete' || a.id === 'reactivate',
+    );
+    let context = '';
+    if (stepInFlight) context = 'Step running — actions unlock when it settles';
+    else if (forward) context = `Next: ${forward.label}`;
+
+    // Workflow-provided commands collapse into an "Other actions" menu.
+    const showEnhancements = isActive && !specClosureReady && enhancementButtons.length > 0;
 
     return (
         <footer class="actions">
             <Toast id="action-toast" />
+            {context && <span class="footer-context">{context}</span>}
             <div class="actions-left">
                 {leftActions.map(renderAction)}
-                {isActive && !specClosureReady && enhancementButtons.map((btn) => (
-                    <Button
-                        key={btn.command}
-                        label={btn.label}
-                        variant="enhancement"
-                        icon={btn.icon}
-                        title={btn.tooltip || btn.label}
-                        onClick={send({ type: 'clarify', command: btn.command })}
-                    />
-                ))}
+                {showEnhancements && (
+                    <div class="action-wrap">
+                        <button
+                            type="button"
+                            class="secondary"
+                            aria-expanded={menuOpen}
+                            aria-haspopup="menu"
+                            onClick={() => setMenuOpen(!menuOpen)}
+                        >
+                            Other actions
+                        </button>
+                        {menuOpen && (
+                            <div class="action-menu" role="menu">
+                                {enhancementButtons.map((btn) => (
+                                    <button
+                                        key={btn.command}
+                                        role="menuitem"
+                                        title={btn.tooltip || btn.label}
+                                        onClick={() => {
+                                            send({ type: 'clarify', command: btn.command })();
+                                            setMenuOpen(false);
+                                        }}
+                                    >
+                                        {btn.label}
+                                        {btn.tooltip && <small>{btn.tooltip}</small>}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
             <div class="actions-right">
                 {rightActions.map(renderAction)}

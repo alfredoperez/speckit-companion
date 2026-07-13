@@ -157,7 +157,9 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: white;
+  /* On-status ink: the canvas color reads on the success fill in both themes
+     (hardcoded white failed on the light-green dark-theme success). */
+  color: var(--bg-primary);
   font-size: 10px;
   font-weight: bold;
   line-height: 1;

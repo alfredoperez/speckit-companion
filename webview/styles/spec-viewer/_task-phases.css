@@ -4,10 +4,13 @@
  * preprocessTaskPhases (phase number chip + MVP / priority chips).
  */
 
+/* Compact tinted card instead of an underlined heading. */
 #markdown-content .phase-header {
   margin: var(--space-6) 0 var(--space-3);
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--border);
+  padding: 14px 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
 }
 
 #markdown-content .phase-header:first-child {
@@ -23,13 +26,13 @@
 
 #markdown-content .phase-num {
   font-size: var(--text-xs);
-  font-weight: 600;
+  font-weight: 650;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
-  padding: 1px var(--space-2);
+  background: var(--accent-subtle);
+  border: none;
+  padding: 2px var(--space-2);
   border-radius: var(--radius-sm);
 }
 
@@ -68,6 +71,7 @@
 
 #markdown-content .phase-title {
   margin: 0;
-  font-size: var(--text-xl);
+  font-size: 20px;
+  line-height: 1.25;
   color: var(--text-primary);
 }

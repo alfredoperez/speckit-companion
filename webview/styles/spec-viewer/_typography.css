@@ -7,30 +7,34 @@
    Headings
    ============================================ */
 
-/* Headings with professional document typography */
+/* Document scale: a strong page title, quiet bounded sections. */
 #markdown-content h1 {
-    font-size: 2rem;
+    font-size: clamp(30px, 5vw, 46px);
     font-weight: 700;
-    line-height: var(--leading-tight);
-    letter-spacing: -0.02em;
-    margin: 0 0 var(--space-5) 0;
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    margin: 0 0 30px 0;
     color: var(--header-title);
 }
 
 #markdown-content h2 {
-    font-size: 1.5rem;
-    font-weight: 600;
+    font-size: 22px;
+    font-weight: 650;
     line-height: var(--leading-snug);
-    letter-spacing: -0.01em;
-    margin: 28px 0 16px 0;
+    letter-spacing: -0.025em;
+    margin: 52px 0 18px 0;
     color: var(--header-section);
 }
 
+#markdown-content h2:first-child {
+    margin-top: 0;
+}
+
 #markdown-content h3 {
-    font-size: 1.2rem;
+    font-size: 16px;
     font-weight: 600;
     line-height: 1.4;
-    margin: 20px 0 10px 0;
+    margin: 32px 0 10px 0;
     color: var(--header-subsection);
 }
 
@@ -89,13 +93,14 @@
    Blockquotes
    ============================================ */
 
+/* Neutral edge — quotes are context, not calls to action. */
 #markdown-content blockquote {
     margin: var(--space-3) 0;
     padding: var(--space-2) var(--space-3);
-    border-left: 3px solid var(--accent);
-    background: var(--accent-subtle);
+    border-left: 3px solid var(--border-hover);
+    background: var(--bg-elevated);
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    color: var(--text-primary);
+    color: var(--text-body);
 }
 
 #markdown-content blockquote p {
@@ -107,12 +112,14 @@
    Inline code
    ============================================ */
 
+/* Inline code speaks primary ink on a quiet surface — the syntax palette
+   belongs to the always-dark blocks, not to light-surface inline spans. */
 #markdown-content code:not(pre code) {
     font-family: var(--font-mono);
     font-size: 0.875em;
     padding: 1px 5px;
-    color: var(--code-variable);
+    color: var(--text-primary);
     background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    border: none;
+    border-radius: 3px;
 }

@@ -170,8 +170,6 @@ const specViewerConfig = {
         { from: 'webview/styles/spec-viewer', to: 'spec-viewer' },
         // Shared design tokens — imported by every webview stylesheet
         { from: 'webview/styles/tokens.css', to: 'tokens.css' },
-        // Bundled Geist Variable font (offline loading)
-        { from: 'webview/fonts', to: 'fonts' },
         // Bundled @vscode/codicons (offline loading)
         { from: 'node_modules/@vscode/codicons/dist/codicon.css', to: 'codicons/codicon.css' },
         { from: 'node_modules/@vscode/codicons/dist/codicon.ttf', to: 'codicons/codicon.ttf' }

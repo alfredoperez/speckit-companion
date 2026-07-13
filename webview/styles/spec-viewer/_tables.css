@@ -12,7 +12,8 @@
     margin: var(--space-4) 0;
     border-collapse: collapse;
     font-size: var(--text-sm);
-    border: 1px solid color-mix(in srgb, var(--text-muted) 25%, transparent);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
     border-radius: var(--radius-md);
     overflow: hidden;
 }
@@ -20,35 +21,25 @@
 #markdown-content th {
     text-align: left;
     padding: var(--space-2) var(--space-3);
-    background: var(--bg-secondary);
-    border-bottom: 1px solid color-mix(in srgb, var(--text-muted) 25%, transparent);
-    border-right: 1px solid color-mix(in srgb, var(--text-muted) 15%, transparent);
-    font-weight: 600;
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 650;
+    letter-spacing: 0.02em;
     color: var(--text-primary);
-}
-
-#markdown-content th:last-child {
-    border-right: none;
 }
 
 #markdown-content td {
     padding: var(--space-2) var(--space-3);
-    border-bottom: 1px solid color-mix(in srgb, var(--text-muted) 15%, transparent);
-    border-right: 1px solid color-mix(in srgb, var(--text-muted) 15%, transparent);
+    border-bottom: 1px solid var(--border);
     vertical-align: top;
     color: var(--text-body);
-}
-
-#markdown-content td:last-child {
-    border-right: none;
+    font-variant-numeric: tabular-nums;
 }
 
 #markdown-content tr:last-child td {
     border-bottom: none;
-}
-
-#markdown-content tbody tr:nth-child(even) td {
-    background: color-mix(in srgb, var(--bg-secondary) 50%, transparent);
 }
 
 #markdown-content tr:hover td {
@@ -59,13 +50,17 @@
    User Story Cards - Clean Professional Style
    ============================================ */
 
+/* User stories as bounded sections: a card with an accent edge. */
 .user-story-header {
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
-    padding: var(--space-2) 0;
-    margin: var(--space-4) 0 var(--space-2) 0;
-    border-bottom: 1px solid var(--border);
+    padding: var(--space-4) var(--space-5);
+    margin: var(--space-6) 0 var(--space-3) 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-md);
 }
 
 /* Metadata line (US-1 · Critical) */
@@ -87,8 +82,8 @@
 .story-id {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    font-weight: 500;
-    color: var(--text-muted);
+    font-weight: 650;
+    color: var(--accent);
     letter-spacing: 0.5px;
 }
 
@@ -270,7 +265,8 @@
     opacity: 0;
 }
 
-/* Row add button (comment icon on table rows) */
+/* Row add button (comment icon on table rows) — review affordances speak
+   the info hue, not the success green. */
 .row-add-btn {
     position: absolute;
     left: 50%;
@@ -279,9 +275,9 @@
     width: 24px;
     height: 24px;
     border-radius: var(--radius-sm);
-    border: 1px solid #22c55e;
-    background: #22c55e;
-    color: white;
+    border: 1px solid var(--info);
+    background: var(--info);
+    color: var(--bg-primary);
     opacity: 0;
     transition: all var(--transition-fast);
     cursor: pointer;
@@ -301,8 +297,8 @@
 }
 
 .row-add-btn:hover {
-    background: #16a34a;
-    border-color: #16a34a;
+    background: color-mix(in srgb, var(--info) 85%, var(--text-primary));
+    border-color: color-mix(in srgb, var(--info) 85%, var(--text-primary));
     transform: translate(-50%, -50%) scale(1.1);
 }
 
@@ -395,13 +391,13 @@
 }
 
 #markdown-content .scenario-item .keyword-given {
-    color: #4fc1ff;
+    color: var(--info);
 }
 
 #markdown-content .scenario-item .keyword-when {
-    color: #e5c07b;
+    color: var(--warning);
 }
 
 #markdown-content .scenario-item .keyword-then {
-    color: #73c991;
+    color: var(--success);
 }

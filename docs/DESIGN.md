@@ -2,31 +2,35 @@
 
 ## Tokens (source of truth)
 
-All color / spacing / type come from `webview/styles/tokens.css`, which maps to VS Code theme variables (`--vscode-*`) with fallbacks. **Never hardcode hex for theme-able surfaces** — use the tokens so light / dark / high-contrast all work.
+All color / spacing / type come from `webview/styles/tokens.css`. Since the Codex adoption (spec 394), the palette is **owned**: deliberate light/dark literals for canvas, surfaces, ink, statuses, and syntax — chosen for predictable WCAG contrast rather than inherited from `--vscode-*` variables. Only typography (`--vscode-font-family` / `--vscode-editor-font-family`) and **high-contrast mode** follow the host. **Never hardcode hex in partials** — use the tokens; theme blocks (`body.vscode-light` / `-dark` / `-high-contrast`) re-value them.
 
-- Surfaces: `--bg-primary` / `--bg-secondary` / `--bg-elevated` / `--bg-hover`
-- Text: `--text-primary` / `--text-body` / `--text-secondary` / `--text-muted` — readable content uses `--text-body` / `--text-primary`; secondary/muted are **metadata only** (they map to VS Code's intentionally low-contrast description/disabled colors).
-- Accent / status: `--accent`, `--success`, `--warning`, `--error` (+ `*-subtle` tints, `--border-accent`).
-- Type: `--font-family` (Geist / system), `--font-mono`; scale `--text-xs` … `--text-3xl`.
-- Radius / shadow / motion: `--radius-*`, `--shadow-*`, `--transition-fast/normal`.
+- Surfaces: `--bg-primary` (canvas) / `--bg-secondary` / `--bg-elevated` / `--bg-hover` / `--bg-inset`
+- Text: `--text-primary` / `--text-body` / `--text-secondary` / `--text-muted` — readable content uses `--text-body` / `--text-primary`; secondary/muted are **metadata only**.
+- Accent / status: `--accent` (+ `--accent-ink` for on-accent text), `--info`, `--success`, `--warning`, `--error` (+ `*-subtle` opaque washes).
+- Code: `--bg-code` is an **always-dark owned surface** (readable in both themes); syntax colors sit on it.
+- Type: `--font-family` (host editor), `--font-mono`; scale `--text-xs` … `--text-3xl`.
+- Radius / shadow / motion: `--radius-sm` 4px (controls) / `--radius-md` 6px (surfaces) / `--radius-lg` 8px; `--shadow-*`; `--transition-fast/normal`.
+
+**Token discipline (learned the hard way):** a custom property declared on `:root` resolves its `var()` chain *at `:root`* — a theme block that re-values only the underlying token leaves the alias frozen. Theme-dependent tokens must be re-declared as literals in every theme block (see `--header-*`).
 
 ## Component vocabulary (markdown-rendered, inside `#markdown-content`)
 
-Requirement rows, key-entity rows, user-story headers, Given/When/Then stacked scenarios, phase headers, task items + capture detail, plan Technical Context grid + Constitution verdict rows (collapsible), research decision cards, checklist report, tables, file tree. Card-like components share a hover affordance (border + shadow + slight lift). Per-item components stay commentable (the inline "+" line affordance).
+Requirement scan rows (info-hue id badges), key-entity hairline rows, user-story cards (accent-edged), Given/When/Then stacked scenarios, compact tinted phase headers, task items + capture detail, plan Technical Context grid + Constitution verdict rows (collapsible), research decision cards, checklist report, surface tables (mono headers, row-only borders), file tree and code on the owned dark surface with a language chip. Per-item components stay commentable (the inline "+" line affordance, info hue).
 
-## Direction: terminal-native / techy accent (measured)
+## Direction: the Codex system (spec 394)
 
-Goal: feel modern and built-for-developers without breaking VS Code nativeness.
+The viewer reads as a calm operational surface for spec documents — structured data first, prose quieter than identifiers and headings.
 
-- **Shape** — squared corners (radius 0–2px) on interactive / techy elements; sharp 1.5–2px borders.
-- **Type** — monospace + uppercase + wide letter-spacing on buttons and key labels for a terminal feel.
-- **Motion** — crisp hover **color-flip** (transparent ↔ accent, or fg/bg invert), ease-out, 120–160ms; always a `prefers-reduced-motion` fallback to instant.
-- **Signature interactions** — a hard offset shadow that collapses on press (`box-shadow` 3–4px → 0 + a small translate); optional **corner-bracket / viewfinder** framing on primary actions.
-- **Restraint** — do NOT drench surfaces in one loud color; backgrounds stay theme-adaptive. The accent (VS Code `focusBorder` by default) carries the energy, not a fixed yellow.
+- **Shell** — title-first header with an **Overview / Documents** view switch; a vertical **document rail** (selection = lifted surface, completion = rail marks — never one visual for both); a 72ch-capped reading column; a **run-facts aside** (≤980px yields); a **floating glass-pill footer** whose primary carries the workflow-derived next action and whose extra commands collapse into "Other actions".
+- **Shape** — 6px surfaces, 4px controls, pill badges. The earlier 2px terminal direction is retired.
+- **Type** — host fonts; sentence-case buttons; mono microtype reserved for metadata (ids, counts, rail labels, timestamps).
+- **Color** — primary fill reserved for the forward action; navigation and secondary actions use surface contrast, not accent fills; semantic hues on their `*-subtle` washes.
+- **Motion** — quiet: background/color transitions at 150–200ms, a 1px press settle, the working-state pulse; only running states animate. Always reduced-motion safe (global kill-switch in tokens.css).
 
 ## Bans (impeccable + repo rules)
 
-- No **side-stripe accent borders** (a >1px colored border on one side). Use full borders or background tints.
-- No gradient text; no decorative glassmorphism.
-- Readable text must clear WCAG AA; `--text-secondary` / `--text-muted` are for metadata, not body copy.
-- Stay **theme-adaptive** — hardcoded brand color only for a deliberate accent moment, never for body surfaces.
+- No accent-flip hover fills or viewfinder/corner-bracket decoration (rejected in the Codex evaluation — competes with dense document content).
+- No side-stripe accent borders **except** the Codex-specified user-story card edge and neutral structural edges (blockquote, spec-input).
+- No gradient text; no decorative glassmorphism (the footer's backdrop blur is the one sanctioned glass moment).
+- Readable text must clear WCAG AA in **both** owned palettes.
+- Mono + uppercase is metadata voice only — never buttons or body copy.

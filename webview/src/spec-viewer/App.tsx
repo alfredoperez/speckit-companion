@@ -3,9 +3,10 @@ import { NavigationBar } from './components/NavigationBar';
 import { StaleBanner } from './components/StaleBanner';
 import { SpecHeader } from './components/SpecHeader';
 import { FooterActions } from './components/FooterActions';
-import { ActivityPanel } from './components/ActivityPanel';
+import { ActivityPanel, hasAnyData } from './components/ActivityPanel';
 import { ActivityErrorBoundary } from './components/ActivityErrorBoundary';
-import { markdownHtml, navState, activityVisible, viewerState } from './signals';
+import { RunAside } from './components/RunAside';
+import { markdownHtml, navState, viewerMode, viewerState } from './signals';
 import { restoreComments, clearAllRefinements } from './editor';
 
 export interface AppProps {
@@ -16,12 +17,22 @@ export function App({ specStatus }: AppProps) {
     const contentRef = useRef<HTMLDivElement>(null);
     const html = markdownHtml.value;
     const ns = navState.value;
-    const showActivity = activityVisible.value;
-    const reviewComments = viewerState.value?.reviewComments;
+    const vs = viewerState.value;
+    const reviewComments = vs?.reviewComments;
+
+    // Shell view: Overview (the run's story) is the landing view when the
+    // spec has recorded activity; documents otherwise. Living mode and a
+    // disabled activity panel always read as documents.
+    const living = !!ns?.livingMode;
+    const activityEnabled = ns?.activityPanelEnabled ?? true;
+    const overviewAvailable = activityEnabled && !living && !!vs && hasAnyData(vs);
+    const mode = viewerMode.value ?? (overviewAvailable ? 'overview' : 'document');
+    const showOverview = mode === 'overview' && overviewAvailable;
+
     const [hasMountedActivity, setHasMountedActivity] = useState(false);
     useEffect(() => {
-        if (showActivity) setHasMountedActivity(true);
-    }, [showActivity]);
+        if (showOverview) setHasMountedActivity(true);
+    }, [showOverview]);
 
     // After Preact sets innerHTML via dangerouslySetInnerHTML,
     // fire a custom event so highlighting/mermaid can run
@@ -54,27 +65,33 @@ export function App({ specStatus }: AppProps) {
 
     return (
         <>
-            <nav class="compact-nav">
-                <NavigationBar />
-            </nav>
-            <StaleBanner />
             <SpecHeader />
-            <main class="content-area" id="content-area">
-                <div
-                    id="markdown-content"
-                    ref={contentRef}
-                    dangerouslySetInnerHTML={{ __html: html }}
-                    hidden={showActivity}
-                />
-                {hasMountedActivity && (
-                    <div hidden={!showActivity}>
-                        <ActivityErrorBoundary>
-                            <ActivityPanel />
-                        </ActivityErrorBoundary>
-                    </div>
-                )}
-                <aside class="spec-toc" id="spec-toc" aria-label="Table of contents" hidden={showActivity}></aside>
-            </main>
+            <StaleBanner />
+            {living && (
+                <nav class="compact-nav">
+                    <NavigationBar />
+                </nav>
+            )}
+            <div class={`shell-grid${living ? ' shell-grid--no-rail' : ''}`}>
+                {!living && <NavigationBar />}
+                <main class="content-area" id="content-area">
+                    <div
+                        id="markdown-content"
+                        ref={contentRef}
+                        dangerouslySetInnerHTML={{ __html: html }}
+                        hidden={showOverview}
+                    />
+                    {hasMountedActivity && (
+                        <div class="overview-pane" hidden={!showOverview}>
+                            <ActivityErrorBoundary>
+                                <ActivityPanel />
+                            </ActivityErrorBoundary>
+                        </div>
+                    )}
+                    <aside class="spec-toc" id="spec-toc" aria-label="Table of contents" hidden={showOverview}></aside>
+                </main>
+                {!living && <RunAside />}
+            </div>
             <FooterActions initialSpecStatus={specStatus} />
         </>
     );

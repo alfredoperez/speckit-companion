@@ -482,18 +482,22 @@ flowchart LR
 
 ---
 
-## Activity Panel
+## Overview (the Activity view)
 
-An `Activity` button at the right of the navigation bar swaps the markdown
-pane for a card-stack overview of everything `.spec-context.json` exposes
-through `viewerState`.
+Since the Codex redesign (spec 394), the Activity data is the **Overview** —
+one of the shell's two views, selected by the **Overview / Documents**
+switch in the header (there is no longer a nav-bar toggle). A spec with
+recorded activity **lands on the Overview**; a spec with none (and living
+specs, and specs with the panel setting off) lands on its document view.
+Picking any document on the rail switches to Documents.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> markdown : viewer opens
-    markdown --> activity : user clicks Activity (aria-pressed=true)
-    activity --> markdown : user clicks Activity again
-    activity --> activity : .spec-context.json change → viewerState refresh
+    [*] --> overview : viewer opens (spec has recorded activity)
+    [*] --> documents : viewer opens (no activity / living mode / setting off)
+    overview --> documents : Documents switch, or any rail selection
+    documents --> overview : Overview switch
+    overview --> overview : .spec-context.json change → viewerState refresh
 ```
 
 **Cards (top to bottom; each hides when its data is empty)**:

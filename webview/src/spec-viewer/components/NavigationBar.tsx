@@ -1,5 +1,5 @@
-import type { VSCodeApi } from '../types';
-import { navState, activityVisible } from '../signals';
+import type { VSCodeApi, SpecDocument } from '../types';
+import { navState, viewerMode } from '../signals';
 import { StepTab } from './StepTab';
 
 declare const vscode: VSCodeApi;
@@ -35,10 +35,11 @@ export function NavigationBar() {
         );
     }
 
+    const rootPhase = coreDocs?.[0]?.type || 'spec';
     const viewingRelatedDoc = isViewingRelatedDoc
         ? relatedDocs.find(d => d.type === currentDoc)
         : undefined;
-    const parentPhaseForRelated = viewingRelatedDoc?.parentStep || coreDocs?.[0]?.type || 'spec';
+    const parentPhaseForRelated = viewingRelatedDoc?.parentStep || rootPhase;
 
     // Index of the step currently running — derive from stepHistory
     // (entry with startedAt set and no completedAt). Future tabs beyond this
@@ -54,50 +55,37 @@ export function NavigationBar() {
         return null;
     })();
 
+    // Selecting any document from the rail is a "read documents" action —
+    // the shell leaves the Overview if it was showing.
     const handleClick = (phase: string) => {
+        viewerMode.value = 'document';
         vscode.postMessage({ type: 'stepperClick', phase });
     };
 
     const handleRelatedClick = (docType: string) => {
+        viewerMode.value = 'document';
         vscode.postMessage({ type: 'switchDocument', documentType: docType });
     };
 
-    // Related tabs for the current step — rendered in a right-aligned slot
-    // inside .nav-primary (R010, R011). The Overview tab is removed since
-    // the parent step-tab itself routes to the overview.
-    const isVisible = (d: typeof relatedDocs[number]) => d.exists;
-    const relevantRelatedDocs = relatedDocs.filter(d =>
-        d.parentStep === currentDoc && isVisible(d)
-    );
-    const displayRelatedDocs = isViewingRelatedDoc
-        ? relatedDocs.filter(d => {
-            return (!d.parentStep || d.parentStep === viewingRelatedDoc?.parentStep) && isVisible(d);
-        })
-        : relevantRelatedDocs;
-
-    // Parent step for the second-row children rail. When viewing a core step,
-    // that step is its own parent; when viewing a related doc, parent comes from
-    // the doc's parentStep field. Including the parent as the first child tab
-    // gives users a single way back to the step's overview from any sub-doc.
-    const parentStepType = isViewingRelatedDoc
-        ? viewingRelatedDoc?.parentStep
-        : currentDoc;
-    const parentStepDoc = coreDocs.find(d => d.type === parentStepType);
-    // Always render the sub-nav row (the parent doc tab is always shown, related
-    // docs appear after it when present) so the nav height stays constant and the
-    // content below doesn't jump when switching between steps with/without docs.
-    const showChildrenRow = !!parentStepDoc;
-
-    const activityActive = activityVisible.value;
-    const activityEnabled = ns.activityPanelEnabled ?? true;
-    const handleActivityToggle = () => {
-        activityVisible.value = !activityVisible.value;
-    };
+    // Artifact groups: every existing related doc, grouped under
+    // its owning step, always visible — "where am I" answers from one place
+    // instead of a per-step second row.
+    const groups: Array<{ parent: SpecDocument | undefined; key: string; docs: SpecDocument[] }> = [];
+    for (const doc of relatedDocs) {
+        if (!doc.exists) continue;
+        const parentType = doc.parentStep || rootPhase;
+        let group = groups.find(g => g.key === parentType);
+        if (!group) {
+            group = { parent: coreDocs.find(d => d.type === parentType), key: parentType, docs: [] };
+            groups.push(group);
+        }
+        group.docs.push(doc);
+    }
 
     const recovery = ns.runRecovery;
 
     return (
-        <>
+        <nav class="doc-rail" aria-label="Spec documents">
             {recovery?.show && (
                 <div class="run-recovery" role="status">
                     <span class="run-recovery__msg">{recovery.message}</span>
@@ -121,62 +109,36 @@ export function NavigationBar() {
                     </div>
                 </div>
             )}
-            <div class="nav-primary">
+            <div class="rail-group">
+                <p class="rail-label">Pipeline</p>
                 <div class="step-tabs">
-                    {coreDocs.map((doc, i) => {
-                        const hasRelatedChildren = relatedDocs.some(d => d.parentStep === doc.type);
-                        const exists = doc.exists || hasRelatedChildren;
-                        return (
-                            <>
-                                <StepTab
-                                    key={doc.type}
-                                    doc={doc}
-                                    index={i}
-                                    totalSteps={coreDocs.length}
-                                    currentDoc={currentDoc}
-                                    workflowPhase={workflowPhase}
-                                    taskCompletionPercent={taskCompletionPercent}
-                                    isViewingRelatedDoc={isViewingRelatedDoc}
-                                    parentPhaseForRelated={parentPhaseForRelated}
-                                    activeStep={activeStep}
-                                    currentStep={currentStep}
-                                    stepHistory={stepHistory}
-                                    stalenessMap={stalenessMap}
-                                    hasRelatedChildren={hasRelatedChildren}
-                                    runningStepIndex={runningStepIndex}
-                                    onClick={handleClick}
-                                />
-                                {i < coreDocs.length - 1 && (
-                                    <span class={`step-connector ${exists ? 'filled' : ''}`} />
-                                )}
-                            </>
-                        );
-                    })}
+                    {coreDocs.map((doc, i) => (
+                        <StepTab
+                            key={doc.type}
+                            doc={doc}
+                            index={i}
+                            totalSteps={coreDocs.length}
+                            currentDoc={currentDoc}
+                            workflowPhase={workflowPhase}
+                            taskCompletionPercent={taskCompletionPercent}
+                            isViewingRelatedDoc={isViewingRelatedDoc}
+                            parentPhaseForRelated={parentPhaseForRelated}
+                            activeStep={activeStep}
+                            currentStep={currentStep}
+                            stepHistory={stepHistory}
+                            stalenessMap={stalenessMap}
+                            hasRelatedChildren={relatedDocs.some(d => d.parentStep === doc.type)}
+                            runningStepIndex={runningStepIndex}
+                            onClick={handleClick}
+                        />
+                    ))}
                 </div>
-                {activityEnabled && (
-                    <button
-                        type="button"
-                        class="activity-toggle"
-                        aria-pressed={activityActive}
-                        title="Toggle the activity overview for this spec"
-                        onClick={handleActivityToggle}
-                    >
-                        Activity
-                    </button>
-                )}
             </div>
-            {showChildrenRow && !activityActive && (
-                <div class="step-children" aria-label={`${parentStepDoc.label} files`}>
+            {groups.map(group => (
+                <div class="rail-group" key={group.key}>
+                    <p class="rail-label">{group.parent ? `${group.parent.label} files` : 'Artifacts'}</p>
                     <div class="step-children-tabs">
-                        <button
-                            key={parentStepDoc.type}
-                            class={`step-child step-child--parent ${parentStepDoc.type === currentDoc ? 'active' : ''}`}
-                            data-doc={parentStepDoc.type}
-                            onClick={() => handleRelatedClick(parentStepDoc.type)}
-                        >
-                            {parentStepDoc.label}
-                        </button>
-                        {displayRelatedDocs.map(doc => (
+                        {group.docs.map(doc => (
                             <button
                                 key={doc.type}
                                 class={`step-child ${doc.type === currentDoc ? 'active' : ''}`}
@@ -188,7 +150,7 @@ export function NavigationBar() {
                         ))}
                     </div>
                 </div>
-            )}
-        </>
+            ))}
+        </nav>
     );
 }

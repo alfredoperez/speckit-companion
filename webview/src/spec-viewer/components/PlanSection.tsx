@@ -39,11 +39,17 @@ export function PlanSection({ state }: PlanSectionProps) {
                     <span class="activity-plan__list">{expectations.join(' · ')}</span>
                 </div>
             )}
-            {(approach || classification) && (
+            {/* The long approach text is progressively disclosed so the run's
+                story leads and the how-prose doesn't dominate. */}
+            {approach && (
+                <details class="activity-plan__disclosure">
+                    <summary>Approach</summary>
+                    <p class="activity-plan__approach">{approach}</p>
+                </details>
+            )}
+            {classification && (
                 <p class="activity-plan__approach">
-                    {approach}
-                    {approach && classification ? ' ' : ''}
-                    {classification && <span class="activity-plan__sizing">{sizingLine(classification)}</span>}
+                    <span class="activity-plan__sizing">{sizingLine(classification)}</span>
                 </p>
             )}
         </section>
