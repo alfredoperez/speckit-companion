@@ -51,6 +51,12 @@ export interface StepTabProps {
     runningStepIndex?: number | null;
     /** This tab renders the live implement percent (the implement entry, or the last tab). */
     isPercentHost?: boolean;
+    /**
+     * For an action step: the document it runs from (Implement runs from
+     * tasks.md). Selecting the action opens that document, so no rail entry is
+     * ever a dead click.
+     */
+    sourceDoc?: { type: string; label: string };
     onClick: (phase: string) => void;
 }
 
@@ -58,7 +64,7 @@ export function StepTab(props: StepTabProps) {
     const { doc, index, currentDoc, workflowPhase,
         taskCompletionPercent, isViewingRelatedDoc, parentPhaseForRelated,
         activeStep, currentStep, stepHistory, stalenessMap, hasRelatedChildren,
-        runningStepIndex, isPercentHost, onClick } = props;
+        runningStepIndex, isPercentHost, sourceDoc, onClick } = props;
 
     const phase = doc.type;
     const isAction = doc.category === 'action';
@@ -96,9 +102,13 @@ export function StepTab(props: StepTabProps) {
         && index > runningStepIndex
         && !isViewing
         && !stepDocExists;
-    // Action steps are never openable — the index-0 escape hatch must not
-    // apply (a workflow can lead with an action step, e.g. GSD's discuss).
-    const isClickable = !isAction && (exists || index === 0) && !isLocked;
+    // An action step produces no document of its own, so it opens the one it
+    // runs from (Implement → tasks.md). Without such a source it stays inert —
+    // and the index-0 escape hatch must not apply to it (a workflow can lead
+    // with an action step, e.g. GSD's discuss).
+    const isClickable = isAction
+        ? !!sourceDoc && !isLocked
+        : (exists || index === 0) && !isLocked;
     // R003: checkmark only when completed AND the step's document exists.
     const vsCompleted = (vs?.highlights?.includes(stepName) ?? false) && stepDocExists;
     // An action step has no document, so completion reads from the derived
@@ -150,7 +160,9 @@ export function StepTab(props: StepTabProps) {
     const showSyncGlyph = canonicalState === 'in-flight';
 
     const baseTooltip = isAction
-        ? `${doc.label} — action step (no document)`
+        ? sourceDoc
+            ? `${doc.label} — action step; opens ${sourceDoc.label}, the document it runs from`
+            : `${doc.label} — action step (no document)`
         : STEP_TOOLTIPS[phase] ?? doc.label;
     const tooltip = isLocked
         ? `${baseTooltip} (disabled while ${activeStep} is running)`
@@ -176,7 +188,7 @@ export function StepTab(props: StepTabProps) {
             aria-current={isViewing ? 'page' : undefined}
             aria-disabled={!isClickable}
             disabled={!isClickable}
-            onClick={() => isClickable && phase !== 'done' && onClick(phase)}
+            onClick={() => isClickable && phase !== 'done' && onClick(isAction && sourceDoc ? sourceDoc.type : phase)}
         >
             {!showPercentLabel && (
                 <span class="step-status">

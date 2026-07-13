@@ -82,6 +82,26 @@ function LatestFeed() {
     );
 }
 
+/**
+ * Whether the spec carries durable context worth *landing* on — the dossier's
+ * own material (why / fence / proof / choices / traceability). A spec with only
+ * a work log (a run journaled outside the Companion pipeline, say) still gets
+ * an Overview to open, but it opens on its documents instead of on a page whose
+ * only content is a collapsed log.
+ */
+export function hasDurableContext(state: ViewerState): boolean {
+    return !!(
+        state.intent ||
+        state.approach ||
+        (state.expectations && state.expectations.length > 0) ||
+        (state.context && state.context.length > 0) ||
+        (state.verified && state.verified.length > 0) ||
+        (state.decisions && state.decisions.length > 0) ||
+        (state.coverage && state.coverage.length > 0) ||
+        (state.concerns && state.concerns.length > 0)
+    );
+}
+
 /** Whether any of the work-log cards inside the disclosure would render. */
 function hasRunLogData(state: ViewerState): boolean {
     return (

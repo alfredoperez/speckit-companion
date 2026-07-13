@@ -83,13 +83,16 @@ export function CatalogFooter({ vs, isActive, stepInFlight = false, enhancementB
         />
     );
 
-    // Context line: one sentence naming the forward motion,
-    // derived from the same catalog the buttons render from.
+    // Context line: one sentence naming the forward motion, derived from the
+    // same catalog the buttons render from. Reactivate is NOT forward motion —
+    // a completed run is done, and reopening it is a deliberate reversal.
     const forward = rightActions.find(
-        (a) => a.id === 'approve' || a.id === 'start' || a.id === 'complete' || a.id === 'reactivate',
+        (a) => a.id === 'approve' || a.id === 'start' || a.id === 'complete',
     );
+    const settled = vs.status === 'completed' || vs.status === 'archived';
     let context = '';
     if (stepInFlight) context = 'Step running — actions unlock when it settles';
+    else if (settled) context = vs.status === 'archived' ? 'Archived — read-only' : 'Run complete';
     else if (forward) context = `Next: ${forward.label}`;
 
     // Workflow-provided commands collapse into an "Other actions" menu.

@@ -3,7 +3,7 @@ import { NavigationBar } from './components/NavigationBar';
 import { StaleBanner } from './components/StaleBanner';
 import { SpecHeader } from './components/SpecHeader';
 import { FooterActions } from './components/FooterActions';
-import { ActivityPanel, hasAnyData } from './components/ActivityPanel';
+import { ActivityPanel, hasAnyData, hasDurableContext } from './components/ActivityPanel';
 import { ActivityErrorBoundary } from './components/ActivityErrorBoundary';
 import { RunStrip } from './components/RunStrip';
 import { markdownHtml, navState, viewerMode, viewerState } from './signals';
@@ -20,14 +20,17 @@ export function App({ specStatus }: AppProps) {
     const vs = viewerState.value;
     const reviewComments = vs?.reviewComments;
 
-    // Shell view: Overview (the run's story) is the landing view when the
-    // spec has recorded activity; documents otherwise. Living mode and a
-    // disabled activity panel always read as documents.
+    // The Overview exists only when the spec has a recorded run to show — no
+    // `.spec-context.json` (or nothing in it), no Overview, and the viewer is
+    // just its documents. It's the landing view when it exists, and the rail
+    // owns the selection between it and the documents.
     const living = !!ns?.livingMode;
     const activityEnabled = ns?.activityPanelEnabled ?? true;
     const overviewAvailable = activityEnabled && !living && !!vs && hasAnyData(vs);
-    const mode = viewerMode.value ?? (overviewAvailable ? 'overview' : 'document');
-    const showOverview = mode === 'overview' && overviewAvailable;
+    // Land on the Overview only when it has durable context to show; a spec
+    // carrying nothing but a work log opens on its documents.
+    const landing = overviewAvailable && hasDurableContext(vs!) ? 'overview' : 'document';
+    const showOverview = overviewAvailable && (viewerMode.value ?? landing) === 'overview';
 
     const [hasMountedActivity, setHasMountedActivity] = useState(false);
     useEffect(() => {

@@ -281,8 +281,11 @@ async function handleStepperClick(
 ): Promise<void> {
   if (phase === "done") return; // Done is not clickable
 
-  // Full regeneration — matches sidebar navigation's appearance.
-  await deps.updateContent(specDirectory, phase);
+  // Message-based update, like the artifact chips: a full HTML regeneration
+  // would reload the webview and wipe its in-memory shell state (the
+  // Overview/document selection), so picking a pipeline document from the
+  // Overview would snap straight back to the Overview.
+  await deps.sendContentUpdateMessage(specDirectory, phase);
 }
 
 /**

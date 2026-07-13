@@ -485,16 +485,19 @@ flowchart LR
 ## Overview (the Activity view)
 
 Since the Codex redesign (spec 394) and its Context-First revision, the
-Activity data is the **Overview** — one of the shell's two views, selected
-by the **Overview / Documents** switch at the top of the document rail
-(there is no longer a nav-bar toggle or a header-hosted switch). A spec
-with recorded activity **lands on the Overview**; a spec with none (and
-living specs, and specs with the panel setting off) lands on its document
-view. Picking any document on the rail switches to Documents. In both
-views a one-line **run strip** above the content carries the frequently
-scanned facts (status, phase, tasks, traced requirements, checks,
-concerns, trusted active time, PR link); its **Run details** action jumps
-back to the Overview.
+Activity data is the **Overview** — a destination on the document rail,
+not a mode toggle. The rail's first entry is `Overview`, present only when
+the spec has a recorded run (`hasAnyData(viewerState)`); selecting it is
+the same kind of act as selecting a document, so there is exactly one
+selection axis and navigation can never get stuck. A spec whose context
+carries durable material (`hasDurableContext` — intent / approach /
+context / expectations / verified / decisions / coverage / concerns)
+**lands on the Overview**; a spec with only a work log, no context at all,
+living specs, or the panel setting off lands on its document view. A
+one-line **run strip** above the content carries the frequently scanned
+facts (phase, tasks, traced requirements, checks, concerns, trusted active
+time, PR link) — the status is not repeated there, the header badge owns
+it.
 
 ```mermaid
 stateDiagram-v2
@@ -571,14 +574,20 @@ watcher invokes `specViewerProvider.refreshContextIfDisplaying`, which
 re-derives `viewerState` and posts `viewerStateUpdated`. Cards re-render
 from the new state without a reload.
 
-**Switch mechanics**: the rail's Overview/Documents buttons set the
-`viewerMode` signal (`'overview' | 'document'`; `null` until first
-interaction, letting the data pick the landing view). The markdown pane
-stays mounted (hidden via the `hidden` attribute) so switching back is
-instant, and the Overview mounts lazily on first reveal so initial spec
-render is never blocked. Picking any rail document also sets
-`viewerMode = 'document'`, so navigation always lands you in the reading
-view.
+**Selection mechanics**: the rail's `Overview` entry and its document
+buttons both set the `viewerMode` signal (`'overview' | 'document'`; `null`
+until first interaction, letting the data pick the landing view). The
+markdown pane stays mounted (hidden via the `hidden` attribute) so
+switching back is instant, and the Overview mounts lazily on first reveal
+so initial spec render is never blocked.
+
+**Pipeline clicks are message-based, not a regeneration.** `stepperClick`
+routes through `sendContentUpdateMessage`, exactly like the artifact chips.
+It used to call `updateContent`, which rebuilds the panel's whole HTML —
+that reloads the webview and wipes its in-memory shell state, so picking a
+pipeline document while the Overview was showing bounced straight back to
+the Overview. Any new navigation path must keep this property: the webview
+is a single page, and only its content is swapped.
 
 ---
 

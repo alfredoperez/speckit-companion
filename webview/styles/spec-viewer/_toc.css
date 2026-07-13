@@ -17,9 +17,8 @@ aside.spec-toc {
     max-height: calc(100vh - var(--space-4));
     overflow-y: auto;
     padding: var(--space-2) var(--space-3) var(--space-2) 0;
-    border-right: 1px solid var(--border);
+    border-left: 1px solid var(--border);
     font-size: var(--text-sm);
-    order: -1; /* sit on the LEFT of the markdown column */
 }
 
 .spec-toc-header {

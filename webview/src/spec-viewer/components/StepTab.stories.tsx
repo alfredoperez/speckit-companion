@@ -81,6 +81,18 @@ export const ActionCurrent: Story = {
     args: { ...base, doc: mockActionDoc('execute', 'Execute (Superpowers)'), index: 2, currentStep: 'execute' },
 };
 
+// Implement has no document of its own — selecting it opens tasks.md, the
+// document it runs from, so no rail entry is a dead click.
+export const ActionOpensItsSourceDoc: Story = {
+    args: {
+        ...base,
+        doc: mockActionDoc('implement', 'Implement'),
+        index: 3,
+        currentStep: 'implement',
+        sourceDoc: { type: 'tasks', label: 'Tasks' },
+    },
+};
+
 export const ActionDone: Story = {
     args: {
         ...base,

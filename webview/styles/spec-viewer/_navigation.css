@@ -16,44 +16,49 @@
 }
 
 /* ============================================
-   Overview / Documents view switch — rail-hosted
-   parent of document navigation (Context-First shell)
+   Overview — a rail destination, not a mode toggle
    ============================================ */
 
-.view-switch {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3px;
-    padding: 3px;
-    margin-bottom: var(--space-4);
-    border-radius: var(--radius-md);
-    background: var(--bg-elevated);
-}
-
-.view-switch__btn {
-    min-width: 0;
-    min-height: 30px;
-    padding: 4px 8px;
+.rail-overview {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 36px;
+    padding: 7px 10px;
     border: none;
     border-radius: var(--radius-sm);
     background: transparent;
     color: var(--text-secondary);
     cursor: pointer;
-    font-family: var(--font-family);
-    font-size: 12px;
-    font-weight: 550;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    white-space: nowrap;
     transition: background var(--transition-fast), color var(--transition-fast);
 }
 
-.view-switch__btn:hover {
+.rail-overview:hover:not(.current) {
     color: var(--text-primary);
+    background: var(--bg-hover);
 }
 
-.view-switch__btn.active {
+/* Selection reads exactly like a selected document — one selection axis. */
+.rail-overview.current {
     background: var(--bg-secondary);
     color: var(--text-primary);
     font-weight: 650;
     box-shadow: var(--shadow-sm);
+}
+
+.rail-overview .codicon {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.rail-overview.current .codicon {
+    color: var(--accent);
 }
 
 /* ============================================

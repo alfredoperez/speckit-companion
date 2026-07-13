@@ -12,8 +12,30 @@ export default meta;
 
 type Story = StoryObj<typeof NavigationBar>;
 
+// The Overview is a rail entry, present only when the spec has a recorded run
+// (a `.spec-context.json` with content) — no context, no Overview entry.
+export const WithOverviewEntry: Story = {
+    name: 'Overview entry (spec has recorded activity)',
+    render: () => {
+        viewerState.value = {
+            status: 'completed', activeStep: 'implement', steps: {}, pulse: null,
+            highlights: [], activeSubstep: null, footer: [], history: [], stepHistory: {},
+            intent: 'Adopt the Codex redesign in the production viewer.',
+            decisions: [{ decision: 'rail-hosted Overview' }],
+        } as never;
+        navState.value = mockNavState({
+            coreDocs: [mockDoc('spec', true, 'Specification'), mockDoc('plan', true, 'Plan'), mockDoc('tasks', true, 'Tasks')],
+            currentDoc: 'spec',
+            workflowPhase: 'tasks',
+            taskCompletionPercent: 100,
+        });
+        return <NavigationBar />;
+    },
+};
+
 export const ActiveSpec: Story = {
     render: () => {
+        viewerState.value = null;
         navState.value = mockNavState({
             coreDocs: [mockDoc('spec', true, 'Specification'), mockDoc('plan', true, 'Plan'), mockDoc('tasks', true, 'Tasks')],
             currentDoc: 'spec',

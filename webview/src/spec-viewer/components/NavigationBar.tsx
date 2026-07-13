@@ -1,12 +1,13 @@
 import type { VSCodeApi, SpecDocument } from '../types';
-import { navState, viewerMode } from '../signals';
+import { navState, viewerMode, viewerState } from '../signals';
 import { StepTab } from './StepTab';
-import { ViewSwitch } from './ViewSwitch';
+import { hasAnyData, hasDurableContext } from './ActivityPanel';
 
 declare const vscode: VSCodeApi;
 
 export function NavigationBar() {
     const ns = navState.value;
+    const vs = viewerState.value;
     if (!ns) return null;
 
     const { coreDocs, relatedDocs, currentDoc, workflowPhase,
@@ -44,6 +45,15 @@ export function NavigationBar() {
     // one, else on the last tab (pre-action-rail behavior).
     const percentHostType = coreDocs?.find(d => d.type === 'implement')?.type
         ?? coreDocs?.[coreDocs.length - 1]?.type;
+    // The document an action step runs from: the nearest document-producing
+    // step before it (stock Implement runs from Tasks; GSD's Execute from Plan).
+    const sourceDocFor = (index: number): { type: string; label: string } | undefined => {
+        for (let i = index - 1; i >= 0; i--) {
+            const prev = coreDocs[i];
+            if (prev.category !== 'action' && prev.exists) return { type: prev.type, label: prev.label };
+        }
+        return undefined;
+    };
     const viewingRelatedDoc = isViewingRelatedDoc
         ? relatedDocs.find(d => d.type === currentDoc)
         : undefined;
@@ -92,9 +102,31 @@ export function NavigationBar() {
 
     const recovery = ns.runRecovery;
 
+    // The Overview is a rail destination, not a mode toggle: it exists only
+    // when the spec has a recorded run to show (no `.spec-context.json`, no
+    // Overview), and selecting it is the same kind of act as selecting a
+    // document — one selection axis, so navigation can never get stuck.
+    const overviewAvailable = (ns.activityPanelEnabled ?? true) && !!vs && hasAnyData(vs);
+    const landing = overviewAvailable && hasDurableContext(vs!) ? 'overview' : 'document';
+    const showingOverview = overviewAvailable && (viewerMode.value ?? landing) === 'overview';
+    // While the Overview is the selection, no document reads as selected.
+    const selectedDoc = showingOverview ? '' : currentDoc;
+
     return (
         <nav class="doc-rail" aria-label="Spec documents">
-            <ViewSwitch />
+            {overviewAvailable && (
+                <div class="rail-group">
+                    <button
+                        type="button"
+                        class={`rail-overview${showingOverview ? ' current' : ''}`}
+                        aria-current={showingOverview ? 'page' : undefined}
+                        onClick={() => { viewerMode.value = 'overview'; }}
+                    >
+                        <span class="codicon codicon-book" aria-hidden="true" />
+                        Overview
+                    </button>
+                </div>
+            )}
             {recovery?.show && (
                 <div class="run-recovery" role="status">
                     <span class="run-recovery__msg">{recovery.message}</span>
@@ -127,10 +159,10 @@ export function NavigationBar() {
                             doc={doc}
                             index={i}
                             totalSteps={coreDocs.length}
-                            currentDoc={currentDoc}
+                            currentDoc={selectedDoc}
                             workflowPhase={workflowPhase}
                             taskCompletionPercent={taskCompletionPercent}
-                            isViewingRelatedDoc={isViewingRelatedDoc}
+                            isViewingRelatedDoc={!showingOverview && isViewingRelatedDoc}
                             parentPhaseForRelated={parentPhaseForRelated}
                             activeStep={activeStep}
                             currentStep={currentStep}
@@ -139,6 +171,7 @@ export function NavigationBar() {
                             hasRelatedChildren={relatedDocs.some(d => d.parentStep === doc.type)}
                             runningStepIndex={runningStepIndex}
                             isPercentHost={doc.type === percentHostType}
+                            sourceDoc={doc.category === 'action' ? sourceDocFor(i) : undefined}
                             onClick={handleClick}
                         />
                     ))}
@@ -151,9 +184,9 @@ export function NavigationBar() {
                         {group.docs.map(doc => (
                             <button
                                 key={doc.type}
-                                class={`step-child ${doc.type === currentDoc ? 'active' : ''}`}
+                                class={`step-child ${doc.type === selectedDoc ? 'active' : ''}`}
                                 data-doc={doc.type}
-                                aria-current={doc.type === currentDoc ? 'page' : undefined}
+                                aria-current={doc.type === selectedDoc ? 'page' : undefined}
                                 onClick={() => handleRelatedClick(doc.type)}
                             >
                                 {doc.label}

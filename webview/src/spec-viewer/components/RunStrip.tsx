@@ -1,13 +1,11 @@
-import { navState, viewerState, viewerMode } from '../signals';
+import { navState, viewerState } from '../signals';
 import { heroStats, formatActiveTime } from '../activityHeroModel';
-import { formatStatusLabel } from './SpecHeader';
-import { hasAnyData } from './ActivityPanel';
 
 /**
  * One-line run context above the content: the frequently scanned facts the
  * old permanent Run-context column carried, compacted so the width goes back
- * to the reading column. Full detail is a secondary action (Run details →
- * the Overview). Renders only the facts that exist; null when none do.
+ * to the reading column. The status is NOT repeated here — the header badge
+ * already carries it. Renders only the facts that exist; null when none do.
  */
 export function RunStrip() {
     const vs = viewerState.value;
@@ -37,19 +35,10 @@ export function RunStrip() {
         facts.push({ key: 'active', value: `${formatActiveTime(stats.trustedActiveMs)} active` });
     }
 
-    if (!vs.status && facts.length === 0) return null;
-
-    const overviewAvailable = (ns?.activityPanelEnabled ?? true) && hasAnyData(vs);
-    const mode = viewerMode.value ?? (overviewAvailable ? 'overview' : 'document');
-    const showDetailsAction = overviewAvailable && mode !== 'overview';
+    if (facts.length === 0 && !vs.prUrl) return null;
 
     return (
         <div class="run-strip" aria-label="Run context">
-            {vs.status && (
-                <span class={`run-strip__status is-${vs.status}`}>
-                    <i aria-hidden="true" /> {formatStatusLabel(vs.status)}
-                </span>
-            )}
             {facts.map(f => (
                 <span key={f.key} class={f.warning ? 'run-strip__fact run-strip__fact--warning' : 'run-strip__fact'}>
                     {f.value}
@@ -59,15 +48,6 @@ export function RunStrip() {
                 <a class="run-strip__pr" href={vs.prUrl} title={vs.prUrl}>
                     PR{vs.prNumber ? ` #${vs.prNumber}` : ''}
                 </a>
-            )}
-            {showDetailsAction && (
-                <button
-                    type="button"
-                    class="run-strip__details"
-                    onClick={() => { viewerMode.value = 'overview'; }}
-                >
-                    Run details <span aria-hidden="true">→</span>
-                </button>
             )}
         </div>
     );

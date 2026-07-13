@@ -342,7 +342,7 @@ describe('StepTab — action-only pipeline entries (FR-007)', () => {
         };
     }
 
-    it('renders marked as an action and non-openable — even at index 0', () => {
+    it('renders marked as an action and inert when it has no source document — even at index 0', () => {
         const onClick = jest.fn();
         const c = renderTab(baseProps({
             doc: actionDoc('discuss', 'Discuss'),
@@ -358,6 +358,26 @@ describe('StepTab — action-only pipeline entries (FR-007)', () => {
             expect(c.querySelector('.codicon-zap')).not.toBeNull();
             btn.click();
             expect(onClick).not.toHaveBeenCalled();
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('opens the document it runs from — Implement produces nothing of its own, it runs from tasks.md', () => {
+        const onClick = jest.fn();
+        const c = renderTab(baseProps({
+            doc: actionDoc('implement', 'Implement'),
+            index: 3,
+            currentStep: 'implement',
+            sourceDoc: { type: 'tasks', label: 'Tasks' },
+            onClick,
+        }));
+        try {
+            const btn = c.querySelector('button')!;
+            expect(btn.disabled).toBe(false);
+            expect(btn.title).toContain('runs from');
+            btn.click();
+            expect(onClick).toHaveBeenCalledWith('tasks');
         } finally {
             cleanup(c);
         }

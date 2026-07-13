@@ -91,38 +91,13 @@ body {
     white-space: nowrap;
 }
 
-.run-strip__status {
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-size: 11px;
-    color: var(--text-primary);
-}
-
-.run-strip__status.is-completed { color: var(--success); }
-.run-strip__status.is-implementing,
-.run-strip__status.is-planning,
-.run-strip__status.is-tasking,
-.run-strip__status.is-specifying { color: var(--accent); }
-
-.run-strip__status i {
-    display: inline-block;
-    width: 7px;
-    height: 7px;
-    margin-right: 6px;
-    background: currentColor;
-    border-radius: 50%;
-}
-
 .run-strip__fact strong,
 .run-strip__fact { font-variant-numeric: tabular-nums; }
 
 .run-strip__fact--warning { color: var(--warning); }
 
-.run-strip__status + .run-strip__fact::before,
 .run-strip__fact + .run-strip__fact::before,
-.run-strip__fact + .run-strip__pr::before,
-.run-strip__status + .run-strip__pr::before {
+.run-strip__fact + .run-strip__pr::before {
     content: "·";
     margin: 0 12px;
     color: var(--border-hover);
@@ -134,17 +109,6 @@ body {
 }
 
 .run-strip__pr:hover { text-decoration: underline; }
-
-.run-strip__details {
-    margin-left: auto;
-    padding: 5px 0 5px 16px;
-    border: none;
-    background: transparent;
-    color: var(--accent);
-    cursor: pointer;
-    font-family: var(--font-family);
-    font-size: 12px;
-}
 
 /* The rail folds to a horizontal strip on narrow panes (pane width, not
    window width — these are container queries against .viewer-container). */
@@ -167,9 +131,14 @@ body {
         scrollbar-width: none;
     }
 
-    .doc-rail .view-switch {
-        margin: 0 var(--space-2) 0 0;
+    .doc-rail .rail-overview {
+        width: auto;
+        background: var(--bg-elevated);
         flex: none;
+    }
+
+    .doc-rail .rail-overview.current {
+        background: var(--bg-secondary);
     }
 
     .doc-rail .rail-group {
@@ -211,8 +180,6 @@ body {
     .main-column {
         flex: 1;
     }
-
-    .run-strip__details { display: none; }
 }
 
 @container viewer (max-width: 560px) {

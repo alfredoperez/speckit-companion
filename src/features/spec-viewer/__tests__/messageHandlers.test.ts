@@ -291,7 +291,18 @@ describe('messageHandlers - stepperClick', () => {
         await handler({ type: 'stepperClick', phase: 'plan' } as any);
 
         expect(updateStepProgress).not.toHaveBeenCalled();
-        expect(deps.updateContent).toHaveBeenCalledWith(SPEC_DIR, 'plan');
+        expect(deps.sendContentUpdateMessage).toHaveBeenCalledWith(SPEC_DIR, 'plan');
+    });
+
+    it('updates by message, never by regenerating the webview', async () => {
+        // A full regeneration reloads the webview and wipes its in-memory shell
+        // state, which would bounce the reader back to the Overview.
+        const deps = createMockDeps();
+        const handler = createMessageHandlers(SPEC_DIR, deps);
+
+        await handler({ type: 'stepperClick', phase: 'plan' } as any);
+
+        expect(deps.updateContent).not.toHaveBeenCalled();
     });
 
     it('is a no-op when phase is "done"', async () => {
@@ -300,6 +311,7 @@ describe('messageHandlers - stepperClick', () => {
 
         await handler({ type: 'stepperClick', phase: 'done' } as any);
 
+        expect(deps.sendContentUpdateMessage).not.toHaveBeenCalled();
         expect(deps.updateContent).not.toHaveBeenCalled();
         expect(updateStepProgress).not.toHaveBeenCalled();
     });

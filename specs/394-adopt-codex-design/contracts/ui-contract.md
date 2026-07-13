@@ -28,7 +28,7 @@ Class roles adopted from the Codex system (final names live in the shipped parti
 | Region | Contract |
 |---|---|
 | Shell top | title, subtitle (branch/workflow), and status badge; the two-state **view switch** (`Overview` / `Documents`, `aria-pressed` semantics) sits at the top of the document rail (Context-First revision) |
-| Document rail | `nav[aria-label="Spec documents"]`; grouped lists (Pipeline / Artifacts, or the workflow's own name); each button carries a **rail mark** expressing completion independent of `aria-current="page"` selection; action-only steps render marked as actions and non-openable |
+| Document rail | `nav[aria-label="Spec documents"]`; grouped lists (Pipeline / Artifacts, or the workflow's own name); each button carries a **rail mark** expressing completion independent of `aria-current="page"` selection; action-only steps render marked as actions; producing no document of their own, they open the nearest earlier document they run from (Implement → Tasks), or stay inert when there is none |
 | Reading column | prose capped ≈72ch; heading TOC remains inside the column; empty `.spec-meta` and `details.template-instructions` hidden |
 | Run strip | `[aria-label="Run context"]` one-line strip above the content; facts rendered only when present; "Run details" jumps to the Overview (Context-First revision — replaces the permanent aside column) |
 | Footer | context line (next-step sentence), optional **Other actions** menu (workflow `enhancementButtons`), primary CTA labeled by `getApproveLabel()`; in-flight states render no CTA |
