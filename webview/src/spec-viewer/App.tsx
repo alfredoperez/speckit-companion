@@ -1,11 +1,10 @@
 import { useRef, useEffect, useState } from 'preact/hooks';
 import { NavigationBar } from './components/NavigationBar';
 import { StaleBanner } from './components/StaleBanner';
-import { SpecHeader } from './components/SpecHeader';
+import { PageChrome } from './components/PageChrome';
 import { FooterActions } from './components/FooterActions';
 import { ActivityPanel, hasAnyData, hasDurableContext } from './components/ActivityPanel';
 import { ActivityErrorBoundary } from './components/ActivityErrorBoundary';
-import { RunStrip } from './components/RunStrip';
 import { markdownHtml, navState, viewerMode, viewerState } from './signals';
 import { restoreComments, clearAllRefinements } from './editor';
 
@@ -68,8 +67,7 @@ export function App({ specStatus }: AppProps) {
 
     return (
         <>
-            <SpecHeader />
-            <StaleBanner />
+            <PageChrome />
             {living && (
                 <nav class="compact-nav">
                     <NavigationBar />
@@ -78,7 +76,10 @@ export function App({ specStatus }: AppProps) {
             <div class={`shell-grid${living ? ' shell-grid--no-rail' : ''}`}>
                 {!living && <NavigationBar />}
                 <div class="main-column">
-                    {!living && <RunStrip />}
+                    {/* Staleness is a fact about the DOCUMENT you're reading, with a
+                        document-scoped action — so it lives over the document, not
+                        across the whole window behind the rail. */}
+                    <StaleBanner />
                     <main class="content-area" id="content-area">
                         <div
                             id="markdown-content"

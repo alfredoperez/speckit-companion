@@ -3,10 +3,15 @@
  * Sticky outline column inside .content-area, hidden when the pane is narrow.
  */
 
-/* Responsive threshold — read in JS via getComputedStyle, not via @media. */
+/* Responsive threshold — read in JS via getComputedStyle, not via @media.
+   The outline only earns a column when the content region can afford one: a
+   72ch reading column plus a 240px outline plus gutters needs ~1040px. Below
+   that the reading column was being squeezed to pay for the outline. */
 :root {
-    --toc-min-width: 800px;
+    --toc-min-width: 1040px;
     --toc-column-width: 240px;
+    /* Holds #markdown-content's own 72ch cap (72ch of a 16px font ≈ 720px). */
+    --reading-column-width: 760px;
 }
 
 aside.spec-toc {
@@ -45,17 +50,18 @@ aside.spec-toc {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
-    padding: 0;
+    padding: 2px 7px;
     margin: 0;
     background: transparent;
     border: 1px solid var(--border);
     color: var(--text-muted);
     cursor: pointer;
     font-family: inherit;
-    font-size: 13px;
-    line-height: 1;
+    font-family: var(--font-family);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
     border-radius: var(--radius-sm);
     transition: color var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
     flex-shrink: 0;
@@ -76,9 +82,61 @@ aside.spec-toc.spec-toc--empty {
     display: none;
 }
 
-/* Width-class hook toggled by JS ResizeObserver on .content-area */
-.content-area--narrow aside.spec-toc {
-    display: none;
+/* ── Compact form: a disclosure above the document (narrow panes) ── */
+
+aside.spec-toc.spec-toc--compact {
+    position: static;
+    flex: none;
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+    margin-bottom: var(--space-5);
+    border-left: none;
+}
+
+.spec-toc-disclosure {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+}
+
+.spec-toc-summary {
+    padding: 8px 12px;
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+}
+
+.spec-toc-summary::-webkit-details-marker { display: none; }
+
+.spec-toc-summary::before {
+    content: "▸";
+    display: inline-block;
+    margin-right: 8px;
+    color: var(--text-muted);
+    transition: transform var(--transition-fast);
+}
+
+.spec-toc-disclosure[open] .spec-toc-summary::before {
+    transform: rotate(90deg);
+}
+
+.spec-toc--compact .spec-toc-header {
+    padding: 0 12px 7px;
+    margin: 0;
+}
+
+.spec-toc--compact .spec-toc-list {
+    padding: 0 8px 8px;
+}
+
+/* The compact list has the full pane width, so entries needn't clamp. */
+.spec-toc--compact .spec-toc-link {
+    display: block;
+    overflow: visible;
 }
 
 .spec-toc-list {

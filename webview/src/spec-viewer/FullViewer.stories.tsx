@@ -43,6 +43,14 @@ import quickstart172 from '../../../specs/172-composable-command-nodes/quickstar
 import checklist172 from '../../../specs/172-composable-command-nodes/checklists/requirements.md?raw';
 import contract172 from '../../../specs/172-composable-command-nodes/contracts/assembly-and-parity.md?raw';
 import ctx172Raw from '../../../specs/172-composable-command-nodes/.spec-context.json?raw';
+import spec394 from '../../../specs/394-adopt-codex-design/spec.md?raw';
+import plan394 from '../../../specs/394-adopt-codex-design/plan.md?raw';
+import tasks394 from '../../../specs/394-adopt-codex-design/tasks.md?raw';
+import research394 from '../../../specs/394-adopt-codex-design/research.md?raw';
+import dataModel394 from '../../../specs/394-adopt-codex-design/data-model.md?raw';
+import checklist394 from '../../../specs/394-adopt-codex-design/checklists/requirements.md?raw';
+import contract394 from '../../../specs/394-adopt-codex-design/contracts/ui-contract.md?raw';
+import ctx394Raw from '../../../specs/394-adopt-codex-design/.spec-context.json?raw';
 
 /** The slice of an on-disk .spec-context.json these stories consume. */
 interface SpecContextData {
@@ -64,6 +72,7 @@ interface SpecContextData {
 
 const ctx392 = JSON.parse(ctx392Raw) as SpecContextData;
 const ctx172 = JSON.parse(ctx172Raw) as SpecContextData;
+const ctx394 = JSON.parse(ctx394Raw) as SpecContextData;
 
 /** Every openable document of a spec, keyed by the `documentType` the nav emits. */
 interface DocEntry {
@@ -95,6 +104,16 @@ const docs172: DocSet = {
     'data-model': { md: dataModel172, label: 'Data Model', parentStep: 'plan' },
     quickstart: { md: quickstart172, label: 'Quickstart', parentStep: 'plan' },
     contract: { md: contract172, label: 'Contracts', parentStep: 'plan' },
+};
+
+const docs394: DocSet = {
+    spec: { md: spec394, label: 'Specification' },
+    plan: { md: plan394, label: 'Plan' },
+    tasks: { md: tasks394, label: 'Tasks' },
+    checklist: { md: checklist394, label: 'Checklist', parentStep: 'spec' },
+    research: { md: research394, label: 'Research', parentStep: 'plan' },
+    'data-model': { md: dataModel394, label: 'Data Model', parentStep: 'plan' },
+    contract: { md: contract394, label: 'UI Contract', parentStep: 'plan' },
 };
 
 function relatedDocsFor(docs: DocSet) {
@@ -291,6 +310,34 @@ export const ComposableCommandNodes172: Story = {
     name: '172 · Composable Command Nodes',
     render: () => (
         <InteractiveViewer ctx={ctx172} docs={docs172} initialDoc="spec" vs={vsFromContext(ctx172, completedFooter)} />
+    ),
+};
+
+// ── 394 · the review surface ──
+// Lands on Plan, with the plan marked stale, so the whole chrome can be judged
+// at once: one header band, a document-local stale notice that does NOT span
+// the rail, the rail with its Overview entry, a long right-hand TOC over real
+// markdown, and the footer. This is the story the layout review runs against.
+
+export const AdoptCodexDesign394OnPlan: Story = {
+    name: '394 · On Plan (chrome + staleness + long TOC)',
+    render: () => (
+        <InteractiveViewer
+            ctx={ctx394}
+            docs={docs394}
+            initialDoc="plan"
+            view="document"
+            extraNav={{
+                stalenessMap: {
+                    plan: {
+                        isStale: true,
+                        staleReason: 'The specification changed after this plan was generated.',
+                        newerUpstream: 'spec',
+                    },
+                },
+            }}
+            vs={vsFromContext(ctx394, completedFooter)}
+        />
     ),
 };
 

@@ -213,19 +213,37 @@ body[data-has-spec-context="true"] .meta-branch {
 }
 
 /* ============================================
-   Structured Header (spec-context driven)
+   Page chrome — ONE band, two halves
+   Identity (what this spec is) on the left, run facts (how the run went) on the
+   right. One boundary, not two stacked headers. The facts yield as the pane
+   narrows; identity never does.
+   ============================================ */
+
+.page-chrome {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-5);
+    padding: var(--space-3) var(--content-padding);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-primary);
+    flex-shrink: 0;
+}
+
+/* ============================================
+   Structured Header (spec-context driven) — the identity half
    ============================================ */
 
 .spec-header {
     margin: 0;
-    padding: var(--space-3) var(--content-padding);
+    padding: 0;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 6px;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg-primary);
-    flex-shrink: 0;
+    background: transparent;
+    min-width: 0;
+    flex: 1 1 auto;
 }
 
 .spec-header-row {
@@ -263,6 +281,23 @@ body[data-has-spec-context="true"] .meta-branch {
     flex-wrap: wrap;
     align-items: center;
     gap: 8px;
+    min-width: 0;
+}
+
+/* A long branch name truncates rather than pushing the date out or wrapping the
+   cluster — the title and the lifecycle badge never yield. The ellipsis needs a
+   text-bearing box of its own: the chip is a flex parent, and `text-overflow`
+   does nothing on one. */
+.spec-header-branch {
+    min-width: 0;
+    max-width: 34ch;
+}
+
+.spec-header-branch__name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Hide the first H1 when structured header provides the title.

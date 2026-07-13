@@ -47,7 +47,7 @@ export function SpecHeader() {
                             {ns.branch && (
                                 <span class="spec-header-branch" title={`Branch: ${ns.branch}`}>
                                     <span class="codicon codicon-git-branch" aria-hidden="true"></span>
-                                    {ns.branch}
+                                    <span class="spec-header-branch__name">{ns.branch}</span>
                                 </span>
                             )}
                             {ns.createdDate && (

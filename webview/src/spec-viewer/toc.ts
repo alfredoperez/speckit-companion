@@ -8,8 +8,12 @@
  *   - ResizeObserver on the scroll container to toggle .content-area--narrow
  *     when its inline size drops below --toc-min-width.
  *
+ * Below that threshold the outline does not vanish — it becomes a compact
+ * "On this page" disclosure above the document (same links, same observers),
+ * because a reading column has no room to give a permanent 240px column.
+ *
  * Defaults to h2-only rendering; users can toggle h3 subsections back in via
- * the "Show subsections" button in the TOC header. The choice is module-scoped
+ * the "Subsections" button in the TOC header. The choice is module-scoped
  * so it persists across doc switches within a single viewer session.
  *
  * buildToc is idempotent — it tears down prior observers before rebuilding,
@@ -48,7 +52,11 @@ function readTocMinWidth(): number {
         .getPropertyValue('--toc-min-width')
         .trim();
     const parsed = parseFloat(raw);
-    return Number.isFinite(parsed) ? parsed : 780;
+    return Number.isFinite(parsed) ? parsed : 1040;
+}
+
+function isNarrow(scrollRoot: HTMLElement): boolean {
+    return scrollRoot.clientWidth < readTocMinWidth();
 }
 
 function teardown(tocRoot: HTMLElement): void {
@@ -103,10 +111,8 @@ export function buildToc(
         const toggle = document.createElement('button');
         toggle.type = 'button';
         toggle.className = 'spec-toc-toggle';
-        // Icon-only toggle so the header stays on one line at the column's
-        // narrow (220px) width. Title carries the explanation for hover users;
-        // aria-label carries it for screen readers.
-        toggle.textContent = showSubsections ? '−' : '+';
+        // A bare +/− was ambiguous ("add what?"). It says what it toggles.
+        toggle.textContent = showSubsections ? 'Subsections −' : 'Subsections +';
         const tooltip = showSubsections ? 'Hide subsections' : 'Show subsections';
         toggle.title = tooltip;
         toggle.setAttribute('aria-label', tooltip);
@@ -125,6 +131,7 @@ export function buildToc(
     list.className = 'spec-toc-list';
 
     const linkByTargetId = new Map<string, HTMLAnchorElement>();
+    let parentSection = '';
 
     for (const heading of headings) {
         const id = heading.id;
@@ -138,6 +145,14 @@ export function buildToc(
         a.textContent = (heading.textContent ?? '').replace(PRIORITY_SUFFIX, '').trim();
         // The entry clamps to two lines, so the full heading lives in the tooltip.
         a.title = a.textContent;
+        if (level === 'h2') {
+            parentSection = a.textContent;
+        } else if (parentSection) {
+            // A tasks.md has five headings called "Implementation". Out of
+            // context they are indistinguishable, so the accessible name says
+            // which section each one belongs to.
+            a.setAttribute('aria-label', `${a.textContent} — ${parentSection}`);
+        }
         a.dataset.target = id;
         li.appendChild(a);
         list.appendChild(li);
@@ -145,8 +160,24 @@ export function buildToc(
     }
 
     tocRoot.innerHTML = '';
-    tocRoot.appendChild(header);
-    tocRoot.appendChild(list);
+    const narrow = isNarrow(scrollRoot);
+    tocRoot.classList.toggle('spec-toc--compact', narrow);
+    if (narrow) {
+        // No room for a column: the same outline becomes a disclosure that sits
+        // above the document. Same links, same observers — only the shell differs.
+        const details = document.createElement('details');
+        details.className = 'spec-toc-disclosure';
+        const summary = document.createElement('summary');
+        summary.className = 'spec-toc-summary';
+        summary.textContent = 'On this page';
+        details.appendChild(summary);
+        details.appendChild(header);
+        details.appendChild(list);
+        tocRoot.appendChild(details);
+    } else {
+        tocRoot.appendChild(header);
+        tocRoot.appendChild(list);
+    }
 
     // Click handler — smooth scroll, honor prefers-reduced-motion, set active.
     const onClick = (event: Event) => {
@@ -208,15 +239,20 @@ export function buildToc(
     );
     for (const heading of headings) io.observe(heading);
 
-    // ResizeObserver — toggle narrow class on the scroll container.
+    // ResizeObserver — the column and the disclosure are different DOM, so a
+    // crossing of the threshold rebuilds rather than merely restyling. Rebuild
+    // ONLY on a crossing: rebuilding on every resize tick would thrash (and the
+    // rebuild itself resizes the container).
+    let wasNarrow = narrow;
+    scrollRoot.classList.toggle('content-area--narrow', narrow);
     const applyWidthClass = () => {
-        const threshold = readTocMinWidth();
-        scrollRoot.classList.toggle(
-            'content-area--narrow',
-            scrollRoot.clientWidth < threshold
-        );
+        const nowNarrow = isNarrow(scrollRoot);
+        scrollRoot.classList.toggle('content-area--narrow', nowNarrow);
+        if (nowNarrow !== wasNarrow) {
+            wasNarrow = nowNarrow;
+            buildToc(scrollRoot, markdownRoot, tocRoot);
+        }
     };
-    applyWidthClass();
     const ro = new ResizeObserver(applyWidthClass);
     ro.observe(scrollRoot);
 

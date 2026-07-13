@@ -10,6 +10,9 @@ interface Heading {
 
 interface TocHarnessProps {
     headings: Heading[];
+    /** Pin the content region's width — below --toc-min-width the outline
+     *  becomes the compact disclosure above the document. */
+    width?: number;
 }
 
 function renderHeadingsHtml(headings: Heading[]): string {
@@ -32,7 +35,7 @@ function renderHeadingsHtml(headings: Heading[]): string {
  * built via innerHTML so the story matches how the real viewer renders
  * markdown (also avoids JSX-tag collisions with the `h` jsx-factory).
  */
-function TocHarness({ headings }: TocHarnessProps) {
+function TocHarness({ headings, width }: TocHarnessProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const markdownRef = useRef<HTMLDivElement>(null);
     const tocRef = useRef<HTMLElement>(null);
@@ -47,25 +50,41 @@ function TocHarness({ headings }: TocHarnessProps) {
             class="content-area"
             id="content-area"
             style={{
-                display: 'flex',
-                flexDirection: 'row',
-                gap: 'var(--space-6)',
-                alignItems: 'flex-start',
-                height: '480px',
+                height: '560px',
                 overflowY: 'auto',
                 padding: 'var(--content-padding)',
+                width: width ? `${width}px` : undefined,
+                border: width ? '1px solid var(--border)' : undefined,
             }}
         >
             <div
                 ref={markdownRef}
                 id="markdown-content"
-                style={{ flex: 1, maxWidth: '72ch' }}
                 dangerouslySetInnerHTML={{ __html: renderHeadingsHtml(headings) }}
             />
             <aside ref={tocRef} class="spec-toc" id="spec-toc" aria-label="Table of contents" />
         </div>
     );
 }
+
+// The long headings a real tasks.md produces, used by the stories below.
+const LONG_HEADINGS: Heading[] = [
+    { level: 'h2', id: 'setup', text: 'Setup' },
+    { level: 'h2', id: 'foundational', text: 'Foundational (blocks all stories)' },
+    { level: 'h2', id: 'us1', text: 'User Story 1 — Read any spec without losing content' },
+    { level: 'h3', id: 'impl-1', text: 'Implementation' },
+    { level: 'h2', id: 'us2', text: 'User Story 2 — The viewer still reacts to the run lifecycle' },
+    { level: 'h3', id: 'impl-2', text: 'Implementation' },
+    { level: 'h2', id: 'us3', text: "User Story 3 — The run's story is the front page" },
+    { level: 'h3', id: 'impl-3', text: 'Implementation' },
+    { level: 'h2', id: 'us4', text: 'User Story 4 — Custom workflows drive the shell' },
+    { level: 'h3', id: 'impl-4', text: 'Implementation' },
+    { level: 'h2', id: 'us5', text: 'User Story 5 — The reading layout holds at any width' },
+    { level: 'h3', id: 'impl-5', text: 'Implementation' },
+    { level: 'h2', id: 'polish', text: 'Polish' },
+    { level: 'h2', id: 'review-fixes', text: 'Review fixes + Context-First revision (post-review)' },
+    { level: 'h2', id: 'deps', text: 'Dependencies & Execution Order' },
+];
 
 const meta: Meta<typeof TocHarness> = {
     title: 'Viewer/Toc',
@@ -119,33 +138,21 @@ export const TasksLikeWithSubsections: Story = {
     ),
 };
 
-// The stress case: the long, wrapping headings a real tasks.md produces. This
-// is what the outline has to survive — entries clamp to two lines (full text on
-// hover) and subsections hang off a guide rule so they read as children, not
-// look-alike peers. Flip the "+" toggle to review the expanded state.
+// The stress case, wide: long wrapping headings in the right-hand column.
+// Entries clamp to two lines (full text on hover). Hit "Subsections +" to
+// review the expanded state — h3s hang off a guide rule, and each repeated
+// "Implementation" carries its parent section in its accessible name.
 export const LongHeadingsStressTest: Story = {
     name: 'Long headings (readability stress test)',
-    render: () => (
-        <TocHarness
-            headings={[
-                { level: 'h2', id: 'setup', text: 'Setup' },
-                { level: 'h2', id: 'foundational', text: 'Foundational (blocks all stories)' },
-                { level: 'h2', id: 'us1', text: 'User Story 1 — Read any spec without losing content' },
-                { level: 'h3', id: 'impl-1', text: 'Implementation' },
-                { level: 'h2', id: 'us2', text: 'User Story 2 — The viewer still reacts to the run lifecycle' },
-                { level: 'h3', id: 'impl-2', text: 'Implementation' },
-                { level: 'h2', id: 'us3', text: "User Story 3 — The run's story is the front page" },
-                { level: 'h3', id: 'impl-3', text: 'Implementation' },
-                { level: 'h2', id: 'us4', text: 'User Story 4 — Custom workflows drive the shell' },
-                { level: 'h3', id: 'impl-4', text: 'Implementation' },
-                { level: 'h2', id: 'us5', text: 'User Story 5 — The reading layout holds at any width' },
-                { level: 'h3', id: 'impl-5', text: 'Implementation' },
-                { level: 'h2', id: 'polish', text: 'Polish' },
-                { level: 'h2', id: 'review-fixes', text: 'Review fixes + Context-First revision (post-review)' },
-                { level: 'h2', id: 'deps', text: 'Dependencies & Execution Order' },
-            ]}
-        />
-    ),
+    render: () => <TocHarness headings={LONG_HEADINGS} />,
+};
+
+// Below --toc-min-width (1040px) the outline does not simply vanish: it becomes
+// an "On this page" disclosure ABOVE the document, so the reading column keeps
+// its full width and the outline is still one click away.
+export const CompactDisclosure: Story = {
+    name: 'Compact disclosure (narrow / split pane)',
+    render: () => <TocHarness headings={LONG_HEADINGS} width={720} />,
 };
 
 // Empty doc: the aside hides itself entirely (.spec-toc--empty).
