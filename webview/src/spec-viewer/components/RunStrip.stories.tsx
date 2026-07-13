@@ -68,12 +68,21 @@ export const CompletedWithPr: Story = {
     },
 };
 
-// Status only — every optional fact absent; the strip stays one quiet line.
-export const StatusOnly: Story = {
+// No facts yet (a freshly specified spec): the strip renders nothing at all
+// rather than an empty bar. The status is NOT repeated here — the header badge
+// owns it — so with no run facts there is simply nothing to say.
+export const NoFactsYet: Story = {
     render: () => {
-        viewerMode.value = 'overview';
+        viewerMode.value = 'document';
         navState.value = mockNavState({ taskCompletionPercent: 0 });
         viewerState.value = baseState({ status: 'specified', activeStep: '' });
-        return <RunStrip />;
+        return (
+            <div>
+                <p style="color: var(--text-muted); font-size: 12px; padding: 8px 0;">
+                    (nothing renders below — the strip is absent, not empty)
+                </p>
+                <RunStrip />
+            </div>
+        );
     },
 };

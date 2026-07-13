@@ -119,6 +119,35 @@ export const TasksLikeWithSubsections: Story = {
     ),
 };
 
+// The stress case: the long, wrapping headings a real tasks.md produces. This
+// is what the outline has to survive — entries clamp to two lines (full text on
+// hover) and subsections hang off a guide rule so they read as children, not
+// look-alike peers. Flip the "+" toggle to review the expanded state.
+export const LongHeadingsStressTest: Story = {
+    name: 'Long headings (readability stress test)',
+    render: () => (
+        <TocHarness
+            headings={[
+                { level: 'h2', id: 'setup', text: 'Setup' },
+                { level: 'h2', id: 'foundational', text: 'Foundational (blocks all stories)' },
+                { level: 'h2', id: 'us1', text: 'User Story 1 — Read any spec without losing content' },
+                { level: 'h3', id: 'impl-1', text: 'Implementation' },
+                { level: 'h2', id: 'us2', text: 'User Story 2 — The viewer still reacts to the run lifecycle' },
+                { level: 'h3', id: 'impl-2', text: 'Implementation' },
+                { level: 'h2', id: 'us3', text: "User Story 3 — The run's story is the front page" },
+                { level: 'h3', id: 'impl-3', text: 'Implementation' },
+                { level: 'h2', id: 'us4', text: 'User Story 4 — Custom workflows drive the shell' },
+                { level: 'h3', id: 'impl-4', text: 'Implementation' },
+                { level: 'h2', id: 'us5', text: 'User Story 5 — The reading layout holds at any width' },
+                { level: 'h3', id: 'impl-5', text: 'Implementation' },
+                { level: 'h2', id: 'polish', text: 'Polish' },
+                { level: 'h2', id: 'review-fixes', text: 'Review fixes + Context-First revision (post-review)' },
+                { level: 'h2', id: 'deps', text: 'Dependencies & Execution Order' },
+            ]}
+        />
+    ),
+};
+
 // Empty doc: the aside hides itself entirely (.spec-toc--empty).
 export const EmptyDoc: Story = {
     render: () => <TocHarness headings={[]} />,
