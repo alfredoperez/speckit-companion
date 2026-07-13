@@ -36,6 +36,7 @@ import {
   startStep,
 } from "../specs/stepLifecycle";
 import type { WorkflowStepConfig } from "../workflows/types";
+import { nextWorkflowStep, workflowStepIndex } from "../workflows/stepSequence";
 import { isOptionalCommand } from "./optionalCommands";
 import {
   addComment as addCommentToCtx,
@@ -338,7 +339,6 @@ async function handleApprove(
   if (!instance) return;
 
   const steps = await deps.resolveWorkflowSteps();
-  const navSteps = steps.filter((s) => !s.actionOnly);
 
   // Custom workflows don't emit capture context, so ctx.currentStep can lag the
   // files their commands produced. Reconstruct the real position from the step output
@@ -350,23 +350,20 @@ async function handleApprove(
   );
 
   // Dispatch routes off ctx.currentStep so a past stepper tab can't
-  // misdirect the action. Fall back to docType only when currentStep
-  // isn't a navStep (e.g. the actionOnly implement step).
-  let currentIndex = ctx?.currentStep
-    ? navSteps.findIndex((s) => s.name === ctx.currentStep)
-    : -1;
-  if (currentIndex < 0) {
+  // misdirect the action; fall back to the displayed document's step. The
+  // walk uses the FULL ordered step list — the same traversal the footer
+  // label uses (getApproveLabel) — so action-only steps between document
+  // steps are dispatched in workflow order, never skipped or reordered.
+  let currentName: string | undefined = ctx?.currentStep;
+  if (workflowStepIndex(steps, currentName) < 0) {
     const docType = instance.state.currentDocument;
-    currentIndex = navSteps.findIndex((s) => s.name === docType);
-    if (currentIndex < 0) {
+    if (workflowStepIndex(steps, docType) >= 0) {
+      currentName = docType;
+    } else {
       const relatedDoc = instance.state.availableDocuments.find(
         (d) => d.type === docType && d.category === "related",
       );
-      if (relatedDoc?.parentStep) {
-        currentIndex = navSteps.findIndex(
-          (s) => s.name === relatedDoc.parentStep,
-        );
-      }
+      currentName = relatedDoc?.parentStep;
     }
   }
 
@@ -381,28 +378,17 @@ async function handleApprove(
     }
   }
 
-  if (currentIndex >= 0 && currentIndex < navSteps.length - 1) {
-    // Execute next step's command
-    const nextStep = navSteps[currentIndex + 1];
+  const nextStep = nextWorkflowStep(steps, currentName);
+  if (nextStep) {
     if (isLifecycleStep(nextStep.name)) {
       await startStep(specDirectory, nextStep.name as StepName, "extension");
     }
     await deps.updateContent(specDirectory, instance.state.currentDocument);
     await executeStepInTerminal(nextStep, specDirectory, deps);
-  } else if (currentIndex === navSteps.length - 1) {
-    // Last navigable step: find the actionOnly implement step
-    const implementStep = steps.find((s) => s.actionOnly);
-    if (implementStep) {
-      if (isLifecycleStep(implementStep.name)) {
-        await startStep(
-          specDirectory,
-          implementStep.name as StepName,
-          "extension",
-        );
-      }
-      await deps.updateContent(specDirectory, instance.state.currentDocument);
-      await executeStepInTerminal(implementStep, specDirectory, deps);
-    }
+  } else {
+    deps.outputChannel.appendLine(
+      `[approve] No next step after '${currentName ?? "unknown"}' — nothing dispatched`,
+    );
   }
 }
 

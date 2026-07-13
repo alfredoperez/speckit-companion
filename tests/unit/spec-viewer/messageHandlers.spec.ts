@@ -241,3 +241,84 @@ describe("handleApprove dispatch routing", () => {
     expect(prompt).toContain("/speckit.implement");
   });
 });
+
+// Mirrors examples/todo-gsd-superpowers: action-only steps lead, follow, and
+// surround the single navigable step, so the dispatch must walk the FULL
+// ordered step list — the old navSteps walk dispatched the workflow's FIRST
+// action step (discuss) from plan instead of the next one (execute).
+const gsdSteps = [
+  { name: "discuss", label: "Discuss", command: "gsd-discuss-phase", actionOnly: true },
+  { name: "plan", label: "Plan Phase", command: "gsd-plan-phase", includeRelatedDocs: true },
+  { name: "execute", label: "Execute (Superpowers)", command: "superpowers-execute", actionOnly: true },
+  { name: "verify", label: "Verify", command: "gsd-verify-work", actionOnly: true },
+];
+
+describe("handleApprove — custom workflow with interleaved action-only steps", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  function gsdDeps(currentDocument: string) {
+    const docs = [makeSpecDocument("plan", "plan.md", `${SPEC_DIR}/plan.md`, true)];
+    return makeDeps(
+      docs,
+      { resolveWorkflowSteps: jest.fn().mockResolvedValue(gsdSteps) },
+      { currentDocument: currentDocument as any },
+    );
+  }
+
+  it("dispatches execute (the next step), not discuss (the first action step), from plan", async () => {
+    mockCtx.currentStep = "plan";
+    const deps = gsdDeps("plan");
+    const handler = createMessageHandlers(SPEC_DIR, deps);
+
+    await handler({ type: "approve" } as any);
+
+    const prompt = (deps.executeInTerminal as jest.Mock).mock.calls[0]?.[0];
+    expect(prompt).toContain("superpowers-execute");
+    expect(prompt).not.toContain("gsd-discuss-phase");
+  });
+
+  it("dispatches verify from execute (consecutive action-only steps)", async () => {
+    mockCtx.currentStep = "execute";
+    const deps = gsdDeps("plan");
+    const handler = createMessageHandlers(SPEC_DIR, deps);
+
+    await handler({ type: "approve" } as any);
+
+    const prompt = (deps.executeInTerminal as jest.Mock).mock.calls[0]?.[0];
+    expect(prompt).toContain("gsd-verify-work");
+  });
+
+  it("dispatches nothing from verify (last step overall)", async () => {
+    mockCtx.currentStep = "verify";
+    const deps = gsdDeps("plan");
+    const handler = createMessageHandlers(SPEC_DIR, deps);
+
+    await handler({ type: "approve" } as any);
+
+    expect(deps.executeInTerminal).not.toHaveBeenCalled();
+  });
+
+  it("keeps the footer label and the dispatched step in agreement", async () => {
+    const { getApproveLabel } = jest.requireActual(
+      "../../../src/features/spec-viewer/footerActions",
+    );
+    for (const [current, expected] of [
+      ["plan", "Execute (Superpowers)"],
+      ["execute", "Verify"],
+    ] as const) {
+      mockCtx.currentStep = current;
+      const deps = gsdDeps("plan");
+      const handler = createMessageHandlers(SPEC_DIR, deps);
+
+      await handler({ type: "approve" } as any);
+
+      const dispatched = gsdSteps.find((s) =>
+        ((deps.executeInTerminal as jest.Mock).mock.calls[0]?.[0] as string).includes(s.command),
+      );
+      expect(dispatched?.label).toBe(expected);
+      expect(getApproveLabel(current, gsdSteps)).toBe(expected);
+    }
+  });
+});

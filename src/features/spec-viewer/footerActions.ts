@@ -25,6 +25,7 @@ import { SpecStatuses, FooterActionIds } from '../../core/constants';
 import { deriveStepHistory } from '../specs/stepHistoryDerivation';
 import { isStepLevelEntry } from '../specs/historyHelpers';
 import type { WorkflowStepConfig } from '../workflows/types';
+import { nextWorkflowStep, workflowStepIndex } from '../workflows/stepSequence';
 
 type DerivedHistory = Record<string, StepHistoryEntry>;
 
@@ -164,9 +165,8 @@ export function getApproveLabel(
     workflowSteps: WorkflowStepConfig[] | undefined
 ): string {
     if (!workflowSteps || workflowSteps.length === 0) return 'Approve';
-    const idx = workflowSteps.findIndex(s => s.name === currentStep);
-    if (idx < 0) return 'Approve';
-    const next = workflowSteps[idx + 1];
+    if (workflowStepIndex(workflowSteps, currentStep) < 0) return 'Approve';
+    const next = nextWorkflowStep(workflowSteps, currentStep);
     if (!next) return 'Complete';
     return next.label ?? capitalize(next.name);
 }
