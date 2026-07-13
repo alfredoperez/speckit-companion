@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/preact';
 import { RunStrip } from './RunStrip';
-import { navState, viewerState, viewerMode } from '../signals';
+import { navState, viewerState } from '../signals';
 import type { ViewerState } from '../types';
 import { mockNavState } from './__stories__/mockData';
 
@@ -29,7 +29,6 @@ const baseState = (overrides: Partial<ViewerState>): ViewerState => ({
 // Mid-run: status, phase, task progress, traceability gap, one concern.
 export const MidRun: Story = {
     render: () => {
-        viewerMode.value = 'document';
         navState.value = mockNavState({ taskCompletionPercent: 60 });
         viewerState.value = baseState({
             taskSummaries: {
@@ -52,7 +51,6 @@ export const MidRun: Story = {
 // so the "Run details →" action offers the jump back to the Overview.
 export const CompletedWithPr: Story = {
     render: () => {
-        viewerMode.value = 'document';
         navState.value = mockNavState({});
         viewerState.value = baseState({
             status: 'completed',
@@ -69,11 +67,10 @@ export const CompletedWithPr: Story = {
 };
 
 // No facts yet (a freshly specified spec): the strip renders nothing at all
-// rather than an empty bar. The status is NOT repeated here — the header badge
-// owns it — so with no run facts there is simply nothing to say.
+// rather than an empty bar. Neither the status nor the phase is repeated here
+// (the badge owns both), so with no run facts there is simply nothing to say.
 export const NoFactsYet: Story = {
     render: () => {
-        viewerMode.value = 'document';
         navState.value = mockNavState({ taskCompletionPercent: 0 });
         viewerState.value = baseState({ status: 'specified', activeStep: '' });
         return (

@@ -13,8 +13,11 @@ import { mockNavState } from './__stories__/mockData';
  * (name, lifecycle badge, branch, date) and how its run WENT (phase, tasks,
  * traceability…). One boundary, not two headers. The status appears exactly once.
  *
- * The run facts yield as the pane narrows — first the time and the checks, then
- * everything but the way back to the Overview. Identity never yields.
+ * The facts only say what nothing else says: no status (the badge has it), no
+ * phase (the badge and the spinning rail step have it), no "Run details" link
+ * (the rail's Overview entry is that, at every width). They yield as the pane
+ * narrows — the time and the checks first, then all of them. Identity never
+ * yields.
  */
 
 const meta: Meta<typeof PageChrome> = {
@@ -98,7 +101,7 @@ export const Completed: Story = {
 };
 
 // Medium (~1000px): the checks and the active time drop out first — the facts
-// that matter least once you're mid-read.
+// that matter least once you're mid-read. Tasks, traceability and concerns stay.
 export const MediumPane: Story = {
     name: 'Medium pane (facts start yielding)',
     render: () => {
@@ -107,10 +110,11 @@ export const MediumPane: Story = {
     },
 };
 
-// Split pane (~700px): the facts yield entirely; the way back to the Overview
-// survives, and the title, badge and branch are all still readable.
+// Split pane (~700px): the facts yield entirely and the band shrinks to the
+// identity half. Nothing is lost — the run's full story is the rail's Overview
+// entry, which is present at every width.
 export const SplitPane: Story = {
-    name: 'Split pane (collapses to Run details)',
+    name: 'Split pane (band shrinks to identity)',
     render: () => {
         completedRun();
         return <Pane width={700}><PageChrome /></Pane>;

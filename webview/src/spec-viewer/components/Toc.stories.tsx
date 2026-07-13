@@ -147,12 +147,21 @@ export const LongHeadingsStressTest: Story = {
     render: () => <TocHarness headings={LONG_HEADINGS} />,
 };
 
-// Below --toc-min-width (1040px) the outline does not simply vanish: it becomes
+// The case the threshold is actually FOR: a 13" MacBook with the VS Code
+// sidebar open leaves the content region ~1012px. The outline must keep its
+// column here — this is a laptop at full screen, not a cramped pane — and the
+// reading measure stays comfortable (~78 characters).
+export const LaptopWidth: Story = {
+    name: 'Laptop full-screen (13" + sidebar ≈ 1012px)',
+    render: () => <TocHarness headings={LONG_HEADINGS} width={1012} />,
+};
+
+// Below --toc-min-width (920px) the outline does not simply vanish: it becomes
 // an "On this page" disclosure ABOVE the document, so the reading column keeps
 // its full width and the outline is still one click away.
 export const CompactDisclosure: Story = {
-    name: 'Compact disclosure (narrow / split pane)',
-    render: () => <TocHarness headings={LONG_HEADINGS} width={720} />,
+    name: 'Compact disclosure (split editor ≈ 550px)',
+    render: () => <TocHarness headings={LONG_HEADINGS} width={550} />,
 };
 
 // Empty doc: the aside hides itself entirely (.spec-toc--empty).

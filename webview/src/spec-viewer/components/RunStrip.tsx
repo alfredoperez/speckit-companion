@@ -1,20 +1,23 @@
-import { navState, viewerState, viewerMode } from '../signals';
+import { navState, viewerState } from '../signals';
 import { heroStats, formatActiveTime } from '../activityHeroModel';
-import { hasAnyData } from './ActivityPanel';
 
 /**
  * The run facts, sitting in the right half of the header band: how far the run
- * got, at a glance. The status is NOT here — the header badge owns it, and
- * saying it twice was what made the chrome read as two headers.
+ * got, at a glance.
+ *
+ * It only says what nothing else already says. The status is the badge's job,
+ * and the phase is the badge's job too (a COMPLETED spec saying "implement"
+ * adds nothing, and a running one is already named by the badge and the
+ * spinning rail step). Getting to the run's full story is the rail's job — the
+ * Overview is an entry there at every width — so there is no "Run details" link
+ * competing with it.
  *
  * Facts are ranked, and the CSS drops them from the least important end as the
- * pane narrows (checks and active time first). In a split pane they all yield
- * and only "Run details" survives, which jumps to the Overview — the same rail
- * destination the outline points at. Renders nothing when there is no run.
+ * pane narrows. Renders nothing when there is no run to describe.
  */
 
 /** Least → most important; the CSS hides by this key as width runs out. */
-type FactKey = 'active' | 'checks' | 'traced' | 'concerns' | 'tasks' | 'phase';
+type FactKey = 'active' | 'checks' | 'traced' | 'concerns' | 'tasks';
 
 export function RunStrip() {
     const vs = viewerState.value;
@@ -23,7 +26,6 @@ export function RunStrip() {
 
     const stats = heroStats(vs);
     const facts: Array<{ key: FactKey; value: string; warning?: boolean }> = [];
-    if (vs.activeStep) facts.push({ key: 'phase', value: vs.activeStep });
     if (stats.tasksTotal !== undefined) {
         facts.push({ key: 'tasks', value: `${stats.tasksDone}/${stats.tasksTotal} tasks` });
     } else if (typeof ns?.taskCompletionPercent === 'number' && ns.taskCompletionPercent > 0) {
@@ -50,12 +52,6 @@ export function RunStrip() {
 
     if (facts.length === 0 && !vs.prUrl) return null;
 
-    // "Run details" is only an offer when there's an Overview to land on and
-    // you aren't already standing on it.
-    const overviewAvailable = (ns?.activityPanelEnabled ?? true) && hasAnyData(vs);
-    const showingOverview = (viewerMode.value ?? 'overview') === 'overview';
-    const showDetails = overviewAvailable && !showingOverview;
-
     return (
         <div class="run-strip" aria-label="Run context">
             {facts.map(f => (
@@ -71,16 +67,6 @@ export function RunStrip() {
                 <a class="run-strip__pr" href={vs.prUrl} title={vs.prUrl}>
                     PR{vs.prNumber ? ` #${vs.prNumber}` : ''}
                 </a>
-            )}
-            {showDetails && (
-                <button
-                    type="button"
-                    class="run-strip__details"
-                    title="Open the Overview — the run's durable context"
-                    onClick={() => { viewerMode.value = 'overview'; }}
-                >
-                    Run details <span aria-hidden="true">→</span>
-                </button>
             )}
         </div>
     );

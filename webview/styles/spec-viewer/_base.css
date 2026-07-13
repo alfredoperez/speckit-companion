@@ -94,9 +94,7 @@ body {
 .run-strip__fact--warning { color: var(--warning); }
 
 .run-strip__fact + .run-strip__fact::before,
-.run-strip__fact + .run-strip__pr::before,
-.run-strip__fact + .run-strip__details::before,
-.run-strip__pr + .run-strip__details::before {
+.run-strip__fact + .run-strip__pr::before {
     content: "·";
     margin: 0 10px;
     color: var(--border-hover);
@@ -109,19 +107,6 @@ body {
 
 .run-strip__pr:hover { text-decoration: underline; }
 
-.run-strip__details {
-    padding: 0;
-    border: none;
-    background: transparent;
-    color: var(--accent);
-    cursor: pointer;
-    font-family: var(--font-family);
-    font-size: 12px;
-    white-space: nowrap;
-}
-
-.run-strip__details:hover { text-decoration: underline; }
-
 /* The facts yield from the least important end as the pane narrows: first the
    time and the checks, then everything but the way back to the Overview. */
 @container viewer (max-width: 1100px) {
@@ -132,17 +117,11 @@ body {
     }
 }
 
+/* A split pane has no room for facts at all: the band shrinks to identity, and
+   the run's full story stays one click away on the rail's Overview entry. */
 @container viewer (max-width: 760px) {
-    .run-strip__fact {
+    .run-strip {
         display: none;
-    }
-
-    /* The separator belongs to a neighbour that is now hidden — it must go too,
-       or "Run details" leads with an orphaned middot. Matches the specificity
-       of the rule that added it. */
-    .run-strip__fact + .run-strip__details::before,
-    .run-strip__pr + .run-strip__details::before {
-        content: none;
     }
 }
 
@@ -237,9 +216,11 @@ body {
        resolves against the CONTAINER's font, while #markdown-content caps
        itself at 72ch of its OWN (larger) font — so a ch-sized track is too
        narrow and the prose spills over the outline. */
-    grid-template-columns: minmax(0, var(--reading-column-width)) var(--toc-column-width);
+    grid-template-columns:
+        minmax(0, var(--reading-column-width))
+        minmax(var(--toc-column-min), var(--toc-column-width));
     justify-content: center;
-    column-gap: clamp(24px, 4vw, 56px);
+    column-gap: clamp(20px, 3vw, 56px);
     align-items: start;
 }
 

@@ -4,12 +4,21 @@
  */
 
 /* Responsive threshold — read in JS via getComputedStyle, not via @media.
-   The outline only earns a column when the content region can afford one: a
-   72ch reading column plus a 240px outline plus gutters needs ~1040px. Below
-   that the reading column was being squeezed to pay for the outline. */
+   The outline earns a column when the region can still hold a comfortable
+   reading measure beside it. Both tracks flex, so the threshold is the point
+   where the reading column would drop below ~60 characters, NOT the point where
+   both tracks hit their ideal widths.
+
+   The real geometry this has to survive is a laptop, not a monitor. A 13"
+   MacBook with the sidebar open leaves the content region ~1012px — so a 1040px
+   threshold made the outline disappear on a full-screen laptop, and a 14"
+   (~1054px) would have flickered it in and out with the sidebar. 920px keeps the
+   column on every laptop full-screen, and a split editor (~400–650px) correctly
+   falls back to the compact disclosure. */
 :root {
-    --toc-min-width: 1040px;
+    --toc-min-width: 920px;
     --toc-column-width: 240px;
+    --toc-column-min: 190px;
     /* Holds #markdown-content's own 72ch cap (72ch of a 16px font ≈ 720px). */
     --reading-column-width: 760px;
 }
