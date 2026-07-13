@@ -136,6 +136,8 @@ export function buildToc(
         a.className = `spec-toc-link spec-toc-link--${level}`;
         a.href = `#${id}`;
         a.textContent = (heading.textContent ?? '').replace(PRIORITY_SUFFIX, '').trim();
+        // The entry clamps to two lines, so the full heading lives in the tooltip.
+        a.title = a.textContent;
         a.dataset.target = id;
         li.appendChild(a);
         list.appendChild(li);

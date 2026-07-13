@@ -64,7 +64,8 @@ describe('preprocessTaskPhases', () => {
         // …and the checkbox list below it still renders as task items.
         expect(html).toContain('class="task-item');
         expect(html).toContain('<input type="checkbox" checked');
-        expect(html).toContain('T010 Implement deriveViewerState');
+        // The id is a chip ahead of the description, not part of the sentence.
+        expect(html).toContain('<span class="task-item__id">T010</span>Implement deriveViewerState');
     });
 });
 

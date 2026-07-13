@@ -401,8 +401,9 @@ export function renderMarkdown(markdown: string): string {
                 const checked = taskMatch[1].toLowerCase() === 'x' ? 'checked' : '';
                 const taskText = taskMatch[2];
 
-                // Extract task ID (T001, T002, etc.) from parsed HTML
-                const taskIdExtract = taskText.match(/<strong>(T\d+)<\/strong>/i);
+                // Extract task ID (T001, T002, …). Specs write it either bolded
+                // (`**T001**`) or bare, so accept both.
+                const taskIdExtract = taskText.match(/^\s*(?:<strong>\s*)?(T\d+)(?:\s*<\/strong>)?\b/i);
                 const taskId = taskIdExtract ? taskIdExtract[1] : null;
 
                 // Build classes — include 'line' so hover/comment affordances activate
@@ -413,11 +414,27 @@ export function renderMarkdown(markdown: string): string {
                 const classAttr = `class="${classes.join(' ')}"`;
                 const dataTaskAttr = taskId ? ` data-task-id="${taskId}"` : '';
 
-                // Extract user story ID for tooltip
-                const usMatch = taskText.match(/^(T\d+\s*\[US\d+\])\s*(.+)$/i) || taskText.match(/<strong>(T\d+)<\/strong>\s*(.*)/i);
-
-                const innerText = (usMatch && taskText.match(/\[US\d+\]/)) ? usMatch[2] : taskText;
-                const titleAttr = (usMatch && taskText.match(/\[US\d+\]/)) ? ` title="${usMatch[1]}"` : '';
+                // The id and the `[P]` / `[US#]` markers are metadata, not prose:
+                // they render as compact chips ahead of the description instead of
+                // sitting in the sentence as raw bracket noise.
+                let body = taskId
+                    ? taskText.replace(/^\s*(?:<strong>\s*)?T\d+(?:\s*<\/strong>)?\s*/i, '')
+                    : taskText;
+                const chips: string[] = [];
+                if (taskId) chips.push(`<span class="task-item__id">${taskId}</span>`);
+                body = body.replace(/^(?:\s*\[(P|US\d+)\])+/gi, (markers) => {
+                    for (const [, marker] of markers.matchAll(/\[(P|US\d+)\]/gi)) {
+                        const parallel = marker.toUpperCase() === 'P';
+                        chips.push(
+                            `<span class="task-item__marker${parallel ? ' task-item__marker--parallel' : ''}"` +
+                            ` title="${parallel ? 'Runs in parallel with its wave' : `User story ${marker.slice(2)}`}">` +
+                            `${marker.toUpperCase()}</span>`,
+                        );
+                    }
+                    return '';
+                }).trimStart();
+                const innerText = chips.join('') + body;
+                const titleAttr = '';
                 const summary = taskId ? taskSummaries[taskId] : undefined;
                 let captureHtml = '';
                 if (summary && (summary.did || (summary.files && summary.files.length))) {

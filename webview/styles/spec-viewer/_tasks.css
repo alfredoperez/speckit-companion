@@ -62,7 +62,7 @@
   flex-wrap: wrap;
   align-items: flex-start;
   gap: var(--space-2);
-  padding: 2px 0;
+  padding: 5px 0;
   padding-right: 24px; /* room for absolute-positioned + button */
   margin: 0;
   background: transparent;
@@ -97,13 +97,58 @@
      checkbox. basis 0 lets it sit beside the checkbox and wrap internally (#331). */
   flex: 1 1 0;
   min-width: 0;
-  line-height: 1.4;
+  font-size: 0.94em;
+  line-height: 1.6;
+  color: var(--text-body);
+}
+
+/* ── Task metadata: the id and the [P] / [US#] markers ──
+   They are labels ABOUT the task, not part of its sentence, so they sit ahead
+   of the description as quiet chips rather than raw brackets inside the prose. */
+
+#markdown-content .task-item__id {
+  display: inline-block;
+  margin-right: 7px;
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  font-weight: 650;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+#markdown-content .task-item__marker {
+  display: inline-block;
+  margin-right: 5px;
+  padding: 0 5px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  vertical-align: 1px;
+  cursor: help;
+}
+
+#markdown-content .task-item__marker--parallel {
+  color: var(--info);
+  background: var(--info-subtle);
+}
+
+/* Inline code inside a task reads as a term in a sentence — it must not
+   out-shout the sentence around it. */
+#markdown-content li.task-item .task-text code:not(pre code) {
+  padding: 0 3px;
+  font-size: 0.85em;
+  color: var(--text-body);
+  background: color-mix(in srgb, var(--text-muted) 12%, transparent);
 }
 
 #markdown-content li.task-item:hover {
   background: var(--bg-hover);
   margin: 0 calc(-1 * var(--space-2));
-  padding: 2px var(--space-2);
+  padding: 5px var(--space-2);
   padding-right: 24px; /* restore + button slot — shorthand above clobbers it (spec 112) */
   border-radius: var(--radius-sm);
 }

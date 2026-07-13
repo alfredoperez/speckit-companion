@@ -158,3 +158,43 @@ describe('stripFrontmatter', () => {
         expect(stripFrontmatter(input)).toBe(input);
     });
 });
+
+describe('task lines — id and markers render as metadata chips', () => {
+    const TASK = '- [x] **T008** [P] [US1] Reading column: hide empty `.spec-meta` · `_content.css`\n';
+
+    it('lifts the task id out of the sentence into its own chip', () => {
+        const html = renderMarkdown(TASK);
+        expect(html).toContain('<span class="task-item__id">T008</span>');
+        // The id no longer hides in a tooltip, and never repeats inside the text.
+        expect(html).not.toContain('<strong>T008</strong>');
+        expect(html).not.toContain('title="T008');
+    });
+
+    it('renders [P] and [US#] as chips instead of raw brackets in the prose', () => {
+        const html = renderMarkdown(TASK);
+        expect(html).toContain('task-item__marker--parallel');
+        expect(html).toContain('>P</span>');
+        expect(html).toContain('>US1</span>');
+
+        const text = html.replace(/<[^>]+>/g, '');
+        expect(text).not.toContain('[P]');
+        expect(text).not.toContain('[US1]');
+        expect(text).toContain('Reading column');
+    });
+
+    it('chips a bare (unbolded) task id too — specs write it both ways', () => {
+        const html = renderMarkdown('- [x] T002 [P] Copy the canonical JSON Schema\n');
+        expect(html).toContain('<span class="task-item__id">T002</span>');
+        expect(html).toContain('task-item__marker--parallel');
+        const text = html.replace(/<[^>]+>/g, '');
+        expect(text).not.toContain('[P]');
+        expect(text).toContain('Copy the canonical JSON Schema');
+    });
+
+    it('leaves a task with no markers alone', () => {
+        const html = renderMarkdown('- [ ] **T001** Create the shared-parts directory\n');
+        expect(html).toContain('<span class="task-item__id">T001</span>');
+        expect(html).toContain('Create the shared-parts directory');
+        expect(html).not.toContain('task-item__marker');
+    });
+});

@@ -107,34 +107,46 @@
    ============================================ */
 
 /* Clickable file reference pill buttons */
+/* A path is a reference, not a call to action: it stays quiet in the sentence
+   and only picks up the accent when you hover it. (It also rides the viewer's
+   own palette — it used to reach for the host's link color, which is off-key
+   against the owned theme.) */
 #markdown-content .file-ref {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
-    padding: 1px 6px 1px 4px;
+    gap: 4px;
+    padding: 0 5px;
     border-radius: var(--radius-sm);
-    background: var(--accent-subtle);
-    border: 1px solid var(--border-accent);
+    background: color-mix(in srgb, var(--text-muted) 12%, transparent);
+    border: 1px solid transparent;
     cursor: pointer;
     text-decoration: none;
-    color: var(--vscode-textLink-foreground);
-    font-size: 0.9em;
+    color: var(--text-body);
+    font-size: 0.85em;
     line-height: inherit;
     vertical-align: baseline;
+    transition: color var(--transition-fast), background var(--transition-fast),
+                border-color var(--transition-fast);
 }
 
 /* File icon via codicon font */
 #markdown-content .file-ref::before {
     font-family: 'codicon';
     content: '\eb60';
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1;
+    color: var(--text-muted);
     speak: never;
 }
 
 #markdown-content .file-ref:hover {
-    background: color-mix(in srgb, var(--vscode-textLink-foreground) 15%, transparent);
-    border-color: color-mix(in srgb, var(--vscode-textLink-foreground) 60%, transparent);
+    color: var(--accent);
+    background: var(--accent-subtle);
+    border-color: var(--border-accent);
+}
+
+#markdown-content .file-ref:hover::before {
+    color: var(--accent);
 }
 
 #markdown-content .file-ref:focus-visible {

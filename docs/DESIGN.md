@@ -15,7 +15,7 @@ Shared scale/spacing/type tokens come from `webview/styles/tokens.css` (host-der
 
 ## Component vocabulary (markdown-rendered, inside `#markdown-content`)
 
-Requirement scan rows (info-hue id badges), key-entity hairline rows, user-story cards (accent-edged), Given/When/Then stacked scenarios, compact tinted phase headers, task items + capture detail, plan Technical Context grid + Constitution verdict rows (collapsible), research decision cards, checklist report, surface tables (mono headers, row-only borders), file tree and code on the owned dark surface with a language chip. Per-item components stay commentable (the inline "+" line affordance, info hue).
+Requirement scan rows (info-hue id badges), key-entity hairline rows, user-story cards (accent-edged), Given/When/Then stacked scenarios, compact tinted phase headers, task items + capture detail, plan Technical Context grid + Constitution verdict rows (collapsible), research decision cards, checklist report, surface tables (mono headers, row-only borders), file tree and code on the owned dark surface with a language chip. Per-item components stay commentable (the inline "+" line affordance, info hue). Task metadata (the id, `[P]`, `[US#]`) renders as chips ahead of the description, never as brackets inside the sentence; inline code and file references stay quieter than the prose they sit in, with the accent reserved for hover.
 
 ## Direction: the Codex system (spec 394)
 

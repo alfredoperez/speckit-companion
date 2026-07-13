@@ -116,10 +116,10 @@
    belongs to the always-dark blocks, not to light-surface inline spans. */
 #markdown-content code:not(pre code) {
     font-family: var(--font-mono);
-    font-size: 0.875em;
-    padding: 1px 5px;
+    font-size: 0.85em;
+    padding: 1px 4px;
     color: var(--text-primary);
-    background: var(--bg-elevated);
+    background: color-mix(in srgb, var(--text-muted) 14%, transparent);
     border: none;
     border-radius: 3px;
 }
