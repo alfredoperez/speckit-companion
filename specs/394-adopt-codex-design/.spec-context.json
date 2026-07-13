@@ -1,0 +1,280 @@
+{
+  "workflow": "speckit",
+  "specName": "adopt codex design",
+  "branch": "viewer-redesign-investigation",
+  "currentStep": "implement",
+  "status": "implementing",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-13T00:34:06.631Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-13T00:39:29.491Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-13T00:40:38.250Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T00:43:04.472Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T00:45:00.608Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T00:45:01.256Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-13T00:46:12.229Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T00:47:41.590Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T00:47:43.214Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-13T00:48:56.576Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "living specs evaluated — skipped (not configured)",
+  "coverage": {
+    "FR-001": {
+      "title": "Adopt Codex hybrid theme: owned light/dark palette, host fonts/accessibility inherited",
+      "tasks": [
+        "T001"
+      ]
+    },
+    "FR-002": {
+      "title": "All text roles meet WCAG AA in both palettes",
+      "tasks": [
+        "T001",
+        "T010",
+        "T030"
+      ]
+    },
+    "FR-003": {
+      "title": "Code blocks readable on owned surface in both themes",
+      "tasks": [
+        "T002"
+      ]
+    },
+    "FR-004": {
+      "title": "Primitives migrate to Codex roles without API/message changes",
+      "tasks": [
+        "T011",
+        "T012",
+        "T016",
+        "T017",
+        "T018"
+      ]
+    },
+    "FR-005": {
+      "title": "Overview is default landing view; document fallback when no activity",
+      "tasks": [
+        "T014",
+        "T020",
+        "T021"
+      ]
+    },
+    "FR-006": {
+      "title": "Document rail (where) separated from completion marks (how far)",
+      "tasks": [
+        "T017"
+      ]
+    },
+    "FR-007": {
+      "title": "Rail/steps fully workflow-driven, no stock-four assumption",
+      "tasks": [
+        "T022",
+        "T023"
+      ]
+    },
+    "FR-008": {
+      "title": "CTA uses workflow-derived label; extra commands in Other actions",
+      "tasks": [
+        "T018",
+        "T024"
+      ]
+    },
+    "FR-009": {
+      "title": "Every lifecycle state renders correct badge/marks/actions",
+      "tasks": [
+        "T011",
+        "T012",
+        "T013"
+      ]
+    },
+    "FR-010": {
+      "title": "All markdown content types styled via existing emitted classes",
+      "tasks": [
+        "T002",
+        "T003",
+        "T004",
+        "T005",
+        "T006",
+        "T007",
+        "T008",
+        "T010"
+      ]
+    },
+    "FR-011": {
+      "title": "Hide empty meta/template remnants; branch metadata contrast",
+      "tasks": [
+        "T008"
+      ]
+    },
+    "FR-012": {
+      "title": "Three-column grid with documented responsive behavior",
+      "tasks": [
+        "T015",
+        "T019",
+        "T025"
+      ]
+    },
+    "FR-013": {
+      "title": "Inline review comments + refinement queue keep working",
+      "tasks": [
+        "T026"
+      ]
+    },
+    "FR-014": {
+      "title": "Living-specs mode behavior preserved in new shell",
+      "tasks": [
+        "T014",
+        "T017",
+        "T021"
+      ]
+    },
+    "FR-015": {
+      "title": "Extension-webview message protocol unchanged",
+      "tasks": [
+        "T013",
+        "T021",
+        "T024",
+        "T030"
+      ]
+    },
+    "FR-016": {
+      "title": "Recovery/safety affordances surface in new shell",
+      "tasks": [
+        "T013",
+        "T021"
+      ]
+    },
+    "FR-017": {
+      "title": "Stories and viewer docs updated with the design",
+      "tasks": [
+        "T013",
+        "T016",
+        "T017",
+        "T018",
+        "T019",
+        "T020",
+        "T021",
+        "T024",
+        "T026",
+        "T028",
+        "T029"
+      ]
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 22,
+    "projectedTasks": 18,
+    "scopeSignal": "larger",
+    "verdict": "oversized"
+  },
+  "context": [
+    "design source: webview/src/spec-viewer/__redesign__/codex/ (stories, RATIONALE.md, codex.css --cx-* roles)",
+    "area: webview/src/spec-viewer + webview/styles (tokens.css, spec-viewer partials)",
+    "constraint: docs/viewer-states.md state machine must hold unchanged",
+    "constraint: markdown emitted-class contract and extension<->webview message protocol are frozen interfaces",
+    "constraint: keep inline-comment UX (line-anchored comments + refinement queue)"
+  ],
+  "intent": "Ship the Codex redesign (owned palette, Overview-first shell, workflow-driven rail, data-display skin) in the production viewer with zero behavioral regressions",
+  "expectations": [
+    "sidebar tree, spec-editor, workflow-editor webviews unchanged",
+    "no extension-side derivation/capture/schema changes",
+    "no markdown pipeline restructuring",
+    "no new theming/layout settings"
+  ],
+  "approach": "Reskin-and-relayout over frozen seams: re-value the existing token layer to the Codex owned light/dark palette, recompose App.tsx into the shell regions (header + view switch, grouped document rail, 72ch reading column, run-facts aside, CTA footer with Other-actions menu) with each region kept on its existing component and state seam, and restyle the markdown pipeline's emitted classes for the data-display skin. Signals, message protocol, state derivation, and viewer-states transitions untouched.",
+  "decisions": [
+    {
+      "decision": "adopt the palette by re-valuing the existing token layer",
+      "why": "every partial already consumes these token names; one coherent restyle, no rename churn",
+      "rejected": "shipping codex.css alongside and porting components onto .cx-* classes"
+    },
+    {
+      "decision": "shell regions map 1:1 onto existing components (SpecHeader/NavigationBar/FooterActions + new RunAside)",
+      "why": "components already own the right state seams; markup/CSS change only, protocol and state machine fenced",
+      "rejected": "a fresh shell component tree replacing them"
+    },
+    {
+      "decision": "Overview replaces the Activity toggle, defaulting by data presence; living mode exempt",
+      "why": "panel is already a peer region behind a signal — default-state change delivers the design cheaply",
+      "rejected": "keeping the toggle and only restyling it"
+    },
+    {
+      "decision": "code keeps highlight.js on an owned always-dark surface in both themes",
+      "why": "the accepted proposal fixes light-mode code without touching the highlighting pipeline",
+      "rejected": "per-theme syntax palettes overriding hljs classes"
+    },
+    {
+      "decision": "host typography (Geist retired) and 6px geometry supersede the 2px terminal direction; docs updated",
+      "why": "the selected design inherits editor fonts and softer geometry; docs must not describe the old look",
+      "rejected": "keeping Geist lead / keeping 2px radii under the new palette"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Full plan + research + data-model + UI contract for adopting the Codex design over frozen viewer seams",
+      "key_finding": "Every Codex region maps onto an existing component and state seam (getApproveLabel, enhancementButtons, hasAnyData, livingMode), so the entire redesign is markup+CSS with zero protocol or derivation changes"
+    },
+    "tasks": {
+      "summary": "30 tasks, 8 phases: tokens foundation -> US1 data-display skin (8-way parallel wave) -> US2 lifecycle verification -> US3 Overview-first shell (5-way component wave) -> US4 custom workflows -> US5 layout+comments -> polish/docs/reconciliation"
+    }
+  }
+}
