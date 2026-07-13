@@ -484,12 +484,17 @@ flowchart LR
 
 ## Overview (the Activity view)
 
-Since the Codex redesign (spec 394), the Activity data is the **Overview** —
-one of the shell's two views, selected by the **Overview / Documents**
-switch in the header (there is no longer a nav-bar toggle). A spec with
-recorded activity **lands on the Overview**; a spec with none (and living
-specs, and specs with the panel setting off) lands on its document view.
-Picking any document on the rail switches to Documents.
+Since the Codex redesign (spec 394) and its Context-First revision, the
+Activity data is the **Overview** — one of the shell's two views, selected
+by the **Overview / Documents** switch at the top of the document rail
+(there is no longer a nav-bar toggle or a header-hosted switch). A spec
+with recorded activity **lands on the Overview**; a spec with none (and
+living specs, and specs with the panel setting off) lands on its document
+view. Picking any document on the rail switches to Documents. In both
+views a one-line **run strip** above the content carries the frequently
+scanned facts (status, phase, tasks, traced requirements, checks,
+concerns, trusted active time, PR link); its **Run details** action jumps
+back to the Overview.
 
 ```mermaid
 stateDiagram-v2
@@ -500,24 +505,23 @@ stateDiagram-v2
     overview --> overview : .spec-context.json change → viewerState refresh
 ```
 
-**Cards (top to bottom; each hides when its data is empty)**:
+**Dossier sections (top to bottom; each hides when its data is empty)**:
 
-| Card | Source fields |
-|------|---------------|
-| Approach | `approach`, `last_action`, `status`, `prUrl`/`prNumber`, `checkpointStatus.{commit, pr}` |
-| Phases | `stepHistory` (step-level `startedAt`/`completedAt`) + `transitions` for substep names; renders an overall started/ended/total header, per-step duration, and per-substep timing. Author (`by`) badge shows once at spec start |
-| Tasks | `task_summaries.T###` — `status`, `did`, `files`, per-task `concerns` |
-| Decisions | `decisions[]` |
+| Section | Source fields |
+|---------|---------------|
+| Intent | `intent` as the typographic statement; `approach`, the `area:` entry of `context[]`, and `classification` in the meta grid |
+| Expectations | `constraint:` entries of `context[]` (must stay true) paired with `expectations[]` (deliberately out of scope) |
+| Verified | `verified[]` — a ledger row per check: `what`, `result`, evidence `command`, `warnings[]` (amber) |
+| Decisions | `decisions[]` — numbered, top 3 visible, the rest behind a disclosure |
+| Coverage | `coverage[]` — requirement → tasks → tests traceability rows, untraced first, full list behind a disclosure |
 | Concerns | `concerns[]` (`{ task?, note }`) |
-| Files touched | `files_modified[]`, clickable |
+| Run log (collapsed `<details>`) | `last_action`, latest `history[]` finishes, `stepHistory` phase timeline, `task_summaries.T###`, `files_modified[]`, review comments, living specs |
 
-**Setting gate** — `speckit.viewer.activityPanel`:
-
-| Value | Toggle visibility | Label |
-|-------|------------------|-------|
-| `"off"` | hidden | — |
-| `"beta"` (default) | visible | `Activity` + small `beta` pill |
-| `"on"` | visible | `Activity` (no pill) |
+**Setting gate** — `speckit.viewer.activityPanel` is a **boolean** (default
+`true`). `true`: specs with recorded activity land on the Overview and the
+rail shows the Overview/Documents switch. `false`: every spec lands on its
+documents and the switch never renders. (The legacy `"off" | "beta" | "on"`
+strings migrate to booleans on activation; there is no beta pill.)
 
 **stepHistory is derived, not read from disk.** The extension owns this
 field. `deriveStepHistory(transitions, currentStep, status)` in
@@ -567,13 +571,14 @@ watcher invokes `specViewerProvider.refreshContextIfDisplaying`, which
 re-derives `viewerState` and posts `viewerStateUpdated`. Cards re-render
 from the new state without a reload.
 
-**Toggle mechanics**: clicking `Activity` flips the `activityVisible` signal.
-The markdown pane stays mounted (hidden via the `hidden` attribute) so
-toggling back is instant. `<ActivityPanel />` mounts lazily on first reveal
-so initial spec render is never blocked. While Activity is shown, the
-sub-document sub-navigation row in `NavigationBar` is suppressed (Activity
-has no sub-documents); switching back to a content tab restores that tab's
-sub-nav.
+**Switch mechanics**: the rail's Overview/Documents buttons set the
+`viewerMode` signal (`'overview' | 'document'`; `null` until first
+interaction, letting the data pick the landing view). The markdown pane
+stays mounted (hidden via the `hidden` attribute) so switching back is
+instant, and the Overview mounts lazily on first reveal so initial spec
+render is never blocked. Picking any rail document also sets
+`viewerMode = 'document'`, so navigation always lands you in the reading
+view.
 
 ---
 

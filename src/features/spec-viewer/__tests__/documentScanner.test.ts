@@ -172,3 +172,56 @@ describe('scanDocuments - parentStep assignment for orphan related docs', () => 
         expect(subDoc!.parentStep).toBe('specify');
     });
 });
+
+describe('scanDocuments - action-only steps become pipeline entries', () => {
+    // GSD × Superpowers shape: action steps lead, follow, and surround the
+    // single document-producing step.
+    const gsdSteps: WorkflowStepConfig[] = [
+        { name: 'discuss', label: 'Discuss', command: 'gsd-discuss-phase', actionOnly: true },
+        { name: 'plan', label: 'Plan Phase', command: 'gsd-plan-phase', includeRelatedDocs: true },
+        { name: 'execute', label: 'Execute (Superpowers)', command: 'superpowers-execute', actionOnly: true },
+        { name: 'verify', label: 'Verify', command: 'gsd-verify-work', actionOnly: true },
+    ];
+
+    it('emits non-openable action entries interleaved in declaration order', async () => {
+        mockFileExists(`${SPEC_DIR}/plan.md`);
+        mockReadDirectory({
+            [SPEC_DIR]: [['plan.md', vscode.FileType.File]],
+        });
+
+        const docs = await scanDocuments(SPEC_DIR, outputChannel, gsdSteps);
+
+        const pipeline = docs.filter(d => d.category !== 'related');
+        expect(pipeline.map(d => d.type)).toEqual(['discuss', 'plan', 'execute', 'verify']);
+
+        const discuss = pipeline[0];
+        expect(discuss).toMatchObject({
+            label: 'Discuss',
+            fileName: '',
+            filePath: '',
+            exists: false,
+            isCore: false,
+            category: 'action',
+        });
+        expect(discuss.parentStep).toBeUndefined();
+    });
+
+    it('sorts related docs after the pipeline and never parents them to action steps', async () => {
+        mockFileExists(`${SPEC_DIR}/plan.md`);
+        mockReadDirectory({
+            [SPEC_DIR]: [
+                ['plan.md', vscode.FileType.File],
+                ['01-01-PLAN.md', vscode.FileType.File],
+            ],
+        });
+
+        const docs = await scanDocuments(SPEC_DIR, outputChannel, gsdSteps);
+
+        const related = docs.find(d => d.fileName === '01-01-PLAN.md');
+        expect(related).toBeDefined();
+        expect(related!.parentStep).toBe('plan');
+        expect(docs.indexOf(related!)).toBeGreaterThan(
+            docs.findIndex(d => d.type === 'verify'),
+        );
+    });
+});

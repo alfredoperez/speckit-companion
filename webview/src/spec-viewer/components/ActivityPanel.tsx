@@ -1,14 +1,14 @@
 import type { ViewerState } from '../types';
-import { viewerState, navState, activityTab, historyEntries } from '../signals';
-import { activityTabs, defaultActivityTab, ActivityTabId } from '../activityTabsModel';
-import { ActivityHero } from './ActivityHero';
-import { PlanSection } from './PlanSection';
-import { ActivityTabs } from './ActivityTabs';
+import { viewerState, navState, historyEntries } from '../signals';
+import {
+    IntentSection,
+    ExpectationsSection,
+    VerifiedSection,
+    DecisionsSection,
+    CoverageSection,
+} from './OverviewDossier';
 import { PhasesCard } from './cards/PhasesCard';
 import { TasksCard } from './cards/TasksCard';
-import { DecisionsCard } from './cards/DecisionsCard';
-import { VerifiedCard } from './cards/VerifiedCard';
-import { CoverageCard } from './cards/CoverageCard';
 import { ConcernsCard } from './cards/ConcernsCard';
 import { FilesCard } from './cards/FilesCard';
 import { CommentsCard } from './cards/CommentsCard';
@@ -82,6 +82,19 @@ function LatestFeed() {
     );
 }
 
+/** Whether any of the work-log cards inside the disclosure would render. */
+function hasRunLogData(state: ViewerState): boolean {
+    return (
+        (state.history?.length ?? 0) > 0 ||
+        Object.keys(state.stepHistory ?? {}).length > 0 ||
+        Object.keys(state.taskSummaries ?? {}).length > 0 ||
+        (state.filesModified?.length ?? 0) > 0 ||
+        (state.reviewComments?.length ?? 0) > 0 ||
+        !!state.livingSpecs ||
+        !!state.lastAction
+    );
+}
+
 export function ActivityPanel() {
     const state = viewerState.value;
 
@@ -94,43 +107,34 @@ export function ActivityPanel() {
         );
     }
 
-    const tabs = activityTabs(state);
-    const fallback = defaultActivityTab(state);
-    const chosen = activityTab.value;
-    const active: ActivityTabId | null =
-        chosen && tabs.some(t => t.id === chosen) ? chosen : fallback;
-    const select = (id: ActivityTabId) => { activityTab.value = id; };
+    const taskCount = Object.keys(state.taskSummaries ?? {}).length;
 
+    // Durable context leads (why → fence → proof → choices → traceability);
+    // how-the-run-happened demotes to the collapsed log at the bottom.
     return (
-        <div class="activity-panel">
+        <div class="activity-panel dossier">
             <InstallBanner />
-            <ActivityHero state={state} onJump={select} />
-            <PlanSection state={state} />
-            <LatestFeed />
-            {active && (
-                <ActivityTabs tabs={tabs} active={active} onSelect={select}>
-                    {active === 'decisions' && <DecisionsCard state={state} />}
-                    {active === 'work' && (
-                        <>
-                            <PhasesCard state={state} />
-                            <TasksCard state={state} />
-                            <FilesCard state={state} />
-                        </>
-                    )}
-                    {active === 'proof' && (
-                        <>
-                            <VerifiedCard state={state} />
-                            <CoverageCard state={state} />
-                        </>
-                    )}
-                    {active === 'notes' && (
-                        <>
-                            <ConcernsCard state={state} />
-                            <CommentsCard state={state} />
-                            <LivingSpecsCard state={state} />
-                        </>
-                    )}
-                </ActivityTabs>
+            <IntentSection state={state} />
+            <ExpectationsSection state={state} />
+            <VerifiedSection state={state} />
+            <DecisionsSection state={state} />
+            <CoverageSection state={state} />
+            <ConcernsCard state={state} />
+            {hasRunLogData(state) && (
+                <details class="dossier-log">
+                    <summary>
+                        Run log{taskCount > 0 ? ` and ${taskCount} task record${taskCount === 1 ? '' : 's'}` : ''}
+                    </summary>
+                    <div class="dossier-log__body">
+                        {state.lastAction && <p class="dossier-log__last-action">{state.lastAction}</p>}
+                        <LatestFeed />
+                        <PhasesCard state={state} />
+                        <TasksCard state={state} />
+                        <FilesCard state={state} />
+                        <CommentsCard state={state} />
+                        <LivingSpecsCard state={state} />
+                    </div>
+                </details>
             )}
         </div>
     );

@@ -27,13 +27,13 @@ Class roles adopted from the Codex system (final names live in the shipped parti
 
 | Region | Contract |
 |---|---|
-| Shell top | title, subtitle (branch/workflow), status badge, and a two-state **view switch** (`Overview` / `Documents`) with `aria-pressed`/selected semantics |
+| Shell top | title, subtitle (branch/workflow), and status badge; the two-state **view switch** (`Overview` / `Documents`, `aria-pressed` semantics) sits at the top of the document rail (Context-First revision) |
 | Document rail | `nav[aria-label="Spec documents"]`; grouped lists (Pipeline / Artifacts, or the workflow's own name); each button carries a **rail mark** expressing completion independent of `aria-current="page"` selection; action-only steps render marked as actions and non-openable |
 | Reading column | prose capped ≈72ch; heading TOC remains inside the column; empty `.spec-meta` and `details.template-instructions` hidden |
-| Run aside | `aside[aria-label="Run context"]`; fact list rendered only for present facts; yields below ~980px |
+| Run strip | `[aria-label="Run context"]` one-line strip above the content; facts rendered only when present; "Run details" jumps to the Overview (Context-First revision — replaces the permanent aside column) |
 | Footer | context line (next-step sentence), optional **Other actions** menu (workflow `enhancementButtons`), primary CTA labeled by `getApproveLabel()`; in-flight states render no CTA |
 | Code | `pre.code-block` on the owned always-dark code surface in both themes, language chip from `data-lang` |
-| Comments | line-anchored threads + composer preserved; pending items surface as the **refinement queue** with a count |
+| Comments | line-anchored comment cards + composer preserved; pending items surface as the **refinement queue** with a count |
 
 ### Accessibility invariants (carried from repo rules)
 

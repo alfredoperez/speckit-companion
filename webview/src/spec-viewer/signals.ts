@@ -5,16 +5,12 @@
 
 import { signal } from '@preact/signals';
 import type { NavState, Refinement, ViewerState, HistoryEntry } from './types';
-import type { ActivityTabId } from './activityTabsModel';
 
 /** Navigation state from extension messages */
 export const navState = signal<NavState | null>(null);
 
 /** Derived viewer state (pulse, highlights, footer, substep). */
 export const viewerState = signal<ViewerState | null>(null);
-
-/** Active Activity-panel detail tab; null = use the default-tab rule. */
-export const activityTab = signal<ActivityTabId | null>(null);
 
 /** Pending refinements for GitHub-style review */
 export const pendingRefinements = signal<Refinement[]>([]);

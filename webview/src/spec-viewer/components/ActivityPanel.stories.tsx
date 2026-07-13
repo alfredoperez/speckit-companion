@@ -1,6 +1,7 @@
 /**
- * Storybook coverage for the Activity panel — the multi-card view that
- * surfaces .spec-context.json data (transitions, task summaries, etc.).
+ * Storybook coverage for the Activity panel — the Overview dossier that
+ * surfaces .spec-context.json data ordered by durable context (Intent →
+ * Expectations → Verified → Decisions → Coverage → collapsed run log).
  *
  * Each story drives the panel directly via the `viewerState` signal it
  * reads at render time. The legacy-shape story is the regression
@@ -12,7 +13,7 @@
 import type { Meta, StoryObj } from '@storybook/preact';
 import { ActivityPanel } from './ActivityPanel';
 import { ActivityErrorBoundary } from './ActivityErrorBoundary';
-import { viewerState, navState, activityTab } from '../signals';
+import { viewerState, navState } from '../signals';
 import type { ViewerState, TaskSummary, Transition, NavState } from '../types';
 import legacyFixture from '../../../../specs/095-fix-tasks-card-concerns/fixtures/legacy-string-concerns.spec-context.json';
 
@@ -226,8 +227,8 @@ export const InstallBannerDismissed: Story = {
 };
 
 // ============================================
-// Redesign payloads: rich (ICE-complete), mid-pipeline, and the sparse
-// legacy shape is already covered by LegacyStringConcerns above.
+// Dossier payloads: rich (ICE-complete), all-traced, mid-pipeline; the
+// sparse legacy shape is already covered by LegacyStringConcerns above.
 // ============================================
 
 const richReasoningState: ViewerState = {
@@ -276,21 +277,20 @@ const richReasoningState: ViewerState = {
     checkpointStatus: { commit: true, pr: true },
 };
 
-// The full redesign with an ICE-complete payload: hero, plan, four tabs.
-export const RedesignRich: Story = {
+// The full dossier with an ICE-complete payload: intent hero, fence,
+// verified ledger, decisions, coverage table, collapsed run log.
+export const DossierRich: Story = {
     render: () => {
-        activityTab.value = null;
         viewerState.value = richReasoningState;
         navState.value = { showInstallPrompt: false } as NavState;
         return <div style="max-width: 900px;"><ActivityPanel /></div>;
     },
 };
 
-// Fully covered, no concerns: Proof and Notes render without badges (the
-// badge is an attention signal, not a content count) and Decisions opens.
-export const RedesignCleanNoBadges: Story = {
+// Fully covered, no concerns: the coverage count pill reads as success and
+// no warning treatments render anywhere.
+export const DossierAllTraced: Story = {
     render: () => {
-        activityTab.value = null;
         viewerState.value = {
             ...richReasoningState,
             concerns: undefined,
@@ -304,10 +304,10 @@ export const RedesignCleanNoBadges: Story = {
     },
 };
 
-// Mid-pipeline: nothing covered yet, one concern — Proof opens by default.
-export const RedesignMidPipeline: Story = {
+// Mid-pipeline: nothing traced yet, one concern — the coverage pill warns
+// and every row reads "No test linked".
+export const DossierMidPipeline: Story = {
     render: () => {
-        activityTab.value = null;
         viewerState.value = {
             ...richReasoningState,
             status: 'implementing',
@@ -328,11 +328,17 @@ export const RedesignMidPipeline: Story = {
     },
 };
 
-// Work tab preset: the phases strip + tasks + files as one surface.
-export const RedesignWorkTab: Story = {
+// Log-only payload: no durable-context fields at all — the dossier renders
+// nothing above the collapsed "Run log" disclosure, which carries the work.
+export const DossierLogOnly: Story = {
     render: () => {
-        activityTab.value = 'work';
-        viewerState.value = richReasoningState;
+        viewerState.value = baseState({
+            taskSummaries: {
+                T001: { status: 'DONE', did: 'tab model + default rule', files: ['activityTabsModel.ts'] },
+                T002: { status: 'DONE', did: 'hero stats derivation', files: ['activityHeroModel.ts'] },
+            },
+            lastAction: 'T002 finished — hero stats derivation',
+        });
         navState.value = { showInstallPrompt: false } as NavState;
         return <div style="max-width: 900px;"><ActivityPanel /></div>;
     },

@@ -1,5 +1,4 @@
-import { navState, viewerState, viewerMode } from '../signals';
-import { hasAnyData } from './ActivityPanel';
+import { navState, viewerState } from '../signals';
 
 // Visible-label overrides for canonical status keys whose default
 // hyphen-split capitalization isn't the friendliest reading. Keeps
@@ -27,14 +26,6 @@ export function SpecHeader() {
 
     const hasContext = !!(badgeText || ns.specContextName);
     if (!badgeText && !ns.createdDate && !ns.specContextName) return null;
-
-    // Overview/Documents view switch: shown only when the
-    // Overview view is actually available for this spec.
-    const living = !!ns.livingMode;
-    const activityEnabled = ns.activityPanelEnabled ?? true;
-    const overviewAvailable = activityEnabled && !living && !!vs && hasAnyData(vs);
-    const mode = viewerMode.value ?? (overviewAvailable ? 'overview' : 'document');
-    const isOverview = overviewAvailable && mode === 'overview';
 
     return (
         <div class="spec-header" data-has-context={String(hasContext)}>
@@ -67,26 +58,6 @@ export function SpecHeader() {
                         </div>
                     )}
                 </div>
-                {overviewAvailable && (
-                    <div class="view-switch" role="group" aria-label="Viewer mode">
-                        <button
-                            type="button"
-                            class={`view-switch__btn${isOverview ? ' active' : ''}`}
-                            aria-pressed={isOverview}
-                            onClick={() => { viewerMode.value = 'overview'; }}
-                        >
-                            Overview
-                        </button>
-                        <button
-                            type="button"
-                            class={`view-switch__btn${!isOverview ? ' active' : ''}`}
-                            aria-pressed={!isOverview}
-                            onClick={() => { viewerMode.value = 'document'; }}
-                        >
-                            Documents
-                        </button>
-                    </div>
-                )}
             </div>
         </div>
     );

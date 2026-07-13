@@ -70,15 +70,18 @@ export function generateHtml(
         ? `<div id="markdown-content" data-raw="${escapeHtmlAttribute(content)}"></div>`
         : `<div class="empty-state">${escapeHtml(emptyMessage)}</div>`;
 
-    // Build initial navState for Preact components
+    // Build initial navState for Preact components. The rail renders the full
+    // pipeline (core + action steps) — the same partition buildViewerPayload
+    // sends — so first paint matches the first navStateUpdated message.
     const coreDocs = documents.filter(d => d.category === 'core');
+    const pipelineDocs = documents.filter(d => d.category === 'core' || d.category === 'action');
     const relatedDocs = documents.filter(d => d.category === 'related');
     const coreDocTypes = coreDocs.map(d => d.type);
     const isViewingRelatedDoc = !coreDocTypes.includes(currentDocType);
     const workflowPhase = calculateWorkflowPhase(coreDocs);
 
     const initialNavState: NavState = {
-        coreDocs,
+        coreDocs: pipelineDocs,
         relatedDocs,
         currentDoc: currentDocType,
         workflowPhase,

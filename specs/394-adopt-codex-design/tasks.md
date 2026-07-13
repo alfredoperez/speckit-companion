@@ -96,7 +96,7 @@
 **Wave 1 — independent (different files):**
 
 - [x] **T025** [P] [US5] Responsive sweep 700–1600px: prose cap holds, aside yields ~980, rail becomes horizontal strip ~700, zero horizontal page scroll; fix what the sweep finds · `webview/styles/spec-viewer/_base.css`, `webview/styles/spec-viewer/_navigation.css`
-- [x] **T026** [P] [US5] Comments + refinement queue: line-anchored threads, composer, and persisted comments restyled; pending feedback surfaces as the refinement queue with count; InlineComment/InlineEditor stories updated · `webview/styles/spec-viewer/_line-actions.css`, `webview/styles/spec-viewer/_refinements.css` (+ comment stories)
+- [x] **T026** [P] [US5] Comments + refinement queue: line-anchored comment cards, composer, and persisted comments restyled; pending feedback surfaces as the refinement queue with count; InlineComment/InlineEditor stories updated (GitHub-style threaded presentation deferred — follow-up issue) · `webview/styles/spec-viewer/_line-actions.css`, `webview/styles/spec-viewer/_refinements.css` (+ comment stories)
 
 **Checkpoint**: layout honest at every width with comments anchored — US5 verifiable by resizing the Dev Host / Layout stories.
 
@@ -113,6 +113,26 @@
 - [x] **T030** Final validation against Success Criteria: `npm test` green, `npm run compile` green, `build-storybook` green, AA audit both themes (SC-003), state matrix pass (SC-001), content-type pass (SC-002), custom workflow pass (SC-004), width sweep (SC-006); record results · validation across the above
 
 **Checkpoint**: all six Success Criteria measured and passing.
+
+## Phase 9: Review fixes + Context-First revision (post-review)
+
+Findings from the PR #431 deep review (two of them pre-existing on `main` but promised by this spec's FR-007/SC-004), plus adoption of Codex's second iteration — the Context-First shell.
+
+> This phase ran **after** the spec reached `completed`, so its work is not in the `.spec-context.json` journal — the writer refuses to append to a shipped spec, and that guard is correct (the status must not regress). The task records below are the audit trail for this phase.
+
+**Wave 1 — independent (different files):**
+
+- [x] **T031** [P] Scope the owned palette to the viewer: restore host-derived `tokens.css`, move Codex literals to a viewer-only layer, add a scope-guard spec · `webview/styles/tokens.css`, `webview/styles/spec-viewer/_tokens-viewer.css`, `webview/styles/spec-viewer/index.css`, `tests/unit/spec-viewer/tokensScope.spec.ts`
+- [x] **T032** [P] Rail geometry to FR-012 (≤208px) + `aria-current="page"` on rail selection (StepTab, artifact chips, living tiers) · `webview/styles/spec-viewer/_base.css`, `webview/src/spec-viewer/components/StepTab.tsx`, `webview/src/spec-viewer/components/NavigationBar.tsx`
+- [x] **T033** [P] Continue Run dispatches the true next step: shared `nextWorkflowStep` walk for label AND dispatch, GSD-shape tests · `src/features/workflows/stepSequence.ts`, `src/features/spec-viewer/messageHandlers.ts`, `src/features/spec-viewer/footerActions.ts`, `tests/unit/spec-viewer/messageHandlers.spec.ts`
+
+**⟶ Wait for Wave 1 to finish, then:**
+
+- [x] **T034** Action-only steps reach the rail (FR-007): scanner emits `category: 'action'` pipeline entries, non-openable marked StepTabs with completion, action-scoped commands reachable via currentStep, provider-shaped stories · `src/features/spec-viewer/documentScanner.ts`, `src/features/spec-viewer/panelStateComputer.ts`, `src/features/spec-viewer/specViewerProvider.ts`, `webview/src/spec-viewer/components/StepTab.tsx`, `webview/src/spec-viewer/components/NavigationBar.tsx`
+- [x] **T035** Adopt the Context-First shell: view switch into the rail, RunAside → run strip, Overview rebuilt as the durable-context dossier (Intent → Expectations → Verified → Decisions → Coverage → collapsed run log), container-query responsiveness · `webview/src/spec-viewer/components/OverviewDossier.tsx`, `webview/src/spec-viewer/components/RunStrip.tsx`, `webview/src/spec-viewer/components/ViewSwitch.tsx`, `webview/src/spec-viewer/components/ActivityPanel.tsx`, `webview/src/spec-viewer/App.tsx`, `webview/styles/spec-viewer/_overview-dossier.css`, `webview/styles/spec-viewer/_base.css`
+- [x] **T036** Docs honest with the shipped shell: README in-flight footer + boolean setting + dossier description, viewer-states Overview/setting/switch sections, DESIGN.md Context-First layer, changelog; T026/FR-013 rescoped to cards with the thread work deferred to #433 · `README.md`, `docs/viewer-states.md`, `docs/DESIGN.md`, `CHANGELOG.md`, `specs/394-adopt-codex-design/`
+
+**Checkpoint**: every review finding closed or explicitly deferred with an issue; Context-First shell is the shipped Overview.
 
 ## Dependencies & Execution Order
 

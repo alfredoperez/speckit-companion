@@ -1,6 +1,7 @@
 import type { VSCodeApi, SpecDocument } from '../types';
 import { navState, viewerMode } from '../signals';
 import { StepTab } from './StepTab';
+import { ViewSwitch } from './ViewSwitch';
 
 declare const vscode: VSCodeApi;
 
@@ -25,6 +26,7 @@ export function NavigationBar() {
                             key={doc.type}
                             class={`step-child ${doc.type === currentDoc ? 'active' : ''}`}
                             data-doc={doc.type}
+                            aria-current={doc.type === currentDoc ? 'page' : undefined}
                             onClick={() => vscode.postMessage({ type: 'switchDocument', documentType: doc.type })}
                         >
                             {doc.label}
@@ -35,7 +37,13 @@ export function NavigationBar() {
         );
     }
 
-    const rootPhase = coreDocs?.[0]?.type || 'spec';
+    // Action entries can't parent related docs or be viewed, so the root
+    // phase is the first document-producing step.
+    const rootPhase = coreDocs?.find(d => d.category !== 'action')?.type || 'spec';
+    // The implement percent renders on the implement entry when the rail has
+    // one, else on the last tab (pre-action-rail behavior).
+    const percentHostType = coreDocs?.find(d => d.type === 'implement')?.type
+        ?? coreDocs?.[coreDocs.length - 1]?.type;
     const viewingRelatedDoc = isViewingRelatedDoc
         ? relatedDocs.find(d => d.type === currentDoc)
         : undefined;
@@ -86,6 +94,7 @@ export function NavigationBar() {
 
     return (
         <nav class="doc-rail" aria-label="Spec documents">
+            <ViewSwitch />
             {recovery?.show && (
                 <div class="run-recovery" role="status">
                     <span class="run-recovery__msg">{recovery.message}</span>
@@ -129,6 +138,7 @@ export function NavigationBar() {
                             stalenessMap={stalenessMap}
                             hasRelatedChildren={relatedDocs.some(d => d.parentStep === doc.type)}
                             runningStepIndex={runningStepIndex}
+                            isPercentHost={doc.type === percentHostType}
                             onClick={handleClick}
                         />
                     ))}
@@ -143,6 +153,7 @@ export function NavigationBar() {
                                 key={doc.type}
                                 class={`step-child ${doc.type === currentDoc ? 'active' : ''}`}
                                 data-doc={doc.type}
+                                aria-current={doc.type === currentDoc ? 'page' : undefined}
                                 onClick={() => handleRelatedClick(doc.type)}
                             >
                                 {doc.label}

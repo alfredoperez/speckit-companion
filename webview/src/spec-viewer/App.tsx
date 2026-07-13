@@ -5,7 +5,7 @@ import { SpecHeader } from './components/SpecHeader';
 import { FooterActions } from './components/FooterActions';
 import { ActivityPanel, hasAnyData } from './components/ActivityPanel';
 import { ActivityErrorBoundary } from './components/ActivityErrorBoundary';
-import { RunAside } from './components/RunAside';
+import { RunStrip } from './components/RunStrip';
 import { markdownHtml, navState, viewerMode, viewerState } from './signals';
 import { restoreComments, clearAllRefinements } from './editor';
 
@@ -74,23 +74,25 @@ export function App({ specStatus }: AppProps) {
             )}
             <div class={`shell-grid${living ? ' shell-grid--no-rail' : ''}`}>
                 {!living && <NavigationBar />}
-                <main class="content-area" id="content-area">
-                    <div
-                        id="markdown-content"
-                        ref={contentRef}
-                        dangerouslySetInnerHTML={{ __html: html }}
-                        hidden={showOverview}
-                    />
-                    {hasMountedActivity && (
-                        <div class="overview-pane" hidden={!showOverview}>
-                            <ActivityErrorBoundary>
-                                <ActivityPanel />
-                            </ActivityErrorBoundary>
-                        </div>
-                    )}
-                    <aside class="spec-toc" id="spec-toc" aria-label="Table of contents" hidden={showOverview}></aside>
-                </main>
-                {!living && <RunAside />}
+                <div class="main-column">
+                    {!living && <RunStrip />}
+                    <main class="content-area" id="content-area">
+                        <div
+                            id="markdown-content"
+                            ref={contentRef}
+                            dangerouslySetInnerHTML={{ __html: html }}
+                            hidden={showOverview}
+                        />
+                        {hasMountedActivity && (
+                            <div class="overview-pane" hidden={!showOverview}>
+                                <ActivityErrorBoundary>
+                                    <ActivityPanel />
+                                </ActivityErrorBoundary>
+                            </div>
+                        )}
+                        <aside class="spec-toc" id="spec-toc" aria-label="Table of contents" hidden={showOverview}></aside>
+                    </main>
+                </div>
             </div>
             <FooterActions initialSpecStatus={specStatus} />
         </>

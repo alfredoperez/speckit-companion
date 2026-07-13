@@ -26,7 +26,7 @@ export interface SpecDocument {
     filePath: string;
     exists: boolean;
     isCore: boolean;
-    category?: 'core' | 'related';
+    category?: 'core' | 'related' | 'action';
     parentStep?: string;
 }
 

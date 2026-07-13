@@ -99,7 +99,7 @@
     font-size: 11px;
 }
 
-@media (max-width: 700px) {
+@container viewer (max-width: 700px) {
     .actions {
         left: 12px;
         right: 12px;

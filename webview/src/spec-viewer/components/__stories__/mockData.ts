@@ -16,6 +16,19 @@ export function mockDoc(type: string, exists: boolean, label?: string): SpecDocu
     };
 }
 
+/** An action-only pipeline entry, exactly as documentScanner emits it. */
+export function mockActionDoc(type: string, label?: string): SpecDocument {
+    return {
+        type,
+        label: label ?? type.charAt(0).toUpperCase() + type.slice(1),
+        fileName: '',
+        filePath: '',
+        exists: false,
+        isCore: false,
+        category: 'action',
+    };
+}
+
 export function mockRelatedDoc(type: string, parentStep: string, label?: string): SpecDocument {
     return {
         type,

@@ -43,7 +43,7 @@ import {
   SpecViewerState,
 } from "./types";
 import { getDocumentTypeFromPath, getSpecDirectoryFromPath } from "./utils";
-import { optionalCommandButtonsForTab } from "./optionalCommands";
+import { customCommandButtons, optionalCommandButtonsForTab } from "./optionalCommands";
 import { ConfigKeys, SpecStatuses } from "../../core/constants";
 import { coerceLegacyBoolean } from "../../core/settingsMigration";
 import type { CustomCommandConfig } from "../../core/types/config";
@@ -668,6 +668,7 @@ export class SpecViewerProvider {
       // Resolve enhancement buttons (vscode config + workflow defaults)
       const enhancementButtons = this.resolveEnhancementButtons(
         doc?.type || CORE_DOCUMENTS.SPEC,
+        featureCtx?.currentStep,
       );
 
       // Pure derivation: stepHistory, phases, status, badges, dates, footer
@@ -746,32 +747,13 @@ export class SpecViewerProvider {
    */
   private resolveEnhancementButtons(
     docType: DocumentType,
+    currentStep?: string,
   ): EnhancementButton[] {
     const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
     const rawCommands = config.get<Array<CustomCommandConfig | string>>("customCommands", []);
 
-    const buttons: EnhancementButton[] = [];
     const seenCommands = new Set<string>();
-
-    for (const entry of rawCommands) {
-      if (typeof entry === "string") continue;
-      const step = entry.step || "all";
-      if (step !== docType && step !== "all") continue;
-
-      const title = entry.title || entry.name;
-      if (!title) continue;
-
-      const command = entry.command || (entry.name ? `/speckit.${entry.name}` : undefined);
-      if (!command) continue;
-
-      seenCommands.add(command);
-      buttons.push({
-        label: title,
-        command,
-        icon: "⚡",
-        tooltip: entry.tooltip || title,
-      });
-    }
+    const buttons = customCommandButtons(rawCommands, docType, seenCommands, currentStep);
 
     // Append built-in optional SpecKit command buttons for this tab, deduped
     // against the user's custom commands (which take precedence).
@@ -1023,7 +1005,7 @@ export class SpecViewerProvider {
       );
     }
 
-    const enhancementButtons = this.resolveEnhancementButtons(resolvedType);
+    const enhancementButtons = this.resolveEnhancementButtons(resolvedType, featureCtx?.currentStep);
 
     const newestActivityMs = await this.computeNewestActivityMs(specDirectory);
     const derived = computePanelDerivedState(
@@ -1050,7 +1032,7 @@ export class SpecViewerProvider {
     const runInfo = this.deriveRunningStepInfo(derived.derivedStepHistory);
 
     const navState: NavState = {
-      coreDocs: derived.coreDocs,
+      coreDocs: derived.pipelineDocs,
       relatedDocs: derived.relatedDocs,
       currentDoc: resolvedType,
       workflowPhase: derived.workflowPhase,

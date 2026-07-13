@@ -6,9 +6,21 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- **The spec viewer got its redesign.** The viewer now runs the design that won the multi-provider redesign investigation: a spec with recorded activity opens on its **Overview** — progress, intent, decisions, latest activity, and proof up front — with an **Overview / Documents** switch in the header replacing the old Activity toggle. Documents live on a left rail where the highlight shows what you're reading and separate marks show how far the run is; a run-facts column keeps status, phase, current task, and progress in view; and the footer becomes a floating action pill led by a context line naming the next step, with workflow-provided commands under **Other actions**.
+- **The spec viewer got its redesign.** The viewer now runs the design that won the multi-provider redesign investigation: a spec with recorded activity opens on its **Overview**, documents live on a left rail where the highlight shows what you're reading and separate marks show how far the run is, and the footer becomes a floating action pill led by a context line naming the next step, with workflow-provided commands under **Other actions**.
+- **The Overview is now a durable-context dossier.** Instead of an activity feed, the Overview leads with what a future session needs: why the spec exists, the constraints and deliberately-excluded work, what was verified (with the evidence command), the decisions with their rejected alternatives, and a requirement→test traceability table. The run log and task records stay one click away, collapsed at the bottom.
+- **The Overview / Documents switch moved into the rail, and the run facts became a strip.** The mode switch now sits at the top of the document rail where navigation lives, and the permanent run-facts column is replaced by a one-line strip above the content (status, phase, tasks, traced requirements, checks, active time, PR link) with a "Run details" jump back to the Overview.
 - **A theme you can actually read, in both modes.** The viewer now ships its own tested light and dark palette (statuses, surfaces, syntax) instead of inheriting whatever the editor theme happens to define — every text/surface pair clears WCAG AA in both modes, and code blocks render on a dark surface that stays readable even in light themes. Typography follows your editor font.
+- **Narrow panes now collapse by pane width, not window width.** The layout responds to the viewer's own pane (the rail folds to a horizontal strip around 900px), so a VS Code split behaves correctly even in a wide window.
 - Custom workflows, living specs, inline review comments, and every lifecycle state behave exactly as before — the redesign changes how the viewer looks and lands, not what it does.
+
+### Added
+
+- **Action-only workflow steps now show on the rail.** A custom workflow step with no output file (like GSD's Discuss / Execute / Verify) renders in its true position in the pipeline — marked as an action, non-openable, showing done/current/running state — instead of silently disappearing. Custom commands scoped to such a step surface in the footer while the workflow sits at that step.
+
+### Fixed
+
+- **"Continue Run" now dispatches the step it says it will.** In a custom workflow with action steps between documents, the forward button could say one step (e.g. "Execute") but run another (the workflow's first action step). The button's label and its dispatch now derive from the same next-step walk, so they can never disagree.
+- **The spec editor and workflow editor got their host theming back.** The redesign's owned palette had leaked into the shared token file and repainted both editors; the palette is now scoped to the spec viewer only, and the other webviews follow your VS Code theme again.
 
 ## [0.28.1] - 2026-07-11
 
