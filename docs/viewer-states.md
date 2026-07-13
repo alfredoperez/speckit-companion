@@ -574,6 +574,13 @@ watcher invokes `specViewerProvider.refreshContextIfDisplaying`, which
 re-derives `viewerState` and posts `viewerStateUpdated`. Cards re-render
 from the new state without a reload.
 
+**Staleness is suppressed once the spec settles.** `computeStaleness` is
+skipped entirely for `completed` / `archived` specs (`isStalenessRelevant`
+in `staleness.ts`), so the map arrives empty and BOTH surfaces that read it
+— the "consider regenerating" banner and the per-step stale mark — go quiet.
+"Regenerate the plan, the spec moved on" is advice about work still to do,
+and a finished spec has none.
+
 **Selection mechanics**: the rail's `Overview` entry and its document
 buttons both set the `viewerMode` signal (`'overview' | 'document'`; `null`
 until first interaction, letting the data pick the landing view). The

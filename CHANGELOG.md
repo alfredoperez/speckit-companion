@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - **You can open a document from the Overview again.** Clicking Specification, Plan, or Tasks while the Overview was showing did nothing: those clicks rebuilt the whole panel, which reset the view and landed you right back on the Overview. Navigation is now a true single-page swap, so every rail entry is reachable from every other one.
+- **A finished spec no longer nags about being out of date.** The "Plan was generated before the current specification — consider regenerating" banner (and the matching warning mark on the step) kept showing on completed and archived specs, where there is no regenerating left to do. Staleness now goes quiet once a spec settles.
 - **A completed run no longer suggests a next step.** The footer used to read "Next: Reactivate" on a finished spec; reactivating is a deliberate reversal, not forward motion. It now simply says the run is complete.
 - **"Continue Run" now dispatches the step it says it will.** In a custom workflow with action steps between documents, the forward button could say one step (e.g. "Execute") but run another (the workflow's first action step). The button's label and its dispatch now derive from the same next-step walk, so they can never disagree.
 - **The spec editor and workflow editor got their host theming back.** The redesign's owned palette had leaked into the shared token file and repainted both editors; the palette is now scoped to the spec viewer only, and the other webviews follow your VS Code theme again.

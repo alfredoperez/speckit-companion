@@ -6,6 +6,17 @@
 
 import * as vscode from 'vscode';
 import type { SpecDocument, StalenessMap, StalenessInfo } from './types';
+import { SpecStatuses } from '../../core/constants';
+
+/**
+ * A settled spec cannot be stale: "regenerate the plan, the spec moved on" is
+ * advice about work still to do, and there is none. Suppressing it here keeps
+ * the banner AND the per-tab stale badge quiet on a finished spec, since both
+ * read the same map.
+ */
+export function isStalenessRelevant(status: string | undefined): boolean {
+    return status !== SpecStatuses.COMPLETED && status !== SpecStatuses.ARCHIVED;
+}
 
 /**
  * Compute staleness for all core workflow documents.

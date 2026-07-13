@@ -4,6 +4,7 @@ import {
     resolveTabClickDocument,
 } from '../panelStateComputer';
 import { customCommandButtons } from '../optionalCommands';
+import { isStalenessRelevant } from '../staleness';
 import type { SpecDocument } from '../types';
 
 function doc(overrides: Partial<SpecDocument> & Pick<SpecDocument, 'type'>): SpecDocument {
@@ -105,5 +106,18 @@ describe('customCommandButtons — action-step scoping', () => {
     it('keeps document-scoped and all-scoped matching intact without a currentStep', () => {
         const buttons = customCommandButtons(rawCommands, 'verify', new Set());
         expect(buttons.map(b => b.command)).toEqual(['/gsd-plan-phase --gaps', '/always-on']);
+    });
+});
+
+describe('staleness relevance', () => {
+    it('goes quiet once the spec settles — a finished spec cannot be stale', () => {
+        expect(isStalenessRelevant('completed')).toBe(false);
+        expect(isStalenessRelevant('archived')).toBe(false);
+    });
+
+    it('still flags a live spec whose plan trails its spec', () => {
+        expect(isStalenessRelevant('planned')).toBe(true);
+        expect(isStalenessRelevant('implementing')).toBe(true);
+        expect(isStalenessRelevant(undefined)).toBe(true);
     });
 });

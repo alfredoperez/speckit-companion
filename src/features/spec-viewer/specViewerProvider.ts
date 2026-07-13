@@ -9,7 +9,7 @@ import * as vscode from "vscode";
 import { scanDocuments } from "./documentScanner";
 import { generateHtml } from "./html";
 import { createMessageHandlers } from "./messageHandlers";
-import { computeStaleness } from "./staleness";
+import { computeStaleness, isStalenessRelevant } from "./staleness";
 import {
   computePanelDerivedState,
   resolveDisplayDocument,
@@ -694,7 +694,9 @@ export class SpecViewerProvider {
       instance.panel.title = `Spec: ${specName} - ${docLabel}`;
 
       // Staleness is I/O (filesystem probes); compute here after derived state.
-      const stalenessMap = await computeStaleness(documents);
+      const stalenessMap = isStalenessRelevant(featureCtx?.status)
+        ? await computeStaleness(documents)
+        : {};
       const runInfo = this.deriveRunningStepInfo(derived.derivedStepHistory);
 
       // Generate and set HTML
@@ -1025,7 +1027,7 @@ export class SpecViewerProvider {
 
     // Skip staleness recompute for context-only refreshes; the UI only updates
     // staleness indicators on full content refreshes (tab switches, file saves).
-    const stalenessMap = options?.skipContentAndStaleness
+    const stalenessMap = options?.skipContentAndStaleness || !isStalenessRelevant(featureCtx?.status)
       ? {}
       : await computeStaleness(instance.state.availableDocuments);
 
