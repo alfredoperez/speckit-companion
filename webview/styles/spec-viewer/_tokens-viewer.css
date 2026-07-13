@@ -1,0 +1,214 @@
+/**
+ * SpecKit Companion - Spec Viewer Palette (owned)
+ * Loaded ONLY by the spec viewer (via index.css, after ../tokens.css so these
+ * re-valuations win the cascade). The spec-editor and workflow-editor webviews
+ * keep the host-derived tokens from tokens.css — the redesign is scoped to the
+ * viewer (spec 394), so nothing here may leak into a shared file.
+ *
+ * Palette: a hybrid theme (docs/DESIGN.md) — the viewer OWNS a tested
+ * light/dark semantic palette (canvas, surfaces, ink, statuses, syntax) for
+ * predictable contrast, while inheriting the host editor's font families and
+ * accessibility mode. Colors are deliberate literals, not VS Code
+ * derivations; only typography and high-contrast mode follow the host.
+ */
+
+:root {
+    /* Canvas & surfaces (dark defaults) */
+    --bg-primary: #101416;
+    --bg-secondary: #171d20;
+    --bg-elevated: #20282c;
+    --bg-hover: #20282c;
+    --bg-inset: #293337;
+
+    /* Ink */
+    --text-primary: #f1f5f4;
+    --text-body: #b4c0bd;
+    --text-secondary: #b4c0bd;
+    --text-muted: #82908d;
+    --text-label: #82908d;
+
+    /* Accent (single hue; -ink is the on-accent text color) */
+    --accent: #65e6bd;
+    --accent-strong: #65e6bd;
+    --accent-ink: #071b15;
+    --accent-hover: color-mix(in srgb, #65e6bd 85%, #f1f5f4);
+    --accent-subtle: #173b32;
+    --accent-glow: 0 0 20px color-mix(in srgb, #65e6bd 30%, transparent);
+
+    /* Status */
+    --info: #78bdf7;
+    --info-subtle: #182f43;
+    --success: #8adb77;
+    --success-subtle: #1f3823;
+    --success-glow: 0 0 12px color-mix(in srgb, #8adb77 50%, transparent);
+    --warning: #f2c66d;
+    --warning-subtle: #3c311a;
+    --error: #ff8c8c;
+    --error-subtle: #442326;
+
+    /* Extended callout colors */
+    --purple: #c4a7f5;
+    --gray: #82908d;
+
+    /* Review mode colors - purple for reviewing completed steps */
+    --review: #b48df0;
+    --review-subtle: color-mix(in srgb, #b48df0 14%, transparent);
+    --review-glow: 0 0 12px color-mix(in srgb, #b48df0 50%, transparent);
+
+    /* Borders */
+    --border: #344044;
+    --border-hover: #52615e;
+    --border-accent: color-mix(in srgb, #65e6bd 50%, transparent);
+
+    /* Semantic header colors — literals, because a var() chain declared on
+       :root resolves THERE, so a theme block that only re-values --text-primary
+       would leave these frozen at the dark ink (the exact bug class this
+       palette exists to prevent). */
+    --header-title: #f1f5f4;
+    --header-section: #f1f5f4;
+    --header-subsection: #f1f5f4;
+
+    /* Code: an owned always-dark surface, readable in BOTH themes */
+    --bg-code: #0b0f11;
+    --bg-code-header: #141b1e;
+    --border-code: #34433f;
+
+    /* Syntax colors (sit on the always-dark code surface in both themes) */
+    --code-text: #d9e3df;
+    --code-keyword: #ff9f9f;
+    --code-string: #a9df92;
+    --code-number: #e3c78a;
+    --code-function: #83c7ff;
+    --code-comment: #869590;
+    --code-variable: #9fd6e8;
+    --code-type: #7fd8c8;
+
+    /* Task styling */
+    --bg-task: #171d20;
+    --bg-task-hover: #20282c;
+    --bg-task-done: #1f3823;
+    --border-task: #344044;
+    --task-pending: #f2c66d;
+    --border-checkbox: #52615e;
+    --bg-checkbox: #171d20;
+
+    /* Geometry: 6px surfaces, 4px controls (docs/DESIGN.md). */
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --shadow-sm: 0 1px 4px rgb(0 0 0 / 12%);
+    --shadow-md: 0 6px 18px rgb(0 0 0 / 18%);
+    --shadow-lg: 0 18px 48px rgb(0 0 0 / 24%);
+}
+
+/* ============================================
+   Light palette
+   ============================================ */
+
+body.vscode-light {
+    --bg-primary: #f4f7f6;
+    --bg-secondary: #ffffff;
+    --bg-elevated: #eaf0ee;
+    --bg-hover: #eaf0ee;
+    --bg-inset: #dfe8e5;
+
+    --text-primary: #14201d;
+    --text-body: #43524e;
+    --text-secondary: #43524e;
+    --text-muted: #63726e;
+    --text-label: #63726e;
+
+    --accent: #087d63;
+    --accent-strong: #087d63;
+    --accent-ink: #ffffff;
+    --accent-hover: color-mix(in srgb, #087d63 85%, #14201d);
+    --accent-subtle: #d8eee7;
+    --accent-glow: 0 0 20px color-mix(in srgb, #087d63 25%, transparent);
+
+    --info: #176da8;
+    --info-subtle: #dcecf7;
+    --success: #277a35;
+    --success-subtle: #e0f0e1;
+    --success-glow: 0 0 12px color-mix(in srgb, #277a35 40%, transparent);
+    --warning: #8b5a00;
+    --warning-subtle: #f7ebce;
+    --error: #b72f39;
+    --error-subtle: #f9e0e2;
+
+    --purple: #6e40c9;
+    --gray: #63726e;
+    --review: #6e40c9;
+    --review-subtle: color-mix(in srgb, #6e40c9 12%, transparent);
+    --review-glow: 0 0 12px color-mix(in srgb, #6e40c9 40%, transparent);
+
+    --border: #ced9d5;
+    --border-hover: #9daca7;
+    --border-accent: color-mix(in srgb, #087d63 50%, transparent);
+
+    --header-title: #14201d;
+    --header-section: #14201d;
+    --header-subsection: #14201d;
+
+    /* Code keeps the owned dark surface in light mode (readable by design) */
+    --bg-code: #18201f;
+    --bg-code-header: #222c2a;
+    --border-code: #34433f;
+    --code-text: #d9e3df;
+    --code-keyword: #ff9f9f;
+    --code-string: #a9df92;
+    --code-number: #e3c78a;
+    --code-function: #83c7ff;
+    --code-comment: #869590;
+    --code-variable: #9fd6e8;
+    --code-type: #7fd8c8;
+
+    --bg-task: #ffffff;
+    --bg-task-hover: #eaf0ee;
+    --bg-task-done: #e0f0e1;
+    --border-task: #ced9d5;
+    --border-checkbox: #9daca7;
+    --bg-checkbox: #ffffff;
+
+    --shadow-sm: 0 1px 4px rgb(24 53 45 / 8%);
+    --shadow-md: 0 6px 18px rgb(24 53 45 / 10%);
+    --shadow-lg: 0 18px 48px rgb(24 53 45 / 12%);
+}
+
+/* Dark palette matches the :root defaults; the block exists so an explicit
+   theme class always wins over any earlier override. */
+body.vscode-dark {
+    --bg-primary: #101416;
+    --bg-secondary: #171d20;
+    --bg-elevated: #20282c;
+    --bg-hover: #20282c;
+    --text-primary: #f1f5f4;
+    --text-body: #b4c0bd;
+    --text-secondary: #b4c0bd;
+    --text-muted: #82908d;
+    --text-label: #82908d;
+    --border: #344044;
+    --border-hover: #52615e;
+    --border-accent: color-mix(in srgb, #65e6bd 50%, transparent);
+    --header-title: #f1f5f4;
+    --header-section: #f1f5f4;
+    --header-subsection: #f1f5f4;
+}
+
+/* High contrast follows the HOST (accessibility mode is inherited, not owned). */
+body.vscode-high-contrast {
+    --bg-primary: var(--vscode-editor-background, #000000);
+    --bg-secondary: var(--vscode-sideBar-background, #000000);
+    --bg-elevated: var(--vscode-editorWidget-background, #000000);
+    --bg-hover: var(--vscode-list-hoverBackground, #0a0a0a);
+    --bg-inset: var(--vscode-editorWidget-background, #000000);
+    --text-primary: var(--vscode-editor-foreground, #ffffff);
+    --text-secondary: var(--vscode-editor-foreground, #ffffff);
+    --text-body: var(--vscode-editor-foreground, #ffffff);
+    --text-muted: color-mix(in srgb, var(--vscode-editor-foreground, #ffffff) 70%, transparent);
+    --text-label: var(--vscode-editor-foreground, #ffffff);
+    --border: var(--vscode-contrastBorder, #ffffff);
+    --border-hover: var(--vscode-contrastBorder, #ffffff);
+    --accent: var(--vscode-focusBorder, #f38518);
+    --accent-strong: var(--vscode-focusBorder, #f38518);
+    --accent-ink: var(--vscode-editor-background, #000000);
+}

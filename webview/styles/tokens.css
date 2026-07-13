@@ -1,16 +1,10 @@
 /**
  * SpecKit Companion - Design Tokens
  * Single source of truth for all webviews (spec-viewer, spec-editor, workflow-editor).
- *
- * Palette: a hybrid theme (docs/DESIGN.md) — the viewer OWNS a tested
- * light/dark semantic palette (canvas, surfaces, ink, statuses, syntax) for
- * predictable contrast, while inheriting the host editor's font families and
- * accessibility mode. Colors are deliberate literals, not VS Code
- * derivations; only typography and high-contrast mode follow the host.
  */
 
 /* ============================================
-   Semantic Color System (owned palette)
+   VS Code Theme-Aware Color System
    ============================================ */
 
 :root {
@@ -39,98 +33,102 @@
     --space-6: 2rem;      /* 32px */
     --space-8: 3rem;      /* 48px */
 
-    /* Canvas & surfaces (dark defaults) */
-    --bg-primary: #101416;
-    --bg-secondary: #171d20;
-    --bg-elevated: #20282c;
-    --bg-hover: #20282c;
-    --bg-inset: #293337;
+    /* Core backgrounds - mapped to VS Code theme variables */
+    --bg-primary: var(--vscode-editor-background, #1e1e1e);
+    --bg-secondary: var(--vscode-sideBar-background, #252526);
+    --bg-elevated: var(--vscode-editorWidget-background, #252526);
+    --bg-hover: var(--vscode-list-hoverBackground, #2a2d2e);
 
-    /* Ink */
-    --text-primary: #f1f5f4;
-    --text-body: #b4c0bd;
-    --text-secondary: #b4c0bd;
-    --text-muted: #82908d;
-    --text-label: #82908d;
+    /* Text colors - mapped to VS Code theme variables */
+    --text-primary: var(--vscode-editor-foreground, #d4d4d4);
+    /* Secondary/muted derive from the theme's own foreground (not the intentionally
+       low-contrast description/disabled tokens) so they clear WCAG AA on dark while
+       staying subordinate and theme-adaptive. See spec 148. */
+    --text-secondary: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 70%, transparent);
+    --text-muted: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 50%, transparent);
+    /* Tiny uppercase metadata labels: small size costs apparent contrast, so this
+       mixes stronger than --text-secondary while staying subordinate to values. */
+    --text-label: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 82%, transparent);
 
-    /* Accent (single hue; -ink is the on-accent text color) */
-    --accent: #65e6bd;
-    --accent-strong: #65e6bd;
-    --accent-ink: #071b15;
-    --accent-hover: color-mix(in srgb, #65e6bd 85%, #f1f5f4);
-    --accent-subtle: #173b32;
-    --accent-glow: 0 0 20px color-mix(in srgb, #65e6bd 30%, transparent);
+    /* Accent colors - mapped to VS Code theme variables */
+    --accent: var(--vscode-focusBorder, #007fd4);
+    /* The vivid action blue (button bg) — focusBorder reads muted as a thin line,
+       so active highlights use this stronger accent. */
+    --accent-strong: var(--vscode-button-background, var(--accent));
+    --accent-hover: var(--vscode-button-hoverBackground, #0062a3);
+    --accent-subtle: color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 10%, transparent);
+    --accent-glow: 0 0 20px color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 30%, transparent);
 
-    /* Status */
-    --info: #78bdf7;
-    --info-subtle: #182f43;
-    --success: #8adb77;
-    --success-subtle: #1f3823;
-    --success-glow: 0 0 12px color-mix(in srgb, #8adb77 50%, transparent);
-    --warning: #f2c66d;
-    --warning-subtle: #3c311a;
-    --error: #ff8c8c;
-    --error-subtle: #442326;
+    /* Status colors - mapped to VS Code theme variables */
+    --success: var(--vscode-testing-iconPassed, #388a34);
+    --success-subtle: color-mix(in srgb, var(--vscode-testing-iconPassed, #388a34) 10%, transparent);
+    --success-glow: 0 0 12px color-mix(in srgb, var(--vscode-testing-iconPassed, #388a34) 50%, transparent);
+    --warning: var(--vscode-editorWarning-foreground, #cca700);
+    --warning-subtle: color-mix(in srgb, var(--vscode-editorWarning-foreground, #cca700) 10%, transparent);
+    --error: var(--vscode-editorError-foreground, #f14c4c);
+    --error-subtle: color-mix(in srgb, var(--vscode-editorError-foreground, #f14c4c) 10%, transparent);
 
     /* Extended callout colors */
-    --purple: #c4a7f5;
-    --gray: #82908d;
+    --purple: var(--vscode-symbolIcon-classForeground, #9a6dd7);
+    --gray: var(--vscode-descriptionForeground, #858585);
 
     /* Review mode colors - purple for reviewing completed steps */
-    --review: #b48df0;
-    --review-subtle: color-mix(in srgb, #b48df0 14%, transparent);
-    --review-glow: 0 0 12px color-mix(in srgb, #b48df0 50%, transparent);
+    --review: #a855f7;
+    --review-subtle: color-mix(in srgb, #a855f7 10%, transparent);
+    --review-glow: 0 0 12px color-mix(in srgb, #a855f7 50%, transparent);
 
-    /* Borders */
-    --border: #344044;
-    --border-hover: #52615e;
-    --border-accent: color-mix(in srgb, #65e6bd 50%, transparent);
+    /* Borders - mapped to VS Code theme variables */
+    --border: var(--vscode-panel-border, #3c3c3c);
+    --border-hover: var(--vscode-contrastBorder, #6c6c6c);
+    --border-accent: color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 50%, transparent);
 
-    /* Typography - inherited from the host editor (accessibility follows the host) */
+    /* Typography - mapped to VS Code theme variables with professional fallbacks */
     --font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif);
     --font-mono: var(--vscode-editor-font-family, 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', 'Monaco', 'Menlo', monospace);
     --font-size: var(--vscode-editor-font-size, 15px);
 
-    /* Semantic header colors — literals, because a var() chain declared on
-       :root resolves THERE, so a theme block that only re-values --text-primary
-       would leave these frozen at the dark ink (the exact bug class this
-       palette exists to prevent). */
-    --header-title: #f1f5f4;
-    --header-section: #f1f5f4;
-    --header-subsection: #f1f5f4;
+    /* Body text - brighter than --text-secondary but softer than --text-primary */
+    --text-body: #d0d0d0;
 
-    /* Code: an owned always-dark surface, readable in BOTH themes */
-    --bg-code: #0b0f11;
-    --bg-code-header: #141b1e;
-    --border-code: #34433f;
+    /* Semantic header colors - mapped to VS Code theme variables */
+    --header-title: var(--vscode-foreground, #e4e4e4);
+    --header-section: var(--vscode-foreground, #e4e4e4);
+    /* Readable (was descriptionForeground, below WCAG AA) — hierarchy comes from
+       size/weight, not a muted color. */
+    --header-subsection: var(--text-body, #d0d0d0);
 
-    /* Syntax colors (sit on the always-dark code surface in both themes) */
-    --code-text: #d9e3df;
-    --code-keyword: #ff9f9f;
-    --code-string: #a9df92;
-    --code-number: #e3c78a;
-    --code-function: #83c7ff;
-    --code-comment: #869590;
-    --code-variable: #9fd6e8;
-    --code-type: #7fd8c8;
+    /* Code block backgrounds */
+    --bg-code: color-mix(in srgb, var(--vscode-editor-background, #1e1e1e) 95%, black);
+    --bg-code-header: color-mix(in srgb, var(--vscode-editor-background, #1e1e1e) 90%, black);
+    --border-code: var(--vscode-panel-border, #3c3c3c);
+
+    /* Syntax colors - VS Code Dark+ inspired */
+    --code-text: #d4d4d4;
+    --code-keyword: #569cd6;
+    --code-string: #ce9178;
+    --code-number: #b5cea8;
+    --code-function: #dcdcaa;
+    --code-comment: #6a9955;
+    --code-variable: #9cdcfe;
+    --code-type: #4ec9b0;
 
     /* Task styling */
-    --bg-task: #171d20;
-    --bg-task-hover: #20282c;
-    --bg-task-done: #1f3823;
-    --border-task: #344044;
-    --task-pending: #f2c66d;
-    --border-checkbox: #52615e;
-    --bg-checkbox: #171d20;
+    --bg-task: color-mix(in srgb, var(--vscode-editor-background, #1e1e1e) 97%, var(--vscode-focusBorder, #007fd4));
+    --bg-task-hover: color-mix(in srgb, var(--vscode-editor-background, #1e1e1e) 94%, var(--vscode-focusBorder, #007fd4));
+    --bg-task-done: color-mix(in srgb, var(--vscode-editor-background, #1e1e1e) 97%, var(--vscode-testing-iconPassed, #388a34));
+    --border-task: var(--vscode-panel-border, #3c3c3c);
+    --task-pending: var(--vscode-editorWarning-foreground, #cca700);
+    --border-checkbox: var(--vscode-checkbox-border, #3c3c3c);
+    --bg-checkbox: var(--vscode-checkbox-background, #3c3c3c);
 
     /* Misc */
-    /* Geometry: 6px surfaces, 4px controls (docs/DESIGN.md). */
-    --radius-sm: 4px;
-    --radius-md: 6px;
-    --radius-lg: 8px;
-    --shadow-sm: 0 1px 4px rgb(0 0 0 / 12%);
-    --shadow-md: 0 6px 18px rgb(0 0 0 / 18%);
-    --shadow-lg: 0 18px 48px rgb(0 0 0 / 24%);
+    /* Terminal/techy direction: squared corners across all webviews (docs/DESIGN.md). */
+    --radius-sm: 2px;
+    --radius-md: 2px;
+    --radius-lg: 2px;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
 
     /* Timing */
     --transition-fast: 150ms;
@@ -144,98 +142,67 @@
 }
 
 /* ============================================
-   Light palette
+   Theme-Specific Fallbacks
    ============================================ */
 
 body.vscode-light {
-    --bg-primary: #f4f7f6;
-    --bg-secondary: #ffffff;
-    --bg-elevated: #eaf0ee;
-    --bg-hover: #eaf0ee;
-    --bg-inset: #dfe8e5;
+    --bg-primary: var(--vscode-editor-background, #ffffff);
+    --bg-secondary: var(--vscode-sideBar-background, #f3f3f3);
+    --bg-elevated: var(--vscode-editorWidget-background, #f3f3f3);
+    --bg-hover: var(--vscode-list-hoverBackground, #e8e8e8);
+    --text-primary: var(--vscode-editor-foreground, #333333);
+    /* Derived from the editor foreground (see spec 148) — keeps secondary/muted
+       theme-adaptive and legible on light backgrounds. */
+    --text-secondary: color-mix(in srgb, var(--vscode-editor-foreground, #333333) 70%, transparent);
+    --text-body: #4a4a4a;
+    --text-muted: color-mix(in srgb, var(--vscode-editor-foreground, #333333) 50%, transparent);
+    --text-label: color-mix(in srgb, var(--vscode-editor-foreground, #333333) 82%, transparent);
+    --border: var(--vscode-panel-border, #e0e0e0);
+    --border-hover: var(--vscode-contrastBorder, #c0c0c0);
 
-    --text-primary: #14201d;
-    --text-body: #43524e;
-    --text-secondary: #43524e;
-    --text-muted: #63726e;
-    --text-label: #63726e;
+    /* Light theme code colors */
+    --bg-code: #f5f5f5;
+    --bg-code-header: #e8e8e8;
+    --code-text: #333333;
+    --code-keyword: #0000ff;
+    --code-string: #a31515;
+    --code-number: #098658;
+    --code-function: #795e26;
+    --code-comment: #008000;
+    --code-variable: #001080;
+    --code-type: #267f99;
 
-    --accent: #087d63;
-    --accent-strong: #087d63;
-    --accent-ink: #ffffff;
-    --accent-hover: color-mix(in srgb, #087d63 85%, #14201d);
-    --accent-subtle: #d8eee7;
-    --accent-glow: 0 0 20px color-mix(in srgb, #087d63 25%, transparent);
-
-    --info: #176da8;
-    --info-subtle: #dcecf7;
-    --success: #277a35;
-    --success-subtle: #e0f0e1;
-    --success-glow: 0 0 12px color-mix(in srgb, #277a35 40%, transparent);
-    --warning: #8b5a00;
-    --warning-subtle: #f7ebce;
-    --error: #b72f39;
-    --error-subtle: #f9e0e2;
-
-    --purple: #6e40c9;
-    --gray: #63726e;
-    --review: #6e40c9;
-    --review-subtle: color-mix(in srgb, #6e40c9 12%, transparent);
-    --review-glow: 0 0 12px color-mix(in srgb, #6e40c9 40%, transparent);
-
-    --border: #ced9d5;
-    --border-hover: #9daca7;
-    --border-accent: color-mix(in srgb, #087d63 50%, transparent);
-
-    --header-title: #14201d;
-    --header-section: #14201d;
-    --header-subsection: #14201d;
-
-    /* Code keeps the owned dark surface in light mode (readable by design) */
-    --bg-code: #18201f;
-    --bg-code-header: #222c2a;
-    --border-code: #34433f;
-
-    --bg-task: #ffffff;
-    --bg-task-hover: #eaf0ee;
-    --bg-task-done: #e0f0e1;
-    --border-task: #ced9d5;
-    --border-checkbox: #9daca7;
-    --bg-checkbox: #ffffff;
-
-    --shadow-sm: 0 1px 4px rgb(24 53 45 / 8%);
-    --shadow-md: 0 6px 18px rgb(24 53 45 / 10%);
-    --shadow-lg: 0 18px 48px rgb(24 53 45 / 12%);
+    /* Light theme task colors */
+    --bg-task: #f8f9fa;
+    --bg-task-hover: #f0f2f4;
+    --bg-task-done: #f0fff4;
 }
 
-/* Dark palette matches the :root defaults; the block exists so an explicit
-   theme class always wins over any earlier override. */
 body.vscode-dark {
-    --bg-primary: #101416;
-    --bg-secondary: #171d20;
-    --bg-elevated: #20282c;
-    --bg-hover: #20282c;
-    --text-primary: #f1f5f4;
-    --text-body: #b4c0bd;
-    --text-secondary: #b4c0bd;
-    --text-muted: #82908d;
-    --text-label: #82908d;
-    --border: #344044;
-    --border-hover: #52615e;
-    --border-accent: color-mix(in srgb, #65e6bd 50%, transparent);
-    --header-title: #f1f5f4;
-    --header-section: #f1f5f4;
-    --header-subsection: #f1f5f4;
+    --bg-primary: var(--vscode-editor-background, #1e1e1e);
+    --bg-secondary: var(--vscode-sideBar-background, #252526);
+    --bg-elevated: var(--vscode-editorWidget-background, #252526);
+    --bg-hover: var(--vscode-list-hoverBackground, #2a2d2e);
+    --text-primary: var(--vscode-editor-foreground, #d4d4d4);
+    /* Derived from the editor foreground (semi-transparent, so effective color
+       composites over the background) so secondary text clears WCAG AA (≥4.5:1)
+       and muted clears ~3:1 against the dark editor bg. See spec 148. */
+    --text-secondary: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 70%, transparent);
+    --text-muted: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 50%, transparent);
+    --text-label: color-mix(in srgb, var(--vscode-editor-foreground, #d4d4d4) 82%, transparent);
+    --border: var(--vscode-panel-border, #3c3c3c);
+    --border-hover: var(--vscode-contrastBorder, #6c6c6c);
 }
 
-/* High contrast follows the HOST (accessibility mode is inherited, not owned). */
 body.vscode-high-contrast {
     --bg-primary: var(--vscode-editor-background, #000000);
     --bg-secondary: var(--vscode-sideBar-background, #000000);
     --bg-elevated: var(--vscode-editorWidget-background, #000000);
     --bg-hover: var(--vscode-list-hoverBackground, #0a0a0a);
-    --bg-inset: var(--vscode-editorWidget-background, #000000);
     --text-primary: var(--vscode-editor-foreground, #ffffff);
+    /* High-contrast mandates maximal contrast: keep secondary at the full editor
+       foreground (no dilution) and derive muted only mildly (70%) so it stays
+       strong against the HC background. See spec 148. */
     --text-secondary: var(--vscode-editor-foreground, #ffffff);
     --text-body: var(--vscode-editor-foreground, #ffffff);
     --text-muted: color-mix(in srgb, var(--vscode-editor-foreground, #ffffff) 70%, transparent);
@@ -243,8 +210,6 @@ body.vscode-high-contrast {
     --border: var(--vscode-contrastBorder, #ffffff);
     --border-hover: var(--vscode-contrastBorder, #ffffff);
     --accent: var(--vscode-focusBorder, #f38518);
-    --accent-strong: var(--vscode-focusBorder, #f38518);
-    --accent-ink: var(--vscode-editor-background, #000000);
 }
 
 /* ============================================
