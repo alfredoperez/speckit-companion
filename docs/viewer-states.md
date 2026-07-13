@@ -574,6 +574,12 @@ watcher invokes `specViewerProvider.refreshContextIfDisplaying`, which
 re-derives `viewerState` and posts `viewerStateUpdated`. Cards re-render
 from the new state without a reload.
 
+**Staleness is document-local.** The notice renders inside `.main-column`,
+above the reading column — it describes ONE document (`plan.md` trails
+`spec.md`) and its Regenerate action is scoped to that document, so it must
+not span the navigation rail. The matching mark on the rail item answers the
+same question from the navigation side; the two are complementary.
+
 **Staleness is suppressed once the spec settles.** `computeStaleness` is
 skipped entirely for `completed` / `archived` specs (`isStalenessRelevant`
 in `staleness.ts`), so the map arrives empty and BOTH surfaces that read it
