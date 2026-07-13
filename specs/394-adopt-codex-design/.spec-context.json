@@ -3,7 +3,7 @@
   "specName": "adopt codex design",
   "branch": "viewer-redesign-investigation",
   "currentStep": "implement",
-  "status": "implemented",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
@@ -324,7 +324,7 @@
     }
   ],
   "unattended": true,
-  "last_action": "30/30 tasks done — 1266/1266 jest, 22/22 AA both palettes, shell verified in both themes",
+  "last_action": "30/30 tasks done — PR #431 open for review (1266/1266 jest, 22/22 AA)",
   "coverage": {
     "FR-001": {
       "title": "Adopt Codex hybrid theme: owned light/dark palette, host fonts/accessibility inherited",
