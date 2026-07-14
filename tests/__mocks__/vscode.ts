@@ -103,6 +103,11 @@ export enum ConfigurationTarget {
     WorkspaceFolder = 3,
 }
 
+export enum QuickPickItemKind {
+    Separator = -1,
+    Default = 0,
+}
+
 /**
  * A capturing FileSystemWatcher stub. Records the glob it was registered for
  * and the listeners passed to each `onDid*`, exposing `fire*` helpers so a test

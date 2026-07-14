@@ -1,4 +1,4 @@
-import { deriveStepHistory } from '../stepHistoryDerivation';
+import { deriveStepHistory, deriveDocumentState } from '../stepHistoryDerivation';
 import { findRunningStep } from '../../spec-viewer/stateDerivation';
 import type { Transition } from '../../../core/types/specContext';
 
@@ -431,5 +431,46 @@ describe('deriveStepHistory', () => {
             expect(sh.implement.completedAt).toBeNull();
             expect(sh.implement.durationTrusted).toBe(true);
         });
+    });
+});
+
+describe('deriveDocumentState', () => {
+    const done = { startedAt: '2026-01-01T00:00:00Z', completedAt: '2026-01-01T01:00:00Z' };
+
+    it('reports a missing file as missing whatever the parent says', () => {
+        expect(deriveDocumentState('empty', 'specify', { status: 'completed', currentStep: 'implement' }))
+            .toBe('missing');
+        expect(deriveDocumentState(undefined, 'specify', undefined)).toBe('missing');
+    });
+
+    it.each(['completed', 'archived'])(
+        'still completes a finished step under a %s spec (no blank icon)',
+        status => {
+            expect(deriveDocumentState('complete', 'specify', { status, currentStep: 'implement' }))
+                .toBe('complete');
+        },
+    );
+
+    it('keeps a stub file in progress under a completed spec rather than claiming completion', () => {
+        expect(deriveDocumentState('partial', 'tasks', { status: 'completed', currentStep: 'implement' }))
+            .toBe('in-progress');
+    });
+
+    it('completes a step the workflow moved past', () => {
+        expect(deriveDocumentState('complete', 'specify', { currentStep: 'plan', stepHistory: { specify: done } }))
+            .toBe('complete');
+    });
+
+    it('marks the current step in progress', () => {
+        expect(deriveDocumentState('complete', 'plan', { currentStep: 'plan' })).toBe('in-progress');
+    });
+
+    it('leaves a step the workflow has not reached pending', () => {
+        expect(deriveDocumentState('complete', 'tasks', { currentStep: 'specify' })).toBe('pending');
+    });
+
+    it('treats a non-workflow document by its own content', () => {
+        expect(deriveDocumentState('complete', 'research', { currentStep: 'specify' })).toBe('complete');
+        expect(deriveDocumentState('partial', 'research', { currentStep: 'specify' })).toBe('in-progress');
     });
 });

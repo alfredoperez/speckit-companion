@@ -91,7 +91,7 @@ export async function resetAllContextKeys(logger?: ContextKeyLogger): Promise<vo
         setContextKey(CONTEXT_KEYS.cliInstalled, false, logger),
         setContextKey(CONTEXT_KEYS.detected, false, logger),
         setContextKey(CONTEXT_KEYS.constitutionNeedsSetup, false, logger),
-        setContextKey(CONTEXT_KEYS.specsAllCollapsed, false, logger),
+        setContextKey(CONTEXT_KEYS.specsAllCollapsed, true, logger),
         setContextKey(CONTEXT_KEYS.specsFilterActive, false, logger),
         setContextKey(CONTEXT_KEYS.specsNoFilterMatch, false, logger),
         setContextKey(CONTEXT_KEYS.specsSortActive, false, logger),

@@ -25,11 +25,14 @@ import { track as trackTerminal } from './terminalStepTracker';
 import type { HistoryEntry, StepName, Status } from '../../core/types/specContext';
 import { SpecsFilterState } from './specsFilterState';
 import { SpecsSortState } from './specsSortState';
-import { ALL_SORT_MODES, DEFAULT_SORT_MODE, SortMode } from './specsSortMode';
+import { ALL_SORT_MODES, SortMode } from './specsSortMode';
 import { loadCustomCommands, NormalizedCustomCommand } from './customCommandConfig';
 import { CONTEXT_KEYS, setContextKey } from '../../core/utils/contextKeys';
 import { sendTelemetryEvent, getSpecTelemetryContext, phaseTelemetryId } from '../../core/telemetry';
 import { getConfiguredProviderType } from '../../ai-providers/aiProvider';
+import { buildMoreActions } from './specsMoreActions';
+import { isCompanionInstalled } from '../settings/companionPresetReconciler';
+import { SpecKitDetector } from '../../speckit/detector';
 
 function toWorkspaceRelative(absOrRel: string): string {
     const ws = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -101,39 +104,72 @@ export function registerSpecKitCommands(
         })
     );
 
-    // Toggle collapse/expand all specs — single button in the view title bar.
-    // Two menu entries (collapse / expand) swap icons via the
-    // speckit.specs.allCollapsed context key; both forward to the same toggle
-    // handler so state stays in sync.
-    //
-    // Both directions flip the provider flag and refresh. The provider encodes
-    // the flag into the spec-item id on each emit, so VS Code treats the items
-    // as fresh and honors the emitted collapsibleState. Group items keep stable
-    // ids so their expansion state is untouched by the toggle.
-    const toggleCollapseAllHandler = async () => {
-        specExplorer.expandAllSpecs = !specExplorer.expandAllSpecs;
-        await setContextKey(CONTEXT_KEYS.specsAllCollapsed, !specExplorer.expandAllSpecs);
+    // Collapse/expand all specs. `collapseAll` and `expandAll` enforce their
+    // named state (idempotent, whatever the current one); `toggleCollapseAll`
+    // flips it. The provider encodes the flag into the spec-item id on each
+    // emit, so VS Code treats the items as fresh and honors the emitted
+    // collapsibleState. Group items keep stable ids so their expansion state is
+    // untouched.
+    const setExpandAllSpecs = async (expandAll: boolean) => {
+        specExplorer.expandAllSpecs = expandAll;
+        await setContextKey(CONTEXT_KEYS.specsAllCollapsed, !expandAll);
         specExplorer.refresh();
     };
+    void setContextKey(CONTEXT_KEYS.specsAllCollapsed, !specExplorer.expandAllSpecs);
     context.subscriptions.push(
-        vscode.commands.registerCommand('speckit.specs.toggleCollapseAll', toggleCollapseAllHandler),
-        vscode.commands.registerCommand('speckit.specs.collapseAll', toggleCollapseAllHandler),
-        vscode.commands.registerCommand('speckit.specs.expandAll', toggleCollapseAllHandler)
+        vscode.commands.registerCommand('speckit.specs.toggleCollapseAll', () =>
+            setExpandAllSpecs(!specExplorer.expandAllSpecs)
+        ),
+        vscode.commands.registerCommand('speckit.specs.collapseAll', () => setExpandAllSpecs(false)),
+        vscode.commands.registerCommand('speckit.specs.expandAll', () => setExpandAllSpecs(true))
     );
 
-    // Filter specs: prompt for a fuzzy query (prefilled with the current one so
-    // edits are incremental) and persist it via SpecsFilterState. Clearing is a
-    // separate command gated on the `speckit.specs.filterActive` context key.
+    // The Specs title bar carries only Filter, Sort, More Actions, and New Spec.
+    // Everything else the toolbar used to show lives behind this picker, gated by
+    // the same conditions its title contributions used.
+    context.subscriptions.push(
+        vscode.commands.registerCommand('speckit.specs.moreActions', async () => {
+            const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+            const detector = SpecKitDetector.getInstance();
+            const entries = buildMoreActions({
+                allCollapsed: !specExplorer.expandAllSpecs,
+                companionInstalled: root ? isCompanionInstalled(root) : false,
+                speckitAvailable: detector.workspaceInitialized || detector.cliInstalled,
+            });
+            type MoreActionsPick = vscode.QuickPickItem & { commandId?: string };
+            const picks: MoreActionsPick[] = entries.map(entry =>
+                entry.separator
+                    ? { label: entry.label, kind: vscode.QuickPickItemKind.Separator }
+                    : { label: entry.label, commandId: entry.command }
+            );
+            const picked = await vscode.window.showQuickPick(picks, {
+                title: 'Specs',
+                placeHolder: 'Choose an action',
+            });
+            if (picked?.commandId) {
+                await vscode.commands.executeCommand(picked.commandId);
+            }
+        })
+    );
+
+    // Filter specs: prompt for a fuzzy query, prefilled with the current one so
+    // edits are incremental. Submitting an empty value clears the filter, which
+    // is why the title bar carries no separate clear icon; the clear command
+    // stays registered for the Command Palette and the no-match welcome view.
     if (filterState) {
         context.subscriptions.push(
             vscode.commands.registerCommand(Commands.specsFilter, async () => {
                 const current = filterState.getQuery();
                 const input = await vscode.window.showInputBox({
                     value: current,
-                    prompt: 'Filter specs by slug or name',
+                    prompt: 'Filter specs by slug or name — submit an empty value to clear',
                     placeHolder: 'type to filter…',
                 });
                 if (input === undefined) return;
+                if (input.trim().length === 0) {
+                    await filterState.clear();
+                    return;
+                }
                 await filterState.setQuery(input);
             }),
             vscode.commands.registerCommand(Commands.specsFilterClear, async () => {
@@ -142,39 +178,29 @@ export function registerSpecKitCommands(
         );
     }
 
-    // Sort specs: open a QuickPick with the 5 modes, check-mark the current
-    // one, and persist the selection via SpecsSortState. When the current
-    // mode is non-default we append a "Reset to default" option so the user
-    // can bail out without re-selecting Number explicitly.
+    // Sort specs: five compact options with a check on the current one, persisted
+    // via SpecsSortState.
     if (sortState) {
         const SORT_LABELS: Record<SortMode, { label: string; description: string }> = {
-            number: { label: 'Number', description: 'Numeric prefix (default)' },
-            name: { label: 'Name', description: 'A–Z by slug or spec name' },
+            number: { label: 'Number', description: 'Default · Highest number first' },
+            name: { label: 'Name', description: 'A–Z' },
             dateCreated: { label: 'Date Created', description: 'Newest first' },
-            dateModified: { label: 'Date Modified', description: 'Most recently edited' },
-            status: { label: 'Status', description: 'By workflow step' },
+            dateModified: { label: 'Date Modified', description: 'Recently edited first' },
+            status: { label: 'Workflow Step', description: 'Current progress' },
         };
 
         context.subscriptions.push(
             vscode.commands.registerCommand(Commands.specsSort, async () => {
                 const current = sortState.getMode();
-                type SortPickItem = vscode.QuickPickItem & { mode: SortMode; reset?: boolean };
+                type SortPickItem = vscode.QuickPickItem & { mode: SortMode };
                 const items: SortPickItem[] = ALL_SORT_MODES.map(m => ({
                     label: current === m ? `$(check) ${SORT_LABELS[m].label}` : SORT_LABELS[m].label,
                     description: SORT_LABELS[m].description,
                     mode: m,
                 }));
-                if (current !== DEFAULT_SORT_MODE) {
-                    items.push({
-                        label: '$(clear-all) Reset to default',
-                        description: SORT_LABELS[DEFAULT_SORT_MODE].label,
-                        mode: DEFAULT_SORT_MODE,
-                        reset: true,
-                    });
-                }
                 const picked = await vscode.window.showQuickPick(items, {
-                    title: 'Sort specs by…',
-                    placeHolder: 'Choose a sort mode',
+                    title: 'Sort Specs',
+                    placeHolder: 'Choose sort order',
                 });
                 if (!picked) return;
                 await sortState.setMode(picked.mode);
@@ -249,7 +275,7 @@ export function registerSpecKitCommands(
         })
     );
 
-    // Generic reveal — works from ANY SpecKit tree (Specs, Spec Explorer, Steering).
+    // Generic reveal — works from ANY SpecKit tree (Specs, Living Specs, Steering).
     // Each tree stores its item's path differently, so resolve a URI from whatever
     // field is present, then hand off to VS Code's built-in reveal commands. Pre-stats
     // so a missing target surfaces an error rather than the silent no-op revealFileInOS

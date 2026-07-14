@@ -54,6 +54,19 @@ jest.mock('./specContextManager', () => ({
     readSpecContextSync: jest.fn(),
 }));
 
+jest.mock('../settings/companionPresetReconciler', () => ({
+    isCompanionInstalled: jest.fn().mockReturnValue(false),
+}));
+
+jest.mock('../../speckit/detector', () => ({
+    SpecKitDetector: {
+        getInstance: jest.fn().mockReturnValue({
+            workspaceInitialized: true,
+            cliInstalled: false,
+        }),
+    },
+}));
+
 import { setStatus, forceStatus, reactivate } from './stepLifecycle';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import { readSpecContextSync } from './specContextManager';
@@ -154,16 +167,67 @@ describe('speckit.specs.toggleCollapseAll handler', () => {
         );
     });
 
-    it('collapseAll and expandAll forward to the same handler', () => {
+});
+
+describe('speckit.specs.collapseAll / expandAll handlers', () => {
+    function lastContextValueFor(key: string): unknown {
+        const calls = (mockCommands.executeCommand as jest.Mock).mock.calls.filter(
+            c => c[0] === 'setContext' && c[1] === key
+        );
+        return calls[calls.length - 1]?.[2];
+    }
+
+    it('collapseAll collapses, and stays collapsed when run again', async () => {
         const context = createMockContext();
         const handlers = captureCommandHandlers(context);
+        lastMockExplorer.expandAllSpecs = true;
+        (mockCommands.executeCommand as jest.Mock).mockClear();
 
-        const toggleHandler = handlers.get('speckit.specs.toggleCollapseAll');
-        const collapseHandler = handlers.get('speckit.specs.collapseAll');
-        const expandHandler = handlers.get('speckit.specs.expandAll');
+        const collapseAll = handlers.get('speckit.specs.collapseAll')!;
+        await collapseAll();
 
-        expect(collapseHandler).toBe(toggleHandler);
-        expect(expandHandler).toBe(toggleHandler);
+        expect(lastMockExplorer.expandAllSpecs).toBe(false);
+        expect(lastContextValueFor('speckit.specs.allCollapsed')).toBe(true);
+
+        await collapseAll();
+
+        expect(lastMockExplorer.expandAllSpecs).toBe(false);
+        expect(lastContextValueFor('speckit.specs.allCollapsed')).toBe(true);
+    });
+
+    it('expandAll expands, and stays expanded when run on an already-expanded tree', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        lastMockExplorer.expandAllSpecs = true;
+        (mockCommands.executeCommand as jest.Mock).mockClear();
+
+        const expandAll = handlers.get('speckit.specs.expandAll')!;
+        await expandAll();
+
+        expect(lastMockExplorer.expandAllSpecs).toBe(true);
+        expect(lastContextValueFor('speckit.specs.allCollapsed')).toBe(false);
+
+        await expandAll();
+
+        expect(lastMockExplorer.expandAllSpecs).toBe(true);
+        expect(lastContextValueFor('speckit.specs.allCollapsed')).toBe(false);
+    });
+
+    it('neither command flips the other’s state', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const collapseAll = handlers.get('speckit.specs.collapseAll')!;
+        const expandAll = handlers.get('speckit.specs.expandAll')!;
+
+        lastMockExplorer.expandAllSpecs = false;
+        await expandAll();
+        expect(lastMockExplorer.expandAllSpecs).toBe(true);
+
+        await collapseAll();
+        expect(lastMockExplorer.expandAllSpecs).toBe(false);
+        await expandAll();
+        expect(lastMockExplorer.expandAllSpecs).toBe(true);
+        expect(lastContextValueFor('speckit.specs.allCollapsed')).toBe(false);
     });
 });
 
@@ -778,5 +842,107 @@ describe('speckit.specs.copyName command handler', () => {
 
         expect(mockClipboardWriteText).not.toHaveBeenCalled();
         expect(NotificationUtils.showAutoDismissNotification).not.toHaveBeenCalled();
+    });
+});
+
+describe('speckit.specs.moreActions handler', () => {
+    function registerWithState() {
+        const handlers = new Map<string, (...args: any[]) => any>();
+        mockCommands.registerCommand.mockImplementation((name: string, handler: any) => {
+            handlers.set(name, handler);
+            return { dispose: jest.fn() };
+        });
+        const explorer = { refresh: jest.fn(), expandAllSpecs: false } as any;
+        const filterState = {
+            getQuery: jest.fn().mockReturnValue(''),
+            setQuery: jest.fn().mockResolvedValue(undefined),
+            clear: jest.fn().mockResolvedValue(undefined),
+        } as any;
+        const sortState = {
+            getMode: jest.fn().mockReturnValue('number'),
+            setMode: jest.fn().mockResolvedValue(undefined),
+        } as any;
+        registerSpecKitCommands(
+            createMockContext(),
+            explorer,
+            { appendLine: jest.fn() } as any,
+            undefined,
+            filterState,
+            sortState
+        );
+        return { handlers, explorer, filterState, sortState };
+    }
+
+    it('seeds the all-collapsed context key from the provider default', () => {
+        (mockCommands.executeCommand as jest.Mock).mockClear();
+        registerWithState();
+        expect(mockCommands.executeCommand).toHaveBeenCalledWith(
+            'setContext',
+            'speckit.specs.allCollapsed',
+            true
+        );
+    });
+
+    it('dispatches the picked command', async () => {
+        const { handlers } = registerWithState();
+        (vscode.window.showQuickPick as jest.Mock).mockResolvedValueOnce({
+            label: 'Upgrade…',
+            commandId: 'speckit.upgrade',
+        });
+        (mockCommands.executeCommand as jest.Mock).mockClear();
+
+        await handlers.get('speckit.specs.moreActions')!();
+
+        expect(mockCommands.executeCommand).toHaveBeenCalledWith('speckit.upgrade');
+    });
+
+    it('does nothing when the picker is dismissed', async () => {
+        const { handlers } = registerWithState();
+        (vscode.window.showQuickPick as jest.Mock).mockResolvedValueOnce(undefined);
+        (mockCommands.executeCommand as jest.Mock).mockClear();
+
+        await handlers.get('speckit.specs.moreActions')!();
+
+        expect(mockCommands.executeCommand).not.toHaveBeenCalled();
+    });
+
+    it('clears the filter when the input is submitted empty', async () => {
+        const { handlers, filterState } = registerWithState();
+        (vscode.window.showInputBox as jest.Mock).mockResolvedValueOnce('   ');
+
+        await handlers.get('speckit.specs.filter')!();
+
+        expect(filterState.clear).toHaveBeenCalled();
+        expect(filterState.setQuery).not.toHaveBeenCalled();
+    });
+
+    it('sets the filter when the input carries a query', async () => {
+        const { handlers, filterState } = registerWithState();
+        (vscode.window.showInputBox as jest.Mock).mockResolvedValueOnce('auth');
+
+        await handlers.get('speckit.specs.filter')!();
+
+        expect(filterState.setQuery).toHaveBeenCalledWith('auth');
+    });
+
+    it('offers five compact sort options with a check on the current one', async () => {
+        const { handlers, sortState } = registerWithState();
+        (vscode.window.showQuickPick as jest.Mock).mockResolvedValueOnce(undefined);
+
+        await handlers.get('speckit.specs.sort')!();
+
+        const [items, options] = (vscode.window.showQuickPick as jest.Mock).mock.calls.at(-1)!;
+        expect(options.title).toBe('Sort Specs');
+        expect(options.placeHolder).toBe('Choose sort order');
+        expect(items).toHaveLength(5);
+        expect(items[0].label).toBe('$(check) Number');
+        expect(items.map((i: any) => i.description)).toEqual([
+            'Default · Highest number first',
+            'A–Z',
+            'Newest first',
+            'Recently edited first',
+            'Current progress',
+        ]);
+        expect(sortState.setMode).not.toHaveBeenCalled();
     });
 });

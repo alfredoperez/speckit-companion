@@ -1,14 +1,6 @@
 # Third-Party Icon Attribution
 
-SpecKit Companion bundles icons from the following open-source sets. Both are MIT-licensed and safe to redistribute inside this MIT-licensed extension.
-
-## Fluent Emoji — Microsoft (MIT)
-
-Colorful spec-state and steering-concept icons.
-
-- Files: `assets/icons/specs/*.svg`, `assets/icons/steering/*.svg`
-- Source: https://github.com/microsoft/fluentui-emoji
-- License: MIT — https://github.com/microsoft/fluentui-emoji/blob/main/LICENSE
+SpecKit Companion bundles icons from the following open-source set, which is MIT-licensed and safe to redistribute inside this MIT-licensed extension. The only other bundled artwork is the project's own, listed at the bottom of this file; every remaining icon in the sidebar is a VS Code Codicon supplied by the editor itself.
 
 ## Lobe Icons — LobeHub (MIT)
 

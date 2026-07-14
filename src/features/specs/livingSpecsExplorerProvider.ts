@@ -96,9 +96,9 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
             if (!hasContent) {
                 const message = listing.enabled
                     ? 'No living specs yet'
-                    : 'Living specs are turned off';
+                    : 'Living Specs are off';
                 const tooltip = listing.enabled
-                    ? 'No capabilities or orphan specs were found in this project.'
+                    ? 'Adopt a code area to create and register your first living spec.'
                     : 'Enable livingSpecs in .specify/companion.yml to track capability specs.';
                 return [LivingSpecItem.info(message, tooltip)];
             }
@@ -186,7 +186,7 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
             tooltipLines.push(`${health.coverage.covered} of ${health.coverage.total} requirements have a mapped test`);
         }
         if (health?.drifted) {
-            suffixes.push('● drift');
+            suffixes.push('drift');
             tooltipLines.push("Source files changed since the living spec's last commit");
         }
         item.description = suffixes.length > 0 ? `${base} · ${suffixes.join(' · ')}` : base;

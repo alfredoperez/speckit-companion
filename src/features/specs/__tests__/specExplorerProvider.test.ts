@@ -256,39 +256,37 @@ describe('SpecExplorerProvider', () => {
     });
 
     describe('spec-group icons', () => {
-        it('should use the active-cluster sprout icon for Active group', async () => {
+        async function groupIcon(status: string | undefined): Promise<vscode.ThemeIcon> {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'feature', path: 'specs/feature' },
             ]);
-            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
-
+            (readSpecContextSync as jest.Mock).mockReturnValue(status ? { status } : undefined);
             const children = await provider.getChildren();
-            const activeGroup = children[0];
+            return children[0].iconPath as vscode.ThemeIcon;
+        }
 
-            expect(activeGroup.iconPath).toBeInstanceOf(vscode.Uri);
-            expect((activeGroup.iconPath as vscode.Uri).path).toMatch(/assets\/icons\/specs\/group-active\.svg$/);
+        it('uses the pulse codicon for the Active group', async () => {
+            const icon = await groupIcon(undefined);
+            expect(icon).toBeInstanceOf(vscode.ThemeIcon);
+            expect(icon.id).toBe('pulse');
         });
 
-        it('should use the check icon for Completed group', async () => {
-            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
-                { name: 'feature', path: 'specs/feature' },
-            ]);
-            (readSpecContextSync as jest.Mock).mockReturnValue({ status: 'completed' });
-
-            const children = await provider.getChildren();
-
-            expect((children[0].iconPath as vscode.Uri).path).toMatch(/assets\/icons\/specs\/spec-completed\.svg$/);
+        it('uses a passed-tinted check for the Completed group', async () => {
+            const icon = await groupIcon('completed');
+            expect(icon.id).toBe('pass-filled');
+            expect(icon.color).toBeDefined();
         });
 
-        it('should use the archived-box icon for Archived group', async () => {
-            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
-                { name: 'feature', path: 'specs/feature' },
-            ]);
-            (readSpecContextSync as jest.Mock).mockReturnValue({ status: 'archived' });
+        it('uses the archive codicon for the Archived group', async () => {
+            const icon = await groupIcon('archived');
+            expect(icon.id).toBe('archive');
+        });
 
-            const children = await provider.getChildren();
-
-            expect((children[0].iconPath as vscode.Uri).path).toMatch(/assets\/icons\/specs\/group-archived\.svg$/);
+        it('never renders a bundled SVG for a group', async () => {
+            for (const status of [undefined, 'completed', 'archived']) {
+                const icon = await groupIcon(status);
+                expect(icon).not.toBeInstanceOf(vscode.Uri);
+            }
         });
     });
 
@@ -375,7 +373,10 @@ describe('SpecExplorerProvider', () => {
     });
 
     describe('step document colored icons', () => {
-        async function getDocumentItems(specContext: any): Promise<any[]> {
+        async function getDocumentItems(
+            specContext: any,
+            fileContent = '# Title\nLine 2\nLine 3\nLine 4\nLine 5',
+        ): Promise<any[]> {
             const specName = 'my-feature';
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: specName, path: `specs/${specName}` },
@@ -383,7 +384,7 @@ describe('SpecExplorerProvider', () => {
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
             (readSpecContextSync as jest.Mock).mockReturnValue(specContext || undefined);
             (mockFs.existsSync as jest.Mock).mockReturnValue(true);
-            (mockFs.readFileSync as jest.Mock).mockReturnValue('# Title\nLine 2\nLine 3\nLine 4\nLine 5');
+            (mockFs.readFileSync as jest.Mock).mockReturnValue(fileContent);
 
             const groups = await provider.getChildren();
             const specs = await provider.getChildren(groups[0]);
@@ -453,7 +454,7 @@ describe('SpecExplorerProvider', () => {
             expect((icon.color as vscode.ThemeColor).id).toBe('charts.blue');
         });
 
-        it('should not add colored icon for steps with no history', async () => {
+        it('gives an existing, non-current, uncompleted step a muted outline', async () => {
             const docs = await getDocumentItems({
                 workflow: 'default',
                 selectedAt: '2026-01-01',
@@ -463,10 +464,11 @@ describe('SpecExplorerProvider', () => {
                 },
             });
 
-            // 'tasks' step (no history entry) should have no special icon
             const tasksDoc = docs.find((d: any) => d.label === 'Tasks');
             expect(tasksDoc).toBeDefined();
-            expect(tasksDoc!.iconPath).toBeUndefined();
+            const icon = tasksDoc!.iconPath as vscode.ThemeIcon;
+            expect(icon.id).toBe('circle-outline');
+            expect(icon.color).toBeUndefined();
         });
 
         it('should use currentStep for in-progress icon (migration maps step→currentStep)', async () => {
@@ -491,7 +493,7 @@ describe('SpecExplorerProvider', () => {
             // 'tasks' should NOT have the blue dot (currentStep is 'plan', not 'tasks')
             const tasksDoc = docs.find((d: any) => d.label === 'Tasks');
             expect(tasksDoc).toBeDefined();
-            expect(tasksDoc!.iconPath).toBeUndefined();
+            expect((tasksDoc!.iconPath as vscode.ThemeIcon).id).toBe('circle-outline');
         });
 
         it('should fall back to currentStep when step field is absent', async () => {
@@ -532,22 +534,74 @@ describe('SpecExplorerProvider', () => {
             expect((icon.color as vscode.ThemeColor).id).toBe('testing.iconPassed');
         });
 
-        it('should not show step icons for completed specs', async () => {
-            const docs = await getDocumentItems({
-                workflow: 'default',
-                selectedAt: '2026-01-01',
-                status: 'completed',
-                currentStep: 'implement',
-                stepHistory: {
-                    specify: { startedAt: '2026-01-01T00:00:00Z', completedAt: '2026-01-01T01:00:00Z' },
-                    plan: { startedAt: '2026-01-01T01:00:00Z', completedAt: '2026-01-01T02:00:00Z' },
-                    tasks: { startedAt: '2026-01-01T02:00:00Z', completedAt: '2026-01-01T03:00:00Z' },
-                },
-            });
+        it.each(['completed', 'archived'])(
+            'still shows completed step icons under a %s spec',
+            async status => {
+                const docs = await getDocumentItems({
+                    workflow: 'default',
+                    selectedAt: '2026-01-01',
+                    status,
+                    currentStep: 'implement',
+                    stepHistory: {
+                        specify: { startedAt: '2026-01-01T00:00:00Z', completedAt: '2026-01-01T01:00:00Z' },
+                        plan: { startedAt: '2026-01-01T01:00:00Z', completedAt: '2026-01-01T02:00:00Z' },
+                        tasks: { startedAt: '2026-01-01T02:00:00Z', completedAt: '2026-01-01T03:00:00Z' },
+                    },
+                });
 
-            // Completed specs: no per-step icons — green beaker is sufficient
+                expect(docs.length).toBeGreaterThan(0);
+                for (const doc of docs) {
+                    const icon = doc.iconPath as vscode.ThemeIcon;
+                    expect(icon.id).toBe('pass');
+                    expect((icon.color as vscode.ThemeColor).id).toBe('testing.iconPassed');
+                    expect(doc.tooltip).toContain('Complete');
+                }
+            }
+        );
+
+        it('does not green-check a stub document under a completed spec, and its tooltip agrees', async () => {
+            const docs = await getDocumentItems(
+                {
+                    workflow: 'default',
+                    selectedAt: '2026-01-01',
+                    status: 'completed',
+                    currentStep: 'implement',
+                },
+                '# Title\nOne line of body',
+            );
+
+            expect(docs.length).toBeGreaterThan(0);
+            for (const doc of docs) {
+                const icon = doc.iconPath as vscode.ThemeIcon;
+                expect(icon.id).toBe('circle-filled');
+                expect((icon.color as vscode.ThemeColor).id).toBe('charts.blue');
+                expect(icon.id).not.toBe('pass');
+                expect(doc.tooltip).toContain('In Progress');
+            }
+        });
+
+        it('leaves a missing document iconless and marks it not created', async () => {
+            const specName = 'my-feature';
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: specName, path: `specs/${specName}` },
+            ]);
+            (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
+            (readSpecContextSync as jest.Mock).mockReturnValue({
+                workflow: 'default',
+                currentStep: 'specify',
+                status: 'specifying',
+            });
+            (mockFs.existsSync as jest.Mock).mockReturnValue(false);
+
+            const groups = await provider.getChildren();
+            const specs = await provider.getChildren(groups[0]);
+            const docs = await provider.getChildren(specs[0]);
+
             for (const doc of docs) {
                 expect(doc.iconPath).toBeUndefined();
+                expect(doc.description).toBe('not created');
+                expect(doc.contextValue).toBe('spec-document-missing');
+                expect(doc.command).toBeUndefined();
             }
         });
     });
@@ -575,7 +629,7 @@ describe('SpecExplorerProvider', () => {
                 status: 'implementing',
                 history: [{ step: 'implement', substep: null, task: 'T004', kind: 'complete', by: 'ai', at }],
             });
-            expect(row.description).toBe('· T004 · just now');
+            expect(row.description).toBe('T004 · just now');
             expect(row.description).not.toMatch(/implement/i);
         });
 
@@ -589,7 +643,7 @@ describe('SpecExplorerProvider', () => {
                 status: 'planned',
                 history: [{ step: 'plan', substep: null, kind: 'start', by: 'extension', at }],
             });
-            expect(row.description).toBe('· just now');
+            expect(row.description).toBe('just now');
             expect(row.description).not.toMatch(/plan/i);
         });
 
@@ -601,6 +655,21 @@ describe('SpecExplorerProvider', () => {
                 status: 'specifying',
             });
             expect(row.description).toBeUndefined();
+        });
+
+        it('shows a friendly status and a last-activity line in the tooltip, never a raw key', async () => {
+            const at = new Date(Date.now() - 30 * 1000).toISOString();
+            const row = await getSpecRow({
+                workflow: 'default',
+                currentStep: 'tasks',
+                status: 'ready-to-implement',
+                history: [{ step: 'tasks', substep: null, kind: 'complete', by: 'ai', at }],
+            });
+            const tooltip = row.tooltip as string;
+            expect(tooltip.split('\n')[0]).toBe('my-feature');
+            expect(tooltip).toContain('Status: Ready to Implement');
+            expect(tooltip).toContain('Last activity:');
+            expect(tooltip).not.toContain('ready-to-implement');
         });
     });
 
@@ -776,8 +845,22 @@ describe('SpecExplorerProvider', () => {
             return provider.getChildren(groups[0]);
         }
 
-        it('defaults to true', () => {
-            expect(provider.expandAllSpecs).toBe(true);
+        it('defaults to false so spec rows start collapsed', () => {
+            expect(provider.expandAllSpecs).toBe(false);
+        });
+
+        it('renders spec rows collapsed on a first render, with the Active group expanded', async () => {
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: 'feature', path: 'specs/feature' },
+            ]);
+            (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
+            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
+
+            const groups = await provider.getChildren();
+            expect(groups[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.Expanded);
+
+            const specs = await provider.getChildren(groups[0]);
+            expect(specs[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
         });
 
         it('renders spec items Expanded when expandAllSpecs=true', async () => {

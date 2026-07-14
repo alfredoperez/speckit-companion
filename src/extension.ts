@@ -201,10 +201,6 @@ export async function activate(context: vscode.ExtensionContext) {
     });
     specsTreeView.onDidChangeSelection(e => updateSelectionContextKeys(e.selection as any));
 
-    // Seed the collapse/expand toggle icon state to match the provider default
-    // (expandAllSpecs=true → next click collapses → show collapse-all icon).
-    void setContextKey(CONTEXT_KEYS.specsAllCollapsed, false);
-
     context.subscriptions.push(
         vscode.window.registerTreeDataProvider(Views.settings, overviewProvider),
         specsTreeView,
@@ -344,7 +340,7 @@ export async function activate(context: vscode.ExtensionContext) {
             extWatcher.onDidDelete(refresh);
             context.subscriptions.push(extWatcher);
 
-            // Refresh the Spec Explorer when the living-specs config or the
+            // Refresh the Living Specs view when the living-specs config or the
             // capabilities tree changes on disk (no reload needed).
             const livingSpecsWatcher = vscode.workspace.createFileSystemWatcher(
                 new vscode.RelativePattern(root, '{.specify/companion.yml,capabilities/**,**/*.spec.md}')
