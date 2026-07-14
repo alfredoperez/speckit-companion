@@ -11,7 +11,8 @@ import { SkillManager, SkillInfo, SkillType } from '../skills/skillManager';
 import { AIProviders, TreeItemContext } from '../../core/constants';
 import { isCompanionInstalled } from '../settings/companionPresetReconciler';
 import { readCompanionConfigGroups, readCompanionCommands, readCompanionTemplates, isWithinRoot, companionCommandFilePath, COMPANION_STEERING_PATHS } from './companionSteering';
-import { resolveProviderIconKey, detectHostIde } from './providerIcon';
+import { resolveProviderIconKey } from './providerIcon';
+import { detectHostIde } from '../../core/utils/hostIde';
 
 export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem> {
     private steeringManager!: SteeringManager;
@@ -1035,10 +1036,7 @@ class SteeringItem extends vscode.TreeItem {
 
         const C = TreeItemContext;
 
-        if (contextValue === C.steeringLoading) {
-            this.iconPath = new vscode.ThemeIcon('sync~spin');
-            this.tooltip = 'Loading steering documents...';
-        } else if (contextValue === C.steeringFile) {
+        if (contextValue === C.steeringFile) {
             this.iconPath = new vscode.ThemeIcon('file');
             this.tooltip = resourcePath;
         } else if (contextValue === C.createGlobal || contextValue === C.createProject) {

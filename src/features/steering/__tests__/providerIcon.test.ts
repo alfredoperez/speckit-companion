@@ -1,5 +1,8 @@
+import * as fs from 'fs';
+import * as path from 'path';
 import * as vscode from 'vscode';
-import { detectHostIde, resolveProviderIconKey, HostIde, NEUTRAL_PROVIDER_ICON } from '../providerIcon';
+import { resolveProviderIconKey, NEUTRAL_PROVIDER_ICON } from '../providerIcon';
+import { detectHostIde, HostIde } from '../../../core/utils/hostIde';
 import { getProviderDisplayName } from '../../../ai-providers/aiProvider';
 import { AIProviders } from '../../../core/constants';
 
@@ -61,6 +64,56 @@ describe('resolveProviderIconKey', () => {
     it('gives an unknown provider a neutral icon rather than another vendor mark', () => {
         expect(resolveProviderIconKey('something-new', 'vscode')).toEqual(NEUTRAL_PROVIDER_ICON);
     });
+
+    describe('exhaustiveness over the shipped provider list', () => {
+        const manifest = JSON.parse(
+            fs.readFileSync(path.join(__dirname, '../../../../package.json'), 'utf-8')
+        );
+        const enumValues: string[] = manifest.contributes.configuration
+            .flatMap((section: any) => Object.entries(section.properties ?? {}))
+            .find(([key]: [string, unknown]) => key === 'speckit.aiProvider')[1].enum;
+
+        // A provider added to the setting without a resolver case would silently
+        // land on the neutral glyph; these are the only two allowed to.
+        const NEUTRAL_BY_DESIGN: string[] = [AIProviders.WIBEY, AIProviders.WIBEY_VSCODE];
+
+        it('covers every value the aiProvider setting accepts', () => {
+            expect(enumValues.length).toBeGreaterThan(0);
+            for (const id of enumValues) {
+                const key = resolveProviderIconKey(id, 'vscode');
+                if (NEUTRAL_BY_DESIGN.includes(id)) {
+                    expect(key).toEqual(NEUTRAL_PROVIDER_ICON);
+                } else {
+                    expect(key).not.toEqual(NEUTRAL_PROVIDER_ICON);
+                }
+            }
+        });
+
+        it('resolves an ide-chat host to a mark the extension actually ships', () => {
+            const assets = path.join(__dirname, '../../../../assets/icons/providers');
+            for (const host of ['vscode', 'cursor', 'windsurf'] as HostIde[]) {
+                const key = resolveProviderIconKey(AIProviders.IDE_CHAT, host);
+                expect(key.kind).toBe('mono');
+                if (key.kind === 'mono') {
+                    expect(fs.existsSync(path.join(assets, `${key.name}-light.svg`))).toBe(true);
+                    expect(fs.existsSync(path.join(assets, `${key.name}-dark.svg`))).toBe(true);
+                }
+            }
+        });
+
+        it('resolves every branded provider to a mark the extension actually ships', () => {
+            const assets = path.join(__dirname, '../../../../assets/icons/providers');
+            for (const id of enumValues) {
+                const key = resolveProviderIconKey(id, 'vscode');
+                if (key.kind === 'asset') {
+                    expect(fs.existsSync(path.join(assets, key.file))).toBe(true);
+                } else if (key.kind === 'mono') {
+                    expect(fs.existsSync(path.join(assets, `${key.name}-light.svg`))).toBe(true);
+                    expect(fs.existsSync(path.join(assets, `${key.name}-dark.svg`))).toBe(true);
+                }
+            }
+        });
+    });
 });
 
 describe('label and icon agreement', () => {
@@ -72,11 +125,7 @@ describe('label and icon agreement', () => {
         (vscode.env as any).appName = originalApp;
     });
 
-    const BRAND_WORDS: Record<string, string> = {
-        copilot: 'copilot',
-        cursor: 'cursor',
-        windsurf: 'windsurf',
-    };
+    const BRANDS = ['copilot', 'cursor', 'windsurf'];
 
     it.each(HOSTS)('ide-chat in $host names the same product in label and mark', ({ uriScheme, appName, host }) => {
         (vscode.env as any).uriScheme = uriScheme;
@@ -86,12 +135,10 @@ describe('label and icon agreement', () => {
         const key = resolveProviderIconKey(AIProviders.IDE_CHAT, host);
 
         if (key.kind === 'mono') {
-            // A branded mark must be named by the label too.
-            expect(label).toContain(BRAND_WORDS[key.name] === 'copilot' ? 'copilot' : key.name);
+            expect(label).toContain(key.name);
         } else {
-            // A neutral mark means the label must stay neutral as well.
             expect(label).toBe('ide chat');
-            for (const brand of Object.values(BRAND_WORDS)) {
+            for (const brand of BRANDS) {
                 expect(label).not.toContain(brand);
             }
         }

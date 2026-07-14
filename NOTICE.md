@@ -1,6 +1,6 @@
 # Third-Party Icon Attribution
 
-SpecKit Companion bundles icons from the following open-source set, which is MIT-licensed and safe to redistribute inside this MIT-licensed extension. Every other icon in the sidebar is a VS Code Codicon supplied by the editor itself, so nothing else is bundled.
+SpecKit Companion bundles icons from the following open-source set, which is MIT-licensed and safe to redistribute inside this MIT-licensed extension. The only other bundled artwork is the project's own, listed at the bottom of this file; every remaining icon in the sidebar is a VS Code Codicon supplied by the editor itself.
 
 ## Lobe Icons — LobeHub (MIT)
 

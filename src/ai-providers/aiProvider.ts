@@ -4,6 +4,7 @@ import { AIProviders, Timing } from '../core/constants';
 import { waitForShellReady } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { detectShell, formatPromptFileSubstitution, Shell } from '../core/utils/shellDetection';
+import { detectHostIde, HostIde } from '../core/utils/hostIde';
 import { validateProviderRegistry } from './providerRegistry';
 
 const CMD_LINE_MAX = 8000;
@@ -553,20 +554,21 @@ export function getProviderPaths(providerType?: AIProviderType): ProviderPaths {
     return PROVIDER_PATHS[type];
 }
 
+const IDE_CHAT_DISPLAY_NAMES: Record<HostIde, string> = {
+    vscode: 'GitHub Copilot',
+    cursor: 'Cursor Chat',
+    windsurf: 'Windsurf Chat',
+    unknown: 'IDE Chat',
+};
+
 /**
  * Returns the human-readable display name for the given provider type.
- * For IDE_CHAT, resolves the host editor at call-time and returns
- * "GitHub Copilot", "Cursor Chat", "Windsurf Chat", or "IDE Chat" as fallback.
- * All other providers return their static PROVIDER_PATHS displayName.
+ * For IDE_CHAT, resolves the host editor at call-time; all other providers
+ * return their static PROVIDER_PATHS displayName.
  */
 export function getProviderDisplayName(type: AIProviderType): string {
     if (type === AIProviders.IDE_CHAT) {
-        const scheme = (vscode.env.uriScheme || '').toLowerCase();
-        const appName = (vscode.env.appName || '').toLowerCase();
-        if (scheme === 'cursor' || appName.includes('cursor')) { return 'Cursor Chat'; }
-        if (scheme === 'windsurf' || appName.includes('windsurf')) { return 'Windsurf Chat'; }
-        if (scheme === 'vscode' || scheme === 'vscode-insiders' || appName.includes('visual studio code')) { return 'GitHub Copilot'; }
-        return 'IDE Chat';
+        return IDE_CHAT_DISPLAY_NAMES[detectHostIde(vscode.env.uriScheme, vscode.env.appName)];
     }
     return PROVIDER_PATHS[type].displayName;
 }

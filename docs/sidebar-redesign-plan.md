@@ -7,16 +7,9 @@
 
 ## Handoff instruction
 
-Implement this plan as a focused sidebar design pass. Preserve existing command IDs,
-stored settings, lifecycle behavior, multi-select behavior, and native VS Code
-TreeView semantics. Make changes incrementally, add or update automated tests for
-every contribution or tree-model behavior changed, and finish by updating the
-sidebar documentation and screenshots.
+Implement this plan as a focused sidebar design pass. Preserve existing command IDs, stored settings, lifecycle behavior, multi-select behavior, and native VS Code TreeView semantics. Make changes incrementally, add or update automated tests for every contribution or tree-model behavior changed, and finish by updating the sidebar documentation and screenshots.
 
-Do not replace the native TreeViews with a webview. Do not add custom CSS or invent
-custom hover, focus, selection, or context-menu implementations. VS Code must remain
-responsible for row height, indentation, keyboard navigation, focus, selection,
-hover surfaces, and menu rendering.
+Do not replace the native TreeViews with a webview. Do not add custom CSS or invent custom hover, focus, selection, or context-menu implementations. VS Code must remain responsible for row height, indentation, keyboard navigation, focus, selection, hover surfaces, and menu rendering.
 
 ---
 
@@ -25,19 +18,16 @@ hover surfaces, and menu rendering.
 The sidebar has a sound functional foundation, but its design language has drifted:
 
 - four related views use partially overlapping names and hierarchy;
-- detailed emoji-style SVGs, Codicons, provider logos, and brand assets compete at
-  the same 16 px tree scale;
+- detailed emoji-style SVGs, Codicons, provider logos, and brand assets compete at the same 16 px tree scale;
 - the Specs title toolbar can expose too many icon-only actions at once;
 - hover actions and right-click menus do not use the same grouping or coverage;
 - several file-backed rows have no reveal actions while similar rows do;
-- some tooltips expose raw values, reconstruct inaccurate paths, or mention the
-  wrong provider file;
+- some tooltips expose raw values, reconstruct inaccurate paths, or mention the wrong provider file;
 - active and completed trees can open into hundreds of rows by default;
 - empty views can occupy substantial vertical space without a useful next action;
 - command capitalization and terminology vary between otherwise parallel actions.
 
-The redesign should make the sidebar feel like one coherent VS Code-native product:
-quiet, scannable, semantically colored, predictable, and compact.
+The redesign should make the sidebar feel like one coherent VS Code-native product: quiet, scannable, semantically colored, predictable, and compact.
 
 ## 2. Goals
 
@@ -64,17 +54,12 @@ quiet, scannable, semantically colored, predictable, and compact.
 
 ## 4. Native VS Code constraints
 
-- Tree row dimensions, font, selection, focus, hover background, indentation, and
-  disclosure arrows come from VS Code and should not be simulated.
-- Icon-only title and inline actions receive their hover labels from contributed
-  command titles. Those titles must therefore be short and unambiguous.
-- `ThemeIcon` should be preferred for semantic and functional icons because it
-  inherits normal, dark, light, and high-contrast theme behavior.
-- Custom SVGs remain appropriate for product identity and official provider marks,
-  but should not be used for generic concepts already represented by Codicons.
+- Tree row dimensions, font, selection, focus, hover background, indentation, and disclosure arrows come from VS Code and should not be simulated.
+- Icon-only title and inline actions receive their hover labels from contributed command titles. Those titles must therefore be short and unambiguous.
+- `ThemeIcon` should be preferred for semantic and functional icons because it inherits normal, dark, light, and high-contrast theme behavior.
+- Custom SVGs remain appropriate for product identity and official provider marks, but should not be used for generic concepts already represented by Codicons.
 - Menu visibility must continue to use `when` clauses and per-item `contextValue`.
-- Existing command IDs should remain stable even when their user-facing titles
-  change.
+- Existing command IDs should remain stable even when their user-facing titles change.
 
 ---
 
@@ -91,16 +76,14 @@ Use these names in the SpecKit Activity Bar container:
 | Steering | Steering | Existing product term; no rename in this pass. |
 | Settings | Settings & Feedback | Accurately describes all four rows in the view. |
 
-Do not rename command IDs or view IDs. Only change contributed display names and
-documentation.
+Do not rename command IDs or view IDs. Only change contributed display names and documentation.
 
 ### 5.2 Recommended view order and visibility
 
 The canonical contribution order should be:
 
 1. **Specs** — visible and expanded by default.
-2. **Living Specs** — collapsed by default; only contributed when Companion is
-   installed, as it is today.
+2. **Living Specs** — collapsed by default; only contributed when Companion is installed, as it is today.
 3. **Steering** — visible, with VS Code retaining the user's expansion state.
 4. **Settings & Feedback** — collapsed and hidden by default, as Settings is today.
 
@@ -129,8 +112,7 @@ Rules:
 - Active group starts expanded.
 - Completed and Archived start collapsed.
 - Individual spec nodes start collapsed, including Active specs.
-- The existing Collapse All / Expand All command may still change individual spec
-  states for the current session.
+- The existing Collapse All / Expand All command may still change individual spec states for the current session.
 - Preserve stable IDs so VS Code can retain manual expansion across refreshes.
 - Preserve duplicate-name disambiguation with the parent path.
 - Preserve current filtering and sorting behavior.
@@ -156,16 +138,11 @@ Rules:
 - Keep capability rows collapsed by default.
 - Keep health summaries short and in the description.
 - Keep exact paths and full explanations in tooltips.
-- When disabled, show a single informative row:
-  `Living Specs are off`.
-- Disabled tooltip:
-  `Enable livingSpecs in .specify/companion.yml to track capability specs.`
-- When enabled but empty, show:
-  `No living specs yet`.
-- Empty-state tooltip:
-  `Adopt a code area to create and register your first living spec.`
-- An empty view must never render as a blank panel. The provider must always return
-  an informative row for disabled, empty, loading, or recoverable error states.
+- When disabled, show a single informative row: `Living Specs are off`.
+- Disabled tooltip: `Enable livingSpecs in .specify/companion.yml to track capability specs.`
+- When enabled but empty, show: `No living specs yet`.
+- Empty-state tooltip: `Adopt a code area to create and register your first living spec.`
+- An empty view must never render as a blank panel. The provider must always return an informative row for disabled, empty, loading, or recoverable error states.
 
 ### 5.5 Steering tree
 
@@ -196,16 +173,12 @@ Steering
 Rules:
 
 - Stop rendering `Create Global Rule` and `Create Project Rule` as loose root rows.
-- Put each missing-file action inside the corresponding Provider > User or Project
-  group.
+- Put each missing-file action inside the corresponding Provider > User or Project group.
 - Use **User** consistently; do not alternate between Global and User.
 - Rename `SpecKit Files` to `SpecKit Project Files`.
-- Do not force Companion into an arbitrary second slot with `splice`. Build the root
-  list in the target order explicitly.
-- Only show sections that contain content, except Provider and installed Companion,
-  which serve as stable entry points.
-- Keep leaf filenames literal. Developers need to see the actual `.sh`, `.md`,
-  `.json`, `.toml`, and `.yml` names.
+- Do not force Companion into an arbitrary second slot with `splice`. Build the root list in the target order explicitly.
+- Only show sections that contain content, except Provider and installed Companion, which serve as stable entry points.
+- Keep leaf filenames literal. Developers need to see the actual `.sh`, `.md`, `.json`, `.toml`, and `.yml` names.
 
 ### 5.6 Settings & Feedback tree
 
@@ -225,15 +198,13 @@ Use native Codicons. No additional grouping or separators are needed for four ro
 ### 6.1 Principles
 
 - Use Codicons/`ThemeIcon` for functional and semantic concepts.
-- Keep the SpecKit seedling Activity Bar icon if it remains legible and monochrome
-  in light, dark, and high-contrast themes.
+- Keep the SpecKit seedling Activity Bar icon if it remains legible and monochrome in light, dark, and high-contrast themes.
 - Keep the moss asset only as the Companion product identity.
 - Keep official provider logos for provider rows.
 - Do not use literal Unicode emoji in labels, titles, descriptions, or tooltips.
 - Retire detailed Fluent Emoji-style SVGs from generic tree categories.
 - Do not color decorative icons. Color only meaningful status or brand icons.
-- Never rely on color alone: status must also be communicated by icon shape,
-  grouping, label, description, or tooltip.
+- Never rely on color alone: status must also be communicated by icon shape, grouping, label, description, or tooltip.
 
 ### 6.2 Specs icon mapping
 
@@ -252,13 +223,9 @@ Use native Codicons. No additional grouping or separators are needed for four ro
 | Existing partial/non-current document | `ThemeIcon('circle-outline')` | Default/muted |
 | Missing document | No icon | Description says `not created` |
 
-Completed and archived spec children must not silently lose their status icons.
-Render a green pass for an existing completed step regardless of the parent lifecycle.
-Archived specs may use the same document status icons at normal or muted theme color;
-do not leave structurally identical rows blank solely because the parent is archived.
+Completed and archived spec children must not silently lose their status icons. Render a green pass for an existing completed step regardless of the parent lifecycle. Archived specs may use the same document status icons at normal or muted theme color; do not leave structurally identical rows blank solely because the parent is archived.
 
-Related-document rows may remain iconless when that absence is deliberately used to
-show nesting. Their tooltip must show the exact relative path.
+Related-document rows may remain iconless when that absence is deliberately used to show nesting. Their tooltip must show the exact relative path.
 
 ### 6.3 Living Specs icon mapping
 
@@ -299,8 +266,7 @@ Leaf files can remain iconless to preserve indentation and reduce visual noise.
 
 ### 6.5 Provider icon correctness
 
-Extract provider-icon selection into a testable resolver rather than embedding it in
-`SteeringItem.providerIcon()`.
+Extract provider-icon selection into a testable resolver rather than embedding it in `SteeringItem.providerIcon()`.
 
 Requirements:
 
@@ -315,8 +281,7 @@ Requirements:
   - Wibey (VS Code)
 - Claude and Claude VS Code may share the Claude logo.
 - Monochrome provider marks must keep light/dark variants.
-- Unknown providers must fall back to a neutral `ThemeIcon('hubot')` or
-  `ThemeIcon('comment-discussion')`, not an unrelated brand.
+- Unknown providers must fall back to a neutral `ThemeIcon('hubot')` or `ThemeIcon('comment-discussion')`, not an unrelated brand.
 
 ---
 
@@ -333,8 +298,7 @@ Requirements:
 - Use **Complete**, not **Completed**, in action labels.
 - Keep actual filenames, command names, provider names, and paths exact.
 - Do not expose raw enum keys or kebab-case lifecycle values in user-facing copy.
-- Avoid redundant nouns when the surrounding view supplies context, but be specific
-  in context menus where the target may otherwise be unclear.
+- Avoid redundant nouns when the surrounding view supplies context, but be specific in context menus where the target may otherwise be unclear.
 
 ### 7.2 Command title changes
 
@@ -363,15 +327,9 @@ Keep command IDs unchanged and update their contributed titles:
 | `speckit.livingSpecs.drift` | Check Living-Spec Drift | Check for Drift |
 | `speckit.livingSpecs.adopt` | Adopt Code Area into Living Spec | Adopt Code Area… |
 
-Use `Delete Spec` in the spec-row menus. If retaining the shared `speckit.delete`
-command title as `Delete` is necessary for other surfaces, contribute a menu-specific
-title only if supported cleanly; otherwise leave the shared title and rely on the
-confirmation copy to name the spec.
+Use `Delete Spec` in the spec-row menus. If retaining the shared `speckit.delete` command title as `Delete` is necessary for other surfaces, contribute a menu-specific title only if supported cleanly; otherwise leave the shared title and rely on the confirmation copy to name the spec.
 
-Review the wording `Install spec-kit Extension`. At minimum normalize capitalization
-to `Install SpecKit Extension`. If the installed artifact is specifically the
-Companion extension/preset, prefer `Install Companion Extension`, but verify the
-product name before changing it.
+Review the wording `Install spec-kit Extension`. At minimum normalize capitalization to `Install SpecKit Extension`. If the installed artifact is specifically the Companion extension/preset, prefer `Install Companion Extension`, but verify the product name before changing it.
 
 ### 7.3 Row descriptions
 
@@ -389,14 +347,12 @@ Living Specs:
 - Central capability: `central`.
 - Colocated capability: folder path or `next to code`.
 - Coverage: append `3/5 covered`.
-- Drift: append `drift` without a decorative bullet; the warning-colored icon
-  already supplies the visual signal.
+- Drift: append `drift` without a decorative bullet; the warning-colored icon already supplies the visual signal.
 - Missing capability: append `not created`.
 
 Agents and skills:
 
-- Standardize counts as `3 tools`, never `Tools: 3` in one place and `3 tools` in
-  another.
+- Standardize counts as `3 tools`, never `Tools: 3` in one place and `3 tools` in another.
 
 ### 7.4 Tooltips
 
@@ -435,8 +391,7 @@ Related document tooltip:
 <workspace-relative path>
 ```
 
-Do not reconstruct a filename from the display label. Use the stored `filePath` or
-`resourcePath`.
+Do not reconstruct a filename from the display label. Use the stored `filePath` or `resourcePath`.
 
 Provider missing-file action examples:
 
@@ -461,10 +416,7 @@ Always visible:
 3. More Actions
 4. New Spec, positioned as the trailing/rightmost primary action
 
-Do not show a separate Clear Filter icon. When Filter is opened, prefill the input
-with the current query. Submitting an empty value clears the filter. Keep the
-`speckit.specs.filter.clear` command available from the Command Palette for users who
-prefer it and for backward compatibility.
+Do not show a separate Clear Filter icon. When Filter is opened, prefill the input with the current query. Submitting an empty value clears the filter. Keep the `speckit.specs.filter.clear` command available from the Command Palette for users who prefer it and for backward compatibility.
 
 Move these actions out of the permanent title bar:
 
@@ -472,8 +424,7 @@ Move these actions out of the permanent title bar:
 - Install Companion/SpecKit extension
 - Upgrade
 
-Add a command such as `speckit.specs.moreActions` with an ellipsis icon. It should
-open a QuickPick with sections or separators:
+Add a command such as `speckit.specs.moreActions` with an ellipsis icon. It should open a QuickPick with sections or separators:
 
 ```text
 View
@@ -484,14 +435,11 @@ Maintenance
   Upgrade…                         when applicable
 ```
 
-The QuickPick must only include actions currently valid under the same context gates
-used by the existing title contributions.
+The QuickPick must only include actions currently valid under the same context gates used by the existing title contributions.
 
 #### Sort picker
 
-Keep Sort as a direct, one-click title action. A native VS Code QuickPick is the
-correct control for this five-option choice; do not replace it with a custom webview,
-modal, or cycling icon button. Make the existing picker quieter:
+Keep Sort as a direct, one-click title action. A native VS Code QuickPick is the correct control for this five-option choice; do not replace it with a custom webview, modal, or cycling icon button. Make the existing picker quieter:
 
 - Title: `Sort Specs`
 - Placeholder: `Choose sort order`
@@ -506,9 +454,7 @@ modal, or cycling icon button. Make the existing picker quieter:
 | Date Modified | Recently edited first |
 | Workflow Step | Current progress |
 
-Do not repeat `sort`, `mode`, `specs`, or `by` inside every option. Do not add detail
-rows; five compact single-line choices are faster to scan. Preserve type-to-filter
-behavior supplied by QuickPick, but do not add an extra explanatory paragraph.
+Do not repeat `sort`, `mode`, `specs`, or `by` inside every option. Do not add detail rows; five compact single-line choices are faster to scan. Preserve type-to-filter behavior supplied by QuickPick, but do not add an extra explanatory paragraph.
 
 ### 8.2 Living Specs title toolbar
 
@@ -554,8 +500,7 @@ The More Actions submenu should contain, in this order and with separators/group
 6. Reveal in File Manager
 7. Delete, isolated in a final danger group
 
-Do not add a separate permanent Set Status hover icon; it is an advanced recovery
-action and belongs in More Actions.
+Do not add a separate permanent Set Status hover icon; it is an advanced recovery action and belongs in More Actions.
 
 ### 9.2 Spec document rows
 
@@ -568,13 +513,11 @@ action and belongs in More Actions.
 
 - Keep Refine on generated steering documents where the command is valid.
 - Keep Install on the uninstalled Companion row.
-- Do not add inline reveal icons to every file row; reveal belongs in the right-click
-  menu to avoid visual noise.
+- Do not add inline reveal icons to every file row; reveal belongs in the right-click menu to avoid visual noise.
 
 ### 9.4 Living Specs rows
 
-No new inline actions are required. Open remains the primary row action; drift,
-coverage, and reveal actions remain in the context menu.
+No new inline actions are required. Open remains the primary row action; drift, coverage, and reveal actions remain in the context menu.
 
 ---
 
@@ -582,9 +525,7 @@ coverage, and reveal actions remain in the context menu.
 
 ### 10.1 Spec row context menu
 
-Make the standard right-click menu match the hover More Actions submenu. Use explicit
-group names and numeric ordering; do not put Delete in the same undifferentiated
-modification group as status and lifecycle actions.
+Make the standard right-click menu match the hover More Actions submenu. Use explicit group names and numeric ordering; do not put Delete in the same undifferentiated modification group as status and lifecycle actions.
 
 Target grouping:
 
@@ -617,8 +558,7 @@ Keep lifecycle-specific bulk actions and confirmations:
 - Completed: Reactivate All, Archive All
 - Archived: Reactivate All
 
-Use Title Case. Keep filtered-list semantics and skip items already in the target
-state.
+Use Title Case. Keep filtered-list semantics and skip items already in the target state.
 
 ### 10.3 Document context menus
 
@@ -627,8 +567,7 @@ All existing core and related documents should offer:
 - Reveal in VS Code Explorer
 - Reveal in File Manager
 
-Only offer Open Source File as an inline action, not as a redundant context item,
-unless native discoverability testing shows it is needed.
+Only offer Open Source File as an inline action, not as a redundant context item, unless native discoverability testing shows it is needed.
 
 ### 10.4 Living Specs context menus
 
@@ -648,8 +587,7 @@ Missing capability:
 
 - No reveal action until a file exists.
 
-Add `living-specs-orphan` to the reveal menu eligibility. The generic reveal handler
-must resolve the orphan's exact path.
+Add `living-specs-orphan` to the reveal menu eligibility. The generic reveal handler must resolve the orphan's exact path.
 
 ### 10.5 Steering context menus
 
@@ -666,21 +604,16 @@ Every file-backed Steering item should offer both reveal actions, including:
 - reference files;
 - Companion configuration, commands, and templates.
 
-Only generated steering documents should offer Refine and Delete Steering.
-Do not expose destructive actions for provider or SpecKit-owned files unless a
-separate product requirement explicitly authorizes them.
+Only generated steering documents should offer Refine and Delete Steering. Do not expose destructive actions for provider or SpecKit-owned files unless a separate product requirement explicitly authorizes them.
 
-Prefer a shared predicate or a common `file-backed` context-value suffix/flag over a
-long set of duplicated `when` clauses if it can be expressed safely in VS Code menu
-contributions. Otherwise enumerate the supported context values and test the list.
+Prefer a shared predicate or a common `file-backed` context-value suffix/flag over a long set of duplicated `when` clauses if it can be expressed safely in VS Code menu contributions. Otherwise enumerate the supported context values and test the list.
 
 ---
 
 ## 11. Accessibility and theme requirements
 
 - Preserve native keyboard navigation and selection behavior.
-- Every icon-only title or inline action must have a clear command title that works
-  as its tooltip.
+- Every icon-only title or inline action must have a clear command title that works as its tooltip.
 - Do not add hover transitions or animation to high-frequency tree rows.
 - Use `ThemeIcon` and `ThemeColor` for semantic states.
 - Verify light, dark, high-contrast light, and high-contrast dark themes.
@@ -692,10 +625,8 @@ contributions. Otherwise enumerate the supported context values and test the lis
   - friendly tooltip status.
 - Do not use emoji characters as icons or labels.
 - Avoid custom SVGs with fine gradients, shadows, or filters at 16 px.
-- Ensure spinning state is not the only running-state indication; the tooltip or
-  description should still communicate that work is running.
-- Empty-state rows must not have hover styling or commands unless they are genuinely
-  actionable.
+- Ensure spinning state is not the only running-state indication; the tooltip or description should still communicate that work is running.
+- Empty-state rows must not have hover styling or commands unless they are genuinely actionable.
 
 ---
 
@@ -710,8 +641,7 @@ contributions. Otherwise enumerate the supported context values and test the lis
    - orphan reveal eligibility;
    - Steering reveal eligibility for all intended file-backed contexts;
    - lifecycle `when` clauses remain intact.
-2. Preserve existing tests for Mark Complete eligibility, bulk actions, Resume gates,
-   and provider labels.
+2. Preserve existing tests for Mark Complete eligibility, bulk actions, Resume gates, and provider labels.
 3. Add test helpers for locating contributed commands and menu items by ID.
 
 Files:
@@ -746,26 +676,22 @@ Files:
 2. Keep Active group expanded and Completed/Archived collapsed.
 3. Preserve explicit Collapse All / Expand All behavior.
 4. Render completed document icons consistently under completed and archived specs.
-5. Give existing partial/non-current documents an intentional muted status icon if
-   it improves scanability without overstating completion.
+5. Give existing partial/non-current documents an intentional muted status icon if it improves scanability without overstating completion.
 6. Add tests for default and toggled collapsible states.
-7. Add tests for document icon behavior across active, implemented, completed, and
-   archived parents.
+7. Add tests for document icon behavior across active, implemented, completed, and archived parents.
 
 Files:
 
 - `src/features/specs/specExplorerProvider.ts`
 - `src/features/specs/__tests__/specExplorerProvider.test.ts`
-- `src/features/specs/specsSidebarState.ts` if default expansion ownership belongs
-  in the sidebar facade
+- `src/features/specs/specsSidebarState.ts` if default expansion ownership belongs in the sidebar facade
 
 ### Phase 4 — Replace decorative category SVGs
 
 1. Replace Specs group SVGs with themed Codicons.
 2. Replace generic Steering category SVGs with themed Codicons.
 3. Keep moss and official provider assets.
-4. Remove unused SVG files only after confirming no code, docs, or packaging path
-   references them.
+4. Remove unused SVG files only after confirming no code, docs, or packaging path references them.
 5. Update `NOTICE.md` only if removing assets changes what is distributed and listed.
 6. Add icon mapping tests where the tree model already exposes icon paths/types.
 
@@ -789,8 +715,7 @@ Files:
 
 - `src/features/steering/steeringExplorerProvider.ts`
 - optionally a new `src/features/steering/providerIcon.ts`
-- `src/ai-providers/ideChatProvider.ts` only if a shared public host resolver is
-  required
+- `src/ai-providers/ideChatProvider.ts` only if a shared public host resolver is required
 - `assets/icons/providers/`
 - provider/steering tests
 
@@ -799,8 +724,7 @@ Files:
 1. Add the Specs More Actions command.
 2. Move Collapse/Expand, Install, and Upgrade into its QuickPick.
 3. Keep Filter, Sort, More Actions, and New Spec in the title bar.
-4. Remove Clear Filter from the title bar; prefill the current query in Filter and
-   treat an empty submission as clear.
+4. Remove Clear Filter from the title bar; prefill the current query in Filter and treat an empty submission as clear.
 5. Simplify the Sort picker copy while preserving its current-selection checkmark.
 6. Preserve command-palette availability for every moved or hidden action.
 7. Test the More Actions QuickPick composition under:
@@ -824,8 +748,7 @@ Files:
 3. Add Living Specs orphan reveal support.
 4. Add reveal support to every file-backed Steering row.
 5. Keep destructive Steering actions restricted to generated steering documents.
-6. Verify the generic reveal resolver receives an exact URI/path from every newly
-   eligible tree item.
+6. Verify the generic reveal resolver receives an exact URI/path from every newly eligible tree item.
 7. Add manifest and handler tests for each context value.
 
 Files:
@@ -843,11 +766,8 @@ Files:
 2. Move missing Project/User rule actions into their respective provider groups.
 3. Rename SpecKit Files to SpecKit Project Files.
 4. Ensure empty categories are omitted.
-5. Remove fake loading flicker if `refresh()` can synchronously invalidate and let
-   actual asynchronous children communicate loading. Do not retain a fixed 100 ms
-   loading state solely for visual effect.
-6. Add tests for multiple providers, installed/uninstalled Companion, missing
-   steering files, and absent SpecKit content.
+5. Remove fake loading flicker if `refresh()` can synchronously invalidate and let actual asynchronous children communicate loading. Do not retain a fixed 100 ms loading state solely for visual effect.
+6. Add tests for multiple providers, installed/uninstalled Companion, missing steering files, and absent SpecKit content.
 
 Files:
 
@@ -917,8 +837,7 @@ Required assertions:
 
 ### 13.2 Manual QA matrix
 
-Test on macOS, Windows, or Linux where available, especially the file-manager reveal
-label and behavior.
+Test on macOS, Windows, or Linux where available, especially the file-manager reveal label and behavior.
 
 | Scenario | Expected result |
 |---|---|
@@ -948,21 +867,17 @@ label and behavior.
 The redesign is complete only when all of the following are true:
 
 1. No generic category uses a detailed emoji-style SVG where a Codicon exists.
-2. SpecKit identity and official provider marks are the only intentional custom-art
-   exceptions.
+2. SpecKit identity and official provider marks are the only intentional custom-art exceptions.
 3. Provider labels and icons always agree, including IDE Chat and Wibey.
 4. The view is named Living Specs, not Spec Explorer.
 5. The view is named Settings & Feedback, not Settings.
 6. Individual spec rows start collapsed.
 7. Completed and Archived groups start collapsed.
-8. A populated sidebar with hundreds of completed specs does not flood the initial
-   viewport.
+8. A populated sidebar with hundreds of completed specs does not flood the initial viewport.
 9. No empty Living Specs state renders as a blank panel.
 10. The Specs title bar shows at most four actions simultaneously.
-11. Sort remains a direct title action and uses the compact native QuickPick defined
-    in this plan.
-12. Collapse/expand, install, and upgrade remain reachable through More Actions and
-    the Command Palette.
+11. Sort remains a direct title action and uses the compact native QuickPick defined in this plan.
+12. Collapse/expand, install, and upgrade remain reachable through More Actions and the Command Palette.
 13. Hover More Actions and the direct right-click spec menu use the same safe order.
 14. Delete is isolated as the final danger action.
 15. All file-backed Living Specs and Steering rows have both reveal actions.
@@ -971,8 +886,7 @@ The redesign is complete only when all of the following are true:
 18. Related-document tooltips show exact paths.
 19. Raw lifecycle keys are not visible in tooltips.
 20. Command and group labels follow consistent Title Case.
-21. Existing lifecycle, multi-select, filter, sort, Resume, and bulk-action behavior
-    remains unchanged.
+21. Existing lifecycle, multi-select, filter, sort, Resume, and bulk-action behavior remains unchanged.
 22. TypeScript compilation, Jest, and the production packaging build pass.
 23. Sidebar documentation and screenshots match the shipped UI.
 

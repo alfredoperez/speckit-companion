@@ -1,6 +1,5 @@
 import { AIProviders } from '../../core/constants';
-
-export type HostIde = 'vscode' | 'cursor' | 'windsurf' | 'unknown';
+import { HostIde } from '../../core/utils/hostIde';
 
 export type ProviderIconKey =
     /** A single colored SVG under `assets/icons/providers/`. */
@@ -11,19 +10,6 @@ export type ProviderIconKey =
     | { kind: 'codicon'; id: string };
 
 export const NEUTRAL_PROVIDER_ICON: ProviderIconKey = { kind: 'codicon', id: 'comment-discussion' };
-
-/**
- * Resolve the host editor from the same two signals `getProviderDisplayName()`
- * reads, so the provider row's label and its mark can never disagree.
- */
-export function detectHostIde(uriScheme: string | undefined, appName: string | undefined): HostIde {
-    const scheme = (uriScheme || '').toLowerCase();
-    const app = (appName || '').toLowerCase();
-    if (scheme === 'cursor' || app.includes('cursor')) { return 'cursor'; }
-    if (scheme === 'windsurf' || app.includes('windsurf')) { return 'windsurf'; }
-    if (scheme === 'vscode' || scheme === 'vscode-insiders' || app.includes('visual studio code')) { return 'vscode'; }
-    return 'unknown';
-}
 
 const COLORED: Record<string, string> = {
     [AIProviders.CLAUDE]: 'claude.svg',
@@ -45,10 +31,7 @@ const IDE_CHAT_MARKS: Record<HostIde, ProviderIconKey> = {
     unknown: NEUTRAL_PROVIDER_ICON,
 };
 
-/**
- * No official Wibey mark ships with the extension, so both Wibey providers
- * resolve to the neutral chat glyph deliberately rather than falling through.
- */
+/** No official Wibey mark ships with the extension, so both Wibey providers resolve to the neutral glyph deliberately rather than falling through. */
 const DOCUMENTED_NEUTRAL: ReadonlySet<string> = new Set<string>([
     AIProviders.WIBEY,
     AIProviders.WIBEY_VSCODE,

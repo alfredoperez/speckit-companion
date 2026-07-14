@@ -4,7 +4,7 @@ import { LivingSpecsExplorerProvider } from './livingSpecsExplorerProvider';
 import { ResolvedCapability } from './livingSpecsModel';
 
 /**
- * Actions for the Living Specs (living specs) view: dispatch the existing
+ * Actions for the Living Specs view: dispatch the existing
  * `/speckit.companion.{drift,coverage,adopt}` commands to the AI provider —
  * the same one-way `executeSlashCommand` path every other Companion command
  * uses — plus a refresh that recomputes row health. The extension never runs

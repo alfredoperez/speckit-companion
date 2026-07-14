@@ -154,7 +154,6 @@ export const TreeItemContext = {
     agentBuiltIn: 'agent-builtin',
     hook: 'hook',
     // Consolidated from treeContextValues.ts
-    steeringLoading: 'steering-loading',
     steeringHeader: 'steering-header',
     steeringFile: 'steering-file',
     speckitHeader: 'speckit-header',
