@@ -322,6 +322,7 @@ export type ViewerToExtensionMessage =
     // Persisted review comments — written to .spec-context.json on each mutation
     | { type: 'addComment'; id: string; doc: DocumentType; lineNum: number; lineContent: string; comment: string }
     | { type: 'removeComment'; id: string }
+    | { type: 'editComment'; id: string; comment: string }
     // Run refinement for one document's pending comments (from the Activity list)
     | { type: 'runDocRefinement'; doc: DocumentType }
     // File reference click
@@ -365,4 +366,6 @@ export interface Refinement {
     comment: string;
     /** Type of line for context-aware actions */
     lineType: LineType;
+    /** Whether the comment is still awaiting refinement, or already dispatched. */
+    status: ReviewCommentStatus;
 }

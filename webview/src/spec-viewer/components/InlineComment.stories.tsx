@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/preact";
 import { InlineComment } from "./InlineComment";
+import type { Refinement } from "../types";
 
 const meta: Meta<typeof InlineComment> = {
   title: "Viewer/InlineComment",
@@ -9,51 +10,23 @@ export default meta;
 
 type Story = StoryObj<typeof InlineComment>;
 
-const mockRefinement = {
-  id: "ref-1",
-  lineNum: 5,
-  lineContent: "The user should be able to login",
-  comment: "This should specify which auth methods are supported",
-  lineType: "paragraph" as const,
-};
+const noop = () => undefined;
 
-export const LineMode: Story = {
-  args: {
-    refinement: mockRefinement,
-    mode: "line",
-    onDelete: (id: string) => console.log("delete", id),
-  },
-};
-
-export const RowMode: Story = {
-  decorators: [
-    (Story) => (
-      <table>
-        <tbody>
-          <Story />
-        </tbody>
-      </table>
-    ),
-  ],
-  args: {
-    refinement: {
-      ...mockRefinement,
-      lineType: "acceptance" as const,
-      comment: "Add error case for invalid credentials",
-    },
-    mode: "row",
-    onDelete: (id: string) => console.log("delete", id),
-  },
-};
-
-// ============================================================
-// Height-parity stories (fix 110-fix-comment-line-height)
-// Wrap content in #markdown-content so scoped CSS rules apply.
-// ============================================================
+function refinement(over: Partial<Refinement> = {}): Refinement {
+  return {
+    id: "ref-1",
+    lineNum: 5,
+    lineContent: "The user should be able to log in",
+    comment: "Name the auth methods in scope for v1",
+    lineType: "paragraph",
+    status: "pending",
+    ...over,
+  };
+}
 
 /**
- * Injects minimal VS Code CSS-variable overrides so theme vars resolve
- * inside the browser-based Storybook environment.
+ * Injects the VS Code CSS variables the viewer's tokens resolve against, so the
+ * annotation renders in Storybook the way it renders in the panel.
  */
 const DocumentContextDecorator = (Story: () => JSX.Element) => (
   <div
@@ -63,17 +36,19 @@ const DocumentContextDecorator = (Story: () => JSX.Element) => (
         "--bg-primary": "#1e1e1e",
         "--bg-secondary": "#252526",
         "--bg-hover": "rgba(255,255,255,0.05)",
-        "--bg-checkbox": "#1e1e1e",
         "--text-primary": "#cccccc",
+        "--text-body": "#d0d0d0",
         "--text-secondary": "#9d9d9d",
+        "--text-muted": "#8a8a8a",
         "--border": "#3c3c3c",
-        "--border-checkbox": "#6b6b6b",
+        "--border-accent": "rgba(14,99,156,0.5)",
         "--accent": "#0e639c",
         "--accent-subtle": "rgba(14,99,156,0.2)",
-        "--accent-glow": "0 0 0 1px rgba(14,99,156,0.4)",
-        "--success": "#4ec9b0",
+        "--error": "#f14c4c",
+        "--error-subtle": "rgba(241,76,76,0.1)",
         "--space-1": "4px",
         "--space-2": "8px",
+        "--space-3": "12px",
         "--radius-sm": "3px",
         "--transition-fast": "100ms ease",
         "--header-title": "#ffffff",
@@ -89,172 +64,179 @@ const DocumentContextDecorator = (Story: () => JSX.Element) => (
   </div>
 );
 
-const taskRefinement = {
-  id: "ref-task-1",
-  lineNum: 3,
-  lineContent: "- [ ] Implement login form with email and password fields",
-  comment: "Should also handle OAuth providers",
-  lineType: "task" as const,
-};
+/** A document line with its comment slot — what the annotation actually sits in. */
+function Line({ text, children }: { text: string; children?: JSX.Element | JSX.Element[] }) {
+  return (
+    <div class="line" style="position: relative; padding: 2px 0;">
+      <div class="line-content" style="line-height: 1.6;">{text}</div>
+      <div class="line-comment-slot">{children}</div>
+    </div>
+  );
+}
 
-const paragraphRefinement = {
-  id: "ref-para-1",
-  lineNum: 8,
-  lineContent:
-    "The authentication system must support multiple identity providers.",
-  comment: "Clarify which providers are in scope for v1",
-  lineType: "paragraph" as const,
-};
-
-/**
- * Task line WITH a comment. The task-text row height should be identical to
- * TaskLineWithoutComment — height parity is the success criterion for US1/US2.
- */
-export const TaskLineWithComment: Story = {
+/** The resting state: one quiet line under the line it annotates. */
+export const PendingCollapsed: Story = {
   decorators: [DocumentContextDecorator],
   render: () => (
-    <ul style={{ padding: 0, margin: 0, listStyle: "none" }}>
-      <li
-        class="task-item line"
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "flex-start",
-          gap: "var(--space-2)",
-          padding: "var(--space-1) 0",
-          position: "relative",
-        }}
-      >
-        <input type="checkbox" />
-        <span class="task-text line-content">
-          Implement login form with email and password fields
-        </span>
-        <div class="line-comment-slot">
-          <InlineComment
-            refinement={taskRefinement}
-            mode="line"
-            onDelete={(id) => console.log("delete", id)}
-          />
-        </div>
-      </li>
-      <li
-        class="task-item line"
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "flex-start",
-          gap: "var(--space-2)",
-          padding: "var(--space-1) 0",
-          position: "relative",
-        }}
-      >
-        <input type="checkbox" />
-        <span class="task-text line-content">
-          Write unit tests for login validation (no comment — height baseline)
-        </span>
-        <div class="line-comment-slot"></div>
-      </li>
-    </ul>
+    <Line text="The authentication system must support multiple identity providers.">
+      <InlineComment refinement={refinement()} mode="line" onDelete={noop} onEdit={noop} onRefine={noop} />
+    </Line>
   ),
 };
 
 /**
- * Task line WITHOUT any comment.
- * Baseline — compare row height against TaskLineWithComment.
+ * Expanded — click the row (or focus it and press Enter) to reach the full text
+ * and the three actions. Refine hands this document's pending comments to the AI.
  */
-export const TaskLineWithoutComment: Story = {
+export const PendingExpanded: Story = {
   decorators: [DocumentContextDecorator],
   render: () => (
-    <ul style={{ padding: 0, margin: 0, listStyle: "none" }}>
-      <li
-        class="task-item line"
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "flex-start",
-          gap: "var(--space-2)",
-          padding: "var(--space-1) 0",
-          position: "relative",
-        }}
-      >
-        <input type="checkbox" />
-        <span class="task-text line-content">
-          Implement login form with email and password fields
-        </span>
-        <div class="line-comment-slot"></div>
-      </li>
-      <li
-        class="task-item line"
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "flex-start",
-          gap: "var(--space-2)",
-          padding: "var(--space-1) 0",
-          position: "relative",
-        }}
-      >
-        <input type="checkbox" />
-        <span class="task-text line-content">
-          Write unit tests for login validation
-        </span>
-        <div class="line-comment-slot"></div>
-      </li>
-    </ul>
+    <Line text="The authentication system must support multiple identity providers.">
+      <InlineComment refinement={refinement()} mode="line" onDelete={noop} onEdit={noop} onRefine={noop} />
+    </Line>
+  ),
+  play: async ({ canvasElement }) => {
+    (canvasElement.querySelector(".comment-disclosure") as HTMLButtonElement)?.click();
+  },
+};
+
+/** Already handed to the AI: a muted rail, a check, and no Refine action. */
+export const Applied: Story = {
+  decorators: [DocumentContextDecorator],
+  render: () => (
+    <Line text="The authentication system must support multiple identity providers.">
+      <InlineComment
+        refinement={refinement({ status: "applied", comment: "Clarify which providers ship in v1" })}
+        mode="line"
+        onDelete={noop}
+        onEdit={noop}
+        onRefine={noop}
+      />
+    </Line>
+  ),
+  play: async ({ canvasElement }) => {
+    (canvasElement.querySelector(".comment-disclosure") as HTMLButtonElement)?.click();
+  },
+};
+
+/** A completed or archived spec: the comment is readable, but nothing can change it. */
+export const ReadOnly: Story = {
+  decorators: [DocumentContextDecorator],
+  render: () => (
+    <Line text="The authentication system must support multiple identity providers.">
+      <InlineComment
+        refinement={refinement({ status: "applied" })}
+        mode="line"
+        readOnly
+        onDelete={noop}
+        onEdit={noop}
+        onRefine={noop}
+      />
+    </Line>
+  ),
+  play: async ({ canvasElement }) => {
+    (canvasElement.querySelector(".comment-disclosure") as HTMLButtonElement)?.click();
+  },
+};
+
+/** However long the comment, collapsed it costs exactly one line. */
+export const LongTextTruncates: Story = {
+  decorators: [DocumentContextDecorator],
+  render: () => (
+    <Line text="Password reset flows must complete within five minutes.">
+      <InlineComment
+        refinement={refinement({
+          comment:
+            "This needs to say what happens when the reset link expires mid-flow, whether the user can request a second link while the first is still live, how many attempts are allowed before the account locks, and which of those cases sends an email.",
+        })}
+        mode="line"
+        onDelete={noop}
+        onEdit={noop}
+        onRefine={noop}
+      />
+    </Line>
   ),
 };
 
-/**
- * Paragraph line WITH a comment.
- * The text row height should be identical to ParagraphLineWithoutComment.
- */
-export const ParagraphLineWithComment: Story = {
+/** The density case: several annotated lines still read as a document. */
+export const SeveralOnOneDocument: Story = {
   decorators: [DocumentContextDecorator],
   render: () => (
     <div>
-      <div class="line" style={{ position: "relative" }}>
-        <div class="line-content">
-          The authentication system must support multiple identity providers.
-        </div>
-        <div class="line-comment-slot">
-          <InlineComment
-            refinement={paragraphRefinement}
-            mode="line"
-            onDelete={(id) => console.log("delete", id)}
-          />
-        </div>
-      </div>
-      <div class="line" style={{ position: "relative" }}>
-        <div class="line-content">
-          Password reset flows must be completed within 5 minutes (no comment —
-          height baseline).
-        </div>
-        <div class="line-comment-slot"></div>
-      </div>
+      <Line text="The authentication system must support multiple identity providers.">
+        <InlineComment
+          refinement={refinement({ id: "r1", comment: "Name the providers in scope for v1" })}
+          mode="line"
+          onDelete={noop}
+          onEdit={noop}
+          onRefine={noop}
+        />
+      </Line>
+      <Line text="Sessions expire after 30 minutes of inactivity." />
+      <Line text="Password reset flows must complete within five minutes.">
+        <InlineComment
+          refinement={refinement({ id: "r2", status: "applied", comment: "Say what happens when the link expires" })}
+          mode="line"
+          onDelete={noop}
+          onEdit={noop}
+          onRefine={noop}
+        />
+      </Line>
+      <Line text="Failed logins are rate-limited per account.">
+        <InlineComment
+          refinement={refinement({ id: "r3", comment: "How many attempts before lockout?" })}
+          mode="line"
+          onDelete={noop}
+          onEdit={noop}
+          onRefine={noop}
+        />
+      </Line>
+      <Line text="Audit events are written for every sign-in attempt." />
     </div>
   ),
 };
 
-/**
- * Paragraph line WITHOUT any comment.
- * Baseline — compare row height against ParagraphLineWithComment.
- */
-export const ParagraphLineWithoutComment: Story = {
+/** Comment text is user data: markup in it stays literal characters. */
+export const MarkupInCommentStaysLiteral: Story = {
   decorators: [DocumentContextDecorator],
   render: () => (
-    <div>
-      <div class="line" style={{ position: "relative" }}>
-        <div class="line-content">
-          The authentication system must support multiple identity providers.
-        </div>
-        <div class="line-comment-slot"></div>
-      </div>
-      <div class="line" style={{ position: "relative" }}>
-        <div class="line-content">
-          Password reset flows must be completed within 5 minutes.
-        </div>
-        <div class="line-comment-slot"></div>
-      </div>
-    </div>
+    <Line text="The authentication system must support multiple identity providers.">
+      <InlineComment
+        refinement={refinement({ comment: '"><img src=x onerror="alert(1)"> — should read as text' })}
+        mode="line"
+        onDelete={noop}
+        onEdit={noop}
+        onRefine={noop}
+      />
+    </Line>
+  ),
+};
+
+/** Acceptance-scenario tables carry the same annotation, in a row. */
+export const RowMode: Story = {
+  decorators: [
+    DocumentContextDecorator,
+    (Story) => (
+      <table style="width: 100%; border-collapse: collapse;">
+        <tbody>
+          <tr class="scenario-row">
+            <td style="padding: 4px;">Given a signed-out user</td>
+            <td style="padding: 4px;">When they submit valid credentials</td>
+            <td style="padding: 4px;">Then they land on the dashboard</td>
+            <td />
+          </tr>
+        </tbody>
+        <Story />
+      </table>
+    ),
+  ],
+  render: () => (
+    <InlineComment
+      refinement={refinement({ lineType: "acceptance", comment: "Add the invalid-credentials case" })}
+      mode="row"
+      onDelete={noop}
+      onEdit={noop}
+      onRefine={noop}
+    />
   ),
 };

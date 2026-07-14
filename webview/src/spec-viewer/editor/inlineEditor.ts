@@ -7,8 +7,9 @@ import { render, h } from 'preact';
 import type { VSCodeApi } from '../types';
 import { activeEditor } from '../signals';
 import { detectLineType, handleContextAction } from './lineActions';
-import { addRefinement, addRefinementForRow } from './refinements';
+import { addRefinement, addRefinementForRow, editRefinement, mountedRefinement } from './refinements';
 import { InlineEditor } from '../components/InlineEditor';
+import { isReadOnly } from './readOnly';
 
 declare const vscode: VSCodeApi;
 
@@ -30,7 +31,7 @@ function cleanup(): void {
 }
 
 export function showInlineEditor(lineElement: HTMLElement): void {
-    if (document.body.dataset.specStatus === 'completed' || document.body.dataset.specStatus === 'archived') return;
+    if (isReadOnly()) return;
 
     closeInlineEditor();
 
@@ -67,8 +68,46 @@ export function closeInlineEditor(): void {
     cleanup();
 }
 
+/** Reopen the composer on an existing comment, pre-filled with its current text. */
+export function showInlineEditorForEdit(refId: string): void {
+    if (isReadOnly()) return;
+
+    const entry = mountedRefinement(refId);
+    if (!entry) return;
+
+    closeInlineEditor();
+
+    const { ref, target, mode } = entry;
+    const container = document.createElement(mode === 'row' ? 'tbody' : 'div');
+    if (mode === 'row') {
+        target.parentElement?.insertBefore(container, target.nextSibling);
+    } else {
+        const commentSlot = target.querySelector('.line-comment-slot');
+        if (!commentSlot) return;
+        commentSlot.appendChild(container);
+    }
+
+    render(h(InlineEditor, {
+        mode,
+        lineNum: ref.lineNum,
+        lineType: ref.lineType,
+        initialValue: ref.comment,
+        submitLabel: 'Save',
+        onSubmit: (comment: string) => {
+            editRefinement(refId, comment);
+            closeInlineEditor();
+        },
+        onCancel: () => closeInlineEditor(),
+        onContextAction: () => closeInlineEditor(),
+    }), container);
+
+    activeEditorContainer = container;
+    activeEditor.value = container;
+    target.classList.add('editing');
+}
+
 export function showInlineEditorForRow(rowElement: HTMLElement, rowNum: number): void {
-    if (document.body.dataset.specStatus === 'completed' || document.body.dataset.specStatus === 'archived') return;
+    if (isReadOnly()) return;
 
     closeInlineEditor();
 
@@ -135,13 +174,13 @@ export function showInlineEdit(lineEl: HTMLElement | null, lineNum: number, cont
 
 export function setupLineActions(): void {
     document.addEventListener('click', (e) => {
-        const target = e.target as HTMLElement;
-        const addBtn = target.closest('.line-add-btn') as HTMLElement;
+        if (!(e.target instanceof Element)) return;
+        const target = e.target;
+        const addBtn = target.closest<HTMLElement>('.line-add-btn');
 
-        if (addBtn || target.classList.contains('line-add-btn')) {
-            const btn = addBtn || target;
-            const lineNum = parseInt(btn.dataset.line || '0', 10);
-            const listId = btn.dataset.listId;
+        if (addBtn) {
+            const lineNum = parseInt(addBtn.dataset.line || '0', 10);
+            const listId = addBtn.dataset.listId;
             const selector = listId
                 ? `.line[data-line="${lineNum}"][data-list-id="${listId}"]`
                 : `.line[data-line="${lineNum}"]`;
@@ -150,9 +189,10 @@ export function setupLineActions(): void {
             return;
         }
 
-        if (target.classList.contains('row-add-btn')) {
-            const rowNum = parseInt(target.dataset.row || '0', 10);
-            const tableId = target.dataset.tableId;
+        const rowBtn = target.closest<HTMLElement>('.row-add-btn');
+        if (rowBtn) {
+            const rowNum = parseInt(rowBtn.dataset.row || '0', 10);
+            const tableId = rowBtn.dataset.tableId;
             const selector = tableId
                 ? `.scenario-row[data-row="${rowNum}"][data-table-id="${tableId}"]`
                 : `.scenario-row[data-row="${rowNum}"]`;
@@ -161,7 +201,8 @@ export function setupLineActions(): void {
             return;
         }
 
-        if (activeEditorContainer && !target.closest('.inline-editor') && !target.classList.contains('line-add-btn') && !target.classList.contains('row-add-btn')) {
+        // The Edit action opens the composer on the same click that bubbles here.
+        if (activeEditorContainer && !target.closest('.inline-editor') && !target.closest('.inline-comment')) {
             closeInlineEditor();
         }
     });

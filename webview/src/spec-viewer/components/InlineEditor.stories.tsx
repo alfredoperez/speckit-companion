@@ -55,6 +55,19 @@ export const UserStoryMode: Story = {
     },
 };
 
+// Edit mode: the same composer, pre-filled — "Save" instead of "Add Comment", and no
+// line-removal actions, since revising a comment is not the moment to delete the line.
+export const EditMode: Story = {
+    args: {
+        mode: 'line',
+        lineNum: 12,
+        lineType: 'paragraph',
+        initialValue: 'Name the auth methods in scope for v1',
+        submitLabel: 'Save',
+        ...lineArgs,
+    },
+};
+
 // Acceptance-scenario row: scenario context shows in the card header,
 // primary actions right-aligned, no secondary action.
 export const RowMode: Story = {

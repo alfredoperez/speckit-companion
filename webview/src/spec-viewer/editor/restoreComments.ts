@@ -1,9 +1,9 @@
 /**
  * SpecKit Companion — Restore persisted review comments on open.
  *
- * Re-renders the current document's pending comments inline by re-anchoring
- * each to the freshly rendered DOM. Anchoring is best-effort and never drops a
- * comment (R002, R003):
+ * Re-renders the current document's comments inline — pending ones live, applied
+ * ones as a quiet record of what was already asked — by re-anchoring each to the
+ * freshly rendered DOM. Anchoring is best-effort and never drops a comment:
  *   1. the stored line, when its content still matches the stored block;
  *   2. else any line whose content equals the stored block's first line
  *      (handles line-number drift);
@@ -38,9 +38,9 @@ function anchorElement(c: ReviewComment, rendered: RenderedLine[]): HTMLElement 
 }
 
 /**
- * Restore the current document's pending comments inline. Safe to call after
- * every markdown render and on document switch — `addRestoredRefinement` is
- * idempotent per comment id.
+ * Restore the current document's comments inline. Safe to call after every
+ * markdown render and on document switch — `addRestoredRefinement` is idempotent
+ * per comment id.
  */
 export function restoreComments(): void {
     const comments = viewerState.value?.reviewComments;
@@ -50,7 +50,7 @@ export function restoreComments(): void {
 
     const rendered = renderedLines();
     for (const c of comments) {
-        if (c.doc !== doc || c.status !== 'pending') continue;
+        if (c.doc !== doc) continue;
         const el = anchorElement(c, rendered);
         if (el) addRestoredRefinement(c, el);
     }

@@ -97,8 +97,17 @@
   flex-shrink: 0;
 }
 
-.line:hover .line-add-btn {
+/* Hover is not a discoverable affordance on its own — the button must also
+   surface when it takes keyboard focus, or there is no way to comment a line
+   without a mouse. */
+.line:hover .line-add-btn,
+.line-add-btn:focus-visible {
   opacity: 1;
+}
+
+.line-add-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 /* Hide button when editor is open */

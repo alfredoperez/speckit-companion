@@ -410,6 +410,49 @@ describe('messageHandlers - persisted review comments', () => {
         expect(written.get().reviewComments).toHaveLength(0);
     });
 
+    it('persists an edited comment, preserving its identity, anchor, status and creation time', async () => {
+        (readSpecContext as jest.Mock).mockResolvedValue(
+            baseCtx([
+                comment({ id: 'c1', status: 'applied', comment: 'first take' }),
+                comment({ id: 'c2', comment: 'untouched' }),
+            ]),
+        );
+        const written = captureWrite();
+
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+        await handler({ type: 'editComment', id: 'c1', comment: 'second take' } as any);
+
+        const [edited, other] = written.get().reviewComments;
+        expect(edited).toEqual({
+            id: 'c1',
+            doc: 'spec',
+            anchor: { heading: null, blockText: 'block', line: 1 },
+            comment: 'second take',
+            status: 'applied',
+            createdAt: '2026-05-21T00:00:00.000Z',
+        });
+        expect(other.comment).toBe('untouched');
+    });
+
+    it('leaves comments untouched when an edit is blank or names an unknown id', async () => {
+        for (const msg of [
+            { type: 'editComment', id: 'c1', comment: '   ' },
+            { type: 'editComment', id: 'nope', comment: 'ignored' },
+        ]) {
+            (readSpecContext as jest.Mock).mockResolvedValue(
+                baseCtx([comment({ id: 'c1', comment: 'original' })]),
+            );
+            const written = captureWrite();
+
+            const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+            await handler(msg as any);
+
+            expect(written.get().reviewComments).toEqual([
+                expect.objectContaining({ id: 'c1', comment: 'original' }),
+            ]);
+        }
+    });
+
     it('dispatches a doc\'s pending comments to the AI and marks them applied', async () => {
         const ctx = baseCtx([
             comment({ id: 'c1', doc: 'spec', anchor: { heading: 'Requirements', blockText: 'Some text', line: 5 }, comment: 'tighten wording' }),

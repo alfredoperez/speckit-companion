@@ -46,6 +46,7 @@ import { isOptionalCommand } from "./optionalCommands";
 import {
   addComment as addCommentToCtx,
   buildReviewComment,
+  editComment as editCommentInCtx,
   markApplied,
   pendingForDoc,
   removeComment as removeCommentFromCtx,
@@ -140,6 +141,7 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
     addComment: (msg, dir, deps) =>
       handleAddComment(dir, msg.id, msg.doc, msg.lineNum, msg.lineContent, msg.comment, deps),
     removeComment: (msg, dir, deps) => handleRemoveComment(dir, msg.id, deps),
+    editComment: (msg, dir, deps) => handleEditComment(dir, msg.id, msg.comment, deps),
     runDocRefinement: (msg, dir, deps) => dispatchDocRefinement(dir, msg.doc, deps),
     completeSpec: (_msg, dir, deps) => handleLifecycleAction(dir, SpecStatuses.COMPLETED, deps),
     archiveSpec: (_msg, dir, deps) => handleLifecycleAction(dir, SpecStatuses.ARCHIVED, deps),
@@ -860,6 +862,17 @@ async function handleAddComment(
   deps.outputChannel.appendLine(
     `[SpecViewer] Persisted comment ${id} on ${doc}:${lineNum}`,
   );
+}
+
+/** Persist a comment's revised text. */
+async function handleEditComment(
+  specDirectory: string,
+  id: string,
+  comment: string,
+  deps: MessageHandlerDependencies,
+): Promise<void> {
+  await persistCommentMutation(specDirectory, (ctx) => editCommentInCtx(ctx, id, comment), deps);
+  deps.outputChannel.appendLine(`[SpecViewer] Edited comment ${id}`);
 }
 
 /** Persist removal of a comment. */

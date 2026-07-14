@@ -1,0 +1,655 @@
+{
+  "workflow": "speckit",
+  "specName": "inline comment polish",
+  "branch": "398-inline-comment-polish",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-14T04:29:33.937Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-14T04:31:34.094Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:32:51.956Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:33:39.526Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:33:40.141Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-14T04:33:53.885Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:34:57.069Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:34:57.151Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-14T04:34:57.212Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-14T04:35:09.070Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:35:34.731Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:35:34.789Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:36:47.253Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:36:47.313Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:42:17.668Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:42:17.728Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:42:17.794Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:42:17.855Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:42:17.912Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:42:17.975Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:42:18.034Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:42:18.096Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:42:18.154Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:42:18.211Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:43:09.101Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:43:09.158Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:48:02.623Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:48:02.681Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:48:02.744Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:48:02.806Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T04:48:02.865Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-14T04:48:02.950Z"
+    }
+  ],
+  "last_action": "all 21 tasks done — compile, 1503 tests, storybook, and package all green",
+  "coverage": {
+    "FR-001": {
+      "title": "A saved comment renders as a collapsed single-line annotation with state glyph, truncated text, and state label",
+      "tasks": [
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "InlineComment.test.tsx::renders as a single disclosure row with no body and no delete control",
+        "InlineComment.test.tsx::shows the comment text and its state on the collapsed row"
+      ]
+    },
+    "FR-002": {
+      "title": "The collapsed annotation is borderless on the quiet neutral surface, taking accent only on hover/focus",
+      "tasks": [
+        "T006"
+      ]
+    },
+    "FR-003": {
+      "title": "The annotation is a focusable control that expands/collapses on click, Enter, or Space and exposes its expanded state",
+      "tasks": [
+        "T008"
+      ],
+      "tests": [
+        "InlineComment.test.tsx::reveals the full text and the action row when opened"
+      ]
+    },
+    "FR-004": {
+      "title": "Expanding reveals the complete comment text at body weight plus an action row",
+      "tasks": [
+        "T008",
+        "T012"
+      ]
+    },
+    "FR-005": {
+      "title": "The action row offers Delete and Edit always, Refine when pending; no permanent delete control when collapsed",
+      "tasks": [
+        "T005",
+        "T008"
+      ],
+      "tests": [
+        "InlineComment.test.tsx::offers refine",
+        "edit and delete on an expanded pending comment"
+      ]
+    },
+    "FR-006": {
+      "title": "Refine from the action row performs the same document hand-off as the footer control",
+      "tasks": [
+        "T011"
+      ]
+    },
+    "FR-007": {
+      "title": "Edit opens the existing composer pre-filled and updates that comment's text in place, preserving identity",
+      "tasks": [
+        "T002",
+        "T003",
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "messageHandlers.test.ts::persists an edited comment",
+        "preserving its identity",
+        "anchor",
+        "status and creation time"
+      ]
+    },
+    "FR-008": {
+      "title": "An edit submitted empty or unchanged leaves the comment untouched",
+      "tasks": [
+        "T002",
+        "T004",
+        "T010"
+      ],
+      "tests": [
+        "messageHandlers.test.ts::leaves comments untouched when an edit is blank or names an unknown id"
+      ]
+    },
+    "FR-009": {
+      "title": "Pending is visually distinguished from applied by state label, glyph, and rail",
+      "tasks": [
+        "T005",
+        "T014"
+      ],
+      "tests": [
+        "InlineComment.test.tsx::marks an applied comment with the applied modifier and the check glyph"
+      ]
+    },
+    "FR-010": {
+      "title": "Applied comments restore on their lines collapsed and are not counted by the Refine badge",
+      "tasks": [
+        "T013"
+      ],
+      "tests": [
+        "restoreInline.test.ts::remounts an applied comment on its line but leaves the Refine count at zero"
+      ]
+    },
+    "FR-011": {
+      "title": "Pending comments restore on reopen as they do today, including after anchor drift",
+      "tasks": [
+        "T013",
+        "T017"
+      ],
+      "tests": [
+        "restoreInline.test.ts::re-anchors a comment whose line has drifted rather than dropping it",
+        "restoreInline.test.ts::is idempotent — a re-render does not double-mount a comment"
+      ]
+    },
+    "FR-012": {
+      "title": "Add, delete, and refine persistence is unchanged and survives reopen",
+      "tasks": [
+        "T004",
+        "T017"
+      ]
+    },
+    "FR-013": {
+      "title": "Comment text renders as literal text in every surface and can never introduce markup or script",
+      "tasks": [
+        "T005",
+        "T017"
+      ],
+      "tests": [
+        "InlineComment.test.tsx::renders markup-like comment text as literal characters",
+        "InlineComment.test.tsx::never lets comment text escape into an attribute",
+        "restoreInline.test.ts::restores a comment whose text is markup-like as literal text"
+      ]
+    },
+    "FR-014": {
+      "title": "A line's add control becomes visible on keyboard focus and opens the composer when activated",
+      "tasks": [
+        "T015"
+      ]
+    },
+    "FR-015": {
+      "title": "The Overview Review comments card uses the same state chip vocabulary and body-weight text",
+      "tasks": [
+        "T016"
+      ]
+    },
+    "FR-016": {
+      "title": "On completed/archived specs annotations stay readable while mutating actions stay unavailable",
+      "tasks": [
+        "T008",
+        "T017"
+      ],
+      "tests": [
+        "InlineComment.test.tsx::offers no actions at all on a read-only spec",
+        "but still shows the comment"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 15,
+    "projectedTasks": 12,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "intent": "Make saved inline review comments read as quiet annotations on the line they describe, with pending/applied legible at a glance and refine/edit/delete one keyboard-reachable step away.",
+  "expectations": [
+    "No review conversations: no replies, no resolve, no avatars, no Write/Preview composer",
+    "No change to how comments are stored, dispatched, or restored — the line-hover plus, the composer, the card, and the reviewComments path all stay",
+    "Refining a single comment in isolation (the hand-off stays document-level)"
+  ],
+  "context": [
+    "area: webview/src/spec-viewer/components (InlineComment, InlineEditor, CommentsCard)",
+    "area: webview/src/spec-viewer/editor (refinements, restoreComments, inlineEditor)",
+    "area: webview/styles/spec-viewer (_refinements.css, _line-actions.css)",
+    "constraint: user comment text never interpolated into an HTML attribute via innerHTML",
+    "constraint: readable text uses --text-body/--text-primary, never the low-contrast secondary/muted tokens",
+    "constraint: quiet-surface vocabulary borrowed from the existing inline-code and .file-ref chip treatment"
+  ],
+  "approach": "Restyle the existing InlineComment into a collapsed, quiet annotation that expands in place on click/Enter/Space, borrowing the viewer's inline-code and file-chip surface vocabulary. Add an in-place edit via a new editComment message plus a pure editComment(ctx,id,text) helper alongside the existing add/remove/markApplied. Restore stops filtering applied comments so pending vs applied is legible on the line, while the Refine badge stays pending-only.",
+  "decisions": [
+    {
+      "decision": "Collapse the comment to one line and expand it in place via a real button with aria-expanded",
+      "why": "Density is the complaint — a collapsed comment costs one line no matter how long it is, and a button gets the keyboard path, focus ring, and disclosure semantics for free",
+      "rejected": "Hover-reveal (no keyboard path, undiscoverable) and a gutter marker plus side panel (decouples the comment from its line and duplicates the Overview list)"
+    },
+    {
+      "decision": "Edit persists via a new additive editComment message and pure helper that mutates only the comment text",
+      "why": "It keeps the comment identity, anchor, createdAt, and status, and rides the existing serialized comment-write queue",
+      "rejected": "Delete-then-re-add, which mints a new id, drops createdAt, and resets an applied comment to pending"
+    },
+    {
+      "decision": "Applied comments are restored inline in the quiet collapsed state but excluded from the Refine count",
+      "why": "Pending vs applied cannot be legible at a glance if only one state ever appears on a line; the line becomes a record of what was asked",
+      "rejected": "Keeping applied comments only in the Overview card"
+    },
+    {
+      "decision": "Refine on an expanded pending comment dispatches the document batch via the existing runDocRefinement",
+      "why": "Surfaces the hand-off at the comment without forking the dispatch semantics",
+      "rejected": "Per-comment refinement dispatch — comments are handed to the AI as a document-level batch today"
+    },
+    {
+      "decision": "Scoped the annotation CSS under .inline-comment",
+      "why": "The Overview review card reuses .comment-text; a global truncation rule would have silently broken it — the card had no styles of its own and was inheriting the inline ones",
+      "rejected": "Leaving the selectors global"
+    },
+    {
+      "decision": "The document click-delegation handler ignores clicks inside .inline-comment",
+      "why": "The Edit action opens the composer on the same click that bubbles to the close-on-outside-click handler, which would have closed it immediately",
+      "rejected": "stopPropagation on the action buttons, which would have masked the ordering rather than stating the rule"
+    },
+    {
+      "decision": "Extracted the completed/archived read-only check into one helper",
+      "why": "The same fact was being re-derived in three places once the annotation needed it; two paths to one fact drift",
+      "rejected": "A fourth inline copy of the dataset check"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Presentation-and-disclosure pass over the existing inline comment, plus one additive edit mutation",
+      "key_finding": "The Refine badge is driven by the pendingRefinements signal, so applied comments must be mounted on their line without entering that signal"
+    },
+    "tasks": {
+      "summary": "21 tasks across 8 phases — foundational types + edit mutation, then one phase per user story, then polish (tests, stories, docs)"
+    },
+    "implement": {
+      "summary": "Inline comments now rest as quiet one-line annotations that open on demand, distinguish pending from applied, and carry refine/edit/delete without a permanent delete control"
+    }
+  },
+  "currentTask": "T021",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added status to the webview Refinement type and the editComment message to ViewerToExtensionMessage",
+      "files": [
+        "webview/src/spec-viewer/types.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added the pure editComment(ctx,id,text) mutation preserving id/anchor/status/createdAt, no-op on blank or unknown id",
+      "files": [
+        "src/features/spec-viewer/reviewComments.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Routed the editComment message through the existing serialized comment-write queue",
+      "files": [
+        "src/features/spec-viewer/messageHandlers.ts",
+        "src/features/spec-viewer/types.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Covered edit-in-place: text replaced, identity/anchor/status/createdAt preserved, blank and unknown-id no-ops",
+      "files": [
+        "src/features/spec-viewer/__tests__/messageHandlers.test.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Rebuilt InlineComment as a collapsed annotation — disclosure button with state glyph, truncated text, and state label, all text through Preact",
+      "files": [
+        "webview/src/spec-viewer/components/InlineComment.tsx"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Restyled the annotation onto the viewer's quiet neutral surface — borderless, body-weight text, accent only on hover/focus, state rail, full truncation trio",
+      "files": [
+        "webview/styles/spec-viewer/_refinements.css"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Carried each mounted comment's status through the add and restore paths into the annotation",
+      "files": [
+        "webview/src/spec-viewer/editor/refinements.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Added the disclosure and action row — aria-expanded/aria-controls, Refine only when pending, actions suppressed when read-only",
+      "files": [
+        "webview/src/spec-viewer/components/InlineComment.tsx"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Gave the composer optional initialValue and submitLabel so edit reuses it pre-filled, with the caret at the end",
+      "files": [
+        "webview/src/spec-viewer/components/InlineEditor.tsx"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Opened the pre-filled composer for an existing comment and persisted the revision, keeping the click-outside handler from closing what Edit just opened",
+      "files": [
+        "webview/src/spec-viewer/editor/inlineEditor.ts",
+        "webview/src/spec-viewer/editor/readOnly.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Wired Edit and Refine into the mount path alongside delete, tracking mounted comments so applied ones can be acted on too",
+      "files": [
+        "webview/src/spec-viewer/editor/refinements.ts",
+        "webview/src/spec-viewer/editor/index.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Styled the expanded body and action row — body-weight text wrapping safely, ghost actions with an accent Refine and a red-on-hover Delete",
+      "files": [
+        "webview/styles/spec-viewer/_refinements.css"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Restored applied comments inline alongside pending ones without entering the pending signal, so the Refine badge stays pending-only",
+      "files": [
+        "webview/src/spec-viewer/editor/restoreComments.ts",
+        "webview/src/spec-viewer/editor/refinements.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Styled the two states — accent rail plus comment glyph for pending, muted rail plus check glyph for applied",
+      "files": [
+        "webview/styles/spec-viewer/_refinements.css"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Revealed the line add control on keyboard focus with a focus ring, closing the mouse-only gap",
+      "files": [
+        "webview/styles/spec-viewer/_line-actions.css"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Gave the Overview review list the annotation's state-chip vocabulary and body-weight text — its classes had no styles at all before",
+      "files": [
+        "webview/src/spec-viewer/components/cards/CommentsCard.tsx",
+        "webview/styles/spec-viewer/_activity.css"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Added component tests — collapsed/expanded, pending vs applied, refine hidden when applied, read-only, plus XSS regressions — and a restore-on-reopen suite covering drift, idempotence, and the pending-only Refine count",
+      "files": [
+        "webview/src/spec-viewer/components/__tests__/InlineComment.test.tsx",
+        "webview/src/spec-viewer/editor/restoreInline.test.ts"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Rewrote the stories for every state — pending collapsed/expanded, applied, read-only, long-text truncation, five-on-one-document density, markup-as-text, row mode — and added the composer's edit-mode story",
+      "files": [
+        "webview/src/spec-viewer/components/InlineComment.stories.tsx",
+        "webview/src/spec-viewer/components/InlineEditor.stories.tsx"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Described the annotation, its states, and its actions in the README's Reading Specs section",
+      "files": [
+        "README.md"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Added the user-facing changelog entry",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Validated the Success Criteria — compile, 1503 tests, Storybook build, and vsix package all green"
+    }
+  },
+  "verified": [
+    {
+      "what": "Full test suite",
+      "command": "npm test",
+      "result": "1503 passed / 111 suites — includes 18 new tests for the annotation, restore-on-reopen, and edit persistence"
+    },
+    {
+      "what": "TypeScript compile",
+      "command": "npm run compile",
+      "result": "clean"
+    },
+    {
+      "what": "Storybook build",
+      "command": "npm run build-storybook",
+      "result": "built — 8 InlineComment stories + the composer edit-mode story",
+      "warnings": [
+        "chunk-size advisory, pre-existing"
+      ]
+    },
+    {
+      "what": "Extension package",
+      "command": "npm run package",
+      "result": "speckit-companion-0.28.1.vsix packaged, 473 files"
+    }
+  ]
+}

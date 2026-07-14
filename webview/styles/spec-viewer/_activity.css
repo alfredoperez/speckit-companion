@@ -449,3 +449,110 @@
     font-size: 11px;
     font-variant-numeric: tabular-nums;
 }
+
+/* ============================================
+   Review comments card
+
+   Same state vocabulary as the inline annotation: a quiet chip carrying the
+   glyph and the word, comment text at body weight.
+   ============================================ */
+
+.comments-doc-group + .comments-doc-group {
+    margin-top: var(--space-3);
+}
+
+.comments-doc-group__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-bottom: var(--space-1);
+}
+
+.comments-doc-group__label {
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.comments-run-btn {
+    padding: 2px 10px;
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.comments-run-btn:hover {
+    background: var(--accent-subtle);
+}
+
+.comments-run-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.comments-list .comment-item {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    padding: 3px 0;
+}
+
+.comment-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    padding: 0 6px;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--text-muted) 12%, transparent);
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.comment-chip--pending {
+    color: color-mix(in srgb, var(--accent) 75%, var(--text-primary));
+}
+
+.comment-chip .codicon {
+    font-size: 10px;
+    line-height: 1;
+}
+
+.comment-jump {
+    flex-shrink: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.comment-jump:hover {
+    color: var(--accent);
+}
+
+.comment-jump:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.comment-body-text {
+    flex: 1;
+    min-width: 0;
+    color: var(--text-body);
+    font-size: 12px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}

@@ -67,6 +67,18 @@ export function removeComment(ctx: SpecContext, id: string): SpecContext {
     };
 }
 
+/** Replace a comment's text, preserving its id, anchor, status, and createdAt. */
+export function editComment(ctx: SpecContext, id: string, comment: string): SpecContext {
+    const text = comment.trim();
+    if (!text) return ctx;
+    return {
+        ...ctx,
+        reviewComments: getComments(ctx).map(c =>
+            c.id === id ? { ...c, comment: text } : c,
+        ),
+    };
+}
+
 /** Mark the given comment ids `applied` (kept as history). */
 export function markApplied(ctx: SpecContext, ids: string[]): SpecContext {
     const idSet = new Set(ids);
