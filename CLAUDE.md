@@ -32,7 +32,7 @@ npm run package
 ```
 src/                      # Main extension source (Node.js)
 ├── extension.ts          # Extension entry point, command registration
-├── ai-providers/         # AI provider integrations (8 files)
+├── ai-providers/         # AI provider integrations
 ├── core/                 # Core utilities and types
 │   ├── constants, types, fileWatchers, specDirectoryResolver
 │   ├── errors/
@@ -59,11 +59,12 @@ webview/                  # Webview UI code (browser context)
 │   ├── spec-editor/      # Spec editor webview
 │   ├── markdown/         # Shared markdown utilities
 │   ├── render/           # Shared render utilities
+│   ├── shared/           # Shared webview helpers
 │   ├── ui/               # Shared UI components
 │   ├── types.ts          # Shared type definitions
 │   └── workflow.ts       # Workflow editor
 └── styles/               # CSS stylesheets
-    ├── spec-viewer/      # Modular CSS partials (16 files + index.css)
+    ├── spec-viewer/      # Modular CSS partials imported via index.css
     ├── spec-editor.css
     ├── spec-markdown.css
     ├── spec-viewer.css
@@ -116,13 +117,13 @@ When adding, changing, or removing a user-facing feature, update README.md. The 
 
 When modifying spec viewer statuses, badges, buttons, or step tab behavior, also update `docs/viewer-states.md` (full state machine: status lifecycle, footer button matrix, badge text logic, step tab visual states, data flow).
 
-When modifying the companion template profiles — the `companion-standard` / `companion-turbo` presets, their command bodies, the shared timing partial, the `speckit.companion.templateProfile` setting, the per-spec profile control, or the preset reconciler — also update `docs/template-profiles.md` (the living reference for the two profiles, the commands-vs-templates mechanism, the per-file turbo treatment, the timing partial, and the selection model).
+When modifying the Companion pipeline shape — the single **workflow choice** (stock `speckit` vs `companion`) on `speckit.defaultWorkflow`, the `companion-standard` preset, its command bodies, the shared timing partial, the classify/routing step, or the preset reconciler — also update `docs/template-profiles.md` (the living reference for the two workflows, the commands-vs-templates mechanism, the per-file Companion treatment, the timing partial, the routing step, and the selection model). The former `templateProfile` / `turboWorkflowPicker` / `complexityFastPath` toggles and the `companion-turbo` preset are **retired** — don't reintroduce them; `speckit.companion.templateProfile` survives only in `src/core/settingsMigration.ts` to migrate old persisted values.
 
 When modifying the project structure, adding/removing modules, or changing the architecture, also update `docs/architecture.md`.
 
 When modifying how `.spec-context.json` gets captured — the lifecycle hooks, `write-context.py`, the timing part (`speckit-extension/presets/_parts/timing.md` / `promptBuilder.ts`), the preset command-override mechanism, `derive-from-files.py`, or the eval (`check_capture.py`) — also update `docs/capture-and-timing.md` (the deterministic-vs-best-effort capture model, the reliability principle, install paths, known timing gaps, and what the eval asserts). Don't re-derive this flow from the code each time; this doc is the map.
 
-The Companion pipeline also ships as a first-class spec-kit **workflow definition** (`speckit-extension/workflows/speckit-companion.workflow.yml`) that runs the whole pipeline on spec-kit's own engine (`specify workflow run speckit-companion` / `resume`), with review gates, a `switch` routing node that right-sizes small vs. oversized changes (thresholds live in the workflow, no toggle — the workflow path doesn't read the `complexityFastPath` setting), and a terminal `mark-complete` step that writes `status: completed` via `write-context.py --mark-complete`. Capture is unchanged on this path — the engine dispatches the same `speckit.companion.*` commands, so the same hooks/bodies write `.spec-context.json`. When modifying the workflow, its `classify`/`mark-complete` commands, or the routing node, update `docs/template-profiles.md` (routing-node reference), `docs/capture-and-timing.md` (run/resume capture path), and the spec-kit extension's own README/CHANGELOG/`extension.yml` version — never the root README/CHANGELOG/`package.json`.
+The Companion pipeline also ships as a first-class spec-kit **workflow definition** (`speckit-extension/workflows/speckit-companion.workflow.yml`) that runs the whole pipeline on spec-kit's own engine (`specify workflow run speckit-companion` / `resume`), with review gates, a `switch` routing node that right-sizes small vs. oversized changes (thresholds live in the workflow, no toggle), and a terminal `mark-complete` step that writes `status: completed` via `write-context.py --mark-complete`. Capture is unchanged on this path — the engine dispatches the same `speckit.companion.*` commands, so the same hooks/bodies write `.spec-context.json`. When modifying the workflow, its `classify`/`mark-complete` commands, or the routing node, update `docs/template-profiles.md` (routing-node reference), `docs/capture-and-timing.md` (run/resume capture path), and the spec-kit extension's own `README.md` plus an `[Unreleased]` entry in its `CHANGELOG.md` — never the root README/CHANGELOG/`package.json`, and never the `extension.yml` version (see "Two extensions, two sets of docs").
 
 When modifying the sidebar (filter, sort, lifecycle buttons, badge tiers, tree icons, transition logging), also update `docs/sidebar.md` (the long-form sidebar reference linked from the README).
 
@@ -140,7 +141,9 @@ This repo ships **two independently-versioned extensions**, each with its **own*
 
 To release both in one pass, use `/publish-both` — it runs `/publish` then `/publish-speckit-ext` sequentially (versions asked once up front, no rollback of phase 1 if phase 2 fails).
 
-A change under `speckit-extension/` updates **its** README/CHANGELOG/version, **never** the root ones (and vice-versa). The two changelogs may both describe a feature that spans the GUI and the spec-kit side (e.g. status/resume) — each from its own half; that overlap is expected. **Never edit `.specify/extensions/companion/CHANGELOG.md`** — it's a generated copy of the source, gitignored, and overwritten on every install.
+A change under `speckit-extension/` updates **its** README/CHANGELOG, **never** the root ones (and vice-versa). The two changelogs may both describe a feature that spans the GUI and the spec-kit side (e.g. status/resume) — each from its own half; that overlap is expected. **Never edit `.specify/extensions/companion/CHANGELOG.md`** — it's a generated copy of the source, gitignored, and overwritten on every install.
+
+**The release flow owns the version bump — feature branches do not.** A feature branch touching `speckit-extension/` writes its entry under `## [Unreleased]` in `speckit-extension/CHANGELOG.md` and leaves `extension.yml` `version`, the README version badge, and `speckit-extension/docs/publishing.md` **alone**. `/publish-speckit-ext` bumps the version, dates the section, and re-points those references at release time. Bumping the version on a feature branch is what produces the classic drift — a version ahead of the changelog's `[Unreleased]` heading and a README badge behind both.
 
 ### Feature → README section map
 
@@ -157,7 +160,7 @@ A change under `speckit-extension/` updates **its** README/CHANGELOG/version, **
 | New webview UI element (header, badge, tab, etc.) | "Reading Specs" subsection in README + retake associated screenshot |
 | Modified webview component with a sibling `.stories.tsx` | Update the stories to exercise the new state/variant; if there is no story file for a non-trivial component being modified, add one |
 | Bug fix that changes documented behavior | The README section that documented the broken behavior |
-| Change under `speckit-extension/` (commands, scripts, hooks, manifest) | `speckit-extension/README.md` + `speckit-extension/CHANGELOG.md` + `extension.yml` `version` — **not** the root README/CHANGELOG/`package.json`. Release with `/publish-speckit-ext`. A new command must be added to `extension.yml` `provides.commands` or the installer skips it. |
+| Change under `speckit-extension/` (commands, scripts, hooks, manifest) | `speckit-extension/README.md` + an `[Unreleased]` entry in `speckit-extension/CHANGELOG.md` — **not** the root README/CHANGELOG/`package.json`, and **not** `extension.yml` `version` / the README version badge / `publishing.md` (`/publish-speckit-ext` owns the bump). A new command must be added to `extension.yml` `provides.commands` or the installer skips it. |
 
 ### Per-release checklist (run before tagging a version)
 
