@@ -43,7 +43,7 @@ const CORE_DOCS = ['spec.md', 'plan.md', 'tasks.md'];
 /**
  * Every `.md` in the spec dir (recursively, hidden dirs skipped) that no step
  * claims as its own file and isn't a lifecycle core doc. This is the same
- * "related docs" set the Spec Explorer computes — the files a step marked
+ * "related docs" set the Living Specs computes — the files a step marked
  * `includeRelatedDocs` produces when its output doesn't match a fixed name
  * (GSD's `gsd-plan-phase` writes `01-01-PLAN.md`, not `plan.md`).
  */
@@ -79,7 +79,7 @@ function relatedDocsPresent(specDir: string, allSteps: WorkflowStepConfig[]): bo
 
 /**
  * Has this step produced its output on disk? Mirrors the existence rules the
- * Spec Explorer already uses: the step's own `file`, any explicit `subFiles`,
+ * Living Specs already uses: the step's own `file`, any explicit `subFiles`,
  * any `.md` under its `subDir` (a tickets step's `issues/NN-*.md`), or — when the
  * step is marked `includeRelatedDocs` — any related `.md` in the spec dir that no
  * step claims (GSD's plan phase writes `01-01-PLAN.md`, not `plan.md`).

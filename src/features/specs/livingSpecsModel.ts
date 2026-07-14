@@ -6,7 +6,7 @@ import * as yaml from 'js-yaml';
  * Node-side reader for the `livingSpecs` block of `.specify/companion.yml`.
  *
  * Mirrors the listing rules of `speckit-extension/scripts/resolve-spec-paths.py`
- * (and `companion_config.py`) in TypeScript so the Spec Explorer view needs no
+ * (and `companion_config.py`) in TypeScript so the Living Specs view needs no
  * Python runtime. Only the *listing* slice is reproduced: capability spec-path
  * resolution, tier-sibling existence, and orphan discovery.
  */
@@ -44,7 +44,7 @@ export interface ResolvedCapability {
 }
 
 /**
- * Per-capability derived health for the Spec Explorer row. Fields are absent
+ * Per-capability derived health for the Living Specs row. Fields are absent
  * (not zeroed) whenever they cannot be computed — a missing count must be
  * indistinguishable from "no coverage tier".
  */
@@ -283,7 +283,7 @@ function findOrphans(caps: RawCapability[], root: string): string[] {
 }
 
 /**
- * Read and resolve the project's living specs for the Spec Explorer view.
+ * Read and resolve the project's living specs for the Living Specs view.
  * Returns an inert, empty listing (no throw) when the config is missing,
  * malformed, or `livingSpecs.enabled` is not true.
  */

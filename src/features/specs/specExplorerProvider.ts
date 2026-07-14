@@ -18,6 +18,7 @@ import { SpecStatuses, WorkflowSteps } from '../../core/constants';
 import { readSpecContextSync } from './specContextManager';
 import { isStepCompleted } from './stepHistoryDerivation';
 import { deriveLastTransition } from './lastTransition';
+import { specStatusLabel, documentStatusLabel } from './specStatusLabel';
 import { StepName, STEP_NAMES } from '../../core/types/specContext';
 import { SpecsFilterState } from './specsFilterState';
 import { fuzzyMatch } from './fuzzyMatch';
@@ -89,7 +90,7 @@ type DocumentStatus = 'empty' | 'partial' | 'complete';
 
 export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
     public activeSpecName: string | null = null;
-    public expandAllSpecs: boolean = true;
+    public expandAllSpecs: boolean = false;
 
     constructor(
         context: vscode.ExtensionContext,
@@ -643,7 +644,7 @@ class SpecItem extends vscode.TreeItem {
         public readonly label: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
         public readonly contextValue: string,
-        private readonly extContext: vscode.ExtensionContext,
+        _extContext: vscode.ExtensionContext,
         public readonly specName?: string,
         public readonly documentType?: string,
         public readonly command?: vscode.Command,
@@ -661,21 +662,18 @@ class SpecItem extends vscode.TreeItem {
             this.iconPath = new vscode.ThemeIcon('sync~spin');
             this.tooltip = 'Loading specs...';
         } else if (isSpecGroupItem(contextValue)) {
-            const groupIcons: Record<string, string> = {
-                'Active': 'group-active.svg',
-                'Completed': 'spec-completed.svg',
-                'Archived': 'group-archived.svg',
+            const groupIcons: Record<string, vscode.ThemeIcon> = {
+                'Active': new vscode.ThemeIcon('pulse'),
+                'Completed': new vscode.ThemeIcon('pass-filled', new vscode.ThemeColor('testing.iconPassed')),
+                'Archived': new vscode.ThemeIcon('archive'),
             };
             const groupTooltips: Record<string, string> = {
                 'Active': 'Specs in progress',
-                'Completed': 'Completed specs',
+                'Completed': 'Specs you marked complete',
                 'Archived': 'Archived specs',
             };
             const baseLabel = label.split(' (')[0];
-            const groupIcon = groupIcons[baseLabel];
-            this.iconPath = groupIcon
-                ? this.specIcon(groupIcon)
-                : new vscode.ThemeIcon('pulse');
+            this.iconPath = groupIcons[baseLabel] ?? new vscode.ThemeIcon('pulse');
             this.tooltip = groupTooltips[baseLabel] || label;
         } else if (isSpecLifecycleItem(contextValue)) {
             if (isActive) {
@@ -689,14 +687,9 @@ class SpecItem extends vscode.TreeItem {
             } else {
                 this.iconPath = new vscode.ThemeIcon('beaker');
             }
-            // Trim the row description to ONLY what the per-document step icons
-            // (Specification / Plan / Tasks) don't already convey (#238). The step
-            // name is redundant with those icons, so we deliberately DROP both the
-            // standalone `currentStep` word and the step-name phrase of the
-            // last-transition label ("Implement" / "Implement completed"). We KEEP
-            // the genuinely icon-absent info — the active task and the last-active
-            // relative time — in a compact "· T004 · 22h ago" form. The fuller
-            // step+time label still lives in the tooltip below for on-demand detail.
+            // The per-document step icons already convey the step, so the row
+            // description keeps only what they can't show — the active task and
+            // the last-active relative time.
             const lastTransition = deriveLastTransition(specContext);
             if (lastTransition) {
                 const kept: string[] = [];
@@ -707,43 +700,51 @@ class SpecItem extends vscode.TreeItem {
                     kept.push(lastTransition.relative);
                 }
                 if (kept.length > 0) {
-                    this.description = `· ${kept.join(' · ')}`;
+                    this.description = kept.join(' · ');
                 }
             }
-            const tooltipParts = [`SpecKit Spec: ${label}`];
-            if (specContext?.status) {
-                tooltipParts.push(`Status: ${specContext.status}`);
+            const tooltipLines = [label];
+            const friendly = specStatusLabel(specContext?.status);
+            if (friendly) {
+                tooltipLines.push(`Status: ${friendly}`);
             }
             if (lastTransition) {
-                tooltipParts.push(`Last: ${lastTransition.label} (${lastTransition.relative})`);
+                const activity = lastTransition.relative
+                    ? `${lastTransition.label} · ${lastTransition.relative}`
+                    : lastTransition.label;
+                tooltipLines.push(`Last activity: ${activity}`);
             }
-            this.tooltip = tooltipParts.join(' — ');
+            if (isActive) {
+                tooltipLines.push('A workflow step is running now');
+            }
+            this.tooltip = tooltipLines.join('\n');
         } else if (contextValue === 'spec-document') {
-            const statusLabel = status === 'complete' ? 'Complete' : status === 'partial' ? 'In Progress' : 'Not Started';
-            this.tooltip = `${documentType}: ${specName}/${label} — ${statusLabel}`;
+            this.tooltip = [`${label} — ${documentStatusLabel(status ?? 'empty')}`, filePath]
+                .filter(Boolean)
+                .join('\n');
 
             if (status === 'empty') {
                 this.description = 'not created';
             }
 
-            this.contextValue = `spec-document-${documentType}`;
+            // A missing document carries its own context value so no menu offers
+            // an action against a file that isn't there.
+            this.contextValue = status === 'empty' ? 'spec-document-missing' : `spec-document-${documentType}`;
 
-            // Apply step status colors from specContext (only for active specs — completed specs use the green beaker).
-            // stepHistory may be missing or partial; isStepCompleted infers completion from currentStep ordering when an
-            // entry isn't present, so fall back to {} rather than guarding the call (otherwise specs with no stepHistory
-            // never show the completed icon even though the workflow has moved past the step).
-            if (specContext && documentType && specContext.status !== SpecStatuses.COMPLETED && specContext.status !== SpecStatuses.ARCHIVED) {
+            // The document's own state decides its icon — a completed step under a
+            // completed or archived parent still reads as completed.
+            if (specContext && documentType && status !== 'empty') {
                 const stepHistory = specContext.stepHistory ?? {};
                 const stepName = documentType as StepName;
                 const cs = (specContext.currentStep ?? 'specify') as StepName;
-                // Gate the green "pass" icon on the file actually existing —
-                // otherwise a hand-crafted .spec-context.json (or a deleted
-                // doc) can show "completed" while the description reads
-                // "not created", which is contradictory.
-                if (status !== 'empty' && STEP_NAMES.includes(stepName) && isStepCompleted(stepName, cs, stepHistory)) {
+                const parentFinished = specContext.status === SpecStatuses.COMPLETED
+                    || specContext.status === SpecStatuses.ARCHIVED;
+                if (STEP_NAMES.includes(stepName) && (parentFinished || isStepCompleted(stepName, cs, stepHistory))) {
                     this.iconPath = new vscode.ThemeIcon('pass', new vscode.ThemeColor('testing.iconPassed'));
-                } else if (specContext.currentStep === documentType) {
+                } else if (!parentFinished && specContext.currentStep === documentType) {
                     this.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('charts.blue'));
+                } else {
+                    this.iconPath = new vscode.ThemeIcon('circle-outline');
                 }
             }
 
@@ -759,11 +760,13 @@ class SpecItem extends vscode.TreeItem {
             // No icon — makes the tree-depth indentation visually obvious.
             // The chevron column on siblings + the missing icon here shifts
             // the label inward so sub-files clearly nest under their parent.
-            this.tooltip = `Related: ${label}.md`;
+            this.tooltip = filePath ?? label;
+            if (filePath) {
+                const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+                if (workspaceFolder) {
+                    this.fileUri = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, filePath));
+                }
+            }
         }
-    }
-
-    private specIcon(file: string): vscode.Uri {
-        return vscode.Uri.joinPath(this.extContext.extensionUri, 'assets', 'icons', 'specs', file);
     }
 }

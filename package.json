@@ -62,7 +62,7 @@
         },
         {
           "id": "speckit.views.livingSpecs",
-          "name": "Spec Explorer",
+          "name": "Living Specs",
           "visibility": "collapsed",
           "when": "!(workbenchState == empty || workspaceFolderCount == 0) && speckit.companion.installed"
         },
@@ -73,7 +73,7 @@
         },
         {
           "id": "speckit.views.settings",
-          "name": "Settings",
+          "name": "Settings & Feedback",
           "visibility": "collapsed",
           "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.views.settings.visible"
         }
@@ -125,7 +125,7 @@
       },
       {
         "command": "speckit.create",
-        "title": "Create New Spec",
+        "title": "New Spec",
         "category": "SpecKit",
         "icon": "$(plus)"
       },
@@ -197,38 +197,44 @@
       },
       {
         "command": "speckit.specs.toggleCollapseAll",
-        "title": "Toggle Collapse/Expand All Specs",
+        "title": "Toggle Collapse/Expand All",
         "category": "SpecKit"
       },
       {
         "command": "speckit.specs.collapseAll",
-        "title": "Collapse All Specs",
+        "title": "Collapse All",
         "category": "SpecKit",
         "icon": "$(collapse-all)"
       },
       {
         "command": "speckit.specs.expandAll",
-        "title": "Expand All Specs",
+        "title": "Expand All",
         "category": "SpecKit",
         "icon": "$(expand-all)"
       },
       {
         "command": "speckit.specs.filter",
-        "title": "Filter Specs…",
+        "title": "Filter…",
         "category": "SpecKit",
         "icon": "$(filter)"
       },
       {
         "command": "speckit.specs.filter.clear",
-        "title": "Clear Specs Filter",
+        "title": "Clear Filter",
         "category": "SpecKit",
         "icon": "$(clear-all)"
       },
       {
         "command": "speckit.specs.sort",
-        "title": "Sort Specs…",
+        "title": "Sort…",
         "category": "SpecKit",
         "icon": "$(sort-precedence)"
+      },
+      {
+        "command": "speckit.specs.moreActions",
+        "title": "More Actions…",
+        "category": "SpecKit",
+        "icon": "$(ellipsis)"
       },
       {
         "command": "speckit.delete",
@@ -238,7 +244,7 @@
       },
       {
         "command": "speckit.markCompleted",
-        "title": "Mark as Completed",
+        "title": "Mark Complete",
         "category": "SpecKit",
         "icon": "$(check)"
       },
@@ -262,31 +268,31 @@
       },
       {
         "command": "speckit.specs.setStatus",
-        "title": "Set status…",
+        "title": "Set Status…",
         "category": "SpecKit",
         "icon": "$(settings-gear)"
       },
       {
         "command": "speckit.group.markAllCompleted",
-        "title": "Mark all as Completed",
+        "title": "Mark All Complete",
         "category": "SpecKit",
         "icon": "$(check-all)"
       },
       {
         "command": "speckit.group.archiveAll",
-        "title": "Archive all",
+        "title": "Archive All",
         "category": "SpecKit",
         "icon": "$(archive)"
       },
       {
         "command": "speckit.group.reactivateAll",
-        "title": "Reactivate all",
+        "title": "Reactivate All",
         "category": "SpecKit",
         "icon": "$(debug-restart)"
       },
       {
         "command": "speckit.steering.create",
-        "title": "Create Custom Steering",
+        "title": "New Steering Document…",
         "category": "SpecKit",
         "icon": "$(plus)"
       },
@@ -364,7 +370,7 @@
       },
       {
         "command": "speckit.feedback.review",
-        "title": "Rate SpecKit on Marketplace",
+        "title": "Rate on Marketplace",
         "category": "SpecKit",
         "icon": "$(star-empty)"
       },
@@ -400,13 +406,13 @@
       },
       {
         "command": "speckit.companion.installSpecKitExtension",
-        "title": "Install spec-kit Extension",
+        "title": "Install Companion Extension",
         "category": "SpecKit",
         "icon": "$(desktop-download)"
       },
       {
         "command": "speckit.companion.openReadme",
-        "title": "About the spec-kit Extension",
+        "title": "About the Companion Extension",
         "category": "SpecKit",
         "icon": "$(book)"
       },
@@ -472,37 +478,37 @@
       },
       {
         "command": "speckit.specs.reveal",
-        "title": "Reveal in File Explorer",
+        "title": "Reveal in File Manager",
         "category": "SpecKit"
       },
       {
         "command": "speckit.specs.revealInExplorer",
-        "title": "Reveal in Explorer View",
+        "title": "Reveal in VS Code Explorer",
         "category": "SpecKit"
       },
       {
         "command": "speckit.revealItemInOS",
-        "title": "Reveal in File Explorer",
+        "title": "Reveal in File Manager",
         "category": "SpecKit"
       },
       {
         "command": "speckit.revealItemInExplorer",
-        "title": "Reveal in Explorer View",
+        "title": "Reveal in VS Code Explorer",
         "category": "SpecKit"
       },
       {
         "command": "speckit.specs.copyPath",
-        "title": "Copy Path",
+        "title": "Copy Spec Path",
         "category": "SpecKit"
       },
       {
         "command": "speckit.specs.copyName",
-        "title": "Copy Name",
+        "title": "Copy Spec Name",
         "category": "SpecKit"
       },
       {
         "command": "speckit.livingSpecs.drift",
-        "title": "Check Living-Spec Drift",
+        "title": "Check for Drift",
         "category": "SpecKit",
         "icon": "$(git-compare)"
       },
@@ -514,13 +520,13 @@
       },
       {
         "command": "speckit.livingSpecs.adopt",
-        "title": "Adopt Code Area into Living Spec",
+        "title": "Adopt Code Area…",
         "category": "SpecKit",
         "icon": "$(wand)"
       },
       {
         "command": "speckit.livingSpecs.refresh",
-        "title": "Refresh Spec Explorer",
+        "title": "Refresh Living Specs",
         "category": "SpecKit",
         "icon": "$(refresh)"
       }
@@ -535,53 +541,33 @@
     "menus": {
       "view/title": [
         {
+          "command": "speckit.specs.filter",
+          "when": "view == speckit.views.explorer",
+          "group": "navigation@1"
+        },
+        {
+          "command": "speckit.specs.sort",
+          "when": "view == speckit.views.explorer",
+          "group": "navigation@2"
+        },
+        {
+          "command": "speckit.specs.moreActions",
+          "when": "view == speckit.views.explorer",
+          "group": "navigation@3"
+        },
+        {
           "command": "speckit.create",
           "when": "view == speckit.views.explorer",
           "group": "navigation@9"
         },
         {
-          "command": "speckit.specs.filter",
-          "when": "view == speckit.views.explorer",
-          "group": "navigation@5"
-        },
-        {
-          "command": "speckit.specs.filter.clear",
-          "when": "view == speckit.views.explorer && speckit.specs.filterActive",
-          "group": "navigation@5"
-        },
-        {
-          "command": "speckit.specs.sort",
-          "when": "view == speckit.views.explorer",
-          "group": "navigation@5"
-        },
-        {
-          "command": "speckit.specs.collapseAll",
-          "when": "view == speckit.views.explorer && !speckit.specs.allCollapsed",
-          "group": "navigation@5"
-        },
-        {
-          "command": "speckit.specs.expandAll",
-          "when": "view == speckit.views.explorer && speckit.specs.allCollapsed",
-          "group": "navigation@5"
+          "command": "speckit.steering.refresh",
+          "when": "view == speckit.views.steering",
+          "group": "navigation@1"
         },
         {
           "command": "speckit.steering.create",
           "when": "view == speckit.views.steering",
-          "group": "navigation@1"
-        },
-        {
-          "command": "speckit.steering.refresh",
-          "when": "view == speckit.views.steering",
-          "group": "navigation@2"
-        },
-        {
-          "command": "speckit.companion.installSpecKitExtension",
-          "when": "view == speckit.views.explorer && (speckit.detected || speckit.cliInstalled) && !speckit.companion.installed",
-          "group": "navigation@1"
-        },
-        {
-          "command": "speckit.upgrade",
-          "when": "view == speckit.views.explorer && (speckit.detected || speckit.cliInstalled)",
           "group": "navigation@2"
         },
         {
@@ -597,11 +583,6 @@
       ],
       "view/item/context": [
         {
-          "command": "speckit.delete",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
-          "group": "7_modification"
-        },
-        {
           "command": "speckit.specs.resume",
           "when": "view == speckit.views.explorer && (viewItem == spec-active || viewItem == spec-tasks-done) && speckit.resumeBeta && speckit.companion.installed",
           "group": "inline"
@@ -614,57 +595,77 @@
         {
           "command": "speckit.specs.setStatus",
           "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
-          "group": "7_modification"
+          "group": "1_status@1"
         },
         {
           "command": "speckit.markCompleted",
           "when": "view == speckit.views.explorer && (viewItem == spec-active || viewItem == spec-tasks-done || viewItem == spec-implemented)",
-          "group": "7_modification"
+          "group": "2_lifecycle@1"
         },
         {
           "command": "speckit.archive",
           "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed)$/",
-          "group": "7_modification"
+          "group": "2_lifecycle@2"
         },
         {
           "command": "speckit.reactivate",
           "when": "view == speckit.views.explorer && (viewItem == spec-completed || viewItem == spec-archived)",
-          "group": "7_modification"
+          "group": "2_lifecycle@3"
+        },
+        {
+          "command": "speckit.specs.copyName",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
+          "group": "3_copy@1"
+        },
+        {
+          "command": "speckit.specs.copyPath",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
+          "group": "3_copy@2"
+        },
+        {
+          "command": "speckit.revealItemInExplorer",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
+          "group": "4_reveal@1"
+        },
+        {
+          "command": "speckit.revealItemInOS",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
+          "group": "4_reveal@2"
+        },
+        {
+          "command": "speckit.delete",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
+          "group": "5_danger@1"
         },
         {
           "command": "speckit.group.markAllCompleted",
           "when": "view == speckit.views.explorer && viewItem == spec-group-active",
-          "group": "7_modification@1"
+          "group": "2_lifecycle@1"
         },
         {
           "command": "speckit.group.archiveAll",
           "when": "view == speckit.views.explorer && (viewItem == spec-group-active || viewItem == spec-group-completed)",
-          "group": "7_modification@2"
+          "group": "2_lifecycle@2"
         },
         {
           "command": "speckit.group.reactivateAll",
           "when": "view == speckit.views.explorer && (viewItem == spec-group-completed || viewItem == spec-group-archived)",
-          "group": "7_modification@3"
+          "group": "2_lifecycle@3"
         },
         {
-          "command": "speckit.specs.reveal",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
-          "group": "navigation@98"
+          "command": "speckit.openSpecSource",
+          "when": "view == speckit.views.explorer && (viewItem =~ /^spec-document-/ || viewItem == spec-related-doc) && viewItem != spec-document-missing",
+          "group": "inline"
         },
         {
-          "command": "speckit.specs.revealInExplorer",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
-          "group": "navigation@99"
+          "command": "speckit.revealItemInExplorer",
+          "when": "view == speckit.views.explorer && (viewItem =~ /^spec-document-/ || viewItem == spec-related-doc) && viewItem != spec-document-missing",
+          "group": "4_reveal@1"
         },
         {
-          "command": "speckit.specs.revealInExplorer",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-document/",
-          "group": "navigation@99"
-        },
-        {
-          "command": "speckit.specs.revealInExplorer",
-          "when": "view == speckit.views.explorer && viewItem == spec-related-doc",
-          "group": "navigation@99"
+          "command": "speckit.revealItemInOS",
+          "when": "view == speckit.views.explorer && (viewItem =~ /^spec-document-/ || viewItem == spec-related-doc) && viewItem != spec-document-missing",
+          "group": "4_reveal@2"
         },
         {
           "command": "speckit.companion.installSpecKitExtension",
@@ -679,22 +680,7 @@
         {
           "command": "speckit.steering.delete",
           "when": "view == speckit.views.steering && viewItem == steering-document",
-          "group": "7_modification"
-        },
-        {
-          "command": "speckit.openSpecSource",
-          "when": "view == speckit.views.explorer && viewItem =~ /spec-document-/",
-          "group": "inline"
-        },
-        {
-          "command": "speckit.specs.copyPath",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
-          "group": "9_clipboard@1"
-        },
-        {
-          "command": "speckit.specs.copyName",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
-          "group": "9_clipboard@2"
+          "group": "5_danger@1"
         },
         {
           "command": "speckit.livingSpecs.drift",
@@ -708,23 +694,23 @@
         },
         {
           "command": "speckit.revealItemInExplorer",
-          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-tier)",
-          "group": "navigation@98"
+          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-tier || viewItem == living-specs-orphan)",
+          "group": "4_reveal@1"
         },
         {
           "command": "speckit.revealItemInOS",
-          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-tier)",
-          "group": "navigation@99"
+          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-tier || viewItem == living-specs-orphan)",
+          "group": "4_reveal@2"
         },
         {
           "command": "speckit.revealItemInExplorer",
-          "when": "view == speckit.views.steering && viewItem == steering-document",
-          "group": "navigation@98"
+          "when": "view == speckit.views.steering && (viewItem == steering-document || viewItem == steering-file || viewItem == provider-settings || viewItem == agent || viewItem == skill || viewItem == skill-warning || viewItem == speckit-constitution || viewItem == speckit-script || viewItem == speckit-template || viewItem == companion-config-item || viewItem == companion-command || viewItem == companion-template)",
+          "group": "4_reveal@1"
         },
         {
           "command": "speckit.revealItemInOS",
-          "when": "view == speckit.views.steering && viewItem == steering-document",
-          "group": "navigation@99"
+          "when": "view == speckit.views.steering && (viewItem == steering-document || viewItem == steering-file || viewItem == provider-settings || viewItem == agent || viewItem == skill || viewItem == skill-warning || viewItem == speckit-constitution || viewItem == speckit-script || viewItem == speckit-template || viewItem == companion-config-item || viewItem == companion-command || viewItem == companion-template)",
+          "group": "4_reveal@2"
         }
       ],
       "speckit.specs.rowMenu": [

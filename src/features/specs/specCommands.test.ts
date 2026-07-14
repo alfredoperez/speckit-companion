@@ -54,6 +54,19 @@ jest.mock('./specContextManager', () => ({
     readSpecContextSync: jest.fn(),
 }));
 
+jest.mock('../settings/companionPresetReconciler', () => ({
+    isCompanionInstalled: jest.fn().mockReturnValue(false),
+}));
+
+jest.mock('../../speckit/detector', () => ({
+    SpecKitDetector: {
+        getInstance: jest.fn().mockReturnValue({
+            workspaceInitialized: true,
+            cliInstalled: false,
+        }),
+    },
+}));
+
 import { setStatus, forceStatus, reactivate } from './stepLifecycle';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 import { readSpecContextSync } from './specContextManager';
@@ -778,5 +791,107 @@ describe('speckit.specs.copyName command handler', () => {
 
         expect(mockClipboardWriteText).not.toHaveBeenCalled();
         expect(NotificationUtils.showAutoDismissNotification).not.toHaveBeenCalled();
+    });
+});
+
+describe('speckit.specs.moreActions handler', () => {
+    function registerWithState() {
+        const handlers = new Map<string, (...args: any[]) => any>();
+        mockCommands.registerCommand.mockImplementation((name: string, handler: any) => {
+            handlers.set(name, handler);
+            return { dispose: jest.fn() };
+        });
+        const explorer = { refresh: jest.fn(), expandAllSpecs: false } as any;
+        const filterState = {
+            getQuery: jest.fn().mockReturnValue(''),
+            setQuery: jest.fn().mockResolvedValue(undefined),
+            clear: jest.fn().mockResolvedValue(undefined),
+        } as any;
+        const sortState = {
+            getMode: jest.fn().mockReturnValue('number'),
+            setMode: jest.fn().mockResolvedValue(undefined),
+        } as any;
+        registerSpecKitCommands(
+            createMockContext(),
+            explorer,
+            { appendLine: jest.fn() } as any,
+            undefined,
+            filterState,
+            sortState
+        );
+        return { handlers, explorer, filterState, sortState };
+    }
+
+    it('seeds the all-collapsed context key from the provider default', () => {
+        (mockCommands.executeCommand as jest.Mock).mockClear();
+        registerWithState();
+        expect(mockCommands.executeCommand).toHaveBeenCalledWith(
+            'setContext',
+            'speckit.specs.allCollapsed',
+            true
+        );
+    });
+
+    it('dispatches the picked command', async () => {
+        const { handlers } = registerWithState();
+        (vscode.window.showQuickPick as jest.Mock).mockResolvedValueOnce({
+            label: 'Upgrade…',
+            commandId: 'speckit.upgrade',
+        });
+        (mockCommands.executeCommand as jest.Mock).mockClear();
+
+        await handlers.get('speckit.specs.moreActions')!();
+
+        expect(mockCommands.executeCommand).toHaveBeenCalledWith('speckit.upgrade');
+    });
+
+    it('does nothing when the picker is dismissed', async () => {
+        const { handlers } = registerWithState();
+        (vscode.window.showQuickPick as jest.Mock).mockResolvedValueOnce(undefined);
+        (mockCommands.executeCommand as jest.Mock).mockClear();
+
+        await handlers.get('speckit.specs.moreActions')!();
+
+        expect(mockCommands.executeCommand).not.toHaveBeenCalled();
+    });
+
+    it('clears the filter when the input is submitted empty', async () => {
+        const { handlers, filterState } = registerWithState();
+        (vscode.window.showInputBox as jest.Mock).mockResolvedValueOnce('   ');
+
+        await handlers.get('speckit.specs.filter')!();
+
+        expect(filterState.clear).toHaveBeenCalled();
+        expect(filterState.setQuery).not.toHaveBeenCalled();
+    });
+
+    it('sets the filter when the input carries a query', async () => {
+        const { handlers, filterState } = registerWithState();
+        (vscode.window.showInputBox as jest.Mock).mockResolvedValueOnce('auth');
+
+        await handlers.get('speckit.specs.filter')!();
+
+        expect(filterState.setQuery).toHaveBeenCalledWith('auth');
+    });
+
+    it('offers five compact sort options with a check on the current one', async () => {
+        const { handlers, sortState } = registerWithState();
+        (vscode.window.showQuickPick as jest.Mock).mockResolvedValueOnce(undefined);
+
+        await handlers.get('speckit.specs.sort')!();
+
+        const [items, options] = (vscode.window.showQuickPick as jest.Mock).mock.calls.at(-1)!;
+        expect(options.title).toBe('Sort Specs');
+        expect(options.placeHolder).toBe('Choose sort order');
+        expect(items).toHaveLength(5);
+        expect(items[0].label).toBe('$(check) Number');
+        expect(items.map((i: any) => i.description)).toEqual([
+            'Default · Highest number first',
+            'A–Z',
+            'Newest first',
+            'Recently edited first',
+            'Current progress',
+        ]);
+        expect(sortState.setMode).not.toHaveBeenCalled();
     });
 });

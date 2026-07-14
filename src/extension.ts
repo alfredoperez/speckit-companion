@@ -344,7 +344,7 @@ export async function activate(context: vscode.ExtensionContext) {
             extWatcher.onDidDelete(refresh);
             context.subscriptions.push(extWatcher);
 
-            // Refresh the Spec Explorer when the living-specs config or the
+            // Refresh the Living Specs when the living-specs config or the
             // capabilities tree changes on disk (no reload needed).
             const livingSpecsWatcher = vscode.workspace.createFileSystemWatcher(
                 new vscode.RelativePattern(root, '{.specify/companion.yml,capabilities/**,**/*.spec.md}')

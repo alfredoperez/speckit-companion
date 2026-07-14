@@ -1,0 +1,961 @@
+{
+  "workflow": "speckit",
+  "specName": "sidebar redesign",
+  "branch": "396-sidebar-redesign",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-14T02:37:07.193Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-14T02:39:46.442Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:41:27.912Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:42:34.178Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:42:34.946Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:43:55.665Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:43:55.839Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-14T02:44:05.056Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:46:12.141Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:46:12.201Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:46:12.258Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:46:12.319Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:46:12.380Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:49:26.130Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:49:26.189Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:49:26.246Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:49:26.303Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:49:26.361Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:49:26.420Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:49:26.477Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T027",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:49:26.537Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:59:00.164Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:59:00.224Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:59:00.284Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:59:00.343Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:59:00.403Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:59:00.461Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:59:00.520Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:59:00.581Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:59:00.641Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:59:00.702Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:59:00.760Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:59:00.820Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T025",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:59:00.881Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T026",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:59:00.940Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T028",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:59:01.000Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T029",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:59:01.058Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T030",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:59:01.119Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T031",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:59:01.177Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T032",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:59:01.235Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T033",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T02:59:01.294Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T034",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T03:02:55.161Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T035",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T03:02:55.225Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T036",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T03:02:55.288Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T037",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T03:02:55.347Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T038",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T03:02:55.407Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-14T03:02:55.490Z"
+    }
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Title the living-specs view Living Specs and the settings view Settings & Feedback, without changing any view id",
+      "tasks": [
+        "T006",
+        "T007"
+      ]
+    },
+    "FR-002": {
+      "title": "Render individual spec rows collapsed by default; Active group expanded, Completed and Archived collapsed",
+      "tasks": [
+        "T015",
+        "T018"
+      ]
+    },
+    "FR-003": {
+      "title": "Omit zero-item spec groups; keep group order Active, Completed, Archived with counts",
+      "tasks": [
+        "T018"
+      ]
+    },
+    "FR-004": {
+      "title": "Preserve collapse-all / expand-all behavior for individual spec rows",
+      "tasks": [
+        "T015",
+        "T016",
+        "T018"
+      ]
+    },
+    "FR-005": {
+      "title": "Use themed editor icons for functional and status concepts; reserve custom art for product identity and provider marks",
+      "tasks": [
+        "T008",
+        "T009",
+        "T014"
+      ]
+    },
+    "FR-006": {
+      "title": "Render no emoji characters in any tree label, description, or tooltip",
+      "tasks": [
+        "T008",
+        "T009"
+      ]
+    },
+    "FR-007": {
+      "title": "Communicate every status by at least one non-color signal",
+      "tasks": [
+        "T008",
+        "T017"
+      ]
+    },
+    "FR-008": {
+      "title": "Render coherent per-document status icons regardless of parent spec lifecycle",
+      "tasks": [
+        "T017",
+        "T018"
+      ]
+    },
+    "FR-009": {
+      "title": "Resolve the provider icon through a single testable resolver that agrees with the provider display name",
+      "tasks": [
+        "T002",
+        "T004",
+        "T014"
+      ]
+    },
+    "FR-010": {
+      "title": "Fall back to a neutral chat icon for an unrecognized host editor or unknown provider",
+      "tasks": [
+        "T002",
+        "T004",
+        "T014"
+      ]
+    },
+    "FR-011": {
+      "title": "Show at most four actions in the Specs title bar: Filter, Sort, More Actions, New Spec",
+      "tasks": [
+        "T020",
+        "T023"
+      ]
+    },
+    "FR-012": {
+      "title": "Prefill the filter input with the active query; treat an empty submission as clearing the filter",
+      "tasks": [
+        "T021",
+        "T022"
+      ]
+    },
+    "FR-013": {
+      "title": "Expose collapse/expand, install, and upgrade through More Actions and keep them in the Command Palette",
+      "tasks": [
+        "T019",
+        "T020",
+        "T021",
+        "T022"
+      ]
+    },
+    "FR-014": {
+      "title": "Present the same actions in the same order in the hover More Actions submenu and the right-click menu",
+      "tasks": [
+        "T024",
+        "T027"
+      ]
+    },
+    "FR-015": {
+      "title": "Isolate delete in a final, separate group in both spec-row menus",
+      "tasks": [
+        "T024",
+        "T027"
+      ]
+    },
+    "FR-016": {
+      "title": "Show at most two inline actions on a spec row: Resume when eligible, and More Actions",
+      "tasks": [
+        "T024"
+      ]
+    },
+    "FR-017": {
+      "title": "Offer both reveal actions on every file-backed Living Specs and Steering row, resolving exact paths",
+      "tasks": [
+        "T024",
+        "T025",
+        "T026"
+      ]
+    },
+    "FR-018": {
+      "title": "Offer no reveal action on a row whose file does not exist",
+      "tasks": [
+        "T024",
+        "T026",
+        "T027"
+      ]
+    },
+    "FR-019": {
+      "title": "Restrict destructive steering actions to generated steering documents",
+      "tasks": [
+        "T024"
+      ]
+    },
+    "FR-020": {
+      "title": "Nest each missing-rule create action under its provider Project or User group and name the real filename",
+      "tasks": [
+        "T012",
+        "T029",
+        "T032"
+      ]
+    },
+    "FR-021": {
+      "title": "Build the Steering root in one explicit order and use User consistently",
+      "tasks": [
+        "T028",
+        "T029",
+        "T032"
+      ]
+    },
+    "FR-022": {
+      "title": "Open the configuration file when the Configuration row is clicked, while still listing setting groups",
+      "tasks": [
+        "T030",
+        "T032"
+      ]
+    },
+    "FR-023": {
+      "title": "Render an informative row for Living Specs disabled, empty, or error states",
+      "tasks": [
+        "T026"
+      ]
+    },
+    "FR-024": {
+      "title": "Present friendly title-cased status text in tooltips; expose no raw lifecycle keys",
+      "tasks": [
+        "T003",
+        "T005",
+        "T011"
+      ]
+    },
+    "FR-025": {
+      "title": "Derive document tooltip paths from the stored path, not the display label",
+      "tasks": [
+        "T011"
+      ]
+    },
+    "FR-026": {
+      "title": "Preserve every command id, view id, stored setting, lifecycle rule, multi-select, filter, sort, and Resume gate",
+      "tasks": [
+        "T001",
+        "T023"
+      ]
+    },
+    "FR-027": {
+      "title": "Keep sidebar rendering native: no webview, no custom styling, no hand-rolled hover/focus/selection/menus",
+      "tasks": [
+        "T001"
+      ]
+    },
+    "FR-028": {
+      "title": "Cover the contribution manifest and tree presentation logic with automated regression tests",
+      "tasks": [
+        "T001",
+        "T004",
+        "T005",
+        "T018",
+        "T022",
+        "T023",
+        "T026",
+        "T027",
+        "T032"
+      ]
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 20,
+    "projectedTasks": 40,
+    "scopeSignal": "larger",
+    "verdict": "oversized"
+  },
+  "intent": "Make the SpecKit sidebar read as one coherent, quiet, VS Code-native product without changing any behavior",
+  "expectations": [
+    "No webview, custom CSS, or hand-rolled hover/focus/selection/menu rendering",
+    "No breaking changes to command ids, view ids, stored settings, lifecycle rules, multi-select, filter/sort, or Resume gates",
+    "No redesign of the spec viewer or editor webviews",
+    "No new icon package; no renaming files or directories on disk",
+    "Screenshots are a manual surface — not captured by this change"
+  ],
+  "context": [
+    "area: src/features/specs (spec + living-specs tree providers, spec commands)",
+    "area: src/features/steering (steering tree provider, provider icons)",
+    "area: package.json contributions (views, commands, menus)",
+    "constraint: stay native to VS Code TreeView semantics"
+  ],
+  "approach": "Presentation-only pass across package.json contributions and the four tree providers: retitle views, collapse spec rows by default, swap decorative SVGs for themed Codicons, extract a pure provider-icon resolver and a friendly-status formatter, consolidate the Specs toolbar behind a More Actions QuickPick, align hover and right-click menus with Delete isolated, and rebuild the Steering root in explicit order. A manifest-parsing test plus tree-presentation tests land first as the safety net.",
+  "decisions": [
+    {
+      "decision": "Lock the contributed manifest with a package.json-parsing test before changing anything",
+      "why": "Every acceptance criterion is a statement about the manifest or a tree item field, and none is covered today",
+      "rejected": "Integration tests against a real VS Code host — slow and cannot assert a ceiling on title actions"
+    },
+    {
+      "decision": "Extract provider-icon selection into a pure resolver returning a discriminated icon key",
+      "why": "The icon path disagrees with the label path today — an unknown IDE Chat host renders Copilot branding",
+      "rejected": "Fixing the ternary in place inside the TreeItem constructor — untestable and drifts again"
+    },
+    {
+      "decision": "Wibey resolves to an explicit, documented neutral chat Codicon",
+      "why": "No official Wibey mark ships and inventing one is worse than an honest neutral glyph; an explicit table row turns an accidental fallback into a documented one",
+      "rejected": "Reusing the generic robot glyph — indistinguishable from an unknown provider"
+    },
+    {
+      "decision": "Consolidate the Specs toolbar behind a More Actions QuickPick built by a pure composition function",
+      "why": "Makes the picker composition unit-testable against every context combination, which a declarative submenu cannot be",
+      "rejected": "A view/title submenu contribution"
+    },
+    {
+      "decision": "Filter clears on an empty submission; the clear-filter icon leaves the title bar",
+      "why": "Buys back a title slot without losing a capability; the command stays registered for the palette and the no-match welcome view",
+      "rejected": "Dropping Sort to More Actions instead — the plan requires Sort to stay a direct title action"
+    },
+    {
+      "decision": "Document status icons stop depending on the parent spec lifecycle",
+      "why": "Expanding a completed spec currently shows iconless rows that read as nothing happened; the parent beaker already carries the parent state",
+      "rejected": "Muting child icons under an archived parent"
+    },
+    {
+      "decision": "A missing spec document gets its own context value rather than reusing the per-step one",
+      "why": "Menus gate on the context value, so a distinct value is the only way to stop offering open and reveal actions against a file that is not there",
+      "rejected": "Leaving the per-step context value and letting the reveal handler error at click time"
+    },
+    {
+      "decision": "The Specs More Actions picker is a QuickPick composed by a pure function, not a contributed submenu",
+      "why": "The composition is then unit-testable against every context combination, and the collapse entry can reflect the current tree state as one line",
+      "rejected": "A view/title submenu contribution"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Presentation-only redesign across the manifest and four tree providers, with two pure modules extracted for the provider-icon and friendly-status correctness bugs",
+      "key_finding": "The provider icon and the provider display name are computed by two separate code paths that disagree for an unknown IDE Chat host — the icon falls through to Copilot while the label says IDE Chat"
+    },
+    "tasks": {
+      "summary": "38 tasks across 10 phases — foundational safety net (manifest lock + two pure modules), then one phase per user story in priority order, ending in docs and a full verification gate"
+    },
+    "implement": {
+      "summary": "Presentation-only sidebar redesign: renamed views, collapsed spec rows, Codicon icon system, tested provider-icon resolver, four-action toolbar behind a More Actions picker, aligned hover/right-click menus with Delete isolated, rebuilt Steering root, full reveal coverage, and refreshed docs"
+    }
+  },
+  "currentTask": "T038",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added a package.json-parsing manifest lock test covering view titles, the four-action Specs toolbar, spec-row menu grouping with Delete isolated, lifecycle when-clauses, and reveal eligibility",
+      "files": [
+        "src/features/specs/__tests__/manifest.test.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Created the pure provider-icon resolver with host-IDE detection and a documented neutral fallback",
+      "files": [
+        "src/features/steering/providerIcon.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Created the pure friendly-status formatter for spec and document statuses",
+      "files": [
+        "src/features/specs/specStatusLabel.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Tested the provider-icon resolver across every provider and host, asserting label/icon agreement and no Copilot fallback in an unknown host",
+      "files": [
+        "src/features/steering/__tests__/providerIcon.test.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Tested the friendly-status formatter for every canonical status and an unknown value",
+      "files": [
+        "src/features/specs/__tests__/specStatusLabel.test.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Renamed the contributed view titles to Living Specs and Settings & Feedback, leaving ids, when-clauses, and visibility untouched",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Manifest test asserts the new view titles",
+      "files": [
+        "src/features/specs/__tests__/manifest.test.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Applied the command-title copy table across 25 commands without changing an id, and added the More Actions command",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Manifest test asserts every retitled command and that no title carries an emoji",
+      "files": [
+        "src/features/specs/__tests__/manifest.test.ts"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Reduced the Specs title bar to Filter, Sort, More Actions, and New Spec; moved clear-filter, collapse/expand, install, and upgrade out while keeping them contributed",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "Manifest test asserts the four-action ceiling and that every removed title action is still a contributed, palette-reachable command",
+      "files": [
+        "src/features/specs/__tests__/manifest.test.ts"
+      ]
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "Rebuilt the spec-row context menu on the same five groups as the hover submenu with Delete isolated in 5_danger, and extended reveal eligibility to orphan living specs and every file-backed Steering row",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T027": {
+      "status": "DONE",
+      "did": "Manifest test asserts hover/right-click parity, Delete isolation, the full reveal matrix, and that missing rows expose no reveal",
+      "files": [
+        "src/features/specs/__tests__/manifest.test.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Replaced the Specs group SVGs with pulse / passed-tinted check / archive Codicons and rewrote the group tooltips",
+      "files": [
+        "src/features/specs/specExplorerProvider.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Replaced every generic Steering category SVG with a themed Codicon, keeping the moss product mark and the official provider marks",
+      "files": [
+        "src/features/steering/steeringExplorerProvider.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Rewrote spec-row tooltips as multi-line friendly status plus last activity, dropped the leading bullet from the description, and derived document tooltips from the stored path",
+      "files": [
+        "src/features/specs/specExplorerProvider.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Standardized the agent tools count and made the missing-rule tooltips name the configured provider's steering filename",
+      "files": [
+        "src/features/steering/steeringExplorerProvider.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Rewrote the provider icon as a thin adapter over the pure resolver",
+      "files": [
+        "src/features/steering/steeringExplorerProvider.ts"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Defaulted individual spec rows to collapsed",
+      "files": [
+        "src/features/specs/specExplorerProvider.ts"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Seeded the all-collapsed context key at registration and in the activation reset so the affordance reads correctly on a fresh window",
+      "files": [
+        "src/features/specs/specCommands.ts",
+        "src/core/utils/contextKeys.ts"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Document status icons now derive from the document's own state regardless of parent lifecycle, with a distinct context value for a missing document",
+      "files": [
+        "src/features/specs/specExplorerProvider.ts"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Extended the spec-explorer tests for collapsed defaults, Codicon groups, friendly tooltips, and document icons under every parent lifecycle",
+      "files": [
+        "src/features/specs/__tests__/specExplorerProvider.test.ts"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Added the pure More Actions composition function",
+      "files": [
+        "src/features/specs/specsMoreActions.ts"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Registered the More Actions picker, made an empty filter submission clear the filter, and compacted the sort picker copy",
+      "files": [
+        "src/features/specs/specCommands.ts"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Tested the More Actions composition across every context combination plus the sort picker labels and the filter clear-on-empty path",
+      "files": [
+        "src/features/specs/__tests__/specsMoreActions.test.ts",
+        "src/features/specs/specCommands.test.ts",
+        "tests/__mocks__/vscode.ts"
+      ]
+    },
+    "T025": {
+      "status": "DONE",
+      "did": "Related-document rows now carry a file URI so the open and reveal actions resolve, and missing documents expose neither",
+      "files": [
+        "src/features/specs/specExplorerProvider.ts"
+      ]
+    },
+    "T026": {
+      "status": "DONE",
+      "did": "Added Living Specs provider tests for the disabled, empty, orphan, and missing-capability states, and corrected the empty-state copy",
+      "files": [
+        "src/features/specs/__tests__/livingSpecsExplorerProvider.test.ts",
+        "src/features/specs/livingSpecsExplorerProvider.ts"
+      ]
+    },
+    "T028": {
+      "status": "DONE",
+      "did": "Built the Steering root in one explicit order and renamed the spec-kit section to SpecKit Project Files",
+      "files": [
+        "src/features/steering/steeringExplorerProvider.ts"
+      ]
+    },
+    "T029": {
+      "status": "DONE",
+      "did": "Moved the missing rule create actions into the provider's Project and User groups",
+      "files": [
+        "src/features/steering/steeringExplorerProvider.ts"
+      ]
+    },
+    "T030": {
+      "status": "DONE",
+      "did": "The Companion Configuration row now opens the config file on click while still listing its setting groups",
+      "files": [
+        "src/features/steering/steeringExplorerProvider.ts"
+      ]
+    },
+    "T031": {
+      "status": "DONE",
+      "did": "Removed the artificial loading flicker from the Steering refresh",
+      "files": [
+        "src/features/steering/steeringExplorerProvider.ts"
+      ]
+    },
+    "T032": {
+      "status": "DONE",
+      "did": "Added Steering provider tests for root order, nested create actions with real provider filenames, the Companion node, and the flicker-free refresh",
+      "files": [
+        "src/features/steering/__tests__/steeringExplorerProvider.test.ts"
+      ]
+    },
+    "T033": {
+      "status": "DONE",
+      "did": "Deleted the unreferenced decorative icon assets and updated NOTICE to stop attributing artwork the extension no longer ships",
+      "files": [
+        "assets/icons/specs",
+        "assets/icons/steering",
+        "NOTICE.md"
+      ]
+    },
+    "T034": {
+      "status": "DONE",
+      "did": "Rewrote the sidebar reference for the new view names, four-action toolbar, More Actions picker, Codicon icon system, provider-icon table with Wibey's documented fallback, aligned menus, and the rebuilt Steering hierarchy",
+      "files": [
+        "docs/sidebar.md"
+      ]
+    },
+    "T035": {
+      "status": "DONE",
+      "did": "Rewrote the README's Sidebar at a Glance for the new names, collapsed-by-default rows, four-action toolbar, and aligned menus",
+      "files": [
+        "README.md"
+      ]
+    },
+    "T036": {
+      "status": "DONE",
+      "did": "Added the user-facing changelog entry under Unreleased",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T037": {
+      "status": "DONE",
+      "did": "Committed the design plan this feature implements",
+      "files": [
+        "docs/sidebar-redesign-plan.md"
+      ]
+    },
+    "T038": {
+      "status": "DONE",
+      "did": "Ran compile, the full Jest suite (1456 tests, 107 suites), and the packaging build — all green",
+      "files": [
+        "specs/396-sidebar-redesign"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "TypeScript compilation",
+      "command": "npm run compile",
+      "result": "clean"
+    },
+    {
+      "what": "Full Jest suite",
+      "command": "npm test",
+      "result": "107 suites, 1456 tests, all passing"
+    },
+    {
+      "what": "Production packaging build",
+      "command": "npm run package",
+      "result": "packaged 470 files, 1.39MB"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Screenshots could not be re-rendered — capturing the sidebar needs a human running VS Code, so docs/screenshots/ was deliberately left untouched rather than shipping a stale or faked image.",
+      "step": "implement"
+    }
+  ],
+  "last_action": "all 38 tasks done — compile, 1456 tests, and the packaging build green"
+}

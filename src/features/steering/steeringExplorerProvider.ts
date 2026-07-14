@@ -11,6 +11,7 @@ import { SkillManager, SkillInfo, SkillType } from '../skills/skillManager';
 import { AIProviders, TreeItemContext } from '../../core/constants';
 import { isCompanionInstalled } from '../settings/companionPresetReconciler';
 import { readCompanionConfigGroups, readCompanionCommands, readCompanionTemplates, isWithinRoot, companionCommandFilePath, COMPANION_STEERING_PATHS } from './companionSteering';
+import { resolveProviderIconKey, detectHostIde } from './providerIcon';
 
 export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem> {
     private steeringManager!: SteeringManager;
@@ -141,126 +142,74 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
     }
 
     refresh(): void {
-        this.isLoading = true;
-        this._onDidChangeTreeData.fire(); // Show loading state immediately
+        this._onDidChangeTreeData.fire();
+    }
 
-        // Simulate async loading
-        setTimeout(() => {
-            this.isLoading = false;
-            this._onDidChangeTreeData.fire(); // Show actual content
-        }, 100);
+    /** Root sections, built in one explicit order: Companion, Provider, Steering Docs, SpecKit Project Files, References. */
+    private async getRootChildren(): Promise<SteeringItem[]> {
+        const items: SteeringItem[] = [];
+
+        const companionNode = this.buildCompanionHeaderNode();
+        if (companionNode) {
+            items.push(companionNode);
+        }
+
+        items.push(new SteeringItem(
+            getProviderDisplayName(getConfiguredProviderType()),
+            vscode.TreeItemCollapsibleState.Collapsed,
+            TreeItemContext.providerHeader,
+            '',
+            this.context
+        ));
+
+        const providerType = getConfiguredProviderType();
+        const providerPaths = getProviderPaths(providerType);
+        if (vscode.workspace.workspaceFolders && providerPaths.steeringDir) {
+            const steeringDocs = await this.getProviderSteeringDocuments(providerType, providerPaths);
+            if (steeringDocs.length > 0) {
+                items.push(new SteeringItem(
+                    'Steering Docs',
+                    vscode.TreeItemCollapsibleState.Expanded,
+                    TreeItemContext.steeringHeader,
+                    '',
+                    this.context
+                ));
+            }
+        }
+
+        const specKitFiles = await this.getSpecKitFiles();
+        const hasSpecKitContent = specKitFiles.constitution ||
+            specKitFiles.scripts.length > 0 ||
+            specKitFiles.templates.length > 0;
+
+        if (hasSpecKitContent) {
+            items.push(new SteeringItem(
+                'SpecKit Project Files',
+                vscode.TreeItemCollapsibleState.Expanded,
+                TreeItemContext.speckitHeader,
+                '',
+                this.context
+            ));
+        }
+
+        // Folders a custom workflow reads as reference docs — not specs, so they
+        // surface here rather than in the Specs tree.
+        if (this.getWorkflowReferenceSources().length > 0) {
+            items.push(new SteeringItem(
+                'References',
+                vscode.TreeItemCollapsibleState.Collapsed,
+                TreeItemContext.referencesHeader,
+                '',
+                this.context
+            ));
+        }
+
+        return items;
     }
 
     async getChildren(element?: SteeringItem): Promise<SteeringItem[]> {
         if (!element) {
-            // Root level - show steering files based on provider
-            const items: SteeringItem[] = [];
-
-            if (this.isLoading) {
-                items.push(new SteeringItem(
-                    'Loading steering documents...',
-                    vscode.TreeItemCollapsibleState.None,
-                    'steering-loading',
-                    '',
-                    this.context
-                ));
-                return items;
-            }
-
-            const providerType = getConfiguredProviderType();
-            const providerPaths = getProviderPaths(providerType);
-            const { globalExists, projectExists } = this.getSteeringFilePaths(providerType, providerPaths);
-
-            // Traditional steering documents - provider-specific
-            if (vscode.workspace.workspaceFolders && providerPaths.steeringDir) {
-                const steeringDocs = await this.getProviderSteeringDocuments(providerType, providerPaths);
-                if (steeringDocs.length > 0) {
-                    items.push(new SteeringItem(
-                        'Steering Docs',
-                        vscode.TreeItemCollapsibleState.Expanded,
-                        TreeItemContext.steeringHeader,
-                        '',
-                        this.context
-                    ));
-                }
-            }
-
-            const specKitFiles = await this.getSpecKitFiles();
-            const hasSpecKitContent = specKitFiles.constitution ||
-                specKitFiles.scripts.length > 0 ||
-                specKitFiles.templates.length > 0;
-
-            if (hasSpecKitContent) {
-                items.push(new SteeringItem(
-                    'SpecKit Files',
-                    vscode.TreeItemCollapsibleState.Expanded,
-                    TreeItemContext.speckitHeader,
-                    '',
-                    this.context
-                ));
-            }
-
-            // Per-workflow reference-doc sources (issue #425). These are folders a
-            // custom workflow reads but that are not specs — they surface here rather
-            // than in the Specs tree.
-            if (this.getWorkflowReferenceSources().length > 0) {
-                items.push(new SteeringItem(
-                    'References',
-                    vscode.TreeItemCollapsibleState.Collapsed,
-                    TreeItemContext.referencesHeader,
-                    '',
-                    this.context
-                ));
-            }
-
-            // AI Provider section — CLAUDE.md, agents, skills, settings under provider name
-            items.push(new SteeringItem(
-                getProviderDisplayName(getConfiguredProviderType()),
-                vscode.TreeItemCollapsibleState.Collapsed,
-                TreeItemContext.providerHeader,
-                '',
-                this.context
-            ));
-
-            // Companion group — install state, configuration, and command discovery.
-            // Positioned as the second top-level entry (spliced in below).
-            const companionNode = this.buildCompanionHeaderNode();
-
-            // Add create buttons for missing files (only providers that own a steering file)
-            if (providerPaths.globalSteeringFile && !globalExists) {
-                items.push(new SteeringItem(
-                    'Create Global Rule',
-                    vscode.TreeItemCollapsibleState.None,
-                    TreeItemContext.createGlobal,
-                    '',
-                    this.context,
-                    {
-                        command: 'speckit.steering.createUserRule',
-                        title: `Create Global ${providerPaths.steeringFile}`
-                    }
-                ));
-            }
-
-            if (vscode.workspace.workspaceFolders && providerPaths.steeringFile && !projectExists) {
-                items.push(new SteeringItem(
-                    'Create Project Rule',
-                    vscode.TreeItemCollapsibleState.None,
-                    TreeItemContext.createProject,
-                    '',
-                    this.context,
-                    {
-                        command: 'speckit.steering.createProjectRule',
-                        title: `Create Project ${providerPaths.steeringFile}`
-                    }
-                ));
-            }
-
-            if (companionNode) {
-                // Second top-level entry when anything precedes it, else first.
-                items.splice(Math.min(1, items.length), 0, companionNode);
-            }
-
-            return items;
+            return this.getRootChildren();
         } else if (element.contextValue === 'steering-header') {
             // Return steering documents as children of the header
             const items: SteeringItem[] = [];
@@ -632,7 +581,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
         const providerPaths = getProviderPaths(providerType);
         const { projectPath, projectExists } = this.getSteeringFilePaths(providerType, providerPaths);
 
-        // Steering file (e.g., CLAUDE.md)
+        // Steering file (e.g., CLAUDE.md), or the action that creates it.
         if (projectExists && projectPath) {
             items.push(new SteeringItem(
                 providerPaths.steeringFile,
@@ -646,6 +595,20 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                     arguments: [vscode.Uri.file(projectPath)]
                 }
             ));
+        } else if (vscode.workspace.workspaceFolders && providerPaths.steeringFile) {
+            const create = new SteeringItem(
+                'Create Project Rule',
+                vscode.TreeItemCollapsibleState.None,
+                TreeItemContext.createProject,
+                '',
+                this.context,
+                {
+                    command: 'speckit.steering.createProjectRule',
+                    title: `Create project-level ${providerPaths.steeringFile}`
+                }
+            );
+            create.tooltip = `Create project-level ${providerPaths.steeringFile}`;
+            items.push(create);
         }
 
         // Agents sub-header
@@ -714,7 +677,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
         const providerPaths = getProviderPaths(providerType);
         const { globalPath, globalExists } = this.getSteeringFilePaths(providerType, providerPaths);
 
-        // Steering file (e.g., CLAUDE.md)
+        // Steering file (e.g., CLAUDE.md), or the action that creates it.
         if (globalExists && globalPath) {
             items.push(new SteeringItem(
                 providerPaths.steeringFile,
@@ -728,6 +691,20 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                     arguments: [vscode.Uri.file(globalPath)]
                 }
             ));
+        } else if (providerPaths.globalSteeringFile) {
+            const create = new SteeringItem(
+                'Create User Rule',
+                vscode.TreeItemCollapsibleState.None,
+                TreeItemContext.createGlobal,
+                '',
+                this.context,
+                {
+                    command: 'speckit.steering.createUserRule',
+                    title: `Create user-level ${providerPaths.steeringFile}`
+                }
+            );
+            create.tooltip = `Create user-level ${providerPaths.steeringFile}`;
+            items.push(create);
         }
 
         // Agents sub-header (user + plugin)
@@ -846,7 +823,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             );
             item.tooltip = agent.description || agent.name;
             if (agent.tools) {
-                item.description = `Tools: ${agent.tools.length}`;
+                item.description = `${agent.tools.length} tools`;
             }
             return item;
         });
@@ -926,13 +903,22 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
 
         const configPath = path.join(root, COMPANION_STEERING_PATHS.config);
         if (isWithinRoot(root, configPath)) {
-            items.push(new SteeringItem(
+            // Configuration is a single file, so clicking it opens that file
+            // rather than only toggling the group open.
+            const config = new SteeringItem(
                 'Configuration',
                 vscode.TreeItemCollapsibleState.Collapsed,
                 TreeItemContext.companionConfigGroup,
                 configPath,
-                this.context
-            ));
+                this.context,
+                {
+                    command: 'vscode.open',
+                    title: 'Open Companion Configuration',
+                    arguments: [vscode.Uri.file(configPath)]
+                }
+            );
+            config.tooltip = COMPANION_STEERING_PATHS.config;
+            items.push(config);
         }
 
         items.push(new SteeringItem(
@@ -1053,78 +1039,72 @@ class SteeringItem extends vscode.TreeItem {
             this.iconPath = new vscode.ThemeIcon('sync~spin');
             this.tooltip = 'Loading steering documents...';
         } else if (contextValue === C.steeringFile) {
-            this.iconPath = this.steerIcon('doc.svg');
+            this.iconPath = new vscode.ThemeIcon('file');
             this.tooltip = resourcePath;
-        } else if (contextValue === C.createGlobal) {
-            this.iconPath = this.steerIcon('globe.svg');
-            this.tooltip = 'Click to create Global CLAUDE.md';
-        } else if (contextValue === C.createProject) {
-            this.iconPath = this.steerIcon('folder.svg');
-            this.tooltip = 'Click to create Project CLAUDE.md';
+        } else if (contextValue === C.createGlobal || contextValue === C.createProject) {
+            this.iconPath = new vscode.ThemeIcon('add');
         } else if (contextValue === C.separator) {
             this.iconPath = undefined;
             this.description = undefined;
         } else if (contextValue === C.steeringHeader) {
-            this.iconPath = this.steerIcon('folder.svg');
+            this.iconPath = new vscode.ThemeIcon('files');
             this.tooltip = 'Generated project steering documents';
         } else if (contextValue === C.steeringDocument) {
-            if (label === 'product') {
-                this.iconPath = this.steerIcon('product.svg');
-            } else if (label === 'tech') {
-                this.iconPath = this.steerIcon('tech.svg');
-            } else if (label === 'structure') {
-                this.iconPath = this.steerIcon('structure.svg');
-            } else {
-                this.iconPath = this.steerIcon('doc.svg');
-            }
-            this.tooltip = `Steering document: ${resourcePath}`;
+            this.iconPath = new vscode.ThemeIcon('file');
+            this.tooltip = resourcePath;
             this.description = filename;
         } else if (contextValue === C.speckitHeader) {
-            this.iconPath = this.steerIcon('library.svg');
+            this.iconPath = new vscode.ThemeIcon('library');
             this.tooltip = 'SpecKit project configuration files';
         } else if (contextValue === C.speckitConstitution) {
-            this.iconPath = this.steerIcon('constitution.svg');
-            this.tooltip = `Project Constitution: ${resourcePath}`;
+            this.iconPath = new vscode.ThemeIcon('law');
+            this.tooltip = resourcePath;
         } else if (contextValue === C.speckitScriptsCategory) {
-            this.iconPath = this.steerIcon('scripts.svg');
+            this.iconPath = new vscode.ThemeIcon('terminal');
             this.tooltip = 'SpecKit automation scripts';
         } else if (contextValue === C.speckitScript) {
             this.iconPath = undefined;
-            this.tooltip = `Script: ${resourcePath}`;
+            this.tooltip = resourcePath;
         } else if (contextValue === C.speckitTemplatesCategory) {
-            this.iconPath = this.steerIcon('templates.svg');
+            this.iconPath = new vscode.ThemeIcon('files');
             this.tooltip = 'SpecKit document templates';
         } else if (contextValue === C.speckitTemplate) {
             this.iconPath = undefined;
-            this.tooltip = `Template: ${resourcePath}`;
+            this.tooltip = resourcePath;
+        } else if (contextValue === C.referencesHeader) {
+            this.iconPath = new vscode.ThemeIcon('references');
+            this.tooltip = 'Reference documents your workflows read';
+        } else if (contextValue === C.referencesSource) {
+            this.iconPath = new vscode.ThemeIcon('folder');
+            this.tooltip = resourcePath;
         } else if (contextValue === C.providerHeader) {
-            this.iconPath = this.providerIcon();
+            this.iconPath = providerIconPath(this.extContext);
             this.tooltip = `${label} configuration files`;
         } else if (contextValue === C.providerProjectGroup) {
-            this.iconPath = this.steerIcon('folder.svg');
+            this.iconPath = new vscode.ThemeIcon('root-folder');
             this.tooltip = 'Project-scoped configuration files';
         } else if (contextValue === C.providerUserGroup) {
-            this.iconPath = this.steerIcon('globe.svg');
+            this.iconPath = new vscode.ThemeIcon('account');
             this.tooltip = 'User-scoped configuration files';
         } else if (contextValue === C.providerAgentsGroup) {
-            this.iconPath = this.steerIcon('agents.svg');
+            this.iconPath = new vscode.ThemeIcon('hubot');
             this.tooltip = 'Agents';
         } else if (contextValue === C.providerSkillsGroup) {
-            this.iconPath = this.steerIcon('skills.svg');
+            this.iconPath = new vscode.ThemeIcon('tools');
             this.tooltip = 'Skills';
         } else if (contextValue === C.providerSettings) {
-            this.iconPath = this.steerIcon('settings.svg');
-            this.tooltip = `Settings: ${resourcePath}`;
+            this.iconPath = new vscode.ThemeIcon('gear');
+            this.tooltip = resourcePath;
         } else if (contextValue === C.companionConfigGroup) {
-            this.iconPath = this.steerIcon('settings.svg');
+            this.iconPath = new vscode.ThemeIcon('gear');
         } else if (contextValue === C.companionConfigItem) {
             this.iconPath = undefined;
         } else if (contextValue === C.companionCommandsGroup) {
-            this.iconPath = this.steerIcon('commands.svg');
+            this.iconPath = new vscode.ThemeIcon('terminal');
         } else if (contextValue === C.companionCommand) {
             this.iconPath = undefined;
         } else if (contextValue === C.companionTemplatesGroup) {
-            this.iconPath = this.steerIcon('templates.svg');
+            this.iconPath = new vscode.ThemeIcon('files');
         } else if (contextValue === C.companionTemplate) {
             this.iconPath = undefined;
         } else if (contextValue === C.agent) {
@@ -1132,36 +1112,27 @@ class SteeringItem extends vscode.TreeItem {
         } else if (contextValue === C.skill) {
             this.iconPath = undefined;
         } else if (contextValue === C.skillWarning) {
-            this.iconPath = this.steerIcon('warning.svg');
+            this.iconPath = new vscode.ThemeIcon('warning', new vscode.ThemeColor('list.warningForeground'));
         }
     }
+}
 
-    private steerIcon(file: string): vscode.Uri {
-        return vscode.Uri.joinPath(this.extContext.extensionUri, 'assets', 'icons', 'steering', file);
-    }
-
-    private providerIcon(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } {
-        const p = (f: string) => vscode.Uri.joinPath(this.extContext.extensionUri, 'assets', 'icons', 'providers', f);
-        const mono = (name: string) => ({ light: p(`${name}-light.svg`), dark: p(`${name}-dark.svg`) });
-        let id = vscode.workspace.getConfiguration('speckit').get<string>('aiProvider') || 'claude';
-        // IDE Chat routes to the host editor's own chat — show that editor's brand.
-        if (id === 'ide-chat') {
-            const app = (vscode.env.appName || '').toLowerCase();
-            id = app.includes('cursor') ? 'cursor' : app.includes('windsurf') ? 'windsurf' : 'copilot';
-        }
-        const colorful: Record<string, string> = {
-            claude: 'claude.svg',
-            'claude-vscode': 'claude.svg',
-            gemini: 'gemini.svg',
-            qwen: 'qwen.svg',
-        };
-        const monochrome = new Set(['copilot', 'codex', 'opencode', 'cursor', 'windsurf']);
-        if (colorful[id]) {
-            return p(colorful[id]);
-        }
-        if (monochrome.has(id)) {
-            return mono(id);
-        }
-        return this.steerIcon('agents.svg');
+/**
+ * Turn the resolver's icon key into the shape VS Code wants. The resolver owns
+ * the choice so the row's mark can never disagree with its label.
+ */
+function providerIconPath(
+    extContext: vscode.ExtensionContext
+): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | vscode.ThemeIcon {
+    const asset = (f: string) => vscode.Uri.joinPath(extContext.extensionUri, 'assets', 'icons', 'providers', f);
+    const id = vscode.workspace.getConfiguration('speckit').get<string>('aiProvider') || AIProviders.CLAUDE;
+    const key = resolveProviderIconKey(id, detectHostIde(vscode.env.uriScheme, vscode.env.appName));
+    switch (key.kind) {
+        case 'asset':
+            return asset(key.file);
+        case 'mono':
+            return { light: asset(`${key.name}-light.svg`), dark: asset(`${key.name}-dark.svg`) };
+        default:
+            return new vscode.ThemeIcon(key.id);
     }
 }
