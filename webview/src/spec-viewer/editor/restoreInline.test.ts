@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */
 import { restoreComments } from './restoreComments';
-import { clearAllRefinements } from './refinements';
+import { clearAllRefinements, showInlineEditorForEdit } from './refinements';
 import { navState, pendingRefinements, viewerState } from '../signals';
 import type { ReviewComment } from '../types';
 
@@ -94,6 +94,17 @@ describe('restoreComments', () => {
 
         const line = document.querySelector('.line[data-line="3"]') as HTMLElement;
         expect(line.querySelector('.inline-comment')).not.toBeNull();
+    });
+
+    it('edits a drifted comment against the line it now sits on, not its stored line', () => {
+        renderDocument(['intro', 'a new paragraph', 'the target line']);
+        viewerState.value = { reviewComments: [comment()] } as never;
+        restoreComments();
+
+        showInlineEditorForEdit('c1');
+
+        const editor = document.querySelector('.line[data-line="3"] .inline-editor');
+        expect(editor?.querySelector('.editor-header-target')?.textContent).toBe('Editing comment on line 3');
     });
 
     it('flips a mounted comment to applied when a refine run marks it, dropping it from the Refine count', () => {

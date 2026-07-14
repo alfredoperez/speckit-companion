@@ -8,9 +8,10 @@ import type { Refinement, ReviewComment, VSCodeApi } from '../types';
 import { pendingRefinements } from '../signals';
 import { detectLineType } from './lineActions';
 import { currentDoc } from './currentDoc';
-import { showInlineEditorForEdit } from './inlineEditor';
+import { closeInlineEditor, openInlineEditor } from './editorHost';
 import { isReadOnly } from './readOnly';
 import { InlineComment } from '../components/InlineComment';
+import { InlineEditor } from '../components/InlineEditor';
 
 declare const vscode: VSCodeApi;
 
@@ -80,9 +81,11 @@ export function addRestoredRefinement(comment: ReviewComment, lineEl: HTMLElemen
     const lineContent = lineEl.querySelector('.line-content')?.textContent?.trim()
         || comment.anchor.blockText.split('\n')[0]
         || '';
+    // Re-anchoring can mount a comment on a line other than its stored one — the card speaks for where it now sits.
+    const mountedLine = Number(lineEl.dataset.line) || comment.anchor.line;
     const refinement: Refinement = {
         id: comment.id,
-        lineNum: comment.anchor.line,
+        lineNum: mountedLine,
         lineContent,
         comment: comment.comment,
         lineType: detectLineType(lineEl),
@@ -132,6 +135,42 @@ function renderComment(targetEl: HTMLElement, ref: Refinement, mode: 'line' | 'r
 /** The mounted comment behind an id, for the edit flow. */
 export function mountedRefinement(refId: string): MountedComment | undefined {
     return mounted.get(refId);
+}
+
+/** Reopen the composer on an existing comment, pre-filled with its current text. */
+export function showInlineEditorForEdit(refId: string): void {
+    if (isReadOnly()) return;
+
+    const entry = mounted.get(refId);
+    if (!entry) return;
+
+    closeInlineEditor();
+
+    const { ref, target, mode } = entry;
+    const container = document.createElement(mode === 'row' ? 'tbody' : 'div');
+    if (mode === 'row') {
+        target.parentElement?.insertBefore(container, target.nextSibling);
+    } else {
+        const commentSlot = target.querySelector('.line-comment-slot');
+        if (!commentSlot) return;
+        commentSlot.appendChild(container);
+    }
+
+    render(h(InlineEditor, {
+        mode,
+        lineNum: ref.lineNum,
+        lineType: ref.lineType,
+        initialValue: ref.comment,
+        submitLabel: 'Save',
+        onSubmit: (comment: string) => {
+            editRefinement(refId, comment);
+            closeInlineEditor();
+        },
+        onCancel: () => closeInlineEditor(),
+        onContextAction: () => closeInlineEditor(),
+    }), container);
+
+    openInlineEditor(container, target);
 }
 
 /** Replace a mounted comment's text and persist the revision; an unchanged text is a no-op. */

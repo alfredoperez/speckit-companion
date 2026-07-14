@@ -5,28 +5,45 @@
 
 import { render, h } from 'preact';
 import type { VSCodeApi } from '../types';
-import { activeEditor } from '../signals';
-import { detectLineType, handleContextAction } from './lineActions';
-import { addRefinement, addRefinementForRow, editRefinement, mountedRefinement } from './refinements';
+import { detectLineType } from './lineActions';
+import { addRefinement, addRefinementForRow } from './refinements';
 import { InlineEditor } from '../components/InlineEditor';
 import { isReadOnly } from './readOnly';
+import { closeInlineEditor, isInlineEditorOpen, openInlineEditor } from './editorHost';
 
 declare const vscode: VSCodeApi;
 
-let activeEditorContainer: HTMLElement | null = null;
-
-function cleanup(): void {
-    if (activeEditorContainer) {
-        render(null, activeEditorContainer);
-        const lineEl = activeEditorContainer.closest('.line');
-        const rowEl = activeEditorContainer.closest('.scenario-row');
-        // For row mode, the container is a <tbody> after the row
-        const editorRow = activeEditorContainer.closest('.inline-editor-row') || activeEditorContainer;
-        lineEl?.classList.remove('editing');
-        rowEl?.classList.remove('editing');
-        activeEditorContainer.remove();
-        activeEditorContainer = null;
-        activeEditor.value = null;
+/** A remove action becomes a refinement comment, never an immediate deletion. */
+export function handleContextAction(
+    action: string,
+    lineNum: number,
+    closeEditor: () => void,
+    lineElement?: HTMLElement
+): void {
+    switch (action) {
+        case 'remove-line':
+        case 'remove-story':
+        case 'remove-section':
+        case 'remove-scenario':
+        case 'remove-task':
+            if (lineElement) {
+                const actionLabel = action.replace('remove-', '').replace('-', ' ');
+                addRefinement(lineNum, `🗑️ Remove this ${actionLabel}`, lineElement);
+            }
+            closeEditor();
+            break;
+        case 'toggle-task': {
+            closeEditor();
+            const lineEl = document.querySelector(`.line[data-line="${lineNum}"]`);
+            const checkbox = lineEl?.querySelector('input[type="checkbox"]') as HTMLInputElement;
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+                checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            break;
+        }
+        default:
+            closeEditor();
     }
 }
 
@@ -59,51 +76,7 @@ export function showInlineEditor(lineElement: HTMLElement): void {
         },
     }), container);
 
-    activeEditorContainer = container;
-    activeEditor.value = container;
-    lineElement.classList.add('editing');
-}
-
-export function closeInlineEditor(): void {
-    cleanup();
-}
-
-/** Reopen the composer on an existing comment, pre-filled with its current text. */
-export function showInlineEditorForEdit(refId: string): void {
-    if (isReadOnly()) return;
-
-    const entry = mountedRefinement(refId);
-    if (!entry) return;
-
-    closeInlineEditor();
-
-    const { ref, target, mode } = entry;
-    const container = document.createElement(mode === 'row' ? 'tbody' : 'div');
-    if (mode === 'row') {
-        target.parentElement?.insertBefore(container, target.nextSibling);
-    } else {
-        const commentSlot = target.querySelector('.line-comment-slot');
-        if (!commentSlot) return;
-        commentSlot.appendChild(container);
-    }
-
-    render(h(InlineEditor, {
-        mode,
-        lineNum: ref.lineNum,
-        lineType: ref.lineType,
-        initialValue: ref.comment,
-        submitLabel: 'Save',
-        onSubmit: (comment: string) => {
-            editRefinement(refId, comment);
-            closeInlineEditor();
-        },
-        onCancel: () => closeInlineEditor(),
-        onContextAction: () => closeInlineEditor(),
-    }), container);
-
-    activeEditorContainer = container;
-    activeEditor.value = container;
-    target.classList.add('editing');
+    openInlineEditor(container, lineElement);
 }
 
 export function showInlineEditorForRow(rowElement: HTMLElement, rowNum: number): void {
@@ -132,9 +105,7 @@ export function showInlineEditorForRow(rowElement: HTMLElement, rowNum: number):
         onContextAction: () => closeInlineEditor(),
     }), container);
 
-    activeEditorContainer = container;
-    activeEditor.value = container;
-    rowElement.classList.add('editing');
+    openInlineEditor(container, rowElement);
 }
 
 export function showInlineEdit(lineEl: HTMLElement | null, lineNum: number, content: string): void {
@@ -202,7 +173,7 @@ export function setupLineActions(): void {
         }
 
         // The Edit action opens the composer on the same click that bubbles here.
-        if (activeEditorContainer && !target.closest('.inline-editor') && !target.closest('.inline-comment')) {
+        if (isInlineEditorOpen() && !target.closest('.inline-editor') && !target.closest('.inline-comment')) {
             closeInlineEditor();
         }
     });

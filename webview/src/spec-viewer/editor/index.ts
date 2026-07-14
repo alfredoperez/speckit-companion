@@ -1,11 +1,12 @@
 export {
     showInlineEditor,
-    closeInlineEditor,
     showInlineEditorForRow,
-    showInlineEditorForEdit,
     showInlineEdit,
+    handleContextAction,
     setupLineActions
 } from './inlineEditor';
+
+export { closeInlineEditor } from './editorHost';
 
 export {
     addRefinement,
@@ -13,6 +14,7 @@ export {
     addRefinementForRow,
     editRefinement,
     mountedRefinement,
+    showInlineEditorForEdit,
     updateRefineButton,
     submitAllRefinements,
     clearAllRefinements,
@@ -25,6 +27,5 @@ export { restoreComments } from './restoreComments';
 
 export {
     detectLineType,
-    getContextActions,
-    handleContextAction
+    getContextActions
 } from './lineActions';
