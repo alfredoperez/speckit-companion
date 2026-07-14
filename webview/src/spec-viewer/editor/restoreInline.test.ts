@@ -1,10 +1,4 @@
-/**
- * @jest-environment jsdom
- *
- * Restore-on-reopen: a spec's saved comments come back on their lines when the
- * document renders again — pending ones live, applied ones as a quiet record —
- * and only the pending ones are counted by the Refine badge.
- */
+/** @jest-environment jsdom */
 import { restoreComments } from './restoreComments';
 import { clearAllRefinements } from './refinements';
 import { navState, pendingRefinements, viewerState } from '../signals';
@@ -100,6 +94,35 @@ describe('restoreComments', () => {
 
         const line = document.querySelector('.line[data-line="3"]') as HTMLElement;
         expect(line.querySelector('.inline-comment')).not.toBeNull();
+    });
+
+    it('flips a mounted comment to applied when a refine run marks it, dropping it from the Refine count', () => {
+        renderDocument(['intro', 'the target line']);
+        viewerState.value = { reviewComments: [comment()] } as never;
+        restoreComments();
+        expect(pendingRefinements.value).toHaveLength(1);
+
+        // The Activity panel's "Run refinement" dispatches without clearing the
+        // mounted cards; the refreshed context is what must correct them.
+        viewerState.value = { reviewComments: [comment({ status: 'applied' })] } as never;
+        restoreComments();
+
+        expect(annotations()).toHaveLength(1);
+        expect(annotations()[0].className).toContain('inline-comment--applied');
+        expect(pendingRefinements.value).toEqual([]);
+    });
+
+    it('picks up a comment\'s revised text on the next restore', () => {
+        renderDocument(['intro', 'the target line']);
+        viewerState.value = { reviewComments: [comment()] } as never;
+        restoreComments();
+
+        viewerState.value = { reviewComments: [comment({ comment: 'revised wording' })] } as never;
+        restoreComments();
+
+        expect(annotations()).toHaveLength(1);
+        expect(document.querySelector('.comment-text')?.textContent).toBe('revised wording');
+        expect(pendingRefinements.value.map(r => r.comment)).toEqual(['revised wording']);
     });
 
     it('is idempotent — a re-render does not double-mount a comment', () => {

@@ -212,10 +212,47 @@ export const MarkupInCommentStaysLiteral: Story = {
   ),
 };
 
+/**
+ * A task line: the annotation lives in the same slot below the checkbox row, so
+ * the task text keeps the height it has with no comment on it (the row below).
+ */
+export const TaskLine: Story = {
+  decorators: [DocumentContextDecorator],
+  render: () => (
+    <ul style="padding: 0; margin: 0; list-style: none;">
+      <li
+        class="task-item line"
+        style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-2); padding: var(--space-1) 0; position: relative;"
+      >
+        <input type="checkbox" />
+        <span class="task-text line-content">Implement the login form</span>
+        <div class="line-comment-slot">
+          <InlineComment
+            refinement={refinement({ lineType: "task", comment: "OAuth providers too?" })}
+            mode="line"
+            onDelete={noop}
+            onEdit={noop}
+            onRefine={noop}
+          />
+        </div>
+      </li>
+      <li
+        class="task-item line"
+        style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-2); padding: var(--space-1) 0; position: relative;"
+      >
+        <input type="checkbox" />
+        <span class="task-text line-content">Write unit tests for login validation</span>
+        <div class="line-comment-slot"></div>
+      </li>
+    </ul>
+  ),
+};
+
 /** Acceptance-scenario tables carry the same annotation, in a row. */
 export const RowMode: Story = {
   decorators: [
     DocumentContextDecorator,
+    // The viewer mounts a row comment into its own <tbody> after the scenario row.
     (Story) => (
       <table style="width: 100%; border-collapse: collapse;">
         <tbody>
@@ -226,7 +263,9 @@ export const RowMode: Story = {
             <td />
           </tr>
         </tbody>
-        <Story />
+        <tbody>
+          <Story />
+        </tbody>
       </table>
     ),
   ],

@@ -292,8 +292,15 @@
     flex-shrink: 0;
 }
 
-.scenario-row:hover .row-add-btn {
+/* Keyboard parity with `.line-add-btn`: a scenario row is commentable without a mouse. */
+.scenario-row:hover .row-add-btn,
+.row-add-btn:focus-visible {
     opacity: 1;
+}
+
+.row-add-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
 }
 
 .row-add-btn:hover {

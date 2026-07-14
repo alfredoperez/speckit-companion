@@ -1,10 +1,4 @@
-/**
- * @jest-environment jsdom
- *
- * The annotation: a comment costs one collapsed line until it is asked to open,
- * carries its pending/applied state without opening, and can never let a
- * comment's text — which is user data — become markup.
- */
+/** @jest-environment jsdom */
 import { render } from 'preact';
 import { InlineComment } from '../InlineComment';
 import type { Refinement } from '../../types';

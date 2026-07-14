@@ -53,9 +53,11 @@
     transition: background var(--transition-fast), color var(--transition-fast);
 }
 
+/* The accent rides the glyph and caret on hover; the comment itself is readable
+   content and stays on a body-text colour in every theme. */
 .inline-comment .comment-disclosure:hover {
     background: var(--accent-subtle);
-    color: var(--accent);
+    color: var(--text-primary);
 }
 
 .inline-comment .comment-disclosure:focus-visible {

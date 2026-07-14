@@ -65,10 +65,18 @@ function persistAdd(id: string, lineNum: number, lineContent: string, comment: s
  * Mount a persisted comment that was restored from `.spec-context.json` onto an
  * already-anchored line element. Unlike `addRefinement`, this does NOT persist
  * (the comment already exists on disk) and reuses the stored id so later
- * edit/remove map back to the same record. Idempotent per id.
+ * edit/remove map back to the same record. A re-restore of an unchanged comment
+ * is a no-op; a changed one (a refine run flipped it to `applied`) re-renders in
+ * place and leaves the pending set honest.
  */
 export function addRestoredRefinement(comment: ReviewComment, lineEl: HTMLElement): void {
-    if (commentContainers.has(comment.id)) return;
+    const existing = mounted.get(comment.id);
+    const unchanged = existing
+        && commentContainers.has(comment.id)
+        && existing.ref.comment === comment.comment
+        && existing.ref.status === comment.status;
+    if (unchanged) return;
+
     const lineContent = lineEl.querySelector('.line-content')?.textContent?.trim()
         || comment.anchor.blockText.split('\n')[0]
         || '';
@@ -80,9 +88,8 @@ export function addRestoredRefinement(comment: ReviewComment, lineEl: HTMLElemen
         lineType: detectLineType(lineEl),
         status: comment.status,
     };
-    if (refinement.status === 'pending' && !pendingRefinements.value.some(r => r.id === comment.id)) {
-        pendingRefinements.value = [...pendingRefinements.value, refinement];
-    }
+    const others = pendingRefinements.value.filter(r => r.id !== comment.id);
+    pendingRefinements.value = refinement.status === 'pending' ? [...others, refinement] : others;
     renderComment(lineEl, refinement, 'line');
     updateRefineButton();
 }
@@ -156,6 +163,8 @@ export function removeRefinement(refId: string, targetEl?: HTMLElement): void {
     if (target) {
         const stillAnnotated = [...mounted.values()].some(m => m.target === target);
         if (!stillAnnotated) target.classList.remove('has-refinement');
+        // Delete unmounts the button that had focus — hand it back to the line.
+        target.querySelector<HTMLElement>('.line-add-btn, .row-add-btn')?.focus();
     }
 
     updateRefineButton();
