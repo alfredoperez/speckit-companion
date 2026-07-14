@@ -40,7 +40,7 @@ Release the **spec-kit extension** (`speckit-extension/`, `id: companion`) so pe
    cd - >/dev/null
    ( cd /tmp/cb && zip -rq companion-$V.zip companion-$V )
    ```
-   **Never hand-type the script list here.** `package-manifest.py` is the single source of truth and `--copy-to` fills the archive from it (it re-runs the gate first and refuses to copy from a failing list). This step used to enumerate the scripts by hand — it drifted behind the commands, disagreed with the copy in `docs/publishing.md`, and shipped an archive missing five runtime scripts, which left the adoption, drift, and coverage commands unrunnable for every user who installed from a release (#432). If a command starts calling a new script, CI fails until the script is added to the manifest — there is nothing to update in this file.
+   **Never hand-type the script list here.** `scripts/package-manifest.py` is the single source of truth; `--copy-to` fills the archive from it and refuses to copy from a failing list. Hand-enumerating the scripts here is what shipped an archive missing five of them (#432). If a command starts calling a new script, CI fails until the manifest carries it — there is nothing to update in this file.
 6. **Cut the release** (prefixed tag, attach the version-named zip for archival):
    ```bash
    gh release create speckit-ext-v$V /tmp/cb/companion-$V.zip \

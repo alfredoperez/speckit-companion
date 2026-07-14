@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""The packing list for the release archive — the single source of truth for which
-scripts ship, read by both the CI gate and the publish flow.
+"""The packing list for the release archive — which scripts ship, for the CI gate and the publish flow.
 
 `RUNTIME_SCRIPTS` is what goes into the archive. `--check` independently derives
 what the shipped commands actually reach for (scan the command bodies for the
@@ -12,6 +11,7 @@ and asserts the derived closure equals the declared list in BOTH directions:
   - unclassified             -> a new script with no ship/don't-ship decision
   - declared but absent      -> a typo, or a deleted script
   - referenced but missing   -> a command calls a script that exists nowhere
+  - command file absent      -> extension.yml lists a command markdown that is gone
 
 The declared list is kept rather than replaced by the derived set on purpose: a
 bare derivation would make an unrecognized reference form silently drop a script,
@@ -77,15 +77,23 @@ def _resolve_sibling(name: str, existing: set[str]) -> str | None:
     return None
 
 
+def declared_command_files() -> list[str]:
+    """Every command file `extension.yml` declares, whether or not it exists."""
+    manifest = os.path.join(EXT_ROOT, "extension.yml")
+    if not os.path.exists(manifest):
+        return []
+    return [os.path.join(EXT_ROOT, rel) for rel in MANIFEST_COMMAND_FILE.findall(_read(manifest))]
+
+
+def missing_command_files() -> list[str]:
+    return sorted(
+        os.path.relpath(p, EXT_ROOT) for p in declared_command_files() if not os.path.exists(p)
+    )
+
+
 def shipped_command_bodies() -> list[str]:
     """Every command file the manifest declares, plus the shipped workflows."""
-    paths = []
-    manifest = os.path.join(EXT_ROOT, "extension.yml")
-    if os.path.exists(manifest):
-        for rel in MANIFEST_COMMAND_FILE.findall(_read(manifest)):
-            path = os.path.join(EXT_ROOT, rel)
-            if os.path.exists(path):
-                paths.append(path)
+    paths = [p for p in declared_command_files() if os.path.exists(p)]
     workflows = os.path.join(EXT_ROOT, "workflows")
     if os.path.isdir(workflows):
         for entry in sorted(os.listdir(workflows)):
@@ -159,6 +167,11 @@ def check() -> list[str]:
         problems.append(
             f"referenced but missing: {script} — a shipped command calls it, "
             f"but no such file exists in scripts/"
+        )
+    for rel in missing_command_files():
+        problems.append(
+            f"command file absent: {rel} — extension.yml declares it under "
+            f"provides.commands, but no such file exists, so nothing scans it"
         )
     return problems
 

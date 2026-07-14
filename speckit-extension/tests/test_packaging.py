@@ -13,8 +13,10 @@ from __future__ import annotations
 
 import importlib.util
 import os
+import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
 
@@ -49,8 +51,7 @@ class TestPackingList(unittest.TestCase):
 
 class TestClosureDerivation(unittest.TestCase):
     def test_indirect_dependencies_are_reached(self):
-        """companion_config.py is named by no command — only the resolver imports it.
-        A scan of command text alone would miss it, which is how the archive shipped short."""
+        """companion_config.py is named by no command — only the resolver imports it."""
         self.assertNotIn("companion_config.py", pm.direct_refs())
         self.assertIn("companion_config.py", pm.derive_closure())
 
@@ -75,6 +76,59 @@ class TestClosureDerivation(unittest.TestCase):
         deps = pm.sibling_deps("write-context.py", scripts_on_disk())
         self.assertNotIn("os.py", deps)
         self.assertNotIn("json.py", deps)
+
+
+class TestGateFailsOnDrift(unittest.TestCase):
+    """Each case simulates one real regression and asserts check() names it."""
+
+    def assertProblem(self, problems: list[str], needle: str):
+        self.assertTrue(
+            any(needle in p for p in problems),
+            f"expected a problem matching {needle!r}, got: {problems}",
+        )
+
+    def test_a_reachable_script_left_out_of_the_list_fails(self):
+        short = frozenset(pm.RUNTIME_SCRIPTS - {"companion_config.py"})
+        with mock.patch.object(pm, "RUNTIME_SCRIPTS", short):
+            self.assertProblem(pm.check(), "needed but not packaged: companion_config.py")
+
+    def test_a_packaged_script_nothing_reaches_fails(self):
+        padded = frozenset(pm.RUNTIME_SCRIPTS | {"capture-golden.py"})
+        with mock.patch.object(pm, "RUNTIME_SCRIPTS", padded):
+            self.assertProblem(pm.check(), "packaged but unreachable: capture-golden.py")
+
+    def test_a_declared_script_that_does_not_exist_fails(self):
+        padded = frozenset(pm.RUNTIME_SCRIPTS | {"ghost.py"})
+        with mock.patch.object(pm, "RUNTIME_SCRIPTS", padded):
+            self.assertProblem(pm.check(), "declared but absent: ghost.py")
+
+    def test_a_new_script_with_no_shipping_decision_fails(self):
+        with mock.patch.object(pm, "BUILD_ONLY", frozenset(pm.BUILD_ONLY - {"capture-golden.py"})):
+            self.assertProblem(pm.check(), "unclassified: capture-golden.py")
+
+    def test_a_command_calling_a_script_that_does_not_exist_fails(self):
+        refs = pm.direct_refs() | {"ghost.py"}
+        with mock.patch.object(pm, "direct_refs", lambda: refs):
+            self.assertProblem(pm.check(), "referenced but missing: ghost.py")
+
+    def test_a_command_file_the_manifest_declares_but_disk_lacks_fails(self):
+        declared = pm.declared_command_files() + [str(SCRIPTS.parent / "commands" / "gone.md")]
+        with mock.patch.object(pm, "declared_command_files", lambda: declared):
+            self.assertProblem(pm.check(), "command file absent: commands/gone.md")
+
+    def test_copy_to_refuses_to_build_from_a_failing_list(self):
+        short = frozenset(pm.RUNTIME_SCRIPTS - {"companion_config.py"})
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = os.path.join(tmp, "scripts")
+            with mock.patch.object(pm, "RUNTIME_SCRIPTS", short):
+                self.assertEqual(pm._copy_to(dest), 1)
+            self.assertFalse(os.path.exists(dest), "a failing list must not produce an archive")
+
+    def test_copy_to_fills_the_archive_from_the_list(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = os.path.join(tmp, "scripts")
+            self.assertEqual(pm._copy_to(dest), 0)
+            self.assertEqual(set(os.listdir(dest)), set(pm.RUNTIME_SCRIPTS))
 
 
 if __name__ == "__main__":
