@@ -22,7 +22,7 @@ class SpecViewerProvider {
 
 `showSpec` behavior:
 
-- No panel for `specDirectory` → create one, requesting the `spec` document; `resolveDisplayDocument` cascades to the first available document when `spec.md` is absent.
+- No panel for `specDirectory` → create one requesting *no particular document*; `resolveDisplayDocument` then resolves the first available one.
 - A panel already exists → re-render it on its current document and reveal it.
 - The landing view (Overview vs document) is decided by the webview's `showingOverview`, never by the caller.
 

@@ -21,7 +21,6 @@ export function registerSpecViewerCommands(
         )
     );
 
-    // Spec-level open: the viewer decides which document backs the panel and whether to land on the Overview.
     context.subscriptions.push(
         vscode.commands.registerCommand(
             'speckit.openSpec',

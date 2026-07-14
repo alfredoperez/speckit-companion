@@ -91,20 +91,9 @@ describe('SpecViewerProvider.showSpec', () => {
         (vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
             get: jest.fn((_key: string, fallback?: unknown) => fallback),
         });
-        (vscode.window.createWebviewPanel as jest.Mock).mockImplementation(() => ({
-            title: '',
-            webview: {
-                html: '',
-                postMessage: jest.fn().mockResolvedValue(true),
-                onDidReceiveMessage: jest.fn().mockReturnValue({ dispose: jest.fn() }),
-                asWebviewUri: jest.fn((uri: unknown) => uri),
-                cspSource: 'vscode-webview:',
-            },
-            reveal: jest.fn(),
-            dispose: jest.fn(),
-            onDidDispose: jest.fn().mockReturnValue({ dispose: jest.fn() }),
-            onDidChangeViewState: jest.fn().mockReturnValue({ dispose: jest.fn() }),
-        }));
+        (vscode.window.createWebviewPanel as jest.Mock).mockImplementation(
+            (vscode as any).createMockWebviewPanel,
+        );
         provider = createProvider();
     });
 

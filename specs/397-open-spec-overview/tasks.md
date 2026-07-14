@@ -6,7 +6,7 @@
 
 **Wave 1 — single task:**
 
-- [x] **T001** Add `showSpec(specDirectory)` to the spec viewer provider: create the panel for the spec when none exists (requesting the `spec` document so the existing display-document cascade resolves the first available one), otherwise re-render the existing panel on its current document and reveal it · `src/features/spec-viewer/specViewerProvider.ts`
+- [x] **T001** Add `showSpec(specDirectory)` to the spec viewer provider: create the panel for the spec when none exists (requesting no particular document, so the existing display-document cascade resolves the first available one), otherwise re-render the existing panel on its current document and reveal it · `src/features/spec-viewer/specViewerProvider.ts`
 
 **⟶ Wait for Wave 1 to finish, then:**
 
