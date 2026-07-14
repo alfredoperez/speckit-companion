@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-07-14
+
 ### Fixed
 - **`/speckit.companion.adopt`, `/speckit.companion.drift`, and `/speckit.companion.coverage` now actually run.** If you installed the extension from a release, these three commands could never work: the helpers they call were left out of the published package, so each one stopped partway and reported a missing file. Everything they need now ships with the extension. The same gap was quietly degrading `/speckit.companion.specify` and `/speckit.companion.plan`, which silently skipped loading your project's living specs instead of reading them into context — they now pick that context up as intended.
 - **Installing from a git-built spec-kit works again.** The extension's spec-kit version floor rejected dev builds (`0.9.5.dev0` sorts below `0.9.5` under PEP 440), so anyone running spec-kit installed from GitHub — the setup the README itself recommends — was blocked with a compatibility error. The floor now admits dev builds of the same engine line.
