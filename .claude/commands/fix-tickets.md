@@ -129,17 +129,21 @@ done
 - If Copilot returns actionable comments → dispatch a subagent to address them: fix, commit, push. Re-run `npm test`.
 - If 10 min elapse with nothing → log "Copilot review timed out; relying on /code-review" and proceed. (This is the agreed fallback — our review covers it.)
 
-**Conditional 2nd Copilot pass.** The fix you just pushed to address Copilot's comments is itself unreviewed — not by Copilot, not by `/code-review` — and on logic changes that's the highest-risk commit in the ticket. So:
-- **If the fix changed real LOGIC** (control flow, a migration, a data-shape writer, an auth/availability gate, etc.) → **capture the current Copilot inline-comment count as a baseline, re-request Copilot, and poll for NEW comments** (count > baseline). Address any new findings (loop), then merge. If ~12 min pass with no new comments, that's the all-clear → merge.
-- **If the fix was only docs / CSS / labels / a comment** → skip the 2nd pass; merge after CI. A second loop there just adds ~5–12 min for no signal.
+**Re-request Copilot after EVERY logic-changing fix — loop until a pass comes back clean.** A fix commit is the least-reviewed code in the PR: it was seen by neither Copilot nor `/code-review`, and it lands under time pressure. So:
+- **If the fix changed real LOGIC** (control flow, a migration, a data-shape writer, an auth/availability gate, a DOM/lifecycle refactor, etc.) → **capture the current Copilot inline-comment count as a baseline, re-request Copilot, and poll for NEW comments** (count > baseline). Address any new findings, then **repeat** — the fix you just wrote is now itself the unreviewed commit. Merge only on a pass that returns nothing new (~12 min quiet = all-clear).
+- **If the fix was only docs / CSS / labels / a comment** → skip the extra pass; merge after CI. A second loop there just adds ~5–12 min for no signal.
+- **Don't budget for exactly one extra pass.** #433 needed **four**, and each found something real — pass 3's top finding was a regression *introduced by pass 2's fix* (a cycle-breaking refactor left `closeInlineEditor()` unable to find its target). The trigger condition ("did the fix change logic?") is right; the count is not bounded.
+- **A finding two independent reviewers raise is a fix order, not a note.** `/code-review` flagged a circular import and declined to fix it ("resolves fine today"); Copilot re-raised it independently. When the second reviewer lands on something ours consciously waived, do it — breaking that cycle surfaced a *second*, pre-existing cycle of the same class that neither reviewer had seen.
+- **Settle a framework-semantics dispute with a test, not an argument.** On #433 both `/code-review` and Copilot reasoned confidently about Preact's input handling and **both were wrong** — Copilot's stated bug ("controlled, can't type") didn't exist, and the real one (Preact forces the DOM back to the vnode's `value`, so an open editor silently reverted and Save wrote the *old* text) was found only by writing the test. When a review thread turns on "how does the framework behave here," stop arguing and write the assertion.
 
 Re-request + baseline pattern:
 ```bash
 BASE=$(gh api "repos/alfredoperez/speckit-companion/pulls/<PR>/comments" --jq '[.[]|select(.user.login|test("[Cc]opilot"))]|length')
 gh api -X POST "repos/alfredoperez/speckit-companion/pulls/<PR>/requested_reviewers" -f "reviewers[]=copilot-pull-request-reviewer[bot]" >/dev/null 2>&1
 # then sleep 300 and poll for the inline-comment count to exceed $BASE (new findings); if none in ~12 min, merge.
+# Re-run this whole block after each logic-changing fix — the baseline resets each round.
 ```
-This caught real logic bugs across the touchups batch; the 2nd pass on the riskiest fix (a settings migration) came back clean and merged with confidence.
+This caught real logic bugs across the touchups batch, and on #433 it kept finding them through four rounds — including a regression a fix commit had just introduced.
 
 #### 7. Merge + cleanup — main loop
 Confirm CI/checks are green (`gh pr checks <PR>`):
