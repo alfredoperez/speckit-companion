@@ -64,7 +64,9 @@ For changes that are **small and already understood** — a wrong regex, a stale
 
 **The spec pipeline is the dogfooding.** Running the Companion workflow on itself is the entire reason this loop exists — it's how the broken `adopt` command, the no-op reconciler, and the packaging gap were found. Light mode trades that signal away.
 
-So light mode is a **named exception for small changes, never the default.** If a task turns out to be bigger than it looked — it needs a design decision, it touches derived state, it spans more than a couple of files — **stop and escalate it to the full loop**. Don't push a large change through light mode because it was already started there.
+So light mode is a **named exception for small changes, never the default.** If a task turns out to be bigger than it looked — it needs a design decision, or it touches derived state / lifecycle / capture — **stop and escalate it to the full loop**. Don't push a large change through light mode because it was already started there.
+
+**Growing past your named file set is NOT by itself an escalation trigger.** Chasing one root cause into more files is the job: #442 started as "a wrong path constant" and ended up also fixing the skills list the sidebar renders — because it was one bug (the registry lied, and a consumer ignored it anyway), and stopping at the named files would have shipped half of it. The test is *"is this still one coherent defect?"*, not *"is this still three files?"* Escalate when the **decision** grows (a new design call, a behavior the user has to choose), not when the **blast radius** does. If the file set widens, say so in the PR body and re-check disjointness against the other in-flight branches.
 
 ## Choosing light vs full
 
@@ -78,15 +80,16 @@ So light mode is a **named exception for small changes, never the default.** If 
 
 > A user-visible **bug** can still be light — but give it the full review + Copilot treatment even while skipping the spec ceremony. Skipping paperwork is not the same as skipping scrutiny.
 
-## Parallel worktrees — the three collisions
+## Parallel worktrees — the four collisions
 
 Light mode runs one subagent per task, **each with `isolation: "worktree"`**. This is mandatory, not an optimization: background agents otherwise share one working tree and branch, and they *will* clobber each other's git state.
 
-Three things collide if you're not careful. Note that the first two are precisely why parallelism is safe **only** in light mode:
+Four things collide if you're not careful. Note that the first two are precisely why parallelism is safe **only** in light mode:
 
 1. **Spec numbering race.** `before_specify` picks the next `NNN-` by scanning `specs/`. Two agents starting together both choose the same number. — *Cannot happen in light mode: no spec pipeline.*
 2. **A fresh worktree has no companion commands.** `.specify/extensions/companion/` is **gitignored** (it's the `--dev` install), so a new worktree checks out tracked files only and `/speckit.companion.*` does not exist there. An agent running the pipeline in a worktree fails — or silently falls back, which is worse. — *Cannot happen in light mode: no pipeline. If you ever need it, the worktree must run `specify extension add ./speckit-extension --dev --force` first.*
 3. **`install-local` is a global singleton.** One VS Code extension host, one `~/.vscode/extensions`. It cannot be parallelized — run it **once, after all merges**.
+4. **A fresh worktree has no `node_modules` — run `npm ci` FIRST or every test run lies.** `node_modules/` is gitignored, so a new worktree checks out source only. Worse than an obvious "command not found": jest's `moduleNameMapper` is pinned to `rootDir`, so ~10 suites fail on *module resolution* and read like real regressions. Two of four agents hit this on the first light run and one nearly reported it as a broken build. **`npm ci` in the worktree before you trust any `npm test` / `npm run compile` output** — and if a test suite fails on `Cannot find module`, that is this, not your change.
 
 **Disjointness gate.** Before fanning out, name the files each task will touch. **If two tasks touch the same file, do not run them in parallel** — run those two sequentially (or fold them into one PR). Parallel PRs on the same file just move the conflict to merge time.
 
@@ -101,6 +104,7 @@ Three things collide if you're not careful. Note that the first two are precisel
 ### L1. Fan out — parallel subagents, one per task, `isolation: "worktree"`
 Dispatch all disjoint tasks **in a single message** so they run concurrently. Each subagent:
 - Reads `.claude/review-checklist.md` (+ the `CLAUDE.md` conventions it points to) **first**.
+- **Runs `npm ci` in the worktree before anything else** (collision 4 above) — otherwise its test run is meaningless.
 - **Verifies the defect still reproduces on current `main`** before building. Stale tasks are common; if it's already fixed, STOP and report that with evidence instead of inventing a change.
 - Fixes it **directly** — no `/speckit-companion-*` chain, no `specs/NNN-*/` folder.
 - Updates the docs the change requires (`CLAUDE.md`'s doc-map is not optional in light mode).
@@ -295,5 +299,6 @@ End your chat response with a tight summary: tickets processed, merged vs in-rev
 - **Never force-merge red checks.** Leave the PR open and report it.
 - **Auto-merge is on by default** (per this loop's design). If the user passed `--review-merge` in `$ARGUMENTS`, pause for a thumbs-up before each `gh pr merge` instead.
 - Copilot is best-effort; its absence is not an error.
-- **Light mode never silently absorbs a big change.** If a `--light` task needs a design decision, touches derived state / lifecycle / capture, or sprawls past its named file set, the subagent returns `escalate` and it goes through the full loop instead. Skipping paperwork is not skipping scrutiny.
+- **Light mode never silently absorbs a big change.** If a `--light` task needs a design decision, or touches derived state / lifecycle / capture, the subagent returns `escalate` and it goes through the full loop instead. A widening *file set* alone is not an escalation — one coherent root cause may legitimately span more files than you named (see [What light mode COSTS](#what-light-mode-costs--read-before-choosing-it)); report the widened set and re-check disjointness. Skipping paperwork is not skipping scrutiny.
+- **Never trust a test run in a fresh worktree until `npm ci` has run there.** Module-resolution failures masquerade as regressions.
 - **Never run `install-local` inside a worktree.** It installs a global VS Code extension and regenerates `.specify/` — it belongs to the main loop, once, at the end.
