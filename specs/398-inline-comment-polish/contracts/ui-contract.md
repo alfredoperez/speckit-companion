@@ -22,16 +22,16 @@ The identifiers tests and stories code against. Anything the spec pinned verbati
 | `.inline-comment` | The annotation root. Retained from today. |
 | `.inline-comment--pending` / `.inline-comment--applied` | State modifier; drives the rail colour. |
 | `.inline-comment.is-expanded` | Set while the disclosure is open. |
-| `.comment-disclosure` | The `<button>` that is the collapsed annotation and the disclosure trigger. Carries `aria-expanded` and `aria-controls`. |
+| `.comment-disclosure` | The `<button>` that is the collapsed annotation and the disclosure trigger. Carries `aria-expanded`. |
 | `.comment-glyph` | Codicon: `codicon-comment` when pending, `codicon-check` when applied. `aria-hidden`. |
 | `.comment-text` | The one-line truncated text on the trigger. Flex child with `min-width: 0`. |
 | `.comment-state` | The state label — the literal words `Pending` / `Applied`. |
-| `.comment-body` | The full comment text, revealed on expand. Its `id` is what `aria-controls` points at. |
+| `.comment-body` | The full comment text, revealed on expand. `aria-hidden`, with no `id` — see Accessibility below. |
 | `.comment-actions` | The action row. |
 | `.comment-action--refine` / `--edit` / `--delete` | The three actions. Refine is present only when pending. |
 | `data-ref-id` | The comment's id, on the annotation root. Retained from today. |
 
-**Accessibility**: the trigger's accessible name is composed from the state and the comment text via Preact props (never string-built HTML). The disclosure state is `aria-expanded`. Anything an `aria-describedby` points at uses `.sr-only`, never `hidden` or `display: none`.
+**Accessibility**: the trigger's accessible name is composed from the state and the comment text via Preact props (never string-built HTML). The disclosure state is carried by `aria-expanded` alone — a valid disclosure pattern, since the revealed body is a verbatim visual duplicate of the trigger's accessible name. Announcing it a second time on expand would be noise, so `.comment-body` is `aria-hidden` and carries no `id`, and the trigger has no `aria-controls` (an `aria-controls` pointing at a hidden node would name nothing). Anything an `aria-describedby` points at uses `.sr-only`, never `hidden` or `display: none`.
 
 ## Composer (edit reuse)
 

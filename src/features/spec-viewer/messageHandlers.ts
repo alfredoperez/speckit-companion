@@ -791,7 +791,8 @@ async function persistCommentMutation(
   specDirectory: string,
   mutate: (ctx: SpecContext) => SpecContext,
   deps: MessageHandlerDependencies,
-): Promise<void> {
+): Promise<boolean> {
+  let changed = false;
   await commentQueue.enqueue(specDirectory, async () => {
     let current: SpecContext | null = null;
     try {
@@ -810,11 +811,20 @@ async function persistCommentMutation(
       );
       return;
     }
-    await updateSpecContext(specDirectory, mutate, current);
+    await updateSpecContext(
+      specDirectory,
+      (ctx) => {
+        const next = mutate(ctx);
+        changed = next !== ctx;
+        return next;
+      },
+      current,
+    );
     await deps.refreshContextIfDisplaying(
       path.join(specDirectory, SPEC_CONTEXT_FILENAME),
     );
   });
+  return changed;
 }
 
 /**
@@ -864,15 +874,22 @@ async function handleAddComment(
   );
 }
 
-/** Persist a comment's revised text. */
+/** Persist a comment's revised text. A blank, unchanged, or unknown-id edit is a no-op. */
 async function handleEditComment(
   specDirectory: string,
   id: string,
   comment: string,
   deps: MessageHandlerDependencies,
 ): Promise<void> {
-  await persistCommentMutation(specDirectory, (ctx) => editCommentInCtx(ctx, id, comment), deps);
-  deps.outputChannel.appendLine(`[SpecViewer] Edited comment ${id}`);
+  const text = comment.trim();
+  const changed = await persistCommentMutation(
+    specDirectory,
+    (ctx) => editCommentInCtx(ctx, id, text),
+    deps,
+  );
+  if (changed) {
+    deps.outputChannel.appendLine(`[SpecViewer] Edited comment ${id}`);
+  }
 }
 
 /** Persist removal of a comment. */

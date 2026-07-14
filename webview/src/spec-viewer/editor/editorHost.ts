@@ -1,9 +1,3 @@
-/**
- * SpecKit Companion - The single open inline composer.
- * Owned here so the new-comment composer (`inlineEditor`) and the edit-an-existing
- * -comment composer (`refinements`) can share one open slot without importing each other.
- */
-
 import { render } from 'preact';
 import { activeEditor } from '../signals';
 

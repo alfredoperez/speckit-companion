@@ -224,7 +224,6 @@ describe('InlineComment — comment text is user data, never markup', () => {
     it('never lets comment text escape into an attribute', () => {
         const host = mount({ comment: hostile, id: 'ref-"><b>x</b>' });
 
-        // The id lands in data-ref-id and the body id; neither may break the markup.
         expect(host.querySelector('b')).toBeNull();
         expect(host.querySelector('.inline-comment')?.getAttribute('data-ref-id')).toBe('ref-"><b>x</b>');
 
