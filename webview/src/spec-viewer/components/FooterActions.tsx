@@ -1,15 +1,10 @@
 import { navState, viewerState } from '../signals';
+import { inFlightStepFor } from '../stepInFlight';
 import { CatalogFooter } from './footer/CatalogFooter';
 
 export interface FooterActionsProps {
     initialSpecStatus: string;
 }
-
-// Statuses for which the current step is still in flight. The in-flight
-// indicator now lives solely on the step tab (a spinning sync glyph + the
-// implement percent), so while one of these is active the footer must NOT
-// surface the next-step lifecycle button — the step isn't done yet.
-const IN_FLIGHT_STATUSES = new Set(['specifying', 'planning', 'tasking', 'implementing']);
 
 /**
  * The footer is a pure function of one `viewerState` snapshot (INV-1). The
@@ -29,7 +24,7 @@ export function FooterActions(_props: FooterActionsProps) {
     // it reaches the closure gate. CatalogFooter additionally suppresses them once
     // the footer offers a closure action.
     const isActive = status !== 'implemented' && status !== 'completed' && status !== 'archived';
-    const stepInFlight = IN_FLIGHT_STATUSES.has(status);
+    const stepInFlight = inFlightStepFor(status) !== undefined;
     const enhancementButtons = ns?.enhancementButtons ?? [];
 
     return (

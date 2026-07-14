@@ -79,6 +79,36 @@ describe('calculateTaskCompletion', () => {
     it('returns 100 when all checkboxes are complete', () => {
         expect(calculateTaskCompletion('- [x] a\n- [x] b\n- [x] c', CORE_DOCUMENTS.TASKS)).toBe(100);
     });
+
+    it('ignores a checkbox shown inside an inline code span', () => {
+        const content = [
+            'Line format: `- [ ] **T###** [P?] [US#] Description · exact/file/path`',
+            '',
+            '- [x] **T001** Do the thing',
+            '- [x] **T002** Do the other thing',
+        ].join('\n');
+        expect(calculateTaskCompletion(content, CORE_DOCUMENTS.TASKS)).toBe(100);
+    });
+
+    it('ignores checkboxes inside a fenced code block', () => {
+        const content = [
+            '```markdown',
+            '- [ ] example task',
+            '- [ ] another example',
+            '```',
+            '',
+            '- [x] **T001** Real task',
+        ].join('\n');
+        expect(calculateTaskCompletion(content, CORE_DOCUMENTS.TASKS)).toBe(100);
+    });
+
+    it('counts indented / nested task items', () => {
+        expect(calculateTaskCompletion('- [x] parent\n  - [ ] child', CORE_DOCUMENTS.TASKS)).toBe(50);
+    });
+
+    it('ignores a checkbox mid-sentence — a task is a list item', () => {
+        expect(calculateTaskCompletion('Write it as - [ ] here.\n- [x] real', CORE_DOCUMENTS.TASKS)).toBe(100);
+    });
 });
 
 describe('calculateWorkflowPhase', () => {

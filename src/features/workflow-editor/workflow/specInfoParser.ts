@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import type { SpecInfo, RelatedDoc, EnhancementButton } from '../../../core/types';
 import { WorkflowSteps } from '../../../core/constants';
 import { CORE_DOCUMENTS } from '../../spec-viewer/types';
+import { countTaskCheckboxes } from '../../spec-viewer/phaseCalculation';
 import {
     getStepFile,
     DEFAULT_WORKFLOW,
@@ -181,18 +182,15 @@ export function formatDocName(name: string): string {
 function getTaskCompletionStats(tasksPath: string): { complete: boolean; percent: number } {
     try {
         const content = fs.readFileSync(tasksPath, 'utf-8');
-        const unchecked = (content.match(/- \[ \]/g) || []).length;
-        const checked = (content.match(/- \[x\]/gi) || []).length;
-        const total = checked + unchecked;
+        const { checked, total } = countTaskCheckboxes(content);
 
         if (total === 0) {
             return { complete: false, percent: 0 };
         }
 
         const percent = Math.round((checked / total) * 100);
-        const complete = checked > 0 && unchecked === 0;
 
-        return { complete, percent };
+        return { complete: checked === total, percent };
     } catch {
         return { complete: false, percent: 0 };
     }

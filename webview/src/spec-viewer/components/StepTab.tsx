@@ -1,5 +1,6 @@
 import type { SpecDocument, StalenessMap } from '../types';
 import { viewerState } from '../signals';
+import { IMPLEMENT_STEP, isStepInFlight } from '../stepInFlight';
 import { ElapsedTimer } from './ElapsedTimer';
 
 const DOC_TO_STEP: Record<string, string> = {
@@ -14,25 +15,6 @@ const STEP_TOOLTIPS: Record<string, string> = {
     tasks: 'Tasks — break the plan into work items',
     done: 'Implement — execute and ship',
 };
-
-// Spec-level transition `status` → the step that is actively running for it.
-// An in-flight status spins ONLY its matching step; a settled status spins none.
-// (#255 — drive the in-flight glyph off `status`, not just history `completedAt`,
-// so a step stops spinning the moment its status settles even if the self-close
-// `complete` history entry never landed.)
-const STATUS_TO_INFLIGHT_STEP: Record<string, string> = {
-    specifying: 'specify',
-    planning: 'plan',
-    tasking: 'tasks',
-    implementing: 'implement',
-};
-
-// Settled statuses: no step spins. The in-flight counterparts above are the only
-// statuses that drive a spinner; everything else (incl. completed / archived) is
-// settled.
-const SETTLED_STATUSES = new Set([
-    'specified', 'planned', 'ready-to-implement', 'implemented', 'completed', 'archived',
-]);
 
 export interface StepTabProps {
     doc: SpecDocument;
@@ -69,33 +51,27 @@ export function StepTab(props: StepTabProps) {
     const stepDocExists = doc.exists;
     const exists = stepDocExists || !!hasRelatedChildren;
     const isViewing = phase === currentDoc || (isViewingRelatedDoc && phase === parentPhaseForRelated);
-    const inProgress = !!isPercentHost && currentStep === 'implement' && taskCompletionPercent < 100;
     const isStale = stalenessMap?.[phase]?.isStale ?? false;
 
+    // `activeStep` / `stepHistory` are keyed by step name ('specify'), not doc
+    // type ('spec').
     const stepName = DOC_TO_STEP[phase] ?? phase;
 
     const vs = viewerState.value;
 
-    // Drive the in-flight indicator off the transition `status` first, falling
-    // back to step-history for a live dispatch that hasn't moved `status` yet.
-    // `activeStep` and `stepHistory` are keyed by step name (e.g. 'specify'),
-    // not doc type (e.g. 'spec'). Compare against the mapped name so the
-    // in-flight visual fires correctly during specifying / planning / etc.
-    const statusStep = vs?.status ? STATUS_TO_INFLIGHT_STEP[vs.status] : undefined;
-    const statusInFlight = statusStep === stepName;
-    // A settled status means NO step spins — even this one, even if its
-    // self-close `complete` history entry (a `completedAt`) never landed (#255).
-    const statusSettled = vs?.status ? SETTLED_STATUSES.has(vs.status) : false;
-    // When the status is itself in-flight (`statusStep` defined), it is
-    // authoritative: ONLY the step it points at spins. The history fallback is
-    // for statuses that give no in-flight guidance (e.g. `draft`/unknown) — using
-    // it while status is in-flight could spin a second tab if `activeStep` and
-    // `status` momentarily disagree (#255 review).
-    const statusGivesGuidance = statusStep !== undefined || statusSettled;
-    const isWorking = statusInFlight
-        || (!statusGivesGuidance
-            && activeStep === stepName
-            && !stepHistory?.[stepName]?.completedAt);
+    const run = {
+        status: vs?.status,
+        activeStep,
+        currentStep,
+        stepBadges: vs?.steps,
+        stepHistory,
+        taskCompletionPercent,
+    };
+    // The live implement percent is hosted by the implement entry, or by the
+    // last tab when the rail has none — so this tab is in flight when its own
+    // step is, or when it hosts a running implement.
+    const hostsRunningImplement = !!isPercentHost && isStepInFlight(IMPLEMENT_STEP, run);
+    const isWorking = isStepInFlight(stepName, run) || hostsRunningImplement;
     const isLocked = runningStepIndex != null
         && index > runningStepIndex
         && !isViewing
@@ -122,7 +98,7 @@ export function StepTab(props: StepTabProps) {
     let canonicalState: 'current' | 'done' | 'in-flight' | 'locked' | null = null;
     if (isLocked) {
         canonicalState = 'locked';
-    } else if (isWorking || inProgress) {
+    } else if (isWorking) {
         canonicalState = 'in-flight';
     } else if (stepDocExists || vsCompleted || actionDone) {
         canonicalState = 'done';
@@ -143,7 +119,7 @@ export function StepTab(props: StepTabProps) {
     // badge. It advances as `tasks.md` boxes are checked (taskCompletionPercent is
     // file-watched and capture-independent). When it's showing, the badge itself is
     // empty so we don't double-render the number.
-    const showPercentLabel = canonicalState === 'in-flight' && inProgress;
+    const showPercentLabel = canonicalState === 'in-flight' && hostsRunningImplement;
 
     // Status content: ✓ done, empty otherwise. The percentage is its own label.
     const statusIcon = canonicalState === 'done' && !showPercentLabel ? '✓' : '';
@@ -166,15 +142,13 @@ export function StepTab(props: StepTabProps) {
         ? `${baseTooltip} (disabled while ${activeStep} is running)`
         : baseTooltip;
 
-    // Only show the elapsed ticker for a live dispatch run — not for the
-    // last-step `inProgress` case, which is driven by task-completion percent.
-    // Use the mapped stepName (matches activeStep / stepHistory keys),
-    // not the doc-type phase.
+    // The elapsed ticker is for a live dispatch run only — the percent label
+    // already carries progress for a hosted implement run.
     const runEntry = stepHistory?.[stepName];
     const runningStartedAt = canonicalState === 'in-flight'
         && runEntry?.startedAt
         && !runEntry.completedAt
-        && !inProgress
+        && !hostsRunningImplement
         ? runEntry.startedAt
         : null;
 

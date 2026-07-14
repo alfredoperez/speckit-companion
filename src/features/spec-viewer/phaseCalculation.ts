@@ -106,20 +106,50 @@ export function getPhaseNumber(docType: DocumentType, stepNames?: string[]): 1 |
     return 1;
 }
 
+const FENCE_PATTERN = /^\s*(`{3,}|~{3,})/;
+const INLINE_CODE_PATTERN = /(`+)[^`]*?\1/g;
+const TASK_LINE_PATTERN = /^\s*- \[([ xX])\]/;
+
+/**
+ * Count the real task checkboxes in a tasks document.
+ * A task is a list item, so only a line-leading `- [ ]` counts — a checkbox
+ * shown inside a fenced block or an inline code span is documentation, not work.
+ */
+export function countTaskCheckboxes(content: string): { checked: number; total: number } {
+    let openFence: string | null = null;
+    let checked = 0;
+    let total = 0;
+
+    for (const rawLine of content.split('\n')) {
+        const fence = rawLine.match(FENCE_PATTERN)?.[1];
+        if (openFence) {
+            if (fence && fence[0] === openFence[0] && fence.length >= openFence.length) openFence = null;
+            continue;
+        }
+        if (fence) {
+            openFence = fence;
+            continue;
+        }
+
+        const marker = rawLine.replace(INLINE_CODE_PATTERN, '').match(TASK_LINE_PATTERN)?.[1];
+        if (!marker) continue;
+        total++;
+        if (marker.toLowerCase() === 'x') checked++;
+    }
+
+    return { checked, total };
+}
+
 /**
  * Calculate task completion percentage from content
  */
 export function calculateTaskCompletion(content: string, docType: DocumentType): number {
     if (docType !== CORE_DOCUMENTS.TASKS || !content) return 0;
 
-    const checkboxPattern = /- \[([ xX])\]/g;
-    const matches = content.matchAll(checkboxPattern);
-    const matchArray = Array.from(matches);
+    const { checked, total } = countTaskCheckboxes(content);
+    if (total === 0) return 0;
 
-    if (matchArray.length === 0) return 0;
-
-    const completed = matchArray.filter(m => m[1].toLowerCase() === 'x').length;
-    return Math.round((completed / matchArray.length) * 100);
+    return Math.round((checked / total) * 100);
 }
 
 /**

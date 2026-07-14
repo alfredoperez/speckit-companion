@@ -465,6 +465,20 @@ stateDiagram-v2
 | `disabled` | Step not available (no file, not first) | Dimmed (opacity 0.35) |
 | `stale` | Document stale relative to upstream | `!` badge |
 
+### In-flight derivation (one fact, one path)
+
+Whether a step is running is decided in exactly one place — `isStepInFlight(step, run)` in `webview/src/spec-viewer/stepInFlight.ts`. Every surface reads that one answer: the step tab's spinning glyph, the live implement percent, and the footer's forward-motion gate (`FooterActions` asks the same module which step a status names). There is no second "the implement percent is below 100, so it must still be running" path — that one could not be stopped by a settled status, which is how a completed spec kept a step spinning at 95% forever.
+
+The derivation, in order:
+
+1. **The spec-level `status` wins when it names a step.** `specifying` / `planning` / `tasking` / `implementing` run exactly the step they name — and only that step.
+2. **A settled status runs nothing.** `specified`, `planned`, `ready-to-implement`, `implemented`, `completed`, `archived` — no step spins, even if the step's self-close history entry never landed.
+3. **Otherwise fall back to local signals** (a status that gives no guidance, e.g. `draft`): a recorded completion (step badge `completed` or a `completedAt`) settles the step; an `activeStep` match runs it; and `implement`, which writes no document of its own, is read as running while the workflow sits at it and `tasks.md` still has unchecked boxes.
+
+The implement percent is a *label*, not a run signal: the tab that hosts it (the implement entry, or the last tab when the rail has none) shows it only while implement is in flight by the rule above.
+
+**What counts as a task.** The percent comes from `countTaskCheckboxes()` (`src/features/spec-viewer/phaseCalculation.ts`), which counts only line-leading `- [ ]` / `- [x]` list items and ignores anything inside a fenced code block or an inline code span — so a `tasks.md` legend line like ``Line format: `- [ ] **T###** …` `` is documentation, not an unfinished task. The workflow panel's task stats read the same counter.
+
 ### Elapsed Timer and Completion Notifications
 
 - **Elapsed timer** (`.step-tab__elapsed`): rendered as a live `Ns` / `Mm Ss` / `Hh Mm` ticker beneath the running step tab's label. Derived from `stepHistory[step].startedAt`, so it survives webview reloads. Hidden as soon as the step's `completedAt` is written.
