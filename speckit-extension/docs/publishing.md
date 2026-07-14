@@ -33,6 +33,8 @@ v0.2.0                  ❌  matches v* → would publish the WRONG thing to the
 
    The archive deliberately **omits** README, CHANGELOG, ROADMAP, `docs/`, `examples/`, the build-only `nodes/`+`presets/` sources, the build/test scripts, `tests/`, and `assets/`. The catalog page renders README/CHANGELOG from the GitHub blob URLs below — they're not needed inside the zip. This is still an **allow-list**; don't swap it back to a `tar --exclude` deny-list, or new docs/sources will silently bloat the package again.
 
+   **`--copy-to` leaves the destination holding exactly that list.** It clears any scripts already sitting there first, so a reused staging dir can't slip a leftover (say, a build-only script from an older layout) into the zip. It only ever removes loose `.py` files, never recursively: a destination holding anything else — a subdirectory, a document, the `speckit-extension/scripts/` source tree itself — is refused with the offending entries named, so a mistyped path can't be emptied.
+
    **The list cannot silently fall behind again.** `package-manifest.py --check` derives what the shipped commands actually reach for — scanning the command bodies, then following each script's own imports — and fails if that disagrees with the packed set in either direction, naming the offending script. It runs in CI on every PR, and `--copy-to` refuses to build an archive from a failing list. A new command that calls a new script now blocks the build until the script is packaged.
 6. **Create the GitHub release** with a **prefixed tag** (`speckit-ext-v0.2.0`) and attach the version-named zip (archival):
    ```bash

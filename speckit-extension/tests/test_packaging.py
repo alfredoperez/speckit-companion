@@ -131,5 +131,49 @@ class TestGateFailsOnDrift(unittest.TestCase):
             self.assertEqual(set(os.listdir(dest)), set(pm.RUNTIME_SCRIPTS))
 
 
+class TestCopyToLeavesExactlyTheList(unittest.TestCase):
+    """The archive must carry the packing list and nothing else, however dest arrived."""
+
+    def test_a_stray_script_in_the_destination_does_not_survive(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "scripts"
+            dest.mkdir()
+            (dest / "build-commands.py").write_text("# leftover from a prior run\n")
+            (dest / "write-context.py").write_text("# stale copy\n")
+
+            self.assertEqual(pm._copy_to(str(dest)), 0)
+
+            self.assertEqual(set(os.listdir(dest)), set(pm.RUNTIME_SCRIPTS))
+            self.assertFalse((dest / "build-commands.py").exists())
+            self.assertEqual(
+                (dest / "write-context.py").read_text(),
+                (SCRIPTS / "write-context.py").read_text(),
+                "a stale copy must be replaced by the current script",
+            )
+
+    def test_a_destination_holding_anything_but_scripts_is_refused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "not-an-archive"
+            (dest / "nested").mkdir(parents=True)
+            (dest / "notes.md").write_text("someone's work\n")
+
+            self.assertEqual(pm._copy_to(str(dest)), 1)
+
+            self.assertTrue((dest / "notes.md").exists())
+            self.assertTrue((dest / "nested").is_dir())
+
+    def test_the_source_scripts_directory_is_refused(self):
+        before = scripts_on_disk()
+        self.assertEqual(pm._copy_to(str(SCRIPTS)), 1)
+        self.assertEqual(scripts_on_disk(), before)
+
+    def test_a_destination_that_is_a_file_is_refused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "scripts"
+            dest.write_text("not a directory\n")
+            self.assertEqual(pm._copy_to(str(dest)), 1)
+            self.assertTrue(dest.is_file())
+
+
 if __name__ == "__main__":
     unittest.main()

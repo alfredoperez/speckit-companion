@@ -19,7 +19,10 @@ which is the failure this gate exists to prevent. The two-way compare turns ever
 disagreement into a named, blocking error instead.
 
 `--copy-to <dir>` fills an archive from the same list, so the shipped bits and the
-gated list cannot disagree. Exit 0 clean, 1 on any problem. Stdlib only.
+gated list cannot disagree: it clears any leftover scripts already in the destination
+so what lands there is exactly the list, and refuses a destination it cannot reduce to
+the list safely (anything but `.py` files, or the source directory itself). Exit 0
+clean, 1 on any problem. Stdlib only.
 """
 from __future__ import annotations
 
@@ -176,6 +179,30 @@ def check() -> list[str]:
     return problems
 
 
+def unsafe_dest(dest: str) -> str | None:
+    """Why `dest` cannot be reduced to exactly the packing list, or None if it can.
+
+    Only loose `.py` files are ever removed, so a mistyped path (`/`, a populated
+    source tree, a directory holding anything else) is refused rather than emptied."""
+    if os.path.realpath(dest) == os.path.realpath(HERE):
+        return "it is the source scripts/ directory — clearing it would delete the build-only scripts"
+    if not os.path.exists(dest):
+        return None
+    if not os.path.isdir(dest):
+        return "it exists and is not a directory"
+    strays = [
+        entry
+        for entry in sorted(os.listdir(dest))
+        if not (entry.endswith(".py") and os.path.isfile(os.path.join(dest, entry)))
+    ]
+    if strays:
+        return (
+            f"it holds entries that are not packaged scripts ({', '.join(strays)}) and this "
+            f"script only ever removes loose .py files — point --copy-to at an empty or fresh directory"
+        )
+    return None
+
+
 def _copy_to(dest: str) -> int:
     problems = check()
     if problems:
@@ -183,10 +210,20 @@ def _copy_to(dest: str) -> int:
         for problem in problems:
             print(f"  ✗ {problem}")
         return 1
+    unsafe = unsafe_dest(dest)
+    if unsafe:
+        print(f"[package-manifest] refusing to fill {dest}: {unsafe}")
+        return 1
+    cleared = 0
+    if os.path.isdir(dest):
+        for entry in sorted(os.listdir(dest)):
+            os.remove(os.path.join(dest, entry))
+            cleared += 1
     os.makedirs(dest, exist_ok=True)
     for script in sorted(RUNTIME_SCRIPTS):
         shutil.copy2(os.path.join(HERE, script), os.path.join(dest, script))
-    print(f"[package-manifest] copied {len(RUNTIME_SCRIPTS)} runtime scripts to {dest}")
+    note = f" (cleared {cleared} pre-existing script(s))" if cleared else ""
+    print(f"[package-manifest] copied {len(RUNTIME_SCRIPTS)} runtime scripts to {dest}{note}")
     return 0
 
 
@@ -194,7 +231,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--check", action="store_true", help="gate the packing list")
-    group.add_argument("--copy-to", metavar="DIR", help="fill an archive from the list")
+    group.add_argument(
+        "--copy-to",
+        metavar="DIR",
+        help="fill an archive from the list (clears leftover scripts in DIR first)",
+    )
     group.add_argument("--list", action="store_true", help="print the packing list")
     args = parser.parse_args()
 

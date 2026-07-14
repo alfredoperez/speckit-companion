@@ -23,7 +23,7 @@ A failure must name the script. A bare "packaging check failed" is not sufficien
 
 ## `--copy-to <dir>`
 
-Copies every script in the packing list into `<dir>`, creating it if needed. This is what the publish flow calls in place of the hand-typed `cp scripts/…` line.
+Leaves `<dir>` holding exactly the packing list — creating it if needed, and removing any scripts already there so a reused destination can't smuggle an unlisted file into the archive. This is what the publish flow calls in place of the hand-typed `cp scripts/…` line.
 
 ```bash
 python3 speckit-extension/scripts/package-manifest.py --copy-to /tmp/cb/companion-0.18.1/scripts
@@ -31,10 +31,12 @@ python3 speckit-extension/scripts/package-manifest.py --copy-to /tmp/cb/companio
 
 | Exit | Meaning |
 |---|---|
-| `0` | Every listed script was copied. Prints the count. |
-| `1` | A listed script is missing from `scripts/`, or the destination cannot be written. Nothing partial is left behind silently — the failure is loud. |
+| `0` | The destination now holds the packing list and nothing else. Prints the count, plus how many pre-existing scripts were cleared. |
+| `1` | A listed script is missing from `scripts/`, the destination cannot be written, or the destination is one the command refuses to clear. Nothing partial is left behind silently — the failure is loud. |
 
 `--copy-to` runs `--check`'s validation first and refuses to copy on a failed check. An archive is never built from a packing list that is known to disagree with the commands.
+
+Only loose `.py` files are ever removed, and never recursively — a destination holding anything else (a subdirectory, a document, a whole source tree) is refused with the offending entries named, rather than emptied. `--copy-to speckit-extension/scripts` is refused outright for the same reason: it would otherwise delete the build-only scripts from their own directory.
 
 ## `--list`
 
