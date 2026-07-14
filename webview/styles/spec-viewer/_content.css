@@ -99,32 +99,6 @@
     font-family: var(--font-mono);
 }
 
-.spec-file-link {
-    font-size: var(--text-sm);
-    margin-bottom: var(--space-4);
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-}
-
-.spec-file-ref {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-    padding: 2px 10px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    text-decoration: none;
-    transition: all var(--transition-fast);
-    cursor: pointer;
-}
-
-.spec-file-ref:hover {
-    color: var(--accent);
-    border-color: var(--accent);
-    background: var(--accent-subtle);
-}
-
 .spec-input {
     font-size: var(--text-sm);
     color: var(--text-secondary);

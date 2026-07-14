@@ -1,16 +1,14 @@
 import type { VSCodeApi, SpecDocument } from '../types';
-import { navState, viewerMode, viewerState } from '../signals';
+import { navState, overviewAvailable, showingOverview, viewerMode } from '../signals';
 import { StepTab } from './StepTab';
-import { hasAnyData, hasDurableContext } from './ActivityPanel';
 
 declare const vscode: VSCodeApi;
 
 export function NavigationBar() {
     const ns = navState.value;
-    const vs = viewerState.value;
     if (!ns) return null;
 
-    const { coreDocs, relatedDocs, currentDoc, workflowPhase,
+    const { coreDocs, relatedDocs, currentDoc,
         taskCompletionPercent, isViewingRelatedDoc, activeStep,
         currentStep, stepHistory, stalenessMap } = ns;
 
@@ -102,24 +100,19 @@ export function NavigationBar() {
 
     const recovery = ns.runRecovery;
 
-    // The Overview is a rail destination, not a mode toggle: it exists only
-    // when the spec has a recorded run to show (no `.spec-context.json`, no
-    // Overview), and selecting it is the same kind of act as selecting a
-    // document — one selection axis, so navigation can never get stuck.
-    const overviewAvailable = (ns.activityPanelEnabled ?? true) && !!vs && hasAnyData(vs);
-    const landing = overviewAvailable && hasDurableContext(vs!) ? 'overview' : 'document';
-    const showingOverview = overviewAvailable && (viewerMode.value ?? landing) === 'overview';
-    // While the Overview is the selection, no document reads as selected.
-    const selectedDoc = showingOverview ? '' : currentDoc;
+    // The Overview is a rail destination, so selecting it deselects every document.
+    const hasOverview = overviewAvailable.value;
+    const onOverview = showingOverview.value;
+    const selectedDoc = onOverview ? '' : currentDoc;
 
     return (
         <nav class="doc-rail" aria-label="Spec documents">
-            {overviewAvailable && (
+            {hasOverview && (
                 <div class="rail-group">
                     <button
                         type="button"
-                        class={`rail-overview${showingOverview ? ' current' : ''}`}
-                        aria-current={showingOverview ? 'page' : undefined}
+                        class={`rail-overview${onOverview ? ' current' : ''}`}
+                        aria-current={onOverview ? 'page' : undefined}
                         onClick={() => { viewerMode.value = 'overview'; }}
                     >
                         <span class="codicon codicon-book" aria-hidden="true" />
@@ -158,11 +151,9 @@ export function NavigationBar() {
                             key={doc.type}
                             doc={doc}
                             index={i}
-                            totalSteps={coreDocs.length}
                             currentDoc={selectedDoc}
-                            workflowPhase={workflowPhase}
                             taskCompletionPercent={taskCompletionPercent}
-                            isViewingRelatedDoc={!showingOverview && isViewingRelatedDoc}
+                            isViewingRelatedDoc={!onOverview && isViewingRelatedDoc}
                             parentPhaseForRelated={parentPhaseForRelated}
                             activeStep={activeStep}
                             currentStep={currentStep}

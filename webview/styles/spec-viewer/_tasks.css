@@ -14,14 +14,6 @@
   margin: var(--space-2) 0 var(--space-3) 0;
 }
 
-#markdown-content .section-progress-bar {
-  flex: 1;
-  height: 4px;
-  background: var(--border);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
 #markdown-content .section-progress-fill {
   height: 100%;
   background: var(--accent);
@@ -46,8 +38,7 @@
    ============================================ */
 
 /* Task list container - simple list */
-#markdown-content ul:has(.task-item),
-#markdown-content ul.task-list-simple {
+#markdown-content ul:has(.task-item) {
   list-style: none;
   padding-left: 0;
   margin: var(--space-2) 0 var(--space-4) 0;

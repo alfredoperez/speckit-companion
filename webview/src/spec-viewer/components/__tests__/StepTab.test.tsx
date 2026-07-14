@@ -35,9 +35,7 @@ function baseProps(over: Partial<StepTabProps> = {}): StepTabProps {
     return {
         doc: doc('plan', true, 'Plan'),
         index: 1,
-        totalSteps: 3,
         currentDoc: 'spec',
-        workflowPhase: 'spec',
         taskCompletionPercent: 0,
         isViewingRelatedDoc: false,
         parentPhaseForRelated: 'spec',
@@ -277,7 +275,6 @@ describe('StepTab — #229 in-flight sync glyph', () => {
         const c = renderTab(baseProps({
             doc: doc('tasks', true, 'Tasks'),
             index: 2,
-            totalSteps: 3,
             currentStep: 'implement',
             taskCompletionPercent: 60,
             currentDoc: 'tasks',
@@ -307,7 +304,6 @@ describe('StepTab — #229 in-flight sync glyph', () => {
         const c = renderTab(baseProps({
             doc: doc('tasks', true, 'Tasks'),
             index: 2,
-            totalSteps: 3,
             currentStep: 'implement',
             taskCompletionPercent: 95,
             currentDoc: 'tasks',

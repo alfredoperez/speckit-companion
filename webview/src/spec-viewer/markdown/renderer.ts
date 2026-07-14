@@ -434,7 +434,6 @@ export function renderMarkdown(markdown: string): string {
                     return '';
                 }).trimStart();
                 const innerText = chips.join('') + body;
-                const titleAttr = '';
                 const summary = taskId ? taskSummaries[taskId] : undefined;
                 let captureHtml = '';
                 if (summary && (summary.did || (summary.files && summary.files.length))) {
@@ -444,7 +443,7 @@ export function renderMarkdown(markdown: string): string {
                         : '';
                     captureHtml = `<div class="task-item__capture">${didHtml}${filesHtml}</div>`;
                 }
-                html += `<li ${classAttr}${titleAttr} data-line="${sourceLineNum}"${dataTaskAttr}>` +
+                html += `<li ${classAttr} data-line="${sourceLineNum}"${dataTaskAttr}>` +
                     `<button class="line-add-btn" data-line="${sourceLineNum}" title="Add comment">${COMMENT_ICON_SVG}</button>` +
                     `<input type="checkbox" ${checked} data-line="${sourceLineNum}">` +
                     `<span class="task-text line-content">${innerText}</span>` +

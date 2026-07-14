@@ -9,6 +9,7 @@
 import { Commands } from '../../core/constants';
 import { CORE_DOCUMENTS, DocumentType, EnhancementButton } from './types';
 import type { CustomCommandConfig } from '../../core/types/config';
+import { commandMatchesStep, normalizeCustomCommand } from './customCommands';
 
 interface OptionalCommand {
     /** Registered VS Code command id (e.g. "speckit.clarify") */
@@ -93,22 +94,19 @@ export function customCommandButtons(
 ): EnhancementButton[] {
     const buttons: EnhancementButton[] = [];
     for (const entry of rawCommands) {
-        if (typeof entry === 'string') continue;
-        const step = entry.step || 'all';
-        if (step !== docType && step !== 'all' && step !== currentStep) continue;
+        const cmd = normalizeCustomCommand(entry);
+        if (!cmd) continue;
+        if (!commandMatchesStep(cmd.step, docType, currentStep)) continue;
 
-        const title = entry.title || entry.name;
+        const title = cmd.title || cmd.name;
         if (!title) continue;
 
-        const command = entry.command || (entry.name ? `/speckit.${entry.name}` : undefined);
-        if (!command) continue;
-
-        seen.add(command);
+        seen.add(cmd.command);
         buttons.push({
             label: title,
-            command,
+            command: cmd.command,
             icon: '⚡',
-            tooltip: entry.tooltip || title,
+            tooltip: (typeof entry === 'string' ? undefined : entry.tooltip) || title,
         });
     }
     return buttons;

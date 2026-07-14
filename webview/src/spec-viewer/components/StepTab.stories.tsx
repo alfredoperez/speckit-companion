@@ -13,9 +13,7 @@ type Story = StoryObj<typeof StepTab>;
 
 const base = {
     index: 0,
-    totalSteps: 3,
     currentDoc: 'spec',
-    workflowPhase: 'spec',
     taskCompletionPercent: 0,
     isViewingRelatedDoc: false,
     parentPhaseForRelated: 'spec',
@@ -217,7 +215,6 @@ export const AllStates: Story = {
                 {...base}
                 doc={mockDoc('spec', true, 'Specification')}
                 currentDoc="_"
-                totalSteps={4}
             />
             <span class="step-connector filled" />
             <StepTab
@@ -225,7 +222,6 @@ export const AllStates: Story = {
                 doc={mockDoc('plan', true, 'Plan')}
                 index={1}
                 currentDoc="plan"
-                totalSteps={4}
             />
             <span class="step-connector filled" />
             <StepTab
@@ -235,7 +231,6 @@ export const AllStates: Story = {
                 currentDoc="_"
                 activeStep="tasks"
                 stepHistory={{ tasks: { startedAt: STARTED_3M_22S_AGO } }}
-                totalSteps={4}
             />
             <span class="step-connector" />
             <StepTab
@@ -243,7 +238,6 @@ export const AllStates: Story = {
                 doc={mockDoc('done', false, 'Implement')}
                 index={3}
                 currentDoc="_"
-                totalSteps={4}
                 runningStepIndex={2}
             />
         </div>

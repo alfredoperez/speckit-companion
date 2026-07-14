@@ -17,6 +17,11 @@ import {
   SpecStatuses,
 } from "../../core/constants";
 import type { CustomCommandConfig } from "../../core/types/config";
+import {
+  commandMatchesStep,
+  normalizeCustomCommand,
+  type EnhancementCommand,
+} from "./customCommands";
 import type { SpecContext, StepName } from "../../core/types/specContext";
 import { NotificationUtils } from "../../core/utils/notificationUtils";
 import { createDispatcher, DispatcherMap } from "../../core/utils/dispatcher";
@@ -485,47 +490,27 @@ async function handleLifecycleAction(
   );
 }
 
-/**
- * Handle clarify/enhancement button - executes the matching customCommand in the AI terminal
- */
-/**
- * A normalised enhancement command pulled from the user's `customCommands`
- * settings. Matched and dispatched through a shared matcher + dispatch builder.
- */
-interface EnhancementCommand {
-  command: string;
-  step?: string;
-  title?: string;
-  name?: string;
-}
-
 function customCommandsFromConfig(): EnhancementCommand[] {
   const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
   const raw = config.get<Array<CustomCommandConfig | string>>("customCommands", []);
-  const out: EnhancementCommand[] = [];
-  for (const entry of raw) {
-    if (typeof entry === "string") continue;
-    const command = entry.command || (entry.name ? `/speckit.${entry.name}` : undefined);
-    if (!command) continue;
-    out.push({ command, step: entry.step, title: entry.title, name: entry.name });
-  }
-  return out;
+  return raw
+    .map(normalizeCustomCommand)
+    .filter((c): c is EnhancementCommand => !!c);
 }
 
 /**
- * Test whether a candidate command matches the current dispatch intent.
- * When the user clicked a specific button (`buttonCommand` set), the
- * candidate's command must match exactly. When the dispatch is implicit
- * ("clarify the current step"), match by step with `"all"` as wildcard.
+ * Whether a candidate matches this dispatch. A clicked button names its command
+ * exactly; an implicit request ("run the command for where I am") matches by
+ * step through the same rule the buttons were rendered with.
  */
 function matchesCommand(
   candidate: EnhancementCommand,
   buttonCommand: string | undefined,
   docType: string,
+  currentStep?: string,
 ): boolean {
   if (buttonCommand) return candidate.command === buttonCommand;
-  const step = candidate.step || "all";
-  return step === docType || step === "all";
+  return commandMatchesStep(candidate.step, docType, currentStep);
 }
 
 async function dispatchEnhancement(
@@ -554,10 +539,11 @@ async function handleClarify(
 
   const docType = instance.state.currentDocument;
   const targetPath = instance.state.changeRoot || specDirectory;
+  const currentStep = readSpecContextSync(specDirectory)?.currentStep;
 
   // Source 1: custom commands from settings.
   for (const cmd of customCommandsFromConfig()) {
-    if (matchesCommand(cmd, buttonCommand, docType)) {
+    if (matchesCommand(cmd, buttonCommand, docType, currentStep)) {
       await dispatchEnhancement(cmd, "enhancement", targetPath, deps);
       return;
     }

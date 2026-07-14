@@ -37,9 +37,7 @@ const SETTLED_STATUSES = new Set([
 export interface StepTabProps {
     doc: SpecDocument;
     index: number;
-    totalSteps: number;
     currentDoc: string;
-    workflowPhase: string;
     taskCompletionPercent: number;
     isViewingRelatedDoc: boolean;
     parentPhaseForRelated: string;
@@ -61,7 +59,7 @@ export interface StepTabProps {
 }
 
 export function StepTab(props: StepTabProps) {
-    const { doc, index, currentDoc, workflowPhase,
+    const { doc, index, currentDoc,
         taskCompletionPercent, isViewingRelatedDoc, parentPhaseForRelated,
         activeStep, currentStep, stepHistory, stalenessMap, hasRelatedChildren,
         runningStepIndex, isPercentHost, sourceDoc, onClick } = props;

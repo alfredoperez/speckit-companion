@@ -3,8 +3,9 @@
  * Components that read .value auto-re-render when it changes.
  */
 
-import { signal } from '@preact/signals';
+import { computed, signal } from '@preact/signals';
 import type { NavState, Refinement, ViewerState, HistoryEntry } from './types';
+import { hasAnyData, hasDurableContext } from './overviewModel';
 
 /** Navigation state from extension messages */
 export const navState = signal<NavState | null>(null);
@@ -25,13 +26,22 @@ export const activeEditor = signal<HTMLElement | null>(null);
 /** Rendered markdown HTML (set imperatively, read by App) */
 export const markdownHtml = signal('');
 
-/**
- * Viewer mode: 'overview' (the run's story — the Activity data as the landing
- * view) vs 'document' (reading a markdown artifact). Starts null so the first
- * data decides the landing view: overview when the spec has recorded activity,
- * document otherwise. Living mode always reads as 'document'.
- */
+/** Which view the reader picked; null until they pick, so the data decides. */
 export const viewerMode = signal<'overview' | 'document' | null>(null);
+
+/** Whether this spec has an Overview at all (no recorded run → no Overview). */
+export const overviewAvailable = computed(() => {
+    const ns = navState.value;
+    const vs = viewerState.value;
+    return (ns?.activityPanelEnabled ?? true) && !ns?.livingMode && !!vs && hasAnyData(vs);
+});
+
+/** Read by both the rail (selection) and the pane (content), so they cannot disagree. */
+export const showingOverview = computed(() => {
+    if (!overviewAvailable.value) return false;
+    const landing = hasDurableContext(viewerState.value!) ? 'overview' : 'document';
+    return (viewerMode.value ?? landing) === 'overview';
+});
 
 /** History array mirrored from viewerState for the timeline panel. */
 export const historyEntries = signal<HistoryEntry[]>([]);

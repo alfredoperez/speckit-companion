@@ -145,11 +145,9 @@ export interface PanelDerivedState {
     createdDate: string | null;
     lastUpdatedDate: string | null;
 
-    /** Core + related doc partitions; used to build NavState. */
-    coreDocs: SpecDocument[];
-    relatedDocs: SpecDocument[];
-    /** Ordered pipeline (core + action steps) — what the rail renders. */
+    /** The rail's ordered pipeline (document steps + action steps). */
     pipelineDocs: SpecDocument[];
+    relatedDocs: SpecDocument[];
     isViewingRelatedDoc: boolean;
 
     /** Footer approve-button state (the "advance to next phase" affordance). */
@@ -229,9 +227,8 @@ export function computePanelDerivedState(
         badgeText,
         createdDate,
         lastUpdatedDate,
-        coreDocs,
-        relatedDocs,
         pipelineDocs,
+        relatedDocs,
         isViewingRelatedDoc,
         footer,
         runRecovery,

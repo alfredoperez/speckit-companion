@@ -8,7 +8,7 @@ const STATUS_LABEL_OVERRIDES: Record<string, string> = {
     'ready-to-implement': 'Tasks Created',
 };
 
-export function formatStatusLabel(status: string): string {
+function formatStatusLabel(status: string): string {
     if (STATUS_LABEL_OVERRIDES[status]) return STATUS_LABEL_OVERRIDES[status];
     return status
         .split('-')

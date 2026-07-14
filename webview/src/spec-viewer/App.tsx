@@ -3,9 +3,9 @@ import { NavigationBar } from './components/NavigationBar';
 import { StaleBanner } from './components/StaleBanner';
 import { PageChrome } from './components/PageChrome';
 import { FooterActions } from './components/FooterActions';
-import { ActivityPanel, hasAnyData, hasDurableContext } from './components/ActivityPanel';
+import { ActivityPanel } from './components/ActivityPanel';
 import { ActivityErrorBoundary } from './components/ActivityErrorBoundary';
-import { markdownHtml, navState, viewerMode, viewerState } from './signals';
+import { markdownHtml, navState, showingOverview, viewerState } from './signals';
 import { restoreComments, clearAllRefinements } from './editor';
 
 export interface AppProps {
@@ -19,17 +19,8 @@ export function App({ specStatus }: AppProps) {
     const vs = viewerState.value;
     const reviewComments = vs?.reviewComments;
 
-    // The Overview exists only when the spec has a recorded run to show — no
-    // `.spec-context.json` (or nothing in it), no Overview, and the viewer is
-    // just its documents. It's the landing view when it exists, and the rail
-    // owns the selection between it and the documents.
     const living = !!ns?.livingMode;
-    const activityEnabled = ns?.activityPanelEnabled ?? true;
-    const overviewAvailable = activityEnabled && !living && !!vs && hasAnyData(vs);
-    // Land on the Overview only when it has durable context to show; a spec
-    // carrying nothing but a work log opens on its documents.
-    const landing = overviewAvailable && hasDurableContext(vs!) ? 'overview' : 'document';
-    const showOverview = overviewAvailable && (viewerMode.value ?? landing) === 'overview';
+    const showOverview = showingOverview.value;
 
     const [hasMountedActivity, setHasMountedActivity] = useState(false);
     useEffect(() => {
@@ -76,9 +67,7 @@ export function App({ specStatus }: AppProps) {
             <div class={`shell-grid${living ? ' shell-grid--no-rail' : ''}`}>
                 {!living && <NavigationBar />}
                 <div class="main-column">
-                    {/* Staleness is a fact about the DOCUMENT you're reading, with a
-                        document-scoped action — so it lives over the document, not
-                        across the whole window behind the rail. */}
+                    {/* Document-scoped: it must not span the rail. */}
                     <StaleBanner />
                     <main class="content-area" id="content-area">
                         <div

@@ -1,12 +1,9 @@
 import type { ViewerState } from '../types';
 
 /**
- * The Overview as a durable-context dossier, ordered by what a future session
- * needs: Intent (why the spec exists) → Expectations (the fence around the
- * work) → Verified (what was checked) → Decisions (choices not to rediscover)
- * → Coverage (requirement → task → test). Work logs and task records live in
- * a collapsed disclosure below (ActivityPanel composes it). Every section
- * renders only when its data exists.
+ * The Overview's sections, ordered by what a future session needs:
+ * Intent → Expectations → Verified → Decisions → Coverage. Each renders only
+ * when its data exists; ActivityPanel composes them.
  */
 
 const CONSTRAINT_PREFIX = 'constraint: ';
@@ -153,6 +150,21 @@ export function VerifiedSection({ state }: { state: ViewerState }) {
 
 const DECISIONS_SHOWN = 3;
 
+function Decision({ d, num }: { d: NonNullable<ViewerState['decisions']>[number]; num: number }) {
+    return (
+        <article class="dossier-decision">
+            <span class="dossier-decision__num" aria-hidden="true">
+                {String(num).padStart(2, '0')}
+            </span>
+            <div>
+                <h3>{d.decision}</h3>
+                {d.why && <p><b>Why</b> {d.why}</p>}
+                {d.rejected && <p class="dossier-decision__rejected"><b>Rejected</b> {d.rejected}</p>}
+            </div>
+        </article>
+    );
+}
+
 export function DecisionsSection({ state }: { state: ViewerState }) {
     const items = state.decisions;
     if (!items || items.length === 0) return null;
@@ -167,16 +179,7 @@ export function DecisionsSection({ state }: { state: ViewerState }) {
             />
             <div class="dossier-decisions">
                 {items.slice(0, DECISIONS_SHOWN).map((d, i) => (
-                    <article class="dossier-decision" key={i}>
-                        <span class="dossier-decision__num" aria-hidden="true">
-                            {String(i + 1).padStart(2, '0')}
-                        </span>
-                        <div>
-                            <h3>{d.decision}</h3>
-                            {d.why && <p><b>Why</b> {d.why}</p>}
-                            {d.rejected && <p class="dossier-decision__rejected"><b>Rejected</b> {d.rejected}</p>}
-                        </div>
-                    </article>
+                    <Decision key={i} d={d} num={i + 1} />
                 ))}
             </div>
             {rest.length > 0 && (
@@ -184,16 +187,7 @@ export function DecisionsSection({ state }: { state: ViewerState }) {
                     <summary>Show {rest.length} more decision{rest.length === 1 ? '' : 's'}</summary>
                     <div class="dossier-more__body">
                         {rest.map((d, i) => (
-                            <article class="dossier-decision" key={i}>
-                                <span class="dossier-decision__num" aria-hidden="true">
-                                    {String(DECISIONS_SHOWN + i + 1).padStart(2, '0')}
-                                </span>
-                                <div>
-                                    <h3>{d.decision}</h3>
-                                    {d.why && <p><b>Why</b> {d.why}</p>}
-                                    {d.rejected && <p class="dossier-decision__rejected"><b>Rejected</b> {d.rejected}</p>}
-                                </div>
-                            </article>
+                            <Decision key={i} d={d} num={DECISIONS_SHOWN + i + 1} />
                         ))}
                     </div>
                 </details>
@@ -204,6 +198,24 @@ export function DecisionsSection({ state }: { state: ViewerState }) {
 
 const COVERAGE_SHOWN = 6;
 
+function CoverageRow({ row }: { row: NonNullable<ViewerState['coverage']>[number] }) {
+    const tested = row.tests.length > 0;
+    return (
+        <article class="dossier-coverage__row">
+            <div class="dossier-coverage__req">
+                <b>{row.req}</b>
+                {row.title && <span>{row.title}</span>}
+            </div>
+            <div class="dossier-coverage__tasks">
+                {row.tasks.map(task => <code key={task}>{task}</code>)}
+            </div>
+            <div class={tested ? 'dossier-coverage__state is-traced' : 'dossier-coverage__state is-untraced'}>
+                <i aria-hidden="true" /> {tested ? `${row.tests.length} test${row.tests.length === 1 ? '' : 's'}` : 'No test linked'}
+            </div>
+        </article>
+    );
+}
+
 export function CoverageSection({ state }: { state: ViewerState }) {
     const rows = state.coverage;
     if (!rows || rows.length === 0) return null;
@@ -212,24 +224,6 @@ export function CoverageSection({ state }: { state: ViewerState }) {
     // Untraced requirements lead — the gaps are the signal.
     const ordered = [...rows.filter(r => r.tests.length === 0), ...rows.filter(r => r.tests.length > 0)];
     const rest = ordered.slice(COVERAGE_SHOWN);
-
-    const Row = ({ row }: { row: NonNullable<ViewerState['coverage']>[number] }) => {
-        const tested = row.tests.length > 0;
-        return (
-            <article class="dossier-coverage__row">
-                <div class="dossier-coverage__req">
-                    <b>{row.req}</b>
-                    {row.title && <span>{row.title}</span>}
-                </div>
-                <div class="dossier-coverage__tasks">
-                    {row.tasks.map(task => <code key={task}>{task}</code>)}
-                </div>
-                <div class={tested ? 'dossier-coverage__state is-traced' : 'dossier-coverage__state is-untraced'}>
-                    <i aria-hidden="true" /> {tested ? `${row.tests.length} test${row.tests.length === 1 ? '' : 's'}` : 'No test linked'}
-                </div>
-            </article>
-        );
-    };
 
     return (
         <section class="dossier-section" aria-label="Coverage">
@@ -243,13 +237,13 @@ export function CoverageSection({ state }: { state: ViewerState }) {
                 <span>Requirement</span><span>Delivery</span><span>Evidence</span>
             </div>
             <div class="dossier-coverage">
-                {ordered.slice(0, COVERAGE_SHOWN).map(row => <Row key={row.req} row={row} />)}
+                {ordered.slice(0, COVERAGE_SHOWN).map(row => <CoverageRow key={row.req} row={row} />)}
             </div>
             {rest.length > 0 && (
                 <details class="dossier-more">
                     <summary>Show all {rows.length} requirements</summary>
                     <div class="dossier-coverage">
-                        {rest.map(row => <Row key={row.req} row={row} />)}
+                        {rest.map(row => <CoverageRow key={row.req} row={row} />)}
                     </div>
                 </details>
             )}

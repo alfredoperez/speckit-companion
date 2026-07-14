@@ -4,5 +4,3 @@
  */
 
 export { generateHtml } from './generator';
-export { generateCompactNav } from './navigation';
-export { generatePhaseStepper } from './stepper';

@@ -5,6 +5,7 @@ import {
 } from '../panelStateComputer';
 import { customCommandButtons } from '../optionalCommands';
 import { isStalenessRelevant } from '../staleness';
+import { commandMatchesStep, normalizeCustomCommand } from '../customCommands';
 import type { SpecDocument } from '../types';
 
 function doc(overrides: Partial<SpecDocument> & Pick<SpecDocument, 'type'>): SpecDocument {
@@ -41,13 +42,12 @@ const gsdDocs: SpecDocument[] = [
 ];
 
 describe('pipeline partition with action steps', () => {
-    it('pipelineDocs keeps workflow order; coreDocs and phases exclude actions', () => {
+    it('pipelineDocs keeps workflow order; related docs stay out of it', () => {
         const derived = computePanelDerivedState(
             { documents: gsdDocs, doc: gsdDocs[1], tasksContent: '', featureCtx: undefined },
             [],
         );
         expect(derived.pipelineDocs.map(d => d.type)).toEqual(['discuss', 'plan', 'execute', 'verify']);
-        expect(derived.coreDocs.map(d => d.type)).toEqual(['plan']);
         expect(derived.relatedDocs.map(d => d.type)).toEqual(['phase-plan']);
     });
 
@@ -119,5 +119,31 @@ describe('staleness relevance', () => {
         expect(isStalenessRelevant('planned')).toBe(true);
         expect(isStalenessRelevant('implementing')).toBe(true);
         expect(isStalenessRelevant(undefined)).toBe(true);
+    });
+});
+
+describe('commandMatchesStep — the render and dispatch paths agree', () => {
+    it('matches an action-only step by currentStep, since it has no document', () => {
+        // The bug this closes: the button rendered (render path matched
+        // currentStep) but an implicit dispatch could not resolve it (dispatch
+        // path matched only docType), so the two paths disagreed.
+        expect(commandMatchesStep('discuss', 'plan', 'discuss')).toBe(true);
+        expect(commandMatchesStep('discuss', 'plan', 'plan')).toBe(false);
+    });
+
+    it('keeps document scoping and the all-wildcard intact', () => {
+        expect(commandMatchesStep('plan', 'plan')).toBe(true);
+        expect(commandMatchesStep('all', 'anything')).toBe(true);
+        expect(commandMatchesStep(undefined, 'anything')).toBe(true);
+        expect(commandMatchesStep('spec', 'plan')).toBe(false);
+    });
+});
+
+describe('normalizeCustomCommand', () => {
+    it('derives the command from a bare name and drops entries with neither', () => {
+        expect(normalizeCustomCommand({ name: 'clarify' })?.command).toBe('/speckit.clarify');
+        expect(normalizeCustomCommand({ command: '/custom', name: 'x' })?.command).toBe('/custom');
+        expect(normalizeCustomCommand({} as never)).toBeUndefined();
+        expect(normalizeCustomCommand('legacy-string-entry')).toBeUndefined();
     });
 });

@@ -2,18 +2,8 @@ import { navState, viewerState } from '../signals';
 import { heroStats, formatActiveTime } from '../activityHeroModel';
 
 /**
- * The run facts, sitting in the right half of the header band: how far the run
- * got, at a glance.
- *
- * It only says what nothing else already says. The status is the badge's job,
- * and the phase is the badge's job too (a COMPLETED spec saying "implement"
- * adds nothing, and a running one is already named by the badge and the
- * spinning rail step). Getting to the run's full story is the rail's job — the
- * Overview is an entry there at every width — so there is no "Run details" link
- * competing with it.
- *
- * Facts are ranked, and the CSS drops them from the least important end as the
- * pane narrows. Renders nothing when there is no run to describe.
+ * Run facts for the header band. Deliberately says nothing the badge or the rail
+ * already says (no status, no phase, no link to the Overview).
  */
 
 /** Least → most important; the CSS hides by this key as width runs out. */
