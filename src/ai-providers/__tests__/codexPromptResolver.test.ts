@@ -1,8 +1,12 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { parseSlashCommand, resolveCodexPrompt } from '../codexPromptResolver';
+import { findPromptFile, parseSlashCommand, resolveCodexPrompt } from '../codexPromptResolver';
+import { AIProviders } from '../../core/constants';
+import { PROVIDER_PATHS } from '../aiProvider';
 import { MARKER_OPEN, MARKER_CLOSE } from '../promptPreamble';
+
+const REPO_ROOT = path.join(__dirname, '..', '..', '..');
 
 const PREAMBLE = `${MARKER_OPEN}\nRecord the step in .spec-context.json.\n${MARKER_CLOSE}`;
 
@@ -191,6 +195,30 @@ describe('codexPromptResolver', () => {
 
         it('returns the fallback for a prompt that is not a slash command', () => {
             expect(resolveCodexPrompt(workspaceRoot, 'refactor the auth module', 'FALLBACK').text).toBe('FALLBACK');
+        });
+    });
+
+    describe('the Codex skills directory', () => {
+        const codexSkillsDir = PROVIDER_PATHS[AIProviders.CODEX].skillsDir;
+
+        it('is the layout spec-kit actually emits for Codex', () => {
+            expect(codexSkillsDir).toBe('.agents/skills');
+        });
+
+        it('names a directory that exists in a real `specify init --ai codex` workspace', () => {
+            const emitted = path.join(REPO_ROOT, codexSkillsDir, 'speckit-specify', 'SKILL.md');
+
+            expect(fs.existsSync(emitted)).toBe(true);
+        });
+
+        it('is the only source the resolver reads, so registry and resolver cannot disagree', () => {
+            const skillDir = path.join(workspaceRoot, codexSkillsDir, 'speckit-companion-plan');
+            fs.mkdirSync(skillDir, { recursive: true });
+            fs.writeFileSync(path.join(skillDir, 'SKILL.md'), 'plan body', 'utf8');
+
+            expect(findPromptFile(workspaceRoot, 'speckit-companion-plan')).toBe(
+                path.join(skillDir, 'SKILL.md'),
+            );
         });
     });
 });

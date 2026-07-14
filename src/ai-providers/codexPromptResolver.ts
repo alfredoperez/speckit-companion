@@ -1,5 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { AIProviders } from '../core/constants';
+import { PROVIDER_PATHS } from './aiProvider';
 import { splitContextPreamble } from './promptBuilder';
 
 /**
@@ -9,10 +11,13 @@ import { splitContextPreamble } from './promptBuilder';
  * text into `codex exec -`, so a `/speckit.companion.specify` line only works
  * if the extension itself substitutes the command's body first.
  *
- * spec-kit emits Codex commands as skills (`.agents/skills/<skill>/SKILL.md`);
- * older `specify init --ai codex` workspaces carry the deprecated prompts
- * layout (`.codex/prompts/<command>.md`) instead, so both are searched.
+ * spec-kit emits Codex commands as skills under the provider's registered
+ * skills directory; older `specify init --ai codex` workspaces carry the
+ * deprecated prompts layout (`.codex/prompts/<command>.md`) instead, so both
+ * are searched.
  */
+
+const CODEX_SKILLS_DIR = PROVIDER_PATHS[AIProviders.CODEX].skillsDir;
 
 export interface ParsedSlashCommand {
     /** Skill directory spec-kit emits, e.g. `speckit-companion-mark-complete`. */
@@ -51,7 +56,7 @@ function findLegacyPrompt(workspaceRoot: string, skillName: string): string | nu
 }
 
 export function findPromptFile(workspaceRoot: string, skillName: string): string | null {
-    const skillPath = path.join(workspaceRoot, '.agents', 'skills', skillName, 'SKILL.md');
+    const skillPath = path.join(workspaceRoot, CODEX_SKILLS_DIR, skillName, 'SKILL.md');
     if (fs.existsSync(skillPath)) return skillPath;
     return findLegacyPrompt(workspaceRoot, skillName);
 }

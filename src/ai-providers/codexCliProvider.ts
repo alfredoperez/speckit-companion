@@ -47,7 +47,7 @@ export class CodexCliProvider extends CliTerminalProvider {
             fallback,
         );
         if (resolution.error) {
-            this.outputChannel.appendLine(`[Codex] Failed to read prompt template: ${resolution.error}. Falling back.`);
+            this.outputChannel.appendLine(`[${this.logPrefix}] Failed to read prompt template: ${resolution.error}. Falling back.`);
         }
         const resolvedPrompt = resolution.text;
 
@@ -67,7 +67,7 @@ export class CodexCliProvider extends CliTerminalProvider {
             promptFilePath: tempFilePath,
             permissionFlag: this.getPermissionFlag(),
         });
-        this.outputChannel.appendLine(`[codex] script=${script} (init-options)`);
+        this.outputChannel.appendLine(`[${this.logPrefix}] script=${script} (init-options)`);
 
         return { commandLine, tempFiles: [tempFilePath] };
     }

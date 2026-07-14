@@ -280,7 +280,7 @@ const _PROVIDER_PATHS_RAW: Record<AIProviderType, ProviderPaths> = {
         steeringPattern: 'AGENTS.md',
         agentsDir: '', // Codex uses AGENTS.md hierarchy, not separate agents
         agentsPattern: '',
-        skillsDir: '.codex/skills',
+        skillsDir: '.agents/skills',
         skillsPattern: '*/SKILL.md',
         mcpConfigPath: '~/.codex/config.toml', // Note: home directory, TOML format
         configDir: '.codex',

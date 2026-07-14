@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as yaml from 'js-yaml';
+import { getProviderPaths } from '../../ai-providers/aiProvider';
 
 export type SkillType = 'plugin' | 'user' | 'project';
 
@@ -40,18 +41,19 @@ export class SkillManager {
      */
     async getSkillList(type: SkillType | 'all' = 'all'): Promise<SkillInfo[]> {
         const skills: SkillInfo[] = [];
+        const { skillsDir } = getProviderPaths();
 
         // Get project skills
-        if (type === 'project' || type === 'all') {
+        if (skillsDir && (type === 'project' || type === 'all')) {
             if (this.workspaceRoot) {
-                const projectSkillsPath = path.join(this.workspaceRoot, '.claude/skills');
+                const projectSkillsPath = path.join(this.workspaceRoot, skillsDir);
                 skills.push(...await this.getSkillsFromDirectory(projectSkillsPath, 'project'));
             }
         }
 
         // Get user skills
-        if (type === 'user' || type === 'all') {
-            const userSkillsPath = path.join(os.homedir(), '.claude/skills');
+        if (skillsDir && (type === 'user' || type === 'all')) {
+            const userSkillsPath = path.join(os.homedir(), skillsDir);
             skills.push(...await this.getSkillsFromDirectory(userSkillsPath, 'user'));
         }
 
