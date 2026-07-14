@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import type { SpecInfo, RelatedDoc, EnhancementButton } from '../../../core/types';
 import { WorkflowSteps } from '../../../core/constants';
 import { CORE_DOCUMENTS } from '../../spec-viewer/types';
-import { countTaskCheckboxes } from '../../spec-viewer/phaseCalculation';
+import { countTaskCheckboxes } from '../../../core/utils/taskCheckboxes';
 import {
     getStepFile,
     DEFAULT_WORKFLOW,

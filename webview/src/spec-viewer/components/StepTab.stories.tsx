@@ -4,8 +4,7 @@ import { viewerState } from '../signals';
 import type { ViewerState } from '../types';
 import { mockActionDoc, mockDoc } from './__stories__/mockData';
 
-// The in-flight derivation reads `status` from `viewerState`, so a story that
-// exercises a lifecycle status has to seed it.
+// The in-flight derivation reads `status` off `viewerState`, so a lifecycle story seeds it.
 const seedStatus = (status: string) => {
     viewerState.value = {
         status,
@@ -18,8 +17,7 @@ const meta: Meta<typeof StepTab> = {
     title: 'Viewer/StepTab',
     component: StepTab,
     decorators: [(Story) => {
-        // Reset between stories — a status seeded by one story would otherwise
-        // decide the next one's in-flight state.
+        // Reset: a status seeded by one story would otherwise decide the next one's.
         viewerState.value = null;
         return <div class="compact-nav"><div class="nav-primary"><div class="step-tabs"><Story /></div></div></div>;
     }],
@@ -84,8 +82,7 @@ export const InFlightImplementPercentAndGlyph: Story = {
     },
 };
 
-// A running implement: the status says the step is in flight, so the tab spins
-// and the percent advances as tasks.md boxes get checked.
+// A running implement: the tab spins and the percent advances as tasks.md boxes get checked.
 export const ImplementRunning: Story = {
     render: () => {
         seedStatus('implementing');
@@ -103,8 +100,7 @@ export const ImplementRunning: Story = {
     },
 };
 
-// A settled spec never spins, whatever the percent says. A tasks.md whose
-// percent stalls below 100 (a stray unchecked box) must still read as done.
+// A settled spec never spins, whatever the percent says — a stalled 95% still reads as done.
 export const CompletedWithStalledPercent: Story = {
     render: () => {
         seedStatus('completed');

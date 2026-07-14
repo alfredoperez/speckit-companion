@@ -1,13 +1,13 @@
 export const IMPLEMENT_STEP = 'implement';
 
-// Spec-level `status` → the step that is actively running for it. An in-flight
-// status runs ONLY its matching step; a settled status runs none.
-const STATUS_TO_INFLIGHT_STEP: Record<string, string> = {
-    specifying: 'specify',
-    planning: 'plan',
-    tasking: 'tasks',
-    implementing: IMPLEMENT_STEP,
-};
+// A Map, not an object: `status` is user-authored data, and an object lookup
+// would resolve `constructor`/`toString` off the prototype.
+const STATUS_TO_INFLIGHT_STEP = new Map<string, string>([
+    ['specifying', 'specify'],
+    ['planning', 'plan'],
+    ['tasking', 'tasks'],
+    ['implementing', IMPLEMENT_STEP],
+]);
 
 const SETTLED_STATUSES = new Set([
     'specified', 'planned', 'ready-to-implement', 'implemented', 'completed', 'archived',
@@ -24,17 +24,14 @@ export interface StepRunState {
 
 /** The step a spec-level `status` says is running, or undefined when it names none. */
 export function inFlightStepFor(status?: string | null): string | undefined {
-    return status ? STATUS_TO_INFLIGHT_STEP[status] : undefined;
+    return status ? STATUS_TO_INFLIGHT_STEP.get(status) : undefined;
 }
 
 export function isSettledStatus(status?: string | null): boolean {
     return status ? SETTLED_STATUSES.has(status) : false;
 }
 
-/**
- * The single derivation of "is this step in flight" — every surface (step tab
- * spinner, live implement percent, footer gating) reads this one answer.
- */
+/** The single derivation of "is this step in flight" — every surface reads this one answer. */
 export function isStepInFlight(stepName: string, run: StepRunState): boolean {
     const statusStep = inFlightStepFor(run.status);
     if (statusStep !== undefined) return statusStep === stepName;

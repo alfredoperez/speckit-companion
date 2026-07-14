@@ -5,6 +5,7 @@
 
 import { CORE_DOCUMENTS, SpecDocument, DocumentType, PhaseInfo } from './types';
 import { SpecStatuses, WorkflowSteps } from '../../core/constants';
+import { countTaskCheckboxes } from '../../core/utils/taskCheckboxes';
 
 /**
  * Calculate phase information for the stepper.
@@ -104,40 +105,6 @@ export function getPhaseNumber(docType: DocumentType, stepNames?: string[]): 1 |
     if (docType === CORE_DOCUMENTS.PLAN) return 2;
     if (docType === CORE_DOCUMENTS.TASKS) return 3;
     return 1;
-}
-
-const FENCE_PATTERN = /^\s*(`{3,}|~{3,})/;
-const INLINE_CODE_PATTERN = /(`+)[^`]*?\1/g;
-const TASK_LINE_PATTERN = /^\s*- \[([ xX])\]/;
-
-/**
- * Count the real task checkboxes in a tasks document.
- * A task is a list item, so only a line-leading `- [ ]` counts — a checkbox
- * shown inside a fenced block or an inline code span is documentation, not work.
- */
-export function countTaskCheckboxes(content: string): { checked: number; total: number } {
-    let openFence: string | null = null;
-    let checked = 0;
-    let total = 0;
-
-    for (const rawLine of content.split('\n')) {
-        const fence = rawLine.match(FENCE_PATTERN)?.[1];
-        if (openFence) {
-            if (fence && fence[0] === openFence[0] && fence.length >= openFence.length) openFence = null;
-            continue;
-        }
-        if (fence) {
-            openFence = fence;
-            continue;
-        }
-
-        const marker = rawLine.replace(INLINE_CODE_PATTERN, '').match(TASK_LINE_PATTERN)?.[1];
-        if (!marker) continue;
-        total++;
-        if (marker.toLowerCase() === 'x') checked++;
-    }
-
-    return { checked, total };
 }
 
 /**

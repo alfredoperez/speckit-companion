@@ -5,6 +5,8 @@
  * when phases are newly completed to trigger notifications.
  */
 
+import { proseLines, taskCheckboxMarker } from '../core/utils/taskCheckboxes';
+
 export interface PhaseProgress {
     phaseName: string;
     total: number;
@@ -27,11 +29,10 @@ const progressCache = new Map<string, SpecProgress>();
  * Parse a tasks.md file and extract phase progress information
  */
 export function parseTasksFile(content: string, specName: string, specPath: string): SpecProgress {
-    const lines = content.split('\n');
     const phases: PhaseProgress[] = [];
     let currentPhase: PhaseProgress | null = null;
 
-    for (const line of lines) {
+    for (const line of proseLines(content)) {
         // Detect phase headers: ## Phase N: or ### Phase N:
         const phaseMatch = line.match(/^#{2,3}\s+Phase\s+\d+[:\s]+(.+)/i);
         if (phaseMatch) {
@@ -50,11 +51,10 @@ export function parseTasksFile(content: string, specName: string, specPath: stri
             continue;
         }
 
-        // Detect tasks: - [ ] or - [x] (case insensitive for x)
-        const taskMatch = line.match(/^\s*-\s+\[([ xX])\]/);
-        if (taskMatch && currentPhase) {
+        const marker = taskCheckboxMarker(line);
+        if (marker && currentPhase) {
             currentPhase.total++;
-            if (taskMatch[1].toLowerCase() === 'x') {
+            if (marker.toLowerCase() === 'x') {
                 currentPhase.completed++;
             }
         }

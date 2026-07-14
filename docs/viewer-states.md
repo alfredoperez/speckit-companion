@@ -467,7 +467,7 @@ stateDiagram-v2
 
 ### In-flight derivation (one fact, one path)
 
-Whether a step is running is decided in exactly one place — `isStepInFlight(step, run)` in `webview/src/spec-viewer/stepInFlight.ts`. Every surface reads that one answer: the step tab's spinning glyph, the live implement percent, and the footer's forward-motion gate (`FooterActions` asks the same module which step a status names). There is no second "the implement percent is below 100, so it must still be running" path — that one could not be stopped by a settled status, which is how a completed spec kept a step spinning at 95% forever.
+Whether a step is running is decided in exactly one place per bundle. In the webview it is `isStepInFlight(step, run)` (`webview/src/spec-viewer/stepInFlight.ts`), and every viewer surface reads that one answer: the step tab's spinning glyph, the live implement percent, and the footer's forward-motion gate (`FooterActions` asks the same module which step a status names). There is no second "the implement percent is below 100, so it must still be running" path — that one could not be stopped by a settled status, which is how a completed spec kept a step spinning at 95% forever. On the extension side the same fact comes from `STATUS_OWNING_STEP` / `isInFlightStatus()` (`src/core/types/specContext.ts`), which `forceStatus` and the quiet-run recovery strip both read; the webview keeps its own copy only because it is a separate bundle that cannot import `src/`.
 
 The derivation, in order:
 
@@ -477,7 +477,7 @@ The derivation, in order:
 
 The implement percent is a *label*, not a run signal: the tab that hosts it (the implement entry, or the last tab when the rail has none) shows it only while implement is in flight by the rule above.
 
-**What counts as a task.** The percent comes from `countTaskCheckboxes()` (`src/features/spec-viewer/phaseCalculation.ts`), which counts only line-leading `- [ ]` / `- [x]` list items and ignores anything inside a fenced code block or an inline code span — so a `tasks.md` legend line like ``Line format: `- [ ] **T###** …` `` is documentation, not an unfinished task. The workflow panel's task stats read the same counter.
+**What counts as a task.** The percent comes from `countTaskCheckboxes()` (`src/core/utils/taskCheckboxes.ts`), which counts only line-leading `- [ ]` / `- [x]` list items — indented sub-tasks included — and ignores anything inside a fenced code block or an inline code span, so a `tasks.md` legend line like ``Line format: `- [ ] **T###** …` `` is documentation, not an unfinished task. A task whose *description* contains inline code (`` - [x] **T001** fix `foo.ts` ``) still counts: only the line-leading marker decides. That module is the single reader of task checkboxes — the viewer percent, the workflow panel's task stats, and the phase-completion notifications all go through it.
 
 ### Elapsed Timer and Completion Notifications
 

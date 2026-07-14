@@ -9,6 +9,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import {
     SpecContext,
+    STATUS_OWNING_STEP,
     StepName,
     TransitionBy,
 } from '../../core/types/specContext';
@@ -131,27 +132,6 @@ export async function setStatus(
 
 
 /**
- * The step that owns each non-terminal status, plus whether that status
- * represents the step in flight (`start`) or settled (`complete`). Drives
- * `forceStatus`, which must realign `currentStep` to the chosen status so the
- * viewer's footer/step-tab (keyed on `currentStep` + history, not `status`)
- * recovers coherently rather than spinning on a stale step.
- */
-const STATUS_OWNING_STEP: Record<
-    Exclude<Status, 'draft' | 'completed' | 'archived'>,
-    { step: StepName; settled: boolean }
-> = {
-    specifying: { step: 'specify', settled: false },
-    specified: { step: 'specify', settled: true },
-    planning: { step: 'plan', settled: false },
-    planned: { step: 'plan', settled: true },
-    tasking: { step: 'tasks', settled: false },
-    'ready-to-implement': { step: 'tasks', settled: true },
-    implementing: { step: 'implement', settled: false },
-    implemented: { step: 'implement', settled: true },
-};
-
-/**
  * Force-override a spec's status as a manual recovery escape hatch (#347).
  *
  * Unlike `setStatus` (which only writes a terminal status and a `complete`
@@ -172,7 +152,7 @@ export async function forceStatus(
     if (status === 'completed' || status === 'archived') {
         return setStatus(specDir, status, by);
     }
-    const owning = STATUS_OWNING_STEP[status as keyof typeof STATUS_OWNING_STEP];
+    const owning = STATUS_OWNING_STEP.get(status);
     if (!owning) {
         // `draft` and any unmapped value: fall back to the plain status write.
         return setStatus(specDir, status, by);

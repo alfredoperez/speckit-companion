@@ -49,6 +49,24 @@ export const STATUSES: Status[] = [
     'archived',
 ];
 
+/** The step each non-terminal status owns, and whether that status has it settled or still running. */
+export const STATUS_OWNING_STEP: ReadonlyMap<Status, { step: StepName; settled: boolean }> = new Map([
+    ['specifying', { step: 'specify', settled: false }],
+    ['specified', { step: 'specify', settled: true }],
+    ['planning', { step: 'plan', settled: false }],
+    ['planned', { step: 'plan', settled: true }],
+    ['tasking', { step: 'tasks', settled: false }],
+    ['ready-to-implement', { step: 'tasks', settled: true }],
+    ['implementing', { step: 'implement', settled: false }],
+    ['implemented', { step: 'implement', settled: true }],
+] as [Status, { step: StepName; settled: boolean }][]);
+
+/** Whether a status has its step actively running. */
+export function isInFlightStatus(status?: string | null): boolean {
+    const owning = status ? STATUS_OWNING_STEP.get(status as Status) : undefined;
+    return owning !== undefined && !owning.settled;
+}
+
 /**
  * Per-substep timing entry. Derived in-memory by the viewer from
  * `history[]`; not persisted on disk.

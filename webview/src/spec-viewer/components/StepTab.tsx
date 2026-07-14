@@ -53,8 +53,7 @@ export function StepTab(props: StepTabProps) {
     const isViewing = phase === currentDoc || (isViewingRelatedDoc && phase === parentPhaseForRelated);
     const isStale = stalenessMap?.[phase]?.isStale ?? false;
 
-    // `activeStep` / `stepHistory` are keyed by step name ('specify'), not doc
-    // type ('spec').
+    // `activeStep` / `stepHistory` are keyed by step name ('specify'), not doc type ('spec').
     const stepName = DOC_TO_STEP[phase] ?? phase;
 
     const vs = viewerState.value;
@@ -67,9 +66,7 @@ export function StepTab(props: StepTabProps) {
         stepHistory,
         taskCompletionPercent,
     };
-    // The live implement percent is hosted by the implement entry, or by the
-    // last tab when the rail has none — so this tab is in flight when its own
-    // step is, or when it hosts a running implement.
+    // The percent host stands in for implement when the rail has no implement entry.
     const hostsRunningImplement = !!isPercentHost && isStepInFlight(IMPLEMENT_STEP, run);
     const isWorking = isStepInFlight(stepName, run) || hostsRunningImplement;
     const isLocked = runningStepIndex != null
@@ -142,8 +139,7 @@ export function StepTab(props: StepTabProps) {
         ? `${baseTooltip} (disabled while ${activeStep} is running)`
         : baseTooltip;
 
-    // The elapsed ticker is for a live dispatch run only — the percent label
-    // already carries progress for a hosted implement run.
+    // A hosted implement run already carries its progress in the percent label.
     const runEntry = stepHistory?.[stepName];
     const runningStartedAt = canonicalState === 'in-flight'
         && runEntry?.startedAt
