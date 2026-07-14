@@ -15,8 +15,7 @@
  * NOT nagging.
  */
 
-/** In-progress statuses — the only ones for which a quiet run is meaningful. */
-const IN_PROGRESS_STATUSES = new Set(['specifying', 'planning', 'tasking', 'implementing']);
+import { isInFlightStatus } from '../../core/types/specContext';
 
 /** Per-step quiet thresholds, in minutes, before the affordance appears. */
 const STEP_QUIET_MINUTES: Record<string, number> = {
@@ -67,7 +66,7 @@ export function quietThresholdMinutes(step: string | undefined): number {
 export function computeRunRecovery(input: RunRecoveryInput): RunRecoveryState {
     const { currentStep, status, newestActivityMs, nowMs } = input;
 
-    if (!status || !IN_PROGRESS_STATUSES.has(status)) return HIDDEN;
+    if (!isInFlightStatus(status)) return HIDDEN;
     if (newestActivityMs === undefined || !Number.isFinite(newestActivityMs)) return HIDDEN;
 
     const elapsedMs = nowMs - newestActivityMs;

@@ -5,6 +5,7 @@
 
 import { CORE_DOCUMENTS, SpecDocument, DocumentType, PhaseInfo } from './types';
 import { SpecStatuses, WorkflowSteps } from '../../core/constants';
+import { countTaskCheckboxes } from '../../core/utils/taskCheckboxes';
 
 /**
  * Calculate phase information for the stepper.
@@ -112,14 +113,10 @@ export function getPhaseNumber(docType: DocumentType, stepNames?: string[]): 1 |
 export function calculateTaskCompletion(content: string, docType: DocumentType): number {
     if (docType !== CORE_DOCUMENTS.TASKS || !content) return 0;
 
-    const checkboxPattern = /- \[([ xX])\]/g;
-    const matches = content.matchAll(checkboxPattern);
-    const matchArray = Array.from(matches);
+    const { checked, total } = countTaskCheckboxes(content);
+    if (total === 0) return 0;
 
-    if (matchArray.length === 0) return 0;
-
-    const completed = matchArray.filter(m => m[1].toLowerCase() === 'x').length;
-    return Math.round((completed / matchArray.length) * 100);
+    return Math.round((checked / total) * 100);
 }
 
 /**

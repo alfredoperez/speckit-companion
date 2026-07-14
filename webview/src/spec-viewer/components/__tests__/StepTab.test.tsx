@@ -299,6 +299,52 @@ describe('StepTab — #229 in-flight sync glyph', () => {
         }
     });
 
+    it('settles the implement tab on a completed spec even when the percent never reached 100', () => {
+        viewerState.value = {
+            status: 'completed', highlights: ['specify', 'plan', 'tasks'], activeSubstep: null,
+        } as any;
+        const c = renderTab(baseProps({
+            doc: doc('tasks', true, 'Tasks'),
+            index: 2,
+            currentStep: 'implement',
+            taskCompletionPercent: 95,
+            currentDoc: 'tasks',
+            isPercentHost: true,
+        }));
+        try {
+            const btn = c.querySelector('button')!;
+            expect(btn.className).not.toContain('in-flight');
+            expect(btn.className).toContain('done');
+            expect(c.querySelector('.step-status__sync')).toBeNull();
+            expect(c.querySelector('.step-tab__percent')).toBeNull();
+            expect(c.querySelector('.step-status')!.textContent).toBe('✓');
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('keeps spinning a genuinely-running implement and shows its live percent', () => {
+        viewerState.value = {
+            status: 'implementing', highlights: ['specify', 'plan', 'tasks'], activeSubstep: null,
+        } as any;
+        const c = renderTab(baseProps({
+            doc: doc('tasks', true, 'Tasks'),
+            index: 2,
+            currentStep: 'implement',
+            taskCompletionPercent: 40,
+            currentDoc: 'tasks',
+            isPercentHost: true,
+        }));
+        try {
+            expect(c.querySelector('button')!.className).toContain('in-flight');
+            const pct = c.querySelector('.step-tab__percent');
+            expect(pct!.textContent).toContain('40%');
+            expect(pct!.querySelector('.step-status__sync')).not.toBeNull();
+        } finally {
+            cleanup(c);
+        }
+    });
+
     it('ramps the percentage label color via the --impl-progress ratio', () => {
         viewerState.value = { highlights: ['specify', 'plan'], activeSubstep: null } as any;
         const c = renderTab(baseProps({

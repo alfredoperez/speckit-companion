@@ -1,11 +1,26 @@
 import type { Meta, StoryObj } from '@storybook/preact';
 import { StepTab } from './StepTab';
+import { viewerState } from '../signals';
+import type { ViewerState } from '../types';
 import { mockActionDoc, mockDoc } from './__stories__/mockData';
+
+// The in-flight derivation reads `status` off `viewerState`, so a lifecycle story seeds it.
+const seedStatus = (status: string) => {
+    viewerState.value = {
+        status,
+        highlights: ['specify', 'plan', 'tasks'],
+        activeSubstep: null,
+    } as unknown as ViewerState;
+};
 
 const meta: Meta<typeof StepTab> = {
     title: 'Viewer/StepTab',
     component: StepTab,
-    decorators: [(Story) => <div class="compact-nav"><div class="nav-primary"><div class="step-tabs"><Story /></div></div></div>],
+    decorators: [(Story) => {
+        // Reset: a status seeded by one story would otherwise decide the next one's.
+        viewerState.value = null;
+        return <div class="compact-nav"><div class="nav-primary"><div class="step-tabs"><Story /></div></div></div>;
+    }],
 };
 export default meta;
 
@@ -35,7 +50,7 @@ export const Done: Story = {
 };
 
 export const InFlight: Story = {
-    args: { ...base, doc: mockDoc('tasks', true, 'Tasks'), index: 2, taskCompletionPercent: 72 },
+    args: { ...base, doc: mockDoc('tasks', true, 'Tasks'), index: 2, currentStep: 'implement', isPercentHost: true, taskCompletionPercent: 72 },
 };
 
 // #229: the in-flight indicator is a spinning `sync` codicon — looping arrows
@@ -64,6 +79,42 @@ export const InFlightImplementPercentAndGlyph: Story = {
         currentStep: 'implement',
         taskCompletionPercent: 40,
         isPercentHost: true,
+    },
+};
+
+// A running implement: the tab spins and the percent advances as tasks.md boxes get checked.
+export const ImplementRunning: Story = {
+    render: () => {
+        seedStatus('implementing');
+        return (
+            <StepTab
+                {...base}
+                doc={mockDoc('tasks', true, 'Tasks')}
+                index={2}
+                currentDoc="tasks"
+                currentStep="implement"
+                taskCompletionPercent={40}
+                isPercentHost
+            />
+        );
+    },
+};
+
+// A settled spec never spins, whatever the percent says — a stalled 95% still reads as done.
+export const CompletedWithStalledPercent: Story = {
+    render: () => {
+        seedStatus('completed');
+        return (
+            <StepTab
+                {...base}
+                doc={mockDoc('tasks', true, 'Tasks')}
+                index={2}
+                currentDoc="tasks"
+                currentStep="implement"
+                taskCompletionPercent={95}
+                isPercentHost
+            />
+        );
     },
 };
 
@@ -121,7 +172,7 @@ export const DoneStale: Story = {
 };
 
 export const InFlightStale: Story = {
-    args: { ...base, doc: mockDoc('tasks', true, 'Tasks'), index: 2, taskCompletionPercent: 45, stalenessMap: staleMap('tasks') },
+    args: { ...base, doc: mockDoc('tasks', true, 'Tasks'), index: 2, currentStep: 'implement', isPercentHost: true, taskCompletionPercent: 45, stalenessMap: staleMap('tasks') },
 };
 
 export const LockedStale: Story = {
@@ -142,6 +193,8 @@ export const CurrentInFlight: Story = {
         doc: mockDoc('tasks', true, 'Tasks'),
         index: 2,
         currentDoc: 'tasks',
+        currentStep: 'implement',
+        isPercentHost: true,
         taskCompletionPercent: 33,
     },
 };
@@ -152,6 +205,8 @@ export const CurrentInFlightStale: Story = {
         doc: mockDoc('tasks', true, 'Tasks'),
         index: 2,
         currentDoc: 'tasks',
+        currentStep: 'implement',
+        isPercentHost: true,
         taskCompletionPercent: 33,
         stalenessMap: staleMap('tasks'),
     },
