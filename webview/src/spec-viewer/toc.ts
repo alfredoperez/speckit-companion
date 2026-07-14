@@ -52,7 +52,9 @@ function readTocMinWidth(): number {
         .getPropertyValue('--toc-min-width')
         .trim();
     const parsed = parseFloat(raw);
-    return Number.isFinite(parsed) ? parsed : 1040;
+    // Must match --toc-min-width in _toc.css: a higher fallback would force the
+    // compact outline on a laptop-width pane the CSS considers wide enough.
+    return Number.isFinite(parsed) ? parsed : 920;
 }
 
 function isNarrow(scrollRoot: HTMLElement): boolean {

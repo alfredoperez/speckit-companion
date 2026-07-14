@@ -22,7 +22,9 @@ function withScopeSuffix(a: SerializedFooterAction): string {
 
 function actionVariant(id: string): ButtonVariant {
     if (id === 'refine') return 'enhancement';
-    if (id === 'approve' || id === 'complete' || id === 'reactivate') return 'primary';
+    // `start` is forward motion like `approve` (FORWARD_MOTION_IDS, the context
+    // line) — it must carry the same emphasis, not read as a secondary action.
+    if (id === 'approve' || id === 'start' || id === 'complete' || id === 'reactivate') return 'primary';
     return 'secondary';
 }
 
