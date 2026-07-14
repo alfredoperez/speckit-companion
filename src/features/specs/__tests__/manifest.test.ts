@@ -140,10 +140,10 @@ describe('sidebar contributions', () => {
 
     describe('specs title submenu', () => {
         const TITLE_MENU_GROUPS = [
-            ['speckit.specs.collapseAll', '1_view'],
-            ['speckit.specs.expandAll', '1_view'],
-            ['speckit.companion.installSpecKitExtension', '2_maintenance'],
-            ['speckit.upgrade', '2_maintenance'],
+            ['speckit.specs.collapseAll', '1_view@1'],
+            ['speckit.specs.expandAll', '1_view@1'],
+            ['speckit.companion.installSpecKitExtension', '2_maintenance@1'],
+            ['speckit.upgrade', '2_maintenance@2'],
         ] as const;
 
         it('carries exactly the four More Actions entries', () => {
@@ -152,9 +152,8 @@ describe('sidebar contributions', () => {
             );
         });
 
-        it.each(TITLE_MENU_GROUPS)('%s sits in the %s group', (command, group) => {
-            const entry = titleMenu.find(e => e.command === command)!;
-            expect(entry.group.split('@')[0]).toBe(group);
+        it.each(TITLE_MENU_GROUPS)('%s sits at %s', (command, group) => {
+            expect(titleMenu.find(e => e.command === command)!.group).toBe(group);
         });
 
         it.each([
