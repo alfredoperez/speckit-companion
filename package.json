@@ -231,12 +231,6 @@
         "icon": "$(sort-precedence)"
       },
       {
-        "command": "speckit.specs.moreActions",
-        "title": "More Actions…",
-        "category": "SpecKit",
-        "icon": "$(ellipsis)"
-      },
-      {
         "command": "speckit.delete",
         "title": "Delete",
         "category": "SpecKit",
@@ -542,6 +536,11 @@
         "id": "speckit.specs.rowMenu",
         "label": "More Actions…",
         "icon": "$(ellipsis)"
+      },
+      {
+        "id": "speckit.specs.titleMenu",
+        "label": "More Actions…",
+        "icon": "$(ellipsis)"
       }
     ],
     "menus": {
@@ -557,7 +556,7 @@
           "group": "navigation@2"
         },
         {
-          "command": "speckit.specs.moreActions",
+          "submenu": "speckit.specs.titleMenu",
           "when": "view == speckit.views.explorer",
           "group": "navigation@3"
         },
@@ -758,6 +757,28 @@
         {
           "command": "speckit.delete",
           "group": "5_danger@1"
+        }
+      ],
+      "speckit.specs.titleMenu": [
+        {
+          "command": "speckit.specs.collapseAll",
+          "when": "!speckit.specs.allCollapsed",
+          "group": "1_view@1"
+        },
+        {
+          "command": "speckit.specs.expandAll",
+          "when": "speckit.specs.allCollapsed",
+          "group": "1_view@1"
+        },
+        {
+          "command": "speckit.companion.installSpecKitExtension",
+          "when": "(speckit.detected || speckit.cliInstalled) && !speckit.companion.installed",
+          "group": "2_maintenance@1"
+        },
+        {
+          "command": "speckit.upgrade",
+          "when": "speckit.detected || speckit.cliInstalled",
+          "group": "2_maintenance@2"
         }
       ],
       "commandPalette": [

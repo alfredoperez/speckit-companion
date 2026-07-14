@@ -30,9 +30,6 @@ import { loadCustomCommands, NormalizedCustomCommand } from './customCommandConf
 import { CONTEXT_KEYS, setContextKey } from '../../core/utils/contextKeys';
 import { sendTelemetryEvent, getSpecTelemetryContext, phaseTelemetryId } from '../../core/telemetry';
 import { getConfiguredProviderType } from '../../ai-providers/aiProvider';
-import { buildMoreActions } from './specsMoreActions';
-import { isCompanionInstalled } from '../settings/companionPresetReconciler';
-import { SpecKitDetector } from '../../speckit/detector';
 
 function toWorkspaceRelative(absOrRel: string): string {
     const ws = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -122,34 +119,6 @@ export function registerSpecKitCommands(
         ),
         vscode.commands.registerCommand('speckit.specs.collapseAll', () => setExpandAllSpecs(false)),
         vscode.commands.registerCommand('speckit.specs.expandAll', () => setExpandAllSpecs(true))
-    );
-
-    // The Specs title bar carries only Filter, Sort, More Actions, and New Spec.
-    // Everything else the toolbar used to show lives behind this picker, gated by
-    // the same conditions its title contributions used.
-    context.subscriptions.push(
-        vscode.commands.registerCommand('speckit.specs.moreActions', async () => {
-            const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-            const detector = SpecKitDetector.getInstance();
-            const entries = buildMoreActions({
-                allCollapsed: !specExplorer.expandAllSpecs,
-                companionInstalled: root ? isCompanionInstalled(root) : false,
-                speckitAvailable: detector.workspaceInitialized || detector.cliInstalled,
-            });
-            type MoreActionsPick = vscode.QuickPickItem & { commandId?: string };
-            const picks: MoreActionsPick[] = entries.map(entry =>
-                entry.separator
-                    ? { label: entry.label, kind: vscode.QuickPickItemKind.Separator }
-                    : { label: entry.label, commandId: entry.command }
-            );
-            const picked = await vscode.window.showQuickPick(picks, {
-                title: 'Specs',
-                placeHolder: 'Choose an action',
-            });
-            if (picked?.commandId) {
-                await vscode.commands.executeCommand(picked.commandId);
-            }
-        })
     );
 
     // Filter specs: prompt for a fuzzy query, prefilled with the current one so
