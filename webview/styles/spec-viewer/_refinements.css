@@ -1,58 +1,171 @@
 /**
  * SpecKit Companion - Refinement Styles
- * Inline comment cards and refine submit button
+ * Inline comment annotations and the refine submit button
  */
 
 /* ============================================
-   Inline Comment Cards
+   Inline Comment Annotation
+
+   A comment annotates its line; it must not outweigh it. Same quiet vocabulary
+   the viewer already uses for inline code and file-reference chips: a neutral
+   surface mixed from the theme foreground, no border, body-weight text, and the
+   accent only on hover/focus. State rides a rail + glyph + word, never colour
+   alone.
    ============================================ */
 
 .inline-comment {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    margin: 8px 0 0 0;
-    padding: 8px 12px;
-    background: var(--bg-secondary);
-    border-left: 3px solid var(--accent);
+    margin: var(--space-1) 0 0 0;
     border-radius: var(--radius-sm);
-    font-size: 13px;
+    border-left: 2px solid transparent;
+    background: color-mix(in srgb, var(--text-muted) 12%, transparent);
+    font-size: 12px;
     animation: fadeIn var(--transition-fast) ease-out;
 }
 
-.comment-icon {
-    flex-shrink: 0;
-    font-size: 14px;
-    line-height: 1.4;
+/* Pending reads live; applied reads settled. */
+.inline-comment--pending {
+    border-left-color: color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
-.comment-text {
-    flex: 1;
-    color: var(--text-secondary);
-    line-height: 1.4;
-    word-break: break-word;
+.inline-comment--applied {
+    border-left-color: color-mix(in srgb, var(--text-muted) 45%, transparent);
 }
 
-.comment-delete {
-    flex-shrink: 0;
-    width: 20px;
-    height: 20px;
-    padding: 0;
-    border: none;
-    background: transparent;
-    color: var(--text-muted);
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    border-radius: var(--radius-sm);
-    transition: all var(--transition-fast);
+/* ============================================
+   Collapsed row — the disclosure trigger
+   ============================================ */
+
+.inline-comment .comment-disclosure {
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: var(--space-2);
+    width: 100%;
+    padding: 3px var(--space-2);
+    border: none;
+    background: transparent;
+    color: var(--text-body);
+    font-family: inherit;
+    font-size: inherit;
+    line-height: 1.5;
+    text-align: left;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: background var(--transition-fast), color var(--transition-fast);
 }
 
-.comment-delete:hover {
+/* The accent rides the glyph and caret on hover; the comment itself is readable
+   content and stays on a body-text colour in every theme. */
+.inline-comment .comment-disclosure:hover {
+    background: var(--accent-subtle);
+    color: var(--text-primary);
+}
+
+.inline-comment .comment-disclosure:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.inline-comment .comment-glyph,
+.inline-comment .comment-caret {
+    flex-shrink: 0;
+    font-size: 12px;
+    line-height: 1;
+    color: var(--text-muted);
+}
+
+.inline-comment .comment-disclosure:hover .comment-glyph,
+.inline-comment .comment-disclosure:hover .comment-caret {
+    color: var(--accent);
+}
+
+/* The one-line preview truncates rather than wrapping, so a comment of any
+   length costs exactly one line. min-width:0 lets the flex child shrink. */
+.inline-comment .comment-text {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: inherit;
+}
+
+.inline-comment .comment-state {
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.inline-comment--pending .comment-state {
+    color: color-mix(in srgb, var(--accent) 75%, var(--text-primary));
+}
+
+/* Expanded, the preview line is redundant with the body below it — hidden with
+   opacity so it keeps its space AND stays in the trigger's accessible name. */
+.inline-comment.is-expanded .comment-text {
+    opacity: 0;
+}
+
+/* ============================================
+   Expanded detail — full text + actions
+   ============================================ */
+
+.inline-comment .comment-detail {
+    padding: 0 var(--space-2) var(--space-2) calc(var(--space-2) + 20px);
+    animation: fadeIn var(--transition-fast) ease-out;
+}
+
+.inline-comment .comment-body {
+    margin: 0 0 var(--space-2) 0;
+    color: var(--text-body);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.inline-comment .comment-actions {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.inline-comment .comment-action {
+    padding: 2px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-body);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast),
+                border-color var(--transition-fast);
+}
+
+.inline-comment .comment-action:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.inline-comment .comment-action:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.inline-comment .comment-action--refine {
+    border-color: var(--border-accent);
+    color: var(--accent);
+}
+
+.inline-comment .comment-action--refine:hover {
+    background: var(--accent-subtle);
+    color: var(--accent);
+}
+
+.inline-comment .comment-action--delete:hover {
     background: var(--error-subtle);
+    border-color: var(--error);
     color: var(--error);
 }
 

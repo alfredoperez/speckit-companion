@@ -5,32 +5,50 @@
 
 import { render, h } from 'preact';
 import type { VSCodeApi } from '../types';
-import { activeEditor } from '../signals';
-import { detectLineType, handleContextAction } from './lineActions';
+import { detectLineType } from './lineActions';
 import { addRefinement, addRefinementForRow } from './refinements';
 import { InlineEditor } from '../components/InlineEditor';
+import { isReadOnly } from './readOnly';
+import { closeInlineEditor, isInlineEditorOpen, openInlineEditor } from './editorHost';
 
 declare const vscode: VSCodeApi;
 
-let activeEditorContainer: HTMLElement | null = null;
-
-function cleanup(): void {
-    if (activeEditorContainer) {
-        render(null, activeEditorContainer);
-        const lineEl = activeEditorContainer.closest('.line');
-        const rowEl = activeEditorContainer.closest('.scenario-row');
-        // For row mode, the container is a <tbody> after the row
-        const editorRow = activeEditorContainer.closest('.inline-editor-row') || activeEditorContainer;
-        lineEl?.classList.remove('editing');
-        rowEl?.classList.remove('editing');
-        activeEditorContainer.remove();
-        activeEditorContainer = null;
-        activeEditor.value = null;
+/** A remove action becomes a refinement comment, never an immediate deletion. */
+export function handleContextAction(
+    action: string,
+    lineNum: number,
+    closeEditor: () => void,
+    lineElement?: HTMLElement
+): void {
+    switch (action) {
+        case 'remove-line':
+        case 'remove-story':
+        case 'remove-section':
+        case 'remove-scenario':
+        case 'remove-task':
+            if (lineElement) {
+                const actionLabel = action.replace('remove-', '').replace('-', ' ');
+                addRefinement(lineNum, `🗑️ Remove this ${actionLabel}`, lineElement);
+            }
+            closeEditor();
+            break;
+        case 'toggle-task': {
+            closeEditor();
+            const lineEl = document.querySelector(`.line[data-line="${lineNum}"]`);
+            const checkbox = lineEl?.querySelector('input[type="checkbox"]') as HTMLInputElement;
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+                checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            break;
+        }
+        default:
+            closeEditor();
     }
 }
 
 export function showInlineEditor(lineElement: HTMLElement): void {
-    if (document.body.dataset.specStatus === 'completed' || document.body.dataset.specStatus === 'archived') return;
+    if (isReadOnly()) return;
 
     closeInlineEditor();
 
@@ -58,17 +76,11 @@ export function showInlineEditor(lineElement: HTMLElement): void {
         },
     }), container);
 
-    activeEditorContainer = container;
-    activeEditor.value = container;
-    lineElement.classList.add('editing');
-}
-
-export function closeInlineEditor(): void {
-    cleanup();
+    openInlineEditor(container, lineElement);
 }
 
 export function showInlineEditorForRow(rowElement: HTMLElement, rowNum: number): void {
-    if (document.body.dataset.specStatus === 'completed' || document.body.dataset.specStatus === 'archived') return;
+    if (isReadOnly()) return;
 
     closeInlineEditor();
 
@@ -93,9 +105,7 @@ export function showInlineEditorForRow(rowElement: HTMLElement, rowNum: number):
         onContextAction: () => closeInlineEditor(),
     }), container);
 
-    activeEditorContainer = container;
-    activeEditor.value = container;
-    rowElement.classList.add('editing');
+    openInlineEditor(container, rowElement);
 }
 
 export function showInlineEdit(lineEl: HTMLElement | null, lineNum: number, content: string): void {
@@ -135,13 +145,13 @@ export function showInlineEdit(lineEl: HTMLElement | null, lineNum: number, cont
 
 export function setupLineActions(): void {
     document.addEventListener('click', (e) => {
-        const target = e.target as HTMLElement;
-        const addBtn = target.closest('.line-add-btn') as HTMLElement;
+        if (!(e.target instanceof Element)) return;
+        const target = e.target;
+        const addBtn = target.closest<HTMLElement>('.line-add-btn');
 
-        if (addBtn || target.classList.contains('line-add-btn')) {
-            const btn = addBtn || target;
-            const lineNum = parseInt(btn.dataset.line || '0', 10);
-            const listId = btn.dataset.listId;
+        if (addBtn) {
+            const lineNum = parseInt(addBtn.dataset.line || '0', 10);
+            const listId = addBtn.dataset.listId;
             const selector = listId
                 ? `.line[data-line="${lineNum}"][data-list-id="${listId}"]`
                 : `.line[data-line="${lineNum}"]`;
@@ -150,9 +160,10 @@ export function setupLineActions(): void {
             return;
         }
 
-        if (target.classList.contains('row-add-btn')) {
-            const rowNum = parseInt(target.dataset.row || '0', 10);
-            const tableId = target.dataset.tableId;
+        const rowBtn = target.closest<HTMLElement>('.row-add-btn');
+        if (rowBtn) {
+            const rowNum = parseInt(rowBtn.dataset.row || '0', 10);
+            const tableId = rowBtn.dataset.tableId;
             const selector = tableId
                 ? `.scenario-row[data-row="${rowNum}"][data-table-id="${tableId}"]`
                 : `.scenario-row[data-row="${rowNum}"]`;
@@ -161,7 +172,8 @@ export function setupLineActions(): void {
             return;
         }
 
-        if (activeEditorContainer && !target.closest('.inline-editor') && !target.classList.contains('line-add-btn') && !target.classList.contains('row-add-btn')) {
+        // The Edit action opens the composer on the same click that bubbles here.
+        if (isInlineEditorOpen() && !target.closest('.inline-editor') && !target.closest('.inline-comment')) {
             closeInlineEditor();
         }
     });

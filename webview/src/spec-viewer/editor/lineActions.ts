@@ -1,12 +1,10 @@
 /**
  * SpecKit Companion - Line Actions
- * Handles line type detection and context-aware action buttons
+ * Line type detection and the context-aware actions each type offers.
+ * Pure classifiers — acting on an action lives with the composer that raised it.
  */
 
-import type { LineType, VSCodeApi } from '../types';
-import { addRefinement } from './refinements';
-
-declare const vscode: VSCodeApi;
+import type { LineType } from '../types';
 
 /**
  * Detect the type of a line element for context-aware actions
@@ -57,42 +55,4 @@ export function getContextActions(lineType: LineType): ContextAction[] {
         'paragraph': [{ action: 'remove-line', label: 'Remove Line' }],
     };
     return actions[lineType];
-}
-
-/**
- * Handle context-aware action clicks
- * Remove actions now add a refinement comment instead of immediately deleting
- */
-export function handleContextAction(
-    action: string,
-    lineNum: number,
-    closeEditor: () => void,
-    lineElement?: HTMLElement
-): void {
-    switch (action) {
-        case 'remove-line':
-        case 'remove-story':
-        case 'remove-section':
-        case 'remove-scenario':
-        case 'remove-task':
-            // Add removal comment instead of immediate deletion
-            if (lineElement) {
-                const actionLabel = action.replace('remove-', '').replace('-', ' ');
-                addRefinement(lineNum, `🗑️ Remove this ${actionLabel}`, lineElement);
-            }
-            closeEditor();
-            break;
-        case 'toggle-task':
-            closeEditor();
-            // Find the checkbox and toggle it
-            const lineEl = document.querySelector(`.line[data-line="${lineNum}"]`);
-            const checkbox = lineEl?.querySelector('input[type="checkbox"]') as HTMLInputElement;
-            if (checkbox) {
-                checkbox.checked = !checkbox.checked;
-                checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-            break;
-        default:
-            closeEditor();
-    }
 }

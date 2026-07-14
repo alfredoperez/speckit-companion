@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'preact/hooks';
+import { useRef, useEffect, useState } from 'preact/hooks';
 import type { LineType } from '../types';
 import { getContextActions } from '../editor/lineActions';
 
@@ -9,34 +9,43 @@ export interface InlineEditorProps {
     lineNum: number;
     lineType: LineType;
     scenarioContent?: string;
+    /** Pre-fills the textarea — the edit flow reuses this composer. */
+    initialValue?: string;
+    submitLabel?: string;
     onSubmit: (comment: string) => void;
     onCancel: () => void;
     onContextAction: (action: string) => void;
 }
 
 export function InlineEditor(props: InlineEditorProps) {
-    const { mode, lineNum, lineType, scenarioContent, onSubmit, onCancel, onContextAction } = props;
+    const { mode, lineNum, lineType, scenarioContent, initialValue, submitLabel, onSubmit, onCancel, onContextAction } = props;
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const [draft, setDraft] = useState(initialValue ?? '');
 
     useEffect(() => {
-        setTimeout(() => textareaRef.current?.focus(), 50);
+        setTimeout(() => {
+            const el = textareaRef.current;
+            if (!el) return;
+            el.focus();
+            el.setSelectionRange(el.value.length, el.value.length);
+        }, 50);
     }, []);
+
+    const submitDraft = () => {
+        const comment = (textareaRef.current?.value ?? draft).trim();
+        comment ? onSubmit(comment) : onCancel();
+    };
 
     const handleKeydown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') onCancel();
         if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
             e.preventDefault();
-            const comment = textareaRef.current?.value.trim();
-            comment ? onSubmit(comment) : onCancel();
+            submitDraft();
         }
     };
 
-    const handleAdd = () => {
-        const comment = textareaRef.current?.value.trim();
-        comment ? onSubmit(comment) : onCancel();
-    };
-
-    const contextActions = mode === 'line' ? getContextActions(lineType) : [];
+    const editing = initialValue !== undefined;
+    const contextActions = mode === 'line' && !editing ? getContextActions(lineType) : [];
 
     const card = (
         <div class="inline-editor">
@@ -49,7 +58,9 @@ export function InlineEditor(props: InlineEditorProps) {
                         </>
                     )
                 ) : (
-                    <span class="editor-header-target">Commenting on line {lineNum}</span>
+                    <span class="editor-header-target">
+                        {editing ? `Editing comment on line ${lineNum}` : `Commenting on line ${lineNum}`}
+                    </span>
                 )}
             </div>
             <div class="editor-body">
@@ -57,6 +68,8 @@ export function InlineEditor(props: InlineEditorProps) {
                     ref={textareaRef}
                     class="editor-textarea"
                     placeholder="Add a comment or refinement instruction..."
+                    value={draft}
+                    onInput={(e) => setDraft((e.currentTarget as HTMLTextAreaElement).value)}
                     onKeyDown={handleKeydown}
                 />
             </div>
@@ -75,7 +88,7 @@ export function InlineEditor(props: InlineEditorProps) {
                 </div>
                 <div class="editor-buttons">
                     <button class="editor-cancel" onClick={onCancel}>Cancel</button>
-                    <button class="editor-add" onClick={handleAdd}>Add Comment</button>
+                    <button class="editor-add" onClick={submitDraft}>{submitLabel ?? 'Add Comment'}</button>
                 </div>
             </div>
         </div>

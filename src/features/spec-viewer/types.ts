@@ -399,6 +399,11 @@ export type ViewerToExtensionMessage =
           type: 'removeComment';
           id: string;
       }
+    | {
+          type: 'editComment';
+          id: string;
+          comment: string;
+      }
     // Run refinement for one document's pending comments (inline button + Activity)
     | {
           type: 'runDocRefinement';

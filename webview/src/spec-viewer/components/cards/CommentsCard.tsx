@@ -78,8 +78,12 @@ export function CommentsCard({ state }: CommentsCardProps) {
                             <ul class="activity-list comments-list">
                                 {docComments.map(c => (
                                     <li key={c.id} class="comment-item">
-                                        <span class={`comment-status comment-status--${c.status}`}>
-                                            {c.status}
+                                        <span class={`comment-chip comment-chip--${c.status}`}>
+                                            <span
+                                                class={`codicon codicon-${c.status === 'applied' ? 'check' : 'comment'}`}
+                                                aria-hidden="true"
+                                            />
+                                            {c.status === 'applied' ? 'Applied' : 'Pending'}
                                         </span>
                                         <button
                                             class="comment-jump"
@@ -88,7 +92,7 @@ export function CommentsCard({ state }: CommentsCardProps) {
                                         >
                                             L{c.anchor.line}
                                         </button>
-                                        <span class="comment-text">{c.comment}</span>
+                                        <span class="comment-body-text">{c.comment}</span>
                                     </li>
                                 ))}
                             </ul>
