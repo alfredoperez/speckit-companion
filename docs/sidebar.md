@@ -197,12 +197,12 @@ Spec rows carry a color-tinted beaker for their lifecycle:
 - **Green beaker** — a confirmed-completed spec
 - **Spinner** — a workflow step is running right now; the tooltip says so in words as well
 
-Document rows carry their **own** state, independent of the parent spec's lifecycle — so expanding a completed or archived spec still shows a coherent picture rather than a blank list:
+Document rows carry their **own** state, independent of the parent spec's lifecycle — so expanding a completed or archived spec still shows a coherent picture rather than a blank list. One derived state drives both the icon and the tooltip, so the two can never disagree:
 
-- **Green check** — a completed step whose file exists on disk
-- **Blue dot** — the current step
-- **Hollow circle** — an existing step that is neither current nor complete
-- **No icon**, with a `not created` note — the step's file does not exist yet. Such a row offers no open or reveal action.
+- **Green check — "Complete"** — the workflow finished this step (or the whole spec is completed/archived) *and* the file holds real content.
+- **Blue dot — "In Progress"** — the step is the current one, or the workflow considers it done but the file is still a stub. A finished spec does not force a green check onto a stub file.
+- **Hollow circle — "Not Started"** — the file exists but the workflow has not reached this step.
+- **No icon — "Not Created"**, with a `not created` note — the step's file does not exist yet. Such a row offers no open or reveal action.
 
 ### Living Specs icons
 

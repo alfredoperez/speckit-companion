@@ -1,4 +1,4 @@
-import { specStatusLabel, documentStatusLabel } from '../specStatusLabel';
+import { specStatusLabel, documentStateLabel } from '../specStatusLabel';
 
 describe('specStatusLabel', () => {
     it.each([
@@ -26,12 +26,13 @@ describe('specStatusLabel', () => {
     });
 });
 
-describe('documentStatusLabel', () => {
+describe('documentStateLabel', () => {
     it.each([
         ['complete', 'Complete'],
-        ['partial', 'In Progress'],
-        ['empty', 'Not Created'],
-    ] as const)('maps %s to "%s"', (status, label) => {
-        expect(documentStatusLabel(status)).toBe(label);
+        ['in-progress', 'In Progress'],
+        ['pending', 'Not Started'],
+        ['missing', 'Not Created'],
+    ] as const)('maps %s to "%s"', (state, label) => {
+        expect(documentStateLabel(state)).toBe(label);
     });
 });

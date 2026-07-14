@@ -16,10 +16,9 @@ import {
 import { resolveSpecDirectories, hasDuplicateNames, deriveChangeRoot, type SpecDirectoryInfo } from '../../core/specDirectoryResolver';
 import { SpecStatuses, WorkflowSteps } from '../../core/constants';
 import { readSpecContextSync } from './specContextManager';
-import { isStepCompleted } from './stepHistoryDerivation';
+import { deriveDocumentState } from './stepHistoryDerivation';
 import { deriveLastTransition } from './lastTransition';
-import { specStatusLabel, documentStatusLabel } from './specStatusLabel';
-import { StepName, STEP_NAMES } from '../../core/types/specContext';
+import { specStatusLabel, documentStateLabel, DocumentStatus } from './specStatusLabel';
 import { SpecsFilterState } from './specsFilterState';
 import { fuzzyMatch } from './fuzzyMatch';
 import { SpecsSortState } from './specsSortState';
@@ -85,8 +84,6 @@ export function lifecycleContextValue(
 export function isSpecLifecycleItem(contextValue: string | undefined): boolean {
     return contextValue !== undefined && SPEC_LIFECYCLE_CONTEXT_VALUES.has(contextValue);
 }
-
-type DocumentStatus = 'empty' | 'partial' | 'complete';
 
 export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
     public activeSpecName: string | null = null;
@@ -719,29 +716,26 @@ class SpecItem extends vscode.TreeItem {
             }
             this.tooltip = tooltipLines.join('\n');
         } else if (contextValue === 'spec-document') {
-            this.tooltip = [`${label} — ${documentStatusLabel(status ?? 'empty')}`, filePath]
+            const documentState = deriveDocumentState(status, documentType, specContext);
+
+            this.tooltip = [`${label} — ${documentStateLabel(documentState)}`, filePath]
                 .filter(Boolean)
                 .join('\n');
 
-            if (status === 'empty') {
+            if (documentState === 'missing') {
                 this.description = 'not created';
             }
 
             // A missing document carries its own context value so no menu offers
             // an action against a file that isn't there.
-            this.contextValue = status === 'empty' ? 'spec-document-missing' : `spec-document-${documentType}`;
+            this.contextValue = documentState === 'missing'
+                ? 'spec-document-missing'
+                : `spec-document-${documentType}`;
 
-            // The document's own state decides its icon — a completed step under a
-            // completed or archived parent still reads as completed.
-            if (specContext && documentType && status !== 'empty') {
-                const stepHistory = specContext.stepHistory ?? {};
-                const stepName = documentType as StepName;
-                const cs = (specContext.currentStep ?? 'specify') as StepName;
-                const parentFinished = specContext.status === SpecStatuses.COMPLETED
-                    || specContext.status === SpecStatuses.ARCHIVED;
-                if (STEP_NAMES.includes(stepName) && (parentFinished || isStepCompleted(stepName, cs, stepHistory))) {
+            if (specContext && documentType && documentState !== 'missing') {
+                if (documentState === 'complete') {
                     this.iconPath = new vscode.ThemeIcon('pass', new vscode.ThemeColor('testing.iconPassed'));
-                } else if (!parentFinished && specContext.currentStep === documentType) {
+                } else if (documentState === 'in-progress') {
                     this.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('charts.blue'));
                 } else {
                     this.iconPath = new vscode.ThemeIcon('circle-outline');

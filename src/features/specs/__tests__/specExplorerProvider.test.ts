@@ -373,7 +373,10 @@ describe('SpecExplorerProvider', () => {
     });
 
     describe('step document colored icons', () => {
-        async function getDocumentItems(specContext: any): Promise<any[]> {
+        async function getDocumentItems(
+            specContext: any,
+            fileContent = '# Title\nLine 2\nLine 3\nLine 4\nLine 5',
+        ): Promise<any[]> {
             const specName = 'my-feature';
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: specName, path: `specs/${specName}` },
@@ -381,7 +384,7 @@ describe('SpecExplorerProvider', () => {
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
             (readSpecContextSync as jest.Mock).mockReturnValue(specContext || undefined);
             (mockFs.existsSync as jest.Mock).mockReturnValue(true);
-            (mockFs.readFileSync as jest.Mock).mockReturnValue('# Title\nLine 2\nLine 3\nLine 4\nLine 5');
+            (mockFs.readFileSync as jest.Mock).mockReturnValue(fileContent);
 
             const groups = await provider.getChildren();
             const specs = await provider.getChildren(groups[0]);
@@ -551,9 +554,31 @@ describe('SpecExplorerProvider', () => {
                     const icon = doc.iconPath as vscode.ThemeIcon;
                     expect(icon.id).toBe('pass');
                     expect((icon.color as vscode.ThemeColor).id).toBe('testing.iconPassed');
+                    expect(doc.tooltip).toContain('Complete');
                 }
             }
         );
+
+        it('does not green-check a stub document under a completed spec, and its tooltip agrees', async () => {
+            const docs = await getDocumentItems(
+                {
+                    workflow: 'default',
+                    selectedAt: '2026-01-01',
+                    status: 'completed',
+                    currentStep: 'implement',
+                },
+                '# Title\nOne line of body',
+            );
+
+            expect(docs.length).toBeGreaterThan(0);
+            for (const doc of docs) {
+                const icon = doc.iconPath as vscode.ThemeIcon;
+                expect(icon.id).toBe('circle-filled');
+                expect((icon.color as vscode.ThemeColor).id).toBe('charts.blue');
+                expect(icon.id).not.toBe('pass');
+                expect(doc.tooltip).toContain('In Progress');
+            }
+        });
 
         it('leaves a missing document iconless and marks it not created', async () => {
             const specName = 'my-feature';

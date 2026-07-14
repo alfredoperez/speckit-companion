@@ -43,6 +43,7 @@ import {
 } from '../../core/types/specContext';
 import { SpecStatuses } from '../../core/constants';
 import { isStepLevelEntry } from './historyHelpers';
+import { DocumentState, DocumentStatus } from './specStatusLabel';
 
 /**
  * Canonical spec-status derivation. Single entry point for "given a context
@@ -113,6 +114,41 @@ export function isStepCompleted(
     if (stepIdx >= 0 && currentIdx >= 0 && stepIdx < currentIdx) return true;
     if (!entry?.startedAt) return false;
     return false;
+}
+
+/**
+ * Single source of truth for how a spec document renders — the tree derives
+ * both its icon and its tooltip from this one value, so they can never
+ * disagree (a green check over an "In Progress" tooltip, say).
+ *
+ * A document only reads as complete when the workflow finished its step *and*
+ * the file itself holds more than a stub; a step the workflow finished but
+ * whose file is still a stub reads as in-progress, matching what it says.
+ */
+export function deriveDocumentState(
+    contentStatus: DocumentStatus | undefined,
+    documentType: string | undefined,
+    specContext: { status?: string; currentStep?: string; stepHistory?: Record<string, StepHistoryEntry> } | undefined,
+): DocumentState {
+    if (!contentStatus || contentStatus === 'empty') {
+        return 'missing';
+    }
+
+    const stepName = documentType as StepName;
+    if (!specContext || !documentType || !STEP_NAMES.includes(stepName)) {
+        return contentStatus === 'complete' ? 'complete' : 'in-progress';
+    }
+
+    const currentStep = (specContext.currentStep ?? 'specify') as StepName;
+    const stepDone = isTerminalStatus(specContext.status)
+        || isStepCompleted(stepName, currentStep, specContext.stepHistory ?? {});
+    if (stepDone) {
+        return contentStatus === 'complete' ? 'complete' : 'in-progress';
+    }
+    if (specContext.currentStep === documentType) {
+        return 'in-progress';
+    }
+    return 'pending';
 }
 
 interface RawStep {

@@ -28,13 +28,21 @@ export function specStatusLabel(status: string | undefined): string | undefined 
         .join(' ');
 }
 
-/** Friendly Title Case for a document's completion state. */
-export function documentStatusLabel(status: 'empty' | 'partial' | 'complete'): string {
-    switch (status) {
+/** What a document's file holds on disk. */
+export type DocumentStatus = 'empty' | 'partial' | 'complete';
+
+/** What a document row renders — one value drives both its icon and its tooltip. */
+export type DocumentState = 'missing' | 'pending' | 'in-progress' | 'complete';
+
+/** Friendly Title Case for a document's rendered state. */
+export function documentStateLabel(state: DocumentState): string {
+    switch (state) {
         case 'complete':
             return 'Complete';
-        case 'partial':
+        case 'in-progress':
             return 'In Progress';
+        case 'pending':
+            return 'Not Started';
         default:
             return 'Not Created';
     }
