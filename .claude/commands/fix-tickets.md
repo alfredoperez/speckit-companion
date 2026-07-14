@@ -1,12 +1,14 @@
 ---
 allowed-tools: Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(node:*), Bash(python3:*), Bash(code:*), Bash(specify:*), Bash(date:*), Bash(sleep:*), Bash(jq:*), Agent, AskUserQuestion, Read, Write, Edit, Skill, TaskCreate, TaskUpdate
 description: Autonomously fix one or more speckit-companion GitHub issues with the SpecKit Companion pipeline — clean branch, fix, review, PR, Copilot review, merge, reinstall — then write a manual-verification report. Self-hosting build loop.
-argument-hint: "<issue numbers e.g. '237 238 241'> | 'open' (all open issues) | <path to backlog .md>"
+argument-hint: "<issue numbers e.g. '237 238 241'> | 'open' (all open issues) | <path to backlog .md> | --light [free-text tasks]"
 ---
 
 ## What this does
 
 A **self-hosting build loop** for `speckit-companion`. For each ticket, in strict sequence:
+
+> **Two modes.** The default (below) is the full loop: one issue per ticket, fixed by driving the SpecKit Companion pipeline on itself. **`--light`** ([Light mode](#light-mode---light)) drops the issue, the spec pipeline, and the sequencing for small mechanical changes, and fans out parallel worktree agents instead. It keeps the code review, tests, and CI. Light mode trades away the dogfooding signal — pick it deliberately, not by default.
 
 1. **Clean slate + install-local FIRST** — on `main`, `git fetch && git pull --ff-only`, then run `/install-local` so this ticket is fixed by the freshest build **and the latest `/speckit.companion.*` commands** (the previous ticket's merge lands here). Discard the throwaway version bump, assert a clean tree. Refuse to start dirty.
 2. **Fix** — drive the SpecKit Companion pipeline to fix the ticket.
@@ -15,16 +17,16 @@ A **self-hosting build loop** for `speckit-companion`. For each ticket, in stric
 5. **Copilot review** — request it, poll ~10 min.
 6. **Address** — fix any Copilot comments and push; if Copilot never responds, fall back to our `/code-review` and proceed.
 7. **Merge** — squash-merge, delete branch.
-8. **Capture learnings + tick the box** — distill this ticket's review + Copilot findings into `.claude/lessons-learned.md` (so the *next* ticket's fix avoids the same bug class), and check the ticket off in the vault's `Current.md` queue with its PR link.
+8. **Capture learnings + tick the box** — distill this ticket's review + Copilot findings and route each to where it fires (review check → `.claude/review-checklist.md`; authoring convention → a *proposed* `CLAUDE.md` edit; loop mechanics → this file; gap → an issue candidate), so the *next* ticket's fix avoids the same bug class. Then check the ticket off in the vault's `Current.md` queue with its PR link.
 9. **Next ticket** — its step 1 `/install-local` installs *this* ticket's merge. After the last ticket, a closing `/install-local` installs the final merge. This is the point of the loop: prove the companion keeps working on itself as it improves.
 
-After all tickets: generate one **themed HTML brief** (via the vault `/html-brief` skill) of everything fixed, in plain language, **flagging UI / manual-test items** so you know exactly what to verify by hand, what was already exercised by the pipeline (don't re-test), the **new lessons** captured, and any **architecture/skill flags** worth promoting.
+After all tickets: write one **run report** (markdown, via the vault `obsidian` skill, into `Projects/speckit companion/reports/`) of everything fixed, in plain language, **flagging UI / manual-test items** so you know exactly what to verify by hand, what was already exercised by the pipeline (don't re-test), the **new lessons** captured, and any **architecture/skill flags** worth promoting. Use `/html-page` only to *export* it if it needs to leave the vault — HTML in the vault is unsearchable.
 
 ## Locked defaults
 
 - **Merge:** auto-merge, no per-ticket stop. You review via the final report + manual verification.
 - **Copilot wait:** poll ~10 min, then fall back to our `/code-review` alone.
-- **Sequential only.** Never parallelize — each `install-local` must land before the next ticket starts.
+- **Sequential only.** Never parallelize — each `install-local` must land before the next ticket starts. (`--light` lifts this; it has no per-ticket install to gate on. See [Light mode](#light-mode---light).)
 - **Heavy steps run in subagents** (the fix, the code review, addressing Copilot comments, distilling learnings) so the main orchestration context stays lean. The main loop only does git/gh/decisions and accumulates the report.
 - **The loop compounds.** Every ticket reads `.claude/review-checklist.md` (+ the `CLAUDE.md` conventions it points to) before fixing, and routes any new high-signal learning to where it fires (review check → checklist; authoring convention → `CLAUDE.md`; loop-mechanics → this file; gap → an issue). So review/Copilot findings strengthen the *next* fix. Convention/architecture promotions are *proposed* in the report, never auto-applied.
 - **Queue gating honored.** `🔒 Gated` tickets are skipped; `⏸️ Review-gated` tickets pause before merge.
@@ -35,12 +37,100 @@ After all tickets: generate one **themed HTML brief** (via the vault `/html-brie
 - A space-separated list of issue numbers: `237 238 241`
 - `open` — process all currently-open issues (`gh issue list`), confirm the list first via AskUserQuestion before starting.
 - A path to a backlog markdown file or folder — treat each item as a ticket (still requires a GitHub issue; create one with `/create-issue` if missing, confirm first).
+- `--light` — run **light mode** (below). Takes issue numbers *or* free-text task descriptions, since light mode files no issues.
 
 If `$ARGUMENTS` is empty, list open issues and ask which to run.
 
 ---
 
-## Procedure
+# Light mode (`--light`)
+
+For changes that are **small and already understood** — a wrong regex, a stale doc, a missing emission, a manifest tweak. It drops the ceremony, not the safety: the code review, the tests, and CI all stay, because those are what actually catch bugs. What it drops is the paperwork.
+
+## What light mode changes
+
+| Step | Full loop | Light |
+|---|---|---|
+| GitHub issue | required (`Closes #N`) | **none** — the PR body carries the why |
+| Fix | SpecKit Companion pipeline (`specify → plan → tasks → implement`), writes `specs/NNN-*/` | **direct fix**, no spec folder |
+| Execution | strictly sequential | **parallel worktree subagents** |
+| `install-local` | before every ticket | **once, at the end** |
+| Code review | `/code-review` high, applied | **unchanged** |
+| Copilot | loop until a pass is clean | **one pass** on logic changes; **skipped** for docs/manifest-only |
+| Learnings | distill per ticket | **one distill** for the batch |
+| Report | themed HTML brief | **chat summary** |
+
+## What light mode COSTS — read before choosing it
+
+**The spec pipeline is the dogfooding.** Running the Companion workflow on itself is the entire reason this loop exists — it's how the broken `adopt` command, the no-op reconciler, and the packaging gap were found. Light mode trades that signal away.
+
+So light mode is a **named exception for small changes, never the default.** If a task turns out to be bigger than it looked — it needs a design decision, it touches derived state, it spans more than a couple of files — **stop and escalate it to the full loop**. Don't push a large change through light mode because it was already started there.
+
+## Choosing light vs full
+
+**Light is fine when** the fix is mechanical and the *what* is settled: a parsing bug with a known cause, a doc that contradicts the code, a missing file emission, a manifest/menu change, deleting dead code.
+
+**Use the full loop when** any of these is true:
+- The fix needs a design decision (the issue asks "should we…?").
+- It touches **derived state**, lifecycle/status writing, or capture (`.spec-context.json`) — this repo's worst bug class lives there.
+- It's user-facing UI/UX with a visual judgment to make.
+- You can't name the files it will touch before starting.
+
+> A user-visible **bug** can still be light — but give it the full review + Copilot treatment even while skipping the spec ceremony. Skipping paperwork is not the same as skipping scrutiny.
+
+## Parallel worktrees — the three collisions
+
+Light mode runs one subagent per task, **each with `isolation: "worktree"`**. This is mandatory, not an optimization: background agents otherwise share one working tree and branch, and they *will* clobber each other's git state.
+
+Three things collide if you're not careful. Note that the first two are precisely why parallelism is safe **only** in light mode:
+
+1. **Spec numbering race.** `before_specify` picks the next `NNN-` by scanning `specs/`. Two agents starting together both choose the same number. — *Cannot happen in light mode: no spec pipeline.*
+2. **A fresh worktree has no companion commands.** `.specify/extensions/companion/` is **gitignored** (it's the `--dev` install), so a new worktree checks out tracked files only and `/speckit.companion.*` does not exist there. An agent running the pipeline in a worktree fails — or silently falls back, which is worse. — *Cannot happen in light mode: no pipeline. If you ever need it, the worktree must run `specify extension add ./speckit-extension --dev --force` first.*
+3. **`install-local` is a global singleton.** One VS Code extension host, one `~/.vscode/extensions`. It cannot be parallelized — run it **once, after all merges**.
+
+**Disjointness gate.** Before fanning out, name the files each task will touch. **If two tasks touch the same file, do not run them in parallel** — run those two sequentially (or fold them into one PR). Parallel PRs on the same file just move the conflict to merge time.
+
+## Light procedure
+
+### L0. Setup — main loop
+- Assert a clean tree on `main`, `git fetch && git pull --ff-only`. **Refuse to start dirty.**
+- Resolve the task list from `$ARGUMENTS` (issue numbers and/or free-text). `TaskCreate` one task each.
+- **Name the file set for each task** and check disjointness (above). Group any overlapping tasks to run sequentially.
+- **Do NOT run `install-local` here** — light mode installs once at the end.
+
+### L1. Fan out — parallel subagents, one per task, `isolation: "worktree"`
+Dispatch all disjoint tasks **in a single message** so they run concurrently. Each subagent:
+- Reads `.claude/review-checklist.md` (+ the `CLAUDE.md` conventions it points to) **first**.
+- **Verifies the defect still reproduces on current `main`** before building. Stale tasks are common; if it's already fixed, STOP and report that with evidence instead of inventing a change.
+- Fixes it **directly** — no `/speckit-companion-*` chain, no `specs/NNN-*/` folder.
+- Updates the docs the change requires (`CLAUDE.md`'s doc-map is not optional in light mode).
+- Runs `npm run compile && npm test` (+ `npm run package` if the manifest/webview changed). **Does not return green if red.**
+- Commits on a branch named `light/<slug>` and **pushes**.
+- Returns `{ branch, filesChanged[], testsPassed, summary, uiOrManualSurfaces[], escalate? }`.
+
+If a subagent returns `escalate` — the task was bigger than it looked — **do not merge it**. Leave the branch, report it, and re-run it through the full loop.
+
+### L2. Review — one subagent per branch
+`/code-review` at **high** effort on each branch's diff vs `main`, apply findings, commit, re-run tests. Same as the full loop; this step is not lightened.
+
+### L3. PR + Copilot — main loop
+Open a PR per branch (`/create-pr` conventions). Since there's no issue, **the PR body must carry the why** — what was broken, how you know, how to verify. No `Closes #N`.
+
+Copilot, by change kind:
+- **Logic** (parsers, derived state, dispatch, data writers) → request Copilot, **one pass**, address findings. If that fix itself changes logic, loop until a pass is clean (the full-loop rule still applies to the riskiest code).
+- **Docs / manifest / dead-code removal only** → **skip Copilot.** Our review + CI is the bar. A poll loop here buys nothing but 10 minutes.
+
+### L4. Merge — main loop, sequential
+Merge **one at a time**, confirming CI green on each (`gh pr checks`). After each merge, the next PR is behind `main` — if GitHub reports a conflict or the branch is stale, rebase it before merging. (This is the tax for parallel branches; it's cheap when the file sets are disjoint, which is why L0 gates on that.)
+
+### L5. Close out — main loop
+- **One** `install-local`, then `git restore package.json package-lock.json .specify/`.
+- **One** learnings distill for the whole batch (same routing rules as the full loop: checklist / `CLAUDE.md` proposal / this file / issue candidate). An empty distill is the norm.
+- **Chat summary**, not an HTML brief: what shipped, what needs manual eyeballing, anything escalated.
+
+---
+
+# Full loop (default)
 
 > Run from the repo root: `~/dev/GitHub/speckit-companion`. Confirm with `git rev-parse --show-toplevel`.
 
@@ -187,7 +277,7 @@ Run `/install-local`, then `git restore package.json package-lock.json .specify/
 
 ### Final report — after the queue is drained
 
-Generate **one themed HTML brief via the vault `/html-brief` skill** (house dark-mode style — let the skill own the structure). Archive it under the vault's SDD briefs with a **unique dated name** `~/dev/GitHub/obsidian-vault/Projects/sdd/briefs/YYYY-MM-DD-fix-tickets-run.html` and **never overwrite a prior brief** — each run gets its own file. It must be **concise and plain-language**, covering:
+Write **one markdown run report** (via the vault `obsidian` skill) to `~/dev/GitHub/obsidian-vault/Projects/speckit companion/reports/YYYY-MM-DD-fix-tickets-run.md`. **Never overwrite a prior report** — each run gets its own dated file. Markdown, not HTML: the vault's reports are markdown so they stay searchable and linkable; reach for `/html-page` only to *export* one that has to leave the vault. It must be **concise and plain-language**, covering:
 
 - **Per ticket:** issue # + title, one-sentence "what was fixed," PR link, merged / in-review / skipped, new extension version after its `install-local`.
 - **🖐️ Manual verification needed** — a clearly separated section listing the UI / sidebar / webview / settings surfaces from each ticket's `uiOrManualSurfaces[]`. This is the part the user spends their time on. For each: what changed and how to eyeball it.
@@ -201,7 +291,9 @@ End your chat response with a tight summary: tickets processed, merged vs in-rev
 ## Guardrails
 
 - **Never start a ticket on a dirty tree.** Stop and report instead.
-- **Never parallelize tickets** — the `install-local` gate is the whole point.
+- **Never parallelize tickets in the full loop** — the `install-local` gate is the whole point. (`--light` parallelizes *because* it has no such gate; it must still use `isolation: "worktree"` and the disjoint-file check.)
 - **Never force-merge red checks.** Leave the PR open and report it.
 - **Auto-merge is on by default** (per this loop's design). If the user passed `--review-merge` in `$ARGUMENTS`, pause for a thumbs-up before each `gh pr merge` instead.
 - Copilot is best-effort; its absence is not an error.
+- **Light mode never silently absorbs a big change.** If a `--light` task needs a design decision, touches derived state / lifecycle / capture, or sprawls past its named file set, the subagent returns `escalate` and it goes through the full loop instead. Skipping paperwork is not skipping scrutiny.
+- **Never run `install-local` inside a worktree.** It installs a global VS Code extension and regenerates `.specify/` — it belongs to the main loop, once, at the end.
