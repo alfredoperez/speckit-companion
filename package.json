@@ -471,6 +471,12 @@
         "icon": "$(preview)"
       },
       {
+        "command": "speckit.openSpec",
+        "title": "Open Spec",
+        "category": "SpecKit",
+        "icon": "$(preview)"
+      },
+      {
         "command": "speckit.openSpecSource",
         "title": "Open Source File",
         "category": "SpecKit",
@@ -813,6 +819,10 @@
         {
           "command": "speckit.upgradeAll",
           "when": "speckit.detected"
+        },
+        {
+          "command": "speckit.openSpec",
+          "when": "false"
         },
         {
           "command": "speckit.openSpecSource",

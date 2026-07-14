@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- **Clicking a spec's name opens the spec.** It used to do nothing but expand the row — to see a spec you had to guess a document, open it, and then find the Overview. Now the name opens the viewer on that spec's **Overview**: why it exists, what constrained it, what was verified, the decisions, and how its requirements map to tests. A spec with no recorded run has no Overview, so it opens on its first document instead. The click still expands the row, and the chevron still expands it *without* opening the viewer when you only want to browse.
 - **The sidebar reads as one product now.** Four views, one icon language, and a toolbar you can take in at a glance. Nothing about how specs behave changed — the same commands, lifecycle, filter, sort, multi-select, and Resume rules — but the sidebar stopped looking like four features that grew separately.
 - **The sidebar opens calm instead of flooded.** Individual spec rows now start collapsed, so a project with two hundred finished specs shows you a short, readable list rather than every document of every spec. Active stays expanded, Completed and Archived stay collapsed, and **Expand All** still opens everything when you want it.
 - **Views are named for what they hold.** **Spec Explorer** is now **Living Specs** (it was too easy to confuse with Specs), and **Settings** is now **Settings & Feedback**, which is what it actually contains.

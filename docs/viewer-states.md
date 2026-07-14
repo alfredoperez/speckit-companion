@@ -508,6 +508,14 @@ stateDiagram-v2
     overview --> overview : .spec-context.json change → viewerState refresh
 ```
 
+**Opening a spec from the sidebar** (clicking its name, which runs
+`speckit.openSpec`) is a spec-level open: it asks for no particular
+document, so `resolveDisplayDocument` picks the first one that exists, and
+the landing rule above then decides Overview-versus-document. The tree
+makes neither call. Because an extension-driven open regenerates the panel
+HTML, the webview's shell state resets and the rule re-applies — which is
+why the same click returns an already-open panel to the Overview.
+
 **Dossier sections (top to bottom; each hides when its data is empty)**:
 
 | Section | Source fields |

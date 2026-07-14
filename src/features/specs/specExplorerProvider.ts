@@ -272,7 +272,11 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                     this.context,
                     spec.name,
                     undefined,
-                    undefined,
+                    {
+                        command: 'speckit.openSpec',
+                        title: `Open ${spec.name}`,
+                        arguments: [specFullPath]
+                    },
                     undefined,
                     spec.path,
                     undefined,

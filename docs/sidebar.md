@@ -29,6 +29,14 @@ A group with zero specs is omitted entirely.
 
 **Individual spec rows start collapsed**, including active ones. A workspace with hundreds of completed specs therefore opens to a short, readable list rather than a flood of document rows. Use **Expand All** (from More Actions, or the Command Palette) to open every row for the session.
 
+## Opening a spec
+
+**Click a spec's name to open it.** The viewer opens for that spec and lands on its **Overview** — the durable-context dossier: why the spec exists, what constrained it, what was verified, the decisions, and the requirement-to-test map. A spec with no recorded run has no Overview, so it opens on its first available document instead; that is the viewer's own landing rule, not a second decision made by the tree. If the spec's viewer is already open, the click reveals it and returns it to the Overview rather than opening a second panel.
+
+The name click also toggles the row, so the spec's documents come into view with it — the same way the editor's Testing view both opens a suite's file and expands it. **To browse without opening the viewer, click the chevron**: it expands and collapses the row on its own.
+
+Clicking a **document** row still opens that document, exactly as before.
+
 ## Title toolbar
 
 The Specs title bar shows **at most four actions**, always in this order:

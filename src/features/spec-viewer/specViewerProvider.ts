@@ -276,6 +276,20 @@ export class SpecViewerProvider {
   }
 
   /**
+   * Open a spec as a whole. Rendering regenerates the panel HTML, which resets the
+   * webview's shell state, so `showingOverview` re-applies its landing rule.
+   */
+  public async showSpec(specDirectory: string): Promise<void> {
+    const existing = this.panels.get(specDirectory);
+    if (existing) {
+      await this.updateContent(specDirectory, existing.state.currentDocument);
+      existing.panel.reveal(vscode.ViewColumn.One);
+      return;
+    }
+    await this.createPanel(specDirectory, undefined);
+  }
+
+  /**
    * Open a living-spec capability document in the viewer (no workflow chrome).
    * The panel is keyed by the tier file's own directory; tier siblings
    * (spec / arch / coverage) become the tab strip.
@@ -446,7 +460,7 @@ export class SpecViewerProvider {
    */
   private async createPanel(
     specDirectory: string,
-    documentType: DocumentType,
+    documentType: DocumentType | undefined,
     living?: { living: true; sourcePath: string },
   ): Promise<void> {
     const specName = living
@@ -473,7 +487,7 @@ export class SpecViewerProvider {
       specDirectory,
       living: !!living,
       livingSourcePath: living?.sourcePath,
-      currentDocument: documentType,
+      currentDocument: documentType ?? CORE_DOCUMENTS.SPEC,
       availableDocuments: [],
       lastUpdated: Date.now(),
       phases: [],
@@ -610,12 +624,15 @@ export class SpecViewerProvider {
    */
   private async updateContent(
     specDirectory: string,
-    documentType: DocumentType,
+    documentType: DocumentType | undefined,
   ): Promise<void> {
     const instance = this.panels.get(specDirectory);
     if (!instance) return;
     if (instance.state.living) {
-      return this.updateLivingContent(specDirectory, documentType);
+      return this.updateLivingContent(
+        specDirectory,
+        documentType ?? instance.state.currentDocument,
+      );
     }
 
     try {

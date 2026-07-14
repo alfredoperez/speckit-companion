@@ -53,20 +53,22 @@ import type { PhaseInfo } from "./types";
  *      fileName is `"spec.md"` (handles the spec/specify alias).
  *   3. First core doc that exists on disk.
  *   4. First document in the list.
+ * Omitting `requestedType` means "no preference" — a spec-level open, where the
+ * caller wants whichever document is available — so it starts at step 3.
  * If the resolved doc is a non-existent core doc but a sub-spec of the same
  * type exists, redirect to that sub-spec (lets the viewer surface real
  * content even when the canonical core file is empty).
  */
 export function resolveDisplayDocument(
     documents: SpecDocument[],
-    requestedType: DocumentType,
+    requestedType?: DocumentType,
 ): SpecDocument | undefined {
     // Action-only pipeline entries carry no file — they can never be displayed.
     const openable = documents.filter(d => d.category !== 'action');
     if (openable.length === 0) return undefined;
 
-    let doc = openable.find(d => d.type === requestedType);
-    if (!doc) {
+    let doc = requestedType ? openable.find(d => d.type === requestedType) : undefined;
+    if (!doc && requestedType) {
         const requestedFile = `${requestedType}.md`;
         doc = openable.find(d => d.isCore && d.fileName === requestedFile);
     }
