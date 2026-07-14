@@ -95,6 +95,7 @@ hooks:
     command: speckit.companion.capture
     enabled: true
     optional: false
+    priority: 10
     prompt: Execute speckit.companion.capture?
     description: Record specify completion (currentStep=specify, status=specified)
       into .spec-context.json
@@ -119,6 +120,7 @@ hooks:
     command: speckit.companion.capture-plan
     enabled: true
     optional: false
+    priority: 10
     prompt: Execute speckit.companion.capture-plan?
     description: Record plan completion (currentStep=plan, status=planned) into .spec-context.json
     condition: null
@@ -134,6 +136,7 @@ hooks:
     command: speckit.companion.capture-tasks
     enabled: true
     optional: false
+    priority: 10
     prompt: Execute speckit.companion.capture-tasks?
     description: Record tasks completion (currentStep=tasks, status=ready-to-implement)
       into .spec-context.json
@@ -150,6 +153,7 @@ hooks:
     command: speckit.companion.capture-implement
     enabled: true
     optional: false
+    priority: 10
     prompt: Execute speckit.companion.capture-implement?
     description: Per-task journaling on implement (currentStep=implement; status=implemented
       when all tasks checked)
