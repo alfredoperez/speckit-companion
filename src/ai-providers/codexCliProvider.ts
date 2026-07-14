@@ -1,11 +1,10 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as path from 'path';
 import { AIProviders } from '../core/constants';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { CliTerminalProvider, DispatchContext, DispatchPlan } from './cliTerminalProvider';
 import { readInitOptions } from './initOptions';
 import { buildCodexExecCommand } from './codexCommandBuilder';
+import { resolveCodexPrompt } from './codexPromptResolver';
 
 /**
  * Codex CLI provider — `<script> codex exec - < <tmp>`.
@@ -16,11 +15,11 @@ import { buildCodexExecCommand } from './codexCommandBuilder';
  *      `buildPromptDispatchCommand`. Codex streams the prompt into `codex
  *      exec -` via a shell pipe, with an optional pre-script wrapper read
  *      from `initOptions`.
- *   2. When the prompt is a known SpecKit slash command (e.g.
- *      `/speckit.specify`), the prompt body is the *template* from
- *      `.codex/prompts/<name>.md` with `$ARGUMENTS` substituted in Node —
- *      not the slash text itself. Unknown commands fall back to a short
- *      instructional wrapper.
+ *   2. When the prompt carries a SpecKit slash command (e.g. `/speckit.specify`,
+ *      `/speckit.companion.plan`), the command is replaced by the *template*
+ *      spec-kit emitted for Codex, with `$ARGUMENTS` substituted in Node — the
+ *      context preamble, when present, still leads. Unresolvable commands fall
+ *      back to a short instructional wrapper.
  *
  * Everything else (install check, terminal lifecycle, cleanup) is inherited.
  */
@@ -38,17 +37,19 @@ export class CodexCliProvider extends CliTerminalProvider {
     protected readonly logPrefix = 'Codex';
 
     protected async prepareDispatch(ctx: Omit<DispatchContext, 'cliPath' | 'permissionFlag'>): Promise<DispatchPlan> {
-        // Slash-command path: try to resolve a SpecKit skill template, else
-        // wrap the slash in a short instructional fallback. Other modes pass
-        // the prompt straight through to template resolution (no-op when the
-        // prompt isn't a slash command).
-        const rawPrompt = ctx.slashCommand
-            ? ctx.slashCommand
-            : ctx.prompt;
+        const rawPrompt = ctx.slashCommand ?? ctx.prompt;
         const fallback = ctx.slashCommand
             ? `Run the following SpecKit command: ${ctx.slashCommand}`
             : ctx.prompt;
-        const resolvedPrompt = this.resolvePromptText(rawPrompt, fallback);
+        const resolution = resolveCodexPrompt(
+            vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+            rawPrompt,
+            fallback,
+        );
+        if (resolution.error) {
+            this.outputChannel.appendLine(`[${this.logPrefix}] Failed to read prompt template: ${resolution.error}. Falling back.`);
+        }
+        const resolvedPrompt = resolution.text;
 
         const filePrefix =
             ctx.mode === 'headless' ? 'background-prompt'
@@ -66,41 +67,8 @@ export class CodexCliProvider extends CliTerminalProvider {
             promptFilePath: tempFilePath,
             permissionFlag: this.getPermissionFlag(),
         });
-        this.outputChannel.appendLine(`[codex] script=${script} (init-options)`);
+        this.outputChannel.appendLine(`[${this.logPrefix}] script=${script} (init-options)`);
 
         return { commandLine, tempFiles: [tempFilePath] };
-    }
-
-    // ─── Codex-specific skill-template resolution ─────────────────────────
-
-    private parseSlashCommand(prompt: string): { skillName: string; args: string } | null {
-        const firstLine = prompt.split('\n')[0].trim();
-        const match = firstLine.match(/^\/(speckit[.\-]\w+)\s*(.*)$/);
-        if (!match) return null;
-        return { skillName: match[1], args: match[2]?.trim() || '' };
-    }
-
-    private getPromptFileAbsolutePath(skillName: string): string | null {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder) return null;
-        const normalized = skillName.replace(/^speckit-/, 'speckit.');
-        const promptPath = path.join(workspaceFolder.uri.fsPath, '.codex', 'prompts', `${normalized}.md`);
-        return fs.existsSync(promptPath) ? promptPath : null;
-    }
-
-    private resolvePromptText(rawPrompt: string, fallback: string): string {
-        const parsed = this.parseSlashCommand(rawPrompt.trim());
-        if (!parsed) return fallback;
-
-        const promptFilePath = this.getPromptFileAbsolutePath(parsed.skillName);
-        if (!promptFilePath) return fallback;
-
-        try {
-            const template = fs.readFileSync(promptFilePath, 'utf8');
-            return template.replace(/\$ARGUMENTS/g, parsed.args);
-        } catch (e) {
-            this.outputChannel.appendLine(`[Codex] Failed to read skill prompt ${promptFilePath}: ${e}. Falling back.`);
-            return fallback;
-        }
     }
 }
