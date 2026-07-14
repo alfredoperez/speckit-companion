@@ -1,7 +1,39 @@
 /** @jest-environment jsdom */
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { render } from 'preact';
 import { InlineComment } from '../InlineComment';
 import type { Refinement } from '../../types';
+
+const refinementsCss = readFileSync(
+    join(__dirname, '../../../../styles/spec-viewer/_refinements.css'),
+    'utf8',
+);
+
+/** The shipped stylesheet decides what survives into the accessibility tree — load the real one. */
+function applyRefinementStyles(): void {
+    const style = document.createElement('style');
+    style.textContent = refinementsCss;
+    document.head.appendChild(style);
+}
+
+/** The text a screen reader builds the control's name from: no aria-hidden, no styled-away nodes. */
+function accessibleName(el: Element): string {
+    const parts: string[] = [];
+    const walk = (node: Node): void => {
+        if (node.nodeType === Node.TEXT_NODE) {
+            parts.push(node.textContent ?? '');
+            return;
+        }
+        if (!(node instanceof Element)) return;
+        if (node.getAttribute('aria-hidden') === 'true') return;
+        const style = getComputedStyle(node);
+        if (style.display === 'none' || style.visibility === 'hidden') return;
+        node.childNodes.forEach(walk);
+    };
+    el.childNodes.forEach(walk);
+    return parts.join(' ').replace(/\s+/g, ' ').trim();
+}
 
 function refinement(over: Partial<Refinement> = {}): Refinement {
     return {
@@ -44,6 +76,38 @@ async function toggle(host: HTMLElement): Promise<void> {
 
 afterEach(() => {
     document.body.innerHTML = '';
+    document.head.innerHTML = '';
+});
+
+describe('InlineComment — the disclosure names its comment in both states', () => {
+    it('names the trigger with the comment and its state while collapsed', () => {
+        applyRefinementStyles();
+        const host = mount();
+
+        expect(accessibleName(disclosure(host))).toBe(
+            'Comment: Name the auth methods in scope Pending',
+        );
+    });
+
+    it('keeps the comment in the trigger name once expanded', async () => {
+        applyRefinementStyles();
+        const host = mount();
+
+        await toggle(host);
+
+        expect(accessibleName(disclosure(host))).toBe(
+            'Comment: Name the auth methods in scope Pending',
+        );
+    });
+
+    it('does not announce the expanded body a second time — the trigger already carries it', async () => {
+        applyRefinementStyles();
+        const host = mount();
+
+        await toggle(host);
+
+        expect(host.querySelector('.comment-body')?.getAttribute('aria-hidden')).toBe('true');
+    });
 });
 
 describe('InlineComment — collapsed by default', () => {
@@ -82,7 +146,7 @@ describe('InlineComment — pending vs applied', () => {
 });
 
 describe('InlineComment — disclosure', () => {
-    it('reveals the full text and the action row when opened, and points aria-controls at the body', async () => {
+    it('reveals the full text and the action row when opened', async () => {
         const host = mount();
 
         await toggle(host);
@@ -90,7 +154,6 @@ describe('InlineComment — disclosure', () => {
         const body = host.querySelector('.comment-body') as HTMLElement;
         expect(body.textContent).toBe('Name the auth methods in scope');
         expect(disclosure(host).getAttribute('aria-expanded')).toBe('true');
-        expect(disclosure(host).getAttribute('aria-controls')).toBe(body.id);
         expect(host.querySelector('.inline-comment')?.className).toContain('is-expanded');
     });
 

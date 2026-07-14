@@ -16,7 +16,6 @@ export interface InlineCommentProps {
 export function InlineComment({ refinement, mode, onDelete, onEdit, onRefine, readOnly }: InlineCommentProps) {
     const [expanded, setExpanded] = useState(false);
     const pending = refinement.status !== 'applied';
-    const bodyId = `comment-body-${refinement.id}`;
 
     const inner = (
         <div
@@ -27,7 +26,6 @@ export function InlineComment({ refinement, mode, onDelete, onEdit, onRefine, re
                 type="button"
                 class="comment-disclosure"
                 aria-expanded={expanded}
-                aria-controls={expanded ? bodyId : undefined}
                 onClick={() => setExpanded(!expanded)}
             >
                 <span class="sr-only">Comment: </span>
@@ -45,7 +43,8 @@ export function InlineComment({ refinement, mode, onDelete, onEdit, onRefine, re
 
             {expanded && (
                 <div class="comment-detail">
-                    <p class="comment-body" id={bodyId}>{refinement.comment}</p>
+                    {/* The trigger's accessible name already carries this text verbatim. */}
+                    <p class="comment-body" aria-hidden="true">{refinement.comment}</p>
                     {!readOnly && (
                         <div class="comment-actions">
                             {pending && onRefine && (

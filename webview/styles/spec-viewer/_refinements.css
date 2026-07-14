@@ -102,9 +102,10 @@
     color: color-mix(in srgb, var(--accent) 75%, var(--text-primary));
 }
 
-/* Expanded, the preview line is redundant with the body below it. */
+/* Expanded, the preview line is redundant with the body below it — hidden with
+   opacity so it keeps its space AND stays in the trigger's accessible name. */
 .inline-comment.is-expanded .comment-text {
-    visibility: hidden;
+    opacity: 0;
 }
 
 /* ============================================
