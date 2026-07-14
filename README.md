@@ -119,7 +119,7 @@ Specs are grouped into three collapsible sections, each with a count in the head
 
 **Click a spec's name to open it** — the viewer opens on that spec's **Overview**, the dossier of why it exists, what constrained it, what was verified, and how its requirements map to tests. A spec with no recorded run has no Overview, so it opens on its first document instead. The click expands the row too; to browse a spec's documents without opening the viewer, click the chevron.
 
-The Specs title bar shows **at most four actions**: **Filter…**, **Sort…**, **More Actions…**, and **New Spec** (rightmost). Filter opens prefilled with your current query and clears when you submit an empty one. Sort offers five compact options with a check on the current order. Everything occasional — Collapse/Expand All, Install Companion Extension, Upgrade… — lives behind More Actions, and all of it stays in the Command Palette.
+The Specs title bar shows **at most four actions**: **Filter…**, **Sort…**, **More Actions…**, and **New Spec** (rightmost). Filter opens prefilled with your current query and clears when you submit an empty one. Sort offers five compact options with a check on the current order. Everything occasional — Collapse/Expand All, Install Companion Extension, Upgrade… — lives behind More Actions, a native menu that drops open under the `…` button, and all of it stays in the Command Palette.
 
 Hover a spec for **Resume** (when eligible) and **More Actions**; right-click gives you the same items in the same order — Set Status…, the lifecycle action, Copy Spec Name / Path, both Reveal actions, and **Delete alone in its own danger group** at the bottom. Multi-select with shift-click or cmd/ctrl-click to bulk-archive, complete, or reactivate, and right-click a group header to apply a lifecycle action to every spec in it, each behind a confirmation. If a mis-click ever strands a spec, **Set Status…** forces it to any chosen lifecycle status after a confirm — a recovery escape hatch that writes through the sanctioned writer instead of a hand-edited `.spec-context.json`.
 
@@ -137,7 +137,7 @@ The **Steering** view is built in one explicit order — **Companion**, your pro
 
 Everything in the sidebar uses VS Code's own themed icons, so it stays legible in light, dark, and high-contrast themes; the only custom artwork is the product mark and the official provider logos. No status depends on color alone.
 
-For the full reference (icon meanings, the toolbar and its More Actions picker, hover and right-click menus, the provider-icon table, the Steering hierarchy, and the lifecycle button matrix), see [`docs/sidebar.md`](./docs/sidebar.md).
+For the full reference (icon meanings, the toolbar and its More Actions menu, hover and right-click menus, the provider-icon table, the Steering hierarchy, and the lifecycle button matrix), see [`docs/sidebar.md`](./docs/sidebar.md).
 
 ### Offline-First UI
 

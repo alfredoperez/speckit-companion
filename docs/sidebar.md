@@ -46,16 +46,16 @@ The Specs title bar shows **at most four actions**, always in this order:
 3. **More Actions…** (`$(ellipsis)`)
 4. **New Spec** (`$(plus)`) — the trailing, rightmost primary action
 
-Everything that used to crowd the toolbar now lives behind **More Actions**, gated by the same conditions its title buttons used:
+Everything that used to crowd the toolbar now lives behind **More Actions**, which is a **native VS Code menu** — it drops open directly under the `…` button, and VS Code owns its rendering, hover, keyboard navigation, and theming. Its entries are gated by the same conditions the old title buttons used:
 
 ```text
-View
-  Collapse All / Expand All      whichever the tree's current state calls for
-
-Maintenance
-  Install Companion Extension    when spec-kit is available and the companion isn't installed
-  Upgrade…                       when spec-kit is detected or its CLI is installed
+Collapse All / Expand All        whichever the tree's current state calls for
+─────────────────────────────
+Install Companion Extension      when spec-kit is available and the companion isn't installed
+Upgrade…                         when spec-kit is detected or its CLI is installed
 ```
+
+A native menu expresses grouping with a **separator line** rather than a labelled section header, so the two groups (view actions, then maintenance) read as two blocks with a rule between them.
 
 Every one of those commands also remains available from the Command Palette under `SpecKit: …`.
 
@@ -79,7 +79,7 @@ Ties fall back to numeric prefix then name so output is deterministic. The chose
 
 ## Maintenance actions
 
-The spec-kit upgrade commands are consolidated behind a single **Upgrade…** entry in the More Actions picker. Choosing it opens a picker with three options. **Upgrade All** and **Upgrade Project** resolve the `--ai` agent from your configured `speckit.aiProvider` (see [`docs/how-it-works.md`](how-it-works.md)) and re-scaffold with `specify init --here --force`; **Upgrade CLI** only upgrades the globally installed spec-kit CLI.
+The spec-kit upgrade commands are consolidated behind a single **Upgrade…** entry in the More Actions menu. Choosing it opens a picker with three options. **Upgrade All** and **Upgrade Project** resolve the `--ai` agent from your configured `speckit.aiProvider` (see [`docs/how-it-works.md`](how-it-works.md)) and re-scaffold with `specify init --here --force`; **Upgrade CLI** only upgrades the globally installed spec-kit CLI.
 
 - **Upgrade All** (`speckit.upgradeAll`) — upgrades the spec-kit CLI, then re-scaffolds the project. The "just do it" choice.
 - **Upgrade Project** (`speckit.upgradeProject`) — re-runs `specify init` in place to refresh this workspace's scaffolding only.

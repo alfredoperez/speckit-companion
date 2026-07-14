@@ -845,7 +845,7 @@ describe('speckit.specs.copyName command handler', () => {
     });
 });
 
-describe('speckit.specs.moreActions handler', () => {
+describe('specs title-bar handlers', () => {
     function registerWithState() {
         const handlers = new Map<string, (...args: any[]) => any>();
         mockCommands.registerCommand.mockImplementation((name: string, handler: any) => {
@@ -881,29 +881,6 @@ describe('speckit.specs.moreActions handler', () => {
             'speckit.specs.allCollapsed',
             true
         );
-    });
-
-    it('dispatches the picked command', async () => {
-        const { handlers } = registerWithState();
-        (vscode.window.showQuickPick as jest.Mock).mockResolvedValueOnce({
-            label: 'Upgrade…',
-            commandId: 'speckit.upgrade',
-        });
-        (mockCommands.executeCommand as jest.Mock).mockClear();
-
-        await handlers.get('speckit.specs.moreActions')!();
-
-        expect(mockCommands.executeCommand).toHaveBeenCalledWith('speckit.upgrade');
-    });
-
-    it('does nothing when the picker is dismissed', async () => {
-        const { handlers } = registerWithState();
-        (vscode.window.showQuickPick as jest.Mock).mockResolvedValueOnce(undefined);
-        (mockCommands.executeCommand as jest.Mock).mockClear();
-
-        await handlers.get('speckit.specs.moreActions')!();
-
-        expect(mockCommands.executeCommand).not.toHaveBeenCalled();
     });
 
     it('clears the filter when the input is submitted empty', async () => {

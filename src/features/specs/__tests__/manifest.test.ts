@@ -8,12 +8,15 @@ const manifest = JSON.parse(
 const commands: Array<{ command: string; title: string; icon?: string }> = manifest.contributes.commands;
 const views: Array<{ id: string; name: string; when?: string; visibility?: string }> =
     manifest.contributes.views.speckit;
-const viewTitle: Array<{ command: string; when: string; group: string }> =
+const viewTitle: Array<{ command?: string; submenu?: string; when: string; group: string }> =
     manifest.contributes.menus['view/title'];
 const itemContext: Array<{ command?: string; submenu?: string; when: string; group: string }> =
     manifest.contributes.menus['view/item/context'];
 const rowMenu: Array<{ command: string; when?: string; group: string }> =
     manifest.contributes.menus['speckit.specs.rowMenu'];
+const titleMenu: Array<{ command: string; when?: string; group: string }> =
+    manifest.contributes.menus['speckit.specs.titleMenu'];
+const submenus: Array<{ id: string; label: string; icon?: string }> = manifest.contributes.submenus;
 const commandPalette: Array<{ command: string; when?: string }> = manifest.contributes.menus.commandPalette;
 
 const SPECS_VIEW = 'speckit.views.explorer';
@@ -22,10 +25,10 @@ function commandTitle(id: string): string | undefined {
     return commands.find(c => c.command === id)?.title;
 }
 
-function specsTitleActions(): Array<{ command: string; group: string }> {
+function specsTitleActions(): Array<{ id: string; group: string }> {
     return viewTitle
         .filter(entry => entry.when.includes(`view == ${SPECS_VIEW}`))
-        .map(({ command, group }) => ({ command, group }));
+        .map(entry => ({ id: (entry.command ?? entry.submenu)!, group: entry.group }));
 }
 
 /** The five lifecycle spec-row context values, as a `when`-clause regex fragment. */
@@ -56,7 +59,6 @@ describe('sidebar contributions', () => {
             ['speckit.specs.filter', 'Filter…'],
             ['speckit.specs.filter.clear', 'Clear Filter'],
             ['speckit.specs.sort', 'Sort…'],
-            ['speckit.specs.moreActions', 'More Actions…'],
             ['speckit.specs.collapseAll', 'Collapse All'],
             ['speckit.specs.expandAll', 'Expand All'],
             ['speckit.markCompleted', 'Mark Complete'],
@@ -91,10 +93,10 @@ describe('sidebar contributions', () => {
         it('shows at most four actions, in the target order', () => {
             const actions = specsTitleActions();
             expect(actions).toHaveLength(4);
-            expect(actions.map(a => a.command)).toEqual([
+            expect(actions.map(a => a.id)).toEqual([
                 'speckit.specs.filter',
                 'speckit.specs.sort',
-                'speckit.specs.moreActions',
+                'speckit.specs.titleMenu',
                 'speckit.create',
             ]);
         });
@@ -102,8 +104,16 @@ describe('sidebar contributions', () => {
         it('places New Spec last', () => {
             const actions = specsTitleActions();
             const groups = actions.map(a => a.group);
-            const createGroup = actions.find(a => a.command === 'speckit.create')!.group;
+            const createGroup = actions.find(a => a.id === 'speckit.create')!.group;
             expect(groups.every(g => g <= createGroup)).toBe(true);
+        });
+
+        it('renders More Actions as an ellipsis submenu, not a command', () => {
+            const entry = viewTitle.find(e => e.submenu === 'speckit.specs.titleMenu')!;
+            expect(entry.command).toBeUndefined();
+            const declared = submenus.find(s => s.id === 'speckit.specs.titleMenu')!;
+            expect(declared.label).toBe('More Actions…');
+            expect(declared.icon).toBe('$(ellipsis)');
         });
 
         it.each([
@@ -113,7 +123,7 @@ describe('sidebar contributions', () => {
             'speckit.companion.installSpecKitExtension',
             'speckit.upgrade',
         ])('%s left the title bar but is still a contributed command', id => {
-            expect(specsTitleActions().some(a => a.command === id)).toBe(false);
+            expect(specsTitleActions().some(a => a.id === id)).toBe(false);
             expect(commands.some(c => c.command === id)).toBe(true);
         });
 
@@ -125,6 +135,37 @@ describe('sidebar contributions', () => {
         ])('%s stays reachable from the command palette', id => {
             const hidden = commandPalette.find(e => e.command === id && e.when === 'false');
             expect(hidden).toBeUndefined();
+        });
+    });
+
+    describe('specs title submenu', () => {
+        const TITLE_MENU_GROUPS = [
+            ['speckit.specs.collapseAll', '1_view@1'],
+            ['speckit.specs.expandAll', '1_view@1'],
+            ['speckit.companion.installSpecKitExtension', '2_maintenance@1'],
+            ['speckit.upgrade', '2_maintenance@2'],
+        ] as const;
+
+        it('carries exactly the four More Actions entries', () => {
+            expect(titleMenu.map(e => e.command).sort()).toEqual(
+                TITLE_MENU_GROUPS.map(([command]) => command).slice().sort()
+            );
+        });
+
+        it.each(TITLE_MENU_GROUPS)('%s sits at %s', (command, group) => {
+            expect(titleMenu.find(e => e.command === command)!.group).toBe(group);
+        });
+
+        it.each([
+            ['speckit.specs.collapseAll', '!speckit.specs.allCollapsed'],
+            ['speckit.specs.expandAll', 'speckit.specs.allCollapsed'],
+            [
+                'speckit.companion.installSpecKitExtension',
+                '(speckit.detected || speckit.cliInstalled) && !speckit.companion.installed',
+            ],
+            ['speckit.upgrade', 'speckit.detected || speckit.cliInstalled'],
+        ])('%s is gated on %s', (command, when) => {
+            expect(titleMenu.find(e => e.command === command)!.when).toBe(when);
         });
     });
 
