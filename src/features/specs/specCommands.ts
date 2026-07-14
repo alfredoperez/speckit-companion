@@ -104,25 +104,24 @@ export function registerSpecKitCommands(
         })
     );
 
-    // Toggle collapse/expand all specs — single button in the view title bar.
-    // Two menu entries (collapse / expand) swap icons via the
-    // speckit.specs.allCollapsed context key; both forward to the same toggle
-    // handler so state stays in sync.
-    //
-    // Both directions flip the provider flag and refresh. The provider encodes
-    // the flag into the spec-item id on each emit, so VS Code treats the items
-    // as fresh and honors the emitted collapsibleState. Group items keep stable
-    // ids so their expansion state is untouched by the toggle.
-    const toggleCollapseAllHandler = async () => {
-        specExplorer.expandAllSpecs = !specExplorer.expandAllSpecs;
-        await setContextKey(CONTEXT_KEYS.specsAllCollapsed, !specExplorer.expandAllSpecs);
+    // Collapse/expand all specs. `collapseAll` and `expandAll` enforce their
+    // named state (idempotent, whatever the current one); `toggleCollapseAll`
+    // flips it. The provider encodes the flag into the spec-item id on each
+    // emit, so VS Code treats the items as fresh and honors the emitted
+    // collapsibleState. Group items keep stable ids so their expansion state is
+    // untouched.
+    const setExpandAllSpecs = async (expandAll: boolean) => {
+        specExplorer.expandAllSpecs = expandAll;
+        await setContextKey(CONTEXT_KEYS.specsAllCollapsed, !expandAll);
         specExplorer.refresh();
     };
     void setContextKey(CONTEXT_KEYS.specsAllCollapsed, !specExplorer.expandAllSpecs);
     context.subscriptions.push(
-        vscode.commands.registerCommand('speckit.specs.toggleCollapseAll', toggleCollapseAllHandler),
-        vscode.commands.registerCommand('speckit.specs.collapseAll', toggleCollapseAllHandler),
-        vscode.commands.registerCommand('speckit.specs.expandAll', toggleCollapseAllHandler)
+        vscode.commands.registerCommand('speckit.specs.toggleCollapseAll', () =>
+            setExpandAllSpecs(!specExplorer.expandAllSpecs)
+        ),
+        vscode.commands.registerCommand('speckit.specs.collapseAll', () => setExpandAllSpecs(false)),
+        vscode.commands.registerCommand('speckit.specs.expandAll', () => setExpandAllSpecs(true))
     );
 
     // The Specs title bar carries only Filter, Sort, More Actions, and New Spec.

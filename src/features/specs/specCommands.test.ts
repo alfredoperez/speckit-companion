@@ -167,16 +167,67 @@ describe('speckit.specs.toggleCollapseAll handler', () => {
         );
     });
 
-    it('collapseAll and expandAll forward to the same handler', () => {
+});
+
+describe('speckit.specs.collapseAll / expandAll handlers', () => {
+    function lastContextValueFor(key: string): unknown {
+        const calls = (mockCommands.executeCommand as jest.Mock).mock.calls.filter(
+            c => c[0] === 'setContext' && c[1] === key
+        );
+        return calls[calls.length - 1]?.[2];
+    }
+
+    it('collapseAll collapses, and stays collapsed when run again', async () => {
         const context = createMockContext();
         const handlers = captureCommandHandlers(context);
+        lastMockExplorer.expandAllSpecs = true;
+        (mockCommands.executeCommand as jest.Mock).mockClear();
 
-        const toggleHandler = handlers.get('speckit.specs.toggleCollapseAll');
-        const collapseHandler = handlers.get('speckit.specs.collapseAll');
-        const expandHandler = handlers.get('speckit.specs.expandAll');
+        const collapseAll = handlers.get('speckit.specs.collapseAll')!;
+        await collapseAll();
 
-        expect(collapseHandler).toBe(toggleHandler);
-        expect(expandHandler).toBe(toggleHandler);
+        expect(lastMockExplorer.expandAllSpecs).toBe(false);
+        expect(lastContextValueFor('speckit.specs.allCollapsed')).toBe(true);
+
+        await collapseAll();
+
+        expect(lastMockExplorer.expandAllSpecs).toBe(false);
+        expect(lastContextValueFor('speckit.specs.allCollapsed')).toBe(true);
+    });
+
+    it('expandAll expands, and stays expanded when run on an already-expanded tree', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        lastMockExplorer.expandAllSpecs = true;
+        (mockCommands.executeCommand as jest.Mock).mockClear();
+
+        const expandAll = handlers.get('speckit.specs.expandAll')!;
+        await expandAll();
+
+        expect(lastMockExplorer.expandAllSpecs).toBe(true);
+        expect(lastContextValueFor('speckit.specs.allCollapsed')).toBe(false);
+
+        await expandAll();
+
+        expect(lastMockExplorer.expandAllSpecs).toBe(true);
+        expect(lastContextValueFor('speckit.specs.allCollapsed')).toBe(false);
+    });
+
+    it('neither command flips the other’s state', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const collapseAll = handlers.get('speckit.specs.collapseAll')!;
+        const expandAll = handlers.get('speckit.specs.expandAll')!;
+
+        lastMockExplorer.expandAllSpecs = false;
+        await expandAll();
+        expect(lastMockExplorer.expandAllSpecs).toBe(true);
+
+        await collapseAll();
+        expect(lastMockExplorer.expandAllSpecs).toBe(false);
+        await expandAll();
+        expect(lastMockExplorer.expandAllSpecs).toBe(true);
+        expect(lastContextValueFor('speckit.specs.allCollapsed')).toBe(false);
     });
 });
 

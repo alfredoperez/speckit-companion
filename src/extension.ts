@@ -201,10 +201,6 @@ export async function activate(context: vscode.ExtensionContext) {
     });
     specsTreeView.onDidChangeSelection(e => updateSelectionContextKeys(e.selection as any));
 
-    // Seed the collapse/expand toggle icon state to match the provider default
-    // (expandAllSpecs=true → next click collapses → show collapse-all icon).
-    void setContextKey(CONTEXT_KEYS.specsAllCollapsed, false);
-
     context.subscriptions.push(
         vscode.window.registerTreeDataProvider(Views.settings, overviewProvider),
         specsTreeView,
