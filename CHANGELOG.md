@@ -4,7 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **The Companion commands now actually reach Codex.** Picking Codex as your assistant and running a Companion step quietly did nothing useful — the extension piped raw text the CLI couldn't act on, with no error to tell you. It was looking for the commands in a location spec-kit no longer writes to, and it couldn't read a namespaced command name in the first place. Codex now runs the whole Companion pipeline like every other assistant.
+- **Codex and Wibey users see their own skills in the sidebar.** The Skills group listed Claude's skills no matter which assistant you had selected, and it watched a folder that didn't exist, so editing a skill never refreshed the tree.
+- **A finished spec no longer spins forever.** A completed spec kept showing its Implement step as if it were still running, stuck a few percent short of done. The progress number was counting the example checkbox in the task file's own formatting legend as an unfinished task, so it could never reach 100% — and the spinner never checked whether the spec had actually finished. Task progress now counts only real tasks, ignoring examples inside code blocks, and a finished step stops moving. Phase-completion notifications were miscounting the same way and now fire correctly.
+
 ### Changed
+
+- **More Actions opens a proper menu.** The `…` button in the Specs toolbar used to throw a picker to the top of the window, away from the button you clicked. It now opens a normal menu right under it.
 
 - **Review comments annotate a line instead of interrupting it.** Every saved comment used to plant a full-width strip in the middle of the document, complete with a delete `×` that never went away — five comments meant five permanent interruptions that shouted louder than the lines they were about. A comment now rests as one quiet line: a glyph, the comment truncated to a single line, and its state. Open it (click it, or press Enter when it has focus) to read it in full and act on it — **Refine** hands that document's pending comments to the AI, **Edit** reopens the composer with the text already in it, **Delete** removes it. A document under review stays a document you can read.
 - **Pending and applied comments now look different.** A comment awaiting refinement reads as live; one the AI has already been asked to act on carries a check and stays on its line as a record of what was asked — quiet, and never counted in the Refine badge. Comments you already refined come back on reopen too, instead of disappearing.
