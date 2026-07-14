@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-07-14
+
 ### Fixed
 
 - **The Companion commands now actually reach Codex.** Picking Codex as your assistant and running a Companion step quietly did nothing useful — the extension piped raw text the CLI couldn't act on, with no error to tell you. It was looking for the commands in a location spec-kit no longer writes to, and it couldn't read a namespaced command name in the first place. Codex now runs the whole Companion pipeline like every other assistant.
