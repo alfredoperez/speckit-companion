@@ -79,8 +79,8 @@
   width: 18px;
   height: 18px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--success);
-  background: var(--success);
+  border: 1px solid var(--info);
+  background: var(--info);
   color: white;
   opacity: 0;
   transition: all var(--transition-fast);
@@ -107,8 +107,8 @@
 }
 
 .line-add-btn:hover {
-  background: color-mix(in srgb, var(--success) 85%, white);
-  border-color: color-mix(in srgb, var(--success) 85%, white);
+  background: color-mix(in srgb, var(--info) 85%, white);
+  border-color: color-mix(in srgb, var(--info) 85%, white);
   transform: scale(1.1);
 }
 

@@ -218,7 +218,7 @@ describe('computePanelDerivedState (integration of pure pieces)', () => {
         );
         expect(result.specStatus).toBe(SpecStatuses.ACTIVE);
         expect(result.taskCompletionPercent).toBe(0);
-        expect(result.coreDocs).toHaveLength(1);
+        expect(result.pipelineDocs).toHaveLength(1);
         expect(result.relatedDocs).toHaveLength(0);
     });
 

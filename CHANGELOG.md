@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- **The spec viewer got its redesign.** The viewer now runs the design that won the multi-provider redesign investigation: a spec with recorded activity opens on its **Overview**, documents live on a left rail where the highlight shows what you're reading and separate marks show how far the run is, and the footer becomes a floating action pill led by a context line naming the next step, with workflow-provided commands under **Other actions**.
+- **The Overview is now a durable-context dossier.** Instead of an activity feed, the Overview leads with what a future session needs: why the spec exists, the constraints and deliberately-excluded work, what was verified (with the evidence command), the decisions with their rejected alternatives, and a requirement→test traceability table. The run log and task records stay one click away, collapsed at the bottom.
+- **The Overview is a place on the rail, not a toggle.** It sits at the top of the document rail as the first destination, and it only appears when the spec actually has a recorded run — a spec created outside the Companion pipeline is simply its documents, with no empty Overview to explain. A spec whose run notes are just a work log opens on its documents too.
+- **The run facts became a strip.** The permanent run-facts column is replaced by a one-line strip above the content (phase, tasks, traced requirements, checks, active time, PR link). The status isn't repeated there — the header badge already carries it.
+- **One header, not two.** The spec's identity (name, status, branch, date) and its run facts (phase, tasks, traceability) now share a single header band instead of stacking as two full-width rows, and the status is stated exactly once. The facts only say what nothing else already says: no repeated status, and no phase either (a completed spec announcing "implement" tells you nothing, and a running one is already named by the badge and the spinning step). As the pane narrows they step aside — the checks and elapsed time first, then all of them in a split editor — while the title and status never yield. There's no "Run details" link, because the Overview is an entry on the rail at every width.
+- **A stale-document warning now sits over the document it's about.** It used to stretch across the whole window, behind the navigation rail, even though it describes one file and its Regenerate button acts on that one file. It's now a notice inside the reading column, and it names the document ("Plan may be stale").
+- **The table of contents moved to the right**, so the rail and the outline stop crowding the same edge and the document sits between them. It also reads like an index again rather than a second column of prose: smaller type, long headings clipped to two lines (full text on hover), and subsections hung off a guide rule so they're clearly children of their section instead of look-alike peers. And it only takes a column when the pane can spare one — below roughly 920px it becomes a collapsible "On this page" list above the document instead of squeezing the text you're reading. That threshold is set for laptops: a 13" MacBook with the sidebar open keeps its outline column, while a split editor correctly falls back to the list. The ambiguous `+` button now says what it does ("Subsections"), and repeated entries like the five "Implementation" headings announce which section they belong to.
+- **Task lines read as tasks, not as bracket soup.** The task id and the `[P]` / `[US1]` markers are labels *about* a task, so they now sit ahead of the description as small chips instead of raw brackets in the middle of the sentence. File paths and inline code inside a task quieted down too — a path is a reference, so it no longer shouts louder than the task it belongs to, and it picks up the accent only when you hover it.
+- **A theme you can actually read, in both modes.** The viewer now ships its own tested light and dark palette (statuses, surfaces, syntax) instead of inheriting whatever the editor theme happens to define — every text/surface pair clears WCAG AA in both modes, and code blocks render on a dark surface that stays readable even in light themes. Typography follows your editor font.
+- **Narrow panes now collapse by pane width, not window width.** The layout responds to the viewer's own pane (the rail folds to a horizontal strip around 900px), so a VS Code split behaves correctly even in a wide window.
+- Custom workflows, living specs, inline review comments, and every lifecycle state behave exactly as before — the redesign changes how the viewer looks and lands, not what it does.
+
+### Added
+
+- **Action-only workflow steps now show on the rail.** A step with no output file of its own — stock **Implement**, or a custom workflow's Discuss / Execute / Verify — renders in its true position in the pipeline, marked as an action and showing done/current/running state, instead of silently disappearing. Selecting one opens the document it actually runs from (Implement opens Tasks), so no rail entry is a dead click. Custom commands scoped to such a step surface in the footer while the workflow sits at that step.
+
+### Fixed
+
+- **You can open a document from the Overview again.** Clicking Specification, Plan, or Tasks while the Overview was showing did nothing: those clicks rebuilt the whole panel, which reset the view and landed you right back on the Overview. Navigation is now a true single-page swap, so every rail entry is reachable from every other one.
+- **A finished spec no longer nags about being out of date.** The "Plan was generated before the current specification — consider regenerating" banner (and the matching warning mark on the step) kept showing on completed and archived specs, where there is no regenerating left to do. Staleness now goes quiet once a spec settles.
+- **A completed run no longer suggests a next step.** The footer used to read "Next: Reactivate" on a finished spec; reactivating is a deliberate reversal, not forward motion. It now simply says the run is complete.
+- **"Continue Run" now dispatches the step it says it will.** In a custom workflow with action steps between documents, the forward button could say one step (e.g. "Execute") but run another (the workflow's first action step). The button's label and its dispatch now derive from the same next-step walk, so they can never disagree.
+- **The spec editor and workflow editor got their host theming back.** The redesign's owned palette had leaked into the shared token file and repainted both editors; the palette is now scoped to the spec viewer only, and the other webviews follow your VS Code theme again.
+
 ## [0.28.1] - 2026-07-11
 
 ### Fixed

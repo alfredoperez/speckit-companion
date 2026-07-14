@@ -1,11 +1,11 @@
 import { useRef, useEffect, useState } from 'preact/hooks';
 import { NavigationBar } from './components/NavigationBar';
 import { StaleBanner } from './components/StaleBanner';
-import { SpecHeader } from './components/SpecHeader';
+import { PageChrome } from './components/PageChrome';
 import { FooterActions } from './components/FooterActions';
 import { ActivityPanel } from './components/ActivityPanel';
 import { ActivityErrorBoundary } from './components/ActivityErrorBoundary';
-import { markdownHtml, navState, activityVisible, viewerState } from './signals';
+import { markdownHtml, navState, showingOverview, viewerState } from './signals';
 import { restoreComments, clearAllRefinements } from './editor';
 
 export interface AppProps {
@@ -16,12 +16,16 @@ export function App({ specStatus }: AppProps) {
     const contentRef = useRef<HTMLDivElement>(null);
     const html = markdownHtml.value;
     const ns = navState.value;
-    const showActivity = activityVisible.value;
-    const reviewComments = viewerState.value?.reviewComments;
+    const vs = viewerState.value;
+    const reviewComments = vs?.reviewComments;
+
+    const living = !!ns?.livingMode;
+    const showOverview = showingOverview.value;
+
     const [hasMountedActivity, setHasMountedActivity] = useState(false);
     useEffect(() => {
-        if (showActivity) setHasMountedActivity(true);
-    }, [showActivity]);
+        if (showOverview) setHasMountedActivity(true);
+    }, [showOverview]);
 
     // After Preact sets innerHTML via dangerouslySetInnerHTML,
     // fire a custom event so highlighting/mermaid can run
@@ -54,27 +58,35 @@ export function App({ specStatus }: AppProps) {
 
     return (
         <>
-            <nav class="compact-nav">
-                <NavigationBar />
-            </nav>
-            <StaleBanner />
-            <SpecHeader />
-            <main class="content-area" id="content-area">
-                <div
-                    id="markdown-content"
-                    ref={contentRef}
-                    dangerouslySetInnerHTML={{ __html: html }}
-                    hidden={showActivity}
-                />
-                {hasMountedActivity && (
-                    <div hidden={!showActivity}>
-                        <ActivityErrorBoundary>
-                            <ActivityPanel />
-                        </ActivityErrorBoundary>
-                    </div>
-                )}
-                <aside class="spec-toc" id="spec-toc" aria-label="Table of contents" hidden={showActivity}></aside>
-            </main>
+            <PageChrome />
+            {living && (
+                <nav class="compact-nav">
+                    <NavigationBar />
+                </nav>
+            )}
+            <div class={`shell-grid${living ? ' shell-grid--no-rail' : ''}`}>
+                {!living && <NavigationBar />}
+                <div class="main-column">
+                    {/* Document-scoped: it must not span the rail. */}
+                    <StaleBanner />
+                    <main class="content-area" id="content-area">
+                        <div
+                            id="markdown-content"
+                            ref={contentRef}
+                            dangerouslySetInnerHTML={{ __html: html }}
+                            hidden={showOverview}
+                        />
+                        {hasMountedActivity && (
+                            <div class="overview-pane" hidden={!showOverview}>
+                                <ActivityErrorBoundary>
+                                    <ActivityPanel />
+                                </ActivityErrorBoundary>
+                            </div>
+                        )}
+                        <aside class="spec-toc" id="spec-toc" aria-label="Table of contents" hidden={showOverview}></aside>
+                    </main>
+                </div>
+            </div>
             <FooterActions initialSpecStatus={specStatus} />
         </>
     );

@@ -2,6 +2,10 @@
  * Install banner — shown in the Create-Spec and Activity panels only when the
  * companion spec-kit extension is missing. Server-rendered markup; see
  * src/features/spec-editor/installBanner.ts.
+ *
+ * Styled through semantic tokens, never `--vscode-*` directly: this sheet is
+ * imported by BOTH the spec editor (host-derived tokens) and the spec viewer
+ * (owned palette), so the same rules have to resolve correctly under each.
  */
 
 .install-banner {
@@ -10,10 +14,10 @@
     gap: 8px;
     padding: 6px 10px;
     margin: 0 0 10px 0;
-    border: 1px solid var(--vscode-inputValidation-infoBorder, #3794ff);
+    border: 1px solid color-mix(in srgb, var(--info) 45%, transparent);
     border-radius: var(--radius-sm);
-    background: var(--vscode-inputValidation-infoBackground, rgba(55, 148, 255, 0.1));
-    color: var(--vscode-foreground);
+    background: var(--info-subtle);
+    color: var(--text-body);
     font-size: 12px;
 }
 
@@ -31,7 +35,7 @@
 }
 
 .install-banner__text code {
-    font-family: var(--vscode-editor-font-family, monospace);
+    font-family: var(--font-mono);
     font-size: 11px;
 }
 
@@ -45,17 +49,17 @@
 }
 
 .install-banner__btn--primary {
-    background: var(--vscode-button-background);
-    color: var(--vscode-button-foreground);
+    background: var(--accent);
+    color: var(--accent-ink);
 }
 
 .install-banner__btn--primary:hover {
-    background: var(--vscode-button-hoverBackground);
+    background: var(--accent-hover);
 }
 
 .install-banner__btn--link {
     background: transparent;
-    color: var(--vscode-textLink-foreground);
+    color: var(--accent);
     padding: 3px 4px;
 }
 
@@ -74,12 +78,12 @@
     border: none;
     border-radius: var(--radius-sm);
     background: transparent;
-    color: var(--vscode-foreground);
+    color: var(--text-body);
     opacity: 0.7;
     cursor: pointer;
 }
 
 .install-banner__dismiss:hover {
     opacity: 1;
-    background: var(--vscode-toolbar-hoverBackground, rgba(128, 128, 128, 0.2));
+    background: var(--bg-hover);
 }

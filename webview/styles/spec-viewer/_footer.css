@@ -7,23 +7,46 @@
    Footer Actions
    ============================================ */
 
+/* Floating glass pill: the footer detaches from the viewport
+   edge and hovers bottom-right, keeping the forward action in reach without
+   consuming a full-width band. */
 .actions {
-    position: relative;
+    position: fixed;
+    right: 20px;
+    bottom: 16px;
+    z-index: 6;
     display: flex;
-    justify-content: flex-end;  /* Right-align all actions */
+    justify-content: flex-end;
     align-items: center;
-    padding: 8px 16px;  /* More compact padding */
-    background: var(--bg-secondary);
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
-    gap: 6px;  /* Tighter spacing */
+    padding: 7px;
+    background: color-mix(in srgb, var(--bg-secondary) 92%, transparent);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(12px);
+    gap: 6px;
+    max-width: calc(100vw - 40px);
+}
+
+/* An empty footer (no actions, no context) renders nothing. */
+.actions:not(:has(button)):not(:has(.footer-generating-chip)) {
+    display: none;
+}
+
+.footer-context {
+    padding: 0 8px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
 }
 
 .actions-left {
     display: flex;
     gap: 6px;
     flex-shrink: 0;
-    margin-right: auto;  /* Push to left when present */
 }
 
 .actions-right {
@@ -32,15 +55,69 @@
     flex-shrink: 0;
 }
 
+/* "Other actions" menu (workflow-provided commands) */
+.action-wrap {
+    position: relative;
+}
+
+.action-menu {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 10px);
+    width: 250px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+    box-shadow: var(--shadow-lg);
+    z-index: 7;
+}
+
+.action-menu button {
+    display: block;
+    width: 100%;
+    padding: 9px 10px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary);
+    text-align: left;
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-size: 12.5px;
+}
+
+.action-menu button:hover {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+}
+
+.action-menu button small {
+    display: block;
+    margin-top: 2px;
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+@container viewer (max-width: 700px) {
+    .actions {
+        left: 12px;
+        right: 12px;
+    }
+
+    .footer-context {
+        margin-right: auto;
+    }
+}
+
 .actions button {
+    min-height: 32px;
     padding: 6px 14px;
     border-radius: var(--radius-sm);
     cursor: pointer;
-    font-family: var(--font-mono);
+    font-family: var(--font-family);
     font-size: 12.5px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    font-weight: 650;
     display: flex;
     align-items: center;
     gap: 5px;
@@ -52,28 +129,24 @@
 }
 
 .actions button.primary {
-    background: var(--accent-strong);
-    color: var(--vscode-button-foreground, #ffffff);
-    border: 1px solid var(--accent-strong);
-    padding: 8px 24px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: 1px solid transparent;
+    padding: 6px 20px;
 }
 
 .actions button.primary:hover {
     background: var(--accent-hover);
-    border-color: var(--accent-hover);
 }
 
-/* Color-flip: outline at rest, fills with the accent on hover. */
 .actions button.secondary {
-    background: transparent;
-    border: 1.5px solid var(--border);
-    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-hover);
+    color: var(--text-primary);
 }
 
 .actions button.secondary:hover {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--vscode-button-foreground, #ffffff);
+    background: var(--bg-elevated);
 }
 
 .actions button.enhancement {
@@ -87,9 +160,7 @@
 }
 
 .actions button.enhancement:hover {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--vscode-button-foreground, #ffffff);
+    background: var(--bg-inset);
 }
 
 /* Disabled state for all footer buttons (e.g. while a step is running) */
@@ -139,8 +210,8 @@
     transform: translateX(-50%);
     font-size: 12px;
     color: var(--text-primary);
-    background: var(--bg-elevated, var(--vscode-editorWidget-background));
-    border: 1px solid var(--border, var(--vscode-editorWidget-border));
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: var(--radius-sm, 4px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     padding: 6px 14px;

@@ -8,6 +8,8 @@
 
 import { Commands } from '../../core/constants';
 import { CORE_DOCUMENTS, DocumentType, EnhancementButton } from './types';
+import type { CustomCommandConfig } from '../../core/types/config';
+import { commandMatchesStep, normalizeCustomCommand } from './customCommands';
 
 interface OptionalCommand {
     /** Registered VS Code command id (e.g. "speckit.clarify") */
@@ -75,4 +77,37 @@ export function optionalCommandButtonsForTab(
  */
 export function isOptionalCommand(command: string): boolean {
     return OPTIONAL_SPECKIT_COMMANDS.some(c => c.command === command);
+}
+
+/**
+ * Build enhancement buttons from the user's `speckit.customCommands` setting.
+ * A command surfaces when its `step` matches the displayed document, is `all`,
+ * or matches the spec's current workflow step — the latter is how commands
+ * scoped to an action-only step (which never has a document) stay reachable.
+ * Emitted command ids are added to `seen` so built-ins dedupe against them.
+ */
+export function customCommandButtons(
+    rawCommands: ReadonlyArray<CustomCommandConfig | string>,
+    docType: string,
+    seen: Set<string>,
+    currentStep?: string,
+): EnhancementButton[] {
+    const buttons: EnhancementButton[] = [];
+    for (const entry of rawCommands) {
+        const cmd = normalizeCustomCommand(entry);
+        if (!cmd) continue;
+        if (!commandMatchesStep(cmd.step, docType, currentStep)) continue;
+
+        const title = cmd.title || cmd.name;
+        if (!title) continue;
+
+        seen.add(cmd.command);
+        buttons.push({
+            label: title,
+            command: cmd.command,
+            icon: '⚡',
+            tooltip: (typeof entry === 'string' ? undefined : entry.tooltip) || title,
+        });
+    }
+    return buttons;
 }

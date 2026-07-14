@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/preact';
 import { StepTab } from './StepTab';
-import { mockDoc } from './__stories__/mockData';
+import { mockActionDoc, mockDoc } from './__stories__/mockData';
 
 const meta: Meta<typeof StepTab> = {
     title: 'Viewer/StepTab',
@@ -13,9 +13,7 @@ type Story = StoryObj<typeof StepTab>;
 
 const base = {
     index: 0,
-    totalSteps: 3,
     currentDoc: 'spec',
-    workflowPhase: 'spec',
     taskCompletionPercent: 0,
     isViewingRelatedDoc: false,
     parentPhaseForRelated: 'spec',
@@ -65,6 +63,41 @@ export const InFlightImplementPercentAndGlyph: Story = {
         currentDoc: 'tasks',
         currentStep: 'implement',
         taskCompletionPercent: 40,
+        isPercentHost: true,
+    },
+};
+
+// ── Action-only pipeline entries (FR-007) ─────────────────
+// No document: marked with the action glyph, non-openable, completion from
+// step history, `current` while the workflow sits at the step.
+
+export const ActionPending: Story = {
+    args: { ...base, doc: mockActionDoc('execute', 'Execute (Superpowers)'), index: 2, currentStep: 'plan' },
+};
+
+export const ActionCurrent: Story = {
+    args: { ...base, doc: mockActionDoc('execute', 'Execute (Superpowers)'), index: 2, currentStep: 'execute' },
+};
+
+// Implement has no document of its own — selecting it opens tasks.md, the
+// document it runs from, so no rail entry is a dead click.
+export const ActionOpensItsSourceDoc: Story = {
+    args: {
+        ...base,
+        doc: mockActionDoc('implement', 'Implement'),
+        index: 3,
+        currentStep: 'implement',
+        sourceDoc: { type: 'tasks', label: 'Tasks' },
+    },
+};
+
+export const ActionDone: Story = {
+    args: {
+        ...base,
+        doc: mockActionDoc('discuss', 'Discuss'),
+        index: 0,
+        currentStep: 'plan',
+        stepHistory: { discuss: { startedAt: '2026-07-10T10:00:00Z', completedAt: '2026-07-10T10:12:00Z' } },
     },
 };
 
@@ -182,7 +215,6 @@ export const AllStates: Story = {
                 {...base}
                 doc={mockDoc('spec', true, 'Specification')}
                 currentDoc="_"
-                totalSteps={4}
             />
             <span class="step-connector filled" />
             <StepTab
@@ -190,7 +222,6 @@ export const AllStates: Story = {
                 doc={mockDoc('plan', true, 'Plan')}
                 index={1}
                 currentDoc="plan"
-                totalSteps={4}
             />
             <span class="step-connector filled" />
             <StepTab
@@ -200,7 +231,6 @@ export const AllStates: Story = {
                 currentDoc="_"
                 activeStep="tasks"
                 stepHistory={{ tasks: { startedAt: STARTED_3M_22S_AGO } }}
-                totalSteps={4}
             />
             <span class="step-connector" />
             <StepTab
@@ -208,7 +238,6 @@ export const AllStates: Story = {
                 doc={mockDoc('done', false, 'Implement')}
                 index={3}
                 currentDoc="_"
-                totalSteps={4}
                 runningStepIndex={2}
             />
         </div>
@@ -222,7 +251,7 @@ export const AllStatesWithPercent: Story = {
             <span class="step-connector filled" />
             <StepTab {...base} doc={mockDoc('plan', true, 'Plan')} index={1} currentDoc="_" />
             <span class="step-connector filled" />
-            <StepTab {...base} doc={mockDoc('tasks', true, 'Tasks')} index={2} currentDoc="_" taskCompletionPercent={45} />
+            <StepTab {...base} doc={mockDoc('tasks', true, 'Tasks')} index={2} currentDoc="_" currentStep="implement" taskCompletionPercent={45} isPercentHost />
         </div>
     ),
 };

@@ -37,9 +37,7 @@ const SETTLED_STATUSES = new Set([
 export interface StepTabProps {
     doc: SpecDocument;
     index: number;
-    totalSteps: number;
     currentDoc: string;
-    workflowPhase: string;
     taskCompletionPercent: number;
     isViewingRelatedDoc: boolean;
     parentPhaseForRelated: string;
@@ -49,20 +47,29 @@ export interface StepTabProps {
     stalenessMap?: StalenessMap;
     hasRelatedChildren?: boolean;
     runningStepIndex?: number | null;
+    /** This tab renders the live implement percent (the implement entry, or the last tab). */
+    isPercentHost?: boolean;
+    /**
+     * For an action step: the document it runs from (Implement runs from
+     * tasks.md). Selecting the action opens that document, so no rail entry is
+     * ever a dead click.
+     */
+    sourceDoc?: { type: string; label: string };
     onClick: (phase: string) => void;
 }
 
 export function StepTab(props: StepTabProps) {
-    const { doc, index, totalSteps, currentDoc, workflowPhase,
+    const { doc, index, currentDoc,
         taskCompletionPercent, isViewingRelatedDoc, parentPhaseForRelated,
-        activeStep, currentStep, stepHistory, stalenessMap, hasRelatedChildren, runningStepIndex, onClick } = props;
+        activeStep, currentStep, stepHistory, stalenessMap, hasRelatedChildren,
+        runningStepIndex, isPercentHost, sourceDoc, onClick } = props;
 
     const phase = doc.type;
+    const isAction = doc.category === 'action';
     const stepDocExists = doc.exists;
     const exists = stepDocExists || !!hasRelatedChildren;
     const isViewing = phase === currentDoc || (isViewingRelatedDoc && phase === parentPhaseForRelated);
-    const isLastStep = index === totalSteps - 1;
-    const inProgress = isLastStep && currentStep === 'implement' && taskCompletionPercent < 100;
+    const inProgress = !!isPercentHost && currentStep === 'implement' && taskCompletionPercent < 100;
     const isStale = stalenessMap?.[phase]?.isStale ?? false;
 
     const stepName = DOC_TO_STEP[phase] ?? phase;
@@ -93,9 +100,21 @@ export function StepTab(props: StepTabProps) {
         && index > runningStepIndex
         && !isViewing
         && !stepDocExists;
-    const isClickable = (exists || index === 0) && !isLocked;
+    // An action step produces no document of its own, so it opens the one it
+    // runs from (Implement → tasks.md). Without such a source it stays inert —
+    // and the index-0 escape hatch must not apply to it (a workflow can lead
+    // with an action step, e.g. GSD's discuss).
+    const isClickable = isAction
+        ? !!sourceDoc && !isLocked
+        : (exists || index === 0) && !isLocked;
     // R003: checkmark only when completed AND the step's document exists.
     const vsCompleted = (vs?.highlights?.includes(stepName) ?? false) && stepDocExists;
+    // An action step has no document, so completion reads from the derived
+    // step badges (lifecycle names) or step history (custom names).
+    const actionDone = isAction && (
+        vs?.steps?.[stepName] === 'completed'
+        || !!stepHistory?.[stepName]?.completedAt
+    );
     const vsSubstep = vs?.activeSubstep?.step === stepName ? vs.activeSubstep.name : null;
 
     // Collapse to four canonical states (R007, R008).
@@ -105,9 +124,9 @@ export function StepTab(props: StepTabProps) {
         canonicalState = 'locked';
     } else if (isWorking || inProgress) {
         canonicalState = 'in-flight';
-    } else if (stepDocExists || vsCompleted) {
+    } else if (stepDocExists || vsCompleted || actionDone) {
         canonicalState = 'done';
-    } else if (isViewing) {
+    } else if (isViewing || (isAction && currentStep === stepName)) {
         canonicalState = 'current';
     }
 
@@ -115,6 +134,7 @@ export function StepTab(props: StepTabProps) {
         'step-tab',
         canonicalState,
         canonicalState !== 'current' && isViewing && 'current',
+        isAction && 'action',
         isStale && 'stale',
     ].filter(Boolean).join(' ');
 
@@ -137,7 +157,11 @@ export function StepTab(props: StepTabProps) {
     // keeps the glyph.
     const showSyncGlyph = canonicalState === 'in-flight';
 
-    const baseTooltip = STEP_TOOLTIPS[phase] ?? doc.label;
+    const baseTooltip = isAction
+        ? sourceDoc
+            ? `${doc.label} — action step; opens ${sourceDoc.label}, the document it runs from`
+            : `${doc.label} — action step (no document)`
+        : STEP_TOOLTIPS[phase] ?? doc.label;
     const tooltip = isLocked
         ? `${baseTooltip} (disabled while ${activeStep} is running)`
         : baseTooltip;
@@ -159,15 +183,18 @@ export function StepTab(props: StepTabProps) {
             class={classes}
             data-phase={phase}
             title={tooltip}
+            aria-current={isViewing ? 'page' : undefined}
             aria-disabled={!isClickable}
             disabled={!isClickable}
-            onClick={() => isClickable && phase !== 'done' && onClick(phase)}
+            onClick={() => isClickable && phase !== 'done' && onClick(isAction && sourceDoc ? sourceDoc.type : phase)}
         >
             {!showPercentLabel && (
                 <span class="step-status">
                     {showSyncGlyph
                         ? <span class="codicon codicon-sync step-status__sync" aria-hidden="true" />
-                        : statusIcon}
+                        : isAction && !statusIcon
+                            ? <span class="codicon codicon-zap" aria-hidden="true" />
+                            : statusIcon}
                 </span>
             )}
             <span class="step-label">{doc.label}</span>

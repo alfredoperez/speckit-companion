@@ -7,16 +7,16 @@
    Callout Blocks
    ============================================ */
 
-/* Full hairline border + faint tint keyed to the callout type (--callout-c),
-   instead of a left-edge accent stripe. The colored uppercase label carries the
-   type signal. */
+/* Soft-fill callouts: a borderless tinted surface keyed to the type,
+   with the colored uppercase label carrying the type signal. */
 .callout {
-    --callout-c: var(--border);
-    padding: 8px 14px;
+    --callout-c: var(--info);
+    --callout-bg: var(--info-subtle);
+    padding: 12px 14px;
     margin: 0 0 10px 0;
-    border-radius: var(--radius-sm);
-    border: 1px solid color-mix(in srgb, var(--callout-c) 40%, transparent);
-    background: color-mix(in srgb, var(--callout-c) 8%, transparent);
+    border-radius: var(--radius-md);
+    border: none;
+    background: var(--callout-bg);
 }
 
 .callout-icon {
@@ -25,12 +25,16 @@
 
 .callout-content {
     line-height: var(--leading-relaxed);
+    color: var(--text-body);
+}
+
+.callout-content strong {
     color: var(--text-primary);
 }
 
 .callout-label {
     display: block;
-    font-weight: 600;
+    font-weight: 650;
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -38,38 +42,20 @@
     color: var(--callout-c);
 }
 
-.callout-purpose    { --callout-c: var(--accent); }
-.callout-note       { --callout-c: var(--purple); }
-.callout-tip        { --callout-c: var(--success); }
-.callout-checkpoint { --callout-c: var(--success); }
-.callout-warning    { --callout-c: var(--warning); }
-.callout-important  { --callout-c: var(--warning); }
-.callout-critical   { --callout-c: var(--error); }
+.callout-purpose    { --callout-c: var(--accent);  --callout-bg: var(--accent-subtle); }
+.callout-note       { --callout-c: var(--info);    --callout-bg: var(--info-subtle); }
+.callout-tip        { --callout-c: var(--success); --callout-bg: var(--success-subtle); }
+.callout-checkpoint { --callout-c: var(--success); --callout-bg: var(--success-subtle); }
+.callout-warning    { --callout-c: var(--warning); --callout-bg: var(--warning-subtle); }
+.callout-important  { --callout-c: var(--warning); --callout-bg: var(--warning-subtle); }
+.callout-critical   { --callout-c: var(--error);   --callout-bg: var(--error-subtle); }
 
 /* ============================================
    Template Instructions (collapsed HTML comments)
    ============================================ */
 
+/* Template scaffolding is authoring noise — removed from the reading view
+   entirely. */
 details.template-instructions {
-    margin: var(--space-1) 0 var(--space-2) 0;
-    padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--border);
-    font-size: var(--text-sm);
-    color: var(--text-secondary);
-    background: color-mix(in srgb, var(--border) 10%, transparent);
-    border-radius: var(--radius-sm);
-}
-
-details.template-instructions summary {
-    font-size: var(--text-xs);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-muted);
-    cursor: pointer;
-    user-select: none;
-}
-
-details.template-instructions summary:hover {
-    color: var(--text-secondary);
+    display: none;
 }

@@ -17,6 +17,11 @@ import {
   SpecStatuses,
 } from "../../core/constants";
 import type { CustomCommandConfig } from "../../core/types/config";
+import {
+  commandMatchesStep,
+  normalizeCustomCommand,
+  type EnhancementCommand,
+} from "./customCommands";
 import type { SpecContext, StepName } from "../../core/types/specContext";
 import { NotificationUtils } from "../../core/utils/notificationUtils";
 import { createDispatcher, DispatcherMap } from "../../core/utils/dispatcher";
@@ -36,6 +41,7 @@ import {
   startStep,
 } from "../specs/stepLifecycle";
 import type { WorkflowStepConfig } from "../workflows/types";
+import { nextWorkflowStep, workflowStepIndex } from "../workflows/stepSequence";
 import { isOptionalCommand } from "./optionalCommands";
 import {
   addComment as addCommentToCtx,
@@ -280,8 +286,11 @@ async function handleStepperClick(
 ): Promise<void> {
   if (phase === "done") return; // Done is not clickable
 
-  // Full regeneration — matches sidebar navigation's appearance.
-  await deps.updateContent(specDirectory, phase);
+  // Message-based update, like the artifact chips: a full HTML regeneration
+  // would reload the webview and wipe its in-memory shell state (the
+  // Overview/document selection), so picking a pipeline document from the
+  // Overview would snap straight back to the Overview.
+  await deps.sendContentUpdateMessage(specDirectory, phase);
 }
 
 /**
@@ -338,7 +347,6 @@ async function handleApprove(
   if (!instance) return;
 
   const steps = await deps.resolveWorkflowSteps();
-  const navSteps = steps.filter((s) => !s.actionOnly);
 
   // Custom workflows don't emit capture context, so ctx.currentStep can lag the
   // files their commands produced. Reconstruct the real position from the step output
@@ -350,23 +358,20 @@ async function handleApprove(
   );
 
   // Dispatch routes off ctx.currentStep so a past stepper tab can't
-  // misdirect the action. Fall back to docType only when currentStep
-  // isn't a navStep (e.g. the actionOnly implement step).
-  let currentIndex = ctx?.currentStep
-    ? navSteps.findIndex((s) => s.name === ctx.currentStep)
-    : -1;
-  if (currentIndex < 0) {
+  // misdirect the action; fall back to the displayed document's step. The
+  // walk uses the FULL ordered step list — the same traversal the footer
+  // label uses (getApproveLabel) — so action-only steps between document
+  // steps are dispatched in workflow order, never skipped or reordered.
+  let currentName: string | undefined = ctx?.currentStep;
+  if (workflowStepIndex(steps, currentName) < 0) {
     const docType = instance.state.currentDocument;
-    currentIndex = navSteps.findIndex((s) => s.name === docType);
-    if (currentIndex < 0) {
+    if (workflowStepIndex(steps, docType) >= 0) {
+      currentName = docType;
+    } else {
       const relatedDoc = instance.state.availableDocuments.find(
         (d) => d.type === docType && d.category === "related",
       );
-      if (relatedDoc?.parentStep) {
-        currentIndex = navSteps.findIndex(
-          (s) => s.name === relatedDoc.parentStep,
-        );
-      }
+      currentName = relatedDoc?.parentStep;
     }
   }
 
@@ -381,28 +386,17 @@ async function handleApprove(
     }
   }
 
-  if (currentIndex >= 0 && currentIndex < navSteps.length - 1) {
-    // Execute next step's command
-    const nextStep = navSteps[currentIndex + 1];
+  const nextStep = nextWorkflowStep(steps, currentName);
+  if (nextStep) {
     if (isLifecycleStep(nextStep.name)) {
       await startStep(specDirectory, nextStep.name as StepName, "extension");
     }
     await deps.updateContent(specDirectory, instance.state.currentDocument);
     await executeStepInTerminal(nextStep, specDirectory, deps);
-  } else if (currentIndex === navSteps.length - 1) {
-    // Last navigable step: find the actionOnly implement step
-    const implementStep = steps.find((s) => s.actionOnly);
-    if (implementStep) {
-      if (isLifecycleStep(implementStep.name)) {
-        await startStep(
-          specDirectory,
-          implementStep.name as StepName,
-          "extension",
-        );
-      }
-      await deps.updateContent(specDirectory, instance.state.currentDocument);
-      await executeStepInTerminal(implementStep, specDirectory, deps);
-    }
+  } else {
+    deps.outputChannel.appendLine(
+      `[approve] No next step after '${currentName ?? "unknown"}' — nothing dispatched`,
+    );
   }
 }
 
@@ -496,47 +490,27 @@ async function handleLifecycleAction(
   );
 }
 
-/**
- * Handle clarify/enhancement button - executes the matching customCommand in the AI terminal
- */
-/**
- * A normalised enhancement command pulled from the user's `customCommands`
- * settings. Matched and dispatched through a shared matcher + dispatch builder.
- */
-interface EnhancementCommand {
-  command: string;
-  step?: string;
-  title?: string;
-  name?: string;
-}
-
 function customCommandsFromConfig(): EnhancementCommand[] {
   const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
   const raw = config.get<Array<CustomCommandConfig | string>>("customCommands", []);
-  const out: EnhancementCommand[] = [];
-  for (const entry of raw) {
-    if (typeof entry === "string") continue;
-    const command = entry.command || (entry.name ? `/speckit.${entry.name}` : undefined);
-    if (!command) continue;
-    out.push({ command, step: entry.step, title: entry.title, name: entry.name });
-  }
-  return out;
+  return raw
+    .map(normalizeCustomCommand)
+    .filter((c): c is EnhancementCommand => !!c);
 }
 
 /**
- * Test whether a candidate command matches the current dispatch intent.
- * When the user clicked a specific button (`buttonCommand` set), the
- * candidate's command must match exactly. When the dispatch is implicit
- * ("clarify the current step"), match by step with `"all"` as wildcard.
+ * Whether a candidate matches this dispatch. A clicked button names its command
+ * exactly; an implicit request ("run the command for where I am") matches by
+ * step through the same rule the buttons were rendered with.
  */
 function matchesCommand(
   candidate: EnhancementCommand,
   buttonCommand: string | undefined,
   docType: string,
+  currentStep?: string,
 ): boolean {
   if (buttonCommand) return candidate.command === buttonCommand;
-  const step = candidate.step || "all";
-  return step === docType || step === "all";
+  return commandMatchesStep(candidate.step, docType, currentStep);
 }
 
 async function dispatchEnhancement(
@@ -565,10 +539,11 @@ async function handleClarify(
 
   const docType = instance.state.currentDocument;
   const targetPath = instance.state.changeRoot || specDirectory;
+  const currentStep = readSpecContextSync(specDirectory)?.currentStep;
 
   // Source 1: custom commands from settings.
   for (const cmd of customCommandsFromConfig()) {
-    if (matchesCommand(cmd, buttonCommand, docType)) {
+    if (matchesCommand(cmd, buttonCommand, docType, currentStep)) {
       await dispatchEnhancement(cmd, "enhancement", targetPath, deps);
       return;
     }

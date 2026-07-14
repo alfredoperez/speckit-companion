@@ -29,32 +29,36 @@ export function SpecHeader() {
 
     return (
         <div class="spec-header" data-has-context={String(hasContext)}>
-            {ns.specContextName && (
-                <h1 class="spec-header-title">{ns.specContextName}</h1>
-            )}
-            {(badgeText || ns.branch || ns.createdDate) && (
-                <div class="spec-header-badges">
-                    {badgeText && (
-                        <span
-                            class={`spec-badge${statusClass ? ` spec-badge--${statusClass}` : ''}`}
-                            title={ns.createdDate ? `${badgeText} · ${ns.createdDate}` : badgeText}
-                        >
-                            {badgeText}
-                        </span>
+            <div class="spec-header-row">
+                <div class="spec-header-main">
+                    {ns.specContextName && (
+                        <h1 class="spec-header-title">{ns.specContextName}</h1>
                     )}
-                    {ns.branch && (
-                        <span class="spec-header-branch" title={`Branch: ${ns.branch}`}>
-                            <span class="codicon codicon-git-branch" aria-hidden="true"></span>
-                            {ns.branch}
-                        </span>
-                    )}
-                    {ns.createdDate && (
-                        <span class="spec-header-date" aria-label={`Created ${ns.createdDate}`}>
-                            {ns.createdDate}
-                        </span>
+                    {(badgeText || ns.branch || ns.createdDate) && (
+                        <div class="spec-header-badges">
+                            {badgeText && (
+                                <span
+                                    class={`spec-badge${statusClass ? ` spec-badge--${statusClass}` : ''}`}
+                                    title={ns.createdDate ? `${badgeText} · ${ns.createdDate}` : badgeText}
+                                >
+                                    {badgeText}
+                                </span>
+                            )}
+                            {ns.branch && (
+                                <span class="spec-header-branch" title={`Branch: ${ns.branch}`}>
+                                    <span class="codicon codicon-git-branch" aria-hidden="true"></span>
+                                    <span class="spec-header-branch__name">{ns.branch}</span>
+                                </span>
+                            )}
+                            {ns.createdDate && (
+                                <span class="spec-header-date" aria-label={`Created ${ns.createdDate}`}>
+                                    {ns.createdDate}
+                                </span>
+                            )}
+                        </div>
                     )}
                 </div>
-            )}
+            </div>
         </div>
     );
 }

@@ -1,47 +1,58 @@
 /**
  * SpecKit Companion - Staleness Warning Styles
- * Warning banner and stale badges for outdated workflow documents
+ * A document-local notice (it lives inside the reading column, over the document
+ * it describes) plus the matching mark on the rail item.
  */
 
 /* ============================================
-   Stale Warning Banner
+   Stale notice — document-scoped
    ============================================ */
 
 .stale-banner {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 16px;
-    background: var(--vscode-inputValidation-warningBackground, rgba(255, 170, 0, 0.1));
-    border-bottom: 1px solid var(--vscode-editorWarning-foreground, #cca700);
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin: var(--space-4) var(--content-padding) 0;
+    padding: 10px 14px;
+    background: var(--warning-subtle);
+    border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
+    border-radius: var(--radius-md);
     font-size: 12px;
-    line-height: 1.4;
+    line-height: 1.45;
 }
 
-.stale-banner-message {
+.stale-banner__icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: var(--warning);
+    font-size: 14px;
+}
+
+.stale-banner__body {
     flex: 1;
-    color: var(--vscode-editorWarning-foreground, #cca700);
+    min-width: 0;
+}
+
+.stale-banner__title {
+    margin: 0;
+    color: var(--warning);
+    font-size: 12.5px;
+    font-weight: 650;
+}
+
+.stale-banner__detail {
+    margin: 2px 0 0;
+    color: var(--text-body);
+    max-width: 72ch;
 }
 
 .stale-regen-btn {
     flex-shrink: 0;
-    padding: 3px 10px;
-    font-size: 11px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--vscode-editorWarning-foreground, #cca700);
-    background: transparent;
-    color: var(--vscode-editorWarning-foreground, #cca700);
-    cursor: pointer;
-    transition: background 0.15s;
-}
-
-.stale-regen-btn:hover {
-    background: var(--vscode-editorWarning-foreground, #cca700);
-    color: var(--vscode-editor-background, #1e1e1e);
+    align-self: center;
 }
 
 /* ============================================
-   Stale Badge on Tabs
+   Stale mark on a rail item
    ============================================ */
 
 .stale-badge {
@@ -54,8 +65,8 @@
     font-weight: 700;
     line-height: 1;
     border-radius: 50%;
-    background: var(--vscode-editorWarning-foreground, #cca700);
-    color: var(--vscode-editor-background, #1e1e1e);
+    background: var(--warning);
+    color: var(--bg-primary);
     margin-left: 4px;
     position: relative;
     top: -1px;

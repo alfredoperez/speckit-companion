@@ -482,38 +482,49 @@ flowchart LR
 
 ---
 
-## Activity Panel
+## Overview (the Activity view)
 
-An `Activity` button at the right of the navigation bar swaps the markdown
-pane for a card-stack overview of everything `.spec-context.json` exposes
-through `viewerState`.
+Since the Codex redesign (spec 394) and its Context-First revision, the
+Activity data is the **Overview** — a destination on the document rail,
+not a mode toggle. The rail's first entry is `Overview`, present only when
+the spec has a recorded run (`hasAnyData(viewerState)`); selecting it is
+the same kind of act as selecting a document, so there is exactly one
+selection axis and navigation can never get stuck. A spec whose context
+carries durable material (`hasDurableContext` — intent / approach /
+context / expectations / verified / decisions / coverage / concerns)
+**lands on the Overview**; a spec with only a work log, no context at all,
+living specs, or the panel setting off lands on its document view. A
+one-line **run strip** above the content carries the frequently scanned
+facts (phase, tasks, traced requirements, checks, concerns, trusted active
+time, PR link) — the status is not repeated there, the header badge owns
+it.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> markdown : viewer opens
-    markdown --> activity : user clicks Activity (aria-pressed=true)
-    activity --> markdown : user clicks Activity again
-    activity --> activity : .spec-context.json change → viewerState refresh
+    [*] --> overview : viewer opens (spec has recorded activity)
+    [*] --> documents : viewer opens (no activity / living mode / setting off)
+    overview --> documents : Documents switch, or any rail selection
+    documents --> overview : Overview switch
+    overview --> overview : .spec-context.json change → viewerState refresh
 ```
 
-**Cards (top to bottom; each hides when its data is empty)**:
+**Dossier sections (top to bottom; each hides when its data is empty)**:
 
-| Card | Source fields |
-|------|---------------|
-| Approach | `approach`, `last_action`, `status`, `prUrl`/`prNumber`, `checkpointStatus.{commit, pr}` |
-| Phases | `stepHistory` (step-level `startedAt`/`completedAt`) + `transitions` for substep names; renders an overall started/ended/total header, per-step duration, and per-substep timing. Author (`by`) badge shows once at spec start |
-| Tasks | `task_summaries.T###` — `status`, `did`, `files`, per-task `concerns` |
-| Decisions | `decisions[]` |
+| Section | Source fields |
+|---------|---------------|
+| Intent | `intent` as the typographic statement; `approach`, the `area:` entry of `context[]`, and `classification` in the meta grid |
+| Expectations | `constraint:` entries of `context[]` (must stay true) paired with `expectations[]` (deliberately out of scope) |
+| Verified | `verified[]` — a ledger row per check: `what`, `result`, evidence `command`, `warnings[]` (amber) |
+| Decisions | `decisions[]` — numbered, top 3 visible, the rest behind a disclosure |
+| Coverage | `coverage[]` — requirement → tasks → tests traceability rows, untraced first, full list behind a disclosure |
 | Concerns | `concerns[]` (`{ task?, note }`) |
-| Files touched | `files_modified[]`, clickable |
+| Run log (collapsed `<details>`) | `last_action`, latest `history[]` finishes, `stepHistory` phase timeline, `task_summaries.T###`, `files_modified[]`, review comments, living specs |
 
-**Setting gate** — `speckit.viewer.activityPanel`:
-
-| Value | Toggle visibility | Label |
-|-------|------------------|-------|
-| `"off"` | hidden | — |
-| `"beta"` (default) | visible | `Activity` + small `beta` pill |
-| `"on"` | visible | `Activity` (no pill) |
+**Setting gate** — `speckit.viewer.activityPanel` is a **boolean** (default
+`true`). `true`: specs with recorded activity land on the Overview and the
+rail shows the Overview/Documents switch. `false`: every spec lands on its
+documents and the switch never renders. (The legacy `"off" | "beta" | "on"`
+strings migrate to booleans on activation; there is no beta pill.)
 
 **stepHistory is derived, not read from disk.** The extension owns this
 field. `deriveStepHistory(transitions, currentStep, status)` in
@@ -563,13 +574,33 @@ watcher invokes `specViewerProvider.refreshContextIfDisplaying`, which
 re-derives `viewerState` and posts `viewerStateUpdated`. Cards re-render
 from the new state without a reload.
 
-**Toggle mechanics**: clicking `Activity` flips the `activityVisible` signal.
-The markdown pane stays mounted (hidden via the `hidden` attribute) so
-toggling back is instant. `<ActivityPanel />` mounts lazily on first reveal
-so initial spec render is never blocked. While Activity is shown, the
-sub-document sub-navigation row in `NavigationBar` is suppressed (Activity
-has no sub-documents); switching back to a content tab restores that tab's
-sub-nav.
+**Staleness is document-local.** The notice renders inside `.main-column`,
+above the reading column — it describes ONE document (`plan.md` trails
+`spec.md`) and its Regenerate action is scoped to that document, so it must
+not span the navigation rail. The matching mark on the rail item answers the
+same question from the navigation side; the two are complementary.
+
+**Staleness is suppressed once the spec settles.** `computeStaleness` is
+skipped entirely for `completed` / `archived` specs (`isStalenessRelevant`
+in `staleness.ts`), so the map arrives empty and BOTH surfaces that read it
+— the "consider regenerating" banner and the per-step stale mark — go quiet.
+"Regenerate the plan, the spec moved on" is advice about work still to do,
+and a finished spec has none.
+
+**Selection mechanics**: the rail's `Overview` entry and its document
+buttons both set the `viewerMode` signal (`'overview' | 'document'`; `null`
+until first interaction, letting the data pick the landing view). The
+markdown pane stays mounted (hidden via the `hidden` attribute) so
+switching back is instant, and the Overview mounts lazily on first reveal
+so initial spec render is never blocked.
+
+**Pipeline clicks are message-based, not a regeneration.** `stepperClick`
+routes through `sendContentUpdateMessage`, exactly like the artifact chips.
+It used to call `updateContent`, which rebuilds the panel's whole HTML —
+that reloads the webview and wipes its in-memory shell state, so picking a
+pipeline document while the Overview was showing bounced straight back to
+the Overview. Any new navigation path must keep this property: the webview
+is a single page, and only its content is swapped.
 
 ---
 

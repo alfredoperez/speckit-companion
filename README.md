@@ -55,7 +55,7 @@ Review spec documents with inline comments. Add feedback directly on specific li
 
 Reopen a spec and every pending comment is **restored inline**, anchored to its source location. Restore is resilient: a comment remembers its nearest heading and surrounding block, so if the source drifted (a line moved or was edited) it best-effort re-anchors to the nearest matching heading rather than being dropped — a comment is never silently lost.
 
-Comments live entirely in `.spec-context.json`; the old per-document `<doc>-extra.md` scratchpad files and the read-only "Notes" sub-tab have been removed. There is one storage surface (the committed context file) and one overview surface (the **Activity** panel's *Review comments* card — a consolidated list across spec/plan/tasks with per-comment status, jump-to-line, and a per-document **Run refinement** action). The inline surface stays the always-on primary path; the Activity list is the power-user overview (when the Activity panel is toggled off, inline comments still work and still persist).
+Comments live entirely in `.spec-context.json`; the old per-document `<doc>-extra.md` scratchpad files and the read-only "Notes" sub-tab have been removed. There is one storage surface (the committed context file) and one overview surface (the Overview's *Review comments* card — a consolidated list across spec/plan/tasks with per-comment status, jump-to-line, and a per-document **Run refinement** action). The inline surface stays the always-on primary path; the Activity list is the power-user overview (with the Overview unavailable — setting off or no activity — inline comments still work and still persist).
 
 ### Create Specs Visually
 
@@ -78,29 +78,28 @@ Each feature flows through four phases, each a one-click footer action in the vi
 The spec viewer is built for fast scanning of long-form specs:
 
 - **Title-leading header**: the spec name dominates above a compact `[STATUS] [⌥ branch] · date` cluster, so the page anchor is the first thing your eye lands on.
-- **Sticky chrome**: step tabs (Specification / Plan / Tasks) and header stay pinned at the top while you scroll.
-- **Children rail**: when a step has sub-files (e.g., Plan's `data-model.md`, `quickstart.md`, `research.md`), they render as chips directly under the active step tab, with the parent step itself as the first chip so any sub-doc has a one-click path back to the overview.
+- **Document rail**: the shell puts the workflow's documents on a vertical rail — the selected document sits on a lifted surface while separate completion marks (done check, in-flight spinner + live percent, pending dot) tell you how far along the run is, so "where am I reading" and "how far along is the run" never share one visual. On narrow panes the rail folds into a horizontal chip strip.
+- **Artifacts on the rail**: a step's sub-files (e.g., Plan's `data-model.md`, `quickstart.md`, `research.md` — or a custom workflow's free-named outputs) group under their owning step on the rail, always visible, one click from anywhere.
 - **Persistent inline comments**: review comments persist to `.spec-context.json` as you make them and restore inline when the spec reopens (best-effort re-anchoring if the source drifted). The old per-document `… Notes` scratchpad sub-tabs are gone — the consolidated cross-document list now lives in the Activity panel's *Review comments* card.
-- **Table of contents**: sticky outline column on the left of the content area. Defaults to h2-only (so phase-heavy `tasks.md` reads as a clean ~7-entry list); a small `+` toggle expands h3 subsections when needed. Auto-hides on narrow panes.
+- **Table of contents**: sticky outline column on the right of the content area. Defaults to h2-only (so phase-heavy `tasks.md` reads as a clean ~7-entry list); a small `+` toggle expands h3 subsections when needed. Auto-hides on narrow panes.
 - **Quiet content**: when the structured header has the metadata, in-content duplicates (the `Input:` block, repeated branch chips, literal `Slug:`/`Date:` paragraphs) are suppressed so the body is just the spec content.
 - **Diagrams**: wide mermaid diagrams scroll horizontally inside the prose column instead of bleeding past it. Each diagram has its own `−` / Reset / `+` zoom controls.
-- **Activity panel**: an `Activity` toggle swaps the markdown pane for a card-stack overview of everything `.spec-context.json` carries. See [Activity Panel](https://github.com/alfredoperez/speckit-companion#activity-panel) below.
-- **Quiet, intentional footer**: the footer surfaces only what fits the moment — `Regenerate` plus a forward button labelled with the next phase (`Plan` / `Tasks` / `Implement` / `Complete`). While a step generates, that button is disabled and reads `Generating <step>…` until the artifact actually lands on disk, so the footer never advances ahead of the work. `Archive` and `Mark Completed` appear only once the spec is closure-eligible (`ready-to-implement` and beyond). See [`docs/viewer-states.md`](./docs/viewer-states.md) for the full footer state matrix.
+- **Overview first**: a spec with recorded activity opens on its **Overview** — the durable-context dossier (why the spec exists, its constraints, what was verified, the decisions, and requirement→test traceability) — reachable as the first entry on the document rail, right above the pipeline. It only exists when the spec actually has a recorded run; a spec with no run context is just its documents. A one-line **run strip** above the content keeps phase, task progress, and traceability in view while you read. See [Overview](https://github.com/alfredoperez/speckit-companion#overview-the-runs-story) below.
+- **Quiet, intentional footer**: a floating action pill (bottom-right) surfaces only what fits the moment, led by a context line naming the next action — `Regenerate` plus a forward button labelled with the next phase (`Plan` / `Tasks` / `Implement` / `Complete`). While a step generates, the forward button is withdrawn entirely and the context line reads `Step running — actions unlock when it settles`, so the footer never advances ahead of the work. `Archive` and `Mark Completed` appear only once the spec is closure-eligible (`ready-to-implement` and beyond). See [`docs/viewer-states.md`](./docs/viewer-states.md) for the full footer state matrix.
 - **Optional SpecKit commands per tab**: SpecKit's three refinement commands surface as one-click footer buttons where each is most useful — **Clarify** on Spec, **Checklist** on Plan, **Analyze** on Tasks. No configuration required; a custom command with the same id wins. They disappear once the spec reaches the closure gate.
 
-### Activity Panel
+### Overview (the run's story)
 
-Toggle **Activity** in the viewer's nav bar to swap the markdown pane for a **brief** of everything `.spec-context.json` carries — built to orient you in two seconds:
+A spec with recorded activity **lands on its Overview** — a **durable-context dossier** of everything `.spec-context.json` carries, ordered by what a future session needs. It sits at the top of the document rail as a destination like any other, so moving between it and a document is one click either way. The one-line **run strip** above the content keeps the frequently scanned facts (phase, tasks, requirements traced to tests, checks, concerns, honest active time, PR link) in view in both. A spec whose context holds only a work log opens on its documents instead:
 
-- **The hero strip** — how the run stands at a glance: status, how the pipeline sized the change, honestly-measured active time, plus big-numeral chips for tasks done, requirements covered (with a coverage donut), checks passed, and open concerns (with a pulsing warning dot). Each chip jumps to its detail tab.
-- **The plan** — always visible below the hero: the spec's distilled goal as a lede, the **context** the run worked from (living specs, areas, constraints), the out-of-scope fence, and the approach — the full Intent/Context/Expectations picture in one block.
-- **Four tabs** hold the rest, with keyboard navigation; empty tabs simply don't appear. Decisions and Work carry plain count badges, while Proof and Notes badge only what needs attention — uncovered requirements and open concerns, warning-tinted — and stay badge-free when everything is covered and calm:
-  - **Decisions** — each choice as a numbered entry with its reasoning and the rejected alternative.
-  - **Work** — the phase timeline (with duration bars proportional to genuinely measured spans), per-task summaries, and files touched.
-  - **Proof** — checks as green/amber pass pills that pack like tags (including dismissed warnings), and the requirement coverage map: uncovered requirements lead, each requirement chip tinted by its covered state, the full mapping behind a disclosure. When anything is uncovered or concerning, Proof opens first.
-  - **Notes** — concerns, persisted review comments (grouped by document, jump-to-line, per-document **Run refinement**), and the living specs the feature touched — each capability readable inline (its purpose and requirements, plus fold-back change counts on completion) instead of bare names, degrading gracefully when the content isn't available in the workspace.
+- **Intent** — why the spec exists, set as one prominent statement, with the approach, working area, and sizing beside it.
+- **Expectations** — the fence around the work: constraints that must stay true paired with the deliberately out-of-scope list, as peers.
+- **Verified** — a ledger of what was checked: each check keeps its result and evidence command visually connected (warnings surface amber).
+- **Decisions** — numbered choices future work should not have to rediscover, each with its reasoning and the rejected alternative.
+- **Coverage** — a requirement → task → test traceability table (untraced requirements lead; the full list sits behind a disclosure), plus any open concerns.
+- **Run log** — the how-it-happened detail (latest activity, phase timeline, per-task records, files touched, review comments, living specs) collapsed at the bottom: it describes how the run went, so it doesn't outrank why it happened.
 
-Old specs without the newer capture degrade gracefully — the hero shows what exists and only populated tabs render. Visibility is gated by `speckit.viewer.activityPanel` — `"off"`, `"beta"` (default; toggle shows a *beta* pill), or `"on"`.
+Old specs without the newer capture degrade gracefully — only the sections whose data exists render, and a spec with no `.spec-context.json` at all simply has no Overview entry. Visibility is gated by the boolean `speckit.viewer.activityPanel` setting (default on); turning it off makes every spec open directly on its documents.
 
 ![Activity Panel](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/activity.png)
 *Activity panel. The hero answers "how did the run stand" at a glance — status, honest active time, tasks, coverage, checks — and the Plan states the intent, the context the run worked from, and what was explicitly out of scope.*
@@ -575,7 +574,7 @@ This scans `plan/` for `.md` files and shows them as children of the Plan step. 
 | `command` | Yes | Slash command to execute (e.g., `"myflow.specify"`) |
 | `label` | No | Display name in sidebar (defaults to capitalized `name`) |
 | `file` | No | Output file for this step (defaults to `{name}.md`) |
-| `actionOnly` | No | When `true`, the step has no output file and is hidden from the document tree (e.g., an "Implement" step that just runs a command) |
+| `actionOnly` | No | When `true`, the step has no output file (e.g., an "Implement" step that just runs a command). It still occupies its slot on the viewer's pipeline rail, marked as an action; selecting it opens the document it runs from (Implement runs from `tasks.md`). It stays hidden from the sidebar's document tree |
 | `subFiles` | No | Array of child file paths shown under this step |
 | `subDir` | No | Directory to scan for child `.md` files (non-recursive) |
 | `includeRelatedDocs` | No | When `true`, unassigned `.md` files in the spec folder are grouped under this step. Only one step should have this flag. |
@@ -584,7 +583,7 @@ This scans `plan/` for `.md` files and shows them as children of the Plan step. 
 
 - The sidebar shows only the steps declared by the active workflow
 - Steps with missing output files appear as "not started"
-- Steps with `actionOnly: true` are action-only. They appear in the workflow editor but not in the file tree
+- Steps with `actionOnly: true` are action-only. They render on the viewer's pipeline rail in workflow order — marked as actions, showing completion and in-flight state — and appear in the workflow editor, but not in the sidebar's file tree. Because such a step produces no document of its own, selecting it opens the nearest earlier document it runs from (stock Implement opens Tasks); with no such document it stays inert. Custom commands scoped to an action-only step surface in the footer's actions while the workflow sits at that step
 - When a spec is created via the editor, the selected workflow is automatically persisted to `.spec-context.json` in the spec directory
 - If no workflow is selected, the `speckit.defaultWorkflow` setting is used (falls back to the built-in default)
 - Once persisted, all subsequent operations (viewer, step execution, command palette) use the same workflow consistently

@@ -67,92 +67,6 @@
 }
 
 /* ============================================
-   Approach card
-   ============================================ */
-
-.activity-approach__text {
-    margin: 0 0 var(--space-3);
-    color: var(--text-primary);
-}
-
-.activity-approach__meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    align-items: center;
-    margin-bottom: var(--space-2);
-}
-
-.activity-approach__last-action {
-    margin: var(--space-2) 0 0;
-    color: var(--text-secondary);
-    font-size: 0.82rem;
-}
-
-.activity-approach__last-action-label {
-    color: var(--text-muted);
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.7rem;
-    letter-spacing: 0.04em;
-}
-
-.activity-status-pill {
-    display: inline-flex;
-    align-items: center;
-    padding: 2px 8px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-}
-
-.activity-status-pill.is-completed {
-    color: var(--success);
-    border-color: color-mix(in srgb, var(--success) 50%, transparent);
-    background: color-mix(in srgb, var(--success) 12%, transparent);
-}
-
-.activity-status-pill.is-implementing,
-.activity-status-pill.is-planning,
-.activity-status-pill.is-tasking,
-.activity-status-pill.is-specifying {
-    color: var(--accent);
-    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
-}
-
-.activity-status-pill.is-archived {
-    color: var(--text-muted);
-    border-color: var(--border);
-    background: var(--bg-hover);
-}
-
-.activity-checkpoint {
-    display: inline-flex;
-    align-items: center;
-    color: var(--success);
-    font-size: 0.78rem;
-    font-weight: 600;
-}
-
-.activity-pr-link {
-    color: var(--accent);
-    font-size: 0.82rem;
-    font-weight: 600;
-    text-decoration: none;
-    border-bottom: 1px dashed color-mix(in srgb, var(--accent) 50%, transparent);
-    padding-bottom: 1px;
-}
-
-.activity-pr-link:hover {
-    border-bottom-style: solid;
-}
-
-/* ============================================
    Phases card
    ============================================ */
 
@@ -188,132 +102,6 @@
 }
 
 /* Vertical timeline: phases stacked top-to-bottom on a left spine, one node each */
-.phases-track {
-    display: flex;
-    flex-direction: column;
-}
-
-.phases-step {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1, 4px);
-    padding: 0 0 var(--space-4) var(--space-5);
-}
-
-.phases-step:last-child {
-    padding-bottom: 0;
-}
-
-/* Spine segment — one per step; consecutive steps form a continuous line. */
-.phases-step::before {
-    content: '';
-    position: absolute;
-    left: 5px;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: var(--border);
-}
-
-.phases-step:first-child::before { top: 0.4em; }
-.phases-step:last-child::before { bottom: auto; height: 0.4em; }
-
-/* Node dot centered on the spine. */
-.phases-step::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0.3em;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: var(--success);
-    box-shadow: 0 0 0 3px var(--bg-elevated);
-}
-
-.phases-step.is-in-flight::after {
-    background: var(--accent);
-    animation: phases-pulse 2s ease-in-out infinite;
-}
-
-.phases-step__heading {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-3);
-    margin: 0;
-}
-
-@keyframes phases-pulse {
-    0%, 100% { box-shadow: 0 0 0 3px var(--bg-elevated), 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); }
-    50%      { box-shadow: 0 0 0 3px var(--bg-elevated), 0 0 0 6px color-mix(in srgb, var(--accent) 0%, transparent); }
-}
-
-.phases-step__name {
-    font-size: var(--text-sm);
-    font-weight: 700;
-    color: var(--text-primary);
-    text-transform: capitalize;
-}
-
-/* Active time, right-aligned next to the step name */
-.phases-step__time {
-    font-size: var(--text-sm);
-    font-weight: 600;
-    color: var(--text-secondary);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-}
-
-.phases-step.is-in-flight .phases-step__time {
-    color: var(--accent);
-}
-
-/* Muted subline under the name (multi-day start date) */
-.phases-step__sub {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    margin: 2px 0 var(--space-1, 4px) 0;
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    font-variant-numeric: tabular-nums;
-}
-
-.phases-event {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-2);
-    padding: 2px 0;
-    font-size: var(--text-sm);
-    color: var(--text-body);
-}
-
-.phases-event--empty {
-    color: var(--text-muted);
-    font-style: italic;
-    font-size: 0.74rem;
-}
-
-.phases-event__name {
-    color: var(--text-primary);
-    font-weight: 500;
-    font-family: var(--font-mono);
-    font-size: 0.82em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.phases-event__time {
-    color: var(--text-muted);
-    font-size: 0.72rem;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-}
-
 /* ============================================
    Actor badge (shared)
    ============================================ */
@@ -520,317 +308,6 @@
 }
 
 /* ============================================
-   Activity toggle button in nav-primary
-   ============================================ */
-
-.activity-toggle {
-    margin-left: auto;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    border: none;
-    background: transparent;
-    color: var(--text-secondary);
-    cursor: pointer;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    border-radius: var(--radius-sm);
-    transition: color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.activity-toggle:hover {
-    color: var(--text-primary);
-    background: var(--bg-hover);
-}
-
-.activity-toggle[aria-pressed='true'] {
-    color: var(--text-primary);
-    background: transparent;
-    box-shadow: inset 0 0 0 1.5px var(--accent);
-    font-weight: 700;
-}
-
-/* ── Review comments card ─────────────────────────────────────── */
-.comments-doc-group {
-    margin-bottom: 12px;
-}
-
-.comments-doc-group:last-child {
-    margin-bottom: 0;
-}
-
-.comments-doc-group__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 4px;
-}
-
-.comments-doc-group__label {
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-secondary);
-}
-
-.comments-run-btn {
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
-    font-size: 0.72rem;
-    padding: 2px 8px;
-    border-radius: var(--radius-sm);
-    color: var(--accent, #4a9eff);
-    background: color-mix(in srgb, var(--accent, #4a9eff) 14%, transparent);
-    transition: background var(--transition-fast);
-}
-
-.comments-run-btn:hover {
-    background: color-mix(in srgb, var(--accent, #4a9eff) 26%, transparent);
-}
-
-.comments-list .comment-item {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-}
-
-.comment-status {
-    flex: 0 0 auto;
-    font-size: 0.6rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    padding: 1px 6px;
-    border-radius: 999px;
-    line-height: 1.4;
-}
-
-.comment-status--pending {
-    color: var(--warning);
-    background: color-mix(in srgb, var(--warning) 16%, transparent);
-}
-
-.comment-status--applied {
-    color: var(--text-secondary);
-    background: var(--bg-hover);
-}
-
-.comment-jump {
-    flex: 0 0 auto;
-    border: none;
-    cursor: pointer;
-    font-family: var(--vscode-editor-font-family, monospace);
-    font-size: 0.68rem;
-    color: var(--accent, #4a9eff);
-    background: transparent;
-    padding: 0;
-    text-decoration: underline;
-}
-
-.comment-text {
-    flex: 1 1 auto;
-    min-width: 0;
-}
-
-/* Living specs card (LS·7) */
-.living-specs-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.living-specs-list__item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.living-specs-list__name {
-    flex: 1 1 auto;
-    min-width: 0;
-    font-family: var(--font-mono);
-    font-size: 0.82rem;
-    color: var(--text-body);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.living-specs-list__synced {
-    display: inline-flex;
-    align-items: center;
-    padding: 1px 7px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    border-radius: var(--radius-sm);
-    color: var(--accent);
-    border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
-    line-height: 1.4;
-}
-
-/* Per-capability readable content: open disclosure, purpose, requirement rows */
-
-.living-specs-cap {
-    padding: var(--space-2) 0;
-}
-
-.living-specs-cap + .living-specs-cap {
-    border-top: 1px solid var(--border);
-}
-
-.living-specs-cap__summary {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-2);
-    flex-wrap: wrap;
-    cursor: pointer;
-    font-size: 0.86rem;
-}
-
-.living-specs-cap__name {
-    font-family: var(--font-mono);
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.living-specs-cap__delta {
-    font-size: 0.74rem;
-    color: var(--text-label);
-    font-variant-numeric: tabular-nums;
-}
-
-.living-specs-cap__body {
-    padding: var(--space-2) 0 0 var(--space-4);
-}
-
-.living-specs-cap__purpose {
-    margin: 0 0 var(--space-2);
-    font-size: 0.82rem;
-    color: var(--text-body);
-    max-width: 72ch;
-}
-
-.living-specs-req-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1, 4px);
-}
-
-.living-specs-req {
-    font-size: 0.82rem;
-    max-width: 72ch;
-}
-
-.living-specs-req__id {
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.living-specs-req__text {
-    color: var(--text-body);
-}
-
-.living-specs-req__id + .living-specs-req__text::before {
-    content: ' — ';
-    color: var(--text-muted);
-}
-
-.living-specs-cap__unavailable {
-    margin: var(--space-1, 4px) 0 0 var(--space-4);
-    font-size: 0.78rem;
-    color: var(--text-secondary);
-    font-style: italic;
-}
-
-/* --- Reasoning-trail cards (Goal / Decisions detail / Verified / Coverage) --- */
-
-.activity-detail {
-    margin-top: 2px;
-    font-size: 0.82rem;
-    color: var(--text-body);
-}
-
-.activity-detail--warning {
-    color: var(--warning);
-}
-
-/* Inline label token: the prefix recedes, the value reads. */
-.activity-inline-label {
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--text-label);
-    margin-right: 2px;
-}
-
-/* Native disclosure for the full coverage mapping. */
-.activity-disclosure {
-    margin-top: 6px;
-}
-
-.activity-disclosure summary {
-    cursor: pointer;
-    font-size: 0.8rem;
-    color: var(--text-body);
-}
-
-.activity-detail-label {
-    display: block;
-    margin-bottom: 2px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--text-label);
-}
-
-.activity-intent__text {
-    margin: 0 0 6px;
-    color: var(--text-primary);
-}
-
-.activity-intent__fence {
-    margin-top: 4px;
-}
-
-.activity-list--compact li {
-    padding: 2px 0;
-}
-
-.activity-verified__result {
-    color: var(--text-body);
-}
-
-.activity-coverage__title {
-    margin-left: 6px;
-    color: var(--text-body);
-}
-
-/* The FR chip is the row marker — a list bullet would double it. */
-.activity-card--coverage .activity-list {
-    list-style: none;
-    padding-left: 0;
-}
-
-/* ============================================
    Redesign: hero strip, plan section, tabs
    ============================================ */
 
@@ -847,339 +324,17 @@
     border: 0;
 }
 
-
-.activity-hero {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-    padding: var(--space-4) var(--space-5);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    background: linear-gradient(180deg, var(--bg-elevated), var(--bg-secondary));
-}
-
-.activity-hero__line {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-3);
-    flex-wrap: wrap;
-}
-
-.activity-hero__status {
-    font-size: 0.86rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-primary);
-}
-
-.activity-hero__status.is-completed { color: var(--success); }
-.activity-hero__status.is-implementing,
-.activity-hero__status.is-planning,
-.activity-hero__status.is-specifying { color: var(--accent); }
-
-.activity-hero__fact {
-    font-size: 0.8rem;
-    color: var(--text-body);
-}
-
-.activity-hero__pr {
-    font-size: 0.8rem;
-    color: var(--accent);
-    text-decoration: none;
-}
-
-.activity-hero__pr:hover { text-decoration: underline; }
-
-.activity-hero__last-action {
-    margin: 0;
-    font-size: 0.8rem;
-    color: var(--text-body);
-}
-
-.activity-hero__chips {
-    display: flex;
-    gap: var(--space-2);
-    flex-wrap: wrap;
-}
-
-.activity-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 12px 5px 9px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-pill, 999px);
-    background: var(--bg-secondary);
-    color: var(--text-body);
-    font: inherit;
-    font-size: 0.78rem;
-    cursor: pointer;
-}
-
-.activity-chip:hover {
-    border-color: var(--accent);
-    background: var(--accent-subtle);
-}
-
-.activity-chip__value {
-    font-size: 0.92rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    font-variant-numeric: tabular-nums;
-}
-
-.activity-chip__label {
-    font-size: 0.68rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-secondary);
-}
-
-.activity-chip--warning { border-color: color-mix(in srgb, var(--warning) 55%, transparent); }
-.activity-chip--warning .activity-chip__value { color: var(--warning); }
-
-.activity-chip__dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--warning);
-    animation: activity-dot-pulse 2s ease-in-out infinite;
-}
-
 @keyframes activity-dot-pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.35; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .activity-chip__dot { animation: none; }
-}
-
-.activity-donut { flex: none; }
-.activity-donut__track { stroke: color-mix(in srgb, var(--text-muted) 35%, transparent); }
-.activity-donut__fill { stroke: var(--warning); }
-.activity-donut__fill.is-full { stroke: var(--success); }
-
-/* Plan section — the ICE triad, always visible */
-
-.activity-plan {
-    padding: var(--space-4) var(--space-5);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    background: var(--bg-secondary);
-}
-
-.activity-plan__heading {
-    margin: 0 0 var(--space-2);
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--text-primary);
-}
-
-.activity-plan__lede {
-    margin: 0 0 var(--space-3);
-    font-size: 1.02rem;
-    line-height: 1.5;
-    color: var(--text-primary);
-}
-
-.activity-plan__row {
-    margin: 0 0 var(--space-2);
-    font-size: 0.82rem;
-}
-
-.activity-plan__list { color: var(--text-body); }
-
-.activity-plan__approach {
-    margin: var(--space-3) 0 0;
-    font-size: 0.85rem;
-    color: var(--text-body);
-}
-
-.activity-plan__sizing { color: var(--text-body); }
-
-/* Tab bar — echoes the viewer's step-nav */
-
-.activity-tabs__bar {
-    display: flex;
-    gap: var(--space-1);
-    border-bottom: 1px solid var(--border);
-    margin-bottom: var(--space-4);
-    overflow-x: auto;
-}
-
-.activity-tabs__tab {
-    appearance: none;
-    border: none;
-    background: none;
-    padding: var(--space-2) var(--space-3);
-    font: inherit;
-    font-size: 0.84rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    white-space: nowrap;
-}
-
-.activity-tabs__tab:hover { color: var(--text-primary); }
-
-/* Deliberate focus treatment: the webview's default outline collides with the
-   active underline and reads as a broken three-sided box on click. */
-.activity-tabs__tab:focus:not(:focus-visible) { outline: none; }
-
-.activity-tabs__tab:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: -2px;
-    border-radius: var(--radius-sm, 4px);
-}
-
-.activity-tabs__tab.is-active {
-    color: var(--text-primary);
-    border-bottom-color: var(--accent);
-}
-
-.activity-tabs__count {
-    margin-left: 6px;
-    padding: 1px 7px;
-    border-radius: var(--radius-pill, 999px);
-    background: color-mix(in srgb, var(--text-muted) 18%, transparent);
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: var(--text-body);
-    font-variant-numeric: tabular-nums;
-}
-
-.activity-tabs__count--warning {
-    background: color-mix(in srgb, var(--warning) 16%, transparent);
-    color: var(--warning);
-}
-
-.activity-tabs__panel {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-}
-
 /* Signature elements: pills, ordinals, requirement chips, duration bars */
-
-/* Checks pack like tags: content-width pills, wrapping — a fixed-column grid
-   leaves a ghost cell for odd counts and mismatched sibling heights. */
-.activity-pill-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-}
-
-.activity-pill {
-    display: flex;
-    gap: var(--space-2);
-    align-items: flex-start;
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius-md);
-    font-size: 0.82rem;
-    border: 1px solid transparent;
-    max-width: 100%;
-}
-
-.activity-pill__body { min-width: 0; }
-
-.activity-pill--pass {
-    border-color: color-mix(in srgb, var(--success) 40%, transparent);
-    background: color-mix(in srgb, var(--success) 8%, transparent);
-}
-
-.activity-pill--warning {
-    border-color: color-mix(in srgb, var(--warning) 45%, transparent);
-    background: color-mix(in srgb, var(--warning) 8%, transparent);
-}
-
-.activity-pill__mark { flex: none; font-weight: 700; }
-.activity-pill--pass .activity-pill__mark { color: var(--success); }
-.activity-pill--warning .activity-pill__mark { color: var(--warning); }
-.activity-pill__what { font-weight: 600; color: var(--text-primary); }
-.activity-pill__result { color: var(--text-body); }
-
-.activity-list--ordinals {
-    list-style: none;
-    counter-reset: none;
-}
-
-.activity-list--ordinals li {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    column-gap: var(--space-2);
-}
-
-.activity-list--ordinals .activity-detail { grid-column: 2; }
-
-.activity-ordinal {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-    margin-top: 1px;
-    border-radius: 50%;
-    border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
-    color: var(--accent);
-    font-size: 0.68rem;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-}
-
-.activity-decision__text { color: var(--text-primary); }
-
-.activity-req-chip {
-    display: inline-block;
-    padding: 1px 8px;
-    border-radius: var(--radius-pill, 999px);
-    font-size: 0.72rem;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-}
-
-.activity-req-chip.is-covered {
-    color: var(--success);
-    border: 1px solid color-mix(in srgb, var(--success) 45%, transparent);
-    background: color-mix(in srgb, var(--success) 9%, transparent);
-}
-
-.activity-req-chip.is-uncovered {
-    color: var(--warning);
-    border: 1px solid color-mix(in srgb, var(--warning) 50%, transparent);
-    background: color-mix(in srgb, var(--warning) 9%, transparent);
-}
-
-.phases-step__bar {
-    height: 4px;
-    margin: 2px 0 var(--space-2);
-    border-radius: 2px;
-    background: color-mix(in srgb, var(--text-muted) 15%, transparent);
-    max-width: 320px;
-}
-
-.phases-step__bar-fill {
-    height: 100%;
-    border-radius: 2px;
-    background: var(--accent);
-}
 
 /* Prose measure: card text caps at a readable line length. */
 .activity-card__body p,
 .activity-card__body li,
-.activity-hero__last-action,
-.activity-plan__row,
 .task-row__did,
-.activity-plan__lede,
-.activity-plan__approach,
-.activity-decision__text,
-.activity-detail {
-    max-width: 72ch;
-}
-
 /* ============================================
    Phases strip + one-surface tabs
    ============================================ */
@@ -1238,35 +393,59 @@
     font-variant-numeric: tabular-nums;
 }
 
-/* One surface per tab: the panel carries the chrome, inner cards flatten. */
+/* ============================================
+   Latest-activity feed (Overview)
+   ============================================ */
 
-.activity-tabs__panel {
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    background: var(--bg-secondary);
-    padding: var(--space-4) var(--space-5);
-    gap: var(--space-5);
+.activity-feed {
+    margin: var(--space-4) 0 0;
 }
 
-.activity-tabs__panel .activity-card {
-    border: none;
-    border-radius: 0;
-    background: transparent;
-    overflow: visible;
+.activity-feed__label {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--text-label);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
-.activity-tabs__panel .activity-card__title {
-    padding: 0 0 var(--space-2);
-    background: transparent;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: var(--space-3);
-}
-
-.activity-tabs__panel .activity-card__body {
+.activity-feed ul {
+    margin: 0;
     padding: 0;
+    list-style: none;
 }
 
-/* A tab with a single section: the tab label already names it — drop the title. */
-.activity-tabs__panel > .activity-card:only-of-type .activity-card__title {
-    display: none;
+.activity-feed li {
+    display: grid;
+    grid-template-columns: 8px minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: baseline;
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+}
+
+.activity-feed__mark {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    align-self: center;
+}
+
+.activity-feed__text {
+    color: var(--text-body);
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.activity-feed time {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
 }

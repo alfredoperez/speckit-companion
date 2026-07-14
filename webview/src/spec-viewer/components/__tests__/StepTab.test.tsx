@@ -35,9 +35,7 @@ function baseProps(over: Partial<StepTabProps> = {}): StepTabProps {
     return {
         doc: doc('plan', true, 'Plan'),
         index: 1,
-        totalSteps: 3,
         currentDoc: 'spec',
-        workflowPhase: 'spec',
         taskCompletionPercent: 0,
         isViewingRelatedDoc: false,
         parentPhaseForRelated: 'spec',
@@ -277,11 +275,13 @@ describe('StepTab — #229 in-flight sync glyph', () => {
         const c = renderTab(baseProps({
             doc: doc('tasks', true, 'Tasks'),
             index: 2,
-            totalSteps: 3,
             currentStep: 'implement',
             taskCompletionPercent: 60,
             currentDoc: 'tasks',
             stepHistory: {},
+            // NavigationBar marks the implement entry (or the last tab, as
+            // here — a rail without an implement entry) as the percent host.
+            isPercentHost: true,
         }));
         try {
             expect(c.querySelector('button')!.className).toContain('in-flight');
@@ -304,17 +304,117 @@ describe('StepTab — #229 in-flight sync glyph', () => {
         const c = renderTab(baseProps({
             doc: doc('tasks', true, 'Tasks'),
             index: 2,
-            totalSteps: 3,
             currentStep: 'implement',
             taskCompletionPercent: 95,
             currentDoc: 'tasks',
             stepHistory: {},
+            isPercentHost: true,
         }));
         try {
             const pct = c.querySelector('.step-tab__percent') as HTMLElement;
             expect(pct).not.toBeNull();
             // 0→1 ratio drives the CSS color-mix ramp toward the success color.
             expect(pct.style.getPropertyValue('--impl-progress')).toBe('0.95');
+        } finally {
+            cleanup(c);
+        }
+    });
+});
+
+describe('StepTab — action-only pipeline entries (FR-007)', () => {
+    afterEach(() => {
+        viewerState.value = null;
+    });
+
+    function actionDoc(type: string, label: string): SpecDocument {
+        return {
+            type,
+            label,
+            fileName: '',
+            filePath: '',
+            exists: false,
+            isCore: false,
+            category: 'action',
+        };
+    }
+
+    it('renders marked as an action and inert when it has no source document — even at index 0', () => {
+        const onClick = jest.fn();
+        const c = renderTab(baseProps({
+            doc: actionDoc('discuss', 'Discuss'),
+            index: 0,
+            currentStep: 'plan',
+            onClick,
+        }));
+        try {
+            const btn = c.querySelector('button')!;
+            expect(btn.className).toContain('action');
+            expect(btn.disabled).toBe(true);
+            expect(btn.title).toContain('action step');
+            expect(c.querySelector('.codicon-zap')).not.toBeNull();
+            btn.click();
+            expect(onClick).not.toHaveBeenCalled();
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('opens the document it runs from — Implement produces nothing of its own, it runs from tasks.md', () => {
+        const onClick = jest.fn();
+        const c = renderTab(baseProps({
+            doc: actionDoc('implement', 'Implement'),
+            index: 3,
+            currentStep: 'implement',
+            sourceDoc: { type: 'tasks', label: 'Tasks' },
+            onClick,
+        }));
+        try {
+            const btn = c.querySelector('button')!;
+            expect(btn.disabled).toBe(false);
+            expect(btn.title).toContain('runs from');
+            btn.click();
+            expect(onClick).toHaveBeenCalledWith('tasks');
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('shows completion from the derived step badges (implement) or step history (custom names)', () => {
+        viewerState.value = { steps: { implement: 'completed' }, highlights: [], activeSubstep: null } as any;
+        const viaBadges = renderTab(baseProps({
+            doc: actionDoc('implement', 'Implement'),
+            index: 3,
+            currentStep: 'implement',
+        }));
+        try {
+            expect(viaBadges.querySelector('button')!.className).toContain('done');
+            expect(viaBadges.querySelector('.step-status')?.textContent).toBe('✓');
+        } finally {
+            cleanup(viaBadges);
+        }
+
+        viewerState.value = null;
+        const viaHistory = renderTab(baseProps({
+            doc: actionDoc('discuss', 'Discuss'),
+            index: 0,
+            currentStep: 'plan',
+            stepHistory: { discuss: { startedAt: '2026-01-01T00:00:00Z', completedAt: '2026-01-01T00:05:00Z' } },
+        }));
+        try {
+            expect(viaHistory.querySelector('button')!.className).toContain('done');
+        } finally {
+            cleanup(viaHistory);
+        }
+    });
+
+    it('reads as current while the workflow sits at it', () => {
+        const c = renderTab(baseProps({
+            doc: actionDoc('execute', 'Execute (Superpowers)'),
+            index: 2,
+            currentStep: 'execute',
+        }));
+        try {
+            expect(c.querySelector('button')!.className).toContain('current');
         } finally {
             cleanup(c);
         }

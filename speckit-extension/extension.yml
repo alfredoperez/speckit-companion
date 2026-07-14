@@ -13,11 +13,11 @@ extension:
 requires:
   # Floor is the workflow-engine surface the Companion workflow rides:
   # `specify workflow run`/`resume` plus the `command`/`gate`/`switch` step
-  # registry, all present from the 0.9.5 engine. Bare floor: spec-kit stable is
-  # well past this (0.11.x), so git/`uv` dev builds report `0.11.x.devN`, which
-  # PEP 440 admits against `>=0.9.5`. A `.dev0` suffix would only matter if this
-  # floor were the same line HEAD currently builds — it isn't.
-  speckit_version: ">=0.9.5"
+  # registry, all present from the 0.9.5 engine. The `.dev0` suffix is load-
+  # bearing: git/`uv` installs can report `0.9.5.dev0`, and PEP 440 sorts a
+  # dev build BELOW its final, so a bare `>=0.9.5` rejects exactly the builds
+  # this floor means to admit (this regressed once — don't simplify it away).
+  speckit_version: ">=0.9.5.dev0"
   tools:
     - name: python3
       required: false

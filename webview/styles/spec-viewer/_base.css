@@ -32,6 +32,10 @@ body {
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
+    /* Responsive behavior keys off the VIEWER container, not the browser
+       viewport, so a VS Code split pane collapses correctly too. */
+    container-type: inline-size;
+    container-name: viewer;
 }
 
 /* Instant render - no animation delay */
@@ -40,18 +44,209 @@ body {
 }
 
 /* ============================================
-   Content Area
+   Shell Grid
+   rail | main column (run strip + reading column)
+   ============================================ */
+
+.shell-grid {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 208px minmax(0, 1fr);
+}
+
+.shell-grid--no-rail {
+    grid-template-columns: 1fr;
+}
+
+.doc-rail {
+    overflow-y: auto;
+    padding: var(--space-4) var(--space-3) var(--space-8);
+    border-right: 1px solid var(--border);
+    background: transparent;
+}
+
+.main-column {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* ── Run facts: the right half of the header band ── */
+
+.run-strip {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding-top: 5px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    flex: 0 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+.run-strip__fact {
+    font-variant-numeric: tabular-nums;
+}
+
+.run-strip__fact--warning { color: var(--warning); }
+
+.run-strip__fact + .run-strip__fact::before,
+.run-strip__fact + .run-strip__pr::before {
+    content: "·";
+    margin: 0 10px;
+    color: var(--border-hover);
+}
+
+.run-strip__pr {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.run-strip__pr:hover { text-decoration: underline; }
+
+/* The facts yield from the least important end as the pane narrows: first the
+   time and the checks, then everything but the way back to the Overview. */
+@container viewer (max-width: 1100px) {
+    .run-strip__fact[data-fact="active"],
+    .run-strip__fact[data-fact="checks"],
+    .run-strip__pr {
+        display: none;
+    }
+}
+
+/* A split pane has no room for facts at all: the band shrinks to identity, and
+   the run's full story stays one click away on the rail's Overview entry. */
+@container viewer (max-width: 760px) {
+    .run-strip {
+        display: none;
+    }
+}
+
+/* The rail folds to a horizontal strip on narrow panes (pane width, not
+   window width — these are container queries against .viewer-container). */
+@container viewer (max-width: 900px) {
+    .shell-grid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .doc-rail {
+        display: flex;
+        gap: var(--space-2);
+        align-items: center;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: var(--space-2) var(--space-3);
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+        scrollbar-width: none;
+    }
+
+    .doc-rail .rail-overview {
+        width: auto;
+        background: var(--bg-elevated);
+        flex: none;
+    }
+
+    .doc-rail .rail-overview.current {
+        background: var(--bg-secondary);
+    }
+
+    .doc-rail .rail-group {
+        display: flex;
+        gap: var(--space-2);
+        align-items: center;
+        flex: none;
+    }
+
+    .doc-rail .rail-group + .rail-group {
+        margin-top: 0;
+    }
+
+    .doc-rail .rail-label {
+        display: none;
+    }
+
+    .doc-rail .rail-group .step-tabs,
+    .doc-rail .rail-group .step-children-tabs {
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: nowrap;
+        width: auto;
+    }
+
+    .doc-rail .rail-group .step-tab,
+    .doc-rail .rail-group .step-child {
+        width: auto;
+        min-height: 30px;
+        white-space: nowrap;
+        background: var(--bg-elevated);
+    }
+
+    .doc-rail .rail-group .step-tab.current,
+    .doc-rail .rail-group .step-child.active {
+        background: var(--bg-secondary);
+    }
+
+    .main-column {
+        flex: 1;
+    }
+}
+
+/* ============================================
+   Content Area (the reading column)
    ============================================ */
 
 .content-area {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
-    padding: var(--content-padding);
+    /* Extra bottom room so the floating footer never covers the last lines. */
+    padding: var(--content-padding) var(--content-padding) 108px;
     scroll-behavior: smooth;
-    display: flex;
-    flex-direction: row;
-    gap: var(--space-6);
-    align-items: flex-start;
+    /* A controlled grid, not flex: the reading column gets its 72ch and the
+       outline gets its fixed column, so the gutter is a decision rather than
+       whatever space happens to be left over. */
+    display: grid;
+    /* The reading track is sized in px, not ch: `ch` inside grid-template
+       resolves against the CONTAINER's font, while #markdown-content caps
+       itself at 72ch of its OWN (larger) font — so a ch-sized track is too
+       narrow and the prose spills over the outline. */
+    grid-template-columns:
+        minmax(0, var(--reading-column-width))
+        minmax(var(--toc-column-min), var(--toc-column-width));
+    justify-content: center;
+    column-gap: clamp(20px, 3vw, 56px);
+    align-items: start;
+}
+
+.content-area > #markdown-content { grid-column: 1; }
+.content-area > aside.spec-toc { grid-column: 2; }
+
+/* The dossier is its own bounded page — it spans both tracks. */
+.overview-pane {
+    grid-column: 1 / -1;
+    min-width: 0;
+}
+
+/* Too narrow for a column: one track, and the outline (now a disclosure) sits
+   ABOVE the document rather than beside it. */
+.content-area--narrow {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.content-area--narrow > aside.spec-toc {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.content-area--narrow > #markdown-content {
+    grid-column: 1;
+    grid-row: 2;
 }
 
 /* ============================================
@@ -128,7 +323,7 @@ body {
    Responsive Adjustments
    ============================================ */
 
-@media (max-width: 500px) {
+@container viewer (max-width: 500px) {
     .actions {
         padding: 8px 12px;
     }

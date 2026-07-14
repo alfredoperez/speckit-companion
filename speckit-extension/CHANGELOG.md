@@ -6,6 +6,11 @@ All notable changes to the **spec-kit extension** (`id: companion`) are document
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/); this extension follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- **Installing from a git-built spec-kit works again.** The extension's spec-kit version floor rejected dev builds (`0.9.5.dev0` sorts below `0.9.5` under PEP 440), so anyone running spec-kit installed from GitHub — the setup the README itself recommends — was blocked with a compatibility error. The floor now admits dev builds of the same engine line.
+
 ## [0.18.0] - 2026-07-06
 
 ### Added

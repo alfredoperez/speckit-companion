@@ -53,9 +53,6 @@ export function generateHtml(
     const scriptUri = webview.asWebviewUri(
         vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'spec-viewer.js')
     );
-    const geistFontUri = webview.asWebviewUri(
-        vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'fonts', 'geist-vf.woff2')
-    );
     const codiconCssUri = webview.asWebviewUri(
         vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'codicons', 'codicon.css')
     );
@@ -73,15 +70,18 @@ export function generateHtml(
         ? `<div id="markdown-content" data-raw="${escapeHtmlAttribute(content)}"></div>`
         : `<div class="empty-state">${escapeHtml(emptyMessage)}</div>`;
 
-    // Build initial navState for Preact components
+    // Build initial navState for Preact components. The rail renders the full
+    // pipeline (core + action steps) — the same partition buildViewerPayload
+    // sends — so first paint matches the first navStateUpdated message.
     const coreDocs = documents.filter(d => d.category === 'core');
+    const pipelineDocs = documents.filter(d => d.category === 'core' || d.category === 'action');
     const relatedDocs = documents.filter(d => d.category === 'related');
     const coreDocTypes = coreDocs.map(d => d.type);
     const isViewingRelatedDoc = !coreDocTypes.includes(currentDocType);
     const workflowPhase = calculateWorkflowPhase(coreDocs);
 
     const initialNavState: NavState = {
-        coreDocs,
+        coreDocs: pipelineDocs,
         relatedDocs,
         currentDoc: currentDocType,
         workflowPhase,
@@ -116,15 +116,6 @@ export function generateHtml(
                    script-src 'nonce-${nonce}' https://cdn.jsdelivr.net;
                    img-src ${webview.cspSource} data: https:;
                    font-src ${webview.cspSource};">
-    <style nonce="${nonce}">
-      @font-face {
-        font-family: 'Geist';
-        font-style: normal;
-        font-display: swap;
-        font-weight: 100 900;
-        src: url('${geistFontUri}') format('woff2');
-      }
-    </style>
     <link href="${styleUri}" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
     <link rel="stylesheet" href="${codiconCssUri}">

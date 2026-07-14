@@ -110,8 +110,20 @@ export async function scanDocuments(
 
     if (steps && steps.length > 0) {
         for (const step of steps) {
-            // Skip action-only steps (e.g. implement/apply) — they have no output file
-            if (step.actionOnly) continue;
+            // Action-only steps (e.g. implement/apply) have no output file, but
+            // still occupy their slot in the pipeline rail as non-openable marks.
+            if (step.actionOnly) {
+                documents.push({
+                    type: step.name,
+                    label: step.label || step.name.charAt(0).toUpperCase() + step.name.slice(1),
+                    fileName: '',
+                    filePath: '',
+                    exists: false,
+                    isCore: false,
+                    category: 'action'
+                });
+                continue;
+            }
 
             const fileName = step.file ?? `${step.name}.md`;
 
@@ -281,7 +293,7 @@ export async function scanDocuments(
         const fallbackStep = contentSteps.length >= 2 ? contentSteps[1] : contentSteps[contentSteps.length - 1];
 
         for (const doc of documents) {
-            if (doc.isCore || doc.parentStep) continue;
+            if (doc.isCore || doc.category === 'action' || doc.parentStep) continue;
 
             // 1. Match against each step's subFiles list
             const matchingStep = steps.find(s =>
@@ -305,13 +317,15 @@ export async function scanDocuments(
         }
     }
 
-    // Sort: core documents first (in step declaration order), then related docs alphabetically
-    const coreOrder = documents.filter(d => d.isCore).map(d => d.type);
+    // Sort: pipeline documents (core + action, in step declaration order) first,
+    // then related docs alphabetically.
+    const isPipeline = (d: SpecDocument): boolean => d.category !== 'related';
+    const pipelineOrder = documents.filter(isPipeline).map(d => d.type);
     documents.sort((a, b) => {
-        if (a.isCore && !b.isCore) return -1;
-        if (!a.isCore && b.isCore) return 1;
-        if (a.isCore && b.isCore) {
-            return coreOrder.indexOf(a.type) - coreOrder.indexOf(b.type);
+        if (isPipeline(a) && !isPipeline(b)) return -1;
+        if (!isPipeline(a) && isPipeline(b)) return 1;
+        if (isPipeline(a) && isPipeline(b)) {
+            return pipelineOrder.indexOf(a.type) - pipelineOrder.indexOf(b.type);
         }
         return a.label.localeCompare(b.label);
     });

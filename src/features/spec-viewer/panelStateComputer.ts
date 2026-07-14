@@ -61,15 +61,17 @@ export function resolveDisplayDocument(
     documents: SpecDocument[],
     requestedType: DocumentType,
 ): SpecDocument | undefined {
-    if (documents.length === 0) return undefined;
+    // Action-only pipeline entries carry no file — they can never be displayed.
+    const openable = documents.filter(d => d.category !== 'action');
+    if (openable.length === 0) return undefined;
 
-    let doc = documents.find(d => d.type === requestedType);
+    let doc = openable.find(d => d.type === requestedType);
     if (!doc) {
         const requestedFile = `${requestedType}.md`;
-        doc = documents.find(d => d.isCore && d.fileName === requestedFile);
+        doc = openable.find(d => d.isCore && d.fileName === requestedFile);
     }
-    if (!doc) doc = documents.find(d => d.isCore && d.exists);
-    if (!doc) doc = documents[0];
+    if (!doc) doc = openable.find(d => d.isCore && d.exists);
+    if (!doc) doc = openable[0];
 
     if (doc && !doc.exists && doc.isCore) {
         const firstSubSpec = documents.find(d => d.parentStep === doc!.type && d.exists);
@@ -89,7 +91,7 @@ export function resolveTabClickDocument(
     documents: SpecDocument[],
     documentType: DocumentType,
 ): SpecDocument | undefined {
-    const doc = documents.find(d => d.type === documentType);
+    const doc = documents.find(d => d.type === documentType && d.category !== 'action');
     if (!doc) return undefined;
     if (!doc.exists && doc.isCore) {
         const firstSubSpec = documents.find(d => d.parentStep === documentType && d.exists);
@@ -143,8 +145,8 @@ export interface PanelDerivedState {
     createdDate: string | null;
     lastUpdatedDate: string | null;
 
-    /** Core + related doc partitions; used to build NavState. */
-    coreDocs: SpecDocument[];
+    /** The rail's ordered pipeline (document steps + action steps). */
+    pipelineDocs: SpecDocument[];
     relatedDocs: SpecDocument[];
     isViewingRelatedDoc: boolean;
 
@@ -193,6 +195,7 @@ export function computePanelDerivedState(
 
     const coreDocs = documents.filter(d => d.category === 'core');
     const relatedDocs = documents.filter(d => d.category === 'related');
+    const pipelineDocs = documents.filter(d => d.category === 'core' || d.category === 'action');
     const coreDocTypes = coreDocs.map(d => d.type);
     const isViewingRelatedDoc = !coreDocTypes.includes(docType);
     const workflowPhase = calculateWorkflowPhase(coreDocs);
@@ -224,7 +227,7 @@ export function computePanelDerivedState(
         badgeText,
         createdDate,
         lastUpdatedDate,
-        coreDocs,
+        pipelineDocs,
         relatedDocs,
         isViewingRelatedDoc,
         footer,

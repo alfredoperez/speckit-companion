@@ -106,6 +106,10 @@ const withRefine = (footer: SerializedFooterAction[]): SerializedFooterAction[] 
     [REFINE_ACTION, ...footer];
 
 function renderFrame(frame: Frame) {
+    // The shipped footer floats fixed (Codex shell); pin it back into the
+    // story frame so each lifecycle frame stays self-contained.
+    const containFooter = '.actions { position: static; box-shadow: none; max-width: none; }';
+
     navState.value = mockNavState({
         coreDocs: [
             mockDoc('spec', true, 'Specification'),
@@ -139,7 +143,8 @@ function renderFrame(frame: Frame) {
     };
 
     return (
-        <div style="background: var(--vscode-editor-background, #1e1e1e); color: var(--vscode-foreground, #ccc); padding: 24px; min-height: 100vh; font-family: var(--vscode-font-family, system-ui);">
+        <div style="position: relative; background: var(--vscode-editor-background, #1e1e1e); color: var(--vscode-foreground, #ccc); padding: 24px; min-height: 100vh; font-family: var(--vscode-font-family, system-ui);">
+            <style>{containFooter}</style>
             <p style="opacity: 0.65; font-size: 12px; margin: 0 0 16px;">{frame.note}</p>
             <div style="border: 1px solid var(--vscode-widget-border, #303030); border-radius: 6px; overflow: hidden;">
                 <SpecHeader />

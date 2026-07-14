@@ -48,7 +48,7 @@ export interface PhaseInfo {
 /**
  * Document category for navigation
  */
-export type DocumentCategory = 'core' | 'related';
+export type DocumentCategory = 'core' | 'related' | 'action';
 
 /**
  * Document type constants for consistency

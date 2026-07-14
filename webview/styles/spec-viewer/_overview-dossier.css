@@ -1,0 +1,448 @@
+/**
+ * SpecKit Companion - Overview Dossier
+ * The Context-First Overview: one typographic Intent statement, then
+ * editorial sections divided by rules (Expectations fence, Verified ledger,
+ * Decisions, Coverage traceability), with the run log collapsed at the end.
+ */
+
+.dossier {
+    width: min(100%, 1020px);
+    margin: 0 auto;
+}
+
+.dossier-kicker {
+    margin: 0;
+    color: var(--text-label);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+}
+
+/* ── Intent — the reason the spec exists, set as the page's thesis ── */
+
+.dossier-intent {
+    padding: var(--space-4) 0 var(--space-6);
+    border-bottom: 1px solid var(--border);
+}
+
+.dossier-intent__statement {
+    max-width: 890px;
+    margin: var(--space-3) 0 var(--space-5);
+    font-size: clamp(24px, 3.2cqi, 38px);
+    font-weight: 600;
+    line-height: 1.16;
+    letter-spacing: -0.03em;
+    color: var(--text-primary);
+    text-wrap: balance;
+}
+
+.dossier-intent__meta {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(220px, 0.7fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.dossier-intent__meta > div {
+    padding: var(--space-4) var(--space-5);
+    background: var(--bg-secondary);
+}
+
+.dossier-meta-label {
+    display: block;
+    color: var(--text-label);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.dossier-intent__meta p {
+    margin: 6px 0 0;
+    color: var(--text-body);
+    max-width: 72ch;
+}
+
+.dossier-intent__meta p + .dossier-meta-label {
+    margin-top: var(--space-3);
+}
+
+/* ── Section frame: editorial dividers, not stacked cards ── */
+
+.dossier-section {
+    padding: var(--space-6) 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.dossier-section__head {
+    margin-bottom: var(--space-5);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: var(--space-5);
+}
+
+.dossier-section__title {
+    margin: 5px 0 0;
+    font-size: 19px;
+    letter-spacing: -0.015em;
+    color: var(--text-primary);
+}
+
+.dossier-count {
+    flex: none;
+    padding: 3px 9px;
+    color: var(--text-body);
+    background: var(--bg-inset);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.dossier-count--good {
+    color: var(--success);
+    background: var(--success-subtle);
+}
+
+.dossier-count--warn {
+    color: var(--warning);
+    background: var(--warning-subtle);
+}
+
+/* ── Expectations: the paired fence — peers, not footnotes ── */
+
+.dossier-fence-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+}
+
+.dossier-fence-grid > .dossier-fence:only-child {
+    grid-column: 1 / -1;
+}
+
+.dossier-fence {
+    padding: var(--space-4) var(--space-5) var(--space-3);
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--accent);
+}
+
+.dossier-fence--out {
+    border-top-color: var(--warning);
+}
+
+.dossier-fence h3 {
+    margin: 0 0 var(--space-2);
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.dossier-fence ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.dossier-fence li {
+    position: relative;
+    padding: 9px 0 9px 18px;
+    color: var(--text-body);
+    border-top: 1px solid var(--border);
+    max-width: 72ch;
+}
+
+.dossier-fence li::before {
+    content: "";
+    position: absolute;
+    top: 16px;
+    left: 1px;
+    width: 6px;
+    height: 6px;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+}
+
+.dossier-fence--out li::before {
+    border-color: var(--warning);
+}
+
+/* ── Verified: a ledger — check, what, result, evidence command ── */
+
+.dossier-evidence {
+    border-top: 1px solid var(--border);
+}
+
+.dossier-evidence__row {
+    padding: var(--space-3) 0;
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) minmax(150px, auto);
+    gap: var(--space-3);
+    align-items: start;
+    border-bottom: 1px solid var(--border);
+}
+
+.dossier-check {
+    width: 19px;
+    height: 19px;
+    margin-top: 1px;
+    color: var(--success);
+    background: var(--success-subtle);
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 19px;
+    text-align: center;
+}
+
+.dossier-check--warn {
+    color: var(--warning);
+    background: var(--warning-subtle);
+}
+
+.dossier-evidence__body h3 {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.dossier-evidence__body p {
+    margin: 2px 0 0;
+    color: var(--text-body);
+    max-width: 72ch;
+}
+
+.dossier-evidence__warnings {
+    color: var(--warning);
+}
+
+.dossier-evidence__row code {
+    max-width: 280px;
+    padding: 3px 6px;
+    color: var(--text-body);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    overflow-wrap: anywhere;
+}
+
+/* ── Decisions: numbered choices with why / rejected ── */
+
+.dossier-decision {
+    padding: var(--space-4) 0;
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: var(--space-3);
+    border-top: 1px solid var(--border);
+}
+
+.dossier-decision__num {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+.dossier-decision h3 {
+    margin: -3px 0 7px;
+    font-size: 15px;
+    font-weight: 620;
+    color: var(--text-primary);
+    max-width: 72ch;
+}
+
+.dossier-decision p {
+    margin: 3px 0;
+    color: var(--text-body);
+    max-width: 72ch;
+}
+
+.dossier-decision b {
+    margin-right: 5px;
+    color: var(--text-label);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.dossier-decision__rejected {
+    opacity: 0.82;
+}
+
+/* ── Coverage: requirement → task → test traceability ── */
+
+.dossier-coverage__head {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(120px, 0.55fr) minmax(130px, 0.5fr);
+    gap: var(--space-4);
+    padding: 0 12px 8px;
+    color: var(--text-label);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.dossier-coverage {
+    border-top: 1px solid var(--border);
+}
+
+.dossier-coverage__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(120px, 0.55fr) minmax(130px, 0.5fr);
+    gap: var(--space-4);
+    padding: 13px 12px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+}
+
+.dossier-coverage__req {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: var(--space-2);
+}
+
+.dossier-coverage__req b {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 12px;
+}
+
+.dossier-coverage__req span {
+    color: var(--text-body);
+}
+
+.dossier-coverage__tasks code {
+    display: inline-block;
+    margin: 2px 4px 2px 0;
+    padding: 1px 5px;
+    color: var(--text-body);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 11px;
+}
+
+.dossier-coverage__state {
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.dossier-coverage__state i {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-right: 5px;
+    background: currentColor;
+    border-radius: 50%;
+}
+
+.dossier-coverage__state.is-traced { color: var(--success); }
+.dossier-coverage__state.is-untraced { color: var(--warning); }
+
+/* ── Disclosures: "show more" + the demoted run log ── */
+
+.dossier-more {
+    margin-top: var(--space-3);
+    color: var(--text-body);
+}
+
+.dossier-more summary {
+    width: fit-content;
+    color: var(--accent);
+    cursor: pointer;
+    user-select: none;
+}
+
+.dossier-more__body {
+    padding: var(--space-2) var(--space-4);
+    border-left: 1px solid var(--border);
+}
+
+.dossier-log {
+    margin: var(--space-5) 0 var(--space-6);
+    padding: var(--space-4) 0;
+    color: var(--text-body);
+    border-bottom: 1px solid var(--border);
+}
+
+.dossier-log summary {
+    width: fit-content;
+    color: var(--text-primary);
+    font-weight: 650;
+    cursor: pointer;
+    user-select: none;
+}
+
+.dossier-log__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+}
+
+.dossier-log__last-action {
+    margin: 0;
+    color: var(--text-body);
+    max-width: 72ch;
+}
+
+/* ── Narrow panes: single-column fences, stacked ledger/coverage rows ── */
+
+@container viewer (max-width: 900px) {
+    .dossier-intent__meta {
+        grid-template-columns: 1fr;
+    }
+
+    .dossier-fence-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dossier-evidence__row {
+        grid-template-columns: 24px minmax(0, 1fr);
+    }
+
+    .dossier-evidence__row code {
+        grid-column: 2;
+        max-width: 100%;
+    }
+
+    .dossier-coverage__head {
+        display: none;
+    }
+
+    .dossier-coverage__row {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .dossier-coverage__req {
+        grid-column: 1 / -1;
+    }
+}
+
+@container viewer (max-width: 560px) {
+    .dossier-section__head {
+        align-items: flex-start;
+    }
+
+    .dossier-coverage__row {
+        display: block;
+    }
+
+    .dossier-coverage__row > div {
+        margin-top: 8px;
+    }
+}

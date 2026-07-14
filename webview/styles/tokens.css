@@ -56,10 +56,14 @@
        so active highlights use this stronger accent. */
     --accent-strong: var(--vscode-button-background, var(--accent));
     --accent-hover: var(--vscode-button-hoverBackground, #0062a3);
+    /* Text that sits ON the accent fill. */
+    --accent-ink: var(--vscode-button-foreground, #ffffff);
     --accent-subtle: color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 10%, transparent);
     --accent-glow: 0 0 20px color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 30%, transparent);
 
     /* Status colors - mapped to VS Code theme variables */
+    --info: var(--vscode-inputValidation-infoBorder, #3794ff);
+    --info-subtle: color-mix(in srgb, var(--vscode-inputValidation-infoBorder, #3794ff) 10%, transparent);
     --success: var(--vscode-testing-iconPassed, #388a34);
     --success-subtle: color-mix(in srgb, var(--vscode-testing-iconPassed, #388a34) 10%, transparent);
     --success-glow: 0 0 12px color-mix(in srgb, var(--vscode-testing-iconPassed, #388a34) 50%, transparent);
@@ -83,7 +87,7 @@
     --border-accent: color-mix(in srgb, var(--vscode-focusBorder, #007fd4) 50%, transparent);
 
     /* Typography - mapped to VS Code theme variables with professional fallbacks */
-    --font-family: 'Geist', var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif);
+    --font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif);
     --font-mono: var(--vscode-editor-font-family, 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', 'Monaco', 'Menlo', monospace);
     --font-size: var(--vscode-editor-font-size, 15px);
 
