@@ -1,8 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { splitContextPreamble } from './promptBuilder';
 
 /**
- * Pure resolution of a SpecKit slash command to the prompt text Codex is fed.
+ * Resolves a SpecKit slash command to the prompt text Codex is fed.
  *
  * Codex has no client-side slash-command registry — the extension pipes raw
  * text into `codex exec -`, so a `/speckit.companion.specify` line only works
@@ -14,35 +15,45 @@ import * as path from 'path';
  */
 
 export interface ParsedSlashCommand {
-    /** Dotted command id, e.g. `speckit.companion.specify`. */
-    commandId: string;
-    /** Skill directory name, e.g. `speckit-companion-specify`. */
+    /** Skill directory spec-kit emits, e.g. `speckit-companion-mark-complete`. */
     skillName: string;
     args: string;
 }
 
-const SLASH_COMMAND = /^\/(speckit[.\-][\w.\-]*[\w-])\s*(.*)$/;
+const SLASH_COMMAND = /^\/(speckit[.\-][\w.\-]*[\w\-])(?:\s+([\s\S]*))?$/;
 
-export function parseSlashCommand(prompt: string): ParsedSlashCommand | null {
-    const firstLine = prompt.split('\n')[0].trim();
-    const match = firstLine.match(SLASH_COMMAND);
+export function parseSlashCommand(command: string): ParsedSlashCommand | null {
+    const match = command.trim().match(SLASH_COMMAND);
     if (!match) return null;
 
-    const raw = match[1];
-    const suffix = raw.slice('speckit'.length + 1);
+    const suffix = match[1].slice('speckit'.length + 1);
     return {
-        commandId: `speckit.${suffix.replace(/-/g, '.')}`,
         skillName: `speckit-${suffix.replace(/\./g, '-')}`,
-        args: match[2]?.trim() || '',
+        args: match[2]?.trim() ?? '',
     };
 }
 
-export function findPromptFile(workspaceRoot: string, parsed: ParsedSlashCommand): string | null {
-    const candidates = [
-        path.join(workspaceRoot, '.agents', 'skills', parsed.skillName, 'SKILL.md'),
-        path.join(workspaceRoot, '.codex', 'prompts', `${parsed.commandId}.md`),
-    ];
-    return candidates.find(candidate => fs.existsSync(candidate)) ?? null;
+function findLegacyPrompt(workspaceRoot: string, skillName: string): string | null {
+    const dir = path.join(workspaceRoot, '.codex', 'prompts');
+    let entries: string[];
+    try {
+        entries = fs.readdirSync(dir);
+    } catch {
+        return null;
+    }
+    // Prompt files are named by dotted command id whose leaf may itself be hyphenated
+    // (`speckit.companion.mark-complete.md`), so match on the skill name both spellings
+    // normalize to rather than guessing where the dots went.
+    const found = entries.find(
+        entry => entry.endsWith('.md') && entry.slice(0, -'.md'.length).replace(/\./g, '-') === skillName,
+    );
+    return found ? path.join(dir, found) : null;
+}
+
+export function findPromptFile(workspaceRoot: string, skillName: string): string | null {
+    const skillPath = path.join(workspaceRoot, '.agents', 'skills', skillName, 'SKILL.md');
+    if (fs.existsSync(skillPath)) return skillPath;
+    return findLegacyPrompt(workspaceRoot, skillName);
 }
 
 export interface CodexPromptResolution {
@@ -57,20 +68,22 @@ export function resolveCodexPrompt(
     rawPrompt: string,
     fallback: string,
 ): CodexPromptResolution {
-    const parsed = parseSlashCommand(rawPrompt.trim());
+    const { preamble, command } = splitContextPreamble(rawPrompt);
+    const parsed = parseSlashCommand(command);
     if (!parsed || !workspaceRoot) {
         return { text: fallback, promptFilePath: null };
     }
 
-    const promptFilePath = findPromptFile(workspaceRoot, parsed);
+    const promptFilePath = findPromptFile(workspaceRoot, parsed.skillName);
     if (!promptFilePath) {
         return { text: fallback, promptFilePath: null };
     }
 
     try {
         const template = fs.readFileSync(promptFilePath, 'utf8');
+        const body = template.replace(/\$ARGUMENTS/g, () => parsed.args);
         return {
-            text: template.replace(/\$ARGUMENTS/g, parsed.args),
+            text: preamble ? `${preamble}\n\n${body}` : body,
             promptFilePath,
         };
     } catch (e) {

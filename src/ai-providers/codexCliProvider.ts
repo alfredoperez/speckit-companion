@@ -15,11 +15,11 @@ import { resolveCodexPrompt } from './codexPromptResolver';
  *      `buildPromptDispatchCommand`. Codex streams the prompt into `codex
  *      exec -` via a shell pipe, with an optional pre-script wrapper read
  *      from `initOptions`.
- *   2. When the prompt is a SpecKit slash command (e.g. `/speckit.specify`,
- *      `/speckit.companion.plan`), the prompt body is the *template* spec-kit
- *      emitted for Codex, with `$ARGUMENTS` substituted in Node — not the
- *      slash text itself. Unresolvable commands fall back to a short
- *      instructional wrapper.
+ *   2. When the prompt carries a SpecKit slash command (e.g. `/speckit.specify`,
+ *      `/speckit.companion.plan`), the command is replaced by the *template*
+ *      spec-kit emitted for Codex, with `$ARGUMENTS` substituted in Node — the
+ *      context preamble, when present, still leads. Unresolvable commands fall
+ *      back to a short instructional wrapper.
  *
  * Everything else (install check, terminal lifecycle, cleanup) is inherited.
  */
@@ -37,13 +37,7 @@ export class CodexCliProvider extends CliTerminalProvider {
     protected readonly logPrefix = 'Codex';
 
     protected async prepareDispatch(ctx: Omit<DispatchContext, 'cliPath' | 'permissionFlag'>): Promise<DispatchPlan> {
-        // Slash-command path: try to resolve a SpecKit skill template, else
-        // wrap the slash in a short instructional fallback. Other modes pass
-        // the prompt straight through to template resolution (no-op when the
-        // prompt isn't a slash command).
-        const rawPrompt = ctx.slashCommand
-            ? ctx.slashCommand
-            : ctx.prompt;
+        const rawPrompt = ctx.slashCommand ?? ctx.prompt;
         const fallback = ctx.slashCommand
             ? `Run the following SpecKit command: ${ctx.slashCommand}`
             : ctx.prompt;
