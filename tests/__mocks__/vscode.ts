@@ -154,7 +154,33 @@ export const workspace = {
     }),
 };
 
+export const ViewColumn = {
+    Active: -1,
+    Beside: -2,
+    One: 1,
+    Two: 2,
+    Three: 3,
+};
+
+export function createMockWebviewPanel() {
+    return {
+        title: '',
+        webview: {
+            html: '',
+            postMessage: jest.fn().mockResolvedValue(true),
+            onDidReceiveMessage: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+            asWebviewUri: jest.fn((uri: any) => uri),
+            cspSource: 'vscode-webview:',
+        },
+        reveal: jest.fn(),
+        dispose: jest.fn(),
+        onDidDispose: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+        onDidChangeViewState: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+    };
+}
+
 export const window = {
+    createWebviewPanel: jest.fn().mockImplementation(createMockWebviewPanel),
     showInformationMessage: jest.fn(),
     showErrorMessage: jest.fn(),
     showWarningMessage: jest.fn(),

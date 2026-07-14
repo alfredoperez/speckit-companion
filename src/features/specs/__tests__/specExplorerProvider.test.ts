@@ -290,6 +290,45 @@ describe('SpecExplorerProvider', () => {
         });
     });
 
+    describe('opening a spec from its name', () => {
+        async function getSpecItems(specName: string): Promise<any[]> {
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: specName, path: `specs/${specName}` },
+            ]);
+            (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
+            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
+
+            const groups = await provider.getChildren();
+            return provider.getChildren(groups[0]);
+        }
+
+        it('gives the spec row an open command carrying its spec directory', async () => {
+            const specs = await getSpecItems('my-feature');
+
+            expect(specs[0].command).toEqual({
+                command: 'speckit.openSpec',
+                title: 'Open my-feature',
+                arguments: [path.join(WORKSPACE_ROOT, 'specs/my-feature')],
+            });
+        });
+
+        it('keeps the spec row collapsible so the chevron still browses', async () => {
+            const specs = await getSpecItems('my-feature');
+
+            expect(specs[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
+        });
+
+        it('leaves document rows opening their own document', async () => {
+            (mockFs.existsSync as jest.Mock).mockReturnValue(true);
+            (mockFs.readFileSync as jest.Mock).mockReturnValue('# Spec\n\na\nb\nc\nd\n');
+            const specs = await getSpecItems('my-feature');
+
+            const docs = await provider.getChildren(specs[0]);
+
+            expect(docs[0].command?.command).toBe('speckit.viewSpecDocument');
+        });
+    });
+
     describe('spec item icons based on active state and context', () => {
         async function getSpecItems(
             specName: string,
