@@ -29,18 +29,18 @@ Release the **spec-kit extension** (`speckit-extension/`, `id: companion`) so pe
    - **Every `provides.commands[].file` exists** AND every command markdown under `speckit-extension/commands/` is listed in `provides.commands`.
    - README is current (it's the catalog listing page).
 4. **Commit + push** to `main` (`chore(speckit-ext): release v<X.Y.Z>`).
-5. **Build the archive** — **allow-list, runtime files only**. Copy just what the installed extension runs (manifest, dispatched commands, the workflow, the three runtime scripts, license). Do NOT ship docs, CHANGELOG, ROADMAP, README, `examples/`, or the build-only `nodes/`+`presets/` sources — the catalog renders README/CHANGELOG from GitHub blob URLs, not the zip. (Don't "restore" a `tar --exclude` deny-list here: an allow-list is what keeps future doc/source additions out of the package.)
+5. **Build the archive** — **allow-list, runtime files only**. Copy just what the installed extension runs (manifest, dispatched commands, the workflow, the runtime scripts, license). Do NOT ship docs, CHANGELOG, ROADMAP, README, `examples/`, or the build-only `nodes/`+`presets/` sources — the catalog renders README/CHANGELOG from GitHub blob URLs, not the zip. (Don't "restore" a `tar --exclude` deny-list here: an allow-list is what keeps future doc/source additions out of the package.)
    ```bash
    V=<X.Y.Z>
    rm -rf /tmp/cb && mkdir -p /tmp/cb/companion-$V/scripts
    cd speckit-extension
    cp extension.yml LICENSE /tmp/cb/companion-$V/
    cp -R commands workflows /tmp/cb/companion-$V/
-   cp scripts/write-context.py scripts/status-context.py scripts/derive-from-files.py /tmp/cb/companion-$V/scripts/
+   python3 scripts/package-manifest.py --copy-to /tmp/cb/companion-$V/scripts
    cd - >/dev/null
    ( cd /tmp/cb && zip -rq companion-$V.zip companion-$V )
    ```
-   Runtime-script set: commands invoke `write-context.py` and `status-context.py`; `status-context.py` imports `derive-from-files.py`, which imports `write-context.py`. If a command ever starts calling a new script, add it here.
+   **Never hand-type the script list here.** `scripts/package-manifest.py` is the single source of truth; `--copy-to` fills the archive from it and refuses to copy from a failing list. Hand-enumerating the scripts here is what shipped an archive missing five of them (#432). If a command starts calling a new script, CI fails until the manifest carries it — there is nothing to update in this file.
 6. **Cut the release** (prefixed tag, attach the version-named zip for archival):
    ```bash
    gh release create speckit-ext-v$V /tmp/cb/companion-$V.zip \

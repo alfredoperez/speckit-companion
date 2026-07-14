@@ -9,7 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ## [Unreleased]
 
 ### Fixed
+- **`/speckit.companion.adopt`, `/speckit.companion.drift`, and `/speckit.companion.coverage` now actually run.** If you installed the extension from a release, these three commands could never work: the helpers they call were left out of the published package, so each one stopped partway and reported a missing file. Everything they need now ships with the extension. The same gap was quietly degrading `/speckit.companion.specify` and `/speckit.companion.plan`, which silently skipped loading your project's living specs instead of reading them into context — they now pick that context up as intended.
 - **Installing from a git-built spec-kit works again.** The extension's spec-kit version floor rejected dev builds (`0.9.5.dev0` sorts below `0.9.5` under PEP 440), so anyone running spec-kit installed from GitHub — the setup the README itself recommends — was blocked with a compatibility error. The floor now admits dev builds of the same engine line.
+
+### Changed
+- **The release package is now assembled from a checked list rather than a hand-written one.** What goes into a release used to be typed out by hand in two separate documents, and nothing verified it against what the commands actually call — which is how the three commands above shipped broken. The package is now built from a single list that is checked on every change: if a command needs something the package doesn't carry, the build fails and says which file is missing, so a release can't go out incomplete again.
 
 ## [0.18.0] - 2026-07-06
 

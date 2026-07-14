@@ -49,3 +49,6 @@ jobs:
 
       - name: Check node-assembly parity (commands re-assemble byte-identical)
         run: python3 speckit-extension/scripts/assemble-nodes.py --check
+
+      - name: Check release packaging (every script a shipped command calls is packaged)
+        run: python3 speckit-extension/scripts/package-manifest.py --check

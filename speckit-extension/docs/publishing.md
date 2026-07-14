@@ -24,12 +24,18 @@ v0.2.0                  ❌  matches v* → would publish the WRONG thing to the
    cd speckit-extension
    cp extension.yml LICENSE /tmp/cb/companion-$V/
    cp -R commands workflows /tmp/cb/companion-$V/
-   cp scripts/write-context.py scripts/status-context.py scripts/derive-from-files.py scripts/resolve-spec-paths.py scripts/companion_config.py /tmp/cb/companion-$V/scripts/
+   python3 scripts/package-manifest.py --copy-to /tmp/cb/companion-$V/scripts
    cd - >/dev/null
    ( cd /tmp/cb && zip -rq companion-$V.zip companion-$V )
    ```
 
-   **What ships (and what doesn't).** The package carries `extension.yml`, `LICENSE`, `commands/`, `workflows/`, and exactly five scripts: `write-context.py`, `status-context.py`, `derive-from-files.py`, `resolve-spec-paths.py`, and `companion_config.py` (the only ones reached at runtime — commands call the capture/status scripts; `status-context.py` imports `derive-from-files.py`, which imports `write-context.py`; the living-specs resolver `resolve-spec-paths.py` imports `companion_config.py`). It deliberately **omits** README, CHANGELOG, ROADMAP, `docs/`, `examples/`, the build-only `nodes/`+`presets/` sources, the remaining build/test scripts, `tests/`, and `assets/`. The catalog page renders README/CHANGELOG from the GitHub blob URLs below — they're not needed inside the zip. Keep this an allow-list; don't swap it back to a `tar --exclude` deny-list, or new docs/sources will silently bloat the package again.
+   **What ships (and what doesn't).** The package carries `extension.yml`, `LICENSE`, `commands/`, `workflows/`, and the runtime scripts. **Which scripts those are is not restated here** — `package-manifest.py` is the single source of truth, and `--copy-to` fills the archive straight from it. That is deliberate: this list used to be typed out in prose in two places, drifted behind the commands that call the scripts, and shipped an archive missing five of them, which left the adoption, drift, and coverage commands unrunnable for anyone who installed from a release (#432). Run `python3 scripts/package-manifest.py --list` to see the current set.
+
+   The archive deliberately **omits** README, CHANGELOG, ROADMAP, `docs/`, `examples/`, the build-only `nodes/`+`presets/` sources, the build/test scripts, `tests/`, and `assets/`. The catalog page renders README/CHANGELOG from the GitHub blob URLs below — they're not needed inside the zip. This is still an **allow-list**; don't swap it back to a `tar --exclude` deny-list, or new docs/sources will silently bloat the package again.
+
+   **`--copy-to` leaves the destination holding exactly that list.** It clears any scripts already sitting there first, so a reused staging dir can't slip a leftover (say, a build-only script from an older layout) into the zip. It only ever removes loose `.py` files, never recursively: a destination holding anything else — a subdirectory, a document, the `speckit-extension/scripts/` source tree itself — is refused with the offending entries named, so a mistyped path can't be emptied.
+
+   **The list cannot silently fall behind again.** `package-manifest.py --check` derives what the shipped commands actually reach for — scanning the command bodies, then following each script's own imports — and fails if that disagrees with the packed set in either direction, naming the offending script. It runs in CI on every PR, and `--copy-to` refuses to build an archive from a failing list. A new command that calls a new script now blocks the build until the script is packaged.
 6. **Create the GitHub release** with a **prefixed tag** (`speckit-ext-v0.2.0`) and attach the version-named zip (archival):
    ```bash
    gh release create speckit-ext-v$V /tmp/cb/companion-$V.zip --title "..." --notes-file <CHANGELOG [X.Y.Z]> --target main

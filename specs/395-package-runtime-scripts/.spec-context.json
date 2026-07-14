@@ -1,0 +1,463 @@
+{
+  "workflow": "speckit",
+  "specName": "package runtime scripts",
+  "branch": "395-package-runtime-scripts",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-14T01:08:13.668Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-14T01:11:06.753Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T01:13:23.577Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T01:14:29.957Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T01:14:30.570Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T01:16:06.026Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T01:16:06.183Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-14T01:16:28.682Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T01:17:10.952Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T01:17:26.055Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T01:18:12.766Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T01:18:12.822Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T01:18:41.558Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T01:18:41.615Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T01:19:45.490Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T01:20:32.826Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T01:20:32.883Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T01:21:39.184Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T01:21:39.240Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T01:21:39.295Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T01:22:28.002Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-14T01:22:53.678Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-14T01:22:53.759Z"
+    }
+  ],
+  "last_action": "all 14 tasks done — 1286 jest + 258 python tests pass, 3 gates green",
+  "coverage": {
+    "FR-001": {
+      "title": "Release archive contains every helper a shipped command invokes, incl. indirect",
+      "tasks": [
+        "T001",
+        "T002",
+        "T003",
+        "T004"
+      ]
+    },
+    "FR-002": {
+      "title": "Archive excludes build/test-only programs, docs, examples; stays an allow-list",
+      "tasks": [
+        "T001",
+        "T003"
+      ]
+    },
+    "FR-003": {
+      "title": "Exactly one machine-readable packing list; no document restates it",
+      "tasks": [
+        "T001",
+        "T008",
+        "T009"
+      ]
+    },
+    "FR-004": {
+      "title": "Check fails and names a needed-but-unpacked program",
+      "tasks": [
+        "T001",
+        "T005",
+        "T007"
+      ]
+    },
+    "FR-005": {
+      "title": "Check fails and names a packed-but-unneeded program",
+      "tasks": [
+        "T001",
+        "T005",
+        "T007"
+      ]
+    },
+    "FR-006": {
+      "title": "Check follows dependencies transitively and terminates on cycles",
+      "tasks": [
+        "T001",
+        "T002"
+      ]
+    },
+    "FR-007": {
+      "title": "Check runs inside the existing automated test run",
+      "tasks": [
+        "T005",
+        "T006"
+      ]
+    },
+    "FR-008": {
+      "title": "Publish flow reads the packing list instead of restating it; fails loudly",
+      "tasks": [
+        "T008",
+        "T009"
+      ]
+    },
+    "FR-009": {
+      "title": "Extension version bumped; its own changelog and readme record the fix",
+      "tasks": [
+        "T010",
+        "T011",
+        "T012",
+        "T014"
+      ]
+    },
+    "FR-010": {
+      "title": "No shipped command's instructions change; only what ships alongside them",
+      "tasks": [
+        "T013"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 8,
+    "projectedTasks": 10,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "context": [
+    "area: speckit-extension packaging (release archive allow-list)",
+    "area: speckit-extension/scripts — 8-script runtime closure vs 5 build-only scripts",
+    "area: publish flow duplicated in speckit-extension/docs/publishing.md + .claude/commands/publish-speckit-ext.md",
+    "area: CI capture-suite job runs unittest discover + check-shape-parity",
+    "constraint: change is under speckit-extension/ — bump its extension.yml version, its README + CHANGELOG, never the root ones",
+    "constraint: allow-list only, never a deny-list",
+    "constraint: no command instruction text changes; packaging only"
+  ],
+  "intent": "Ship every helper script the extension's commands call, and make the packing list self-verifying so it can't silently fall behind again",
+  "expectations": [
+    "Writing any new helper script — all 8 already exist and work",
+    "Changing what any shipped command instructs the assistant to do",
+    "Cutting/publishing an actual release — this makes the next release correct, it does not publish one",
+    "Touching the root README, CHANGELOG, or package.json",
+    "Reworking the rest of the publish flow (tagging, rolling download asset, catalog entry)"
+  ],
+  "approach": "Add speckit-extension/scripts/package-manifest.py as the one machine-readable packing list, with --check (gate) and --copy-to (publish) modes. --check derives what the shipped commands actually need — scan command bodies for the installed script path form, then follow each script's sibling imports to a fixed point — and compares that closure against the declared list in both directions, naming any offender. Wire it into the CI capture-suite job and a unittest, repoint both publish docs at --copy-to, and bump the extension to 0.18.1.",
+  "decisions": [
+    {
+      "decision": "Keep a declared packing list AND compare it against an independently derived closure, both directions",
+      "why": "A pure derivation makes the scanner a silent single point of failure — an unrecognized reference form would just not copy the script, reintroducing this exact bug with no alarm. The two-way compare turns both a missed declaration and a scanner gap into a loud, named build failure.",
+      "rejected": "Derived-only (silent on scanner gaps); declared-only (cannot see a command that started calling something new — that is todays bug)"
+    },
+    {
+      "decision": "Put the packing list in scripts/package-manifest.py, not in extension.yml",
+      "why": "extension.yml is validated against spec-kits published schema at catalog review and parsed by the installer; a non-schema key is schema risk for zero gain since nothing in spec-kit would read it. A script in scripts/ matches the repos existing build-gate idiom, is executable rather than inert, and is importable by the tests.",
+      "rejected": "A package.runtime_scripts key in extension.yml; a plain MANIFEST/package.txt data file (still needs a program to check and copy it, and cannot express the build-only exclusion set)"
+    },
+    {
+      "decision": "Derive the closure by scanning the installed script path form, then following sibling references to a fixed point with cycle protection",
+      "why": "Commands invoke scripts by exactly one textual form, making the root scan an exact anchor. A direct scan alone finds only 6 of 8 — companion_config.py is named by no command and is reachable only through the resolver. Three reference forms exist (plain import, import_module with a hyphenated string, load-by-filename) and all three resolve to a literal naming a sibling, so one resolver handles them; non-sibling candidates fall away, which drops stdlib imports for free.",
+      "rejected": "AST/import-graph analysis (overkill for 13 stdlib scripts, and blind to the load-by-filename string form anyway); shipping all of scripts/ (a deny-list by another name — the publishing doc explicitly warns against it)"
+    },
+    {
+      "decision": "Land the gate in the CI capture-suite job as both a unittest and an explicit step; patch bump 0.18.0 to 0.18.1",
+      "why": "The unittest makes it fail for a developer locally under the existing discover sweep; the explicit step makes a packaging break legible as a packaging break in the CI log. Both sibling gates in that job already have this shape. The bump is a patch because no interface or behavior changes — files that were always meant to be in the package now are.",
+      "rejected": "Folding the assertion into check-shape-parity.py (its contract is command-body parity — an unrelated concern); a CI step with no test (would not fail locally before a push)"
+    },
+    {
+      "decision": "Added a fifth problem category, referenced-but-missing, beyond the four the design called for",
+      "why": "Writing the negative probe revealed the first draft silently ignored a command that names a script existing nowhere on disk — it was filtered out before the closure walk. That is precisely the user-visible symptom of #432 (the adopt command calling a script that is not there), so the gate has to catch it.",
+      "rejected": "Shipping the four planned categories — would have left the gate blind to the exact failure mode the issue reported"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "One machine-readable packing list (package-manifest.py) feeds both the release archive and a two-way CI gate, so the 5 missing runtime scripts ship and the list cannot silently drift again.",
+      "key_finding": "The closure is 8 scripts, not the 3 that ship. Only 6 are named directly by commands — companion_config.py and derive-from-files.py are reachable only indirectly, and write-context.py itself loads resolve-spec-paths.py by filename, so any check that scans command text alone would still under-ship."
+    },
+    "tasks": {
+      "summary": "14 tasks across 6 phases: 1 foundational (the packing list), 3 serial US1 proof tasks, 3 US2 gate tasks incl. negative probes, 2 parallel US3 doc repoints, 5 polish/verify."
+    },
+    "implement": {
+      "summary": "One machine-readable packing list now feeds both the release archive and a two-way CI gate; the 5 missing runtime scripts ship, and adopt/drift/coverage run from a real install."
+    }
+  },
+  "currentTask": "T014",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Created the packing list + two-way gate (RUNTIME_SCRIPTS/BUILD_ONLY, derive_closure, check, --check/--copy-to/--list)",
+      "files": [
+        "speckit-extension/scripts/package-manifest.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Ran --check on the real repo: PASS, closure independently derived as the 8 declared scripts from 6 direct roots",
+      "files": [
+        "speckit-extension/scripts/package-manifest.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Built a real archive via --copy-to: all 8 runtime scripts in, all 6 build-only out, nothing extra",
+      "files": [
+        "speckit-extension/scripts/package-manifest.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Installed the archive into a scratch project and ran resolve-spec-paths/register-capability/drift/check-coverage — all execute; registration really appended a capability. Counter-proof: the published 3-script archive lacks all four",
+      "files": [
+        "speckit-extension/scripts/package-manifest.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added the packaging gate as a stdlib unittest (9 cases incl. indirect-dependency and stdlib-not-a-sibling coverage)",
+      "files": [
+        "speckit-extension/tests/test_packaging.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added the packaging-gate step to the CI capture-suite job beside the parity gates",
+      "files": [
+        ".github/workflows/ci.yml"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Proved the gate bites in 3 directions (new unpacked script / packaged-but-unreachable / command calling a nonexistent script), each named; probes reverted, gate green. Probe design exposed a real gap — added the referenced-but-missing category",
+      "files": [
+        "speckit-extension/scripts/package-manifest.py",
+        "speckit-extension/tests/test_packaging.py"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Repointed publishing.md step 5 at --copy-to; removed the hand-typed 5-script enumeration, kept the allow-list principle",
+      "files": [
+        "speckit-extension/docs/publishing.md"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Repointed the publish command step 5 at --copy-to; it was copying only 3 scripts — the actual source of the shipped archive and of #432",
+      "files": [
+        ".claude/commands/publish-speckit-ext.md"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Bumped the spec-kit extension version to 0.18.1",
+      "files": [
+        "speckit-extension/extension.yml"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Added user-facing changelog entries (Fixed: the 3 commands run; Changed: package built from a checked list)",
+      "files": [
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Documented what the release archive carries and the packaging gate in the extension README",
+      "files": [
+        "speckit-extension/README.md"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Full suite green: npm compile, 1286 jest tests, 258 python tests, shape-parity + node-assembly + packaging gates all exit 0"
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Verified the scope fence: root README/CHANGELOG/package.json untouched; only .specify/feature.json pointer changed (reverted before commit)"
+    }
+  },
+  "verified": [
+    {
+      "what": "The packaging gate derives the true closure and passes on the real repo",
+      "command": "python3 speckit-extension/scripts/package-manifest.py --check",
+      "result": "OK — 8 runtime scripts, closure matches the declared list; 6 direct roots expand to 8 via indirect deps",
+      "warnings": []
+    },
+    {
+      "what": "The gate actually fails on drift, in three directions, each naming the offender",
+      "command": "probes: new unpacked script referenced by a command / unreachable entry added to the list / command calling a nonexistent script",
+      "result": "All three exit 1 and name the file. Reverted; gate back to green",
+      "warnings": [
+        "Probe design exposed a real gap in the first draft: a command naming a script that exists nowhere was silently filtered out. Added the referenced-but-missing category and a test."
+      ]
+    },
+    {
+      "what": "An archive built from the packing list carries exactly the runtime closure",
+      "command": "package-manifest.py --copy-to /tmp/arch432/companion-0.18.1/scripts",
+      "result": "8/8 runtime present, 0 build-only leaked, 0 extra files",
+      "warnings": []
+    },
+    {
+      "what": "The previously-broken commands run end-to-end from an archive-only scratch install (the #432 reproduction)",
+      "command": "ran resolve-spec-paths.py, register-capability.py, drift.py, check-coverage.py in /tmp/sb432",
+      "result": "All four execute; register-capability really appended a capability to companion.yml. Counter-proof: the published 3-script archive lacks all four",
+      "warnings": []
+    },
+    {
+      "what": "Full suite + all gates green; no command body text changed",
+      "command": "npm run compile && npm test; check-shape-parity.py; assemble-nodes.py --check; unittest discover",
+      "result": "1286 jest tests pass, 258 python tests pass, shape-parity OK (14 bodies), node-assembly OK (5 bodies), packaging OK",
+      "warnings": []
+    }
+  ],
+  "concerns": [
+    {
+      "note": "The fix makes the NEXT release correct; it does not republish. The currently-published companion-latest zip is still the broken 3-script build until someone runs /publish-speckit-ext.",
+      "step": "implement"
+    }
+  ]
+}
