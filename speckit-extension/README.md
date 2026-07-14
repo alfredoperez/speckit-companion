@@ -302,6 +302,19 @@ specify extension list        # `companion` present
 # then run a real /speckit.specify and confirm specs/<NNN>/.spec-context.json is written
 ```
 
+### What the release archive contains
+
+The archive is an **allow-list**: the manifest, the `LICENSE`, the dispatched `commands/`, the `workflows/`, and the runtime scripts — nothing else. README, CHANGELOG, `docs/`, `examples/`, `tests/`, and the build-only sources stay out (the catalog renders the docs from GitHub, not from the zip).
+
+Which scripts count as "runtime" is not maintained by hand. `scripts/package-manifest.py` is the single source of truth, and the publish flow fills the archive straight from it:
+
+```bash
+python3 speckit-extension/scripts/package-manifest.py --list     # the scripts that ship
+python3 speckit-extension/scripts/package-manifest.py --check    # the gate (runs in CI)
+```
+
+`--check` derives what the shipped commands actually reach for — it scans the command bodies for the scripts they invoke, then follows each script's own imports — and fails if that disagrees with the packed list in either direction, naming the offending file. This is a guard against a real regression: the list used to be typed out in prose in two places, drifted behind the commands, and shipped an archive missing five scripts, which left `/speckit.companion.adopt`, `/speckit.companion.drift`, and `/speckit.companion.coverage` unrunnable for anyone who installed from a release. A command that starts calling a new script now fails the build until that script is packaged.
+
 ## How it works
 
 ```
