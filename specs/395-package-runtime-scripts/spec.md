@@ -85,7 +85,7 @@ A maintainer cutting a release follows the publish steps. Today those steps embe
 - **FR-006**: The automated check MUST determine what a command needs by reading the shipped command text and then following each referenced program's own dependencies to their conclusion, terminating even when those dependencies form a cycle.
 - **FR-007**: The automated check MUST run as part of the project's existing automated test run, so a disagreement blocks the change before release.
 - **FR-008**: The publish flow MUST obtain the files to copy from the single packing list rather than restating them, and MUST fail loudly if the list cannot be read.
-- **FR-009**: The extension's own version MUST be raised, and its own changelog and readme MUST record the fix, so an existing user can tell a repaired build from the broken one.
+- **FR-009**: The extension's own changelog and readme MUST record the fix under the pending-release section, so an existing user can tell a repaired build from the broken one once it ships. The version itself MUST NOT be raised here — the release flow owns that bump when it cuts the build.
 - **FR-010**: The change MUST NOT alter what any command instructs the assistant to do; only what ships alongside those commands changes.
 
 ### Key Entities
@@ -110,7 +110,7 @@ A maintainer cutting a release follows the publish steps. Today those steps embe
 
 - The reported defect needs no new helper programs written. Every program the commands call already exists and works; the fix is packaging and the process that keeps packaging honest.
 - The three helpers the archive currently carries stay; the fix adds the ones that are missing rather than reorganizing what ships.
-- Raising the extension's version is a patch-level fix, since no command's behavior or interface changes for someone who already had a working install.
+- The fix is patch-level, since no command's behavior or interface changes for someone who already had a working install. The bump itself is the release flow's to make, not this change's — notes accumulate under the pending-release section until then.
 - The publish flow's other steps (tagging, the rolling download, the catalog entry) are out of scope and unchanged.
 - Actually cutting a new release is a separate, human-triggered action; this change makes the next release correct but does not publish one.
 
@@ -142,4 +142,4 @@ Documents that carry the duplicated copy-files instruction and must stop restati
 - `speckit-extension/docs/publishing.md`
 - `.claude/commands/publish-speckit-ext.md`
 
-Scope fence: only `speckit-extension/README.md`, `speckit-extension/CHANGELOG.md`, and the `extension.version` in `speckit-extension/extension.yml` may be updated for docs/version. The root `README.md`, `CHANGELOG.md`, and `package.json` MUST NOT be touched.
+Scope fence: only `speckit-extension/README.md` and `speckit-extension/CHANGELOG.md` may be updated for docs. `speckit-extension/extension.yml`'s `extension.version` MUST be left alone — `/publish-speckit-ext` bumps it at release time, and the changelog entry lands under `[Unreleased]` until then. The root `README.md`, `CHANGELOG.md`, and `package.json` MUST NOT be touched.

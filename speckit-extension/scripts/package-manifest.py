@@ -228,7 +228,8 @@ def _copy_to(dest: str) -> int:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    summary = (__doc__ or "").splitlines()
+    parser = argparse.ArgumentParser(description=summary[0] if summary else None)
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--check", action="store_true", help="gate the packing list")
     group.add_argument(

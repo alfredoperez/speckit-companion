@@ -101,8 +101,9 @@ The packing list is the single thing all three stories read. Nothing else can st
 
 **Wave 8 — independent (different files):**
 
-- [x] **T010** [P] Bump the extension version `0.18.0` → `0.18.1` · `speckit-extension/extension.yml` (FR-009)
-- [x] **T011** [P] Add the release-notes entry · `speckit-extension/CHANGELOG.md`
+- [x] **T010** [P] Leave `extension.version` at `0.18.0` · `speckit-extension/extension.yml`
+  The release flow (`/publish-speckit-ext`) owns the bump; notes accumulate under `[Unreleased]` until it runs. No edit here. (FR-009)
+- [x] **T011** [P] Add the release-notes entry under `[Unreleased]` · `speckit-extension/CHANGELOG.md`
   User-facing voice: the adopt / drift / coverage commands now run from a released install, and specify / plan regain their living-spec context. Name the commands, not the scripts or the scanner. (FR-009)
 - [x] **T012** [P] Document what the release archive carries · `speckit-extension/README.md` (FR-009)
 

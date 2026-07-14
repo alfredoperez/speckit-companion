@@ -50,8 +50,11 @@ All three resolve to a *string literal or bare name that matches a sibling scrip
 - *A new check inside `check-shape-parity.py`*: rejected — that script's contract is command-body parity (part fences, golden equality, timing fences). Packaging is an unrelated concern, and folding it in would muddy a script whose docstring is a precise three-assertion contract.
 - *Only a CI step, no test*: rejected — it would not fail for a developer running the suite locally before pushing.
 
-## Decision 5 — Patch-level version bump
+## Decision 5 — The release flow owns the version bump
 
-**Decision**: `0.18.0` → `0.18.1`.
+**Decision**: leave `extension.version` at `0.18.0`; land the note under `[Unreleased]` in the extension's changelog.
 
-**Rationale**: Nothing about the extension's interface, commands, or behavior changes for a user who somehow already had a working install. Files that were always supposed to be in the package are now in the package. That is the definition of a patch.
+**Rationale**: The repo's established pattern is that changes accumulate under `## [Unreleased]` and `/publish-speckit-ext` bumps `extension.yml` when it actually cuts the build. `main` already carries an unreleased `Fixed` entry that did not bump the version — this change has the same shape. Bumping here would mint a version number for a build nobody publishes, and leave the next release to reconcile it. The fix is patch-level when it does ship: nothing about the extension's interface, commands, or behavior changes for a user who somehow already had a working install — files that were always supposed to be in the package are now in the package.
+
+**Alternatives considered**:
+- *Bump to `0.18.1` in this change*: rejected — it decouples the version from the release that carries it, and an earlier review pass on this branch reverted exactly that bump.

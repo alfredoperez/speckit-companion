@@ -26,7 +26,7 @@ A failure must name the script. A bare "packaging check failed" is not sufficien
 Leaves `<dir>` holding exactly the packing list — creating it if needed, and removing any scripts already there so a reused destination can't smuggle an unlisted file into the archive. This is what the publish flow calls in place of the hand-typed `cp scripts/…` line.
 
 ```bash
-python3 speckit-extension/scripts/package-manifest.py --copy-to /tmp/cb/companion-0.18.1/scripts
+python3 speckit-extension/scripts/package-manifest.py --copy-to /tmp/cb/companion-X.Y.Z/scripts
 ```
 
 | Exit | Meaning |
