@@ -34,16 +34,9 @@ is classified:
 - **`unspeced`** — the file changed entirely outside the pipeline; the living spec
   never saw it. The more concerning of the two.
 
-Files matching any glob in `livingSpecs.exempt` (default `*.config.*`, `*.test.*`,
-`**/migrations/**`) are filtered out. A capability whose spec is not yet committed
-is skipped with an informational note, and the run ends on a counts line — e.g.
-`0 checked, 2 skipped (spec.md not yet committed)` — so a check that examined
-nothing never reads as clean. The `✓ All N checked capabilities in sync.` line is
-reserved for a run that checked at least one capability and found it clean.
+Files matching any glob in `livingSpecs.exempt` (default `*.config.*`, `*.test.*`, `**/migrations/**`) are filtered out. A capability whose spec is not yet committed is skipped with an informational note, and the run ends on a counts line — e.g. `0 checked, 2 skipped (spec.md not yet committed)` — so a check that examined nothing never reads as clean. The `✓ All N checked capabilities in sync.` line is reserved for a run that checked at least one capability and found it clean.
 
-Add `--json` for a machine-readable object (used by tooling/CI). It carries a
-`checked` count alongside the `capabilities` and `skipped` lists, so a caller can
-tell "clean" from "did not run" — the exit code stays `0` either way:
+Add `--json` for a machine-readable object (used by tooling/CI). It carries a `checked` count alongside the `capabilities` and `skipped` lists, so a caller can tell "clean" from "did not run" — the exit code stays `0` either way:
 
 ```bash
 python3 .specify/extensions/companion/scripts/drift.py --json

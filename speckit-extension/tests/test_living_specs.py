@@ -1222,7 +1222,8 @@ class DriftTests(unittest.TestCase):
         result = self._run(root)
         todos = next(c for c in result["capabilities"] if c["name"] == "todos")
         self.assertTrue(todos["inSync"])
-        self.assertIn("in sync", drift.render_human(result))
+        self.assertEqual(result["checked"], 1)
+        self.assertIn("✓ All 1 checked capability in sync.", drift.render_human(result))
 
     def test_uncommitted_spec_is_skipped_not_drift(self) -> None:
         root = _bake_drift_repo(self.YAML)
