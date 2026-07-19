@@ -43,6 +43,11 @@ from _command_parts import declared_commands  # noqa: E402
 
 RUNTIME_SCRIPTS = frozenset({
     "write-context.py",
+    "spec_context.py",
+    "spec_deltas.py",
+    "capture.py",
+    "task_sync.py",
+    "living_spec_fold.py",
     "status-context.py",
     "derive-from-files.py",
     "resolve-spec-paths.py",
