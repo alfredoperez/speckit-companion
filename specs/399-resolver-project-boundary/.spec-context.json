@@ -1,0 +1,342 @@
+{
+  "workflow": "speckit",
+  "specName": "resolver project boundary",
+  "branch": "399-resolver-project-boundary",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-19T15:29:27.953Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-19T15:31:13.427Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-19T15:31:19.274Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T15:31:19.353Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-19T15:31:19.451Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T15:31:19.529Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-19T15:31:37.386Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T15:32:47.613Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T15:32:47.668Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T15:32:47.722Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T15:32:47.775Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T15:34:02.627Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T15:34:02.688Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T15:34:26.993Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T15:34:27.048Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T15:35:50.698Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-19T15:35:50.782Z"
+    }
+  ],
+  "last_action": "all 9 tasks done — 316 extension tests + 1596 jest tests pass, shape parity OK",
+  "coverage": {
+    "FR-001": {
+      "title": "Do not descend into a directory that contains its own project configuration",
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::ProjectBoundaryTests"
+      ]
+    },
+    "FR-002": {
+      "title": "Apply the boundary identically to the orphans and full-inventory listings",
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::ProjectBoundaryTests"
+      ]
+    },
+    "FR-003": {
+      "title": "The scan root's own configuration is not a boundary against itself",
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::ProjectBoundaryTests"
+      ]
+    },
+    "FR-004": {
+      "title": "A nested project with living specs switched off contributes nothing",
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::ProjectBoundaryTests::test_opted_out_nested_project_contributes_nothing"
+      ]
+    },
+    "FR-005": {
+      "title": "An unreadable nested configuration still establishes a boundary",
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::ProjectBoundaryTests"
+      ]
+    },
+    "FR-006": {
+      "title": "No file is reported as both a claimed capability and unclaimed",
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::DiscoveryConsistencyTests::test_capability_specs_and_orphans_never_overlap"
+      ]
+    },
+    "FR-007": {
+      "title": "Discovered inventory entries carry distinct, non-colliding names",
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::DiscoveryConsistencyTests"
+      ]
+    },
+    "FR-008": {
+      "title": "Behavior is unchanged when there are no nested projects",
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::ProjectBoundaryTests"
+      ]
+    },
+    "FR-009": {
+      "title": "Regression tests cover boundary, opt-out, listing agreement, and names",
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::ProjectBoundaryTests",
+        "speckit-extension/tests/test_living_specs.py::DiscoveryConsistencyTests"
+      ]
+    },
+    "FR-010": {
+      "title": "Record the change in the extension changelog and documentation"
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 4,
+    "projectedTasks": 9,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "context": [
+    "area: speckit-extension/scripts/resolve-spec-paths.py living-spec discovery",
+    "area: speckit-extension/tests/test_living_specs.py",
+    "constraint: drift.py is already correct — match its configured-only behavior",
+    "constraint: feature branch must not bump extension.yml version"
+  ],
+  "intent": "Stop living-spec discovery at nested project boundaries so a repo with sample projects reports only its own specs",
+  "expectations": [
+    "No change to drift.py, which already iterates only configured capabilities",
+    "No new marker file — the existing project configuration marks the boundary",
+    "No version bump to extension.yml and no root README/CHANGELOG/package.json changes"
+  ],
+  "currentTask": "T009",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added find_spec_files: an os.walk that prunes any subdirectory carrying its own .specify/companion.yml",
+      "files": [
+        "speckit-extension/scripts/resolve-spec-paths.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "find_orphans now iterates the boundary-aware walk instead of a recursive glob",
+      "files": [
+        "speckit-extension/scripts/resolve-spec-paths.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "discover_all reuses find_orphans' file set, so the inventory and the orphan list share one scan",
+      "files": [
+        "speckit-extension/scripts/resolve-spec-paths.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Discovered names widen along the path until distinct and never displace a configured capability",
+      "files": [
+        "speckit-extension/scripts/resolve-spec-paths.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added ProjectBoundaryTests: boundary stop, opt-out, unreadable nested config, depth, root-not-a-boundary, boundary inside an owned capability dir",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added DiscoveryConsistencyTests: no overlap between claimed and orphan paths, unique discovered names, configured names untouched",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Documented the nested-project boundary in the living-specs discovery section",
+      "files": [
+        "speckit-extension/README.md"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Added the [Unreleased] Fixed entries for the boundary, listing agreement, and name collisions",
+      "files": [
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Ran the extension python suites, npm compile/test, shape parity, and re-ran the original reproduction",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "spec-kit extension python suites",
+      "command": "python3 speckit-extension/tests/test_living_specs.py (and the 5 sibling suites)",
+      "result": "147 living-spec tests pass; 316 across all six suites",
+      "warnings": []
+    },
+    {
+      "what": "VS Code extension build and unit tests",
+      "command": "npm run compile && npm test",
+      "result": "compile clean; 118 suites / 1596 tests pass",
+      "warnings": []
+    },
+    {
+      "what": "command shape parity",
+      "command": "python3 speckit-extension/scripts/check-shape-parity.py",
+      "result": "OK — 14 bodies match parts, golden, and carry the timing fence",
+      "warnings": []
+    },
+    {
+      "what": "original issue reproduction",
+      "command": "resolve-spec-paths.py --root <sandbox> --orphans --json and --all",
+      "result": "nested project and opted-out sandbox files no longer reported; a genuine root-level orphan still is",
+      "warnings": []
+    },
+    {
+      "what": "new tests fail without the fix",
+      "command": "monkeypatched _is_project_root and _discovered_name to pre-fix behavior",
+      "result": "6/10 boundary tests and 2/3 naming tests fail as expected",
+      "warnings": []
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "The boundary is the presence of the config file, not what it says",
+      "why": "A project that declares itself is a project; this also makes an unreadable or empty nested config stop the scan instead of letting it descend",
+      "rejected": "Reading each nested config and only stopping when it enables or disables living specs"
+    },
+    {
+      "decision": "Both listings read one shared file walk",
+      "why": "The reported self-contradiction was two code paths answering the same question; one scan makes disagreement unrepresentable rather than merely fixed",
+      "rejected": "Adding the boundary check separately to each listing"
+    },
+    {
+      "decision": "Colliding discovered names widen along the path until distinct",
+      "why": "Keeps every discovered spec addressable instead of dropping one, and never displaces a configured capability name",
+      "rejected": "Numeric suffixes, or skipping the second colliding entry"
+    },
+    {
+      "decision": "The walk keeps skipping dot-directories and dotfiles",
+      "why": "Preserves byte-for-byte behavior on repos with no nested projects, matching the glob it replaced",
+      "rejected": "Walking everything, which would newly surface specs under hidden directories"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "Living-spec discovery now stops at nested projects, both listings share one scan, and discovered names are unique"
+    }
+  }
+}

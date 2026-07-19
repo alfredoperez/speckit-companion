@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Fixed
+
+- Living-spec discovery now stops at nested projects. If your repo contains sample apps, fixtures, or sandboxes that carry their own `.specify/companion.yml`, they are separate projects: their spec files no longer show up as orphans in the parent repo, and they are no longer invented into capabilities of it. A nested project that has living specs turned off is left alone entirely, so opting a sandbox out finally means nothing happens to it.
+- The full listing and the orphan listing can no longer disagree — they read one scan, so a file is never reported as both a known capability and an unaccounted-for stray.
+- Two discovered specs in like-named folders no longer collapse onto one name, and a discovered spec never takes over the name of a capability you configured.
+
 ### Changed
 - **Eight commands renamed so their names say what they belong to.** The living-specs commands now carry the family: `/speckit.companion.adopt` → `living-adopt`, `drift` → `living-drift`, `coverage` → `living-coverage`, `relocate` → `living-move`. The four hook commands are now named after the lifecycle event they handle rather than the generic "capture": `capture` → `after-specify`, `capture-plan` → `after-plan`, `capture-tasks` → `after-tasks`, `capture-implement` → `after-implement`. The hooks still auto-run, so nothing changes unless you invoked one of the four living-specs commands by hand. The other nine (`specify`, `plan`, `tasks`, `implement`, `auto`, `classify`, `mark-complete`, `status`, `resume`) keep their names — they mirror stock Spec Kit, and that parallel is the point.
 

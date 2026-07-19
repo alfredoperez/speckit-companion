@@ -9,10 +9,12 @@ colocated-no-path error, and the opt-in guarantee (enabled:false -> inert).
 from __future__ import annotations
 
 import importlib.util
+import os
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS))
@@ -227,6 +229,145 @@ class AllAndOrphanTests(unittest.TestCase):
         living = rsp.load_living(str(root))
         self.assertEqual(rsp.find_orphans(living, str(root)),
                          ["docs/wandering.spec.md"])
+
+
+def plant_nested_project(root: Path, rel_dir: str, yaml_text: str, spec_files=()) -> Path:
+    """Plant a self-contained project (its own companion.yml) under `root`."""
+    nested = root / rel_dir
+    (nested / ".specify").mkdir(parents=True, exist_ok=True)
+    (nested / ".specify" / "companion.yml").write_text(yaml_text, encoding="utf-8")
+    for f in spec_files:
+        p = nested / f
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text("# spec\n", encoding="utf-8")
+    return nested
+
+
+NESTED_ENABLED_YAML = """\
+livingSpecs:
+  enabled: true
+  capabilities:
+    - name: todos-store
+      match: ["src/store/**"]
+      spec: src/store/todos.spec.md
+"""
+
+NESTED_OPTOUT_YAML = "livingSpecs:\n  enabled: false\n"
+
+
+class ProjectBoundaryTests(unittest.TestCase):
+    def test_nested_project_specs_are_not_orphans(self) -> None:
+        root = make_repo(CHECKOUT_YAML)
+        plant_nested_project(root, "examples/nested", NESTED_ENABLED_YAML,
+                             spec_files=["src/store/todos.spec.md"])
+        living = rsp.load_living(str(root))
+        self.assertEqual(rsp.find_orphans(living, str(root)), [])
+
+    def test_nested_project_specs_are_not_promoted_to_capabilities(self) -> None:
+        root = make_repo(CHECKOUT_YAML)
+        plant_nested_project(root, "examples/nested", NESTED_ENABLED_YAML,
+                             spec_files=["src/store/todos.spec.md"])
+        living = rsp.load_living(str(root))
+        specs = {e["spec"] for e in rsp.discover_all(living, str(root))}
+        self.assertNotIn("examples/nested/src/store/todos.spec.md", specs)
+
+    def test_opted_out_nested_project_contributes_nothing(self) -> None:
+        root = make_repo(CHECKOUT_YAML)
+        plant_nested_project(root, "examples/optout", NESTED_OPTOUT_YAML,
+                             spec_files=["notes/stray.spec.md"])
+        living = rsp.load_living(str(root))
+        self.assertEqual(rsp.find_orphans(living, str(root)), [])
+        names = {e["name"] for e in rsp.discover_all(living, str(root))}
+        self.assertNotIn("notes", names)
+
+    def test_unreadable_nested_config_still_stops_the_scan(self) -> None:
+        root = make_repo(CHECKOUT_YAML)
+        plant_nested_project(root, "examples/broken", "livingSpecs: [: not: yaml\n",
+                             spec_files=["notes/stray.spec.md"])
+        living = rsp.load_living(str(root))
+        self.assertEqual(rsp.find_orphans(living, str(root)), [])
+
+    def test_boundary_applies_at_any_depth(self) -> None:
+        root = make_repo(CHECKOUT_YAML)
+        plant_nested_project(root, "a/b/c/deep", NESTED_ENABLED_YAML,
+                             spec_files=["src/store/todos.spec.md"])
+        living = rsp.load_living(str(root))
+        self.assertEqual(rsp.find_orphans(living, str(root)), [])
+
+    def test_root_config_is_not_a_boundary_against_itself(self) -> None:
+        root = make_repo(CHECKOUT_YAML, spec_files=["docs/wandering.spec.md"])
+        plant_nested_project(root, "examples/nested", NESTED_ENABLED_YAML,
+                             spec_files=["src/store/todos.spec.md"])
+        living = rsp.load_living(str(root))
+        self.assertEqual(rsp.find_orphans(living, str(root)),
+                         ["docs/wandering.spec.md"])
+
+    def test_nested_project_inside_an_owned_capability_dir_still_stops(self) -> None:
+        root = make_repo(CHECKOUT_YAML, spec_files=["capabilities/checkout/spec.md"])
+        plant_nested_project(root, "capabilities/checkout/sample", NESTED_ENABLED_YAML,
+                             spec_files=["src/store/todos.spec.md"])
+        living = rsp.load_living(str(root))
+        specs = {e["spec"] for e in rsp.discover_all(living, str(root))}
+        self.assertNotIn("capabilities/checkout/sample/src/store/todos.spec.md", specs)
+
+    def test_unreadable_boundary_probe_still_stops_the_scan(self) -> None:
+        root = make_repo(CHECKOUT_YAML)
+        nested = plant_nested_project(root, "examples/locked", NESTED_ENABLED_YAML,
+                                      spec_files=["notes/stray.spec.md"])
+        living = rsp.load_living(str(root))
+        blocked = str(nested / ".specify" / "companion.yml")
+        real_isfile = os.path.isfile
+
+        def probe(path):
+            if os.path.abspath(path) == blocked:
+                raise PermissionError(13, "Permission denied", path)
+            return real_isfile(path)
+
+        with mock.patch("os.path.isfile", side_effect=probe):
+            orphans = rsp.find_orphans(living, str(root))
+            specs = {e["spec"] for e in rsp.discover_all(living, str(root))}
+        self.assertEqual(orphans, [])
+        self.assertNotIn("examples/locked/notes/stray.spec.md", specs)
+
+
+class DiscoveryConsistencyTests(unittest.TestCase):
+    def test_capability_specs_and_orphans_never_overlap(self) -> None:
+        root = make_repo(CHECKOUT_YAML, spec_files=["capabilities/checkout/spec.md",
+                                                    "docs/wandering.spec.md"])
+        plant_nested_project(root, "examples/nested", NESTED_ENABLED_YAML,
+                             spec_files=["src/store/todos.spec.md"])
+        living = rsp.load_living(str(root))
+        configured = {c["spec"] for c in living["capabilities"]}
+        orphans = set(rsp.find_orphans(living, str(root)))
+        self.assertEqual(configured & orphans, set())
+
+    def test_discovered_names_are_unique(self) -> None:
+        root = make_repo(CHECKOUT_YAML, spec_files=["one/notes/stray.spec.md",
+                                                    "two/notes/stray.spec.md"])
+        living = rsp.load_living(str(root))
+        names = [e["name"] for e in rsp.discover_all(living, str(root))]
+        self.assertEqual(len(names), len(set(names)))
+
+    def test_a_root_level_discovered_spec_is_named_without_its_suffix(self) -> None:
+        root = make_repo(CHECKOUT_YAML, spec_files=["billing.spec.md"])
+        living = rsp.load_living(str(root))
+        names = {e["name"] for e in rsp.discover_all(living, str(root))}
+        self.assertIn("billing", names)
+
+    def test_all_reuses_the_orphan_scan_rather_than_rescanning(self) -> None:
+        root = make_repo(CHECKOUT_YAML, spec_files=["docs/wandering.spec.md"])
+        living = rsp.load_living(str(root))
+        orphans = rsp.find_orphans(living, str(root))
+        specs = {e["spec"] for e in rsp.discover_all(living, str(root), orphans)}
+        self.assertEqual(set(orphans) - specs, set())
+
+    def test_a_discovered_name_never_displaces_a_configured_capability(self) -> None:
+        root = make_repo(CHECKOUT_YAML, spec_files=["checkout/stray.spec.md"])
+        living = rsp.load_living(str(root))
+        allres = rsp.discover_all(living, str(root))
+        checkout = [e for e in allres if e["name"] == "checkout"]
+        self.assertEqual(len(checkout), 1)
+        self.assertEqual(checkout[0]["spec"], "capabilities/checkout/spec.md")
 
 
 class ColocatedErrorTests(unittest.TestCase):

@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- The Living Specs view's **Orphans** group now stops at nested projects. If your repo contains sample apps, fixtures, or sandboxes that carry their own `.specify/companion.yml`, they are separate projects and their spec files no longer show up as strays in the parent repo's sidebar.
+
 ## [0.29.0] - 2026-07-14
 
 ### Fixed

@@ -10,7 +10,10 @@ drift) call instead of re-interpreting the `livingSpecs` block in
   - path:        centralized -> `capabilities/<name>/spec.md` (default), or the
                  explicit `spec` path (colocated).
   - discovery:   union of configured capabilities and the on-disk `*.spec.md`
-                 glob, de-duped by resolved spec path.
+                 scan, de-duped by resolved spec path and by name.
+  - boundary:    a subdirectory with its own `.specify/companion.yml` is a
+                 separate project — the scan stops there and never reports or
+                 promotes anything inside it.
   - ordering:    most-specific first (longest matching glob literal-prefix that
                  prefixes the file), tiebreak by capability name.
   - tiers:       `.spec.md` (hot, loaded in v1); `.arch.md` / `.coverage.md`
@@ -34,7 +37,6 @@ import json
 import os
 import re
 import sys
-from glob import glob
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import companion_config as cc  # noqa: E402
@@ -214,17 +216,69 @@ def match_changed(files: list[str], living: dict, root: str) -> list[dict]:
     return hits
 
 
-def discover_all(living: dict, root: str) -> list[dict]:
-    out, seen = [], set()
+def _is_project_root(path: str) -> bool:
+    try:
+        return os.path.isfile(os.path.join(path, CONFIG))
+    except OSError:
+        # Only a confirmed absence means "not a project"; an unreadable config still bounds the scan.
+        return True
+
+
+def find_spec_files(root: str) -> list[str]:
+    """Every `*.spec.md` under `root` that belongs to `root`'s own project.
+
+    A subdirectory carrying its own `.specify/companion.yml` is a separate
+    project: the walk prunes it and never looks inside, whatever that config
+    says or fails to say. `root`'s own config is not a boundary against itself.
+    Dot-directories and dotfiles are excluded.
+    """
+    found = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = sorted(
+            d for d in dirnames
+            if not d.startswith(".") and not _is_project_root(os.path.join(dirpath, d))
+        )
+        for name in filenames:
+            if name.startswith(".") or not name.endswith(".spec.md"):
+                continue
+            found.append(os.path.normpath(os.path.relpath(os.path.join(dirpath, name), root)))
+    return sorted(found)
+
+
+def _discovered_name(rel: str, taken: set[str]) -> str:
+    """A distinct capability name for a discovered spec at `rel`.
+
+    Prefers the parent directory name; on collision widens to more of the path
+    until distinct, so two `notes/stray.spec.md` files stay individually
+    addressable and never displace a configured capability.
+    """
+    parts = _posix(rel).split("/")
+    dirs = parts[:-1]
+    for i in range(1, len(dirs) + 1):
+        widened = "/".join(dirs[-i:])
+        if widened not in taken:
+            return widened
+    base = "/".join(dirs) if dirs else parts[-1][: -len(".spec.md")] or parts[-1]
+    candidate, n = base, 2
+    while candidate in taken:
+        candidate = f"{base}-{n}"
+        n += 1
+    return candidate
+
+
+def discover_all(living: dict, root: str, orphans: list[str] | None = None) -> list[dict]:
+    out, seen, names = [], set(), set()
     for cap in living["capabilities"]:
         entry = _entry(cap, root)
         out.append(entry)
         seen.add(os.path.normpath(entry["spec"]))
-    for rel in find_orphans(living, root):
+        names.add(entry["name"])
+    for rel in find_orphans(living, root) if orphans is None else orphans:
         norm = os.path.normpath(rel)
         if norm in seen:
             continue
-        name = os.path.basename(os.path.dirname(norm)) or os.path.basename(norm)
+        name = _discovered_name(norm, names)
+        names.add(name)
         out.append({"name": name, "spec": _posix(norm), "location": "colocated",
                     "exists": True, "tiers": tier_paths(_posix(norm), root)})
         seen.add(norm)
@@ -233,22 +287,21 @@ def discover_all(living: dict, root: str) -> list[dict]:
 
 
 def find_orphans(living: dict, root: str) -> list[str]:
-    """`*.spec.md` on disk not claimed by — and not owned by — any capability.
+    """`*.spec.md` in this project not claimed by — and not owned by — any capability.
 
     A spec is NOT an orphan when it is: the exact claimed `spec` path of a
     capability; a reserved-tier sibling (`.arch.md` / `.coverage.md`); or any
     `*.spec.md` living inside a configured capability's resolved spec directory
     (e.g. another file under `capabilities/checkout/`). A genuinely-unclaimed,
     differently-named spec elsewhere stays an orphan. `specs/` (feature specs)
-    is always excluded.
+    and every nested project are always excluded.
     """
     # _resolve_spec raises on an empty/missing spec, so --orphans surfaces the
     # same config error the --changed/--all paths do (the CLI contract).
     claimed = {os.path.normpath(_resolve_spec(c)) for c in living["capabilities"]}
     owned_dirs = {os.path.dirname(c) for c in claimed if os.path.dirname(c)}
     orphans = []
-    for sp in glob(os.path.join(root, "**", "*.spec.md"), recursive=True):
-        rel = os.path.normpath(os.path.relpath(sp, root))
+    for rel in find_spec_files(root):
         if rel.split(os.sep, 1)[0] == "specs":
             continue
         if any(rel.endswith(t) for t in RESERVED_TIERS):
@@ -312,8 +365,9 @@ def main(argv=None) -> int:
         if args.orphans:
             result = {"orphans": find_orphans(living, root)}
         elif args.all:
-            result = {"capabilities": discover_all(living, root),
-                      "orphans": find_orphans(living, root)}
+            orphans = find_orphans(living, root)
+            result = {"capabilities": discover_all(living, root, orphans),
+                      "orphans": orphans}
         else:
             files = args.changed or []
             result = {"changed": files, "matched": match_changed(files, living, root)}
