@@ -1,0 +1,598 @@
+{
+  "workflow": "speckit",
+  "specName": "command inventory guard",
+  "branch": "401-command-inventory-guard",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-19T20:04:00.545Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-19T20:07:39.644Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-19T20:08:01.174Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:10:00.814Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:11:12.608Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:11:13.188Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-19T20:11:37.492Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:12:36.376Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:12:36.458Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-19T20:12:53.537Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:14:07.772Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:14:07.832Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:15:28.063Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:15:28.123Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:17:13.988Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:17:14.044Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:17:14.100Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:17:14.155Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:17:14.212Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:18:12.354Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:18:12.410Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:19:39.537Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:19:39.597Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:20:50.910Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:20:50.967Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:20:51.033Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T20:23:42.183Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-19T20:23:42.262Z"
+    }
+  ],
+  "last_action": "living specs evaluated — skipped (not configured)",
+  "coverage": {
+    "FR-001": {
+      "title": "The check reads the command list from the extension manifest and keeps no second copy of it",
+      "tasks": [
+        "T001",
+        "T002"
+      ],
+      "tests": [
+        "test_command_emissions.py::TestRealRepo::test_gate_passes_on_the_real_repo",
+        "test_packaging.py"
+      ]
+    },
+    "FR-002": {
+      "title": "The check compares that list against the command files in each install area",
+      "tasks": [
+        "T006",
+        "T009"
+      ],
+      "tests": [
+        "test_command_emissions.py::TestDiskDrift::test_clean_area_reports_nothing"
+      ]
+    },
+    "FR-003": {
+      "title": "The check reports any command file whose name is not in the manifest, with its exact path",
+      "tasks": [
+        "T006"
+      ],
+      "tests": [
+        "test_command_emissions.py::TestDiskDrift::test_orphan_emission_is_reported_with_its_path",
+        "TestDiskDrift::test_orphan_is_caught_in_a_file_style_area_too"
+      ]
+    },
+    "FR-004": {
+      "title": "The check reports any manifest command that has no file, naming command and area",
+      "tasks": [
+        "T006"
+      ],
+      "tests": [
+        "test_command_emissions.py::TestDiskDrift::test_missing_emission_is_reported"
+      ]
+    },
+    "FR-005": {
+      "title": "The check compares the manifest against the install records in both directions",
+      "tasks": [
+        "T007"
+      ],
+      "tests": [
+        "test_command_emissions.py::TestRecordDrift::test_stale_record_is_reported",
+        "TestRecordDrift::test_unrecorded_command_is_reported",
+        "TestRecordDrift::test_stale_hook_is_reported_with_its_event"
+      ]
+    },
+    "FR-006": {
+      "title": "The check fails loudly on any input it cannot resolve rather than skipping it",
+      "tasks": [
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "test_command_emissions.py::TestDiskDrift::test_unknown_install_area_fails_loudly",
+        "TestDiskDrift::test_companion_shaped_entry_of_the_wrong_type_is_unresolvable",
+        "TestRealRepo::test_every_discovered_area_is_known"
+      ]
+    },
+    "FR-007": {
+      "title": "The check does not inspect the preserved sample projects under examples/",
+      "tasks": [
+        "T005"
+      ],
+      "tests": [
+        "test_command_emissions.py::TestDiskDrift::test_excluded_trees_are_not_scanned"
+      ]
+    },
+    "FR-008": {
+      "title": "The check exits success when clean and failure on any disagreement",
+      "tasks": [
+        "T009"
+      ],
+      "tests": [
+        "test_command_emissions.py::TestComposition::test_check_is_clean_on_a_fully_consistent_synthetic_tree"
+      ]
+    },
+    "FR-009": {
+      "title": "The check runs using only the standard library",
+      "tasks": [
+        "T003"
+      ],
+      "tests": [
+        "test_command_emissions.py (stdlib-only import)"
+      ]
+    },
+    "FR-010": {
+      "title": "The check verifies every manifest command appears in both documents",
+      "tasks": [
+        "T008"
+      ],
+      "tests": [
+        "test_command_emissions.py::TestDocDrift::test_undocumented_command_is_reported_with_its_document",
+        "TestDocDrift::test_a_count_match_is_not_enough"
+      ]
+    },
+    "FR-011": {
+      "title": "Tests exercise each drift direction with an input that genuinely fails the check",
+      "tasks": [
+        "T004",
+        "T015"
+      ],
+      "tests": [
+        "test_command_emissions.py::TestComposition::test_check_reports_drift_from_every_surface_at_once"
+      ]
+    },
+    "FR-012": {
+      "title": "Install records register the automatic capture steps under their current names",
+      "tasks": [
+        "T010"
+      ],
+      "tests": [
+        "test_command_emissions.py::TestRealRepo::test_gate_passes_on_the_real_repo"
+      ]
+    },
+    "FR-013": {
+      "title": "The recorded command list matches the manifest",
+      "tasks": [
+        "T011"
+      ],
+      "tests": [
+        "test_command_emissions.py::TestRealRepo::test_gate_passes_on_the_real_repo"
+      ]
+    },
+    "FR-014": {
+      "title": "The overview table lists every manifest command, grouped by family",
+      "tasks": [
+        "T012"
+      ],
+      "tests": [
+        "test_command_emissions.py::TestRealRepo::test_gate_passes_on_the_real_repo"
+      ]
+    },
+    "FR-015": {
+      "title": "The overview table marks each automatic command and names its triggering event",
+      "tasks": [
+        "T012"
+      ],
+      "tests": [
+        "manual — README hook table lists each triggering event"
+      ]
+    },
+    "FR-016": {
+      "title": "The detailed reference describes every manifest command",
+      "tasks": [
+        "T013"
+      ],
+      "tests": [
+        "test_command_emissions.py::TestRealRepo::test_gate_passes_on_the_real_repo"
+      ]
+    },
+    "FR-017": {
+      "title": "The release notes record the change in user-facing terms",
+      "tasks": [
+        "T016"
+      ],
+      "tests": [
+        "manual — changelog voice review"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 7,
+    "projectedTasks": 14,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "context": [
+    "area: speckit-extension/scripts (existing manifest-vs-disk parity checks)",
+    "area: repo-root install areas emitted by specify init per agent",
+    "constraint: pruning belongs to the spec-kit CLI, not this repo — detection and repair only",
+    "constraint: examples/ fixtures are frozen at pre-rename names and stay untouched"
+  ],
+  "intent": "Give the repo one check that catches a renamed or removed command before it ships, and make the command reference list every command.",
+  "expectations": [
+    "No change to spec-kit CLI code — the prune belongs upstream",
+    "No version bump anywhere, including extension.yml",
+    "No changes to the frozen examples/ sample projects",
+    "No root README or CHANGELOG changes — no VS Code extension code is touched"
+  ],
+  "approach": "Add one stdlib check that treats extension.yml provides.commands as the sole authority and holds three downstream surfaces against it: the per-agent command files on disk, the project's install records, and the two docs. Install areas are discovered then asserted against a known table, so a new agent dir fails loudly instead of being skipped. Repair the stale records and complete the docs, both of which the check reports on its first run.",
+  "decisions": [
+    {
+      "decision": "Detection and repair only — the prune stays upstream in the spec-kit CLI",
+      "why": "The CLI owns the install records and the delete path; its reinstall merges names and never removes, and it skips overwriting an existing skill. A local patch would sit in vendored code that the next CLI upgrade overwrites, and would help no other project.",
+      "rejected": "Patching the CLI in place, or shipping an uninstall wrapper from this repo that duplicates the CLI delete logic"
+    },
+    {
+      "decision": "One manifest reader — add declared_commands() to _command_parts.py and repoint package-manifest.py at it",
+      "why": "The packaging guard already parses the manifest for file paths; the new check needs names. A second regex over the same block is two paths to the same fact and drifts the first time the manifest formatting changes. Repointing leaves the repo with one parser instead of two.",
+      "rejected": "A private parser inside the new script, or parsing with a yaml library (unavailable — tooling is deliberately stdlib-only)"
+    },
+    {
+      "decision": "Discover install areas, then assert every one found is in the known table",
+      "why": "Iterating a hardcoded list is how the check would silently shrink its own scanned surface — a future specify init --ai <new-agent> adds an area the check has never heard of and skips it without a word, which is the exact drift class it exists to catch.",
+      "rejected": "Iterating the known table only (silent under-scanning), or accepting anything found and inferring its naming shape (guesswork producing false orphans)"
+    },
+    {
+      "decision": "Check the install records, not just the files on disk",
+      "why": "They fail independently and currently disagree in this repo: disk carries all 17 current names while the records carry the 17 pre-rename names, so a files-only check would call this repo healthy while its four capture hooks point at commands that no longer exist.",
+      "rejected": "Files-only (passes on the exact broken state that opened the ticket) or records-only (misses an orphaned file left by skip-if-exists)"
+    },
+    {
+      "decision": "Emissions are dashed DIRECTORIES or dotted FILES, never the reverse",
+      "why": "Matching the speckit[.-]companion prefix alone made .claude/speckit-companion-prompt.md — a dev-workspace note — read as an install area, so the gate failed on a false positive its first run.",
+      "rejected": "Requiring 2+ companion entries before calling a dir an install area (arbitrary), or allow-listing the one offending file (would not generalize)"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "One stdlib gate holds four surfaces — per-agent emissions, install records, and two docs — against extension.yml provides.commands, with the areas discovered rather than assumed.",
+      "key_finding": "The stale surface in this repo is the install records, not the emissions: disk carries all 17 current names while .registry and the extensions.yml hooks still carry the 17 pre-rename ones, so the four capture hooks are registered to commands that no longer exist."
+    },
+    "tasks": {
+      "summary": "17 tasks across 7 phases — foundational single-reader refactor, then the check (4 independent comparisons), the record repair, the two docs, CI wiring, and a per-direction test suite."
+    },
+    "implement": {
+      "summary": "Added the command-inventory gate over emissions, install records, and both docs; repaired 64 stale records and 4 stale hooks; completed the reference from 6 to 17 commands."
+    }
+  },
+  "currentTask": "T017",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added declared_commands() to the shared helper as the one manifest reader and repointed the packaging gate at it, deleting its private regex",
+      "files": [
+        "speckit-extension/scripts/_command_parts.py",
+        "speckit-extension/scripts/package-manifest.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Confirmed the packaging and shape-parity gates both pass against the repointed reader (17 commands parsed)",
+      "files": [
+        "speckit-extension/scripts/package-manifest.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Built the gate skeleton — KNOWN_AREAS, the prefix-only dashed/dotted translations, the skip table with reasons, and main() with the derived-count success line",
+      "files": [
+        "speckit-extension/scripts/check-command-emissions.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added the test module with the by-filename loader, a synthetic-install-area builder, and translation round-trip cases",
+      "files": [
+        "speckit-extension/tests/test_command_emissions.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added discover_areas() + check_areas(); tightened the shape rule to dashed-dir/dotted-file after a dev-workspace note under .claude read as an install area",
+      "files": [
+        "speckit-extension/scripts/check-command-emissions.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added check_area() reporting orphan emission, missing emission, and unresolvable entry for a companion-shaped entry of the wrong type",
+      "files": [
+        "speckit-extension/scripts/check-command-emissions.py"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Added check_records() over the registry per agent and the hook registrations — stale record, unrecorded command, stale hook",
+      "files": [
+        "speckit-extension/scripts/check-command-emissions.py"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Added check_docs() matching on names not counts, and reporting a gated document that does not exist",
+      "files": [
+        "speckit-extension/scripts/check-command-emissions.py"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Composed check() over the discovered areas with sorted output and wired the exit codes; first real run surfaced the stale hooks, 64 stale records, and 15 doc gaps",
+      "files": [
+        "speckit-extension/scripts/check-command-emissions.py"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Repointed the four lifecycle hook registrations from the retired capture names to the current after-* names, prompts included",
+      "files": [
+        ".specify/extensions.yml"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Renamed 64 stale command entries across 8 agents in the install registry, preserving list order and the file's exact formatting",
+      "files": [
+        ".specify/extensions/.registry"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Rebuilt the README Commands section as four family tables, adding the missing living-move row and giving each hook its triggering event and a never-invoke note",
+      "files": [
+        "speckit-extension/README.md"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Extended the reference from 6 to all 17 commands — a family index plus new pipeline and living-specs sections",
+      "files": [
+        "speckit-extension/docs/commands.md"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Wired the inventory gate into the capture-suite job beside the shape-parity and packaging gates",
+      "files": [
+        ".github/workflows/ci.yml"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Added 22 tests — a genuinely-failing case per drift direction plus clean-tree and real-repo coverage; all green",
+      "files": [
+        "speckit-extension/tests/test_command_emissions.py"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Added the [Unreleased] entry in user-facing voice covering the reference, the new check, and the stale-record repair",
+      "files": [
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Full verification green; drift-proofing found check() was vacuously tested, so it was parametrized and given a real composition test",
+      "files": [
+        "speckit-extension/scripts/check-command-emissions.py",
+        "speckit-extension/tests/test_command_emissions.py"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "spec-kit python suite",
+      "command": "python3 -m unittest discover -s speckit-extension/tests",
+      "result": "358 tests OK (24 new)"
+    },
+    {
+      "what": "VS Code extension build + tests",
+      "command": "npm run compile && npm test",
+      "result": "tsc clean; 118 suites / 1599 tests passed"
+    },
+    {
+      "what": "all four repo gates",
+      "command": "check-shape-parity.py; assemble-nodes.py --check; package-manifest.py --check; check-command-emissions.py",
+      "result": "all OK — inventory gate reports 17 commands across 7 areas, 8 agent records, 2 documents"
+    },
+    {
+      "what": "drift-proofing — revert each production branch, confirm its test fails",
+      "command": "revert orphan / missing-emission / stale-hook / discovery-shape / check-composition branches in turn",
+      "result": "each direction FAILED when reverted and OK when restored",
+      "warnings": [
+        "check() was initially vacuous — a hardcoded [] still passed; fixed by parametrizing root/docs and adding a composition test"
+      ]
+    }
+  ]
+}

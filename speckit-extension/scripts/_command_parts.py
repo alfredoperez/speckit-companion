@@ -1,8 +1,11 @@
 """Shared helpers for the command-parts build + parity tooling.
 
-Single source of: which command bodies are tracked, how a part fence looks, and
-how a body is canonicalized for golden comparison. Stdlib only.
+Single source of: which command bodies are tracked, how a part fence looks, how a
+body is canonicalized for golden comparison, and what `extension.yml` declares
+under `provides.commands`. Stdlib only.
 """
+from __future__ import annotations
+
 import os
 import re
 
@@ -38,6 +41,52 @@ _MARKER_LINE = re.compile(
     r"^[ \t]*<!-- /?speckit-companion:(?:part [\w-]+|timing) -->[ \t]*\n?",
     re.MULTILINE,
 )
+
+
+MANIFEST = "extension.yml"
+
+# The `provides.commands:` block, ending at the next top-level key (`hooks:`,
+# `tags:`, …). Bounding it matters: `file:`/`name:` also appear under `hooks:`
+# and in descriptions, and an unbounded scan would pull those in as commands.
+_COMMANDS_BLOCK = re.compile(
+    r"^provides:\s*$.*?^\s+commands:\s*$\n(.*?)(?=^\S|\Z)",
+    re.MULTILINE | re.DOTALL,
+)
+_COMMAND_NAME = re.compile(r"^\s*-\s*name:\s*(\S+)\s*$", re.MULTILINE)
+_COMMAND_FILE = re.compile(r"^\s*file:\s*(\S+)\s*$", re.MULTILINE)
+
+
+def declared_commands(path: str | None = None) -> list:
+    """The (name, file) pairs `extension.yml` declares under `provides.commands`.
+
+    The one manifest reader in this repo, so a second parser cannot drift from it.
+    Every failure to resolve the manifest raises: a reader that returned a short or
+    empty list would make every downstream gate vacuously pass.
+    """
+    path = path or os.path.join(EXT, MANIFEST)
+    if not os.path.isfile(path):
+        raise SystemExit(f"[parts] no manifest at {path}")
+    with open(path, encoding="utf-8") as fh:
+        text = fh.read()
+    block = _COMMANDS_BLOCK.search(text)
+    if not block:
+        raise SystemExit(f"[parts] no provides.commands block in {MANIFEST}")
+    body = block.group(1)
+    starts = [(m.start(), m.group(1)) for m in _COMMAND_NAME.finditer(body)]
+    if not starts:
+        raise SystemExit(f"[parts] provides.commands in {MANIFEST} declares no commands")
+    pairs = []
+    for i, (pos, name) in enumerate(starts):
+        end = starts[i + 1][0] if i + 1 < len(starts) else len(body)
+        found = _COMMAND_FILE.search(body, pos, end)
+        if not found:
+            raise SystemExit(f"[parts] provides.commands entry {name} in {MANIFEST} has no file:")
+        pairs.append((name, found.group(1)))
+    return pairs
+
+
+def declared_command_names() -> list:
+    return [name for name, _ in declared_commands()]
 
 
 def golden_path(rel: str) -> str:

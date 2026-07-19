@@ -6,6 +6,17 @@ The extension follows spec-kit's bundled-extension pattern exactly: a **lifecycl
 /speckit.specify  →  after_specify hook  →  speckit.companion.after-specify  →  write-context.py  →  .spec-context.json
 ```
 
+## The seventeen commands
+
+Everything the extension declares, by family. The README's [Commands](../README.md#commands) table is the short version; this page is the detail. Both are checked against the extension's own command list on every build, so neither can fall behind a rename.
+
+| Family | Commands |
+|--------|----------|
+| [Pipeline](#pipeline-commands) | `speckit.companion.specify`, `speckit.companion.plan`, `speckit.companion.tasks`, `speckit.companion.implement`, `speckit.companion.auto`, `speckit.companion.classify`, `speckit.companion.mark-complete` |
+| [Run state](#read-commands-status--resume) | `speckit.companion.status`, `speckit.companion.resume` |
+| [Living specs](#living-specs-commands) | `speckit.companion.living-adopt`, `speckit.companion.living-drift`, `speckit.companion.living-coverage`, `speckit.companion.living-move` |
+| [Hooks](#lifecycle-hooks) | `speckit.companion.after-specify`, `speckit.companion.after-plan`, `speckit.companion.after-tasks`, `speckit.companion.after-implement` |
+
 ## Lifecycle hooks
 
 Registered in the extension's `extension.yml` (and, once installed, in the project's `.specify/extensions.yml`):
@@ -108,3 +119,61 @@ python3 .specify/extensions/companion/scripts/status-context.py --feature-dir sp
 Resolves the next step from the same script, then dispatches the next `/speckit.*` command with the recorded `decisions[]` in scope. Inside the implement step it continues at the next unchecked task. On a terminal state (`implemented`/`completed`/`archived`) it reports "Pipeline complete" and dispatches nothing. Resume dispatches the **already-installed** `/speckit.*` commands — it does not require a `specify workflow resume` CLI subcommand, so it works on the stock spec-kit version.
 
 The next-action mapping: `specify/specified → /speckit.plan`, `plan/planned → /speckit.tasks`, `tasks/ready-to-implement → /speckit.implement`, `implement/implementing → /speckit.implement` (at the next unchecked task). In-progress statuses re-dispatch the current step.
+
+## Pipeline commands
+
+The four step commands are the Companion pipeline itself. They mirror stock spec-kit's `/speckit.specify · plan · tasks · implement` deliberately — same step names, same artifacts — so the model carries across; what differs is the leaner shape they emit and the lifecycle capture they carry. Each one records its own timing into `.spec-context.json` as it runs, and each ends by handing off to the next step on a host that keeps working.
+
+### `speckit.companion.specify`
+
+Writes `<feature_directory>/spec.md` — prioritized user stories with acceptance scenarios, functional requirements, key entities, edge cases, and measurable success criteria — plus `checklists/requirements.md`. It also **classifies the change's size** (`simple` / `normal` / `oversized`, against a 5-file / 10-task bar) and records the verdict, which is what the later steps read to right-size themselves. A `simple` verdict fast-tracks: specify additionally emits a lean `plan.md` and a real `tasks.md` in the same pass, and the spec lands at the tasks step ready to implement.
+
+### `speckit.companion.plan`
+
+Writes `plan.md` (summary, constitution check, project structure) plus `research.md`, `data-model.md`, and `contracts/` as the recorded size warrants — at `simple` size it keeps the summary and folds the rest inline. When living specs are configured it reads the capabilities in scope into context first, and pulls each one's architecture tier only for an architecture-significant change.
+
+### `speckit.companion.tasks`
+
+Writes `tasks.md`: a dependency-ordered checklist grouped by user story into phases, and within each phase into **waves** separated by explicit join lines. Tasks inside a wave are independent; a join marks where the next tasks depend on everything above. That layout is the execution map `implement` reads.
+
+### `speckit.companion.implement`
+
+Executes `tasks.md` wave by wave in dependency order, journaling each task's finish the moment it completes and folding the journal into `.spec-context.json` after each wave. It owns the `- [ ]` checkboxes through that fold rather than editing them by hand, then marks the spec complete at the end.
+
+### `speckit.companion.auto`
+
+Runs the whole pipeline hands-off — specify → plan → tasks → implement → completed — with no approval pauses. It rides on the same per-step commands above, so it cannot drift from them. It sets an `unattended` signal that project checkpoint hooks read: a hook that would normally stop and ask a person records the checkpoint and keeps going instead. On a one-shot terminal it degrades gracefully, running the first step and stopping.
+
+### `speckit.companion.classify`
+
+Emits a `small | normal | oversized` size signal for the Companion workflow's routing step, which is how a small change skips the review pauses and an oversized one gets extra scrutiny. The thresholds live in the command and the workflow, not in a setting. Dispatched by the workflow engine rather than typed.
+
+### `speckit.companion.mark-complete`
+
+The workflow's terminal step. Writes `status: completed` — and it is the **only** sanctioned writer of that status:
+
+```bash
+python3 .specify/extensions/companion/scripts/write-context.py --mark-complete --by ai
+```
+
+It refuses unless the spec is already `implemented` (or `implementing` with every task checked), leaves an already-completed spec untouched, and keeps `currentStep` at `implement`. When living specs are on, completion is also where a feature spec's `## ADDED / MODIFIED / REMOVED / RENAMED Requirements` deltas fold back into the durable living spec.
+
+## Living-specs commands
+
+All four are **opt-in by presence**: with no `livingSpecs` block in `.specify/companion.yml`, or `enabled: false`, each reports nothing and changes nothing. The three read commands are read-only and never fail the build — they always exit success, so a surrounding workflow decides whether to treat findings as a gate.
+
+### `speckit.companion.living-adopt`
+
+Brownfield adoption wizard. Point it at one code area; it reads that area's surface, proposes capabilities for just that area, and drafts a living spec for each from what the code already exposes. Every draft wears its limits openly — the spec is marked `[DRAFT]`, each requirement is tagged `observed` or `inferred`, uncertain items carry `[NEEDS CLARIFICATION: …]`, and unreadable files are listed under `## Uncovered`. You confirm, and the capability is registered so the resolver recognizes it. Incremental by design: one area at a time, never a whole-repo bootstrap, and a re-run on an adopted area is a safe no-op.
+
+### `speckit.companion.living-drift`
+
+Per capability, the source files that changed since its living spec was last committed, classified `tracked` (it went through the pipeline but was never folded back) or `unspeced` (it changed entirely outside the pipeline). Exempt generated code, tests, or migrations with a `livingSpecs.exempt` glob list. A capability whose spec isn't committed yet is **skipped**, not passed — the run reports how many it checked versus skipped, so "clean" is never confused with "did not run".
+
+### `speckit.companion.living-coverage`
+
+Reads each capability's `.coverage.md` tier and reports, per requirement, which have a test mapped and which are uncovered.
+
+### `speckit.companion.living-move`
+
+Moves a living spec between central storage (`capabilities/<name>/spec.md`) and colocation next to its code, taking the spec file, its tier siblings (`.arch.md`, `.coverage.md`), and the registry entry together so the three cannot end up disagreeing. Reversible — moving back restores the prior layout.
