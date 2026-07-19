@@ -8,7 +8,9 @@ colocated-no-path error, and the opt-in guarantee (enabled:false -> inert).
 """
 from __future__ import annotations
 
+import contextlib
 import importlib.util
+import io
 import os
 import sys
 import tempfile
@@ -636,32 +638,77 @@ class ApplyDeltasTests(unittest.TestCase):
     def test_added_appends_idempotently(self) -> None:
         d = wc.parse_spec_deltas(
             "## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
-        once = wc.apply_deltas(TODOS_LIVING, d)
+        once, applied = wc.apply_deltas(TODOS_LIVING, d)
         self.assertIn("### Due dates", once)
-        twice = wc.apply_deltas(once, d)
+        self.assertEqual(applied["added"], 1)
+        twice, reapplied = wc.apply_deltas(once, d)
         self.assertEqual(once, twice)  # idempotent
+        self.assertEqual(reapplied["added"], 0)  # a re-fold adds nothing
 
     def test_modified_replaces_body(self) -> None:
         d = wc.parse_spec_deltas(
             "## MODIFIED Requirements\n\n### Users can add a todo\n\n"
             "#### Scenario: add\n- WHEN submitted\n- THEN it persists\n")
-        out = wc.apply_deltas(TODOS_LIVING, d)
+        out, applied = wc.apply_deltas(TODOS_LIVING, d)
         self.assertIn("THEN it persists", out)
         self.assertNotIn("THEN a todo appears", out)
+        self.assertEqual(applied["modified"], 1)
 
     def test_removed_deletes_requirement(self) -> None:
         d = wc.parse_spec_deltas(
             "## REMOVED Requirements\n\n### Users can add a todo\n")
-        out = wc.apply_deltas(TODOS_LIVING, d)
+        out, applied = wc.apply_deltas(TODOS_LIVING, d)
         self.assertNotIn("### Users can add a todo", out)
+        self.assertEqual(applied["removed"], 1)
 
     def test_renamed_renames_heading_keeps_body(self) -> None:
         d = wc.parse_spec_deltas(
             "## RENAMED Requirements\n\n### Users can add a todo -> Users can create a todo\n")
-        out = wc.apply_deltas(TODOS_LIVING, d)
+        out, applied = wc.apply_deltas(TODOS_LIVING, d)
         self.assertIn("### Users can create a todo", out)
         self.assertNotIn("### Users can add a todo", out)
         self.assertIn("THEN a todo appears", out)  # body preserved
+        self.assertEqual(applied["renamed"], 1)
+
+    # --- Applied, not attempted ---
+
+    def test_unmatched_targets_are_not_counted_as_applied(self) -> None:
+        d = wc.parse_spec_deltas(
+            "## MODIFIED Requirements\n\n"
+            "### Ghost one\n\n#### Scenario: a\n- x\n\n"
+            "### Ghost two\n\n#### Scenario: b\n- y\n\n"
+            "### Ghost three\n\n#### Scenario: c\n- z\n")
+        self.assertEqual(len(d["modified"]), 3)
+        out, applied = wc.apply_deltas(TODOS_LIVING, d)
+        self.assertEqual(out, TODOS_LIVING)
+        self.assertEqual(applied["modified"], 0)
+
+    def test_partial_match_counts_only_what_landed(self) -> None:
+        d = wc.parse_spec_deltas(
+            "## MODIFIED Requirements\n\n"
+            "### Users can add a todo\n\n#### Scenario: add\n- THEN it persists\n\n"
+            "### Ghost\n\n#### Scenario: g\n- nothing\n")
+        self.assertEqual(len(d["modified"]), 2)
+        _, applied = wc.apply_deltas(TODOS_LIVING, d)
+        self.assertEqual(applied["modified"], 1)
+
+    def test_unmatched_removed_and_renamed_are_not_counted(self) -> None:
+        d = wc.parse_spec_deltas(
+            "## REMOVED Requirements\n\n### Ghost\n\n"
+            "## RENAMED Requirements\n\n### Ghost -> Phantom\n")
+        out, applied = wc.apply_deltas(TODOS_LIVING, d)
+        self.assertEqual(out, TODOS_LIVING)
+        self.assertEqual(applied["removed"], 0)
+        self.assertEqual(applied["renamed"], 0)
+
+    def test_all_applied_counts_match_the_parsed_counts(self) -> None:
+        d = wc.parse_spec_deltas(
+            "## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n\n"
+            "## MODIFIED Requirements\n\n### Users can add a todo\n\n"
+            "#### Scenario: add\n- THEN it persists\n")
+        _, applied = wc.apply_deltas(TODOS_LIVING, d)
+        for verb in ("added", "modified", "removed", "renamed"):
+            self.assertEqual(applied[verb], len(d[verb]), verb)
 
 
 class FoldLivingSpecTests(unittest.TestCase):
@@ -680,6 +727,35 @@ class FoldLivingSpecTests(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertIn("### Due dates", self._living(root))
         self.assertEqual(self._ctx(fdir)["livingSpecs"]["synced"], ["todos"])
+
+    def _fold_log(self, fdir: Path) -> str:
+        """The stderr the fold emits — the receipt a developer actually reads."""
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            wc.fold_living_spec(fdir, "ai")
+        return buf.getvalue()
+
+    def test_fold_log_counts_applied_changes_not_parsed_ones(self) -> None:
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n\n"
+            "## MODIFIED Requirements\n\n"
+            "### Ghost one\n\n#### Scenario: g\n- x\n\n"
+            "### Ghost two\n\n#### Scenario: h\n- y\n")
+        log = self._fold_log(fdir)
+        self.assertIn("+1 added, ~0 modified", log)
+        self.assertNotIn("~2 modified", log)
+        self.assertIn("2 change(s) skipped", log)
+
+    def test_fold_log_is_unchanged_when_everything_applies(self) -> None:
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+        log = self._fold_log(fdir)
+        self.assertIn("+1 added, ~0 modified, -0 removed, ↻0 renamed", log)
+        self.assertNotIn("skipped", log)
 
     def test_no_delta_block_is_byte_identical_noop(self) -> None:
         root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
@@ -1133,7 +1209,7 @@ class DriftTests(unittest.TestCase):
         result = self._run(root)
         todos = next(c for c in result["capabilities"] if c["name"] == "todos")
         self.assertTrue(todos["inSync"])
-        self.assertIn("All capabilities in sync", drift.render_human(result))
+        self.assertIn("in sync", drift.render_human(result))
 
     def test_uncommitted_spec_is_skipped_not_drift(self) -> None:
         root = _bake_drift_repo(self.YAML)
@@ -1156,7 +1232,7 @@ class DriftTests(unittest.TestCase):
         _commit_all(root, "baseline")
 
         result = self._run(root)
-        self.assertEqual(drift.render_human(result), "✓ All capabilities in sync.")
+        self.assertEqual(drift.render_human(result), "✓ All 1 checked capability in sync.")
 
     def test_disabled_is_inert_and_exits_zero(self) -> None:
         root = _bake_drift_repo(self.YAML.replace("enabled: true", "enabled: false"))
@@ -1171,6 +1247,114 @@ class DriftTests(unittest.TestCase):
         self.assertFalse(result["enabled"])
         self.assertEqual(result["capabilities"], [])
         self.assertEqual(drift.main(["--root", str(root)]), 0)
+
+    # --- The summary reports the run's OUTCOME, never its intent ---
+
+    def _mixed_root(self) -> Path:
+        """todos: spec committed + clean. about: spec never committed → skipped."""
+        root = _bake_drift_repo(self.YAML)
+        _write(root, "capabilities/todos/spec.md", "# Todos\n")
+        _write(root, "src/todos/list.ts", "// todos\n")
+        _write(root, "src/about/page.ts", "// about\n")
+        _commit_all(root, "baseline")
+        return root
+
+    def test_all_skipped_makes_no_success_claim(self) -> None:
+        root = _bake_drift_repo(self.YAML)
+        _write(root, "src/todos/list.ts", "// todos\n")
+        _write(root, "src/about/page.ts", "// about\n")
+        _commit_all(root, "code only")  # neither capability spec committed
+
+        result = self._run(root)
+        text = drift.render_human(result)
+        self.assertNotIn("All capabilities in sync", text)
+        self.assertNotIn("in sync", text)
+        self.assertNotIn("✓", text)
+        self.assertIn("0 checked, 2 skipped (spec.md not yet committed)", text)
+        self.assertTrue(text.splitlines()[-1].startswith("0 checked"))
+        self.assertEqual(result["checked"], 0)
+        self.assertEqual(len(result["skipped"]), 2)
+
+    def test_all_skipped_mixed_reasons_omits_the_parenthetical(self) -> None:
+        # One reason can't speak for the others, so the shared-reason note drops.
+        root = _bake_drift_repo(self.YAML)
+        _commit_all(root, "empty")
+        result = self._run(root)
+        result["skipped"] = [
+            {"name": "todos", "reason": "spec.md not yet committed"},
+            {"name": "about", "reason": "no resolvable spec path"},
+        ]
+        text = drift.render_human(result)
+        self.assertIn("0 checked, 2 skipped", text)
+        self.assertNotIn("skipped (", text)
+
+    def test_enabled_but_nothing_configured_is_not_a_success(self) -> None:
+        yaml = "livingSpecs:\n  enabled: true\n  capabilities: []\n"
+        root = _bake_drift_repo(yaml)
+        _commit_all(root, "empty")
+
+        result = self._run(root)
+        text = drift.render_human(result)
+        self.assertNotIn("in sync", text)
+        self.assertEqual(text, "No capabilities configured.")
+        self.assertEqual(result["checked"], 0)
+        self.assertEqual(result["skipped"], [])
+
+    def test_disabled_stays_silent(self) -> None:
+        root = _bake_drift_repo(self.YAML.replace("enabled: true", "enabled: false"))
+        _write(root, "capabilities/todos/spec.md", "# Todos\n")
+        _commit_all(root, "baseline")
+
+        result = self._run(root)
+        self.assertEqual(drift.render_human(result), "")
+        self.assertEqual(result["checked"], 0)
+
+    def test_mixed_run_reports_both_checked_and_skipped(self) -> None:
+        result = self._run(self._mixed_root())
+        text = drift.render_human(result)
+        self.assertIn("✓ All 1 checked capability in sync.", text)
+        self.assertIn("1 skipped (spec.md not yet committed)", text)
+        self.assertEqual(result["checked"], 1)
+        self.assertEqual([s["name"] for s in result["skipped"]], ["about"])
+
+    def test_mixed_run_with_drift_still_states_the_skipped_count(self) -> None:
+        root = self._mixed_root()
+        _write(root, "src/todos/list.ts", "// todos\n// drifted\n")
+        _commit_all(root, "off-pipeline edit")
+
+        result = self._run(root)
+        text = drift.render_human(result)
+        self.assertIn("unspeced src/todos/list.ts", text)
+        self.assertIn("1 checked, 1 skipped (spec.md not yet committed)", text)
+        self.assertEqual(result["checked"], 1)
+
+    def test_checked_count_tracks_the_capabilities_actually_examined(self) -> None:
+        # `checked` must equal the examined set in every state, not the configured one.
+        cases = {
+            "disabled": _bake_drift_repo(self.YAML.replace("enabled: true", "enabled: false")),
+            "all-skipped": _bake_drift_repo(self.YAML),
+            "mixed": self._mixed_root(),
+        }
+        _commit_all(cases["disabled"], "init")
+        _commit_all(cases["all-skipped"], "init")
+
+        expected = {"disabled": 0, "all-skipped": 0, "mixed": 1}
+        for label, root in cases.items():
+            with self.subTest(state=label):
+                result = self._run(root)
+                self.assertIn("checked", result)
+                self.assertEqual(result["checked"], expected[label])
+                self.assertEqual(result["checked"], len(result["capabilities"]))
+
+    def test_exits_zero_when_every_capability_was_skipped(self) -> None:
+        # The never-halts contract holds even when nothing ran.
+        root = _bake_drift_repo(self.YAML)
+        _write(root, "src/todos/list.ts", "// todos\n")
+        _commit_all(root, "code only")
+
+        self.assertEqual(drift.main(["--root", str(root)]), 0)
+        self.assertEqual(drift.main(["--root", str(root), "--json"]), 0)
+        self.assertEqual(self._run(root)["checked"], 0)
 
     def test_colocated_spec_tier_siblings_are_not_drift(self) -> None:
         # A colocated capability's `match` globs claim its own area, so an edit to

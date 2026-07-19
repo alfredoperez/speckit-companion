@@ -13,10 +13,16 @@ classify each:
   - `unspeced`  — the file changed entirely outside the pipeline (the living
                   spec never saw it at all). More concerning than `tracked`.
 
+The `✓ … in sync` claim is earned only by capabilities that were CHECKED — a run
+that skipped every capability reports `0 checked, N skipped` instead, and callers
+read `checked` off the result to tell "clean" from "did not run".
+
 Deterministic: pure git + the LS·1 resolver (membership) + an exempt-glob filter.
-It NEVER halts — always exits 0. A surrounding workflow / CI may treat findings
-as a gate; the command itself does not. With living specs disabled (or no
-config), it reports nothing and exits 0 (the LS·1 inert/opt-in contract).
+It NEVER halts — always exits 0, including when everything was skipped (a skip
+without a committed baseline is correct, not a failure). A surrounding workflow /
+CI may treat findings as a gate; the command itself does not. With living specs
+disabled (or no config), it reports nothing and exits 0 (the LS·1 inert/opt-in
+contract).
 
 All git operations are anchored to `--root` (via `git -C <root>`), never cwd, so
 pointing it at a sandbox or sibling repo records THAT repo's history.
@@ -155,7 +161,7 @@ def _exempt(file: str, exempt_globs: list[str]) -> bool:
 def compute_drift(root: str, living: dict) -> dict:
     """The drift result object. Inert (empty) when living specs are disabled."""
     if not living["enabled"]:
-        return {"enabled": False, "capabilities": [], "skipped": []}
+        return {"enabled": False, "checked": 0, "capabilities": [], "skipped": []}
 
     exempt_globs = living.get("exempt") or []
     git_ok = _is_git_repo(root)
@@ -199,7 +205,24 @@ def compute_drift(root: str, living: dict) -> dict:
         })
 
     caps_out.sort(key=lambda c: c["name"])
-    return {"enabled": True, "capabilities": caps_out, "skipped": skipped}
+    return {"enabled": True, "checked": len(caps_out),
+            "capabilities": caps_out, "skipped": skipped}
+
+
+def _counts_line(result: dict, include_checked: bool = True) -> str:
+    """`0 checked, 9 skipped (spec.md not yet committed)` — the run's outcome.
+
+    The parenthetical names the reason only when every skip shares one; mixed
+    reasons are left to the per-capability notes above.
+    """
+    skipped = result["skipped"]
+    line = f"{len(skipped)} skipped"
+    if include_checked:
+        line = f"{result['checked']} checked, " + line
+    reasons = {sk["reason"] for sk in skipped}
+    if len(reasons) == 1:
+        line += f" ({reasons.pop()})"
+    return line
 
 
 def render_human(result: dict) -> str:
@@ -210,12 +233,19 @@ def render_human(result: dict) -> str:
     for sk in result["skipped"]:
         lines.append(f"ℹ {sk['name']}: {sk['reason']}; skipping drift check")
 
-    has_drift = any(c["drifted"] for c in result["capabilities"])
-    if not has_drift:
-        if lines:
-            lines.append("✓ All capabilities in sync.")
-            return "\n".join(lines)
-        return "✓ All capabilities in sync."
+    checked = result["checked"]
+    if checked == 0:
+        if not result["skipped"]:
+            return "No capabilities configured."
+        lines.append(_counts_line(result))
+        return "\n".join(lines)
+
+    if not any(c["drifted"] for c in result["capabilities"]):
+        noun = "capability" if checked == 1 else "capabilities"
+        lines.append(f"✓ All {checked} checked {noun} in sync.")
+        if result["skipped"]:
+            lines.append(_counts_line(result, include_checked=False))
+        return "\n".join(lines)
 
     lines.append("🔍 Spec drift report")
     for cap in result["capabilities"]:
@@ -232,6 +262,7 @@ def render_human(result: dict) -> str:
                     else "changed outside the pipeline")
             lines.append(f"   {d['severity']:<8} {d['file']}  — {note}")
     lines.append("")
+    lines.append(_counts_line(result))
     lines.append("👉 Fold these into the living spec (e.g. /speckit.companion.living-adopt) "
                  "or add the path to livingSpecs.exempt.")
     return "\n".join(lines)
