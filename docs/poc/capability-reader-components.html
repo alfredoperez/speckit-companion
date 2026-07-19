@@ -1,0 +1,1447 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Proposal — Capability Reader Components</title>
+  <style>
+    :root {
+      --canvas: #0d1113;
+      --surface: #141a1d;
+      --surface-2: #1a2226;
+      --surface-3: #202b2f;
+      --ink: #f1f5f4;
+      --body: #b7c3c0;
+      --muted: #82918d;
+      --line: #344145;
+      --line-strong: #52615e;
+      --accent: #65e6bd;
+      --accent-ink: #062018;
+      --accent-soft: #173b32;
+      --info: #78bdf7;
+      --info-soft: #182f43;
+      --warning: #f2c66d;
+      --warning-soft: #3c311a;
+      --danger: #ff8c8c;
+      --danger-soft: #442326;
+      --success: #8adb77;
+      --success-soft: #1f3823;
+      --purple: #c4a7f5;
+      --purple-soft: #302641;
+      --shadow: 0 24px 70px rgb(0 0 0 / 28%);
+      --font: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "SFMono-Regular", "Cascadia Code", "Roboto Mono", Consolas, monospace;
+      --radius: 8px;
+      --radius-sm: 5px;
+    }
+
+    body.light {
+      --canvas: #eef3f1;
+      --surface: #ffffff;
+      --surface-2: #f5f8f7;
+      --surface-3: #e8efed;
+      --ink: #14201d;
+      --body: #43524e;
+      --muted: #63726e;
+      --line: #ced9d5;
+      --line-strong: #9daca7;
+      --accent: #087d63;
+      --accent-ink: #ffffff;
+      --accent-soft: #d8eee7;
+      --info: #176da8;
+      --info-soft: #dcecf7;
+      --warning: #8b5a00;
+      --warning-soft: #f7ebce;
+      --danger: #b72f39;
+      --danger-soft: #f9e0e2;
+      --success: #277a35;
+      --success-soft: #e0f0e1;
+      --purple: #6e40c9;
+      --purple-soft: #eee6fb;
+      --shadow: 0 24px 70px rgb(24 53 45 / 12%);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--body);
+      background: var(--canvas);
+      font: 15px/1.6 var(--font);
+      -webkit-font-smoothing: antialiased;
+      transition: color 160ms ease, background 160ms ease;
+    }
+
+    button, input { font: inherit; }
+    button { color: inherit; }
+    a { color: inherit; }
+
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .page {
+      width: min(1240px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 24px 0 96px;
+    }
+
+    .proposal-bar {
+      position: sticky;
+      z-index: 20;
+      top: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      min-height: 52px;
+      padding: 8px 10px 8px 16px;
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgb(0 0 0 / 14%);
+      backdrop-filter: blur(14px);
+    }
+
+    .proposal-mark {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      color: var(--ink);
+      font-weight: 670;
+    }
+
+    .proposal-mark svg { color: var(--accent); flex: 0 0 auto; }
+
+    .proposal-mark small {
+      padding-left: 10px;
+      border-left: 1px solid var(--line);
+      color: var(--muted);
+      font: 600 11px/1.2 var(--mono);
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+
+    .bar-actions { display: flex; align-items: center; gap: 6px; }
+
+    .icon-button, .seg-button, .copy-button, .filter-button {
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: 120ms ease;
+    }
+
+    .icon-button {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+    }
+
+    .icon-button:hover, .seg-button:hover, .filter-button:hover {
+      color: var(--ink);
+      border-color: var(--line-strong);
+      background: var(--surface-3);
+    }
+
+    .segmented {
+      display: flex;
+      gap: 2px;
+      padding: 2px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--surface-2);
+    }
+
+    .seg-button {
+      padding: 6px 10px;
+      border-color: transparent;
+      color: var(--muted);
+      background: transparent;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .seg-button.active {
+      color: var(--accent-ink);
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(300px, .75fr);
+      gap: 40px;
+      align-items: end;
+      padding: 94px 12px 56px;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 18px;
+      color: var(--accent);
+      font: 700 11px/1 var(--mono);
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      width: 24px;
+      height: 1px;
+      background: currentColor;
+      content: "";
+    }
+
+    h1, h2, h3, h4, p { margin-top: 0; }
+
+    h1 {
+      max-width: 800px;
+      margin-bottom: 20px;
+      color: var(--ink);
+      font-size: clamp(42px, 6.5vw, 76px);
+      font-weight: 690;
+      line-height: .98;
+      letter-spacing: -.055em;
+    }
+
+    .hero-lede {
+      max-width: 750px;
+      margin: 0;
+      color: var(--body);
+      font-size: clamp(17px, 2vw, 21px);
+      line-height: 1.55;
+      letter-spacing: -.01em;
+    }
+
+    .decision-card {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .decision-card .label {
+      margin-bottom: 8px;
+      color: var(--muted);
+      font: 700 10px/1 var(--mono);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .decision-card strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--ink);
+      font-size: 17px;
+    }
+
+    .decision-card p { margin: 0; font-size: 13px; }
+
+    .section-heading {
+      display: grid;
+      grid-template-columns: 110px minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+      margin: 56px 12px 22px;
+    }
+
+    .section-heading .number {
+      padding-top: 5px;
+      color: var(--accent);
+      font: 700 11px/1 var(--mono);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .section-heading h2 {
+      margin-bottom: 7px;
+      color: var(--ink);
+      font-size: 28px;
+      line-height: 1.2;
+      letter-spacing: -.025em;
+    }
+
+    .section-heading p { max-width: 760px; margin: 0; }
+
+    .viewer-frame {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .frame-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 44px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-2);
+      color: var(--muted);
+      font: 600 11px/1 var(--mono);
+      letter-spacing: .03em;
+    }
+
+    .window-dots { display: flex; gap: 6px; }
+    .window-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--line-strong); }
+    .frame-label .live-label { color: var(--accent); }
+
+    .capability-header {
+      padding: 24px 28px 18px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .capability-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .capability-title h3 {
+      margin: 0 0 10px;
+      color: var(--ink);
+      font-size: 25px;
+      line-height: 1.2;
+      letter-spacing: -.025em;
+    }
+
+    .header-badges, .capability-facts, .claims, .mini-badges {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .badge, .fact, .claim, .confidence, .scope-chip, .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .badge {
+      padding: 4px 8px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      color: var(--muted);
+      background: var(--surface-2);
+      font: 700 10px/1 var(--mono);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .badge.draft { color: var(--warning); border-color: color-mix(in srgb, var(--warning) 42%, transparent); background: var(--warning-soft); }
+    .badge.drift { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 42%, transparent); background: var(--danger-soft); }
+
+    .header-icon-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      color: var(--body);
+      background: var(--surface-2);
+      font-size: 12px;
+    }
+
+    .capability-facts { margin-top: 16px; gap: 14px; }
+
+    .fact {
+      color: var(--body);
+      font-size: 12px;
+    }
+
+    .fact svg { color: var(--muted); }
+    .fact strong { color: var(--ink); font-weight: 660; }
+
+    .claims {
+      margin-top: 13px;
+      padding-top: 13px;
+      border-top: 1px solid var(--line);
+    }
+
+    .claims-label {
+      margin-right: 3px;
+      color: var(--muted);
+      font: 650 10px/1 var(--mono);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .claim {
+      max-width: 260px;
+      overflow: hidden;
+      padding: 4px 8px;
+      border-radius: 4px;
+      color: var(--body);
+      background: var(--surface-3);
+      font: 11px/1.2 var(--mono);
+      text-overflow: ellipsis;
+    }
+
+    .claim.more { color: var(--accent); background: var(--accent-soft); }
+
+    .reader-tabs {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 42px;
+      padding: 0 28px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .reader-tab {
+      position: relative;
+      padding: 12px 11px 10px;
+      border: 0;
+      color: var(--muted);
+      background: transparent;
+      font-size: 12px;
+      font-weight: 650;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .reader-tab.active { color: var(--ink); }
+    .reader-tab.active::after {
+      position: absolute;
+      right: 10px;
+      bottom: -1px;
+      left: 10px;
+      height: 2px;
+      background: var(--accent);
+      content: "";
+    }
+
+    .reader-tab .count {
+      margin-left: 5px;
+      color: var(--muted);
+      font: 650 10px/1 var(--mono);
+    }
+
+    .reader-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 230px;
+      align-items: start;
+    }
+
+    .reader-main {
+      min-width: 0;
+      padding: 30px clamp(22px, 4vw, 54px) 54px;
+      border-right: 1px solid var(--line);
+    }
+
+    .reader-outline {
+      position: sticky;
+      top: 0;
+      padding: 28px 20px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .outline-title {
+      margin-bottom: 12px;
+      color: var(--muted);
+      font: 700 10px/1 var(--mono);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .outline-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 7px 8px;
+      border-left: 2px solid transparent;
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .outline-link:hover, .outline-link.active {
+      color: var(--ink);
+      background: var(--surface-2);
+      border-left-color: var(--accent);
+    }
+
+    .outline-link span:last-child { font: 600 10px/1 var(--mono); }
+
+    .purpose-card {
+      display: grid;
+      grid-template-columns: 32px minmax(0, 1fr);
+      gap: 14px;
+      margin-bottom: 36px;
+      padding: 17px 18px;
+      border: 1px solid color-mix(in srgb, var(--accent) 36%, var(--line));
+      border-radius: var(--radius);
+      background: var(--accent-soft);
+    }
+
+    .purpose-icon {
+      display: grid;
+      width: 32px;
+      height: 32px;
+      place-items: center;
+      color: var(--accent);
+      border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+      border-radius: 6px;
+      background: color-mix(in srgb, var(--accent) 10%, transparent);
+    }
+
+    .component-kicker {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--accent);
+      font: 700 10px/1 var(--mono);
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+
+    .purpose-card p { margin: 0; color: var(--ink); font-size: 15px; line-height: 1.55; }
+
+    .document-section { margin: 0 0 40px; scroll-margin-top: 85px; }
+
+    .document-heading {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .document-heading h4 {
+      margin: 0;
+      color: var(--ink);
+      font-size: 19px;
+      line-height: 1.25;
+      letter-spacing: -.015em;
+    }
+
+    .document-heading p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+
+    .filter-row { display: flex; flex-wrap: wrap; gap: 5px; }
+
+    .filter-button {
+      padding: 4px 8px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .filter-button.active {
+      color: var(--accent);
+      border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+      background: var(--accent-soft);
+    }
+
+    .requirement-group {
+      overflow: hidden;
+      margin-bottom: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .group-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      min-height: 40px;
+      padding: 9px 13px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-2);
+    }
+
+    .group-header strong { color: var(--ink); font-size: 12px; }
+    .group-header span { color: var(--muted); font: 600 10px/1 var(--mono); }
+
+    .requirement-row {
+      display: grid;
+      grid-template-columns: 58px minmax(0, 1fr);
+      gap: 14px;
+      padding: 15px 14px;
+      border-bottom: 1px solid var(--line);
+      transition: background 100ms ease;
+    }
+
+    .requirement-row:last-child { border-bottom: 0; }
+    .requirement-row:hover { background: var(--surface-2); }
+    .requirement-row[hidden] { display: none; }
+
+    .req-id {
+      width: max-content;
+      height: max-content;
+      padding: 4px 7px;
+      border-radius: 4px;
+      color: var(--info);
+      background: var(--info-soft);
+      font: 700 10px/1 var(--mono);
+    }
+
+    .req-copy { min-width: 0; }
+
+    .req-title {
+      margin-bottom: 5px;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 680;
+      line-height: 1.35;
+    }
+
+    .req-copy p { margin: 0; font-size: 13px; line-height: 1.55; }
+
+    .mini-badges { margin-top: 9px; }
+
+    .confidence, .scope-chip, .status-chip {
+      padding: 3px 6px;
+      border-radius: 3px;
+      font: 650 9px/1 var(--mono);
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .confidence.observed { color: var(--success); background: var(--success-soft); }
+    .confidence.inferred { color: var(--purple); background: var(--purple-soft); }
+    .scope-chip { color: var(--muted); background: var(--surface-3); }
+    .status-chip.covered { color: var(--success); background: var(--success-soft); }
+    .status-chip.uncovered { color: var(--warning); background: var(--warning-soft); }
+
+    .source-anchor {
+      display: none;
+      align-items: center;
+      gap: 4px;
+      color: var(--muted);
+      font: 500 10px/1.2 var(--mono);
+    }
+
+    body.show-sources .source-anchor { display: inline-flex; }
+
+    .clarification {
+      margin: 10px 0 0;
+      padding: 8px 10px;
+      border-left: 2px solid var(--warning);
+      color: var(--body);
+      background: var(--warning-soft);
+      font-size: 11px;
+    }
+
+    .scenario-card {
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr);
+      gap: 14px;
+      margin-bottom: 10px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .scenario-index {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--accent);
+      background: var(--accent-soft);
+      font: 700 11px/1 var(--mono);
+    }
+
+    .scenario-steps { display: grid; gap: 7px; }
+
+    .scenario-step {
+      display: grid;
+      grid-template-columns: 52px minmax(0, 1fr);
+      gap: 9px;
+      font-size: 13px;
+    }
+
+    .scenario-key {
+      color: var(--muted);
+      font: 700 10px/1.55 var(--mono);
+      letter-spacing: .06em;
+    }
+
+    .scenario-key.then { color: var(--accent); }
+    .scenario-step strong { color: var(--ink); font-weight: 620; }
+
+    .coverage-summary {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 22px;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 16px;
+      border: 1px solid color-mix(in srgb, var(--warning) 35%, var(--line));
+      border-radius: var(--radius);
+      background: var(--warning-soft);
+    }
+
+    .coverage-summary h5 { margin: 0 0 4px; color: var(--ink); font-size: 14px; }
+    .coverage-summary p { margin: 0; font-size: 12px; }
+
+    .coverage-meter { min-width: 138px; }
+
+    .meter-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font: 650 10px/1 var(--mono);
+    }
+
+    .meter-track {
+      overflow: hidden;
+      height: 6px;
+      border-radius: 4px;
+      background: color-mix(in srgb, var(--warning) 18%, var(--surface));
+    }
+
+    .meter-fill { width: 36%; height: 100%; background: var(--warning); }
+
+    details.evidence-group {
+      margin-bottom: 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .evidence-group summary {
+      display: grid;
+      grid-template-columns: 26px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px 13px;
+      color: var(--ink);
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .evidence-group summary::-webkit-details-marker { display: none; }
+
+    .chevron {
+      display: grid;
+      width: 22px;
+      height: 22px;
+      place-items: center;
+      color: var(--muted);
+      transition: transform 120ms ease;
+    }
+
+    details[open] .chevron { transform: rotate(90deg); }
+    .evidence-group summary strong { font-size: 12px; }
+    .evidence-group summary small { color: var(--muted); font: 600 10px/1 var(--mono); }
+
+    .evidence-list {
+      border-top: 1px solid var(--line);
+      background: var(--surface-2);
+    }
+
+    .evidence-file {
+      display: grid;
+      grid-template-columns: minmax(160px, .7fr) minmax(0, 1.5fr);
+      gap: 18px;
+      padding: 11px 14px 11px 49px;
+      border-bottom: 1px solid var(--line);
+      font-size: 12px;
+    }
+
+    .evidence-file:last-child { border-bottom: 0; }
+
+    .filename {
+      overflow: hidden;
+      color: var(--ink);
+      font: 600 11px/1.5 var(--mono);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .evidence-reason { color: var(--body); }
+
+    .why-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .why-item {
+      min-height: 150px;
+      padding: 20px;
+      border-right: 1px solid var(--line);
+    }
+
+    .why-item:last-child { border-right: 0; }
+
+    .why-index { margin-bottom: 18px; color: var(--accent); font: 700 11px/1 var(--mono); }
+    .why-item h3 { margin-bottom: 7px; color: var(--ink); font-size: 16px; }
+    .why-item p { margin: 0; font-size: 13px; }
+
+    .ticket-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(300px, .65fr);
+      gap: 16px;
+    }
+
+    .ticket-card {
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .ticket-card h3 {
+      margin-bottom: 15px;
+      color: var(--ink);
+      font-size: 18px;
+    }
+
+    .ticket-card h4 {
+      margin: 24px 0 10px;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .ticket-card p { font-size: 13px; }
+
+    .acceptance-list, .component-list, .scope-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .acceptance-list {
+      counter-reset: acceptance;
+      display: grid;
+      gap: 10px;
+    }
+
+    .acceptance-list li {
+      counter-increment: acceptance;
+      display: grid;
+      grid-template-columns: 26px minmax(0, 1fr);
+      gap: 10px;
+      color: var(--body);
+      font-size: 13px;
+    }
+
+    .acceptance-list li::before {
+      content: counter(acceptance, decimal-leading-zero);
+      padding-top: 3px;
+      color: var(--accent);
+      font: 700 10px/1 var(--mono);
+    }
+
+    .component-list { display: grid; gap: 7px; }
+
+    .component-list li {
+      display: grid;
+      grid-template-columns: minmax(135px, .6fr) minmax(0, 1fr);
+      gap: 12px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 12px;
+    }
+
+    .component-list li:last-child { border-bottom: 0; }
+
+    .component-list code, .scope-list code {
+      color: var(--accent);
+      font: 600 11px/1.4 var(--mono);
+    }
+
+    .scope-list { display: grid; gap: 8px; }
+    .scope-list li { position: relative; padding-left: 18px; font-size: 12px; }
+    .scope-list li::before { position: absolute; left: 0; color: var(--success); content: "✓"; font-weight: 800; }
+    .scope-list.out li::before { color: var(--muted); content: "—"; }
+
+    .copy-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      margin-top: 18px;
+      padding: 10px 14px;
+      color: var(--accent-ink);
+      border-color: var(--accent);
+      background: var(--accent);
+      font-size: 12px;
+      font-weight: 720;
+    }
+
+    .copy-button:hover { filter: brightness(1.06); }
+
+    .approval {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      margin-top: 18px;
+      padding: 24px;
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      background: var(--accent-soft);
+    }
+
+    .approval h3 { margin-bottom: 4px; color: var(--ink); font-size: 18px; }
+    .approval p { margin: 0; font-size: 13px; }
+
+    .approval-pill {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 5px;
+      color: var(--accent-ink);
+      background: var(--accent);
+      font-size: 12px;
+      font-weight: 720;
+    }
+
+    body.compact .reader-main { padding-top: 22px; }
+    body.compact .requirement-row { padding-top: 10px; padding-bottom: 10px; }
+    body.compact .scenario-card { padding-top: 11px; padding-bottom: 11px; }
+    body.compact .document-section { margin-bottom: 30px; }
+
+    @media (max-width: 900px) {
+      .hero, .ticket-grid { grid-template-columns: 1fr; }
+      .hero { padding-top: 72px; }
+      .reader-grid { grid-template-columns: 1fr; }
+      .reader-main { border-right: 0; }
+      .reader-outline { display: none; }
+      .why-strip { grid-template-columns: 1fr; }
+      .why-item { min-height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+      .why-item:last-child { border-bottom: 0; }
+    }
+
+    @media (max-width: 640px) {
+      .page { width: min(100% - 22px, 1240px); padding-top: 11px; }
+      .proposal-bar { top: 7px; }
+      .proposal-mark small, .segmented { display: none; }
+      .hero { gap: 25px; padding: 58px 5px 35px; }
+      h1 { font-size: 43px; }
+      .section-heading { grid-template-columns: 1fr; gap: 8px; margin-left: 5px; margin-right: 5px; }
+      .capability-header, .reader-tabs { padding-left: 17px; padding-right: 17px; }
+      .capability-top { align-items: stretch; flex-direction: column; }
+      .header-icon-button { align-self: flex-start; }
+      .reader-main { padding: 23px 15px 40px; }
+      .document-heading { align-items: flex-start; flex-direction: column; }
+      .coverage-summary { grid-template-columns: 1fr; }
+      .requirement-row { grid-template-columns: 1fr; gap: 8px; }
+      .scenario-card { grid-template-columns: 1fr; }
+      .scenario-step { grid-template-columns: 45px minmax(0, 1fr); }
+      .evidence-file { grid-template-columns: 1fr; gap: 4px; padding-left: 49px; }
+      .component-list li { grid-template-columns: 1fr; gap: 3px; }
+      .approval { align-items: flex-start; flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <nav class="proposal-bar" aria-label="Proposal controls">
+      <div class="proposal-mark">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M5 4.5h11.5L20 8v11.5H5z" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M16.5 4.5V8H20M8 12h8M8 15.5h5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Capability Reader
+        <small>Design proposal · 19 Jul 2026</small>
+      </div>
+      <div class="bar-actions">
+        <div class="segmented" aria-label="Preview density">
+          <button class="seg-button active" data-density="comfortable" type="button">Comfortable</button>
+          <button class="seg-button" data-density="compact" type="button">Compact</button>
+        </div>
+        <button class="icon-button" id="sources-toggle" type="button" aria-pressed="false" title="Toggle source evidence">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M9.5 7.5 5 12l4.5 4.5M14.5 7.5 19 12l-4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button class="icon-button" id="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M20 15.2A8.2 8.2 0 0 1 8.8 4a8.2 8.2 0 1 0 11.2 11.2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </nav>
+
+    <header class="hero">
+      <div>
+        <div class="eyebrow">Follow-up ticket proposal</div>
+        <h1>Make capability specs feel built to be read.</h1>
+        <p class="hero-lede">Turn recurring living-spec patterns into calm, semantic components. Requirements become scannable, scenarios become comprehensible, and incomplete evidence becomes impossible to mistake for complete coverage.</p>
+      </div>
+      <aside class="decision-card">
+        <div class="label">Approval requested</div>
+        <strong>Approve the componentized reader direction.</strong>
+        <p>This proposal is a visual and technical basis for a new ticket. It does not replace Markdown authoring or change the underlying spec format.</p>
+      </aside>
+    </header>
+
+    <div class="section-heading">
+      <div class="number">01 · Preview</div>
+      <div>
+        <h2>The proposed reading experience</h2>
+        <p>The mock keeps the new capability header, then gives the document a purpose callout, grouped requirements, structured scenarios, and a truthful evidence summary. Try the density, source, filter, disclosure, and theme controls.</p>
+      </div>
+    </div>
+
+    <main class="viewer-frame" aria-label="Interactive capability reader mockup">
+      <div class="frame-label">
+        <div class="window-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+        <span>SpecKit Companion · Living Spec</span>
+        <span class="live-label">Interactive proposal</span>
+      </div>
+
+      <header class="capability-header">
+        <div class="capability-top">
+          <div class="capability-title">
+            <h3>Capture Runtime</h3>
+            <div class="header-badges">
+              <span class="badge draft">Draft</span>
+              <span class="badge drift">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v18M7 8l5-5 5 5M7 16l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Drift detected
+              </span>
+            </div>
+          </div>
+          <button class="header-icon-button" type="button">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7.5h16M7.5 4v7M8 20h8M12 11.5V20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Open source
+          </button>
+        </div>
+        <div class="capability-facts">
+          <span class="fact">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <strong>5</strong> requirements
+          </span>
+          <span class="fact">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m8 6-4 6 4 6M16 6l4 6-4 6M13.5 4 10 20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <strong>2</strong> scenarios
+          </span>
+          <span class="fact">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 12 4 4L19 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <strong>2/5</strong> covered
+          </span>
+          <span class="fact">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5h6l2 2H20v11H4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            <span>speckit-extension/scripts/capture-runtime.spec.md</span>
+          </span>
+        </div>
+        <div class="claims">
+          <span class="claims-label">Covers</span>
+          <span class="claim">speckit-extension/scripts/capture*.py</span>
+          <span class="claim">speckit-extension/scripts/*context*.py</span>
+          <span class="claim more">+3 patterns</span>
+        </div>
+      </header>
+
+      <nav class="reader-tabs" aria-label="Document sections">
+        <button class="reader-tab active" type="button" data-scroll="purpose">Overview</button>
+        <button class="reader-tab" type="button" data-scroll="requirements">Requirements <span class="count">5</span></button>
+        <button class="reader-tab" type="button" data-scroll="scenarios">Scenarios <span class="count">2</span></button>
+        <button class="reader-tab" type="button" data-scroll="evidence">Evidence <span class="count">7</span></button>
+      </nav>
+
+      <div class="reader-grid">
+        <article class="reader-main">
+          <section class="purpose-card" id="purpose">
+            <div class="purpose-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" stroke="currentColor" stroke-width="1.5"/><path d="M12 8v4.5M12 16h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </div>
+            <div>
+              <span class="component-kicker">Purpose</span>
+              <p>Capture runtime records what an agent actually examined, changed, and verified—without ever turning missing work into a success claim.</p>
+            </div>
+          </section>
+
+          <section class="document-section" id="requirements">
+            <div class="document-heading">
+              <div>
+                <h4>Requirements</h4>
+                <p>Grouped by reader intent, with confidence and coverage visible.</p>
+              </div>
+              <div class="filter-row" aria-label="Filter requirements">
+                <button class="filter-button active" data-filter="all" type="button">All 5</button>
+                <button class="filter-button" data-filter="observed" type="button">Observed</button>
+                <button class="filter-button" data-filter="inferred" type="button">Inferred</button>
+                <button class="filter-button" data-filter="uncovered" type="button">Uncovered</button>
+              </div>
+            </div>
+
+            <div class="requirement-group">
+              <div class="group-header">
+                <strong>Truthful reporting</strong>
+                <span>3 requirements</span>
+              </div>
+              <div class="requirement-row" data-confidence="observed" data-coverage="covered">
+                <span class="req-id">FR-001</span>
+                <div class="req-copy">
+                  <div class="req-title">A report never claims work it did not perform</div>
+                  <p>Summary output must state both what was examined and what was not. A run that skips every capability reports zero checked—not a clean verdict.</p>
+                  <div class="mini-badges">
+                    <span class="confidence observed">Observed</span>
+                    <span class="status-chip covered">Covered</span>
+                    <span class="scope-chip">Reporting</span>
+                    <span class="source-anchor">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="1.5"/></svg>
+                      drift.py:214–236
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="requirement-row" data-confidence="observed" data-coverage="uncovered">
+                <span class="req-id">FR-002</span>
+                <div class="req-copy">
+                  <div class="req-title">Partial runs name checked and unchecked counts</div>
+                  <p>When only part of the configured set can be examined, the summary exposes both counts so a success marker cannot be read as a verdict on the whole configuration.</p>
+                  <div class="mini-badges">
+                    <span class="confidence observed">Observed</span>
+                    <span class="status-chip uncovered">No mapped test</span>
+                    <span class="scope-chip">Summaries</span>
+                    <span class="source-anchor">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="1.5"/></svg>
+                      capture-runtime.spec.md:32
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="requirement-row" data-confidence="inferred" data-coverage="uncovered">
+                <span class="req-id">FR-003</span>
+                <div class="req-copy">
+                  <div class="req-title">Actionable skips carry a recovery hint</div>
+                  <p>Skip reasons that a developer can resolve should include a concrete next action close to the reason.</p>
+                  <div class="clarification"><strong>Needs clarification:</strong> should hints be generated by each checker or normalized by the report model?</div>
+                  <div class="mini-badges">
+                    <span class="confidence inferred">Inferred</span>
+                    <span class="status-chip uncovered">No mapped test</span>
+                    <span class="scope-chip">Recovery</span>
+                    <span class="source-anchor">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="1.5"/></svg>
+                      status-context.py:1–14
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="requirement-group">
+              <div class="group-header">
+                <strong>Workflow behavior</strong>
+                <span>2 requirements</span>
+              </div>
+              <div class="requirement-row" data-confidence="observed" data-coverage="covered">
+                <span class="req-id">FR-004</span>
+                <div class="req-copy">
+                  <div class="req-title">Report commands are informational, never gates</div>
+                  <p>A finding is a signal for a surrounding workflow to act on; reporting commands themselves exit successfully.</p>
+                  <div class="mini-badges">
+                    <span class="confidence observed">Observed</span>
+                    <span class="status-chip covered">Covered</span>
+                    <span class="scope-chip">Exit behavior</span>
+                  </div>
+                </div>
+              </div>
+              <div class="requirement-row" data-confidence="inferred" data-coverage="uncovered">
+                <span class="req-id">FR-005</span>
+                <div class="req-copy">
+                  <div class="req-title">Every runtime result remains attributable</div>
+                  <p>Each finding and skip should retain the capability and source that produced it through aggregation.</p>
+                  <div class="mini-badges">
+                    <span class="confidence inferred">Inferred</span>
+                    <span class="status-chip uncovered">No mapped test</span>
+                    <span class="scope-chip">Traceability</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="document-section" id="scenarios">
+            <div class="document-heading">
+              <div>
+                <h4>Acceptance scenarios</h4>
+                <p>Conditions and outcomes are separated without becoming a wall of prose.</p>
+              </div>
+            </div>
+            <div class="scenario-card">
+              <div class="scenario-index">01</div>
+              <div class="scenario-steps">
+                <div class="scenario-step"><span class="scenario-key">WHEN</span><span>a drift run examines <strong>part of the configured set</strong></span></div>
+                <div class="scenario-step"><span class="scenario-key then">THEN</span><span>the summary names both the <strong>checked and unchecked counts</strong> and the reason</span></div>
+              </div>
+            </div>
+            <div class="scenario-card">
+              <div class="scenario-index">02</div>
+              <div class="scenario-steps">
+                <div class="scenario-step"><span class="scenario-key">WHEN</span><span>every configured capability is skipped</span></div>
+                <div class="scenario-step"><span class="scenario-key then">THEN</span><span>the result reads <strong>0 checked</strong> and does not show a clean verdict</span></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="document-section" id="evidence">
+            <div class="document-heading">
+              <div>
+                <h4>Uncovered evidence</h4>
+                <p>Incomplete review is summarized first, then disclosed by reason.</p>
+              </div>
+            </div>
+            <div class="coverage-summary">
+              <div>
+                <h5>7 implementation areas were not fully examined</h5>
+                <p>This draft describes the public contract confidently; matching and resolution internals still need a focused read before approval.</p>
+              </div>
+              <div class="coverage-meter" aria-label="36 percent of implementation evidence reviewed">
+                <div class="meter-label"><span>Evidence read</span><strong>36%</strong></div>
+                <div class="meter-track"><div class="meter-fill"></div></div>
+              </div>
+            </div>
+
+            <details class="evidence-group" open>
+              <summary>
+                <span class="chevron">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <strong>Contract only</strong>
+                <small>4 files</small>
+              </summary>
+              <div class="evidence-list">
+                <div class="evidence-file"><span class="filename">check-coverage.py</span><span class="evidence-reason">Read its contract docstring, not the matching logic.</span></div>
+                <div class="evidence-file"><span class="filename">register-capability.py</span><span class="evidence-reason">Read its contract docstring, not configuration mutation.</span></div>
+                <div class="evidence-file"><span class="filename">companion_config.py</span><span class="evidence-reason">Read the failure table, not its YAML reader.</span></div>
+                <div class="evidence-file"><span class="filename">status-context.py</span><span class="evidence-reason">Read exported functions, not resolution behavior.</span></div>
+              </div>
+            </details>
+
+            <details class="evidence-group">
+              <summary>
+                <span class="chevron">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <strong>Opening only</strong>
+                <small>2 files</small>
+              </summary>
+              <div class="evidence-list">
+                <div class="evidence-file"><span class="filename">relocate-capability.py</span><span class="evidence-reason">Only the opening docstring was reviewed.</span></div>
+                <div class="evidence-file"><span class="filename">derive-from-files.py</span><span class="evidence-reason">Only the module overview was reviewed.</span></div>
+              </div>
+            </details>
+
+            <details class="evidence-group">
+              <summary>
+                <span class="chevron">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <strong>Test suite not reviewed</strong>
+                <small>1 area</small>
+              </summary>
+              <div class="evidence-list">
+                <div class="evidence-file"><span class="filename">speckit-extension/tests/</span><span class="evidence-reason">No Python tests were read during the surface-first capture.</span></div>
+              </div>
+            </details>
+          </section>
+        </article>
+
+        <aside class="reader-outline" aria-label="On this page">
+          <div class="outline-title">On this page</div>
+          <a class="outline-link active" href="#purpose"><span>Purpose</span><span>01</span></a>
+          <a class="outline-link" href="#requirements"><span>Requirements</span><span>05</span></a>
+          <a class="outline-link" href="#scenarios"><span>Scenarios</span><span>02</span></a>
+          <a class="outline-link" href="#evidence"><span>Uncovered</span><span>07</span></a>
+        </aside>
+      </div>
+    </main>
+
+    <div class="section-heading">
+      <div class="number">02 · Rationale</div>
+      <div>
+        <h2>Why this reads better</h2>
+        <p>The proposal adds hierarchy only where the document has repeatable meaning. Ordinary prose remains ordinary prose.</p>
+      </div>
+    </div>
+
+    <section class="why-strip">
+      <article class="why-item">
+        <div class="why-index">01</div>
+        <h3>Scan before reading</h3>
+        <p>IDs, confidence, coverage, and groups establish a fast information scent. A reader can find the risky requirement without parsing every paragraph.</p>
+      </article>
+      <article class="why-item">
+        <div class="why-index">02</div>
+        <h3>Structure carries meaning</h3>
+        <p>WHEN and THEN, observed and inferred, covered and uncovered are semantic distinctions—not styling decoration.</p>
+      </article>
+      <article class="why-item">
+        <div class="why-index">03</div>
+        <h3>Honesty stays prominent</h3>
+        <p>The “Uncovered” section starts with a plain-language scope summary, then lets readers inspect the exact files and reasons on demand.</p>
+      </article>
+    </section>
+
+    <div class="section-heading">
+      <div class="number">03 · Ticket</div>
+      <div>
+        <h2>Implementation-ready ticket draft</h2>
+        <p>Scoped as a capability-reader enhancement. The authoring format remains Markdown, existing feature-spec rendering remains unchanged, and every component must preserve line-level commenting.</p>
+      </div>
+    </div>
+
+    <section class="ticket-grid">
+      <article class="ticket-card">
+        <h3>Capability Reader — semantic document components</h3>
+        <p><strong style="color:var(--ink)">Problem.</strong> Living specs currently render recurring structures as generic headings, paragraphs, and bullets. The content is technically present but hard to scan, compare, or qualify—especially requirements, acceptance scenarios, and the “Uncovered” evidence boundary.</p>
+        <p><strong style="color:var(--ink)">Outcome.</strong> In living-spec mode, recognized structures render through a small set of accessible reader components. Unknown Markdown keeps the existing renderer as a lossless fallback.</p>
+
+        <h4>Acceptance criteria</h4>
+        <ol class="acceptance-list" id="ticket-text">
+          <li>Living-spec purpose text renders as a distinct lead component; the same text is never duplicated elsewhere in the body.</li>
+          <li>Requirements render in grouped rows with identifier, plain-language title, body, observed/inferred confidence, clarification state, and coverage state when those facts exist.</li>
+          <li>Acceptance scenarios visually separate conditions from outcomes while preserving their original order and exact wording.</li>
+          <li>The Uncovered section begins with a count and plain-language scope statement, then groups file-level omissions by reason in keyboard-accessible disclosures.</li>
+          <li>No component invents metadata. Missing confidence, coverage, source, or counts are omitted—not shown as zero or guessed.</li>
+          <li>Every semantic block remains addressable by source line and supports the existing add, restore, edit, and delete comment flows.</li>
+          <li>The reader uses the viewer’s owned dark/light/high-contrast tokens, honors reduced motion, and passes keyboard and contrast checks.</li>
+          <li>Feature specs and unrecognized Markdown remain behaviorally unchanged; rendering failures fall back to the current Markdown output instead of blanking the document.</li>
+          <li>Storybook stories cover complete, sparse, inferred, clarified, uncovered, narrow, light, dark, and high-contrast states.</li>
+        </ol>
+      </article>
+
+      <aside>
+        <div class="ticket-card">
+          <h3>Component map</h3>
+          <ul class="component-list">
+            <li><code>CapabilityDocument</code><span>Living-mode composition and safe fallback boundary.</span></li>
+            <li><code>PurposeCallout</code><span>One-sentence reader orientation.</span></li>
+            <li><code>RequirementGroup</code><span>Intent grouping and group count.</span></li>
+            <li><code>RequirementRow</code><span>ID, title, body, confidence, coverage, source.</span></li>
+            <li><code>ScenarioCard</code><span>Ordered conditions and outcomes.</span></li>
+            <li><code>EvidenceSummary</code><span>Coverage boundary and review scope.</span></li>
+            <li><code>EvidenceDisclosure</code><span>Files grouped by omission reason.</span></li>
+          </ul>
+
+          <h4>In scope</h4>
+          <ul class="scope-list">
+            <li>Typed living-spec block model</li>
+            <li>Preact reader components</li>
+            <li>Source-line/comment adapters</li>
+            <li>Stories and renderer tests</li>
+          </ul>
+
+          <h4>Out of scope</h4>
+          <ul class="scope-list out">
+            <li>Changing Markdown file format</li>
+            <li>Editing capability content in cards</li>
+            <li>Recomputing drift or coverage</li>
+            <li>Restyling feature specs globally</li>
+          </ul>
+
+          <button class="copy-button" id="copy-ticket" type="button">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 8h11v11H8zM5 16H4V5h11v1" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            Copy ticket summary
+          </button>
+        </div>
+      </aside>
+    </section>
+
+    <footer class="approval">
+      <div>
+        <h3>Approval question</h3>
+        <p>Should this component system become the visual and implementation basis for the capability-reader ticket?</p>
+      </div>
+      <span class="approval-pill">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 10v10H4V10h3Zm3 10V9l4-6 1 1v5h4a1.7 1.7 0 0 1 1.7 2l-1 7a2.3 2.3 0 0 1-2.3 2H10Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        Ready for thumbs up
+      </span>
+    </footer>
+  </div>
+
+  <script>
+    const body = document.body;
+
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      body.classList.toggle('light');
+    });
+
+    document.querySelectorAll('[data-density]').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('[data-density]').forEach((item) => item.classList.remove('active'));
+        button.classList.add('active');
+        body.classList.toggle('compact', button.dataset.density === 'compact');
+      });
+    });
+
+    const sourcesToggle = document.getElementById('sources-toggle');
+    sourcesToggle.addEventListener('click', () => {
+      const active = body.classList.toggle('show-sources');
+      sourcesToggle.setAttribute('aria-pressed', String(active));
+    });
+
+    document.querySelectorAll('[data-filter]').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('[data-filter]').forEach((item) => item.classList.remove('active'));
+        button.classList.add('active');
+        const filter = button.dataset.filter;
+        document.querySelectorAll('.requirement-row').forEach((row) => {
+          const matches = filter === 'all'
+            || row.dataset.confidence === filter
+            || row.dataset.coverage === filter;
+          row.hidden = !matches;
+        });
+      });
+    });
+
+    document.querySelectorAll('[data-scroll]').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('[data-scroll]').forEach((item) => item.classList.remove('active'));
+        button.classList.add('active');
+        document.getElementById(button.dataset.scroll).scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    document.getElementById('copy-ticket').addEventListener('click', async (event) => {
+      const button = event.currentTarget;
+      const text = [
+        'Capability Reader — semantic document components',
+        '',
+        'Outcome: In living-spec mode, recognized structures render through accessible Preact reader components. Unknown Markdown uses the current renderer as a lossless fallback.',
+        '',
+        ...Array.from(document.querySelectorAll('#ticket-text li')).map((item, index) => `${index + 1}. ${item.textContent.trim()}`)
+      ].join('\n');
+      try {
+        await navigator.clipboard.writeText(text);
+        button.lastChild.textContent = ' Copied';
+        window.setTimeout(() => { button.lastChild.textContent = ' Copy ticket summary'; }, 1600);
+      } catch {
+        button.lastChild.textContent = ' Copy unavailable';
+      }
+    });
+  </script>
+</body>
+</html>
