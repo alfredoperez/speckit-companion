@@ -296,7 +296,17 @@ Drift is **read-only and never halts** — it always exits success, so a surroun
 0 checked, 2 skipped (spec.md not yet committed)
 ```
 
-The `✓ All N checked capabilities in sync.` line is reserved for a run that genuinely examined at least one capability and found it clean, and a partly-skipped run states both halves. The `--json` output carries a `checked` count alongside the existing `capabilities` and `skipped` lists, so a caller can tell "clean" from "did not run" without parsing prose. The exit code stays `0` throughout, including when everything was skipped: a skip is correct behavior on adoption day, not a failure.
+The `✓ All N checked capabilities in sync.` line is reserved for a run where *every* configured capability was examined and found clean. When some were skipped, the summary states both halves instead — `✓ 2 of 9 capabilities in sync; 7 not checked — spec.md not yet committed` — so the checkmark can never read as a verdict on the whole configuration. The `--json` output carries a `checked` count alongside the existing `capabilities` and `skipped` lists, so a caller can tell "clean" from "did not run" without parsing prose. The exit code stays `0` throughout, including when everything was skipped: a skip is correct behavior on adoption day, not a failure.
+
+**A CI checkout without enough history is skipped, not guessed at.** Most CI providers clone only the most recent slice of history by default, which leaves drift with no real baseline to compare against. Rather than compare against the oldest commit it happens to have — which produced either a false all-clear or a wrong list of changed files — drift now recognizes that case and skips those capabilities, telling you how to fix it:
+
+```
+ℹ billing: spec history unreachable (shallow clone); skipping drift check
+0 checked, 1 skipped (spec history unreachable (shallow clone))
+👉 Fetch the full history to check these (e.g. actions/checkout with fetch-depth: 0).
+```
+
+A capability whose spec *was* committed inside the available slice is still checked normally, and a full clone behaves exactly as it always has. If drift cannot read a repository's history at all, it now says so (`spec history unreadable`) rather than blaming an uncommitted spec file.
 
 ### Coverage and architecture tiers
 

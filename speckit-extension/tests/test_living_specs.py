@@ -1223,7 +1223,10 @@ class DriftTests(unittest.TestCase):
         todos = next(c for c in result["capabilities"] if c["name"] == "todos")
         self.assertTrue(todos["inSync"])
         self.assertEqual(result["checked"], 1)
-        self.assertIn("✓ All 1 checked capability in sync.", drift.render_human(result))
+        self.assertIn(
+            "✓ 1 of 2 capabilities in sync; 1 not checked — spec.md not yet committed",
+            drift.render_human(result),
+        )
 
     def test_uncommitted_spec_is_skipped_not_drift(self) -> None:
         root = _bake_drift_repo(self.YAML)
@@ -1326,8 +1329,11 @@ class DriftTests(unittest.TestCase):
     def test_mixed_run_reports_both_checked_and_skipped(self) -> None:
         result = self._run(self._mixed_root())
         text = drift.render_human(result)
-        self.assertIn("✓ All 1 checked capability in sync.", text)
-        self.assertIn("1 skipped (spec.md not yet committed)", text)
+        self.assertIn(
+            "✓ 1 of 2 capabilities in sync; 1 not checked — spec.md not yet committed",
+            text,
+        )
+        self.assertNotIn("All 1 checked", text)
         self.assertEqual(result["checked"], 1)
         self.assertEqual([s["name"] for s in result["skipped"]], ["about"])
 
@@ -1403,6 +1409,147 @@ class DriftTests(unittest.TestCase):
         _write(root, "src/todos/list.ts", "// drift\n")
         _commit_all(root, "drift")
         self.assertEqual(drift.main(["--root", str(root)]), 0)
+
+
+def _shallow_clone(src: Path, depth: int) -> Path:
+    dst = Path(tempfile.mkdtemp()) / "clone"
+    subprocess.run(
+        ["git", "clone", "-q", "--depth", str(depth), f"file://{src}", str(dst)],
+        check=True, capture_output=True, text=True,
+    )
+    return dst
+
+
+class DriftShallowCloneTests(unittest.TestCase):
+    """A CI checkout without the history to compare against must say so."""
+
+    YAML = DriftTests.YAML
+
+    def _run(self, root: Path) -> dict:
+        living = drift.rsp.load_living(str(root))
+        return drift.compute_drift(str(root), living)
+
+    def _source_repo(self) -> Path:
+        """todos adopted at the first commit, about adopted near the tip, with
+        filler commits between so a depth-3 clone splits the two."""
+        root = _bake_drift_repo(self.YAML)
+        _write(root, "capabilities/todos/spec.md", "# Todos\n")
+        _write(root, "src/todos/list.ts", "// todos\n")
+        _commit_all(root, "adopt todos")
+        for i in range(4):
+            _write(root, "src/other/f.ts", f"// filler {i}\n")
+            _commit_all(root, f"filler {i}")
+        _write(root, "capabilities/about/spec.md", "# About\n")
+        _write(root, "src/about/page.ts", "// about\n")
+        _commit_all(root, "adopt about")
+        _write(root, "src/todos/list.ts", "// todos\n// changed outside\n")
+        _commit_all(root, "off-pipeline edit")
+        return root
+
+    def test_depth_one_clone_skips_instead_of_claiming_in_sync(self) -> None:
+        clone = _shallow_clone(self._source_repo(), 1)
+
+        result = self._run(clone)
+        text = drift.render_human(result)
+        self.assertEqual(result["checked"], 0)
+        self.assertEqual(
+            sorted(sk["reason"] for sk in result["skipped"]),
+            [drift.SKIP_SHALLOW, drift.SKIP_SHALLOW],
+        )
+        self.assertNotIn("✓", text)
+        self.assertNotIn("in sync", text)
+        self.assertIn("shallow clone", text)
+
+    def test_deeper_shallow_clone_skips_instead_of_fabricating_a_baseline(self) -> None:
+        clone = _shallow_clone(self._source_repo(), 3)
+
+        result = self._run(clone)
+        todos = next(sk for sk in result["skipped"] if sk["name"] == "todos")
+        self.assertEqual(todos["reason"], drift.SKIP_SHALLOW)
+        self.assertEqual([c["name"] for c in result["capabilities"]], ["about"])
+        self.assertEqual(result["capabilities"][0]["drifted"], [])
+
+    def test_mixed_shallow_run_reports_both_counts_and_the_fix(self) -> None:
+        clone = _shallow_clone(self._source_repo(), 3)
+
+        text = drift.render_human(self._run(clone))
+        self.assertIn(
+            f"✓ 1 of 2 capabilities in sync; 1 not checked — {drift.SKIP_SHALLOW}", text
+        )
+        self.assertNotIn("All 1 checked", text)
+        self.assertIn("fetch-depth: 0", text)
+
+    def test_full_clone_is_unaffected_by_the_shallow_guard(self) -> None:
+        source = self._source_repo()
+
+        result = self._run(source)
+        todos = next(c for c in result["capabilities"] if c["name"] == "todos")
+        self.assertEqual(result["skipped"], [])
+        self.assertEqual(result["checked"], 2)
+        self.assertEqual(
+            [(d["file"], d["severity"]) for d in todos["drifted"]],
+            [("src/todos/list.ts", "unspeced")],
+        )
+        self.assertNotIn("shallow", drift.render_human(result))
+
+    def test_every_shallow_path_still_exits_zero(self) -> None:
+        source = self._source_repo()
+        for depth in (1, 3):
+            clone = _shallow_clone(source, depth)
+            with self.subTest(depth=depth):
+                self.assertEqual(drift.main(["--root", str(clone)]), 0)
+                self.assertEqual(drift.main(["--root", str(clone), "--json"]), 0)
+
+    def test_unreadable_history_is_not_reported_as_an_uncommitted_spec(self) -> None:
+        root = _bake_drift_repo(self.YAML)
+        _write(root, "capabilities/todos/spec.md", "# Todos\n")
+        _commit_all(root, "adopt todos")
+        for obj in (root / ".git" / "objects").rglob("*"):
+            if obj.is_file():
+                obj.unlink()
+
+        result = self._run(root)
+        todos = next(sk for sk in result["skipped"] if sk["name"] == "todos")
+        self.assertEqual(todos["reason"], drift.SKIP_UNREADABLE)
+        self.assertNotEqual(todos["reason"], drift.SKIP_UNCOMMITTED)
+        self.assertEqual(drift.main(["--root", str(root)]), 0)
+
+    def test_repo_with_no_commits_reports_uncommitted_not_unreadable(self) -> None:
+        root = _bake_drift_repo(self.YAML)
+        _write(root, "capabilities/todos/spec.md", "# Todos\n")
+        _write(root, "capabilities/about/spec.md", "# About\n")
+
+        result = self._run(root)
+        self.assertEqual(result["checked"], 0)
+        self.assertEqual(
+            sorted(sk["reason"] for sk in result["skipped"]),
+            [drift.SKIP_UNCOMMITTED, drift.SKIP_UNCOMMITTED],
+        )
+        self.assertNotIn("unreadable", drift.render_human(result))
+        self.assertEqual(drift.main(["--root", str(root)]), 0)
+
+    def test_full_clone_with_no_shallow_file_finds_no_boundaries(self) -> None:
+        root = self._source_repo()
+
+        self.assertEqual(drift._shallow_boundaries(str(root)), frozenset())
+        self.assertTrue(drift._shallow_boundaries(str(_shallow_clone(root, 1))))
+
+    def test_an_unreadable_shallow_file_skips_instead_of_claiming_full_history(self) -> None:
+        clone = _shallow_clone(self._source_repo(), 1)
+        shallow = Path(clone) / ".git" / "shallow"
+        shallow.chmod(0o000)
+        self.addCleanup(shallow.chmod, 0o644)
+
+        self.assertIsNone(drift._shallow_boundaries(str(clone)))
+
+        result = self._run(Path(clone))
+        self.assertEqual(result["checked"], 0)
+        self.assertTrue(result["skipped"])
+        self.assertEqual(
+            {sk["reason"] for sk in result["skipped"]}, {drift.SKIP_UNREADABLE}
+        )
+        self.assertNotIn("in sync", drift.render_human(result))
+        self.assertEqual(drift.main(["--root", str(clone)]), 0)
 
 
 class TierPathTests(unittest.TestCase):

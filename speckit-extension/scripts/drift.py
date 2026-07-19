@@ -14,8 +14,10 @@ classify each:
                   spec never saw it at all). More concerning than `tracked`.
 
 The `✓ … in sync` claim is earned only by capabilities that were CHECKED — a run
-that skipped every capability reports `0 checked, N skipped` instead, and callers
-read `checked` off the result to tell "clean" from "did not run".
+that skipped every capability reports `0 checked, N skipped` instead, a partly
+skipped run states both counts, and callers read `checked` off the result to tell
+"clean" from "did not run". A clone without the history to reach a capability's
+baseline is skipped rather than compared against the graft boundary.
 
 Deterministic: pure git + the LS·1 resolver (membership) + an exempt-glob filter.
 It NEVER halts — always exits 0, including when everything was skipped (a skip
@@ -72,11 +74,54 @@ def _is_git_repo(root: str) -> bool:
     return code == 0 and out.strip() == "true"
 
 
-def _spec_commit(root: str, spec: str) -> str | None:
-    """The last commit that modified <spec>, or None if untracked / no commits."""
+SKIP_UNCOMMITTED = "spec.md not yet committed"
+SKIP_UNREADABLE = "spec history unreadable"
+SKIP_SHALLOW = "spec history unreachable (shallow clone)"
+HINT_SHALLOW = ("👉 Fetch the full history to check these "
+                "(e.g. actions/checkout with fetch-depth: 0).")
+
+
+def _shallow_boundaries(root: str) -> frozenset[str] | None:
+    """The commits git grafted at the edge of a shallow clone, or None if unknowable.
+
+    A boundary commit has no parent in the local object store, so git reports it
+    as touching every path — `git log -n1 -- <spec>` resolves to it for specs it
+    never modified, which would produce a baseline that does not exist.
+
+    The shallow file IS git's definition of shallowness — `--is-shallow-repository`
+    just reports whether it holds anything — so this reads it as the only source.
+    """
+    code, out = _git(root, ["rev-parse", "--git-path", "shallow"])
+    if code != 0 or not out.strip():
+        return None
+    path = out.strip()
+    if not os.path.isabs(path):
+        path = os.path.join(root, path)
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return frozenset(ln.strip() for ln in fh if ln.strip())
+    except FileNotFoundError:
+        # No shallow file is git's own answer for "not a shallow clone".
+        return frozenset()
+    except OSError:
+        # Present but unreadable: we cannot tell which baselines are grafted.
+        return None
+
+
+def _has_commits(root: str) -> bool:
+    """False on an unborn HEAD, where `git log` fails for every path alike."""
+    code, _ = _git(root, ["rev-parse", "--verify", "--quiet", "HEAD"])
+    return code == 0
+
+
+def _spec_commit(root: str, spec: str) -> tuple[str, str | None]:
+    """`("ok", sha)` for the last commit that modified <spec>, else
+    `("uncommitted", None)` or `("unreadable", None)`."""
     code, out = _git(root, ["log", "-n", "1", "--format=%H", "--", spec])
+    if code != 0:
+        return "unreadable", None
     sha = out.strip()
-    return sha if code == 0 and sha else None
+    return ("ok", sha) if sha else ("uncommitted", None)
 
 
 def _changed_since(root: str, commit: str, pathspec: str | None = None) -> list[str]:
@@ -165,6 +210,9 @@ def compute_drift(root: str, living: dict) -> dict:
 
     exempt_globs = living.get("exempt") or []
     git_ok = _is_git_repo(root)
+    boundaries = _shallow_boundaries(root) if git_ok else frozenset()
+    graft_state_unknown = boundaries is None
+    has_commits = _has_commits(root) if git_ok else False
     caps_out: list[dict] = []
     skipped: list[dict] = []
 
@@ -177,9 +225,17 @@ def compute_drift(root: str, living: dict) -> dict:
             skipped.append({"name": cap["name"],
                             "reason": "git unavailable or --root is not a git repo"})
             continue
-        commit = _spec_commit(root, spec)
-        if commit is None:
-            skipped.append({"name": cap["name"], "reason": "spec.md not yet committed"})
+        if graft_state_unknown:
+            skipped.append({"name": cap["name"], "reason": SKIP_UNREADABLE})
+            continue
+        state, commit = _spec_commit(root, spec)
+        if state != "ok":
+            unreadable = state == "unreadable" and has_commits
+            reason = SKIP_UNREADABLE if unreadable else SKIP_UNCOMMITTED
+            skipped.append({"name": cap["name"], "reason": reason})
+            continue
+        if commit in boundaries:
+            skipped.append({"name": cap["name"], "reason": SKIP_SHALLOW})
             continue
 
         spec_posix = rsp._posix(spec)
@@ -209,17 +265,35 @@ def compute_drift(root: str, living: dict) -> dict:
             "capabilities": caps_out, "skipped": skipped}
 
 
-def _counts_line(result: dict, include_checked: bool = True) -> str:
+def _counts_line(result: dict) -> str:
     """`0 checked, 9 skipped (spec.md not yet committed)` — the parenthetical
     appears only when every skip shares one reason."""
     skipped = result["skipped"]
-    line = f"{len(skipped)} skipped"
-    if include_checked:
-        line = f"{result['checked']} checked, " + line
+    line = f"{result['checked']} checked, {len(skipped)} skipped"
     reasons = {sk["reason"] for sk in skipped}
     if len(reasons) == 1:
         line += f" ({reasons.pop()})"
     return line
+
+
+def _partial_clean_line(result: dict) -> str:
+    """`✓ 2 of 9 capabilities in sync; 7 not checked — <reason>` — the clean-run
+    summary when some capabilities were skipped, so the ✓ can't read as a verdict
+    on the whole configuration."""
+    checked = result["checked"]
+    skipped = result["skipped"]
+    line = (f"✓ {checked} of {checked + len(skipped)} capabilities in sync; "
+            f"{len(skipped)} not checked")
+    reasons = {sk["reason"] for sk in skipped}
+    if len(reasons) == 1:
+        line += f" — {reasons.pop()}"
+    return line
+
+
+def _shallow_hint(result: dict) -> list[str]:
+    return ([HINT_SHALLOW]
+            if any(sk["reason"] == SKIP_SHALLOW for sk in result["skipped"])
+            else [])
 
 
 def render_human(result: dict) -> str:
@@ -235,13 +309,16 @@ def render_human(result: dict) -> str:
         if not result["skipped"]:
             return "No capabilities configured."
         lines.append(_counts_line(result))
+        lines.extend(_shallow_hint(result))
         return "\n".join(lines)
 
     if not any(c["drifted"] for c in result["capabilities"]):
-        noun = "capability" if checked == 1 else "capabilities"
-        lines.append(f"✓ All {checked} checked {noun} in sync.")
         if result["skipped"]:
-            lines.append(_counts_line(result, include_checked=False))
+            lines.append(_partial_clean_line(result))
+            lines.extend(_shallow_hint(result))
+        else:
+            noun = "capability" if checked == 1 else "capabilities"
+            lines.append(f"✓ All {checked} checked {noun} in sync.")
         return "\n".join(lines)
 
     lines.append("🔍 Spec drift report")
@@ -260,6 +337,7 @@ def render_human(result: dict) -> str:
             lines.append(f"   {d['severity']:<8} {d['file']}  — {note}")
     lines.append("")
     lines.append(_counts_line(result))
+    lines.extend(_shallow_hint(result))
     lines.append("👉 Fold these into the living spec (e.g. /speckit.companion.living-adopt) "
                  "or add the path to livingSpecs.exempt.")
     return "\n".join(lines)
