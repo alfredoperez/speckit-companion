@@ -99,7 +99,7 @@ A future maintainer adds a command and updates the manifest but forgets the docu
 - **Install area** — a directory belonging to one AI tool where the installer writes the command files, each with its own naming shape and file extension.
 - **Install record** — the project's stored account of which commands were registered for which tool, plus which command each automatic event triggers. This is the record that goes stale, because a reinstall adds to it and never removes from it.
 - **Orphan** — a command present in an install area or an install record that the manifest no longer declares.
-- **Gap** — a command the manifest declares that is absent from an install area, an install record, or a document.
+- **Gap** — a command the manifest declares that is absent from an install area, an install record, or a document. An install area holding no Companion commands at all is not a gap: the extension simply is not installed there, which is the normal state of a fresh checkout, since the per-tool command files are install output and are not committed.
 
 ## Success Criteria
 

@@ -40,7 +40,7 @@ Each drift direction produces its own prefix, so a test asserts the specific fai
 | Direction | Line |
 |---|---|
 | Orphan on disk | `orphan emission: <path> — no command named <name> in extension.yml provides.commands` |
-| Gap on disk | `missing emission: <name> — declared in extension.yml but absent from <area>` |
+| Gap on disk | `missing emission: <name> — declared in extension.yml but absent from <area>` (only where the area holds at least one Companion entry — see below) |
 | Orphan in records | `stale record: <name> registered for <agent> — not in extension.yml provides.commands` |
 | Gap in records | `unrecorded command: <name> — declared in extension.yml but not registered for <agent>` |
 | Stale hook | `stale hook: <event> triggers <name>, which extension.yml no longer declares` |
@@ -49,6 +49,12 @@ Each drift direction produces its own prefix, so a test asserts the specific fai
 | Unresolvable entry | `unresolvable entry: <path> — inside <area> but matches no known naming shape` |
 
 Findings are sorted so the output is stable across runs and diffable.
+
+## Install areas that are not installed
+
+The per-agent command files are install output and are gitignored, so a fresh checkout (CI, a new clone) has the agent directories but none of the emissions in them. An area holding **no** Companion entries therefore means "the extension is not installed here" and is skipped; an area holding **any** is held to the full declared set in both directions. Without that rule the gate reports every declared command as missing from every area on every CI run.
+
+The records and documents are checked into git, so those two surfaces — which is where the drift this gate was built for actually landed — are verified on every CI run regardless.
 
 ## Public surface for tests
 

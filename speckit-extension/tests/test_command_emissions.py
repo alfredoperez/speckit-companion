@@ -24,6 +24,10 @@ _spec = importlib.util.spec_from_file_location("check_command_emissions", SCRIPT
 ce = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(ce)
 
+_parts_spec = importlib.util.spec_from_file_location("command_parts", SCRIPTS / "_command_parts.py")
+parts = importlib.util.module_from_spec(_parts_spec)
+_parts_spec.loader.exec_module(parts)
+
 NAMES = ["speckit.companion.specify", "speckit.companion.living-move"]
 
 
@@ -80,6 +84,13 @@ class TestDiskDrift(unittest.TestCase):
             self.assertIn("orphan emission: .claude/skills/speckit-companion-relocate", problems[0])
             self.assertIn("speckit.companion.relocate", problems[0])
 
+    def test_an_area_with_no_companion_entries_is_not_installed_here(self):
+        """A fresh checkout has the agent dirs but no emissions — they are gitignored
+        install output. Reporting all 17 as missing there would red every CI run."""
+        with tempfile.TemporaryDirectory() as root:
+            os.makedirs(os.path.join(root, ".claude/skills/some-other-skill"))
+            self.assertEqual(ce.check_area(".claude/skills", NAMES, root), [])
+
     def test_missing_emission_is_reported(self):
         with tempfile.TemporaryDirectory() as root:
             build_area(root, ".claude/skills", NAMES[:1])
@@ -119,6 +130,71 @@ class TestDiskDrift(unittest.TestCase):
             os.makedirs(os.path.join(root, "examples/demo/.claude/skills/speckit-companion-relocate"))
             self.assertEqual(ce.discover_areas(root), [])
             self.assertEqual(ce.check_areas(NAMES, root), [])
+
+
+class TestManifestReader(unittest.TestCase):
+    """The shared reader must resolve every declared entry or raise — a reader that
+    silently dropped one would shrink the surface every downstream gate compares."""
+
+    def _manifest(self, root: str, block: str) -> str:
+        path = os.path.join(root, "extension.yml")
+        Path(path).write_text(f"provides:\n  commands:\n{block}tags:\n  - x\n", encoding="utf-8")
+        return path
+
+    def test_it_reads_name_and_file_pairs(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = self._manifest(
+                root,
+                "    - name: speckit.companion.specify\n"
+                "      file: commands/speckit.companion.specify.md\n"
+                '      description: "x"\n',
+            )
+            self.assertEqual(
+                parts.declared_commands(path),
+                [("speckit.companion.specify", "commands/speckit.companion.specify.md")],
+            )
+
+    def test_a_reordered_entry_still_resolves(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = self._manifest(
+                root,
+                "    - name: speckit.companion.specify\n"
+                '      description: "x"\n'
+                "      file: commands/speckit.companion.specify.md\n",
+            )
+            self.assertEqual(len(parts.declared_commands(path)), 1)
+
+    def test_an_entry_without_a_file_raises_naming_it(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = self._manifest(root, "    - name: speckit.companion.specify\n      description: \"x\"\n")
+            with self.assertRaises(SystemExit) as caught:
+                parts.declared_commands(path)
+            self.assertIn("speckit.companion.specify", str(caught.exception))
+
+    def test_hook_entries_outside_the_block_are_not_read_as_commands(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = os.path.join(root, "extension.yml")
+            Path(path).write_text(
+                "provides:\n  commands:\n"
+                "    - name: speckit.companion.specify\n"
+                "      file: commands/speckit.companion.specify.md\n"
+                "hooks:\n  after_specify:\n"
+                "    - name: speckit.companion.after-specify\n"
+                "      file: commands/nope.md\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(len(parts.declared_commands(path)), 1)
+
+    def test_a_commands_block_at_end_of_file_still_resolves(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = os.path.join(root, "extension.yml")
+            Path(path).write_text(
+                "provides:\n  commands:\n"
+                "    - name: speckit.companion.specify\n"
+                "      file: commands/speckit.companion.specify.md\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(len(parts.declared_commands(path)), 1)
 
 
 class TestRecordDrift(unittest.TestCase):

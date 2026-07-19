@@ -8,6 +8,9 @@ which has drifted in this repo before:
       A renamed command leaves the old file behind (the CLI's reinstall merges
       names and never deletes, and it skips overwriting a skill that already
       exists), so the retired name stays live in the agent's command list.
+      Emissions are install output and are gitignored, so an area holding NONE of
+      them means the extension is not installed here (a fresh CI checkout) and is
+      skipped; an area holding ANY is held to the full declared set.
       Failure: `orphan emission:` / `missing emission:`.
 
   (b) RECORDS    — `.specify/extensions/.registry` and the hook registrations in
@@ -58,13 +61,9 @@ SKIP_DIRS = {
     "node_modules": "vendored dependencies",
     "out": "build output",
     "dist": "build output",
-    # Deliberately frozen at pre-rename command names: the rename commit kept them
-    # because rewriting them would falsify the record of what was decided then.
     "examples": "frozen pre-rename fixtures",
-    # Spec folders quote command names as prose, and are a record of past runs.
     "specs": "historical spec records",
-    # The extension's own source and its installed copy are the SOURCE of an
-    # emission, not an emission. Scanning them would compare the manifest to itself.
+    # Source of an emission, not an emission — scanning it compares the manifest to itself.
     "speckit-extension": "extension source",
     ".specify": "install source, checked as records instead",
 }
@@ -145,7 +144,11 @@ def check_areas(names, root: str) -> list:
 
 
 def check_area(area: str, names, root: str) -> list:
-    """Hold one install area's entries against the manifest, both directions."""
+    """Hold one install area's entries against the manifest, both directions.
+
+    An area holding no Companion entries is not installed here, so it is skipped
+    rather than reported as missing all of them.
+    """
     problems = []
     base = os.path.join(root, area)
     if not os.path.isdir(base):
@@ -165,6 +168,9 @@ def check_area(area: str, names, root: str) -> list:
             )
             continue
         on_disk[name] = f"{area}/{entry}"
+
+    if not on_disk:
+        return problems
 
     for name, path in sorted(on_disk.items()):
         if name not in declared:
@@ -259,9 +265,8 @@ def check_docs(names, docs: dict) -> list:
 
 
 def check(root: str = REPO_ROOT, docs: dict | None = None) -> list:
-    """Compose the four comparisons. `root`/`docs` are parameters so a test can
-    drive the real composition against a synthetic tree — a check() that only ever
-    ran on the healthy repo would pass even if it returned nothing at all."""
+    """Compose the four comparisons. `root`/`docs` are parameters so a test can drive
+    the real composition against a synthetic tree."""
     names = declared_command_names()
     problems = check_areas(names, root)
     for area in sorted(KNOWN_AREAS):
