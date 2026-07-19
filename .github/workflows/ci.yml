@@ -52,3 +52,6 @@ jobs:
 
       - name: Check release packaging (every script a shipped command calls is packaged)
         run: python3 speckit-extension/scripts/package-manifest.py --check
+
+      - name: Check command inventory (emissions, install records, and docs match the manifest)
+        run: python3 speckit-extension/scripts/check-command-emissions.py

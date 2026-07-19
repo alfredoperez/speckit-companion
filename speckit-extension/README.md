@@ -77,25 +77,52 @@ Companion rides your **existing** spec-kit commands via lifecycle hooks — you 
 
 ## Commands
 
-Four capture commands run automatically as lifecycle hooks; the rest are yours to run.
+Seventeen commands in four families. Thirteen are yours to run; the four hook commands run themselves and should never be typed by hand.
 
-| Command | Runs | What it does |
-|---------|------|--------------|
-| `speckit.companion.after-specify` | `after_specify` hook | Record specify completion into `.spec-context.json` |
-| `speckit.companion.after-plan` | `after_plan` hook | Record plan completion (`planned`) |
-| `speckit.companion.after-tasks` | `after_tasks` hook | Record tasks completion (`ready-to-implement`) |
-| `speckit.companion.after-implement` | `after_implement` hook | Per-task journaling on implement (`implemented` when all tasks checked) |
-| `/speckit.companion.status` | you | Print the current step, status, recorded decisions, and the next action |
-| `/speckit.companion.resume` | you | Continue the pipeline from the recorded step — carries decisions into scope and dispatches the next command in the family the spec has been running (`/speckit.companion.<step>` for Companion specs, `/speckit.<step>` for stock specs; at the next unchecked task inside implement) |
-| `/speckit.companion.specify` · `.plan` · `.tasks` · `.implement` | you | The SpecKit Companion pipeline — emit the lean shape (no user stories, trimmed plan, files/dependencies tasks) for a spec |
-| `speckit.companion.classify` | workflow routing step | Emit a `small \| normal \| oversized` size signal so the Companion workflow can right-size the pipeline (thresholds live here, not in a setting) |
-| `speckit.companion.mark-complete` | workflow terminal step | Write `status: completed` to `.spec-context.json` — the Companion workflow's final step (the command writes it; the AI never hand-writes `completed`) |
-| `/speckit.companion.auto` | you | Run the whole pipeline hands-off — specify → plan → tasks → implement → completed, no approval pauses. The Run button in Create Spec triggers the same flow |
-| `/speckit.companion.living-adopt` | you | Brownfield adoption wizard — draft living specs for the code areas you name, surface-first (`[DRAFT]`, `[inferred]` tags, `## Uncovered`), walk the clarifications, and register the capabilities (opt-in, incremental) |
-| `/speckit.companion.living-drift` | you | Per-capability report of source files changed since the living spec was last committed, classified `tracked` vs `unspeced` (opt-in, read-only, never halts) |
-| `/speckit.companion.living-coverage` | you | Per-capability requirement→test report — which requirements in the living spec have a test mapped in its `.coverage.md` tier and which are uncovered (opt-in, read-only, never halts) |
+### Pipeline
 
-Full reference: [docs/commands.md](./docs/commands.md).
+The spec-driven run itself, in the order you'd use them.
+
+| Command | What it does |
+|---------|--------------|
+| `/speckit.companion.specify` | Write `spec.md` — prioritized user stories, acceptance scenarios, requirements, and success criteria — and classify the change's size |
+| `/speckit.companion.plan` | Write `plan.md` and its design artifacts, right-sized to that classification |
+| `/speckit.companion.tasks` | Write `tasks.md` — a dependency-ordered task list grouped by user story into waves |
+| `/speckit.companion.implement` | Execute `tasks.md` wave by wave, journaling each task as it finishes |
+| `/speckit.companion.auto` | Run the whole pipeline hands-off — specify → plan → tasks → implement → completed, no approval pauses. The Run button in Create Spec triggers the same flow |
+| `speckit.companion.classify` | Emit a `small \| normal \| oversized` size signal so the workflow can right-size the pipeline (thresholds live here, not in a setting). Dispatched by the workflow's routing step |
+| `speckit.companion.mark-complete` | Write `status: completed` — the workflow's terminal step. The command writes it; the AI never hand-writes `completed`. Dispatched by the workflow |
+
+### Run state
+
+| Command | What it does |
+|---------|--------------|
+| `/speckit.companion.status` | Print where the active spec stands — current step, status, recorded decisions, and the next action |
+| `/speckit.companion.resume` | Continue from the recorded step, carrying decisions into scope, and dispatch the next command in the family the spec has been running (`/speckit.companion.<step>` for Companion specs, `/speckit.<step>` for stock specs; at the next unchecked task inside implement) |
+
+### Living specs
+
+All four are opt-in — with no `livingSpecs` block in `.specify/companion.yml` they report nothing and change nothing.
+
+| Command | What it does |
+|---------|--------------|
+| `/speckit.companion.living-adopt` | Brownfield adoption wizard — draft living specs for the code areas you name, surface-first (`[DRAFT]`, `[inferred]` tags, `## Uncovered`), walk the clarifications, and register the capabilities (incremental) |
+| `/speckit.companion.living-drift` | Per-capability report of source files changed since the living spec was last committed, classified `tracked` vs `unspeced` (read-only, never halts) |
+| `/speckit.companion.living-coverage` | Per-capability requirement→test report — which requirements have a test mapped in the capability's `.coverage.md` tier and which are uncovered (read-only, never halts) |
+| `/speckit.companion.living-move` | Move a living spec between central and colocated storage — the file, its tier siblings, and the registry entry together (reversible) |
+
+### Hooks — never invoke these
+
+These four run automatically when their lifecycle event fires. They are what keeps `.spec-context.json` current, and they are listed here so you recognize them, not so you call them.
+
+| Command | Fired by | What it records |
+|---------|----------|-----------------|
+| `speckit.companion.after-specify` | `after_specify` | Specify completion (`specified`) |
+| `speckit.companion.after-plan` | `after_plan` | Plan completion (`planned`) |
+| `speckit.companion.after-tasks` | `after_tasks` | Tasks completion (`ready-to-implement`) |
+| `speckit.companion.after-implement` | `after_implement` | Per-task journaling on implement (`implemented` when every task is checked) |
+
+Full reference: [docs/commands.md](./docs/commands.md). This table is checked against the extension's own command list on every build, so a command can't be added without appearing here.
 
 ### Run the whole spec hands-off
 

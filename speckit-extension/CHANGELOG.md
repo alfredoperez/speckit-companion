@@ -8,7 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Added
+
+- **Every command is now listed in one place.** The README carries a full command table grouped into four families — the pipeline, the run-state commands, the living-specs commands, and the four that run themselves on a lifecycle event and should never be typed by hand, each labelled with the event that fires it. The detailed reference, which described six of the seventeen commands, now covers all of them. `/speckit.companion.living-move` was missing from the listing entirely and is now documented.
+- **A rename can no longer leave a stale command behind unnoticed.** A new build check holds the extension's own command list against everything downstream of it: the command files installed for each AI tool, the project's install records, and both documents. If a command is renamed or removed and an old copy survives, or a new one never gets installed, recorded, or documented, the build fails and names the command and the exact path. Adding a command without documenting it now fails too. The AI tool directories it knows about are discovered rather than assumed, so a newly supported tool is reported instead of quietly going unchecked.
+
 ### Fixed
+
+- **This project's own install records were pointing at commands that no longer exist.** After the recent rename, the four automatic capture steps were still registered under their old names, and the stored command list carried eight retired names and none of their replacements. Anything reading those records — including a later clean uninstall — was working from a picture that was a release out of date. The records now match the commands that actually ship.
+
+  This is the drift the new check exists to catch, and it is worth knowing why it happened: reinstalling an extension **adds** to the command list it already had and never removes from it, and it will not overwrite a command file that is already there. That behavior lives in the Spec Kit CLI rather than here, so upgrading across a rename still needs `specify extension remove companion` before reinstalling. What changed is that a stale name is no longer invisible.
 
 - **The drift check no longer reports "all in sync" after checking nothing.** Right after you adopt a batch of capabilities, none of their specs are committed yet, so every one is skipped — drift needs a committed baseline to diff against. The run used to end on a green all-clear anyway, which read as a clean bill of health for a check that never ran. It now ends on `0 checked, 9 skipped (spec.md not yet committed)`, and the `✓ All N checked capabilities in sync.` line is reserved for a run that genuinely examined at least one capability and found it clean. A partly-skipped run states both numbers. The `--json` output gained a `checked` count so a script can tell "clean" from "did not run", and the exit code stays `0` throughout — a skip is correct behavior, not a failure.
 - **Folding a spec back into a living spec now reports what it applied, not what it attempted.** A change block naming a requirement heading the living spec doesn't have is skipped, but the summary still counted it, so `~3 modified` printed when all three had quietly matched nothing. The counts now reflect what actually landed, and dropped changes are called out.

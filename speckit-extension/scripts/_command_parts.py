@@ -1,7 +1,8 @@
 """Shared helpers for the command-parts build + parity tooling.
 
-Single source of: which command bodies are tracked, how a part fence looks, and
-how a body is canonicalized for golden comparison. Stdlib only.
+Single source of: which command bodies are tracked, how a part fence looks, how a
+body is canonicalized for golden comparison, and what `extension.yml` declares
+under `provides.commands`. Stdlib only.
 """
 import os
 import re
@@ -38,6 +39,48 @@ _MARKER_LINE = re.compile(
     r"^[ \t]*<!-- /?speckit-companion:(?:part [\w-]+|timing) -->[ \t]*\n?",
     re.MULTILINE,
 )
+
+
+MANIFEST = "extension.yml"
+
+# The `provides.commands:` block, ending at the next top-level key (`hooks:`,
+# `tags:`, …). Bounding it matters: `file:`/`name:` also appear under `hooks:`
+# and in descriptions, and an unbounded scan would pull those in as commands.
+_COMMANDS_BLOCK = re.compile(
+    r"^provides:\s*$.*?^\s+commands:\s*$\n(.*?)(?=^\S)",
+    re.MULTILINE | re.DOTALL,
+)
+_COMMAND_ENTRY = re.compile(
+    r"^\s*-\s*name:\s*(\S+)\s*$\n^\s*file:\s*(\S+)\s*$",
+    re.MULTILINE,
+)
+
+
+def declared_commands() -> list:
+    """The (name, file) pairs `extension.yml` declares under `provides.commands`.
+
+    The one manifest reader in this repo — the packaging gate and the emissions
+    gate both consume it, so a second parser can never drift from this one.
+    A manifest that parses to no commands is a hard error, not an empty list:
+    silently reporting zero commands would make every downstream gate vacuously
+    pass, which is the drift those gates exist to catch.
+    """
+    path = os.path.join(EXT, MANIFEST)
+    if not os.path.isfile(path):
+        raise SystemExit(f"[parts] no manifest at {path}")
+    with open(path, encoding="utf-8") as fh:
+        text = fh.read()
+    block = _COMMANDS_BLOCK.search(text)
+    if not block:
+        raise SystemExit(f"[parts] no provides.commands block in {MANIFEST}")
+    pairs = _COMMAND_ENTRY.findall(block.group(1))
+    if not pairs:
+        raise SystemExit(f"[parts] provides.commands in {MANIFEST} declares no commands")
+    return pairs
+
+
+def declared_command_names() -> list:
+    return [name for name, _ in declared_commands()]
 
 
 def golden_path(rel: str) -> str:

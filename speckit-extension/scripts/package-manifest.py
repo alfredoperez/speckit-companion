@@ -35,6 +35,12 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 EXT_ROOT = os.path.dirname(HERE)
 
+# Loaded by filename from the test suite, which does not put this dir on the path.
+if HERE not in sys.path:
+    sys.path.insert(0, HERE)
+
+from _command_parts import declared_commands  # noqa: E402
+
 RUNTIME_SCRIPTS = frozenset({
     "write-context.py",
     "status-context.py",
@@ -54,12 +60,12 @@ BUILD_ONLY = frozenset({
     "capture-golden.py",
     "_command_parts.py",
     "package-manifest.py",
+    "check-command-emissions.py",
 })
 
 INSTALLED_SCRIPT_REF = re.compile(
     r"\.specify/extensions/companion/scripts/([A-Za-z0-9_.-]+\.py)"
 )
-MANIFEST_COMMAND_FILE = re.compile(r"^\s*file:\s*(\S+)", re.MULTILINE)
 QUOTED_NAME = re.compile(r"""["']([A-Za-z0-9_.-]+)["']""")
 PLAIN_IMPORT = re.compile(r"^\s*(?:import|from)\s+([A-Za-z0-9_]+)", re.MULTILINE)
 
@@ -83,10 +89,7 @@ def _resolve_sibling(name: str, existing: set[str]) -> str | None:
 
 def declared_command_files() -> list[str]:
     """Every command file `extension.yml` declares, whether or not it exists."""
-    manifest = os.path.join(EXT_ROOT, "extension.yml")
-    if not os.path.exists(manifest):
-        return []
-    return [os.path.join(EXT_ROOT, rel) for rel in MANIFEST_COMMAND_FILE.findall(_read(manifest))]
+    return [os.path.join(EXT_ROOT, rel) for _, rel in declared_commands()]
 
 
 def missing_command_files() -> list[str]:
