@@ -232,7 +232,7 @@ def render_human(result: dict) -> str:
                     else "changed outside the pipeline")
             lines.append(f"   {d['severity']:<8} {d['file']}  — {note}")
     lines.append("")
-    lines.append("👉 Fold these into the living spec (e.g. /speckit.companion.adopt) "
+    lines.append("👉 Fold these into the living spec (e.g. /speckit.companion.living-adopt) "
                  "or add the path to livingSpecs.exempt.")
     return "\n".join(lines)
 

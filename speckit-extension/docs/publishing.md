@@ -100,10 +100,10 @@ requires:
   speckit_version: ">=0.8.5"
 tags: [spec-driven-development, tracking, companion]
 commands:
-  - speckit.companion.capture          # after_specify hook
-  - speckit.companion.capture-plan     # after_plan hook
-  - speckit.companion.capture-tasks    # after_tasks hook
-  - speckit.companion.capture-implement# after_implement hook (per-task journaling)
+  - speckit.companion.after-specify          # after_specify hook
+  - speckit.companion.after-plan     # after_plan hook
+  - speckit.companion.after-tasks    # after_tasks hook
+  - speckit.companion.after-implement# after_implement hook (per-task journaling)
   - speckit.companion.status           # report step/status/decisions/next action
   - speckit.companion.resume           # resume the pipeline from the recorded step
 download_url: https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip

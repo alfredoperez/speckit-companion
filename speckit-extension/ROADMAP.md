@@ -30,7 +30,7 @@ The reproducible proof procedure lives in the [README](./README.md#end-to-end-pr
 
 ## Step 2 — what shipped
 
-- **Three new lifecycle hooks** — `after_plan`, `after_tasks`, and `after_implement` (all `optional: false`, auto-running), each backed by a per-step capture command (`speckit.companion.capture-plan` / `-tasks` / `-implement`) that reuses `write-context.py`.
+- **Three new lifecycle hooks** — `after_plan`, `after_tasks`, and `after_implement` (all `optional: false`, auto-running), each backed by a per-step capture command (`speckit.companion.after-plan` / `-tasks` / `-implement`) that reuses `write-context.py`.
 - **Per-task journaling** on `after_implement` via the writer's new `--tasks-file` task-sync mode — appends one idempotent transition per completed `- [x] **T###**` marker, recording `implementing` until every task is checked, then `implemented`.
 - **`derive-from-files.py`** — a new stdlib-only fallback that reconstructs `.spec-context.json` from on-disk artifacts + git when a hook never fired, honoring the same no-backward-clobber guard and emitting the same canonical schema.
 - **Regression coverage** — a stdlib `unittest` suite (append-only transitions, no-backward-clobber, unknown-key preservation, derive round-trip).

@@ -3,7 +3,7 @@
 The extension lives beside the VS Code GUI in the monorepo and is published/installed independently. At runtime it does **not** read or depend on the GUI — it only writes the canonical `.spec-context.json` the GUI already consumes.
 
 ```
-/speckit.specify  →  after_specify hook  →  speckit.companion.capture.md  →  write-context.py  →  .spec-context.json  →  Companion GUI re-renders
+/speckit.specify  →  after_specify hook  →  speckit.companion.after-specify.md  →  write-context.py  →  .spec-context.json  →  Companion GUI re-renders
 ```
 
 (The command/hook layer is documented in [commands.md](./commands.md).)
@@ -50,7 +50,7 @@ Expected: a valid canonical `.spec-context.json` with `currentStep: "specify"`, 
 
 1. Install the extension ([install.md](./install.md)) and open the repo with the SpecKit Companion VS Code extension enabled.
 2. Run a real `/speckit.specify "throwaway proof feature"` in your agent.
-3. Let the `after_specify` hook run `speckit.companion.capture` (it auto-runs at `optional: false`).
+3. Let the `after_specify` hook run `speckit.companion.after-specify` (it auto-runs at `optional: false`).
 4. Confirm `specs/<NNN>-<slug>/.spec-context.json` carries `currentStep: specify` / `status: specified` / a `by: extension` transition, and the Companion sidebar renders it at **specify / specified** — no GUI code change.
 5. Clean up: delete the throwaway spec; optionally `specify extension remove companion`.
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Write/update a feature's .spec-context.json from a spec-kit lifecycle hook.
 
-Invoked by the `speckit.companion.capture` command-markdown (registered on the
+Invoked by the `speckit.companion.after-specify` command-markdown (registered on the
 `after_specify` hook). Resolves the active feature directory using spec-kit's
 own precedence, then does a crash-safe read-merge-write of the Companion's
 canonical .spec-context.json:

@@ -48,6 +48,6 @@ python3 .specify/extensions/companion/scripts/drift.py --json
 ## What to do with the report
 
 Drift is a signal, not an error. For each `unspeced` or `tracked` row, either fold
-the change into the living spec (e.g. run `/speckit.companion.adopt` for the area,
+the change into the living spec (e.g. run `/speckit.companion.living-adopt` for the area,
 or write a delta spec) or add the path to `livingSpecs.exempt` if it shouldn't be
 tracked. The command never blocks the pipeline on its own.

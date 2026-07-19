@@ -55,8 +55,8 @@ describe('codexPromptResolver', () => {
                 skillName: 'speckit-companion-mark-complete',
                 args: '',
             });
-            expect(parseSlashCommand('/speckit.companion.capture-implement specs/012-x')).toEqual({
-                skillName: 'speckit-companion-capture-implement',
+            expect(parseSlashCommand('/speckit.companion.after-implement specs/012-x')).toEqual({
+                skillName: 'speckit-companion-after-implement',
                 args: 'specs/012-x',
             });
         });

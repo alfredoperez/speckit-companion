@@ -93,7 +93,7 @@ export function livingTierDocuments(sourcePath: string): SpecDocument[] {
 
 /**
  * How many body lines (after any YAML frontmatter) can carry the draft banner.
- * `/speckit.companion.adopt` writes it immediately under the title, so a small
+ * `/speckit.companion.living-adopt` writes it immediately under the title, so a small
  * window is enough — and it keeps the word "draft" in prose from counting.
  */
 const DRAFT_BANNER_SCAN_LINES = 10;
@@ -109,7 +109,7 @@ const DRAFT_BANNER_LINE = /^\s*(?:>\s*)*(?:#{1,6}\s+)?(?:[*_]{1,3})?\s*\[draft\]
 /**
  * True when a living spec's markdown declares itself a draft.
  *
- * `/speckit.companion.adopt` drafts surface-first specs and marks them with a
+ * `/speckit.companion.living-adopt` drafts surface-first specs and marks them with a
  * `[DRAFT]` banner near the top; the viewer badges those DRAFT instead of
  * LIVING. Only the banner window is inspected, so a requirement that merely
  * says "draft" deeper in the document does not demote the spec.

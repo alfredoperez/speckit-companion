@@ -137,8 +137,8 @@ describe('companionSteering', () => {
         };
 
         it('resolves an existing command body under the extension dir', () => {
-            const abs = writeCommandFile('commands/speckit.companion.capture.md');
-            expect(companionCommandFilePath(root, 'commands/speckit.companion.capture.md')).toBe(abs);
+            const abs = writeCommandFile('commands/speckit.companion.after-specify.md');
+            expect(companionCommandFilePath(root, 'commands/speckit.companion.after-specify.md')).toBe(abs);
         });
 
         it('returns undefined when the file does not exist on disk', () => {

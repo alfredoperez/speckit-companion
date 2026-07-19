@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Changed
+- **Eight commands renamed so their names say what they belong to.** The living-specs commands now carry the family: `/speckit.companion.adopt` → `living-adopt`, `drift` → `living-drift`, `coverage` → `living-coverage`, `relocate` → `living-move`. The four hook commands are now named after the lifecycle event they handle rather than the generic "capture": `capture` → `after-specify`, `capture-plan` → `after-plan`, `capture-tasks` → `after-tasks`, `capture-implement` → `after-implement`. The hooks still auto-run, so nothing changes unless you invoked one of the four living-specs commands by hand. The other nine (`specify`, `plan`, `tasks`, `implement`, `auto`, `classify`, `mark-complete`, `status`, `resume`) keep their names — they mirror stock Spec Kit, and that parallel is the point.
+
+  Entries below this one predate the rename and use the names as they were at the time. **Upgrading requires `specify extension remove companion` before reinstalling** — nothing prunes emitted commands, so a plain reinstall leaves the old names live alongside the new ones (see #461).
+
 ## [0.19.0] - 2026-07-14
 
 ### Fixed

@@ -81,19 +81,19 @@ Four capture commands run automatically as lifecycle hooks; the rest are yours t
 
 | Command | Runs | What it does |
 |---------|------|--------------|
-| `speckit.companion.capture` | `after_specify` hook | Record specify completion into `.spec-context.json` |
-| `speckit.companion.capture-plan` | `after_plan` hook | Record plan completion (`planned`) |
-| `speckit.companion.capture-tasks` | `after_tasks` hook | Record tasks completion (`ready-to-implement`) |
-| `speckit.companion.capture-implement` | `after_implement` hook | Per-task journaling on implement (`implemented` when all tasks checked) |
+| `speckit.companion.after-specify` | `after_specify` hook | Record specify completion into `.spec-context.json` |
+| `speckit.companion.after-plan` | `after_plan` hook | Record plan completion (`planned`) |
+| `speckit.companion.after-tasks` | `after_tasks` hook | Record tasks completion (`ready-to-implement`) |
+| `speckit.companion.after-implement` | `after_implement` hook | Per-task journaling on implement (`implemented` when all tasks checked) |
 | `/speckit.companion.status` | you | Print the current step, status, recorded decisions, and the next action |
 | `/speckit.companion.resume` | you | Continue the pipeline from the recorded step — carries decisions into scope and dispatches the next command in the family the spec has been running (`/speckit.companion.<step>` for Companion specs, `/speckit.<step>` for stock specs; at the next unchecked task inside implement) |
 | `/speckit.companion.specify` · `.plan` · `.tasks` · `.implement` | you | The SpecKit Companion pipeline — emit the lean shape (no user stories, trimmed plan, files/dependencies tasks) for a spec |
 | `speckit.companion.classify` | workflow routing step | Emit a `small \| normal \| oversized` size signal so the Companion workflow can right-size the pipeline (thresholds live here, not in a setting) |
 | `speckit.companion.mark-complete` | workflow terminal step | Write `status: completed` to `.spec-context.json` — the Companion workflow's final step (the command writes it; the AI never hand-writes `completed`) |
 | `/speckit.companion.auto` | you | Run the whole pipeline hands-off — specify → plan → tasks → implement → completed, no approval pauses. The Run button in Create Spec triggers the same flow |
-| `/speckit.companion.adopt` | you | Brownfield adoption wizard — draft living specs for the code areas you name, surface-first (`[DRAFT]`, `[inferred]` tags, `## Uncovered`), walk the clarifications, and register the capabilities (opt-in, incremental) |
-| `/speckit.companion.drift` | you | Per-capability report of source files changed since the living spec was last committed, classified `tracked` vs `unspeced` (opt-in, read-only, never halts) |
-| `/speckit.companion.coverage` | you | Per-capability requirement→test report — which requirements in the living spec have a test mapped in its `.coverage.md` tier and which are uncovered (opt-in, read-only, never halts) |
+| `/speckit.companion.living-adopt` | you | Brownfield adoption wizard — draft living specs for the code areas you name, surface-first (`[DRAFT]`, `[inferred]` tags, `## Uncovered`), walk the clarifications, and register the capabilities (opt-in, incremental) |
+| `/speckit.companion.living-drift` | you | Per-capability report of source files changed since the living spec was last committed, classified `tracked` vs `unspeced` (opt-in, read-only, never halts) |
+| `/speckit.companion.living-coverage` | you | Per-capability requirement→test report — which requirements in the living spec have a test mapped in its `.coverage.md` tier and which are uncovered (opt-in, read-only, never halts) |
 
 Full reference: [docs/commands.md](./docs/commands.md).
 
@@ -228,7 +228,7 @@ This stays **opt-in and safe**: with living specs off there is no fold. A featur
 
 ### Adopting an existing code area into a living spec
 
-Starting living specs on a codebase you didn't grow this way is the slow part — you'd normally hand-write one spec per area. The **adoption wizard** does the first draft for you, one area at a time. You point `/speckit.companion.adopt` at a single code area (say the billing module); it reads that area's surface, proposes a small set of capabilities for *just that area*, and drafts a living spec for each from what the code already exposes.
+Starting living specs on a codebase you didn't grow this way is the slow part — you'd normally hand-write one spec per area. The **adoption wizard** does the first draft for you, one area at a time. You point `/speckit.companion.living-adopt` at a single code area (say the billing module); it reads that area's surface, proposes a small set of capabilities for *just that area*, and drafts a living spec for each from what the code already exposes.
 
 Because the read is surface-first — exported functions, routes, props, signatures, not a deep behavioral study — every draft wears its limits openly. The whole spec is marked `[DRAFT]`, each requirement is tagged `observed` (drawn straight from the code surface) or `inferred` (an educated guess), genuinely uncertain items carry an inline `[NEEDS CLARIFICATION: …]`, and any file the assistant couldn't read is listed under a `## Uncovered` heading so nobody mistakes a quick draft for a verified spec. You review and confirm, and the wizard registers the capability into your `livingSpecs` block so the resolver immediately recognizes it.
 
@@ -236,14 +236,14 @@ Adoption is **opt-in and incremental**: you run it deliberately for the area you
 
 ### Spotting drift
 
-A living spec only stays honest if changes to its area keep flowing back into it — and in practice code keeps moving while the spec sits still. `/speckit.companion.drift` is the cheap way to notice. For each capability it lists the source files that changed *since the living spec was last committed*, and tells you how each one slipped:
+A living spec only stays honest if changes to its area keep flowing back into it — and in practice code keeps moving while the spec sits still. `/speckit.companion.living-drift` is the cheap way to notice. For each capability it lists the source files that changed *since the living spec was last committed*, and tells you how each one slipped:
 
 - **`tracked`** — the file went through the Companion pipeline (it shows up in a feature's `.spec-context.json` changed set) but was never folded back into the living spec. A missed sync.
 - **`unspeced`** — the file changed entirely outside the pipeline. The living spec never saw it at all — the more concerning of the two.
 
 ```bash
-/speckit.companion.drift          # human-readable report
-/speckit.companion.drift --json   # the same data for tooling / CI
+/speckit.companion.living-drift          # human-readable report
+/speckit.companion.living-drift --json   # the same data for tooling / CI
 ```
 
 Files you don't want tracked — generated code, tests, migrations — are filtered out by an exempt list. It defaults to `*.config.*`, `*.test.*`, and `**/migrations/**`, and you can override it with a `livingSpecs.exempt` glob list:
@@ -265,12 +265,12 @@ A living spec is more than its requirements. Next to a capability's requirements
 
 **Architecture loads lazily, only when the change warrants it.** When you plan a change, Companion already reads the requirements of the capabilities it touches. For an architecture-significant change — a `normal` or `oversized` plan, not a small fast-path one — it *also* pulls those capabilities' `.arch.md` files into context, so the plan is briefed on how the area is built. A small change never drags in the cold architecture tier. The resolver derives the tier paths, so you never hardcode a filename, and a capability with no `.arch.md` is simply skipped.
 
-**Coverage tells you which requirements have a test.** `/speckit.companion.coverage` reads a capability's requirements and its `.coverage.md` map and reports, per requirement, whether a test is mapped:
+**Coverage tells you which requirements have a test.** `/speckit.companion.living-coverage` reads a capability's requirements and its `.coverage.md` map and reports, per requirement, whether a test is mapped:
 
 ```bash
-/speckit.companion.coverage                 # human-readable report, all capabilities
-/speckit.companion.coverage --capability billing
-/speckit.companion.coverage --json          # the same data for tooling / CI
+/speckit.companion.living-coverage                 # human-readable report, all capabilities
+/speckit.companion.living-coverage --capability billing
+/speckit.companion.living-coverage --json          # the same data for tooling / CI
 ```
 
 A requirement counts as covered when its id (`FR-001`, `NFR-2`, …) appears in the coverage file on a line that also names a test (a `.test.` / `.spec.` path, a `tests/…` reference, or a `file::TestCase` nodeid). Like drift, it's **read-only and never halts** — a signal you act on, not a gate. A capability that ships only its requirements file reports every requirement uncovered (never an error), and with living specs off it reports nothing.
@@ -313,12 +313,12 @@ python3 speckit-extension/scripts/package-manifest.py --list     # the scripts t
 python3 speckit-extension/scripts/package-manifest.py --check    # the gate (runs in CI)
 ```
 
-`--check` derives what the shipped commands actually reach for — it scans the command bodies for the scripts they invoke, then follows each script's own imports — and fails if that disagrees with the packed list in either direction, naming the offending file. This is a guard against a real regression: the list used to be typed out in prose in two places, drifted behind the commands, and shipped an archive missing five scripts, which left `/speckit.companion.adopt`, `/speckit.companion.drift`, and `/speckit.companion.coverage` unrunnable for anyone who installed from a release. A command that starts calling a new script now fails the build until that script is packaged.
+`--check` derives what the shipped commands actually reach for — it scans the command bodies for the scripts they invoke, then follows each script's own imports — and fails if that disagrees with the packed list in either direction, naming the offending file. This is a guard against a real regression: the list used to be typed out in prose in two places, drifted behind the commands, and shipped an archive missing five scripts, which left `/speckit.companion.living-adopt`, `/speckit.companion.living-drift`, and `/speckit.companion.living-coverage` unrunnable for anyone who installed from a release. A command that starts calling a new script now fails the build until that script is packaged.
 
 ## How it works
 
 ```
-/speckit.specify  →  after_specify hook  →  speckit.companion.capture
+/speckit.specify  →  after_specify hook  →  speckit.companion.after-specify
                                               →  write-context.py
                                               →  .spec-context.json  (append-only history[])  →  GUI lights up
 ```

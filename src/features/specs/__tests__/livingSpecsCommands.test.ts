@@ -49,7 +49,7 @@ describe('registerLivingSpecsCommands', () => {
         it('dispatches the drift command scoped to the invoked capability', async () => {
             await handlers['speckit.livingSpecs.drift']({ capability: { name: 'checkout' } });
             expect(executeSlashCommand).toHaveBeenCalledWith(
-                '/speckit.companion.drift checkout',
+                '/speckit.companion.living-drift checkout',
                 'SpecKit - Living-Spec Drift',
                 true
             );
@@ -58,7 +58,7 @@ describe('registerLivingSpecsCommands', () => {
         it('dispatches unscoped when invoked without a capability node', async () => {
             await handlers['speckit.livingSpecs.drift']();
             expect(executeSlashCommand).toHaveBeenCalledWith(
-                '/speckit.companion.drift',
+                '/speckit.companion.living-drift',
                 'SpecKit - Living-Spec Drift',
                 true
             );
@@ -67,7 +67,7 @@ describe('registerLivingSpecsCommands', () => {
         it('treats a non-capability node (no capability field) as unscoped', async () => {
             await handlers['speckit.livingSpecs.drift']({ groupId: 'living-specs-capabilities' });
             expect(executeSlashCommand).toHaveBeenCalledWith(
-                '/speckit.companion.drift',
+                '/speckit.companion.living-drift',
                 expect.any(String),
                 true
             );
@@ -78,7 +78,7 @@ describe('registerLivingSpecsCommands', () => {
         it('dispatches the coverage command scoped to the invoked capability', async () => {
             await handlers['speckit.livingSpecs.coverage']({ capability: { name: 'billing' } });
             expect(executeSlashCommand).toHaveBeenCalledWith(
-                '/speckit.companion.coverage billing',
+                '/speckit.companion.living-coverage billing',
                 'SpecKit - Requirement Coverage',
                 true
             );
@@ -89,7 +89,7 @@ describe('registerLivingSpecsCommands', () => {
         it('dispatches the bare adopt command (the wizard prompts for the area)', async () => {
             await handlers['speckit.livingSpecs.adopt']();
             expect(executeSlashCommand).toHaveBeenCalledWith(
-                '/speckit.companion.adopt',
+                '/speckit.companion.living-adopt',
                 'SpecKit - Adopt Code Area',
                 true
             );

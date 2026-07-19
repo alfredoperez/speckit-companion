@@ -3,7 +3,7 @@
 The extension follows spec-kit's bundled-extension pattern exactly: a **lifecycle hook** runs a **command-markdown** file, which tells the agent to **run a script**.
 
 ```
-/speckit.specify  →  after_specify hook  →  speckit.companion.capture  →  write-context.py  →  .spec-context.json
+/speckit.specify  →  after_specify hook  →  speckit.companion.after-specify  →  write-context.py  →  .spec-context.json
 ```
 
 ## Lifecycle hooks
@@ -12,14 +12,14 @@ Registered in the extension's `extension.yml` (and, once installed, in the proje
 
 | Hook | Command | optional | Effect |
 |------|---------|----------|--------|
-| `after_specify` | `speckit.companion.capture` | `false` (auto-runs) | Record specify completion into `.spec-context.json` |
-| `after_plan` | `speckit.companion.capture-plan` | `false` (auto-runs) | Record plan completion (`currentStep=plan`, `status=planned`) into `.spec-context.json` |
-| `after_tasks` | `speckit.companion.capture-tasks` | `false` (auto-runs) | Record tasks completion (`currentStep=tasks`, `status=ready-to-implement`) into `.spec-context.json` |
-| `after_implement` | `speckit.companion.capture-implement` | `false` (auto-runs) | Per-task journaling on implement (`currentStep=implement`); `status=implemented` when all tasks checked |
+| `after_specify` | `speckit.companion.after-specify` | `false` (auto-runs) | Record specify completion into `.spec-context.json` |
+| `after_plan` | `speckit.companion.after-plan` | `false` (auto-runs) | Record plan completion (`currentStep=plan`, `status=planned`) into `.spec-context.json` |
+| `after_tasks` | `speckit.companion.after-tasks` | `false` (auto-runs) | Record tasks completion (`currentStep=tasks`, `status=ready-to-implement`) into `.spec-context.json` |
+| `after_implement` | `speckit.companion.after-implement` | `false` (auto-runs) | Per-task journaling on implement (`currentStep=implement`); `status=implemented` when all tasks checked |
 
 `optional: false` means the agent runs it **automatically** with no prompt. (For contrast, the bundled `git` extension's `after_specify` commit hook is `optional: true`, so it only *offers* to run.) ROADMAP step 2 shipped `after_plan` / `after_tasks` / `after_implement`, so the full `specify → plan → tasks → implement` lifecycle is now captured automatically — see [../ROADMAP.md](../ROADMAP.md).
 
-## `speckit.companion.capture`
+## `speckit.companion.after-specify`
 
 The first command. It carries no business logic itself — it resolves the active feature and invokes the writer script, mirroring `speckit.git.feature.md`. The three commands below follow the same pattern.
 
@@ -41,7 +41,7 @@ python3 .specify/extensions/companion/scripts/write-context.py --step specify --
 
 **Graceful degradation:** if `python3` is missing the command warns and skips; if the active feature directory can't be resolved the script warns and exits 0. It never fails the host spec-kit command.
 
-## `speckit.companion.capture-plan`
+## `speckit.companion.after-plan`
 
 Runs after `/speckit.plan`. Resolves the active feature and records plan completion.
 
@@ -51,7 +51,7 @@ Runs after `/speckit.plan`. Resolves the active feature and records plan complet
 python3 .specify/extensions/companion/scripts/write-context.py --step plan --status planned --by extension
 ```
 
-## `speckit.companion.capture-tasks`
+## `speckit.companion.after-tasks`
 
 Runs after `/speckit.tasks`. Resolves the active feature and records tasks completion.
 
@@ -61,7 +61,7 @@ Runs after `/speckit.tasks`. Resolves the active feature and records tasks compl
 python3 .specify/extensions/companion/scripts/write-context.py --step tasks --status ready-to-implement --by extension
 ```
 
-## `speckit.companion.capture-implement`
+## `speckit.companion.after-implement`
 
 Runs after `/speckit.implement` in task-sync mode: it appends one transition per completed `- [x] **T###**` marker in `tasks.md`. Idempotent — re-running adds only newly-checked markers; status stays `implementing` until all markers are checked, then becomes `implemented`.
 

@@ -14,9 +14,9 @@ The extension or a script writes these; nothing depends on the AI's judgement.
 |---|---|---|---|
 | GUI lifecycle button (sidebar/viewer) | `src/features/specs/stepLifecycle.ts` → `specContextWriter.ts` | `extension` | step `start`/`complete`, `setStatus`, `setProfile` (atomic temp+rename) |
 | Command-body self-capture | the companion `specify`/`implement` bodies call `write-context.py --kind start`/`--kind complete` | `extension` | **specify** start (right after the dir is created) + complete (at the end) → a real begin→end span; **implement** start (at begin) |
-| `after_implement` hook | `write-context.py --tasks-file` → `sync_tasks()` (run by `speckit.companion.capture-implement`) | `extension` | first **materializes** any pending append-log lines, then a **single finish** per task not already journaled (finish-only backstop), then the implement step's **complete** — all stamped with the script's own clock |
+| `after_implement` hook | `write-context.py --tasks-file` → `sync_tasks()` (run by `speckit.companion.after-implement`) | `extension` | first **materializes** any pending append-log lines, then a **single finish** per task not already journaled (finish-only backstop), then the implement step's **complete** — all stamped with the script's own clock |
 | Append-log fold | `write-context.py --materialize` → folds `.spec-context.events.jsonl` into `history[]`/`task_summaries` | `ai`/`extension` | every appended per-task finish, replayed through the same fold core as the live path (idempotent), in one write per batch |
-| Other lifecycle hooks | `write-context.py` (run by `speckit.companion.capture*`) | `extension` | step **start** (plan→planned, tasks→ready-to-implement, …) |
+| Other lifecycle hooks | `write-context.py` (run by `speckit.companion.after-*`) | `extension` | step **start** (plan→planned, tasks→ready-to-implement, …) |
 | Reconstruction fallback | `speckit-extension/scripts/derive-from-files.py` | `derive` | state rebuilt from on-disk artifacts when a hook never fired (same start+complete shape) |
 
 These carry **sub-second (ms) precision** because they read the real clock at write time, and they are monotonic because they fire in order.
