@@ -72,7 +72,7 @@ The 2026-06-08 fix above made per-task capture *reliable* (the hook owns it) but
 - **Derivation.** `src/features/specs/stepHistoryDerivation.ts` (`buildSubsteps`) computes each row from finish deltas, staying tolerant of legacy start+complete pairs and single boundary markers. A per-task row is named from `task` (or a legacy `substep` mirror); the derivation compares `task` so two distinct finishes don't collapse, and excludes task entries when deciding whether the step itself is closed.
 - **Both dispatch surfaces.** The instruction lives identically in `presets/_parts/timing.md` (spec-kit path, assembled into the bodies by `build-commands.py`) and the GUI preamble renderers in `src/ai-providers/promptPreamble.ts` (GUI path); `check-shape-parity.py` guards against a fork. The relocation from `_shared/timing-partial.md` to `_parts/timing.md` changed only where the block is authored — the bytes the AI receives, and therefore the capture, are unchanged.
 - **GUI preamble is vscode-free + reusable.** The pure preamble renderers (`renderPreamble`, `renderLifecyclePreamble`, `renderSpecifyCreationLifecyclePreamble`, plus the schema/status/timing blocks) live in `src/ai-providers/promptPreamble.ts` with **no `import vscode`** — the only vscode-dependent parts (the `aiContextInstructions` on/off toggle and `nowUtc()`) stay in `promptBuilder.ts`, which imports and re-exports the renderers so its public API is unchanged. This lets the adoption bench import the compiled `dist/ai-providers/promptPreamble.js` and dispatch each step with the *exact* GUI preamble (`bench/driver.mjs`), so the bench can't drift from the real dispatch path.
-- **Both marker formats.** Per-task detection accepts the Companion **bold** form (`- [x] **T001**`) *and* the stock tasks-template **plain** form (`- [x] T001 …`) — `parse_task_markers` (`write-context.py`) and the eval make the `**` optional. Previously the bold-only regex silently no-op'd on a stock `tasks.md`, so the spec got no per-task journal and implement never auto-closed. The TS/GUI task-percent already counted plain checkboxes, so only the Python parsers needed it.
+- **Both marker formats.** Per-task detection accepts the Companion **bold** form (`- [x] **T001**`) *and* the stock tasks-template **plain** form (`- [x] T001 …`) — `parse_task_markers` (`task_sync.py`) and the eval make the `**` optional. Previously the bold-only regex silently no-op'd on a stock `tasks.md`, so the spec got no per-task journal and implement never auto-closed. The TS/GUI task-percent already counted plain checkboxes, so only the Python parsers needed it.
 
 ## Record-shape hardening (2026-06-09)
 
@@ -176,9 +176,39 @@ See `docs/template-profiles.md` for the full workflow reference.
 
 On activation the extension runs an **add-only** ensure — `companionPresetReconciler.ensureStandardFamily` — that adds `companion-standard` from the bundled path (`specify preset add --dev .specify/extensions/companion/presets/companion-standard`) when the stock command files are absent, and is a no-op when present. The `--dev` bundled path is required because catalog-form `add <id>` silently no-ops (the presets aren't published to a catalog). The ensure **never** removes the stock family, so it cannot strand a project: it re-materializes the stock commands on a fresh checkout and recovers a project a prior swap left without them. A one-time migration removes a leftover `companion-turbo` install if present (and the pre-rename `companion-lean` / `sdd-lean` leftovers); the workflow choice itself issues no removes thereafter. CLI failures are logged, not thrown, so activation never breaks.
 
+## Where the writer's code lives (#458)
+
+`write-context.py` is the command line, the step lifecycle, journal finish/advance, terminal promotion, and the no-regress guard. Everything else sits in siblings beside it, each readable end to end on its own:
+
+| File | Owns |
+|---|---|
+| `spec_context.py` | The store: `read_ctx` / `atomic_write`, `resolve_feature_dir` and the feature-dir precedence, `canonical_log` / `commit_log` / `append_complete` and the history predicates, the git helpers, and the canonical step/status vocabulary (`CANONICAL_STEPS`, `STEP_COMPLETED_STATUS`, `TERMINAL_STATUSES`, `CROSS_STEP_TERMINAL`). |
+| `spec_deltas.py` | The `## ADDED / MODIFIED / REMOVED / RENAMED Requirements` grammar and `parse_spec_deltas`. Pure — no file access. |
+| `capture.py` | The additive capture writers: `set_fields`, the living-spec name recording, `append_capture_entries` (decisions / verified / concerns), `append_string_list` (expectations / context), `upsert_coverage`, `upsert_step_summary`, `set_classification`. |
+| `task_sync.py` | `parse_task_markers` and both marker formats, `_mark_tasks_done` (the single checkbox writer), the per-task journal (`journal_task_finish`, `append_task_log`, `materialize_log`), and the `sync_tasks` backstop. |
+| `living_spec_fold.py` | `apply_deltas`, `fold_living_spec`, target resolution, requirement spans, and the initial scaffold. |
+
+The dependency order is one-way: `spec_context` and `spec_deltas` depend on nothing local, `capture` and `task_sync` depend on `spec_context`, `living_spec_fold` depends on all three, and `write-context.py` sits on top. `spec_context.py` exists precisely to keep that acyclic — the fold and the capture writers both need the store, so it cannot live in the module that imports them.
+
+**`write-context.py` re-exports every name the siblings hold**, so anything importing it as a module keeps reaching them by their original path. Five things do: `derive-from-files.py`, `status-context.py`, `test_context.py`, `test_capture_fields.py`, and `.claude/skills/eval-speckit-extension/check_living_spec.py`. None of them changed for the split, and none should need to.
+
+**Every new module must be in `package-manifest.py`'s `RUNTIME_SCRIPTS`.** The gate derives what ships by scanning command bodies and then following plain `import` statements to a fixed point — which is why the siblings are imported by plain name rather than loaded dynamically. A dynamically-loaded module would be invisible to the gate and the release archive would ship a broken extension.
+
+**Capture flags are additive; lifecycle modes are exclusive.** `--set`, `--decision`, `--verified`, `--concern`, `--expectation`, `--context`, `--coverage-req`, `--step-summary`, `--living-specs`, `--fold-living-spec`, and `--classification` all take effect when passed together, each printing its own line. A ladder used to record the first and silently drop the rest at exit 0. The lifecycle modes (`--tasks-file`, `--mark-complete`, `--finish`, `--advance`, `--materialize`, `--task`, and the default step update) stay first-match-wins — they are alternative readings of one invocation, not composable writes. A capture flag also takes precedence over an explicit lifecycle flag in the same call: the lifecycle write is skipped and named on stderr, so `--mark-complete --set x=y` sets the field and warns that the completion did not happen. Run the two as separate calls.
+
+`speckit-extension/tests/test_cli_parity.py` is the guard: it runs a 34-invocation matrix against two copies of the writer and compares exit code, stdout, stderr, and the resulting context file. Run it with `--record` before a refactor and `--compare` after, or `--reference <scripts dir>` against a checked-out copy.
+
+## Fold repeatability (#465)
+
+Re-folding a delta set onto its own output is a byte-for-byte no-op, for every combination of verbs. The verbs apply in a fixed pipeline order — renamed, removed, modified, added — regardless of document order, and ADDED runs last and appends. Its existence check used to run against pre-rename state, so a delta set that both added and renamed the same heading re-added the section on every fold, one duplicate per fold, without limit; add-plus-edit alternated between two bodies.
+
+`apply_deltas` now builds the delta set's rename map up front and resolves each added heading through it before both the existence check and the append, retitling the section to the resolved heading. A same-heading MODIFIED body wins over the ADDED body. A rename chain that loops back on itself names no final heading, so those entries are dropped as unsatisfiable rather than applied.
+
+Tests live in `FoldIdempotencyMatrixTests` (`speckit-extension/tests/test_living_specs.py`) and cover all 4 singles, all 12 ordered same-heading pairs, all 24 ordered triples, the disjoint-heading pairs, a five-apply growth check, rename chains and cycles, and folding onto an already-duplicated document. **Every verb in those fixtures carries distinct body text** — with identical bodies the add-plus-edit break is invisible and the assertions pass against broken code.
+
 ## Install paths
 
-Capture scripts run from the **installed** extension dir, `.specify/extensions/companion/scripts/write-context.py` — never the dev-source `speckit-extension/scripts/…` (that path doesn't exist in a consumer project). The hooks reference the installed path (mirroring the git extension's `.specify/extensions/<id>/scripts/…` convention).
+Capture scripts run from the **installed** extension dir, `.specify/extensions/companion/scripts/write-context.py` — never the dev-source `speckit-extension/scripts/…` (that path doesn't exist in a consumer project). The hooks reference the installed path (mirroring the git extension's `.specify/extensions/<id>/scripts/…` convention). The writer's sibling modules install alongside it from the same packing list, and `.vscodeignore` carries a matching `!` rule per module so the `.vsix` copy can import them too — `package-manifest.py --check` fails if either list falls behind.
 
 ## The eval
 

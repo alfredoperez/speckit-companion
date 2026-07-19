@@ -13,6 +13,7 @@ derive-from-files round-trip.
 from __future__ import annotations
 
 import importlib
+import io
 import json
 import sys
 import tempfile
@@ -1397,6 +1398,118 @@ class FeatureJsonResolverTests(unittest.TestCase):
         self._write_pointer({"FEATURE_DIR": "specs/001-x", "FEATURE_NAME": "001-x"})
         got = wc.resolve_feature_dir(self.root, None)
         self.assertEqual(got, self.root / "specs/001-x")
+
+
+class MultiFlagDispatchTests(unittest.TestCase):
+    """Every capture flag in one invocation records — the ladder used to drop all but the first."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.fd = Path(self._tmp.name) / "specs" / "_zzz-multi"
+        self.fd.mkdir(parents=True)
+        self.fd.joinpath(".spec-context.json").write_text(
+            json.dumps({"specName": "_zzz-multi", "branch": "main",
+                        "currentStep": "plan", "status": "planning", "history": []})
+        )
+        self._orig_root, self._orig_resolve = wc._repo_root, wc.resolve_feature_dir
+        wc._repo_root = lambda: Path(self._tmp.name)
+        wc.resolve_feature_dir = lambda root, explicit: self.fd
+
+    def tearDown(self) -> None:
+        wc._repo_root, wc.resolve_feature_dir = self._orig_root, self._orig_resolve
+        self._tmp.cleanup()
+
+    def _run(self, argv: list[str]) -> tuple[int, str]:
+        orig_argv, orig_stdout = sys.argv, sys.stdout
+        sys.argv = ["write-context.py", "--feature-dir", str(self.fd), *argv]
+        buf = io.StringIO()
+        sys.stdout = buf
+        try:
+            return wc.main(), buf.getvalue()
+        finally:
+            sys.argv, sys.stdout = orig_argv, orig_stdout
+
+    def test_a_decision_and_a_verification_in_one_call_both_record(self) -> None:
+        rc, out = self._run(["--decision", "picked A", "--verified", "suite green"])
+        self.assertEqual(rc, 0)
+        ctx = _ctx(self.fd)
+        self.assertEqual([d["decision"] for d in ctx["decisions"]], ["picked A"])
+        self.assertEqual([v["what"] for v in ctx["verified"]], ["suite green"])
+        self.assertIn("decision(s)", out)
+        self.assertIn("verification(s)", out)
+
+    def test_every_capture_flag_in_one_call_records(self) -> None:
+        rc, _ = self._run([
+            "--set", "size=normal",
+            "--decision", "d1",
+            "--verified", "v1",
+            "--concern", "c1",
+            "--expectation", "e1",
+            "--context", "x1",
+            "--coverage-req", "FR-001", "--title", "the requirement",
+            "--step", "plan", "--step-summary", "s1",
+            "--living-specs", "todos",
+        ])
+        self.assertEqual(rc, 0)
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["size"], "normal")
+        self.assertEqual([d["decision"] for d in ctx["decisions"]], ["d1"])
+        self.assertEqual([v["what"] for v in ctx["verified"]], ["v1"])
+        self.assertEqual([c["note"] for c in ctx["concerns"]], ["c1"])
+        self.assertEqual(ctx["expectations"], ["e1"])
+        self.assertEqual(ctx["context"], ["x1"])
+        self.assertEqual(ctx["coverage"]["FR-001"]["title"], "the requirement")
+        self.assertEqual(ctx["step_summaries"]["plan"]["summary"], "s1")
+        self.assertEqual(ctx["livingSpecs"]["loaded"], ["todos"])
+
+    def test_a_classification_alongside_a_decision_records_both(self) -> None:
+        rc, _ = self._run([
+            "--classification", '{"projectedFiles": 2, "projectedTasks": 3, "verdict": "simple"}',
+            "--decision", "d1",
+        ])
+        self.assertEqual(rc, 0)
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["classification"]["verdict"], "simple")
+        self.assertEqual([d["decision"] for d in ctx["decisions"]], ["d1"])
+
+    def test_a_malformed_classification_still_exits_two_and_writes_nothing_else(self) -> None:
+        rc, _ = self._run(["--classification", "not json", "--decision", "d1"])
+        self.assertEqual(rc, 2)
+        self.assertEqual(_ctx(self.fd).get("decisions"), None)
+
+    def test_a_capture_flag_never_writes_lifecycle_history(self) -> None:
+        self._run(["--decision", "d1", "--verified", "v1"])
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["history"], [])
+        self.assertEqual(ctx["status"], "planning")
+
+    def test_a_lifecycle_mode_stays_exclusive(self) -> None:
+        # --finish and --advance both present: the ladder order still picks one.
+        rc, out = self._run(["--step", "plan", "--finish", "--advance", "--by", "ai"])
+        self.assertEqual(rc, 0)
+        self.assertEqual(len(_ctx(self.fd)["history"]), 1)
+        self.assertIn("Journaled plan finish", out)
+        self.assertNotIn("Advanced plan", out)
+
+    def _run_err(self, argv: list[str]) -> tuple[int, str]:
+        orig_argv, orig_stdout, orig_stderr = sys.argv, sys.stdout, sys.stderr
+        sys.argv = ["write-context.py", "--feature-dir", str(self.fd), *argv]
+        sys.stdout, err = io.StringIO(), io.StringIO()
+        sys.stderr = err
+        try:
+            return wc.main(), err.getvalue()
+        finally:
+            sys.argv, sys.stdout, sys.stderr = orig_argv, orig_stdout, orig_stderr
+
+    def test_a_lifecycle_flag_dropped_for_a_capture_flag_says_so(self) -> None:
+        rc, err = self._run_err(["--mark-complete", "--set", "size=normal"])
+        self.assertEqual(rc, 0)
+        self.assertEqual(_ctx(self.fd)["status"], "planning")
+        self.assertIn("--mark-complete not applied", err)
+
+    def test_a_capture_flag_on_its_own_warns_about_nothing(self) -> None:
+        _, err = self._run_err(["--set", "size=normal"])
+        self.assertNotIn("not applied", err)
 
 
 if __name__ == "__main__":
