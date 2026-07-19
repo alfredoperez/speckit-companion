@@ -1,5 +1,5 @@
 ---
-description: "Brownfield adoption wizard — draft a living spec for ONE code area and register it (opt-in, surface-first, [DRAFT])"
+description: "Brownfield adoption wizard — draft living specs for the code areas you name and register them (opt-in, surface-first, [DRAFT])"
 ---
 
 # Adopt a Code Area into a Living Spec

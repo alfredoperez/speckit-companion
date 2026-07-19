@@ -65,7 +65,7 @@ provides:
       description: "Run the whole Companion pipeline hands-off (specify → plan → tasks → implement → mark-complete), no approval pauses"
     - name: speckit.companion.adopt
       file: commands/speckit.companion.adopt.md
-      description: "Brownfield adoption wizard — draft a living spec for ONE code area surface-first and register the capability (opt-in)"
+      description: "Brownfield adoption wizard — draft living specs for the code areas you name, surface-first, and register the capabilities (opt-in)"
     - name: speckit.companion.drift
       file: commands/speckit.companion.drift.md
       description: "Report living-spec drift — per capability, source files changed since the spec was last committed, classified tracked vs unspeced (opt-in, never halts)"

@@ -91,7 +91,7 @@ Four capture commands run automatically as lifecycle hooks; the rest are yours t
 | `speckit.companion.classify` | workflow routing step | Emit a `small \| normal \| oversized` size signal so the Companion workflow can right-size the pipeline (thresholds live here, not in a setting) |
 | `speckit.companion.mark-complete` | workflow terminal step | Write `status: completed` to `.spec-context.json` — the Companion workflow's final step (the command writes it; the AI never hand-writes `completed`) |
 | `/speckit.companion.auto` | you | Run the whole pipeline hands-off — specify → plan → tasks → implement → completed, no approval pauses. The Run button in Create Spec triggers the same flow |
-| `/speckit.companion.adopt` | you | Brownfield adoption wizard — draft a living spec for one code area surface-first (`[DRAFT]`, observed/inferred tags, `## Uncovered`) and register the capability (opt-in, incremental) |
+| `/speckit.companion.adopt` | you | Brownfield adoption wizard — draft living specs for the code areas you name, surface-first (`[DRAFT]`, `[inferred]` tags, `## Uncovered`), walk the clarifications, and register the capabilities (opt-in, incremental) |
 | `/speckit.companion.drift` | you | Per-capability report of source files changed since the living spec was last committed, classified `tracked` vs `unspeced` (opt-in, read-only, never halts) |
 | `/speckit.companion.coverage` | you | Per-capability requirement→test report — which requirements in the living spec have a test mapped in its `.coverage.md` tier and which are uncovered (opt-in, read-only, never halts) |
 
