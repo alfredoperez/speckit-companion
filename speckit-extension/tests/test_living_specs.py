@@ -729,7 +729,7 @@ class FoldLivingSpecTests(unittest.TestCase):
         self.assertEqual(self._ctx(fdir)["livingSpecs"]["synced"], ["todos"])
 
     def _fold_log(self, fdir: Path) -> str:
-        """The stderr the fold emits — the receipt a developer actually reads."""
+        """The stderr receipt the fold emits."""
         buf = io.StringIO()
         with contextlib.redirect_stderr(buf):
             wc.fold_living_spec(fdir, "ai")
@@ -756,6 +756,19 @@ class FoldLivingSpecTests(unittest.TestCase):
         log = self._fold_log(fdir)
         self.assertIn("+1 added, ~0 modified, -0 removed, ↻0 renamed", log)
         self.assertNotIn("skipped", log)
+
+    def test_fold_log_names_the_right_reason_for_a_skipped_addition(self) -> None:
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n### Users can add a todo\n\n"
+            "#### Scenario: dup\n- x\n\n"
+            "## MODIFIED Requirements\n\n### Users can add a todo\n\n"
+            "#### Scenario: add\n- THEN it persists\n")
+        log = self._fold_log(fdir)
+        self.assertIn("+0 added, ~1 modified", log)
+        self.assertIn("1 addition(s) skipped: heading already present", log)
+        self.assertNotIn("no matching requirement heading", log)
 
     def test_no_delta_block_is_byte_identical_noop(self) -> None:
         root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},

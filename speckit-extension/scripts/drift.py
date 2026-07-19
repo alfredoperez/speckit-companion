@@ -210,11 +210,8 @@ def compute_drift(root: str, living: dict) -> dict:
 
 
 def _counts_line(result: dict, include_checked: bool = True) -> str:
-    """`0 checked, 9 skipped (spec.md not yet committed)` — the run's outcome.
-
-    The parenthetical names the reason only when every skip shares one; mixed
-    reasons are left to the per-capability notes above.
-    """
+    """`0 checked, 9 skipped (spec.md not yet committed)` — the parenthetical
+    appears only when every skip shares one reason."""
     skipped = result["skipped"]
     line = f"{len(skipped)} skipped"
     if include_checked:

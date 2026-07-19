@@ -705,8 +705,7 @@ def apply_deltas(living_text: str, deltas: dict) -> tuple[str, dict]:
     it, RENAMED rewrites the matching heading's name. Unmatched MODIFIED/REMOVED/
     RENAMED targets are skipped (best-effort).
 
-    Returns the updated text and the per-verb count of what was actually applied,
-    which excludes skipped targets."""
+    Returns the updated text and the per-verb count of what was applied."""
     lines = living_text.splitlines()
     applied = {"added": 0, "modified": 0, "removed": 0, "renamed": 0}
 
@@ -910,9 +909,15 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
             f"+{applied['added']} added, ~{applied['modified']} modified, "
             f"-{applied['removed']} removed, ↻{applied['renamed']} renamed"
         )
-        dropped = sum(len(deltas[verb]) - count for verb, count in applied.items())
-        note = (f" — {dropped} change(s) skipped: no matching requirement heading"
-                if dropped else "")
+        unmatched = sum(len(deltas[verb]) - applied[verb]
+                        for verb in ("modified", "removed", "renamed"))
+        already_present = len(deltas["added"]) - applied["added"]
+        reasons = []
+        if unmatched:
+            reasons.append(f"{unmatched} change(s) skipped: no matching requirement heading")
+        if already_present:
+            reasons.append(f"{already_present} addition(s) skipped: heading already present")
+        note = f" — {'; '.join(reasons)}" if reasons else ""
         print(f"[companion] Living-spec fold: {cap['name']} ← {counts} ({spec_rel}){note}",
               file=sys.stderr)
 
