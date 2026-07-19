@@ -361,6 +361,25 @@ const DEFAULT_EXEMPT_GLOBS = ['*.config.*', '*.test.*', '**/migrations/**'];
 
 const REQUIREMENT_ID_RE = /\bN?FR-\d+\b/g;
 
+/**
+ * The distinct requirement identifiers a spec declares, ignoring fenced code
+ * blocks so an example in a snippet is never counted as a requirement. The one
+ * derivation behind both the coverage denominator and the viewer's count — two
+ * regexes over the same text would eventually disagree.
+ */
+export function requirementIds(specText: string): string[] {
+    const kept: string[] = [];
+    let inFence = false;
+    for (const line of specText.split(/\r?\n/)) {
+        if (/^\s*(```|~~~)/.test(line)) {
+            inFence = !inFence;
+            continue;
+        }
+        if (!inFence) kept.push(line);
+    }
+    return [...new Set(kept.join('\n').match(REQUIREMENT_ID_RE) ?? [])];
+}
+
 /** A coverage line "names a test" per the CLI rule. */
 const TEST_REF_RE = /(\.test\.|\.spec\.|(^|[\s`(])tests\/|::)/;
 
@@ -391,7 +410,7 @@ function readCoverageCount(root: string, cap: ResolvedCapability): CapabilityHea
     }
     try {
         const specText = fs.readFileSync(path.join(root, cap.spec), 'utf-8');
-        const ids = [...new Set(specText.match(REQUIREMENT_ID_RE) ?? [])];
+        const ids = requirementIds(specText);
         if (ids.length === 0) {
             return undefined;
         }

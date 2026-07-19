@@ -12,20 +12,29 @@ function plural(count: number, noun: string): string {
 function LivingFacts({ meta }: { meta: LivingHeaderMeta }) {
     const facts: JSX.Element[] = [];
 
-
     if (meta.requirements !== undefined) {
         facts.push(
-            <span class="spec-header-fact">{plural(meta.requirements, 'requirement')}</span>
+            <span key="requirements" class="spec-header-fact">
+                {plural(meta.requirements, 'requirement')}
+            </span>
         );
     }
     if (meta.scenarios !== undefined) {
-        facts.push(<span class="spec-header-fact">{plural(meta.scenarios, 'scenario')}</span>);
+        facts.push(
+            <span key="scenarios" class="spec-header-fact">
+                {plural(meta.scenarios, 'scenario')}
+            </span>
+        );
     }
     if (meta.coverage) {
+        const coverageLabel =
+            `${meta.coverage.covered} of ${meta.coverage.total} requirements have a mapped test`;
         facts.push(
             <span
+                key="coverage"
                 class="spec-header-fact"
-                title={`${meta.coverage.covered} of ${meta.coverage.total} requirements have a mapped test`}
+                title={coverageLabel}
+                aria-label={coverageLabel}
             >
                 {meta.coverage.covered}/{meta.coverage.total} covered
             </span>
@@ -34,6 +43,7 @@ function LivingFacts({ meta }: { meta: LivingHeaderMeta }) {
     if (meta.drifted) {
         facts.push(
             <span
+                key="drift"
                 class="spec-header-fact spec-header-fact--drift"
                 title="Source files changed since the living spec's last commit"
                 aria-label="Source files changed since the living spec's last commit"
@@ -56,7 +66,7 @@ function LivingCovers({ meta }: { meta: LivingHeaderMeta }) {
                 <div class="spec-header-covers">
                     <span class="spec-header-covers__label">Covers</span>
                     {shown.map(glob => (
-                        <span class="spec-header-glob" title={glob}>
+                        <span key={glob} class="spec-header-glob" title={glob}>
                             {glob}
                         </span>
                     ))}
@@ -64,6 +74,7 @@ function LivingCovers({ meta }: { meta: LivingHeaderMeta }) {
                         <span
                             class="spec-header-glob spec-header-glob--more"
                             title={rest.join('\n')}
+                            aria-label={`Also covers ${rest.join(', ')}`}
                         >
                             +{rest.length} more
                         </span>

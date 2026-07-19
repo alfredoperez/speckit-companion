@@ -257,8 +257,8 @@ body[data-has-spec-context="true"] .meta-branch {
     text-transform: none;
 }
 
-/* Capability facts are readable content, so body token — muted is for the path.
-   Middot separators are pseudo-elements so they are never announced. */
+/* Capability facts are readable content, so they take the body token.
+   Middot separators are pseudo-elements so they stay out of the document text. */
 .spec-header-living {
     display: flex;
     flex-wrap: wrap;
@@ -317,7 +317,8 @@ body[data-has-spec-context="true"] .meta-branch {
     font-family: inherit;
 }
 
-/* Where the spec file lives — true metadata, so the muted token belongs here. */
+/* Where the spec file lives — a path the reader uses to find the file, so it
+   takes the body token; size and mono face carry the hierarchy instead. */
 .spec-header-location {
     display: flex;
     min-width: 0;
@@ -326,7 +327,7 @@ body[data-has-spec-context="true"] .meta-branch {
 .spec-header-path {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    color: var(--text-muted);
+    color: var(--text-body);
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;

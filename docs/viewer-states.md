@@ -421,6 +421,8 @@ Notes:
 - **The title is authored, so it is not re-cased.** `.spec-header-title` carries `text-transform: capitalize` for feature specs, whose names really are directory slugs. A heading-derived title adds `.spec-header-title--authored`, which turns that off — without it, `SpecKit` renders as `Speckit` and the fix looks like it never landed.
 - **The title belongs to the capability, not the tier on screen.** It is read from the spec tier's document whichever of Spec / Architecture / Coverage is selected.
 - **Coverage and drift are the sidebar's own numbers.** They come from `readCapabilityHealth()` in `src/features/specs/livingSpecsModel.ts` — the exact call the Living Specs tree makes — so the two surfaces cannot disagree. See [`docs/sidebar.md`](./sidebar.md).
+- **The requirement count and the coverage denominator are one derivation.** Both call `requirementIds()` in `src/features/specs/livingSpecsModel.ts`, which ignores fenced code blocks, so `N requirements` and the `M` in `N/M covered` are counted off the same identifiers and cannot drift apart.
+- **Health is discarded if the panel moved on.** Colocated capabilities share a panel key, so a health result is dropped unless the panel's current spec tier is still the one the call was made for — otherwise a slow git check on one capability could land on another.
 - **Health arrives after first paint.** Drift runs git, so the header renders from the synchronous facts and the extension pushes `livingHealthResolved` once the health call returns. A repository without git, a spec never committed, or a timed-out check simply leaves both fields absent.
 
 ### Key Files

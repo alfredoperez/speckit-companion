@@ -11,11 +11,9 @@ import type { LivingHeaderMeta } from './types';
 import {
     readLivingSpecs,
     readCapabilityHealth,
+    requirementIds,
     CapabilityHealth,
 } from '../specs/livingSpecsModel';
-
-/** Same identifier shape the coverage check counts, so the totals agree. */
-const REQUIREMENT_ID_RE = /\bN?FR-\d+\b/g;
 
 /** A numbered acceptance scenario as `/speckit.companion.living-adopt` writes it. */
 const SCENARIO_LINE_RE = /^\s*\d+\.\s.*\bgiven\b.*\bwhen\b.*\bthen\b/i;
@@ -47,12 +45,11 @@ function withoutFences(content: string): string[] {
 export function countLivingFacts(content: string): LivingFactCounts {
     if (!content) return {};
 
-    const lines = withoutFences(content);
-    const ids = new Set(lines.join('\n').match(REQUIREMENT_ID_RE) ?? []);
-    const scenarios = lines.filter(line => SCENARIO_LINE_RE.test(line)).length;
+    const ids = requirementIds(content);
+    const scenarios = withoutFences(content).filter(line => SCENARIO_LINE_RE.test(line)).length;
 
     const facts: LivingFactCounts = {};
-    if (ids.size > 0) facts.requirements = ids.size;
+    if (ids.length > 0) facts.requirements = ids.length;
     if (scenarios > 0) facts.scenarios = scenarios;
     return facts;
 }

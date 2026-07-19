@@ -130,7 +130,7 @@ export function generateHtml(
     <div class="viewer-container" id="app-root"></div>
     <template id="initial-content" data-raw="${content ? escapeHtmlAttribute(content) : ''}"></template>
     <script nonce="${nonce}">
-        window.__INITIAL_NAV_STATE__ = ${JSON.stringify(initialNavState)};
+        window.__INITIAL_NAV_STATE__ = ${JSON.stringify(initialNavState).replace(/</g, '\\u003c')};
     </script>
 
     <div class="loading-overlay" id="loading-overlay" style="display: none;">

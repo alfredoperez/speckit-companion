@@ -7,6 +7,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { readLivingSpecs, readCapabilityHealth, __test } from '../livingSpecsModel';
+import { countLivingFacts } from '../../spec-viewer/livingHeaderMeta';
 
 const realStatSync = jest.requireActual('fs').statSync;
 const statSyncMock = fs.statSync as unknown as jest.Mock;
@@ -270,6 +271,32 @@ describe('readCapabilityHealth', () => {
         created.push(root);
         const health = await readCapabilityHealth(root, capFor(root), { git: async () => '' });
         expect(health.coverage).toEqual({ covered: 2, total: 3 });
+    });
+
+    it('keeps the coverage denominator equal to the viewer requirement count', async () => {
+        const spec = [
+            '# Checkout',
+            '',
+            'FR-001 add',
+            'FR-002 remove',
+            '',
+            '```md',
+            'FR-900 an example, not a requirement',
+            '```',
+            '',
+        ].join('\n');
+        const root = makeWorkspace(
+            {
+                'capabilities/checkout/spec.md': spec,
+                'capabilities/checkout/spec.coverage.md': '- FR-001 → src/cart.test.ts::adds\n',
+            },
+            YML
+        );
+        created.push(root);
+        const health = await readCapabilityHealth(root, capFor(root), { git: async () => '' });
+
+        expect(health.coverage?.total).toBe(2);
+        expect(countLivingFacts(spec).requirements).toBe(health.coverage?.total);
     });
 
     it('omits coverage when there is no coverage tier', async () => {

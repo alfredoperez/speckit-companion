@@ -666,6 +666,17 @@ export class SpecViewerProvider {
     const instance = this.panels.get(specDirectory);
     if (!instance?.state.living) return;
 
+    // Colocated capabilities share a panel key, so the panel may have been
+    // re-anchored to a different one while this git-backed call was in flight.
+    const anchor = instance.state.livingSourcePath;
+    const currentSpec = anchor
+      ? livingTierDocuments(anchor).find(d => d.type === 'spec')?.filePath
+      : undefined;
+    const currentSpecPath = currentSpec
+      ? path.relative(workspaceRoot, currentSpec).replace(/\\/g, '/')
+      : undefined;
+    if (currentSpecPath !== meta.specPath) return;
+
     this.postMessage(specDirectory, {
       type: "livingHealthResolved",
       livingMeta: { ...meta, ...health },
