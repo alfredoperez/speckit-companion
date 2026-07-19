@@ -555,6 +555,19 @@ def main() -> int:
     if captured or capture_mode or args.set_pairs or args.living_specs or args.fold_living_spec:
         for line in captured:
             print(line)
+        skipped = [
+            name for name, given in (
+                ("--tasks-file", args.tasks_file), ("--task", args.task),
+                ("--materialize", args.materialize), ("--mark-complete", args.mark_complete),
+                ("--finish", args.finish), ("--advance", args.advance),
+            ) if given
+        ]
+        if skipped:
+            print(
+                f"[companion] Warning: {', '.join(skipped)} not applied — a capture flag "
+                f"in the same call takes precedence. Run it as a separate call.",
+                file=sys.stderr,
+            )
         return 0
 
     # Lifecycle modes stay exclusive — these are alternative readings of one
