@@ -697,19 +697,68 @@ def _living_requirement_span(living_lines: list[str], heading: str) -> tuple[int
     return start, end
 
 
+def _rename_map(deltas: dict) -> dict[str, str]:
+    """The delta set's old-heading -> new-heading map, first rename of a heading winning.
+
+    Renames whose chain loops back on itself are dropped: a cycle names no final
+    heading, so it is unsatisfiable input and skipped like any unmatched target."""
+    mapping: dict[str, str] = {}
+    for old_head, new_head in deltas["renamed"]:
+        mapping.setdefault(old_head, new_head)
+    cyclic: set[str] = set()
+    for start in mapping:
+        chain = [start]
+        current = start
+        while current in mapping:
+            current = mapping[current]
+            if current in chain:
+                cyclic.update(chain)
+                break
+            chain.append(current)
+    return {old: new for old, new in mapping.items() if old not in cyclic}
+
+
+def _resolve_rename(heading: str, mapping: dict[str, str]) -> str:
+    """Follow a rename chain to its end. The map is already cycle-free."""
+    current = heading
+    for _ in range(len(mapping) + 1):
+        if current not in mapping:
+            break
+        current = mapping[current]
+    return current
+
+
+def _retitle(section: str, heading: str) -> str:
+    """The same requirement section under a different `### ` heading."""
+    lines = section.splitlines()
+    for i, line in enumerate(lines):
+        if _REQ_HEADING_RE.match(line):
+            lines[i] = re.sub(r"^(###\s+).+$", lambda m: m.group(1) + heading, line)
+            break
+    return "\n".join(lines) + "\n"
+
+
 def apply_deltas(living_text: str, deltas: dict) -> tuple[str, dict]:
     """Apply ADDED/MODIFIED/REMOVED/RENAMED deltas to a living-spec text.
 
-    ADDED appends a requirement (idempotent — skipped when its heading already
-    exists), MODIFIED replaces the matching requirement in place, REMOVED deletes
-    it, RENAMED rewrites the matching heading's name. Unmatched MODIFIED/REMOVED/
-    RENAMED targets are skipped (best-effort).
+    ADDED appends a requirement, MODIFIED replaces the matching requirement in
+    place, REMOVED deletes it, RENAMED rewrites the matching heading's name.
+    Unmatched MODIFIED/REMOVED/RENAMED targets are skipped (best-effort).
+
+    Re-applying a delta set to its own output is a no-op. ADDED runs last, so it
+    resolves its heading through this delta set's renames before both the
+    existence check and the append — otherwise it would re-add the section the
+    RENAMED verb had just renamed away from, once per apply, without limit. A
+    MODIFIED body for the same resolved heading wins over the ADDED body, so an
+    add-plus-edit pair settles instead of alternating between the two.
 
     Returns the updated text and the per-verb count of what was applied."""
     lines = living_text.splitlines()
     applied = {"added": 0, "modified": 0, "removed": 0, "renamed": 0}
+    renames = _rename_map(deltas)
+    modified_bodies = {head: section for head, section in deltas["modified"]}
 
-    for old_head, new_head in deltas["renamed"]:
+    for old_head, new_head in renames.items():
         span = _living_requirement_span(lines, old_head)
         if span:
             i = span[0]
@@ -730,9 +779,11 @@ def apply_deltas(living_text: str, deltas: dict) -> tuple[str, dict]:
 
     appended = "\n".join(lines).rstrip() + "\n"
     for head, section in deltas["added"]:
-        if _living_requirement_span(appended.splitlines(), head) is not None:
-            continue  # idempotent — already present
-        appended = appended.rstrip() + "\n\n" + section.rstrip() + "\n"
+        target = _resolve_rename(head, renames)
+        body = modified_bodies.get(target) or modified_bodies.get(head) or section
+        if _living_requirement_span(appended.splitlines(), target) is not None:
+            continue  # already present under its final heading
+        appended = appended.rstrip() + "\n\n" + _retitle(body, target).rstrip() + "\n"
         applied["added"] += 1
     return appended, applied
 
