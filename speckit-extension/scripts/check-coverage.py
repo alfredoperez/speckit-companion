@@ -15,12 +15,21 @@ entry) or uncovered. It is the conformance ON-RAMP, not a gate:
   - OPT-IN: with `livingSpecs.enabled` unset/false (or no config) it reports
     nothing and exits 0 (the LS·1 inert contract).
 
-Requirement ids are extracted from the spec as the leading `FR-NNN` / `NFR-NNN`
-(also `FR001`, `NFR4`) token of a bullet or heading. A requirement is COVERED
-when its id appears in the coverage file on a line that also names at least one
-test (a `.test.`/`.spec.`/`_test` path or a `tests/...` reference). A capability
-with no `.coverage.md` reports every requirement uncovered (with `hasCoverage:
-false`); a capability with no `.spec.md` requirements reports an empty list.
+A spec may write its requirements in EITHER of two shapes, and both are read:
+
+  - the id form — a bullet or heading led by an `FR-NNN` / `NFR-NNN` (also
+    `FR001`, `NFR4`) token. Identity is the normalized id.
+  - the named form (OpenSpec requirement+scenario shape, what the LS·3 fold-back
+    writes) — a `### <name>` or `### Requirement: <name>` heading, usually with
+    `#### Scenario:` blocks under it and NO numeric id. Identity is the heading
+    text, matching how `write-context.py` finds a requirement to fold into.
+
+A requirement is COVERED when the coverage file names it on a line that also
+names at least one test (a `.test.`/`.spec.`/`_test` path or a `tests/...`
+reference) — by id for the id form, by heading text for the named form. A
+capability with no `.coverage.md` reports every requirement uncovered (with
+`hasCoverage: false`); a capability with no `.spec.md` requirements reports an
+empty list.
 
 Usage:
   check-coverage.py [--root <dir>] [--capability <name>] [--json]
@@ -52,6 +61,12 @@ rsp = _load_resolver()
 # as a new requirement.
 REQ_LINE = re.compile(r"^\s*(?:[-*+]|#{1,6})\s*\**(?P<id>(?:N?FR)-?\d+)\b", re.I)
 REQ_ANY = re.compile(r"\b(?P<id>(?:N?FR)-?\d+)\b", re.I)
+# Any markdown ATX heading, with its level.
+HEADING = re.compile(r"^(?P<hashes>#{1,6})\s+(?P<text>.+?)\s*$")
+# The optional `Requirement:` label the fold's delta blocks may carry.
+REQ_LABEL = re.compile(r"^\**\s*requirements?:\s*", re.I)
+# A canonical id, post-normalization (`FR-1`) — tells an id apart from a name.
+ID_FORM = re.compile(r"^N?FR-\d+$")
 # A token that looks like a test reference.
 TEST_TOKEN = re.compile(
     r"(?:[\w./-]*\.(?:test|spec)\.[\w]+"   # foo.test.ts / foo.spec.tsx
@@ -73,34 +88,111 @@ def _norm_id(rid: str) -> str:
     return f"{m.group(1).upper()}-{m.group(2)}"
 
 
+def _clean_name(name: str) -> str:
+    """Display form of a named requirement: label + emphasis stripped."""
+    s = REQ_LABEL.sub("", name.strip())
+    s = re.sub(r"[*_`]", "", s)
+    return re.sub(r"\s+", " ", s).strip()
+
+
+def _norm_name(name: str) -> str:
+    """Canonicalize a requirement NAME for matching: label/emphasis stripped,
+    whitespace collapsed, trailing punctuation dropped, lowercased."""
+    return _clean_name(name).strip(" .:;—–-").lower()
+
+
+def is_named(rid: str) -> bool:
+    """True when this requirement's identity is a heading name, not an id."""
+    return not ID_FORM.match(rid)
+
+
+def _key(rid: str) -> str:
+    """The coverage-map key for a requirement returned by spec_requirements."""
+    return _norm_name(rid) if is_named(rid) else rid
+
+
 def spec_requirements(text: str) -> list[str]:
-    """Ordered, de-duped requirement ids from a spec's bullets/headings."""
+    """Ordered, de-duped requirements from a spec.
+
+    Returns a mixed list: normalized ids (`FR-1`) for the id form, and the
+    cleaned heading text for the named (fold-back / OpenSpec) form.
+
+    Section-vs-requirement rule for `###` headings — a `###` heading is a NAMED
+    REQUIREMENT unless its body (down to the next `###`/`##`/`#`) contains an
+    `FR-NNN`/`NFR-NNN` requirement line. Specs commonly use `###` as a section
+    GROUPING (`### Public surface`) over id-bearing bullets; in that shape the
+    bullets are the requirements and the heading is just a label, so counting the
+    heading too would double-count. A `#### Scenario:` (or any level >= 4
+    heading) is never a requirement — it is part of a requirement's body.
+    """
     out, seen = [], set()
+    pending: str | None = None   # an undecided `###` candidate
+    is_section = False
+
+    def flush() -> None:
+        nonlocal pending, is_section
+        if pending and not is_section:
+            key = _norm_name(pending)
+            if key and key not in seen:
+                seen.add(key)
+                out.append(pending)
+        pending, is_section = None, False
+
     for line in text.splitlines():
-        m = REQ_LINE.match(line)
-        if not m:
+        hm = HEADING.match(line)
+        level = len(hm.group("hashes")) if hm else 0
+        # Any heading at `###` or above closes the previous candidate's body.
+        if hm and level <= 3:
+            flush()
+        rm = REQ_LINE.match(line)
+        if rm:
+            rid = _norm_id(rm.group("id"))
+            if rid not in seen:
+                seen.add(rid)
+                out.append(rid)
+            # An id-bearing line inside a `###` body (a bullet, or a `####`
+            # sub-heading) demotes that heading to a section grouping.
+            if pending is not None and not (hm and level <= 3):
+                is_section = True
             continue
-        rid = _norm_id(m.group("id"))
-        if rid in seen:
-            continue
-        seen.add(rid)
-        out.append(rid)
+        if hm and level == 3:
+            pending = _clean_name(hm.group("text"))
+    flush()
     return out
 
 
-def coverage_map(text: str) -> dict[str, list[str]]:
-    """Map requirement id -> list of test references found on its line(s)."""
+def coverage_map(text: str, names: list[str] | None = None) -> dict[str, list[str]]:
+    """Map requirement key -> list of test references found on its line(s).
+
+    Keys are normalized ids (`FR-1`) and normalized requirement names. Names are
+    only looked for when `names` is supplied (the spec is what defines them);
+    a coverage line references a named requirement by writing its heading text
+    anywhere on the line — e.g. a table cell `| Users can add a todo | ... |` or
+    `- Users can add a todo → src/todos.test.tsx`. The `Requirement:` label and
+    markdown emphasis are tolerated on either side.
+    """
+    wanted = []
+    for n in names or []:
+        if is_named(n):
+            k = _norm_name(n)
+            if k:
+                wanted.append((k, re.compile(rf"(?<![a-z0-9]){re.escape(k)}(?![a-z0-9])")))
+
     out: dict[str, list[str]] = {}
     for line in text.splitlines():
         tests = TEST_TOKEN.findall(line)
         # Harvest ids only from the line MINUS its test references, so an `fr-N`
         # buried inside a test path (`src/feature-fr-2/x.test.ts`) can't register
-        # as a covered requirement (the LS·3 substring lesson).
+        # as a covered requirement (the LS·3 substring lesson). Names are matched
+        # against the same test-stripped text, for the same reason.
         id_text = TEST_TOKEN.sub(" ", line)
-        ids = {_norm_id(m.group("id")) for m in REQ_ANY.finditer(id_text)}
-        if not ids:
+        keys = {_norm_id(m.group("id")) for m in REQ_ANY.finditer(id_text)}
+        if wanted:
+            hay = _norm_name(id_text)
+            keys.update(k for k, pat in wanted if pat.search(hay))
+        if not keys:
             continue
-        for rid in ids:
+        for rid in keys:
             bucket = out.setdefault(rid, [])
             for t in tests:
                 if t not in bucket:
@@ -122,12 +214,17 @@ def check_capability(name: str, spec_path: str, root: str, tiers: dict) -> dict:
     cmap: dict[str, list[str]] = {}
     if has_coverage and cov_path:
         with open(os.path.join(root, cov_path), encoding="utf-8") as fh:
-            cmap = coverage_map(fh.read())
+            cmap = coverage_map(fh.read(), reqs)
 
     requirements = []
     for rid in reqs:
-        tests = cmap.get(rid, [])
-        requirements.append({"id": rid, "covered": bool(tests), "tests": tests})
+        tests = cmap.get(_key(rid), [])
+        requirements.append({
+            "id": rid,
+            "kind": "name" if is_named(rid) else "id",
+            "covered": bool(tests),
+            "tests": tests,
+        })
 
     covered = sum(1 for r in requirements if r["covered"])
     return {

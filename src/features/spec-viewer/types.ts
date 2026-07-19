@@ -278,7 +278,7 @@ export interface NavState {
     /** Whether to render the install banner inside the Activity panel (viewer only). */
     showInstallPrompt?: boolean;
     /** Run-recovery affordance for a quiet in-flight run (issue #418). */
-    runRecovery?: { show: boolean; message: string; minutesQuiet: number };
+    runRecovery?: { show: boolean; mode: 'stalled' | 'stale'; message: string; minutesQuiet: number };
 }
 
 /**

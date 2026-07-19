@@ -171,6 +171,34 @@ body {
         display: none;
     }
 
+    /* The recovery strip is a rail sibling, so in the horizontal fold it has to
+       become a row too — stacked, it blows out the strip height and knocks the
+       step chips out of alignment (#451). It scrolls along with everything
+       else; the message truncates and keeps its full text in the title. */
+    .doc-rail .run-recovery {
+        flex: none;
+        flex-direction: row;
+        align-items: center;
+        gap: var(--space-2);
+        max-width: 340px;
+        margin: 0;
+        padding: var(--space-1) var(--space-2);
+    }
+
+    .doc-rail .run-recovery__msg {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .doc-rail .run-recovery__actions {
+        flex-wrap: nowrap;
+    }
+
+    .doc-rail .run-recovery__btn {
+        white-space: nowrap;
+    }
+
     .doc-rail .rail-group .step-tabs,
     .doc-rail .rail-group .step-children-tabs {
         flex-direction: row;

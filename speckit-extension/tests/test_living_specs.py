@@ -1233,5 +1233,152 @@ class CoverageReportTests(unittest.TestCase):
         self.assertEqual(coverage.main(["--root", str(off)]), 0)
 
 
+# --- LS·8 × LS·3: named requirements (the shape the fold-back writes) --------
+
+NAMED_SPEC = """\
+# Billing
+## Requirements
+
+### Requirement: Charge a card
+
+#### Scenario: a valid card is charged
+- WHEN a user submits a valid card
+- THEN the charge succeeds
+
+### Refund a charge
+
+#### Scenario: a charge is refunded
+- WHEN an operator refunds a settled charge
+- THEN the money is returned
+"""
+
+NAMED_COVERAGE = """\
+# Billing coverage
+
+| Requirement | Test |
+| --- | --- |
+| Charge a card | src/billing/charge.test.ts |
+"""
+
+MIXED_SPEC = """\
+# Billing
+## Requirements
+- **FR-001** Charge a card.
+- **FR-002** Refund a charge.
+
+### Users can email a receipt
+
+#### Scenario: a receipt is emailed
+- WHEN a charge settles
+- THEN a receipt is emailed
+"""
+
+# `###` used as a SECTION grouping over FR bullets — the heading is a label, the
+# bullets are the requirements.
+SECTIONED_SPEC = """\
+# Billing
+## Requirements
+
+### Public surface
+- **FR-001** Charge a card.
+- **FR-002** Refund a charge.
+
+### Layout primitives
+- **NFR-001** Renders under 100ms.
+"""
+
+
+class NamedRequirementParseTests(unittest.TestCase):
+    """LS·8 — the named (`### <name>`) requirement form the fold writes."""
+
+    def test_named_headings_are_requirements(self) -> None:
+        # Both `### Requirement: <name>` and the bare `### <name>` form; the
+        # `Requirement:` label is stripped from the identity.
+        self.assertEqual(
+            coverage.spec_requirements(NAMED_SPEC),
+            ["Charge a card", "Refund a charge"],
+        )
+
+    def test_scenario_heading_is_not_a_requirement(self) -> None:
+        reqs = coverage.spec_requirements(NAMED_SPEC)
+        self.assertFalse([r for r in reqs if r.lower().startswith("scenario")])
+
+    def test_section_heading_over_fr_bullets_is_not_a_requirement(self) -> None:
+        # `### Public surface` groups FR bullets → the bullets are the
+        # requirements, the heading is not (no double counting).
+        self.assertEqual(
+            coverage.spec_requirements(SECTIONED_SPEC), ["FR-1", "FR-2", "NFR-1"]
+        )
+
+    def test_mixed_spec_reports_both_forms(self) -> None:
+        self.assertEqual(
+            coverage.spec_requirements(MIXED_SPEC),
+            ["FR-1", "FR-2", "Users can email a receipt"],
+        )
+
+    def test_pure_fr_spec_is_unchanged(self) -> None:
+        self.assertEqual(coverage.spec_requirements(BILLING_SPEC), ["FR-1", "FR-2", "FR-3"])
+
+    def test_named_requirements_are_deduped_case_insensitively(self) -> None:
+        text = "### Charge a card\n\n### Requirement: **charge a card**\n"
+        self.assertEqual(coverage.spec_requirements(text), ["Charge a card"])
+
+    def test_coverage_map_matches_a_requirement_by_name(self) -> None:
+        names = coverage.spec_requirements(NAMED_SPEC)
+        cmap = coverage.coverage_map(NAMED_COVERAGE, names)
+        self.assertEqual(cmap["charge a card"], ["src/billing/charge.test.ts"])
+        self.assertNotIn("refund a charge", cmap)
+
+    def test_name_matching_needs_the_spec_names(self) -> None:
+        # Without the spec's names there is nothing to look for — the id-only
+        # behavior is preserved for callers that pass one argument.
+        self.assertEqual(coverage.coverage_map(NAMED_COVERAGE), {})
+
+    def test_a_name_only_partially_present_does_not_match(self) -> None:
+        cmap = coverage.coverage_map(
+            "| Charge | src/billing/charge.test.ts |\n", ["Charge a card"]
+        )
+        self.assertNotIn("charge a card", cmap)
+
+
+class NamedRequirementReportTests(unittest.TestCase):
+    """LS·8 — named requirements reach the report (issue #454)."""
+
+    def test_named_spec_is_reported_covered_and_uncovered(self) -> None:
+        root = _bake_coverage_repo(spec=NAMED_SPEC, cov=NAMED_COVERAGE)
+        cap = coverage.run(str(root), None)["capabilities"][0]
+        by_id = {r["id"]: r for r in cap["requirements"]}
+        self.assertEqual((cap["covered"], cap["total"]), (1, 2))
+        self.assertTrue(by_id["Charge a card"]["covered"])
+        self.assertEqual(by_id["Charge a card"]["tests"], ["src/billing/charge.test.ts"])
+        # A named requirement with no coverage entry reports as UNCOVERED —
+        # before #454 it was absent from the report entirely.
+        self.assertFalse(by_id["Refund a charge"]["covered"])
+        self.assertEqual(by_id["Refund a charge"]["kind"], "name")
+
+    def test_mixed_spec_counts_both_forms(self) -> None:
+        cov = BILLING_COVERAGE + "- Users can email a receipt → src/billing/receipt.test.ts\n"
+        root = _bake_coverage_repo(spec=MIXED_SPEC, cov=cov)
+        cap = coverage.run(str(root), None)["capabilities"][0]
+        by_id = {r["id"]: r for r in cap["requirements"]}
+        self.assertEqual((cap["covered"], cap["total"]), (3, 3))
+        self.assertEqual(by_id["FR-1"]["kind"], "id")
+        self.assertEqual(
+            by_id["Users can email a receipt"]["tests"], ["src/billing/receipt.test.ts"]
+        )
+
+    def test_named_capability_without_a_coverage_file_reports_uncovered(self) -> None:
+        root = _bake_coverage_repo(spec=NAMED_SPEC, cov=None)
+        cap = coverage.run(str(root), None)["capabilities"][0]
+        self.assertFalse(cap["hasCoverage"])
+        self.assertEqual((cap["covered"], cap["total"]), (0, 2))
+
+    def test_human_render_lists_named_requirements(self) -> None:
+        root = _bake_coverage_repo(spec=NAMED_SPEC, cov=NAMED_COVERAGE)
+        text = coverage.render_human(coverage.run(str(root), None))
+        self.assertIn("✓ Charge a card → src/billing/charge.test.ts", text)
+        self.assertIn("✗ Refund a charge — uncovered", text)
+
+
 if __name__ == "__main__":
     unittest.main()

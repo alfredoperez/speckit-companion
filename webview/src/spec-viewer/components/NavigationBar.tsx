@@ -121,17 +121,30 @@ export function NavigationBar() {
                 </div>
             )}
             {recovery?.show && (
-                <div class="run-recovery" role="status">
-                    <span class="run-recovery__msg">{recovery.message}</span>
+                <div class={`run-recovery run-recovery--${recovery.mode}`} role="status">
+                    <span class="run-recovery__msg" title={recovery.message}>{recovery.message}</span>
                     <div class="run-recovery__actions">
-                        <button
-                            type="button"
-                            class="run-recovery__btn run-recovery__btn--primary"
-                            title="Resume the pipeline from where it left off"
-                            onClick={() => vscode.postMessage({ type: 'resumeRun' })}
-                        >
-                            Resume
-                        </button>
+                        {recovery.mode === 'stale' ? (
+                            // Nothing has been running for days — resuming is the
+                            // wrong offer, so closing the spec out leads instead.
+                            <button
+                                type="button"
+                                class="run-recovery__btn run-recovery__btn--primary"
+                                title="Mark this spec as completed"
+                                onClick={() => vscode.postMessage({ type: 'completeSpec' })}
+                            >
+                                Mark complete
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                class="run-recovery__btn run-recovery__btn--primary"
+                                title="Resume the pipeline from where it left off"
+                                onClick={() => vscode.postMessage({ type: 'resumeRun' })}
+                            >
+                                Resume
+                            </button>
+                        )}
                         <button
                             type="button"
                             class="run-recovery__btn"

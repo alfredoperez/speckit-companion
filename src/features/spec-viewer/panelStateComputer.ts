@@ -209,6 +209,7 @@ export function computePanelDerivedState(
         status: featureCtx?.status,
         newestActivityMs,
         nowMs: nowMs ?? 0,
+        taskCompletionPercent,
     });
 
     // `enhancementButtons` is passed through unchanged — it's an input here
