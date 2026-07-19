@@ -152,11 +152,67 @@ def derive_closure() -> set[str]:
     return closure
 
 
+VSIX_ROOT = "speckit-extension/scripts/"
+
+
+def _imported_siblings(script: str, existing: set[str]) -> set[str]:
+    """Siblings `script` imports outright, so a missing one is an import error.
+
+    Load-by-filename siblings are excluded on purpose: those callers already
+    treat a failed load as a no-op, so their absence degrades rather than
+    crashes."""
+    path = os.path.join(HERE, script)
+    if not os.path.exists(path):
+        return set()
+    deps = set()
+    for name in set(PLAIN_IMPORT.findall(_read(path))):
+        resolved = _resolve_sibling(name, existing)
+        if resolved and resolved != script:
+            deps.add(resolved)
+    return deps
+
+
+def vsix_writer_closure() -> set[str]:
+    """write-context.py plus every sibling it imports, transitively.
+
+    The VS Code extension ships the writer inside its .vsix for stock mode, so
+    each of these has to survive `.vscodeignore` or the writer cannot start."""
+    existing = _script_files()
+    closure: set[str] = set()
+    pending = ["write-context.py"]
+    while pending:
+        script = pending.pop()
+        if script in closure:
+            continue
+        closure.add(script)
+        pending.extend(_imported_siblings(script, existing) - closure)
+    return closure
+
+
+def vsix_gaps() -> list[str]:
+    """Writer dependencies that `.vscodeignore` would strip out of the .vsix."""
+    path = os.path.join(os.path.dirname(EXT_ROOT), ".vscodeignore")
+    if not os.path.exists(path):
+        return []
+    negated = {
+        line[len(VSIX_ROOT) + 1:].strip()
+        for line in _read(path).splitlines()
+        if line.strip().startswith("!" + VSIX_ROOT)
+    }
+    return sorted(vsix_writer_closure() - negated)
+
+
 def check() -> list[str]:
     """Every disagreement between the declared list and reality. Empty means clean."""
     problems = []
     existing = _script_files()
     closure = derive_closure()
+
+    for script in vsix_gaps():
+        problems.append(
+            f"stripped from the .vsix: {script} — the context writer imports it, "
+            f"but .vscodeignore has no `!` rule for it, so stock mode would break"
+        )
 
     for script in sorted(closure - RUNTIME_SCRIPTS):
         problems.append(
