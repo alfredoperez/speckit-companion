@@ -66,6 +66,9 @@ provides:
     - name: speckit.companion.adopt
       file: commands/speckit.companion.adopt.md
       description: "Brownfield adoption wizard — draft living specs for the code areas you name, surface-first, and register the capabilities (opt-in)"
+    - name: speckit.companion.relocate
+      file: commands/speckit.companion.relocate.md
+      description: "Move a living spec between central and colocated storage — file, tier siblings, and registry together (opt-in, reversible)"
     - name: speckit.companion.drift
       file: commands/speckit.companion.drift.md
       description: "Report living-spec drift — per capability, source files changed since the spec was last committed, classified tracked vs unspeced (opt-in, never halts)"

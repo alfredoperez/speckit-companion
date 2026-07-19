@@ -42,6 +42,7 @@ RUNTIME_SCRIPTS = frozenset({
     "resolve-spec-paths.py",
     "companion_config.py",
     "register-capability.py",
+    "relocate-capability.py",
     "drift.py",
     "check-coverage.py",
 })

@@ -108,7 +108,7 @@ describe('codexPromptResolver', () => {
 
         it('resolves every command the companion extension provides, in both spellings', () => {
             const commands = companionCommands();
-            expect(commands).toHaveLength(16);
+            expect(commands).toHaveLength(17);
 
             commands.forEach(commandId => {
                 const skillName = `speckit-${commandId.slice('speckit.'.length).replace(/\./g, '-')}`;

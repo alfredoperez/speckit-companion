@@ -32,6 +32,13 @@ _reg_spec = importlib.util.spec_from_file_location(
 regcap = importlib.util.module_from_spec(_reg_spec)
 _reg_spec.loader.exec_module(regcap)
 
+# relocate-capability.py (#460 central <-> colocated migration) — hyphenated.
+_rel_spec = importlib.util.spec_from_file_location(
+    "relocate_capability", SCRIPTS / "relocate-capability.py"
+)
+relocate = importlib.util.module_from_spec(_rel_spec)
+_rel_spec.loader.exec_module(relocate)
+
 # drift.py (LS·6) — imported by file path (no hyphen, but kept consistent).
 _drift_spec = importlib.util.spec_from_file_location("drift", SCRIPTS / "drift.py")
 drift = importlib.util.module_from_spec(_drift_spec)
@@ -1378,6 +1385,276 @@ class NamedRequirementReportTests(unittest.TestCase):
         text = coverage.render_human(coverage.run(str(root), None))
         self.assertIn("✓ Charge a card → src/billing/charge.test.ts", text)
         self.assertIn("✗ Refund a charge — uncovered", text)
+
+
+CENTRAL_YAML = """\
+livingSpecs:
+  enabled: true
+  capabilities:
+    - name: billing
+      match: ["src/features/billing/**"]
+"""
+
+
+def _read_config(root: Path) -> str:
+    return (root / ".specify" / "companion.yml").read_text(encoding="utf-8")
+
+
+class RelocateCapabilityTests(unittest.TestCase):
+    """#460 — migrating a capability between centralized and colocated storage."""
+
+    def test_central_to_colocated_moves_file_and_sets_spec(self) -> None:
+        root = make_repo(CENTRAL_YAML, files=["src/features/billing/x.ts"],
+                         spec_files=["capabilities/billing/spec.md"])
+        result = relocate.relocate(str(root), "colocated", name="billing")
+        self.assertEqual(len(result["relocated"]), 1)
+        target = root / "src/features/billing/billing.spec.md"
+        self.assertTrue(target.is_file())
+        self.assertFalse((root / "capabilities/billing/spec.md").exists())
+        self.assertIn("spec: src/features/billing/billing.spec.md", _read_config(root))
+
+    def test_colocated_to_central_moves_back_and_removes_the_key(self) -> None:
+        yaml = (
+            "livingSpecs:\n  enabled: true\n  capabilities:\n"
+            "    - name: billing\n      match: [\"src/features/billing/**\"]\n"
+            "      spec: src/features/billing/billing.spec.md\n"
+        )
+        root = make_repo(yaml, spec_files=["src/features/billing/billing.spec.md"])
+        relocate.relocate(str(root), "central", name="billing")
+        self.assertTrue((root / "capabilities/billing/spec.md").is_file())
+        self.assertFalse((root / "src/features/billing/billing.spec.md").exists())
+        # Terse by default: the resolver fills the centralized path itself.
+        self.assertNotIn("spec:", _read_config(root))
+
+    def test_resolver_agrees_with_the_config_after_a_move(self) -> None:
+        root = make_repo(CENTRAL_YAML, spec_files=["capabilities/billing/spec.md"])
+        relocate.relocate(str(root), "colocated", name="billing")
+        entry = rsp.discover_all(rsp.load_living(str(root)), str(root))[0]
+        self.assertEqual(entry["location"], "colocated")
+        self.assertEqual(entry["spec"], "src/features/billing/billing.spec.md")
+        self.assertTrue(entry["exists"])
+
+    def test_tier_siblings_move_with_the_hot_spec(self) -> None:
+        root = make_repo(CENTRAL_YAML, spec_files=[
+            "capabilities/billing/spec.md",
+            "capabilities/billing/spec.arch.md",
+            "capabilities/billing/spec.coverage.md",
+        ])
+        relocate.relocate(str(root), "colocated", name="billing")
+        area = root / "src/features/billing"
+        self.assertTrue((area / "billing.spec.md").is_file())
+        self.assertTrue((area / "billing.arch.md").is_file())
+        self.assertTrue((area / "billing.coverage.md").is_file())
+
+    def test_absent_tier_sibling_is_simply_not_moved(self) -> None:
+        root = make_repo(CENTRAL_YAML, spec_files=[
+            "capabilities/billing/spec.md", "capabilities/billing/spec.arch.md",
+        ])
+        relocate.relocate(str(root), "colocated", name="billing")
+        area = root / "src/features/billing"
+        self.assertTrue((area / "billing.arch.md").is_file())
+        self.assertFalse((area / "billing.coverage.md").exists())
+
+    def test_rerun_in_the_target_layout_is_a_clean_no_op(self) -> None:
+        root = make_repo(CENTRAL_YAML, spec_files=["capabilities/billing/spec.md"])
+        relocate.relocate(str(root), "colocated", name="billing")
+        before = _read_config(root)
+        result = relocate.relocate(str(root), "colocated", name="billing")
+        self.assertEqual(result["relocated"], [])
+        self.assertEqual(result["unchanged"][0]["action"], "already-colocated")
+        self.assertEqual(_read_config(root), before)
+        self.assertEqual(relocate.main(["--root", str(root), "--name", "billing",
+                                        "--to", "colocated"]), 0)
+
+    def test_already_central_is_a_no_op(self) -> None:
+        root = make_repo(CENTRAL_YAML, spec_files=["capabilities/billing/spec.md"])
+        result = relocate.relocate(str(root), "central", name="billing")
+        self.assertEqual(result["relocated"], [])
+        self.assertEqual(result["unchanged"][0]["action"], "already-central")
+
+    def test_multi_glob_without_a_common_root_fails_clearly(self) -> None:
+        yaml = (
+            "livingSpecs:\n  enabled: true\n  capabilities:\n"
+            "    - name: wide\n      match: [\"src/a/**\", \"lib/b/**\"]\n"
+        )
+        root = make_repo(yaml, spec_files=["capabilities/wide/spec.md"])
+        with self.assertRaises(ValueError) as ctx:
+            relocate.relocate(str(root), "colocated", name="wide")
+        self.assertIn("no single area root", str(ctx.exception))
+        self.assertIn("--spec", str(ctx.exception))
+        # Nothing was touched.
+        self.assertTrue((root / "capabilities/wide/spec.md").is_file())
+        self.assertNotIn("spec:", _read_config(root))
+        self.assertEqual(
+            relocate.main(["--root", str(root), "--name", "wide", "--to", "colocated"]), 2
+        )
+
+    def test_sibling_globs_use_the_shallowest_common_directory(self) -> None:
+        yaml = (
+            "livingSpecs:\n  enabled: true\n  capabilities:\n"
+            "    - name: wide\n      match: [\"src/a/**\", \"src/b/**\"]\n"
+        )
+        root = make_repo(yaml, spec_files=["capabilities/wide/spec.md"])
+        result = relocate.relocate(str(root), "colocated", name="wide")
+        self.assertEqual(result["relocated"][0]["spec"], "src/wide.spec.md")
+        self.assertTrue((root / "src/wide.spec.md").is_file())
+
+    def test_spec_override_beats_the_derivation(self) -> None:
+        root = make_repo(CENTRAL_YAML, spec_files=["capabilities/billing/spec.md"])
+        relocate.relocate(str(root), "colocated", name="billing",
+                          spec="src/features/billing/docs/money.spec.md")
+        self.assertTrue((root / "src/features/billing/docs/money.spec.md").is_file())
+        self.assertIn("spec: src/features/billing/docs/money.spec.md", _read_config(root))
+
+    def test_spec_override_rescues_an_ambiguous_capability(self) -> None:
+        yaml = (
+            "livingSpecs:\n  enabled: true\n  capabilities:\n"
+            "    - name: wide\n      match: [\"src/a/**\", \"lib/b/**\"]\n"
+        )
+        root = make_repo(yaml, spec_files=["capabilities/wide/spec.md"])
+        relocate.relocate(str(root), "colocated", name="wide", spec="src/a/wide.spec.md")
+        self.assertTrue((root / "src/a/wide.spec.md").is_file())
+
+    def test_all_migrates_many_and_skips_the_ambiguous_one(self) -> None:
+        yaml = (
+            "livingSpecs:\n  enabled: true\n  capabilities:\n"
+            "    - name: alpha\n      match: [\"src/alpha/**\"]\n"
+            "    - name: wide\n      match: [\"src/a/**\", \"lib/b/**\"]\n"
+            "    - name: beta\n      match: [\"src/beta/**\"]\n"
+        )
+        root = make_repo(yaml, spec_files=[
+            "capabilities/alpha/spec.md", "capabilities/wide/spec.md",
+            "capabilities/beta/spec.md",
+        ])
+        result = relocate.relocate(str(root), "colocated", every=True)
+        self.assertEqual({p["name"] for p in result["relocated"]}, {"alpha", "beta"})
+        self.assertEqual([s["name"] for s in result["skipped"]], ["wide"])
+        self.assertTrue((root / "src/alpha/alpha.spec.md").is_file())
+        self.assertTrue((root / "src/beta/beta.spec.md").is_file())
+        # The skipped capability keeps BOTH halves of its old layout.
+        self.assertTrue((root / "capabilities/wide/spec.md").is_file())
+        cfg = _read_config(root)
+        self.assertIn("spec: src/alpha/alpha.spec.md", cfg)
+        self.assertIn("spec: src/beta/beta.spec.md", cfg)
+        self.assertNotIn("spec: capabilities/wide", cfg)
+        # Partial run -> exit 1, never an abort.
+        self.assertEqual(relocate.main(["--root", str(root), "--all", "--to", "colocated"]), 1)
+
+    def test_all_round_trips_back_to_central(self) -> None:
+        yaml = (
+            "livingSpecs:\n  enabled: true\n  capabilities:\n"
+            "    - name: alpha\n      match: [\"src/alpha/**\"]\n"
+            "    - name: beta\n      match: [\"src/beta/**\"]\n"
+        )
+        root = make_repo(yaml, spec_files=[
+            "capabilities/alpha/spec.md", "capabilities/beta/spec.md",
+        ])
+        relocate.relocate(str(root), "colocated", every=True)
+        relocate.relocate(str(root), "central", every=True)
+        self.assertTrue((root / "capabilities/alpha/spec.md").is_file())
+        self.assertTrue((root / "capabilities/beta/spec.md").is_file())
+        self.assertNotIn("spec:", _read_config(root))
+
+    def test_a_failed_config_write_rolls_the_files_back(self) -> None:
+        root = make_repo(CENTRAL_YAML, spec_files=[
+            "capabilities/billing/spec.md", "capabilities/billing/spec.arch.md",
+        ])
+        before = _read_config(root)
+        original_write = relocate._write_config
+        relocate._write_config = lambda *a, **k: (_ for _ in ()).throw(OSError("disk full"))
+        try:
+            with self.assertRaises(OSError):
+                relocate.relocate(str(root), "colocated", name="billing")
+        finally:
+            relocate._write_config = original_write
+        # Config and disk still agree — on the ORIGINAL layout.
+        self.assertEqual(_read_config(root), before)
+        self.assertTrue((root / "capabilities/billing/spec.md").is_file())
+        self.assertTrue((root / "capabilities/billing/spec.arch.md").is_file())
+        self.assertFalse((root / "src/features/billing/billing.spec.md").exists())
+        entry = rsp.discover_all(rsp.load_living(str(root)), str(root))[0]
+        self.assertEqual(entry["location"], "centralized")
+        self.assertTrue(entry["exists"])
+
+    def test_destination_collision_refuses_before_moving_anything(self) -> None:
+        root = make_repo(CENTRAL_YAML, spec_files=[
+            "capabilities/billing/spec.md",
+            "src/features/billing/billing.spec.md",
+        ])
+        with self.assertRaises(ValueError) as ctx:
+            relocate.relocate(str(root), "colocated", name="billing")
+        self.assertIn("already exists", str(ctx.exception))
+        self.assertTrue((root / "capabilities/billing/spec.md").is_file())
+
+    def test_display_name_change_is_reported(self) -> None:
+        # A colocated stem that differs from the capability name renames the sidebar
+        # entry when it moves to the centralized layout.
+        yaml = (
+            "livingSpecs:\n  enabled: true\n  capabilities:\n"
+            "    - name: todos-store\n      match: [\"src/store/**\"]\n"
+            "      spec: src/store/todos.spec.md\n"
+        )
+        root = make_repo(yaml, spec_files=["src/store/todos.spec.md"])
+        plan = relocate.relocate(str(root), "central", name="todos-store")["relocated"][0]
+        self.assertTrue(plan["renamed"])
+        self.assertEqual(plan["displayNameFrom"], "todos")
+        self.assertEqual(plan["displayName"], "todos-store")
+        self.assertIn("sidebar name changes", relocate.render_human(
+            {"relocated": [plan], "unchanged": [], "skipped": []}))
+
+    def test_matching_stem_does_not_report_a_rename(self) -> None:
+        root = make_repo(CENTRAL_YAML, spec_files=["capabilities/billing/spec.md"])
+        plan = relocate.relocate(str(root), "colocated", name="billing")["relocated"][0]
+        self.assertFalse(plan["renamed"])
+
+    def test_missing_config_is_a_clear_error_not_a_traceback(self) -> None:
+        root = Path(tempfile.mkdtemp())
+        self.assertEqual(
+            relocate.main(["--root", str(root), "--name", "x", "--to", "central"]), 2
+        )
+
+    def test_malformed_config_refuses_to_write(self) -> None:
+        root = make_repo("livingSpecs:\n  enabled: true\n  capabilities:\n  - [unclosed\n")
+        self.assertEqual(
+            relocate.main(["--root", str(root), "--name", "x", "--to", "central"]), 2
+        )
+
+    def test_unknown_capability_lists_the_registered_ones(self) -> None:
+        root = make_repo(CENTRAL_YAML)
+        with self.assertRaises(ValueError) as ctx:
+            relocate.relocate(str(root), "colocated", name="nope")
+        self.assertIn("billing", str(ctx.exception))
+
+    def test_name_and_all_are_mutually_exclusive(self) -> None:
+        root = make_repo(CENTRAL_YAML)
+        self.assertEqual(relocate.main(["--root", str(root), "--to", "central"]), 2)
+        self.assertEqual(
+            relocate.main(["--root", str(root), "--all", "--name", "billing",
+                           "--to", "central"]), 2
+        )
+        self.assertEqual(
+            relocate.main(["--root", str(root), "--all", "--to", "central",
+                           "--spec", "x.spec.md"]), 2
+        )
+
+    def test_empty_colocated_spec_can_be_repaired_to_central(self) -> None:
+        # This config already breaks the resolver; relocating to central is the fix.
+        yaml = (
+            "livingSpecs:\n  enabled: true\n  capabilities:\n"
+            "    - name: broken\n      match: [\"src/broken/**\"]\n      spec: \"\"\n"
+        )
+        root = make_repo(yaml)
+        result = relocate.relocate(str(root), "central", name="broken")
+        self.assertEqual(result["relocated"][0]["spec"], "capabilities/broken/spec.md")
+        self.assertEqual(rsp.main(["--root", str(root), "--all"]), 0)
+
+    def test_unrelated_config_blocks_survive_the_rewrite(self) -> None:
+        yaml = "commands:\n  specify:\n    nodes: [\"resolve-dir\"]\n\n" + CENTRAL_YAML
+        root = make_repo(yaml, spec_files=["capabilities/billing/spec.md"])
+        relocate.relocate(str(root), "colocated", name="billing")
+        cfg = _read_config(root)
+        self.assertIn("commands:", cfg)
+        self.assertIn('nodes: ["resolve-dir"]', cfg)
 
 
 if __name__ == "__main__":
