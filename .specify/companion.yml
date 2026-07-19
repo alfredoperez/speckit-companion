@@ -6,3 +6,25 @@ commands:
           - { type: prompt, text: "Before this spec is marked complete, self-review your full diff against the project conventions and the review checklist, and fix any violations you find." }
           - { type: prompt, text: "Run the code-simplifier agent on the files you changed and apply its safe behavior-preserving simplifications. If you have no agent tool, say so and continue." }
           - { type: prompt, text: "Commit the work and open a pull request using the create-pr skill, following the repo PR conventions. Do not merge. Leave the PR open for review. If you cannot run git or gh, report what you would do and continue." }
+
+livingSpecs:
+  enabled: true
+  capabilities:
+    - name: ai-providers
+      match: ["src/ai-providers/**"]
+    - name: features
+      match: ["src/features/**"]
+    - name: spec-viewer
+      match: ["src/features/spec-viewer/**"]
+    - name: specs
+      match: ["src/features/specs/**"]
+    - name: webview
+      match: ["webview/src/**"]
+    - name: webview-spec-viewer
+      match: ["webview/src/spec-viewer/**"]
+    - name: speckit-extension
+      match: ["speckit-extension/**"]
+    - name: speckit-extension-capture
+      match: ["speckit-extension/scripts/**"]
+    - name: speckit-extension-commands
+      match: ["speckit-extension/commands/**", "speckit-extension/nodes/**", "speckit-extension/presets/**"]

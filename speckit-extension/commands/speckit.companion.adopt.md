@@ -1,5 +1,5 @@
 ---
-description: "Brownfield adoption wizard — draft living specs for the code areas you name and register them (opt-in, surface-first, [DRAFT])"
+description: "Brownfield adoption wizard — draft living specs for the code areas you name, central or colocated, and register them (opt-in, surface-first, [DRAFT])"
 ---
 
 # Adopt a Code Area into a Living Spec
@@ -31,13 +31,29 @@ List the files under the named area. From their **surface only** — exported sy
 For each proposed capability, derive:
 - a **name** (a short slug for the area, e.g. `billing`),
 - a **match** glob from the area path (e.g. adopting `src/billing/` → `["src/billing/**"]`; a nested leaf → `["src/billing/invoices/**"]`),
-- the default **spec** path `capabilities/<name>/spec.md` (centralized).
+- a **spec** path, which depends on the storage layout chosen below.
 
-Show the proposed capability tree to the developer and pause for confirmation before drafting and registering. This is the one review gate in this command.
+#### Choose the storage layout
+
+Living specs support two layouts, and the choice is the developer's:
+
+- **central** — every spec under `capabilities/<name>/spec.md`. One folder holds the whole record; easy to read end to end, and the spec stays put when code moves.
+- **colocated** — the spec sits next to the code it describes, at `<area root>/<name>.spec.md`. Ownership is obvious, the spec travels with the code in a move, and it shows up in the same folder a developer already has open.
+
+If the invocation named a layout, use it. **Otherwise ask before proposing anything**, since the layout determines the spec paths shown at the review gate. Offer central, colocated, or per-capability, and say plainly that it can be changed later.
+
+Deriving a **colocated** path: take the capability's match glob, strip the trailing `/**`, and place `<name>.spec.md` in that directory — `src/features/spec-viewer/**` → `src/features/spec-viewer/spec-viewer.spec.md`.
+
+Two consequences to state out loud when proposing colocated paths, because both surprise people:
+
+1. **The filename stem becomes the capability's display name.** A capability named `speckit-extension-capture` colocated as `capture.spec.md` shows as `capture` in the sidebar. Either keep the stem equal to the name, or tell the developer the name it will display as.
+2. **A capability whose match globs span unrelated directories has no obvious home.** If a capability matches `speckit-extension/commands/**` *and* `speckit-extension/nodes/**`, there is no single area root. Propose the shallowest common directory, and if there isn't a sensible one, say so and propose central for that capability specifically — a mix is fine.
+
+Show the proposed capability tree to the developer — names, match globs, and the resolved spec path for each — and pause for confirmation before drafting and registering. This is the one review gate in this command.
 
 ### 2. Draft each living spec — surface-first, honestly marked
 
-For each confirmed capability, draft `capabilities/<name>/spec.md`. Read the area's files; if a file is unreadable (binary, permission) or too large to read within a reasonable budget, **do not silently skip it** — record its path for the `## Uncovered` section.
+For each confirmed capability, draft the spec at the path confirmed at the review gate — `capabilities/<name>/spec.md` for central, `<area root>/<name>.spec.md` for colocated. Read the area's files; if a file is unreadable (binary, permission) or too large to read within a reasonable budget, **do not silently skip it** — record its path for the `## Uncovered` section.
 
 A living spec uses the **requirement-and-scenario shape** — a named requirement heading with at least one scenario under it. This is not a stylistic preference: fold-back identifies a requirement by its exact `###` heading text, so a living spec written any other way cannot be updated by the pipeline. Numbered `FR-001` bullets are the *feature*-spec format and must not be used here.
 
@@ -135,6 +151,10 @@ For each confirmed capability, register it so the shipped resolver recognizes it
 python3 .specify/extensions/companion/scripts/register-capability.py --name <name> --match "<glob>" [--match "<glob>" …] [--exclude "<glob>"] [--spec <path>]
 ```
 
+**Pass `--spec` for every colocated capability**, with the same path you drafted the spec to. Omit it for central ones — the helper emits `spec` only when it differs from the centralized default, which keeps the config terse.
+
+Register a colocated capability only *after* its spec file is on disk at that path. The two must agree: the resolver raises `capability "<name>" is colocated but has no resolvable spec path` if a capability is registered with a `spec` path that isn't there, and the whole living-specs config fails to load, not just that capability.
+
 This is **incremental** — it appends one capability per confirmed proposal; it never bootstraps the whole repo and never rewrites unrelated capabilities. Re-running it for an already-registered name is a safe no-op. After it appends, confirm the resolver recognizes the area:
 
 ```bash
@@ -147,11 +167,12 @@ If you have no terminal tool, report the exact `register-capability.py` command 
 
 ### 5. Report
 
-Summarize, in plain language: which capabilities you proposed and registered, where each living spec was drafted, how many requirements each carries, how many were tagged `[inferred]`, how many clarifications you walked and how they landed (resolved / kept / dropped), any **defects** the clarification walk turned up, and what landed under `## Uncovered`. Make clear the drafts are `[DRAFT]` starting points to review, not finished specs.
+Summarize, in plain language: which capabilities you proposed and registered, the storage layout used (and any capability that deviated from it), where each living spec was drafted, how many requirements each carries, how many were tagged `[inferred]`, how many clarifications you walked and how they landed (resolved / kept / dropped), any **defects** the clarification walk turned up, and what landed under `## Uncovered`. Make clear the drafts are `[DRAFT]` starting points to review, not finished specs.
 
 ## Boundaries
 
 - **Opt-in and isolated.** This command changes no existing command's behavior and touches no spec's lifecycle. It only creates `capabilities/<name>/spec.md` files and appends to the `livingSpecs` registry.
+- **The layout is the developer's call.** Never assume central because it is the default. Ask when it was not specified, and show the resulting spec paths before writing anything.
 - **Only what was named.** Adopt the areas the developer named or chose, and nothing else. Several areas in one run is fine; silently widening past the agreed scope is not.
 - **Specify, don't transcribe.** A requirement that a prop rename would falsify is a bug in the draft, not a detail. Fewer, durable requirements beat an exhaustive inventory of the code.
 - **Write the shape the pipeline can update.** Named `###` requirements with scenarios, never numbered `FR-` bullets, and never `###` section groupings. Fold-back matches requirements by heading text; a spec in any other shape is one the pipeline can silently fail to update.
