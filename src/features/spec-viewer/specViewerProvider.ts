@@ -52,7 +52,7 @@ import { deriveSpecName } from "../specs/specContextManager";
 import { readSpecContext, SPEC_CONTEXT_FILENAME, SpecContextParseError } from "../specs/specContextReader";
 import { writeSpecContext } from "../specs/specContextWriter";
 import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
-import { livingTierType, livingCapabilityName, livingTierDocuments, readLivingDoc } from "./livingDocs";
+import { livingTierType, livingCapabilityName, livingTierDocuments, readLivingDoc, isLivingDraft } from "./livingDocs";
 import { deriveStepHistory } from "../specs/stepHistoryDerivation";
 import { backfillMinimalContext } from "../specs/specContextBackfill";
 import { resetMalformedContext } from "../specs/specContextReset";
@@ -575,6 +575,10 @@ export class SpecViewerProvider {
     const content = doc.exists ? await readLivingDoc(doc.filePath) : '';
     const specName = instance.state.specName;
 
+    // An adopt-drafted spec carries a `[DRAFT]` banner in its body; badge it
+    // DRAFT so the header stops contradicting the first line of the document.
+    const isDraft = isLivingDraft(content);
+
     instance.state = {
       ...instance.state,
       currentDocument: doc.type,
@@ -597,11 +601,11 @@ export class SpecViewerProvider {
       specName,
       [],            // phases — no stepper
       0,             // taskCompletionPercent
-      SpecStatuses.ACTIVE,
+      isDraft ? 'draft' : SpecStatuses.ACTIVE,
       [],            // enhancementButtons
       {},            // stalenessMap
       null,          // activeStep
-      'LIVING',      // badgeText
+      isDraft ? 'DRAFT' : 'LIVING',  // badgeText
       null,
       null,
       specName,      // contextSpecName (header title)

@@ -91,6 +91,45 @@ export function livingTierDocuments(sourcePath: string): SpecDocument[] {
     return docs;
 }
 
+/**
+ * How many body lines (after any YAML frontmatter) can carry the draft banner.
+ * `/speckit.companion.adopt` writes it immediately under the title, so a small
+ * window is enough — and it keeps the word "draft" in prose from counting.
+ */
+const DRAFT_BANNER_SCAN_LINES = 10;
+
+/**
+ * The banner line itself: an optional blockquote/heading/emphasis wrapper
+ * around a leading `[DRAFT]` marker. Matches
+ * `> [DRAFT] Surface-first draft from existing code — review before trusting.`
+ * and the plain-line variants of it.
+ */
+const DRAFT_BANNER_LINE = /^\s*(?:>\s*)*(?:#{1,6}\s+)?(?:[*_]{1,3})?\s*\[draft\]/i;
+
+/**
+ * True when a living spec's markdown declares itself a draft.
+ *
+ * `/speckit.companion.adopt` drafts surface-first specs and marks them with a
+ * `[DRAFT]` banner near the top; the viewer badges those DRAFT instead of
+ * LIVING. Only the banner window is inspected, so a requirement that merely
+ * says "draft" deeper in the document does not demote the spec.
+ */
+export function isLivingDraft(content: string): boolean {
+    if (!content) return false;
+
+    let lines = content.split(/\r?\n/);
+
+    // Skip YAML frontmatter so the window covers the body, not the metadata.
+    if (lines[0]?.trim() === '---') {
+        const close = lines.findIndex((line, i) => i > 0 && line.trim() === '---');
+        if (close > 0) lines = lines.slice(close + 1);
+    }
+
+    return lines
+        .slice(0, DRAFT_BANNER_SCAN_LINES)
+        .some(line => DRAFT_BANNER_LINE.test(line));
+}
+
 /** Read a tier document, tolerating missing files. */
 export async function readLivingDoc(filePath: string): Promise<string> {
     try {

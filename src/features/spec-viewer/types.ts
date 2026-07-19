@@ -479,7 +479,11 @@ export type SpecStatus =
     | typeof SpecStatuses.ACTIVE          // Default - shows all editing controls
     | typeof SpecStatuses.TASKS_DONE      // All tasks 100% - shows Complete as primary CTA
     | typeof SpecStatuses.COMPLETED       // User marked complete - shows Archive + Reactivate
-    | typeof SpecStatuses.ARCHIVED;       // Read-only - shows Reactivate only
+    | typeof SpecStatuses.ARCHIVED        // Read-only - shows Reactivate only
+    | 'draft';                            // Presentation only - a living spec still carrying
+                                          // its `[DRAFT]` banner; renders the muted
+                                          // `.spec-badge--draft` pill. Not a lifecycle state,
+                                          // so it is deliberately absent from `SpecStatuses`.
 
 /**
  * Check if a status allows editing/refinement

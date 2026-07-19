@@ -116,9 +116,13 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         if (element.contextValue === 'living-specs-group' && element.groupId === 'living-specs-capabilities') {
             // Health is async (one time-bounded git call per capability) and
             // best-effort — a failed/absent computation renders the row as before.
+            // A location badge only earns its space when the repo actually mixes
+            // storage modes; an all-central repo (every adopted repo) would show
+            // "central" on 100% of rows and distinguish nothing. (Issue #448)
+            const mixedLocations = listing.capabilities.some(cap => cap.location === 'colocated');
             return Promise.all(listing.capabilities.map(async cap => {
                 const health = await this.health(cap);
-                return this.capabilityItem(cap, health);
+                return this.capabilityItem(cap, health, mixedLocations);
             }));
         }
 
@@ -159,8 +163,15 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         }
     }
 
-    private capabilityItem(cap: ResolvedCapability, health?: CapabilityHealth): LivingSpecItem {
-        const hasChildren = cap.exists && this.tierChildren(cap).length > 0;
+    private capabilityItem(
+        cap: ResolvedCapability,
+        health?: CapabilityHealth,
+        mixedLocations = false
+    ): LivingSpecItem {
+        // `tierChildren` always yields the Spec node, and a capability row has no
+        // other children (see `getChildren`), so a lone Spec child is a disclosure
+        // triangle over nothing — the row opens the spec itself instead. (Issue #449)
+        const hasChildren = cap.exists && this.tierChildren(cap).length > 1;
         const item = new LivingSpecItem(
             cap.name,
             hasChildren
@@ -170,12 +181,17 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         );
         // Plain-language location: "colocated" reads as jargon in the tree, so
         // for a spec that lives next to the code we show its folder instead, and
-        // for a central spec we say "central". The exact path + a full-sentence
-        // explanation move to the tooltip. (Issue #421)
+        // for a central spec we say "central" — but only when the repo mixes
+        // storage modes, since an all-central repo badges every row alike. The
+        // exact path + a full-sentence explanation live in the tooltip either
+        // way. (Issues #421, #448)
         const locationLabel = cap.location === 'colocated'
             ? (posixDirname(cap.spec) || 'next to code')
-            : 'central';
-        const base = cap.exists ? locationLabel : `${locationLabel} · not created`;
+            : (mixedLocations ? 'central' : '');
+        const baseParts = [locationLabel];
+        if (!cap.exists) {
+            baseParts.push('not created');
+        }
         const locationSentence = cap.location === 'colocated'
             ? 'Lives next to the code it describes'
             : 'Lives in the central specs folder';
@@ -189,7 +205,8 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
             suffixes.push('drift');
             tooltipLines.push("Source files changed since the living spec's last commit");
         }
-        item.description = suffixes.length > 0 ? `${base} · ${suffixes.join(' · ')}` : base;
+        const description = [...baseParts, ...suffixes].filter(part => part !== '').join(' · ');
+        item.description = description === '' ? undefined : description;
         if (health?.drifted) {
             item.iconPath = new vscode.ThemeIcon('symbol-namespace', new vscode.ThemeColor('list.warningForeground'));
         } else if (cap.exists) {

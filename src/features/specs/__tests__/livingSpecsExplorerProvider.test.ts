@@ -116,4 +116,92 @@ describe('LivingSpecsExplorerProvider', () => {
         expect(caps[0].description).toContain('not created');
         expect((caps[0].iconPath as vscode.ThemeIcon).id).toBe('circle-outline');
     });
+
+    it('drops the location badge when every capability is central', async () => {
+        (readLivingSpecs as jest.Mock).mockReturnValue({
+            enabled: true,
+            capabilities: [
+                { name: 'auth', spec: 'capabilities/auth/spec.md', location: 'centralized', exists: true, tiers: [] },
+                { name: 'billing', spec: 'capabilities/billing/spec.md', location: 'centralized', exists: true, tiers: [] },
+            ],
+            orphans: [],
+        });
+
+        const roots = await provider.getChildren();
+        const caps = await provider.getChildren(roots[0]);
+
+        expect(caps.map(c => c.description)).toEqual([undefined, undefined]);
+    });
+
+    it('keeps the location badge when the repo mixes storage modes', async () => {
+        (readLivingSpecs as jest.Mock).mockReturnValue({
+            enabled: true,
+            capabilities: [
+                { name: 'auth', spec: 'capabilities/auth/spec.md', location: 'centralized', exists: true, tiers: [] },
+                { name: 'billing', spec: 'src/billing/billing.spec.md', location: 'colocated', exists: true, tiers: [] },
+            ],
+            orphans: [],
+        });
+
+        const roots = await provider.getChildren();
+        const caps = await provider.getChildren(roots[0]);
+
+        expect(caps[0].description).toBe('central');
+        expect(caps[1].description).toBe('src/billing');
+    });
+
+    it('still says "not created" in an all-central repo', async () => {
+        (readLivingSpecs as jest.Mock).mockReturnValue({
+            enabled: true,
+            capabilities: [
+                { name: 'billing', spec: 'capabilities/billing/spec.md', location: 'centralized', exists: false, tiers: [] },
+            ],
+            orphans: [],
+        });
+
+        const roots = await provider.getChildren();
+        const caps = await provider.getChildren(roots[0]);
+
+        expect(caps[0].description).toBe('not created');
+    });
+
+    it('opens the spec straight from a capability whose only child would be Spec', async () => {
+        (readLivingSpecs as jest.Mock).mockReturnValue({
+            enabled: true,
+            capabilities: [
+                { name: 'auth', spec: 'capabilities/auth/spec.md', location: 'centralized', exists: true, tiers: [] },
+            ],
+            orphans: [],
+        });
+
+        const roots = await provider.getChildren();
+        const caps = await provider.getChildren(roots[0]);
+
+        expect(caps[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
+        expect(caps[0].command?.arguments?.[0]).toContain('capabilities/auth/spec.md');
+    });
+
+    it('stays expandable when a capability has architecture or coverage tiers', async () => {
+        (readLivingSpecs as jest.Mock).mockReturnValue({
+            enabled: true,
+            capabilities: [
+                {
+                    name: 'auth',
+                    spec: 'capabilities/auth/spec.md',
+                    location: 'centralized',
+                    exists: true,
+                    tiers: [{ kind: 'arch', path: 'capabilities/auth/architecture.md' }],
+                },
+            ],
+            orphans: [],
+        });
+
+        const roots = await provider.getChildren();
+        const caps = await provider.getChildren(roots[0]);
+
+        expect(caps[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
+
+        const tiers = await provider.getChildren(caps[0]);
+        expect(tiers.map(t => t.label)).toEqual(['Spec', 'Architecture']);
+    });
 });

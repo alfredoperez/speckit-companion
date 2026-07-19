@@ -5,6 +5,7 @@ import {
     livingTierType,
     livingCapabilityName,
     livingTierDocuments,
+    isLivingDraft,
 } from '../livingDocs';
 
 describe('livingTierType', () => {
@@ -66,5 +67,67 @@ describe('livingTierDocuments', () => {
         fs.writeFileSync(path.join(dir, 'spec.arch.md'), '# a');
         const docs = livingTierDocuments(path.join(dir, 'spec.arch.md'));
         expect(docs.map(d => d.type)).toEqual(['spec', 'arch']);
+    });
+});
+
+describe('isLivingDraft', () => {
+    const ADOPT_BANNER =
+        '> [DRAFT] Surface-first draft from existing code — review before trusting.';
+
+    it('detects the adopt banner under the title', () => {
+        const content = [
+            '# Todos — Living Spec',
+            '',
+            ADOPT_BANNER,
+            '',
+            '## Requirements',
+        ].join('\n');
+        expect(isLivingDraft(content)).toBe(true);
+    });
+
+    it('tolerates a plain (unquoted) banner line and lower-case marker', () => {
+        expect(isLivingDraft('# Todos\n\n[draft] still being reviewed.\n')).toBe(true);
+    });
+
+    it('sees past YAML frontmatter', () => {
+        const content = [
+            '---',
+            'title: Todos',
+            'tier: spec',
+            '---',
+            '',
+            '# Todos — Living Spec',
+            '',
+            ADOPT_BANNER,
+        ].join('\n');
+        expect(isLivingDraft(content)).toBe(true);
+    });
+
+    it('is false for a reviewed living spec with no banner', () => {
+        const content = [
+            '# Todos — Living Spec',
+            '',
+            'Task list behavior: everything the todos area guarantees today.',
+            '',
+            '## Requirements',
+        ].join('\n');
+        expect(isLivingDraft(content)).toBe(false);
+    });
+
+    it('ignores the word "draft" in body prose', () => {
+        const content = [
+            '# Todos — Living Spec',
+            '',
+            '## Requirements',
+            '',
+            '### A note can be saved as a draft',
+            '',
+            'The editor MUST keep a [draft] copy until the note is published.',
+        ].join('\n');
+        expect(isLivingDraft(content)).toBe(false);
+    });
+
+    it('is false for empty content', () => {
+        expect(isLivingDraft('')).toBe(false);
     });
 });
