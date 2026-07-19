@@ -52,7 +52,9 @@ import { deriveSpecName } from "../specs/specContextManager";
 import { readSpecContext, SPEC_CONTEXT_FILENAME, SpecContextParseError } from "../specs/specContextReader";
 import { writeSpecContext } from "../specs/specContextWriter";
 import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
-import { livingTierType, livingCapabilityName, livingTierDocuments, readLivingDoc, isLivingDraft } from "./livingDocs";
+import { livingTierType, livingCapabilityName, livingTierDocuments, readLivingDoc, isLivingDraft, livingSpecHeading } from "./livingDocs";
+import { buildLivingHeaderMeta, resolveLivingHealth } from "./livingHeaderMeta";
+import type { LivingHeaderMeta } from "./types";
 import { deriveStepHistory } from "../specs/stepHistoryDerivation";
 import { backfillMinimalContext } from "../specs/specContextBackfill";
 import { resetMalformedContext } from "../specs/specContextReset";
@@ -575,6 +577,23 @@ export class SpecViewerProvider {
     const content = doc.exists ? await readLivingDoc(doc.filePath) : '';
     const specName = instance.state.specName;
 
+    // The title belongs to the capability, not the tier on screen, so it comes
+    // from the spec tier's own heading whichever tab is showing.
+    const specTier = documents.find(d => d.type === 'spec');
+    const specTierContent = !specTier?.exists
+      ? ''
+      : specTier.filePath === doc.filePath
+        ? content
+        : await readLivingDoc(specTier.filePath);
+    const heading = livingSpecHeading(specTierContent);
+    const displayName = heading ?? specName;
+
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    const specTierPath = specTier?.filePath ?? doc.filePath;
+    const meta = workspaceRoot
+      ? buildLivingHeaderMeta(workspaceRoot, specTierPath, specTierContent)
+      : null;
+
     // An adopt-drafted spec carries a `[DRAFT]` banner in its body; badge it
     // DRAFT so the header stops contradicting the first line of the document.
     const isDraft = isLivingDraft(content);
@@ -589,7 +608,7 @@ export class SpecViewerProvider {
       taskCompletionPercent: 0,
     };
     instance.firstOpenComplete = true;
-    instance.panel.title = `Living Spec: ${specName}`;
+    instance.panel.title = `Living Spec: ${displayName}`;
 
     instance.panel.webview.html = generateHtml(
       instance.panel.webview,
@@ -598,7 +617,7 @@ export class SpecViewerProvider {
       'This tier has not been written yet.',
       documents,
       doc.type,
-      specName,
+      displayName,
       [],            // phases — no stepper
       0,             // taskCompletionPercent
       isDraft ? 'draft' : SpecStatuses.ACTIVE,
@@ -608,7 +627,7 @@ export class SpecViewerProvider {
       isDraft ? 'DRAFT' : 'LIVING',  // badgeText
       null,
       null,
-      specName,      // contextSpecName (header title)
+      displayName,   // contextSpecName (header title)
       null,          // branch
       doc.filePath,
       null,          // currentStep
@@ -616,11 +635,41 @@ export class SpecViewerProvider {
       false,         // activity panel off — no run to narrate
       false,         // no install prompt
       true,          // livingMode
+      meta,
+      heading !== null,
     );
 
     this.outputChannel.appendLine(
       `[SpecViewer] Updated living content: ${specName}/${doc.type}`,
     );
+
+    if (meta) {
+      void this.pushLivingHealth(specDirectory, meta);
+    }
+  }
+
+  /**
+   * Resolve a capability's coverage and drift after the header has already
+   * painted, then push them to the open panel. Keeping this off the render
+   * path is what stops the git-backed drift check from delaying the panel.
+   */
+  private async pushLivingHealth(
+    specDirectory: string,
+    meta: LivingHeaderMeta,
+  ): Promise<void> {
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if (!workspaceRoot) return;
+
+    const health = await resolveLivingHealth(workspaceRoot, meta);
+    if (health.coverage === undefined && health.drifted === undefined) return;
+
+    const instance = this.panels.get(specDirectory);
+    if (!instance?.state.living) return;
+
+    this.postMessage(specDirectory, {
+      type: "livingHealthResolved",
+      livingMeta: { ...meta, ...health },
+    });
   }
 
   /**

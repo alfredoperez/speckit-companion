@@ -6,6 +6,7 @@ import {
     livingCapabilityName,
     livingTierDocuments,
     isLivingDraft,
+    livingSpecTitle,
 } from '../livingDocs';
 
 describe('livingTierType', () => {
@@ -29,6 +30,57 @@ describe('livingCapabilityName', () => {
     it('uses the file stem for the colocated layout', () => {
         expect(livingCapabilityName('/w/src/store/todos.spec.md')).toBe('todos');
         expect(livingCapabilityName('/w/src/lib/storage.arch.md')).toBe('storage');
+    });
+});
+
+describe('livingSpecTitle', () => {
+    it('prefers the document heading over the slug-derived fallback', () => {
+        const content = '# SpecKit Extension Capture — Living Spec\n\nBody.';
+        expect(livingSpecTitle(content, 'speckit-extension-capture'))
+            .toBe('SpecKit Extension Capture');
+    });
+
+    it('keeps a heading that carries no Living Spec suffix', () => {
+        expect(livingSpecTitle('# Billing\n', 'billing')).toBe('Billing');
+    });
+
+    it('strips the suffix behind an en dash or a hyphen, at any casing', () => {
+        expect(livingSpecTitle('# Todos – living spec\n', 'todos')).toBe('Todos');
+        expect(livingSpecTitle('# Todos - LIVING SPEC\n', 'todos')).toBe('Todos');
+    });
+
+    it('preserves the author capitalization instead of title-casing it', () => {
+        expect(livingSpecTitle('# gRPC Gateway\n', 'grpc-gateway')).toBe('gRPC Gateway');
+    });
+
+    it('finds the heading below YAML frontmatter', () => {
+        const content = '---\nowner: platform\n---\n\n# Payments Core — Living Spec\n';
+        expect(livingSpecTitle(content, 'payments-core')).toBe('Payments Core');
+    });
+
+    it('ignores a heading inside a fenced code block', () => {
+        const content = '```md\n# Not The Title\n```\n\n# Real Title\n';
+        expect(livingSpecTitle(content, 'fallback')).toBe('Real Title');
+    });
+
+    it('trims whitespace, closing hashes and emphasis markers', () => {
+        expect(livingSpecTitle('#   **Search Index**   #\n', 'search-index'))
+            .toBe('Search Index');
+    });
+
+    it('falls back when there is no heading', () => {
+        expect(livingSpecTitle('Just a paragraph.\n', 'todos')).toBe('todos');
+        expect(livingSpecTitle('', 'todos')).toBe('todos');
+    });
+
+    it('falls back when the heading is only the suffix or is empty', () => {
+        expect(livingSpecTitle('# — Living Spec\n', 'todos')).toBe('todos');
+        expect(livingSpecTitle('#\n', 'todos')).toBe('todos');
+    });
+
+    it('ignores deeper headings and only reads a level-one heading', () => {
+        expect(livingSpecTitle('## Requirements\n\n# Real Title\n', 'fallback'))
+            .toBe('Real Title');
     });
 });
 

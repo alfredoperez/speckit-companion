@@ -46,6 +46,54 @@ export function livingCapabilityName(sourcePath: string): string {
     return stem;
 }
 
+/** Trailing "— Living Spec" on a title, across dash and casing variants. */
+const LIVING_SPEC_SUFFIX = /\s*[—–-]\s*living\s+spec\s*$/i;
+
+/**
+ * The document's own H1 with any trailing "— Living Spec" removed, or `null`
+ * when it has no usable one. The single derivation behind both the displayed
+ * title and the flag that tells the header to skip its slug capitalization.
+ */
+export function livingSpecHeading(content: string): string | null {
+    if (!content) return null;
+
+    let lines = content.split(/\r?\n/);
+    if (lines[0]?.trim() === '---') {
+        const close = lines.findIndex((line, i) => i > 0 && line.trim() === '---');
+        if (close > 0) lines = lines.slice(close + 1);
+    }
+
+    let inFence = false;
+    for (const line of lines) {
+        if (/^\s*(```|~~~)/.test(line)) {
+            inFence = !inFence;
+            continue;
+        }
+        if (inFence) continue;
+
+        const heading = /^#\s+(.*)$/.exec(line);
+        if (!heading) continue;
+
+        const title = heading[1]
+            .replace(/\s+#+\s*$/, '')
+            .replace(LIVING_SPEC_SUFFIX, '')
+            .replace(/^\s*[*_]{1,3}\s*/, '')
+            .replace(/\s*[*_]{1,3}\s*$/, '')
+            .trim();
+        return title === '' ? null : title;
+    }
+    return null;
+}
+
+/**
+ * A living spec's display title: the document's own H1 when it has one, else
+ * the location-derived name. The H1 is the only place a human writes the
+ * capability's real name — a slug cannot round-trip casing like "SpecKit".
+ */
+export function livingSpecTitle(content: string, fallback: string): string {
+    return livingSpecHeading(content) ?? fallback;
+}
+
 /**
  * The tier documents for the capability that owns `sourcePath`, in tab order.
  * Only the spec tier is guaranteed; arch/coverage appear when their files exist.

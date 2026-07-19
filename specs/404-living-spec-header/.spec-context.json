@@ -1,0 +1,780 @@
+{
+  "workflow": "speckit",
+  "specName": "living spec header",
+  "branch": "404-living-spec-header",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-19T21:11:40.628Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-19T21:13:25.994Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:14:35.494Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:15:59.650Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:16:00.332Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:17:05.213Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:17:05.291Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-19T21:17:17.192Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:18:06.362Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:18:06.419Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:18:34.746Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:19:41.437Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:19:41.523Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:22:07.718Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:22:07.774Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:22:07.831Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:22:07.889Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:22:07.948Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:26:38.036Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:26:38.096Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:26:38.157Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:26:38.216Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:26:38.277Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:26:38.335Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:26:38.395Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:26:38.455Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:26:38.515Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:26:38.571Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:30:25.334Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:30:25.396Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:30:25.456Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:30:25.516Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T025",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:30:25.573Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T026",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T21:30:25.633Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-19T21:30:25.718Z"
+    }
+  ],
+  "last_action": "all 26 tasks done — 1637 tests pass, package build green",
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 14,
+    "projectedTasks": 16,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "coverage": {
+    "FR-001": {
+      "title": "Use the living spec document's own first heading as the displayed title",
+      "tasks": [
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "livingDocs.test.ts::prefers the document heading over the slug-derived fallback"
+      ]
+    },
+    "FR-002": {
+      "title": "Strip a trailing em-dash Living Spec suffix from that heading",
+      "tasks": [
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "livingDocs.test.ts::strips the suffix behind an en dash or a hyphen",
+        "at any casing"
+      ]
+    },
+    "FR-003": {
+      "title": "Fall back to the location-derived name when there is no usable heading",
+      "tasks": [
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "livingDocs.test.ts::falls back when there is no heading"
+      ]
+    },
+    "FR-004": {
+      "title": "Use the derived title consistently for page header and editor tab",
+      "tasks": [
+        "T006",
+        "T007",
+        "T008"
+      ]
+    },
+    "FR-005": {
+      "title": "Badge must not carry hover text that repeats the badge wording",
+      "tasks": [
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "SpecHeader.test.tsx::says nothing when there is no created date to add"
+      ]
+    },
+    "FR-006": {
+      "title": "Badge keeps hover text where it adds information",
+      "tasks": [
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "SpecHeader.test.tsx::still names the created date when there is one"
+      ]
+    },
+    "FR-007": {
+      "title": "In-body draft banner and its marker are unchanged",
+      "tasks": [
+        "T009",
+        "T010"
+      ]
+    },
+    "FR-008": {
+      "title": "Header shows the capability's requirement count when determinable",
+      "tasks": [
+        "T011",
+        "T012",
+        "T015"
+      ],
+      "tests": [
+        "livingHeaderMeta.test.ts::counts distinct requirement identifiers",
+        "SpecHeader.test.tsx::shows counts",
+        "coverage and drift when they are known"
+      ]
+    },
+    "FR-009": {
+      "title": "Header shows the capability's scenario count when determinable",
+      "tasks": [
+        "T011",
+        "T012",
+        "T015"
+      ],
+      "tests": [
+        "livingHeaderMeta.test.ts::counts acceptance scenarios"
+      ]
+    },
+    "FR-010": {
+      "title": "Header shows coverage as N/M covered when a coverage tier exists",
+      "tasks": [
+        "T015",
+        "T019",
+        "T020"
+      ],
+      "tests": [
+        "SpecHeader.test.tsx::shows counts",
+        "coverage and drift when they are known"
+      ]
+    },
+    "FR-011": {
+      "title": "Header shows a drift marker when source files changed since the spec's last commit",
+      "tasks": [
+        "T015",
+        "T019",
+        "T020"
+      ],
+      "tests": [
+        "SpecHeader.test.tsx::shows no drift marker when the capability has been checked and has not drifted"
+      ]
+    },
+    "FR-012": {
+      "title": "Header lists the file patterns the capability claims",
+      "tasks": [
+        "T013",
+        "T017"
+      ],
+      "tests": [
+        "SpecHeader.test.tsx::lists what the capability covers"
+      ]
+    },
+    "FR-013": {
+      "title": "A long pattern list stays readable via a subset plus overflow",
+      "tasks": [
+        "T016",
+        "T017",
+        "T021"
+      ],
+      "tests": [
+        "SpecHeader.test.tsx::caps the list and keeps the rest reachable"
+      ]
+    },
+    "FR-014": {
+      "title": "Header shows where the spec file lives",
+      "tasks": [
+        "T013",
+        "T018"
+      ],
+      "tests": [
+        "SpecHeader.test.tsx::shows the path and explains where it lives"
+      ]
+    },
+    "FR-015": {
+      "title": "Coverage and drift come from the same computation the sidebar uses",
+      "tasks": [
+        "T019",
+        "T020"
+      ],
+      "tests": [
+        "livingHeaderMeta.test.ts::reads the sidebar health through readCapabilityHealth",
+        "not a second derivation"
+      ]
+    },
+    "FR-016": {
+      "title": "Undeterminable facts are omitted, never zeroed or guessed",
+      "tasks": [
+        "T011",
+        "T012",
+        "T013",
+        "T020"
+      ],
+      "tests": [
+        "livingHeaderMeta.test.ts::leaves a count absent rather than zero when nothing is found",
+        "SpecHeader.test.tsx::omits a fact that could not be determined rather than showing a zero"
+      ]
+    },
+    "FR-017": {
+      "title": "A failure to read capability facts never blocks the viewer",
+      "tasks": [
+        "T013",
+        "T014",
+        "T019"
+      ],
+      "tests": [
+        "livingHeaderMeta.test.ts::never rejects when the shared computation throws"
+      ]
+    },
+    "FR-018": {
+      "title": "The feature-spec header is unchanged",
+      "tasks": [
+        "T010",
+        "T026"
+      ]
+    },
+    "FR-019": {
+      "title": "All author-written header values render as text and cannot inject markup",
+      "tasks": [
+        "T015",
+        "T017",
+        "T018"
+      ],
+      "tests": [
+        "SpecHeader.test.tsx::renders a claimed pattern as text",
+        "never as markup"
+      ]
+    },
+    "FR-020": {
+      "title": "Readable header content uses body/primary tokens; muted only for metadata",
+      "tasks": [
+        "T007",
+        "T016"
+      ]
+    }
+  },
+  "context": [
+    "area: src/features/spec-viewer (specViewerProvider, livingDocs, html/generator)",
+    "area: webview/src/spec-viewer/components/SpecHeader.tsx + stories",
+    "area: src/features/specs/livingSpecsModel.ts (existing coverage + drift computation to reuse)",
+    "constraint: never interpolate user data into HTML attributes via innerHTML",
+    "constraint: readable content uses --text-body/--text-primary tokens",
+    "constraint: feature-spec header behavior must not change"
+  ],
+  "intent": "Make the living-spec viewer header show the author's real title, say DRAFT once, and surface the capability facts (size, coverage, drift, claimed files, location) that already exist elsewhere.",
+  "expectations": [
+    "No change to the feature-spec header (branch, created date, phases, task progress)",
+    "The in-body [DRAFT] banner is not removed",
+    "No new computation of coverage or drift — reuse the sidebar's",
+    "The header stays read-only; it does not edit capabilities or config"
+  ],
+  "approach": "Derive the living-spec title from the document's own first heading (stripping a trailing Living Spec suffix) and turn off the presentational capitalization for it. Drop the badge tooltip when it would only repeat the badge. Add a facts row for living specs — requirement and scenario counts, coverage, drift, claimed file patterns, spec location — sourcing coverage and drift from the sidebar's own livingSpecsModel functions rather than a second derivation, and pushing the git-dependent fields in after first paint so the panel never waits.",
+  "decisions": [
+    {
+      "decision": "Read the title from the document H1 rather than the folder slug",
+      "why": "The heading is the only place the real name exists; a slug cannot round-trip product casing like SpecKit",
+      "rejected": "Storing a display name in companion.yml — duplicates the name and drifts"
+    },
+    {
+      "decision": "Reuse readLivingSpecs/readCapabilityHealth from livingSpecsModel",
+      "why": "Makes sidebar and viewer disagreement structurally impossible; the functions are already absent-on-failure",
+      "rejected": "A new shared service layer — indirection with no new behavior"
+    },
+    {
+      "decision": "Render the header before the drift check resolves, then push coverage and drift as a nav-state update",
+      "why": "Drift runs two git commands; a blank panel on every open is a worse regression than a late marker",
+      "rejected": "Blocking first paint on the health call"
+    },
+    {
+      "decision": "Turn off text-transform: capitalize for heading-derived titles",
+      "why": "The stylesheet would otherwise re-mangle SpecKit back to Speckit and the fix would look broken",
+      "rejected": "Removing the capitalization entirely — regresses feature specs, which really are slugs"
+    },
+    {
+      "decision": "Show three claimed patterns inline plus a +N more overflow",
+      "why": "Answers which files without letting a many-pattern capability push the document below the fold",
+      "rejected": "Showing a bare count — fails the ticket question, which is which files not how many"
+    },
+    {
+      "decision": "Split livingSpecHeading (returns null when there is none) out from livingSpecTitle",
+      "why": "The title and the skip-capitalization flag are then one derivation read twice, instead of the flag guessing from title !== fallback",
+      "rejected": "Comparing the derived title against the fallback — wrong whenever a heading happens to equal the slug"
+    },
+    {
+      "decision": "Read the title from the spec tier, not the tier currently on screen",
+      "why": "The title names the capability; switching to the Architecture tab should not change it",
+      "rejected": "Using whichever tier is rendering — the title would flicker between tabs"
+    },
+    {
+      "decision": "Give the spec path its own row rather than appending it to the Covers row",
+      "why": "A capability that claims nothing still has a location; nesting it inside the Covers row would hide it",
+      "rejected": "One combined row with conditional placement"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Header title from the document heading, tooltip dropped when redundant, and a living-spec facts row reusing the sidebar coverage/drift computation",
+      "key_finding": "The header title carries text-transform: capitalize — reading the H1 without also disabling that would have silently re-mangled the name"
+    },
+    "tasks": {
+      "summary": "26 tasks across 7 phases — shared types, then one phase per user story, then docs and stories in a fully parallel polish wave"
+    },
+    "implement": {
+      "summary": "Living-spec header now shows the authored title, one DRAFT, and the capability facts — counts, coverage, drift, claimed patterns and location — reusing the sidebar computation"
+    }
+  },
+  "currentTask": "T026",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added the LivingHeaderMeta fact bundle plus livingMeta/titleFromHeading on the extension-side navigation state",
+      "files": [
+        "src/features/spec-viewer/types.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Mirrored the fact bundle and the two new navigation-state fields on the webview side",
+      "files": [
+        "webview/src/spec-viewer/types.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Threaded the fact bundle and the heading-title flag through the HTML generator into the initial navigation state",
+      "files": [
+        "src/features/spec-viewer/html/generator.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added 11 title-derivation cases: suffix variants, casing, frontmatter, fenced blocks, emphasis, and every fallback path",
+      "files": [
+        "src/features/spec-viewer/__tests__/livingDocs.test.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added livingSpecTitle — first H1 outside fences and frontmatter, Living Spec suffix stripped, fallback when unusable",
+      "files": [
+        "src/features/spec-viewer/livingDocs.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Living panel title, tab label and header title now come from the spec tier's heading whichever tier is on screen",
+      "files": [
+        "src/features/spec-viewer/specViewerProvider.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Added the authored-title modifier that turns off slug capitalization, plus the truncation trio on the title",
+      "files": [
+        "webview/styles/spec-viewer/_content.css"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Header applies the authored-title class when the title came from a document heading",
+      "files": [
+        "webview/src/spec-viewer/components/SpecHeader.tsx"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Added the SpecHeader test suite: tooltip omission, authored title, facts row, claimed files and location",
+      "files": [
+        "webview/src/spec-viewer/components/__tests__/SpecHeader.test.tsx"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Badge sets hover text only when a created date adds something; otherwise the attribute is omitted",
+      "files": [
+        "webview/src/spec-viewer/components/SpecHeader.tsx"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Added 13 fact-derivation cases: counts, fence handling, absence-not-zero, capability resolution, both storage layouts, and the shared-health reuse",
+      "files": [
+        "src/features/spec-viewer/__tests__/livingHeaderMeta.test.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Added countLivingFacts — distinct requirement ids and numbered scenarios, both absent when none are found",
+      "files": [
+        "src/features/spec-viewer/livingHeaderMeta.ts"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Added buildLivingHeaderMeta — resolves the owning capability from the project config and folds in the counts, synchronously",
+      "files": [
+        "src/features/spec-viewer/livingHeaderMeta.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Provider builds the fact bundle when a living spec renders and passes it into the initial navigation state",
+      "files": [
+        "src/features/spec-viewer/specViewerProvider.ts"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Header renders the facts row — counts, coverage, drift with its accessible label — using the pinned wording",
+      "files": [
+        "webview/src/spec-viewer/components/SpecHeader.tsx"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Styled the facts row, pattern chips and location chip; body tokens for values, muted only for the path, every chip truncates",
+      "files": [
+        "webview/styles/spec-viewer/_content.css"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Header lists up to three claimed patterns plus an overflow chip carrying the rest",
+      "files": [
+        "webview/src/spec-viewer/components/SpecHeader.tsx"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Header shows the spec path with the sidebar's own central-versus-colocated explanation",
+      "files": [
+        "webview/src/spec-viewer/components/SpecHeader.tsx"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Coverage and drift resolve through the sidebar's readCapabilityHealth after first paint and arrive as a navigation-state update",
+      "files": [
+        "src/features/spec-viewer/specViewerProvider.ts",
+        "webview/src/spec-viewer/index.tsx"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Pinned the reuse: health comes from the shared call, stays absent when it yields nothing, and never rejects",
+      "files": [
+        "src/features/spec-viewer/__tests__/livingHeaderMeta.test.ts"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Added seven living-spec stories: everything known, draft, no coverage tier, drifted, many patterns, long colocated title, and nothing determinable",
+      "files": [
+        "webview/src/spec-viewer/components/SpecHeader.stories.tsx"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Reading Specs now describes the living-spec header and the badge hover rule",
+      "files": [
+        "README.md"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "Documented the badge hover rule and the full living-spec header, including why the authored title must not be re-cased",
+      "files": [
+        "docs/viewer-states.md"
+      ]
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "Noted that the viewer shows the sidebar's own coverage and drift, from one computation",
+      "files": [
+        "docs/sidebar.md"
+      ]
+    },
+    "T025": {
+      "status": "DONE",
+      "did": "Added the Unreleased entry: useful living-spec header, real title, one DRAFT",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T026": {
+      "status": "DONE",
+      "did": "Compile, 1637 tests across 120 suites, and a package build all green; every new test drift-proofed against a reverted behavior",
+      "files": [
+        "repository root"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "Full test suite",
+      "command": "npm test",
+      "result": "1637 passed across 120 suites",
+      "warnings": []
+    },
+    {
+      "what": "TypeScript compile",
+      "command": "npm run compile",
+      "result": "clean"
+    },
+    {
+      "what": "Extension package build (webview changed)",
+      "command": "npm run package",
+      "result": "packaged 373 files, webpack compiled successfully"
+    },
+    {
+      "what": "Drift-proofing — every new test reverted against old behavior",
+      "command": "revert each behavior, npx jest",
+      "result": "6 of 6 reverts produced failures: title fallback 8, badge tooltip 1, authored class 1, facts row 7, zeroed counts 1, local health 3"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "The design hook flags a pre-existing side-tab accent border at _content.css:108, outside this change. Left alone.",
+      "step": "implement"
+    }
+  ]
+}

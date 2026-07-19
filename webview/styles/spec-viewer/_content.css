@@ -245,6 +245,92 @@ body[data-has-spec-context="true"] .meta-branch {
     letter-spacing: -0.015em;
     /* Spec names arrive as lowercase dir slugs; presentation-only casing. */
     text-transform: capitalize;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* A title read from the document's own H1 is already written by a human —
+   capitalizing it would turn "SpecKit" back into "Speckit". */
+.spec-header-title--authored {
+    text-transform: none;
+}
+
+/* Capability facts are readable content, so body token — muted is for the path.
+   Middot separators are pseudo-elements so they are never announced. */
+.spec-header-living {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    font-size: var(--text-xs);
+    color: var(--text-body);
+}
+
+.spec-header-fact + .spec-header-fact::before,
+.spec-header-badges > .spec-header-living::before {
+    content: '·';
+    margin-right: 8px;
+    color: var(--text-muted);
+}
+
+.spec-header-fact--drift {
+    color: var(--vscode-list-warningForeground, var(--text-body));
+    font-weight: 600;
+}
+
+/* What the capability claims — the one fact that lives nowhere else in the UI. */
+.spec-header-covers {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.spec-header-covers__label {
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.spec-header-glob {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    padding: 2px 8px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-body);
+    min-width: 0;
+    max-width: 30ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.spec-header-glob--more {
+    color: var(--text-secondary);
+    font-family: inherit;
+}
+
+/* Where the spec file lives — true metadata, so the muted token belongs here. */
+.spec-header-location {
+    display: flex;
+    min-width: 0;
+}
+
+.spec-header-path {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Glance-metadata cluster: badge · branch · date all flow inline at the same

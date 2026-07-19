@@ -401,10 +401,34 @@ When `.spec-context.json` data is available, a structured header renders above t
 - **Fallback**: When `specName` is missing from context, it is derived from the directory slug (e.g., `046-spec-viewer-header-redesign` → `Spec Viewer Header Redesign`)
 - **No context**: When no `.spec-context.json` exists, no header renders; markdown displays as before
 
+### Badge hover text
+
+The badge sets a `title` **only when it would add something the badge doesn't already say** — that is, only when a created date exists, giving `{badge} · {date}`. A living spec passes no created date, so its badge carries no hover text at all; before this rule the tooltip repeated the badge verbatim (`DRAFT` hovering over `DRAFT`) and covered the title while showing. The in-body `[DRAFT]` banner is unaffected and must stay — `isLivingDraft()` keys on it to decide the badge in the first place.
+
+### Living-spec header
+
+A living spec has no branch, created date, phases or task completion, so the header carries capability facts instead. All of them are best-effort: a fact that cannot be determined is **omitted**, never rendered as a zero.
+
+| Element | Content | Source |
+|---------|---------|--------|
+| Title | The spec document's own H1, with a trailing `— Living Spec` stripped | `livingSpecHeading()` in `livingDocs.ts`; falls back to `livingCapabilityName()` |
+| Facts row | `N requirements`, `N scenarios`, `N/M covered`, `drift` | `countLivingFacts()`; coverage/drift from `readCapabilityHealth()` |
+| Covers row | `Covers` + up to 3 claimed globs + `+N more` (rest on hover) | `match` from the capability's `.specify/companion.yml` entry |
+| Location | Repo-relative spec path, with the central/colocated explanation on hover | `location` + `spec` from the resolved capability |
+
+Notes:
+
+- **The title is authored, so it is not re-cased.** `.spec-header-title` carries `text-transform: capitalize` for feature specs, whose names really are directory slugs. A heading-derived title adds `.spec-header-title--authored`, which turns that off — without it, `SpecKit` renders as `Speckit` and the fix looks like it never landed.
+- **The title belongs to the capability, not the tier on screen.** It is read from the spec tier's document whichever of Spec / Architecture / Coverage is selected.
+- **Coverage and drift are the sidebar's own numbers.** They come from `readCapabilityHealth()` in `src/features/specs/livingSpecsModel.ts` — the exact call the Living Specs tree makes — so the two surfaces cannot disagree. See [`docs/sidebar.md`](./sidebar.md).
+- **Health arrives after first paint.** Drift runs git, so the header renders from the synchronous facts and the extension pushes `livingHealthResolved` once the health call returns. A repository without git, a spec never committed, or a timed-out check simply leaves both fields absent.
+
 ### Key Files
 
 | File | Role |
 |------|------|
+| `src/features/spec-viewer/livingDocs.ts` | `livingSpecHeading()` / `livingSpecTitle()` — the authored title |
+| `src/features/spec-viewer/livingHeaderMeta.ts` | `countLivingFacts()`, `buildLivingHeaderMeta()`, `resolveLivingHealth()` |
 | `src/features/spec-viewer/html/generator.ts` | `buildHeaderHtml()` — server-side header generation |
 | `webview/src/spec-viewer/navigation.ts` | `updateNavState()` — client-side header updates on tab switch |
 | `webview/src/spec-viewer/markdown/preprocessors.ts` | `preprocessSpecMetadata()` — strips metadata when context-driven |
