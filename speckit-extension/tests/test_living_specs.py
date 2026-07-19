@@ -1514,6 +1514,26 @@ class DriftShallowCloneTests(unittest.TestCase):
         self.assertNotEqual(todos["reason"], drift.SKIP_UNCOMMITTED)
         self.assertEqual(drift.main(["--root", str(root)]), 0)
 
+    def test_repo_with_no_commits_reports_uncommitted_not_unreadable(self) -> None:
+        root = _bake_drift_repo(self.YAML)
+        _write(root, "capabilities/todos/spec.md", "# Todos\n")
+        _write(root, "capabilities/about/spec.md", "# About\n")
+
+        result = self._run(root)
+        self.assertEqual(result["checked"], 0)
+        self.assertEqual(
+            sorted(sk["reason"] for sk in result["skipped"]),
+            [drift.SKIP_UNCOMMITTED, drift.SKIP_UNCOMMITTED],
+        )
+        self.assertNotIn("unreadable", drift.render_human(result))
+        self.assertEqual(drift.main(["--root", str(root)]), 0)
+
+    def test_full_clone_with_no_shallow_file_finds_no_boundaries(self) -> None:
+        root = self._source_repo()
+
+        self.assertEqual(drift._shallow_boundaries(str(root)), frozenset())
+        self.assertTrue(drift._shallow_boundaries(str(_shallow_clone(root, 1))))
+
 
 class TierPathTests(unittest.TestCase):
     """LS·8 — the resolver derives the reserved-tier sibling paths."""

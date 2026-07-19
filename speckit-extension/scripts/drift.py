@@ -87,10 +87,10 @@ def _shallow_boundaries(root: str) -> frozenset[str]:
     A boundary commit has no parent in the local object store, so git reports it
     as touching every path — `git log -n1 -- <spec>` resolves to it for specs it
     never modified, which would produce a baseline that does not exist.
+
+    The shallow file IS git's definition of shallowness — `--is-shallow-repository`
+    just reports whether it holds anything — so this reads it as the only source.
     """
-    code, out = _git(root, ["rev-parse", "--is-shallow-repository"])
-    if code != 0 or out.strip() != "true":
-        return frozenset()
     code, out = _git(root, ["rev-parse", "--git-path", "shallow"])
     if code != 0 or not out.strip():
         return frozenset()
@@ -102,6 +102,12 @@ def _shallow_boundaries(root: str) -> frozenset[str]:
             return frozenset(ln.strip() for ln in fh if ln.strip())
     except OSError:
         return frozenset()
+
+
+def _has_commits(root: str) -> bool:
+    """False on an unborn HEAD, where `git log` fails for every path alike."""
+    code, _ = _git(root, ["rev-parse", "--verify", "--quiet", "HEAD"])
+    return code == 0
 
 
 def _spec_commit(root: str, spec: str) -> tuple[str, str | None]:
@@ -201,6 +207,7 @@ def compute_drift(root: str, living: dict) -> dict:
     exempt_globs = living.get("exempt") or []
     git_ok = _is_git_repo(root)
     boundaries = _shallow_boundaries(root) if git_ok else frozenset()
+    has_commits = _has_commits(root) if git_ok else False
     caps_out: list[dict] = []
     skipped: list[dict] = []
 
@@ -215,7 +222,8 @@ def compute_drift(root: str, living: dict) -> dict:
             continue
         state, commit = _spec_commit(root, spec)
         if state != "ok":
-            reason = SKIP_UNCOMMITTED if state == "uncommitted" else SKIP_UNREADABLE
+            unreadable = state == "unreadable" and has_commits
+            reason = SKIP_UNREADABLE if unreadable else SKIP_UNCOMMITTED
             skipped.append({"name": cap["name"], "reason": reason})
             continue
         if commit in boundaries:
