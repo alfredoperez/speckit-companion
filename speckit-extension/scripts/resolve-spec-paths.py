@@ -217,7 +217,11 @@ def match_changed(files: list[str], living: dict, root: str) -> list[dict]:
 
 
 def _is_project_root(path: str) -> bool:
-    return os.path.isfile(os.path.join(path, CONFIG))
+    try:
+        return os.path.isfile(os.path.join(path, CONFIG))
+    except OSError:
+        # Only a confirmed absence means "not a project"; an unreadable config still bounds the scan.
+        return True
 
 
 def find_spec_files(root: str) -> list[str]:

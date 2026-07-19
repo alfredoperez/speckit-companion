@@ -9,10 +9,12 @@ colocated-no-path error, and the opt-in guarantee (enabled:false -> inert).
 from __future__ import annotations
 
 import importlib.util
+import os
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS))
@@ -307,6 +309,25 @@ class ProjectBoundaryTests(unittest.TestCase):
         living = rsp.load_living(str(root))
         specs = {e["spec"] for e in rsp.discover_all(living, str(root))}
         self.assertNotIn("capabilities/checkout/sample/src/store/todos.spec.md", specs)
+
+    def test_unreadable_boundary_probe_still_stops_the_scan(self) -> None:
+        root = make_repo(CHECKOUT_YAML)
+        nested = plant_nested_project(root, "examples/locked", NESTED_ENABLED_YAML,
+                                      spec_files=["notes/stray.spec.md"])
+        living = rsp.load_living(str(root))
+        blocked = str(nested / ".specify" / "companion.yml")
+        real_isfile = os.path.isfile
+
+        def probe(path):
+            if os.path.abspath(path) == blocked:
+                raise PermissionError(13, "Permission denied", path)
+            return real_isfile(path)
+
+        with mock.patch("os.path.isfile", side_effect=probe):
+            orphans = rsp.find_orphans(living, str(root))
+            specs = {e["spec"] for e in rsp.discover_all(living, str(root))}
+        self.assertEqual(orphans, [])
+        self.assertNotIn("examples/locked/notes/stray.spec.md", specs)
 
 
 class DiscoveryConsistencyTests(unittest.TestCase):

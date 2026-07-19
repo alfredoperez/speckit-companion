@@ -1,7 +1,15 @@
+jest.mock('fs', () => {
+    const actual = jest.requireActual('fs');
+    return { ...actual, statSync: jest.fn(actual.statSync) };
+});
+
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { readLivingSpecs, readCapabilityHealth, __test } from '../livingSpecsModel';
+
+const realStatSync = jest.requireActual('fs').statSync;
+const statSyncMock = fs.statSync as unknown as jest.Mock;
 
 const { globMatches } = __test;
 
@@ -166,6 +174,44 @@ describe('readLivingSpecs', () => {
             'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
         );
         expect(readLivingSpecs(root).orphans).toEqual(['src/payments/payments.spec.md']);
+    });
+
+    it('stops at a nested project whose companion.yml cannot be read', () => {
+        const root = ws(
+            {
+                'capabilities/checkout/spec.md': '# checkout',
+                'src/payments/payments.spec.md': '# payments',
+                'examples/locked/.specify/companion.yml':
+                    'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: todos\n',
+                'examples/locked/src/store/todos.spec.md': '# todos',
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
+        );
+        const blocked = path.join(root, 'examples', 'locked', '.specify', 'companion.yml');
+        statSyncMock.mockImplementation((p: fs.PathLike, ...rest: unknown[]) => {
+            if (p === blocked) {
+                const denied = new Error('EACCES: permission denied') as NodeJS.ErrnoException;
+                denied.code = 'EACCES';
+                throw denied;
+            }
+            return realStatSync(p, ...rest);
+        });
+        try {
+            expect(readLivingSpecs(root).orphans).toEqual(['src/payments/payments.spec.md']);
+        } finally {
+            statSyncMock.mockImplementation(realStatSync);
+        }
+    });
+
+    it('treats a plain directory with no companion.yml as walkable, not a boundary', () => {
+        const root = ws(
+            {
+                'capabilities/checkout/spec.md': '# checkout',
+                'examples/plain/src/store/todos.spec.md': '# todos',
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
+        );
+        expect(readLivingSpecs(root).orphans).toEqual(['examples/plain/src/store/todos.spec.md']);
     });
 
     it('drops a capability whose spec path is absolute', () => {

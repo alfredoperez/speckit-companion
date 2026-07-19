@@ -224,8 +224,9 @@ function fileExists(root: string, relPath: string): boolean {
 function isProjectRoot(dir: string): boolean {
     try {
         return fs.statSync(path.join(dir, '.specify', 'companion.yml')).isFile();
-    } catch {
-        return false;
+    } catch (e) {
+        // Only a confirmed absence means "not a project"; an unreadable config still bounds the scan.
+        return (e as NodeJS.ErrnoException)?.code !== 'ENOENT';
     }
 }
 
