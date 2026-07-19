@@ -327,6 +327,19 @@ class DiscoveryConsistencyTests(unittest.TestCase):
         names = [e["name"] for e in rsp.discover_all(living, str(root))]
         self.assertEqual(len(names), len(set(names)))
 
+    def test_a_root_level_discovered_spec_is_named_without_its_suffix(self) -> None:
+        root = make_repo(CHECKOUT_YAML, spec_files=["billing.spec.md"])
+        living = rsp.load_living(str(root))
+        names = {e["name"] for e in rsp.discover_all(living, str(root))}
+        self.assertIn("billing", names)
+
+    def test_all_reuses_the_orphan_scan_rather_than_rescanning(self) -> None:
+        root = make_repo(CHECKOUT_YAML, spec_files=["docs/wandering.spec.md"])
+        living = rsp.load_living(str(root))
+        orphans = rsp.find_orphans(living, str(root))
+        specs = {e["spec"] for e in rsp.discover_all(living, str(root), orphans)}
+        self.assertEqual(set(orphans) - specs, set())
+
     def test_a_discovered_name_never_displaces_a_configured_capability(self) -> None:
         root = make_repo(CHECKOUT_YAML, spec_files=["checkout/stray.spec.md"])
         living = rsp.load_living(str(root))

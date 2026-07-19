@@ -152,6 +152,22 @@ describe('readLivingSpecs', () => {
         expect(listing.orphans).toEqual(['src/payments/payments.spec.md']);
     });
 
+    it('stops at a nested project that carries its own companion.yml', () => {
+        const root = ws(
+            {
+                'capabilities/checkout/spec.md': '# checkout',
+                'src/payments/payments.spec.md': '# payments',
+                'examples/sample/.specify/companion.yml':
+                    'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: todos\n',
+                'examples/sample/src/store/todos.spec.md': '# todos',
+                'examples/optout/.specify/companion.yml': 'livingSpecs:\n  enabled: false\n',
+                'examples/optout/notes/stray.spec.md': '# stray',
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
+        );
+        expect(readLivingSpecs(root).orphans).toEqual(['src/payments/payments.spec.md']);
+    });
+
     it('drops a capability whose spec path is absolute', () => {
         const root = ws(
             { 'capabilities/x/spec.md': '# x' },

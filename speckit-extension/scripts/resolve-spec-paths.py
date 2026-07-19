@@ -226,7 +226,7 @@ def find_spec_files(root: str) -> list[str]:
     A subdirectory carrying its own `.specify/companion.yml` is a separate
     project: the walk prunes it and never looks inside, whatever that config
     says or fails to say. `root`'s own config is not a boundary against itself.
-    Dot-directories and dotfiles stay excluded, matching the glob this replaced.
+    Dot-directories and dotfiles are excluded.
     """
     found = []
     for dirpath, dirnames, filenames in os.walk(root):
@@ -254,7 +254,7 @@ def _discovered_name(rel: str, taken: set[str]) -> str:
         widened = "/".join(dirs[-i:])
         if widened not in taken:
             return widened
-    base = "/".join(dirs) if dirs else parts[-1]
+    base = "/".join(dirs) if dirs else parts[-1][: -len(".spec.md")] or parts[-1]
     candidate, n = base, 2
     while candidate in taken:
         candidate = f"{base}-{n}"
@@ -262,14 +262,14 @@ def _discovered_name(rel: str, taken: set[str]) -> str:
     return candidate
 
 
-def discover_all(living: dict, root: str) -> list[dict]:
+def discover_all(living: dict, root: str, orphans: list[str] | None = None) -> list[dict]:
     out, seen, names = [], set(), set()
     for cap in living["capabilities"]:
         entry = _entry(cap, root)
         out.append(entry)
         seen.add(os.path.normpath(entry["spec"]))
         names.add(entry["name"])
-    for rel in find_orphans(living, root):
+    for rel in find_orphans(living, root) if orphans is None else orphans:
         norm = os.path.normpath(rel)
         if norm in seen:
             continue
@@ -361,8 +361,9 @@ def main(argv=None) -> int:
         if args.orphans:
             result = {"orphans": find_orphans(living, root)}
         elif args.all:
-            result = {"capabilities": discover_all(living, root),
-                      "orphans": find_orphans(living, root)}
+            orphans = find_orphans(living, root)
+            result = {"capabilities": discover_all(living, root, orphans),
+                      "orphans": orphans}
         else:
             files = args.changed or []
             result = {"changed": files, "matched": match_changed(files, living, root)}

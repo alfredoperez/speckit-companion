@@ -221,7 +221,19 @@ function fileExists(root: string, relPath: string): boolean {
     }
 }
 
-/** Recursively collect repo-relative POSIX paths of every `*.spec.md` under root. */
+function isProjectRoot(dir: string): boolean {
+    try {
+        return fs.statSync(path.join(dir, '.specify', 'companion.yml')).isFile();
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Repo-relative POSIX paths of every `*.spec.md` belonging to this project.
+ * A subdirectory carrying its own `.specify/companion.yml` is a separate
+ * project and is pruned; `root`'s own config is not a boundary against itself.
+ */
 function globSpecFiles(root: string): string[] {
     const results: string[] = [];
     const walk = (dir: string, rel: string): void => {
@@ -242,8 +254,12 @@ function globSpecFiles(root: string): string[] {
                 continue;
             }
             const childRel = rel ? `${rel}/${entry.name}` : entry.name;
+            const childDir = path.join(dir, entry.name);
             if (entry.isDirectory()) {
-                walk(path.join(dir, entry.name), childRel);
+                if (isProjectRoot(childDir)) {
+                    continue;
+                }
+                walk(childDir, childRel);
             } else if (entry.isFile() && entry.name.endsWith('.spec.md')) {
                 results.push(childRel);
             }
@@ -255,8 +271,9 @@ function globSpecFiles(root: string): string[] {
 
 /**
  * `*.spec.md` files claimed by no capability. Excludes the `specs/` feature
- * folder, reserved tier siblings, claimed spec paths, and any file inside a
- * configured capability's spec directory. Mirrors the resolver's `find_orphans`.
+ * folder, nested projects, reserved tier siblings, claimed spec paths, and any
+ * file inside a configured capability's spec directory. Mirrors the resolver's
+ * `find_orphans`.
  */
 function findOrphans(caps: RawCapability[], root: string): string[] {
     const claimed = new Set(

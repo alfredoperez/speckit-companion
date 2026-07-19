@@ -81,7 +81,8 @@ When the inventory includes specs discovered on disk rather than declared in con
 - **FR-004**: A nested project whose configuration switches living specs off MUST contribute nothing to any listing — no unclaimed entries and no discovered capabilities.
 - **FR-005**: A nested project's configuration that cannot be read or parsed MUST still establish a boundary rather than allowing the scan to descend.
 - **FR-006**: No file path may appear both as a configured capability's claimed spec and as an unclaimed file in the same run.
-- **FR-007**: Discovered entries in the full inventory MUST each carry a distinct name, and a discovered entry MUST NOT take a name already used by a configured capability.
+- **FR-007**: Discovered entries in the full inventory MUST each carry a distinct name, and a discovered entry MUST NOT take a name already used by a configured capability. A discovered spec at the scan root MUST be named after the file without its living-spec suffix.
+- **FR-011**: The sidebar's Living Specs view MUST apply the same boundary rule as the resolver, so the editor listing and the command-line listing cannot disagree about which files belong to the project.
 - **FR-008**: Behavior for a project with no nested project configurations MUST be unchanged from today, including the existing exclusions for feature specs and reserved sibling tiers.
 - **FR-009**: Regression tests MUST cover the boundary stop, the switched-off nested project, the agreement between the two listings, and the name-collision rule.
 - **FR-010**: The change MUST be recorded as a user-facing entry under the unreleased section of the spec-kit extension's changelog, and the extension's documentation MUST describe the boundary rule where the discovery behavior is documented.
