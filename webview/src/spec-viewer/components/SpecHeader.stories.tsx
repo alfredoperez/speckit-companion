@@ -175,6 +175,131 @@ export const StatusTasksCreated: Story = {
     },
 };
 
+// ── Living specs ─────────────────────────────────────────
+// A living spec has no branch, date, phases or task progress —
+// the header carries capability facts instead. `viewerState` is
+// left null so the badge text comes from navState, as it does in
+// the real living-spec panel.
+
+const livingMeta = (overrides = {}) => ({
+    capabilityName: 'speckit-extension-capture',
+    specPath: 'capabilities/speckit-extension-capture/spec.md',
+    location: 'centralized' as const,
+    match: ['speckit-extension/**'],
+    ...overrides,
+});
+
+const living = (overrides: any = {}) => {
+    vs.value = null;
+    navState.value = mockNavState({
+        livingMode: true,
+        badgeText: 'LIVING',
+        branch: null,
+        createdDate: null,
+        specContextName: 'SpecKit Extension Capture',
+        titleFromHeading: true,
+        docTypeLabel: 'Spec',
+        ...overrides,
+    });
+    return <SpecHeader />;
+};
+
+export const LivingFull: Story = {
+    name: 'Living — everything known',
+    decorators: [withStatus('active')],
+    render: () => living({
+        livingMeta: livingMeta({
+            requirements: 12,
+            scenarios: 34,
+            coverage: { covered: 8, total: 12 },
+            drifted: true,
+            match: ['speckit-extension/**', 'src/features/specs/**'],
+        }),
+    }),
+};
+
+export const LivingDraft: Story = {
+    name: 'Living — draft',
+    decorators: [withStatus('draft')],
+    render: () => living({
+        badgeText: 'DRAFT',
+        specContextName: 'Payments Core',
+        livingMeta: livingMeta({
+            capabilityName: 'payments-core',
+            specPath: 'capabilities/payments-core/spec.md',
+            requirements: 6,
+            scenarios: 9,
+            match: ['src/billing/**'],
+        }),
+    }),
+};
+
+export const LivingNoCoverage: Story = {
+    name: 'Living — no coverage tier',
+    decorators: [withStatus('active')],
+    render: () => living({
+        livingMeta: livingMeta({ requirements: 12, scenarios: 34 }),
+    }),
+};
+
+export const LivingDrifted: Story = {
+    name: 'Living — drifted, fully covered',
+    decorators: [withStatus('active')],
+    render: () => living({
+        livingMeta: livingMeta({
+            requirements: 9,
+            scenarios: 21,
+            coverage: { covered: 9, total: 9 },
+            drifted: true,
+        }),
+    }),
+};
+
+export const LivingManyGlobs: Story = {
+    name: 'Living — many claimed patterns',
+    decorators: [withStatus('active')],
+    render: () => living({
+        livingMeta: livingMeta({
+            requirements: 62,
+            scenarios: 140,
+            coverage: { covered: 41, total: 62 },
+            match: [
+                'src/features/specs/**',
+                'src/features/spec-viewer/**',
+                'src/features/steering/**',
+                'webview/src/spec-viewer/**',
+                'webview/styles/**',
+                'docs/viewer-states.md',
+            ],
+        }),
+    }),
+};
+
+export const LivingLongTitle: Story = {
+    name: 'Living — long title, colocated spec',
+    decorators: [withStatus('active')],
+    render: () => living({
+        specContextName: 'Cross-Provider Terminal Dispatch And Session Recovery',
+        livingMeta: livingMeta({
+            capabilityName: 'terminal-dispatch',
+            specPath: 'src/ai-providers/terminal/dispatch.spec.md',
+            location: 'colocated',
+            requirements: 18,
+            scenarios: 44,
+            coverage: { covered: 12, total: 18 },
+            match: ['src/ai-providers/**'],
+        }),
+    }),
+};
+
+export const LivingBare: Story = {
+    name: 'Living — nothing determinable',
+    decorators: [withStatus('active')],
+    render: () => living({
+        livingMeta: livingMeta({ match: [] }),
+    }),
+};
+
 export const StatusImplemented: Story = {
     name: 'Implemented',
     decorators: [withStatus('implemented')],

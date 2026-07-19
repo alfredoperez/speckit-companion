@@ -4,7 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Improved
+
+- **Opening a living spec now tells you something about it.** The header for an adopted capability used to show a name and a badge and nothing else. It now shows how many requirements and scenarios the capability declares, how many of them have a mapped test, a `drift` marker when the code has moved on since the spec was last committed, the file patterns the capability claims, and where its spec file lives. The claimed patterns are the point: you can finally answer "why did this spec load for this change?" without opening `.specify/companion.yml` by hand. Coverage and drift are the same numbers the Living Specs sidebar shows — one computation feeds both, so they cannot disagree.
+
 ### Fixed
+
+- **A living spec's title is the one its author wrote.** The viewer was building the title from the folder name, so a document headed "SpecKit Extension Capture — Living Spec" appeared as "Speckit-Extension-Capture". It now reads the document's own heading and only falls back to the folder name when there isn't one. Product names keep their capitalization.
+- **DRAFT is no longer said three times.** A draft capability announced itself in the badge, in a banner in the body, and a third time in a tooltip that repeated the badge word for word and covered the title while it was showing. The tooltip is gone; the badge and the banner stay.
 
 - The Living Specs view's **Orphans** group now stops at nested projects. If your repo contains sample apps, fixtures, or sandboxes that carry their own `.specify/companion.yml`, they are separate projects and their spec files no longer show up as strays in the parent repo's sidebar.
 

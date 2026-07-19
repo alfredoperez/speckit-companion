@@ -61,9 +61,31 @@ export type StalenessMap = Record<DocumentType, StalenessInfo>;
  * footer now derives entirely from `ViewerState`. `NavState` carries only
  * navigation/document concerns plus the workflow-derived `enhancementButtons`.
  */
+/**
+ * Capability facts shown in the header for a living spec.
+ *
+ * Every optional field is absent — never zeroed — when it could not be
+ * determined, so "no coverage tier" stays distinguishable from "nothing
+ * covered". Mirrors `LivingHeaderMeta` on the extension side.
+ */
+export interface LivingHeaderMeta {
+    capabilityName: string;
+    specPath: string;
+    location: 'centralized' | 'colocated';
+    match: string[];
+    requirements?: number;
+    scenarios?: number;
+    coverage?: { covered: number; total: number };
+    drifted?: boolean;
+}
+
 export interface NavState {
     /** Living-spec mode: hide the workflow stepper and footer. */
     livingMode?: boolean;
+    /** Capability facts for the header; living-spec mode only. */
+    livingMeta?: LivingHeaderMeta | null;
+    /** Header title came from the document's own H1, so skip slug casing. */
+    titleFromHeading?: boolean;
     coreDocs: SpecDocument[];
     relatedDocs: SpecDocument[];
     currentDoc: DocumentType;
@@ -341,6 +363,7 @@ export type ExtensionToViewerMessage =
     | { type: 'fileDeleted'; filePath: string }
     | { type: 'navStateUpdated'; navState: NavState }
     | { type: 'viewerStateUpdated'; viewerState: ViewerState; navState?: NavState }
+    | { type: 'livingHealthResolved'; livingMeta: LivingHeaderMeta }
     | { type: 'actionToast'; message: string };
 
 // ============================================

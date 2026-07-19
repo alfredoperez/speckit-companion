@@ -79,4 +79,24 @@ describe('generateHtml — shell structure', () => {
         expect(html).toContain('id="initial-content"');
         expect(html).toContain('data-raw=""');
     });
+
+    it('should not let a capability glob close the nav-state script tag', () => {
+        const html = generateHtml(
+            mockWebview, extensionUri,
+            'content', 'empty',
+            [coreDoc('spec', true)], 'spec', 'my-feature', [], 0,
+            'active', [], undefined, null, null, null, null, null, null, null, null,
+            undefined, true, false, true,
+            {
+                capabilityName: 'todos',
+                specPath: 'capabilities/todos/spec.md',
+                location: 'centralized',
+                match: ['src/</script><img src=x onerror=alert(1)>/**'],
+            },
+            true,
+        );
+
+        expect(html).not.toContain('</script><img');
+        expect(html).toContain('\\u003c/script');
+    });
 });

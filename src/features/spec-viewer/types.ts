@@ -219,6 +219,31 @@ export interface StalenessInfo {
 export type StalenessMap = Record<DocumentType, StalenessInfo>;
 
 // ============================================
+// Living Spec Header
+// ============================================
+
+/**
+ * Capability facts shown in the viewer header for a living spec.
+ *
+ * Every optional field is absent — never zeroed — when it could not be
+ * determined, so "no coverage tier" stays distinguishable from "nothing
+ * covered". `coverage` and `drifted` come from the Living Specs sidebar's own
+ * `readCapabilityHealth`, so the two surfaces cannot disagree.
+ */
+export interface LivingHeaderMeta {
+    capabilityName: string;
+    /** Repo-relative POSIX path of the spec file. */
+    specPath: string;
+    location: 'centralized' | 'colocated';
+    /** Membership globs the capability claims. May be empty. */
+    match: string[];
+    requirements?: number;
+    scenarios?: number;
+    coverage?: { covered: number; total: number };
+    drifted?: boolean;
+}
+
+// ============================================
 // Message Protocols
 // ============================================
 
@@ -233,6 +258,10 @@ export type StalenessMap = Record<DocumentType, StalenessInfo>;
 export interface NavState {
     /** Living-spec mode: webview hides the workflow stepper and footer. */
     livingMode?: boolean;
+    /** Capability facts for the header; living-spec mode only. */
+    livingMeta?: LivingHeaderMeta | null;
+    /** Header title came from the document's own H1, so skip slug casing. */
+    titleFromHeading?: boolean;
     /** Core documents with existence state */
     coreDocs: SpecDocument[];
     /** Related documents */
@@ -319,6 +348,11 @@ export type ExtensionToViewerMessage =
           viewerState: import('../../core/types/specContext').ViewerState;
           /** Complete NavState — never a partial; carries nav-only fields (enhancementButtons, docs, dates) so no footer-affecting message is partial. */
           navState: NavState;
+      }
+    | {
+          type: 'livingHealthResolved';
+          /** The fact bundle with coverage/drift folded in, once the health call returns. */
+          livingMeta: LivingHeaderMeta;
       }
     | {
           type: 'actionToast';

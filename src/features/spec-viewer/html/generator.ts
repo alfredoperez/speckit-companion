@@ -11,7 +11,8 @@ import {
     SpecStatus,
     EnhancementButton,
     StalenessMap,
-    NavState
+    NavState,
+    LivingHeaderMeta
 } from '../types';
 import { escapeHtml, escapeHtmlAttribute, generateNonce } from '../utils';
 import { calculateWorkflowPhase, getDocTypeLabel } from '../phaseCalculation';
@@ -44,7 +45,9 @@ export function generateHtml(
     stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>,
     activityPanelEnabled: boolean = true,
     showInstallPrompt: boolean = false,
-    livingMode: boolean = false
+    livingMode: boolean = false,
+    livingMeta?: LivingHeaderMeta | null,
+    titleFromHeading: boolean = false
 ): string {
     // Get URIs for resources
     const styleUri = webview.asWebviewUri(
@@ -103,6 +106,8 @@ export function generateHtml(
         activityPanelEnabled,
         showInstallPrompt,
         livingMode,
+        livingMeta: livingMeta ?? null,
+        titleFromHeading,
     };
 
     return `<!DOCTYPE html>
@@ -125,7 +130,7 @@ export function generateHtml(
     <div class="viewer-container" id="app-root"></div>
     <template id="initial-content" data-raw="${content ? escapeHtmlAttribute(content) : ''}"></template>
     <script nonce="${nonce}">
-        window.__INITIAL_NAV_STATE__ = ${JSON.stringify(initialNavState)};
+        window.__INITIAL_NAV_STATE__ = ${JSON.stringify(initialNavState).replace(/</g, '\\u003c')};
     </script>
 
     <div class="loading-overlay" id="loading-overlay" style="display: none;">

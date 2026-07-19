@@ -82,6 +82,12 @@ function handleMessage(event: MessageEvent): void {
             navState.value = message.navState;
             break;
 
+        case 'livingHealthResolved':
+            if (navState.value) {
+                navState.value = { ...navState.value, livingMeta: message.livingMeta };
+            }
+            break;
+
         case 'viewerStateUpdated':
             viewerState.value = message.viewerState;
             historyEntries.value = message.viewerState.history ?? [];
