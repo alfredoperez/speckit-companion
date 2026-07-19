@@ -56,9 +56,12 @@ export function countLivingFacts(content: string): LivingFactCounts {
 
 /**
  * The header's fact bundle for the capability that owns `specFilePath`, or
- * `null` when no configured capability claims it. Synchronous by design: it
- * reads only the config and the document already in hand, so the header can
- * render before the git-backed health call resolves.
+ * `null` when no configured capability claims it. Synchronous by design so the
+ * header can render before the git-backed health call resolves. Resolution goes
+ * through `readLivingSpecs` — the Living Specs tree's own reader — so the two
+ * surfaces can never disagree about which capability owns a path. It stats a
+ * few paths per capability, which costs well under a frame at any realistic
+ * capability count.
  */
 export function buildLivingHeaderMeta(
     workspaceRoot: string,

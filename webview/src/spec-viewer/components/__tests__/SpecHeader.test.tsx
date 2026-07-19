@@ -212,6 +212,37 @@ describe('the claimed-files row', () => {
         cleanup(container);
     });
 
+    it('keeps every entry when the same pattern is claimed twice', () => {
+        const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+
+        navState.value = mockNavState({
+            livingMode: true,
+            livingMeta: livingMeta({ match: ['src/**', 'src/**'] }),
+        });
+        render(<SpecHeader />, container);
+
+        navState.value = mockNavState({
+            livingMode: true,
+            livingMeta: livingMeta({ match: ['docs/**', 'src/**', 'src/**'] }),
+        });
+        render(<SpecHeader />, container);
+
+        const globs = Array.from(container.querySelectorAll('.spec-header-glob'))
+            .map(el => el.textContent);
+
+        expect(globs).toEqual(['docs/**', 'src/**', 'src/**']);
+        expect(warn).not.toHaveBeenCalled();
+        expect(error).not.toHaveBeenCalled();
+
+        warn.mockRestore();
+        error.mockRestore();
+        cleanup(container);
+    });
+
     it('renders a claimed pattern as text, never as markup', () => {
         navState.value = mockNavState({
             livingMode: true,

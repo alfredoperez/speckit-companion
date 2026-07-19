@@ -65,8 +65,9 @@ function LivingCovers({ meta }: { meta: LivingHeaderMeta }) {
             {meta.match.length > 0 && (
                 <div class="spec-header-covers">
                     <span class="spec-header-covers__label">Covers</span>
-                    {shown.map(glob => (
-                        <span key={glob} class="spec-header-glob" title={glob}>
+                    {/* Keyed by position: authored globs may repeat, so the value is not unique. */}
+                    {shown.map((glob, i) => (
+                        <span key={i} class="spec-header-glob" title={glob}>
                             {glob}
                         </span>
                     ))}
