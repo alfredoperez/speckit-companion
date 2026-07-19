@@ -57,7 +57,7 @@
     "companion": {
       "version": "0.19.0",
       "source": "local",
-      "manifest_hash": "sha256:fb49de595d69b5cef10250c8a7260cb64f6d6c1dea84db92c8be1bfd3528d6cd",
+      "manifest_hash": "sha256:50d4501f9b7c858dc94eaadb2d903b6f926fa072f0fc04a4c35d5ae39532dd59",
       "enabled": true,
       "priority": 10,
       "registered_commands": {
@@ -76,6 +76,7 @@
           "speckit.companion.mark-complete",
           "speckit.companion.auto",
           "speckit.companion.adopt",
+          "speckit.companion.relocate",
           "speckit.companion.drift",
           "speckit.companion.coverage"
         ],
@@ -94,6 +95,7 @@
           "speckit.companion.mark-complete",
           "speckit.companion.auto",
           "speckit.companion.adopt",
+          "speckit.companion.relocate",
           "speckit.companion.drift",
           "speckit.companion.coverage"
         ],
@@ -112,6 +114,7 @@
           "speckit.companion.mark-complete",
           "speckit.companion.auto",
           "speckit.companion.adopt",
+          "speckit.companion.relocate",
           "speckit.companion.drift",
           "speckit.companion.coverage"
         ],
@@ -130,6 +133,7 @@
           "speckit.companion.mark-complete",
           "speckit.companion.auto",
           "speckit.companion.adopt",
+          "speckit.companion.relocate",
           "speckit.companion.drift",
           "speckit.companion.coverage"
         ],
@@ -148,6 +152,7 @@
           "speckit.companion.mark-complete",
           "speckit.companion.auto",
           "speckit.companion.adopt",
+          "speckit.companion.relocate",
           "speckit.companion.drift",
           "speckit.companion.coverage"
         ],
@@ -166,6 +171,7 @@
           "speckit.companion.mark-complete",
           "speckit.companion.auto",
           "speckit.companion.adopt",
+          "speckit.companion.relocate",
           "speckit.companion.drift",
           "speckit.companion.coverage"
         ],
@@ -184,6 +190,7 @@
           "speckit.companion.mark-complete",
           "speckit.companion.auto",
           "speckit.companion.adopt",
+          "speckit.companion.relocate",
           "speckit.companion.drift",
           "speckit.companion.coverage"
         ],
@@ -202,12 +209,13 @@
           "speckit.companion.mark-complete",
           "speckit.companion.auto",
           "speckit.companion.adopt",
+          "speckit.companion.relocate",
           "speckit.companion.drift",
           "speckit.companion.coverage"
         ]
       },
       "registered_skills": [],
-      "installed_at": "2026-07-19T12:48:17.031092+00:00"
+      "installed_at": "2026-07-19T14:43:52.145769+00:00"
     }
   }
 }
