@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Living Spec Viewer — Component Styling Proposal</title>
+  <style>
+    :root {
+      --bg: #101416;
+      --surface: #171d20;
+      --raised: #20282c;
+      --inset: #293337;
+      --text: #f1f5f4;
+      --body: #b4c0bd;
+      --muted: #82908d;
+      --border: #344044;
+      --border-strong: #52615e;
+      --accent: #65e6bd;
+      --accent-ink: #071b15;
+      --accent-soft: #173b32;
+      --info: #78bdf7;
+      --info-soft: #182f43;
+      --success: #8adb77;
+      --success-soft: #1f3823;
+      --warning: #f2c66d;
+      --warning-soft: #3c311a;
+      --error: #ff8c8c;
+      --error-soft: #442326;
+      --purple: #c4a7f5;
+      --purple-soft: #302641;
+      --font: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "SFMono-Regular", "Cascadia Code", Consolas, monospace;
+      --shadow: 0 22px 70px rgb(0 0 0 / 30%);
+    }
+
+    body.light {
+      --bg: #f4f7f6;
+      --surface: #ffffff;
+      --raised: #eaf0ee;
+      --inset: #dfe8e5;
+      --text: #14201d;
+      --body: #43524e;
+      --muted: #63726e;
+      --border: #ced9d5;
+      --border-strong: #9daca7;
+      --accent: #087d63;
+      --accent-ink: #ffffff;
+      --accent-soft: #d8eee7;
+      --info: #176da8;
+      --info-soft: #dcecf7;
+      --success: #277a35;
+      --success-soft: #e0f0e1;
+      --warning: #8b5a00;
+      --warning-soft: #f7ebce;
+      --error: #b72f39;
+      --error-soft: #f9e0e2;
+      --purple: #6e40c9;
+      --purple-soft: #eee6fb;
+      --shadow: 0 22px 70px rgb(24 53 45 / 13%);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--body);
+      background: var(--bg);
+      font: 15px/1.6 var(--font);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button { color: inherit; font: inherit; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+    .proposal {
+      width: min(1320px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 24px 0 72px;
+    }
+
+    .proposal-note {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 18px;
+      padding: 13px 15px;
+      color: var(--body);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 6px;
+      background: var(--surface);
+      box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+    }
+
+    .proposal-note strong { color: var(--text); }
+    .proposal-note p { margin: 0; font-size: 13px; }
+
+    .controls { display: flex; flex: 0 0 auto; gap: 6px; }
+
+    .control {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 32px;
+      padding: 6px 9px;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--raised);
+      cursor: pointer;
+    }
+
+    .control:hover { color: var(--text); border-color: var(--border-strong); }
+
+    .viewer {
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      box-shadow: var(--shadow);
+    }
+
+    .window-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 38px;
+      padding: 0 14px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      font: 600 10px/1 var(--mono);
+      letter-spacing: .04em;
+    }
+
+    .window-dots { display: flex; gap: 6px; }
+    .window-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--border-strong); }
+    .window-bar .mode { color: var(--accent); }
+
+    /* Existing PageChrome / SpecHeader shape */
+    .page-chrome {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 28px;
+      padding: 18px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .spec-header { min-width: 0; }
+
+    .title-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .title-row h1 {
+      margin: 0;
+      color: var(--text);
+      font-size: 25px;
+      font-weight: 650;
+      line-height: 1.2;
+      letter-spacing: -.025em;
+    }
+
+    .badge {
+      padding: 4px 8px;
+      color: var(--warning);
+      border: 0;
+      border-radius: 4px;
+      background: var(--warning-soft);
+      font: 700 10px/1 var(--mono);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .facts {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      color: var(--body);
+      font-size: 12px;
+    }
+
+    .fact + .fact::before { margin-right: 8px; color: var(--muted); content: "·"; }
+    .fact.drift { color: var(--warning); }
+
+    .covers {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .covers-label {
+      margin-right: 3px;
+      color: var(--muted);
+      font: 650 10px/1 var(--mono);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .glob {
+      display: inline-block;
+      max-width: 290px;
+      overflow: hidden;
+      padding: 4px 8px;
+      color: var(--body);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--raised);
+      font: 11px/1.2 var(--mono);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .glob.more { color: var(--accent); background: var(--accent-soft); border-color: transparent; }
+
+    .spec-path {
+      margin-top: 8px;
+      color: var(--muted);
+      font: 11px/1.4 var(--mono);
+    }
+
+    .header-scope {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-top: 2px;
+      color: var(--muted);
+      font: 600 10px/1 var(--mono);
+      white-space: nowrap;
+    }
+
+    .header-scope::before { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); content: ""; }
+
+    /* Real living-mode tier strip: shown only when multiple tiers exist. */
+    .tier-strip {
+      display: flex;
+      min-height: 38px;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .tier {
+      position: relative;
+      padding: 11px 12px 9px;
+      color: var(--muted);
+      border: 0;
+      background: transparent;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .tier.active { color: var(--text); }
+    .tier.active::after { position: absolute; right: 10px; bottom: -1px; left: 10px; height: 2px; background: var(--accent); content: ""; }
+
+    .content-area {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 220px;
+      align-items: start;
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    .markdown-content {
+      min-width: 0;
+      max-width: 76ch;
+      padding: 34px 38px 64px;
+    }
+
+    .toc {
+      position: sticky;
+      top: 0;
+      padding: 34px 18px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .toc-title {
+      margin-bottom: 10px;
+      color: var(--muted);
+      font: 700 10px/1 var(--mono);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .toc a {
+      display: block;
+      padding: 5px 8px;
+      color: var(--muted);
+      border-left: 2px solid transparent;
+      text-decoration: none;
+    }
+
+    .toc a:hover, .toc a.active { color: var(--text); border-left-color: var(--accent); background: var(--surface); }
+    .toc a.sub { padding-left: 17px; font-size: 11px; }
+
+    .draft-banner {
+      display: grid;
+      grid-template-columns: 24px minmax(0, 1fr);
+      gap: 10px;
+      margin-bottom: 22px;
+      padding: 11px 13px;
+      color: var(--body);
+      border: 1px solid color-mix(in srgb, var(--warning) 36%, var(--border));
+      border-radius: 6px;
+      background: var(--warning-soft);
+      font-size: 12px;
+    }
+
+    .draft-banner svg { color: var(--warning); }
+    .draft-banner strong { color: var(--text); }
+
+    .purpose {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 14px;
+      margin-bottom: 36px;
+      padding: 18px;
+      border: 1px solid color-mix(in srgb, var(--accent) 36%, var(--border));
+      border-radius: 6px;
+      background: var(--accent-soft);
+    }
+
+    .purpose-icon {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      color: var(--accent);
+      border: 1px solid color-mix(in srgb, var(--accent) 42%, transparent);
+      border-radius: 5px;
+    }
+
+    .purpose-label, .component-label {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--accent);
+      font: 700 10px/1 var(--mono);
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+
+    .purpose p { margin: 0; color: var(--text); font-size: 14px; line-height: 1.6; }
+
+    .section { margin-bottom: 42px; scroll-margin-top: 20px; }
+
+    .section-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-title h2 { margin: 0; color: var(--text); font-size: 20px; line-height: 1.25; letter-spacing: -.02em; }
+    .section-title span { color: var(--muted); font: 600 10px/1 var(--mono); }
+
+    .requirement {
+      position: relative;
+      margin-bottom: 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+    }
+
+    .requirement:hover { border-color: var(--border-strong); }
+
+    .line-action {
+      position: absolute;
+      top: 14px;
+      left: -15px;
+      display: grid;
+      width: 28px;
+      height: 28px;
+      place-items: center;
+      color: var(--accent-ink);
+      border: 1px solid var(--accent);
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0;
+      cursor: pointer;
+      transform: scale(.88);
+      transition: 120ms ease;
+    }
+
+    .requirement:hover .line-action, .requirement:focus-within .line-action { opacity: 1; transform: scale(1); }
+
+    .requirement-head {
+      padding: 14px 16px 11px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .requirement-head h3 { margin: 0; color: var(--text); font-size: 14px; line-height: 1.42; }
+
+    .requirement-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .chip {
+      padding: 3px 6px;
+      border-radius: 3px;
+      font: 650 9px/1 var(--mono);
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .chip.observed { color: var(--success); background: var(--success-soft); }
+    .chip.inferred { color: var(--purple); background: var(--purple-soft); }
+    .chip.covered { color: var(--success); background: var(--success-soft); }
+    .chip.uncovered { color: var(--warning); background: var(--warning-soft); }
+    .chip.source { display: none; color: var(--muted); background: var(--raised); text-transform: none; }
+    body.sources .chip.source { display: inline-block; }
+
+    .requirement-body { padding: 13px 16px 15px; }
+    .requirement-body > p { margin: 0; font-size: 13px; line-height: 1.58; }
+
+    .scenarios {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 13px;
+      border-top: 1px solid var(--border);
+    }
+
+    .scenario {
+      display: grid;
+      grid-template-columns: 24px minmax(0, 1fr);
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 5px;
+      background: var(--raised);
+    }
+
+    .scenario-number {
+      color: var(--accent);
+      font: 700 10px/1.55 var(--mono);
+    }
+
+    .scenario-lines { display: grid; gap: 5px; }
+    .scenario-line { display: grid; grid-template-columns: 45px minmax(0, 1fr); gap: 8px; font-size: 12px; }
+    .scenario-key { color: var(--muted); font: 700 9px/1.65 var(--mono); letter-spacing: .06em; }
+    .scenario-key.then { color: var(--accent); }
+    .scenario-line strong { color: var(--text); font-weight: 620; }
+
+    .more-rules {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      width: 100%;
+      margin-top: 8px;
+      padding: 11px 13px;
+      color: var(--accent);
+      border: 1px dashed var(--border-strong);
+      border-radius: 5px;
+      background: transparent;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .more-rules:hover { background: var(--surface); }
+
+    .uncovered-summary {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 15px;
+      border: 1px solid color-mix(in srgb, var(--warning) 38%, var(--border));
+      border-radius: 6px;
+      background: var(--warning-soft);
+    }
+
+    .uncovered-summary h3 { margin: 0 0 4px; color: var(--text); font-size: 14px; }
+    .uncovered-summary p { margin: 0; font-size: 12px; }
+    .uncovered-count { color: var(--warning); font: 700 22px/1 var(--mono); }
+    .uncovered-count small { display: block; margin-top: 5px; color: var(--muted); font: 600 9px/1 var(--mono); text-align: right; text-transform: uppercase; }
+
+    details.evidence {
+      margin-bottom: 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+    }
+
+    .evidence summary {
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr) auto;
+      gap: 9px;
+      align-items: center;
+      padding: 11px 13px;
+      color: var(--text);
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .evidence summary::-webkit-details-marker { display: none; }
+    .chevron { color: var(--muted); transition: transform 120ms ease; }
+    details[open] .chevron { transform: rotate(90deg); }
+    .evidence summary strong { font-size: 12px; }
+    .evidence summary small { color: var(--muted); font: 600 10px/1 var(--mono); }
+
+    .file-list { border-top: 1px solid var(--border); background: var(--raised); }
+
+    .file {
+      display: grid;
+      grid-template-columns: minmax(155px, .75fr) minmax(0, 1.5fr);
+      gap: 16px;
+      padding: 10px 13px 10px 44px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+
+    .file:last-child { border-bottom: 0; }
+    .file code { overflow: hidden; color: var(--text); font: 600 11px/1.5 var(--mono); text-overflow: ellipsis; white-space: nowrap; }
+
+    .boundary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 18px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+    }
+
+    .boundary-item { padding: 15px; border-right: 1px solid var(--border); }
+    .boundary-item:last-child { border-right: 0; }
+    .boundary-item span { display: block; margin-bottom: 5px; color: var(--accent); font: 700 9px/1 var(--mono); text-transform: uppercase; }
+    .boundary-item strong { display: block; margin-bottom: 4px; color: var(--text); font-size: 12px; }
+    .boundary-item p { margin: 0; font-size: 11px; }
+
+    .approval {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      margin-top: 18px;
+      padding: 17px 18px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent-soft);
+    }
+
+    .approval strong { display: block; color: var(--text); }
+    .approval span { font-size: 12px; }
+    .approval-mark { flex: 0 0 auto; padding: 7px 10px; color: var(--accent-ink); border-radius: 4px; background: var(--accent); font-weight: 700; }
+
+    body.compact .markdown-content { padding-top: 24px; }
+    body.compact .requirement-head { padding-top: 10px; padding-bottom: 8px; }
+    body.compact .requirement-body { padding-top: 9px; padding-bottom: 10px; }
+    body.compact .section { margin-bottom: 30px; }
+
+    @media (max-width: 860px) {
+      .content-area { grid-template-columns: 1fr; }
+      .toc { display: none; }
+      .markdown-content { margin: 0 auto; }
+      .boundary { grid-template-columns: 1fr; }
+      .boundary-item { border-right: 0; border-bottom: 1px solid var(--border); }
+      .boundary-item:last-child { border-bottom: 0; }
+    }
+
+    @media (max-width: 620px) {
+      .proposal { width: min(100% - 18px, 1320px); padding-top: 9px; }
+      .proposal-note { align-items: flex-start; flex-direction: column; }
+      .page-chrome { padding: 16px; }
+      .header-scope { display: none; }
+      .tier-strip { padding: 0 16px; }
+      .markdown-content { padding: 24px 14px 42px; }
+      .title-row h1 { font-size: 22px; }
+      .section-title { align-items: flex-start; flex-direction: column; gap: 5px; }
+      .scenario-line { grid-template-columns: 40px minmax(0, 1fr); }
+      .uncovered-summary { grid-template-columns: 1fr; }
+      .uncovered-count small { text-align: left; }
+      .file { grid-template-columns: 1fr; gap: 3px; padding-left: 44px; }
+      .approval { align-items: flex-start; flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="proposal">
+    <div class="proposal-note">
+      <p><strong>This is the existing Living Spec Viewer.</strong> Same page chrome, tier strip, Markdown source, TOC, and line comments. Only recognized living-spec blocks receive component styling.</p>
+      <div class="controls">
+        <button class="control" id="source-toggle" type="button" aria-pressed="false" title="Show source evidence">Source</button>
+        <button class="control" id="density-toggle" type="button" aria-pressed="false" title="Toggle compact density">Compact</button>
+        <button class="control" id="theme-toggle" type="button" title="Switch color theme" aria-label="Switch color theme">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 15.2A8.2 8.2 0 0 1 8.8 4a8.2 8.2 0 1 0 11.2 11.2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <main class="viewer">
+      <div class="window-bar">
+        <div class="window-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+        <span>SpecKit Companion · Spec Viewer</span>
+        <span class="mode">livingMode</span>
+      </div>
+
+      <header class="page-chrome">
+        <div class="spec-header">
+          <div class="title-row">
+            <h1>Capture Runtime</h1>
+            <span class="badge">Draft</span>
+          </div>
+          <div class="covers">
+            <span class="covers-label">Covers</span>
+            <span class="glob">speckit-extension/scripts/capture*.py</span>
+            <span class="glob">speckit-extension/scripts/*context*.py</span>
+            <span class="glob more">+3 more</span>
+          </div>
+          <div class="spec-path">speckit-extension/scripts/capture-runtime.spec.md</div>
+        </div>
+        <div class="header-scope">Living spec</div>
+      </header>
+
+      <div class="content-area">
+        <article class="markdown-content">
+          <aside class="draft-banner">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 9v5M12 17.2v.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <div><strong>Surface-first draft.</strong> Every requirement is observed from the code surface unless tagged otherwise. Review before trusting.</div>
+          </aside>
+
+          <section class="purpose" id="purpose">
+            <div class="purpose-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" stroke="currentColor" stroke-width="1.5"/><path d="M12 8v4.5M12 16h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </div>
+            <div>
+              <span class="purpose-label">Purpose</span>
+              <p>The capture runtime turns an AI-driven SpecKit run into a durable, trustworthy record on disk—what step it is on, when work finished, what the run decided, and how those decisions fold back into living specs.</p>
+            </div>
+          </section>
+
+          <section class="section" id="requirements">
+            <div class="section-title">
+              <h2>Requirements</h2>
+              <span>13 rules · document order preserved</span>
+            </div>
+
+            <article class="requirement">
+              <button class="line-action" type="button" title="Add comment" aria-label="Add comment to recording-state requirement">+</button>
+              <div class="requirement-head">
+                <h3>Recording state MUST NOT be able to break the run it observes</h3>
+                <div class="requirement-meta">
+                  <span class="chip observed">Observed</span>
+                  <span class="chip covered">Covered</span>
+                  <span class="chip source">capture-runtime.spec.md:9</span>
+                </div>
+              </div>
+              <div class="requirement-body">
+                <p>A missing interpreter, unresolved spec directory, malformed config, or unavailable git history must degrade into a gap in the record—not a halted pipeline.</p>
+                <div class="scenarios">
+                  <div class="scenario">
+                    <span class="scenario-number">01</span>
+                    <div class="scenario-lines">
+                      <div class="scenario-line"><span class="scenario-key">WHEN</span><span>a command reaches capture without <strong>python3</strong></span></div>
+                      <div class="scenario-line"><span class="scenario-key then">THEN</span><span>the command warns once and <strong>continues its real work</strong></span></div>
+                      <div class="scenario-line"><span class="scenario-key">AND</span><span>the run completes with an incomplete record</span></div>
+                    </div>
+                  </div>
+                  <div class="scenario">
+                    <span class="scenario-number">02</span>
+                    <div class="scenario-lines">
+                      <div class="scenario-line"><span class="scenario-key">WHEN</span><span>the writer cannot resolve the spec directory</span></div>
+                      <div class="scenario-line"><span class="scenario-key then">THEN</span><span>it declines to write, reports the problem, and exits successfully</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="requirement">
+              <button class="line-action" type="button" title="Add comment" aria-label="Add comment to context-file requirement">+</button>
+              <div class="requirement-head">
+                <h3>The context file is append-only, crash-safe, and tolerant of fields it does not own</h3>
+                <div class="requirement-meta">
+                  <span class="chip observed">Observed</span>
+                  <span class="chip uncovered">No mapped test</span>
+                  <span class="chip source">capture-runtime.spec.md:24</span>
+                </div>
+              </div>
+              <div class="requirement-body">
+                <p>Writers read-merge-write rather than rebuild, preserve unknown keys and history, and commit atomically so interruption never leaves a truncated context file.</p>
+                <div class="scenarios">
+                  <div class="scenario">
+                    <span class="scenario-number">03</span>
+                    <div class="scenario-lines">
+                      <div class="scenario-line"><span class="scenario-key">WHEN</span><span>a write is interrupted before completion</span></div>
+                      <div class="scenario-line"><span class="scenario-key then">THEN</span><span>disk contains either the previous state or the new state, <strong>never a partial one</strong></span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="requirement">
+              <button class="line-action" type="button" title="Add comment" aria-label="Add comment to timing requirement">+</button>
+              <div class="requirement-head">
+                <h3>Timing is stamped by a script, never hand-authored</h3>
+                <div class="requirement-meta">
+                  <span class="chip observed">Observed</span>
+                  <span class="chip covered">Covered</span>
+                  <span class="chip source">capture-runtime.spec.md:58</span>
+                </div>
+              </div>
+              <div class="requirement-body">
+                <p>Every timing entry is produced by a writer reading the real clock. Humans and agents never edit timestamped JSON entries directly.</p>
+              </div>
+            </article>
+
+            <article class="requirement">
+              <button class="line-action" type="button" title="Add comment" aria-label="Add comment to truthful-reporting requirement">+</button>
+              <div class="requirement-head">
+                <h3>A report MUST NOT claim success for work it did not do</h3>
+                <div class="requirement-meta">
+                  <span class="chip observed">Observed</span>
+                  <span class="chip uncovered">No mapped test</span>
+                  <span class="chip source">capture-runtime.spec.md:170</span>
+                </div>
+              </div>
+              <div class="requirement-body">
+                <p>Summary output states both what was examined and what was not. A fully skipped run reports zero checked rather than a clean verdict; partial runs state both counts and the reason.</p>
+                <div class="scenarios">
+                  <div class="scenario">
+                    <span class="scenario-number">18</span>
+                    <div class="scenario-lines">
+                      <div class="scenario-line"><span class="scenario-key">WHEN</span><span>a drift run examines part of the configured set</span></div>
+                      <div class="scenario-line"><span class="scenario-key then">THEN</span><span>the summary names both the <strong>checked and unchecked counts</strong> and the reason</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <button class="more-rules" id="more-rules" type="button" aria-expanded="false">
+              <span>Show the remaining 9 requirements in document order</span>
+              <span aria-hidden="true">↓</span>
+            </button>
+          </section>
+
+          <section class="section" id="uncovered">
+            <div class="section-title">
+              <h2>Uncovered</h2>
+              <span>Evidence boundary</span>
+            </div>
+
+            <div class="uncovered-summary">
+              <div>
+                <h3>12 files or areas were not fully examined</h3>
+                <p>The contract is readable, but matching, resolution, YAML parsing, build tooling, and the Python test suite still need a focused review.</p>
+              </div>
+              <div class="uncovered-count">12<small>uncovered</small></div>
+            </div>
+
+            <details class="evidence" open>
+              <summary>
+                <svg class="chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <strong>Surface or contract only</strong>
+                <small>6 files</small>
+              </summary>
+              <div class="file-list">
+                <div class="file"><code>check-coverage.py</code><span>Contract docstring read; matching logic not reviewed.</span></div>
+                <div class="file"><code>relocate-capability.py</code><span>Opening docstring only.</span></div>
+                <div class="file"><code>register-capability.py</code><span>Contract docstring only.</span></div>
+                <div class="file"><code>companion_config.py</code><span>Failure table read; YAML reader not reviewed.</span></div>
+                <div class="file"><code>status-context.py</code><span>Function list read; resolution logic not reviewed.</span></div>
+                <div class="file"><code>derive-from-files.py</code><span>Module docstring only.</span></div>
+              </div>
+            </details>
+
+            <details class="evidence">
+              <summary>
+                <svg class="chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <strong>Build-time tooling</strong>
+                <small>5 files</small>
+              </summary>
+              <div class="file-list">
+                <div class="file"><code>capture-golden.py</code><span>Covered by the companion-commands living spec.</span></div>
+                <div class="file"><code>assemble-nodes.py</code><span>Covered by the companion-commands living spec.</span></div>
+                <div class="file"><code>build-commands.py</code><span>Covered by the companion-commands living spec.</span></div>
+                <div class="file"><code>check-shape-parity.py</code><span>Covered by the companion-commands living spec.</span></div>
+                <div class="file"><code>_command_parts.py</code><span>Covered by the companion-commands living spec.</span></div>
+              </div>
+            </details>
+
+            <details class="evidence">
+              <summary>
+                <svg class="chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <strong>Test suite not read</strong>
+                <small>1 area</small>
+              </summary>
+              <div class="file-list">
+                <div class="file"><code>speckit-extension/tests/</code><span>The Python test suite was not reviewed during surface-first capture.</span></div>
+              </div>
+            </details>
+          </section>
+        </article>
+
+        <aside class="toc" aria-label="Table of contents">
+          <div class="toc-title">On this page</div>
+          <a class="active" href="#purpose">Purpose</a>
+          <a href="#requirements">Requirements</a>
+          <a class="sub" href="#requirements">Recording safety</a>
+          <a class="sub" href="#requirements">Context integrity</a>
+          <a class="sub" href="#requirements">Timing</a>
+          <a class="sub" href="#requirements">Truthful reports</a>
+          <a href="#uncovered">Uncovered</a>
+        </aside>
+      </div>
+    </main>
+
+    <section class="boundary" aria-label="Ticket boundaries">
+      <div class="boundary-item">
+        <span>Keep</span>
+        <strong>The viewer shell</strong>
+        <p>PageChrome, living tier strip, TOC, theme tokens, and document swapping stay as they are.</p>
+      </div>
+      <div class="boundary-item">
+        <span>Enhance</span>
+        <strong>Recognized living-spec blocks</strong>
+        <p>Draft notice, purpose, requirement sections, scenarios, and uncovered evidence gain components.</p>
+      </div>
+      <div class="boundary-item">
+        <span>Preserve</span>
+        <strong>Markdown and comments</strong>
+        <p>The file remains Markdown; source lines and existing add/restore/edit/delete comment behavior remain intact.</p>
+      </div>
+    </section>
+
+    <footer class="approval">
+      <div>
+        <strong>Revised approval question</strong>
+        <span>Should the existing Living Spec Viewer render these recurring blocks as semantic components?</span>
+      </div>
+      <div class="approval-mark">Ready for thumbs up</div>
+    </footer>
+  </div>
+
+  <script>
+    const body = document.body;
+    const sourceButton = document.getElementById('source-toggle');
+    const densityButton = document.getElementById('density-toggle');
+
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      body.classList.toggle('light');
+    });
+
+    sourceButton.addEventListener('click', () => {
+      const active = body.classList.toggle('sources');
+      sourceButton.setAttribute('aria-pressed', String(active));
+    });
+
+    densityButton.addEventListener('click', () => {
+      const active = body.classList.toggle('compact');
+      densityButton.setAttribute('aria-pressed', String(active));
+    });
+
+    document.getElementById('more-rules').addEventListener('click', (event) => {
+      const button = event.currentTarget;
+      const expanded = button.getAttribute('aria-expanded') === 'true';
+      button.setAttribute('aria-expanded', String(!expanded));
+      button.firstElementChild.textContent = expanded
+        ? 'Show the remaining 9 requirements in document order'
+        : 'Full implementation would render all 13; this proposal keeps the preview concise';
+      button.lastElementChild.textContent = expanded ? '↓' : '✓';
+    });
+  </script>
+</body>
+</html>
