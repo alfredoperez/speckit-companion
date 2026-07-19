@@ -152,7 +152,7 @@ def run_checks(feature_spec: str, before: str, after: str) -> Report:
     )
 
     # idempotent — re-folding the deltas onto the after-spec changes nothing.
-    refold = wc.apply_deltas(after, deltas)
+    refold, _ = wc.apply_deltas(after, deltas)
     r.add(
         refold == after,
         "idempotent",

@@ -1,0 +1,461 @@
+{
+  "workflow": "speckit",
+  "specName": "drift reports outcome",
+  "branch": "400-drift-reports-outcome",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-19T19:10:51.728Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-19T19:13:03.772Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T19:14:52.791Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T19:15:46.554Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T19:15:47.117Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T19:16:46.041Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T19:16:46.110Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-19T19:16:58.132Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T19:17:17.393Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T19:18:07.383Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T19:21:14.273Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T19:21:14.324Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T19:21:14.376Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T19:21:14.428Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T19:21:14.482Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T19:21:14.535Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T19:21:14.587Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T19:23:38.195Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T19:23:38.244Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-19T19:24:52.758Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-19T19:24:52.831Z"
+    }
+  ],
+  "last_action": "all 12 tasks done — 164 python + 1599 jest tests pass, every new test drift-proofed",
+  "coverage": {
+    "FR-001": {
+      "title": "Drift reports how many capabilities it checked and how many it skipped",
+      "tasks": [
+        "T001",
+        "T002",
+        "T003",
+        "T005"
+      ]
+    },
+    "FR-002": {
+      "title": "No in-sync success claim when zero capabilities were checked",
+      "tasks": [
+        "T002",
+        "T003"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::test_all_skipped_makes_no_success_claim"
+      ]
+    },
+    "FR-003": {
+      "title": "A clean run with >=1 checked still states in sync and names the count",
+      "tasks": [
+        "T002",
+        "T007"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::test_in_sync_reports_single_all_clear",
+        "test_mixed_run_reports_both_checked_and_skipped"
+      ]
+    },
+    "FR-004": {
+      "title": "Skipped count and per-capability reasons reported whether or not any were checked",
+      "tasks": [
+        "T002",
+        "T003",
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::test_mixed_run_with_drift_still_states_the_skipped_count",
+        "test_all_skipped_mixed_reasons_omits_the_parenthetical"
+      ]
+    },
+    "FR-005": {
+      "title": "Machine-readable output carries checked and skipped counts as data",
+      "tasks": [
+        "T001",
+        "T008"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::test_checked_count_tracks_the_capabilities_actually_examined"
+      ]
+    },
+    "FR-006": {
+      "title": "Drift continues to exit successfully in all cases",
+      "tasks": [
+        "T009"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::test_exits_zero_when_every_capability_was_skipped"
+      ]
+    },
+    "FR-007": {
+      "title": "Drift stays silent when the living-specs feature is disabled",
+      "tasks": [
+        "T002",
+        "T004"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::test_disabled_stays_silent_after_the_fix",
+        "test_enabled_but_nothing_configured_is_not_a_success"
+      ]
+    },
+    "FR-008": {
+      "title": "Fold-back reports applied requirement changes, not parsed ones",
+      "tasks": [
+        "T010",
+        "T011"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::test_unmatched_targets_are_not_counted_as_applied",
+        "test_fold_log_counts_applied_changes_not_parsed_ones"
+      ]
+    },
+    "FR-009": {
+      "title": "A dropped fold-back change is visible to the reader",
+      "tasks": [
+        "T010",
+        "T011"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::test_fold_log_counts_applied_changes_not_parsed_ones"
+      ]
+    },
+    "FR-010": {
+      "title": "Fold-back counts unchanged when every parsed change applies cleanly",
+      "tasks": [
+        "T010",
+        "T011"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::test_all_applied_counts_match_the_parsed_counts",
+        "test_fold_log_is_unchanged_when_everything_applies"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 5,
+    "projectedTasks": 12,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "context": [
+    "area: speckit-extension/scripts/drift.py — render_human summary + compute_drift result shape",
+    "area: speckit-extension/scripts/write-context.py — fold_living_spec / apply_deltas",
+    "constraint: drift never halts, always exits 0 (documented contract)",
+    "constraint: living-specs disabled stays silent (LS-1 inert/opt-in contract)",
+    "constraint: feature branch must not bump extension.yml version"
+  ],
+  "intent": "Make the drift and fold-back summary lines report what actually executed instead of what was attempted, so a skipped or dropped operation can never read as success.",
+  "expectations": [
+    "No sweeping refactor of every reporting surface in speckit-extension/scripts — other instances are audited and reported, not changed",
+    "No change to the exit-code contract: drift still always exits 0",
+    "No change to the disabled-feature path, which stays silent",
+    "No VS Code extension (src/) changes, so no root README/CHANGELOG edits"
+  ],
+  "approach": "Carry the outcome alongside the result and render summaries from it. compute_drift gains a checked count; render_human branches on whether anything was actually checked, reserving the success claim for checked>0 and ending an all-skipped run on a counts line. apply_deltas returns per-verb applied counts so the fold logs what landed, not what it parsed.",
+  "decisions": [
+    {
+      "decision": "All-skipped runs end on a counts line (0 checked, N skipped) with no success glyph; the success claim is narrowed to checked>0 and names the count",
+      "why": "The reported harm is a reader who scrolls to the last line, so the honest signal must occupy exactly the position the dishonest one held",
+      "rejected": "Keeping the success glyph with a (0 checked) footnote — the defect wearing a footnote"
+    },
+    {
+      "decision": "Exit code stays 0 in every case, including all-skipped",
+      "why": "The never-halts contract is documented in the module docstring and README; a skip is correct behavior on adoption day, and one non-zero code could not distinguish skipped-everything from found-drift, which demand opposite responses",
+      "rejected": "Exit 2 on all-skipped, and a --strict flag — the new checked field is the primitive a strict flag would be built on, so deferring it stays cheap"
+    },
+    {
+      "decision": "Add an explicit checked integer to the drift result rather than letting consumers infer it from len(capabilities)",
+      "why": "--json is documented as the tooling/CI surface, and inferring ran-ness from an array length is the same reasoning error the human-readable bug encodes",
+      "rejected": "A boolean ran flag — strictly less informative than a count"
+    },
+    {
+      "decision": "Do not fix the ten sibling reporting surfaces the audit found, including a second mechanically-distinct drift.py instance where a git failure yields a false in-sync verdict",
+      "why": "Folding them in would widen the change past its own spec, the exact failure the previous ticket hit; they are reported for separate triage",
+      "rejected": "Fixing the second drift.py instance here since it is the same file — it has its own correct-behavior question (skip or hard error) that would leave the spec narrower than the diff"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Two summary lines rendered from intent get rerouted through outcome: a checked count on the drift result, and applied-not-parsed counts from delta application",
+      "key_finding": "The all-skipped bug is structural, not cosmetic — has_drift is vacuously false over an empty capability list, so the success branch is reached by an absence of findings rather than a presence of checks"
+    },
+    "tasks": {
+      "summary": "12 tasks across 8 phases: a 2-task foundational wave reshaping the drift result and renderer, one phase per user story, a contained fold-back phase, and a docs phase; every test task carries a drift-proof obligation"
+    },
+    "implement": {
+      "summary": "Drift summaries and the living-spec fold now report what executed: a checked count gates the success claim, and delta application returns applied-not-parsed counts"
+    }
+  },
+  "currentTask": "T012",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added a checked count to the drift result on both the disabled and normal return paths",
+      "files": [
+        "speckit-extension/scripts/drift.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Rewrote the drift summary to branch on the checked count: no success claim at zero checked, a counted claim otherwise, and a counts line on the skipped and drifted paths",
+      "files": [
+        "speckit-extension/scripts/drift.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Test that an all-skipped run states 0 checked and makes no success claim; drift-proofed - fails on assertNotIn('All capabilities in sync') when reverted",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Tests that a disabled run stays silent and an enabled-but-unconfigured run reports no capabilities rather than success",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Test that a mixed run reports both the counted success claim and the skipped count",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Test that a mixed run with drift still reports findings and states the skipped count",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Re-derived the two existing success-string tests from the new contract rather than loosening them",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Test that checked is present across disabled/all-skipped/mixed and always equals the capabilities length",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Test that the command exits zero when every capability was skipped, in both human and json modes",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Delta application now returns per-verb applied counts and the fold logs those instead of the parsed ones, naming how many changes were dropped",
+      "files": [
+        "speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Tests for all-dropped, partial, and all-applied folds plus the fold log line; updated the four existing apply_deltas callers for the new return shape",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Documented the outcome-reporting summary in the spec-kit extension README and added the [Unreleased] changelog entry",
+      "files": [
+        "speckit-extension/README.md",
+        "speckit-extension/CHANGELOG.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "spec-kit extension Python suites",
+      "command": "python3 speckit-extension/tests/test_*.py",
+      "result": "all 6 suites OK; test_living_specs 164 tests pass (was 158, +11 new, -5 net after restructuring)"
+    },
+    {
+      "what": "Drift-proof: reverted drift.py and confirmed the new tests go red",
+      "command": "git checkout HEAD -- speckit-extension/scripts/drift.py && python3 speckit-extension/tests/test_living_specs.py",
+      "result": "8 drift tests fail; the key one fails on assertNotIn(\"All capabilities in sync\") - the exact lie, not a missing-field KeyError"
+    },
+    {
+      "what": "Drift-proof: reverted write-context.py and confirmed the fold tests go red",
+      "command": "git checkout HEAD -- speckit-extension/scripts/write-context.py && python3 speckit-extension/tests/test_living_specs.py",
+      "result": "9 fail; test_fold_log_counts_applied_changes_not_parsed_ones fails on the log line asserting ~0 modified",
+      "warnings": [
+        "test_fold_log_is_unchanged_when_everything_applies passes both ways by design - it is the FR-010 no-regression guard, not a bug repro"
+      ]
+    },
+    {
+      "what": "Original bug reproduction in a sandbox repo",
+      "command": "python3 speckit-extension/scripts/drift.py --root <sandbox with uncommitted capability specs>",
+      "result": "before: 2 skips then the green all-clear; after: 0 checked, 2 skipped (spec.md not yet committed), exit 0"
+    },
+    {
+      "what": "Build and full VS Code extension suite",
+      "command": "npm run compile && npm test",
+      "result": "tsc clean; 118 suites / 1599 tests pass"
+    },
+    {
+      "what": "Command shape parity",
+      "command": "python3 speckit-extension/scripts/check-shape-parity.py",
+      "result": "OK - 14 bodies match parts, golden, and carry the timing fence"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "An audit of the sibling reporting lines found 10 more instances of the same intent-vs-outcome class, including a second one in drift.py where a failed git diff yields an empty changed set so the capability is reported positively in sync rather than skipped. Deliberately left unfixed to hold this change to its spec; reported for separate filing.",
+      "step": "implement"
+    }
+  ]
+}

@@ -697,37 +697,44 @@ def _living_requirement_span(living_lines: list[str], heading: str) -> tuple[int
     return start, end
 
 
-def apply_deltas(living_text: str, deltas: dict) -> str:
+def apply_deltas(living_text: str, deltas: dict) -> tuple[str, dict]:
     """Apply ADDED/MODIFIED/REMOVED/RENAMED deltas to a living-spec text.
 
     ADDED appends a requirement (idempotent — skipped when its heading already
     exists), MODIFIED replaces the matching requirement in place, REMOVED deletes
     it, RENAMED rewrites the matching heading's name. Unmatched MODIFIED/REMOVED/
-    RENAMED targets are skipped (best-effort)."""
+    RENAMED targets are skipped (best-effort).
+
+    Returns the updated text and the per-verb count of what was applied."""
     lines = living_text.splitlines()
+    applied = {"added": 0, "modified": 0, "removed": 0, "renamed": 0}
 
     for old_head, new_head in deltas["renamed"]:
         span = _living_requirement_span(lines, old_head)
         if span:
             i = span[0]
             lines[i] = re.sub(r"^(###\s+).+$", lambda m: m.group(1) + new_head, lines[i])
+            applied["renamed"] += 1
 
     for head, _ in deltas["removed"]:
         span = _living_requirement_span(lines, head)
         if span:
             del lines[span[0]:span[1]]
+            applied["removed"] += 1
 
     for head, section in deltas["modified"]:
         span = _living_requirement_span(lines, head)
         if span:
             lines[span[0]:span[1]] = section.rstrip("\n").splitlines()
+            applied["modified"] += 1
 
     appended = "\n".join(lines).rstrip() + "\n"
     for head, section in deltas["added"]:
         if _living_requirement_span(appended.splitlines(), head) is not None:
             continue  # idempotent — already present
         appended = appended.rstrip() + "\n\n" + section.rstrip() + "\n"
-    return appended
+        applied["added"] += 1
+    return appended, applied
 
 
 def _initial_living_spec(capability_name: str) -> str:
@@ -883,7 +890,7 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
             before = living_path.read_text(encoding="utf-8") if living_path.exists() else _initial_living_spec(cap.get("name") or living_path.parent.name)
         except OSError:
             continue
-        after = apply_deltas(before, deltas)
+        after, applied = apply_deltas(before, deltas)
         if after == before:
             print(
                 f"[companion] Living-spec fold: {cap['name']} already up to date "
@@ -899,10 +906,20 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
             continue
         synced.append(cap["name"])
         counts = (
-            f"+{len(deltas['added'])} added, ~{len(deltas['modified'])} modified, "
-            f"-{len(deltas['removed'])} removed, ↻{len(deltas['renamed'])} renamed"
+            f"+{applied['added']} added, ~{applied['modified']} modified, "
+            f"-{applied['removed']} removed, ↻{applied['renamed']} renamed"
         )
-        print(f"[companion] Living-spec fold: {cap['name']} ← {counts} ({spec_rel})", file=sys.stderr)
+        unmatched = sum(len(deltas[verb]) - applied[verb]
+                        for verb in ("modified", "removed", "renamed"))
+        already_present = len(deltas["added"]) - applied["added"]
+        reasons = []
+        if unmatched:
+            reasons.append(f"{unmatched} change(s) skipped: no matching requirement heading")
+        if already_present:
+            reasons.append(f"{already_present} addition(s) skipped: heading already present")
+        note = f" — {'; '.join(reasons)}" if reasons else ""
+        print(f"[companion] Living-spec fold: {cap['name']} ← {counts} ({spec_rel}){note}",
+              file=sys.stderr)
 
     if not synced:
         return None

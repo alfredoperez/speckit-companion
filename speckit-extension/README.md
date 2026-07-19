@@ -259,7 +259,17 @@ livingSpecs:
       match: ["src/checkout/**"]
 ```
 
-Drift is **read-only and never halts** — it always exits success, so a surrounding workflow or CI may treat `unspeced` rows as a gate, but the command itself never blocks a run. A capability whose spec isn't committed yet is skipped with a note, when every capability is in sync it prints a single all-clear line, and with living specs off it reports nothing.
+Drift is **read-only and never halts** — it always exits success, so a surrounding workflow or CI may treat `unspeced` rows as a gate, but the command itself never blocks a run. With living specs off it reports nothing.
+
+**The summary tells you what actually ran.** A capability whose spec isn't committed yet is skipped with a note — drift needs a committed baseline to diff against — and the run ends on a counts line rather than an all-clear, so a check that never happened can't read as a clean bill of health:
+
+```
+ℹ billing: spec.md not yet committed; skipping drift check
+ℹ checkout: spec.md not yet committed; skipping drift check
+0 checked, 2 skipped (spec.md not yet committed)
+```
+
+The `✓ All N checked capabilities in sync.` line is reserved for a run that genuinely examined at least one capability and found it clean, and a partly-skipped run states both halves. The `--json` output carries a `checked` count alongside the existing `capabilities` and `skipped` lists, so a caller can tell "clean" from "did not run" without parsing prose. The exit code stays `0` throughout, including when everything was skipped: a skip is correct behavior on adoption day, not a failure.
 
 ### Coverage and architecture tiers
 
