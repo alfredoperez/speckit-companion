@@ -834,6 +834,72 @@ class FoldIdempotencyMatrixTests(unittest.TestCase):
         self.assertEqual(reapplied["added"], 0)
 
 
+class FoldVerbInterferenceTests(unittest.TestCase):
+    """Verbs that target each other's headings, rather than one heading or disjoint ones.
+
+    The matrix above varies the verbs but not how their targets overlap, so every
+    case here re-applied cleanly under the matrix and still moved on a second fold."""
+
+    def assert_settled(self, base: str, deltas: dict, label: str) -> str:
+        once, _ = wc.apply_deltas(base, deltas)
+        twice, _ = wc.apply_deltas(once, deltas)
+        self.assertEqual(once, twice, f"re-applying changed the document ({label})")
+        return once
+
+    def test_a_rename_chain_declared_out_of_order_lands_in_one_fold(self) -> None:
+        base = "# C — Living Spec\n\n## Requirements\n\n### One\n\nbody one\n"
+        deltas = wc.parse_spec_deltas(
+            "## RENAMED Requirements\n\n### Two -> Three\n### One -> Two\n")
+        out = self.assert_settled(base, deltas, "reverse-order chain")
+        self.assertIn("### Three", out)
+
+    def test_a_rename_onto_an_occupied_heading_is_skipped(self) -> None:
+        base = "# C — Living Spec\n\n## Requirements\n\n### One\n\nbody one\n\n### Two\n\nbody two\n"
+        deltas = wc.parse_spec_deltas("## RENAMED Requirements\n\n### One -> Two\n")
+        out = self.assert_settled(base, deltas, "rename onto occupied heading")
+        self.assertEqual(count_headings(out), 2)
+        self.assertIn("### One", out)
+
+    def test_adding_and_removing_one_heading_does_not_shuffle_the_document(self) -> None:
+        base = "# C — Living Spec\n\n## Requirements\n\n### One\n\nbody one\n"
+        deltas = wc.parse_spec_deltas(
+            "## ADDED Requirements\n\n### Two\n\nbody two\n\n### Three\n\nbody three\n\n"
+            "## REMOVED Requirements\n\n### Two\n"
+        )
+        out = self.assert_settled(base, deltas, "add and remove the same heading")
+        self.assertEqual(count_headings(out), 3)
+
+    def test_removing_a_heading_the_same_set_renames_onto_is_skipped(self) -> None:
+        base = "# C — Living Spec\n\n## Requirements\n\n### One\n\nbody one\n\n### Two\n\nbody two\n"
+        deltas = wc.parse_spec_deltas(
+            "## RENAMED Requirements\n\n### One -> Two\n\n"
+            "## REMOVED Requirements\n\n### Two\n"
+        )
+        out = self.assert_settled(base, deltas, "remove a rename target")
+        self.assertEqual(count_headings(out), 2)
+
+    def test_modifying_a_requirement_keeps_the_blank_line_before_the_next_one(self) -> None:
+        base = (
+            "# C — Living Spec\n\n## Requirements\n\n"
+            "### One\n\nold body\n\n### Two\n\nbody two\n"
+        )
+        deltas = wc.parse_spec_deltas(
+            "## MODIFIED Requirements\n\n### One\n\nnew body\n")
+        out = self.assert_settled(base, deltas, "modify before another requirement")
+        self.assertIn("new body\n\n### Two", out)
+
+    def test_a_heading_with_stray_whitespace_is_matched_not_re_added(self) -> None:
+        base = "# C — Living Spec\n\n## Requirements\n"
+        deltas = {
+            "added": [("Spaced ", "### Spaced \n\nbody\n")],
+            "modified": [], "removed": [], "renamed": [], "markers": {},
+        }
+        text = base
+        for _ in range(4):
+            text, _ = wc.apply_deltas(text, deltas)
+        self.assertEqual(count_headings(text), 1)
+
+
 class FoldLivingSpecTests(unittest.TestCase):
     def _living(self, root: Path, rel="capabilities/todos/spec.md") -> str:
         return (root / rel).read_text(encoding="utf-8")

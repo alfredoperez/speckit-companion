@@ -26,6 +26,7 @@ from spec_deltas import _REQ_HEADING_RE, _has_deltas, parse_spec_deltas
 def _living_requirement_span(living_lines: list[str], heading: str) -> tuple[int, int] | None:
     """Find the [start, end) line span of a `### <heading>` requirement in a living
     spec, end being the next `###`/`##` or EOF. Heading match is exact (stripped)."""
+    heading = heading.strip()
     start = None
     for i, line in enumerate(living_lines):
         m = _REQ_HEADING_RE.match(line)
@@ -76,6 +77,7 @@ def _resolve_rename(heading: str, mapping: dict[str, str]) -> str:
 
 def _retitle(section: str, heading: str) -> str:
     """The same requirement section under a different `### ` heading."""
+    heading = heading.strip()
     lines = section.splitlines()
     for i, line in enumerate(lines):
         if _REQ_HEADING_RE.match(line):
@@ -98,20 +100,34 @@ def apply_deltas(living_text: str, deltas: dict) -> tuple[str, dict]:
     MODIFIED body for the same resolved heading wins over the ADDED body, so an
     add-plus-edit pair settles instead of alternating between the two.
 
+    RENAMED also rewrites each heading straight to the end of its chain rather
+    than one link at a time, so a chain lands in a single pass whatever order its
+    links were declared in — applying them literally left a half-walked chain that
+    moved again on the next fold.
+
     Returns the updated text and the per-verb count of what was applied."""
     lines = living_text.splitlines()
     applied = {"added": 0, "modified": 0, "removed": 0, "renamed": 0}
     renames = _rename_map(deltas)
     modified_bodies = {head: section for head, section in deltas["modified"]}
 
-    for old_head, new_head in renames.items():
+    rename_targets = {_resolve_rename(old, renames) for old in renames}
+    for old_head in renames:
+        final_head = _resolve_rename(old_head, renames)
         span = _living_requirement_span(lines, old_head)
-        if span:
-            i = span[0]
-            lines[i] = re.sub(r"^(###\s+).+$", lambda m: m.group(1) + new_head, lines[i])
-            applied["renamed"] += 1
+        if span is None:
+            continue
+        if _living_requirement_span(lines, final_head) is not None:
+            continue  # the name is taken; renaming onto it would duplicate a heading
+        lines[span[0]] = re.sub(
+            r"^(###\s+).+$", lambda m: m.group(1) + final_head, lines[span[0]]
+        )
+        applied["renamed"] += 1
 
+    readded = {_resolve_rename(head, renames) for head, _ in deltas["added"]}
     for head, _ in deltas["removed"]:
+        if _resolve_rename(head, renames) in readded | rename_targets:
+            continue  # contradictory input: the same set puts this heading back
         span = _living_requirement_span(lines, head)
         if span:
             del lines[span[0]:span[1]]
@@ -120,7 +136,10 @@ def apply_deltas(living_text: str, deltas: dict) -> tuple[str, dict]:
     for head, section in deltas["modified"]:
         span = _living_requirement_span(lines, head)
         if span:
-            lines[span[0]:span[1]] = section.rstrip("\n").splitlines()
+            body = section.rstrip("\n").splitlines()
+            if span[1] < len(lines):
+                body.append("")  # keep the blank line separating the next requirement
+            lines[span[0]:span[1]] = body
             applied["modified"] += 1
 
     appended = "\n".join(lines).rstrip() + "\n"
