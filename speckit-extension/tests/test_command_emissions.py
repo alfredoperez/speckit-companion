@@ -337,8 +337,10 @@ class TestRealRepo(unittest.TestCase):
             self.assertIn(area, ce.KNOWN_AREAS, f"{area} holds Companion commands but is unscanned")
 
     def test_it_scans_a_non_trivial_surface(self):
-        """A gate that discovered nothing would pass vacuously."""
-        self.assertGreaterEqual(len(ce.discover_areas(str(REPO_ROOT))), 1)
+        """A gate that checked nothing would pass vacuously."""
+        # Install areas are absent on a fresh checkout; the records are committed, so they always answer.
+        registry = os.path.join(str(REPO_ROOT), ".specify", "extensions", ".registry")
+        self.assertGreaterEqual(len(ce._registered_commands(registry)), 1)
 
 
 if __name__ == "__main__":
