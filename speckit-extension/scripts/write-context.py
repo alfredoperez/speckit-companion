@@ -725,7 +725,7 @@ def apply_deltas(living_text: str, deltas: dict) -> tuple[str, dict]:
     for head, section in deltas["modified"]:
         span = _living_requirement_span(lines, head)
         if span:
-            lines[span[0]:span[1]] = section.rstrip("\n").splitlines()
+            lines[span[0]:span[1]] = section.rstrip("\n").splitlines() + [""]
             applied["modified"] += 1
 
     appended = "\n".join(lines).rstrip() + "\n"

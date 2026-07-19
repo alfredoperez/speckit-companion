@@ -654,6 +654,18 @@ class ApplyDeltasTests(unittest.TestCase):
         self.assertNotIn("THEN a todo appears", out)
         self.assertEqual(applied["modified"], 1)
 
+    def test_modified_and_added_keep_requirement_separators(self) -> None:
+        d = wc.parse_spec_deltas(
+            "## MODIFIED Requirements\n\n### Users can add a todo\n\n"
+            "#### Scenario: add\n- THEN it persists\n\n"
+            "## ADDED Requirements\n\n### Due dates\n\n"
+            "#### Scenario: schedule\n- THEN it has a due date\n"
+        )
+        once, _ = wc.apply_deltas(TODOS_LIVING, d)
+        twice, _ = wc.apply_deltas(once, d)
+        self.assertEqual(once, twice)
+        self.assertIn("- THEN it persists\n\n### Due dates", twice)
+
     def test_removed_deletes_requirement(self) -> None:
         d = wc.parse_spec_deltas(
             "## REMOVED Requirements\n\n### Users can add a todo\n")
