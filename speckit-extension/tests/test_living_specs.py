@@ -1534,6 +1534,23 @@ class DriftShallowCloneTests(unittest.TestCase):
         self.assertEqual(drift._shallow_boundaries(str(root)), frozenset())
         self.assertTrue(drift._shallow_boundaries(str(_shallow_clone(root, 1))))
 
+    def test_an_unreadable_shallow_file_skips_instead_of_claiming_full_history(self) -> None:
+        clone = _shallow_clone(self._source_repo(), 1)
+        shallow = Path(clone) / ".git" / "shallow"
+        shallow.chmod(0o000)
+        self.addCleanup(shallow.chmod, 0o644)
+
+        self.assertIsNone(drift._shallow_boundaries(str(clone)))
+
+        result = self._run(Path(clone))
+        self.assertEqual(result["checked"], 0)
+        self.assertTrue(result["skipped"])
+        self.assertEqual(
+            {sk["reason"] for sk in result["skipped"]}, {drift.SKIP_UNREADABLE}
+        )
+        self.assertNotIn("in sync", drift.render_human(result))
+        self.assertEqual(drift.main(["--root", str(clone)]), 0)
+
 
 class TierPathTests(unittest.TestCase):
     """LS·8 — the resolver derives the reserved-tier sibling paths."""

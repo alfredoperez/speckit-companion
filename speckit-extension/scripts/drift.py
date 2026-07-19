@@ -81,8 +81,8 @@ HINT_SHALLOW = ("👉 Fetch the full history to check these "
                 "(e.g. actions/checkout with fetch-depth: 0).")
 
 
-def _shallow_boundaries(root: str) -> frozenset[str]:
-    """The commits git grafted at the edge of a shallow clone.
+def _shallow_boundaries(root: str) -> frozenset[str] | None:
+    """The commits git grafted at the edge of a shallow clone, or None if unknowable.
 
     A boundary commit has no parent in the local object store, so git reports it
     as touching every path — `git log -n1 -- <spec>` resolves to it for specs it
@@ -93,15 +93,19 @@ def _shallow_boundaries(root: str) -> frozenset[str]:
     """
     code, out = _git(root, ["rev-parse", "--git-path", "shallow"])
     if code != 0 or not out.strip():
-        return frozenset()
+        return None
     path = out.strip()
     if not os.path.isabs(path):
         path = os.path.join(root, path)
     try:
         with open(path, encoding="utf-8") as fh:
             return frozenset(ln.strip() for ln in fh if ln.strip())
-    except OSError:
+    except FileNotFoundError:
+        # No shallow file is git's own answer for "not a shallow clone".
         return frozenset()
+    except OSError:
+        # Present but unreadable: we cannot tell which baselines are grafted.
+        return None
 
 
 def _has_commits(root: str) -> bool:
@@ -207,6 +211,7 @@ def compute_drift(root: str, living: dict) -> dict:
     exempt_globs = living.get("exempt") or []
     git_ok = _is_git_repo(root)
     boundaries = _shallow_boundaries(root) if git_ok else frozenset()
+    graft_state_unknown = boundaries is None
     has_commits = _has_commits(root) if git_ok else False
     caps_out: list[dict] = []
     skipped: list[dict] = []
@@ -219,6 +224,9 @@ def compute_drift(root: str, living: dict) -> dict:
         if not git_ok:
             skipped.append({"name": cap["name"],
                             "reason": "git unavailable or --root is not a git repo"})
+            continue
+        if graft_state_unknown:
+            skipped.append({"name": cap["name"], "reason": SKIP_UNREADABLE})
             continue
         state, commit = _spec_commit(root, spec)
         if state != "ok":
