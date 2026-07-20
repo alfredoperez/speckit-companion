@@ -141,6 +141,15 @@ function isMapping(value: unknown): value is Record<string, unknown> {
     return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
+/** True only for an existing regular file, matching Python's `os.path.isfile`. */
+function isFile(file: string): boolean {
+    try {
+        return fs.statSync(file).isFile();
+    } catch {
+        return false;
+    }
+}
+
 /** Read a YAML file into a mapping; `undefined` when it is absent or will not parse. */
 function readMapping(file: string): Record<string, unknown> | undefined {
     try {
@@ -200,7 +209,7 @@ function resolveRegistry(workspaceRoot: string): RegistryResolution {
     const legacyBlock = readMapping(legacyFile)?.livingSpecs;
     const legacyHasBlock = isMapping(legacyBlock);
 
-    if (fs.existsSync(registryFile)) {
+    if (isFile(registryFile)) {
         const doc = readMapping(registryFile);
         const parsed = doc ? normalizeBlock(doc) : { enabled: false, capabilities: [] };
         return { ...parsed, legacyStale: legacyHasBlock };

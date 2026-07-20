@@ -91,6 +91,16 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         const listing = this.read();
 
         if (!element) {
+            const notices: LivingSpecItem[] = [];
+            if (listing.legacyStale) {
+                notices.push(LivingSpecItem.info(
+                    'Capabilities still listed in .specify/companion.yml',
+                    'living-specs.yml is the registry and answers instead, so those entries are '
+                    + 'ignored. Move any you still want into living-specs.yml, then delete the '
+                    + 'livingSpecs block from .specify/companion.yml.',
+                ));
+            }
+
             // Root — empty state when off or nothing to show; otherwise the groups.
             const hasContent = listing.capabilities.length > 0 || listing.orphans.length > 0;
             if (!hasContent) {
@@ -100,10 +110,10 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
                 const tooltip = listing.enabled
                     ? 'Adopt a code area to create and register your first living spec.'
                     : 'Set enabled: true in living-specs.yml to track capability specs.';
-                return [LivingSpecItem.info(message, tooltip)];
+                return [...notices, LivingSpecItem.info(message, tooltip)];
             }
 
-            const groups: LivingSpecItem[] = [];
+            const groups: LivingSpecItem[] = [...notices];
             if (listing.capabilities.length > 0) {
                 groups.push(LivingSpecItem.group('Capabilities', 'living-specs-capabilities', 'library'));
             }

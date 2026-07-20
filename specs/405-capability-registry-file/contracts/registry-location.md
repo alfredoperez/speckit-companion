@@ -35,10 +35,10 @@ Rendering and splicing the registry live alongside it: `render_registry`, `rende
 
 ```
 is_project_root(path) -> bool
-legacy_block_present(meta) -> bool
+should_drop_legacy(meta) -> bool
 ```
 
-True when `path` holds either the registry file or the legacy settings file. Only a confirmed absence of both returns false; any other error returns true so an unreadable candidate still bounds a scan.
+`is_project_root` is true when `path` holds either the registry file or the legacy settings file. Only a confirmed absence of both returns false; any other error returns true so an unreadable candidate still bounds a scan. `should_drop_legacy` is true only for `origin: "legacy"` — the one case where the legacy block's capabilities were the set just written forward.
 
 ## Python — `speckit-extension/scripts/resolve-spec-paths.py`
 
@@ -55,11 +55,11 @@ load_living_with_meta(root) -> (living, meta)
 
 1. Resolve through the shared rule.
 2. Write the full capability set to `living-specs.yml`, creating it when absent and splicing it when present.
-3. When `origin` was `legacy`, or `legacy_stale` is true, remove the `livingSpecs` block from `.specify/companion.yml`, leaving every sibling block, comment, and blank line untouched.
+3. When `origin` was `legacy` — and only then — remove the `livingSpecs` block from `.specify/companion.yml`, leaving every sibling block, comment, and blank line untouched. A `legacy_stale` block is left in place: the registry answered instead, so that block's capabilities were never carried forward and deleting it would lose them. It is reported, not removed.
 4. Report the move on stdout in plain language, and carry it in the JSON result as `migratedFrom`.
 5. Refuse to write, exit code 2, nothing truncated, when either file is present but unparseable — detected from `meta["errors"]`, not by matching warning text.
 
-Result objects gain `configPath: "living-specs.yml"` and, when a move happened, `migratedFrom: ".specify/companion.yml"`.
+Result objects gain `configPath: "living-specs.yml"` and, when a move happened, `migratedFrom: ".specify/companion.yml"`. When the registry answered over a legacy block that was left in place, they carry `staleLegacy: ".specify/companion.yml"` instead, and the CLI says so on stderr.
 
 ## TypeScript — `src/features/specs/livingSpecsModel.ts`
 

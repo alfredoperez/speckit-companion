@@ -392,9 +392,13 @@ def resolve_living_specs(root: str):
     }
 
 
-def legacy_block_present(meta: dict) -> bool:
-    """True when `.specify/companion.yml` still carries a `livingSpecs` block."""
-    return meta["origin"] == "legacy" or meta["legacy_stale"]
+def should_drop_legacy(meta: dict) -> bool:
+    """True when the legacy block is safe to delete — it was the set just written forward.
+
+    A `legacy_stale` block is NOT safe: the registry answered instead, so its capabilities
+    were never carried over and deleting it would lose them. Those are only warned about.
+    """
+    return meta["origin"] == "legacy"
 
 
 def is_project_root(path: str) -> bool:

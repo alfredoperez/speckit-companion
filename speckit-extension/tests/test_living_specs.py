@@ -2458,6 +2458,46 @@ class RegistryMigrationTests(unittest.TestCase):
         self.assertEqual(len(meta["warnings"]), 1)
         self.assertIn("malformed", meta["warnings"][0])
 
+    def test_stale_legacy_block_survives_a_registry_write(self) -> None:
+        # The registry answered, so the legacy capabilities were never carried forward —
+        # deleting that block would lose them outright.
+        root = make_repo(CHECKOUT_YAML)
+        (root / "living-specs.yml").write_text(
+            'enabled: true\ncapabilities:\n  - name: billing\n    match: ["src/billing/**"]\n',
+            encoding="utf-8",
+        )
+        result = regcap.register(str(root), "search", ["src/search/**"], [], None)
+        self.assertNotIn("migratedFrom", result)
+        self.assertEqual(result["staleLegacy"], cc.LEGACY_CONFIG_REL)
+        legacy = _read_config(root)
+        self.assertIn("livingSpecs", legacy)
+        self.assertIn("checkout", legacy)
+        self.assertIn("checkout-cart", legacy)
+        self.assertEqual(
+            [c["name"] for c in rsp.load_living(str(root))["capabilities"]],
+            ["billing", "search"],
+        )
+
+    def test_relocation_leaves_a_stale_legacy_block_alone(self) -> None:
+        root = make_repo(CHECKOUT_YAML, spec_files=["capabilities/billing/spec.md"])
+        (root / "living-specs.yml").write_text(
+            'enabled: true\ncapabilities:\n  - name: billing\n    match: ["src/billing/**"]\n',
+            encoding="utf-8",
+        )
+        result = relocate.relocate(str(root), "colocated", name="billing")
+        self.assertNotIn("migratedFrom", result)
+        self.assertIn("checkout", _read_config(root))
+
+    def test_unparseable_legacy_reports_the_parse_error_not_an_absence(self) -> None:
+        root = Path(tempfile.mkdtemp())
+        (root / ".specify").mkdir()
+        (root / ".specify" / "companion.yml").write_text(
+            "livingSpecs:\n  enabled: true\nno colon here\n", encoding="utf-8"
+        )
+        with self.assertRaises(ValueError) as ctx:
+            relocate.relocate(str(root), "colocated", every=True)
+        self.assertIn("malformed", str(ctx.exception))
+
     def test_unparseable_registry_is_refused_not_overwritten(self) -> None:
         root = Path(tempfile.mkdtemp())
         bad = "- just\n- a list\n"

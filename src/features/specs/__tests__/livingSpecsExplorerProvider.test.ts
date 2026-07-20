@@ -58,6 +58,20 @@ describe('LivingSpecsExplorerProvider', () => {
         expect(roots[0].tooltip).toContain('Adopt');
     });
 
+    it('surfaces a notice when capabilities still linger in the legacy config', async () => {
+        (readLivingSpecs as jest.Mock).mockReturnValue({
+            enabled: true,
+            capabilities: [],
+            orphans: [],
+            legacyStale: true,
+        });
+
+        const roots = await provider.getChildren();
+
+        expect(roots[0].label).toContain('.specify/companion.yml');
+        expect(roots[0].tooltip).toContain('living-specs.yml');
+    });
+
     it('never returns a blank root', async () => {
         for (const listing of [
             { enabled: false, capabilities: [], orphans: [] },

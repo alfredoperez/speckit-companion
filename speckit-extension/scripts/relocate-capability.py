@@ -329,12 +329,13 @@ def relocate(root: str, to: str, name: str | None = None, spec: str | None = Non
     config_path = os.path.join(root, CONFIG_REL)
     legacy_path = os.path.join(root, LEGACY_CONFIG_REL)
     living, meta = cc.resolve_living_specs(root)
+    # Errors first: a file that is present but unreadable must not be reported as absent.
+    if meta["errors"]:
+        raise ValueError(meta["errors"][0])
     if meta["origin"] == "none":
         raise ValueError(
             f"no {CONFIG_REL} in {os.path.abspath(root)} — nothing to relocate"
         )
-    if meta["errors"]:
-        raise ValueError(meta["errors"][0])
 
     caps = living["capabilities"]
     if not caps:
@@ -392,7 +393,7 @@ def relocate(root: str, to: str, name: str | None = None, spec: str | None = Non
                 entry["spec"] = plan["spec"]
         _write_config(config_path, original, living["enabled"], capabilities,
                       living.get("exempt"))
-        if cc.legacy_block_present(meta) and regcap._drop_legacy_block(legacy_path):
+        if cc.should_drop_legacy(meta) and regcap._drop_legacy_block(legacy_path):
             result["migratedFrom"] = LEGACY_CONFIG_REL
     except Exception:
         _rollback(root, done, use_git)

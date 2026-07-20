@@ -15,6 +15,8 @@ Contract (incremental, never a whole-repo bootstrap):
                           carrying the one capability.
   - legacy config only -> migrate the whole set into the registry and remove the
                           `livingSpecs` block from `.specify/companion.yml`.
+  - both files present -> the registry answers; the legacy block is left alone
+                          (its capabilities were never carried over) and reported.
   - name not present   -> append the capability; every existing capability and
                           unrelated config is preserved.
   - name present       -> no-op; file byte-identical; reported on stderr.
@@ -115,7 +117,7 @@ def register(root: str, name: str, match: list[str], exclude: list[str],
     # the whole point of the adoption wizard.
     enabled = living["enabled"] if meta["origin"] != "none" else True
     _write_registry(config_path, enabled, capabilities, living.get("exempt"))
-    migrated = cc.legacy_block_present(meta) and _drop_legacy_block(legacy_path)
+    migrated = cc.should_drop_legacy(meta) and _drop_legacy_block(legacy_path)
 
     result = {
         "name": name,
@@ -126,6 +128,8 @@ def register(root: str, name: str, match: list[str], exclude: list[str],
     }
     if migrated:
         result["migratedFrom"] = LEGACY_CONFIG_REL
+    elif meta["legacy_stale"]:
+        result["staleLegacy"] = LEGACY_CONFIG_REL
     return result
 
 
@@ -194,6 +198,11 @@ def main(argv=None) -> int:
             print(f"[companion] moved your capability registrations out of "
                   f"{result['migratedFrom']} into {result['configPath']} — commit it; "
                   f"it no longer sits where the routine cleanup step wipes it.")
+        elif result.get("staleLegacy"):
+            sys.stderr.write(
+                f"[companion] {result['staleLegacy']} still lists capabilities. "
+                f"{result['configPath']} is the registry, so those are ignored — move any "
+                f"you still want into it, then delete the old livingSpecs block.\n")
     return 0
 
 
