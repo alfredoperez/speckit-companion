@@ -466,6 +466,17 @@ class CentralSpecDiscoveryTests(unittest.TestCase):
         self.assertEqual(on_disk - specs, set())
         self.assertEqual(set(orphans) & configured, set())
 
+    def test_vendored_dependencies_are_never_scanned(self) -> None:
+        root = make_repo(
+            CHECKOUT_YAML,
+            spec_files=["node_modules/pkg/vendored.spec.md",
+                        "node_modules/pkg/capabilities/a/spec.md",
+                        "docs/wandering.spec.md"],
+        )
+        living = rsp.load_living(str(root))
+        self.assertEqual(rsp.find_spec_files(str(root)), ["docs/wandering.spec.md"])
+        self.assertEqual(rsp.find_orphans(living, str(root)), ["docs/wandering.spec.md"])
+
 
 class ColocatedErrorTests(unittest.TestCase):
     def test_colocated_without_spec_path_errors(self) -> None:

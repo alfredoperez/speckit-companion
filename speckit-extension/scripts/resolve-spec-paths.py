@@ -226,6 +226,8 @@ def _is_project_root(path: str) -> bool:
 
 CENTRAL_SPEC_NAME = "spec.md"
 
+VENDORED_DIRS = {"node_modules"}
+
 
 def is_central_spec(rel: str) -> bool:
     """True for `<capability root>/<name>/spec.md` — the centralized layout.
@@ -251,13 +253,15 @@ def find_spec_files(root: str) -> list[str]:
     `.specify/companion.yml`) is a separate project: the walk prunes it and never
     looks inside, whatever that config says or fails to say. `root`'s own config
     is not a boundary against itself.
-    Dot-directories and dotfiles are excluded.
+    Dot-directories, dotfiles, and vendored `node_modules` are excluded.
     """
     found = []
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = sorted(
             d for d in dirnames
-            if not d.startswith(".") and not _is_project_root(os.path.join(dirpath, d))
+            if not d.startswith(".")
+            and d not in VENDORED_DIRS
+            and not _is_project_root(os.path.join(dirpath, d))
         )
         for name in filenames:
             if name.startswith("."):

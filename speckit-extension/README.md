@@ -230,7 +230,7 @@ python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --changed sr
 
 An orphan is a spec that no capability claims **and** that does not live inside a configured capability's spec directory — so another file under `capabilities/checkout/` (or a reserved `.arch.md` / `.coverage.md` sibling) is never flagged as stray.
 
-**Nested projects are off limits.** Any directory below the root that has its own `living-specs.yml` (or a legacy `.specify/companion.yml`) is a separate project, and the scan stops at it — the way a search tool stops at a nested ignore file. Sample apps, fixtures, and sandboxes living inside your repo answer for their own living specs; they never show up in the parent's orphan list and are never promoted into the parent's capabilities. That holds whatever the nested config says, including one that turns living specs off, so opting a sandbox out really does mean nothing happens to it.
+**Nested projects are off limits.** Any directory below the root that has its own `living-specs.yml` (or a legacy `.specify/companion.yml`) is a separate project, and the scan stops at it — the way a search tool stops at a nested ignore file. Sample apps, fixtures, and sandboxes living inside your repo answer for their own living specs; they never show up in the parent's orphan list and are never promoted into the parent's capabilities. That holds whatever the nested config says, including one that turns living specs off, so opting a sandbox out really does mean nothing happens to it. Installed dependencies under `node_modules` are skipped on the same grounds — a spec shipped inside a package you depend on belongs to that package, not to you.
 
 ### Auto-loading living specs into specify & plan
 

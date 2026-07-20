@@ -285,6 +285,19 @@ describe('readLivingSpecs', () => {
         expect(readLivingSpecs(root).orphans).toEqual([]);
     });
 
+    it('never scans vendored dependencies', () => {
+        const root = ws(
+            {
+                'capabilities/checkout/spec.md': '# checkout',
+                'node_modules/pkg/vendored.spec.md': '# vendored',
+                'node_modules/pkg/capabilities/a/spec.md': '# vendored central',
+                'docs/wandering.spec.md': '# wandering',
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
+        );
+        expect(readLivingSpecs(root).orphans).toEqual(['docs/wandering.spec.md']);
+    });
+
     it('drops a capability whose spec path is absolute', () => {
         const root = ws(
             { 'capabilities/x/spec.md': '# x' },
