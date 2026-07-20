@@ -1,0 +1,41 @@
+enabled: true
+exempt: ["*.config.*", "*.test.*", "**/migrations/**"]
+capabilities:
+  - name: core
+    match: ["src/core/**"]
+    spec: src/core/core.spec.md
+  - name: specs
+    match: ["src/features/specs/**"]
+    spec: src/features/specs/specs.spec.md
+  - name: spec-viewer
+    match: ["src/features/spec-viewer/**"]
+    spec: src/features/spec-viewer/spec-viewer.spec.md
+  - name: spec-editor
+    match: ["src/features/spec-editor/**"]
+    spec: src/features/spec-editor/spec-editor.spec.md
+  - name: steering
+    match: ["src/features/steering/**"]
+    spec: src/features/steering/steering.spec.md
+  - name: ai-providers
+    match: ["src/ai-providers/**"]
+    spec: src/ai-providers/ai-providers.spec.md
+  - name: speckit-cli
+    match: ["src/speckit/**"]
+    spec: src/speckit/speckit-cli.spec.md
+  - name: viewer-ui
+    match: ["webview/src/spec-viewer/**"]
+    spec: webview/src/spec-viewer/viewer-ui.spec.md
+  - name: editor-ui
+    match: ["webview/src/spec-editor/**"]
+    spec: webview/src/spec-editor/editor-ui.spec.md
+  - name: capture-runtime
+    match: ["speckit-extension/scripts/**"]
+    spec: speckit-extension/scripts/capture-runtime.spec.md
+  - name: companion-commands
+    match: ["speckit-extension/commands/**", "speckit-extension/nodes/**", "speckit-extension/presets/**"]
+  - name: extension-services
+    match: ["src/features/agents/**", "src/features/skills/**", "src/features/settings/**", "src/features/permission/**"]
+  - name: webview-shared
+    match: ["webview/src/markdown/**", "webview/src/render/**", "webview/src/shared/**", "webview/src/ui/**"]
+  - name: workflows
+    match: ["src/features/workflows/**", "src/features/workflow-editor/**", "speckit-extension/workflows/**"]
