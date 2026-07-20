@@ -113,7 +113,7 @@ git restore package.json package-lock.json .specify/
 specify extension remove companion                # committed stub means a fresh add reports "already installed"
 specify extension add ./speckit-extension --dev   # re-copies into .specify/extensions/companion/ + re-emits .claude/ command
 specify extension list                            # confirm "companion" at the new state
-git restore .specify/                             # gitignored dev-install copies — never commit these
+git restore .specify/                             # gitignored dev-install copies — never commit these (living-specs.yml is at the repo root, so it is untouched)
 ```
 The `.claude/` command emissions are **committed real files** (not gitignored like `.specify/`), and the merged PR should already carry the updated ones. If the reinstall leaves `.claude/` dirty (`git status`), that means the PR shipped without re-emitting — **surface it, don't silently restore or commit on main**; the emission belongs in the feature PR.
 End with a tight summary: issue shipped, PR link, merged / in-review / blocked, new installed version, **whether the spec-kit extension was reinstalled**, lessons-captured count, and a **🖐️ manual-verification** list — the UI / sidebar / webview / settings surfaces a human should eyeball (vs what tests/CI already exercised).

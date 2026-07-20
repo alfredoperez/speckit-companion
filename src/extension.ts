@@ -343,7 +343,7 @@ export async function activate(context: vscode.ExtensionContext) {
             // Refresh the Living Specs view when the living-specs config or the
             // capabilities tree changes on disk (no reload needed).
             const livingSpecsWatcher = vscode.workspace.createFileSystemWatcher(
-                new vscode.RelativePattern(root, '{.specify/companion.yml,capabilities/**,**/*.spec.md}')
+                new vscode.RelativePattern(root, '{living-specs.yml,.specify/companion.yml,capabilities/**,**/*.spec.md}')
             );
             // Debounce: a rapid save sequence across the watched glob would
             // otherwise re-run the full `**/*.spec.md` scan per event.

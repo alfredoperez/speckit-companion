@@ -55,13 +55,13 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         }
         const root = this.workspaceRoot;
         if (!root) {
-            return { enabled: false, capabilities: [], orphans: [] };
+            return { enabled: false, capabilities: [], orphans: [], legacyStale: false };
         }
         try {
             this.cached = readLivingSpecs(root);
         } catch {
             this.log('Failed to read living specs');
-            this.cached = { enabled: false, capabilities: [], orphans: [] };
+            this.cached = { enabled: false, capabilities: [], orphans: [], legacyStale: false };
         }
         return this.cached;
     }
@@ -99,7 +99,7 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
                     : 'Living Specs are off';
                 const tooltip = listing.enabled
                     ? 'Adopt a code area to create and register your first living spec.'
-                    : 'Enable livingSpecs in .specify/companion.yml to track capability specs.';
+                    : 'Set enabled: true in living-specs.yml to track capability specs.';
                 return [LivingSpecItem.info(message, tooltip)];
             }
 

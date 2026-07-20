@@ -1,0 +1,11 @@
+# Sample capability registry — checkout + nested checkout-cart, exclude, opt-in.
+enabled: true
+capabilities:
+  - name: checkout
+    match: ["src/checkout/**"]
+    exclude: ["src/checkout/**/*.test.ts"]
+  - name: checkout-cart
+    match: ["src/checkout/cart/**"]
+  - name: billing
+    match: ["src/billing/**"]
+    spec: src/billing/billing.spec.md

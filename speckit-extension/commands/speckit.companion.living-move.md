@@ -54,7 +54,7 @@ For a repo-wide move, `--all --to <layout>`.
 
 Pass `--spec` when the derived path was wrong or ambiguous, using the path confirmed at the gate.
 
-Do **not** move files yourself and do **not** hand-edit `.specify/companion.yml`. The file and the registry must change together: the resolver raises `capability "<name>" is colocated but has no resolvable spec path` and fails the **entire** living-specs config — not just that capability — if they disagree. The helper is atomic and rolls back on failure; a hand-rolled move is not.
+Do **not** move files yourself and do **not** hand-edit `living-specs.yml`. The file and the registry must change together: the resolver raises `capability "<name>" is colocated but has no resolvable spec path` and fails the **entire** living-specs config — not just that capability — if they disagree. The helper is atomic and rolls back on failure; a hand-rolled move is not.
 
 Re-running against a capability already in the target layout is a safe no-op.
 

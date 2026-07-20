@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as yaml from 'js-yaml';
 
 /**
- * Node-side reader for the `livingSpecs` block of `.specify/companion.yml`.
+ * Node-side reader for the project's capability registry.
  *
  * Mirrors the listing rules of `speckit-extension/scripts/resolve-spec-paths.py`
  * (and `companion_config.py`) in TypeScript so the Living Specs view needs no
@@ -12,6 +12,12 @@ import * as yaml from 'js-yaml';
  */
 
 const DEFAULT_CAPABILITY_ROOT = 'capabilities';
+
+/** The capability registry, at the project root — outside the folder `git restore .specify/` sweeps. */
+export const LIVING_SPECS_REL = 'living-specs.yml';
+
+/** Where capability registrations used to live; still read when no registry exists. */
+export const LEGACY_CONFIG_REL = path.join('.specify', 'companion.yml');
 
 /** Reserved tier siblings, keyed by kind. Single source of truth for suffixes. */
 const TIER_SUFFIXES: Record<TierKind, string> = {
@@ -59,6 +65,8 @@ export interface LivingSpecsListing {
     enabled: boolean;
     capabilities: ResolvedCapability[];
     orphans: string[];
+    /** True when the registry answered and a capability block still lingers in the legacy config. */
+    legacyStale: boolean;
 }
 
 interface RawCapability {
@@ -129,46 +137,78 @@ function globMatches(pattern: string, file: string): boolean {
     return globToRegExp(pattern).test(posix(file));
 }
 
-function parseLivingSpecs(configPath: string): { enabled: boolean; capabilities: RawCapability[] } {
-    let block: unknown;
+function isMapping(value: unknown): value is Record<string, unknown> {
+    return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+/** Read a YAML file into a mapping; `undefined` when it is absent or will not parse. */
+function readMapping(file: string): Record<string, unknown> | undefined {
     try {
-        const raw = fs.readFileSync(configPath, 'utf-8');
-        const doc = yaml.load(raw) as Record<string, unknown> | null;
-        block = doc?.livingSpecs;
+        const doc = yaml.load(fs.readFileSync(file, 'utf-8'));
+        return isMapping(doc) ? doc : undefined;
     } catch {
+        return undefined;
+    }
+}
+
+function normalizeBlock(block: unknown): { enabled: boolean; capabilities: RawCapability[] } {
+    if (isMapping(block) && isMapping(block.livingSpecs)) {
+        block = block.livingSpecs;
+    }
+    if (!isMapping(block)) {
         return { enabled: false, capabilities: [] };
     }
-    if (!block || typeof block !== 'object' || Array.isArray(block)) {
-        return { enabled: false, capabilities: [] };
-    }
-    const b = block as Record<string, unknown>;
-    const enabled = b.enabled === true;
-    const rawCaps = Array.isArray(b.capabilities) ? b.capabilities : [];
+    const enabled = block.enabled === true;
+    const rawCaps = Array.isArray(block.capabilities) ? block.capabilities : [];
     const capabilities: RawCapability[] = [];
     for (const entry of rawCaps) {
-        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+        if (!isMapping(entry) || !entry.name) {
             continue;
         }
-        const e = entry as Record<string, unknown>;
-        const name = e.name;
-        if (!name) {
-            continue;
-        }
-        const nameStr = String(name);
+        const name = String(entry.name);
         let spec: string;
-        if ('spec' in e) {
-            spec = e.spec === null || e.spec === undefined || e.spec === '' ? '' : String(e.spec);
+        if ('spec' in entry) {
+            spec = entry.spec === null || entry.spec === undefined || entry.spec === '' ? '' : String(entry.spec);
         } else {
-            spec = `${DEFAULT_CAPABILITY_ROOT}/${nameStr}/spec.md`;
+            spec = `${DEFAULT_CAPABILITY_ROOT}/${name}/spec.md`;
         }
         capabilities.push({
-            name: nameStr,
-            match: asList(e.match),
-            exclude: asList(e.exclude),
+            name,
+            match: asList(entry.match),
+            exclude: asList(entry.exclude),
             spec,
         });
     }
     return { enabled, capabilities };
+}
+
+interface RegistryResolution {
+    enabled: boolean;
+    capabilities: RawCapability[];
+    legacyStale: boolean;
+}
+
+/**
+ * Resolve where this project keeps its capabilities. The registry file wins outright
+ * whenever it is present — including when it will not parse, which yields an inert
+ * result rather than a fallback that would resurrect a set the person replaced.
+ * Mirrors `companion_config.resolve_living_specs`.
+ */
+function resolveRegistry(workspaceRoot: string): RegistryResolution {
+    const registryFile = path.join(workspaceRoot, LIVING_SPECS_REL);
+    const legacyFile = path.join(workspaceRoot, LEGACY_CONFIG_REL);
+    const legacyBlock = readMapping(legacyFile)?.livingSpecs;
+    const legacyHasBlock = isMapping(legacyBlock);
+
+    if (fs.existsSync(registryFile)) {
+        const doc = readMapping(registryFile);
+        const parsed = doc ? normalizeBlock(doc) : { enabled: false, capabilities: [] };
+        return { ...parsed, legacyStale: legacyHasBlock };
+    }
+    if (legacyHasBlock) {
+        return { ...normalizeBlock(legacyBlock), legacyStale: false };
+    }
+    return { enabled: false, capabilities: [], legacyStale: false };
 }
 
 function capLocation(cap: RawCapability): 'centralized' | 'colocated' {
@@ -222,17 +262,24 @@ function fileExists(root: string, relPath: string): boolean {
 }
 
 function isProjectRoot(dir: string): boolean {
-    try {
-        return fs.statSync(path.join(dir, '.specify', 'companion.yml')).isFile();
-    } catch (e) {
-        // Only a confirmed absence means "not a project"; an unreadable config still bounds the scan.
-        return (e as NodeJS.ErrnoException)?.code !== 'ENOENT';
+    for (const rel of [LIVING_SPECS_REL, LEGACY_CONFIG_REL]) {
+        try {
+            if (fs.statSync(path.join(dir, rel)).isFile()) {
+                return true;
+            }
+        } catch (e) {
+            // Only a confirmed absence means "not a project"; an unreadable config still bounds the scan.
+            if ((e as NodeJS.ErrnoException)?.code !== 'ENOENT') {
+                return true;
+            }
+        }
     }
+    return false;
 }
 
 /**
  * Repo-relative POSIX paths of every `*.spec.md` belonging to this project.
- * A subdirectory carrying its own `.specify/companion.yml` is a separate
+ * A subdirectory carrying its own registry or legacy config is a separate
  * project and is pruned; `root`'s own config is not a boundary against itself.
  */
 function globSpecFiles(root: string): string[] {
@@ -309,10 +356,9 @@ export function readLivingSpecs(
     workspaceRoot: string,
     options?: { withOrphans?: boolean }
 ): LivingSpecsListing {
-    const configPath = path.join(workspaceRoot, '.specify', 'companion.yml');
-    const { enabled, capabilities } = parseLivingSpecs(configPath);
+    const { enabled, capabilities, legacyStale } = resolveRegistry(workspaceRoot);
     if (!enabled) {
-        return { enabled: false, capabilities: [], orphans: [] };
+        return { enabled: false, capabilities: [], orphans: [], legacyStale };
     }
 
     const resolved: ResolvedCapability[] = [];
@@ -347,6 +393,7 @@ export function readLivingSpecs(
         // Orphan discovery walks the workspace — callers that only need name
         // resolution (the viewer's per-render enrichment) skip it.
         orphans: options?.withOrphans === false ? [] : findOrphans(capabilities, workspaceRoot),
+        legacyStale,
     };
 }
 

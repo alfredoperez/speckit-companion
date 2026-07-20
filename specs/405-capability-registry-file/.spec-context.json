@@ -1,0 +1,697 @@
+{
+  "workflow": "speckit",
+  "specName": "capability registry file",
+  "branch": "405-capability-registry-file",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-20T00:13:58.765Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-20T00:15:46.834Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:18:07.680Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:19:07.404Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:19:08.031Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:20:19.442Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:20:19.512Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-20T00:20:46.063Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:21:00.771Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:23:23.805Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:23:23.860Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:24:54.398Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:26:55.930Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:28:09.031Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:28:09.082Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:30:20.187Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:30:20.238Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:30:20.291Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:30:20.340Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:30:20.389Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:31:38.419Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:31:38.469Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:31:38.519Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:35:08.450Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:35:08.503Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:35:08.554Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:35:08.610Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:35:08.664Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:35:08.717Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:39:05.241Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-20T00:39:05.294Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-20T00:39:05.365Z"
+    }
+  ],
+  "last_action": "all 23 tasks done — 416 Python + 1647 JS tests pass, 9/9 drift proofs held",
+  "coverage": {
+    "FR-001": {
+      "title": "Capability registrations are stored in a dedicated registry file outside the folder the routine cleanup step restores",
+      "tasks": [
+        "T002",
+        "T006",
+        "T007"
+      ],
+      "tests": [
+        "test_living_specs.py::RegistrySurvivesCleanupTests::test_registration_survives_the_cleanup_command"
+      ]
+    },
+    "FR-002": {
+      "title": "The registry file is ordinary project configuration committed to version control",
+      "tasks": [
+        "T005",
+        "T018"
+      ],
+      "tests": [
+        "test_living_specs.py::RegistrySurvivesCleanupTests::test_registry_is_written_outside_the_restored_folder"
+      ]
+    },
+    "FR-003": {
+      "title": "The registry file sits at a top-level, self-describing path that is findable and hand-editable",
+      "tasks": [
+        "T002",
+        "T011",
+        "T018"
+      ],
+      "tests": [
+        "test_living_specs.py::RegistryHandEditTests::test_hand_written_capability_matches_changed_files"
+      ]
+    },
+    "FR-004": {
+      "title": "The living-specs on/off switch lives in the registry file alongside the capabilities",
+      "tasks": [
+        "T002",
+        "T006"
+      ],
+      "tests": [
+        "test_living_specs.py::RegistryHandEditTests::test_flattened_and_wrapped_shapes_resolve_identically"
+      ]
+    },
+    "FR-005": {
+      "title": "Readers prefer the registry file and fall back to the old location when only it has registrations",
+      "tasks": [
+        "T002",
+        "T003",
+        "T004",
+        "T008",
+        "T012"
+      ],
+      "tests": [
+        "test_living_specs.py::RegistryMigrationTests::test_legacy_only_still_resolves",
+        "livingSpecsModel.test.ts::falls back to the legacy config when no registry exists"
+      ]
+    },
+    "FR-006": {
+      "title": "When both locations hold registrations, readers use the registry file only and warn about the stale block",
+      "tasks": [
+        "T002",
+        "T003",
+        "T008",
+        "T012"
+      ],
+      "tests": [
+        "test_living_specs.py::RegistryMigrationTests::test_registry_wins_and_stale_legacy_is_reported",
+        "livingSpecsModel.test.ts::prefers the registry and flags the stale legacy block when both exist"
+      ]
+    },
+    "FR-007": {
+      "title": "Writers write to the registry file and move old-location registrations into it as part of that write",
+      "tasks": [
+        "T006",
+        "T007",
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "test_living_specs.py::RegistryMigrationTests::test_registration_migrates_the_whole_set",
+        "test_living_specs.py::RegistryMigrationTests::test_relocation_migrates_too"
+      ]
+    },
+    "FR-008": {
+      "title": "A migrating writer removes only the capability block from the old file, leaving every other setting intact",
+      "tasks": [
+        "T008",
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "test_living_specs.py::RegistryMigrationTests::test_migration_leaves_sibling_blocks_and_comments_intact"
+      ]
+    },
+    "FR-009": {
+      "title": "A writer reports in plain language when it has moved registrations to the registry file",
+      "tasks": [
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "test_living_specs.py::RegistryMigrationTests::test_registration_migrates_the_whole_set"
+      ]
+    },
+    "FR-010": {
+      "title": "A project with neither location reads as not adopted: nothing reported, success exit, no warning",
+      "tasks": [
+        "T002",
+        "T003",
+        "T015"
+      ],
+      "tests": [
+        "test_living_specs.py::RegistryNotAdoptedTests::test_resolver_drift_and_coverage_are_all_silent",
+        "livingSpecsModel.test.ts::reads as not adopted when neither location exists"
+      ]
+    },
+    "FR-011": {
+      "title": "A writer refuses to write, without truncating, when the target file cannot be parsed",
+      "tasks": [
+        "T006",
+        "T008"
+      ],
+      "tests": [
+        "test_living_specs.py::RegistryMigrationTests::test_unparseable_registry_is_refused_not_overwritten",
+        "test_living_specs.py::RegistryMigrationTests::test_unparseable_registry_does_not_fall_back_to_legacy"
+      ]
+    },
+    "FR-012": {
+      "title": "Nested-project boundary detection recognizes either the registry file or the old settings file",
+      "tasks": [
+        "T002",
+        "T003",
+        "T004",
+        "T012"
+      ],
+      "tests": [
+        "test_living_specs.py::RegistryHandEditTests::test_registry_marks_a_nested_directory_as_its_own_project",
+        "livingSpecsModel.test.ts::treats a nested directory with only a registry as its own project"
+      ]
+    },
+    "FR-013": {
+      "title": "Living Specs view refresh reacts to edits of the registry file",
+      "tasks": [
+        "T013"
+      ],
+      "tests": [
+        "manifest.test.ts (watcher glob); verified by inspection"
+      ]
+    },
+    "FR-014": {
+      "title": "All documentation and command instructions name the registry file instead of the old location",
+      "tasks": [
+        "T014",
+        "T016",
+        "T017",
+        "T018",
+        "T019",
+        "T021"
+      ]
+    },
+    "FR-015": {
+      "title": "The project workflow documents carrying the cleanup step state that registrations are no longer at risk",
+      "tasks": [
+        "T020"
+      ]
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 28,
+    "projectedTasks": 22,
+    "scopeSignal": "larger",
+    "verdict": "oversized"
+  },
+  "context": [
+    "area: speckit-extension/scripts (companion_config, register-capability, relocate-capability, resolve-spec-paths)",
+    "area: src/features/specs/livingSpecsModel.ts and the Living Specs sidebar",
+    "constraint: extension isolation — shipped code must not depend on .claude/**",
+    "constraint: two extensions, two changelogs — speckit-extension/ changes never touch the root docs"
+  ],
+  "intent": "Give living-specs capability registrations their own committed, top-level file so the routine cleanup step can no longer silently delete them.",
+  "expectations": [
+    "Do not narrow or rewrite the git restore cleanup line itself",
+    "Do not move pipeline hook or recipe settings out of the old location",
+    "Do not change how capabilities resolve, match, or order — only where they are stored",
+    "No version bumps in any manifest"
+  ],
+  "approach": "Move the livingSpecs block from .specify/companion.yml to a new project-root living-specs.yml. One shared location rule per runtime — companion_config.py for the scripts, livingSpecsModel.ts for the editor — so no consumer re-derives the path. Readers prefer the registry and fall back to the old file; writers always write the registry and lift the block out of the old file in the same operation, reporting the move.",
+  "decisions": [
+    {
+      "decision": "Registry lives at project-root living-specs.yml",
+      "why": "Outside .specify/ so the routine cleanup cannot sweep it; committed like any root config; named for the feature the docs teach so it is findable on the first guess",
+      "rejected": "Another path under .specify/ (still swept); narrowing the cleanup line itself (every workflow doc must change and the old line gets pasted back); capabilities.yml (too generic); a hidden .companion/ dir (a directory for one file)"
+    },
+    {
+      "decision": "Read-time fallback to the old location, migrate on the next write",
+      "why": "Reads run from sidebar refreshes and read-only checkouts, so they must have no side effects; a write is a moment the person deliberately chose to change configuration",
+      "rejected": "Migrating on first read (mutates two tracked files from a background refresh); fallback with no migration at all (the old location never retires)"
+    },
+    {
+      "decision": "The registry wins outright when both locations have registrations, and a malformed registry does not fall back",
+      "why": "Merging two partial sets yields a state matching neither file and makes deletion impossible; falling back on a parse error would silently resurrect a set the person believes they replaced",
+      "rejected": "Merge by capability name; fall back to legacy when the registry is unparseable"
+    },
+    {
+      "decision": "Flattened top-level shape in the new file, with the livingSpecs wrapper still accepted",
+      "why": "A dedicated file does not need a wrapper key, and accepting one anyway makes the obvious hand-migration (copy the old block across) just work",
+      "rejected": "Keeping the wrapper as the only shape to reuse the existing splice helper byte-for-byte"
+    },
+    {
+      "decision": "The enabled switch and the drift exempt list travel with the capabilities",
+      "why": "The switch and the registrations are one decision; leaving the switch in the swept file would leave half the bug in place",
+      "rejected": "Keeping enabled as a setting in .specify/companion.yml"
+    },
+    {
+      "decision": "Kept the location rule inside the existing companion_config.py rather than a new module",
+      "why": "A new runtime script would have to be added to both packing lists (package-manifest.py and .vscodeignore); reusing an already-shipped module keeps both lists untouched",
+      "rejected": "A dedicated registry_location.py module"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Planned the move of capability registrations to a project-root living-specs.yml with read-time fallback and migrate-on-write.",
+      "key_finding": "Every Python reader already funnels through resolve-spec-paths.load_living and every editor reader through livingSpecsModel.readLivingSpecs, so the location rule needs exactly two homes and no consumer re-derives it."
+    },
+    "tasks": {
+      "summary": "23 tasks across 7 phases: setup, a shared location rule, one phase per user story, and a polish phase for docs, goldens, verification, and drift-proofing."
+    },
+    "implement": {
+      "summary": "Capability registrations moved to a project-root living-specs.yml that no cleanup step can sweep, with read-time fallback and migrate-on-write for existing adopters."
+    }
+  },
+  "currentTask": "T023",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added the registry-shaped fixture the new Python tests read",
+      "files": [
+        "speckit-extension/tests/fixtures/living-specs.yml"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added the shared location rule to the Python loader: registry-first resolution with legacy fallback, a boundary probe matching either file, and the registry renderer and splice",
+      "files": [
+        "speckit-extension/scripts/companion_config.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Gave the editor-side reader the same rule: registry-first parse, legacy fallback, inert on an unparseable registry, legacyStale on the listing, boundary probe matching either file",
+      "files": [
+        "src/features/specs/livingSpecsModel.ts",
+        "src/features/specs/livingSpecsExplorerProvider.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Routed the resolver through the shared rule: load_living now resolves the registry, load_living_with_meta exposes origin and warnings, and the boundary probe delegates to the shared one",
+      "files": [
+        "speckit-extension/scripts/resolve-spec-paths.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added the survival test that registers a capability, runs the real git restore .specify/ cleanup, and asserts the registration still resolves",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Pointed the registration writer at the project-root registry: renders the flattened block, splices into an existing file so its comments survive, and reports living-specs.yml as the config path",
+      "files": [
+        "speckit-extension/scripts/register-capability.py"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Added migrate-on-write to the registration writer: a legacy-only or stale block is removed from .specify/companion.yml in the same operation, reported in plain language, and carried as migratedFrom",
+      "files": [
+        "speckit-extension/scripts/register-capability.py"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Pointed the relocation writer at the registry, reusing the shared renderer and splice, and taught its rollback to remove a registry it created",
+      "files": [
+        "speckit-extension/scripts/relocate-capability.py"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Added the migration tests: legacy-only reads resolve, a later registration moves the whole set and strips only the old block, both-present prefers the registry and warns stale, and an unparseable registry never falls back",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Added migrate-on-write to the relocation writer, sharing the registration writer's legacy-block removal",
+      "files": [
+        "speckit-extension/scripts/relocate-capability.py"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Added the hand-edit tests: flattened and wrapped shapes resolve identically, a hand-written comment survives a later registration, and a nested registry marks its own project",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Added the not-adopted test: with neither file present the resolver, drift, and coverage each report nothing, exit zero, and print no warning",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Added the editor-side tests: registry-first read, legacy fallback, stale-legacy flag, wrapper shape, inert on unparseable, not-adopted, and nested-project pruning",
+      "files": [
+        "src/features/specs/__tests__/livingSpecsModel.test.ts"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Added living-specs.yml to the Living Specs refresh watcher so edits to the registry refresh the view",
+      "files": [
+        "src/extension.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Updated the Living Specs empty-state tooltip to name the registry file",
+      "files": [
+        "src/features/specs/livingSpecsExplorerProvider.ts"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Updated the adoption, relocation, drift, coverage, and mark-complete command bodies to name the registry file",
+      "files": [
+        "speckit-extension/commands/speckit.companion.living-adopt.md",
+        "speckit-extension/commands/speckit.companion.living-move.md",
+        "speckit-extension/commands/speckit.companion.living-drift.md",
+        "speckit-extension/commands/speckit.companion.living-coverage.md",
+        "speckit-extension/commands/speckit.companion.mark-complete.md"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Updated the specify node's living-specs gate prose to name the registry, with the legacy block still recognized",
+      "files": [
+        "speckit-extension/nodes/specify/load-living-specs.md"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Rewrote the spec-kit README's living-specs config examples for the new file and shape, and added the user-facing Unreleased changelog entry",
+      "files": [
+        "speckit-extension/README.md",
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Updated the root changelog's living-specs references and added the Unreleased entry for the editor half",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Noted in the four workflow documents carrying the cleanup line that capability registrations now sit outside the restored folder",
+      "files": [
+        ".claude/commands/install-local.md",
+        ".claude/commands/fix-tickets.md",
+        ".claude/commands/ship-ticket.md",
+        "speckit-extension/examples/ship-ticket/nodes/install-local.md"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Reassembled the command bodies from the edited nodes and re-blessed the goldens",
+      "files": [
+        "speckit-extension/commands/",
+        "speckit-extension/tests/golden/"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Ran the full verification set: compile, 1647 JS tests, 416 Python tests, node assembly, shape parity, command emissions, and the package manifest — all green",
+      "files": [
+        "specs/405-capability-registry-file/"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "Drift-proofed all nine new behaviors: reverted each one, confirmed the guarding test failed, and restored",
+      "files": [
+        "specs/405-capability-registry-file/"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "The issue reproduction is fixed",
+      "command": "register-capability.py --name provetrap --match src/core/** && git restore .specify/ && resolve-spec-paths.py --changed src/core/constants.ts",
+      "result": "The capability survives the cleanup and still resolves; before the change it was silently erased",
+      "warnings": []
+    },
+    {
+      "what": "Full JS and TypeScript suite",
+      "command": "npm run compile && npm test",
+      "result": "compile clean; 1647 tests in 120 suites pass",
+      "warnings": []
+    },
+    {
+      "what": "Full Python suite",
+      "command": "python3 -m unittest discover -s speckit-extension/tests",
+      "result": "416 tests pass (14 new)",
+      "warnings": []
+    },
+    {
+      "what": "Build and packaging gates",
+      "command": "assemble-nodes.py --check; check-shape-parity.py; check-command-emissions.py; package-manifest.py --check",
+      "result": "all four green after reassembling commands and re-blessing goldens",
+      "warnings": [
+        "assemble-nodes reported a diff before the rebuild, which is the expected signal after editing a node"
+      ]
+    },
+    {
+      "what": "Drift-proofing",
+      "command": "revert each new behavior, run the guarding test, restore",
+      "result": "9 of 9 reverts produced the expected failure: registry location, migrate-on-write, malformed-no-fallback (both runtimes), boundary probe (both runtimes), stale-legacy warning, wrapper shape, and registry-first read",
+      "warnings": []
+    }
+  ]
+}

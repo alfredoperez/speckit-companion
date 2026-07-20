@@ -23,7 +23,7 @@ Run the coverage checker from the repository root:
 python3 .specify/extensions/companion/scripts/check-coverage.py
 ```
 
-The script reads the `livingSpecs` block from `.specify/companion.yml`, reuses the
+The script reads the capability registry (`living-specs.yml`), reuses the
 resolver for the capability and tier paths, extracts each requirement id
 (`FR-NNN` / `NFR-NNN`) from the capability's `.spec.md`, and looks each id up in
 its `.coverage.md` map. A requirement is **covered** when its id appears in the
