@@ -2,7 +2,7 @@
 """Migrate a Living-Specs capability between centralized and colocated storage (#460).
 
 Until now the only way to move a capability was by hand: `git mv` the spec, remember
-its `.arch.md` / `.coverage.md` siblings, then hand-edit `.specify/companion.yml`.
+its `.arch.md` / `.coverage.md` siblings, then hand-edit the capability registry.
 Miss either half and the shipped resolver raises
 `capability "x" is colocated but has no resolvable spec path` — which fails the WHOLE
 living-specs config, not just that capability. This helper does both halves as one
@@ -39,7 +39,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import companion_config as cc  # noqa: E402
 
-CONFIG_REL = os.path.join(".specify", "companion.yml")
+CONFIG_REL = cc.LIVING_SPECS_REL
+LEGACY_CONFIG_REL = cc.LEGACY_CONFIG_REL
 SPEC_SUFFIX = ".spec.md"
 
 
@@ -304,13 +305,15 @@ def _prune_empty_dirs(root: str, rel_dir: str) -> None:
 
 
 def _write_config(config_path: str, original: str | None, enabled: bool,
-                  capabilities: list[dict]) -> None:
-    """Re-emit the livingSpecs block through register-capability's renderer and splice
-    it back, writing via a temp file + os.replace so a partial file never lands."""
-    rendered = regcap._render_living_specs(enabled, capabilities)
+                  capabilities: list[dict], exempt=None) -> None:
+    """Re-emit the registry through the shared renderer and splice it back, writing via
+    a temp file + os.replace so a partial file never lands."""
+    rendered = cc.render_registry(enabled, capabilities, exempt)
     if original is not None:
-        rendered = regcap._splice_living_specs(original, rendered)
-    os.makedirs(os.path.dirname(config_path), exist_ok=True)
+        rendered = cc.splice_registry(original, rendered)
+    parent = os.path.dirname(config_path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
     tmp = config_path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as fh:
         fh.write(rendered)
@@ -324,16 +327,19 @@ def relocate(root: str, to: str, name: str | None = None, spec: str | None = Non
     Raises ValueError for run-level failures (no config, malformed config, unknown
     capability) — the CLI maps those to exit 2 with a plain message."""
     config_path = os.path.join(root, CONFIG_REL)
-    if not os.path.isfile(config_path):
-        raise ValueError(f"no {CONFIG_REL} in {os.path.abspath(root)} — nothing to relocate")
-    cfg, warnings = cc.load_config(config_path)
-    if warnings:
-        raise ValueError(warnings[0])
+    legacy_path = os.path.join(root, LEGACY_CONFIG_REL)
+    living, meta = cc.resolve_living_specs(root)
+    # Errors first: a file that is present but unreadable must not be reported as absent.
+    if meta["errors"]:
+        raise ValueError(meta["errors"][0])
+    if meta["origin"] == "none":
+        raise ValueError(
+            f"no {CONFIG_REL} in {os.path.abspath(root)} — nothing to relocate"
+        )
 
-    living = cc.load_living_specs(cfg)
     caps = living["capabilities"]
     if not caps:
-        raise ValueError("no livingSpecs capabilities registered — nothing to relocate")
+        raise ValueError("no capabilities registered — nothing to relocate")
 
     if every:
         targets = list(caps)
@@ -361,13 +367,18 @@ def relocate(root: str, to: str, name: str | None = None, spec: str | None = Non
         "unchanged": [p for p in plans if p["action"] != "relocate"],
         "skipped": skipped,
     }
+    # A run that changes nothing still leaves the ignored legacy block looking authoritative.
+    if meta["legacy_stale"]:
+        result["staleLegacy"] = LEGACY_CONFIG_REL
     if not moving:
         return result
 
     # --- files first, then config; a failed config write rolls the files back --
     use_git = _is_git_repo(root)
-    with open(config_path, encoding="utf-8") as fh:
-        original = fh.read()
+    original = None
+    if os.path.isfile(config_path):
+        with open(config_path, encoding="utf-8") as fh:
+            original = fh.read()
 
     done = _apply_moves(root, moving, use_git)
     try:
@@ -383,12 +394,18 @@ def relocate(root: str, to: str, name: str | None = None, spec: str | None = Non
                 entry.pop("spec", None)
             else:
                 entry["spec"] = plan["spec"]
-        _write_config(config_path, original, living["enabled"], capabilities)
+        _write_config(config_path, original, living["enabled"], capabilities,
+                      living.get("exempt"))
+        if cc.should_drop_legacy(meta) and regcap._drop_legacy_block(legacy_path):
+            result["migratedFrom"] = LEGACY_CONFIG_REL
     except Exception:
         _rollback(root, done, use_git)
         try:
-            with open(config_path, "w", encoding="utf-8") as fh:
-                fh.write(original)
+            if original is None:
+                os.remove(config_path)
+            else:
+                with open(config_path, "w", encoding="utf-8") as fh:
+                    fh.write(original)
         except OSError:
             pass
         raise
@@ -422,6 +439,18 @@ def render_human(result: dict) -> str:
         )
     for s in result["skipped"]:
         lines.append(f"[companion] skipped '{s['name']}': {s['reason']}")
+    if result.get("migratedFrom"):
+        lines.append(
+            f"[companion] moved your capability registrations out of "
+            f"{result['migratedFrom']} into {result['configPath']} — commit it; "
+            f"it no longer sits where the routine cleanup step wipes it."
+        )
+    elif result.get("staleLegacy"):
+        lines.append(
+            f"[companion] {result['staleLegacy']} still lists capabilities. "
+            f"{result['configPath']} is the registry, so those are ignored — move any "
+            f"you still want into it, then delete the old livingSpecs block."
+        )
     return "\n".join(lines) or "[companion] nothing to do."
 
 

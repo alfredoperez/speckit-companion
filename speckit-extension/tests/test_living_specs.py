@@ -118,6 +118,19 @@ class ConfigReaderTests(unittest.TestCase):
         living = cc.load_living_specs(cc.load_yaml(CHECKOUT_YAML))
         self.assertEqual(living["exempt"], cc.DEFAULT_EXEMPT_GLOBS)
 
+    def test_explicit_empty_exempt_survives_a_rewrite(self) -> None:
+        rendered = cc.render_registry(True, [], exempt=[])
+        self.assertIn("exempt: []", rendered)
+        self.assertEqual(cc.load_living_specs_block(cc.load_yaml(rendered))["exempt"], [])
+
+    def test_omitted_exempt_still_means_use_the_defaults(self) -> None:
+        rendered = cc.render_registry(True, [], exempt=None)
+        self.assertNotIn("exempt:", rendered)
+        self.assertEqual(
+            cc.load_living_specs_block(cc.load_yaml(rendered))["exempt"],
+            cc.DEFAULT_EXEMPT_GLOBS,
+        )
+
     def test_exempt_override_is_read(self) -> None:
         yaml = (
             "livingSpecs:\n  enabled: true\n  exempt: [\"**/*.gen.ts\"]\n"
@@ -1179,7 +1192,9 @@ class RegisterCapabilityTests(unittest.TestCase):
         self.assertIn("# downstream hooks (keep me)", after)
         self.assertIn("hooks:", after)
         self.assertIn("after_specify: noop", after)
-        self.assertIn("billing", after)
+        # The capabilities left for the registry; only the legacy block was removed.
+        self.assertNotIn("livingSpecs", after)
+        self.assertIn("billing", (root / "living-specs.yml").read_text(encoding="utf-8"))
 
     def test_appended_capability_is_resolved(self) -> None:
         root = make_repo(CHECKOUT_YAML)
@@ -2071,6 +2086,9 @@ livingSpecs:
 """
 
 
+def _read_registry(root: Path) -> str:
+    return (root / "living-specs.yml").read_text(encoding="utf-8")
+
 def _read_config(root: Path) -> str:
     return (root / ".specify" / "companion.yml").read_text(encoding="utf-8")
 
@@ -2086,7 +2104,7 @@ class RelocateCapabilityTests(unittest.TestCase):
         target = root / "src/features/billing/billing.spec.md"
         self.assertTrue(target.is_file())
         self.assertFalse((root / "capabilities/billing/spec.md").exists())
-        self.assertIn("spec: src/features/billing/billing.spec.md", _read_config(root))
+        self.assertIn("spec: src/features/billing/billing.spec.md", _read_registry(root))
 
     def test_colocated_to_central_moves_back_and_removes_the_key(self) -> None:
         yaml = (
@@ -2099,7 +2117,7 @@ class RelocateCapabilityTests(unittest.TestCase):
         self.assertTrue((root / "capabilities/billing/spec.md").is_file())
         self.assertFalse((root / "src/features/billing/billing.spec.md").exists())
         # Terse by default: the resolver fills the centralized path itself.
-        self.assertNotIn("spec:", _read_config(root))
+        self.assertNotIn("spec:", _read_registry(root))
 
     def test_resolver_agrees_with_the_config_after_a_move(self) -> None:
         root = make_repo(CENTRAL_YAML, spec_files=["capabilities/billing/spec.md"])
@@ -2157,9 +2175,9 @@ class RelocateCapabilityTests(unittest.TestCase):
             relocate.relocate(str(root), "colocated", name="wide")
         self.assertIn("no single area root", str(ctx.exception))
         self.assertIn("--spec", str(ctx.exception))
-        # Nothing was touched.
+        # Nothing was touched — not even a registry brought into being.
         self.assertTrue((root / "capabilities/wide/spec.md").is_file())
-        self.assertNotIn("spec:", _read_config(root))
+        self.assertFalse((root / "living-specs.yml").exists())
         self.assertEqual(
             relocate.main(["--root", str(root), "--name", "wide", "--to", "colocated"]), 2
         )
@@ -2179,7 +2197,7 @@ class RelocateCapabilityTests(unittest.TestCase):
         relocate.relocate(str(root), "colocated", name="billing",
                           spec="src/features/billing/docs/money.spec.md")
         self.assertTrue((root / "src/features/billing/docs/money.spec.md").is_file())
-        self.assertIn("spec: src/features/billing/docs/money.spec.md", _read_config(root))
+        self.assertIn("spec: src/features/billing/docs/money.spec.md", _read_registry(root))
 
     def test_spec_override_rescues_an_ambiguous_capability(self) -> None:
         yaml = (
@@ -2208,7 +2226,7 @@ class RelocateCapabilityTests(unittest.TestCase):
         self.assertTrue((root / "src/beta/beta.spec.md").is_file())
         # The skipped capability keeps BOTH halves of its old layout.
         self.assertTrue((root / "capabilities/wide/spec.md").is_file())
-        cfg = _read_config(root)
+        cfg = _read_registry(root)
         self.assertIn("spec: src/alpha/alpha.spec.md", cfg)
         self.assertIn("spec: src/beta/beta.spec.md", cfg)
         self.assertNotIn("spec: capabilities/wide", cfg)
@@ -2228,7 +2246,7 @@ class RelocateCapabilityTests(unittest.TestCase):
         relocate.relocate(str(root), "central", every=True)
         self.assertTrue((root / "capabilities/alpha/spec.md").is_file())
         self.assertTrue((root / "capabilities/beta/spec.md").is_file())
-        self.assertNotIn("spec:", _read_config(root))
+        self.assertNotIn("spec:", _read_registry(root))
 
     def test_a_failed_config_write_rolls_the_files_back(self) -> None:
         root = make_repo(CENTRAL_YAML, spec_files=[
@@ -2330,6 +2348,279 @@ class RelocateCapabilityTests(unittest.TestCase):
         cfg = _read_config(root)
         self.assertIn("commands:", cfg)
         self.assertIn('nodes: ["resolve-dir"]', cfg)
+
+
+# --------------------------------------------------------------------------- #
+# The capability registry lives outside `.specify/`
+# --------------------------------------------------------------------------- #
+def _bare_git_repo() -> Path:
+    """A committed throwaway repo with no capabilities registered."""
+    def run(*args: str) -> None:
+        _sp.run(["git", *args], cwd=root, check=True,
+                stdout=_sp.DEVNULL, stderr=_sp.DEVNULL)
+
+    root = Path(tempfile.mkdtemp())
+    run("init")
+    run("config", "user.email", "t@example.com")
+    run("config", "user.name", "t")
+    (root / ".specify").mkdir(parents=True)
+    (root / ".specify" / "companion.yml").write_text(
+        "commands:\n  specify:\n    nodes: [\"resolve-dir\"]\n", encoding="utf-8"
+    )
+    (root / "README.md").write_text("# repo\n", encoding="utf-8")
+    run("add", "-A")
+    run("commit", "-m", "initial")
+    return root
+
+
+class RegistrySurvivesCleanupTests(unittest.TestCase):
+    """The regression itself: `git restore … .specify/` must not erase registrations."""
+
+    def test_registration_survives_the_cleanup_command(self) -> None:
+        root = _bare_git_repo()
+        regcap.register(str(root), "provetrap", ["src/core/**"], [], None)
+        self.assertEqual(
+            [c["name"] for c in rsp.load_living(str(root))["capabilities"]], ["provetrap"]
+        )
+
+        _sp.run(["git", "restore", ".specify/"], cwd=root, check=True,
+                stdout=_sp.DEVNULL, stderr=_sp.DEVNULL)
+
+        self.assertEqual(
+            [c["name"] for c in rsp.load_living(str(root))["capabilities"]], ["provetrap"]
+        )
+        matched = rsp.match_changed(["src/core/thing.ts"], rsp.load_living(str(root)), str(root))
+        self.assertEqual([m["name"] for m in matched], ["provetrap"])
+
+    def test_registry_is_written_outside_the_restored_folder(self) -> None:
+        root = Path(tempfile.mkdtemp())
+        result = regcap.register(str(root), "billing", ["src/billing/**"], [], None)
+        self.assertEqual(result["configPath"], "living-specs.yml")
+        self.assertTrue((root / "living-specs.yml").is_file())
+        self.assertFalse((root / ".specify" / "companion.yml").exists())
+
+
+class RegistryMigrationTests(unittest.TestCase):
+    """Legacy registrations keep working, and move to the registry on the next write."""
+
+    def test_legacy_only_still_resolves(self) -> None:
+        root = make_repo(CHECKOUT_YAML)
+        living, meta = rsp.load_living_with_meta(str(root))
+        self.assertEqual(meta["origin"], "legacy")
+        self.assertEqual([c["name"] for c in living["capabilities"]],
+                         ["checkout", "checkout-cart"])
+        self.assertEqual(meta["warnings"], [])
+
+    def test_registration_migrates_the_whole_set(self) -> None:
+        root = make_repo(CHECKOUT_YAML)
+        result = regcap.register(str(root), "billing", ["src/billing/**"], [], None)
+        self.assertEqual(result["migratedFrom"], cc.LEGACY_CONFIG_REL)
+        living, meta = rsp.load_living_with_meta(str(root))
+        self.assertEqual(meta["origin"], "registry")
+        self.assertEqual([c["name"] for c in living["capabilities"]],
+                         ["checkout", "checkout-cart", "billing"])
+        self.assertNotIn("livingSpecs", _read_config(root))
+
+    def test_migration_leaves_sibling_blocks_and_comments_intact(self) -> None:
+        yaml = (
+            "# top of file\n"
+            "commands:\n  specify:\n    nodes: [\"resolve-dir\"]\n"
+            "\n# downstream hooks (keep me)\n"
+            + CHECKOUT_YAML
+            + "\nhooks:\n  after_specify: noop\n"
+        )
+        root = make_repo(yaml)
+        regcap.register(str(root), "billing", ["src/billing/**"], [], None)
+        cfg = _read_config(root)
+        self.assertIn("# top of file", cfg)
+        self.assertIn('nodes: ["resolve-dir"]', cfg)
+        self.assertIn("# downstream hooks (keep me)", cfg)
+        self.assertIn("after_specify: noop", cfg)
+        self.assertNotIn("livingSpecs", cfg)
+        self.assertNotIn("checkout", cfg)
+
+    def test_relocation_migrates_too(self) -> None:
+        root = make_repo(CENTRAL_YAML, spec_files=["capabilities/billing/spec.md"])
+        result = relocate.relocate(str(root), "colocated", name="billing")
+        self.assertEqual(result["configPath"], "living-specs.yml")
+        self.assertEqual(result["migratedFrom"], cc.LEGACY_CONFIG_REL)
+        self.assertNotIn("livingSpecs", _read_config(root))
+        living, meta = rsp.load_living_with_meta(str(root))
+        self.assertEqual(meta["origin"], "registry")
+        self.assertEqual([c["name"] for c in living["capabilities"]], ["billing"])
+
+    def test_registry_wins_and_stale_legacy_is_reported(self) -> None:
+        root = make_repo(CHECKOUT_YAML)
+        (root / "living-specs.yml").write_text(
+            'enabled: true\ncapabilities:\n  - name: billing\n    match: ["src/billing/**"]\n',
+            encoding="utf-8",
+        )
+        living, meta = rsp.load_living_with_meta(str(root))
+        self.assertEqual(meta["origin"], "registry")
+        self.assertTrue(meta["legacy_stale"])
+        self.assertEqual([c["name"] for c in living["capabilities"]], ["billing"])
+        self.assertEqual(len(meta["warnings"]), 1)
+        self.assertIn("living-specs.yml", meta["warnings"][0])
+
+    def test_unparseable_registry_does_not_fall_back_to_legacy(self) -> None:
+        root = make_repo(CHECKOUT_YAML)
+        (root / "living-specs.yml").write_text("- just\n- a list\n", encoding="utf-8")
+        living, meta = rsp.load_living_with_meta(str(root))
+        self.assertEqual(living["capabilities"], [])
+        self.assertFalse(living["enabled"])
+        self.assertEqual(len(meta["warnings"]), 1)
+        self.assertIn("malformed", meta["warnings"][0])
+
+    def test_stale_legacy_block_survives_a_registry_write(self) -> None:
+        # The registry answered, so the legacy capabilities were never carried forward —
+        # deleting that block would lose them outright.
+        root = make_repo(CHECKOUT_YAML)
+        (root / "living-specs.yml").write_text(
+            'enabled: true\ncapabilities:\n  - name: billing\n    match: ["src/billing/**"]\n',
+            encoding="utf-8",
+        )
+        result = regcap.register(str(root), "search", ["src/search/**"], [], None)
+        self.assertNotIn("migratedFrom", result)
+        self.assertEqual(result["staleLegacy"], cc.LEGACY_CONFIG_REL)
+        legacy = _read_config(root)
+        self.assertIn("livingSpecs", legacy)
+        self.assertIn("checkout", legacy)
+        self.assertIn("checkout-cart", legacy)
+        self.assertEqual(
+            [c["name"] for c in rsp.load_living(str(root))["capabilities"]],
+            ["billing", "search"],
+        )
+
+    def test_relocation_leaves_a_stale_legacy_block_alone(self) -> None:
+        root = make_repo(CHECKOUT_YAML, spec_files=["capabilities/billing/spec.md"])
+        (root / "living-specs.yml").write_text(
+            'enabled: true\ncapabilities:\n  - name: billing\n    match: ["src/billing/**"]\n',
+            encoding="utf-8",
+        )
+        result = relocate.relocate(str(root), "colocated", name="billing")
+        self.assertNotIn("migratedFrom", result)
+        self.assertIn("checkout", _read_config(root))
+
+    def test_unparseable_legacy_reports_the_parse_error_not_an_absence(self) -> None:
+        root = Path(tempfile.mkdtemp())
+        (root / ".specify").mkdir()
+        (root / ".specify" / "companion.yml").write_text(
+            "livingSpecs:\n  enabled: true\nno colon here\n", encoding="utf-8"
+        )
+        with self.assertRaises(ValueError) as ctx:
+            relocate.relocate(str(root), "colocated", every=True)
+        self.assertIn("malformed", str(ctx.exception))
+
+    def test_relocation_reports_a_stale_legacy_block_it_did_not_migrate(self) -> None:
+        root = make_repo(CHECKOUT_YAML, spec_files=["src/billing/billing.spec.md"])
+        (root / "living-specs.yml").write_text(
+            "enabled: true\ncapabilities:\n  - name: billing\n"
+            '    match: ["src/billing/**"]\n    spec: src/billing/billing.spec.md\n',
+            encoding="utf-8",
+        )
+        # Already colocated, so nothing moves and the legacy block is never dropped.
+        result = relocate.relocate(str(root), "colocated", name="billing")
+        self.assertEqual(result["relocated"], [])
+        self.assertEqual(result["staleLegacy"], cc.LEGACY_CONFIG_REL)
+        self.assertIn("livingSpecs", _read_config(root))
+        human = relocate.render_human(result)
+        self.assertIn(cc.LEGACY_CONFIG_REL, human)
+        self.assertIn("ignored", human)
+
+    def test_relocation_that_migrates_reports_the_move_not_a_stale_block(self) -> None:
+        root = make_repo(CENTRAL_YAML, spec_files=["capabilities/billing/spec.md"])
+        result = relocate.relocate(str(root), "colocated", name="billing")
+        self.assertEqual(result["migratedFrom"], cc.LEGACY_CONFIG_REL)
+        self.assertNotIn("staleLegacy", result)
+        self.assertIn("moved your capability registrations out of",
+                      relocate.render_human(result))
+
+    def test_unparseable_registry_is_refused_not_overwritten(self) -> None:
+        root = Path(tempfile.mkdtemp())
+        bad = "- just\n- a list\n"
+        (root / "living-specs.yml").write_text(bad, encoding="utf-8")
+        with self.assertRaises(ValueError):
+            regcap.register(str(root), "x", ["src/x/**"], [], None)
+        self.assertEqual((root / "living-specs.yml").read_text(encoding="utf-8"), bad)
+
+
+class RegistryHandEditTests(unittest.TestCase):
+    """A hand-written registry works, in either accepted shape."""
+
+    FLAT = (
+        "# my capabilities\n"
+        "enabled: true\n"
+        "capabilities:\n"
+        '  - name: checkout\n    match: ["src/checkout/**"]\n'
+    )
+    WRAPPED = (
+        "livingSpecs:\n  enabled: true\n  capabilities:\n"
+        '    - name: checkout\n      match: ["src/checkout/**"]\n'
+    )
+
+    def _resolve(self, text: str):
+        root = Path(tempfile.mkdtemp())
+        (root / "living-specs.yml").write_text(text, encoding="utf-8")
+        return rsp.load_living(str(root))
+
+    def test_flattened_and_wrapped_shapes_resolve_identically(self) -> None:
+        self.assertEqual(self._resolve(self.FLAT), self._resolve(self.WRAPPED))
+
+    def test_hand_written_capability_matches_changed_files(self) -> None:
+        root = Path(tempfile.mkdtemp())
+        (root / "living-specs.yml").write_text(self.FLAT, encoding="utf-8")
+        living = rsp.load_living(str(root))
+        self.assertTrue(living["enabled"])
+        matched = rsp.match_changed(["src/checkout/cart.ts"], living, str(root))
+        self.assertEqual([m["name"] for m in matched], ["checkout"])
+
+    def test_hand_edit_survives_a_later_registration(self) -> None:
+        root = Path(tempfile.mkdtemp())
+        (root / "living-specs.yml").write_text(self.FLAT, encoding="utf-8")
+        regcap.register(str(root), "billing", ["src/billing/**"], [], None)
+        text = (root / "living-specs.yml").read_text(encoding="utf-8")
+        self.assertIn("# my capabilities", text)
+        self.assertEqual([c["name"] for c in rsp.load_living(str(root))["capabilities"]],
+                         ["checkout", "billing"])
+
+    def test_registry_marks_a_nested_directory_as_its_own_project(self) -> None:
+        root = Path(tempfile.mkdtemp())
+        (root / "living-specs.yml").write_text(self.FLAT, encoding="utf-8")
+        nested = root / "examples" / "sample"
+        nested.mkdir(parents=True)
+        (nested / "living-specs.yml").write_text("enabled: false\ncapabilities: []\n",
+                                                 encoding="utf-8")
+        (nested / "thing.spec.md").write_text("# nested\n", encoding="utf-8")
+        self.assertTrue(cc.is_project_root(str(nested)))
+        self.assertEqual(rsp.find_spec_files(str(root)), [])
+
+
+class RegistryNotAdoptedTests(unittest.TestCase):
+    """Neither file present reads as not adopted — quietly, and successfully."""
+
+    def test_resolver_drift_and_coverage_are_all_silent(self) -> None:
+        root = Path(tempfile.mkdtemp())
+        living, meta = rsp.load_living_with_meta(str(root))
+        self.assertEqual(meta["origin"], "none")
+        self.assertIsNone(meta["path"])
+        self.assertEqual(meta["warnings"], [])
+        self.assertFalse(living["enabled"])
+        self.assertEqual(living["capabilities"], [])
+
+        for argv in (["--root", str(root), "--all"], ["--root", str(root), "--orphans"]):
+            out, err = io.StringIO(), io.StringIO()
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                code = rsp.main(argv)
+            self.assertEqual(code, 0)
+            self.assertEqual(err.getvalue(), "")
+
+        for module, argv in ((drift, ["--root", str(root)]),
+                             (coverage, ["--root", str(root)])):
+            out, err = io.StringIO(), io.StringIO()
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                code = module.main(argv)
+            self.assertEqual(code, 0)
+            self.assertEqual(err.getvalue(), "")
 
 
 if __name__ == "__main__":

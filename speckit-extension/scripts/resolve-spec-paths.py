@@ -2,8 +2,8 @@
 """Resolve living-spec paths for Companion capabilities.
 
 Single source of truth for the rules the later Living Specs steps (sync / fold /
-drift) call instead of re-interpreting the `livingSpecs` block in
-`.specify/companion.yml`:
+drift) call instead of re-interpreting the project's capability registry
+(`living-specs.yml`, or the legacy `livingSpecs` block in `.specify/companion.yml`):
 
   - membership:  a file belongs to a capability if it matches any `match` glob
                  and no `exclude` glob.
@@ -11,16 +11,16 @@ drift) call instead of re-interpreting the `livingSpecs` block in
                  explicit `spec` path (colocated).
   - discovery:   union of configured capabilities and the on-disk `*.spec.md`
                  scan, de-duped by resolved spec path and by name.
-  - boundary:    a subdirectory with its own `.specify/companion.yml` is a
-                 separate project — the scan stops there and never reports or
-                 promotes anything inside it.
+  - boundary:    a subdirectory with its own capability registry (or legacy
+                 `.specify/companion.yml`) is a separate project — the scan stops
+                 there and never reports or promotes anything inside it.
   - ordering:    most-specific first (longest matching glob literal-prefix that
                  prefixes the file), tiebreak by capability name.
   - tiers:       `.spec.md` (hot, loaded in v1); `.arch.md` / `.coverage.md`
                  reserved siblings, never flagged as orphans.
   - orphans:     `*.spec.md` in the tree not claimed by any capability's spec.
 
-OPT-IN: when `livingSpecs.enabled` is unset/false (or there is no config), the
+OPT-IN: when `enabled` is unset/false (or there is no registry), the
 resolver is inert — every mode returns empty with exit 0 and no error.
 
 Usage:
@@ -41,8 +41,6 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import companion_config as cc  # noqa: E402
 
-CONFIG = os.path.join(".specify", "companion.yml")
-
 # Map a tier key to the sibling suffix that replaces the hot `.spec.md` tail.
 # Single source of truth for the reserved-tier filenames — RESERVED_TIERS (the
 # orphan/drift exemption set) derives from it so the suffixes live in one place.
@@ -51,9 +49,13 @@ RESERVED_TIERS = tuple(TIER_SUFFIXES.values())
 
 
 def load_living(root: str) -> dict:
-    """Load + normalize the livingSpecs block from <root>/.specify/companion.yml."""
-    cfg, _warnings = cc.load_config(os.path.join(root, CONFIG))
-    return cc.load_living_specs(cfg)
+    """Load + normalize the project's capability registry."""
+    return cc.resolve_living_specs(root)[0]
+
+
+def load_living_with_meta(root: str):
+    """`load_living` plus where the answer came from and any warnings to surface."""
+    return cc.resolve_living_specs(root)
 
 
 def _posix(p: str) -> str:
@@ -217,19 +219,16 @@ def match_changed(files: list[str], living: dict, root: str) -> list[dict]:
 
 
 def _is_project_root(path: str) -> bool:
-    try:
-        return os.path.isfile(os.path.join(path, CONFIG))
-    except OSError:
-        # Only a confirmed absence means "not a project"; an unreadable config still bounds the scan.
-        return True
+    return cc.is_project_root(path)
 
 
 def find_spec_files(root: str) -> list[str]:
     """Every `*.spec.md` under `root` that belongs to `root`'s own project.
 
-    A subdirectory carrying its own `.specify/companion.yml` is a separate
-    project: the walk prunes it and never looks inside, whatever that config
-    says or fails to say. `root`'s own config is not a boundary against itself.
+    A subdirectory carrying its own capability registry (or legacy
+    `.specify/companion.yml`) is a separate project: the walk prunes it and never
+    looks inside, whatever that config says or fails to say. `root`'s own config
+    is not a boundary against itself.
     Dot-directories and dotfiles are excluded.
     """
     found = []

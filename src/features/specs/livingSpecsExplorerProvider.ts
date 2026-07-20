@@ -12,6 +12,7 @@ import {
 
 type LivingSpecContextValue =
     | 'living-specs-empty'
+    | 'living-specs-error'
     | 'living-specs-group'
     | 'living-specs-capability'
     | 'living-specs-capability-missing'
@@ -55,13 +56,13 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         }
         const root = this.workspaceRoot;
         if (!root) {
-            return { enabled: false, capabilities: [], orphans: [] };
+            return { enabled: false, capabilities: [], orphans: [], legacyStale: false };
         }
         try {
             this.cached = readLivingSpecs(root);
         } catch {
             this.log('Failed to read living specs');
-            this.cached = { enabled: false, capabilities: [], orphans: [] };
+            this.cached = { enabled: false, capabilities: [], orphans: [], legacyStale: false };
         }
         return this.cached;
     }
@@ -91,19 +92,33 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         const listing = this.read();
 
         if (!element) {
+            const notices: LivingSpecItem[] = [];
+            if (listing.legacyStale) {
+                notices.push(LivingSpecItem.info(
+                    'Capabilities still listed in .specify/companion.yml',
+                    'living-specs.yml is the registry and answers instead, so those entries are '
+                    + 'ignored. Move any you still want into living-specs.yml, then delete the '
+                    + 'livingSpecs block from .specify/companion.yml.',
+                ));
+            }
+
             // Root — empty state when off or nothing to show; otherwise the groups.
             const hasContent = listing.capabilities.length > 0 || listing.orphans.length > 0;
+            if (listing.error) {
+                // "Off" would send someone to fix a setting inside a file that never parsed.
+                return [...notices, LivingSpecItem.problem("Can't read living-specs.yml", listing.error)];
+            }
             if (!hasContent) {
                 const message = listing.enabled
                     ? 'No living specs yet'
                     : 'Living Specs are off';
                 const tooltip = listing.enabled
                     ? 'Adopt a code area to create and register your first living spec.'
-                    : 'Enable livingSpecs in .specify/companion.yml to track capability specs.';
-                return [LivingSpecItem.info(message, tooltip)];
+                    : 'Set enabled: true in living-specs.yml to track capability specs.';
+                return [...notices, LivingSpecItem.info(message, tooltip)];
             }
 
-            const groups: LivingSpecItem[] = [];
+            const groups: LivingSpecItem[] = [...notices];
             if (listing.capabilities.length > 0) {
                 groups.push(LivingSpecItem.group('Capabilities', 'living-specs-capabilities', 'library'));
             }
@@ -255,6 +270,14 @@ class LivingSpecItem extends vscode.TreeItem {
         const item = new LivingSpecItem(label, vscode.TreeItemCollapsibleState.None, 'living-specs-empty');
         item.iconPath = new vscode.ThemeIcon('info');
         item.tooltip = tooltip;
+        return item;
+    }
+
+    static problem(label: string, tooltip: string): LivingSpecItem {
+        const item = new LivingSpecItem(label, vscode.TreeItemCollapsibleState.None, 'living-specs-error');
+        item.iconPath = new vscode.ThemeIcon('error', new vscode.ThemeColor('list.errorForeground'));
+        item.tooltip = tooltip;
+        item.description = 'fix the file to list capabilities';
         return item;
     }
 

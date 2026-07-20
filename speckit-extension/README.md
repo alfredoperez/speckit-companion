@@ -102,7 +102,7 @@ The spec-driven run itself, in the order you'd use them.
 
 ### Living specs
 
-All four are opt-in — with no `livingSpecs` block in `.specify/companion.yml` they report nothing and change nothing.
+All four are opt-in — with no `living-specs.yml` in your project they report nothing and change nothing.
 
 | Command | What it does |
 |---------|--------------|
@@ -186,22 +186,23 @@ This is separate from stock spec-kit's own extension hooks (`.specify/extensions
 
 Most specs describe one change and then go quiet. **Living specs** are the opposite: a durable spec per *capability* — checkout, auth, billing, todos — that stays current as the code evolves. This is how Companion moves a team from spec-first to spec-anchored, with a road to spec-as-source: the living spec is the artifact, spec-anchored is the practice. You declare which files belong to each capability and where its spec lives, and a resolver answers "which capabilities does this change touch?" so the right specs can be kept in sync.
 
-The feature is **off by default**. With no `livingSpecs` block (or `enabled: false`), nothing changes — every command behaves exactly as it does today. To turn it on, add a `livingSpecs` block to `.specify/companion.yml`:
+The feature is **off by default**. With no `living-specs.yml`, nothing changes — every command behaves exactly as it does today. To turn it on, create `living-specs.yml` at the root of your project:
 
 ```yaml
-livingSpecs:
-  enabled: true
-  capabilities:
-    - name: checkout
-      match: ["src/checkout/**"]        # files that belong to this capability
-      exclude: ["src/checkout/**/*.test.ts"]   # optional — subtracted from membership
-    - name: checkout-cart
-      match: ["src/checkout/cart/**"]
-      # spec defaults to capabilities/checkout-cart/spec.md
-    - name: billing
-      match: ["src/billing/**"]
-      spec: src/billing/billing.spec.md  # colocated — lives next to the code
+enabled: true
+capabilities:
+  - name: checkout
+    match: ["src/checkout/**"]        # files that belong to this capability
+    exclude: ["src/checkout/**/*.test.ts"]   # optional — subtracted from membership
+  - name: checkout-cart
+    match: ["src/checkout/cart/**"]
+    # spec defaults to capabilities/checkout-cart/spec.md
+  - name: billing
+    match: ["src/billing/**"]
+    spec: src/billing/billing.spec.md  # colocated — lives next to the code
 ```
+
+`living-specs.yml` sits at the project root on purpose: it is yours, it belongs in version control alongside the specs it registers, and keeping it out of `.specify/` means the routine cleanup that re-creates that folder can never wipe your registrations. If your project still keeps capabilities in the older `.specify/companion.yml`, they keep working as they are, and the next time you register or move a capability they are carried across for you.
 
 Each capability has a `name`, the `match` globs that define which files belong to it, an optional `exclude`, and where its living spec lives. By default a capability's spec is **centralized** at `capabilities/<name>/spec.md`; give an explicit `spec` path to **colocate** it next to the code. A spec file uses the `.spec.md` extension (the hot tier loaded today); the reserved `.arch.md` / `.coverage.md` siblings are recognized and never flagged as stray.
 
@@ -227,13 +228,13 @@ python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --changed sr
 
 An orphan is a `.spec.md` that no capability claims **and** that does not live inside a configured capability's spec directory — so another file under `capabilities/checkout/` (or a reserved `.arch.md` / `.coverage.md` sibling) is never flagged as stray.
 
-**Nested projects are off limits.** Any directory below the root that has its own `.specify/companion.yml` is a separate project, and the scan stops at it — the way a search tool stops at a nested ignore file. Sample apps, fixtures, and sandboxes living inside your repo answer for their own living specs; they never show up in the parent's orphan list and are never promoted into the parent's capabilities. That holds whatever the nested config says, including one that turns living specs off, so opting a sandbox out really does mean nothing happens to it.
+**Nested projects are off limits.** Any directory below the root that has its own `living-specs.yml` (or a legacy `.specify/companion.yml`) is a separate project, and the scan stops at it — the way a search tool stops at a nested ignore file. Sample apps, fixtures, and sandboxes living inside your repo answer for their own living specs; they never show up in the parent's orphan list and are never promoted into the parent's capabilities. That holds whatever the nested config says, including one that turns living specs off, so opting a sandbox out really does mean nothing happens to it.
 
 ### Auto-loading living specs into specify & plan
 
 When living specs are turned on, you stop re-explaining the codebase. As you start a feature, Companion looks at the files the change touches, finds the capabilities they belong to, and reads those capabilities' living specs into the assistant's context **before it drafts** — most-specific first, so the leaf capability is the primary frame and any parent capability sits behind it as context. The `specify` step records which capabilities it loaded, and the `plan` step reuses that record instead of resolving again.
 
-This stays **opt-in by presence and never blocks a run**: with no `livingSpecs` block or `enabled: false`, specify and plan behave exactly as they do today — no load, no recording. A capability that matches but whose spec file isn't written yet is silently skipped, and specify/plan are strictly read-only — they never create or edit a living spec. The loaded capability names are stored on the spec's context under a `livingSpecs.loaded` list (additive metadata, never a lifecycle field), which is what lets `plan` reuse them.
+This stays **opt-in by presence and never blocks a run**: with no registry or `enabled: false`, specify and plan behave exactly as they do today — no load, no recording. A capability that matches but whose spec file isn't written yet is silently skipped, and specify/plan are strictly read-only — they never create or edit a living spec. The loaded capability names are stored on the spec's context under a `livingSpecs.loaded` list (additive metadata, never a lifecycle field), which is what lets `plan` reuse them.
 
 ### Folding feature deltas back into the living spec on completion
 
@@ -259,9 +260,9 @@ This stays **opt-in and safe**: with living specs off there is no fold. A featur
 
 Starting living specs on a codebase you didn't grow this way is the slow part — you'd normally hand-write one spec per area. The **adoption wizard** does the first draft for you, one area at a time. You point `/speckit.companion.living-adopt` at a single code area (say the billing module); it reads that area's surface, proposes a small set of capabilities for *just that area*, and drafts a living spec for each from what the code already exposes.
 
-Because the read is surface-first — exported functions, routes, props, signatures, not a deep behavioral study — every draft wears its limits openly. The whole spec is marked `[DRAFT]`, each requirement is tagged `observed` (drawn straight from the code surface) or `inferred` (an educated guess), genuinely uncertain items carry an inline `[NEEDS CLARIFICATION: …]`, and any file the assistant couldn't read is listed under a `## Uncovered` heading so nobody mistakes a quick draft for a verified spec. You review and confirm, and the wizard registers the capability into your `livingSpecs` block so the resolver immediately recognizes it.
+Because the read is surface-first — exported functions, routes, props, signatures, not a deep behavioral study — every draft wears its limits openly. The whole spec is marked `[DRAFT]`, each requirement is tagged `observed` (drawn straight from the code surface) or `inferred` (an educated guess), genuinely uncertain items carry an inline `[NEEDS CLARIFICATION: …]`, and any file the assistant couldn't read is listed under a `## Uncovered` heading so nobody mistakes a quick draft for a verified spec. You review and confirm, and the wizard registers the capability in `living-specs.yml` so the resolver immediately recognizes it.
 
-Adoption is **opt-in and incremental**: you run it deliberately for the area you care about, it appends one capability at a time (never a whole-repo bootstrap), re-running it for an area that's already registered is a safe no-op, and it changes no other command's behavior. Registration goes through a small helper that reuses the same config reader the resolver does, so it never corrupts a `companion.yml` it can't fully parse.
+Adoption is **opt-in and incremental**: you run it deliberately for the area you care about, it appends one capability at a time (never a whole-repo bootstrap), re-running it for an area that's already registered is a safe no-op, and it changes no other command's behavior. Registration goes through a small helper that reuses the same config reader the resolver does, so it never corrupts a registry it can't fully parse.
 
 ### Spotting drift
 
@@ -275,15 +276,14 @@ A living spec only stays honest if changes to its area keep flowing back into it
 /speckit.companion.living-drift --json   # the same data for tooling / CI
 ```
 
-Files you don't want tracked — generated code, tests, migrations — are filtered out by an exempt list. It defaults to `*.config.*`, `*.test.*`, and `**/migrations/**`, and you can override it with a `livingSpecs.exempt` glob list:
+Files you don't want tracked — generated code, tests, migrations — are filtered out by an exempt list. It defaults to `*.config.*`, `*.test.*`, and `**/migrations/**`, and you can override it with an `exempt` glob list:
 
 ```yaml
-livingSpecs:
-  enabled: true
-  exempt: ["**/*.gen.ts", "**/migrations/**"]
-  capabilities:
-    - name: checkout
-      match: ["src/checkout/**"]
+enabled: true
+exempt: ["**/*.gen.ts", "**/migrations/**"]
+capabilities:
+  - name: checkout
+    match: ["src/checkout/**"]
 ```
 
 Drift is **read-only and never halts** — it always exits success, so a surrounding workflow or CI may treat `unspeced` rows as a gate, but the command itself never blocks a run. With living specs off it reports nothing.

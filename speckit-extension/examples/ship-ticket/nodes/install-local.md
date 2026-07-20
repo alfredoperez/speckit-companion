@@ -12,7 +12,7 @@ kind: control
    ```bash
    specify extension remove companion
    specify extension add ./speckit-extension --dev
-   git restore .specify/   # gitignored dev-install copies — never commit these
+   git restore .specify/   # gitignored dev-install copies — never commit these (living-specs.yml is at the repo root, so it is untouched)
    ```
 4. Journal progress and finish:
    ```bash

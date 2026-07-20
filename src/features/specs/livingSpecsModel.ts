@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as yaml from 'js-yaml';
 
 /**
- * Node-side reader for the `livingSpecs` block of `.specify/companion.yml`.
+ * Node-side reader for the project's capability registry.
  *
  * Mirrors the listing rules of `speckit-extension/scripts/resolve-spec-paths.py`
  * (and `companion_config.py`) in TypeScript so the Living Specs view needs no
@@ -12,6 +12,12 @@ import * as yaml from 'js-yaml';
  */
 
 const DEFAULT_CAPABILITY_ROOT = 'capabilities';
+
+/** The capability registry, at the project root — outside the folder `git restore .specify/` sweeps. */
+export const LIVING_SPECS_REL = 'living-specs.yml';
+
+/** Where capability registrations used to live; still read when no registry exists. */
+export const LEGACY_CONFIG_REL = path.join('.specify', 'companion.yml');
 
 /** Reserved tier siblings, keyed by kind. Single source of truth for suffixes. */
 const TIER_SUFFIXES: Record<TierKind, string> = {
@@ -59,6 +65,14 @@ export interface LivingSpecsListing {
     enabled: boolean;
     capabilities: ResolvedCapability[];
     orphans: string[];
+    /** True when the registry answered and a capability block still lingers in the legacy config. */
+    legacyStale: boolean;
+    /**
+     * Set when a registry file is on disk but could not be read. An empty listing
+     * with this absent means "nothing registered"; with it set it means "we could
+     * not tell", and the caller must say so rather than render an empty list.
+     */
+    error?: string;
 }
 
 interface RawCapability {
@@ -129,46 +143,130 @@ function globMatches(pattern: string, file: string): boolean {
     return globToRegExp(pattern).test(posix(file));
 }
 
-function parseLivingSpecs(configPath: string): { enabled: boolean; capabilities: RawCapability[] } {
-    let block: unknown;
+function isMapping(value: unknown): value is Record<string, unknown> {
+    return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+/** True only for an existing regular file, matching Python's `os.path.isfile`. */
+function isFile(file: string): boolean {
     try {
-        const raw = fs.readFileSync(configPath, 'utf-8');
-        const doc = yaml.load(raw) as Record<string, unknown> | null;
-        block = doc?.livingSpecs;
+        return fs.statSync(file).isFile();
     } catch {
+        return false;
+    }
+}
+
+type MappingRead =
+    | { ok: true; value: Record<string, unknown> }
+    | { ok: false; absent: true }
+    | { ok: false; absent: false; reason: string };
+
+/** Read a YAML file into a mapping, keeping "not there" distinct from "could not read it". */
+function readMapping(file: string): MappingRead {
+    let text: string;
+    try {
+        text = fs.readFileSync(file, 'utf-8');
+    } catch (e) {
+        if ((e as NodeJS.ErrnoException)?.code === 'ENOENT') {
+            return { ok: false, absent: true };
+        }
+        return { ok: false, absent: false, reason: (e as Error)?.message ?? 'unreadable' };
+    }
+    let doc: unknown;
+    try {
+        doc = yaml.load(text);
+    } catch (e) {
+        return { ok: false, absent: false, reason: (e as Error)?.message ?? 'invalid YAML' };
+    }
+    if (doc === null || doc === undefined) {
+        return { ok: true, value: {} };
+    }
+    if (!isMapping(doc)) {
+        return { ok: false, absent: false, reason: 'top level must be a mapping' };
+    }
+    return { ok: true, value: doc };
+}
+
+function mappingOrUndefined(read: MappingRead): Record<string, unknown> | undefined {
+    return read.ok ? read.value : undefined;
+}
+
+function normalizeBlock(block: unknown): { enabled: boolean; capabilities: RawCapability[] } {
+    if (isMapping(block) && isMapping(block.livingSpecs)) {
+        block = block.livingSpecs;
+    }
+    if (!isMapping(block)) {
         return { enabled: false, capabilities: [] };
     }
-    if (!block || typeof block !== 'object' || Array.isArray(block)) {
-        return { enabled: false, capabilities: [] };
-    }
-    const b = block as Record<string, unknown>;
-    const enabled = b.enabled === true;
-    const rawCaps = Array.isArray(b.capabilities) ? b.capabilities : [];
+    const enabled = block.enabled === true;
+    const rawCaps = Array.isArray(block.capabilities) ? block.capabilities : [];
     const capabilities: RawCapability[] = [];
     for (const entry of rawCaps) {
-        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+        if (!isMapping(entry) || !entry.name) {
             continue;
         }
-        const e = entry as Record<string, unknown>;
-        const name = e.name;
-        if (!name) {
-            continue;
-        }
-        const nameStr = String(name);
+        const name = String(entry.name);
         let spec: string;
-        if ('spec' in e) {
-            spec = e.spec === null || e.spec === undefined || e.spec === '' ? '' : String(e.spec);
+        if ('spec' in entry) {
+            spec = entry.spec === null || entry.spec === undefined || entry.spec === '' ? '' : String(entry.spec);
         } else {
-            spec = `${DEFAULT_CAPABILITY_ROOT}/${nameStr}/spec.md`;
+            spec = `${DEFAULT_CAPABILITY_ROOT}/${name}/spec.md`;
         }
         capabilities.push({
-            name: nameStr,
-            match: asList(e.match),
-            exclude: asList(e.exclude),
+            name,
+            match: asList(entry.match),
+            exclude: asList(entry.exclude),
             spec,
         });
     }
     return { enabled, capabilities };
+}
+
+interface RegistryResolution {
+    enabled: boolean;
+    capabilities: RawCapability[];
+    legacyStale: boolean;
+    error?: string;
+}
+
+/**
+ * Resolve where this project keeps its capabilities. The registry file wins outright
+ * whenever it is present — including when it will not parse, which yields an inert
+ * result carrying `error` rather than a fallback that would resurrect a set the
+ * person replaced. Mirrors `companion_config.resolve_living_specs`.
+ */
+function resolveRegistry(workspaceRoot: string): RegistryResolution {
+    const registryFile = path.join(workspaceRoot, LIVING_SPECS_REL);
+    const legacyFile = path.join(workspaceRoot, LEGACY_CONFIG_REL);
+    const legacyRead = readMapping(legacyFile);
+    const legacyBlock = mappingOrUndefined(legacyRead)?.livingSpecs;
+    const legacyHasBlock = isMapping(legacyBlock);
+
+    if (isFile(registryFile)) {
+        const registryRead = readMapping(registryFile);
+        if (registryRead.ok) {
+            return { ...normalizeBlock(registryRead.value), legacyStale: legacyHasBlock };
+        }
+        const reason = registryRead.absent ? 'file disappeared while reading' : registryRead.reason;
+        return {
+            enabled: false,
+            capabilities: [],
+            legacyStale: legacyHasBlock,
+            error: `${LIVING_SPECS_REL} could not be read (${reason}); no capabilities loaded`,
+        };
+    }
+    if (legacyHasBlock) {
+        return { ...normalizeBlock(legacyBlock), legacyStale: false };
+    }
+    if (!legacyRead.ok && !legacyRead.absent) {
+        return {
+            enabled: false,
+            capabilities: [],
+            legacyStale: false,
+            error: `${LEGACY_CONFIG_REL} could not be read (${legacyRead.reason}); no capabilities loaded`,
+        };
+    }
+    return { enabled: false, capabilities: [], legacyStale: false };
 }
 
 function capLocation(cap: RawCapability): 'centralized' | 'colocated' {
@@ -222,17 +320,24 @@ function fileExists(root: string, relPath: string): boolean {
 }
 
 function isProjectRoot(dir: string): boolean {
-    try {
-        return fs.statSync(path.join(dir, '.specify', 'companion.yml')).isFile();
-    } catch (e) {
-        // Only a confirmed absence means "not a project"; an unreadable config still bounds the scan.
-        return (e as NodeJS.ErrnoException)?.code !== 'ENOENT';
+    for (const rel of [LIVING_SPECS_REL, LEGACY_CONFIG_REL]) {
+        try {
+            if (fs.statSync(path.join(dir, rel)).isFile()) {
+                return true;
+            }
+        } catch (e) {
+            // Only a confirmed absence means "not a project"; an unreadable config still bounds the scan.
+            if ((e as NodeJS.ErrnoException)?.code !== 'ENOENT') {
+                return true;
+            }
+        }
     }
+    return false;
 }
 
 /**
  * Repo-relative POSIX paths of every `*.spec.md` belonging to this project.
- * A subdirectory carrying its own `.specify/companion.yml` is a separate
+ * A subdirectory carrying its own registry or legacy config is a separate
  * project and is pruned; `root`'s own config is not a boundary against itself.
  */
 function globSpecFiles(root: string): string[] {
@@ -303,16 +408,20 @@ function findOrphans(caps: RawCapability[], root: string): string[] {
 /**
  * Read and resolve the project's living specs for the Living Specs view.
  * Returns an inert, empty listing (no throw) when the config is missing,
- * malformed, or `livingSpecs.enabled` is not true.
+ * malformed, or `livingSpecs.enabled` is not true — carrying `error` in the
+ * malformed case so callers can distinguish it from "nothing registered".
  */
 export function readLivingSpecs(
     workspaceRoot: string,
     options?: { withOrphans?: boolean }
 ): LivingSpecsListing {
-    const configPath = path.join(workspaceRoot, '.specify', 'companion.yml');
-    const { enabled, capabilities } = parseLivingSpecs(configPath);
+    const { enabled, capabilities, legacyStale, error } = resolveRegistry(workspaceRoot);
     if (!enabled) {
-        return { enabled: false, capabilities: [], orphans: [] };
+        const listing: LivingSpecsListing = { enabled: false, capabilities: [], orphans: [], legacyStale };
+        if (error) {
+            listing.error = error;
+        }
+        return listing;
     }
 
     const resolved: ResolvedCapability[] = [];
@@ -347,6 +456,7 @@ export function readLivingSpecs(
         // Orphan discovery walks the workspace — callers that only need name
         // resolution (the viewer's per-render enrichment) skip it.
         orphans: options?.withOrphans === false ? [] : findOrphans(capabilities, workspaceRoot),
+        legacyStale,
     };
 }
 

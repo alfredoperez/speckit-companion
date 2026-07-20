@@ -50,7 +50,7 @@ describe('readLivingSpecs', () => {
     it('returns an inert empty listing when there is no companion.yml', () => {
         const root = ws({ 'capabilities/x/spec.md': '# x' });
         const listing = readLivingSpecs(root);
-        expect(listing).toEqual({ enabled: false, capabilities: [], orphans: [] });
+        expect(listing).toEqual({ enabled: false, capabilities: [], orphans: [], legacyStale: false });
     });
 
     it('returns an inert empty listing when livingSpecs.enabled is false', () => {
@@ -349,5 +349,90 @@ describe('readCapabilityHealth', () => {
         const cap = { ...capFor(root) };
         await expect(readCapabilityHealth(root, cap, { git: async () => { throw new Error('boom'); } }))
             .resolves.toEqual({});
+    });
+});
+
+describe('capability registry location', () => {
+    const created: string[] = [];
+    const root = (files: Record<string, string>, yml?: string): string => {
+        const r = makeWorkspace(files, yml);
+        created.push(r);
+        return r;
+    };
+    afterAll(() => {
+        for (const r of created) {
+            fs.rmSync(r, { recursive: true, force: true });
+        }
+    });
+
+    const REGISTRY = 'enabled: true\ncapabilities:\n  - name: billing\n    match: ["src/billing/**"]\n';
+    const LEGACY = 'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n      match: ["src/checkout/**"]\n';
+
+    it('reads capabilities from the project-root registry', () => {
+        const listing = readLivingSpecs(root({ 'living-specs.yml': REGISTRY }));
+        expect(listing.enabled).toBe(true);
+        expect(listing.capabilities.map(c => c.name)).toEqual(['billing']);
+        expect(listing.legacyStale).toBe(false);
+    });
+
+    it('falls back to the legacy config when no registry exists', () => {
+        const listing = readLivingSpecs(root({}, LEGACY));
+        expect(listing.enabled).toBe(true);
+        expect(listing.capabilities.map(c => c.name)).toEqual(['checkout']);
+        expect(listing.legacyStale).toBe(false);
+    });
+
+    it('prefers the registry and flags the stale legacy block when both exist', () => {
+        const listing = readLivingSpecs(root({ 'living-specs.yml': REGISTRY }, LEGACY));
+        expect(listing.capabilities.map(c => c.name)).toEqual(['billing']);
+        expect(listing.legacyStale).toBe(true);
+    });
+
+    it('accepts a registry that still carries the livingSpecs wrapper', () => {
+        const listing = readLivingSpecs(root({ 'living-specs.yml': LEGACY }));
+        expect(listing.capabilities.map(c => c.name)).toEqual(['checkout']);
+    });
+
+    it('stays inert on an unparseable registry instead of falling back', () => {
+        const listing = readLivingSpecs(root({ 'living-specs.yml': '\tnot: [valid' }, LEGACY));
+        expect(listing.enabled).toBe(false);
+        expect(listing.capabilities).toEqual([]);
+    });
+
+    it('reports an unparseable registry rather than reading as not adopted', () => {
+        const listing = readLivingSpecs(root({ 'living-specs.yml': '\tnot: [valid' }, LEGACY));
+        expect(listing.error).toBeDefined();
+        expect(listing.error).toContain('living-specs.yml');
+    });
+
+    it('reports a registry whose top level is not a mapping', () => {
+        const listing = readLivingSpecs(root({ 'living-specs.yml': '- just\n- a list\n' }));
+        expect(listing.enabled).toBe(false);
+        expect(listing.error).toContain('living-specs.yml');
+    });
+
+    it('leaves error absent for an empty registry, so empty never reads as broken', () => {
+        const listing = readLivingSpecs(root({ 'living-specs.yml': 'enabled: true\ncapabilities: []\n' }));
+        expect(listing.enabled).toBe(true);
+        expect(listing.error).toBeUndefined();
+    });
+
+    it('reads as not adopted, with no error, when neither location exists', () => {
+        expect(readLivingSpecs(root({ 'src/a.ts': 'x' })).error).toBeUndefined();
+    });
+
+    it('reads as not adopted when neither location exists', () => {
+        const listing = readLivingSpecs(root({ 'src/a.ts': 'x' }));
+        expect(listing).toEqual({ enabled: false, capabilities: [], orphans: [], legacyStale: false });
+    });
+
+    it('treats a nested directory with only a registry as its own project', () => {
+        const r = root({
+            'living-specs.yml': REGISTRY,
+            'examples/sample/living-specs.yml': 'enabled: false\ncapabilities: []\n',
+            'examples/sample/thing.spec.md': '# nested\n',
+            'src/loose.spec.md': '# mine\n',
+        });
+        expect(readLivingSpecs(r).orphans).toEqual(['src/loose.spec.md']);
     });
 });

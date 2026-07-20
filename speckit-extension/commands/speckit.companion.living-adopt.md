@@ -145,13 +145,15 @@ Do not invent answers to close markers out. An unresolved marker is honest; a fa
 
 ### 4. Register the confirmed capability
 
-For each confirmed capability, register it so the shipped resolver recognizes it. Use the deterministic registry-append helper — it appends one capability to `.specify/companion.yml` `livingSpecs.capabilities[]` idempotently, preserves every existing capability, and refuses to write a config it cannot parse:
+For each confirmed capability, register it so the shipped resolver recognizes it. Use the deterministic registry-append helper — it appends one capability to the project's registry, `living-specs.yml`, idempotently, preserves every existing capability, and refuses to write a config it cannot parse:
 
 ```bash
 python3 .specify/extensions/companion/scripts/register-capability.py --name <name> --match "<glob>" [--match "<glob>" …] [--exclude "<glob>"] [--spec <path>]
 ```
 
 **Pass `--spec` for every colocated capability**, with the same path you drafted the spec to. Omit it for central ones — the helper emits `spec` only when it differs from the centralized default, which keeps the config terse.
+
+The registry lives at the project root, deliberately outside `.specify/`, so a routine `git restore … .specify/` can never wipe it. Commit `living-specs.yml` along with the specs it registers. If this project still keeps its capabilities in the older `.specify/companion.yml`, the helper moves them across on its first write and says so — nothing is lost and nothing needs doing by hand.
 
 Register a colocated capability only *after* its spec file is on disk at that path. The two must agree: the resolver raises `capability "<name>" is colocated but has no resolvable spec path` if a capability is registered with a `spec` path that isn't there, and the whole living-specs config fails to load, not just that capability.
 
@@ -171,7 +173,7 @@ Summarize, in plain language: which capabilities you proposed and registered, th
 
 ## Boundaries
 
-- **Opt-in and isolated.** This command changes no existing command's behavior and touches no spec's lifecycle. It only creates `capabilities/<name>/spec.md` files and appends to the `livingSpecs` registry.
+- **Opt-in and isolated.** This command changes no existing command's behavior and touches no spec's lifecycle. It only creates `capabilities/<name>/spec.md` files and appends to the capability registry.
 - **The layout is the developer's call.** Never assume central because it is the default. Ask when it was not specified, and show the resulting spec paths before writing anything.
 - **Only what was named.** Adopt the areas the developer named or chose, and nothing else. Several areas in one run is fine; silently widening past the agreed scope is not.
 - **Specify, don't transcribe.** A requirement that a prop rename would falsify is a bug in the draft, not a detail. Fewer, durable requirements beat an exhaustive inventory of the code.

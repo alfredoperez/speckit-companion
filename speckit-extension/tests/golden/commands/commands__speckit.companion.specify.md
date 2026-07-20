@@ -84,7 +84,7 @@ Produce a feature specification: prioritized user stories with acceptance scenar
 
 **Load living specs — arrive pre-briefed (best-effort, opt-in, read-only).** Before drafting, check whether this project keeps **living specs** for the areas this change touches, and if so fold them into your context so you are not re-learning the codebase from scratch. This whole step is **opt-in by presence** and must **never** fail or slow the command — on any miss (no config, feature off, no resolver, no spec file) skip silently and draft as usual. It is strictly **read-only**: never create or edit a `capabilities/<name>/spec.md` from here.
 
-   - **Gate first.** If `.specify/companion.yml` is absent, or its `livingSpecs.enabled` is not true, there is nothing to load — continue to the spec draft. Leave the one-line audit breadcrumb so a later reader can tell "correctly did nothing" from "capture broke" (best-effort, then move on without a word):
+   - **Gate first.** If the capability registry (`living-specs.yml`, or a legacy `livingSpecs` block in `.specify/companion.yml`) is absent, or `enabled` is not true, there is nothing to load — continue to the spec draft. Leave the one-line audit breadcrumb so a later reader can tell "correctly did nothing" from "capture broke" (best-effort, then move on without a word):
      ```bash
      python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --set last_action="living specs evaluated — skipped (not configured)"
      ```

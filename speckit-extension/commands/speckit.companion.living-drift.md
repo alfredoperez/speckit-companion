@@ -23,7 +23,7 @@ Run the drift detector from the repository root:
 python3 .specify/extensions/companion/scripts/drift.py
 ```
 
-The script reads the `livingSpecs` block from `.specify/companion.yml`, reuses the
+The script reads the capability registry (`living-specs.yml`), reuses the
 resolver for capability membership, and uses git to find what changed since each
 capability's `capabilities/<name>/spec.md` was last committed. Each drifted file
 is classified:
@@ -34,7 +34,7 @@ is classified:
 - **`unspeced`** — the file changed entirely outside the pipeline; the living spec
   never saw it. The more concerning of the two.
 
-Files matching any glob in `livingSpecs.exempt` (default `*.config.*`, `*.test.*`, `**/migrations/**`) are filtered out. A capability whose spec is not yet committed is skipped with an informational note, and the run ends on a counts line — e.g. `0 checked, 2 skipped (spec.md not yet committed)` — so a check that examined nothing never reads as clean. The `✓ All N checked capabilities in sync.` line is reserved for a run that checked at least one capability and found it clean.
+Files matching any glob in the registry's `exempt` list (default `*.config.*`, `*.test.*`, `**/migrations/**`) are filtered out. A capability whose spec is not yet committed is skipped with an informational note, and the run ends on a counts line — e.g. `0 checked, 2 skipped (spec.md not yet committed)` — so a check that examined nothing never reads as clean. The `✓ All N checked capabilities in sync.` line is reserved for a run that checked at least one capability and found it clean.
 
 Add `--json` for a machine-readable object (used by tooling/CI). It carries a `checked` count alongside the `capabilities` and `skipped` lists, so a caller can tell "clean" from "did not run" — the exit code stays `0` either way:
 
@@ -46,5 +46,5 @@ python3 .specify/extensions/companion/scripts/drift.py --json
 
 Drift is a signal, not an error. For each `unspeced` or `tracked` row, either fold
 the change into the living spec (e.g. run `/speckit.companion.living-adopt` for the area,
-or write a delta spec) or add the path to `livingSpecs.exempt` if it shouldn't be
+or write a delta spec) or add the path to the registry's `exempt` list if it shouldn't be
 tracked. The command never blocks the pipeline on its own.

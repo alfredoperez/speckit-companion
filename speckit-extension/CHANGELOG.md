@@ -17,6 +17,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 - **A spec now records the branch of the repository it actually lives in.** When a spec folder sat outside the directory a command was run from — a sandbox or temp spec, a benchmark fixture, or anything driven by a script that changed directory first — the spec's tracked branch was taken from wherever you happened to be standing rather than from the spec itself, so it recorded the wrong branch. The step-by-step lifecycle writes were affected, along with task progress, the final completed state, free-form fields, and the repair path that rebuilds a spec's tracking from the files on disk. Normal runs were already correct and are unchanged; a spec folder that isn't in a repository at all still falls back as before.
 
+- **Turning off every drift exemption now sticks.** Writing `exempt: []` in `living-specs.yml` means "check every file, exempt nothing" — but the next command that rewrote the file dropped the empty list, and the built-in defaults (`*.config.*`, `*.test.*`, `**/migrations/**`) silently came back. Drift checks would quietly stop reporting files you had deliberately asked them to watch. An explicit empty list is now written back as one and keeps meaning what it says; leaving the key out still gives you the defaults.
+
+- **Your capability registrations can no longer be wiped by a routine cleanup.** Living-spec capabilities used to be stored in `.specify/companion.yml`, and the standard housekeeping step in a lot of projects — `git restore package.json package-lock.json .specify/` after a local install, or a `git reset --hard` after a merge — threw the whole folder away and took every registration with it. Silently: no error, no warning, just living specs quietly not working any more, with the spec files still sitting on disk belonging to nothing. It bit hardest during first-time adoption, exactly when you have the most unsaved registrations and the least sense of what should be there.
+
+  Capabilities now live in `living-specs.yml` at the root of your project, where no cleanup step can reach them. Commit it alongside the specs it registers. Turning living specs on is now a matter of creating that one file:
+
+  ```yaml
+  enabled: true
+  capabilities:
+    - name: checkout
+      match: ["src/checkout/**"]
+  ```
+
+  **Nothing you already registered is lost.** Capabilities still sitting in `.specify/companion.yml` keep working exactly as they do now, and the next time you register or move one, the whole set is carried across to the new file for you and you are told it happened. Your pipeline hooks and recipes stay where they are — only the capabilities move. If you would rather move them by hand, copying the old block into the new file works too; both shapes are accepted. If you end up with both files carrying capabilities, `living-specs.yml` is the one that counts and the old block is left untouched rather than deleted — the Living Specs view and the command output both tell you it is being ignored, so you can move anything still worth keeping before you delete it yourself.
+
 - **This project's own install records were pointing at commands that no longer exist.** After the recent rename, the four automatic capture steps were still registered under their old names, and the stored command list carried eight retired names and none of their replacements. Anything reading those records — including a later clean uninstall — was working from a picture that was a release out of date. The records now match the commands that actually ship.
 
   This is the drift the new check exists to catch, and it is worth knowing why it happened: reinstalling an extension **adds** to the command list it already had and never removes from it, and it will not overwrite a command file that is already there. That behavior lives in the Spec Kit CLI rather than here, so upgrading across a rename still needs `specify extension remove companion` before reinstalling. What changed is that a stale name is no longer invisible.

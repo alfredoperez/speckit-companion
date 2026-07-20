@@ -128,7 +128,7 @@ Copilot, by change kind:
 Merge **one at a time**, confirming CI green on each (`gh pr checks`). After each merge, the next PR is behind `main` — if GitHub reports a conflict or the branch is stale, rebase it before merging. (This is the tax for parallel branches; it's cheap when the file sets are disjoint, which is why L0 gates on that.)
 
 ### L5. Close out — main loop
-- **One** `install-local`, then `git restore package.json package-lock.json .specify/`.
+- **One** `install-local`, then `git restore package.json package-lock.json .specify/`. Your living-spec capabilities are safe from this: they live in `living-specs.yml` at the repo root, outside the folder that gets restored.
 - **One** learnings distill for the whole batch (same routing rules as the full loop: checklist / `CLAUDE.md` proposal / this file / issue candidate). An empty distill is the norm.
 - **Chat summary**, not an HTML brief: what shipped, what needs manual eyeballing, anything escalated.
 
@@ -277,7 +277,7 @@ The loop installs each ticket's merge at the *start* of the next ticket, so the 
 ```bash
 git checkout main && git fetch origin && git pull --ff-only
 ```
-Run `/install-local`, then `git restore package.json package-lock.json .specify/` to drop the throwaway bump + regenerated registry artifacts. Optionally `code --command workbench.action.reloadWindow`. Record the final installed version for the report.
+Run `/install-local`, then `git restore package.json package-lock.json .specify/` to drop the throwaway bump + regenerated registry artifacts. Your living-spec capabilities are safe from this: they live in `living-specs.yml` at the repo root, outside the folder that gets restored. Optionally `code --command workbench.action.reloadWindow`. Record the final installed version for the report.
 
 ### Final report — after the queue is drained
 

@@ -44,6 +44,25 @@ describe('LivingSpecsExplorerProvider', () => {
         expect((roots[0].iconPath as vscode.ThemeIcon).id).toBe('info');
     });
 
+    it('says the registry is unreadable instead of claiming living specs are off', async () => {
+        (readLivingSpecs as jest.Mock).mockReturnValue({
+            enabled: false,
+            capabilities: [],
+            orphans: [],
+            legacyStale: false,
+            error: 'living-specs.yml could not be read (bad indentation); no capabilities loaded',
+        });
+
+        const roots = await provider.getChildren();
+
+        expect(roots).toHaveLength(1);
+        expect(roots[0].label).not.toBe('Living Specs are off');
+        expect(roots[0].label).toContain("Can't read");
+        expect(roots[0].contextValue).toBe('living-specs-error');
+        expect(roots[0].tooltip).toContain('bad indentation');
+        expect((roots[0].iconPath as vscode.ThemeIcon).id).toBe('error');
+    });
+
     it('renders one informative row when enabled but empty', async () => {
         (readLivingSpecs as jest.Mock).mockReturnValue({
             enabled: true,
@@ -56,6 +75,20 @@ describe('LivingSpecsExplorerProvider', () => {
         expect(roots).toHaveLength(1);
         expect(roots[0].label).toBe('No living specs yet');
         expect(roots[0].tooltip).toContain('Adopt');
+    });
+
+    it('surfaces a notice when capabilities still linger in the legacy config', async () => {
+        (readLivingSpecs as jest.Mock).mockReturnValue({
+            enabled: true,
+            capabilities: [],
+            orphans: [],
+            legacyStale: true,
+        });
+
+        const roots = await provider.getChildren();
+
+        expect(roots[0].label).toContain('.specify/companion.yml');
+        expect(roots[0].tooltip).toContain('living-specs.yml');
     });
 
     it('never returns a blank root', async () => {

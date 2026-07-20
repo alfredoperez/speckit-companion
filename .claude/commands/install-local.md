@@ -28,7 +28,7 @@ This repo ships **two** extensions: the **VS Code extension** (`.vsix`) and the 
 3. Install in VS Code: `code --install-extension speckit-companion-{version}.vsix --force`
 4. Reload: the new-higher version makes VS Code surface a **"Restart Extensions / Reload"** banner. `code --command workbench.action.reloadWindow` is NOT a supported CLI flag in current builds (it warns and no-ops) — don't rely on it; tell the user to click the banner or run **Developer: Reload Window** if it doesn't appear.
 
-**Important:** Never skip the version bump, and never bump *below* an installed version — VS Code caches by version number, so same-or-lower = no update and no banner. After installing, restore the throwaway bump in git (`git restore package.json package-lock.json`) so it never lands in a feature commit.
+**Important:** Never skip the version bump, and never bump *below* an installed version — VS Code caches by version number, so same-or-lower = no update and no banner. After installing, restore the throwaway bump in git (`git restore package.json package-lock.json`) so it never lands in a feature commit. Restoring `.specify/` alongside it is safe for living specs — capabilities live in `living-specs.yml` at the repo root, outside that folder.
 
 ### 2. spec-kit extension (only if `speckit-extension/extension.yml` exists)
 
