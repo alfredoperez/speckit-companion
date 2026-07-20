@@ -1,6 +1,6 @@
 # Capture Runtime — Living Spec
 
-> [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
+> Adopted from existing code on 2026-07-19. Requirements describe observed behavior and have not been individually verified against tests.
 
 ## Purpose
 
