@@ -28,7 +28,7 @@ resolver is inert — every mode returns empty with exit 0 and no error.
 Usage:
   resolve-spec-paths.py --changed <file>...   # capabilities in scope (ordered)
   resolve-spec-paths.py --all                 # every capability (union) + orphans
-  resolve-spec-paths.py --orphans             # orphan *.spec.md files only
+  resolve-spec-paths.py --orphans             # unclaimed specs, either layout
   add --json for the machine-readable object; the default is a concise human
   list (capability names / orphan paths).
 """
