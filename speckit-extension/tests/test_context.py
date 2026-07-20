@@ -1586,6 +1586,11 @@ class SpecRelativeBranchTests(unittest.TestCase):
         wc.journal_finish(self.fd, "specify", "ai")
         self.assertEqual(_ctx(self.fd)["branch"], "spec-branch")
 
+    def test_derive_from_files_records_the_spec_repos_branch(self) -> None:
+        (self.fd / "spec.md").write_text("# Outside\n")
+        derive_mod.derive(self.fd, "derive")
+        self.assertEqual(_ctx(self.fd)["branch"], "spec-branch")
+
     def test_a_spec_dir_outside_any_repo_falls_back_to_the_cwd_branch(self) -> None:
         loose = Path(self._tmp.name) / "loose" / "001-loose"
         loose.mkdir(parents=True)

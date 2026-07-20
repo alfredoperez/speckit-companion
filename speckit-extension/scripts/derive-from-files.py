@@ -70,7 +70,7 @@ def derive(feature_dir: Path, by: str = "derive") -> Path | None:
         return None
 
     now = wc._now_iso()
-    branch = wc._git_branch(wc._repo_root()) or "main"
+    branch = wc._git_branch(wc._repo_root_for(feature_dir)) or "main"
 
     log = wc.canonical_log(ctx)
     wc.fill_required(ctx, feature_dir, branch)

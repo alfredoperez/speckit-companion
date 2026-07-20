@@ -807,7 +807,7 @@ async function executeImplementCheckpoints(
         const gitExtension = vscode.extensions.getExtension('vscode.git');
         if (gitExtension) {
             const git = gitExtension.exports.getAPI(1);
-            const repo = git.repositories[0];
+            const repo = git.getRepository?.(vscode.Uri.file(featureDir)) ?? git.repositories[0];
             if (repo && repo.state.HEAD) {
                 branchName = repo.state.HEAD.name || 'main';
             }
