@@ -12,6 +12,7 @@ import {
 
 type LivingSpecContextValue =
     | 'living-specs-empty'
+    | 'living-specs-error'
     | 'living-specs-group'
     | 'living-specs-capability'
     | 'living-specs-capability-missing'
@@ -103,6 +104,10 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
 
             // Root — empty state when off or nothing to show; otherwise the groups.
             const hasContent = listing.capabilities.length > 0 || listing.orphans.length > 0;
+            if (listing.error) {
+                // "Off" would send someone to fix a setting inside a file that never parsed.
+                return [...notices, LivingSpecItem.problem("Can't read living-specs.yml", listing.error)];
+            }
             if (!hasContent) {
                 const message = listing.enabled
                     ? 'No living specs yet'
@@ -265,6 +270,14 @@ class LivingSpecItem extends vscode.TreeItem {
         const item = new LivingSpecItem(label, vscode.TreeItemCollapsibleState.None, 'living-specs-empty');
         item.iconPath = new vscode.ThemeIcon('info');
         item.tooltip = tooltip;
+        return item;
+    }
+
+    static problem(label: string, tooltip: string): LivingSpecItem {
+        const item = new LivingSpecItem(label, vscode.TreeItemCollapsibleState.None, 'living-specs-error');
+        item.iconPath = new vscode.ThemeIcon('error', new vscode.ThemeColor('list.errorForeground'));
+        item.tooltip = tooltip;
+        item.description = 'fix the file to list capabilities';
         return item;
     }
 

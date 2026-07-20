@@ -367,6 +367,9 @@ def relocate(root: str, to: str, name: str | None = None, spec: str | None = Non
         "unchanged": [p for p in plans if p["action"] != "relocate"],
         "skipped": skipped,
     }
+    # A run that changes nothing still leaves the ignored legacy block looking authoritative.
+    if meta["legacy_stale"]:
+        result["staleLegacy"] = LEGACY_CONFIG_REL
     if not moving:
         return result
 
@@ -436,6 +439,18 @@ def render_human(result: dict) -> str:
         )
     for s in result["skipped"]:
         lines.append(f"[companion] skipped '{s['name']}': {s['reason']}")
+    if result.get("migratedFrom"):
+        lines.append(
+            f"[companion] moved your capability registrations out of "
+            f"{result['migratedFrom']} into {result['configPath']} — commit it; "
+            f"it no longer sits where the routine cleanup step wipes it."
+        )
+    elif result.get("staleLegacy"):
+        lines.append(
+            f"[companion] {result['staleLegacy']} still lists capabilities. "
+            f"{result['configPath']} is the registry, so those are ignored — move any "
+            f"you still want into it, then delete the old livingSpecs block."
+        )
     return "\n".join(lines) or "[companion] nothing to do."
 
 

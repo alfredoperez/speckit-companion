@@ -118,6 +118,19 @@ class ConfigReaderTests(unittest.TestCase):
         living = cc.load_living_specs(cc.load_yaml(CHECKOUT_YAML))
         self.assertEqual(living["exempt"], cc.DEFAULT_EXEMPT_GLOBS)
 
+    def test_explicit_empty_exempt_survives_a_rewrite(self) -> None:
+        rendered = cc.render_registry(True, [], exempt=[])
+        self.assertIn("exempt: []", rendered)
+        self.assertEqual(cc.load_living_specs_block(cc.load_yaml(rendered))["exempt"], [])
+
+    def test_omitted_exempt_still_means_use_the_defaults(self) -> None:
+        rendered = cc.render_registry(True, [], exempt=None)
+        self.assertNotIn("exempt:", rendered)
+        self.assertEqual(
+            cc.load_living_specs_block(cc.load_yaml(rendered))["exempt"],
+            cc.DEFAULT_EXEMPT_GLOBS,
+        )
+
     def test_exempt_override_is_read(self) -> None:
         yaml = (
             "livingSpecs:\n  enabled: true\n  exempt: [\"**/*.gen.ts\"]\n"
@@ -2497,6 +2510,30 @@ class RegistryMigrationTests(unittest.TestCase):
         with self.assertRaises(ValueError) as ctx:
             relocate.relocate(str(root), "colocated", every=True)
         self.assertIn("malformed", str(ctx.exception))
+
+    def test_relocation_reports_a_stale_legacy_block_it_did_not_migrate(self) -> None:
+        root = make_repo(CHECKOUT_YAML, spec_files=["src/billing/billing.spec.md"])
+        (root / "living-specs.yml").write_text(
+            "enabled: true\ncapabilities:\n  - name: billing\n"
+            '    match: ["src/billing/**"]\n    spec: src/billing/billing.spec.md\n',
+            encoding="utf-8",
+        )
+        # Already colocated, so nothing moves and the legacy block is never dropped.
+        result = relocate.relocate(str(root), "colocated", name="billing")
+        self.assertEqual(result["relocated"], [])
+        self.assertEqual(result["staleLegacy"], cc.LEGACY_CONFIG_REL)
+        self.assertIn("livingSpecs", _read_config(root))
+        human = relocate.render_human(result)
+        self.assertIn(cc.LEGACY_CONFIG_REL, human)
+        self.assertIn("ignored", human)
+
+    def test_relocation_that_migrates_reports_the_move_not_a_stale_block(self) -> None:
+        root = make_repo(CENTRAL_YAML, spec_files=["capabilities/billing/spec.md"])
+        result = relocate.relocate(str(root), "colocated", name="billing")
+        self.assertEqual(result["migratedFrom"], cc.LEGACY_CONFIG_REL)
+        self.assertNotIn("staleLegacy", result)
+        self.assertIn("moved your capability registrations out of",
+                      relocate.render_human(result))
 
     def test_unparseable_registry_is_refused_not_overwritten(self) -> None:
         root = Path(tempfile.mkdtemp())

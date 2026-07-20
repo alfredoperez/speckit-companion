@@ -422,9 +422,13 @@ def _yaml_flow_list(items: list) -> str:
 
 
 def render_registry(enabled: bool, capabilities: list, exempt=None) -> str:
-    """Render the registry file's flattened body from a normalized capability list."""
+    """Render the registry file's flattened body from a normalized capability list.
+
+    `exempt=None` omits the key (the reader then applies DEFAULT_EXEMPT_GLOBS); an empty
+    list is written as `exempt: []`, which the reader honors as "no exemptions".
+    """
     lines = [f"enabled: {'true' if enabled else 'false'}"]
-    if exempt:
+    if exempt is not None:
         lines.append(f"exempt: {_yaml_flow_list(exempt)}")
     if capabilities:
         lines.append("capabilities:")

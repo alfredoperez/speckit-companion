@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **A broken `living-specs.yml` no longer looks like an empty one.** If your capability registry had a typo in it, the Living Specs sidebar showed `Living Specs are off` and suggested you set `enabled: true` — advice that couldn't help, because the file already said that and simply wasn't parsing. The sidebar now shows `Can't read living-specs.yml` with the parse error in the tooltip, so you go fix the file instead of hunting for a setting.
+
 ### Improved
 
 - **Opening a living spec now tells you something about it.** The header for an adopted capability used to show a name and a badge and nothing else. It now shows how many requirements and scenarios the capability declares, how many of them have a mapped test, a `drift` marker when the code has moved on since the spec was last committed, the file patterns the capability claims, and where its spec file lives. The claimed patterns are the point: you can finally answer "why did this spec load for this change?" without opening the capability registry by hand. Coverage and drift are the same numbers the Living Specs sidebar shows — one computation feeds both, so they cannot disagree.

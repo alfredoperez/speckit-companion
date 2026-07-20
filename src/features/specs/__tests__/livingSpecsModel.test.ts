@@ -399,6 +399,28 @@ describe('capability registry location', () => {
         expect(listing.capabilities).toEqual([]);
     });
 
+    it('reports an unparseable registry rather than reading as not adopted', () => {
+        const listing = readLivingSpecs(root({ 'living-specs.yml': '\tnot: [valid' }, LEGACY));
+        expect(listing.error).toBeDefined();
+        expect(listing.error).toContain('living-specs.yml');
+    });
+
+    it('reports a registry whose top level is not a mapping', () => {
+        const listing = readLivingSpecs(root({ 'living-specs.yml': '- just\n- a list\n' }));
+        expect(listing.enabled).toBe(false);
+        expect(listing.error).toContain('living-specs.yml');
+    });
+
+    it('leaves error absent for an empty registry, so empty never reads as broken', () => {
+        const listing = readLivingSpecs(root({ 'living-specs.yml': 'enabled: true\ncapabilities: []\n' }));
+        expect(listing.enabled).toBe(true);
+        expect(listing.error).toBeUndefined();
+    });
+
+    it('reads as not adopted, with no error, when neither location exists', () => {
+        expect(readLivingSpecs(root({ 'src/a.ts': 'x' })).error).toBeUndefined();
+    });
+
     it('reads as not adopted when neither location exists', () => {
         const listing = readLivingSpecs(root({ 'src/a.ts': 'x' }));
         expect(listing).toEqual({ enabled: false, capabilities: [], orphans: [], legacyStale: false });

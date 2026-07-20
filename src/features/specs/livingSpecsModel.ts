@@ -67,6 +67,12 @@ export interface LivingSpecsListing {
     orphans: string[];
     /** True when the registry answered and a capability block still lingers in the legacy config. */
     legacyStale: boolean;
+    /**
+     * Set when a registry file is on disk but could not be read. An empty listing
+     * with this absent means "nothing registered"; with it set it means "we could
+     * not tell", and the caller must say so rather than render an empty list.
+     */
+    error?: string;
 }
 
 interface RawCapability {
@@ -150,14 +156,39 @@ function isFile(file: string): boolean {
     }
 }
 
-/** Read a YAML file into a mapping; `undefined` when it is absent or will not parse. */
-function readMapping(file: string): Record<string, unknown> | undefined {
+type MappingRead =
+    | { ok: true; value: Record<string, unknown> }
+    | { ok: false; absent: true }
+    | { ok: false; absent: false; reason: string };
+
+/** Read a YAML file into a mapping, keeping "not there" distinct from "could not read it". */
+function readMapping(file: string): MappingRead {
+    let text: string;
     try {
-        const doc = yaml.load(fs.readFileSync(file, 'utf-8'));
-        return isMapping(doc) ? doc : undefined;
-    } catch {
-        return undefined;
+        text = fs.readFileSync(file, 'utf-8');
+    } catch (e) {
+        if ((e as NodeJS.ErrnoException)?.code === 'ENOENT') {
+            return { ok: false, absent: true };
+        }
+        return { ok: false, absent: false, reason: (e as Error)?.message ?? 'unreadable' };
     }
+    let doc: unknown;
+    try {
+        doc = yaml.load(text);
+    } catch (e) {
+        return { ok: false, absent: false, reason: (e as Error)?.message ?? 'invalid YAML' };
+    }
+    if (doc === null || doc === undefined) {
+        return { ok: true, value: {} };
+    }
+    if (!isMapping(doc)) {
+        return { ok: false, absent: false, reason: 'top level must be a mapping' };
+    }
+    return { ok: true, value: doc };
+}
+
+function mappingOrUndefined(read: MappingRead): Record<string, unknown> | undefined {
+    return read.ok ? read.value : undefined;
 }
 
 function normalizeBlock(block: unknown): { enabled: boolean; capabilities: RawCapability[] } {
@@ -195,27 +226,45 @@ interface RegistryResolution {
     enabled: boolean;
     capabilities: RawCapability[];
     legacyStale: boolean;
+    error?: string;
 }
 
 /**
  * Resolve where this project keeps its capabilities. The registry file wins outright
  * whenever it is present — including when it will not parse, which yields an inert
- * result rather than a fallback that would resurrect a set the person replaced.
- * Mirrors `companion_config.resolve_living_specs`.
+ * result carrying `error` rather than a fallback that would resurrect a set the
+ * person replaced. Mirrors `companion_config.resolve_living_specs`.
  */
 function resolveRegistry(workspaceRoot: string): RegistryResolution {
     const registryFile = path.join(workspaceRoot, LIVING_SPECS_REL);
     const legacyFile = path.join(workspaceRoot, LEGACY_CONFIG_REL);
-    const legacyBlock = readMapping(legacyFile)?.livingSpecs;
+    const legacyRead = readMapping(legacyFile);
+    const legacyBlock = mappingOrUndefined(legacyRead)?.livingSpecs;
     const legacyHasBlock = isMapping(legacyBlock);
 
     if (isFile(registryFile)) {
-        const doc = readMapping(registryFile);
-        const parsed = doc ? normalizeBlock(doc) : { enabled: false, capabilities: [] };
-        return { ...parsed, legacyStale: legacyHasBlock };
+        const registryRead = readMapping(registryFile);
+        if (registryRead.ok) {
+            return { ...normalizeBlock(registryRead.value), legacyStale: legacyHasBlock };
+        }
+        const reason = registryRead.absent ? 'file disappeared while reading' : registryRead.reason;
+        return {
+            enabled: false,
+            capabilities: [],
+            legacyStale: legacyHasBlock,
+            error: `${LIVING_SPECS_REL} could not be read (${reason}); no capabilities loaded`,
+        };
     }
     if (legacyHasBlock) {
         return { ...normalizeBlock(legacyBlock), legacyStale: false };
+    }
+    if (!legacyRead.ok && !legacyRead.absent) {
+        return {
+            enabled: false,
+            capabilities: [],
+            legacyStale: false,
+            error: `${LEGACY_CONFIG_REL} could not be read (${legacyRead.reason}); no capabilities loaded`,
+        };
     }
     return { enabled: false, capabilities: [], legacyStale: false };
 }
@@ -359,15 +408,20 @@ function findOrphans(caps: RawCapability[], root: string): string[] {
 /**
  * Read and resolve the project's living specs for the Living Specs view.
  * Returns an inert, empty listing (no throw) when the config is missing,
- * malformed, or `livingSpecs.enabled` is not true.
+ * malformed, or `livingSpecs.enabled` is not true — carrying `error` in the
+ * malformed case so callers can distinguish it from "nothing registered".
  */
 export function readLivingSpecs(
     workspaceRoot: string,
     options?: { withOrphans?: boolean }
 ): LivingSpecsListing {
-    const { enabled, capabilities, legacyStale } = resolveRegistry(workspaceRoot);
+    const { enabled, capabilities, legacyStale, error } = resolveRegistry(workspaceRoot);
     if (!enabled) {
-        return { enabled: false, capabilities: [], orphans: [], legacyStale };
+        const listing: LivingSpecsListing = { enabled: false, capabilities: [], orphans: [], legacyStale };
+        if (error) {
+            listing.error = error;
+        }
+        return listing;
     }
 
     const resolved: ResolvedCapability[] = [];
