@@ -279,7 +279,7 @@ def _open_ctx_or_none(feature_dir: Path, step: str = "") -> tuple[dict, list, st
                 file=sys.stderr,
             )
         return None
-    branch = _git_branch(_repo_root()) or "main"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
     log = canonical_log(ctx)
     fill_required(ctx, feature_dir, branch)
     return ctx, log, branch

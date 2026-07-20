@@ -124,7 +124,7 @@ def update_context(
 ) -> Path | None:
     target = feature_dir / ".spec-context.json"
     now = _now_iso()
-    branch = _git_branch(_repo_root()) or "main"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
 
     ctx = read_ctx(target)
 
@@ -265,7 +265,7 @@ def mark_spec_complete(feature_dir: Path, by: str) -> Path | None:
     """
     target = feature_dir / ".spec-context.json"
     ctx = read_ctx(target)
-    branch = _git_branch(_repo_root()) or "main"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
 
     if ctx.get("status") in CROSS_STEP_TERMINAL:
         print(
