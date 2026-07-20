@@ -23,7 +23,7 @@ from spec_context import (
     _journaled_tasks,
     _now_iso,
     _open_ctx_or_none,
-    _repo_root,
+    _repo_root_for,
     append_complete,
     atomic_write,
     canonical_log,
@@ -336,7 +336,7 @@ def sync_tasks(feature_dir: Path, tasks_md: Path, final_status: str, by: str) ->
     else "implementing". Honors the same no-backward-clobber guard.
     """
     target = feature_dir / ".spec-context.json"
-    branch = _git_branch(_repo_root()) or "main"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
     ctx = read_ctx(target)
 
     # Same-step safe: journal per-task even when implement already self-closed

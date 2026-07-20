@@ -15,6 +15,8 @@ from __future__ import annotations
 import importlib
 import io
 import json
+import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -1510,6 +1512,91 @@ class MultiFlagDispatchTests(unittest.TestCase):
     def test_a_capture_flag_on_its_own_warns_about_nothing(self) -> None:
         _, err = self._run_err(["--set", "size=normal"])
         self.assertNotIn("not applied", err)
+
+
+class SpecRelativeBranchTests(unittest.TestCase):
+    """Every writer derives `branch` from the repo containing the SPEC it writes
+    to, not from the process cwd. Two real git repos on distinct branches; the
+    test runs with cwd inside the caller repo and writes into the other."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        base = Path(self._tmp.name)
+        self.caller = self._repo(base / "caller", "caller-branch")
+        self.spec_repo = self._repo(base / "other", "spec-branch")
+        self.fd = self.spec_repo / "specs" / "001-outside"
+        self.fd.mkdir(parents=True)
+        self._orig_cwd = Path.cwd()
+        os.chdir(self.caller)
+
+    def tearDown(self) -> None:
+        os.chdir(self._orig_cwd)
+        self._tmp.cleanup()
+
+    @staticmethod
+    def _repo(path: Path, branch: str) -> Path:
+        path.mkdir(parents=True)
+        run = lambda *a: subprocess.run(a, cwd=path, check=True, capture_output=True)
+        run("git", "init", "-q")
+        run("git", "config", "user.email", "t@t.t")
+        run("git", "config", "user.name", "t")
+        (path / "README.md").write_text("x\n")
+        run("git", "add", "-A")
+        run("git", "commit", "-qm", "init")
+        run("git", "checkout", "-qb", branch)
+        return path
+
+    def _seed(self, status: str, step: str, history: list | None = None) -> None:
+        (self.fd / ".spec-context.json").write_text(json.dumps({
+            "workflow": "speckit", "specName": "001-outside",
+            "currentStep": step, "status": status, "history": history or [],
+        }))
+
+    def test_caller_and_spec_repos_really_are_on_different_branches(self) -> None:
+        self.assertEqual(wc._git_branch(self.caller), "caller-branch")
+        self.assertEqual(wc._git_branch(self.spec_repo), "spec-branch")
+
+    def test_step_lifecycle_write_records_the_spec_repos_branch(self) -> None:
+        wc.update_context(self.fd, "specify", "specified", "extension")
+        self.assertEqual(_ctx(self.fd)["branch"], "spec-branch")
+
+    def test_terminal_promotion_records_the_spec_repos_branch(self) -> None:
+        self._seed("implemented", "implement",
+                   [{"step": "implement", "kind": "start", "by": "ai", "at": "2026-01-01T00:00:00.000Z"}])
+        wc.mark_spec_complete(self.fd, "extension")
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], "completed")
+        self.assertEqual(ctx["branch"], "spec-branch")
+
+    def test_set_fields_records_the_spec_repos_branch(self) -> None:
+        self._seed("planning", "plan")
+        wc.set_fields(self.fd, ["unattended=true"])
+        self.assertEqual(_ctx(self.fd)["branch"], "spec-branch")
+
+    def test_task_sync_records_the_spec_repos_branch(self) -> None:
+        self._seed("implementing", "implement")
+        tasks = self.fd / "tasks.md"
+        tasks.write_text(_tasks("- [x] T001 done", "- [ ] T002 pending"))
+        wc.sync_tasks(self.fd, tasks, "implemented", "ai")
+        self.assertEqual(_ctx(self.fd)["branch"], "spec-branch")
+
+    def test_step_finish_journal_records_the_spec_repos_branch(self) -> None:
+        self._seed("specifying", "specify",
+                   [{"step": "specify", "kind": "start", "by": "ai", "at": "2026-01-01T00:00:00.000Z"}])
+        wc.journal_finish(self.fd, "specify", "ai")
+        self.assertEqual(_ctx(self.fd)["branch"], "spec-branch")
+
+    def test_a_spec_dir_outside_any_repo_falls_back_to_the_cwd_branch(self) -> None:
+        loose = Path(self._tmp.name) / "loose" / "001-loose"
+        loose.mkdir(parents=True)
+        wc.update_context(loose, "specify", "specified", "extension")
+        self.assertEqual(_ctx(loose)["branch"], "caller-branch")
+
+    def test_a_spec_inside_the_cwd_repo_is_unchanged(self) -> None:
+        same = self.caller / "specs" / "001-same"
+        same.mkdir(parents=True)
+        wc.update_context(same, "specify", "specified", "extension")
+        self.assertEqual(_ctx(same)["branch"], "caller-branch")
 
 
 if __name__ == "__main__":

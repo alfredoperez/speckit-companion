@@ -17,7 +17,6 @@ from pathlib import Path
 from spec_context import (
     CANONICAL_STEPS,
     _git_branch,
-    _repo_root,
     _repo_root_for,
     atomic_write,
     fill_required,
@@ -46,7 +45,7 @@ def set_fields(feature_dir: Path, pairs: list[str]) -> Path | None:
     `unattended=true` without disturbing it. Lifecycle keys are refused so `--set`
     can never bypass the `--mark-complete` / hook-driven status writers."""
     target = feature_dir / ".spec-context.json"
-    branch = _git_branch(_repo_root()) or "main"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
     ctx = read_ctx(target)
     fill_required(ctx, feature_dir, branch)
     for pair in pairs:
