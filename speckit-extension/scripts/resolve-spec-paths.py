@@ -9,8 +9,10 @@ drift) call instead of re-interpreting the project's capability registry
                  and no `exclude` glob.
   - path:        centralized -> `capabilities/<name>/spec.md` (default), or the
                  explicit `spec` path (colocated).
-  - discovery:   union of configured capabilities and the on-disk `*.spec.md`
-                 scan, de-duped by resolved spec path and by name.
+  - discovery:   union of configured capabilities and the on-disk scan of both
+                 layouts (colocated `*.spec.md` and centralized
+                 `capabilities/<name>/spec.md`), de-duped by resolved spec path
+                 and by name.
   - boundary:    a subdirectory with its own capability registry (or legacy
                  `.specify/companion.yml`) is a separate project — the scan stops
                  there and never reports or promotes anything inside it.
@@ -18,7 +20,7 @@ drift) call instead of re-interpreting the project's capability registry
                  prefixes the file), tiebreak by capability name.
   - tiers:       `.spec.md` (hot, loaded in v1); `.arch.md` / `.coverage.md`
                  reserved siblings, never flagged as orphans.
-  - orphans:     `*.spec.md` in the tree not claimed by any capability's spec.
+  - orphans:     a spec of either layout in the tree not claimed by any capability.
 
 OPT-IN: when `enabled` is unset/false (or there is no registry), the
 resolver is inert — every mode returns empty with exit 0 and no error.
@@ -26,7 +28,7 @@ resolver is inert — every mode returns empty with exit 0 and no error.
 Usage:
   resolve-spec-paths.py --changed <file>...   # capabilities in scope (ordered)
   resolve-spec-paths.py --all                 # every capability (union) + orphans
-  resolve-spec-paths.py --orphans             # orphan *.spec.md files only
+  resolve-spec-paths.py --orphans             # unclaimed specs, either layout
   add --json for the machine-readable object; the default is a concise human
   list (capability names / orphan paths).
 """
@@ -222,25 +224,52 @@ def _is_project_root(path: str) -> bool:
     return cc.is_project_root(path)
 
 
+CENTRAL_SPEC_NAME = "spec.md"
+
+VENDORED_DIRS = {"node_modules"}
+
+
+def is_central_spec(rel: str) -> bool:
+    """True for `<capability root>/<name>/spec.md` — the centralized layout.
+
+    A central spec is named exactly `spec.md`, which does not end in `.spec.md`,
+    so it needs its own shape test to enter discovery alongside colocated specs.
+    """
+    parts = _posix(rel).split("/")
+    return (
+        len(parts) == 3
+        and parts[0] == cc.DEFAULT_CAPABILITY_ROOT
+        and parts[2] == CENTRAL_SPEC_NAME
+    )
+
+
 def find_spec_files(root: str) -> list[str]:
-    """Every `*.spec.md` under `root` that belongs to `root`'s own project.
+    """Every living spec under `root` that belongs to `root`'s own project.
+
+    Both layouts are candidates: colocated `*.spec.md` anywhere, and centralized
+    `<capability root>/<name>/spec.md`.
 
     A subdirectory carrying its own capability registry (or legacy
     `.specify/companion.yml`) is a separate project: the walk prunes it and never
     looks inside, whatever that config says or fails to say. `root`'s own config
     is not a boundary against itself.
-    Dot-directories and dotfiles are excluded.
+    Dot-directories, dotfiles, and vendored `node_modules` are excluded.
     """
     found = []
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = sorted(
             d for d in dirnames
-            if not d.startswith(".") and not _is_project_root(os.path.join(dirpath, d))
+            if not d.startswith(".")
+            and d not in VENDORED_DIRS
+            and not _is_project_root(os.path.join(dirpath, d))
         )
         for name in filenames:
-            if name.startswith(".") or not name.endswith(".spec.md"):
+            if name.startswith("."):
                 continue
-            found.append(os.path.normpath(os.path.relpath(os.path.join(dirpath, name), root)))
+            rel = os.path.normpath(os.path.relpath(os.path.join(dirpath, name), root))
+            if not (name.endswith(".spec.md") or is_central_spec(rel)):
+                continue
+            found.append(rel)
     return sorted(found)
 
 
@@ -278,7 +307,8 @@ def discover_all(living: dict, root: str, orphans: list[str] | None = None) -> l
             continue
         name = _discovered_name(norm, names)
         names.add(name)
-        out.append({"name": name, "spec": _posix(norm), "location": "colocated",
+        location = "centralized" if is_central_spec(norm) else "colocated"
+        out.append({"name": name, "spec": _posix(norm), "location": location,
                     "exists": True, "tiers": tier_paths(_posix(norm), root)})
         seen.add(norm)
     out.sort(key=lambda e: e["name"])
@@ -286,11 +316,11 @@ def discover_all(living: dict, root: str, orphans: list[str] | None = None) -> l
 
 
 def find_orphans(living: dict, root: str) -> list[str]:
-    """`*.spec.md` in this project not claimed by — and not owned by — any capability.
+    """A spec in this project — either layout — not claimed by, and not owned by, a capability.
 
     A spec is NOT an orphan when it is: the exact claimed `spec` path of a
     capability; a reserved-tier sibling (`.arch.md` / `.coverage.md`); or any
-    `*.spec.md` living inside a configured capability's resolved spec directory
+    spec living inside a configured capability's resolved spec directory
     (e.g. another file under `capabilities/checkout/`). A genuinely-unclaimed,
     differently-named spec elsewhere stays an orphan. `specs/` (feature specs)
     and every nested project are always excluded.
@@ -340,7 +370,7 @@ def main(argv=None) -> int:
     ap.add_argument("--root", default=".", help="repo root (default: cwd)")
     ap.add_argument("--changed", nargs="*", help="changed files -> capabilities in scope")
     ap.add_argument("--all", action="store_true", help="every capability (union) + orphans")
-    ap.add_argument("--orphans", action="store_true", help="orphan *.spec.md files")
+    ap.add_argument("--orphans", action="store_true", help="orphan spec files (either layout)")
     ap.add_argument("--json", action="store_true",
                     help="emit the machine-readable JSON object (default: a concise human list)")
     args = ap.parse_args(argv)

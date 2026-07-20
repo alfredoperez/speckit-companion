@@ -336,7 +336,17 @@ function isProjectRoot(dir: string): boolean {
 }
 
 /**
- * Repo-relative POSIX paths of every `*.spec.md` belonging to this project.
+ * True for `<capability root>/<name>/spec.md` — the centralized layout, whose
+ * filename is exactly `spec.md` and so never ends in `.spec.md`.
+ */
+function isCentralSpec(rel: string): boolean {
+    const parts = rel.split('/');
+    return parts.length === 3 && parts[0] === DEFAULT_CAPABILITY_ROOT && parts[2] === 'spec.md';
+}
+
+/**
+ * Repo-relative POSIX paths of every living spec belonging to this project —
+ * colocated `*.spec.md` and centralized `<capability root>/<name>/spec.md`.
  * A subdirectory carrying its own registry or legacy config is a separate
  * project and is pruned; `root`'s own config is not a boundary against itself.
  */
@@ -366,7 +376,10 @@ function globSpecFiles(root: string): string[] {
                     continue;
                 }
                 walk(childDir, childRel);
-            } else if (entry.isFile() && entry.name.endsWith('.spec.md')) {
+            } else if (
+                entry.isFile() &&
+                (entry.name.endsWith('.spec.md') || isCentralSpec(childRel))
+            ) {
                 results.push(childRel);
             }
         }
@@ -376,7 +389,7 @@ function globSpecFiles(root: string): string[] {
 }
 
 /**
- * `*.spec.md` files claimed by no capability. Excludes the `specs/` feature
+ * Spec files of either layout claimed by no capability. Excludes the `specs/` feature
  * folder, nested projects, reserved tier siblings, claimed spec paths, and any
  * file inside a configured capability's spec directory. Mirrors the resolver's
  * `find_orphans`.

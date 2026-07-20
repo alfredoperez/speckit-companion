@@ -215,6 +215,89 @@ describe('readLivingSpecs', () => {
         expect(readLivingSpecs(root).orphans).toEqual(['examples/plain/src/store/todos.spec.md']);
     });
 
+    it('reports an unregistered centralized spec as an orphan', () => {
+        const root = ws(
+            {
+                'capabilities/checkout/spec.md': '# checkout',
+                'capabilities/workflows/spec.md': '# workflows',
+                'capabilities/extension-services/spec.md': '# services',
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
+        );
+        expect(readLivingSpecs(root).orphans).toEqual([
+            'capabilities/extension-services/spec.md',
+            'capabilities/workflows/spec.md',
+        ]);
+    });
+
+    it('reports centralized and colocated orphans in one listing', () => {
+        const root = ws(
+            {
+                'capabilities/checkout/spec.md': '# checkout',
+                'capabilities/workflows/spec.md': '# workflows',
+                'src/payments/payments.spec.md': '# payments',
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
+        );
+        expect(readLivingSpecs(root).orphans).toEqual([
+            'capabilities/workflows/spec.md',
+            'src/payments/payments.spec.md',
+        ]);
+    });
+
+    it('does not treat a bare or deeply nested spec.md as the centralized layout', () => {
+        const root = ws(
+            {
+                'capabilities/checkout/spec.md': '# checkout',
+                'spec.md': '# root readme-ish',
+                'capabilities/deep/nested/spec.md': '# too deep',
+                'src/payments/payments.spec.md': '# payments',
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
+        );
+        expect(readLivingSpecs(root).orphans).toEqual(['src/payments/payments.spec.md']);
+    });
+
+    it('still prunes a capabilities directory inside a nested project', () => {
+        const root = ws(
+            {
+                'capabilities/checkout/spec.md': '# checkout',
+                'examples/sample/.specify/companion.yml':
+                    'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: todos\n',
+                'examples/sample/capabilities/todos/spec.md': '# todos',
+                'examples/sample/capabilities/todos/todos.spec.md': '# todos colocated',
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
+        );
+        expect(readLivingSpecs(root).orphans).toEqual([]);
+    });
+
+    it('still prunes a nested project that sits at a capability path', () => {
+        const root = ws(
+            {
+                'capabilities/checkout/spec.md': '# checkout',
+                'capabilities/sample/.specify/companion.yml':
+                    'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: todos\n',
+                'capabilities/sample/spec.md': '# a different project entirely',
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
+        );
+        expect(readLivingSpecs(root).orphans).toEqual([]);
+    });
+
+    it('never scans vendored dependencies', () => {
+        const root = ws(
+            {
+                'capabilities/checkout/spec.md': '# checkout',
+                'node_modules/pkg/vendored.spec.md': '# vendored',
+                'node_modules/pkg/capabilities/a/spec.md': '# vendored central',
+                'docs/wandering.spec.md': '# wandering',
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
+        );
+        expect(readLivingSpecs(root).orphans).toEqual(['docs/wandering.spec.md']);
+    });
+
     it('drops a capability whose spec path is absolute', () => {
         const root = ws(
             { 'capabilities/x/spec.md': '# x' },
