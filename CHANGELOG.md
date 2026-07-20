@@ -14,6 +14,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **The Living Specs sidebar now lists unregistered central specs too.** Its Orphans group only ever showed specs kept next to the code they describe. A spec kept centrally, under `capabilities/<name>/`, was invisible — so one you never registered simply didn't appear anywhere in the view, and an empty Orphans group looked like everything was accounted for when it wasn't. Both layouts now show up. A repository inside your repository that keeps its own registry is still treated as a separate project and stays out of the list.
+
 - **Your capability registrations survive routine cleanup.** The Living Specs view now reads your capabilities from `living-specs.yml` at the root of your project instead of from inside `.specify/`, so the ordinary housekeeping that re-creates that folder — a local install, a hard reset after a merge — can no longer wipe them without saying a word. Registrations you already have keep working from where they are, and move across on their own the next time you register or relocate a capability. The sidebar refreshes as soon as you edit the new file, and a repository inside your repository that keeps its own registry is still treated as a separate project.
 
 - **A living spec's title is the one its author wrote.** The viewer was building the title from the folder name, so a document headed "SpecKit Extension Capture — Living Spec" appeared as "Speckit-Extension-Capture". It now reads the document's own heading and only falls back to the folder name when there isn't one. Product names keep their capitalization.

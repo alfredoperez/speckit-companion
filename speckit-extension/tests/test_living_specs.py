@@ -386,6 +386,87 @@ class DiscoveryConsistencyTests(unittest.TestCase):
         self.assertEqual(checkout[0]["spec"], "capabilities/checkout/spec.md")
 
 
+class CentralSpecDiscoveryTests(unittest.TestCase):
+    def test_unregistered_central_spec_is_an_orphan(self) -> None:
+        root = make_repo(CHECKOUT_YAML,
+                         spec_files=["capabilities/webview-shared/spec.md"])
+        living = rsp.load_living(str(root))
+        self.assertEqual(rsp.find_orphans(living, str(root)),
+                         ["capabilities/webview-shared/spec.md"])
+
+    def test_registered_central_spec_is_not_an_orphan(self) -> None:
+        root = make_repo(CHECKOUT_YAML, spec_files=["capabilities/checkout/spec.md"])
+        living = rsp.load_living(str(root))
+        self.assertEqual(rsp.find_orphans(living, str(root)), [])
+
+    def test_central_and_colocated_orphans_are_reported_together(self) -> None:
+        root = make_repo(
+            CHECKOUT_YAML,
+            spec_files=["capabilities/checkout/spec.md",
+                        "capabilities/workflows/spec.md",
+                        "docs/wandering.spec.md"],
+        )
+        living = rsp.load_living(str(root))
+        self.assertEqual(rsp.find_orphans(living, str(root)),
+                         ["capabilities/workflows/spec.md", "docs/wandering.spec.md"])
+
+    def test_colocated_discovery_is_unchanged_by_the_central_shape_test(self) -> None:
+        root = make_repo(CHECKOUT_YAML,
+                         spec_files=["docs/wandering.spec.md", "spec.md",
+                                     "capabilities/deep/nested/spec.md"])
+        living = rsp.load_living(str(root))
+        # Only `<capability root>/<name>/spec.md` is the centralized layout.
+        self.assertEqual(rsp.find_orphans(living, str(root)), ["docs/wandering.spec.md"])
+
+    def test_discovered_central_spec_reports_its_centralized_location(self) -> None:
+        root = make_repo(CHECKOUT_YAML,
+                         spec_files=["capabilities/workflows/spec.md"])
+        living = rsp.load_living(str(root))
+        entry = next(e for e in rsp.discover_all(living, str(root))
+                     if e["spec"] == "capabilities/workflows/spec.md")
+        self.assertEqual(entry["location"], "centralized")
+        self.assertEqual(entry["name"], "workflows")
+
+    def test_nested_project_capability_dir_is_still_pruned(self) -> None:
+        root = make_repo(CHECKOUT_YAML)
+        plant_nested_project(root, "examples/nested", NESTED_ENABLED_YAML,
+                             spec_files=["capabilities/todos-store/spec.md",
+                                         "capabilities/todos-store/todos.spec.md"])
+        living = rsp.load_living(str(root))
+        self.assertEqual(rsp.find_spec_files(str(root)), [])
+        self.assertEqual(rsp.find_orphans(living, str(root)), [])
+
+    def test_a_nested_project_sitting_at_a_capability_path_is_still_pruned(self) -> None:
+        # Centralized shape, but `sample` carries its own registry — another project.
+        root = make_repo(CHECKOUT_YAML)
+        plant_nested_project(root, "capabilities/sample", NESTED_ENABLED_YAML,
+                             spec_files=["spec.md"])
+        living = rsp.load_living(str(root))
+        self.assertEqual(rsp.find_spec_files(str(root)), [])
+        self.assertEqual(rsp.find_orphans(living, str(root)), [])
+
+    def test_orphans_and_all_agree_on_every_central_spec(self) -> None:
+        root = make_repo(
+            CHECKOUT_YAML,
+            spec_files=["capabilities/checkout/spec.md",
+                        "capabilities/workflows/spec.md",
+                        "capabilities/extension-services/spec.md",
+                        "docs/wandering.spec.md"],
+        )
+        living = rsp.load_living(str(root))
+        orphans = rsp.find_orphans(living, str(root))
+        allres = rsp.discover_all(living, str(root), orphans)
+        specs = {e["spec"] for e in allres}
+        on_disk = {rsp._posix(f) for f in rsp.find_spec_files(str(root))}
+        configured = {c["spec"] for c in living["capabilities"]}
+        self.assertEqual(on_disk, {"capabilities/checkout/spec.md",
+                                   "capabilities/workflows/spec.md",
+                                   "capabilities/extension-services/spec.md",
+                                   "docs/wandering.spec.md"})
+        self.assertEqual(on_disk - specs, set())
+        self.assertEqual(set(orphans) & configured, set())
+
+
 class ColocatedErrorTests(unittest.TestCase):
     def test_colocated_without_spec_path_errors(self) -> None:
         yaml = (
