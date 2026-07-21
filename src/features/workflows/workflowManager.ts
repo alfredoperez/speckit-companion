@@ -66,7 +66,7 @@ export const COMPANION_WORKFLOW: WorkflowConfig = {
         { name: WorkflowSteps.PLAN, label: 'Plan', command: 'speckit.companion.plan', file: 'plan.md', subFiles: ['research.md', 'data-model.md', 'quickstart.md'], subDir: 'contracts', includeRelatedDocs: true },
         { name: WorkflowSteps.TASKS, label: 'Tasks', command: 'speckit.companion.tasks', file: 'tasks.md' },
         { name: WorkflowSteps.IMPLEMENT, label: 'Implement', command: 'speckit.companion.implement', actionOnly: true },
-        { name: 'mark-complete', label: 'Mark Complete', command: 'speckit.companion.mark-complete', actionOnly: true },
+        { name: 'mark-complete', label: 'Mark Complete', command: 'speckit.companion.mark-complete', actionOnly: true, untimed: true },
     ],
     [WorkflowSteps.CONFIG_SPECIFY]: 'speckit.companion.specify',
     [WorkflowSteps.CONFIG_PLAN]: 'speckit.companion.plan',

@@ -313,8 +313,9 @@ export function deriveViewerState(
     // Derive stepHistory once from the canonical history[] sequence and reuse
     // it across all the per-step derivations below.
     const stepHistory = deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status);
+    // Denominator counts only timed steps; `untimed` ones (e.g. mark-complete) never measure.
     const expectedTimingPhases = workflowSteps?.length
-        ? workflowSteps.map(step => step.name)
+        ? workflowSteps.filter(step => !step.untimed).map(step => step.name)
         : ['specify', 'plan', 'tasks', 'implement'];
     return {
         status: ctx.status,
