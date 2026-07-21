@@ -136,3 +136,15 @@ Before a SpecKit command is fired into a host editor's chat, the extension SHALL
 ## Uncovered
 
 _None — every file in the area was read._
+
+### The dispatch preamble names the main agent as the per-task serializing writer
+
+The implement preamble SHALL instruct that per-task journaling is performed by the main agent — one task at a time, in the foreground, including tasks whose work was fanned out — and that workers never write the shared context file. The slim companion preamble SHALL describe step closure as extension-stamped (bodies record starts, hooks and scripts record completes), reserving AI self-close for clarify/analyze.
+
+#### Scenario: implement is dispatched with the full preamble
+- **WHEN** the AI fans tasks out to workers
+- **THEN** the preamble directs the main agent to journal each returned task itself, serially
+
+#### Scenario: a companion command is dispatched
+- **WHEN** the slim preamble is rendered
+- **THEN** it defers step closure to the body-and-hook model and never asks the AI to self-close plan or tasks

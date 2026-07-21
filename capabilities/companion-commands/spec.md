@@ -179,3 +179,28 @@ The mark-complete step instructs the AI to read `livingSpecs.loaded` and, for ea
 
 - **WHEN** the feature loaded a capability but did not change its behavior
 - **THEN** no delta block is authored for it and its spec is left untouched
+
+### Step boundaries are extension-stamped in order on every dispatch path
+
+Each pipeline step's start SHALL be recorded by a script call at the top of the step's own command body, and plan/tasks completions SHALL be recorded by their after-step hook commands — both `by: extension`, start before complete. The AI SHALL self-close only clarify and analyze at step level; a step whose boundaries the extension stamps must never receive an AI step-level complete, because the idempotent completion append lets the first writer win.
+
+#### Scenario: plan runs on any dispatcher
+- **WHEN** the plan command body begins its work
+- **THEN** a script-stamped extension start is recorded before any planning output
+- **AND** the after-plan hook later records the extension-stamped completion
+
+#### Scenario: a step's hook never fires
+- **WHEN** the after-step hook is skipped (missing or unparseable extensions registry)
+- **THEN** the next step's extension start still closes the span and the duration stays trusted
+
+### Task finishes are folded into the shared record one at a time, as they land
+
+Recording an implement task SHALL be a two-part closing action — append the finish, then fold it — executed by the MAIN agent in the foreground the moment the task's work completes. Fanned-out workers SHALL only append to the event log; the main agent folds each worker's finish as its result returns, and the wave-join and end-of-step folds are idempotent backstops, not the cadence.
+
+#### Scenario: a wave of tasks executes
+- **WHEN** each task in the wave finishes
+- **THEN** the watched context file and its checkbox advance before the next task starts
+
+#### Scenario: workers run in parallel
+- **WHEN** several workers finish tasks concurrently
+- **THEN** each appends only its own event-log line and the main agent alone performs every fold

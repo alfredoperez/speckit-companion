@@ -39,7 +39,7 @@ So template overrides are **mixed** (work for plan/tasks, no-op for specify). Co
 
 Both families bake a single shared **timing partial** into every overridden command body, so durations stay honest for any dispatcher — not only when the GUI prepends its preamble (`src/ai-providers/promptBuilder.ts`). The partial fixes three logged bugs:
 
-1. **Self-close** — each step writes its own `complete` when its work ends. (Previously `specify` never self-closed, so the next step stamped its end.)
+1. **Closed boundaries** — every pipeline step gets a script-stamped `complete` when its work ends: specify closes itself, plan/tasks are closed by their after-step hooks, implement by its end-of-step hook; the AI self-closes only clarify/analyze. (Previously `specify` never self-closed, and plan/tasks got their start stamped *after* the AI's close — see `docs/capture-and-timing.md`, #509.)
 2. **No duplicate start** — a repeated same-step `start` is deduped at write time in `speckit-extension/scripts/write-context.py` instead of doubling `history[]`.
 3. **Live cadence** — one fresh `date -u` per substep/task, plus a per-task `complete` (not just `start`); no end-of-run burst with 0ms gaps.
 

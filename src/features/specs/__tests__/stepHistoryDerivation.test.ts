@@ -507,6 +507,33 @@ describe('deriveTimingSummary', () => {
         });
     });
 
+    it('trusts all four phases for the fixed capture order (body starts + hook completes)', () => {
+        const history: Transition[] = [
+            tx({ step: 'specify', kind: 'start', by: 'extension', at: '2026-07-21T10:00:00.100Z' }),
+            tx({ step: 'specify', kind: 'complete', by: 'extension', at: '2026-07-21T10:04:00.200Z' }),
+            tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-21T10:04:30.300Z' }),
+            tx({ step: 'plan', substep: 'research', kind: 'complete', by: 'ai', at: '2026-07-21T10:07:00Z' }),
+            tx({ step: 'plan', substep: 'design', kind: 'complete', by: 'ai', at: '2026-07-21T10:09:00Z' }),
+            tx({ step: 'plan', kind: 'complete', by: 'extension', at: '2026-07-21T10:09:10.400Z' }),
+            tx({ step: 'tasks', kind: 'start', by: 'extension', at: '2026-07-21T10:09:30.500Z' }),
+            tx({ step: 'tasks', substep: 'generate', kind: 'complete', by: 'ai', at: '2026-07-21T10:12:00Z' }),
+            tx({ step: 'tasks', kind: 'complete', by: 'extension', at: '2026-07-21T10:12:10.600Z' }),
+            tx({ step: 'implement', kind: 'start', by: 'extension', at: '2026-07-21T10:12:30.700Z' }),
+            tx({ step: 'implement', substep: null, task: 'T001', kind: 'complete', by: 'ai', at: '2026-07-21T10:15:00Z' }),
+            tx({ step: 'implement', substep: null, task: 'T002', kind: 'complete', by: 'ai', at: '2026-07-21T10:18:00Z' }),
+            tx({ step: 'implement', kind: 'complete', by: 'extension', at: '2026-07-21T10:20:00.800Z' }),
+        ];
+        const steps = deriveStepHistory(history, 'implement', 'completed');
+        for (const step of ['specify', 'plan', 'tasks', 'implement'] as const) {
+            expect(steps[step].durationTrusted).toBe(true);
+        }
+        const timing = deriveTimingSummary(steps);
+        expect(timing.measuredPhases).toBe(4);
+        expect(timing.complete).toBe(true);
+        expect(timing.startedAt).toBe('2026-07-21T10:00:00.100Z');
+        expect(timing.endedAt).toBe('2026-07-21T10:20:00.800Z');
+    });
+
     it('models feature 406 repeated/reversed boundaries without four trusted phases', () => {
         const history: Transition[] = [
             tx({ step: 'specify', kind: 'start', by: 'extension', at: '2026-07-21T00:25:21.186Z' }),

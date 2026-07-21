@@ -21,8 +21,10 @@ document is created by the core `/speckit.plan` workflow.
 Run the writer script from the repository root:
 
 ```bash
-python3 .specify/extensions/companion/scripts/write-context.py --step plan --status planned --by extension
+python3 .specify/extensions/companion/scripts/write-context.py --step plan --status planned --kind complete --by extension
 ```
+
+`--kind complete` records the plan step's **completion boundary** (the plan body already recorded the step's start when it began), so the extension stamps both ends of the span in order. The completion append is idempotent — a re-fired hook never doubles it.
 
 The script resolves the active feature directory on its own, in this order:
 `--feature-dir` → `SPECIFY_FEATURE_DIRECTORY` env → `SPECIFY_FEATURE` env →
@@ -32,7 +34,7 @@ If you already know the feature directory (e.g. the one `/speckit.plan` just
 wrote into), pass it explicitly so resolution is unambiguous:
 
 ```bash
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir specs/<NNN>-<slug> --step plan --status planned --by extension
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir specs/<NNN>-<slug> --step plan --status planned --kind complete --by extension
 ```
 
 ## Graceful Degradation
@@ -45,6 +47,6 @@ The script is best-effort and never fails the host command:
 ## Output
 
 On success the script prints the path it updated and the values written, e.g.:
-`[companion] Updated specs/<NNN>-<slug>/.spec-context.json (currentStep=plan, status=planned, by=extension)`.
+`[companion] Updated specs/<NNN>-<slug>/.spec-context.json (currentStep=plan, status=planned, kind=complete, by=extension)`.
 The write is atomic (temp file + rename) and appends to the canonical `history[]` without
 rewriting existing entries.

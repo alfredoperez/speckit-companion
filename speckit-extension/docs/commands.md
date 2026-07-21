@@ -54,22 +54,22 @@ python3 .specify/extensions/companion/scripts/write-context.py --step specify --
 
 ## `speckit.companion.after-plan`
 
-Runs after `/speckit.plan`. Resolves the active feature and records plan completion.
+Runs after `/speckit.plan`. Resolves the active feature and records the plan step's **completion boundary** (the plan body records the matching start when it begins, so both ends of the span are extension-stamped in order).
 
 **What the agent runs:**
 
 ```bash
-python3 .specify/extensions/companion/scripts/write-context.py --step plan --status planned --by extension
+python3 .specify/extensions/companion/scripts/write-context.py --step plan --status planned --kind complete --by extension
 ```
 
 ## `speckit.companion.after-tasks`
 
-Runs after `/speckit.tasks`. Resolves the active feature and records tasks completion.
+Runs after `/speckit.tasks`. Resolves the active feature and records the tasks step's **completion boundary** (the tasks body records the matching start when it begins, so both ends of the span are extension-stamped in order).
 
 **What the agent runs:**
 
 ```bash
-python3 .specify/extensions/companion/scripts/write-context.py --step tasks --status ready-to-implement --by extension
+python3 .specify/extensions/companion/scripts/write-context.py --step tasks --status ready-to-implement --kind complete --by extension
 ```
 
 ## `speckit.companion.after-implement`

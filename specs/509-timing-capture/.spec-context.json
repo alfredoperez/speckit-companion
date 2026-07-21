@@ -1,0 +1,439 @@
+{
+  "workflow": "speckit",
+  "specName": "timing capture",
+  "branch": "509-timing-capture",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T14:51:02.554Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T14:53:09.502Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T14:53:33.587Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T14:55:27.393Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T14:56:07.421Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T14:56:16.465Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T14:56:22.962Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T14:56:58.262Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T14:56:59.379Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T14:57:08.482Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T14:57:24.556Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T14:57:36.023Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T14:57:58.804Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T14:58:21.645Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T14:58:39.425Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T14:59:21.632Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T14:59:44.465Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T15:00:06.189Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T15:00:58.191Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T15:01:34.027Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T15:03:56.162Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T15:05:00.534Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T15:05:00.616Z"
+    }
+  ],
+  "livingSpecs": {
+    "loaded": [
+      "companion-commands",
+      "specs",
+      "ai-providers"
+    ],
+    "synced": [
+      "ai-providers",
+      "companion-commands"
+    ]
+  },
+  "coverage": {
+    "FR-001": {
+      "title": "Implement instructions fold each task's finish into the shared context the moment it completes (per-task, foreground), not once per wave",
+      "tasks": [
+        "T007",
+        "T008"
+      ]
+    },
+    "FR-002": {
+      "title": "Parallel workers stay append-only; only the main agent folds — one writer of the shared files",
+      "tasks": [
+        "T007",
+        "T008"
+      ]
+    },
+    "FR-003": {
+      "title": "Plan and tasks bodies record a script-stamped extension start at the beginning of their work",
+      "tasks": [
+        "T001",
+        "T002"
+      ]
+    },
+    "FR-004": {
+      "title": "After-plan/after-tasks hooks record the step's completion (extension), not a start",
+      "tasks": [
+        "T003",
+        "T004"
+      ]
+    },
+    "FR-005": {
+      "title": "Timing part drops AI step-level self-close for plan/tasks; clarify/analyze keep it; substeps unchanged",
+      "tasks": [
+        "T005"
+      ]
+    },
+    "FR-006": {
+      "title": "GUI dispatch preamble mirrors the per-task cadence and the new closure model",
+      "tasks": [
+        "T009"
+      ]
+    },
+    "FR-007": {
+      "title": "Derivation trusts new-order runs (4 of 4) and keeps legacy inverted spans untrusted, with tests",
+      "tasks": [
+        "T006"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/stepHistoryDerivation.test.ts::trusts all four phases for the fixed capture order"
+      ]
+    },
+    "FR-008": {
+      "title": "Assembled bodies, goldens, and shape-parity gate agree after the change",
+      "tasks": [
+        "T010"
+      ],
+      "tests": [
+        "speckit-extension/scripts/check-shape-parity.py"
+      ]
+    },
+    "FR-009": {
+      "title": "Capture docs describe the new cadence and boundary-ownership model",
+      "tasks": [
+        "T011"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 12,
+    "projectedTasks": 12,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "context": [
+    "living spec: companion-commands",
+    "living spec: specs",
+    "living spec: ai-providers",
+    "area: speckit-extension command assembly (nodes/parts/goldens)",
+    "area: src/ai-providers dispatch preamble",
+    "constraint: assembled bodies are generated — edit parts/nodes, re-bless goldens deliberately",
+    "constraint: forward-only status guard and idempotent completion appends must hold"
+  ],
+  "intent": "Make Companion timing capture honest: per-task live progress folded by the main agent, and extension-stamped step boundaries in order so all four phases carry trusted durations",
+  "expectations": [
+    "No change to stock-family timing trust (stays best-effort)",
+    "No retroactive trusting of legacy inverted-order data",
+    "No new settings or toggles"
+  ],
+  "approach": "Move the implement fold from per-wave to per-task (main agent, foreground; workers stay append-only) and make plan/tasks boundaries extension-stamped in order: bodies record a script-stamped start, after-step hooks record the complete, and the AI step-level self-close for plan/tasks is removed. No writer or derivation code changes; proven by derivation tests, re-blessed goldens, and shape parity.",
+  "decisions": [
+    {
+      "decision": "Approach (b): extension stamps both step boundaries (body start + after-hook complete)",
+      "why": "The command body is the one surface every dispatch path shares and the hook reliably runs at the true step end; GUI-dispatch stamping (a) misses the skill/auto/workflow paths that produced the 484 data",
+      "rejected": "Approach (a) dispatch-time stamping; trusting by:ai closes in derivation"
+    },
+    {
+      "decision": "No deriveStepHistory changes — prove 4-of-4 with tests only",
+      "why": "Correctly ordered boundaries already satisfy the existing trust rule; changing close-preference would rewrite historical spans",
+      "rejected": "Preferring own completion over next-step boundary for completedAt"
+    },
+    {
+      "decision": "Per-task materialize by the MAIN agent only; workers append-only",
+      "why": "materialize is a read-modify-write of shared files — one named serializing writer, per the concurrency rule; idempotent fold makes per-task + wave-join backstop safe",
+      "rejected": "Workers materializing their own finishes; extension-side sidecar watcher"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Prompt-surface-only fix: per-task fold cadence + extension-stamped plan/tasks boundaries via body starts and hook completes",
+      "key_finding": "The completion-append idempotency race is why the AI self-close must be removed — an earlier by:ai complete would block the hook by:extension complete forever"
+    },
+    "tasks": {
+      "summary": "12 tasks across 4 waves: boundary fixes (4 parallel) -> timing-part + tests -> cadence rewrites -> preamble mirror -> regenerate/docs/validate"
+    },
+    "implement": {
+      "summary": "Per-task fold cadence + ordered extension-stamped plan/tasks boundaries shipped across timing part, nodes, hook commands, GUI preamble, docs; all gates green"
+    }
+  },
+  "currentTask": "T012",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Plan body now records a script-stamped extension start as its opening action",
+      "files": [
+        "speckit-extension/nodes/plan/gather-context.md"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Tasks body now records a script-stamped extension start as its opening action",
+      "files": [
+        "speckit-extension/nodes/tasks/tasks-doc.md"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "after-plan hook now records the extension-stamped completion boundary (--kind complete)",
+      "files": [
+        "speckit-extension/commands/speckit.companion.after-plan.md"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "after-tasks hook now records the extension-stamped completion boundary (--kind complete)",
+      "files": [
+        "speckit-extension/commands/speckit.companion.after-tasks.md"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Timing part self-close narrowed to clarify/analyze; names the idempotency race that forces removing plan/tasks self-close",
+      "files": [
+        "speckit-extension/presets/_parts/timing.md"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added fixed-order derivation test: 4-of-4 trusted phases with complete timing summary; legacy inverted order stays covered by the 484 model",
+      "files": [
+        "src/features/specs/__tests__/stepHistoryDerivation.test.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Timing part fold cadence is now per-task by the MAIN agent (foreground, one at a time); wave-join fold demoted to backstop; workers stay append-only",
+      "files": [
+        "speckit-extension/presets/_parts/timing.md"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "implement-exec closes a task with append+materialize back to back by the MAIN agent; wave join keeps reconcile plus backstop fold",
+      "files": [
+        "speckit-extension/nodes/implement/implement-exec.md"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "GUI preambles name the main agent as the per-task serializing writer; slim body reflects hook-stamped plan/tasks closes",
+      "files": [
+        "src/ai-providers/promptPreamble.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Regenerated 13 assembled bodies, re-blessed 14 goldens; build/assemble/shape-parity gates all pass; tracked stock skills carry no timing part so no emission refresh needed",
+      "files": [
+        "speckit-extension/commands",
+        "speckit-extension/presets/companion-standard/commands",
+        "speckit-extension/tests/golden/commands"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "capture-and-timing doc gained the #509 section and cadence/boundary rewrites; template-profiles, spec-kit commands doc, and spec-kit CHANGELOG updated",
+      "files": [
+        "docs/capture-and-timing.md",
+        "docs/template-profiles.md",
+        "speckit-extension/docs/commands.md",
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "compile clean; 123 suites / 1724 jest tests pass; all python suites pass; manifest + emissions gates OK",
+      "files": [
+        "repo-wide"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "TypeScript compile",
+      "command": "npm run compile",
+      "result": "clean"
+    },
+    {
+      "what": "Full jest suite incl. new 4-of-4 trusted-phases derivation test",
+      "command": "npm test",
+      "result": "123 suites, 1724 tests pass"
+    },
+    {
+      "what": "Spec-kit python test suites",
+      "command": "python3 tests/test_*.py",
+      "result": "all pass"
+    },
+    {
+      "what": "Assembly + parity + goldens",
+      "command": "build-commands.py --check; assemble-nodes.py --check; check-shape-parity.py",
+      "result": "14 bodies match parts, golden, timing fence"
+    },
+    {
+      "what": "Packing + inventory gates",
+      "command": "package-manifest.py --check; check-command-emissions.py",
+      "result": "OK"
+    },
+    {
+      "what": "Live proof on this very spec",
+      "command": "per-task materialize during this run",
+      "result": "tasks.md checkboxes advanced one task at a time; plan/tasks captured start-before-complete",
+      "warnings": [
+        "capture eval to run post-completion"
+      ]
+    }
+  ],
+  "last_action": "all 12 tasks done — gates + 1724 tests green; awaiting completion fold"
+}

@@ -5,7 +5,11 @@ command: tasks
 writes: tasks.md
 reads: []
 ---
-1. Read `.specify/feature.json` for the feature directory; load `plan.md` and `spec.md` (required), plus `data-model.md`, `contracts/`, and `research.md` if present.
+1. Read `.specify/feature.json` for the feature directory, then record the **tasks START** so the step's duration begins now (the script stamps the real clock; do not hand-write tasks timing):
+   ```bash
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step tasks --status tasking --kind start --by extension
+   ```
+   Load `plan.md` and `spec.md` (required), plus `data-model.md`, `contracts/`, and `research.md` if present.
 
 2. Create `<feature_directory>/tasks.md` organized **by user story**, so each story can be implemented, tested, and delivered as an independent increment. Use the line format `- [ ] **T###** [P?] [US#] Description · exact/file/path`:
    - `[P]` marks a task that is **independent** of the others in its wave — a different file with no incomplete dependency, so it can be built in any order (or in parallel on a host that wants to).
