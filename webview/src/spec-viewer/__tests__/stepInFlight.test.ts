@@ -65,4 +65,35 @@ describe('isStepInFlight', () => {
             stepBadges: { implement: 'completed' },
         })).toBe(false);
     });
+
+    // #491: the tasks step finished (its completion is in history / its badge is
+    // `completed`) but the top-level status still lags at `tasking`. A recorded
+    // completion must win, so the panel settles instead of staying locked.
+    it('settles the current step from history even when the status still names it running', () => {
+        const fromBadge = {
+            status: 'tasking',
+            currentStep: 'tasks',
+            activeStep: 'tasks',
+            stepBadges: { tasks: 'completed' as const },
+        };
+        expect(isStepInFlight('tasks', fromBadge)).toBe(false);
+
+        const fromHistory = {
+            status: 'tasking',
+            currentStep: 'tasks',
+            activeStep: 'tasks',
+            stepHistory: { tasks: { startedAt: '2026-07-10T10:00:00Z', completedAt: '2026-07-10T10:05:00Z' } },
+        };
+        expect(isStepInFlight('tasks', fromHistory)).toBe(false);
+    });
+
+    it('keeps a genuinely-running tasks step in flight when no completion is recorded', () => {
+        const run = {
+            status: 'tasking',
+            currentStep: 'tasks',
+            activeStep: 'tasks',
+            stepHistory: { tasks: { startedAt: '2026-07-10T10:00:00Z', completedAt: null } },
+        };
+        expect(isStepInFlight('tasks', run)).toBe(true);
+    });
 });

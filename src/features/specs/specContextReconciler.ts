@@ -18,6 +18,7 @@ import {
     HistoryEntry,
     SpecContext,
     STATUSES,
+    STATUS_OWNING_STEP,
     STEP_NAMES,
     Status,
     StepName,
@@ -95,7 +96,41 @@ export function reconcile(ctx: SpecContext): SpecContext | null {
         changed = true;
     }
 
+    // Settle a lagging in-progress status. When history records the current
+    // step's completion but `status` still names that step running — a
+    // journal-only `--finish` self-close with no hook to flip the status — move
+    // status forward to the step's settled form (`tasking → ready-to-implement`)
+    // so the on-disk record matches the run and the panel unlocks. Forward-only
+    // and never for implement: reaching the terminal `completed` stays the
+    // user's mark-complete action.
+    const inProgress = STATUS_OWNING_STEP.get(result.status);
+    if (
+        inProgress &&
+        !inProgress.settled &&
+        inProgress.step === result.currentStep &&
+        result.currentStep !== 'implement' &&
+        isStepCompletedInHistory(result.history, result.currentStep)
+    ) {
+        result = { ...result, status: deriveCompletedStatus(result.currentStep) };
+        changed = true;
+    }
+
     return changed ? result : null;
+}
+
+/**
+ * A step is settled when its latest step-level entry in history is a completion
+ * (`kind === 'complete'`, or the legacy `from.step === step` form). Substep
+ * entries are skipped so a `tasks/generate` finish never counts as the
+ * step-level close.
+ */
+function isStepCompletedInHistory(history: HistoryEntry[], step: StepName): boolean {
+    for (let i = history.length - 1; i >= 0; i--) {
+        const e = history[i];
+        if (e.step !== step || e.substep) continue;
+        return e.kind === 'complete' || e.from?.step === step;
+    }
+    return false;
 }
 
 /**

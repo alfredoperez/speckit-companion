@@ -270,8 +270,11 @@ The `Approve` label resolves to the next workflow step (`getApproveLabel`); it i
 hidden on the final `implement` step and whenever a past tab is viewed (the
 footer always reflects the true workflow stage, not the viewed tab). While a step
 is in flight the `CatalogFooter` suppresses its forward-motion button and keeps
-`Regenerate` (plus any closure/refine actions); the moment `status` settles, the
-forward button reappears — it never leaves the action bar empty.
+`Regenerate` (plus any closure/refine actions); the moment the step settles — its
+`status` settles **or** its completion is recorded in history (`FooterActions`
+reads the resilient `isStepInFlight`, not the status string alone, so a lagging
+status can't keep it locked, #491) — the forward button reappears; it never
+leaves the action bar empty.
 
 A status recovered via the sidebar gear maps to the **same row** as its normal pause stage: forcing `ready-to-implement` after an interrupted implement run restores Approve → **Implement**, and forcing `planned` restores Approve → **Tasks** — the stale start left by the interrupted run does not suppress the forward button (#414, "Rollback recovery" above). The oracle rows in `footerMatrix.fixtures.ts` pin these recovered states alongside the normal ones.
 
@@ -497,9 +500,10 @@ Whether a step is running is decided in exactly one place per bundle. In the web
 
 The derivation, in order:
 
-1. **The spec-level `status` wins when it names a step.** `specifying` / `planning` / `tasking` / `implementing` run exactly the step they name — and only that step.
-2. **A settled status runs nothing.** `specified`, `planned`, `ready-to-implement`, `implemented`, `completed`, `archived` — no step spins, even if the step's self-close history entry never landed.
-3. **Otherwise fall back to local signals** (a status that gives no guidance, e.g. `draft`): a recorded completion (step badge `completed` or a `completedAt`) settles the step; an `activeStep` match runs it; and `implement`, which writes no document of its own, is read as running while the workflow sits at it and `tasks.md` still has unchecked boxes.
+1. **A recorded completion settles the step, whatever the status says.** If the step's badge is `completed` or its history entry carries a `completedAt`, the step is done — even when the top-level `status` still names it running. The status can lag its own history: a journal-only `--finish` self-close records the completion without flipping `status`, and if no lifecycle hook fires (an IDE-chat host, the workflow engine, an interrupted run) `status` sits at `tasking` while history already shows tasks complete. Trusting `status` over history there kept the panel locked on "Step running — actions unlock when it settles" with no way forward but hand-editing the file (#491). The reconciler heals the on-disk `status` on load too (`specContextReconciler`, forward-only, never implement→completed), but the derivation must not depend on that write having happened.
+2. **Otherwise the spec-level `status` wins when it names a step.** `specifying` / `planning` / `tasking` / `implementing` run exactly the step they name — and only that step — as long as no completion for that step is recorded (rule 1).
+3. **A settled status runs nothing.** `specified`, `planned`, `ready-to-implement`, `implemented`, `completed`, `archived` — no step spins.
+4. **Otherwise fall back to local signals** (a status that gives no guidance, e.g. `draft`): an `activeStep` match runs the step; and `implement`, which writes no document of its own, is read as running while the workflow sits at it and `tasks.md` still has unchecked boxes.
 
 The implement percent is a *label*, not a run signal: the tab that hosts it (the implement entry, or the last tab when the rail has none) shows it only while implement is in flight by the rule above.
 

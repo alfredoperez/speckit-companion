@@ -1073,6 +1073,57 @@ class FoldLivingSpecTests(unittest.TestCase):
         self.assertEqual(self._living(root), before)  # byte-identical
         self.assertNotIn("livingSpecs", self._ctx(fdir))
 
+    # #492: a feature that loaded capabilities but wrote no delta block is the
+    # common pipeline case. It must produce an actionable signal — named
+    # capabilities + how to sync — not a silent success and not a four-way
+    # OR-string.
+    def test_loaded_capabilities_but_no_delta_is_actionable_not_silent(self) -> None:
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat", "# Feat\n\nOrdinary requirements, no delta block.\n")
+        wc.set_living_specs_loaded(fdir, ["todos"])
+        before = self._living(root)
+        log = self._fold_log(fdir)
+        self.assertIsNone(wc.fold_living_spec(fdir, "ai"))
+        self.assertEqual(self._living(root), before)  # nothing written
+        self.assertIn("todos", log)
+        self.assertIn("nothing to fold yet", log)
+        self.assertIn("no ADDED/MODIFIED/REMOVED/RENAMED delta block", log)
+        # Not an OR-string of every possible reason.
+        self.assertNotIn("feature off", log)
+        self.assertNotIn("already up to date", log)
+
+    def test_no_delta_and_no_loaded_caps_names_that_reason(self) -> None:
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat", "# Feat\n\nNo deltas.\n")
+        log = self._fold_log(fdir)
+        self.assertIn("no delta block and loaded no capabilities", log)
+        self.assertNotIn("feature off", log)
+
+    def test_disabled_names_the_off_reason_exactly(self) -> None:
+        disabled = ENABLED_TODOS_YAML.replace("enabled: true", "enabled: false")
+        root = _git_repo(disabled, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+        log = self._fold_log(fdir)
+        self.assertIn("living specs are off in this repo", log)
+        self.assertNotIn("no delta block", log)
+
+    def test_real_delta_block_folds_and_prints_no_noop_reason(self) -> None:
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+        wc.set_living_specs_loaded(fdir, ["todos"])
+        log = self._fold_log(fdir)
+        # A real delta writes the capability spec and records the sync — no
+        # "nothing to fold" no-op reason appears.
+        self.assertIn("### Due dates", self._living(root))
+        self.assertEqual(self._ctx(fdir)["livingSpecs"]["synced"], ["todos"])
+        self.assertNotIn("nothing to fold", log)
+
     def test_idempotent_refold(self) -> None:
         root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
                          code_files=["src/todos/list.ts"])

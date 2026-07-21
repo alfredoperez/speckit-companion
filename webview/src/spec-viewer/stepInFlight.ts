@@ -33,12 +33,16 @@ export function isSettledStatus(status?: string | null): boolean {
 
 /** The single derivation of "is this step in flight" — every surface reads this one answer. */
 export function isStepInFlight(stepName: string, run: StepRunState): boolean {
+    // A recorded completion settles the step, even when the top-level `status`
+    // still names it running — status can lag a journal-only `--finish` when no
+    // hook flips it. History is the truth; a lagging status must not lock the panel.
+    if (run.stepBadges?.[stepName] === 'completed') return false;
+    if (run.stepHistory?.[stepName]?.completedAt) return false;
+
     const statusStep = inFlightStepFor(run.status);
     if (statusStep !== undefined) return statusStep === stepName;
     if (isSettledStatus(run.status)) return false;
 
-    if (run.stepBadges?.[stepName] === 'completed') return false;
-    if (run.stepHistory?.[stepName]?.completedAt) return false;
     if (run.activeStep === stepName) return true;
 
     // Implement writes no document of its own, so without status guidance its
