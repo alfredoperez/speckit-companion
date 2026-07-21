@@ -742,7 +742,7 @@ class DeltaParserTests(unittest.TestCase):
     def test_two_added_blocks_for_different_caps_keep_distinct_unit_caps(self) -> None:
         # Two `## ADDED Requirements` blocks marked for different capabilities must
         # not collapse to one marker — each requirement unit records its own
-        # capability so the fold can route them apart (#503).
+        # capability so the fold can route them apart.
         spec = (
             "# Feat\n\n"
             "## ADDED Requirements\n<!-- capability: alpha -->\n\n"
@@ -1257,7 +1257,7 @@ TWO_CAP_YAML = (
 
 
 class PerCapabilityFoldRoutingTests(unittest.TestCase):
-    """#503: a feature that loaded+changed several capabilities folds each
+    """A feature that loaded+changed several capabilities folds each
     capability's own requirement into its own spec — no cross-contamination."""
 
     def _living(self, root: Path, rel: str) -> str:
