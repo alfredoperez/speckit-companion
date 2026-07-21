@@ -7,6 +7,7 @@ import {
     ResolvedCapability,
     readDriftedFiles,
     resolveCapabilityBySpecPath,
+    isPathWithinRoot,
 } from './livingSpecsModel';
 
 /**
@@ -133,6 +134,8 @@ export function registerLivingSpecsCommands(
             const rel = nodeRelPath(item);
             const root = workspaceRoot();
             if (!rel || !root) return;
+            // Never delete outside the workspace, even if a row carried a bad path.
+            if (!isPathWithinRoot(root, rel)) return;
             const name = path.basename(rel);
             const confirm = await vscode.window.showWarningMessage(
                 `Delete "${name}"? This cannot be undone.`,

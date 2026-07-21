@@ -10,10 +10,18 @@ jest.mock('../../../extension', () => ({
     })),
 }));
 
-jest.mock('../livingSpecsModel', () => ({
-    readDriftedFiles: jest.fn().mockResolvedValue([]),
-    resolveCapabilityBySpecPath: jest.fn(),
-}));
+jest.mock('../livingSpecsModel', () => {
+    const nodePath = require('path');
+    return {
+        readDriftedFiles: jest.fn().mockResolvedValue([]),
+        resolveCapabilityBySpecPath: jest.fn(),
+        isPathWithinRoot: (root: string, relPath: string) => {
+            if (nodePath.isAbsolute(relPath)) return false;
+            const rel = nodePath.relative(root, nodePath.resolve(root, relPath));
+            return rel !== '' && !rel.startsWith('..') && !nodePath.isAbsolute(rel);
+        },
+    };
+});
 
 jest.mock('../../../core/utils/notificationUtils', () => ({
     NotificationUtils: { showAutoDismissNotification: jest.fn() },
@@ -187,6 +195,13 @@ describe('registerLivingSpecsCommands', () => {
             await handlers['speckit.livingSpecs.delete']({ relPath: 'src/x/x.spec.md' });
             expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
             expect(provider.refresh).not.toHaveBeenCalled();
+        });
+
+        it('refuses a path that escapes the workspace root, without even prompting', async () => {
+            (vscode.window.showWarningMessage as jest.Mock).mockClear();
+            await handlers['speckit.livingSpecs.delete']({ relPath: '../../etc/passwd' });
+            expect(vscode.window.showWarningMessage).not.toHaveBeenCalled();
+            expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
         });
     });
 
