@@ -49,7 +49,7 @@ async function dispatchScoped(command: 'living-drift' | 'living-coverage', title
  * update rather than a regeneration so every clarification already in the spec
  * survives.
  */
-export function buildLivingUpdatePrompt(name: string, specPath: string, changedFiles: string[]): string {
+export function buildLivingUpdatePrompt(name: string, specPath: string, changedFiles: string[] | undefined): string {
     const lines = [
         `The "${name}" living spec has drifted — the code it describes changed since the spec was last committed.`,
         `Edit this spec file in place: ${specPath}`,
@@ -57,12 +57,16 @@ export function buildLivingUpdatePrompt(name: string, specPath: string, changedF
         'clarification, and acceptance scenario already written, and revise only what the code changes require.',
         '',
     ];
-    if (changedFiles.length > 0) {
+    if (changedFiles && changedFiles.length > 0) {
         lines.push("Files changed since the spec's last commit:");
         for (const file of changedFiles) {
             lines.push(`- ${file}`);
         }
     } else {
+        // undefined = the git check failed/timed out (distinct from an empty result).
+        if (changedFiles === undefined) {
+            lines.push('(The changed-file list could not be determined — git was unavailable or the check timed out.)');
+        }
         lines.push(
             "Inspect the files under this capability's match globs to find what changed since the spec's last commit.",
         );
@@ -72,9 +76,11 @@ export function buildLivingUpdatePrompt(name: string, specPath: string, changedF
 
 async function dispatchUpdate(cap: ResolvedCapability, outputChannel: vscode.OutputChannel): Promise<void> {
     const root = workspaceRoot();
-    const changed = root ? (await readDriftedFiles(root, cap)) ?? [] : [];
+    // Preserve undefined (git failed/timed out) vs [] (computed, none) — the
+    // prompt says different things for each.
+    const changed = root ? await readDriftedFiles(root, cap) : undefined;
     outputChannel.appendLine(
-        `[SpecKit] Update living spec "${cap.name}" — ${changed.length} changed file(s) in prompt`,
+        `[SpecKit] Update living spec "${cap.name}" — ${changed === undefined ? 'changed files unknown' : `${changed.length} changed file(s)`} in prompt`,
     );
     const prompt = buildLivingUpdatePrompt(cap.name, cap.spec, changed);
     // Natural-language instruction, not a slash command — executeSlashCommand

@@ -235,9 +235,16 @@ describe('buildLivingUpdatePrompt', () => {
         expect(prompt).toContain('- src/b.ts');
     });
 
-    it('falls back to an inspect instruction when the file list is empty', () => {
+    it('falls back to an inspect instruction when the file list is empty (computed, none)', () => {
         const prompt = buildLivingUpdatePrompt('checkout', 'src/checkout/checkout.spec.md', []);
         expect(prompt).toContain('UPDATE, do not regenerate');
+        expect(prompt).toContain('match globs');
+        expect(prompt).not.toContain('could not be determined');
+    });
+
+    it('notes when the changed-file list could not be computed (git failed/timeout)', () => {
+        const prompt = buildLivingUpdatePrompt('checkout', 'src/checkout/checkout.spec.md', undefined);
+        expect(prompt).toContain('could not be determined');
         expect(prompt).toContain('match globs');
     });
 });
