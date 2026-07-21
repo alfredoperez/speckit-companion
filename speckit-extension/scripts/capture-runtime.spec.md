@@ -177,3 +177,17 @@ Where a capability is deliberately left out of one build, attempting it MUST rep
 - `derive-from-files.py` — read its docstring only.
 - `capture-golden.py`, `assemble-nodes.py`, `build-commands.py`, `check-shape-parity.py`, `_command_parts.py` — build-time tooling, covered by the companion-commands spec rather than here.
 - The Python test suite under `speckit-extension/tests/` was not read.
+
+### The fold routes each capability's requirements to its own spec
+
+A feature spec may declare a delta block per capability, each marked `<!-- capability: <name> -->`. The fold applies to each capability only the requirement units marked for it, plus unmarked units when that capability is the changed-files-matched default. A requirement marked for one capability never lands in another capability's spec.
+
+#### Scenario: two blocks marked for different capabilities
+
+- **WHEN** a completing feature's spec carries an `ADDED` block marked for capability A and another marked for capability B
+- **THEN** A's spec receives A's requirement only, B's spec receives B's requirement only, and both names are recorded on `livingSpecs.synced`
+
+#### Scenario: an unmarked block on a multi-capability fold
+
+- **WHEN** a block carries no capability marker
+- **THEN** it folds into the capability the changed files resolved to, and not into any marker-routed capability

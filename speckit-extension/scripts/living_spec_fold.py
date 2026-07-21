@@ -164,6 +164,28 @@ def apply_deltas(living_text: str, deltas: dict) -> tuple[str, dict]:
     return appended, applied
 
 
+def _deltas_for(deltas: dict, cap_name: str, is_default: bool) -> dict:
+    """The subset of `deltas` that belongs to one capability.
+
+    A requirement unit belongs to `cap_name` when its block carried
+    `<!-- capability: cap_name -->`. Unmarked units belong to the capability the
+    changed files resolved to (`is_default`), so a plain delta block still folds
+    into the matched capability. This is what keeps two blocks marked for
+    different capabilities from bleeding requirements into each other."""
+    unit_caps = deltas.get("unit_caps") or {}
+    out: dict = {
+        "added": [], "modified": [], "removed": [], "renamed": [], "markers": {},
+        "unit_caps": {"added": [], "modified": [], "removed": [], "renamed": []},
+    }
+    for verb in ("added", "modified", "removed", "renamed"):
+        caps = unit_caps.get(verb) or [None] * len(deltas[verb])
+        for unit, cap in zip(deltas[verb], caps):
+            if cap == cap_name or (cap is None and is_default):
+                out[verb].append(unit)
+                out["unit_caps"][verb].append(cap)
+    return out
+
+
 def _initial_living_spec(capability_name: str) -> str:
     """A minimal well-formed living-spec scaffold for a capability whose spec.md
     doesn't exist yet, so the first ADDED fold creates a titled, sectioned spec
@@ -220,17 +242,22 @@ def _load_resolver():
         return None
 
 
-def _resolve_fold_targets(rsp, living: dict, root: Path, deltas: dict) -> list[dict]:
-    """Capabilities to fold into: the most-specific match for the change surface,
-    plus any capability explicitly named by a `<!-- capability: <name> -->` marker.
+def _resolve_fold_targets(rsp, living: dict, root: Path, deltas: dict) -> tuple[list[dict], str | None]:
+    """Capabilities to fold into, plus the name of the changed-files-matched default.
+
+    The targets are the most-specific match for the change surface, plus every
+    capability named by a `<!-- capability: <name> -->` marker. The default is the
+    matched head's name: unmarked delta units fold into it (marked units fold into
+    their own capability), so each target's spec gets only its own requirements.
 
     Write-most-specific: from the (most-specific-first) matched list keep only the
     head. Markered targets are added by name from the full capability set, so a
     block can route to a different/additional capability than the code change
     resolves to. When git can't determine the changed files, this folds ONLY the
-    markered capabilities (never fans out to every durable spec) — the conservative
-    choice for a write path; the no-changed-files fallback is logged so the
-    markers-only narrowing is observable rather than a silent no-op."""
+    markered capabilities (never fans out to every durable spec) and there is no
+    default — the conservative choice for a write path; the no-changed-files
+    fallback is logged so the markers-only narrowing is observable rather than a
+    silent no-op."""
     changed = _git_changed_files(root)
     if not changed:
         print(
@@ -241,17 +268,20 @@ def _resolve_fold_targets(rsp, living: dict, root: Path, deltas: dict) -> list[d
     matched = rsp.match_changed(changed, living, str(root)) if changed else []
     targets: list[dict] = []
     seen: set[str] = set()
+    default_name: str | None = None
     if matched:
         head = matched[0]
         targets.append(head)
         seen.add(head["name"])
+        default_name = head["name"]
 
-    marker_names = {v for v in deltas.get("markers", {}).values() if v}
+    marker_names = {v for verb in deltas.get("unit_caps", {}).values() for v in verb if v}
+    marker_names |= {v for v in deltas.get("markers", {}).values() if v}
     if marker_names:
         by_name = {c["name"]: c for c in living["capabilities"]}
         all_entries = rsp.discover_all(living, str(root))
         entry_by_name = {e["name"]: e for e in all_entries}
-        for name in marker_names:
+        for name in sorted(marker_names):
             if name in seen:
                 continue
             entry = entry_by_name.get(name)
@@ -263,7 +293,7 @@ def _resolve_fold_targets(rsp, living: dict, root: Path, deltas: dict) -> list[d
             if entry is not None:
                 targets.append(entry)
                 seen.add(name)
-    return targets
+    return targets, default_name
 
 
 def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
@@ -334,9 +364,9 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
         return None  # additive case — no delta block
 
     try:
-        targets = _resolve_fold_targets(rsp, living, root, deltas)
+        targets, default_name = _resolve_fold_targets(rsp, living, root, deltas)
     except Exception:  # noqa: BLE001
-        targets = []
+        targets, default_name = [], None
     if not targets:
         print(
             "[companion] Living-spec fold: no capability resolved for this change; "
@@ -350,12 +380,15 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
         spec_rel = cap.get("spec")
         if not spec_rel:
             continue
+        cap_deltas = _deltas_for(deltas, cap["name"], cap["name"] == default_name)
+        if not _has_deltas(cap_deltas):
+            continue  # no requirement routed to this capability
         living_path = root / spec_rel
         try:
             before = living_path.read_text(encoding="utf-8") if living_path.exists() else _initial_living_spec(cap.get("name") or living_path.parent.name)
         except OSError:
             continue
-        after, applied = apply_deltas(before, deltas)
+        after, applied = apply_deltas(before, cap_deltas)
         if after == before:
             print(
                 f"[companion] Living-spec fold: {cap['name']} already up to date "
@@ -374,9 +407,9 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
             f"+{applied['added']} added, ~{applied['modified']} modified, "
             f"-{applied['removed']} removed, ↻{applied['renamed']} renamed"
         )
-        unmatched = sum(len(deltas[verb]) - applied[verb]
+        unmatched = sum(len(cap_deltas[verb]) - applied[verb]
                         for verb in ("modified", "removed", "renamed"))
-        already_present = len(deltas["added"]) - applied["added"]
+        already_present = len(cap_deltas["added"]) - applied["added"]
         reasons = []
         if unmatched:
             reasons.append(f"{unmatched} change(s) skipped: no matching requirement heading")
