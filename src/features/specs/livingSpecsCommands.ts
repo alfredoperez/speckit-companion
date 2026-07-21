@@ -106,6 +106,10 @@ export function registerLivingSpecsCommands(
             outputChannel.appendLine('[SpecKit] Living-spec adoption wizard dispatched');
             await getAIProvider().executeSlashCommand('/speckit.companion.living-adopt', 'SpecKit - Adopt Code Area', true);
         }),
+        vscode.commands.registerCommand('speckit.livingSpecs.sync', async () => {
+            outputChannel.appendLine('[SpecKit] Living-spec sync from current changes dispatched');
+            await getAIProvider().executeSlashCommand('/speckit.companion.living-sync', 'SpecKit - Sync Living Specs', true);
+        }),
         vscode.commands.registerCommand('speckit.livingSpecs.update', async (item?: LivingSpecNode) => {
             const root = workspaceRoot();
             let cap = item?.capability;

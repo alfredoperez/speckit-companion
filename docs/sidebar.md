@@ -59,7 +59,7 @@ A native menu expresses grouping with a **separator line** rather than a labelle
 
 Every one of those commands also remains available from the Command Palette under `SpecKit: …`.
 
-**Living Specs** carries two title actions — **Refresh** and **Adopt Code Area…** (trailing). **Steering** carries **Refresh** and **New Steering Document…** (trailing). **Settings & Feedback** carries none.
+**Living Specs** carries three title actions — **Refresh**, **Adopt Code Area…**, and **Sync living specs from my changes** (trailing). **Steering** carries **Refresh** and **New Steering Document…** (trailing). **Settings & Feedback** carries none.
 
 ## Filter and sort
 
@@ -255,7 +255,7 @@ Each capability is defined in `living-specs.yml` at the project root (or, for a 
 
 Clicking any capability spec, tier, or orphan opens that file in the editor.
 
-**Actions.** Right-clicking a capability offers **Check for Drift** and **Check Requirement Coverage** — each sends the matching `/speckit.companion.{drift,coverage}` command (scoped to that capability) to your configured AI assistant — plus the standard file actions the Specs tree offers: **Copy Name**, **Copy Path**, **Copy Relative Path**, **Reveal in VS Code Explorer**, **Reveal in File Manager**, and **Delete** (single-file, with the same "this cannot be undone" confirmation destructive actions get elsewhere — it removes the spec/tier file only, never the surrounding code folder). Those file actions are on the tier and orphan rows too. The view's title bar carries **Adopt Code Area…** (starts the brownfield adoption wizard, useful from the empty state as the on-ramp) and a **Refresh** button that recomputes the tree and its health signals.
+**Actions.** Right-clicking a capability offers **Check for Drift** and **Check Requirement Coverage** — each sends the matching `/speckit.companion.{drift,coverage}` command (scoped to that capability) to your configured AI assistant — plus the standard file actions the Specs tree offers: **Copy Name**, **Copy Path**, **Copy Relative Path**, **Reveal in VS Code Explorer**, **Reveal in File Manager**, and **Delete** (single-file, with the same "this cannot be undone" confirmation destructive actions get elsewhere — it removes the spec/tier file only, never the surrounding code folder). Those file actions are on the tier and orphan rows too. The view's title bar carries **Adopt Code Area…** (starts the brownfield adoption wizard, useful from the empty state as the on-ramp), **Sync living specs from my changes** (dispatches `/speckit.companion.living-sync`, which groups your current working-tree changes — uncommitted and untracked included — by capability and updates every affected living spec in one pass, leaving the spec edits uncommitted so they ship with the code), and a **Refresh** button that recomputes the tree and its health signals.
 
 **Update a drifted spec.** When a capability has drifted — code changed since the spec's last commit — the right-click menu gains an **Update to Match Code** action (it appears only while the row is drifted). It gathers the files that changed and dispatches an instruction to your AI assistant to bring the spec back in sync: *update, do not regenerate* — every clarification, requirement, and scenario already written is preserved, and only what the code changes require is revised. The same **Update** button also sits next to the `drift` marker in the spec viewer's header, so you can act on drift from wherever you spotted it.
 

@@ -199,3 +199,11 @@ The living-specs listing SHALL read the project's capability configuration witho
 - `specCommands.ts` — read in part (registration surface, lifecycle/bulk commands, phase dispatch, custom-command runner). The trailing helper section was not read line by line.
 - `livingSpecsExplorerProvider.ts` — not read; its contract is inferred here from `livingSpecsModel.ts` and `livingSpecsCommands.ts`.
 - All files under `__tests__/` were listed but not read.
+
+### The Living Specs view offers a one-pass sync action
+
+The Living Specs view's title bar SHALL carry a sync action that dispatches the living-spec sync command through the active AI provider, following the same dispatch path and companion-install gating as the adoption action. The action itself performs no grouping or file edits — the dispatched command owns the work.
+
+#### Scenario: the action is triggered
+- **WHEN** the user triggers the sync title action with the companion extension installed
+- **THEN** the sync slash command is dispatched to the AI provider and nothing is edited by the extension itself

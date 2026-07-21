@@ -68,6 +68,7 @@ describe('registerLivingSpecsCommands', () => {
             'speckit.livingSpecs.delete',
             'speckit.livingSpecs.drift',
             'speckit.livingSpecs.refresh',
+            'speckit.livingSpecs.sync',
             'speckit.livingSpecs.update',
         ]);
     });
@@ -111,6 +112,18 @@ describe('registerLivingSpecsCommands', () => {
                 'SpecKit - Adopt Code Area',
                 true
             );
+        });
+    });
+
+    describe('sync', () => {
+        it('dispatches the one-pass sync command for the AI to expand', async () => {
+            await handlers['speckit.livingSpecs.sync']();
+            expect(executeSlashCommand).toHaveBeenCalledWith(
+                '/speckit.companion.living-sync',
+                'SpecKit - Sync Living Specs',
+                true
+            );
+            expect(executeInTerminal).not.toHaveBeenCalled();
         });
     });
 

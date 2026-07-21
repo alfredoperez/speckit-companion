@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **Sync living specs from my changes — one click in the Living Specs view.** A new title-bar action dispatches `/speckit.companion.living-sync` to your AI assistant: it groups your current working-tree changes — uncommitted and untracked files included — by capability and updates every affected living spec in one pass, leaving the spec edits uncommitted so they ship in the same commit as the code. It sits next to the existing Adopt Code Area… action and appears only when the companion spec-kit extension is installed.
+
 ### Changed
 
 - **The SpecKit Companion workflow is now available to everyone — no beta setting to turn on.** The workflow picker in Create New Spec and the Continue/Resume button on active specs used to appear only after you enabled a beta toggle. That toggle and its "Beta Features" heading are gone. Both now show out of the box whenever the companion spec-kit extension is installed. Bench results showed the Companion pipeline matches stock SpecKit on correctness while producing specs 60–68% leaner, so it graduates from beta. If you'd turned the old beta setting on, nothing changes for you; the retired setting is quietly removed from your settings on upgrade.

@@ -14,7 +14,7 @@ Everything the extension declares, by family. The README's [Commands](../README.
 |--------|----------|
 | [Pipeline](#pipeline-commands) | `speckit.companion.specify`, `speckit.companion.plan`, `speckit.companion.tasks`, `speckit.companion.implement`, `speckit.companion.auto`, `speckit.companion.classify`, `speckit.companion.mark-complete` |
 | [Run state](#read-commands-status--resume) | `speckit.companion.status`, `speckit.companion.resume` |
-| [Living specs](#living-specs-commands) | `speckit.companion.living-adopt`, `speckit.companion.living-drift`, `speckit.companion.living-coverage`, `speckit.companion.living-move` |
+| [Living specs](#living-specs-commands) | `speckit.companion.living-adopt`, `speckit.companion.living-drift`, `speckit.companion.living-sync`, `speckit.companion.living-coverage`, `speckit.companion.living-move` |
 | [Hooks](#lifecycle-hooks) | `speckit.companion.after-specify`, `speckit.companion.after-plan`, `speckit.companion.after-tasks`, `speckit.companion.after-implement` |
 
 ## Lifecycle hooks
@@ -160,7 +160,7 @@ It refuses unless the spec is already `implemented` (or `implementing` with ever
 
 ## Living-specs commands
 
-All four are **opt-in by presence**: with no `livingSpecs` block in `.specify/companion.yml`, or `enabled: false`, each reports nothing and changes nothing. The three read commands are read-only and never fail the build — they always exit success, so a surrounding workflow decides whether to treat findings as a gate.
+All five are **opt-in by presence**: with no `livingSpecs` block in `.specify/companion.yml`, or `enabled: false`, each reports nothing and changes nothing. The read commands are read-only and never fail the build — they always exit success, so a surrounding workflow decides whether to treat findings as a gate.
 
 ### `speckit.companion.living-adopt`
 
@@ -168,7 +168,11 @@ Brownfield adoption wizard. Point it at one code area; it reads that area's surf
 
 ### `speckit.companion.living-drift`
 
-Per capability, the source files that changed since its living spec was last committed, classified `tracked` (it went through the pipeline but was never folded back) or `unspeced` (it changed entirely outside the pipeline). Exempt generated code, tests, or migrations with a `livingSpecs.exempt` glob list. A capability whose spec isn't committed yet is **skipped**, not passed — the run reports how many it checked versus skipped, so "clean" is never confused with "did not run".
+Per capability, the source files that changed since its living spec was last committed, classified `tracked` (it went through the pipeline but was never folded back) or `unspeced` (it changed entirely outside the pipeline). Add `--working` to also count working-tree changes — uncommitted edits, deletions, and untracked files. Exempt generated code, tests, or migrations with a `livingSpecs.exempt` glob list. A capability whose spec isn't committed yet is **skipped**, not passed — the run reports how many it checked versus skipped, so "clean" is never confused with "did not run".
+
+### `speckit.companion.living-sync`
+
+The write-side twin of drift: sync every affected living spec from your current changes — uncommitted, deleted, and untracked files included — in one pass. It groups the changes by capability using the same computation as `living-drift --working`, then updates each affected spec scoped to that capability's changed files, update-not-regenerate, so clarifications and hand-written detail survive. Reports what was synced and what was skipped (a never-committed spec belongs to `living-adopt`), and leaves the spec edits uncommitted so they commit with the code that caused them.
 
 ### `speckit.companion.living-coverage`
 

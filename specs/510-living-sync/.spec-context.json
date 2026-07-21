@@ -1,0 +1,496 @@
+{
+  "workflow": "speckit",
+  "specName": "living sync",
+  "branch": "510-living-sync",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T15:49:05.612Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T15:51:27.943Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T15:52:03.318Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T15:55:48.312Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T15:55:48.383Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T15:55:54.115Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T15:56:02.354Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T15:56:52.305Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T15:56:58.356Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T15:57:05.865Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T15:58:53.173Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:00:06.411Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:00:34.508Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:00:53.335Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:00:53.469Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:01:15.434Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:01:44.032Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:01:44.163Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:02:10.519Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:02:10.665Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:03:50.622Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:03:50.746Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:03:50.903Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:03:51.066Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:06:32.291Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T16:06:32.362Z"
+    }
+  ],
+  "livingSpecs": {
+    "loaded": [
+      "companion-commands",
+      "capture-runtime",
+      "specs"
+    ],
+    "synced": [
+      "capture-runtime",
+      "companion-commands",
+      "specs"
+    ]
+  },
+  "coverage": {
+    "FR-001": {
+      "title": "New /speckit.companion.living-sync command registered in the extension manifest",
+      "tasks": [
+        "T003",
+        "T004",
+        "T005"
+      ]
+    },
+    "FR-002": {
+      "title": "Sync collects working-tree changes (uncommitted, untracked, deletions) plus commits since each spec's baseline",
+      "tasks": [
+        "T001",
+        "T002"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::WorkingDriftTests"
+      ]
+    },
+    "FR-003": {
+      "title": "Grouping reuses the existing resolver membership rules — no second derivation",
+      "tasks": [
+        "T001",
+        "T003"
+      ]
+    },
+    "FR-004": {
+      "title": "Each affected capability gets the update-not-regenerate flow scoped to its changed files, automatically",
+      "tasks": [
+        "T003"
+      ]
+    },
+    "FR-005": {
+      "title": "Sync reports synced/skipped capabilities and leaves spec edits uncommitted",
+      "tasks": [
+        "T003"
+      ]
+    },
+    "FR-006": {
+      "title": "Sync is opt-in and non-halting; disabled config means clean no-op",
+      "tasks": [
+        "T003",
+        "T002"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::WorkingDriftTests::test_json_carries_the_mode_flag_in_both_modes"
+      ]
+    },
+    "FR-007": {
+      "title": "drift gains opt-in --working mode; default mode byte-identical; never-fails and counts contract kept",
+      "tasks": [
+        "T001",
+        "T002",
+        "T006"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::WorkingDriftTests",
+        "speckit-extension/tests/test_living_specs.py::DriftTests"
+      ]
+    },
+    "FR-008": {
+      "title": "Sync grouping IS the working-tree drift derivation — one fact, one derivation",
+      "tasks": [
+        "T001",
+        "T003"
+      ]
+    },
+    "FR-009": {
+      "title": "Sidebar action 'Sync living specs from my changes' dispatches the command with existing gating",
+      "tasks": [
+        "T007",
+        "T010",
+        "T011",
+        "T012"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/livingSpecsCommands.test.ts::sync",
+        "src/features/specs/__tests__/manifest.test.ts"
+      ]
+    },
+    "FR-010": {
+      "title": "Never-committed capability specs are skipped with a reason, never redrafted",
+      "tasks": [
+        "T002",
+        "T003"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::WorkingDriftTests::test_uncommitted_spec_is_still_skipped_in_working_mode"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 12,
+    "projectedTasks": 11,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "context": [
+    "living spec: companion-commands",
+    "living spec: capture-runtime",
+    "living spec: specs",
+    "area: speckit-extension/scripts/drift.py + living_spec_fold.py resolver reuse",
+    "area: src/features/specs/livingSpecsCommands.ts update prompt (#475 pattern)",
+    "constraint: never-fails exit-0 drift contract; no extension.yml version bump; update-not-regenerate"
+  ],
+  "intent": "One command syncs every affected living spec from current changes, including uncommitted work, in a single pass",
+  "expectations": [
+    "No redraft/bootstrap of never-committed specs (living-adopt owns that)",
+    "No auto-commit of spec edits — they stay in the user's working tree",
+    "No change to default drift output or the fold-back pipeline path"
+  ],
+  "approach": "Extend drift.py with an opt-in --working mode (baseline-to-working-tree diff plus untracked files) and make that the single grouping derivation. A new hand-authored /speckit.companion.living-sync command consumes its JSON, applies the update-not-regenerate flow per drifted capability, reports synced/skipped, and leaves spec edits uncommitted. A Living Specs view title action dispatches the command.",
+  "decisions": [
+    {
+      "decision": "Sync grouping engine is drift.py --working --json",
+      "why": "drift already owns membership, exemption, baselines, skip reasons, and the never-fails contract; report and sync must not disagree",
+      "rejected": "a dedicated sync grouping script (second derivation)"
+    },
+    {
+      "decision": "Working set = git diff <baseline> unioned with ls-files --others --exclude-standard",
+      "why": "one diff covers commits-since + staged + unstaged + deletions with no double-report; untracked needs the standard plumbing call",
+      "rejected": "parsing git status --porcelain"
+    },
+    {
+      "decision": "Hand-authored command body mirroring the living-* family, reusing the #475 update-not-regenerate voice",
+      "why": "living-* bodies live outside node assembly; one voice for update semantics across viewer and command",
+      "rejected": "joining the node-assembly/golden system"
+    },
+    {
+      "decision": "Sidebar action = view/title item on Living Specs at navigation@3, dispatching the slash command",
+      "why": "identical pattern and companion-install gating as the adopt action; the dispatched text is a real slash command",
+      "rejected": "extension-built multi-capability prose prompt (would re-derive grouping)"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "drift.py --working becomes the shared grouping engine; new living-sync command applies per-capability updates and reports; sidebar title action dispatches it",
+      "key_finding": "living-* command bodies are hand-authored (no node assembly), and check-command-emissions requires the new command in extension.yml, both doc tables, and re-emitted dev-install symlinks"
+    },
+    "tasks": {
+      "summary": "14 tasks across 6 phases: foundational drift --working + tests, US1 command body + registration, US2 docs, US3 sidebar action + tests, polish docs + validation"
+    },
+    "implement": {
+      "summary": "drift --working shipped with 11 tests; living-sync command authored+registered+emitted; sidebar sync action wired and locked; both doc sets updated; all gates green"
+    }
+  },
+  "currentTask": "T015",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added opt-in --working mode to drift.py: baseline-to-worktree diff plus untracked, working-scoped tracked-set, JSON working field, working-tree header note; default git commands unchanged",
+      "files": [
+        "speckit-extension/scripts/drift.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "11 working-mode drift tests: uncommitted/untracked/deletion drift, dedupe, exempt filter, skip counts, tracked via uncommitted context, JSON mode flag, default-mode immunity to a dirty tree, exit-0",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Authored the living-sync command body: drift --working --json as the plan, per-capability update-not-regenerate scoped to drifted files, honest skips pointing at living-adopt, uncommitted-by-design report",
+      "files": [
+        "speckit-extension/commands/speckit.companion.living-sync.md"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Registered speckit.companion.living-sync in extension.yml provides.commands (no version bump)",
+      "files": [
+        "speckit-extension/extension.yml"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Re-emitted dev-install agent commands; emissions gate now fails only on the two doc tables T008/T009 close"
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Documented --working in the living-drift command body and pointed the report at living-sync as its write-side twin",
+      "files": [
+        "speckit-extension/commands/speckit.companion.living-drift.md"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Contributed speckit.livingSpecs.sync command (sync icon) and its Living Specs view/title item at navigation@3",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Registered the sync handler dispatching /speckit.companion.living-sync via executeSlashCommand (adopt pattern)",
+      "files": [
+        "src/features/specs/livingSpecsCommands.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Sync dispatch test: registered in the command set, dispatches the slash command with title, never via executeInTerminal",
+      "files": [
+        "src/features/specs/__tests__/livingSpecsCommands.test.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Locked the sync action's title in the manifest test title table",
+      "files": [
+        "src/features/specs/__tests__/manifest.test.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "spec-kit README: command-table row (five, was four), --working in the drift section, new Syncing-from-your-changes section",
+      "files": [
+        "speckit-extension/README.md"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "commands.md: families table + living-sync entry + --working on the drift entry",
+      "files": [
+        "speckit-extension/docs/commands.md"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Two user-voice [Unreleased] entries: the one-pass sync and the drift --working mode",
+      "files": [
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Root README Living Specs paragraph + docs/sidebar.md title-actions line and Living Specs section now carry the sync action",
+      "files": [
+        "README.md",
+        "docs/sidebar.md"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Validated: tsc clean, 1726 jest + 466 python tests pass, shape-parity/command-emissions/package-manifest gates OK, live drift --working smoke run"
+    }
+  },
+  "verified": [
+    {
+      "what": "TypeScript compile",
+      "command": "npm run compile",
+      "result": "clean"
+    },
+    {
+      "what": "VS Code extension test suite",
+      "command": "npm test",
+      "result": "1726/1726 pass (codex resolver count-lock updated 17 to 18 for the new command)"
+    },
+    {
+      "what": "spec-kit extension python suite",
+      "command": "python3 -m unittest discover -s speckit-extension/tests",
+      "result": "466/466 pass incl. 11 new WorkingDriftTests"
+    },
+    {
+      "what": "inventory + parity + packing gates",
+      "command": "check-shape-parity.py; check-command-emissions.py; package-manifest.py --check",
+      "result": "all OK - 18 commands agree across 7 areas, 8 records, 2 docs"
+    },
+    {
+      "what": "live working-mode smoke",
+      "command": "drift.py --working --json (this repo)",
+      "result": "working=true; caught the branch own uncommitted drift.py edit that default mode missed"
+    }
+  ],
+  "last_action": "all 14 tasks done - 1726 TS + 466 py tests pass, all gates green"
+}

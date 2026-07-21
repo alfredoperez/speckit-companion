@@ -525,6 +525,12 @@
         "icon": "$(wand)"
       },
       {
+        "command": "speckit.livingSpecs.sync",
+        "title": "Sync living specs from my changes",
+        "category": "SpecKit",
+        "icon": "$(sync)"
+      },
+      {
         "command": "speckit.livingSpecs.refresh",
         "title": "Refresh Living Specs",
         "category": "SpecKit",
@@ -610,6 +616,11 @@
           "command": "speckit.livingSpecs.adopt",
           "when": "view == speckit.views.livingSpecs",
           "group": "navigation@2"
+        },
+        {
+          "command": "speckit.livingSpecs.sync",
+          "when": "view == speckit.views.livingSpecs",
+          "group": "navigation@3"
         }
       ],
       "view/item/context": [
