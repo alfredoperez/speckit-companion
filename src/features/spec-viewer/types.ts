@@ -460,6 +460,10 @@ export type ViewerToExtensionMessage =
     | {
           type: 'setStatus';
       }
+    // Living-spec drift → fold the changed code back into the spec
+    | {
+          type: 'livingUpdate';
+      }
     // File reference click
     | {
           type: 'openFile';

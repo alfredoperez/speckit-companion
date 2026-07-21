@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **The Living Specs sidebar is now a directory tree, not a flat list.** Capabilities are grouped by where their specs actually live, so the view's shape mirrors your codebase — capabilities in the same area sit together under their folder path instead of scrolling past as one long list with a grey `central`/`colocated` word on each row. The tree conveys location now, so that word is gone.
+- **Living Specs rows have the standard right-click file actions.** A capability, its Architecture/Coverage tiers, and orphan specs now offer **Copy Name**, **Copy Path**, **Copy Relative Path**, **Reveal in VS Code Explorer**, **Reveal in File Manager**, and **Delete** — the same set the Specs tree has. Delete removes only the spec file (with a confirmation), never the surrounding code folder.
+- **Update a drifted living spec in one click.** When a capability has drifted, a new **Update to Match Code** action — in the sidebar right-click menu and next to the `drift` marker in the spec viewer's header — asks your AI assistant to fold the changed code back into the spec. It updates rather than regenerates, so every clarification, requirement, and scenario you already wrote is preserved and only what the code changed gets revised.
+
 ### Fixed
 
 - **The run log's Living specs section is a scannable list again, not a wall of text.** Opening a finished run used to reprint the entire text of every living spec it loaded — the purpose and every requirement, in full — so the useful signal (which specs were loaded) drowned in content you can already read in the Living Specs viewer. It now shows one compact chip per capability, right under the phase timeline, and clicking a chip opens that capability in the Living Specs viewer.

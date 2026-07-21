@@ -529,6 +529,32 @@
         "title": "Refresh Living Specs",
         "category": "SpecKit",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "speckit.livingSpecs.update",
+        "title": "Update to Match Code",
+        "category": "SpecKit",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "speckit.livingSpecs.copyName",
+        "title": "Copy Name",
+        "category": "SpecKit"
+      },
+      {
+        "command": "speckit.livingSpecs.copyPath",
+        "title": "Copy Path",
+        "category": "SpecKit"
+      },
+      {
+        "command": "speckit.livingSpecs.copyRelativePath",
+        "title": "Copy Relative Path",
+        "category": "SpecKit"
+      },
+      {
+        "command": "speckit.livingSpecs.delete",
+        "title": "Delete",
+        "category": "SpecKit"
       }
     ],
     "submenus": [
@@ -688,24 +714,49 @@
           "group": "5_danger@1"
         },
         {
+          "command": "speckit.livingSpecs.update",
+          "when": "view == speckit.views.livingSpecs && viewItem == living-specs-capability-drifted",
+          "group": "livingSpecs@0"
+        },
+        {
           "command": "speckit.livingSpecs.drift",
-          "when": "view == speckit.views.livingSpecs && viewItem == living-specs-capability",
+          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-capability-drifted)",
           "group": "livingSpecs@1"
         },
         {
           "command": "speckit.livingSpecs.coverage",
-          "when": "view == speckit.views.livingSpecs && viewItem == living-specs-capability",
+          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-capability-drifted)",
           "group": "livingSpecs@2"
         },
         {
+          "command": "speckit.livingSpecs.copyName",
+          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-capability-drifted || viewItem == living-specs-tier || viewItem == living-specs-orphan)",
+          "group": "3_copy@1"
+        },
+        {
+          "command": "speckit.livingSpecs.copyPath",
+          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-capability-drifted || viewItem == living-specs-tier || viewItem == living-specs-orphan)",
+          "group": "3_copy@2"
+        },
+        {
+          "command": "speckit.livingSpecs.copyRelativePath",
+          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-capability-drifted || viewItem == living-specs-tier || viewItem == living-specs-orphan)",
+          "group": "3_copy@3"
+        },
+        {
           "command": "speckit.revealItemInExplorer",
-          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-tier || viewItem == living-specs-orphan)",
+          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-capability-drifted || viewItem == living-specs-tier || viewItem == living-specs-orphan)",
           "group": "4_reveal@1"
         },
         {
           "command": "speckit.revealItemInOS",
-          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-tier || viewItem == living-specs-orphan)",
+          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-capability-drifted || viewItem == living-specs-tier || viewItem == living-specs-orphan)",
           "group": "4_reveal@2"
+        },
+        {
+          "command": "speckit.livingSpecs.delete",
+          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-capability-drifted || viewItem == living-specs-tier || viewItem == living-specs-orphan)",
+          "group": "5_danger@1"
         },
         {
           "command": "speckit.revealItemInExplorer",

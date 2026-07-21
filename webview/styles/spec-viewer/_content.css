@@ -281,6 +281,26 @@ body[data-has-spec-context="true"] .meta-branch {
     font-weight: 600;
 }
 
+.spec-header-update-btn {
+    padding: 1px 8px;
+    font-size: var(--text-xs);
+    line-height: 1.6;
+    color: var(--vscode-button-secondaryForeground, var(--vscode-button-foreground));
+    background: var(--vscode-button-secondaryBackground, var(--vscode-button-background));
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.spec-header-update-btn:hover {
+    background: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-hoverBackground));
+}
+
+.spec-header-update-btn:focus-visible {
+    outline: 1px solid var(--vscode-focusBorder);
+    outline-offset: 1px;
+}
+
 /* What the capability claims — the one fact that lives nowhere else in the UI. */
 .spec-header-covers {
     display: flex;

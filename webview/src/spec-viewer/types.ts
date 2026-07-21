@@ -338,6 +338,8 @@ export type ViewerToExtensionMessage =
     // Run-recovery affordance (issue #418) — quiet in-flight run
     | { type: 'resumeRun' }
     | { type: 'setStatus' }
+    // Living-spec drift → fold the changed code back into the spec
+    | { type: 'livingUpdate' }
     // Stepper navigation
     | { type: 'stepperClick'; phase: string }
     // Persisted review comments — written to .spec-context.json on each mutation
