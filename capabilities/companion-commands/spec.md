@@ -204,3 +204,15 @@ Recording an implement task SHALL be a two-part closing action — append the fi
 #### Scenario: workers run in parallel
 - **WHEN** several workers finish tasks concurrently
 - **THEN** each appends only its own event-log line and the main agent alone performs every fold
+
+### One command syncs every affected living spec from the current changes, uncommitted included
+
+The living-spec family SHALL include a sync command that, in a single pass, groups the working tree's changes — uncommitted edits, deletions, and untracked files, plus commits since each capability spec's baseline — by capability using the same derivation as the drift report's working-tree mode, and updates every affected capability spec in place. Updates are update-not-regenerate: content the change does not invalidate survives verbatim. The run ends with a synced/skipped report, never commits the spec edits, never redrafts a never-committed spec (that belongs to adoption), and inherits the family's opt-in, never-halt contract.
+
+#### Scenario: changes span several capabilities
+- **WHEN** the sync runs with working-tree changes touching multiple capability areas
+- **THEN** every affected capability's spec is updated, each scoped to its own changed files, with no hand-picking
+
+#### Scenario: nothing is configured
+- **WHEN** the sync runs with living specs disabled or absent
+- **THEN** it reports nothing to do and exits successfully

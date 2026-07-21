@@ -19,6 +19,12 @@ skipped run states both counts, and callers read `checked` off the result to tel
 "clean" from "did not run". A clone without the history to reach a capability's
 baseline is skipped rather than compared against the graft boundary.
 
+With `--working` (opt-in), each capability's changed set additionally covers the
+working tree: the diff runs baseline→worktree (uncommitted edits and deletions
+included) and untracked files are added. The default mode is unchanged, and the
+never-halts / counts contract holds in both modes. `/speckit.companion.living-sync`
+consumes this mode's `--json` output as its sync plan.
+
 Deterministic: pure git + the LS·1 resolver (membership) + an exempt-glob filter.
 It NEVER halts — always exits 0, including when everything was skipped (a skip
 without a committed baseline is correct, not a failure). A surrounding workflow /
@@ -30,7 +36,7 @@ All git operations are anchored to `--root` (via `git -C <root>`), never cwd, so
 pointing it at a sandbox or sibling repo records THAT repo's history.
 
 Usage:
-  drift.py [--root <dir>] [--json]
+  drift.py [--root <dir>] [--json] [--working]
 """
 from __future__ import annotations
 
@@ -124,8 +130,23 @@ def _spec_commit(root: str, spec: str) -> tuple[str, str | None]:
     return ("ok", sha) if sha else ("uncommitted", None)
 
 
-def _changed_since(root: str, commit: str, pathspec: str | None = None) -> list[str]:
-    args = ["diff", "--name-only", f"{commit}..HEAD"]
+def _changed_since(root: str, commit: str, pathspec: str | None = None,
+                   working: bool = False) -> list[str]:
+    """Files changed after <commit>. Default: committed history only
+    (`commit..HEAD`). Working mode diffs baseline→worktree (`git diff <commit>`),
+    which folds in commits since, staged, unstaged, and deletions in one pass."""
+    args = ["diff", "--name-only", commit if working else f"{commit}..HEAD"]
+    if pathspec is not None:
+        args += ["--", pathspec]
+    code, out = _git(root, args)
+    if code != 0:
+        return []
+    return [ln.strip() for ln in out.splitlines() if ln.strip()]
+
+
+def _untracked(root: str, pathspec: str | None = None) -> list[str]:
+    """Untracked files (gitignore respected) — invisible to `git diff`."""
+    args = ["ls-files", "--others", "--exclude-standard"]
     if pathspec is not None:
         args += ["--", pathspec]
     code, out = _git(root, args)
@@ -155,10 +176,11 @@ def _read_context_files(path: str) -> set[str]:
     return out
 
 
-def _tracked_files_since(root: str, commit: str) -> set[str]:
+def _tracked_files_since(root: str, commit: str, working: bool = False) -> set[str]:
     """Files recorded in a `specs/*/.spec-context.json` that itself changed in
     `commit..HEAD` — i.e. a pipeline sync recorded SINCE the capability spec's
-    last commit (FR-002: "...changed/modified set since the spec's commit").
+    last commit. Working mode widens the scan the same way as the drifted set,
+    so an uncommitted pipeline record still earns its files the `tracked` label.
 
     Scoping to context files changed in `commit..HEAD` is the git-based read
     consistent with the rest of drift. It degrades conservatively: if git can't
@@ -166,7 +188,10 @@ def _tracked_files_since(root: str, commit: str) -> set[str]:
     is labeled `unspeced` rather than a false `tracked`.
     """
     out: set[str] = set()
-    for rel in _changed_since(root, commit, "specs/"):
+    rels = _changed_since(root, commit, "specs/", working=working)
+    if working:
+        rels += _untracked(root, "specs/")
+    for rel in rels:
         rel = rsp._posix(rel)
         if not rel.endswith("/.spec-context.json"):
             continue
@@ -203,16 +228,20 @@ def _exempt(file: str, exempt_globs: list[str]) -> bool:
     )
 
 
-def compute_drift(root: str, living: dict) -> dict:
-    """The drift result object. Inert (empty) when living specs are disabled."""
+def compute_drift(root: str, living: dict, working: bool = False) -> dict:
+    """The drift result object. Inert (empty) when living specs are disabled.
+    `working` widens each changed set to the working tree (uncommitted +
+    untracked); the default path issues exactly the same git commands as before."""
     if not living["enabled"]:
-        return {"enabled": False, "checked": 0, "capabilities": [], "skipped": []}
+        return {"enabled": False, "working": working, "checked": 0,
+                "capabilities": [], "skipped": []}
 
     exempt_globs = living.get("exempt") or []
     git_ok = _is_git_repo(root)
     boundaries = _shallow_boundaries(root) if git_ok else frozenset()
     graft_state_unknown = boundaries is None
     has_commits = _has_commits(root) if git_ok else False
+    untracked = _untracked(root) if (working and git_ok) else []
     caps_out: list[dict] = []
     skipped: list[dict] = []
 
@@ -239,10 +268,17 @@ def compute_drift(root: str, living: dict) -> dict:
             continue
 
         spec_posix = rsp._posix(spec)
-        tracked = _tracked_files_since(root, commit)
+        tracked = _tracked_files_since(root, commit, working=working)
+        changed = _changed_since(root, commit, working=working)
+        if working:
+            changed += untracked
         drifted = []
-        for f in _changed_since(root, commit):
+        seen: set[str] = set()
+        for f in changed:
             fp = rsp._posix(f)
+            if fp in seen:
+                continue
+            seen.add(fp)
             if _is_own_spec_doc(fp, spec_posix):
                 continue
             if not rsp.matches(cap, fp):
@@ -261,7 +297,7 @@ def compute_drift(root: str, living: dict) -> dict:
         })
 
     caps_out.sort(key=lambda c: c["name"])
-    return {"enabled": True, "checked": len(caps_out),
+    return {"enabled": True, "working": working, "checked": len(caps_out),
             "capabilities": caps_out, "skipped": skipped}
 
 
@@ -321,7 +357,8 @@ def render_human(result: dict) -> str:
             lines.append(f"✓ All {checked} checked {noun} in sync.")
         return "\n".join(lines)
 
-    lines.append("🔍 Spec drift report")
+    lines.append("🔍 Spec drift report (working tree included)"
+                 if result.get("working") else "🔍 Spec drift report")
     for cap in result["capabilities"]:
         if not cap["drifted"]:
             lines.append(f"✓ {cap['name']} — in sync")
@@ -348,10 +385,13 @@ def main(argv=None) -> int:
     ap.add_argument("--root", default=".", help="repo root (default: cwd)")
     ap.add_argument("--json", action="store_true",
                     help="emit the machine-readable JSON object")
+    ap.add_argument("--working", action="store_true",
+                    help="also count working-tree changes (uncommitted edits, "
+                         "deletions, and untracked files) as drift")
     args = ap.parse_args(argv)
 
     living = rsp.load_living(args.root)
-    result = compute_drift(args.root, living)
+    result = compute_drift(args.root, living, working=args.working)
     if args.json:
         print(json.dumps(result, indent=2))
     else:

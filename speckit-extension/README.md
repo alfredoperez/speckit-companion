@@ -102,12 +102,13 @@ The spec-driven run itself, in the order you'd use them.
 
 ### Living specs
 
-All four are opt-in — with no `living-specs.yml` in your project they report nothing and change nothing.
+All five are opt-in — with no `living-specs.yml` in your project they report nothing and change nothing.
 
 | Command | What it does |
 |---------|--------------|
 | `/speckit.companion.living-adopt` | Brownfield adoption wizard — draft living specs for the code areas you name, surface-first (`[DRAFT]`, `[inferred]` tags, `## Uncovered`), walk the clarifications, and register the capabilities (incremental) |
-| `/speckit.companion.living-drift` | Per-capability report of source files changed since the living spec was last committed, classified `tracked` vs `unspeced` (read-only, never halts) |
+| `/speckit.companion.living-drift` | Per-capability report of source files changed since the living spec was last committed, classified `tracked` vs `unspeced` (read-only, never halts; `--working` also counts uncommitted and untracked changes) |
+| `/speckit.companion.living-sync` | Sync living specs from your current changes — group working-tree changes (uncommitted included) by capability and update every affected spec in one pass, update-not-regenerate (never halts) |
 | `/speckit.companion.living-coverage` | Per-capability requirement→test report — which requirements have a test mapped in the capability's `.coverage.md` tier and which are uncovered (read-only, never halts) |
 | `/speckit.companion.living-move` | Move a living spec between central and colocated storage — the file, its tier siblings, and the registry entry together (reversible) |
 
@@ -277,9 +278,12 @@ A living spec only stays honest if changes to its area keep flowing back into it
 - **`unspeced`** — the file changed entirely outside the pipeline. The living spec never saw it at all — the more concerning of the two.
 
 ```bash
-/speckit.companion.living-drift          # human-readable report
-/speckit.companion.living-drift --json   # the same data for tooling / CI
+/speckit.companion.living-drift            # human-readable report
+/speckit.companion.living-drift --json     # the same data for tooling / CI
+/speckit.companion.living-drift --working  # also count uncommitted + untracked changes
 ```
+
+By default drift reads **committed history only** — work you haven't committed yet is invisible to it. Add `--working` to widen each capability's changed set to the working tree: uncommitted edits, deletions, and untracked files then count as drift too. Everything else is unchanged — same counts, same skip reasons, same always-exits-success contract — and the `--json` object says which mode produced it via a `working` boolean.
 
 Files you don't want tracked — generated code, tests, migrations — are filtered out by an exempt list. It defaults to `*.config.*`, `*.test.*`, and `**/migrations/**`, and you can override it with an `exempt` glob list:
 
@@ -312,6 +316,18 @@ The `✓ All N checked capabilities in sync.` line is reserved for a run where *
 ```
 
 A capability whose spec *was* committed inside the available slice is still checked normally, and a full clone behaves exactly as it always has. If drift cannot read a repository's history at all, it now says so (`spec history unreadable`) rather than blaming an uncommitted spec file.
+
+### Syncing from your changes — one pass, uncommitted included
+
+Spotting drift is half the loop; folding it back is the other half. If you code **directly** — no Companion pipeline — the fold-back used to be three steps with a blind spot: run drift, read it, update each capability by hand, and none of it saw uncommitted work. `/speckit.companion.living-sync` closes that loop in one pass:
+
+```bash
+/speckit.companion.living-sync
+```
+
+It groups your current changes — uncommitted edits, deletions, and untracked files included, plus anything committed since each capability's spec was last committed — by capability (the same computation as `living-drift --working`, so the report and the sync can never disagree), then updates **every** affected living spec, scoped to that capability's changed files. No hand-picking. Updates are **update-not-regenerate**: every requirement, clarification, and acceptance scenario the change doesn't invalidate survives verbatim, so a sync never flattens hand-written detail into a fresh draft.
+
+It ends with a report of what was synced and what was skipped (with reasons — a capability whose spec was never committed has no baseline and belongs to `/speckit.companion.living-adopt`), and it deliberately does **not** commit: the spec edits sit in your working tree so they can be reviewed and committed together with the code that caused them. Like the rest of the family it's opt-in and never fails your run.
 
 ### Coverage and architecture tiers
 

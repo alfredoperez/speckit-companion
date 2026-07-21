@@ -191,3 +191,11 @@ A feature spec may declare a delta block per capability, each marked `<!-- capab
 
 - **WHEN** a block carries no capability marker
 - **THEN** it folds into the capability the changed files resolved to, and not into any marker-routed capability
+
+### The drift detector offers an opt-in working-tree mode
+
+The drift script SHALL accept a working-tree mode that widens each capability's changed set from committed history to the baseline→worktree diff plus untracked files, de-duplicated, with the tracked-vs-unspeced scan widened the same way. The default invocation issues exactly the pre-existing git commands and renders identical human output; the machine-readable result names which mode produced it. The never-fails exit contract and the checked/skipped counts semantics hold in both modes.
+
+#### Scenario: an uncommitted edit in a capability's area
+- **WHEN** drift runs without the flag and then with it
+- **THEN** the default run reads the capability as in sync and the working-tree run reports the file as drifted

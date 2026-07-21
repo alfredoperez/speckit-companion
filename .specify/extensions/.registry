@@ -57,7 +57,7 @@
     "companion": {
       "version": "0.19.0",
       "source": "local",
-      "manifest_hash": "sha256:50d4501f9b7c858dc94eaadb2d903b6f926fa072f0fc04a4c35d5ae39532dd59",
+      "manifest_hash": "sha256:f047d6abcaac9f6549db3c338491afd433f303f758879119e58a2c8cf19be99b",
       "enabled": true,
       "priority": 10,
       "registered_commands": {
@@ -78,7 +78,8 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
-          "speckit.companion.living-coverage"
+          "speckit.companion.living-coverage",
+          "speckit.companion.living-sync"
         ],
         "claude": [
           "speckit.companion.after-specify",
@@ -97,7 +98,8 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
-          "speckit.companion.living-coverage"
+          "speckit.companion.living-coverage",
+          "speckit.companion.living-sync"
         ],
         "codex": [
           "speckit.companion.after-specify",
@@ -116,7 +118,8 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
-          "speckit.companion.living-coverage"
+          "speckit.companion.living-coverage",
+          "speckit.companion.living-sync"
         ],
         "copilot": [
           "speckit.companion.after-specify",
@@ -135,7 +138,8 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
-          "speckit.companion.living-coverage"
+          "speckit.companion.living-coverage",
+          "speckit.companion.living-sync"
         ],
         "cursor-agent": [
           "speckit.companion.after-specify",
@@ -154,7 +158,8 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
-          "speckit.companion.living-coverage"
+          "speckit.companion.living-coverage",
+          "speckit.companion.living-sync"
         ],
         "gemini": [
           "speckit.companion.after-specify",
@@ -173,7 +178,8 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
-          "speckit.companion.living-coverage"
+          "speckit.companion.living-coverage",
+          "speckit.companion.living-sync"
         ],
         "qwen": [
           "speckit.companion.after-specify",
@@ -192,7 +198,8 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
-          "speckit.companion.living-coverage"
+          "speckit.companion.living-coverage",
+          "speckit.companion.living-sync"
         ],
         "zed": [
           "speckit.companion.after-specify",
@@ -211,11 +218,12 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
-          "speckit.companion.living-coverage"
+          "speckit.companion.living-coverage",
+          "speckit.companion.living-sync"
         ]
       },
       "registered_skills": [],
-      "installed_at": "2026-07-19T14:43:52.145769+00:00"
+      "installed_at": "2026-07-21T16:01:16.528594+00:00"
     }
   }
 }

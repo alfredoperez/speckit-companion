@@ -75,6 +75,9 @@ provides:
     - name: speckit.companion.living-coverage
       file: commands/speckit.companion.living-coverage.md
       description: "Report living-spec requirement→test coverage — per requirement, whether its coverage tier maps a test (opt-in, read-only, never halts)"
+    - name: speckit.companion.living-sync
+      file: commands/speckit.companion.living-sync.md
+      description: "Sync living specs from your current changes — group working-tree changes (uncommitted included) by capability and update every affected spec in one pass (opt-in, never halts)"
 
 hooks:
   after_specify:

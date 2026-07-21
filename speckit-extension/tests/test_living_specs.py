@@ -1875,6 +1875,135 @@ class DriftTests(unittest.TestCase):
         self.assertEqual(drift.main(["--root", str(root)]), 0)
 
 
+class WorkingDriftTests(unittest.TestCase):
+    """`--working` widens drift to the working tree; the default mode must not move."""
+
+    YAML = DriftTests.YAML
+
+    def _run(self, root: Path, working: bool = False) -> dict:
+        living = drift.rsp.load_living(str(root))
+        return drift.compute_drift(str(root), living, working=working)
+
+    def _baked(self) -> Path:
+        root = _bake_drift_repo(self.YAML)
+        _write(root, "capabilities/todos/spec.md", "# Todos\n")
+        _write(root, "src/todos/list.ts", "// todos\n")
+        _commit_all(root, "baseline")
+        return root
+
+    def test_uncommitted_edit_needs_working_mode(self) -> None:
+        root = self._baked()
+        _write(root, "src/todos/list.ts", "// todos\n// uncommitted\n")
+
+        todos = next(c for c in self._run(root)["capabilities"] if c["name"] == "todos")
+        self.assertTrue(todos["inSync"])
+        todos = next(c for c in self._run(root, working=True)["capabilities"]
+                     if c["name"] == "todos")
+        self.assertEqual(
+            [(d["file"], d["severity"]) for d in todos["drifted"]],
+            [("src/todos/list.ts", "unspeced")],
+        )
+
+    def test_untracked_file_is_drifted_only_with_working(self) -> None:
+        root = self._baked()
+        _write(root, "src/todos/new-item.ts", "// brand new\n")
+
+        self.assertTrue(next(c for c in self._run(root)["capabilities"]
+                             if c["name"] == "todos")["inSync"])
+        todos = next(c for c in self._run(root, working=True)["capabilities"]
+                     if c["name"] == "todos")
+        self.assertIn("src/todos/new-item.ts", [d["file"] for d in todos["drifted"]])
+
+    def test_working_tree_deletion_is_drifted(self) -> None:
+        root = self._baked()
+        (root / "src/todos/list.ts").unlink()
+
+        todos = next(c for c in self._run(root, working=True)["capabilities"]
+                     if c["name"] == "todos")
+        self.assertEqual([d["file"] for d in todos["drifted"]], ["src/todos/list.ts"])
+
+    def test_committed_then_reedited_file_is_reported_once(self) -> None:
+        root = self._baked()
+        _write(root, "src/todos/list.ts", "// todos\n// committed change\n")
+        _commit_all(root, "committed change")
+        _write(root, "src/todos/list.ts", "// todos\n// and an uncommitted one\n")
+
+        todos = next(c for c in self._run(root, working=True)["capabilities"]
+                     if c["name"] == "todos")
+        self.assertEqual([d["file"] for d in todos["drifted"]], ["src/todos/list.ts"])
+
+    def test_exempt_globs_still_filter_in_working_mode(self) -> None:
+        root = self._baked()
+        _write(root, "src/todos/list.test.ts", "// uncommitted test file\n")
+
+        todos = next(c for c in self._run(root, working=True)["capabilities"]
+                     if c["name"] == "todos")
+        self.assertTrue(todos["inSync"])
+
+    def test_uncommitted_spec_is_still_skipped_in_working_mode(self) -> None:
+        root = _bake_drift_repo(self.YAML)
+        _write(root, "src/todos/list.ts", "// todos\n")
+        _commit_all(root, "code only")  # neither capability spec committed
+        _write(root, "src/todos/list.ts", "// todos\n// dirty\n")
+
+        result = self._run(root, working=True)
+        self.assertEqual(result["capabilities"], [])
+        self.assertEqual(result["checked"], 0)
+        self.assertIn(
+            "0 checked, 2 skipped (spec.md not yet committed)",
+            drift.render_human(result),
+        )
+
+    def test_uncommitted_spec_context_earns_tracked_in_working_mode(self) -> None:
+        root = self._baked()
+        _write(root, "src/todos/list.ts", "// changed via pipeline, all uncommitted\n")
+        _write(
+            root, "specs/003-wip/.spec-context.json",
+            '{"files_modified": ["src/todos/list.ts"], "status": "implementing"}\n',
+        )
+
+        todos = next(c for c in self._run(root, working=True)["capabilities"]
+                     if c["name"] == "todos")
+        self.assertEqual(
+            [(d["file"], d["severity"]) for d in todos["drifted"]],
+            [("src/todos/list.ts", "tracked")],
+        )
+
+    def test_json_carries_the_mode_flag_in_both_modes(self) -> None:
+        root = self._baked()
+        self.assertFalse(self._run(root)["working"])
+        self.assertTrue(self._run(root, working=True)["working"])
+        disabled = _bake_drift_repo(self.YAML.replace("enabled: true", "enabled: false"))
+        self.assertTrue(self._run(disabled, working=True)["working"])
+
+    def test_default_mode_result_is_unmoved_by_a_dirty_tree(self) -> None:
+        root = self._baked()
+        clean = self._run(root)
+        _write(root, "src/todos/list.ts", "// todos\n// dirty\n")
+        _write(root, "src/todos/untracked.ts", "// dirty\n")
+        self.assertEqual(self._run(root), clean)
+
+    def test_working_header_names_the_working_tree(self) -> None:
+        root = self._baked()
+        _write(root, "src/todos/list.ts", "// todos\n// dirty\n")
+
+        self.assertIn("🔍 Spec drift report (working tree included)",
+                      drift.render_human(self._run(root, working=True)))
+        _commit_all(root, "now committed")
+        self.assertIn("🔍 Spec drift report\n", drift.render_human(self._run(root)) + "\n")
+
+    def test_working_mode_always_exits_zero(self) -> None:
+        dirty = self._baked()
+        _write(dirty, "src/todos/list.ts", "// dirty\n")
+        no_git = Path(tempfile.mkdtemp())
+        (no_git / ".specify").mkdir(parents=True)
+        (no_git / ".specify" / "companion.yml").write_text(self.YAML, encoding="utf-8")
+
+        for root in (dirty, no_git):
+            self.assertEqual(drift.main(["--root", str(root), "--working"]), 0)
+            self.assertEqual(drift.main(["--root", str(root), "--working", "--json"]), 0)
+
+
 def _shallow_clone(src: Path, depth: int) -> Path:
     dst = Path(tempfile.mkdtemp()) / "clone"
     subprocess.run(

@@ -75,6 +75,7 @@ describe('sidebar contributions', () => {
             ['speckit.revealItemInOS', 'Reveal in File Manager'],
             ['speckit.livingSpecs.drift', 'Check for Drift'],
             ['speckit.livingSpecs.adopt', 'Adopt Code Area…'],
+            ['speckit.livingSpecs.sync', 'Sync living specs from my changes'],
             ['speckit.livingSpecs.refresh', 'Refresh Living Specs'],
             ['speckit.companion.installSpecKitExtension', 'Install Companion Extension'],
         ])('%s is titled "%s"', (id, title) => {
