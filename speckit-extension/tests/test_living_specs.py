@@ -739,6 +739,37 @@ class DeltaParserTests(unittest.TestCase):
         d = wc.parse_spec_deltas(spec)
         self.assertEqual(d["markers"].get("added"), "billing")
 
+    def test_two_added_blocks_for_different_caps_keep_distinct_unit_caps(self) -> None:
+        # Two `## ADDED Requirements` blocks marked for different capabilities must
+        # not collapse to one marker — each requirement unit records its own
+        # capability so the fold can route them apart (#503).
+        spec = (
+            "# Feat\n\n"
+            "## ADDED Requirements\n<!-- capability: alpha -->\n\n"
+            "### Alpha thing\n\n#### Scenario: a\n- x\n\n"
+            "## ADDED Requirements\n<!-- capability: beta -->\n\n"
+            "### Beta thing\n\n#### Scenario: b\n- y\n"
+        )
+        d = wc.parse_spec_deltas(spec)
+        self.assertEqual([h for h, _ in d["added"]], ["Alpha thing", "Beta thing"])
+        self.assertEqual(d["unit_caps"]["added"], ["alpha", "beta"])
+
+    def test_unmarked_block_records_none_unit_cap(self) -> None:
+        d = wc.parse_spec_deltas(
+            "## ADDED Requirements\n\n### Plain thing\n\n#### Scenario: s\n- a\n")
+        self.assertEqual(d["unit_caps"]["added"], [None])
+
+    def test_unit_caps_align_across_all_verbs(self) -> None:
+        spec = (
+            "## MODIFIED Requirements\n<!-- capability: alpha -->\n\n### Edited\n\n- z\n\n"
+            "## REMOVED Requirements\n<!-- capability: beta -->\n\n### Gone\n\n"
+            "## RENAMED Requirements\n<!-- capability: gamma -->\n\n### From -> To\n"
+        )
+        d = wc.parse_spec_deltas(spec)
+        self.assertEqual(d["unit_caps"]["modified"], ["alpha"])
+        self.assertEqual(d["unit_caps"]["removed"], ["beta"])
+        self.assertEqual(d["unit_caps"]["renamed"], ["gamma"])
+
 
 class ApplyDeltasTests(unittest.TestCase):
     def test_added_appends_idempotently(self) -> None:
@@ -1216,6 +1247,92 @@ class FoldLivingSpecTests(unittest.TestCase):
         self.assertEqual(body.count("## Requirements"), 1)
         self.assertIn("### Due dates", body)
         self.assertIn("### Reminders", body)
+
+
+TWO_CAP_YAML = (
+    "livingSpecs:\n  enabled: true\n  capabilities:\n"
+    "    - name: todos\n      match: [\"src/todos/**\"]\n"
+    "    - name: billing\n      match: [\"src/billing/**\"]\n"
+)
+
+
+class PerCapabilityFoldRoutingTests(unittest.TestCase):
+    """#503: a feature that loaded+changed several capabilities folds each
+    capability's own requirement into its own spec — no cross-contamination."""
+
+    def _living(self, root: Path, rel: str) -> str:
+        return (root / rel).read_text(encoding="utf-8")
+
+    def _ctx(self, fdir: Path) -> dict:
+        return _json.loads((fdir / ".spec-context.json").read_text(encoding="utf-8"))
+
+    def test_two_marked_blocks_route_each_requirement_to_its_own_spec(self) -> None:
+        caps = {"capabilities/todos/spec.md": "# Todos\n",
+                "capabilities/billing/spec.md": "# Billing\n"}
+        # The code change touches todos (default), and each block is marked.
+        root = _git_repo(TWO_CAP_YAML, caps, code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n"
+            "## ADDED Requirements\n<!-- capability: todos -->\n\n"
+            "### Todos gain due dates\n\n#### Scenario: s\n- a\n\n"
+            "## ADDED Requirements\n<!-- capability: billing -->\n\n"
+            "### Invoices can be exported\n\n#### Scenario: s\n- b\n")
+        result = wc.fold_living_spec(fdir, "ai")
+        self.assertIsNotNone(result)
+        todos = self._living(root, "capabilities/todos/spec.md")
+        billing = self._living(root, "capabilities/billing/spec.md")
+        # Each spec gets ONLY its own requirement.
+        self.assertIn("### Todos gain due dates", todos)
+        self.assertNotIn("### Invoices can be exported", todos)
+        self.assertIn("### Invoices can be exported", billing)
+        self.assertNotIn("### Todos gain due dates", billing)
+        self.assertEqual(set(self._ctx(fdir)["livingSpecs"]["synced"]), {"todos", "billing"})
+
+    def test_unmarked_block_folds_into_the_matched_default_only(self) -> None:
+        caps = {"capabilities/todos/spec.md": "# Todos\n",
+                "capabilities/billing/spec.md": "# Billing\n"}
+        root = _git_repo(TWO_CAP_YAML, caps, code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n"
+            "## ADDED Requirements\n\n"  # unmarked -> the changed-files default (todos)
+            "### Todos gain due dates\n\n#### Scenario: s\n- a\n\n"
+            "## ADDED Requirements\n<!-- capability: billing -->\n\n"
+            "### Invoices can be exported\n\n#### Scenario: s\n- b\n")
+        wc.fold_living_spec(fdir, "ai")
+        todos = self._living(root, "capabilities/todos/spec.md")
+        billing = self._living(root, "capabilities/billing/spec.md")
+        self.assertIn("### Todos gain due dates", todos)
+        self.assertNotIn("### Invoices can be exported", todos)
+        self.assertIn("### Invoices can be exported", billing)
+        self.assertNotIn("### Todos gain due dates", billing)
+
+    def test_single_unmarked_block_still_folds_into_matched_capability(self) -> None:
+        # Backward-compat: today's behavior — one plain delta block, no marker —
+        # folds into the changed-files-matched capability and stays idempotent.
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+        wc.fold_living_spec(fdir, "ai")
+        after_first = self._living(root, "capabilities/todos/spec.md")
+        self.assertIn("### Due dates", after_first)
+        wc.fold_living_spec(fdir, "ai")  # re-fold
+        self.assertEqual(self._living(root, "capabilities/todos/spec.md"), after_first)
+
+    def test_marked_block_writes_a_capability_the_change_did_not_touch(self) -> None:
+        # Fold-fires-on-completion: a capability the AI authored a delta for
+        # (via the marker) gets a real write even though the code change resolved
+        # elsewhere — the old path folded one target and silently dropped the rest.
+        caps = {"capabilities/todos/spec.md": "# Todos\n",
+                "capabilities/billing/spec.md": "# Billing\n"}
+        root = _git_repo(TWO_CAP_YAML, caps, code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n<!-- capability: billing -->\n\n"
+            "### Invoices can be exported\n\n#### Scenario: s\n- b\n")
+        before = self._living(root, "capabilities/billing/spec.md")
+        wc.fold_living_spec(fdir, "ai")
+        self.assertNotEqual(self._living(root, "capabilities/billing/spec.md"), before)
+        self.assertIn("billing", self._ctx(fdir)["livingSpecs"]["synced"])
 
 
 class FoldBranchFallbackTests(unittest.TestCase):

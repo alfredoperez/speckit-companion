@@ -1,0 +1,75 @@
+{
+  "workflow": "companion",
+  "specName": "Fold changes back into every living spec on completion",
+  "branch": "407-fold-back-on-complete",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-21T11:29:44.064Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T11:29:58.996Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-21T11:29:59.063Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T11:29:59.198Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-21T11:29:59.263Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T11:29:59.371Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-21T11:29:59.433Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T11:29:59.536Z"
+    }
+  ],
+  "livingSpecs": {
+    "loaded": [
+      "capture-runtime",
+      "companion-commands"
+    ],
+    "synced": [
+      "capture-runtime",
+      "companion-commands"
+    ]
+  }
+}

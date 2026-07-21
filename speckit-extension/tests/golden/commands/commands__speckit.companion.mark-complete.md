@@ -37,18 +37,27 @@ completed`, preserving the canonical invariant that the last `history` entry's s
 
 ### Fold living-spec deltas (opt-in, best-effort)
 
-After the completion write succeeds, fold this feature spec's requirement deltas into the durable
-living spec for the capability it changed — OpenSpec's "archive" step. Run from the repository root:
+**Author the deltas first.** Living specs stay current only if completion writes the change back, so
+before folding, read `livingSpecs.loaded` in this feature's `.spec-context.json`. For each loaded
+capability whose *behavior* this feature actually changed, append a delta block to this feature's
+`spec.md` — `## ADDED / MODIFIED / REMOVED / RENAMED Requirements` — capturing the real new or
+changed requirement, and mark each block with `<!-- capability: <name> -->` so the fold routes it to
+the right spec. Write one block per changed capability; skip the ones you merely read, and never
+invent requirements to pad the list. The write lands in the feature's PR diff, so it is reviewed there.
+
+After the completion write succeeds, fold the deltas you just authored into the durable living
+spec(s) — OpenSpec's "archive" step. Run from the repository root:
 
 ```bash
 python3 .specify/extensions/companion/scripts/write-context.py --fold-living-spec --by ai
 ```
 
 This parses the feature spec for `## ADDED / MODIFIED / REMOVED / RENAMED Requirements` blocks and
-applies them to the resolved `capabilities/<name>/spec.md` (most-specific capability, unless a block
-carries a `<!-- capability: <name> -->` marker). It is **opt-in** (only acts when
+applies each to the resolved `capabilities/<name>/spec.md` — the changed-files-matched capability for
+unmarked blocks, and every `<!-- capability: <name> -->`-marked capability for the rest, so each
+capability spec receives only its own requirements. It is **opt-in** (only acts when
 `living-specs.yml` sets `enabled: true`), a **clean no-op** when the spec carries
-no delta block (the common additive case), **idempotent** on re-run, and records the synced
+no delta block, **idempotent** on re-run, and records the synced
 capability names onto `livingSpecs.synced` in `.spec-context.json`. Best-effort — it never fails the
 host command.
 

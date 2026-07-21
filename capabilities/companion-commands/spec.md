@@ -165,3 +165,17 @@ Read in full: the extension manifest, all part files, the node order and a sampl
 - All seven `presets/companion-standard/commands/*.md` carrier bodies and `preset.yml`.
 - Most individual node bodies under `nodes/` — read the order files, frontmatter shape, and three representative bodies.
 - `speckit-extension/workflows/speckit-companion.workflow.yml`.
+
+### Completion authors a delta block per changed capability before folding
+
+The mark-complete step instructs the AI to read `livingSpecs.loaded` and, for each loaded capability whose behavior the feature changed, append a marked delta block to the feature spec capturing the real requirement, then fold. Capabilities merely read are skipped.
+
+#### Scenario: a feature changed a loaded capability
+
+- **WHEN** the feature loaded a capability and changed its behavior
+- **THEN** the completion step authors a delta block marked for that capability, and the fold writes the requirement into that capability's spec
+
+#### Scenario: a capability was read but not changed
+
+- **WHEN** the feature loaded a capability but did not change its behavior
+- **THEN** no delta block is authored for it and its spec is left untouched

@@ -240,12 +240,13 @@ This stays **opt-in by presence and never blocks a run**: with no registry or `e
 
 ### Folding feature deltas back into the living spec on completion
 
-A feature spec is a one-time proposal. When you finish a feature, the change it described should become part of the durable record. If your feature spec includes a delta section describing how it changes a capability — what it adds, modifies, removes, or renames — those changes **fold into the capability's living spec** the moment you mark the spec complete. The feature spec was the proposal; the living spec becomes the record. (This is OpenSpec's "archive" step.)
+A feature spec is a one-time proposal. When you finish a feature, the change it described should become part of the durable record. At completion, Companion asks the assistant to write a delta section for each capability the feature loaded **and** changed, and those deltas **fold into each capability's living spec** the moment you mark the spec complete. The feature spec was the proposal; the living spec becomes the record. (This is OpenSpec's "archive" step.) Because the deltas are written by the assistant into the feature's `spec.md`, they land in the feature's PR diff — so the change to the durable spec is reviewed alongside the code, not applied blindly.
 
-Write the deltas as top-level sections in the feature's `spec.md`, using the requirement-and-scenario shape:
+The deltas are top-level sections in the feature's `spec.md`, using the requirement-and-scenario shape, one section per changed capability with a `<!-- capability: <name> -->` marker so each routes to the right spec:
 
 ```markdown
 ## ADDED Requirements
+<!-- capability: checkout -->
 
 ### Users can set a due date on a todo
 
@@ -254,11 +255,11 @@ Write the deltas as top-level sections in the feature's `spec.md`, using the req
 - THEN the todo shows the due date
 ```
 
-The same four section types are recognized — `## ADDED Requirements`, `## MODIFIED Requirements`, `## REMOVED Requirements`, and `## RENAMED Requirements` (a rename reads `### Old name -> New name`). At completion, Companion resolves which capability the change touched and applies the deltas to its `capabilities/<name>/spec.md`: adds append, modifies replace, removes delete, renames rewrite the heading. When several capabilities are in scope it writes only the **most-specific** one, unless a delta section carries a `<!-- capability: <name> -->` marker naming a different or additional target.
+Four section types are recognized — `## ADDED Requirements`, `## MODIFIED Requirements`, `## REMOVED Requirements`, and `## RENAMED Requirements` (a rename reads `### Old name -> New name`). At completion, each section applies to its capability's `capabilities/<name>/spec.md`: adds append, modifies replace, removes delete, renames rewrite the heading. A feature that changed several capabilities **folds into each of them, and each spec receives only its own requirements** — a section marked for `checkout` never lands in `billing`. An unmarked section folds into the capability the changed files resolved to.
 
-This stays **opt-in and safe**: with living specs off there is no fold. A feature spec with no delta section writes nothing (the common additive case leaves the living spec byte-for-byte unchanged), and re-running completion folds nothing already there — it's idempotent. The synced capability names are recorded on the spec's context under `livingSpecs.synced` (additive metadata, never a lifecycle field). The whole step is best-effort and never fails completion.
+This stays **opt-in and safe**: with living specs off there is no fold. A feature spec with no delta section writes nothing (a purely additive change leaves the living spec byte-for-byte unchanged), and re-running completion folds nothing already there — it's idempotent. The synced capability names are recorded on the spec's context under `livingSpecs.synced` (additive metadata, never a lifecycle field). The whole step is best-effort and never fails completion.
 
-When the fold does nothing, it now tells you **exactly why** — living specs off, no capability resolved, no delta section, or already up to date — instead of listing all the possibilities at once. And when a feature loaded capability specs at the start but its `spec.md` carries no delta section, completion no longer stays silent: it names the capabilities you loaded and reminds you there's nothing to fold yet, so you can add a delta section or run the drift check to sync. Since the standard specify → plan → tasks flow doesn't write delta sections on its own, that reminder is what keeps the write half of living specs from quietly never running.
+When the fold does nothing, it tells you **exactly why** — living specs off, no capability resolved, no delta section, or already up to date — instead of listing all the possibilities at once. If a feature loaded capability specs but its `spec.md` carries no delta section (for example, when nothing about a loaded capability's behavior actually changed), completion names the capabilities you loaded and reminds you there's nothing to fold yet.
 
 ### Adopting an existing code area into a living spec
 
