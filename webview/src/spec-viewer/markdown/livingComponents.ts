@@ -174,14 +174,25 @@ export function preprocessLivingScenarios(markdown: string): string {
     });
 }
 
+// Stateless test (no `g` flag, so no shared lastIndex) + global strip.
+const HAS_INFERRED = /\[inferred\]/i;
+const STRIP_INFERRED = /\s*\[inferred\]\s*/gi;
+
 function buildRequirementCard(heading: string, blockLines: string[]): string[] {
     // Lift the `[inferred]` metadata tag out of the prose into a confidence
-    // badge. An untagged requirement is observed and gets no badge.
+    // badge. The tag can sit in the heading (`### Title [inferred]`) or a body
+    // line; either way it's stripped from the visible text. An untagged
+    // requirement is observed and gets no badge.
     let inferred = false;
+    let title = heading;
+    if (HAS_INFERRED.test(heading)) {
+        inferred = true;
+        title = heading.replace(STRIP_INFERRED, ' ').replace(/[ \t]+$/, '').trim();
+    }
     const body = blockLines.map((line) => {
-        if (/\[inferred\]/i.test(line)) {
+        if (HAS_INFERRED.test(line)) {
             inferred = true;
-            return line.replace(/\s*\[inferred\]\s*/gi, ' ').replace(/[ \t]+$/, '');
+            return line.replace(STRIP_INFERRED, ' ').replace(/[ \t]+$/, '');
         }
         return line;
     });
@@ -191,8 +202,9 @@ function buildRequirementCard(heading: string, blockLines: string[]): string[] {
         badges.push('<span class="living-req-confidence living-req-confidence--inferred">inferred</span>');
     }
     // Coverage is best-effort: shown only when the plumbing supplies a tier, and
-    // never rendered as `0` or a blank.
-    const cov = livingCoverage[heading];
+    // never rendered as `0` or a blank. Keyed on the tag-stripped title so a
+    // heading-level `[inferred]` doesn't defeat the lookup.
+    const cov = livingCoverage[title];
     if (cov != null && String(cov).trim() !== '' && String(cov).trim() !== '0') {
         badges.push(`<span class="living-req-coverage">${escapeHtml(String(cov))}</span>`);
     }
@@ -201,8 +213,8 @@ function buildRequirementCard(heading: string, blockLines: string[]): string[] {
         : [];
 
     return [
-        `<div class="living-req-card" data-req="${escapeHtml(heading)}">`,
-        `### ${heading}`,
+        `<div class="living-req-card" data-req="${escapeHtml(title)}">`,
+        `### ${title}`,
         ...metaLine,
         ...body,
         '</div>',

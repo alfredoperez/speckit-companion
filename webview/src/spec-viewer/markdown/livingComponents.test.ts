@@ -156,6 +156,18 @@ describe('requirement confidence + coverage (FR-009, FR-010, FR-011, FR-019)', (
         expect(out).toContain('This was guessed from code.');
     });
 
+    it('lifts a [inferred] tag out of the heading, badges it, and strips it from the title', () => {
+        setLivingCoverage({ 'Heading-tagged rule': '2/2 tests' });
+        const md = '## Requirements\n\n### Heading-tagged rule [inferred]\n\nBody.';
+        const out = preprocessLivingRequirements(md);
+        expect(out).toContain('living-req-confidence--inferred');
+        expect(out).not.toContain('[inferred]');
+        expect(out).toContain('### Heading-tagged rule');
+        // Coverage keyed on the tag-stripped title still resolves.
+        expect(out).toContain('living-req-coverage');
+        expect(out).toContain('2/2 tests');
+    });
+
     it('renders no confidence badge for an untagged (observed) requirement', () => {
         const md = '## Requirements\n\n### Observed rule\n\nSeen directly in code.';
         const out = preprocessLivingRequirements(md);
