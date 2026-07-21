@@ -288,6 +288,14 @@ describe('preprocessLivingUncovered (FR-014–FR-019)', () => {
         const listIds = [...out.matchAll(/data-list-id="(living-uncovered-\d+)"/g)].map((m) => m[1]);
         expect(new Set(listIds).size).toBe(2);
     });
+
+    it('renders the authored scope sentence as its own commentable line', () => {
+        const out = preprocessLivingUncovered(grouped);
+        expect(out).toMatch(/<div class="living-uncovered-scope line" data-line="1" data-list-id="living-uncovered-scope">/);
+        const scopeIdx = out.indexOf('living-uncovered-scope');
+        expect(out.slice(scopeIdx)).toContain('line-add-btn');
+        expect(out.slice(scopeIdx)).toContain('line-comment-slot');
+    });
 });
 
 describe('uncovered read-everything + fallback (FR-017, FR-018, SC-006)', () => {
@@ -356,5 +364,19 @@ describe('renderMarkdown — feature-spec byte parity (FR-001, SC-001)', () => {
         setLivingMode(false);
         const second = renderMarkdown(featureSpec);
         expect(second).toBe(first);
+    });
+
+    it('escapes authored prose that merely contains the living class substring', () => {
+        setLivingMode(true);
+        const md = [
+            '## Requirements',
+            '',
+            '### A rule',
+            '',
+            'Attack: <img src=x onerror=alert(1)> class="living-x" in prose.',
+        ].join('\n');
+        const out = renderMarkdown(md);
+        expect(out).not.toContain('<img src=x onerror=alert(1)>');
+        expect(out).toContain('&lt;img');
     });
 });

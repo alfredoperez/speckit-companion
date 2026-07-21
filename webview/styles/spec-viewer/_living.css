@@ -161,7 +161,7 @@
   color: var(--text-primary);
 }
 
-#markdown-content .living-uncovered-scope {
+#markdown-content .living-uncovered-scope .line-content {
   color: var(--text-body);
 }
 

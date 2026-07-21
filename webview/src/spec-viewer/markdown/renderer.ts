@@ -36,8 +36,14 @@ let hasSpecContext = false;
 
 // Whether the current document is a living spec. Set from navState.livingMode
 // before render; when false, none of the living preprocessors run and the
-// document takes the feature-spec path unchanged (FR-001, SC-001).
+// document takes the feature-spec path unchanged.
 let livingMode = false;
+
+// A line is trusted living-component HTML only if it *starts* with one of the
+// tag shapes the living preprocessors emit — never merely contains the class
+// substring. Prose that happens to include `class="living-` must still be
+// escaped, not passed through as raw HTML.
+const LIVING_HTML_LINE = /^\s*<(?:div|span|ol|ul|li|p) class="living-/;
 
 // Per-task capture summaries (what each task did + files), keyed by task id.
 // Injected from viewerState so the tasks.md document can show captured detail.
@@ -540,7 +546,7 @@ export function renderMarkdown(markdown: string): string {
 
         // Check if line is preprocessed HTML (callouts, user stories, metadata, scenario tables)
         // Match any line containing our custom class patterns or HTML structure elements
-        if (line.includes('class="living-') ||
+        if (LIVING_HTML_LINE.test(line) ||
             line.includes('<div class="callout') ||
             line.includes('<div class="ck-group') ||
             line.includes('<div class="tech-grid') ||

@@ -301,8 +301,14 @@ function parseUncoveredGroups(bodyLines: string[]): { scope: string; groups: Unc
 
 function buildUncovered(scope: string, groups: UncoveredGroup[]): string {
     const count = groups.reduce((n, g) => n + g.files.length, 0);
+    // The scope sentence is authored prose, so keep it a commentable line
+    // (its own stable list id) rather than baking it into the summary blob.
     const scopeHtml = scope
-        ? `<span class="living-uncovered-scope">${parseInline(scope)}</span>`
+        ? `<div class="living-uncovered-scope line" data-line="1" data-list-id="living-uncovered-scope">` +
+          `<button class="line-add-btn" data-line="1" data-list-id="living-uncovered-scope" title="Add comment">${COMMENT_ICON_SVG}</button>` +
+          `<div class="line-content">${parseInline(scope)}</div>` +
+          `<div class="line-comment-slot"></div>` +
+          `</div>`
         : '';
     const groupsHtml = groups
         .map((g) => {
@@ -331,8 +337,8 @@ function buildUncovered(scope: string, groups: UncoveredGroup[]): string {
         `<div class="living-uncovered">` +
         `<div class="living-uncovered-summary">` +
         `<span class="living-uncovered-count">${count} file${count === 1 ? '' : 's'} not fully read</span>` +
-        scopeHtml +
         `</div>` +
+        scopeHtml +
         groupsHtml +
         `</div>`
     );
