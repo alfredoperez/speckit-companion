@@ -243,10 +243,10 @@ describe('sidebar contributions', () => {
     });
 
     describe('lifecycle gates', () => {
-        it('keeps Resume gated on active/tasks-done, the beta flag, and the installed extension', () => {
+        it('keeps Resume gated on active/tasks-done and the installed extension (no beta gate)', () => {
             const resume = itemContext.find(e => e.command === 'speckit.specs.resume')!;
             expect(resume.when).toBe(
-                `view == ${SPECS_VIEW} && (viewItem == spec-active || viewItem == spec-tasks-done) && speckit.resumeBeta && speckit.companion.installed`
+                `view == ${SPECS_VIEW} && (viewItem == spec-active || viewItem == spec-tasks-done) && speckit.companion.installed`
             );
         });
 

@@ -6,6 +6,13 @@ const mockGetConfig = jest.fn();
     get: mockGetConfig,
 });
 
+// The Companion option is offered to the picker only when the spec-kit extension
+// is installed on disk — mock that probe so selectability is deterministic.
+jest.mock('../../settings/companionPresetReconciler', () => ({
+    isCompanionInstalled: jest.fn(),
+}));
+import { isCompanionInstalled } from '../../settings/companionPresetReconciler';
+
 import {
     getWorkflowCommands,
     getWorkflows,
@@ -167,6 +174,48 @@ describe('getWorkflows provider filtering', () => {
         const names = getWorkflows().map(w => w.name);
 
         expect(names).not.toContain('broken');
+    });
+});
+
+describe('Companion is offered to the picker with no beta setting (gate removed)', () => {
+    const originalFolders = vscode.workspace.workspaceFolders;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        (vscode.workspace as { workspaceFolders: unknown }).workspaceFolders = [
+            { uri: { fsPath: '/root' } },
+        ];
+    });
+
+    afterEach(() => {
+        (vscode.workspace as { workspaceFolders: unknown }).workspaceFolders = originalFolders;
+    });
+
+    it('offers Companion whenever the extension is installed, with no setting enabled', () => {
+        (isCompanionInstalled as jest.Mock).mockReturnValue(true);
+        mockConfig('claude', []);
+
+        const names = getWorkflows().map(w => w.name);
+
+        expect(names).toContain('speckit');
+        expect(names).toContain('companion');
+    });
+
+    it('hides Companion from the picker when the extension is not installed', () => {
+        (isCompanionInstalled as jest.Mock).mockReturnValue(false);
+        mockConfig('claude', []);
+
+        const names = getWorkflows().map(w => w.name);
+
+        expect(names).toContain('speckit');
+        expect(names).not.toContain('companion');
+    });
+
+    it('resolves an existing companion spec even when the extension is not installed', () => {
+        (isCompanionInstalled as jest.Mock).mockReturnValue(false);
+        mockConfig('claude', []);
+
+        expect(getWorkflow('companion')?.name).toBe('companion');
     });
 });
 

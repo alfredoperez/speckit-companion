@@ -15,7 +15,7 @@ import * as crypto from 'crypto';
 import * as vscode from 'vscode';
 import { TelemetryReporter } from '@vscode/extension-telemetry';
 import { ConfigKeys, WorkflowSteps } from './constants';
-import { coerceLegacyBoolean, isCompanionWorkflowEnabled } from './settingsMigration';
+import { coerceLegacyBoolean } from './settingsMigration';
 import { readSpecContextSync, SPEC_CONTEXT_FILENAME } from '../features/specs/specContextReader';
 import { updateSpecContext } from '../features/specs/specContextWriter';
 
@@ -65,10 +65,9 @@ export function defaultWorkflowTelemetryId(value: string | undefined): 'speckit'
     return value === 'companion' ? 'companion' : 'speckit';
 }
 
-/** The beta-flag + workflow states reported with `extension.activated`. */
+/** The workflow + feature-flag states reported with `extension.activated`. */
 export interface BetaSnapshot {
     defaultWorkflow: string;
-    workflowBeta: string;
     activityPanel: string;
     installPrompt: string;
     telemetry: string;
@@ -85,10 +84,6 @@ export function buildBetaSnapshot(): BetaSnapshot {
         String(coerceLegacyBoolean(config.get<unknown>(key), fallback));
     return {
         defaultWorkflow: defaultWorkflowTelemetryId(config.get<string>('defaultWorkflow', 'speckit')),
-        // Reads through the same legacy-fallback helper the live readers use, so an
-        // un-migrated scope (new key unset, legacy workflowBeta/resumeBeta still set)
-        // reports the user's effective opt-in rather than the schema default.
-        workflowBeta: String(isCompanionWorkflowEnabled(config)),
         activityPanel: coerced('viewer.activityPanel', true),
         installPrompt: coerced('companion.installPrompt', true),
         telemetry: bool('telemetry', true),

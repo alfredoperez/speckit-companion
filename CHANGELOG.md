@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **The SpecKit Companion workflow is now available to everyone — no beta setting to turn on.** The workflow picker in Create New Spec and the Continue/Resume button on active specs used to appear only after you enabled a beta toggle. That toggle and its "Beta Features" heading are gone. Both now show out of the box whenever the companion spec-kit extension is installed. Bench results showed the Companion pipeline matches stock SpecKit on correctness while producing specs 60–68% leaner, so it graduates from beta. If you'd turned the old beta setting on, nothing changes for you; the retired setting is quietly removed from your settings on upgrade.
+
 ### Added
 
 - **The Living Specs sidebar is now a directory tree, not a flat list.** Capabilities are grouped by where their specs actually live, so the view's shape mirrors your codebase — capabilities in the same area sit together under their folder path instead of scrolling past as one long list with a grey `central`/`colocated` word on each row. The tree conveys location now, so that word is gone.

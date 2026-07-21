@@ -33,7 +33,6 @@ export const CONTEXT_KEYS = {
     specsSortActive: 'speckit.specs.sortActive',
     specsSelectionCount: 'speckit.specs.selection.count',
     specsSelectionMixed: 'speckit.specs.selection.mixed',
-    resumeBeta: 'speckit.resumeBeta',
     /**
      * True when the companion spec-kit *extension* is installed in the project
      * (`.specify/extensions/companion/` exists). Drives the sidebar install
@@ -97,7 +96,6 @@ export async function resetAllContextKeys(logger?: ContextKeyLogger): Promise<vo
         setContextKey(CONTEXT_KEYS.specsSortActive, false, logger),
         setContextKey(CONTEXT_KEYS.specsSelectionCount, 0, logger),
         setContextKey(CONTEXT_KEYS.specsSelectionMixed, false, logger),
-        setContextKey(CONTEXT_KEYS.resumeBeta, false, logger),
         setContextKey(CONTEXT_KEYS.companionInstalled, false, logger),
     ]);
 }
