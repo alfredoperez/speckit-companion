@@ -156,6 +156,30 @@ class TimingTests(QualityEvalBase):
         self.assertEqual(self.statuses(r)["timing-not-examinable"], "WARN")
         self.assertEqual(r.failed, 0)
 
+    def test_malformed_context_reports_not_examinable(self) -> None:
+        self.write_spec(history=None)
+        (self.spec_dir / ".spec-context.json").write_text("{not json")
+        r = self.run_report()
+        self.assertEqual(self.statuses(r)["timing-not-examinable"], "WARN")
+        self.assertEqual(r.failed, 0)
+
+    def test_empty_history_reports_not_examinable(self) -> None:
+        self.write_spec(history=[])
+        r = self.run_report()
+        self.assertEqual(self.statuses(r)["timing-not-examinable"], "WARN")
+        self.assertEqual(r.failed, 0)
+
+    def test_non_extension_boundary_is_untrusted(self) -> None:
+        history = _healthy_history()
+        for e in history:
+            if e.get("step") == "plan" and e.get("kind") == "start":
+                e["by"] = "cli"
+        self.write_spec(history=history)
+        status, _, detail = next(row for row in self.run_report().rows
+                                 if row[1] == "trusted-boundaries")
+        self.assertEqual(status, "WARN")
+        self.assertIn("plan", detail)
+
 
 class PromptingTests(QualityEvalBase):
     def build_commands(self, mutate: dict[str, str] | None = None,

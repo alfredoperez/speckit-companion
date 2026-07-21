@@ -23,8 +23,9 @@ import sys
 from pathlib import Path
 
 PIPELINE_STEPS = ["specify", "plan", "tasks", "implement"]
-# Writers that read the real clock at write time (same set as check_capture.py).
-DETERMINISTIC_BY = {"extension", "derive", "cli", "user"}
+# Same trust rule as the viewer's deriveStepHistory: only extension-stamped
+# boundaries anchor a span; cli/user/derive writes are honest but not span-grade.
+TRUSTED_BOUNDARY_BY = "extension"
 
 # Verbosity budgets — the single home of every threshold.
 # artifact -> (warn_lines, fail_lines, warn_chars, fail_chars); calibrated on
@@ -124,11 +125,11 @@ def check_verbosity(r: Report, spec_dir: Path) -> None:
     for name, (warn_l, fail_l, warn_c, fail_c) in BUDGETS.items():
         path = spec_dir / name
         cid = f"verbosity-{name.removesuffix('.md')}"
-        if not path.is_file():
-            r.add("INFO", cid, "absent (not scored)")
-            continue
         try:
             text = path.read_text(encoding="utf-8")
+        except FileNotFoundError:
+            r.add("INFO", cid, "absent (not scored)")
+            continue
         except OSError as exc:
             r.add("FAIL", cid, f"unreadable: {exc}")
             continue
@@ -153,13 +154,13 @@ def _is_step_level(e: dict) -> bool:
 
 def _trusted_span(history: list, step: str) -> float | None:
     """start→complete seconds when the step carries an ordered pair of
-    deterministic step-level boundaries; None means the span is untrusted."""
+    extension-stamped step-level boundaries; None means the span is untrusted."""
     starts = [e for e in history
               if e.get("step") == step and _is_step_level(e)
-              and e.get("kind") == "start" and e.get("by") in DETERMINISTIC_BY]
+              and e.get("kind") == "start" and e.get("by") == TRUSTED_BOUNDARY_BY]
     completes = [e for e in history
                  if e.get("step") == step and _is_step_level(e)
-                 and e.get("kind") == "complete" and e.get("by") in DETERMINISTIC_BY]
+                 and e.get("kind") == "complete" and e.get("by") == TRUSTED_BOUNDARY_BY]
     if not starts or not completes:
         return None
     s, c = _parse_at(starts[0].get("at")), _parse_at(completes[-1].get("at"))
@@ -178,13 +179,16 @@ def _fmt(seconds: float) -> str:
 
 def check_timing(r: Report, spec_dir: Path) -> None:
     target = spec_dir / ".spec-context.json"
-    if not target.is_file():
-        r.add("WARN", "timing-not-examinable", f"no .spec-context.json in {spec_dir}")
-        return
     try:
         ctx = json.loads(target.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        r.add("WARN", "timing-not-examinable", f"no .spec-context.json in {spec_dir}")
+        return
     except (json.JSONDecodeError, OSError) as exc:
         r.add("WARN", "timing-not-examinable", f"could not parse .spec-context.json: {exc}")
+        return
+    if not isinstance(ctx, dict):
+        r.add("WARN", "timing-not-examinable", ".spec-context.json is not an object")
         return
     history = ctx.get("history")
     if not isinstance(history, list) or not history:
@@ -282,10 +286,15 @@ def check_prompting(r: Report, commands_dir: Path) -> None:
         short = name.removeprefix("speckit.companion.").removesuffix(".md")
         cid = f"never-prompts-{short}"
         path = commands_dir / name
-        if not path.is_file():
+        try:
+            text = path.read_text(encoding="utf-8")
+        except FileNotFoundError:
             r.add("FAIL", cid, f"roster file missing: {path} (scan surface shrank)")
             continue
-        hits = _prompt_hits(path.read_text(encoding="utf-8"))
+        except OSError as exc:
+            r.add("FAIL", cid, f"roster file unreadable: {exc}")
+            continue
+        hits = _prompt_hits(text)
         if hits:
             r.add("FAIL", cid,
                   f"never-halts command instructs prompting: \"{hits[0]}\""
@@ -296,10 +305,15 @@ def check_prompting(r: Report, commands_dir: Path) -> None:
     for name in MUST_ASK:
         cid = f"must-ask-{name.removeprefix('speckit.').removesuffix('.md')}"
         path = ask_dir / name
-        if not path.is_file():
+        try:
+            text = path.read_text(encoding="utf-8")
+        except FileNotFoundError:
             r.add("FAIL", cid, f"roster file missing: {path} (scan surface shrank)")
             continue
-        hits = _prompt_hits(path.read_text(encoding="utf-8"))
+        except OSError as exc:
+            r.add("FAIL", cid, f"roster file unreadable: {exc}")
+            continue
+        hits = _prompt_hits(text)
         if hits:
             r.add("PASS", cid, f"{len(hits)} ask instruction(s) present")
         else:
