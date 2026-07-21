@@ -1,0 +1,227 @@
+{
+  "workflow": "companion",
+  "specName": "Hide Nav Lifecycle",
+  "branch": "512-hide-nav-lifecycle",
+  "selectedAt": "2026-07-21T17:52:51.371Z",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T17:52:51.371Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T17:57:49.618Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-21T17:57:49.702Z"
+    },
+    {
+      "step": "plan",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T17:57:49.805Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-21T17:57:49.889Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "fast-path",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T17:57:49.965Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T18:41:19.385Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T18:41:19.387Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T18:43:53.253Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T18:44:14.657Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T18:45:36.910Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T18:46:06.321Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T18:47:35.845Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T18:47:35.929Z"
+    }
+  ],
+  "last_action": "all 5 tasks done — 1732/1732 tests pass, builds clean",
+  "coverage": {
+    "FR-001": {
+      "title": "Rail renders entries only for document-producing steps; action-only steps never appear",
+      "tests": [
+        "webview/src/spec-viewer/components/__tests__/NavigationBar.test.tsx::never renders action steps as rail entries",
+        "NavigationBar.test.tsx::hides custom action-only steps"
+      ]
+    },
+    "FR-002": {
+      "title": "Footer behavior unchanged (Approve → Implement, Mark Completed / Archive)"
+    },
+    "FR-003": {
+      "title": "Task completion percent stays visible on the last document entry during implement",
+      "tests": [
+        "webview/src/spec-viewer/components/__tests__/NavigationBar.test.tsx::shows the live implement percent on the last document tab"
+      ]
+    },
+    "FR-004": {
+      "title": "Running indicator, locking, and selection stay correct when the active step has no rail entry",
+      "tests": [
+        "webview/src/spec-viewer/components/__tests__/NavigationBar.test.tsx::locks no document tab while a hidden action step is running"
+      ]
+    },
+    "FR-005": {
+      "title": "Workflow definition and lifecycle unaffected — rendering-only removal"
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 5,
+    "projectedTasks": 5,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "context": [
+    "area: webview/src/spec-viewer/components/NavigationBar.tsx (pipeline rail rendering)",
+    "area: StepTab.tsx index-based lock/percent props",
+    "constraint: render-only filter — coreDocs keeps carrying action steps for footer/state logic",
+    "constraint: stories updated in same change (NavigationBar.stories.tsx is the visual baseline)"
+  ],
+  "intent": "The viewer's side nav lists only openable documents — Implement and Mark Complete stop rendering as dead rail entries",
+  "expectations": [
+    "Footer behavior stays unchanged (Approve → Implement, Mark Completed / Archive)",
+    "The workflow definition keeps the steps — only their side-nav rendering is removed"
+  ],
+  "telemetryInstanceId": "2c37567a-3324-47d3-a35b-ebbd6d97cae8",
+  "currentTask": "T005",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Filtered action-category steps out of the pipeline rail; percent-host and running-lock indices now computed against the rendered railDocs list",
+      "files": [
+        "webview/src/spec-viewer/components/NavigationBar.tsx"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Verified StepTab props align with the filtered rail: index/runningStepIndex both in rendered-list space, percent-host fallback already covers a rail without an implement entry; no code change needed",
+      "files": [
+        "webview/src/spec-viewer/components/StepTab.tsx"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added NavigationBar tests: action steps never render, percent lands on last document tab, no locking while a hidden step runs, hidden-parent artifact groups keep their label; all 23 rail/StepTab tests pass",
+      "files": [
+        "webview/src/spec-viewer/components/__tests__/NavigationBar.test.tsx"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Stories now show the documents-only rail: new mid-implement story with percent on Tasks, custom-workflow stories renamed/re-commented to show action steps never render",
+      "files": [
+        "webview/src/spec-viewer/components/NavigationBar.stories.tsx"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Docs updated: rail lists documents only and lifecycle actions live in the footer (README rail bullet, actionOnly property + behavior, viewer-states percent-host rule, DESIGN.md note) plus a user-facing changelog entry",
+      "files": [
+        "README.md",
+        "docs/viewer-states.md",
+        "docs/DESIGN.md",
+        "CHANGELOG.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "full test suite",
+      "command": "npm test",
+      "result": "124 suites, 1732 tests pass (incl. new NavigationBar rail tests)",
+      "warnings": []
+    },
+    {
+      "what": "extension + webview builds",
+      "command": "npm run compile && npm run compile-web",
+      "result": "tsc clean; webpack compiled successfully",
+      "warnings": []
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Filter is render-only in NavigationBar (railDocs); StepTab keeps its action-step logic untouched",
+      "why": "coreDocs must keep carrying action steps for footer/state logic, and StepTab stays a general component whose action branches simply never fire from the rail",
+      "rejected": "stripping sourceDoc/action handling out of StepTab, which would widen the diff beyond the spec approach"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "Rail now lists documents only: action steps filtered from render, percent on Tasks, no hidden-step locking; tests, stories, docs updated"
+    }
+  }
+}

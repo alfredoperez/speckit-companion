@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- **The spec viewer's side rail now lists only documents.** Implement and Mark Complete used to sit in the rail as entries that opened nothing readable; they're gone from the rail (the same goes for any custom workflow step that produces no document). Their actions were always in the footer, which keeps working unchanged, and while implementation runs the live task percent now shows on the Tasks tab. ([#500](https://github.com/alfredoperez/speckit-companion/issues/500))
 - **The SpecKit Companion workflow is now available to everyone — no beta setting to turn on.** The workflow picker in Create New Spec and the Continue/Resume button on active specs used to appear only after you enabled a beta toggle. That toggle and its "Beta Features" heading are gone. Both now show out of the box whenever the companion spec-kit extension is installed. Bench results showed the Companion pipeline matches stock SpecKit on correctness while producing specs 60–68% leaner, so it graduates from beta. If you'd turned the old beta setting on, nothing changes for you; the retired setting is quietly removed from your settings on upgrade.
 
 ### Added
