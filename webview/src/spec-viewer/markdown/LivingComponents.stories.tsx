@@ -31,6 +31,12 @@ function LivingDoc({ md, coverage }: LivingDocProps) {
         const id = requestAnimationFrame(() => applyHighlighting());
         return () => cancelAnimationFrame(id);
     }, [html]);
+    // These are global renderer flags — reset on unmount so navigating to
+    // another markdown story doesn't inherit this story's living mode.
+    useEffect(() => () => {
+        setLivingMode(false);
+        setLivingCoverage(null);
+    }, []);
     return (
         <div
             id="markdown-content"

@@ -81,6 +81,15 @@ function handleMessage(event: MessageEvent): void {
 
         case 'navStateUpdated':
             navState.value = message.navState;
+            // Keep the renderer flags in lockstep with navState so a later render
+            // (or a livingMode flip) doesn't paint with a stale mode.
+            if (message.navState) {
+                setLivingMode(!!message.navState.livingMode);
+                setHasSpecContext(!!(message.navState.specContextName || message.navState.badgeText));
+                if (message.navState.currentTask !== undefined) {
+                    setCurrentTask(message.navState.currentTask);
+                }
+            }
             break;
 
         case 'livingHealthResolved':
@@ -163,6 +172,13 @@ function init(): void {
     const initialNav = window.__INITIAL_NAV_STATE__;
     if (initialNav) {
         navState.value = initialNav;
+        // Set renderer flags before the first updateContent below, or a living
+        // spec's first paint renders in feature-spec mode until a later message.
+        setLivingMode(!!initialNav.livingMode);
+        setHasSpecContext(!!(initialNav.specContextName || initialNav.badgeText));
+        if (initialNav.currentTask !== undefined) {
+            setCurrentTask(initialNav.currentTask);
+        }
     }
 
     // Wire message listener before render
