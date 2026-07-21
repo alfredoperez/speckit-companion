@@ -68,8 +68,8 @@ const STATUS_LIFECYCLE = [
     'IMPORTANT — the implement step completes at "implemented", NOT "completed".',
     '"completed" is the user\'s final approval gate (their Mark-Completed click in the',
     'viewer) — the AI never writes "completed". The implement step itself is closed by',
-    'the extension\'s end-of-step hook, which sets "implemented" and journals each task;',
-    'you do not flip the implement status or write its completion entry yourself.',
+    'the extension\'s tasks.md watcher, which sets "implemented" once every task is',
+    'checked; you do not flip the implement status or write its completion entry yourself.',
 ].join('\n');
 
 function renderSharedRules(dispatchUtc: string): string {
@@ -235,14 +235,14 @@ function renderClosingInstruction(
             'Skipping the script leaves the badge stuck on the in-progress form and the step timer running; skipping the final line hides the completion from the activity log.',
         ];
     }
-    // specify + implement: the extension/hook closes the STEP deterministically.
+    // specify + implement: the extension/watcher closes the STEP deterministically.
     const recorder = step === 'implement'
-        ? 'the end-of-step hook closes the implement step (and backfills any task you miss)'
+        ? "the extension's tasks.md watcher closes the implement step once every task is checked"
         : 'the specify command records its own completion';
     return [
         `DONE: do NOT flip the status yourself and do NOT append a step-level "complete" entry for ${step} — ${recorder} with a real script timestamp; a hand-written "ai" complete would duplicate it.`,
         ...(step === 'implement'
-            ? [`Per-task timing is finish-only via a script: as you finish each task, mark it \`- [x] **<TaskID>**\` in tasks.md, append task_summaries.<TaskID>, then run \`${perTaskFinishCmd(specDir, writerPath)}\` — that stamps ONE finish event from the real clock (no per-task start, no hand-authored JSON). Run it the moment each task completes, not in one end-of-step batch: clustering every finish into a tiny window FAILS the cadence check. If you fan tasks out to workers, YOU (the main agent) run this journal for each task as its result returns — one at a time, foreground; workers never write the shared context file. The hook backfills any task you don't journal.`]
+            ? [`Per-task timing is finish-only via a script: as you finish each task, mark it \`- [x] **<TaskID>**\` in tasks.md, append task_summaries.<TaskID>, then run \`${perTaskFinishCmd(specDir, writerPath)}\` — that stamps ONE finish event from the real clock (no per-task start, no hand-authored JSON). Run it the moment each task completes, not in one end-of-step batch: clustering every finish into a tiny window FAILS the cadence check. If you fan tasks out to workers, YOU (the main agent) run this journal for each task as its result returns — one at a time, foreground; workers never write the shared context file. Nothing backfills a missed journal — a task you skip has no record; these calls are the ONLY per-task evidence.`]
             : []),
         `Print "${donePhrase}" as the final terminal line.`,
     ];
@@ -375,7 +375,7 @@ export function renderLifecycleBody(target: string, dispatchUtc: string, compani
         '',
         ...captureLines,
         '',
-        `Implement (finish-only per task): as you finish each task, mark it \`- [x] **<TaskID>**\` in tasks.md, append task_summaries.<TaskID>, then run \`${perTaskFinishCmd(featureDir, writerPath)}\` — ONE finish event from the real clock, no per-task start, no hand-authored JSON. Run it the moment each task completes, not in one end-of-step batch: clustering every finish into a tiny window FAILS the cadence check. If you fan tasks out to workers, YOU (the main agent) run this journal for each task as its result returns — one at a time, foreground; workers never write the shared context file. The end-of-step hook backfills any task you miss and closes the step.`,
+        `Implement (finish-only per task): as you finish each task, mark it \`- [x] **<TaskID>**\` in tasks.md, append task_summaries.<TaskID>, then run \`${perTaskFinishCmd(featureDir, writerPath)}\` — ONE finish event from the real clock, no per-task start, no hand-authored JSON. Run it the moment each task completes, not in one end-of-step batch: clustering every finish into a tiny window FAILS the cadence check. If you fan tasks out to workers, YOU (the main agent) run this journal for each task as its result returns — one at a time, foreground; workers never write the shared context file. The extension's tasks.md watcher closes the step once every task is checked, but nothing backfills a missed journal — these per-task calls are the ONLY per-task evidence.`,
         '',
         'Do NOT preemptively write a start-entry for the next step at completion time. The start-entry must coincide with you actually beginning that step (item 1 above), not with you finishing the previous one. Writing a { step: "<next>", kind: "start" } entry as part of the completion write produces a phantom "Generating <next>…" state in the viewer when in fact no one is generating anything.',
         '',
