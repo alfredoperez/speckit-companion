@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import {
     coerceLegacyBoolean,
     migrateBetaTriStateSettings,
-    migrateResumeBetaToWorkflowBeta,
     removeRetiredSettings,
     BETA_BOOLEAN_SETTINGS,
     RETIRED_SETTINGS,
@@ -139,115 +138,6 @@ describe('migrateBetaTriStateSettings', () => {
     });
 });
 
-describe('migrateResumeBetaToWorkflowBeta', () => {
-    type Inspection = {
-        globalValue?: unknown;
-        workspaceValue?: unknown;
-        workspaceFolderValue?: unknown;
-    };
-
-    const OLD = 'companion.resumeBeta';
-    const NEW = 'companion.workflowBeta';
-
-    function setupConfig(inspections: Record<string, Inspection | undefined>) {
-        const update = jest.fn().mockResolvedValue(undefined);
-        const inspect = jest.fn((key: string) => inspections[key]);
-        jest.spyOn(vscode.workspace, 'getConfiguration').mockReturnValue({
-            inspect,
-            update,
-            get: jest.fn(),
-        } as unknown as vscode.WorkspaceConfiguration);
-        return { update, inspect };
-    }
-
-    afterEach(() => jest.restoreAllMocks());
-
-    it.each([true, 'on', 'beta'])(
-        'migrates an on-style value (%p) to workflowBeta=true and deletes the old key at the same scope',
-        async (value) => {
-            const { update } = setupConfig({
-                [OLD]: { globalValue: value },
-                [NEW]: {},
-            });
-
-            await migrateResumeBetaToWorkflowBeta();
-
-            expect(update).toHaveBeenCalledWith(NEW, true, vscode.ConfigurationTarget.Global);
-            expect(update).toHaveBeenCalledWith(OLD, undefined, vscode.ConfigurationTarget.Global);
-            expect(update).toHaveBeenCalledTimes(2);
-        }
-    );
-
-    it.each([false, 'off', 'xyz', 42])(
-        'leaves workflowBeta untouched for an off/garbage value (%p) but still deletes the old key',
-        async (value) => {
-            const { update } = setupConfig({
-                [OLD]: { workspaceValue: value },
-                [NEW]: {},
-            });
-
-            await migrateResumeBetaToWorkflowBeta();
-
-            expect(update).not.toHaveBeenCalledWith(NEW, expect.anything(), expect.anything());
-            expect(update).toHaveBeenCalledWith(OLD, undefined, vscode.ConfigurationTarget.Workspace);
-            expect(update).toHaveBeenCalledTimes(1);
-        }
-    );
-
-    it('preserves scope: a global opt-in migrates at Global, not relocated to Workspace', async () => {
-        const { update } = setupConfig({
-            [OLD]: { globalValue: true },
-            [NEW]: {},
-        });
-
-        await migrateResumeBetaToWorkflowBeta();
-
-        expect(update).toHaveBeenCalledWith(NEW, true, vscode.ConfigurationTarget.Global);
-        expect(update).not.toHaveBeenCalledWith(NEW, true, vscode.ConfigurationTarget.Workspace);
-    });
-
-    it('is a no-op when the old key was never set (nothing to migrate or delete)', async () => {
-        const { update } = setupConfig({
-            [OLD]: {},
-            [NEW]: {},
-        });
-
-        await migrateResumeBetaToWorkflowBeta();
-
-        expect(update).not.toHaveBeenCalled();
-    });
-
-    it('does not overwrite a workflowBeta the user already set explicitly at that scope', async () => {
-        const { update } = setupConfig({
-            [OLD]: { globalValue: true },
-            [NEW]: { globalValue: false },
-        });
-
-        await migrateResumeBetaToWorkflowBeta();
-
-        // The explicit new value wins; only the stale old key is removed.
-        expect(update).not.toHaveBeenCalledWith(NEW, true, vscode.ConfigurationTarget.Global);
-        expect(update).toHaveBeenCalledWith(OLD, undefined, vscode.ConfigurationTarget.Global);
-        expect(update).toHaveBeenCalledTimes(1);
-    });
-
-    it('is idempotent: a re-run after the old key is gone writes nothing', async () => {
-        const { update } = setupConfig({
-            [OLD]: {},
-            [NEW]: { globalValue: true },
-        });
-
-        await migrateResumeBetaToWorkflowBeta();
-
-        expect(update).not.toHaveBeenCalled();
-    });
-
-    it('does not crash when inspect returns undefined for the old key', async () => {
-        setupConfig({ [NEW]: {} });
-        await expect(migrateResumeBetaToWorkflowBeta()).resolves.toBeUndefined();
-    });
-});
-
 describe('removeRetiredSettings', () => {
     type Inspection = {
         globalValue?: unknown;
@@ -268,11 +158,14 @@ describe('removeRetiredSettings', () => {
 
     afterEach(() => jest.restoreAllMocks());
 
-    it('lists exactly the three retired keys', () => {
+    it('lists the retired toggles plus the former Companion-workflow gate keys', () => {
         expect([...RETIRED_SETTINGS]).toEqual([
             'companion.templateProfile',
             'companion.turboWorkflowPicker',
             'companion.complexityFastPath',
+            'companion.speckitCompanionWorkflow',
+            'companion.workflowBeta',
+            'companion.resumeBeta',
         ]);
     });
 
@@ -294,6 +187,32 @@ describe('removeRetiredSettings', () => {
             'companion.turboWorkflowPicker',
             undefined,
             vscode.ConfigurationTarget.Workspace
+        );
+    });
+
+    it('cleans up a stale Companion-workflow gate value without crashing (migration safety)', async () => {
+        const { update } = setupConfig({
+            'companion.speckitCompanionWorkflow': { globalValue: true },
+            'companion.workflowBeta': { workspaceValue: 'on' },
+            'companion.resumeBeta': { workspaceFolderValue: 'beta' },
+        });
+
+        await expect(removeRetiredSettings()).resolves.toBeUndefined();
+
+        expect(update).toHaveBeenCalledWith(
+            'companion.speckitCompanionWorkflow',
+            undefined,
+            vscode.ConfigurationTarget.Global
+        );
+        expect(update).toHaveBeenCalledWith(
+            'companion.workflowBeta',
+            undefined,
+            vscode.ConfigurationTarget.Workspace
+        );
+        expect(update).toHaveBeenCalledWith(
+            'companion.resumeBeta',
+            undefined,
+            vscode.ConfigurationTarget.WorkspaceFolder
         );
     });
 

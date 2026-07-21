@@ -71,9 +71,9 @@ export class SpecEditorProvider {
         const activeProvider = getConfiguredProviderType();
 
         // SpecKit is always offered. Companion is added to the Create-Spec picker
-        // only behind the single beta gate (the Companion-workflow setting on AND the
-        // companion piece installed) — same predicate as the workflow manager — so
-        // the picker never lists an option that silently falls back to stock.
+        // whenever the companion spec-kit extension is installed — same predicate as
+        // the workflow manager — so the picker never lists an option that silently
+        // falls back to stock.
         const workflows: WorkflowDefinition[] = [
             {
                 name: 'speckit',

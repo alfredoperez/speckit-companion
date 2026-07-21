@@ -29,14 +29,19 @@ export const BETA_BOOLEAN_SETTINGS: ReadonlyArray<{
 ];
 
 /**
- * Settings removed when the three spec-driven toggles collapsed into the single
- * `speckit.defaultWorkflow` picker. Their persisted values are dropped at every
- * scope on activation so they don't linger in users' settings.json.
+ * Settings that no longer exist in the manifest. Their persisted values are
+ * dropped at every scope on activation so they don't linger in users' settings.json.
+ * Covers the collapsed spec-driven toggles and the retired Companion-workflow beta
+ * gate (plus its two legacy key names). VS Code tolerates unknown keys either way;
+ * this just keeps settings tidy.
  */
 export const RETIRED_SETTINGS: ReadonlyArray<string> = [
     'companion.templateProfile',
     'companion.turboWorkflowPicker',
     'companion.complexityFastPath',
+    'companion.speckitCompanionWorkflow',
+    'companion.workflowBeta',
+    'companion.resumeBeta',
 ];
 
 /**
@@ -58,33 +63,6 @@ export function coerceLegacyBoolean(value: unknown, fallback: boolean): boolean 
         return false;
     }
     return fallback;
-}
-
-/**
- * Whether the SpecKit Companion workflow is enabled, resilient to a migration that
- * never ran (or threw — it's best-effort under try/catch). The renamed key
- * (`companion.speckitCompanionWorkflow`) wins when it's explicitly set at ANY scope;
- * otherwise the read falls back to the legacy `companion.workflowBeta`, then the
- * older `companion.resumeBeta` opt-in — all coerced via `coerceLegacyBoolean`. So a
- * user whose opt-in still lives only on a legacy key reads as enabled, and an
- * explicit `false` on the new key correctly overrides a stale legacy `true`.
- */
-export function isCompanionWorkflowEnabled(config: vscode.WorkspaceConfiguration): boolean {
-    const newInspected =
-        typeof config.inspect === 'function'
-            ? config.inspect<unknown>('companion.speckitCompanionWorkflow')
-            : undefined;
-    const explicitNew = newInspected
-        ? newInspected.workspaceFolderValue ?? newInspected.workspaceValue ?? newInspected.globalValue
-        : config.get<unknown>('companion.speckitCompanionWorkflow');
-    if (explicitNew !== undefined) {
-        return coerceLegacyBoolean(explicitNew, false);
-    }
-    const legacyWorkflowBeta = config.get<unknown>('companion.workflowBeta');
-    if (legacyWorkflowBeta !== undefined) {
-        return coerceLegacyBoolean(legacyWorkflowBeta, false);
-    }
-    return coerceLegacyBoolean(config.get<unknown>('companion.resumeBeta'), false);
 }
 
 /** The three config scopes a value can be explicitly set at, with their inspect field. */
@@ -121,69 +99,6 @@ export async function migrateBetaTriStateSettings(): Promise<void> {
                 await config.update(key, coerceLegacyBoolean(persisted, settingDefault), target);
             }
         }
-    }
-}
-
-/**
- * One-time, idempotent migration of the retired `companion.resumeBeta` opt-in into
- * the single `companion.workflowBeta` gate. Per scope: when the old value coerces
- * to `true` (boolean, or legacy `'on'`/`'beta'`) AND the user hasn't already set
- * `workflowBeta` there, copy `true` across; then delete the old key at every scope
- * it was set. An off/garbage value migrates nothing but is still cleaned up. Scope
- * is preserved via per-scope `inspect()`, so re-running (old key gone) is a no-op.
- * Invoked from `activate()` inside try/catch — never throws activation (FR-005).
- */
-export async function migrateResumeBetaToWorkflowBeta(): Promise<void> {
-    const config = vscode.workspace.getConfiguration('speckit');
-    const oldKey = 'companion.resumeBeta';
-    const newKey = 'companion.workflowBeta';
-    const oldInspected = config.inspect(oldKey);
-    if (!oldInspected) {
-        return;
-    }
-    const newInspected = config.inspect(newKey);
-    for (const { target, field } of SCOPES) {
-        const persisted = oldInspected[field];
-        if (persisted === undefined) {
-            continue;
-        }
-        const alreadySet = newInspected ? newInspected[field] !== undefined : false;
-        if (coerceLegacyBoolean(persisted, false) && !alreadySet) {
-            await config.update(newKey, true, target);
-        }
-        await config.update(oldKey, undefined, target);
-    }
-}
-
-/**
- * One-time, idempotent migration of the renamed Companion-enable gate from
- * `companion.workflowBeta` to `companion.speckitCompanionWorkflow` (the key was
- * renamed so the Settings UI reads "SpecKit Companion Workflow"). Per scope: when
- * the new key isn't already set there, copy the old value across (coerced, so a
- * legacy tri-state string still carries an opt-in); then delete the old key at
- * every scope it was set. Scope is preserved via per-scope `inspect()`, so
- * re-running (old key gone) is a no-op. Invoked from `activate()` inside try/catch
- * — never throws activation.
- */
-export async function migrateWorkflowBetaKey(): Promise<void> {
-    const config = vscode.workspace.getConfiguration('speckit');
-    const oldKey = 'companion.workflowBeta';
-    const newKey = 'companion.speckitCompanionWorkflow';
-    const oldInspected = config.inspect(oldKey);
-    if (!oldInspected) {
-        return;
-    }
-    const newInspected = config.inspect(newKey);
-    for (const { target, field } of SCOPES) {
-        const persisted = oldInspected[field];
-        if (persisted === undefined) {
-            continue;
-        }
-        const alreadySet = newInspected ? newInspected[field] !== undefined : false;
-        if (!alreadySet) {
-            await config.update(newKey, coerceLegacyBoolean(persisted, false), target);
-        }
-        await config.update(oldKey, undefined, target);
     }
 }
 

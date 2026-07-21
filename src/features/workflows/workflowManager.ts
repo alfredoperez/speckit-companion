@@ -20,7 +20,6 @@ import {
 } from './types';
 import { ConfigKeys, WorkflowSteps, AIProviders, COMPANION_WORKFLOW_NAME } from '../../core/constants';
 import { getConfiguredProviderType, AIProviderType } from '../../ai-providers/aiProvider';
-import { isCompanionWorkflowEnabled } from '../../core/settingsMigration';
 import { isCompanionInstalled } from '../settings/companionPresetReconciler';
 
 /**
@@ -232,15 +231,11 @@ export function validateWorkflow(config: WorkflowConfig): ValidationResult {
  * spec would lose its real steps when viewed under a different provider.
  */
 /**
- * Whether the Companion workflow may be offered for SELECTION: the single beta
- * gate is on AND the companion spec-kit extension is present on disk. Drives the
- * Create-Spec picker so it never lists an option that silently falls back.
+ * Whether the Companion workflow may be offered for SELECTION: the companion
+ * spec-kit extension is present on disk. Drives the Create-Spec picker so it never
+ * lists an option that silently falls back to stock.
  */
 export function isCompanionSelectable(): boolean {
-    const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
-    if (!isCompanionWorkflowEnabled(config)) {
-        return false;
-    }
     const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     return !!root && isCompanionInstalled(root);
 }
@@ -251,10 +246,10 @@ function buildWorkflows(filterByProvider: boolean, outputChannel?: vscode.Output
     const activeProvider = getConfiguredProviderType();
 
     // SpecKit is always available. Companion is seeded into the SELECTION list
-    // (filterByProvider) only behind the single beta gate AND an installed companion
-    // piece — so the picker never offers a hollow option that does nothing. The
-    // RESOLUTION path (getAllWorkflows) always includes it so an existing companion
-    // spec keeps its real steps regardless of the gate.
+    // (filterByProvider) whenever the companion spec-kit extension is installed — so
+    // the picker never offers a hollow option that does nothing. The RESOLUTION path
+    // (getAllWorkflows) always includes it so an existing companion spec keeps its
+    // real steps regardless.
     const includeCompanion = !filterByProvider || isCompanionSelectable();
     const validWorkflows: WorkflowConfig[] = [DEFAULT_WORKFLOW];
     if (includeCompanion) {

@@ -615,7 +615,7 @@
       "view/item/context": [
         {
           "command": "speckit.specs.resume",
-          "when": "view == speckit.views.explorer && (viewItem == spec-active || viewItem == spec-tasks-done) && speckit.resumeBeta && speckit.companion.installed",
+          "when": "view == speckit.views.explorer && (viewItem == spec-active || viewItem == spec-tasks-done) && speckit.companion.installed",
           "group": "inline"
         },
         {
@@ -1312,21 +1312,14 @@
         }
       },
       {
-        "title": "Beta Features",
+        "title": "Companion & Telemetry",
         "properties": {
-          "speckit.companion.speckitCompanionWorkflow": {
-            "type": "boolean",
-            "default": false,
-            "scope": "window",
-            "order": 5,
-            "markdownDescription": "Turn on the **SpecKit Companion** workflow (beta) — the leaner pipeline with right-sizing, the SpecKit / Companion picker in Create Spec, and the sidebar Continue/Resume button. Off by default."
-          },
           "speckit.companion.installPrompt": {
             "type": "boolean",
             "default": true,
             "scope": "window",
             "order": 6,
-            "markdownDescription": "Offer a one-click banner to install the companion spec-kit extension when it's missing. Independent of the **SpecKit Companion Workflow** toggle — the banner shows whenever the extension is missing and you haven't turned this off or dismissed it."
+            "markdownDescription": "Offer a one-click banner to install the companion spec-kit extension when it's missing. The banner shows whenever the extension is missing and you haven't turned this off or dismissed it."
           },
           "speckit.viewer.activityPanel": {
             "type": "boolean",

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { migrateWorkflowBetaKey, coerceLegacyBoolean, isCompanionWorkflowEnabled } from '../../../src/core/settingsMigration';
+import { removeRetiredSettings, coerceLegacyBoolean } from '../../../src/core/settingsMigration';
 
 /**
  * An in-memory `WorkspaceConfiguration` stand-in supporting per-scope `inspect()`
@@ -62,50 +62,7 @@ describe('coerceLegacyBoolean', () => {
     });
 });
 
-describe('isCompanionWorkflowEnabled', () => {
-    it('reads a legacy workflowBeta opt-in (true) when the new key is unset', () => {
-        const { config } = makeConfigStore({
-            'companion.workflowBeta': { global: true },
-        });
-        expect(isCompanionWorkflowEnabled(config as any)).toBe(true);
-    });
-
-    it('reads a legacy tri-state workflowBeta opt-in ("on") when the new key is unset', () => {
-        const { config } = makeConfigStore({
-            'companion.workflowBeta': { workspace: 'on' },
-        });
-        expect(isCompanionWorkflowEnabled(config as any)).toBe(true);
-    });
-
-    it('falls back to resumeBeta when neither the new key nor workflowBeta is set', () => {
-        const { config } = makeConfigStore({
-            'companion.resumeBeta': { global: 'beta' },
-        });
-        expect(isCompanionWorkflowEnabled(config as any)).toBe(true);
-    });
-
-    it('an explicit false on the new key overrides a stale legacy workflowBeta true', () => {
-        const { config } = makeConfigStore({
-            'companion.speckitCompanionWorkflow': { global: false },
-            'companion.workflowBeta': { global: true },
-        });
-        expect(isCompanionWorkflowEnabled(config as any)).toBe(false);
-    });
-
-    it('an explicit true on the new key is honored', () => {
-        const { config } = makeConfigStore({
-            'companion.speckitCompanionWorkflow': { workspace: true },
-        });
-        expect(isCompanionWorkflowEnabled(config as any)).toBe(true);
-    });
-
-    it('returns false when nothing is set anywhere', () => {
-        const { config } = makeConfigStore({});
-        expect(isCompanionWorkflowEnabled(config as any)).toBe(false);
-    });
-});
-
-describe('migrateWorkflowBetaKey', () => {
+describe('removeRetiredSettings clears the former Companion-workflow gate (migration safety)', () => {
     const getConfigSpy = vscode.workspace.getConfiguration as jest.Mock;
 
     afterEach(() => {
@@ -113,61 +70,43 @@ describe('migrateWorkflowBetaKey', () => {
         getConfigSpy.mockReturnValue({ get: jest.fn().mockReturnValue(['specs']) });
     });
 
-    it('carries a global opt-in to the new key and drops the old key', async () => {
+    it('deletes a persisted gate value at the scope it was set', async () => {
         const { store, config } = makeConfigStore({
-            'companion.workflowBeta': { global: true },
+            'companion.speckitCompanionWorkflow': { global: true },
         });
         getConfigSpy.mockReturnValue(config);
 
-        await migrateWorkflowBetaKey();
+        await removeRetiredSettings();
 
-        expect(store['companion.speckitCompanionWorkflow'].global).toBe(true);
-        expect(store['companion.workflowBeta'].global).toBeUndefined();
-    });
-
-    it('coerces a legacy tri-state opt-in (on/beta) to true on the new key', async () => {
-        const { store, config } = makeConfigStore({
-            'companion.workflowBeta': { workspace: 'beta' },
-        });
-        getConfigSpy.mockReturnValue(config);
-
-        await migrateWorkflowBetaKey();
-
-        expect(store['companion.speckitCompanionWorkflow'].workspace).toBe(true);
-        expect(store['companion.workflowBeta'].workspace).toBeUndefined();
-    });
-
-    it('does not overwrite a value already set on the new key', async () => {
-        const { store, config } = makeConfigStore({
-            'companion.workflowBeta': { global: true },
-            'companion.speckitCompanionWorkflow': { global: false },
-        });
-        getConfigSpy.mockReturnValue(config);
-
-        await migrateWorkflowBetaKey();
-
-        expect(store['companion.speckitCompanionWorkflow'].global).toBe(false);
-        expect(store['companion.workflowBeta'].global).toBeUndefined();
-    });
-
-    it('is a no-op when the old key was never set', async () => {
-        const { store, config } = makeConfigStore({});
-        getConfigSpy.mockReturnValue(config);
-
-        await migrateWorkflowBetaKey();
-
-        expect(store['companion.speckitCompanionWorkflow']).toBeUndefined();
-    });
-
-    it('preserves scope (a workspace opt-in does not become global)', async () => {
-        const { store, config } = makeConfigStore({
-            'companion.workflowBeta': { workspace: true },
-        });
-        getConfigSpy.mockReturnValue(config);
-
-        await migrateWorkflowBetaKey();
-
-        expect(store['companion.speckitCompanionWorkflow'].workspace).toBe(true);
         expect(store['companion.speckitCompanionWorkflow'].global).toBeUndefined();
+    });
+
+    it('cleans up the legacy workflowBeta / resumeBeta keys too, across scopes', async () => {
+        const { store, config } = makeConfigStore({
+            'companion.workflowBeta': { workspace: 'on' },
+            'companion.resumeBeta': { folder: 'beta' },
+        });
+        getConfigSpy.mockReturnValue(config);
+
+        await removeRetiredSettings();
+
+        expect(store['companion.workflowBeta'].workspace).toBeUndefined();
+        expect(store['companion.resumeBeta'].folder).toBeUndefined();
+    });
+
+    it('a stale gate value never fails activation — resolves without throwing', async () => {
+        const { config } = makeConfigStore({
+            'companion.speckitCompanionWorkflow': { global: 'garbage' },
+        });
+        getConfigSpy.mockReturnValue(config);
+
+        await expect(removeRetiredSettings()).resolves.toBeUndefined();
+    });
+
+    it('is a no-op when no retired key was ever set', async () => {
+        const { config } = makeConfigStore({});
+        getConfigSpy.mockReturnValue(config);
+
+        await expect(removeRetiredSettings()).resolves.toBeUndefined();
     });
 });

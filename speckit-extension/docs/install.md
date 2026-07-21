@@ -57,7 +57,7 @@ If you're stuck on the stock PyPI build and can't reinstall, replicate what the 
 
 Two command families stay installed at once — installing one never removes the other. The stock `/speckit.*` commands (+ timing) are carried by the `companion-standard` preset; the SpecKit Companion workflow is the namespaced `/speckit.companion.*` commands (lean — no user stories, trimmed plan, files/dependencies tasks). See the full reference in [`../../docs/template-profiles.md`](../../docs/template-profiles.md).
 
-The Companion workflow is an opt-in beta gated by the `speckit.companion.speckitCompanionWorkflow` VS Code setting (off by default); stock SpecKit is always available regardless. Both families coexist — no preset is added, removed, or swapped when you toggle the gate, so you never lose a command set. The extension keeps `companion-standard` present with an **add-only** activation ensure (it never removes it), which also recovers a project whose stock commands a prior version may have stranded.
+The Companion workflow is available to everyone with this extension installed — there's no setting to turn on; stock SpecKit is always available too. Both families coexist — no preset is added, removed, or swapped, so you never lose a command set. The extension keeps `companion-standard` present with an **add-only** activation ensure (it never removes it), which also recovers a project whose stock commands a prior version may have stranded.
 
 The stock carrier installs from the bundled path; verify or (re-)materialize it manually with:
 

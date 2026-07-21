@@ -299,7 +299,7 @@ The extension sends **anonymous, PII-free** usage telemetry to help prioritize w
 | Default workflow | `speckit` / `companion` |
 | Which workflow phase was dispatched | `specify` / `plan` / `tasks` / `implement` |
 | Spec lifecycle counts | created / completed / archived |
-| Beta-flag on/off states | a snapshot reported once per session |
+| Feature-flag on/off states | a snapshot reported once per session |
 | Extension / VS Code versions, spec count | for version distribution and scale |
 | Chosen workflow | the built-in id, or the literal `custom` |
 
@@ -307,23 +307,23 @@ The extension sends **anonymous, PII-free** usage telemetry to help prioritize w
 
 That per-spec id is a **random UUID, not the spec name or path**. It correlates a single spec's events into a funnel (created → dispatched → completed) without ever revealing which spec it is. It is stored in the spec's `.spec-context.json` so the same id rides every event for that spec.
 
-### Beta Features
+### Companion & Telemetry Settings
 
-The opt-in beta toggles appear under **Beta Features** in VS Code Settings in adoption-funnel order — the sequence you'd enable them in, not alphabetical:
+These settings live under **Companion & Telemetry** in VS Code Settings. The SpecKit Companion workflow itself no longer has an enable toggle — the Create-Spec picker and the Continue/Resume button are always available once the companion spec-kit extension is installed.
 
-| Order | Setting | Requires the spec-kit extension? |
-|-------|---------|----------------------------------|
-| 1 | `speckit.companion.speckitCompanionWorkflow` — turns on the whole **SpecKit Companion Workflow** (Create-Spec picker + Continue/Resume button) | Yes |
-| 2 | `speckit.companion.installPrompt` — install banner when the extension is missing; shows independently of the Companion workflow toggle | No (it surfaces the missing extension) |
-| 3 | `speckit.viewer.activityPanel` — per-spec Activity timeline in the viewer | Yes |
+| Setting | Requires the spec-kit extension? |
+|---------|----------------------------------|
+| `speckit.companion.installPrompt` — install banner when the extension is missing | No (it surfaces the missing extension) |
+| `speckit.viewer.activityPanel` — per-spec Activity timeline in the viewer | Yes |
+| `speckit.telemetry` — anonymous, PII-free usage telemetry | No |
 
-The Companion workflow is the master switch for the workflow picker and the Continue/Resume button: with it off, both stay hidden. The install banner is the exception — it is decoupled from this toggle so that people who have not yet opted into beta still see the nudge to install the extension that powers the workflow. The banner shows whenever the extension is missing and you have not turned its own prompt off (or dismissed it), regardless of the workflow setting. Each setting is detailed in the subsections below.
+The install banner shows whenever the extension is missing and you have not turned its own prompt off (or dismissed it). Each setting is detailed in the subsections below.
 
 ### Workflow Choice
 
 You make **one decision, once**: run the stock **SpecKit** pipeline or the **SpecKit Companion** pipeline. That choice lives in a single setting, `speckit.defaultWorkflow`, and is pre-selected in the **Workflow** dropdown of *Create New Spec*. There is no separate template-profile, turbo-picker, or fast-path toggle — those three settings have been retired and folded into this one choice.
 
-The Companion option is a beta: the **Workflow** picker only appears once you turn on `speckit.companion.speckitCompanionWorkflow` **and** the [companion spec-kit extension](#install-the-spec-kit-extension) is installed. Until then, Create Spec runs stock SpecKit with no picker — so you never see a Companion choice that would silently do nothing.
+The **Workflow** picker appears whenever the [companion spec-kit extension](#install-the-spec-kit-extension) is installed — no setting to turn on first. When the extension isn't installed, Create Spec runs stock SpecKit with no picker, so you never see a Companion choice that would silently do nothing.
 
 ```json
 {
@@ -352,24 +352,11 @@ The chosen workflow is recorded on the spec at creation and dispatches **its** c
 
 Companion specs run roughly 60 to 68% leaner, write zero throwaway side files at any size (`research.md` / `data-model.md` / `quickstart.md` / `contracts/`), and trend fastest as the feature gets harder. Correctness was a tie: every cell in both workflows shipped a passing, convention-following build (all-green regression suite, 5.0/5 independent-judge rubric), so neither needed rework. The difference is ceremony and progress visibility, not whether the feature works.
 
-### SpecKit Companion Workflow (picker + resume)
+### The picker and Continue/Resume button (no setting)
 
-A single **opt-in beta** that **defaults to `false`** and turns on the whole SpecKit Companion experience. In VS Code Settings it reads as **SpecKit Companion Workflow**. With it on, Create Spec offers the SpecKit / SpecKit Companion picker (when the companion extension is installed) and the sidebar shows a resume (▶) button on active specs (active / tasks-done). With it off, both disappear and you're on stock SpecKit only. Toggling it updates visibility immediately, with no window reload. The install banner is **not** gated by this toggle — it follows its own `speckit.companion.installPrompt` setting so the nudge to install the extension reaches users before they opt into beta.
+The Create-Spec workflow picker and the sidebar Continue/Resume (▶) button are available to everyone out of the box — there is **no beta toggle to turn on**. Both appear whenever the companion spec-kit extension is installed: Create Spec offers the SpecKit / SpecKit Companion picker, and active specs (active / tasks-done) show a resume (▶) button on hover. When the extension isn't installed, the picker and the resume button stay hidden (the resume command has no stock equivalent), and the install banner offers to add the extension.
 
-```json
-{
-  "speckit.companion.speckitCompanionWorkflow": false
-}
-```
-
-| Value | Behavior |
-|-------|----------|
-| `false` (default) | No workflow picker; the resume (▶) button is hidden on all specs. The install banner still appears when the extension is missing (it follows its own setting, not this toggle). |
-| `true` | The picker appears (when the companion extension is installed) and the resume (▶) button appears on eligible specs (active / tasks-done). |
-
-This one setting replaces the former separate resume toggle, and was previously keyed `speckit.companion.workflowBeta` (labeled "Workflow Beta"). A prior `speckit.companion.resumeBeta` or `speckit.companion.workflowBeta` opt-in carries over to it automatically on upgrade.
-
-Resume dispatches the **command family the spec has been running** — a spec on the Companion workflow resumes with `/speckit.companion.<step>`, a spec on the stock SpecKit workflow resumes with `/speckit.<step>` — based on the workflow recorded on the spec. This gate lives only in VS Code settings.
+Resume dispatches the **command family the spec has been running** — a spec on the Companion workflow resumes with `/speckit.companion.<step>`, a spec on the stock SpecKit workflow resumes with `/speckit.<step>` — based on the workflow recorded on the spec.
 
 ### Command Format
 
