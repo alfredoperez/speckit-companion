@@ -6,7 +6,7 @@
 import { render } from 'preact';
 import type { VSCodeApi, ExtensionToViewerMessage, NavState } from './types';
 import { navState, markdownHtml, viewerState, historyEntries } from './signals';
-import { renderMarkdown, setCurrentTask, setHasSpecContext, setTaskSummaries } from './markdown';
+import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setTaskSummaries } from './markdown';
 import { applyHighlighting, initializeMermaid } from './highlighting';
 import { setupLineActions } from './editor';
 // `setupRefineModal`/`modal.ts` were deleted (orphan since the dynamic
@@ -67,6 +67,7 @@ function handleMessage(event: MessageEvent): void {
                 setCurrentTask(message.navState.currentTask);
             }
             setHasSpecContext(!!(message.navState?.specContextName || message.navState?.badgeText));
+            setLivingMode(!!message.navState?.livingMode);
             if (message.navState) {
                 navState.value = message.navState;
             }
@@ -101,6 +102,7 @@ function handleMessage(event: MessageEvent): void {
                     setCurrentTask(message.navState.currentTask);
                 }
                 setHasSpecContext(!!(message.navState.specContextName || message.navState.badgeText));
+                setLivingMode(!!message.navState.livingMode);
             }
             break;
 

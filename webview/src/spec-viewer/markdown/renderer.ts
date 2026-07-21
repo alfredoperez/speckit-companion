@@ -20,12 +20,24 @@ import {
     stripTaskFormatLegend
 } from './preprocessors';
 import { parseAcceptanceScenarios } from './scenarios';
+import {
+    preprocessLivingDraftNotice,
+    preprocessLivingPurpose,
+    preprocessLivingScenarios,
+    preprocessLivingRequirements,
+    preprocessLivingUncovered
+} from './livingComponents';
 
 // Current task ID from spec-context (for in-progress badge)
 let currentTaskId: string | null = null;
 
 // Whether spec-context.json data is available (controls metadata stripping)
 let hasSpecContext = false;
+
+// Whether the current document is a living spec. Set from navState.livingMode
+// before render; when false, none of the living preprocessors run and the
+// document takes the feature-spec path unchanged (FR-001, SC-001).
+let livingMode = false;
 
 // Per-task capture summaries (what each task did + files), keyed by task id.
 // Injected from viewerState so the tasks.md document can show captured detail.
@@ -49,6 +61,14 @@ export function setCurrentTask(taskId: string | null): void {
  */
 export function setHasSpecContext(value: boolean): void {
     hasSpecContext = value;
+}
+
+/**
+ * Set whether the document is a living spec. When true, the living
+ * preprocessors run; when false, the feature-spec render path is unchanged.
+ */
+export function setLivingMode(value: boolean): void {
+    livingMode = value;
 }
 
 function slugify(text: string): string {
@@ -201,6 +221,17 @@ export function renderMarkdown(markdown: string): string {
 
     // Preprocess special patterns before main rendering
     markdown = preprocessHtmlComments(markdown);
+
+    // Living-spec components run only in living mode; a feature spec never
+    // touches this path, so its output stays byte-identical (FR-001, SC-001).
+    if (livingMode) {
+        markdown = preprocessLivingDraftNotice(markdown);
+        markdown = preprocessLivingPurpose(markdown);
+        markdown = preprocessLivingScenarios(markdown);
+        markdown = preprocessLivingRequirements(markdown);
+        markdown = preprocessLivingUncovered(markdown);
+    }
+
     markdown = preprocessSpecMetadata(markdown, hasSpecContext);
     markdown = preprocessUserStories(markdown);
     markdown = preprocessTaskPhases(markdown);
@@ -509,7 +540,8 @@ export function renderMarkdown(markdown: string): string {
 
         // Check if line is preprocessed HTML (callouts, user stories, metadata, scenario tables)
         // Match any line containing our custom class patterns or HTML structure elements
-        if (line.includes('<div class="callout') ||
+        if (line.includes('class="living-') ||
+            line.includes('<div class="callout') ||
             line.includes('<div class="ck-group') ||
             line.includes('<div class="tech-grid') ||
             line.includes('<div class="decision-card') ||
