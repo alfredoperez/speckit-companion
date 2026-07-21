@@ -136,6 +136,7 @@ describe('registerLivingSpecsCommands', () => {
             expect(executeInTerminal).toHaveBeenCalledTimes(1);
             const [prompt, title] = (executeInTerminal as jest.Mock).mock.calls[0];
             expect(prompt).toContain('drifted');
+            expect(prompt).toContain('Edit this spec file in place: src/checkout/checkout.spec.md');
             expect(prompt).toContain('UPDATE, do not regenerate');
             expect(prompt).toContain('src/checkout/cart.ts');
             expect(prompt).toContain('src/checkout/api.ts');
@@ -225,16 +226,17 @@ describe('registerLivingSpecsCommands', () => {
 });
 
 describe('buildLivingUpdatePrompt', () => {
-    it('lists each changed file and insists on an update, not a regeneration', () => {
-        const prompt = buildLivingUpdatePrompt('checkout', ['src/a.ts', 'src/b.ts']);
+    it('names the spec file to edit, lists each changed file, and insists on an update', () => {
+        const prompt = buildLivingUpdatePrompt('checkout', 'src/checkout/checkout.spec.md', ['src/a.ts', 'src/b.ts']);
         expect(prompt).toContain('"checkout" living spec has drifted');
+        expect(prompt).toContain('Edit this spec file in place: src/checkout/checkout.spec.md');
         expect(prompt).toContain('UPDATE, do not regenerate');
         expect(prompt).toContain('- src/a.ts');
         expect(prompt).toContain('- src/b.ts');
     });
 
     it('falls back to an inspect instruction when the file list is empty', () => {
-        const prompt = buildLivingUpdatePrompt('checkout', []);
+        const prompt = buildLivingUpdatePrompt('checkout', 'src/checkout/checkout.spec.md', []);
         expect(prompt).toContain('UPDATE, do not regenerate');
         expect(prompt).toContain('match globs');
     });

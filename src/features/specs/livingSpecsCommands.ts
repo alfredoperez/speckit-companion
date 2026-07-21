@@ -49,9 +49,10 @@ async function dispatchScoped(command: 'living-drift' | 'living-coverage', title
  * update rather than a regeneration so every clarification already in the spec
  * survives.
  */
-export function buildLivingUpdatePrompt(name: string, changedFiles: string[]): string {
+export function buildLivingUpdatePrompt(name: string, specPath: string, changedFiles: string[]): string {
     const lines = [
         `The "${name}" living spec has drifted — the code it describes changed since the spec was last committed.`,
+        `Edit this spec file in place: ${specPath}`,
         'Update the living spec to match the current code. UPDATE, do not regenerate: keep every requirement,',
         'clarification, and acceptance scenario already written, and revise only what the code changes require.',
         '',
@@ -75,7 +76,7 @@ async function dispatchUpdate(cap: ResolvedCapability, outputChannel: vscode.Out
     outputChannel.appendLine(
         `[SpecKit] Update living spec "${cap.name}" — ${changed.length} changed file(s) in prompt`,
     );
-    const prompt = buildLivingUpdatePrompt(cap.name, changed);
+    const prompt = buildLivingUpdatePrompt(cap.name, cap.spec, changed);
     // Natural-language instruction, not a slash command — executeSlashCommand
     // would force a leading `/` on CLI providers and dispatch it as an unknown command.
     await getAIProvider().executeInTerminal(prompt, 'SpecKit - Update Living Spec');
@@ -144,8 +145,8 @@ export function registerLivingSpecsCommands(
             const name = path.basename(rel);
             const confirm = await vscode.window.showWarningMessage(
                 `Delete "${name}"? This cannot be undone.`,
-                'Delete',
-                'Cancel'
+                { modal: true },
+                'Delete'
             );
             if (confirm !== 'Delete') return;
             try {
