@@ -10,7 +10,9 @@ import type { SpecContext, HistoryEntry, StepName } from '../../../core/types/sp
 import type { WorkflowStepConfig } from '../../workflows/types';
 import { COMPANION_WORKFLOW, normalizeWorkflowConfig } from '../../workflows/workflowManager';
 
-// Mock footerActions to avoid pulling in vscode dependency
+// Stub footerActions — these tests exercise derivation, not footer logic.
+// (vscode itself is mocked globally via jest.config moduleNameMapper, so
+// importing workflowManager below is fine.)
 jest.mock('../footerActions', () => ({
     getFooterActions: jest.fn().mockReturnValue([]),
 }));
