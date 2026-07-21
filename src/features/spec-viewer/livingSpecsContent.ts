@@ -1,9 +1,8 @@
 import * as fs from 'fs';
-import * as path from 'path';
 import { LivingSpecsView, CapabilityContentView } from '../../core/types/specContext';
 import { readLivingSpecs, isPathWithinRoot, ResolvedCapability } from '../specs/livingSpecsModel';
 
-/** Read cap per capability spec — a partial render would lie, so bigger files degrade to unavailable. */
+/** Cap on the feature spec read for delta counts — an oversized spec skips deltas. */
 const MAX_SPEC_BYTES = 256 * 1024;
 
 const DELTA_HEADER_RE = /^##\s+(ADDED|MODIFIED|REMOVED|RENAMED)\s+Requirements\s*$/i;
@@ -15,80 +14,6 @@ export interface DeltaCounts {
     modified?: number;
     removed?: number;
     renamed?: number;
-}
-
-/** Strip inline markdown markers so the webview renders plain text nodes. */
-export function stripInlineMarkdown(text: string): string {
-    return text
-        .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
-        .replace(/(\*\*|__)(.*?)\1/g, '$2')
-        .replace(/(\*|_)(.*?)\1/g, '$2')
-        .replace(/`([^`]*)`/g, '$1')
-        .trim();
-}
-
-/**
- * Parse a living-spec document into purpose + requirement rows. Mirrors the
- * fold-back writer's shape: title line, optional intro paragraph, then
- * `### <heading>` blocks (span ends at the next `###`/`##` or EOF) whose first
- * body paragraph becomes the row text.
- */
-export function parseCapabilitySpec(md: string): { purpose?: string; requirements: { id: string; text: string }[] } {
-    const lines = md.split(/\r?\n/);
-    const requirements: { id: string; text: string }[] = [];
-    let purpose: string | undefined;
-
-    const introLines: string[] = [];
-    for (const line of lines) {
-        if (/^#{1,3}\s/.test(line)) {
-            if (line.startsWith('# ')) continue;
-            break;
-        }
-        introLines.push(line);
-    }
-    const intro = firstParagraph(introLines);
-    if (intro) purpose = stripInlineMarkdown(intro);
-
-    // Requirement rows live only under `## Requirements` — a `###` heading in
-    // any other section (Scenarios, Notes) is not a requirement.
-    let inRequirements = false;
-    let current: { id: string; body: string[] } | null = null;
-    const flush = () => {
-        if (!current) return;
-        const text = firstParagraph(current.body);
-        requirements.push({ id: stripInlineMarkdown(current.id), text: text ? stripInlineMarkdown(text) : '' });
-        current = null;
-    };
-    for (const line of lines) {
-        if (line.startsWith('## ')) {
-            flush();
-            inRequirements = /^##\s+Requirements\s*$/i.test(line);
-            continue;
-        }
-        if (!inRequirements) continue;
-        const m = REQ_HEADING_RE.exec(line);
-        if (m) {
-            flush();
-            current = { id: m[1].trim(), body: [] };
-            continue;
-        }
-        if (current) current.body.push(line);
-    }
-    flush();
-    return { purpose, requirements };
-}
-
-function firstParagraph(lines: string[]): string | null {
-    const out: string[] = [];
-    for (const line of lines) {
-        const t = line.trim();
-        if (t === '') {
-            if (out.length > 0) break;
-            continue;
-        }
-        out.push(t);
-    }
-    return out.length > 0 ? out.join(' ') : null;
 }
 
 /**
@@ -146,10 +71,12 @@ function readCapped(absPath: string): string | null {
 }
 
 /**
- * Enrich a names-only living-specs view with per-capability readable content.
- * Best-effort everywhere: unresolved/missing/oversized specs yield
- * `available: false`; any unexpected failure returns the view unchanged so the
- * panel falls back to the names-only list.
+ * Resolve a names-only living-specs view to clickable run-log chips: each
+ * capability gets a workspace-relative `specPath` when it resolves within the
+ * workspace, so a chip can open it in the Living Specs viewer. The full content
+ * lives there, not in the run log. Best-effort: an unresolved/out-of-root
+ * capability stays `available: false`; any unexpected failure returns the view
+ * unchanged so the panel falls back to the names-only list.
  */
 export function enrichLivingSpecs(
     view: LivingSpecsView,
@@ -178,17 +105,10 @@ export function enrichLivingSpecs(
             if (base.synced && delta && Object.keys(delta).length > 0) base.delta = delta;
 
             const resolved = byName.get(name);
-            if (!resolved || !resolved.spec || !isPathWithinRoot(workspaceRoot, resolved.spec)) return base;
-            const md = readCapped(path.join(workspaceRoot, resolved.spec));
-            if (md === null) return base;
-            const parsed = parseCapabilitySpec(md);
-            return {
-                ...base,
-                available: true,
-                ...(parsed.purpose ? { purpose: parsed.purpose } : {}),
-                // Absent over empty: an empty list is omitted like every optional field.
-                ...(parsed.requirements.length > 0 ? { requirements: parsed.requirements } : {}),
-            };
+            if (!resolved || !resolved.spec || !resolved.exists || !isPathWithinRoot(workspaceRoot, resolved.spec)) {
+                return base;
+            }
+            return { ...base, available: true, specPath: resolved.spec };
         });
 
         return { ...view, capabilities };

@@ -30,9 +30,9 @@ const baseState = (overrides: Partial<ViewerState>): ViewerState => ({
     ...overrides,
 });
 
-// Full readable content: purpose + requirement rows per capability, one synced
-// with fold-back delta counts.
-export const RichContent: Story = {
+// Resolved capabilities: each renders a clickable chip that opens the Living
+// Specs viewer; one is folded back with delta counts.
+export const ResolvedChips: Story = {
     render: () => (
         <LivingSpecsCard
             state={baseState({
@@ -45,20 +45,13 @@ export const RichContent: Story = {
                             available: true,
                             synced: true,
                             delta: { added: 1, modified: 2 },
-                            purpose: 'Task list behavior: everything the todos area guarantees today.',
-                            requirements: [
-                                { id: 'A note can carry one tag', text: 'Each note stores at most one tag, editable from the note form.' },
-                                { id: 'Notes can be filtered by tag', text: 'The list view filters by tag and remembers the choice per session.' },
-                            ],
+                            specPath: 'capabilities/todos/spec.md',
                         },
                         {
                             name: 'notes-ui',
                             available: true,
                             synced: false,
-                            purpose: 'Rendering rules for the notes surface.',
-                            requirements: [
-                                { id: 'Notes render newest first', text: 'The default sort is creation time, descending.' },
-                            ],
+                            specPath: 'capabilities/notes-ui/spec.md',
                         },
                     ],
                 },
@@ -67,9 +60,9 @@ export const RichContent: Story = {
     ),
 };
 
-// Content could not be loaded (unresolved name / missing file / oversized) —
-// names render with the quiet unavailable note.
-export const ContentUnavailable: Story = {
+// Capabilities that could not be resolved (unknown name / missing file) render
+// as plain, non-clickable names.
+export const Unresolved: Story = {
     render: () => (
         <LivingSpecsCard
             state={baseState({

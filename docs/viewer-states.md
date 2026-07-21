@@ -327,7 +327,7 @@ inline comments still work and still persist.
 
 ### Living specs (Activity panel)
 
-When a feature touches **living specs** (durable capability specs), the spec-kit side records which capabilities were loaded into context at specify time (`livingSpecs.loaded`) and which were folded back at completion (`livingSpecs.synced`). The viewer surfaces this read-only in the Activity panel's *Living specs* card: it lists each capability and marks the synced ones as *folded back*. A capability that appears in `synced` but not `loaded` is still shown. The card hides itself when there is no `livingSpecs` data, like every other Activity card, so existing specs see no new UI. The viewer never writes `livingSpecs` — it only displays what LS·2/LS·3 wrote.
+When a feature touches **living specs** (durable capability specs), the spec-kit side records which capabilities were loaded into context at specify time (`livingSpecs.loaded`) and which were folded back at completion (`livingSpecs.synced`). The viewer surfaces this read-only in the Activity panel's *Living specs* card as a compact row of capability chips — one per capability — with the synced ones marked *folded back*. A capability that appears in `synced` but not `loaded` is still shown. Each chip that resolves to a capability spec in the workspace is clickable and opens that capability in the Living Specs viewer; the full capability content lives there, so the run log never reprints its requirements. The card hides itself when there is no `livingSpecs` data, like every other Activity card, so existing specs see no new UI. The viewer never writes `livingSpecs` — it only displays what LS·2/LS·3 wrote.
 
 ---
 
