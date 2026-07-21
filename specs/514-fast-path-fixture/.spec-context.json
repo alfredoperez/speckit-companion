@@ -1,0 +1,63 @@
+{
+  "workflow": "speckit",
+  "specName": "fast path fixture",
+  "branch": "514-fast-path-fixture",
+  "currentStep": "tasks",
+  "status": "ready-to-implement",
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 2,
+    "projectedTasks": 3,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "livingSpecs": {
+    "loaded": [
+      "companion-commands"
+    ]
+  },
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T21:27:53.993Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T21:31:12.481Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T21:31:12.566Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T21:31:12.651Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T21:31:12.737Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T21:31:12.822Z"
+    }
+  ]
+}
