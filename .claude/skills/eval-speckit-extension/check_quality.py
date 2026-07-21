@@ -293,7 +293,7 @@ def check_timing(r: Report, spec_dir: Path) -> None:
         return
     history = [e for e in history if isinstance(e, dict)]
 
-    # trusted-boundaries — each reached step needs an ordered deterministic pair.
+    # trusted-boundaries — each reached step needs extension-stamped boundaries (close = own complete or next step's start).
     reached = [s for s in PIPELINE_STEPS if any(e.get("step") == s for e in history)]
     all_spans = _derive_trusted_spans(history)
     spans = {s: all_spans[s] for s in reached if s in all_spans}
@@ -307,7 +307,7 @@ def check_timing(r: Report, spec_dir: Path) -> None:
     else:
         r.add("PASS", "trusted-boundaries",
               f"{len(spans)}/{len(reached)} reached steps carry ordered "
-              "extension-stamped start→complete boundaries")
+              "extension-stamped boundaries (closed by own complete or next step's start)")
 
     # burst-journaling — ai task finishes dumped in one instant instead of live.
     ai_finishes = sorted(
