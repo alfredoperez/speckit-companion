@@ -61,21 +61,24 @@ NEVER_PROMPT = [
 MUST_ASK_RELATIVE = Path("presets") / "companion-standard" / "commands"
 MUST_ASK = ["speckit.clarify.md"]
 
-# Word-bounded phrases only — a bare "ask" would match "tasks".
+# Word-bounded phrases only — a bare "ask" would match "tasks"; the article is
+# optional so "ask user" reads the same as "ask the user".
 PROMPT_PATTERNS = [re.compile(p, re.IGNORECASE) for p in (
-    r"\bask(?:s|ing)? the user\b",
-    r"\bprompt(?:s|ing)? the user\b",
-    r"\bwait(?:s|ing)? for the user\b",
-    r"\bconfirm with the user\b",
-    r"\bask(?:s|ing)? the developer\b",
+    r"\bask(?:s|ing)? (?:the )?user\b",
+    r"\bprompt(?:s|ing)? (?:the )?user\b",
+    r"\bwait(?:s|ing)? for (?:the )?user\b",
+    r"\bconfirm with (?:the )?user\b",
+    r"\bask(?:s|ing)? (?:the )?developer\b",
     r"\bpresent exactly one question\b",
     r"\bask(?:s|ing)? up to \d+[^.\n]*question",
     r"\bone question at a time\b",
     r"\bwait(?:s|ing)? for (?:an? |the )?(?:answer|approval|confirmation)\b",
 )]
 NEGATION_WINDOW_CHARS = 40
+# Explicit negation forms only — a bare "not"/"no" would excuse real
+# violations like "If not possible, ask the user".
 NEGATION_RE = re.compile(
-    r"\b(?:do not|don'?t|never|not|no|without|rather than|instead of|skip)\b",
+    r"\b(?:do(?:es)? not|don'?t|never|without|rather than|instead of|skip)\b",
     re.IGNORECASE,
 )
 
@@ -252,6 +255,9 @@ def check_timing(r: Report, spec_dir: Path) -> None:
             r.add("PASS", "step-duration-outlier",
                   "trusted step durations are in band: "
                   + ", ".join(f"{k} {_fmt(v)}" for k, v in spans.items()))
+    else:
+        r.add("INFO", "step-duration-outlier",
+              f"{len(spans)} trusted span(s) — need ≥ 2 to compare")
 
 
 def _prompt_hits(text: str) -> list[str]:

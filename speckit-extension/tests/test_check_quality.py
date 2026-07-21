@@ -169,6 +169,13 @@ class TimingTests(QualityEvalBase):
         self.assertEqual(self.statuses(r)["timing-not-examinable"], "WARN")
         self.assertEqual(r.failed, 0)
 
+    def test_fewer_than_two_spans_still_emits_outlier_row(self) -> None:
+        self.write_spec(history=_step_pair("specify", 0, 2))
+        status, _, detail = next(row for row in self.run_report().rows
+                                 if row[1] == "step-duration-outlier")
+        self.assertEqual(status, "INFO")
+        self.assertIn("need ≥ 2", detail)
+
     def test_non_extension_boundary_is_untrusted(self) -> None:
         history = _healthy_history()
         for e in history:
@@ -240,6 +247,18 @@ class PromptingTests(QualityEvalBase):
         r = self.run_prompting(self.build_commands(
             clarify_text="Just rewrite the spec silently."))
         self.assertEqual(self.statuses(r)["must-ask-clarify"], "FAIL")
+
+    def test_prompt_without_article_still_flagged(self) -> None:
+        r = self.run_prompting(self.build_commands(
+            mutate={"speckit.companion.after-plan.md":
+                    "# Hook\nAsk user before continuing.\n"}))
+        self.assertEqual(self.statuses(r)["never-prompts-after-plan"], "FAIL")
+
+    def test_bare_not_does_not_excuse_prompt(self) -> None:
+        r = self.run_prompting(self.build_commands(
+            mutate={"speckit.companion.status.md":
+                    "# Status\nIf not possible, ask the user how to proceed.\n"}))
+        self.assertEqual(self.statuses(r)["never-prompts-status"], "FAIL")
 
     def test_bare_ask_does_not_match_tasks(self) -> None:
         r = self.run_prompting(self.build_commands(
