@@ -431,8 +431,11 @@ export function deriveStepHistory(
         if (previous && current.start < previous.end) {
             out[previous.name].durationTrusted = false;
             entry.durationTrusted = false;
+            // Both spans are now untrusted — neither may anchor the next comparison.
+            previous = null;
+        } else {
+            previous = current;
         }
-        previous = current;
     }
 
     return out;

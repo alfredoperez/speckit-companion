@@ -601,9 +601,10 @@ export class SpecEditorProvider {
 
                 <div class="editor-container">
                     <label class="editor-label" for="specContent">Feature Brief</label>
+                    <p id="helperText" class="sr-only">Include the problem, who it affects, key requirements, and constraints. A Jira or GitHub link also works on its own.</p>
                     <details class="writing-tips" id="writingTips">
                         <summary>Writing tips</summary>
-                        <p id="helperText">Include the problem, who it affects, key requirements, and constraints. A Jira or GitHub link also works on its own.</p>
+                        <p>Include the problem, who it affects, key requirements, and constraints. A Jira or GitHub link also works on its own.</p>
                     </details>
                     <textarea
                         class="spec-editor-textarea"
