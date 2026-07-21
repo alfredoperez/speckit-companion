@@ -290,9 +290,10 @@ export interface LivingSpecsView {
     loaded: string[];
     synced: string[];
     /**
-     * Per-capability readable content, resolved and parsed extension-side.
-     * Absent when content loading wasn't attempted (legacy payloads render the
-     * names-only list). Every loaded/synced name appears exactly once.
+     * Per-capability run-log chip metadata (name, resolved spec path, synced /
+     * delta state) — never the spec text itself, which the Living Specs viewer
+     * shows. Absent on legacy payloads (render the names-only list). Every
+     * loaded/synced name appears exactly once.
      */
     capabilities?: CapabilityContentView[];
 }

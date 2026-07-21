@@ -332,10 +332,12 @@
 }
 
 .living-specs-chip {
+    display: inline-block;
     max-width: 22em;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    vertical-align: middle;
     font-family: var(--font-mono);
     font-size: 0.78rem;
     font-weight: 600;
