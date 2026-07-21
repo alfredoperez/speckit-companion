@@ -6,7 +6,7 @@
  * and reduced-motion modes without owning any raw color.
  */
 
-/* ── Draft notice (US1) ─────────────────────────────────────────────── */
+/* ── Draft notice ───────────────────────────────────────────────────── */
 /* Added trust boundary at the top of a draft living spec. The authored banner
  * line stays in the flow below; this makes the draft status impossible to miss. */
 #markdown-content .living-draft-notice {
@@ -34,7 +34,7 @@
   color: var(--text-body);
 }
 
-/* ── Purpose callout (US1) ──────────────────────────────────────────── */
+/* ── Purpose callout ────────────────────────────────────────────────── */
 /* Gives the reason the capability exists the visual weight to be read first.
  * Wraps the authored `## Purpose` heading + body, which stay commentable. */
 #markdown-content .living-purpose {
@@ -48,7 +48,7 @@
   margin-top: 0;
 }
 
-/* ── Requirement card (US2) ─────────────────────────────────────────── */
+/* ── Requirement card ───────────────────────────────────────────────── */
 /* Each `###` requirement becomes a scannable card. The heading and body stay
  * as their own commentable lines inside the wrapper. */
 #markdown-content .living-req-card {
@@ -83,7 +83,7 @@
 }
 
 /* Inferred reads as less trustworthy — a quiet warning tint, not a loud alarm,
- * so a spec full of inferred rules is not a wall of warnings (FR-010). */
+ * so a spec full of inferred rules is not a wall of warnings. */
 #markdown-content .living-req-confidence--inferred {
   color: var(--warning);
   background: var(--warning-subtle);
@@ -95,7 +95,7 @@
   background: var(--success-subtle);
 }
 
-/* ── Scenario steps (US2) ───────────────────────────────────────────── */
+/* ── Scenario steps ─────────────────────────────────────────────────── */
 /* WHEN conditions are visually separated from THEN/AND outcomes. */
 #markdown-content .living-scenario {
   margin: var(--space-3) 0;
@@ -142,7 +142,7 @@
   opacity: 0.8;
 }
 
-/* ── Uncovered evidence (US3) ───────────────────────────────────────── */
+/* ── Uncovered evidence ─────────────────────────────────────────────── */
 /* The honest headline of a surface-first draft: what it did not read. */
 #markdown-content .living-uncovered {
   margin: 0 0 var(--space-4);
@@ -193,11 +193,12 @@
 }
 
 #markdown-content .living-uncovered-files {
+  list-style: none;
   margin: 0;
-  padding-left: var(--space-5);
+  padding: 0;
 }
 
-#markdown-content .living-uncovered-file {
+#markdown-content .living-uncovered-file .line-content {
   color: var(--text-body);
   line-height: var(--leading-relaxed);
   overflow-wrap: anywhere;
@@ -210,7 +211,7 @@
 }
 
 /* The disclosure marker animates open; honor reduced-motion with a still
- * equivalent so nothing moves for users who ask for less motion (FR-022). */
+ * equivalent so nothing moves for users who ask for less motion. */
 #markdown-content .living-uncovered-group > summary::marker {
   transition: transform 120ms ease;
 }

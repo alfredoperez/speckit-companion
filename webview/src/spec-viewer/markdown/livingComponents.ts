@@ -15,7 +15,7 @@ import { parseInline, escapeHtml } from './inline';
 const COMMENT_ICON_SVG = `<svg width="14" height="14" viewBox="0 0 24 24"><path fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 6h8m-4-4v8M6.099 19.5q-1.949-.192-2.927-1.172C2 17.157 2 15.271 2 11.5V11c0-3.771 0-5.657 1.172-6.828S6.229 3 10 3h1.5m-5 15c-.205 1.002-1.122 3.166-.184 3.865c.49.357 1.271-.024 2.834-.786c1.096-.535 2.206-1.148 3.405-1.424c.438-.1.885-.143 1.445-.155c3.771 0 5.657 0 6.828-1.172C21.947 17.21 21.998 15.44 22 12M8 14h6M8 9h3" color="currentColor"/></svg>`;
 
 /**
- * Per-region fallback wrapper (FR-002, FR-003): run `fn` over `region`; if it
+ * Per-region fallback wrapper: run `fn` over `region`; if it
  * throws, return `region` unchanged so the base renderer takes that region.
  */
 export function safe(region: string, fn: (region: string) => string): string {
@@ -28,12 +28,14 @@ export function safe(region: string, fn: (region: string) => string): string {
 
 // Best-effort per-requirement coverage, keyed by the exact `###` heading text.
 // Empty by default: coverage is omitted (never `0`) until the plumbing supplies
-// it, matching FR-011 / FR-019. Values are rendered verbatim as the tier label.
-let livingCoverage: Record<string, string> = {};
+// it. Values are rendered verbatim as the tier label.
+// Null-prototype store so record-sourced heading keys can't resolve through
+// inherited names like `toString` / `__proto__` — only set headings match.
+let livingCoverage: Record<string, string> = Object.create(null);
 
 /** Inject best-effort per-requirement coverage labels keyed by exact heading. */
 export function setLivingCoverage(map: Record<string, string> | null): void {
-    livingCoverage = map || {};
+    livingCoverage = Object.assign(Object.create(null), map || {});
 }
 
 // How many top body lines can carry the draft banner — mirrors the extension's
@@ -42,7 +44,7 @@ const DRAFT_BANNER_SCAN_LINES = 10;
 const DRAFT_BANNER_LINE = /^\s*(?:>\s*)*(?:#{1,6}\s+)?(?:[*_]{1,3})?\s*\[draft\]/i;
 
 /**
- * Draft notice (FR-006): when a `[DRAFT]` marker sits in the top window, prepend
+ * Draft notice: when a `[DRAFT]` marker sits in the top window, prepend
  * an announced trust-boundary banner. The authored banner line stays intact in
  * the flow — the notice is added, not a replacement.
  */
@@ -65,10 +67,10 @@ export function preprocessLivingDraftNotice(markdown: string): string {
 }
 
 /**
- * Purpose callout (FR-007): wrap the `## Purpose` section in a prominent callout
+ * Purpose callout: wrap the `## Purpose` section in a prominent callout
  * so the reason the capability exists is read first. Rendered only when the
  * section exists; the authored heading and body stay inside as commentable
- * markdown lines (verbatim, FR-004). A missing purpose is omitted, never a
+ * markdown lines (verbatim). A missing purpose is omitted, never a
  * placeholder.
  */
 export function preprocessLivingPurpose(markdown: string): string {
@@ -95,9 +97,11 @@ export function preprocessLivingPurpose(markdown: string): string {
     });
 }
 
-// Local counter so each scenario's inner steps get a unique list id (comment
-// anchoring keys on data-line + data-list-id, mirroring parseAcceptanceScenarios).
+// Local counters so each scenario's steps and each uncovered group's files get a
+// unique list id (comment anchoring keys on data-line + data-list-id, mirroring
+// parseAcceptanceScenarios).
 let scenarioCounter = 0;
+let uncoveredCounter = 0;
 
 const STEP_CLASS: Record<string, string> = {
     WHEN: 'living-when',
@@ -125,7 +129,7 @@ function buildScenario(title: string, steps: { kw: string; rest: string }[]): st
 }
 
 /**
- * Living scenario steps (FR-012, FR-013): render `#### Scenario:` blocks whose
+ * Living scenario steps: render `#### Scenario:` blocks whose
  * bullets are `- **WHEN/THEN/AND** …` so conditions (WHEN) are visually
  * separable from outcomes (THEN/AND), neither reordered nor reworded. Distinct
  * from the feature-spec `parseAcceptanceScenarios` (Given/When/Then). A scenario
@@ -172,7 +176,7 @@ export function preprocessLivingScenarios(markdown: string): string {
 
 function buildRequirementCard(heading: string, blockLines: string[]): string[] {
     // Lift the `[inferred]` metadata tag out of the prose into a confidence
-    // badge (FR-009). An untagged requirement is observed and gets no badge.
+    // badge. An untagged requirement is observed and gets no badge.
     let inferred = false;
     const body = blockLines.map((line) => {
         if (/\[inferred\]/i.test(line)) {
@@ -187,7 +191,7 @@ function buildRequirementCard(heading: string, blockLines: string[]): string[] {
         badges.push('<span class="living-req-confidence living-req-confidence--inferred">inferred</span>');
     }
     // Coverage is best-effort: shown only when the plumbing supplies a tier, and
-    // never rendered as `0` or a blank (FR-011, FR-019).
+    // never rendered as `0` or a blank.
     const cov = livingCoverage[heading];
     if (cov != null && String(cov).trim() !== '' && String(cov).trim() !== '0') {
         badges.push(`<span class="living-req-coverage">${escapeHtml(String(cov))}</span>`);
@@ -206,7 +210,7 @@ function buildRequirementCard(heading: string, blockLines: string[]): string[] {
 }
 
 /**
- * Requirement cards (FR-004, FR-005, FR-008): wrap each `###` requirement under
+ * Requirement cards: wrap each `###` requirement under
  * `## Requirements` in a card keyed on its exact heading text (no trim /
  * normalize / re-case). The heading and body stay as individual markdown lines
  * so per-line comments survive; confidence/coverage badges ride alongside.
@@ -254,7 +258,7 @@ interface UncoveredGroup {
  * Parse the recognized reason-grouped uncovered format: leading non-bullet
  * prose is the scope statement; then top-level `- **Reason**` bullets each own
  * indented `  - file` bullets. Returns null when the body does not match this
- * shape, so the caller can fall back to plain markdown (FR-018).
+ * shape, so the caller can fall back to plain markdown.
  */
 function parseUncoveredGroups(bodyLines: string[]): { scope: string; groups: UncoveredGroup[] } | null {
     const scopeParts: string[] = [];
@@ -290,13 +294,23 @@ function buildUncovered(scope: string, groups: UncoveredGroup[]): string {
         : '';
     const groupsHtml = groups
         .map((g) => {
+            const listId = `living-uncovered-${++uncoveredCounter}`;
             const files = g.files
-                .map((f) => `<li class="living-uncovered-file">${parseInline(f)}</li>`)
+                .map((f, idx) => {
+                    const lineNum = idx + 1;
+                    return (
+                        `<li class="living-uncovered-file line" data-line="${lineNum}" data-list-id="${listId}">` +
+                        `<button class="line-add-btn" data-line="${lineNum}" data-list-id="${listId}" title="Add comment">${COMMENT_ICON_SVG}</button>` +
+                        `<div class="line-content">${parseInline(f)}</div>` +
+                        `<div class="line-comment-slot"></div>` +
+                        `</li>`
+                    );
+                })
                 .join('');
             return (
                 `<details class="living-uncovered-group">` +
                 `<summary>${parseInline(g.reason)} <span class="living-uncovered-group-count">${g.files.length}</span></summary>` +
-                `<ul class="living-uncovered-files">${files}</ul>` +
+                `<ul class="living-uncovered-files" id="${listId}">${files}</ul>` +
                 `</details>`
             );
         })
@@ -313,14 +327,15 @@ function buildUncovered(scope: string, groups: UncoveredGroup[]): string {
 }
 
 /**
- * Uncovered evidence (FR-014–FR-019): render the `## Uncovered` section as a
+ * Uncovered evidence: render the `## Uncovered` section as a
  * count + scope statement over reason-grouped disclosures (closed by default),
  * or a plain read-everything statement for the sentinel/empty case. Any body
  * shape the parser does not recognize falls back to plain markdown so no line
- * is dropped (FR-018). The `## Uncovered` heading itself stays a normal line.
+ * is dropped. The `## Uncovered` heading itself stays a normal line.
  */
 export function preprocessLivingUncovered(markdown: string): string {
     return safe(markdown, (md) => {
+        uncoveredCounter = 0;
         const lines = md.split('\n');
         const secStart = lines.findIndex((l) => /^##\s+Uncovered\s*$/.test(l));
         if (secStart === -1) return md;

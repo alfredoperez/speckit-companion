@@ -177,6 +177,13 @@ describe('requirement confidence + coverage (FR-009, FR-010, FR-011, FR-019)', (
         expect(out).not.toContain('living-req-coverage');
         expect(out).not.toMatch(/living-req-coverage[^>]*>0</);
     });
+
+    it('does not resolve coverage through inherited object keys (prototype safety)', () => {
+        setLivingCoverage({ 'Real rule': '2/2 tests' });
+        const md = '## Requirements\n\n### toString\n\nBody.\n\n### __proto__\n\nBody.';
+        const out = preprocessLivingRequirements(md);
+        expect(out).not.toContain('living-req-coverage');
+    });
 });
 
 describe('preprocessLivingScenarios (FR-012, FR-013)', () => {
@@ -250,6 +257,24 @@ describe('preprocessLivingUncovered (FR-014–FR-019)', () => {
     it('keeps the ## Uncovered heading as a normal line', () => {
         const out = preprocessLivingUncovered(grouped);
         expect(out).toContain('## Uncovered');
+    });
+
+    it('renders each uncovered file as a commentable line with add button and comment slot', () => {
+        const out = preprocessLivingUncovered(grouped);
+        const files = out.match(/<li class="living-uncovered-file line"[^>]*>/g) ?? [];
+        expect(files).toHaveLength(3);
+        expect(out).toContain('line-add-btn');
+        expect(out).toContain('line-comment-slot');
+        for (const file of files) {
+            expect(file).toMatch(/data-line="\d+"/);
+            expect(file).toMatch(/data-list-id="living-uncovered-\d+"/);
+        }
+    });
+
+    it('gives each reason group its own list id so comments anchor per group', () => {
+        const out = preprocessLivingUncovered(grouped);
+        const listIds = [...out.matchAll(/data-list-id="(living-uncovered-\d+)"/g)].map((m) => m[1]);
+        expect(new Set(listIds).size).toBe(2);
     });
 });
 
