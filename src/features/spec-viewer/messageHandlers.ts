@@ -32,6 +32,7 @@ import {
 } from "../specs/specContextReader";
 import { updateSpecContext } from "../specs/specContextWriter";
 import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
+import { isPathWithinRoot } from "../specs/livingSpecsModel";
 import { resolveDispatchWithFallback } from "../specs/profileDispatch";
 import { lastEntryIsCompletionFor } from "../specs/historyHelpers";
 import {
@@ -156,6 +157,7 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
       await vscode.commands.executeCommand('speckit.specs.setStatus', { specPath: toWorkspaceRelativeSpecPath(dir) });
     },
     openFile: (msg, _dir, deps) => handleOpenFile(msg.filename, deps),
+    openLivingSpec: (msg, _dir, deps) => handleOpenLivingSpec(msg.specPath, deps),
     webviewError: async (msg, _dir, deps) => {
       deps.outputChannel.appendLine(
         `[SpecViewer] Webview error (${msg.source}): ${msg.message}` +
@@ -735,6 +737,28 @@ async function handleOpenFile(
       `[SpecViewer] Error opening file ref: ${error}`,
     );
   }
+}
+
+/**
+ * Open a living-spec capability document in the viewer (living mode) from a
+ * run-log chip. The path is workspace-relative and confined within the root
+ * before it reaches the filesystem — the same guard the tree's open command uses.
+ */
+async function handleOpenLivingSpec(
+  specPath: string,
+  deps: MessageHandlerDependencies,
+): Promise<void> {
+  const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  if (!root || !isPathWithinRoot(root, specPath)) {
+    deps.outputChannel.appendLine(
+      `[SpecViewer] Refusing to open living spec outside workspace: ${specPath}`,
+    );
+    return;
+  }
+  const absPath = path.join(root, specPath);
+  await vscode.commands.executeCommand("speckit.viewSpecDocument", absPath, {
+    living: true,
+  });
 }
 
 /**

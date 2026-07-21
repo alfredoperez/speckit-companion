@@ -3,9 +3,7 @@ import * as os from 'os';
 import * as path from 'path';
 import {
     enrichLivingSpecs,
-    parseCapabilitySpec,
     parseDeltaCounts,
-    stripInlineMarkdown,
 } from '../livingSpecsContent';
 
 const LIVING_SPEC = [
@@ -46,48 +44,6 @@ const CONFIG = [
     '      match: ["src/ui/**"]',
 ].join('\n');
 
-describe('parseCapabilitySpec', () => {
-    it('parses the purpose paragraph and one row per requirement heading', () => {
-        const parsed = parseCapabilitySpec(LIVING_SPEC);
-        expect(parsed.purpose).toBe('Task list behavior: everything the todos area guarantees today.');
-        expect(parsed.requirements).toEqual([
-            {
-                id: 'A note can carry one tag',
-                text: 'Each note stores at most one tag, editable from the note form. Continuation line of the same paragraph.',
-            },
-            { id: 'Notes can be filtered by tag', text: 'The list view filters by tag.' },
-        ]);
-    });
-
-    it('ignores ### headings outside the Requirements section', () => {
-        const md = [
-            '# Cap — Living Spec',
-            '',
-            '## Requirements',
-            '### Real requirement',
-            'Body.',
-            '',
-            '## Scenarios',
-            '### Not a requirement',
-            'Scenario body.',
-        ].join('\n');
-        const parsed = parseCapabilitySpec(md);
-        expect(parsed.requirements.map(r => r.id)).toEqual(['Real requirement']);
-    });
-
-    it('handles a spec with no intro and no requirements', () => {
-        const parsed = parseCapabilitySpec('# Bare — Living Spec\n\n## Requirements\n');
-        expect(parsed.purpose).toBeUndefined();
-        expect(parsed.requirements).toEqual([]);
-    });
-});
-
-describe('stripInlineMarkdown', () => {
-    it('removes emphasis, code, and link markers but keeps the text', () => {
-        expect(stripInlineMarkdown('**bold** and _it_ and `code` and [txt](url)')).toBe('bold and it and code and txt');
-    });
-});
-
 describe('parseDeltaCounts', () => {
     const SPEC_WITH_DELTAS = [
         '# Feature',
@@ -122,7 +78,7 @@ describe('parseDeltaCounts', () => {
 describe('enrichLivingSpecs', () => {
     afterEach(() => jest.restoreAllMocks());
 
-    it('loads, parses, and orders capabilities loaded-first with synced tagging', () => {
+    it('resolves a clickable spec path per capability without dumping its content', () => {
         const root = scaffold(CONFIG);
         fs.mkdirSync(path.join(root, 'capabilities', 'todos'), { recursive: true });
         fs.writeFileSync(path.join(root, 'capabilities', 'todos', 'spec.md'), LIVING_SPEC);
@@ -133,8 +89,10 @@ describe('enrichLivingSpecs', () => {
         expect(cap.name).toBe('todos');
         expect(cap.available).toBe(true);
         expect(cap.synced).toBe(true);
-        expect(cap.purpose).toContain('Task list behavior');
-        expect(cap.requirements).toHaveLength(2);
+        expect(cap.specPath).toBe('capabilities/todos/spec.md');
+        // The run log carries the name + path only — never the parsed content.
+        expect(cap).not.toHaveProperty('purpose');
+        expect(cap).not.toHaveProperty('requirements');
         fs.rmSync(root, { recursive: true, force: true });
     });
 
@@ -160,20 +118,12 @@ describe('enrichLivingSpecs', () => {
         fs.rmSync(root, { recursive: true, force: true });
     });
 
-    it('degrades to available:false for unresolved names and missing files', () => {
+    it('degrades to available:false (no specPath) for unresolved names and missing files', () => {
         const root = scaffold(CONFIG);
         const view = enrichLivingSpecs({ loaded: ['todos', 'ghost'], synced: [] }, root);
         expect(view.capabilities).toHaveLength(2);
         expect(view.capabilities!.every(c => c.available === false)).toBe(true);
-        fs.rmSync(root, { recursive: true, force: true });
-    });
-
-    it('degrades oversized files to available:false', () => {
-        const root = scaffold(CONFIG);
-        fs.mkdirSync(path.join(root, 'capabilities', 'todos'), { recursive: true });
-        fs.writeFileSync(path.join(root, 'capabilities', 'todos', 'spec.md'), 'x'.repeat(300 * 1024));
-        const view = enrichLivingSpecs({ loaded: ['todos'], synced: [] }, root);
-        expect(view.capabilities![0].available).toBe(false);
+        expect(view.capabilities!.every(c => c.specPath === undefined)).toBe(true);
         fs.rmSync(root, { recursive: true, force: true });
     });
 

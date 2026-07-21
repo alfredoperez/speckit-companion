@@ -114,10 +114,10 @@ export function ActivityPanel() {
                         {state.lastAction && <p class="dossier-log__last-action">{state.lastAction}</p>}
                         <LatestFeed />
                         <PhasesCard state={state} />
+                        <LivingSpecsCard state={state} />
                         <TasksCard state={state} />
                         <FilesCard state={state} />
                         <CommentsCard state={state} />
-                        <LivingSpecsCard state={state} />
                     </div>
                 </details>
             )}
