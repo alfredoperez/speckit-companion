@@ -28,14 +28,13 @@
 }
 
 .dossier-intent__statement {
-    max-width: 890px;
+    max-width: 72ch;
     margin: var(--space-3) 0 var(--space-5);
-    font-size: clamp(24px, 3.2cqi, 38px);
-    font-weight: 600;
-    line-height: 1.16;
-    letter-spacing: -0.03em;
-    color: var(--text-primary);
-    text-wrap: balance;
+    font-size: clamp(16px, 1.5cqi, 19px);
+    font-weight: 500;
+    line-height: 1.45;
+    color: var(--text-body);
+    text-wrap: pretty;
 }
 
 .dossier-intent__meta {
