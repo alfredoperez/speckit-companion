@@ -76,7 +76,9 @@ async function dispatchUpdate(cap: ResolvedCapability, outputChannel: vscode.Out
         `[SpecKit] Update living spec "${cap.name}" — ${changed.length} changed file(s) in prompt`,
     );
     const prompt = buildLivingUpdatePrompt(cap.name, changed);
-    await getAIProvider().executeSlashCommand(prompt, 'SpecKit - Update Living Spec', true);
+    // Natural-language instruction, not a slash command — executeSlashCommand
+    // would force a leading `/` on CLI providers and dispatch it as an unknown command.
+    await getAIProvider().executeInTerminal(prompt, 'SpecKit - Update Living Spec');
 }
 
 export function registerLivingSpecsCommands(
@@ -112,7 +114,7 @@ export function registerLivingSpecsCommands(
         vscode.commands.registerCommand('speckit.livingSpecs.copyPath', async (item?: LivingSpecNode) => {
             const rel = nodeRelPath(item);
             const root = workspaceRoot();
-            if (!rel || !root) return;
+            if (!rel || !root || !isPathWithinRoot(root, rel)) return;
             const abs = path.join(root, rel);
             await vscode.env.clipboard.writeText(abs);
             NotificationUtils.showAutoDismissNotification(`Copied "${abs}"`);
@@ -124,9 +126,12 @@ export function registerLivingSpecsCommands(
             NotificationUtils.showAutoDismissNotification(`Copied "${rel}"`);
         }),
         vscode.commands.registerCommand('speckit.livingSpecs.copyName', async (item?: LivingSpecNode) => {
+            // A capability row copies its displayed capability name; tier/orphan
+            // rows fall back to the file name (basename would give "spec.md" for a
+            // centralized capability, not its name).
             const rel = nodeRelPath(item);
-            if (!rel) return;
-            const name = path.basename(rel);
+            const name = capabilityName(item) || (rel ? path.basename(rel) : '');
+            if (!name) return;
             await vscode.env.clipboard.writeText(name);
             NotificationUtils.showAutoDismissNotification(`Copied "${name}"`);
         }),

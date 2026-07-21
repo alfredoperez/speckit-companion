@@ -2,10 +2,11 @@ import * as vscode from 'vscode';
 import { registerLivingSpecsCommands, buildLivingUpdatePrompt } from '../livingSpecsCommands';
 
 const executeSlashCommand = jest.fn();
+const executeInTerminal = jest.fn();
 
 jest.mock('../../../extension', () => ({
     getAIProvider: jest.fn(() => ({
-        executeInTerminal: jest.fn(),
+        executeInTerminal: (...args: unknown[]) => executeInTerminal(...args),
         executeSlashCommand: (...args: unknown[]) => executeSlashCommand(...args),
     })),
 }));
@@ -124,19 +125,21 @@ describe('registerLivingSpecsCommands', () => {
             exclude: [],
         };
 
-        it('dispatches an update prompt naming drift, the changed files, and update-not-regenerate', async () => {
+        it('dispatches the update as a natural-language prompt (not a slash command)', async () => {
             (readDriftedFiles as jest.Mock).mockResolvedValue(['src/checkout/cart.ts', 'src/checkout/api.ts']);
 
             await handlers['speckit.livingSpecs.update']({ capability: cap });
 
-            expect(executeSlashCommand).toHaveBeenCalledTimes(1);
-            const [prompt, title, autoExec] = (executeSlashCommand as jest.Mock).mock.calls[0];
+            // Must go through executeInTerminal — executeSlashCommand would force a
+            // leading `/` on CLI providers and break the prompt.
+            expect(executeSlashCommand).not.toHaveBeenCalled();
+            expect(executeInTerminal).toHaveBeenCalledTimes(1);
+            const [prompt, title] = (executeInTerminal as jest.Mock).mock.calls[0];
             expect(prompt).toContain('drifted');
             expect(prompt).toContain('UPDATE, do not regenerate');
             expect(prompt).toContain('src/checkout/cart.ts');
             expect(prompt).toContain('src/checkout/api.ts');
             expect(title).toBe('SpecKit - Update Living Spec');
-            expect(autoExec).toBe(true);
         });
 
         it('resolves the capability from a viewer spec path when no node is passed', async () => {
@@ -146,14 +149,14 @@ describe('registerLivingSpecsCommands', () => {
             await handlers['speckit.livingSpecs.update']({ capabilitySpecPath: cap.spec });
 
             expect(resolveCapabilityBySpecPath).toHaveBeenCalledWith('/workspace', cap.spec);
-            expect(executeSlashCommand).toHaveBeenCalledTimes(1);
-            expect((executeSlashCommand as jest.Mock).mock.calls[0][0]).toContain('src/checkout/cart.ts');
+            expect(executeInTerminal).toHaveBeenCalledTimes(1);
+            expect((executeInTerminal as jest.Mock).mock.calls[0][0]).toContain('src/checkout/cart.ts');
         });
 
         it('warns and does not dispatch when no capability can be resolved', async () => {
             await handlers['speckit.livingSpecs.update']({});
             expect(vscode.window.showWarningMessage).toHaveBeenCalled();
-            expect(executeSlashCommand).not.toHaveBeenCalled();
+            expect(executeInTerminal).not.toHaveBeenCalled();
         });
     });
 
@@ -163,9 +166,16 @@ describe('registerLivingSpecsCommands', () => {
             expect(vscode.env.clipboard.writeText).toHaveBeenCalledWith('src/x/x.spec.md');
         });
 
-        it('copies the basename as the name', async () => {
+        it('copies the basename as the name for a tier/orphan row', async () => {
             await handlers['speckit.livingSpecs.copyName']({ relPath: 'src/x/x.spec.md' });
             expect(vscode.env.clipboard.writeText).toHaveBeenCalledWith('x.spec.md');
+        });
+
+        it('copies the capability name for a capability row, not the spec filename', async () => {
+            await handlers['speckit.livingSpecs.copyName']({
+                capability: { name: 'checkout', spec: 'capabilities/checkout/spec.md' },
+            });
+            expect(vscode.env.clipboard.writeText).toHaveBeenCalledWith('checkout');
         });
 
         it('copies the absolute path', async () => {
