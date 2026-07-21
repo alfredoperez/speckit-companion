@@ -391,17 +391,23 @@ def _fastpath(r: Report, history: list, ctx: dict) -> None:
             boundaries[f"{step}-start"] = _parse_at(starts[0].get("at"))
             boundaries[f"{step}-complete"] = _parse_at(completes[-1].get("at"))
 
-    # Ordered and real: specify-complete → plan → tasks, non-decreasing, all parseable.
+    # Ordered and real: every boundary parses; each folded step has a strictly
+    # positive span (start < complete — the derivation trusts a span only when
+    # closeMs > startMs, so a same-instant fold must fail here too); and the steps
+    # run forward across boundaries (non-decreasing, so specify-complete == plan-start
+    # is fine — a touching handoff, not an overlap).
     spec_complete = [e for e in hist if e.get("step") == "specify" and _is_step_level(e)
                      and e.get("kind") == "complete" and e.get("by") == "extension"]
-    seq = ([_parse_at(spec_complete[-1].get("at"))] if spec_complete else []) + [
-        boundaries.get(k) for k in ("plan-start", "plan-complete", "tasks-start", "tasks-complete")
-    ]
-    real = all(t is not None for t in seq) and len(seq) == 5
-    ordered = real and all(seq[i] <= seq[i + 1] for i in range(len(seq) - 1))
+    sc = _parse_at(spec_complete[-1].get("at")) if spec_complete else None
+    ps, pc = boundaries.get("plan-start"), boundaries.get("plan-complete")
+    ts, tc = boundaries.get("tasks-start"), boundaries.get("tasks-complete")
+    real = all(t is not None for t in (sc, ps, pc, ts, tc))
+    ordered = (real
+               and ps < pc and ts < tc      # strict within each folded step (positive span)
+               and sc <= ps and pc <= ts)    # non-decreasing across the handoffs
     r.add(ordered, "fast-path-fold-ordered",
-          "specify→plan→tasks boundaries parse and run forward"
-          if ordered else "fold boundaries missing, unparseable, or out of order — the #514 untrusted-timing shape")
+          "specify→plan→tasks boundaries parse, each folded step has a positive span, and they run forward"
+          if ordered else "fold boundaries missing, unparseable, zero-length, or out of order — the #514 untrusted-timing shape")
 
     r.add(status in _FOLDED_STATUSES, "fast-path-ready-to-implement",
           f"status={status}" + ("" if status in _FOLDED_STATUSES else " — expected ready-to-implement after a fold"))
