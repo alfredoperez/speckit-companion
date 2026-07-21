@@ -48,11 +48,11 @@ export interface ContextAction {
  */
 export function getContextActions(lineType: LineType): ContextAction[] {
     const actions: Record<LineType, ContextAction[]> = {
-        'user-story': [{ action: 'remove-story', label: 'Remove Story' }],
-        'acceptance': [{ action: 'remove-scenario', label: 'Remove Scenario' }],
-        'task': [{ action: 'toggle-task', label: 'Toggle' }, { action: 'remove-task', label: 'Remove Task' }],
-        'section': [{ action: 'remove-section', label: 'Remove Section' }],
-        'paragraph': [{ action: 'remove-line', label: 'Remove Line' }],
+        'user-story': [{ action: 'remove-story', label: 'Suggest removing story' }],
+        'acceptance': [{ action: 'remove-scenario', label: 'Suggest removing scenario' }],
+        'task': [{ action: 'toggle-task', label: 'Toggle' }, { action: 'remove-task', label: 'Suggest removing task' }],
+        'section': [{ action: 'remove-section', label: 'Suggest removing section' }],
+        'paragraph': [{ action: 'remove-line', label: 'Suggest removing line' }],
     };
     return actions[lineType];
 }

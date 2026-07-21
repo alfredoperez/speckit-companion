@@ -197,4 +197,11 @@ describe('task lines — id and markers render as metadata chips', () => {
         expect(html).toContain('Create the shared-parts directory');
         expect(html).not.toContain('task-item__marker');
     });
+
+    it('gives every comment affordance a line-specific accessible name', () => {
+        const html = renderMarkdown('- [ ] **T001** Add accessible comments\n');
+        expect(html).toContain('aria-label="Add comment to task line 1"');
+        expect(html).toContain('stroke="currentColor"');
+        expect(html).not.toContain('stroke="#ffffff"');
+    });
 });

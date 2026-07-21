@@ -9,7 +9,7 @@
 
 /* Document scale: a strong page title, quiet bounded sections. */
 #markdown-content h1 {
-    font-size: clamp(30px, 5vw, 46px);
+    font-size: clamp(30px, 5vw, 40px);
     font-weight: 700;
     line-height: 1.05;
     letter-spacing: -0.04em;
@@ -22,7 +22,7 @@
     font-weight: 650;
     line-height: var(--leading-snug);
     letter-spacing: -0.025em;
-    margin: 52px 0 18px 0;
+    margin: 40px 0 16px 0;
     color: var(--header-section);
 }
 
@@ -34,7 +34,7 @@
     font-size: 16px;
     font-weight: 600;
     line-height: 1.4;
-    margin: 32px 0 10px 0;
+    margin: 24px 0 8px 0;
     color: var(--header-subsection);
 }
 
@@ -54,7 +54,7 @@
 
 #markdown-content p {
     margin: 0 0 var(--space-5) 0;
-    line-height: var(--leading-loose);
+    line-height: 1.6;
     color: var(--text-body);
 }
 

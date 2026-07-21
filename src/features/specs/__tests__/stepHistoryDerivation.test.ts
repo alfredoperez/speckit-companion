@@ -1,4 +1,4 @@
-import { deriveStepHistory, deriveDocumentState } from '../stepHistoryDerivation';
+import { deriveStepHistory, deriveDocumentState, deriveTimingSummary } from '../stepHistoryDerivation';
 import { findRunningStep } from '../../spec-viewer/stateDerivation';
 import type { Transition } from '../../../core/types/specContext';
 
@@ -175,7 +175,7 @@ describe('deriveStepHistory', () => {
     });
 
     describe('collapses consecutive identical (step, substep) transitions', () => {
-        it('produces the same result feeding a duplicate adjacent transition as feeding one', () => {
+        it('collapses duplicate rows for display but preserves the repeated-start trust anomaly', () => {
             const single = [
                 tx({ step: 'specify', at: '2026-04-29T00:00:00Z' }),
                 tx({ step: 'plan',    at: '2026-04-29T00:01:00Z' }),
@@ -187,7 +187,9 @@ describe('deriveStepHistory', () => {
             ];
             const a = deriveStepHistory(single, 'plan');
             const b = deriveStepHistory(withDuplicate, 'plan');
-            expect(b).toEqual(a);
+            expect(b.specify.startedAt).toBe(a.specify.startedAt);
+            expect(b.specify.completedAt).toBe(a.specify.completedAt);
+            expect(b.specify.durationTrusted).toBe(false);
             // The dropped duplicate's `at` must not become startedAt.
             expect(b.specify.startedAt).toBe('2026-04-29T00:00:00Z');
         });
@@ -423,14 +425,106 @@ describe('deriveStepHistory', () => {
             expect(sh.specify.durationTrusted).toBe(true);
         });
 
-        it('an in-flight extension-started step stays trusted until an untrusted close arrives', () => {
+        it('does not call an in-flight start a measured duration', () => {
             const history: Transition[] = [
                 tx({ step: 'implement', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
             ];
             const sh = deriveStepHistory(history, 'implement', 'implementing');
             expect(sh.implement.completedAt).toBeNull();
-            expect(sh.implement.durationTrusted).toBe(true);
+            expect(sh.implement.durationTrusted).toBe(false);
         });
+
+        it('rejects completion-before-start and repeated starts', () => {
+            const completionBeforeStart = deriveStepHistory([
+                tx({ step: 'plan', kind: 'complete', by: 'extension', at: '2026-07-01T09:59:00Z' }),
+                tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
+            ], 'plan', 'planned');
+            expect(completionBeforeStart.plan.durationTrusted).toBe(false);
+
+            const repeated = deriveStepHistory([
+                tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
+                tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-01T10:01:00Z' }),
+                tx({ step: 'plan', kind: 'complete', by: 'extension', at: '2026-07-01T10:03:00Z' }),
+            ], 'plan', 'planned');
+            expect(repeated.plan.durationTrusted).toBe(false);
+        });
+    });
+});
+
+describe('deriveTimingSummary', () => {
+    const measured = (startedAt: string, completedAt: string) => ({
+        startedAt,
+        completedAt,
+        durationTrusted: true,
+    });
+
+    it('returns wall-clock elapsed only when every expected phase is measured', () => {
+        const timing = deriveTimingSummary({
+            specify: measured('2026-07-01T10:00:00Z', '2026-07-01T10:05:00Z'),
+            plan: measured('2026-07-01T10:05:00Z', '2026-07-01T10:12:00Z'),
+            tasks: measured('2026-07-01T10:12:00Z', '2026-07-01T10:15:00Z'),
+            implement: measured('2026-07-01T10:15:00Z', '2026-07-01T10:24:00Z'),
+        });
+        expect(timing).toEqual({
+            measuredPhases: 4,
+            expectedPhases: 4,
+            complete: true,
+            startedAt: '2026-07-01T10:00:00Z',
+            endedAt: '2026-07-01T10:24:00Z',
+            elapsedMs: 24 * 60 * 1000,
+        });
+    });
+
+    it('keeps partial timing as coverage and never a total', () => {
+        const timing = deriveTimingSummary({
+            implement: measured('2026-07-01T10:15:00Z', '2026-07-01T10:21:30Z'),
+        });
+        expect(timing).toEqual({ measuredPhases: 1, expectedPhases: 4, complete: false });
+        expect(timing.elapsedMs).toBeUndefined();
+    });
+
+    it('models feature 484 as Implement-only timing (~6m 30s), never a run total', () => {
+        const history: Transition[] = [
+            tx({ step: 'specify', kind: 'start', by: 'extension', at: '2026-07-21T04:54:47.394Z' }),
+            tx({ step: 'specify', kind: 'complete', by: 'extension', at: '2026-07-21T04:56:53.041Z' }),
+            tx({ step: 'plan', substep: 'research', kind: 'complete', by: 'ai', at: '2026-07-21T04:58:08.019Z' }),
+            tx({ step: 'plan', kind: 'complete', by: 'ai', at: '2026-07-21T04:58:08.222Z' }),
+            tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-21T04:58:18.300Z' }),
+            tx({ step: 'tasks', substep: 'generate', kind: 'complete', by: 'ai', at: '2026-07-21T04:58:58.186Z' }),
+            tx({ step: 'tasks', kind: 'complete', by: 'ai', at: '2026-07-21T04:58:58.320Z' }),
+            tx({ step: 'tasks', kind: 'start', by: 'extension', at: '2026-07-21T04:59:18.547Z' }),
+            tx({ step: 'implement', kind: 'start', by: 'extension', at: '2026-07-21T04:59:32.305Z' }),
+            tx({ step: 'implement', kind: 'complete', by: 'extension', at: '2026-07-21T05:06:01.863Z' }),
+        ];
+        const steps = deriveStepHistory(history, 'implement', 'completed');
+        expect(steps.implement.durationTrusted).toBe(true);
+        expect(Date.parse(steps.implement.completedAt!) - Date.parse(steps.implement.startedAt))
+            .toBe(389_558);
+        expect(deriveTimingSummary(steps)).toEqual({
+            measuredPhases: 1,
+            expectedPhases: 4,
+            complete: false,
+        });
+    });
+
+    it('models feature 406 repeated/reversed boundaries without four trusted phases', () => {
+        const history: Transition[] = [
+            tx({ step: 'specify', kind: 'start', by: 'extension', at: '2026-07-21T00:25:21.186Z' }),
+            tx({ step: 'specify', kind: 'complete', by: 'extension', at: '2026-07-21T00:28:53.117Z' }),
+            tx({ step: 'specify', kind: 'complete', by: 'user', at: '2026-07-21T00:40:36.886Z' }),
+            tx({ step: 'plan', kind: 'complete', by: 'extension', at: '2026-07-21T00:40:44.310Z' }),
+            tx({ step: 'tasks', kind: 'start', by: 'extension', at: '2026-07-21T00:40:44.312Z' }),
+            tx({ step: 'plan', kind: 'start', by: 'user', at: '2026-07-21T00:41:37.194Z' }),
+            tx({ step: 'plan', kind: 'complete', by: 'user', at: '2026-07-21T00:49:34.719Z' }),
+            tx({ step: 'tasks', kind: 'start', by: 'extension', at: '2026-07-21T00:52:29.049Z' }),
+            tx({ step: 'tasks', kind: 'complete', by: 'user', at: '2026-07-21T01:02:03.685Z' }),
+            tx({ step: 'implement', kind: 'start', by: 'extension', at: '2026-07-21T01:02:05.953Z' }),
+            tx({ step: 'implement', kind: 'complete', by: 'extension', at: '2026-07-21T01:15:18.570Z' }),
+        ];
+        const timing = deriveTimingSummary(deriveStepHistory(history, 'implement', 'completed'));
+        expect(timing.complete).toBe(false);
+        expect(timing.measuredPhases).toBeLessThan(4);
+        expect(timing.elapsedMs).toBeUndefined();
     });
 });
 

@@ -109,13 +109,27 @@ const beardedVividLight: Record<string, string> = {
 };
 
 interface StoryTheme {
-    bodyClass: 'vscode-dark' | 'vscode-light';
+    bodyClass: 'vscode-dark' | 'vscode-light' | 'vscode-high-contrast';
     vars: Record<string, string>;
 }
 
 const themes: Record<string, StoryTheme> = {
     'monokai-black': { bodyClass: 'vscode-dark', vars: beardedMonokaiBlack },
     'vivid-light': { bodyClass: 'vscode-light', vars: beardedVividLight },
+    'high-contrast': {
+        bodyClass: 'vscode-high-contrast',
+        vars: {
+            ...beardedMonokaiBlack,
+            '--vscode-editor-background': '#000000',
+            '--vscode-editor-foreground': '#ffffff',
+            '--vscode-foreground': '#ffffff',
+            '--vscode-sideBar-background': '#000000',
+            '--vscode-editorWidget-background': '#000000',
+            '--vscode-contrastBorder': '#ffffff',
+            '--vscode-focusBorder': '#ffff00',
+            '--vscode-panel-border': '#ffffff',
+        },
+    },
 };
 
 // Mock vscode API
@@ -135,6 +149,7 @@ const preview: Preview = {
                 items: [
                     { value: 'monokai-black', title: 'Bearded Monokai Black (dark)' },
                     { value: 'vivid-light', title: 'Bearded Vivid Light (light)' },
+                    { value: 'high-contrast', title: 'VS Code High Contrast' },
                 ],
                 dynamicTitle: true,
             },
@@ -166,7 +181,7 @@ const preview: Preview = {
 
             // tokens.css and highlighting.ts key off body.vscode-dark/-light,
             // so the class must live on <body>, not just the wrapper div.
-            document.body.classList.remove('vscode-dark', 'vscode-light');
+            document.body.classList.remove('vscode-dark', 'vscode-light', 'vscode-high-contrast');
             document.body.classList.add(theme.bodyClass);
 
             // tokens.css declares its tokens on :root, and a custom property's

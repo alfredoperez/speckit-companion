@@ -1,12 +1,10 @@
 import type { ViewerState, HistoryEntry, StepHistoryEntry } from '../../types';
 import { mergeStepEvents, buildHistoryIndex, TimelineEventModel } from '../../timelineEvents';
 import { Badge } from '../../../shared/components/Badge';
+import { TimelineEvent } from '../TimelineEvent';
 import {
     formatElapsed,
-    formatStepOffset,
     formatAbsolute,
-    activeDurationMs,
-    IDLE_GAP_CAP_MS,
 } from '../../relativeTime';
 
 const STEP_ORDER = ['specify', 'clarify', 'plan', 'tasks', 'analyze', 'implement'];
@@ -57,50 +55,20 @@ function buildGroups(stepHistory: ViewerState['stepHistory'], history: HistoryEn
     return groups;
 }
 
-/**
- * All recorded activity timestamps for a step, in no particular order:
- * the step start, every event boundary, and the completion (when present).
- * Feeds `activeDurationMs`, which sorts them and sums the gaps with long idle
- * pauses capped — so "elapsed" reflects working time, not wall-clock.
- */
-function activityPoints(group: StepGroup): string[] {
-    const pts = [group.startedAt];
-    for (const e of group.events) {
-        pts.push(e.startedAt);
-        if (e.completedAt) pts.push(e.completedAt);
-    }
-    if (group.completedAt) pts.push(group.completedAt);
-    return pts;
-}
-
 export function PhasesCard({ state }: PhasesCardProps) {
     const groups = buildGroups(state.stepHistory ?? {}, state.history ?? []);
     if (groups.length === 0) return null;
 
-    // Overall: the whole-spec start (absolute), end (absolute or in-flight), and
-    // total *active* time. Only extension-stamped (trusted) steps carry real
-    // clock times — a custom workflow's synthesized progression has derived
-    // placeholder timestamps (epoch), which must never surface as a wall-clock
-    // summary. So the overall row is built from trusted groups only, and hides
-    // entirely when none exist (the per-step strip below still renders names).
-    const trustedGroups = groups.filter(
-        g => state.stepHistory?.[g.step]?.durationTrusted === true
-    );
-    const hasTrustedTiming = trustedGroups.length > 0;
-    const overallStart = hasTrustedTiming ? trustedGroups[0].startedAt : null;
-    const lastTrusted = hasTrustedTiming ? trustedGroups[trustedGroups.length - 1] : null;
-    const overallEnd = lastTrusted?.completedAt ?? null;
-    const TERMINAL_STATUSES = new Set(['completed', 'archived']);
-    const overallInFlight = overallEnd === null || !TERMINAL_STATUSES.has(state.status ?? '');
-    const overallActiveMs = trustedGroups.reduce(
-        (sum, g) => sum + activeDurationMs(activityPoints(g)),
-        0
-    );
+    const timing = state.timing;
+    const completeTiming = timing?.complete === true
+        && timing.startedAt !== undefined
+        && timing.endedAt !== undefined
+        && timing.elapsedMs !== undefined;
 
     // Per-step start dates are noise on a single-day spec; show a step's start
     // date only when it began on a different calendar day than the spec start
     // (i.e. a multi-day spec). With no trusted start, there's no reference day.
-    const specStartDay = overallStart ? new Date(overallStart).toDateString() : null;
+    const specStartDay = timing?.startedAt ? new Date(timing.startedAt).toDateString() : null;
 
     // Author only at spec start: the first history entry's actor.
     const firstEntry = (state.history ?? [])[0];
@@ -120,25 +88,28 @@ export function PhasesCard({ state }: PhasesCardProps) {
                 )}
             </h3>
             <div class="activity-card__body">
-                {hasTrustedTiming && (
+                {completeTiming && (
                     <div class="phases-overall">
                         <div class="phases-overall__stat">
                             <span class="phases-overall__label">Started</span>
-                            <span class="phases-overall__value">{formatAbsolute(overallStart as string)}</span>
+                            <span class="phases-overall__value">{formatAbsolute(timing.startedAt!)}</span>
                         </div>
                         <div class="phases-overall__stat">
-                            <span class="phases-overall__label">Total</span>
-                            <span class="phases-overall__value">
-                                {formatElapsed(overallActiveMs)} active
-                            </span>
+                            <span class="phases-overall__label">Elapsed</span>
+                            <span class="phases-overall__value">{formatElapsed(timing.elapsedMs!)}</span>
                         </div>
                         <div class="phases-overall__stat">
                             <span class="phases-overall__label">Ended</span>
                             <span class="phases-overall__value">
-                                {overallInFlight ? 'in progress' : formatAbsolute(overallEnd as string)}
+                                {formatAbsolute(timing.endedAt!)}
                             </span>
                         </div>
                     </div>
+                )}
+                {!completeTiming && timing && timing.measuredPhases > 0 && (
+                    <p class="phases-coverage">
+                        Timing coverage: {timing.measuredPhases} of {timing.expectedPhases} phases
+                    </p>
                 )}
                 <div class="phases-strip" role="list">
                     {groups.map((group, idx) => {
@@ -146,9 +117,8 @@ export function PhasesCard({ state }: PhasesCardProps) {
                         // Timing honesty: a step shows elapsed time only when its span
                         // was extension-stamped; journaled steps render name-only.
                         const trusted = state.stepHistory?.[group.step]?.durationTrusted === true;
-                        // Elapsed = active time (idle gaps capped), not wall-clock.
-                        const duration = trusted || inFlight
-                            ? formatElapsed(activeDurationMs(activityPoints(group)))
+                        const duration = trusted && group.completedAt
+                            ? formatElapsed(Date.parse(group.completedAt) - Date.parse(group.startedAt))
                             : null;
                         const showStepDate = specStartDay !== null &&
                             new Date(group.startedAt).toDateString() !== specStartDay;
@@ -168,6 +138,22 @@ export function PhasesCard({ state }: PhasesCardProps) {
                         );
                     })}
                 </div>
+                {groups.some(group => group.events.length > 0) && (
+                    <div class="phases-events" aria-label="Recorded phase events">
+                        {groups.filter(group => group.events.length > 0).map(group => (
+                            <div class="phases-events__group" key={`${group.step}-events`}>
+                                <h4>{group.step}</h4>
+                                {group.events.map((event, index) => (
+                                    <TimelineEvent
+                                        key={`${event.name}-${event.recordedAt}-${index}`}
+                                        event={event}
+                                        stepStartedAt={group.startedAt}
+                                    />
+                                ))}
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </section>
     );

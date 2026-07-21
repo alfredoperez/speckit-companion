@@ -30,8 +30,100 @@ const baseState = (overrides: Partial<ViewerState>): ViewerState => ({
     footer: [],
     transitions: [],
     stepHistory: {},
+    timing: { measuredPhases: 0, expectedPhases: 4, complete: false },
     ...overrides,
 });
+
+const trusted = (start: string, end: string) => ({
+    startedAt: start,
+    completedAt: end,
+    durationTrusted: true,
+});
+
+export const CompleteTrustworthyTiming: Story = {
+    name: 'Timing · complete trustworthy run',
+    render: () => (
+        <PhasesCard state={baseState({
+            status: 'completed',
+            stepHistory: {
+                specify: trusted('2026-07-02T10:00:00Z', '2026-07-02T10:05:00Z'),
+                plan: trusted('2026-07-02T10:05:00Z', '2026-07-02T10:12:00Z'),
+                tasks: trusted('2026-07-02T10:12:00Z', '2026-07-02T10:15:00Z'),
+                implement: trusted('2026-07-02T10:15:00Z', '2026-07-02T10:24:00Z'),
+            },
+            timing: {
+                measuredPhases: 4,
+                expectedPhases: 4,
+                complete: true,
+                startedAt: '2026-07-02T10:00:00Z',
+                endedAt: '2026-07-02T10:24:00Z',
+                elapsedMs: 1_440_000,
+            },
+        })} />
+    ),
+};
+
+export const Feature484PartialTiming: Story = {
+    name: 'Timing · 484 partial (Implement 6m 30s)',
+    render: () => (
+        <PhasesCard state={baseState({
+            status: 'completed',
+            stepHistory: {
+                specify: { startedAt: '2026-07-02T09:00:00Z', completedAt: '2026-07-02T09:04:00Z', durationTrusted: false },
+                plan: { startedAt: '2026-07-02T09:04:00Z', completedAt: '2026-07-02T09:15:00Z', durationTrusted: false },
+                tasks: { startedAt: '2026-07-02T09:15:00Z', completedAt: '2026-07-02T09:18:00Z', durationTrusted: false },
+                implement: trusted('2026-07-02T09:18:00Z', '2026-07-02T09:24:30Z'),
+            },
+            timing: { measuredPhases: 1, expectedPhases: 4, complete: false },
+        })} />
+    ),
+};
+
+export const AnomalousSequence: Story = {
+    name: 'Timing · anomalous overlap',
+    render: () => (
+        <PhasesCard state={baseState({
+            stepHistory: {
+                specify: { startedAt: '2026-07-02T10:00:00Z', completedAt: '2026-07-02T10:10:00Z', durationTrusted: false },
+                plan: { startedAt: '2026-07-02T10:05:00Z', completedAt: '2026-07-02T10:15:00Z', durationTrusted: false },
+            },
+        })} />
+    ),
+};
+
+export const InFlightUnmeasured: Story = {
+    name: 'Timing · in flight (not measured)',
+    render: () => (
+        <PhasesCard state={baseState({
+            status: 'implementing',
+            stepHistory: {
+                implement: { startedAt: '2026-07-02T10:00:00Z', completedAt: null, durationTrusted: false },
+            },
+        })} />
+    ),
+};
+
+export const RepeatedStartUntrusted: Story = {
+    name: 'Timing · repeated start',
+    render: () => (
+        <PhasesCard state={baseState({
+            stepHistory: {
+                plan: { startedAt: '2026-07-02T10:00:00Z', completedAt: '2026-07-02T10:08:00Z', durationTrusted: false },
+            },
+        })} />
+    ),
+};
+
+export const CompletionBeforeStartUntrusted: Story = {
+    name: 'Timing · completion before start',
+    render: () => (
+        <PhasesCard state={baseState({
+            stepHistory: {
+                plan: { startedAt: '2026-07-02T10:08:00Z', completedAt: '2026-07-02T10:00:00Z', durationTrusted: false },
+            },
+        })} />
+    ),
+};
 
 // ── Specify just started, in flight ──────────────────────────
 // Mirrors the ngx-dev-toolbar screenshot moment: the specify step

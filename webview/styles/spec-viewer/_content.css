@@ -12,7 +12,7 @@
     /* Floor at 16px (matches VS Code's native markdown preview) so the panel
        stays readable regardless of a small editor font; scales up beyond that. */
     font-size: max(16px, calc(var(--font-size) + 1px));
-    line-height: var(--leading-loose);
+    line-height: 1.6;
     color: var(--text-body);
     max-width: 72ch;
     margin: 0 auto;

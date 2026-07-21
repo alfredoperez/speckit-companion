@@ -600,13 +600,17 @@ export class SpecEditorProvider {
                 </div>
 
                 <div class="editor-container">
-                    <label class="editor-label sr-only" for="specContent">Specification</label>
-                    <p class="helper-text sr-only" id="helperText">Write as much or as little as you like — even just a Jira or GitHub link on its own works, and the AI will pull the details from it.</p>
+                    <label class="editor-label" for="specContent">Feature Brief</label>
+                    <p id="helperText" class="sr-only">Include the problem, who it affects, key requirements, and constraints. A Jira or GitHub link also works on its own.</p>
+                    <details class="writing-tips" id="writingTips">
+                        <summary>Writing tips</summary>
+                        <p>Include the problem, who it affects, key requirements, and constraints. A Jira or GitHub link also works on its own.</p>
+                    </details>
                     <textarea
                         class="spec-editor-textarea"
                         id="specContent"
                         aria-describedby="helperText charCount"
-                        placeholder="Describe your feature or task in detail — or just paste a link below and skip the description entirely.&#10;&#10;What helps:&#10;- What is the feature about?&#10;- What problem does it solve?&#10;- Who is it for?&#10;- Key requirements, constraints, or dependencies?&#10;&#10;Or paste a reference link on its own:&#10;- Jira:  https://your-org.atlassian.net/browse/PROJ-1234&#10;- GitHub:  https://github.com/your-org/your-repo/issues/42"
+                        placeholder="Describe the problem, audience, and desired outcome — or paste a Jira/GitHub link."
                     ></textarea>
                     <div class="editor-footer-row">
                         <button class="attach-image-btn" id="attachImageBtn" aria-label="Attach image (or paste an image to attach)">

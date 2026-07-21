@@ -15,6 +15,7 @@
     border-radius: var(--radius-md);
     box-shadow: none;
     overflow: hidden;
+    width: min(100%, 640px);
     animation: slideDown var(--transition-fast) ease-out;
 }
 
@@ -78,6 +79,17 @@
     justify-content: space-between;
     gap: 8px;
     padding: 0 var(--space-3) var(--space-2);
+}
+
+@media (max-width: 560px) {
+    .editor-footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .editor-buttons {
+        align-self: flex-end;
+    }
 }
 
 .editor-footer-actions {

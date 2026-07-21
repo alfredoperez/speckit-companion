@@ -109,6 +109,24 @@
     color: var(--text-primary);
 }
 
+.writing-tips {
+    margin: 0 0 8px;
+    color: var(--text-body);
+    font-size: 0.85em;
+}
+
+.writing-tips summary {
+    width: fit-content;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.writing-tips p {
+    max-width: 68ch;
+    margin: 6px 0 0;
+    line-height: 1.5;
+}
+
 .spec-editor-textarea {
     flex: 1;
     width: 100%;
@@ -225,6 +243,17 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+.create-spec-fixture-image {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    place-items: center;
+    background: var(--bg-elevated);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 1.4rem;
 }
 
 .image-thumbnail .image-name {

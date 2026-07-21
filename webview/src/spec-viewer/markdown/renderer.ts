@@ -134,11 +134,11 @@ function highlightTree(text: string): string {
  * Uses single "+" button for GitHub-style inline review
  */
 // Comment icon SVG for line action buttons
-const COMMENT_ICON_SVG = `<svg width="14" height="14" viewBox="0 0 24 24"><path fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 6h8m-4-4v8M6.099 19.5q-1.949-.192-2.927-1.172C2 17.157 2 15.271 2 11.5V11c0-3.771 0-5.657 1.172-6.828S6.229 3 10 3h1.5m-5 15c-.205 1.002-1.122 3.166-.184 3.865c.49.357 1.271-.024 2.834-.786c1.096-.535 2.206-1.148 3.405-1.424c.438-.1.885-.143 1.445-.155c3.771 0 5.657 0 6.828-1.172C21.947 17.21 21.998 15.44 22 12M8 14h6M8 9h3" color="currentColor"/></svg>`;
+const COMMENT_ICON_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 6h8m-4-4v8M6.099 19.5q-1.949-.192-2.927-1.172C2 17.157 2 15.271 2 11.5V11c0-3.771 0-5.657 1.172-6.828S6.229 3 10 3h1.5m-5 15c-.205 1.002-1.122 3.166-.184 3.865c.49.357 1.271-.024 2.834-.786c1.096-.535 2.206-1.148 3.405-1.424c.438-.1.885-.143 1.445-.155c3.771 0 5.657 0 6.828-1.172C21.947 17.21 21.998 15.44 22 12M8 14h6M8 9h3"/></svg>`;
 
 function wrapWithLineActions(content: string, lineNum: number): string {
     return `<div class="line" data-line="${lineNum}">
-        <button class="line-add-btn" data-line="${lineNum}" title="Add comment">
+        <button class="line-add-btn" data-line="${lineNum}" title="Add comment to line ${lineNum}" aria-label="Add comment to line ${lineNum}">
             ${COMMENT_ICON_SVG}
         </button>
         <div class="line-content">${content}</div>
@@ -152,7 +152,7 @@ function wrapWithLineActions(content: string, lineNum: number): string {
  * inline "+" comment affordance still appears on hover.
  */
 function wrapComponentLine(componentHtml: string, lineNum: number): string {
-    return `<div class="line component-line" data-line="${lineNum}"><button class="line-add-btn" data-line="${lineNum}" title="Add comment">${COMMENT_ICON_SVG}</button>${componentHtml}<div class="line-comment-slot"></div></div>`;
+    return `<div class="line component-line" data-line="${lineNum}"><button class="line-add-btn" data-line="${lineNum}" title="Add comment to line ${lineNum}" aria-label="Add comment to line ${lineNum}">${COMMENT_ICON_SVG}</button>${componentHtml}<div class="line-comment-slot"></div></div>`;
 }
 
 /**
@@ -481,7 +481,7 @@ export function renderMarkdown(markdown: string): string {
                     captureHtml = `<div class="task-item__capture">${didHtml}${filesHtml}</div>`;
                 }
                 html += `<li ${classAttr} data-line="${sourceLineNum}"${dataTaskAttr}>` +
-                    `<button class="line-add-btn" data-line="${sourceLineNum}" title="Add comment">${COMMENT_ICON_SVG}</button>` +
+                    `<button class="line-add-btn" data-line="${sourceLineNum}" title="Add comment to task line ${sourceLineNum}" aria-label="Add comment to task line ${sourceLineNum}">${COMMENT_ICON_SVG}</button>` +
                     `<input type="checkbox" ${checked} data-line="${sourceLineNum}">` +
                     `<span class="task-text line-content">${innerText}</span>` +
                     captureHtml +
@@ -490,7 +490,7 @@ export function renderMarkdown(markdown: string): string {
             } else {
                 // Wrap regular list items with line actions for commenting
                 html += `<li class="line" data-line="${sourceLineNum}">
-                    <button class="line-add-btn" data-line="${sourceLineNum}" title="Add comment">
+                    <button class="line-add-btn" data-line="${sourceLineNum}" title="Add comment to list line ${sourceLineNum}" aria-label="Add comment to list line ${sourceLineNum}">
                         ${COMMENT_ICON_SVG}
                     </button>
                     <span class="line-content">${content}</span>
@@ -524,7 +524,7 @@ export function renderMarkdown(markdown: string): string {
             const content = parseInline(olMatch[2]);
             // Wrap ordered list items with line actions for commenting
             html += `<li class="line" data-line="${sourceLineNum}">
-                <button class="line-add-btn" data-line="${sourceLineNum}" title="Add comment">
+                <button class="line-add-btn" data-line="${sourceLineNum}" title="Add comment to list line ${sourceLineNum}" aria-label="Add comment to list line ${sourceLineNum}">
                     ${COMMENT_ICON_SVG}
                 </button>
                 <span class="line-content">${content}</span>

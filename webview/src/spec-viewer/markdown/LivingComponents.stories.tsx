@@ -8,6 +8,7 @@ import {
     setTaskSummaries,
 } from './index';
 import { applyHighlighting } from '../highlighting';
+import webviewSharedCapability from '../../../../capabilities/webview-shared/spec.md?raw';
 
 /**
  * Shared living-mode host: renders a markdown fixture through the real
@@ -54,6 +55,11 @@ export default meta;
 type Story = StoryObj<typeof LivingDoc>;
 
 const DRAFT_BANNER = '> [DRAFT] Surface-first draft from existing code — review before trusting.';
+
+export const CompleteCapability: Story = {
+    name: 'Complete capability · Webview Shared',
+    args: { md: webviewSharedCapability },
+};
 
 // ── User Story 1 — draft notice + purpose callout ──────────────────────
 

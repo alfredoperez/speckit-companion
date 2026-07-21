@@ -4,13 +4,14 @@
  * preprocessTaskPhases (phase number chip + MVP / priority chips).
  */
 
-/* Compact tinted card instead of an underlined heading. */
+/* Quiet phase boundary: structure without a competing filled panel. */
 #markdown-content .phase-header {
   margin: var(--space-6) 0 var(--space-3);
-  padding: 14px 16px;
+  padding: 14px 0 0;
   border: none;
-  border-radius: var(--radius-md);
-  background: var(--bg-elevated);
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
 }
 
 #markdown-content .phase-header:first-child {

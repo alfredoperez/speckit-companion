@@ -91,11 +91,14 @@ describe('LivingSpecsCard', () => {
         btn!.click();
         expect(postMessage).toHaveBeenCalledWith({
             type: 'openLivingSpec',
+            capabilityName: 'todos',
             specPath: 'capabilities/todos/spec.md',
         });
     });
 
-    it('renders an unresolved capability as a plain, non-clickable name', () => {
+    it('keeps an unresolved historical capability actionable by name', () => {
+        const postMessage = jest.fn();
+        (globalThis as { vscode?: unknown }).vscode = { postMessage };
         const c = renderCard(
             baseState({
                 livingSpecs: {
@@ -105,8 +108,13 @@ describe('LivingSpecsCard', () => {
                 },
             }),
         );
-        expect(c.querySelector('button.living-specs-chip--link')).toBeNull();
-        expect(c.querySelector('.living-specs-chip')?.textContent).toBe('ghost');
+        const button = c.querySelector<HTMLButtonElement>('button.living-specs-chip--link');
+        expect(button?.textContent).toBe('ghost');
+        button!.click();
+        expect(postMessage).toHaveBeenCalledWith({
+            type: 'openLivingSpec',
+            capabilityName: 'ghost',
+        });
     });
 
     it('shows only the capability names — never the full requirement bodies', () => {

@@ -87,7 +87,7 @@ const CommentIconSVG = () => (
   <svg width="14" height="14" viewBox="0 0 24 24">
     <path
       fill="none"
-      stroke="#ffffff"
+      stroke="currentColor"
       stroke-linecap="round"
       stroke-linejoin="round"
       stroke-width="1.5"

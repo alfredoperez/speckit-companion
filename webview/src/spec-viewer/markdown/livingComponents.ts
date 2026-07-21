@@ -12,7 +12,7 @@
 
 import { parseInline, escapeHtml } from './inline';
 
-const COMMENT_ICON_SVG = `<svg width="14" height="14" viewBox="0 0 24 24"><path fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 6h8m-4-4v8M6.099 19.5q-1.949-.192-2.927-1.172C2 17.157 2 15.271 2 11.5V11c0-3.771 0-5.657 1.172-6.828S6.229 3 10 3h1.5m-5 15c-.205 1.002-1.122 3.166-.184 3.865c.49.357 1.271-.024 2.834-.786c1.096-.535 2.206-1.148 3.405-1.424c.438-.1.885-.143 1.445-.155c3.771 0 5.657 0 6.828-1.172C21.947 17.21 21.998 15.44 22 12M8 14h6M8 9h3" color="currentColor"/></svg>`;
+const COMMENT_ICON_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 6h8m-4-4v8M6.099 19.5q-1.949-.192-2.927-1.172C2 17.157 2 15.271 2 11.5V11c0-3.771 0-5.657 1.172-6.828S6.229 3 10 3h1.5m-5 15c-.205 1.002-1.122 3.166-.184 3.865c.49.357 1.271-.024 2.834-.786c1.096-.535 2.206-1.148 3.405-1.424c.438-.1.885-.143 1.445-.155c3.771 0 5.657 0 6.828-1.172C21.947 17.21 21.998 15.44 22 12M8 14h6M8 9h3"/></svg>`;
 
 /**
  * Per-region fallback wrapper: run `fn` over `region`; if it
@@ -117,7 +117,7 @@ function buildScenario(title: string, steps: { kw: string; rest: string }[]): st
             const rest = parseInline(s.rest.trim());
             return (
                 `<li class="living-scenario-step line ${STEP_CLASS[s.kw]}" data-line="${lineNum}" data-list-id="${listId}">` +
-                `<button class="line-add-btn" data-line="${lineNum}" data-list-id="${listId}" title="Add comment">${COMMENT_ICON_SVG}</button>` +
+                `<button class="line-add-btn" data-line="${lineNum}" data-list-id="${listId}" title="Add comment to scenario line ${lineNum}" aria-label="Add comment to scenario line ${lineNum}">${COMMENT_ICON_SVG}</button>` +
                 `<div class="line-content"><span class="living-scenario-kw">${s.kw}</span> ${rest}</div>` +
                 `<div class="line-comment-slot"></div>` +
                 `</li>`
@@ -128,7 +128,7 @@ function buildScenario(title: string, steps: { kw: string; rest: string }[]): st
     // data-line 0 (steps are 1-based) under the scenario's list id.
     const titleHtml = title
         ? `<div class="living-scenario-title line" data-line="0" data-list-id="${listId}">` +
-          `<button class="line-add-btn" data-line="0" data-list-id="${listId}" title="Add comment">${COMMENT_ICON_SVG}</button>` +
+          `<button class="line-add-btn" data-line="0" data-list-id="${listId}" title="Add comment to scenario title" aria-label="Add comment to scenario title">${COMMENT_ICON_SVG}</button>` +
           `<div class="line-content">${parseInline(title)}</div>` +
           `<div class="line-comment-slot"></div>` +
           `</div>`
@@ -313,7 +313,7 @@ function buildUncovered(scope: string, groups: UncoveredGroup[]): string {
     // (its own stable list id) rather than baking it into the summary blob.
     const scopeHtml = scope
         ? `<div class="living-uncovered-scope line" data-line="1" data-list-id="living-uncovered-scope">` +
-          `<button class="line-add-btn" data-line="1" data-list-id="living-uncovered-scope" title="Add comment">${COMMENT_ICON_SVG}</button>` +
+          `<button class="line-add-btn" data-line="1" data-list-id="living-uncovered-scope" title="Add comment to uncovered scope" aria-label="Add comment to uncovered scope">${COMMENT_ICON_SVG}</button>` +
           `<div class="line-content">${parseInline(scope)}</div>` +
           `<div class="line-comment-slot"></div>` +
           `</div>`
@@ -326,7 +326,7 @@ function buildUncovered(scope: string, groups: UncoveredGroup[]): string {
                     const lineNum = idx + 1;
                     return (
                         `<li class="living-uncovered-file line" data-line="${lineNum}" data-list-id="${listId}">` +
-                        `<button class="line-add-btn" data-line="${lineNum}" data-list-id="${listId}" title="Add comment">${COMMENT_ICON_SVG}</button>` +
+                        `<button class="line-add-btn" data-line="${lineNum}" data-list-id="${listId}" title="Add comment to uncovered file ${lineNum}" aria-label="Add comment to uncovered file ${lineNum}">${COMMENT_ICON_SVG}</button>` +
                         `<div class="line-content">${parseInline(f)}</div>` +
                         `<div class="line-comment-slot"></div>` +
                         `</li>`
@@ -386,7 +386,7 @@ export function preprocessLivingUncovered(markdown: string): string {
             // Keep the authored sentinel line commentable, like the scope line.
             component =
                 `<div class="living-uncovered-none line" data-line="1" data-list-id="living-uncovered-none">` +
-                `<button class="line-add-btn" data-line="1" data-list-id="living-uncovered-none" title="Add comment">${COMMENT_ICON_SVG}</button>` +
+                `<button class="line-add-btn" data-line="1" data-list-id="living-uncovered-none" title="Add comment to uncovered summary" aria-label="Add comment to uncovered summary">${COMMENT_ICON_SVG}</button>` +
                 `<div class="line-content">${parseInline(text)}</div>` +
                 `<div class="line-comment-slot"></div>` +
                 `</div>`;

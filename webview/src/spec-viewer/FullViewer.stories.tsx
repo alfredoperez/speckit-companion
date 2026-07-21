@@ -25,6 +25,7 @@ import { renderMarkdown, setCurrentTask, setHasSpecContext, setTaskSummaries } f
 import { applyHighlighting } from './highlighting';
 import { buildToc } from './toc';
 import { mockDoc, mockRelatedDoc, mockNavState } from './components/__stories__/mockData';
+import { deriveStepHistory, deriveTimingSummary } from '../../../src/features/specs/stepHistoryDerivation';
 
 import spec392 from '../../../specs/392-living-specs-viewer/spec.md?raw';
 import plan392 from '../../../specs/392-living-specs-viewer/plan.md?raw';
@@ -51,6 +52,16 @@ import dataModel394 from '../../../specs/394-adopt-codex-design/data-model.md?ra
 import checklist394 from '../../../specs/394-adopt-codex-design/checklists/requirements.md?raw';
 import contract394 from '../../../specs/394-adopt-codex-design/contracts/ui-contract.md?raw';
 import ctx394Raw from '../../../specs/394-adopt-codex-design/.spec-context.json?raw';
+import spec406 from '../../../specs/406-living-spec-components/spec.md?raw';
+import plan406 from '../../../specs/406-living-spec-components/plan.md?raw';
+import tasks406 from '../../../specs/406-living-spec-components/tasks.md?raw';
+import ctx406Raw from '../../../specs/406-living-spec-components/.spec-context.json?raw';
+import viewerUiLiving from './viewer-ui.spec.md?raw';
+import specViewerLiving from '../../../src/features/spec-viewer/spec-viewer.spec.md?raw';
+import spec393 from '../../../specs/393-implement-button-lost/spec.md?raw';
+import plan393 from '../../../specs/393-implement-button-lost/plan.md?raw';
+import tasks393 from '../../../specs/393-implement-button-lost/tasks.md?raw';
+import ctx393Raw from '../../../specs/393-implement-button-lost/.spec-context.json?raw';
 
 /** The slice of an on-disk .spec-context.json these stories consume. */
 interface SpecContextData {
@@ -68,11 +79,19 @@ interface SpecContextData {
     expectations?: string[];
     context?: string[];
     verified?: ViewerState['verified'];
+    coverage?: Record<string, { title?: string; tasks?: string[]; tests?: string[] }>;
+    classification?: ViewerState['classification'];
+    livingSpecs?: {
+        loaded?: string[];
+        synced?: string[];
+    };
 }
 
 const ctx392 = JSON.parse(ctx392Raw) as SpecContextData;
 const ctx172 = JSON.parse(ctx172Raw) as SpecContextData;
 const ctx394 = JSON.parse(ctx394Raw) as SpecContextData;
+const ctx406 = JSON.parse(ctx406Raw) as SpecContextData;
+const ctx393 = JSON.parse(ctx393Raw) as SpecContextData;
 
 /** Every openable document of a spec, keyed by the `documentType` the nav emits. */
 interface DocEntry {
@@ -114,6 +133,18 @@ const docs394: DocSet = {
     research: { md: research394, label: 'Research', parentStep: 'plan' },
     'data-model': { md: dataModel394, label: 'Data Model', parentStep: 'plan' },
     contract: { md: contract394, label: 'UI Contract', parentStep: 'plan' },
+};
+
+const docs406: DocSet = {
+    spec: { md: spec406, label: 'Specification' },
+    plan: { md: plan406, label: 'Plan' },
+    tasks: { md: tasks406, label: 'Tasks' },
+};
+
+const docs393: DocSet = {
+    spec: { md: spec393, label: 'Specification' },
+    plan: { md: plan393, label: 'Plan' },
+    tasks: { md: tasks393, label: 'Tasks' },
 };
 
 function relatedDocsFor(docs: DocSet) {
@@ -170,6 +201,21 @@ function vsFromContext(
     footer: SerializedFooterAction[],
     overrides: Partial<ViewerState> = {},
 ): ViewerState {
+    // Use the same production timing derivation as the extension provider so
+    // integrated stories never manufacture durations from raw journal events.
+    const derivedStepHistory = deriveStepHistory(
+        ctx.history as Parameters<typeof deriveStepHistory>[0],
+        ctx.currentStep as Parameters<typeof deriveStepHistory>[1],
+        ctx.status as Parameters<typeof deriveStepHistory>[2],
+    );
+    const coverage = ctx.coverage
+        ? Object.entries(ctx.coverage).map(([req, row]) => ({
+            req,
+            title: row.title,
+            tasks: row.tasks ?? [],
+            tests: row.tests ?? [],
+        }))
+        : undefined;
     return {
         status: ctx.status,
         activeStep: ctx.currentStep,
@@ -179,7 +225,8 @@ function vsFromContext(
         activeSubstep: null,
         footer,
         history: ctx.history,
-        stepHistory: stepHistoryFrom(ctx.history),
+        stepHistory: derivedStepHistory as ViewerState['stepHistory'],
+        timing: deriveTimingSummary(derivedStepHistory),
         approach: ctx.approach,
         lastAction: ctx.last_action,
         taskSummaries: ctx.task_summaries,
@@ -188,6 +235,11 @@ function vsFromContext(
         expectations: ctx.expectations,
         context: ctx.context,
         verified: ctx.verified,
+        coverage,
+        classification: ctx.classification,
+        livingSpecs: ctx.livingSpecs
+            ? { loaded: ctx.livingSpecs.loaded ?? [], synced: ctx.livingSpecs.synced ?? [] }
+            : undefined,
         ...overrides,
     } as ViewerState;
 }
@@ -244,22 +296,25 @@ interface InteractiveViewerProps {
     vs: ViewerState;
     extraNav?: Partial<NavState>;
     view?: 'overview' | 'document';
+    livingDocs?: Record<string, DocEntry>;
 }
 
 /** FullViewer + working navigation: answers the nav's `stepperClick` /
  *  `switchDocument` messages in-story, standing in for messageHandlers.ts. */
-function InteractiveViewer({ ctx, docs, initialDoc, vs, extraNav, view }: InteractiveViewerProps) {
+function InteractiveViewer({ ctx, docs, initialDoc, vs, extraNav, view, livingDocs }: InteractiveViewerProps) {
     const [doc, setDoc] = useState(initialDoc);
 
     useEffect(() => {
         const host = window as unknown as { vscode: { postMessage: (msg: unknown) => void } };
         const original = host.vscode.postMessage;
         host.vscode.postMessage = (msg: unknown) => {
-            const m = msg as { type?: string; phase?: string; documentType?: string };
+            const m = msg as { type?: string; phase?: string; documentType?: string; capabilityName?: string };
             if (m?.type === 'stepperClick' && m.phase && docs[m.phase]) {
                 setDoc(m.phase);
             } else if (m?.type === 'switchDocument' && m.documentType && docs[m.documentType]) {
                 setDoc(m.documentType);
+            } else if (m?.type === 'openLivingSpec' && m.capabilityName && livingDocs?.[m.capabilityName]) {
+                setDoc(`living:${m.capabilityName}`);
             } else {
                 original(msg);
             }
@@ -267,17 +322,22 @@ function InteractiveViewer({ ctx, docs, initialDoc, vs, extraNav, view }: Intera
         return () => {
             host.vscode.postMessage = original;
         };
-    }, [docs]);
+    }, [docs, livingDocs]);
+
+    const livingName = doc.startsWith('living:') ? doc.slice('living:'.length) : null;
+    const activeDoc = livingName ? livingDocs?.[livingName] : docs[doc];
 
     const nav = navFromContext(ctx, {
-        currentDoc: doc as DocumentType,
+        currentDoc: (livingName ? 'spec' : doc) as DocumentType,
         relatedDocs: relatedDocsFor(docs),
-        isViewingRelatedDoc: !CORE_DOCS.includes(doc),
-        docTypeLabel: docs[doc].label,
+        isViewingRelatedDoc: livingName ? false : !CORE_DOCS.includes(doc),
+        docTypeLabel: activeDoc?.label,
+        livingMode: livingName !== null,
+        specContextName: livingName ?? ctx.specName,
         ...extraNav,
     });
 
-    return <FullViewer md={docs[doc].md} nav={nav} vs={vs} view={view} />;
+    return <FullViewer md={activeDoc?.md ?? docs[initialDoc].md} nav={nav} vs={vs} view={livingName ? 'document' : view} />;
 }
 
 const meta: Meta = {
@@ -310,6 +370,36 @@ export const ComposableCommandNodes172: Story = {
     name: '172 · Composable Command Nodes',
     render: () => (
         <InteractiveViewer ctx={ctx172} docs={docs172} initialDoc="spec" vs={vsFromContext(ctx172, completedFooter)} />
+    ),
+};
+
+export const LivingComponents406: Story = {
+    name: '406 · Living Components (Overview + real artifacts)',
+    render: () => (
+        <InteractiveViewer
+            ctx={ctx406}
+            docs={docs406}
+            initialDoc="spec"
+            view="overview"
+            vs={vsFromContext(ctx406, completedFooter)}
+            livingDocs={{
+                'viewer-ui': { md: viewerUiLiving, label: 'viewer-ui' },
+                'spec-viewer': { md: specViewerLiving, label: 'spec-viewer' },
+            }}
+        />
+    ),
+};
+
+export const IncompleteMetadata393: Story = {
+    name: '393 · Incomplete metadata (no Approach)',
+    render: () => (
+        <InteractiveViewer
+            ctx={ctx393}
+            docs={docs393}
+            initialDoc="spec"
+            view="overview"
+            vs={vsFromContext(ctx393, completedFooter)}
+        />
     ),
 };
 

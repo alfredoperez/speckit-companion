@@ -7,6 +7,7 @@
 
 import type { Meta, StoryObj } from '@storybook/preact';
 import { CreateSpecMock } from '../CreateSpecMock';
+import '../../../styles/spec-editor.css';
 
 const meta: Meta = {
     title: 'SpecEditor/CreateSpec',
@@ -80,4 +81,19 @@ export const StockWorkflow: Story = {
             showAuto={false}
         />
     ),
+};
+
+export const WithAttachments: Story = {
+    name: 'Attachments',
+    render: () => (
+        <CreateSpecMock
+            initialContent="Use the attached reference states for the refreshed viewer."
+            attachments={['viewer-wide.png', 'viewer-narrow.png']}
+        />
+    ),
+};
+
+export const Narrow: Story = {
+    name: 'Narrow',
+    render: () => <CreateSpecMock initialContent="Make the viewer usable in a narrow split pane." narrow />,
 };
