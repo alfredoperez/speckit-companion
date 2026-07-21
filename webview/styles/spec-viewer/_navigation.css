@@ -229,31 +229,6 @@
     pointer-events: none;
 }
 
-/* Action step — a pipeline slot with no document: marked, non-openable,
-   still carrying its completion/in-flight state. Overrides the disabled
-   dimming (must follow it in source order) and keeps pointer events so the
-   explanatory tooltip works. */
-.step-tab.action {
-    opacity: 1;
-    cursor: default;
-    pointer-events: auto;
-}
-
-.step-tab.action .step-status {
-    border-style: dashed;
-}
-
-.step-tab.action.done .step-status,
-.step-tab.action.in-flight .step-status {
-    border-style: solid;
-}
-
-.step-tab.action .step-status .codicon-zap {
-    color: var(--text-muted);
-    font-size: 10px;
-    line-height: 1;
-}
-
 /* Live elapsed-time indicator rendered on in-flight steps */
 .step-tab__elapsed {
     margin-left: auto;
