@@ -113,7 +113,7 @@ describe('TelemetryService', () => {
         });
     });
 
-    describe('the beta snapshot', () => {
+    describe('the workflow + settings snapshot', () => {
         it('assembles the workflow + feature-flag fields from config', () => {
             mockConfig({
                 defaultWorkflow: 'companion',
