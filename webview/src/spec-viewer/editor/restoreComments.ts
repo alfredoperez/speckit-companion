@@ -22,19 +22,29 @@ function contentText(el: Element): string {
     return el.querySelector('.line-content')?.textContent?.trim() || '';
 }
 
-/** Snapshot the rendered lines once so anchoring is O(lines), not O(lines·comments). */
-function renderedLines(): RenderedLine[] {
-    return (Array.from(document.querySelectorAll('.line')) as HTMLElement[]).map(el => ({
+/** Snapshot the rendered line elements once so anchoring is O(lines), not O(lines·comments). */
+function renderedElements(): HTMLElement[] {
+    return Array.from(document.querySelectorAll('.line')) as HTMLElement[];
+}
+
+function toRenderedLines(els: HTMLElement[]): RenderedLine[] {
+    return els.map((el, index) => ({
+        index,
         line: Number(el.getAttribute('data-line')),
         content: contentText(el),
     }));
 }
 
-/** Best-effort element to anchor a restored comment to, given a line snapshot. */
-function anchorElement(c: ReviewComment, rendered: RenderedLine[]): HTMLElement | null {
+/**
+ * Best-effort element to anchor a restored comment to, given the element
+ * snapshot. Mounts by the resolved line's DOM `index`, not by re-querying
+ * `data-line` — component lists reuse list-local `data-line` values, so a global
+ * `.line[data-line="N"]` lookup could mount onto the wrong element.
+ */
+function anchorElement(c: ReviewComment, els: HTMLElement[], rendered: RenderedLine[]): HTMLElement | null {
     const target = resolveAnchorLine(c, rendered);
     if (target === null) return null;
-    return document.querySelector(`.line[data-line="${target}"]`) as HTMLElement | null;
+    return els[target.index] ?? null;
 }
 
 /**
@@ -48,10 +58,11 @@ export function restoreComments(): void {
     const doc = currentDoc();
     if (!doc) return;
 
-    const rendered = renderedLines();
+    const els = renderedElements();
+    const rendered = toRenderedLines(els);
     for (const c of comments) {
         if (c.doc !== doc) continue;
-        const el = anchorElement(c, rendered);
+        const el = anchorElement(c, els, rendered);
         if (el) addRestoredRefinement(c, el);
     }
 }
