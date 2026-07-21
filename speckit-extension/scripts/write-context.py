@@ -172,12 +172,15 @@ def update_context(
 def journal_finish(feature_dir: Path, step: str, by: str, substep: str | None = None) -> Path | None:
     """Append a single step- or substep-level **finish** to history and nothing else.
 
-    This is the AI's timing self-close for the steps the lifecycle hooks don't
-    close: a step-level finish for plan/tasks/clarify/analyze (substep=None), or a
-    substep boundary (plan: research/design; tasks: generate). The capture hooks
-    write the step START + status; they do NOT write these completes, so the AI
-    has to — and it used to hand-author the JSON, which is what produced a
-    duplicate `status` key. Routing it through the script makes the write atomic
+    This is the AI's timing self-close for the boundaries the extension doesn't
+    stamp: a step-level finish for clarify/analyze (substep=None), or a substep
+    boundary (plan: research/design; tasks: generate). The pipeline steps
+    (specify/plan/tasks/implement) are extension-stamped in Companion runs —
+    bodies record the start, the specify body / after-step hooks record the
+    complete — and an earlier `ai` step-level complete would win the idempotent
+    append and block that trusted close; only hook-less stock runs still
+    self-close plan/tasks. The AI used to hand-author the JSON, which is what
+    produced a duplicate `status` key. Routing it through the script makes the write atomic
     (no malformed file possible) and stops the AI ever editing .spec-context.json
     by hand. Deliberately does NOT touch `status` or `currentStep` (the hooks own
     those) — it only adds the honest finish timestamp. Idempotent on (step, substep);
@@ -344,8 +347,9 @@ def main() -> int:
     parser.add_argument(
         "--finish", action="store_true",
         help="Append a pure timing finish for --step (and optional --substep) to history "
-             "without touching status/currentStep — the AI's self-close for plan/tasks/"
-             "clarify/analyze and their substeps. Replaces hand-authored JSON edits.",
+             "without touching status/currentStep — the AI's self-close for clarify/analyze "
+             "and the plan/tasks substeps (hook-less stock runs also self-close plan/tasks). "
+             "Replaces hand-authored JSON edits.",
     )
     parser.add_argument(
         "--advance", action="store_true",

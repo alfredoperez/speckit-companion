@@ -58,6 +58,10 @@ You **MUST** consider the user input before proceeding (if not empty).
 ## Outline
 
 1. **Setup**: Run `{SCRIPT}` from repo root and parse JSON for FEATURE_SPEC, IMPL_PLAN, SPECS_DIR, BRANCH. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
+   - Record the **plan START** so the step's duration begins now (the script stamps the real clock; the after-plan hook records the completion — do not hand-write plan timing):
+     ```bash
+     python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <directory containing FEATURE_SPEC> --step plan --status planning --kind start --by extension
+     ```
 
 2. **Load context**: Read FEATURE_SPEC and `/memory/constitution.md`. Load IMPL_PLAN template (already copied).
 
