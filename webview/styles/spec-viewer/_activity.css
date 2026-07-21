@@ -308,6 +308,69 @@
 }
 
 /* ============================================
+   Living specs card — compact chips
+
+   One chip per capability the run loaded/folded back. The full content lives
+   in the Living Specs viewer, so a resolved chip links there rather than
+   reprinting requirements here.
+   ============================================ */
+
+.living-specs-chips {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.living-specs-chips__item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    min-width: 0;
+}
+
+.living-specs-chip {
+    display: inline-block;
+    max-width: 22em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    color: var(--text-body);
+}
+
+.living-specs-chip--link {
+    cursor: pointer;
+}
+
+.living-specs-chip--link:hover {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+.living-specs-chip--link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.living-specs-chip__synced {
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+/* ============================================
    Redesign: hero strip, plan section, tabs
    ============================================ */
 

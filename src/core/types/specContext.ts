@@ -223,22 +223,21 @@ export interface LivingSpecsView {
     loaded: string[];
     synced: string[];
     /**
-     * Per-capability readable content, resolved and parsed extension-side.
-     * Absent when content loading wasn't attempted (legacy payloads render the
-     * names-only list). Every loaded/synced name appears exactly once.
+     * Per-capability run-log chip metadata (name, resolved spec path, synced /
+     * delta state) — never the spec text itself, which the Living Specs viewer
+     * shows. Absent on legacy payloads (render the names-only list). Every
+     * loaded/synced name appears exactly once.
      */
     capabilities?: CapabilityContentView[];
 }
 
-/** One touched capability, pre-parsed for rendering: plain text only. */
+/** One touched capability, resolved to a clickable run-log chip. */
 export interface CapabilityContentView {
     name: string;
-    /** False when the spec file is missing, unreadable, out-of-root, oversized, or unresolved. */
+    /** False when the capability couldn't be resolved to a spec path within the workspace. */
     available: boolean;
-    /** Intro paragraph before the requirements section, marker-stripped. */
-    purpose?: string;
-    /** One row per requirement heading; text is the first body paragraph, marker-stripped. */
-    requirements?: { id: string; text: string }[];
+    /** Workspace-relative path to the capability spec; absent when unresolved/out-of-root. */
+    specPath?: string;
     synced: boolean;
     /** Fold-back counts from the feature spec's delta blocks; absent when none (never zeros). */
     delta?: { added?: number; modified?: number; removed?: number; renamed?: number };

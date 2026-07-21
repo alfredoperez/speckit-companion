@@ -469,6 +469,11 @@ export type ViewerToExtensionMessage =
           type: 'openFile';
           filename: string;
       }
+    // Living-specs chip click — open the capability in the Living Specs viewer
+    | {
+          type: 'openLivingSpec';
+          specPath: string;
+      }
     // Webview render-time error (reported by error boundaries)
     | {
           type: 'webviewError';
