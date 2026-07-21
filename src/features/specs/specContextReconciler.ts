@@ -96,13 +96,7 @@ export function reconcile(ctx: SpecContext): SpecContext | null {
         changed = true;
     }
 
-    // Settle a lagging in-progress status. When history records the current
-    // step's completion but `status` still names that step running — a
-    // journal-only `--finish` self-close with no hook to flip the status — move
-    // status forward to the step's settled form (`tasking → ready-to-implement`)
-    // so the on-disk record matches the run and the panel unlocks. Forward-only
-    // and never for implement: reaching the terminal `completed` stays the
-    // user's mark-complete action.
+    // Settle a lagging in-progress status forward when history shows the step done; never for implement (mark-complete stays the user's action).
     const inProgress = STATUS_OWNING_STEP.get(result.status);
     if (
         inProgress &&

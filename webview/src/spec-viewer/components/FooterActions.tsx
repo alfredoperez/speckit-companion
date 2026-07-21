@@ -24,9 +24,7 @@ export function FooterActions(_props: FooterActionsProps) {
     // it reaches the closure gate. CatalogFooter additionally suppresses them once
     // the footer offers a closure action.
     const isActive = status !== 'implemented' && status !== 'completed' && status !== 'archived';
-    // A step whose completion is recorded in history is settled even when
-    // `status` still names it running — so ask the resilient derivation, not the
-    // status string alone, or a lagging status keeps the forward button locked.
+    // Ask the resilient (history-aware) derivation, not the status string, so a lagging status can't lock the button.
     const runningStep = inFlightStepFor(status);
     const stepInFlight = runningStep !== undefined && isStepInFlight(runningStep, {
         status,

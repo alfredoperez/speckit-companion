@@ -266,15 +266,7 @@ Zones: **Left** = `regenerate`. **Right** = `refine`, `approve`, `reactivate`,
 | `completed` | — | **Reactivate**, **Archive** | terminal; Regenerate hidden |
 | `archived` | — | **Reactivate** | terminal; Archive hidden |
 
-The `Approve` label resolves to the next workflow step (`getApproveLabel`); it is
-hidden on the final `implement` step and whenever a past tab is viewed (the
-footer always reflects the true workflow stage, not the viewed tab). While a step
-is in flight the `CatalogFooter` suppresses its forward-motion button and keeps
-`Regenerate` (plus any closure/refine actions); the moment the step settles — its
-`status` settles **or** its completion is recorded in history (`FooterActions`
-reads the resilient `isStepInFlight`, not the status string alone, so a lagging
-status can't keep it locked, #491) — the forward button reappears; it never
-leaves the action bar empty.
+The `Approve` label resolves to the next workflow step (`getApproveLabel`); it is hidden on the final `implement` step and whenever a past tab is viewed (the footer always reflects the true workflow stage, not the viewed tab). While a step is in flight the `CatalogFooter` suppresses its forward-motion button and keeps `Regenerate` (plus any closure/refine actions); the moment the step settles — its `status` settles **or** its completion is recorded in history (`FooterActions` reads the resilient `isStepInFlight`, not the status string alone, so a lagging status can't keep it locked, #491) — the forward button reappears; it never leaves the action bar empty.
 
 A status recovered via the sidebar gear maps to the **same row** as its normal pause stage: forcing `ready-to-implement` after an interrupted implement run restores Approve → **Implement**, and forcing `planned` restores Approve → **Tasks** — the stale start left by the interrupted run does not suppress the forward button (#414, "Rollback recovery" above). The oracle rows in `footerMatrix.fixtures.ts` pin these recovered states alongside the normal ones.
 

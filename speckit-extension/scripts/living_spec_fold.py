@@ -322,7 +322,7 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
                 f"({', '.join(loaded)}) but this feature's spec carries no "
                 "ADDED/MODIFIED/REMOVED/RENAMED delta block — nothing to fold yet. "
                 "Add a delta block for the changed requirement(s), or run "
-                "/speckit-companion-living-drift to sync the capability spec.",
+                "/speckit.companion.living-drift to sync the capability spec.",
                 file=sys.stderr,
             )
         else:
