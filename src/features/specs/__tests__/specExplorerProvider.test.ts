@@ -37,9 +37,11 @@ jest.mock('../../workflows', () => ({
     },
 }));
 
-// Mock specContextManager
+// Mock specContextManager — keep the real deriveSpecName so the readable-name
+// resolver humanizes slugs exactly as it does at runtime.
 jest.mock('../specContextManager', () => ({
     readSpecContextSync: jest.fn().mockReturnValue(undefined),
+    deriveSpecName: jest.requireActual('../specContextManager').deriveSpecName,
 }));
 
 import { resolveSpecDirectories, hasDuplicateNames } from '../../../core/specDirectoryResolver';
@@ -326,6 +328,65 @@ describe('SpecExplorerProvider', () => {
             const docs = await provider.getChildren(specs[0]);
 
             expect(docs[0].command?.command).toBe('speckit.viewSpecDocument');
+        });
+    });
+
+    describe('readable spec names (#502)', () => {
+        async function getSpecRow(specName: string, specContext?: any): Promise<any> {
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: specName, path: `specs/${specName}` },
+            ]);
+            (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
+            (readSpecContextSync as jest.Mock).mockReturnValue(specContext || undefined);
+            const groups = await provider.getChildren();
+            const specs = await provider.getChildren(groups[0]);
+            return specs[0];
+        }
+
+        it('labels a row with the recorded specName when one is present', async () => {
+            const row = await getSpecRow('515-readable-spec-names', {
+                workflow: 'default',
+                currentStep: 'specify',
+                status: 'draft',
+                specName: 'Readable Spec Names',
+            });
+            expect(row.label).toBe('Readable Spec Names');
+        });
+
+        it('labels a row with the humanized slug when no name is recorded', async () => {
+            const row = await getSpecRow('406-living-spec-components');
+            expect(row.label).toBe('Living Spec Components');
+        });
+
+        it('keeps the slug as the identifier: open command still carries the slug directory', async () => {
+            const row = await getSpecRow('515-readable-spec-names', {
+                workflow: 'default',
+                currentStep: 'specify',
+                status: 'draft',
+                specName: 'Readable Spec Names',
+            });
+            expect(row.command).toEqual({
+                command: 'speckit.openSpec',
+                title: 'Open 515-readable-spec-names',
+                arguments: [path.join(WORKSPACE_ROOT, 'specs/515-readable-spec-names')],
+            });
+        });
+
+        it('keeps duplicate-name disambiguation keyed on the slug, not the readable label', async () => {
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: 'my-feature', path: 'specs/a/my-feature' },
+            ]);
+            (hasDuplicateNames as jest.Mock).mockReturnValue(new Set(['my-feature']));
+            (readSpecContextSync as jest.Mock).mockReturnValue({
+                workflow: 'default',
+                currentStep: 'specify',
+                status: 'draft',
+                specName: 'My Feature',
+            });
+            const groups = await provider.getChildren();
+            const specs = await provider.getChildren(groups[0]);
+            expect(specs[0].label).toBe('My Feature');
+            expect(specs[0].description).toBe('specs/a');
         });
     });
 
@@ -705,7 +766,7 @@ describe('SpecExplorerProvider', () => {
                 history: [{ step: 'tasks', substep: null, kind: 'complete', by: 'ai', at }],
             });
             const tooltip = row.tooltip as string;
-            expect(tooltip.split('\n')[0]).toBe('my-feature');
+            expect(tooltip.split('\n')[0]).toBe('My Feature');
             expect(tooltip).toContain('Status: Ready to Implement');
             expect(tooltip).toContain('Last activity:');
             expect(tooltip).not.toContain('ready-to-implement');
@@ -758,9 +819,9 @@ describe('SpecExplorerProvider', () => {
             const specs = await provider.getChildren(groups[0]);
 
             expect(specs.map((s: any) => s.label)).toEqual([
-                '069-reveal-folder',
-                '068-collapse-toggle',
-                '067-lock-steps',
+                'Reveal Folder',
+                'Collapse Toggle',
+                'Lock Steps',
             ]);
         });
 
@@ -777,7 +838,7 @@ describe('SpecExplorerProvider', () => {
 
             // Default 'number' mode: non-numeric specs tie on prefix (both
             // null) and fall back to name ascending.
-            expect(specs.map((s: any) => s.label)).toEqual(['alpha', 'beta']);
+            expect(specs.map((s: any) => s.label)).toEqual(['Alpha', 'Beta']);
         });
 
         it('numeric-prefixed specs sort before non-numeric-prefixed specs', async () => {
@@ -795,7 +856,7 @@ describe('SpecExplorerProvider', () => {
             const groups = await provider.getChildren();
             const specs = await provider.getChildren(groups[0]);
 
-            expect(specs.map((s: any) => s.label)).toEqual(['001-first', 'legacy-spec']);
+            expect(specs.map((s: any) => s.label)).toEqual(['First', 'Legacy Spec']);
         });
     });
 
@@ -817,9 +878,9 @@ describe('SpecExplorerProvider', () => {
             expect(specs).toHaveLength(3);
             // Default sort: numeric-prefix desc → name asc. All three specs
             // tie on prefix (null) so they fall through to alphabetical.
-            expect(specs[0].label).toBe('mid-spec');
-            expect(specs[1].label).toBe('new-spec');
-            expect(specs[2].label).toBe('old-spec');
+            expect(specs[0].label).toBe('Mid Spec');
+            expect(specs[1].label).toBe('New Spec');
+            expect(specs[2].label).toBe('Old Spec');
         });
 
         it('should handle statSync errors gracefully during sorting', async () => {
@@ -855,8 +916,8 @@ describe('SpecExplorerProvider', () => {
 
             const specs = await provider.getChildren(groups[0]);
             // Tie on prefix (both null), fall back to name asc: 'n' < 'o'.
-            expect(specs[0].label).toBe('done-new');
-            expect(specs[1].label).toBe('done-old');
+            expect(specs[0].label).toBe('Done New');
+            expect(specs[1].label).toBe('Done Old');
         });
     });
 
@@ -986,7 +1047,7 @@ describe('SpecExplorerProvider', () => {
             expect(groups).toHaveLength(1);
             expect(groups[0].label).toBe('Active (1)');
             const specs = await filteredProvider.getChildren(groups[0]);
-            expect(specs.map(s => s.label)).toEqual(['071-tree-group-counts']);
+            expect(specs.map(s => s.label)).toEqual(['Tree group counts']);
         });
 
         it('matches by specName when slug alone does not match', async () => {
@@ -999,7 +1060,7 @@ describe('SpecExplorerProvider', () => {
             expect(groups).toHaveLength(1);
             expect(groups[0].label).toBe('Active (1)');
             const specs = await filteredProvider.getChildren(groups[0]);
-            expect(specs.map(s => s.label)).toEqual(['070-design-tighten-safety']);
+            expect(specs.map(s => s.label)).toEqual(['Design — tighten safety']);
         });
 
         it('returns empty root when filter matches zero specs', async () => {

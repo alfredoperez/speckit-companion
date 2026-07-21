@@ -29,6 +29,8 @@ A group with zero specs is omitted entirely.
 
 **Individual spec rows start collapsed**, including active ones. A workspace with hundreds of completed specs therefore opens to a short, readable list rather than a flood of document rows. Use **Expand All** (from More Actions, or the Command Palette) to open every row for the session.
 
+**Each row shows a readable name, not the raw directory slug.** A spec in `specs/515-readable-spec-names/` reads as "Readable Spec Names". The name is resolved by preference: the recorded name (`specName` in `.spec-context.json`), then the spec document's own heading where one exists, then a humanized version of the slug (leading number dropped, dashes replaced, words capitalized). This is presentation only — the slug stays the stable identifier, so filtering, sorting, duplicate-name disambiguation, and opening a spec all key off the slug and are unchanged. The viewer header resolves the name the same way, so the sidebar and the header always agree on what a spec is called.
+
 ## Opening a spec
 
 **Click a spec's name to open it.** The viewer opens for that spec and lands on its **Overview** — the durable-context dossier: why the spec exists, what constrained it, what was verified, the decisions, and the requirement-to-test map. A spec with no recorded run has no Overview, so it opens on its first available document instead; that is the viewer's own landing rule, not a second decision made by the tree. If the spec's viewer is already open, the click reveals it and returns it to the Overview rather than opening a second panel.
