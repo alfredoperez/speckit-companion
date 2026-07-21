@@ -23,6 +23,9 @@ import sys
 from pathlib import Path
 
 PIPELINE_STEPS = ["specify", "plan", "tasks", "implement"]
+# Full lifecycle order — overlap handling must see clarify/analyze spans too,
+# exactly like the viewer's STEP_NAMES.
+STEP_NAMES = ["specify", "clarify", "plan", "tasks", "analyze", "implement"]
 # Same trust rule as the viewer's deriveStepHistory: only extension-stamped
 # boundaries anchor a span; cli/user/derive writes are honest but not span-grade.
 TRUSTED_BOUNDARY_BY = "extension"
@@ -85,9 +88,11 @@ NEGATION_RE = re.compile(
 
 def _parse_at(s: object) -> dt.datetime | None:
     try:
-        return dt.datetime.fromisoformat(str(s).replace("Z", "+00:00"))
+        t = dt.datetime.fromisoformat(str(s).replace("Z", "+00:00"))
     except (ValueError, TypeError):
         return None
+    # Naive timestamps read as UTC so mixed offset styles stay comparable.
+    return t if t.tzinfo else t.replace(tzinfo=dt.timezone.utc)
 
 
 class Report:
@@ -133,7 +138,7 @@ def check_verbosity(r: Report, spec_dir: Path) -> None:
         except FileNotFoundError:
             r.add("INFO", cid, "absent (not scored)")
             continue
-        except OSError as exc:
+        except (OSError, UnicodeDecodeError) as exc:
             r.add("FAIL", cid, f"unreadable: {exc}")
             continue
         lines, chars = len(text.splitlines()), len(text)
@@ -155,21 +160,110 @@ def _is_step_level(e: dict) -> bool:
     return e.get("substep") is None and e.get("task") is None
 
 
-def _trusted_span(history: list, step: str) -> float | None:
-    """start→complete seconds when the step carries an ordered pair of
-    extension-stamped step-level boundaries; None means the span is untrusted."""
-    starts = [e for e in history
-              if e.get("step") == step and _is_step_level(e)
-              and e.get("kind") == "start" and e.get("by") == TRUSTED_BOUNDARY_BY]
-    completes = [e for e in history
-                 if e.get("step") == step and _is_step_level(e)
-                 and e.get("kind") == "complete" and e.get("by") == TRUSTED_BOUNDARY_BY]
-    if not starts or not completes:
-        return None
-    s, c = _parse_at(starts[0].get("at")), _parse_at(completes[-1].get("at"))
-    if s is None or c is None or c < s:
-        return None
-    return (c - s).total_seconds()
+def _dedupe_consecutive(entries: list[dict]) -> list[dict]:
+    """Viewer parity: collapse adjacent duplicates before lifecycle grouping."""
+    out: list[dict] = []
+    for e in entries:
+        if out:
+            p = out[-1]
+            pf = p.get("from") if isinstance(p.get("from"), dict) else {}
+            ef = e.get("from") if isinstance(e.get("from"), dict) else {}
+            if (p.get("step") == e.get("step")
+                    and p.get("substep") == e.get("substep")
+                    and p.get("task") == e.get("task")
+                    and p.get("kind") == e.get("kind")
+                    and pf.get("step") == ef.get("step")
+                    and pf.get("substep") == ef.get("substep")):
+                continue
+        out.append(e)
+    return out
+
+
+def _derive_trusted_spans(history: list[dict]) -> dict[str, float]:
+    """Mirror of the viewer's duration-trust rule (`deriveStepHistory` in
+    src/features/specs/stepHistoryDerivation.ts): a step's span is trusted only
+    when the raw log carries exactly ONE extension-stamped step-level start,
+    the lifecycle close boundary — the step's own extension complete OR the
+    next step's extension start — lands strictly after it, no step-level
+    complete precedes the start, no competing step-level start falls inside
+    the span, and the span doesn't overlap another trusted span (overlap
+    untrusts both sides). Returns step -> seconds for trusted spans only."""
+    raw = [e for e in history if isinstance(e, dict)]
+    deduped = _dedupe_consecutive(raw)
+
+    order: list[str] = []
+    groups: dict[object, list[int]] = {}
+    for i, e in enumerate(deduped):
+        step = e.get("step")
+        if step not in groups:
+            groups[step] = []
+            order.append(step)
+        groups[step].append(i)
+
+    spans: dict[str, tuple[float, float]] = {}
+    for step in order:
+        idxs = groups[step]
+        own = [deduped[i] for i in idxs]
+        boundary = next((deduped[j] for j in range(idxs[-1] + 1, len(deduped))
+                         if deduped[j].get("step") != step), None)
+        last_step_level = next((e for e in reversed(own) if _is_step_level(e)), None)
+        last_own_is_completion = (last_step_level is not None
+                                  and last_step_level.get("kind") == "complete")
+
+        close = None
+        if boundary is not None:
+            g_idx = STEP_NAMES.index(step) if step in STEP_NAMES else -1
+            b_step = boundary.get("step")
+            b_idx = STEP_NAMES.index(b_step) if b_step in STEP_NAMES else -1
+            rolled_back = g_idx >= 0 and 0 <= b_idx < g_idx and _is_step_level(boundary)
+            close = (last_step_level if last_own_is_completion else None) if rolled_back else boundary
+        elif last_own_is_completion:
+            close = last_step_level
+        if close is None:
+            continue
+
+        raw_own = [e for e in raw if e.get("step") == step]
+        explicit_starts = [e for e in raw_own
+                           if _is_step_level(e) and e.get("kind") == "start"
+                           and e.get("by") == TRUSTED_BOUNDARY_BY]
+        if len(explicit_starts) != 1:
+            continue
+        close_is_own_completion = (close.get("step") == step and _is_step_level(close)
+                                   and close.get("kind") == "complete"
+                                   and close.get("by") == TRUSTED_BOUNDARY_BY)
+        close_is_next_start = (close.get("step") != step and _is_step_level(close)
+                               and close.get("kind") == "start"
+                               and close.get("by") == TRUSTED_BOUNDARY_BY)
+        if not (close_is_own_completion or close_is_next_start):
+            continue
+        s = _parse_at(explicit_starts[0].get("at"))
+        c = _parse_at(close.get("at"))
+        if s is None or c is None or c <= s:
+            continue
+        if any(_is_step_level(e) and e.get("kind") == "complete"
+               and (t := _parse_at(e.get("at"))) is not None and t < s
+               for e in raw_own):
+            continue
+        if any(e is not explicit_starts[0]
+               and _is_step_level(e) and e.get("kind") == "start"
+               and (t := _parse_at(e.get("at"))) is not None and s < t <= c
+               for e in raw_own):
+            continue
+        spans[step] = (s.timestamp(), c.timestamp())
+
+    trusted = dict(spans)
+    prev: tuple[str, float] | None = None
+    for step in STEP_NAMES:
+        if step not in spans:
+            continue
+        start, end = spans[step]
+        if prev is not None and start < prev[1]:
+            trusted.pop(prev[0], None)
+            trusted.pop(step, None)
+            prev = None
+        else:
+            prev = (step, end)
+    return {step: end - start for step, (start, end) in trusted.items()}
 
 
 def _fmt(seconds: float) -> str:
@@ -187,7 +281,7 @@ def check_timing(r: Report, spec_dir: Path) -> None:
     except FileNotFoundError:
         r.add("WARN", "timing-not-examinable", f"no .spec-context.json in {spec_dir}")
         return
-    except (json.JSONDecodeError, OSError) as exc:
+    except (json.JSONDecodeError, UnicodeDecodeError, OSError) as exc:
         r.add("WARN", "timing-not-examinable", f"could not parse .spec-context.json: {exc}")
         return
     if not isinstance(ctx, dict):
@@ -201,14 +295,9 @@ def check_timing(r: Report, spec_dir: Path) -> None:
 
     # trusted-boundaries — each reached step needs an ordered deterministic pair.
     reached = [s for s in PIPELINE_STEPS if any(e.get("step") == s for e in history)]
-    spans: dict[str, float] = {}
-    untrusted: list[str] = []
-    for step in reached:
-        span = _trusted_span(history, step)
-        if span is None:
-            untrusted.append(step)
-        else:
-            spans[step] = span
+    all_spans = _derive_trusted_spans(history)
+    spans = {s: all_spans[s] for s in reached if s in all_spans}
+    untrusted = [s for s in reached if s not in spans]
     if not reached:
         r.add("WARN", "trusted-boundaries", "no pipeline steps in history")
     elif untrusted:
@@ -297,7 +386,7 @@ def check_prompting(r: Report, commands_dir: Path) -> None:
         except FileNotFoundError:
             r.add("FAIL", cid, f"roster file missing: {path} (scan surface shrank)")
             continue
-        except OSError as exc:
+        except (OSError, UnicodeDecodeError) as exc:
             r.add("FAIL", cid, f"roster file unreadable: {exc}")
             continue
         hits = _prompt_hits(text)
@@ -316,7 +405,7 @@ def check_prompting(r: Report, commands_dir: Path) -> None:
         except FileNotFoundError:
             r.add("FAIL", cid, f"roster file missing: {path} (scan surface shrank)")
             continue
-        except OSError as exc:
+        except (OSError, UnicodeDecodeError) as exc:
             r.add("FAIL", cid, f"roster file unreadable: {exc}")
             continue
         hits = _prompt_hits(text)

@@ -109,6 +109,14 @@ class VerbosityTests(QualityEvalBase):
         r = self.run_report()
         self.assertEqual(self.statuses(r)["verbosity-plan"], "FAIL")
 
+    def test_non_utf8_artifact_fails_structured(self) -> None:
+        self.write_spec(history=_healthy_history())
+        (self.spec_dir / "plan.md").write_bytes(b"\xff\xfe invalid")
+        status, _, detail = next(row for row in self.run_report().rows
+                                 if row[1] == "verbosity-plan")
+        self.assertEqual(status, "FAIL")
+        self.assertIn("unreadable", detail)
+
 
 class TimingTests(QualityEvalBase):
     def test_healthy_history_passes_all_timing_rows(self) -> None:
@@ -145,7 +153,8 @@ class TimingTests(QualityEvalBase):
     def test_outlier_step_duration_warns(self) -> None:
         history = _healthy_history()
         for e in history:
-            if e.get("step") == "specify" and e.get("kind") == "complete":
+            if (e.get("step") == "implement" and e.get("kind") == "complete"
+                    and e.get("by") == "extension"):
                 e["at"] = "2026-07-21T16:00:00.123Z"
         self.write_spec(history=history)
         self.assertEqual(self.statuses(self.run_report())["step-duration-outlier"], "WARN")
@@ -163,6 +172,13 @@ class TimingTests(QualityEvalBase):
         self.assertEqual(self.statuses(r)["timing-not-examinable"], "WARN")
         self.assertEqual(r.failed, 0)
 
+    def test_non_utf8_context_reports_not_examinable(self) -> None:
+        self.write_spec(history=None)
+        (self.spec_dir / ".spec-context.json").write_bytes(b"\xff\xfe not utf8")
+        r = self.run_report()
+        self.assertEqual(self.statuses(r)["timing-not-examinable"], "WARN")
+        self.assertEqual(r.failed, 0)
+
     def test_empty_history_reports_not_examinable(self) -> None:
         self.write_spec(history=[])
         r = self.run_report()
@@ -175,6 +191,31 @@ class TimingTests(QualityEvalBase):
                                  if row[1] == "step-duration-outlier")
         self.assertEqual(status, "INFO")
         self.assertIn("need ≥ 2", detail)
+
+    def test_duplicate_extension_start_untrusts_step(self) -> None:
+        history = _healthy_history()
+        idx = next(i for i, e in enumerate(history)
+                   if e.get("step") == "plan" and e.get("kind") == "complete")
+        history.insert(idx, {"step": "plan", "substep": None, "kind": "start",
+                             "by": "extension", "at": _iso(4)})
+        self.write_spec(history=history)
+        status, _, detail = next(row for row in self.run_report().rows
+                                 if row[1] == "trusted-boundaries")
+        self.assertEqual(status, "WARN")
+        self.assertIn("plan", detail)
+
+    def test_next_step_extension_start_closes_span(self) -> None:
+        # No explicit specify complete — the viewer closes specify at plan's
+        # extension start, and the eval must agree it's trusted.
+        history = [
+            {"step": "specify", "substep": None, "kind": "start",
+             "by": "extension", "at": _iso(0)},
+        ] + _step_pair("plan", 3, 6)
+        self.write_spec(history=history)
+        status, _, detail = next(row for row in self.run_report().rows
+                                 if row[1] == "trusted-boundaries")
+        self.assertEqual(status, "PASS")
+        self.assertIn("2/2", detail)
 
     def test_non_extension_boundary_is_untrusted(self) -> None:
         history = _healthy_history()
@@ -242,6 +283,14 @@ class PromptingTests(QualityEvalBase):
                                  if row[1] == "never-prompts-mark-complete")
         self.assertEqual(status, "FAIL")
         self.assertIn("missing", detail)
+
+    def test_non_utf8_roster_file_fails_structured(self) -> None:
+        commands = self.build_commands()
+        (commands / "speckit.companion.status.md").write_bytes(b"\xff\xfe junk")
+        status, _, detail = next(row for row in self.run_prompting(commands).rows
+                                 if row[1] == "never-prompts-status")
+        self.assertEqual(status, "FAIL")
+        self.assertIn("unreadable", detail)
 
     def test_clarify_without_ask_fails(self) -> None:
         r = self.run_prompting(self.build_commands(
