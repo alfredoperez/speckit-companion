@@ -341,29 +341,76 @@ def _step_span(history: list, step: str):
     return (s, c, (c - s).total_seconds())
 
 
+_FOLDED_STATUSES = ("ready-to-implement", "implementing", "implemented", "completed", "archived")
+
+
 def _fastpath(r: Report, history: list, ctx: dict) -> None:
-    """When a spec fast-tracked (the simple/minimal-mode branch), plan and tasks
-    are folded into the specify run: each carries a `start`+`complete` pair tagged
-    `substep="fast-path"`, the timestamps are real, and the spec lands at
-    `ready-to-implement`. Silent when no fold is present (a normal spec)."""
-    fold = [e for e in history if isinstance(e, dict) and e.get("substep") == "fast-path"]
-    if not fold:
-        return  # not a fast-tracked spec — nothing to assert
-    for step in ("plan", "tasks"):
-        kinds = {e.get("kind") for e in fold if e.get("step") == step}
-        ok = {"start", "complete"} <= kinds
-        r.add(ok, f"fast-path-{step}-folded",
-              f"{step} fold has {sorted(kinds)}"
-              + ("" if ok else " — expected both start and complete"))
-    # The fold is journaled by:ai with real `date -u` — every entry must parse and
-    # carry no hand-typed round-second look beyond the ai second-precision norm.
-    realness = all(_parse_at(e.get("at")) is not None for e in fold)
-    r.add(realness, "fast-path-timestamps-real",
-          "all fold timestamps parse" if realness else "a fold timestamp is unparseable")
+    """When a spec fast-tracks (the simple-mode branch), plan and tasks are folded
+    into the specify run. The trusted fold (post-#514) records each as an
+    ordered, extension-stamped, *step-level* start+complete pair — the same shape
+    every trusted step uses — so the timing panel counts specify/plan/tasks as
+    measured phases. Detection keys off the recorded size verdict, not a substep
+    tag. A legacy spec whose fold still carries `substep="fast-path"` (the old
+    `by: ai` shape) is recognized and its old contract checked, never crashed."""
+    legacy_fold = [e for e in history if isinstance(e, dict) and e.get("substep") == "fast-path"]
+    if legacy_fold:
+        for step in ("plan", "tasks"):
+            kinds = {e.get("kind") for e in legacy_fold if e.get("step") == step}
+            ok = {"start", "complete"} <= kinds
+            r.add(ok, f"fast-path-{step}-folded-legacy",
+                  f"legacy {step} fold has {sorted(kinds)}"
+                  + ("" if ok else " — expected both start and complete"))
+        realness = all(_parse_at(e.get("at")) is not None for e in legacy_fold)
+        r.add(realness, "fast-path-timestamps-real-legacy",
+              "all legacy fold timestamps parse" if realness else "a legacy fold timestamp is unparseable")
+        status = ctx.get("status")
+        r.add(status in _FOLDED_STATUSES, "fast-path-ready-to-implement-legacy",
+              f"status={status}" + ("" if status in _FOLDED_STATUSES else " — expected ready-to-implement after a fold"))
+        return
+
+    verdict = (ctx.get("classification") or {}).get("verdict")
+    is_fast = ctx.get("size") == "simple" or verdict == "simple"
     status = ctx.get("status")
-    landed = status in ("ready-to-implement", "implementing", "implemented", "completed", "archived")
-    r.add(landed, "fast-path-ready-to-implement",
-          f"status={status}" + ("" if landed else " — expected ready-to-implement after a fold"))
+    if not is_fast or status not in _FOLDED_STATUSES:
+        return  # not a fast-tracked spec, or one that hasn't folded yet — nothing to assert
+
+    # New model: plan and tasks each hold exactly one extension-stamped, step-level
+    # start plus an extension-stamped complete — the shape deriveStepHistory trusts.
+    hist = [e for e in history if isinstance(e, dict)]
+    boundaries = {}
+    for step in ("plan", "tasks"):
+        starts = [e for e in hist if e.get("step") == step and _is_step_level(e)
+                  and e.get("kind") == "start" and e.get("by") == "extension"]
+        completes = [e for e in hist if e.get("step") == step and _is_step_level(e)
+                     and e.get("kind") == "complete" and e.get("by") == "extension"]
+        ok = len(starts) == 1 and len(completes) >= 1
+        r.add(ok, f"fast-path-{step}-folded",
+              f"{step}: {len(starts)} extension start / {len(completes)} extension complete"
+              + ("" if ok else " — expected one extension start + an extension complete (the trusted-fold shape)"))
+        if ok:
+            boundaries[f"{step}-start"] = _parse_at(starts[0].get("at"))
+            boundaries[f"{step}-complete"] = _parse_at(completes[-1].get("at"))
+
+    # Ordered and real: every boundary parses; each folded step has a strictly
+    # positive span (start < complete — the derivation trusts a span only when
+    # closeMs > startMs, so a same-instant fold must fail here too); and the steps
+    # run forward across boundaries (non-decreasing, so specify-complete == plan-start
+    # is fine — a touching handoff, not an overlap).
+    spec_complete = [e for e in hist if e.get("step") == "specify" and _is_step_level(e)
+                     and e.get("kind") == "complete" and e.get("by") == "extension"]
+    sc = _parse_at(spec_complete[-1].get("at")) if spec_complete else None
+    ps, pc = boundaries.get("plan-start"), boundaries.get("plan-complete")
+    ts, tc = boundaries.get("tasks-start"), boundaries.get("tasks-complete")
+    real = all(t is not None for t in (sc, ps, pc, ts, tc))
+    ordered = (real
+               and ps < pc and ts < tc      # strict within each folded step (positive span)
+               and sc <= ps and pc <= ts)    # non-decreasing across the handoffs
+    r.add(ordered, "fast-path-fold-ordered",
+          "specify→plan→tasks boundaries parse, each folded step has a positive span, and they run forward"
+          if ordered else "fold boundaries missing, unparseable, zero-length, or out of order — the #514 untrusted-timing shape")
+
+    r.add(status in _FOLDED_STATUSES, "fast-path-ready-to-implement",
+          f"status={status}" + ("" if status in _FOLDED_STATUSES else " — expected ready-to-implement after a fold"))
 
 
 def _timing(r: Report, history: list) -> None:

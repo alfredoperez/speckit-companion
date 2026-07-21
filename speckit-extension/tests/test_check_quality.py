@@ -229,6 +229,60 @@ class TimingTests(QualityEvalBase):
         self.assertIn("plan", detail)
 
 
+def _fastpath_fold() -> list[dict]:
+    """A simple-mode run: specify plus folded plan/tasks, each a step-level
+    extension-stamped start+complete pair (the trusted post-#514 shape). The
+    four fold boundaries are separate `python3` writes tens of ms apart, so their
+    timestamps are honestly near-zero but strictly increasing. No implement step
+    yet — the developer triggers that next."""
+    def _pair(step: str, start: str, end: str) -> list[dict]:
+        return [
+            {"step": step, "substep": None, "kind": "start", "by": "extension", "at": start},
+            {"step": step, "substep": None, "kind": "complete", "by": "extension", "at": end},
+        ]
+    return (_pair("specify", _iso(0, 0, 100), _iso(2, 0, 100))
+            + _pair("plan", _iso(2, 0, 200), _iso(2, 0, 285))
+            + _pair("tasks", _iso(2, 0, 370), _iso(2, 0, 455)))
+
+
+def _legacy_fastpath_fold() -> list[dict]:
+    """The old fold: plan/tasks folded as `by: ai`, `substep: fast-path` pairs.
+    A step boundary is step-level (substep None), so these must NOT be trusted."""
+    fold = _step_pair("specify", 0, 2)
+    fold[-1]["by"] = "ai"  # old fold even self-closed specify by ai
+    for step, minute in (("plan", 3), ("tasks", 4)):
+        for kind in ("start", "complete"):
+            fold.append({"step": step, "substep": "fast-path", "kind": kind,
+                         "by": "ai", "at": _iso(minute)})
+    return fold
+
+
+class FastPathFoldTimingTests(QualityEvalBase):
+    def test_folded_run_trusts_specify_plan_tasks(self) -> None:
+        self.write_spec(history=_fastpath_fold())
+        status, _, detail = next(row for row in self.run_report().rows
+                                 if row[1] == "trusted-boundaries")
+        self.assertEqual(status, "PASS")
+        self.assertIn("3/3", detail)
+
+    def test_folded_spans_are_trusted_in_derivation(self) -> None:
+        spans = cq._derive_trusted_spans(_fastpath_fold())
+        self.assertEqual(set(spans), {"specify", "plan", "tasks"})
+
+    def test_legacy_ai_fold_leaves_plan_and_tasks_untrusted(self) -> None:
+        self.write_spec(history=_legacy_fastpath_fold())
+        status, _, detail = next(row for row in self.run_report().rows
+                                 if row[1] == "trusted-boundaries")
+        self.assertEqual(status, "WARN")
+        self.assertIn("plan", detail)
+        self.assertIn("tasks", detail)
+
+    def test_legacy_ai_fold_trusts_nothing_in_derivation(self) -> None:
+        spans = cq._derive_trusted_spans(_legacy_fastpath_fold())
+        self.assertNotIn("plan", spans)
+        self.assertNotIn("tasks", spans)
+
+
 class PromptingTests(QualityEvalBase):
     def build_commands(self, mutate: dict[str, str] | None = None,
                        drop: set[str] | None = None,

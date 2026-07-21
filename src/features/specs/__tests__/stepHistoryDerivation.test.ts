@@ -449,6 +449,36 @@ describe('deriveStepHistory', () => {
             expect(repeated.plan.durationTrusted).toBe(false);
         });
     });
+
+    describe('fast-path fold (simple mode) — corrected #514 shape is trusted', () => {
+        // A simple-mode run folds plan+tasks into the specify run as ordered,
+        // extension-stamped, step-level start+complete pairs. The four fold
+        // writes are separate `python3` processes tens of ms apart, so the
+        // spans are honestly near-zero but strictly increasing.
+        const foldedRun = (): Transition[] => [
+            tx({ step: 'specify', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00.100Z' }),
+            tx({ step: 'specify', kind: 'complete', by: 'extension', at: '2026-07-01T10:03:00.100Z' }),
+            tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-01T10:03:00.200Z' }),
+            tx({ step: 'plan', kind: 'complete', by: 'extension', at: '2026-07-01T10:03:00.285Z' }),
+            tx({ step: 'tasks', kind: 'start', by: 'extension', at: '2026-07-01T10:03:00.370Z' }),
+            tx({ step: 'tasks', kind: 'complete', by: 'extension', at: '2026-07-01T10:03:00.455Z' }),
+        ];
+
+        it('trusts specify, plan, and tasks after the fold', () => {
+            const sh = deriveStepHistory(foldedRun(), 'tasks', 'ready-to-implement');
+            expect(sh.specify.durationTrusted).toBe(true);
+            expect(sh.plan.durationTrusted).toBe(true);
+            expect(sh.tasks.durationTrusted).toBe(true);
+        });
+
+        it('counts the folded steps as measured timing coverage', () => {
+            const sh = deriveStepHistory(foldedRun(), 'tasks', 'ready-to-implement');
+            const timing = deriveTimingSummary(sh);
+            // specify/plan/tasks measured; implement not run yet in a fold.
+            expect(timing.measuredPhases).toBe(3);
+            expect(timing.expectedPhases).toBe(4);
+        });
+    });
 });
 
 describe('deriveTimingSummary', () => {
