@@ -40,6 +40,7 @@ import {
     StepName,
     Status,
     SubstepEntry,
+    TimingSummary,
 } from '../../core/types/specContext';
 import { SpecStatuses } from '../../core/constants';
 import { isStepLevelEntry } from './historyHelpers';
@@ -358,19 +359,120 @@ export function deriveStepHistory(
 
         const substeps = buildSubsteps(g.transitions, completedAt, startedAt);
 
-        // Duration honesty: a span is a measured duration only when BOTH
-        // boundaries were stamped by the extension's own clock. AI/cli-journaled
-        // timestamps record when the write ran, not when the work happened —
-        // ordering-true, duration-false. Renderers must not show elapsed time
-        // for an untrusted span.
-        const startTrusted = g.transitions[0].by === 'extension';
-        const endTrusted = closeEntry?.by === 'extension';
+        // Duration honesty is deliberately stricter than lifecycle derivation.
+        // A measured phase needs exactly one explicit extension-stamped,
+        // step-level start and an extension-stamped close after it. The close
+        // may be this step's own completion or the next lifecycle step's start.
+        // AI/CLI rows remain useful cadence events, never duration boundaries.
+        // Trust checks use the raw append-only log, not the UI de-duplicated
+        // sequence: a repeated start is precisely one of the anomalies that
+        // must remain visible to the timing validator.
+        const rawStepTransitions = transitions.filter(t => t.step === g.step);
+        const explicitStarts = rawStepTransitions.filter(t =>
+            isStepLevelEntry(t) && t.kind === 'start' && t.by === 'extension'
+        );
+        const trustedStart = explicitStarts.length === 1 ? explicitStarts[0] : null;
+        const startMs = trustedStart ? Date.parse(trustedStart.at) : NaN;
+        const closeMs = completedAt ? Date.parse(completedAt) : NaN;
+        const closeIsOwnCompletion = closeEntry !== null
+            && closeEntry.step === g.step
+            && isStepLevelEntry(closeEntry)
+            && closeEntry.kind === 'complete'
+            && closeEntry.by === 'extension';
+        const closeIsNextStart = closeEntry !== null
+            && closeEntry.step !== g.step
+            && isStepLevelEntry(closeEntry)
+            && closeEntry.kind === 'start'
+            && closeEntry.by === 'extension';
+        const completionBeforeStart = trustedStart !== null && rawStepTransitions.some(t =>
+            isStepLevelEntry(t)
+            && t.kind === 'complete'
+            && Number.isFinite(Date.parse(t.at))
+            && Date.parse(t.at) < startMs
+        );
+        const competingLaterStart = trustedStart !== null && completedAt !== null && rawStepTransitions.some(t =>
+            t !== trustedStart
+            && isStepLevelEntry(t)
+            && t.kind === 'start'
+            && Number.isFinite(Date.parse(t.at))
+            && Date.parse(t.at) > startMs
+            && Date.parse(t.at) <= closeMs
+        );
+        const spanTrusted = trustedStart !== null
+            && completedAt !== null
+            && (closeIsOwnCompletion || closeIsNextStart)
+            && Number.isFinite(startMs)
+            && Number.isFinite(closeMs)
+            && closeMs > startMs
+            && !completionBeforeStart
+            && !competingLaterStart;
 
-        const entry: StepHistoryEntry = { startedAt, completedAt };
-        entry.durationTrusted = startTrusted && (completedAt === null || endTrusted);
+        const entry: StepHistoryEntry = {
+            startedAt: spanTrusted ? trustedStart!.at : startedAt,
+            completedAt,
+        };
+        entry.durationTrusted = spanTrusted;
         if (substeps.length > 0) entry.substeps = substeps;
         out[g.step] = entry;
     }
 
+    // A trustworthy phase cannot overlap or run backwards relative to another
+    // trustworthy lifecycle phase. Mark both sides untrusted conservatively;
+    // this prevents one malformed boundary from becoming a whole-run total.
+    let previous: { name: string; start: number; end: number } | null = null;
+    for (const step of STEP_NAMES) {
+        const entry = out[step];
+        if (!entry?.durationTrusted || !entry.completedAt) continue;
+        const current = {
+            name: step,
+            start: Date.parse(entry.startedAt),
+            end: Date.parse(entry.completedAt),
+        };
+        if (previous && current.start < previous.end) {
+            out[previous.name].durationTrusted = false;
+            entry.durationTrusted = false;
+        }
+        previous = current;
+    }
+
     return out;
+}
+
+const DEFAULT_TIMING_PHASES = ['specify', 'plan', 'tasks', 'implement'] as const;
+
+/** Derive timing coverage and, only for a complete sequence, wall-clock elapsed time. */
+export function deriveTimingSummary(
+    stepHistory: Record<string, StepHistoryEntry>,
+    expectedPhases: readonly string[] = DEFAULT_TIMING_PHASES,
+): TimingSummary {
+    const expected = [...new Set(expectedPhases.filter(Boolean))];
+    const measured = expected.filter(name => {
+        const entry = stepHistory[name];
+        return entry?.durationTrusted === true && !!entry.completedAt;
+    });
+    const base: TimingSummary = {
+        measuredPhases: measured.length,
+        expectedPhases: expected.length,
+        complete: expected.length > 0 && measured.length === expected.length,
+    };
+    if (!base.complete) return base;
+
+    const entries = expected.map(name => stepHistory[name]);
+    const spans = entries.map(entry => ({
+        start: Date.parse(entry.startedAt),
+        end: Date.parse(entry.completedAt as string),
+    }));
+    const sequenceValid = spans.every((span, index) =>
+        Number.isFinite(span.start)
+        && Number.isFinite(span.end)
+        && span.end > span.start
+        && (index === 0 || span.start >= spans[index - 1].end)
+    );
+    if (!sequenceValid) return { ...base, complete: false };
+
+    const startedAt = entries[0].startedAt;
+    const endedAt = entries[entries.length - 1].completedAt as string;
+    const elapsedMs = Date.parse(endedAt) - Date.parse(startedAt);
+    if (!Number.isFinite(elapsedMs) || elapsedMs <= 0) return { ...base, complete: false };
+    return { ...base, startedAt, endedAt, elapsedMs };
 }

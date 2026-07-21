@@ -1,6 +1,6 @@
 /**
  * SpecKit Companion - Overview Dossier
- * The Context-First Overview: one typographic Intent statement, then
+ * The Context-First Overview: compact lifecycle signal, one typographic Intent statement, then
  * editorial sections divided by rules (Expectations fence, Verified ledger,
  * Decisions, Coverage traceability), with the run log collapsed at the end.
  */
@@ -20,6 +20,90 @@
     text-transform: uppercase;
 }
 
+/* ── Run overview — lifecycle only; granular events remain in Run Log ── */
+
+.dossier-timing {
+    margin: 0 0 var(--space-5);
+    padding: var(--space-3) 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+.dossier-timing__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+
+.dossier-timing__head .dossier-kicker {
+    color: var(--accent);
+}
+
+.dossier-timing__head strong {
+    color: var(--text-body);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+}
+
+.dossier-timing__phases {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    row-gap: var(--space-2);
+    margin-top: var(--space-3);
+}
+
+.dossier-timing__phase {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    min-width: 0;
+}
+
+.dossier-timing__connector {
+    width: clamp(12px, 2.5vw, 32px);
+    height: 1px;
+    margin: 0 var(--space-2);
+    background: var(--border);
+    align-self: center;
+}
+
+.dossier-timing__dot {
+    width: 8px;
+    height: 8px;
+    flex: none;
+    align-self: center;
+    border-radius: 50%;
+    background: var(--success);
+}
+
+.dossier-timing__phase.is-in-flight .dossier-timing__dot {
+    background: var(--accent);
+    animation: activity-dot-pulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dossier-timing__phase.is-in-flight .dossier-timing__dot {
+        animation: none;
+    }
+}
+
+.dossier-timing__name {
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.dossier-timing__duration {
+    color: var(--text-body);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
 /* ── Intent — the reason the spec exists, set as the page's thesis ── */
 
 .dossier-intent {
@@ -27,9 +111,13 @@
     border-bottom: 1px solid var(--border);
 }
 
+.dossier-intent > .dossier-kicker {
+    color: var(--purple);
+}
+
 .dossier-intent__statement {
     max-width: 72ch;
-    margin: var(--space-3) 0 var(--space-5);
+    margin: var(--space-3) 0 var(--space-4);
     font-size: clamp(16px, 1.5cqi, 19px);
     font-weight: 500;
     line-height: 1.45;
@@ -52,6 +140,20 @@
     background: var(--bg-secondary);
 }
 
+.dossier-intent__approach .dossier-meta-label {
+    color: var(--accent);
+}
+
+.dossier-intent__context .dossier-meta-label {
+    color: var(--accent);
+}
+
+/* Approach-only / area-only metadata is one editorial block, not half a grid
+   with a phantom empty pane. */
+.dossier-intent__meta > div:only-child {
+    grid-column: 1 / -1;
+}
+
 .dossier-meta-label {
     display: block;
     color: var(--text-label);
@@ -72,11 +174,32 @@
     margin-top: var(--space-3);
 }
 
+.dossier-intent__living-specs {
+    margin-top: var(--space-4);
+}
+
+.dossier-intent__living-specs:first-child {
+    margin-top: 0;
+}
+
+.dossier-intent__living-specs .dossier-meta-label {
+    margin-bottom: 7px;
+    color: var(--purple);
+}
+
+.dossier-intent__living-specs .living-specs-chip {
+    background: var(--bg-inset);
+}
+
 /* ── Section frame: editorial dividers, not stacked cards ── */
 
 .dossier-section {
     padding: var(--space-6) 0;
     border-bottom: 1px solid var(--border);
+}
+
+.dossier-section .dossier-kicker {
+    color: var(--accent);
 }
 
 .dossier-section__head {
@@ -393,6 +516,25 @@
     margin-top: var(--space-4);
 }
 
+/* The expanded log is one divided record, not a stack of cards inside a card. */
+.dossier-log .activity-card {
+    overflow: visible;
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+}
+
+.dossier-log .activity-card__title {
+    padding: var(--space-4) 0 var(--space-2);
+    background: transparent;
+    border: 0;
+}
+
+.dossier-log .activity-card__body {
+    padding: 0 0 var(--space-3);
+}
+
 .dossier-log__last-action {
     margin: 0;
     color: var(--text-body);
@@ -433,6 +575,17 @@
 }
 
 @container viewer (max-width: 560px) {
+    .dossier-timing__head {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .dossier-timing__connector {
+        width: 10px;
+        margin-inline: 5px;
+    }
+
     .dossier-section__head {
         align-items: flex-start;
     }

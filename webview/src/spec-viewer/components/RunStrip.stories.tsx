@@ -59,8 +59,28 @@ export const CompletedWithPr: Story = {
             stepHistory: {
                 implement: { startedAt: '2026-07-02T10:00:00Z', completedAt: '2026-07-02T13:11:00Z', durationTrusted: true },
             },
+            timing: {
+                measuredPhases: 4,
+                expectedPhases: 4,
+                complete: true,
+                startedAt: '2026-07-02T09:36:00Z',
+                endedAt: '2026-07-02T13:11:00Z',
+                elapsedMs: 12_780_000,
+            },
             prUrl: 'https://github.com/alfredoperez/speckit-companion/pull/431',
             prNumber: 431,
+        });
+        return <RunStrip />;
+    },
+};
+
+export const PartialTiming: Story = {
+    name: 'Partial timing (coverage, never total)',
+    render: () => {
+        navState.value = mockNavState({});
+        viewerState.value = baseState({
+            status: 'completed',
+            timing: { measuredPhases: 1, expectedPhases: 4, complete: false },
         });
         return <RunStrip />;
     },

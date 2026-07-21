@@ -13,7 +13,6 @@ import { TasksCard } from './cards/TasksCard';
 import { ConcernsCard } from './cards/ConcernsCard';
 import { FilesCard } from './cards/FilesCard';
 import { CommentsCard } from './cards/CommentsCard';
-import { LivingSpecsCard } from './cards/LivingSpecsCard';
 
 /**
  * The viewer install banner, rendered INSIDE the Activity panel (#255 — it used
@@ -73,9 +72,9 @@ function hasRunLogData(state: ViewerState): boolean {
         (state.history?.length ?? 0) > 0 ||
         Object.keys(state.stepHistory ?? {}).length > 0 ||
         Object.keys(state.taskSummaries ?? {}).length > 0 ||
+        (state.concerns?.length ?? 0) > 0 ||
         (state.filesModified?.length ?? 0) > 0 ||
         (state.reviewComments?.length ?? 0) > 0 ||
-        !!state.livingSpecs ||
         !!state.lastAction
     );
 }
@@ -94,8 +93,8 @@ export function ActivityPanel() {
 
     const taskCount = Object.keys(state.taskSummaries ?? {}).length;
 
-    // Durable context leads (why → fence → proof → choices → traceability);
-    // how-the-run-happened demotes to the collapsed log at the bottom.
+    // Lifecycle signal first, then durable context (why → fence → proof →
+    // choices → traceability); granular run history stays collapsed below.
     return (
         <div class="activity-panel dossier">
             <InstallBanner />
@@ -104,7 +103,6 @@ export function ActivityPanel() {
             <VerifiedSection state={state} />
             <DecisionsSection state={state} />
             <CoverageSection state={state} />
-            <ConcernsCard state={state} />
             {hasRunLogData(state) && (
                 <details class="dossier-log">
                     <summary>
@@ -114,8 +112,8 @@ export function ActivityPanel() {
                         {state.lastAction && <p class="dossier-log__last-action">{state.lastAction}</p>}
                         <LatestFeed />
                         <PhasesCard state={state} />
-                        <LivingSpecsCard state={state} />
                         <TasksCard state={state} />
+                        <ConcernsCard state={state} />
                         <FilesCard state={state} />
                         <CommentsCard state={state} />
                     </div>

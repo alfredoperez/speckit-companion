@@ -62,6 +62,15 @@ describe('mergeStepEvents', () => {
         expect(events[1].by).toBe('cli');
     });
 
+    it('uses the journal finish as recordedAt without treating it as a task duration', () => {
+        const transitions = [
+            tx({ step: 'plan', substep: 'research', kind: 'complete', by: 'ai', at: '2026-04-29T00:04:00Z' }),
+        ];
+        const events = mergeStepEvents('plan', history, transitions);
+        expect(events[0].recordedAt).toBe('2026-04-29T00:04:00Z');
+        expect(events[0].startedAt).toBe('2026-04-29T00:01:00Z');
+    });
+
     it('emits logged-only events for transitions not present in substeps[]', () => {
         const transitions = [
             tx({ step: 'specify', substep: 'parsing',   by: 'cli', at: '2026-04-29T00:00:00Z' }),
@@ -83,14 +92,13 @@ describe('mergeStepEvents', () => {
         expect(events[0].name).toBe('parsing');
     });
 
-    it('returns events sorted by startedAt', () => {
+    it('returns events sorted by their recorded timestamp', () => {
         const transitions = [
             tx({ step: 'plan', substep: 'late',  by: 'ai', at: '2026-04-29T00:08:00Z' }),
             tx({ step: 'plan', substep: 'early', by: 'ai', at: '2026-04-29T00:00:30Z' }),
         ];
         const events = mergeStepEvents('plan', history, transitions);
-        // research (T+1m) → early (T+30s)? No — T+30s comes first.
-        expect(events.map(e => e.name)).toEqual(['early', 'research', 'design', 'late']);
+        expect(events.map(e => e.name)).toEqual(['early', 'research', 'late', 'design']);
     });
 
     it('prefers tracked source when name overlaps with a transition', () => {

@@ -14,6 +14,7 @@
   border-radius: var(--radius-sm);
   transition: all var(--transition-fast);
   min-height: 24px;
+  padding-right: 32px;
 }
 
 .line.empty {
@@ -74,14 +75,14 @@
 .line-add-btn {
   position: absolute;
   left: auto; /* Unset left positioning */
-  right: 0; /* Position on right side */
-  top: 2px; /* Align to top */
-  width: 18px;
-  height: 18px;
+  right: 4px; /* Neutral control inside the reserved 32px annotation gutter. */
+  top: 2px;
+  width: 24px;
+  height: 24px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--info);
-  background: var(--info);
-  color: white;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
   opacity: 0;
   transition: all var(--transition-fast);
   cursor: pointer;
@@ -92,8 +93,8 @@
 }
 
 .line-add-btn svg {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
 }
 
@@ -116,9 +117,9 @@
 }
 
 .line-add-btn:hover {
-  background: color-mix(in srgb, var(--info) 85%, white);
-  border-color: color-mix(in srgb, var(--info) 85%, white);
-  transform: scale(1.1);
+  background: var(--bg-hover);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
 }
 
 .line-add-btn:active {
@@ -138,7 +139,7 @@ li.line {
   position: relative;
   padding-top: 0;
   padding-bottom: 0;
-  padding-right: 0; /* No extra padding */
+  padding-right: 32px;
   margin: 0;
   min-height: unset;
   list-style-position: outside;
@@ -155,7 +156,7 @@ li.line .line-content {
 
 li.line .line-add-btn {
   left: auto; /* Unset left positioning */
-  right: 0; /* Position on right side */
+  right: 4px;
   top: 4px;
 }
 

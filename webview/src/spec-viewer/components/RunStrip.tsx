@@ -7,7 +7,7 @@ import { heroStats, formatActiveTime } from '../activityHeroModel';
  */
 
 /** Least → most important; the CSS hides by this key as width runs out. */
-type FactKey = 'active' | 'checks' | 'traced' | 'concerns' | 'tasks';
+type FactKey = 'timing' | 'checks' | 'traced' | 'concerns' | 'tasks';
 
 export function RunStrip() {
     const vs = viewerState.value;
@@ -36,8 +36,13 @@ export function RunStrip() {
         });
     }
     if (stats.checks !== undefined) facts.push({ key: 'checks', value: `${stats.checks} checks` });
-    if (stats.trustedActiveMs !== undefined) {
-        facts.push({ key: 'active', value: `${formatActiveTime(stats.trustedActiveMs)} active` });
+    if (vs.timing?.complete && vs.timing.elapsedMs !== undefined) {
+        facts.push({ key: 'timing', value: `${formatActiveTime(vs.timing.elapsedMs)} elapsed` });
+    } else if (vs.timing && vs.timing.measuredPhases > 0) {
+        facts.push({
+            key: 'timing',
+            value: `Timing ${vs.timing.measuredPhases}/${vs.timing.expectedPhases} phases`,
+        });
     }
 
     if (facts.length === 0 && !vs.prUrl) return null;

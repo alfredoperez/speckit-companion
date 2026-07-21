@@ -1,11 +1,7 @@
 /**
  * SpecKit Companion - Activity Panel Styles
- * Card-stack layout: Approach, Phases, Tasks, Decisions, Concerns, Files.
- * Each card is hidden by its component when its data is absent.
- *
- * Substep timing inside Phases is intentionally NOT rendered — the on-disk
- * substep timestamps are AI-typed and unreliable. Only step-level durations
- * (extension-stamped) are shown.
+ * Run-log sections and their compact facts. AI/CLI substep timestamps render
+ * only as recorded-at events; only trustworthy step boundaries become spans.
  */
 
 .activity-panel {
@@ -70,7 +66,7 @@
    Phases card
    ============================================ */
 
-/* Overall span header: started · total · ended */
+/* Complete-run header: started · elapsed · ended */
 .phases-overall {
     display: flex;
     flex-wrap: wrap;
@@ -99,6 +95,12 @@
     font-weight: 600;
     color: var(--text-primary);
     font-variant-numeric: tabular-nums;
+}
+
+.phases-coverage {
+    margin: 0 0 var(--space-3);
+    color: var(--text-body);
+    font-size: 0.8rem;
 }
 
 /* Vertical timeline: phases stacked top-to-bottom on a left spine, one node each */
@@ -332,6 +334,7 @@
 }
 
 .living-specs-chip {
+    appearance: none;
     display: inline-block;
     max-width: 22em;
     overflow: hidden;
@@ -454,6 +457,34 @@
     font-size: 0.78rem;
     color: var(--text-body);
     font-variant-numeric: tabular-nums;
+}
+
+.phases-events {
+    margin-top: var(--space-4);
+    border-top: 1px solid var(--border);
+}
+
+.phases-events__group {
+    display: grid;
+    grid-template-columns: minmax(72px, 0.25fr) 1fr;
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.phases-events__group:last-child { border-bottom: 0; }
+
+.phases-events__group h4 {
+    margin: 2px 0 0;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 650;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.phases-events__group .timeline-entry {
+    grid-column: 2;
 }
 
 /* ============================================

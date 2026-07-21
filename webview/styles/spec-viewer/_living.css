@@ -1,7 +1,7 @@
 /**
  * SpecKit Companion - Living Spec Components
  * Styles the living-spec composition layer (draft notice, purpose callout,
- * requirement cards, scenario steps, uncovered evidence) via the existing
+ * requirement groups, scenario steps, uncovered evidence) via the existing
  * viewer tokens so every component tracks dark, light, high-contrast, narrow,
  * and reduced-motion modes without owning any raw color.
  */
@@ -39,24 +39,25 @@
  * Wraps the authored `## Purpose` heading + body, which stay commentable. */
 #markdown-content .living-purpose {
   margin: 0 0 var(--space-5);
-  padding: var(--space-4) var(--space-5);
-  background: var(--accent-subtle);
-  border-radius: var(--radius-md);
+  padding: 0 0 var(--space-4);
+  border-bottom: 1px solid var(--border);
 }
 
 #markdown-content .living-purpose h2 {
   margin-top: 0;
 }
 
-/* ── Requirement card ───────────────────────────────────────────────── */
-/* Each `###` requirement becomes a scannable card. The heading and body stay
- * as their own commentable lines inside the wrapper. */
+/* ── Requirement group ──────────────────────────────────────────────── */
+/* Header-led editorial groups: a quiet boundary, then heading/meta/prose on
+ * the page canvas. The wrapper preserves the component contract without
+ * turning a long capability into nested card soup. */
 #markdown-content .living-req-card {
   margin: 0 0 var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  padding: var(--space-3) 0 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
 }
 
 #markdown-content .living-req-card > h3 {

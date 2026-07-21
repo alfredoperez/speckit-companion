@@ -159,7 +159,8 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
     },
     livingUpdate: (_msg, dir, deps) => handleLivingUpdate(dir, deps),
     openFile: (msg, _dir, deps) => handleOpenFile(msg.filename, deps),
-    openLivingSpec: (msg, _dir, deps) => handleOpenLivingSpec(msg.specPath, deps),
+    openLivingSpec: (msg, _dir, deps) =>
+      handleOpenLivingSpec(msg.specPath, msg.capabilityName, deps),
     webviewError: async (msg, _dir, deps) => {
       deps.outputChannel.appendLine(
         `[SpecViewer] Webview error (${msg.source}): ${msg.message}` +
@@ -766,14 +767,38 @@ async function handleLivingUpdate(
  * before it reaches the filesystem — the same guard the tree's open command uses.
  */
 async function handleOpenLivingSpec(
-  specPath: string,
+  suppliedPath: string | undefined,
+  capabilityName: string,
   deps: MessageHandlerDependencies,
 ): Promise<void> {
   const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-  if (!root || !isPathWithinRoot(root, specPath)) {
+  if (!root) return;
+
+  let specPath = suppliedPath;
+  if (!specPath) {
+    const safeName = /^[a-zA-Z0-9._-]+$/.test(capabilityName) ? capabilityName : null;
+    if (safeName) {
+      const patterns = [`**/${safeName}.spec.md`, `**/${safeName}/spec.md`];
+      for (const pattern of patterns) {
+        const matches = await vscode.workspace.findFiles(
+          pattern,
+          '**/{.git,node_modules,dist,storybook-static}/**',
+          1,
+        );
+        const match = matches[0];
+        if (match) {
+          specPath = path.relative(root, match.fsPath);
+          break;
+        }
+      }
+    }
+  }
+
+  if (!specPath || !isPathWithinRoot(root, specPath)) {
     deps.outputChannel.appendLine(
-      `[SpecViewer] Refusing to open living spec outside workspace: ${specPath}`,
+      `[SpecViewer] Unable to resolve living spec for capability: ${capabilityName}`,
     );
+    vscode.window.showWarningMessage(`Living spec not found: ${capabilityName}`);
     return;
   }
   const absPath = path.join(root, specPath);

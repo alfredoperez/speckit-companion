@@ -1,15 +1,15 @@
 /**
- * Merge `stepHistory.substeps` (carries duration) with non-null history
- * substeps (carries actor) into a single chronological event list per step.
+ * Merge derived substep rows with append-only history into one chronological
+ * event list per step.
  *
- * - Tracked events come from `stepHistory[step].substeps[]`. They have a
- *   `startedAt` and `completedAt` so we can render a duration.
+ * - Tracked events come from `stepHistory[step].substeps[]`, but their spans
+ *   are not presented as work durations; AI/CLI finishes are cadence records.
  * - Logged-only events come from history entries whose `substep` is non-null
  *   and whose name isn't already in the tracked set. They only carry an `at`
  *   timestamp; render as a single moment.
  *
- * Every event also gets an optional `by` actor, looked up from the matching
- * history entry by `(step, substep-name)`.
+ * Every event gets an optional actor and a `recordedAt` journal timestamp,
+ * looked up from the matching history entry by `(step, substep-name)`.
  */
 
 import type { HistoryEntry, StepHistoryEntry, SubstepEntry } from './types';
@@ -49,6 +49,8 @@ export interface TimelineEventModel {
     name: string;
     startedAt: string;
     completedAt: string | null;
+    /** The journal timestamp shown to readers; never interpreted as a duration boundary. */
+    recordedAt: string;
     source: TimelineEventSource;
     by?: string;
     /** Task id when this event is a per-task entry (T001…), else null. */
@@ -93,6 +95,7 @@ export function mergeStepEvents(
             name: sub.name,
             startedAt: sub.startedAt,
             completedAt: sub.completedAt ?? null,
+            recordedAt: tx?.at ?? sub.completedAt ?? sub.startedAt,
             source: 'tracked',
             by: tx?.by,
             task: tx && isPerTaskEntry(tx) ? tx.task : null,
@@ -113,11 +116,12 @@ export function mergeStepEvents(
             name: tx.substep,
             startedAt: tx.at,
             completedAt: null,
+            recordedAt: tx.at,
             source: 'logged',
             by: tx.by,
         });
     }
 
-    out.sort((a, b) => new Date(a.startedAt).getTime() - new Date(b.startedAt).getTime());
+    out.sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime());
     return out;
 }

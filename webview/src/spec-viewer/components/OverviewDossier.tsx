@@ -1,4 +1,6 @@
 import type { ViewerState } from '../types';
+import { formatElapsed } from '../relativeTime';
+import { LivingSpecLinks, livingSpecChips } from './cards/LivingSpecsCard';
 
 /**
  * The Overview's sections, ordered by what a future session needs:
@@ -8,6 +10,59 @@ import type { ViewerState } from '../types';
 
 const CONSTRAINT_PREFIX = 'constraint: ';
 const AREA_PREFIX = 'area: ';
+const PHASE_ORDER = ['specify', 'clarify', 'plan', 'tasks', 'analyze', 'implement'];
+
+function phaseNames(state: ViewerState): string[] {
+    const keys = Object.keys(state.stepHistory ?? {});
+    const known = PHASE_ORDER.filter(step => keys.includes(step));
+    return [...known, ...keys.filter(step => !PHASE_ORDER.includes(step))];
+}
+
+/** Compact lifecycle signal for the top of Overview; task events stay in Run Log. */
+export function OverviewTiming({ state }: { state: ViewerState }) {
+    const phases = phaseNames(state);
+    if (phases.length === 0) return null;
+
+    const timing = state.timing;
+    const complete = timing?.complete === true && timing.elapsedMs !== undefined;
+    const summary = complete
+        ? `${formatElapsed(timing.elapsedMs!)} elapsed`
+        : timing
+            ? `Timing coverage: ${timing.measuredPhases} of ${timing.expectedPhases} phases`
+            : 'Timing not recorded';
+
+    return (
+        <section class="dossier-timing" aria-label="Run timing overview">
+            <div class="dossier-timing__head">
+                <span class="dossier-kicker">Run overview</span>
+                {summary && <strong>{summary}</strong>}
+            </div>
+            <div class="dossier-timing__phases" role="list">
+                {phases.map((phase, index) => {
+                    const entry = state.stepHistory[phase];
+                    const inFlight = entry.completedAt === null;
+                    const duration = entry.durationTrusted && entry.completedAt
+                        ? formatElapsed(Date.parse(entry.completedAt) - Date.parse(entry.startedAt))
+                        : null;
+                    return (
+                        <div
+                            key={phase}
+                            role="listitem"
+                            class={`dossier-timing__phase${inFlight ? ' is-in-flight' : ''}`}
+                        >
+                            {index > 0 && <span class="dossier-timing__connector" aria-hidden="true" />}
+                            <span class="dossier-timing__dot" aria-hidden="true" />
+                            <span class="dossier-timing__name">
+                                {phase.charAt(0).toUpperCase() + phase.slice(1)}
+                            </span>
+                            {duration && <span class="dossier-timing__duration">{duration}</span>}
+                        </div>
+                    );
+                })}
+            </div>
+        </section>
+    );
+}
 
 function sizingLine(c: NonNullable<ViewerState['classification']>): string {
     const parts: string[] = [];
@@ -39,22 +94,36 @@ function SectionHead({ kicker, title, count, tone }: {
 export function IntentSection({ state }: { state: ViewerState }) {
     const { intent, approach, context, classification } = state;
     const area = context?.find(item => item.startsWith(AREA_PREFIX))?.slice(AREA_PREFIX.length);
-    if (!intent && !approach && !area) return null;
+    const livingSpecs = state.livingSpecs;
+    const livingSpecsCount = livingSpecs ? livingSpecChips(livingSpecs).length : 0;
+    const hasTiming = phaseNames(state).length > 0;
+    if (!intent && !approach && !area && !classification && livingSpecsCount === 0 && !hasTiming) return null;
 
     return (
         <section class="dossier-intent" aria-label="Intent">
             <p class="dossier-kicker">Intent</p>
             {intent && <p class="dossier-intent__statement">{intent}</p>}
-            {(approach || area || classification) && (
+            <OverviewTiming state={state} />
+            {(approach || area || classification || livingSpecsCount > 0) && (
                 <div class="dossier-intent__meta">
-                    {approach && (
-                        <div>
-                            <span class="dossier-meta-label">Approach</span>
-                            <p>{approach}</p>
+                    {(approach || (livingSpecs && livingSpecsCount > 0)) && (
+                        <div class="dossier-intent__approach">
+                            {approach && (
+                                <>
+                                    <span class="dossier-meta-label">Approach</span>
+                                    <p>{approach}</p>
+                                </>
+                            )}
+                            {livingSpecs && livingSpecsCount > 0 && (
+                                <div class="dossier-intent__living-specs">
+                                    <span class="dossier-meta-label">Living specs</span>
+                                    <LivingSpecLinks livingSpecs={livingSpecs} />
+                                </div>
+                            )}
                         </div>
                     )}
                     {(area || classification) && (
-                        <div>
+                        <div class="dossier-intent__context">
                             {area && (
                                 <>
                                     <span class="dossier-meta-label">Working area</span>

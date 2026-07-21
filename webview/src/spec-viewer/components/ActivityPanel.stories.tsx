@@ -246,11 +246,20 @@ const richReasoningState: ViewerState = {
         tasks: { startedAt: '2026-07-02T10:18:00Z', completedAt: '2026-07-02T10:21:00Z', durationTrusted: true },
         implement: { startedAt: '2026-07-02T10:21:00Z', completedAt: '2026-07-02T10:52:00Z', durationTrusted: true },
     },
+    timing: {
+        measuredPhases: 4,
+        expectedPhases: 4,
+        complete: true,
+        startedAt: '2026-07-02T10:00:00Z',
+        endedAt: '2026-07-02T10:52:00Z',
+        elapsedMs: 52 * 60_000,
+    },
     intent: 'Turn the Activity panel from an 11-card scroll into a brief: hero summary, always-visible ICE plan, tabbed detail, and signature data visuals.',
     context: ['area: webview/src/spec-viewer/components', 'constraint: approved A-hybrid mock', 'living spec: none configured'],
     expectations: ['existing cards reused inside tabs', 'tab state in-memory only', 'color encodes state only'],
     approach: 'Three new components recomposing existing cards; signature elements as token-driven CSS and SVG.',
     classification: { projectedFiles: 12, projectedTasks: 11, scopeSignal: 'none', verdict: 'normal' },
+    livingSpecs: { loaded: ['viewer-ui', 'spec-viewer'], synced: ['viewer-ui'] },
     decisions: [
         { decision: 'inline SVG stroke-dasharray donut', why: 'zero dependencies, token-colored', rejected: 'a chart library' },
         { decision: 'tab state as an in-memory signal', why: 'matches the webview reactive idiom', rejected: 'persisting the active tab' },
@@ -322,6 +331,7 @@ export const DossierMidPipeline: Story = {
                 plan: { startedAt: '2026-07-02T10:06:00Z', completedAt: '2026-07-02T10:18:00Z', durationTrusted: false },
                 implement: { startedAt: '2026-07-02T10:21:00Z', completedAt: null, durationTrusted: true },
             },
+            timing: { measuredPhases: 1, expectedPhases: 4, complete: false },
         };
         navState.value = { showInstallPrompt: false } as NavState;
         return <div style="max-width: 900px;"><ActivityPanel /></div>;

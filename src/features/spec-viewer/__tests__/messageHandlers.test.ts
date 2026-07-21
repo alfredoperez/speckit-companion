@@ -76,6 +76,53 @@ function createMockDeps(overrides?: Partial<MessageHandlerDependencies>): Messag
     };
 }
 
+describe('messageHandlers - living spec navigation', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        (vscode.workspace as any).workspaceFolders = [{ uri: vscode.Uri.file('/workspace') }];
+    });
+
+    afterEach(() => {
+        (vscode.workspace as any).workspaceFolders = undefined;
+    });
+
+    it('opens the exact enriched capability path in Living mode', async () => {
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({
+            type: 'openLivingSpec',
+            capabilityName: 'todos',
+            specPath: 'capabilities/todos/spec.md',
+        });
+
+        expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
+            'speckit.viewSpecDocument',
+            '/workspace/capabilities/todos/spec.md',
+            { living: true },
+        );
+    });
+
+    it('resolves a historical names-only capability to its colocated spec', async () => {
+        (vscode.workspace.findFiles as jest.Mock).mockResolvedValueOnce([
+            vscode.Uri.file('/workspace/webview/src/spec-viewer/viewer-ui.spec.md'),
+        ]);
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openLivingSpec', capabilityName: 'viewer-ui' });
+
+        expect(vscode.workspace.findFiles).toHaveBeenCalledWith(
+            '**/viewer-ui.spec.md',
+            '**/{.git,node_modules,dist,storybook-static}/**',
+            1,
+        );
+        expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
+            'speckit.viewSpecDocument',
+            '/workspace/webview/src/spec-viewer/viewer-ui.spec.md',
+            { living: true },
+        );
+    });
+});
+
 describe('messageHandlers - lifecycle actions', () => {
     beforeEach(() => {
         jest.clearAllMocks();

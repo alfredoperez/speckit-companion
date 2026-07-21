@@ -184,6 +184,15 @@ export interface StepHistoryEntry {
     durationTrusted?: boolean;
 }
 
+export interface TimingSummary {
+    measuredPhases: number;
+    expectedPhases: number;
+    complete: boolean;
+    startedAt?: string;
+    endedAt?: string;
+    elapsedMs?: number;
+}
+
 export interface TaskSummary {
     status: string;
     did?: string;
@@ -261,6 +270,7 @@ export interface ViewerState {
     footer: SerializedFooterAction[];
     history: HistoryEntry[];
     stepHistory: Record<string, StepHistoryEntry>;
+    timing?: TimingSummary;
     approach?: string;
     lastAction?: string;
     taskSummaries?: Record<string, TaskSummary>;
@@ -351,7 +361,7 @@ export type ViewerToExtensionMessage =
     // File reference click
     | { type: 'openFile'; filename: string }
     // Living-specs chip click — open the capability in the Living Specs viewer
-    | { type: 'openLivingSpec'; specPath: string }
+    | { type: 'openLivingSpec'; capabilityName: string; specPath?: string }
     // Webview render-time error (reported by error boundaries)
     | { type: 'webviewError'; source: string; message: string; stack?: string };
 

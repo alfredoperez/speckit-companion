@@ -30,7 +30,7 @@ import {
     LivingSpecsView,
 } from '../../core/types/specContext';
 import { getFooterActions } from './footerActions';
-import { deriveStepHistory } from '../specs/stepHistoryDerivation';
+import { deriveStepHistory, deriveTimingSummary } from '../specs/stepHistoryDerivation';
 import type { WorkflowStepConfig } from '../workflows/types';
 
 type DerivedHistory = Record<string, StepHistoryEntry>;
@@ -313,6 +313,9 @@ export function deriveViewerState(
     // Derive stepHistory once from the canonical history[] sequence and reuse
     // it across all the per-step derivations below.
     const stepHistory = deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status);
+    const expectedTimingPhases = workflowSteps?.length
+        ? workflowSteps.map(step => step.name)
+        : ['specify', 'plan', 'tasks', 'implement'];
     return {
         status: ctx.status,
         activeStep,
@@ -323,6 +326,7 @@ export function deriveViewerState(
         footer: getFooterActions(ctx, activeStep, workflowSteps),
         history: ctx.history ?? [],
         stepHistory,
+        timing: deriveTimingSummary(stepHistory, expectedTimingPhases),
         approach: pickString(ctx, 'approach'),
         lastAction: pickString(ctx, 'last_action'),
         taskSummaries: pickRecord<TaskSummary>(ctx, 'task_summaries'),

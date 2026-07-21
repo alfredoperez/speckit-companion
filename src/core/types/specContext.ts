@@ -95,6 +95,22 @@ export interface StepHistoryEntry {
     durationTrusted?: boolean;
 }
 
+/**
+ * Honest, derived timing coverage for one feature run. This is never persisted;
+ * `history[]` remains the only timing source on disk.
+ */
+export interface TimingSummary {
+    measuredPhases: number;
+    expectedPhases: number;
+    complete: boolean;
+    /** Present only when every expected phase has a trustworthy closed span. */
+    startedAt?: string;
+    /** Present only when every expected phase has a trustworthy closed span. */
+    endedAt?: string;
+    /** Wall-clock elapsed time, including pauses; present only for a complete run. */
+    elapsedMs?: number;
+}
+
 export interface HistoryEntryFrom {
     step: StepName | null;
     substep: string | null;
@@ -389,6 +405,7 @@ export interface ViewerState {
     footer: FooterAction[];
     history: HistoryEntry[];
     stepHistory: Record<string, StepHistoryEntry>;
+    timing: TimingSummary;
     /** Activity panel — passthroughs from `.spec-context.json`. */
     approach?: string;
     lastAction?: string;

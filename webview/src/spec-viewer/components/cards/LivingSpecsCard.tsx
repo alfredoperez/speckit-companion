@@ -6,7 +6,7 @@ export interface LivingSpecsCardProps {
     state: ViewerState;
 }
 
-interface Chip {
+export interface LivingSpecChip {
     name: string;
     synced: boolean;
     specPath?: string;
@@ -17,7 +17,7 @@ interface Chip {
  * `capabilities` (which carry the clickable spec path); falls back to the
  * names-only `loaded`/`synced` arrays for legacy payloads.
  */
-function toChips(ls: LivingSpecsView): Chip[] {
+export function livingSpecChips(ls: LivingSpecsView): LivingSpecChip[] {
     if (ls.capabilities && ls.capabilities.length > 0) {
         return ls.capabilities.map((cap: CapabilityContentView) => ({
             name: cap.name,
@@ -27,13 +27,50 @@ function toChips(ls: LivingSpecsView): Chip[] {
     }
     const synced = new Set(ls.synced);
     const seen = new Set<string>();
-    const chips: Chip[] = [];
+    const chips: LivingSpecChip[] = [];
     for (const name of [...ls.loaded, ...ls.synced]) {
         if (seen.has(name)) continue;
         seen.add(name);
         chips.push({ name, synced: synced.has(name) });
     }
     return chips;
+}
+
+/** Shared compact links used by both the Overview context and legacy card story. */
+export function LivingSpecLinks({ livingSpecs }: { livingSpecs: LivingSpecsView }) {
+    const chips = livingSpecChips(livingSpecs);
+    if (chips.length === 0) return null;
+
+    const openSpec = (chip: LivingSpecChip) => {
+        vscode.postMessage({
+            type: 'openLivingSpec',
+            capabilityName: chip.name,
+            ...(chip.specPath ? { specPath: chip.specPath } : {}),
+        });
+    };
+
+    return (
+        <ul class="living-specs-chips">
+            {chips.map(chip => (
+                <li key={chip.name} class="living-specs-chips__item">
+                    <button
+                        type="button"
+                        class="living-specs-chip living-specs-chip--link"
+                        title={`Open ${chip.name} in the Living Specs viewer`}
+                        aria-label={`Open ${chip.name} in the Living Specs viewer`}
+                        onClick={() => openSpec(chip)}
+                    >
+                        {chip.name}
+                    </button>
+                    {chip.synced && (
+                        <span class="living-specs-chip__synced" title="Folded back into the living spec">
+                            folded back
+                        </span>
+                    )}
+                </li>
+            ))}
+        </ul>
+    );
 }
 
 /**
@@ -47,40 +84,14 @@ export function LivingSpecsCard({ state }: LivingSpecsCardProps) {
     const ls = state.livingSpecs;
     if (!ls) return null;
 
-    const chips = toChips(ls);
+    const chips = livingSpecChips(ls);
     if (chips.length === 0) return null;
-
-    const openSpec = (specPath: string) => {
-        vscode.postMessage({ type: 'openLivingSpec', specPath });
-    };
 
     return (
         <section class="activity-card activity-card--living-specs">
             <h3 class="activity-card__title">Living specs</h3>
             <div class="activity-card__body">
-                <ul class="living-specs-chips">
-                    {chips.map(chip => (
-                        <li key={chip.name} class="living-specs-chips__item">
-                            {chip.specPath ? (
-                                <button
-                                    type="button"
-                                    class="living-specs-chip living-specs-chip--link"
-                                    title={`Open ${chip.name} in the Living Specs viewer`}
-                                    onClick={() => openSpec(chip.specPath!)}
-                                >
-                                    {chip.name}
-                                </button>
-                            ) : (
-                                <span class="living-specs-chip">{chip.name}</span>
-                            )}
-                            {chip.synced && (
-                                <span class="living-specs-chip__synced" title="Folded back into the living spec">
-                                    folded back
-                                </span>
-                            )}
-                        </li>
-                    ))}
-                </ul>
+                <LivingSpecLinks livingSpecs={ls} />
             </div>
         </section>
     );

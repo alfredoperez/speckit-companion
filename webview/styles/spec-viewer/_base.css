@@ -110,7 +110,7 @@ body {
 /* The facts yield from the least important end as the pane narrows: first the
    time and the checks, then everything but the way back to the Overview. */
 @container viewer (max-width: 1100px) {
-    .run-strip__fact[data-fact="active"],
+    .run-strip__fact[data-fact="timing"],
     .run-strip__fact[data-fact="checks"],
     .run-strip__pr {
         display: none;
