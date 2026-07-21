@@ -460,10 +460,19 @@ export type ViewerToExtensionMessage =
     | {
           type: 'setStatus';
       }
+    // Living-spec drift → fold the changed code back into the spec
+    | {
+          type: 'livingUpdate';
+      }
     // File reference click
     | {
           type: 'openFile';
           filename: string;
+      }
+    // Living-specs chip click — open the capability in the Living Specs viewer
+    | {
+          type: 'openLivingSpec';
+          specPath: string;
       }
     // Webview render-time error (reported by error boundaries)
     | {

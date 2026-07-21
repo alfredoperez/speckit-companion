@@ -473,6 +473,102 @@ export function readLivingSpecs(
     };
 }
 
+/** A directory node in the capability tree; groups capabilities by where their specs live. */
+export interface CapabilityTreeGroup {
+    kind: 'group';
+    /** The single path segment this node names (e.g. `features`). */
+    name: string;
+    /** The full POSIX prefix from the root (e.g. `src/features`). */
+    path: string;
+    children: CapabilityTreeNode[];
+}
+
+/** A capability leaf in the capability tree. */
+export interface CapabilityTreeLeaf {
+    kind: 'capability';
+    capability: ResolvedCapability;
+}
+
+export type CapabilityTreeNode = CapabilityTreeGroup | CapabilityTreeLeaf;
+
+/** Folder of a POSIX relative path, or '' when it sits at the root. */
+function dirOf(rel: string): string {
+    const dir = path.posix.dirname(posix(rel));
+    return dir === '.' || dir === '' ? '' : dir;
+}
+
+/**
+ * The directory segments a capability groups under — the parent of the folder
+ * its spec lives in. `src/core/core.spec.md` groups under `src`; a colocated
+ * `src/features/specs/specs.spec.md` groups under `src/features`; a spec at the
+ * repo root groups under nothing. The capability's own folder is dropped because
+ * the leaf itself stands in for it (labeled by the capability name).
+ */
+function capabilityGroupSegments(cap: ResolvedCapability): string[] {
+    const groupDir = dirOf(dirOf(cap.spec));
+    return groupDir === '' ? [] : groupDir.split('/');
+}
+
+/**
+ * Group capabilities into a directory tree mirroring where their specs live, so
+ * the Living Specs view's shape matches the codebase. Groups and leaves at each
+ * level sort by name together, and capabilities keep their resolved data on the
+ * leaf so the provider can compute row health lazily.
+ */
+export function buildCapabilityTree(capabilities: ResolvedCapability[]): CapabilityTreeNode[] {
+    const root: CapabilityTreeGroup = { kind: 'group', name: '', path: '', children: [] };
+    for (const cap of capabilities) {
+        let node = root;
+        let prefix = '';
+        for (const segment of capabilityGroupSegments(cap)) {
+            prefix = prefix ? `${prefix}/${segment}` : segment;
+            let child = node.children.find(
+                (c): c is CapabilityTreeGroup => c.kind === 'group' && c.path === prefix,
+            );
+            if (!child) {
+                child = { kind: 'group', name: segment, path: prefix, children: [] };
+                node.children.push(child);
+            }
+            node = child;
+        }
+        node.children.push({ kind: 'capability', capability: cap });
+    }
+    sortTreeChildren(root);
+    return root.children;
+}
+
+function nodeName(node: CapabilityTreeNode): string {
+    return node.kind === 'group' ? node.name : node.capability.name;
+}
+
+function sortTreeChildren(group: CapabilityTreeGroup): void {
+    group.children.sort((a, b) => nodeName(a).localeCompare(nodeName(b)));
+    for (const child of group.children) {
+        if (child.kind === 'group') {
+            sortTreeChildren(child);
+        }
+    }
+}
+
+/**
+ * The capability whose resolved spec path equals `specRelPath`, or undefined
+ * when none claims it. The viewer's Update action resolves the owning capability
+ * this way so it and the sidebar act on the same record.
+ */
+export function resolveCapabilityBySpecPath(
+    workspaceRoot: string,
+    specRelPath: string,
+): ResolvedCapability | undefined {
+    let listing: LivingSpecsListing;
+    try {
+        listing = readLivingSpecs(workspaceRoot, { withOrphans: false });
+    } catch {
+        return undefined;
+    }
+    const rel = posix(specRelPath);
+    return listing.capabilities.find(c => c.spec === rel);
+}
+
 // --- Capability health (coverage count + drift) ------------------------------
 //
 // TS mirrors of the CLI rules in `check-coverage.py` and `drift.py`, kept
@@ -548,11 +644,11 @@ function readCoverageCount(root: string, cap: ResolvedCapability): CapabilityHea
     }
 }
 
-async function readDrifted(
+async function computeDriftedFiles(
     root: string,
     cap: ResolvedCapability,
     git: GitRunner,
-): Promise<boolean | undefined> {
+): Promise<string[] | undefined> {
     if (!cap.exists || cap.match.length === 0) {
         return undefined;
     }
@@ -566,16 +662,46 @@ async function readDrifted(
             .map(f => f.trim())
             .filter(Boolean);
         const ownFiles = new Set([cap.spec, ...tierPaths(cap.spec, root).map(t => t.path)]);
-        const drifted = changed.some(file =>
+        return changed.filter(file =>
             cap.match.some(g => globMatches(g, file)) &&
             !cap.exclude.some(g => globMatches(g, file)) &&
             !DEFAULT_EXEMPT_GLOBS.some(g => globMatches(g, file) || globMatches(`**/${g}`, file)) &&
             !ownFiles.has(posix(file))
         );
-        return drifted;
     } catch {
         return undefined; // no git, not a repo, timeout — silently absent
     }
+}
+
+async function readDrifted(
+    root: string,
+    cap: ResolvedCapability,
+    git: GitRunner,
+): Promise<boolean | undefined> {
+    const files = await computeDriftedFiles(root, cap, git);
+    return files === undefined ? undefined : files.length > 0;
+}
+
+/**
+ * The source files that drifted a capability — those changed since its spec's
+ * last commit, after membership/exempt filtering. Time-bounded like the health
+ * call, and absent (not `[]`) on any git/timeout failure. The Update action
+ * lists these so the AI knows exactly what changed.
+ */
+export async function readDriftedFiles(
+    workspaceRoot: string,
+    cap: ResolvedCapability,
+    opts?: { timeoutMs?: number; git?: GitRunner },
+): Promise<string[] | undefined> {
+    const timeoutMs = opts?.timeoutMs ?? 1500;
+    let timer: unknown;
+    const files = await Promise.race([
+        computeDriftedFiles(workspaceRoot, cap, opts?.git ?? makeDefaultGitRunner(timeoutMs)),
+        new Promise<undefined>(resolve => { timer = setTimeout(resolve, timeoutMs); }),
+    ])
+        .catch(() => undefined)
+        .finally(() => clearTimeout(timer as ReturnType<typeof setTimeout>));
+    return files;
 }
 
 /**

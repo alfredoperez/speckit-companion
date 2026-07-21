@@ -43,8 +43,8 @@ export function IntentSection({ state }: { state: ViewerState }) {
 
     return (
         <section class="dossier-intent" aria-label="Intent">
-            <p class="dossier-kicker">Durable context · Intent</p>
-            {intent && <h2 class="dossier-intent__statement">{intent}</h2>}
+            <p class="dossier-kicker">Intent</p>
+            {intent && <p class="dossier-intent__statement">{intent}</p>}
             {(approach || area || classification) && (
                 <div class="dossier-intent__meta">
                     {approach && (
