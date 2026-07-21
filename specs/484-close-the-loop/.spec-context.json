@@ -1,0 +1,375 @@
+{
+  "workflow": "speckit",
+  "specName": "close the loop",
+  "branch": "484-close-the-loop",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T04:54:47.394Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T04:56:53.041Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T04:58:08.019Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T04:58:08.090Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T04:58:08.222Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T04:58:18.300Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T04:58:58.186Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T04:58:58.320Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T04:59:18.547Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T04:59:32.305Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T05:04:07.157Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T05:04:07.206Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T05:04:07.254Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T05:04:07.304Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T05:04:07.353Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T05:04:07.401Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T05:04:07.451Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T05:04:07.499Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T05:04:07.544Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T05:06:01.698Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T05:06:01.747Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T05:06:01.796Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T05:06:01.863Z"
+    }
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "In-flight derivation treats a history-recorded step completion as settled despite a lagging status",
+      "tasks": [
+        "T001",
+        "T004"
+      ]
+    },
+    "FR-004": {
+      "title": "Reconciler moves a lagging in-progress status forward to the step's settled status",
+      "tasks": [
+        "T002",
+        "T005"
+      ]
+    },
+    "FR-007": {
+      "title": "Fold-back applies a real capability delta block to the living spec at completion",
+      "tasks": [
+        "T006",
+        "T008"
+      ]
+    },
+    "FR-008": {
+      "title": "Fold-back reports the single reason that applied, never an OR-string",
+      "tasks": [
+        "T006",
+        "T007",
+        "T008"
+      ]
+    },
+    "FR-009": {
+      "title": "Fold-back surfaces an actionable signal when capabilities loaded but no delta block",
+      "tasks": [
+        "T006",
+        "T008"
+      ]
+    }
+  },
+  "livingSpecs": {
+    "loaded": [
+      "viewer-ui",
+      "spec-viewer",
+      "capture-runtime",
+      "specs"
+    ],
+    "synced": [
+      "viewer-ui"
+    ]
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 12,
+    "projectedTasks": 16,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "context": [
+    "living spec: viewer-ui",
+    "living spec: capture-runtime",
+    "area: spec-viewer footer + stepInFlight derivation",
+    "area: living_spec_fold.py fold-back",
+    "constraint: settle is forward-only, never writes terminal completed"
+  ],
+  "intent": "Close the pipeline loop so finishing tasks unlocks the panel and completing a feature folds its changes back into the living spec",
+  "expectations": [
+    "does not auto-synthesize delta blocks from ordinary requirements",
+    "does not change specify-time living-spec reading"
+  ],
+  "approach": "Make the viewer's in-flight derivation resilient so a recorded step completion settles the step even when the top-level status lags; add a forward-only reconciler settle that heals the on-disk status; and make fold-back name the exact outcome plus an actionable loaded-but-no-delta signal.",
+  "decisions": [
+    {
+      "decision": "Check history completion before status in isStepInFlight",
+      "why": "The footer already offers the forward action when tasks is complete in history; only the status-derived stepInFlight flag suppresses it, so fixing the flag is the minimal surface-agnostic fix",
+      "rejected": "Only fixing the hook to flip status (the hook does not always fire; the reader must not trust a laggable field)"
+    },
+    {
+      "decision": "Move fold-back reason strings into fold_living_spec and drop the OR-string",
+      "why": "Each early-return can then name the one condition that fired, and the no-delta branch can surface loaded capabilities",
+      "rejected": "Auto-synthesizing delta blocks from ordinary requirements (risks writing fabricated content into the durable record)"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Reader-resilient in-flight derivation + defensive reconciler settle + exact-reason fold-back",
+      "key_finding": "The footer catalog already offers the forward action; only the status-derived stepInFlight flag locks it"
+    },
+    "tasks": {
+      "summary": "12 tasks across 2 P1 stories (viewer/reconciler + fold-back) plus polish; waves marked"
+    }
+  },
+  "currentTask": "T012",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Reorder isStepInFlight to settle a step from a recorded completion before consulting status",
+      "files": [
+        "webview/src/spec-viewer/stepInFlight.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Add forward-only reconciler settle: lagging in-progress status moves to settled form when history shows the step complete; never implement",
+      "files": [
+        "src/features/specs/specContextReconciler.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Compute FooterActions stepInFlight via resilient isStepInFlight, not status alone",
+      "files": [
+        "webview/src/spec-viewer/components/FooterActions.tsx"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Status-settles eval: tasking + tasks-complete history reads settled; genuinely-running stays in flight",
+      "files": [
+        "webview/src/spec-viewer/__tests__/stepInFlight.test.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Reconciler-settle eval: tasking->ready-to-implement; running left alone; implement never promoted",
+      "files": [
+        "src/features/specs/__tests__/specContextReconciler.test.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Fold names exact reason per early-return; actionable loaded-but-no-delta signal",
+      "files": [
+        "speckit-extension/scripts/living_spec_fold.py"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Drop generic OR-string; fold owns its message",
+      "files": [
+        "speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Fold-back-writes + exact-reason evals (delta folds; loaded-no-delta actionable; disabled/off)",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "after_tasks settles status to ready-to-implement regression lock",
+      "files": [
+        "speckit-extension/tests/test_context.py"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Rewrote in-flight derivation order in viewer-states.md: a recorded completion settles the step over a lagging status",
+      "files": [
+        "docs/viewer-states.md"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "speckit-extension CHANGELOG [Unreleased] + README note for exact-reason fold-back and loaded-but-no-delta signal",
+      "files": [
+        "speckit-extension/CHANGELOG.md",
+        "speckit-extension/README.md"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Verified: npm test 1721 pass, jest reconciler/stepInFlight, shape-parity OK, python 446 pass"
+    }
+  },
+  "verified": [
+    {
+      "what": "Full jest suite",
+      "result": "1721 passed",
+      "command": "npm test"
+    },
+    {
+      "what": "Capture shape parity",
+      "result": "OK — 14 bodies match",
+      "command": "python3 speckit-extension/scripts/check-shape-parity.py"
+    },
+    {
+      "what": "speckit-extension python suite",
+      "result": "446 passed",
+      "command": "python3 -m unittest discover -s tests"
+    }
+  ],
+  "last_action": "all 12 tasks done — 1721 jest + 446 python green, shape parity OK"
+}

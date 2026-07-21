@@ -222,3 +222,20 @@ The following files were not read in full — their exported surface and role we
 - `webview/src/spec-viewer/components/cards/toStringArray.ts`
 - `webview/src/spec-viewer/components/index.ts`
 - All `*.stories.tsx` files and all files under `__tests__/`
+
+### A recorded step completion settles the step even when status lags
+
+A step whose completion is recorded in the run's history is read as settled, and its forward action reappears, even when the top-level status still names that step as running. A lagging status can never keep a finished step spinning or hold the panel locked.
+
+#### Scenario: history records the current step complete but status still names it running
+
+- **WHEN** the current step's completion is present in history but the top-level status still names that step as in progress
+- **THEN** the step reads as settled and no spinner runs
+- **AND** the forward-motion action reappears
+
+#### Scenario: the step is genuinely still running
+
+- **WHEN** the current step's latest history entry is a start with no matching completion
+- **THEN** the step reads as running and the forward action stays withheld
+
+> The companion requirement for #492 — fold-back naming its exact outcome and surfacing loaded-but-unfolded capabilities — is recorded in the `capture-runtime` living spec's own change record and the spec-kit extension CHANGELOG, not folded here: the fold grammar applies one delta set to its target, so routing this feature's cross-cutting change through a single `viewer-ui` block keeps each capability spec honest.

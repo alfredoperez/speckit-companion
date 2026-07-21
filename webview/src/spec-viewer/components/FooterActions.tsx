@@ -1,5 +1,5 @@
 import { navState, viewerState } from '../signals';
-import { inFlightStepFor } from '../stepInFlight';
+import { inFlightStepFor, isStepInFlight } from '../stepInFlight';
 import { CatalogFooter } from './footer/CatalogFooter';
 
 export interface FooterActionsProps {
@@ -24,7 +24,15 @@ export function FooterActions(_props: FooterActionsProps) {
     // it reaches the closure gate. CatalogFooter additionally suppresses them once
     // the footer offers a closure action.
     const isActive = status !== 'implemented' && status !== 'completed' && status !== 'archived';
-    const stepInFlight = inFlightStepFor(status) !== undefined;
+    // Ask the resilient (history-aware) derivation, not the status string, so a lagging status can't lock the button.
+    const runningStep = inFlightStepFor(status);
+    const stepInFlight = runningStep !== undefined && isStepInFlight(runningStep, {
+        status,
+        activeStep: vs.activeStep,
+        currentStep: vs.activeStep,
+        stepHistory: vs.stepHistory,
+        stepBadges: vs.steps,
+    });
     const enhancementButtons = ns?.enhancementButtons ?? [];
 
     return (

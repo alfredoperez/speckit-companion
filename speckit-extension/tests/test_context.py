@@ -81,6 +81,16 @@ class LifecycleCaptureTests(unittest.TestCase):
         self.assertEqual(h[-1]["step"], "plan")
         self.assertEqual(h[-1]["kind"], "start")
 
+    def test_after_tasks_settles_status_to_ready_to_implement(self) -> None:
+        # #491: the after_tasks hook is what flips tasking -> ready-to-implement.
+        # Lock that the writer settles the top-level status so the panel can
+        # unlock — the hook path (currentStep=tasks) must land at the settled
+        # status, not linger at tasking.
+        wc.update_context(self.fd, "tasks", "ready-to-implement", "extension")
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], "ready-to-implement")
+        self.assertEqual(ctx["currentStep"], "tasks")
+
     def test_writes_canonical_history_not_legacy_keys(self) -> None:
         wc.update_context(self.fd, "specify", "specified", "extension")
         ctx = _ctx(self.fd)

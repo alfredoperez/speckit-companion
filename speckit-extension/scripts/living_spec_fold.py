@@ -19,8 +19,19 @@ import sys
 from pathlib import Path
 
 from capture import set_living_specs_synced
-from spec_context import _repo_root_for
+from spec_context import _repo_root_for, read_ctx
 from spec_deltas import _REQ_HEADING_RE, _has_deltas, parse_spec_deltas
+
+
+def _loaded_capabilities(feature_dir: Path) -> list[str]:
+    """The capability names this feature recorded loading at specify time
+    (livingSpecs.loaded), or []. Best-effort: any read/parse miss returns []."""
+    try:
+        ctx = read_ctx(feature_dir / ".spec-context.json")
+    except Exception:  # noqa: BLE001 - best-effort
+        return []
+    loaded = (ctx.get("livingSpecs") or {}).get("loaded") or []
+    return [c for c in loaded if isinstance(c, str) and c.strip()]
 
 
 def _living_requirement_span(living_lines: list[str], heading: str) -> tuple[int, int] | None:
@@ -267,22 +278,60 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
     root = _repo_root_for(feature_dir)
     rsp = _load_resolver()
     if rsp is None:
+        print(
+            "[companion] Living-spec fold: the capability resolver is unavailable; nothing folded.",
+            file=sys.stderr,
+        )
         return None
     try:
         living = rsp.load_living(str(root))
     except Exception:  # noqa: BLE001
+        print(
+            "[companion] Living-spec fold: could not read the living-specs config; nothing folded.",
+            file=sys.stderr,
+        )
         return None
     if not living.get("enabled"):
+        print(
+            "[companion] Living-spec fold: living specs are off in this repo "
+            "(livingSpecs.enabled is not true); nothing folded.",
+            file=sys.stderr,
+        )
         return None
 
     spec_md = feature_dir / "spec.md"
     try:
         spec_text = spec_md.read_text(encoding="utf-8")
     except OSError:
+        print(
+            f"[companion] Living-spec fold: could not read {spec_md}; nothing folded.",
+            file=sys.stderr,
+        )
         return None
     deltas = parse_spec_deltas(spec_text)
     if not _has_deltas(deltas):
-        return None  # common additive case — clean no-op
+        # The standard specify -> plan -> tasks pipeline never emits a delta
+        # block, so a normally-built feature always lands here. Name the exact
+        # reason and, when the feature loaded capabilities, make the miss
+        # actionable instead of a silent success.
+        loaded = _loaded_capabilities(feature_dir)
+        if loaded:
+            print(
+                f"[companion] Living-spec fold: {len(loaded)} capabilit"
+                f"{'y' if len(loaded) == 1 else 'ies'} loaded "
+                f"({', '.join(loaded)}) but this feature's spec carries no "
+                "ADDED/MODIFIED/REMOVED/RENAMED delta block — nothing to fold yet. "
+                "Add a delta block for the changed requirement(s), or run "
+                "/speckit.companion.living-drift to sync the capability spec.",
+                file=sys.stderr,
+            )
+        else:
+            print(
+                "[companion] Living-spec fold: this feature's spec carries no delta "
+                "block and loaded no capabilities; nothing to fold.",
+                file=sys.stderr,
+            )
+        return None  # additive case — no delta block
 
     try:
         targets = _resolve_fold_targets(rsp, living, root, deltas)

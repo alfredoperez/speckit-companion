@@ -549,8 +549,8 @@ def main() -> int:
         print(f"[companion] Warning: skipped .spec-context.json write: {exc}", file=sys.stderr)
         return 0
 
-    if args.fold_living_spec and target is None:
-        print("[companion] Living-spec fold: nothing to fold (no delta block, feature off, no capability resolved, or the living spec is already up to date).", file=sys.stderr)
+    # A no-op fold already named its own exact reason on stderr (from
+    # fold_living_spec) — don't paper over it with a generic OR-string.
 
     if captured or capture_mode or args.set_pairs or args.living_specs or args.fold_living_spec:
         for line in captured:
