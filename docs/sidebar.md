@@ -136,7 +136,7 @@ The spec row's **hover More Actions** submenu and its **right-click menu** prese
 
 Menu items reflect the spec's lifecycle group — e.g. **Reactivate** appears only on completed or archived specs. **Mark Complete** appears on active, tasks-done, and **implemented** specs: an implemented spec sits in the Active group but still needs your confirmation, so the menu offers Mark Complete to flip it to confirmed-completed.
 
-**Copy Spec Path** copies the workspace-relative spec directory (e.g. `specs/089-copy-spec-path-name`) to the clipboard; **Copy Spec Name** copies just the slug. Both show a brief auto-dismiss notification. They appear on specs in any lifecycle and are not shown on document children, related docs, or group headers.
+**Copy Spec Path** copies the workspace-relative spec directory (e.g. `specs/060-spec-context-tracking`) to the clipboard; **Copy Spec Name** copies just the slug. Both show a brief auto-dismiss notification. They appear on specs in any lifecycle and are not shown on document children, related docs, or group headers.
 
 **Multi-select** specs with shift-click or cmd/ctrl-click and bulk-archive, complete, or reactivate from the same right-click menu.
 
