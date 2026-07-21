@@ -1,0 +1,398 @@
+{
+  "workflow": "speckit",
+  "specName": "command quality eval",
+  "branch": "511-command-quality-eval",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T16:28:16.487Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T16:30:05.905Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T16:30:22.011Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:32:10.570Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:32:48.384Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T16:33:05.246Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T16:33:14.355Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:33:49.605Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T16:33:54.275Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T16:34:55.827Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:35:27.097Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:35:46.442Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:36:13.598Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:36:45.345Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:37:53.942Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:38:04.993Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:38:37.534Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:38:53.819Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T16:41:34.266Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T16:41:34.340Z"
+    }
+  ],
+  "livingSpecs": {
+    "loaded": [
+      "companion-commands"
+    ],
+    "synced": [
+      "companion-commands"
+    ]
+  },
+  "coverage": {
+    "FR-001": {
+      "title": "Eval scores spec.md/plan.md/tasks.md against per-artifact WARN/FAIL budgets defined in one place",
+      "tasks": [
+        "T002"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_check_quality.py::VerbosityTests"
+      ]
+    },
+    "FR-002": {
+      "title": "Budget defaults derived from real completed specs (484/509/510) so healthy runs pass with headroom",
+      "tasks": [
+        "T002"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_check_quality.py::test_healthy_artifacts_pass"
+      ]
+    },
+    "FR-003": {
+      "title": "Timing marks a step span trusted only on ordered extension-stamped start/complete pair; untrusted is reported",
+      "tasks": [
+        "T003"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_check_quality.py::test_missing_boundary_marks_step_untrusted"
+      ]
+    },
+    "FR-004": {
+      "title": "Burst-journaling (>=3 ai finishes within 1s) FAILs; out-of-band step duration WARNs",
+      "tasks": [
+        "T003"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_check_quality.py::test_burst_of_ai_finishes_fails",
+        "speckit-extension/tests/test_check_quality.py::test_outlier_step_duration_warns"
+      ]
+    },
+    "FR-005": {
+      "title": "Static prompting check: never-halts roster has no user prompts, clarify asks, negation-safe, missing roster file fails loud",
+      "tasks": [
+        "T004"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_check_quality.py::PromptingTests"
+      ]
+    },
+    "FR-006": {
+      "title": "Standalone CLI: --feature-dir, --commands-dir, --json, --strict with WARN non-blocking",
+      "tasks": [
+        "T001"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_check_quality.py::CliTests"
+      ]
+    },
+    "FR-007": {
+      "title": "CI capture-suite runs the eval strict over specs 509/510 fixtures and the command dir",
+      "tasks": [
+        "T006"
+      ]
+    },
+    "FR-008": {
+      "title": "Stdlib unittest coverage incl. one failing-direction test per dimension",
+      "tasks": [
+        "T005"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_check_quality.py"
+      ]
+    },
+    "FR-009": {
+      "title": "Docs land with the change: SKILL.md, speckit-extension CHANGELOG [Unreleased], capture-and-timing note",
+      "tasks": [
+        "T007",
+        "T008"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 6,
+    "projectedTasks": 9,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "context": [
+    "living spec: companion-commands",
+    "area: .claude/skills/eval-speckit-extension (check_capture.py sibling)",
+    "area: speckit-extension/tests + .github/workflows/ci.yml capture-suite",
+    "constraint: eval is dev tooling, not shipped in either extension package",
+    "constraint: speckit-extension changes document in its own CHANGELOG [Unreleased], no version bump"
+  ],
+  "intent": "Give the Companion command family a deterministic quality gate: flag verbose artifacts, wasted/untrusted time, and wrong prompting before they ship",
+  "expectations": [
+    "No AI-driven replay of commands or live LLM scoring",
+    "No bench-runner orchestration changes (bench integration is a follow-up)",
+    "Out-of-band step duration is WARN-only, never a hard gate"
+  ],
+  "approach": "A stdlib-only check_quality.py sibling to check_capture.py: verbosity budgets (single BUDGETS table, WARN/FAIL bands calibrated on 484/509/510), timing-waste checks over history[] (trusted boundaries via the deterministic-writer set, 1s burst FAIL, median-relative outlier WARN), and a fence-skipping negation-aware prompting scan over an enumerated never-prompt/must-ask roster. Tests ride the existing unittest discovery; CI adds three strict steps to capture-suite.",
+  "decisions": [
+    {
+      "decision": "Checker lives in the eval skill dir, tests in speckit-extension/tests via sys.path insert",
+      "why": "eval family already lives there and ships in neither package; CI unittest discovery needs zero wiring",
+      "rejected": "speckit-extension/scripts (packing-list implications) and bench (Node harness, different job)"
+    },
+    {
+      "decision": "Enumerated prompting roster, not prefix-derived, with loud FAIL on a missing roster file",
+      "why": "never-prompt is per-command semantics, and a silent skip shrinks the scan surface (the #432/#455 drift class)",
+      "rejected": "deriving the roster from extension.yml description prose"
+    },
+    {
+      "decision": "WARN tier never affects exit code, even under --strict",
+      "why": "budgets and duration outliers are judgment calls; a flapping CI gate would get deleted",
+      "rejected": "strict-warn escalation flag (nothing needs it yet)"
+    },
+    {
+      "decision": "Burst check is absolute (>=3 ai finishes within 1s = FAIL), complementing check_capture task-cadence-span (relative 5%)",
+      "why": "the pre-#509 bug shape is a one-instant dump regardless of step length",
+      "rejected": "reusing only the relative span check"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Three-dimension stdlib checker beside check_capture.py, tests in the existing python suite, three strict CI steps",
+      "key_finding": "A bare ask pattern matches tasks — word-bounded phrases plus fence-skipping and a negation window are what make the prompting scan pass honestly on main"
+    },
+    "tasks": {
+      "summary": "9 tasks in 7 waves: skeleton -> verbosity+timing / prompting (parallel) -> tests -> CI -> docs pair -> validate"
+    },
+    "implement": {
+      "summary": "check_quality.py (3 dimensions, WARN tier) + 23 tests + strict CI step over 509/510/commands + docs; all gates and suites green"
+    }
+  },
+  "currentTask": "T009",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "check_quality.py skeleton: Report with WARN tier, CLI (--feature-dir/--commands-dir/--json/--strict), exit-code model, single-place thresholds/rosters",
+      "files": [
+        ".claude/skills/eval-speckit-extension/check_quality.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Verbosity dimension: BUDGETS-table scoring of spec/plan/tasks with WARN/FAIL bands; absent/tiny artifacts never flagged",
+      "files": [
+        ".claude/skills/eval-speckit-extension/check_quality.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Timing dimension: trusted-boundaries WARN, 1s burst FAIL, median-relative outlier WARN; unreadable/empty history reported not scored-clean",
+      "files": [
+        ".claude/skills/eval-speckit-extension/check_quality.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Prompting dimension: enumerated rosters, fence-skip + negation window, loud FAIL on missing roster file; passes on main, planted prompt FAILs",
+      "files": [
+        ".claude/skills/eval-speckit-extension/check_quality.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "23 stdlib unittest cases: healthy pass + failing-direction per dimension, negation/fence/word-boundary hygiene, strict/JSON CLI semantics",
+      "files": [
+        "speckit-extension/tests/test_check_quality.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "CI capture-suite gains a strict command-quality step over specs 509/510 and the shipped command sources",
+      "files": [
+        ".github/workflows/ci.yml"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "SKILL.md gains the quality-eval area + run step; capture-and-timing doc notes the quality sibling and its timing assertions",
+      "files": [
+        ".claude/skills/eval-speckit-extension/SKILL.md",
+        "docs/capture-and-timing.md"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "speckit-extension CHANGELOG [Unreleased] entry in user voice; no version bump",
+      "files": [
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Validation green: 489 python tests, 1726 jest tests, compile clean, shape-parity/assemble/manifest/emissions OK, eval strict-passes 509+510+commands",
+      "files": [
+        "repo-wide"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "New quality-eval unittest suite",
+      "command": "python3 -m unittest discover -s speckit-extension/tests -p test_check_quality.py",
+      "result": "23/23 pass"
+    },
+    {
+      "what": "Full spec-kit python suite",
+      "command": "python3 -m unittest discover -s speckit-extension/tests",
+      "result": "489 tests pass",
+      "warnings": [
+        "package-manifest failing-direction test prints its expected refusal to stdout — benign"
+      ]
+    },
+    {
+      "what": "TypeScript compile + jest",
+      "command": "npm run compile && npm test",
+      "result": "clean; 123 suites / 1726 tests pass"
+    },
+    {
+      "what": "Extension gates",
+      "command": "check-shape-parity.py; assemble-nodes.py --check; package-manifest.py --check; check-command-emissions.py",
+      "result": "all OK"
+    },
+    {
+      "what": "SC-001 fixture scores",
+      "command": "check_quality.py --strict over specs/509-timing-capture, specs/510-living-sync, speckit-extension/commands",
+      "result": "509: 6 pass/0 warn/0 fail; 510: 6 pass/0 warn/0 fail; prompting: 12 pass/0 fail; strict exit 0"
+    }
+  ],
+  "last_action": "all 9 tasks done — 489 python + 1726 jest tests pass, fixtures score clean"
+}

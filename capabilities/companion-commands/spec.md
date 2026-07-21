@@ -216,3 +216,17 @@ The living-spec family SHALL include a sync command that, in a single pass, grou
 #### Scenario: nothing is configured
 - **WHEN** the sync runs with living specs disabled or absent
 - **THEN** it reports nothing to do and exits successfully
+
+### The prompting contract is held by a static gate, not by convention
+
+The commands under the never-halts contract — the four lifecycle hooks, the living-spec reports and sync, completion, status, resume, and classify — SHALL be scanned on every change for instructions that stop to ask the user, and the clarify-type carrier SHALL be required to ask. The scan reads the command sources as text (negated mentions and fenced templates do not count), and a roster file it cannot find fails loudly rather than shrinking the surface it checks.
+
+#### Scenario: a prompt instruction slips into a never-halts command
+
+- **WHEN** a command on the never-halts roster gains a non-negated ask-the-user instruction
+- **THEN** the quality gate fails naming the command and quoting the offending line
+
+#### Scenario: the clarify carrier stops asking
+
+- **WHEN** the clarify-type command body no longer contains an ask instruction
+- **THEN** the quality gate fails — asking is that command's purpose
