@@ -33,6 +33,33 @@ export const WithOverviewEntry: Story = {
     },
 };
 
+// Mid-implement: the rail lists documents only — Implement and Mark Complete
+// are action steps with nothing to open, so they never become entries. The
+// live percent renders on the last document tab (Tasks) instead.
+export const ImplementingPercentOnTasks: Story = {
+    name: 'Implementing · percent on Tasks, no action entries',
+    render: () => {
+        viewerState.value = {
+            status: 'implementing', activeStep: 'implement', steps: {}, pulse: null,
+            highlights: ['specify', 'plan', 'tasks'], activeSubstep: null, footer: [], history: [], stepHistory: {},
+        } as never;
+        navState.value = mockNavState({
+            coreDocs: [
+                mockDoc('spec', true, 'Specification'),
+                mockDoc('plan', true, 'Plan'),
+                mockDoc('tasks', true, 'Tasks'),
+                mockActionDoc('implement', 'Implement'),
+                mockActionDoc('mark-complete', 'Mark Complete'),
+            ],
+            currentDoc: 'tasks',
+            workflowPhase: 'tasks',
+            currentStep: 'implement',
+            taskCompletionPercent: 45,
+        });
+        return <NavigationBar />;
+    },
+};
+
 export const ActiveSpec: Story = {
     render: () => {
         viewerState.value = null;
@@ -162,10 +189,10 @@ export const SpecWithoutChildren: Story = {
 
 // ── Custom workflow: the rail is generated from workflow data, not a
 //    canonical four-step assumption (FR-007). Action-only steps arrive as
-//    provider-emitted `category: 'action'` entries (no fabricated documents)
-//    and render as non-openable marks interleaved in workflow order. ─────
+//    provider-emitted `category: 'action'` entries but never render — the
+//    rail lists documents only; lifecycle actions live in the footer. ─────
 export const CustomWorkflowSevenSteps: Story = {
-    name: 'Custom workflow · 7 steps + action steps + free-named artifacts',
+    name: 'Custom workflow · 7 steps, action steps hidden, free-named artifacts',
     render: () => {
         viewerState.value = null;
         navState.value = mockNavState({
@@ -191,11 +218,11 @@ export const CustomWorkflowSevenSteps: Story = {
     },
 };
 
-// ── GSD × Superpowers: the committed example workflow. Discuss leads as a
-//    completed action step, Plan is the one document step, Execute is the
-//    current action step, Verify is still pending. ─────────────────────
+// ── GSD × Superpowers: the committed example workflow. Discuss, Execute,
+//    and Verify are action steps, so only Plan gets a rail entry — and the
+//    running Execute step locks nothing because it has no entry. ─────────
 export const GsdSuperpowersWorkflow: Story = {
-    name: 'Custom workflow · GSD (action steps around one document)',
+    name: 'Custom workflow · GSD (only the document step renders)',
     render: () => {
         viewerState.value = null;
         navState.value = mockNavState({

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/preact';
 import { StepTab } from './StepTab';
 import { viewerState } from '../signals';
 import type { ViewerState } from '../types';
-import { mockActionDoc, mockDoc } from './__stories__/mockData';
+import { mockDoc } from './__stories__/mockData';
 
 // The in-flight derivation reads `status` off `viewerState`, so a lifecycle story seeds it.
 const seedStatus = (status: string) => {
@@ -115,40 +115,6 @@ export const CompletedWithStalledPercent: Story = {
                 isPercentHost
             />
         );
-    },
-};
-
-// ── Action-only pipeline entries (FR-007) ─────────────────
-// No document: marked with the action glyph, non-openable, completion from
-// step history, `current` while the workflow sits at the step.
-
-export const ActionPending: Story = {
-    args: { ...base, doc: mockActionDoc('execute', 'Execute (Superpowers)'), index: 2, currentStep: 'plan' },
-};
-
-export const ActionCurrent: Story = {
-    args: { ...base, doc: mockActionDoc('execute', 'Execute (Superpowers)'), index: 2, currentStep: 'execute' },
-};
-
-// Implement has no document of its own — selecting it opens tasks.md, the
-// document it runs from, so no rail entry is a dead click.
-export const ActionOpensItsSourceDoc: Story = {
-    args: {
-        ...base,
-        doc: mockActionDoc('implement', 'Implement'),
-        index: 3,
-        currentStep: 'implement',
-        sourceDoc: { type: 'tasks', label: 'Tasks' },
-    },
-};
-
-export const ActionDone: Story = {
-    args: {
-        ...base,
-        doc: mockActionDoc('discuss', 'Discuss'),
-        index: 0,
-        currentStep: 'plan',
-        stepHistory: { discuss: { startedAt: '2026-07-10T10:00:00Z', completedAt: '2026-07-10T10:12:00Z' } },
     },
 };
 

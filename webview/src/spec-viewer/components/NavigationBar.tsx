@@ -36,22 +36,16 @@ export function NavigationBar() {
         );
     }
 
-    // Action entries can't parent related docs or be viewed, so the root
-    // phase is the first document-producing step.
-    const rootPhase = coreDocs?.find(d => d.category !== 'action')?.type || 'spec';
-    // The implement percent renders on the implement entry when the rail has
-    // one, else on the last tab (pre-action-rail behavior).
-    const percentHostType = coreDocs?.find(d => d.type === 'implement')?.type
-        ?? coreDocs?.[coreDocs.length - 1]?.type;
-    // The document an action step runs from: the nearest document-producing
-    // step before it (stock Implement runs from Tasks; GSD's Execute from Plan).
-    const sourceDocFor = (index: number): { type: string; label: string } | undefined => {
-        for (let i = index - 1; i >= 0; i--) {
-            const prev = coreDocs[i];
-            if (prev.category !== 'action' && prev.exists) return { type: prev.type, label: prev.label };
-        }
-        return undefined;
-    };
+    // The rail lists documents only: action steps (Implement, Mark Complete,
+    // any custom step without a document) never render as entries. Every
+    // index below is computed against this rendered list so hidden steps
+    // can't shift or lock tabs.
+    const railDocs = (coreDocs ?? []).filter(d => d.category !== 'action');
+    const rootPhase = railDocs[0]?.type || 'spec';
+    // The implement percent renders on the implement entry when a workflow
+    // defines it as a document step, else on the last rendered tab.
+    const percentHostType = railDocs.find(d => d.type === 'implement')?.type
+        ?? railDocs[railDocs.length - 1]?.type;
     const viewingRelatedDoc = isViewingRelatedDoc
         ? relatedDocs.find(d => d.type === currentDoc)
         : undefined;
@@ -59,12 +53,13 @@ export function NavigationBar() {
 
     // Index of the step currently running — derive from stepHistory
     // (entry with startedAt set and no completedAt). Future tabs beyond this
-    // index get locked while the step is in-flight.
+    // index get locked while the step is in-flight. A running step with no
+    // rail entry (a hidden action step) yields no index, so it locks nothing.
     const runningStepIndex = (() => {
         if (!stepHistory) return null;
         for (const [stepKey, entry] of Object.entries(stepHistory)) {
             if (entry?.startedAt && !entry?.completedAt) {
-                const idx = coreDocs.findIndex(d => d.type === stepKey);
+                const idx = railDocs.findIndex(d => d.type === stepKey);
                 if (idx >= 0) return idx;
             }
         }
@@ -159,7 +154,7 @@ export function NavigationBar() {
             <div class="rail-group">
                 <p class="rail-label">Pipeline</p>
                 <div class="step-tabs">
-                    {coreDocs.map((doc, i) => (
+                    {railDocs.map((doc, i) => (
                         <StepTab
                             key={doc.type}
                             doc={doc}
@@ -175,7 +170,6 @@ export function NavigationBar() {
                             hasRelatedChildren={relatedDocs.some(d => d.parentStep === doc.type)}
                             runningStepIndex={runningStepIndex}
                             isPercentHost={doc.type === percentHostType}
-                            sourceDoc={doc.category === 'action' ? sourceDocFor(i) : undefined}
                             onClick={handleClick}
                         />
                     ))}
