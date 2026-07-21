@@ -102,9 +102,12 @@
 }
 
 #markdown-content .living-scenario-title {
+  margin: 0 0 var(--space-2);
+}
+
+#markdown-content .living-scenario-title .line-content {
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0 0 var(--space-2);
 }
 
 #markdown-content .living-scenario-steps {
@@ -205,7 +208,7 @@
 }
 
 /* Read-everything: a plain statement, never a large empty banner. */
-#markdown-content .living-uncovered-none {
+#markdown-content .living-uncovered-none .line-content {
   color: var(--text-body);
   font-style: italic;
 }

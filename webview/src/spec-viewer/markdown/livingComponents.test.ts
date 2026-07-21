@@ -217,6 +217,19 @@ describe('preprocessLivingScenarios (FR-012, FR-013)', () => {
         expect(out).toContain('the extension rewrites the file');
     });
 
+    it('renders the scenario title as its own commentable line', () => {
+        const md = [
+            '#### Scenario: an edit is committed',
+            '- **WHEN** the user commits an inline edit',
+            '- **THEN** the request identifies the source line',
+        ].join('\n');
+        const out = preprocessLivingScenarios(md);
+        expect(out).toMatch(/<div class="living-scenario-title line" data-line="0" data-list-id="living-scenario-\d+">/);
+        const titleIdx = out.indexOf('living-scenario-title');
+        expect(out.slice(titleIdx)).toContain('line-add-btn');
+        expect(out).toContain('an edit is committed');
+    });
+
     it('renders a requirement with no scenarios cleanly, no empty scenario container (FR-013)', () => {
         const md = '## Requirements\n\n### A rule with no scenarios\n\nJust a body.';
         const out = preprocessLivingRequirements(preprocessLivingScenarios(md));
@@ -305,6 +318,14 @@ describe('uncovered read-everything + fallback (FR-017, FR-018, SC-006)', () => 
         expect(out).toContain('living-uncovered-none');
         expect(out).toContain('None — every file in the area was read.');
         expect(out).not.toContain('living-uncovered-count');
+    });
+
+    it('keeps the read-everything sentinel a commentable line', () => {
+        const md = '## Uncovered\n\n_None — every file in the area was read._\n';
+        const out = preprocessLivingUncovered(md);
+        expect(out).toMatch(/<div class="living-uncovered-none line" data-line="1" data-list-id="living-uncovered-none">/);
+        expect(out).toContain('line-add-btn');
+        expect(out).toContain('line-comment-slot');
     });
 
     it('treats an empty uncovered section as read-everything', () => {

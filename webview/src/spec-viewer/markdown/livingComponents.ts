@@ -124,7 +124,15 @@ function buildScenario(title: string, steps: { kw: string; rest: string }[]): st
             );
         })
         .join('');
-    const titleHtml = title ? `<p class="living-scenario-title">${parseInline(title)}</p>` : '';
+    // The authored `#### Scenario:` line stays commentable — its own line at
+    // data-line 0 (steps are 1-based) under the scenario's list id.
+    const titleHtml = title
+        ? `<div class="living-scenario-title line" data-line="0" data-list-id="${listId}">` +
+          `<button class="line-add-btn" data-line="0" data-list-id="${listId}" title="Add comment">${COMMENT_ICON_SVG}</button>` +
+          `<div class="line-content">${parseInline(title)}</div>` +
+          `<div class="line-comment-slot"></div>` +
+          `</div>`
+        : '';
     return `<div class="living-scenario">${titleHtml}<ol class="living-scenario-steps" id="${listId}">${items}</ol></div>`;
 }
 
@@ -375,7 +383,13 @@ export function preprocessLivingUncovered(markdown: string): string {
             const text = /^_none\b/i.test(firstLine)
                 ? firstLine.replace(/^_+/, '').replace(/_+$/, '').trim()
                 : 'Every file in the area was read.';
-            component = `<div class="living-uncovered-none">${parseInline(text)}</div>`;
+            // Keep the authored sentinel line commentable, like the scope line.
+            component =
+                `<div class="living-uncovered-none line" data-line="1" data-list-id="living-uncovered-none">` +
+                `<button class="line-add-btn" data-line="1" data-list-id="living-uncovered-none" title="Add comment">${COMMENT_ICON_SVG}</button>` +
+                `<div class="line-content">${parseInline(text)}</div>` +
+                `<div class="line-comment-slot"></div>` +
+                `</div>`;
         } else {
             const parsed = parseUncoveredGroups(body);
             if (!parsed) return md; // unrecognized structure → plain markdown fallback
