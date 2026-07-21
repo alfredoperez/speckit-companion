@@ -385,6 +385,29 @@ class LifecycleCaptureTests(unittest.TestCase):
         ]
         self.assertEqual(len(completes), 1, "complete must be idempotent")
 
+    def test_plan_body_start_then_hook_complete_is_one_ordered_pair(self) -> None:
+        # Body records the start, the after-plan hook the complete: one extension-stamped pair, in order.
+        wc.update_context(self.fd, "specify", "specified", "extension", "complete")
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        wc.update_context(self.fd, "plan", "planned", "extension", "complete")
+        plan = [t for t in _ctx(self.fd)["history"]
+                if t["step"] == "plan" and t["substep"] is None]
+        self.assertEqual([t["kind"] for t in plan], ["start", "complete"])
+        self.assertEqual([t["by"] for t in plan], ["extension", "extension"])
+        self.assertLessEqual(plan[0]["at"], plan[1]["at"])
+        self.assertEqual(_ctx(self.fd)["status"], "planned")
+
+    def test_earlier_ai_self_close_blocks_the_hook_complete(self) -> None:
+        # First writer wins on the idempotent complete — why extension-stamped steps must never be AI self-closed.
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        wc.journal_finish(self.fd, "plan", "ai")
+        wc.update_context(self.fd, "plan", "planned", "extension", "complete")
+        completes = [t for t in _ctx(self.fd)["history"]
+                     if t["step"] == "plan" and t["substep"] is None
+                     and t["kind"] == "complete"]
+        self.assertEqual(len(completes), 1)
+        self.assertEqual(completes[0]["by"], "ai")
+
     def test_specify_self_close_span_collapses_late_hook_start(self) -> None:
         # The terminal order is body start -> body complete -> (late) after_specify
         # hook start. The hook start lands AFTER the complete, which the old
