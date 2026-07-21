@@ -6,7 +6,9 @@ import {
     deriveActiveSubstep,
     deriveViewerState,
 } from '../stateDerivation';
-import type { SpecContext } from '../../../core/types/specContext';
+import type { SpecContext, HistoryEntry, StepName } from '../../../core/types/specContext';
+import type { WorkflowStepConfig } from '../../workflows/types';
+import { COMPANION_WORKFLOW, normalizeWorkflowConfig } from '../../workflows/workflowManager';
 
 // Mock footerActions to avoid pulling in vscode dependency
 jest.mock('../footerActions', () => ({
@@ -179,6 +181,72 @@ describe('deriveViewerState', () => {
         expect(state.highlights).toContain('specify');
         expect(state.highlights).toContain('plan');
         expect(state.pulse).toBeNull();
+    });
+
+    describe('timing coverage denominator', () => {
+        // Mirrors COMPANION_WORKFLOW: 5 steps, mark-complete never times (untimed).
+        const companionSteps: WorkflowStepConfig[] = [
+            { name: 'specify', command: 'speckit.companion.specify' },
+            { name: 'plan', command: 'speckit.companion.plan' },
+            { name: 'tasks', command: 'speckit.companion.tasks' },
+            { name: 'implement', command: 'speckit.companion.implement', actionOnly: true },
+            { name: 'mark-complete', command: 'speckit.companion.mark-complete', actionOnly: true, untimed: true },
+        ];
+        const extPair = (step: StepName, start: string, end: string): HistoryEntry[] => ([
+            { step, substep: null, kind: 'start', from: { step: null, substep: null }, by: 'extension', at: start },
+            { step, substep: null, kind: 'complete', from: { step: null, substep: null }, by: 'extension', at: end },
+        ]);
+        const completedRun = () => makeContext({
+            currentStep: 'implement',
+            status: 'completed',
+            history: [
+                ...extPair('specify', '2026-07-21T10:00:00.000Z', '2026-07-21T10:02:00.000Z'),
+                ...extPair('plan', '2026-07-21T10:02:00.100Z', '2026-07-21T10:04:00.000Z'),
+                ...extPair('tasks', '2026-07-21T10:04:00.100Z', '2026-07-21T10:05:00.000Z'),
+                ...extPair('implement', '2026-07-21T10:05:00.100Z', '2026-07-21T10:12:00.000Z'),
+            ],
+        });
+
+        it('excludes the untimed mark-complete step so a finished Companion run reaches full coverage', () => {
+            const timing = deriveViewerState(completedRun(), 'implement', companionSteps).timing;
+            expect(timing.expectedPhases).toBe(4);   // not 5 — mark-complete is untimed
+            expect(timing.measuredPhases).toBe(4);
+            expect(timing.complete).toBe(true);       // this is what unlocks the elapsed block
+            expect(timing.elapsedMs).toBeGreaterThan(0);
+        });
+
+        it('a fast-path spec parked at ready-to-implement shows 3 of 4, not complete', () => {
+            const parked = makeContext({
+                currentStep: 'tasks',
+                status: 'ready-to-implement',
+                history: [
+                    ...extPair('specify', '2026-07-21T10:00:00.000Z', '2026-07-21T10:02:00.000Z'),
+                    ...extPair('plan', '2026-07-21T10:02:00.100Z', '2026-07-21T10:02:00.200Z'),
+                    ...extPair('tasks', '2026-07-21T10:02:00.300Z', '2026-07-21T10:02:00.400Z'),
+                ],
+            });
+            const timing = deriveViewerState(parked, 'tasks', companionSteps).timing;
+            expect(timing.measuredPhases).toBe(3);
+            expect(timing.expectedPhases).toBe(4);
+            expect(timing.complete).toBe(false);
+        });
+
+        it('leaves a stock 4-step workflow denominator unchanged', () => {
+            const stockSteps = companionSteps.slice(0, 4); // no mark-complete
+            const timing = deriveViewerState(completedRun(), 'implement', stockSteps).timing;
+            expect(timing.expectedPhases).toBe(4);
+            expect(timing.complete).toBe(true);
+        });
+
+        it('the real COMPANION_WORKFLOW flags mark-complete untimed, and it survives normalize', () => {
+            // Closes the runtime gap: the viewer resolves steps via
+            // normalizeWorkflowConfig(COMPANION_WORKFLOW), so the flag must be intact there.
+            const norm = normalizeWorkflowConfig(COMPANION_WORKFLOW);
+            const markComplete = norm.steps!.find(s => s.name === 'mark-complete');
+            expect(markComplete?.untimed).toBe(true);
+            const timed = norm.steps!.filter(s => !s.untimed).map(s => s.name);
+            expect(timed).toEqual(['specify', 'plan', 'tasks', 'implement']);
+        });
     });
 
     describe('livingSpecs derivation', () => {

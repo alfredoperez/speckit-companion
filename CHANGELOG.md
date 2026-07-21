@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **A finished SpecKit Companion spec now shows its full timing, instead of being stuck one phase short.** The run overview counted the final Mark Complete step as a timing phase, but that step only marks the spec done — it has no duration to measure. So even a perfectly-captured run maxed out at "4 of 5 phases" and never showed the total elapsed time. Mark Complete is no longer counted, so a completed Companion run reads "4 of 4" and shows its Started / Elapsed / Ended summary like it should. Stock SpecKit specs are unchanged.
 - **The run log's Living specs section is a scannable list again, not a wall of text.** Opening a finished run used to reprint the entire text of every living spec it loaded — the purpose and every requirement, in full — so the useful signal (which specs were loaded) drowned in content you can already read in the Living Specs viewer. It now shows one compact chip per capability, right under the phase timeline, and clicking a chip opens that capability in the Living Specs viewer.
 
 - **A broken `living-specs.yml` no longer looks like an empty one.** If your capability registry had a typo in it, the Living Specs sidebar showed `Living Specs are off` and suggested you set `enabled: true` — advice that couldn't help, because the file already said that and simply wasn't parsing. The sidebar now shows `Can't read living-specs.yml` with the parse error in the tooltip, so you go fix the file instead of hunting for a setting.

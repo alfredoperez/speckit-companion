@@ -45,6 +45,8 @@ export interface WorkflowStepConfig {
     file?: string;
     /** If true, step is action-only (no output file) and hidden from the document tree */
     actionOnly?: boolean;
+    /** If true, the step has no measured duration (e.g. `mark-complete` only flips status) and is excluded from the timing-coverage denominator. Distinct from `actionOnly` — `implement` is action-only yet timed. */
+    untimed?: boolean;
     /** Explicit list of sub-files shown as children in sidebar */
     subFiles?: string[];
     /** Subdirectory to scan for child .md files */

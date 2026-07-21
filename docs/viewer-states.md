@@ -598,6 +598,16 @@ whatever it ships on disk gets ignored.
 - The **author (`by`) badge** appears once, on the spec-start transition —
   not on every per-substep row (it's uniform within a phase, so repeating
   it is noise).
+- **Timing coverage denominator.** The "Timing coverage: N of M phases" line
+  (and whether the *Started / Elapsed / Ended* block shows at all — it appears
+  only when coverage is complete) counts `M` as the workflow's steps that can
+  actually be *measured*. A step flagged `untimed` in the workflow config is
+  excluded: `mark-complete` only flips `status: completed` and never writes a
+  start/complete boundary, so counting it would leave every finished Companion
+  spec stuck one short of complete and the elapsed block would never render.
+  `untimed` is the discriminator, not `actionOnly` — `implement` is action-only
+  yet timed. So a completed Companion run reads **4 of 4** (specify/plan/tasks/
+  implement) and shows the elapsed block; the stock 4-step workflow is unchanged.
 
 Substep `at` values are still AI-typed when `by ∈ {cli, ai}`, so absolute
 substep times are best-effort; the offsets/durations are displayed as a

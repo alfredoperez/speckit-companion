@@ -1,9 +1,9 @@
 {
-  "workflow": "speckit",
-  "specName": "fast path fixture",
+  "workflow": "speckit-companion",
+  "specName": "Fast Path Fixture",
   "branch": "514-fast-path-fixture",
-  "currentStep": "tasks",
-  "status": "ready-to-implement",
+  "currentStep": "implement",
+  "status": "completed",
   "size": "simple",
   "classification": {
     "projectedFiles": 2,
@@ -16,48 +16,117 @@
       "companion-commands"
     ]
   },
+  "intent": "A small change proves the fast path shows trusted timing — specify, plan, and tasks fold into one run and still measure real durations",
+  "approach": "Fold plan and tasks into the specify run with extension-stamped step boundaries, then implement the tasks; the viewer counts all four phases and shows the elapsed block.",
+  "context": [
+    "living spec: companion-commands",
+    "area: speckit-extension/nodes/specify/finalize.md (the fast-path fold)",
+    "constraint: history is never rewritten for already-recorded runs"
+  ],
   "history": [
     {
       "step": "specify",
       "substep": null,
       "kind": "start",
       "by": "extension",
-      "at": "2026-07-21T21:27:53.993Z"
+      "at": "2026-07-21T10:00:00.137Z"
     },
     {
       "step": "specify",
       "substep": null,
       "kind": "complete",
       "by": "extension",
-      "at": "2026-07-21T21:31:12.481Z"
+      "at": "2026-07-21T10:03:12.481Z"
     },
     {
       "step": "plan",
       "substep": null,
       "kind": "start",
       "by": "extension",
-      "at": "2026-07-21T21:31:12.566Z"
+      "at": "2026-07-21T10:03:12.566Z"
     },
     {
       "step": "plan",
       "substep": null,
       "kind": "complete",
       "by": "extension",
-      "at": "2026-07-21T21:31:12.651Z"
+      "at": "2026-07-21T10:03:12.651Z"
     },
     {
       "step": "tasks",
       "substep": null,
       "kind": "start",
       "by": "extension",
-      "at": "2026-07-21T21:31:12.737Z"
+      "at": "2026-07-21T10:03:12.737Z"
     },
     {
       "step": "tasks",
       "substep": null,
       "kind": "complete",
       "by": "extension",
-      "at": "2026-07-21T21:31:12.822Z"
+      "at": "2026-07-21T10:03:12.822Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T10:03:12.905Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T10:05:31.140Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T10:07:18.902Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T10:09:44.610Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T10:09:50.233Z"
     }
-  ]
+  ],
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Rewrote the fast-path fold to stamp extension step-level boundaries",
+      "files": [
+        "speckit-extension/nodes/specify/finalize.md"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Loaded living specs on the fast path when the touched files are known",
+      "files": [
+        "speckit-extension/nodes/specify/finalize.md"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added fast-path coverage to the capture and quality evals",
+      "files": [
+        ".claude/skills/eval-speckit-extension/check_capture.py"
+      ]
+    }
+  },
+  "last_action": "all 3 tasks done — fast path shows trusted timing"
 }
