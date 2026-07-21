@@ -1,0 +1,924 @@
+{
+  "workflow": "companion",
+  "specName": "Living Spec Components",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T00:25:21.186Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T00:28:53.117Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "user",
+      "at": "2026-07-21T00:40:36.886Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T00:40:44.310Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T00:40:44.312Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "user",
+      "at": "2026-07-21T00:41:37.194Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T00:47:01.435Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T00:48:44.943Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "user",
+      "at": "2026-07-21T00:49:34.719Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T00:52:29.049Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T00:54:33.264Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T00:54:33.351Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "user",
+      "at": "2026-07-21T01:02:03.685Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T01:02:05.953Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:06:33.416Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:06:33.475Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:07:11.400Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:07:11.460Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:08:41.765Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:08:41.825Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:08:41.883Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:09:11.502Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:11:39.565Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:11:39.625Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:11:39.686Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:11:39.746Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:11:39.810Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:11:39.872Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:11:39.932Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:15:18.389Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:15:18.449Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:15:18.511Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:15:18.570Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:15:18.633Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:15:18.701Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:15:18.763Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:15:18.822Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:17:46.907Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T025",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:17:46.967Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T026",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:17:47.026Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T027",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:17:47.086Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T028",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:17:47.146Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T029",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:19:36.447Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T030",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:19:36.509Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T031",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:19:36.569Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T032",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T01:19:36.630Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T01:19:36.715Z"
+    }
+  ],
+  "selectedAt": "2026-07-21T00:24:02.341Z",
+  "livingSpecs": {
+    "loaded": [
+      "viewer-ui",
+      "spec-viewer"
+    ]
+  },
+  "coverage": {
+    "FR-001": {
+      "title": "Component rendering applies only in living-spec mode; feature specs render identically",
+      "tasks": [
+        "T005",
+        "T007",
+        "T010",
+        "T032"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts::feature-spec byte parity"
+      ]
+    },
+    "FR-002": {
+      "title": "Unrecognized markdown falls through to the current renderer losslessly",
+      "tasks": [
+        "T004",
+        "T011"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts::safe() per-region fallback"
+      ]
+    },
+    "FR-003": {
+      "title": "A component that throws hands its region to the existing renderer",
+      "tasks": [
+        "T004",
+        "T011",
+        "T012",
+        "T013"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts::safe() per-region fallback"
+      ]
+    },
+    "FR-004": {
+      "title": "Every component preserves exact authored wording and document order",
+      "tasks": [
+        "T013",
+        "T019"
+      ]
+    },
+    "FR-005": {
+      "title": "Every component preserves source-line identity so comments behave unchanged",
+      "tasks": [
+        "T016",
+        "T019"
+      ]
+    },
+    "FR-006": {
+      "title": "Draft notice makes a draft unmistakable and preserves draft-marker detection",
+      "tasks": [
+        "T009",
+        "T012"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts::preprocessLivingDraftNotice"
+      ]
+    },
+    "FR-007": {
+      "title": "Purpose callout renders only when a purpose section exists; never placeholder",
+      "tasks": [
+        "T010",
+        "T013"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts::preprocessLivingPurpose"
+      ]
+    },
+    "FR-008": {
+      "title": "Requirement card keyed on exact heading text with no normalization",
+      "tasks": [
+        "T016",
+        "T019"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts::keys the card on the exact heading text"
+      ]
+    },
+    "FR-009": {
+      "title": "Confidence shown only when stated; no badge on untagged requirements",
+      "tasks": [
+        "T017",
+        "T020"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts::confidence + coverage"
+      ]
+    },
+    "FR-010": {
+      "title": "Inferred reads as less trustworthy without becoming a wall of warnings",
+      "tasks": [
+        "T017",
+        "T020",
+        "T022"
+      ]
+    },
+    "FR-011": {
+      "title": "Per-requirement coverage shown when determinable; never rendered as zero",
+      "tasks": [
+        "T017",
+        "T020"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts::omits coverage entirely when undeterminable"
+      ]
+    },
+    "FR-012": {
+      "title": "Scenario steps separate conditions from outcomes without reorder/reword",
+      "tasks": [
+        "T018",
+        "T021"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts::separates WHEN from THEN/AND"
+      ]
+    },
+    "FR-013": {
+      "title": "A requirement with no scenarios renders cleanly with no empty container",
+      "tasks": [
+        "T018",
+        "T021"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts::no empty scenario container"
+      ]
+    },
+    "FR-014": {
+      "title": "Uncovered section opens with a count and scope statement before files",
+      "tasks": [
+        "T024",
+        "T026"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts::count and scope before file list"
+      ]
+    },
+    "FR-015": {
+      "title": "Uncovered files grouped by reason for omission, not one flat list",
+      "tasks": [
+        "T024",
+        "T026"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts::groups files by reason"
+      ]
+    },
+    "FR-016": {
+      "title": "Uncovered disclosures are keyboard accessible and closed by default",
+      "tasks": [
+        "T026",
+        "T027"
+      ]
+    },
+    "FR-017": {
+      "title": "A spec that read everything says so plainly with no empty banner",
+      "tasks": [
+        "T025",
+        "T026"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts::read-everything sentinel"
+      ]
+    },
+    "FR-018": {
+      "title": "Uncovered section parsed defensively; unrecognized content falls back, no dropped lines",
+      "tasks": [
+        "T025",
+        "T026"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts::falls back to plain markdown for an unrecognized flat list"
+      ]
+    },
+    "FR-019": {
+      "title": "Undeterminable counts omitted, never guessed, never shown as zero",
+      "tasks": [
+        "T017",
+        "T020",
+        "T024",
+        "T026"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts::never renders it as 0"
+      ]
+    },
+    "FR-020": {
+      "title": "No document content interpolated into HTML attributes via string-built markup",
+      "tasks": [
+        "T020",
+        "T029"
+      ]
+    },
+    "FR-021": {
+      "title": "Accessibility-description targets use a visually-hidden class, not hidden",
+      "tasks": [
+        "T014"
+      ]
+    },
+    "FR-022": {
+      "title": "All themes and modes supported via existing viewer tokens, incl reduced-motion",
+      "tasks": [
+        "T022",
+        "T027",
+        "T030"
+      ]
+    },
+    "FR-023": {
+      "title": "Stories cover every enumerated component state",
+      "tasks": [
+        "T008",
+        "T015",
+        "T023",
+        "T028",
+        "T031"
+      ]
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 20,
+    "projectedTasks": 24,
+    "scopeSignal": "larger",
+    "verdict": "oversized"
+  },
+  "context": [
+    "living spec: viewer-ui",
+    "living spec: spec-viewer",
+    "area: webview/src/spec-viewer/markdown (string→innerHTML renderer, preprocessors, scenarios)",
+    "area: src/features/spec-viewer (livingDocs isLivingDraft, buildLivingHeaderMeta #457)",
+    "constraint: no document content interpolated into HTML attributes via string-built markup",
+    "constraint: preserve source-line data-line identity so line-comments keep working",
+    "constraint: fall back to current renderer, never fail the page"
+  ],
+  "intent": "Render a living spec's repeating structures (draft notice, purpose, requirement cards, scenarios, uncovered evidence) as components inside the existing viewer so readers can scan a draft before reading it, while ordinary markdown renders unchanged",
+  "expectations": [
+    "No new reader UI or product surface — works inside the viewer we already ship",
+    "No change to how living specs are authored",
+    "Feature (non-living) specs render byte-for-byte unchanged",
+    "Not an editing change — authored wording and document order are preserved exactly"
+  ],
+  "telemetryInstanceId": "c6862489-d00b-42b4-a04d-56e7849a9594",
+  "approach": "Render living-spec repeating structures as preprocessor components inside the existing webview string-render pipeline, gated to living mode by a setLivingMode flag so feature specs are byte-identical. Each component emits recognized HTML wrapped in a per-region fallback that hands a failing region back to the base renderer, preserving data-line comment identity throughout.",
+  "decisions": [
+    {
+      "decision": "Build components as string preprocessors in the existing render loop, not Preact for the body",
+      "why": "Line-comment data-line identity, per-region fallback, and feature-spec byte parity all live in the current string loop",
+      "rejected": "A Preact component tree for the living body, which would fork the comment/anchor system and the fallback contract"
+    },
+    {
+      "decision": "Gate all living preprocessors on a module-level livingMode flag set from navState.livingMode",
+      "why": "Feature specs must render identically to today (SC-001) and the extension already owns living-ness",
+      "rejected": "Re-deriving living-ness from document content in the webview"
+    },
+    {
+      "decision": "Per-component safe() fallback returns the input region unchanged on throw",
+      "why": "FR-003 wants a region to fall back, not the whole document; keeps data-line stamping and drops no lines",
+      "rejected": "One document-wide try/catch that would strip component treatment from everything on any single failure"
+    },
+    {
+      "decision": "Requirement card wraps still-individual commentable lines, keyed on exact heading text",
+      "why": "FR-008 needs the exact fold-back key and FR-005 needs per-line comment parity",
+      "rejected": "Collapsing each requirement into one component-line, which loses per-line comments"
+    },
+    {
+      "decision": "Gate the living preprocessors behind a module-level livingMode flag and register living-* classes in one pass-through check (line.includes(\"class=\\\"living-\"))",
+      "why": "Keeps feature-spec output byte-identical (SC-001) and lets all five components pass through the render loop with one recognizer edit",
+      "rejected": "A per-component class list in the recognizer"
+    },
+    {
+      "decision": "Requirement cards emit open/close wrapper divs and leave the heading + prose + scenarios as markdown lines the main loop renders",
+      "why": "Preserves per-line .line identity so line comments survive inside a card (FR-005), instead of collapsing the block into one HTML unit",
+      "rejected": "Rendering the whole card as a single pre-built HTML string"
+    },
+    {
+      "decision": "Only the reason-grouped uncovered format (scope prose + bold reason bullets with nested files) is componentized; flat lists fall back to plain markdown",
+      "why": "FR-015 wants grouping by reason and FR-019 forbids inventing reasons; grouping a flat list would guess. Fallback keeps every line (FR-018)",
+      "rejected": "Forcing every uncovered list into a single synthetic group"
+    },
+    {
+      "decision": "Lift the [inferred] tag out of prose into a confidence badge rather than leaving it inline",
+      "why": "Matches the existing task [P]/[US#] marker-to-chip precedent; [inferred] is a metadata annotation, not sentence prose",
+      "rejected": "Leaving [inferred] inline and duplicating it as a badge"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan + research + data-model + contracts for rendering living-spec structures as gated preprocessor components in the existing webview pipeline",
+      "key_finding": "The body is a string-render loop, not Preact; comment identity, fallback, and feature-spec byte parity all depend on staying in that loop, so components are gated preprocessors not a component tree"
+    },
+    "tasks": {
+      "summary": "32 tasks across 6 phases (Setup, Foundational gate/module/fallback, US1 draft+purpose+fallback, US2 requirement cards+scenarios, US3 uncovered evidence, Polish), waved by dependency"
+    },
+    "implement": {
+      "summary": "Living-spec draft notice, purpose callout, requirement cards (confidence/coverage), WHEN/THEN/AND scenarios, and uncovered-evidence disclosures now render as gated components in the viewer; feature specs unchanged, throwing components fall back per-region."
+    }
+  },
+  "currentTask": "T032",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Created empty _living.css partial with a header comment noting it styles living components via viewer tokens",
+      "files": [
+        "webview/styles/spec-viewer/_living.css"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added @import '_living.css' to the partial index so the new partial ships",
+      "files": [
+        "webview/styles/spec-viewer/index.css"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added module-level livingMode flag + setLivingMode() to the renderer, mirroring setHasSpecContext",
+      "files": [
+        "webview/src/spec-viewer/markdown/renderer.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Created livingComponents.ts scaffold with the safe(region,fn) fallback wrapper, coverage setter, and exported preprocessor stubs",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Gated the living preprocessors to livingMode in renderer and registered living-* root classes in the pass-through recognizer",
+      "files": [
+        "webview/src/spec-viewer/markdown/renderer.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Exported setLivingMode, setLivingCoverage, and the living preprocessors from the markdown barrel",
+      "files": [
+        "webview/src/spec-viewer/markdown/index.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Called setLivingMode(navState.livingMode) on contentUpdated and viewerStateUpdated alongside setHasSpecContext",
+      "files": [
+        "webview/src/spec-viewer/index.tsx"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Created LivingComponents.stories.tsx with the LivingDoc harness (renders a fixture with setLivingMode(true) + optional coverage)",
+      "files": [
+        "webview/src/spec-viewer/markdown/LivingComponents.stories.tsx"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Unit tests: draft notice renders from top-window [DRAFT], banner line intact, none when non-draft/windowed",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Unit tests: purpose callout only when ## Purpose exists, verbatim; feature-spec byte parity when livingMode off",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Unit test: a throwing preprocessor returns its region unchanged via safe(), dropping no line",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Implemented draft-notice preprocessor emitting living-draft-notice, keyed on top-window [DRAFT], banner intact, wrapped in safe()",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.ts"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Implemented purpose-callout preprocessor emitting living-purpose only when ## Purpose exists, text verbatim, wrapped in safe()",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Styled living-draft-notice and living-purpose via viewer tokens (borderless tinted, sr-only trust-boundary target)",
+      "files": [
+        "webview/styles/spec-viewer/_living.css"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Story cases: draft, non-draft, missing purpose, very long purpose, fallback path",
+      "files": [
+        "webview/src/spec-viewer/markdown/LivingComponents.stories.tsx"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Unit tests: card keyed on exact ### heading (no trim/normalize/re-case); inner scenario lines stay per-line .line units",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Unit tests: confidence badge only when [inferred]; coverage only when determinable, never 0",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Unit tests: scenario steps separate WHEN from THEN/AND without reorder/reword; no-scenarios card renders cleanly",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Implemented requirement-card preprocessor emitting living-req-card at exact heading, wrapping commentable lines, in safe()",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.ts"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Emit living-req-confidence(--inferred) only when stated and living-req-coverage only when determinable (never 0), attribute-safe",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.ts"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Implemented living scenario-steps preprocessor emitting living-scenario with living-when/then/and step classes, distinct from parseAcceptanceScenarios, in safe()",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.ts"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Styled req card, confidence (observed vs quiet-inferred), coverage, and scenario step classes via viewer tokens",
+      "files": [
+        "webview/styles/spec-viewer/_living.css"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "Story cases: observed, inferred, covered, unknown-coverage, no-scenarios, many-scenarios, long title",
+      "files": [
+        "webview/src/spec-viewer/markdown/LivingComponents.stories.tsx"
+      ]
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "Unit tests: uncovered opens with count+scope before file list; files grouped by reason as closed disclosures",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts"
+      ]
+    },
+    "T025": {
+      "status": "DONE",
+      "did": "Unit tests: read-everything sentinel renders plain statement; unrecognized flat list falls back to plain markdown, no line dropped",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts"
+      ]
+    },
+    "T026": {
+      "status": "DONE",
+      "did": "Implemented uncovered preprocessor: sentinel/empty→living-uncovered-none, else count+scope over reason-grouped <details> closed by default, defensive fallback, in safe()",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.ts"
+      ]
+    },
+    "T027": {
+      "status": "DONE",
+      "did": "Styled living-uncovered, count/scope, group disclosures (keyboard-operable, closed, reduced-motion-safe), and none via viewer tokens",
+      "files": [
+        "webview/styles/spec-viewer/_living.css"
+      ]
+    },
+    "T028": {
+      "status": "DONE",
+      "did": "Story cases: nothing uncovered, one file, many files across reasons, single reason with long file list",
+      "files": [
+        "webview/src/spec-viewer/markdown/LivingComponents.stories.tsx"
+      ]
+    },
+    "T029": {
+      "status": "DONE",
+      "did": "Audited emitted nodes: only data-req carries authored text and uses quote-escaping escapeHtml; all other attrs are internal counters — attribute-safe",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.ts"
+      ]
+    },
+    "T030": {
+      "status": "DONE",
+      "did": "Verified all component styles use viewer tokens; added narrow-width overflow-wrap; reduced-motion still equivalent for the disclosure",
+      "files": [
+        "webview/styles/spec-viewer/_living.css"
+      ]
+    },
+    "T031": {
+      "status": "DONE",
+      "did": "Confirmed stories exercise every enumerated state incl. covered/uncovered/unknown-coverage in one view",
+      "files": [
+        "webview/src/spec-viewer/markdown/LivingComponents.stories.tsx"
+      ]
+    },
+    "T032": {
+      "status": "DONE",
+      "did": "Ran full jest suite (1689 pass) and webview build (compiled successfully); validated SC-001/004/006/007/008",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "full unit test suite",
+      "command": "npx jest",
+      "result": "1689 pass / 0 fail (30 new living-component tests)",
+      "warnings": []
+    },
+    {
+      "what": "webview production build",
+      "command": "npm run compile-web",
+      "result": "webpack compiled successfully, spec-viewer.js emitted",
+      "warnings": []
+    },
+    {
+      "what": "webview type-check",
+      "command": "npx tsc --noEmit -p tsconfig.webview.json",
+      "result": "No errors found",
+      "warnings": [
+        "impeccable design hook flagged a left accent-border side-tab on the purpose callout; switched to the house borderless-tint callout style"
+      ]
+    }
+  ],
+  "last_action": "all 32 tasks done — 1689/1689 jest pass, webview build clean"
+}

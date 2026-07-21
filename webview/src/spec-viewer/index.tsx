@@ -6,7 +6,7 @@
 import { render } from 'preact';
 import type { VSCodeApi, ExtensionToViewerMessage, NavState } from './types';
 import { navState, markdownHtml, viewerState, historyEntries } from './signals';
-import { renderMarkdown, setCurrentTask, setHasSpecContext, setTaskSummaries } from './markdown';
+import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setTaskSummaries } from './markdown';
 import { applyHighlighting, initializeMermaid } from './highlighting';
 import { setupLineActions } from './editor';
 // `setupRefineModal`/`modal.ts` were deleted (orphan since the dynamic
@@ -67,6 +67,7 @@ function handleMessage(event: MessageEvent): void {
                 setCurrentTask(message.navState.currentTask);
             }
             setHasSpecContext(!!(message.navState?.specContextName || message.navState?.badgeText));
+            setLivingMode(!!message.navState?.livingMode);
             if (message.navState) {
                 navState.value = message.navState;
             }
@@ -80,6 +81,15 @@ function handleMessage(event: MessageEvent): void {
 
         case 'navStateUpdated':
             navState.value = message.navState;
+            // Keep the renderer flags in lockstep with navState so a later render
+            // (or a livingMode flip) doesn't paint with a stale mode.
+            if (message.navState) {
+                setLivingMode(!!message.navState.livingMode);
+                setHasSpecContext(!!(message.navState.specContextName || message.navState.badgeText));
+                if (message.navState.currentTask !== undefined) {
+                    setCurrentTask(message.navState.currentTask);
+                }
+            }
             break;
 
         case 'livingHealthResolved':
@@ -101,6 +111,7 @@ function handleMessage(event: MessageEvent): void {
                     setCurrentTask(message.navState.currentTask);
                 }
                 setHasSpecContext(!!(message.navState.specContextName || message.navState.badgeText));
+                setLivingMode(!!message.navState.livingMode);
             }
             break;
 
@@ -161,6 +172,13 @@ function init(): void {
     const initialNav = window.__INITIAL_NAV_STATE__;
     if (initialNav) {
         navState.value = initialNav;
+        // Set renderer flags before the first updateContent below, or a living
+        // spec's first paint renders in feature-spec mode until a later message.
+        setLivingMode(!!initialNav.livingMode);
+        setHasSpecContext(!!(initialNav.specContextName || initialNav.badgeText));
+        if (initialNav.currentTask !== undefined) {
+            setCurrentTask(initialNav.currentTask);
+        }
     }
 
     // Wire message listener before render

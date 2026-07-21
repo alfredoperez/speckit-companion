@@ -3,7 +3,15 @@
  * Exports markdown rendering functionality
  */
 
-export { renderMarkdown, setCurrentTask, setHasSpecContext, setTaskSummaries } from './renderer';
+export { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setTaskSummaries } from './renderer';
+export {
+    setLivingCoverage,
+    preprocessLivingDraftNotice,
+    preprocessLivingPurpose,
+    preprocessLivingScenarios,
+    preprocessLivingRequirements,
+    preprocessLivingUncovered
+} from './livingComponents';
 export { parseInline, escapeHtml, escapeHtmlInScenario } from './inline';
 export {
     preprocessSpecMetadata,
