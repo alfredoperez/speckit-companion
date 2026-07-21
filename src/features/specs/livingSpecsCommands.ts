@@ -142,21 +142,23 @@ export function registerLivingSpecsCommands(
             if (!rel || !root) return;
             // Never delete outside the workspace, even if a row carried a bad path.
             if (!isPathWithinRoot(root, rel)) return;
-            const name = path.basename(rel);
+            // Prefer the capability name; a centralized spec's basename is just
+            // "spec.md". Show the relative path so it's unambiguous which file goes.
+            const label = capabilityName(item) || path.basename(rel);
             const confirm = await vscode.window.showWarningMessage(
-                `Delete "${name}"? This cannot be undone.`,
-                { modal: true },
+                `Delete "${label}"? This cannot be undone.`,
+                { modal: true, detail: rel },
                 'Delete'
             );
             if (confirm !== 'Delete') return;
             try {
                 await vscode.workspace.fs.delete(vscode.Uri.file(path.join(root, rel)), { recursive: false });
             } catch (err) {
-                vscode.window.showErrorMessage(`Could not delete ${name}: ${err instanceof Error ? err.message : String(err)}`);
+                vscode.window.showErrorMessage(`Could not delete ${label}: ${err instanceof Error ? err.message : String(err)}`);
                 return;
             }
             provider.refresh();
-            NotificationUtils.showAutoDismissNotification(`Deleted "${name}"`);
+            NotificationUtils.showAutoDismissNotification(`Deleted "${label}"`);
         }),
         vscode.commands.registerCommand('speckit.livingSpecs.refresh', () => {
             provider.refresh();

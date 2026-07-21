@@ -296,6 +296,11 @@ body[data-has-spec-context="true"] .meta-branch {
     background: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-hoverBackground));
 }
 
+.spec-header-update-btn:focus-visible {
+    outline: 1px solid var(--vscode-focusBorder);
+    outline-offset: 1px;
+}
+
 /* What the capability claims — the one fact that lives nowhere else in the UI. */
 .spec-header-covers {
     display: flex;
