@@ -1,6 +1,8 @@
 import type { JSX } from 'preact';
 import { navState, viewerState } from '../signals';
-import type { LivingHeaderMeta } from '../types';
+import type { LivingHeaderMeta, VSCodeApi } from '../types';
+
+declare const vscode: VSCodeApi;
 
 /** How many claimed patterns show inline before the rest move behind "+N more". */
 const GLOBS_SHOWN = 3;
@@ -50,6 +52,17 @@ function LivingFacts({ meta }: { meta: LivingHeaderMeta }) {
             >
                 drift
             </span>
+        );
+        facts.push(
+            <button
+                key="update"
+                type="button"
+                class="spec-header-update-btn"
+                title="Update the spec to match the changed code, preserving its clarifications"
+                onClick={() => vscode.postMessage({ type: 'livingUpdate' })}
+            >
+                Update
+            </button>
         );
     }
 

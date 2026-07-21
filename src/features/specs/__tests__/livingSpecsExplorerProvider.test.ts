@@ -1,13 +1,17 @@
 import * as vscode from 'vscode';
 import { LivingSpecsExplorerProvider } from '../livingSpecsExplorerProvider';
 
-jest.mock('../livingSpecsModel', () => ({
-    readLivingSpecs: jest.fn(),
-    readCapabilityHealth: jest.fn().mockResolvedValue(undefined),
-    isPathWithinRoot: jest.fn().mockReturnValue(true),
-}));
+jest.mock('../livingSpecsModel', () => {
+    const actual = jest.requireActual('../livingSpecsModel');
+    return {
+        ...actual,
+        readLivingSpecs: jest.fn(),
+        readCapabilityHealth: jest.fn().mockResolvedValue(undefined),
+        isPathWithinRoot: jest.fn().mockReturnValue(true),
+    };
+});
 
-import { readLivingSpecs } from '../livingSpecsModel';
+import { readLivingSpecs, readCapabilityHealth } from '../livingSpecsModel';
 
 const WORKSPACE = '/workspace';
 
@@ -19,11 +23,22 @@ function createProvider(): LivingSpecsExplorerProvider {
     return new LivingSpecsExplorerProvider(context);
 }
 
+async function childrenOf(provider: LivingSpecsExplorerProvider, item?: any): Promise<any[]> {
+    return await provider.getChildren(item);
+}
+
+function byLabel(items: any[], label: string): any {
+    const found = items.find(i => i.label === label);
+    if (!found) throw new Error(`no row "${label}" in [${items.map(i => i.label).join(', ')}]`);
+    return found;
+}
+
 describe('LivingSpecsExplorerProvider', () => {
     let provider: LivingSpecsExplorerProvider;
 
     beforeEach(() => {
         jest.clearAllMocks();
+        (readCapabilityHealth as jest.Mock).mockResolvedValue(undefined);
         (vscode.workspace as any).workspaceFolders = [{ uri: { fsPath: WORKSPACE } }];
         provider = createProvider();
     });
@@ -102,18 +117,41 @@ describe('LivingSpecsExplorerProvider', () => {
         }
     });
 
-    it('groups capabilities before orphans', async () => {
+    it('groups capabilities into a directory tree mirroring where their specs live', async () => {
         (readLivingSpecs as jest.Mock).mockReturnValue({
             enabled: true,
             capabilities: [
-                { name: 'auth', spec: 'capabilities/auth/spec.md', location: 'central', exists: true, tiers: [] },
+                { name: 'core', spec: 'src/core/core.spec.md', location: 'colocated', exists: true, tiers: [], match: [], exclude: [] },
+                { name: 'specs', spec: 'src/features/specs/specs.spec.md', location: 'colocated', exists: true, tiers: [], match: [], exclude: [] },
+            ],
+            orphans: [],
+        });
+
+        const roots = await provider.getChildren();
+        const src = byLabel(roots, 'src');
+        expect(src.contextValue).toBe('living-specs-dir-group');
+
+        const srcChildren = await childrenOf(provider, src);
+        expect(byLabel(srcChildren, 'core').contextValue).toBe('living-specs-capability');
+        const features = byLabel(srcChildren, 'features');
+        expect(features.contextValue).toBe('living-specs-dir-group');
+
+        const featuresChildren = await childrenOf(provider, features);
+        expect(byLabel(featuresChildren, 'specs').contextValue).toBe('living-specs-capability');
+    });
+
+    it('shows orphans as a group after the capability tree', async () => {
+        (readLivingSpecs as jest.Mock).mockReturnValue({
+            enabled: true,
+            capabilities: [
+                { name: 'auth', spec: 'capabilities/auth/spec.md', location: 'centralized', exists: true, tiers: [], match: [], exclude: [] },
             ],
             orphans: ['legacy/legacy-auth.spec.md'],
         });
 
         const roots = await provider.getChildren();
 
-        expect(roots.map(r => r.label)).toEqual(['Capabilities', 'Orphans']);
+        expect(roots.map(r => r.label)).toEqual(['capabilities', 'Orphans']);
     });
 
     it('gives an orphan row its exact path so reveal can resolve it', async () => {
@@ -124,25 +162,26 @@ describe('LivingSpecsExplorerProvider', () => {
         });
 
         const roots = await provider.getChildren();
-        const orphans = await provider.getChildren(roots[0]);
+        const orphans = await childrenOf(provider, byLabel(roots, 'Orphans'));
 
         expect(orphans).toHaveLength(1);
         expect(orphans[0].contextValue).toBe('living-specs-orphan');
         expect(orphans[0].label).toBe('legacy-auth.spec.md');
         expect(orphans[0].tooltip).toBe('legacy/legacy-auth.spec.md');
+        expect(orphans[0].relPath).toBe('legacy/legacy-auth.spec.md');
     });
 
     it('offers no open command on a capability whose spec does not exist', async () => {
         (readLivingSpecs as jest.Mock).mockReturnValue({
             enabled: true,
             capabilities: [
-                { name: 'billing', spec: 'capabilities/billing/spec.md', location: 'central', exists: false, tiers: [] },
+                { name: 'billing', spec: 'capabilities/billing/spec.md', location: 'centralized', exists: false, tiers: [], match: [], exclude: [] },
             ],
             orphans: [],
         });
 
         const roots = await provider.getChildren();
-        const caps = await provider.getChildren(roots[0]);
+        const caps = await childrenOf(provider, byLabel(roots, 'capabilities'));
 
         expect(caps[0].contextValue).toBe('living-specs-capability-missing');
         expect(caps[0].command).toBeUndefined();
@@ -150,68 +189,38 @@ describe('LivingSpecsExplorerProvider', () => {
         expect((caps[0].iconPath as vscode.ThemeIcon).id).toBe('circle-outline');
     });
 
-    it('drops the location badge when every capability is central', async () => {
+    it('promotes a drifted capability to its own context value and badges it', async () => {
+        (readCapabilityHealth as jest.Mock).mockResolvedValue({ drifted: true });
         (readLivingSpecs as jest.Mock).mockReturnValue({
             enabled: true,
             capabilities: [
-                { name: 'auth', spec: 'capabilities/auth/spec.md', location: 'centralized', exists: true, tiers: [] },
-                { name: 'billing', spec: 'capabilities/billing/spec.md', location: 'centralized', exists: true, tiers: [] },
+                { name: 'billing', spec: 'src/billing/billing.spec.md', location: 'colocated', exists: true, tiers: [], match: ['src/billing/**'], exclude: [] },
             ],
             orphans: [],
         });
 
         const roots = await provider.getChildren();
-        const caps = await provider.getChildren(roots[0]);
+        const caps = await childrenOf(provider, byLabel(roots, 'src'));
 
-        expect(caps.map(c => c.description)).toEqual([undefined, undefined]);
+        expect(caps[0].contextValue).toBe('living-specs-capability-drifted');
+        expect(caps[0].description).toBe('drift');
     });
 
-    it('keeps the location badge when the repo mixes storage modes', async () => {
+    it('leaves a clean capability at the plain context value with no location badge', async () => {
         (readLivingSpecs as jest.Mock).mockReturnValue({
             enabled: true,
             capabilities: [
-                { name: 'auth', spec: 'capabilities/auth/spec.md', location: 'centralized', exists: true, tiers: [] },
-                { name: 'billing', spec: 'src/billing/billing.spec.md', location: 'colocated', exists: true, tiers: [] },
+                { name: 'auth', spec: 'capabilities/auth/spec.md', location: 'centralized', exists: true, tiers: [], match: [], exclude: [] },
             ],
             orphans: [],
         });
 
         const roots = await provider.getChildren();
-        const caps = await provider.getChildren(roots[0]);
+        const caps = await childrenOf(provider, byLabel(roots, 'capabilities'));
 
-        expect(caps[0].description).toBe('central');
-        expect(caps[1].description).toBe('src/billing');
-    });
-
-    it('still says "not created" in an all-central repo', async () => {
-        (readLivingSpecs as jest.Mock).mockReturnValue({
-            enabled: true,
-            capabilities: [
-                { name: 'billing', spec: 'capabilities/billing/spec.md', location: 'centralized', exists: false, tiers: [] },
-            ],
-            orphans: [],
-        });
-
-        const roots = await provider.getChildren();
-        const caps = await provider.getChildren(roots[0]);
-
-        expect(caps[0].description).toBe('not created');
-    });
-
-    it('opens the spec straight from a capability whose only child would be Spec', async () => {
-        (readLivingSpecs as jest.Mock).mockReturnValue({
-            enabled: true,
-            capabilities: [
-                { name: 'auth', spec: 'capabilities/auth/spec.md', location: 'centralized', exists: true, tiers: [] },
-            ],
-            orphans: [],
-        });
-
-        const roots = await provider.getChildren();
-        const caps = await provider.getChildren(roots[0]);
-
-        expect(caps[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
-        expect(caps[0].command?.arguments?.[0]).toContain('capabilities/auth/spec.md');
+        expect(caps[0].contextValue).toBe('living-specs-capability');
+        expect(caps[0].description).toBeUndefined();
+        expect(caps[0].relPath).toBe('capabilities/auth/spec.md');
     });
 
     it('stays expandable when a capability has architecture or coverage tiers', async () => {
@@ -224,17 +233,20 @@ describe('LivingSpecsExplorerProvider', () => {
                     location: 'centralized',
                     exists: true,
                     tiers: [{ kind: 'arch', path: 'capabilities/auth/architecture.md' }],
+                    match: [],
+                    exclude: [],
                 },
             ],
             orphans: [],
         });
 
         const roots = await provider.getChildren();
-        const caps = await provider.getChildren(roots[0]);
+        const caps = await childrenOf(provider, byLabel(roots, 'capabilities'));
 
         expect(caps[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
 
-        const tiers = await provider.getChildren(caps[0]);
+        const tiers = await childrenOf(provider, caps[0]);
         expect(tiers.map(t => t.label)).toEqual(['Spec', 'Architecture']);
+        expect(tiers[0].relPath).toBe('capabilities/auth/spec.md');
     });
 });

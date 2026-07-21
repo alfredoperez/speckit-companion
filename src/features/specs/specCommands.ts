@@ -256,7 +256,7 @@ export function registerSpecKitCommands(
         if (typeof item.resourcePath === 'string' && path.isAbsolute(item.resourcePath)) {
             return vscode.Uri.file(item.resourcePath);
         }
-        const rel = item.filePath || item.specPath;
+        const rel = item.filePath || item.specPath || item.relPath;
         if (typeof rel === 'string' && root) return vscode.Uri.file(path.join(root, rel));
         const arg = item.command?.arguments?.[0];
         if (arg instanceof vscode.Uri) return arg;

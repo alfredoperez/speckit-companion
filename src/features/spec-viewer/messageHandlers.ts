@@ -43,6 +43,7 @@ import {
 import type { WorkflowStepConfig } from "../workflows/types";
 import { nextWorkflowStep, workflowStepIndex } from "../workflows/stepSequence";
 import { isOptionalCommand } from "./optionalCommands";
+import { livingTierDocuments } from "./livingDocs";
 import {
   addComment as addCommentToCtx,
   buildReviewComment,
@@ -155,6 +156,7 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
     setStatus: async (_msg, dir, _deps) => {
       await vscode.commands.executeCommand('speckit.specs.setStatus', { specPath: toWorkspaceRelativeSpecPath(dir) });
     },
+    livingUpdate: (_msg, dir, deps) => handleLivingUpdate(dir, deps),
     openFile: (msg, _dir, deps) => handleOpenFile(msg.filename, deps),
     webviewError: async (msg, _dir, deps) => {
       deps.outputChannel.appendLine(
@@ -735,6 +737,25 @@ async function handleOpenFile(
       `[SpecViewer] Error opening file ref: ${error}`,
     );
   }
+}
+
+/**
+ * The living-spec viewer's Update button — fold the changed code back into the
+ * open spec. Resolves the spec tier's path from the panel's own source anchor
+ * (the single source of truth the header already renders from) and hands off to
+ * the sidebar's Update command so both surfaces build the same prompt.
+ */
+async function handleLivingUpdate(
+  specDirectory: string,
+  deps: MessageHandlerDependencies,
+): Promise<void> {
+  const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  const anchor = deps.getInstance(specDirectory)?.state.livingSourcePath;
+  if (!root || !anchor) return;
+  const specTier = livingTierDocuments(anchor).find(d => d.type === "spec");
+  if (!specTier) return;
+  const capabilitySpecPath = path.relative(root, specTier.filePath).replace(/\\/g, "/");
+  await vscode.commands.executeCommand("speckit.livingSpecs.update", { capabilitySpecPath });
 }
 
 /**
