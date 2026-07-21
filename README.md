@@ -95,7 +95,7 @@ The spec viewer is built for fast scanning of long-form specs:
 
 A spec with recorded activity **lands on its Overview** — a **durable-context dossier** of everything `.spec-context.json` carries, ordered by what a future session needs. It sits at the top of the document rail as a destination like any other, so moving between it and a document is one click either way. The one-line **run strip** above the content keeps the frequently scanned facts (phase, tasks, requirements traced to tests, checks, concerns, honest active time, PR link) in view in both. A spec whose context holds only a work log opens on its documents instead:
 
-- **Intent** — why the spec exists, set as one prominent statement, with the approach, working area, and sizing beside it.
+- **Intent** — why the spec exists, set as a lead summary line beneath the header title, with the approach, working area, and sizing beside it.
 - **Expectations** — the fence around the work: constraints that must stay true paired with the deliberately out-of-scope list, as peers.
 - **Verified** — a ledger of what was checked: each check keeps its result and evidence command visually connected (warnings surface amber).
 - **Decisions** — numbered choices future work should not have to rediscover, each with its reasoning and the rejected alternative.
