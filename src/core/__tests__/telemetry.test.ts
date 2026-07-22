@@ -16,6 +16,17 @@ import {
     __resetInstallPromptShownDedupe,
     INSTALL_PROMPT_EVENT,
     APP_INSIGHTS_CONNECTION_STRING,
+    reportSpecOpened,
+    reportLivingSpecOpened,
+    reportLivingSpecDrift,
+    reportLivingSpecSync,
+    reportSteeringOpened,
+    __resetEngagementDedupe,
+    SPEC_OPENED_EVENT,
+    LIVING_SPEC_OPENED_EVENT,
+    LIVING_SPEC_DRIFT_EVENT,
+    LIVING_SPEC_SYNC_EVENT,
+    STEERING_OPENED_EVENT,
 } from '../telemetry';
 // `@vscode/extension-telemetry` is mapped to the test mock (jest.config.js).
 // The real package types don't declare the mock's captured-event helpers, so
@@ -328,5 +339,142 @@ describe('TelemetryService', () => {
             const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'telemetry-empty-'));
             expect(getSpecTelemetryContext(dir)).toEqual({});
         });
+    });
+});
+
+describe('engagement events', () => {
+    beforeEach(() => {
+        __resetTelemetryMock();
+        __resetEngagementDedupe();
+        mockConfig({ telemetry: true });
+        initTelemetry(new TelemetryService());
+    });
+
+    describe('spec.opened', () => {
+        it('fires a bare event the first time a spec opens', () => {
+            reportSpecOpened('/ws/specs/123-feature');
+            expect(__captured.events).toEqual([{ name: SPEC_OPENED_EVENT, properties: undefined }]);
+        });
+
+        it('carries no properties — no spec name or path', () => {
+            reportSpecOpened('/ws/specs/123-feature');
+            expect(__captured.events[0].properties).toBeUndefined();
+        });
+
+        it('dedupes re-renders/reveals of the same spec within a session', () => {
+            reportSpecOpened('/ws/specs/123-feature');
+            reportSpecOpened('/ws/specs/123-feature');
+            reportSpecOpened('/ws/specs/123-feature');
+            expect(__captured.events).toHaveLength(1);
+        });
+
+        it('fires once per distinct spec', () => {
+            reportSpecOpened('/ws/specs/123-feature');
+            reportSpecOpened('/ws/specs/456-other');
+            expect(__captured.events).toHaveLength(2);
+            expect(__captured.events.every(e => e.name === SPEC_OPENED_EVENT)).toBe(true);
+        });
+
+        it('an open while telemetry is disabled does not burn the dedupe — it still fires once enabled', () => {
+            mockConfig({ telemetry: false });
+            initTelemetry(new TelemetryService());
+            reportSpecOpened('/ws/specs/123-feature');
+            expect(__captured.events).toHaveLength(0);
+
+            mockConfig({ telemetry: true });
+            initTelemetry(new TelemetryService());
+            reportSpecOpened('/ws/specs/123-feature');
+            expect(__captured.events).toEqual([{ name: SPEC_OPENED_EVENT, properties: undefined }]);
+        });
+
+        it('sends nothing when telemetry is disabled', () => {
+            mockConfig({ telemetry: false });
+            initTelemetry(new TelemetryService());
+            reportSpecOpened('/ws/specs/123-feature');
+            expect(__captured.events).toHaveLength(0);
+        });
+    });
+
+    describe('livingSpec.opened', () => {
+        it('fires a bare event the first time a living spec opens', () => {
+            reportLivingSpecOpened('/ws/src/auth/spec.md');
+            expect(__captured.events).toEqual([{ name: LIVING_SPEC_OPENED_EVENT, properties: undefined }]);
+        });
+
+        it('dedupes re-renders of the same capability within a session', () => {
+            reportLivingSpecOpened('/ws/src/auth/spec.md');
+            reportLivingSpecOpened('/ws/src/auth/spec.md');
+            expect(__captured.events).toHaveLength(1);
+        });
+
+        it('fires once per distinct capability', () => {
+            reportLivingSpecOpened('/ws/src/auth/spec.md');
+            reportLivingSpecOpened('/ws/src/billing/spec.md');
+            expect(__captured.events).toHaveLength(2);
+        });
+
+        it('sends nothing when telemetry is disabled', () => {
+            mockConfig({ telemetry: false });
+            initTelemetry(new TelemetryService());
+            reportLivingSpecOpened('/ws/src/auth/spec.md');
+            expect(__captured.events).toHaveLength(0);
+        });
+    });
+
+    describe('livingSpec.drift / livingSpec.sync', () => {
+        it('fires a bare drift event each run (not deduped)', () => {
+            reportLivingSpecDrift();
+            reportLivingSpecDrift();
+            expect(__captured.events).toEqual([
+                { name: LIVING_SPEC_DRIFT_EVENT, properties: undefined },
+                { name: LIVING_SPEC_DRIFT_EVENT, properties: undefined },
+            ]);
+        });
+
+        it('fires a bare sync event each run (not deduped)', () => {
+            reportLivingSpecSync();
+            reportLivingSpecSync();
+            expect(__captured.events).toEqual([
+                { name: LIVING_SPEC_SYNC_EVENT, properties: undefined },
+                { name: LIVING_SPEC_SYNC_EVENT, properties: undefined },
+            ]);
+        });
+
+        it('sends nothing when telemetry is disabled', () => {
+            mockConfig({ telemetry: false });
+            initTelemetry(new TelemetryService());
+            reportLivingSpecDrift();
+            reportLivingSpecSync();
+            expect(__captured.events).toHaveLength(0);
+        });
+    });
+
+    describe('steering.opened', () => {
+        it('fires a bare event each time a steering doc opens (not deduped)', () => {
+            reportSteeringOpened();
+            reportSteeringOpened();
+            expect(__captured.events).toEqual([
+                { name: STEERING_OPENED_EVENT, properties: undefined },
+                { name: STEERING_OPENED_EVENT, properties: undefined },
+            ]);
+        });
+
+        it('sends nothing when telemetry is disabled', () => {
+            mockConfig({ telemetry: false });
+            initTelemetry(new TelemetryService());
+            reportSteeringOpened();
+            expect(__captured.events).toHaveLength(0);
+        });
+    });
+
+    it('every engagement event carries no properties at all', () => {
+        reportSpecOpened('/ws/specs/1');
+        reportLivingSpecOpened('/ws/src/a/spec.md');
+        reportLivingSpecDrift();
+        reportLivingSpecSync();
+        reportSteeringOpened();
+        for (const event of __captured.events) {
+            expect(event.properties).toBeUndefined();
+        }
     });
 });

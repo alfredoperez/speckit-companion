@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { getAIProvider } from '../../extension';
 import { LivingSpecsExplorerProvider } from './livingSpecsExplorerProvider';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
+import { reportLivingSpecDrift, reportLivingSpecSync } from '../../core/telemetry';
 import {
     ResolvedCapability,
     readDriftedFiles,
@@ -95,6 +96,7 @@ export function registerLivingSpecsCommands(
 ): void {
     context.subscriptions.push(
         vscode.commands.registerCommand('speckit.livingSpecs.drift', async (item?: LivingSpecNode) => {
+            reportLivingSpecDrift();
             outputChannel.appendLine(`[SpecKit] Living-spec drift check for: ${capabilityName(item) || '(all capabilities)'}`);
             await dispatchScoped('living-drift', 'SpecKit - Living-Spec Drift', item);
         }),
@@ -107,6 +109,7 @@ export function registerLivingSpecsCommands(
             await getAIProvider().executeSlashCommand('/speckit.companion.living-adopt', 'SpecKit - Adopt Code Area', true);
         }),
         vscode.commands.registerCommand('speckit.livingSpecs.sync', async () => {
+            reportLivingSpecSync();
             outputChannel.appendLine('[SpecKit] Living-spec sync from current changes dispatched');
             await getAIProvider().executeSlashCommand('/speckit.companion.living-sync', 'SpecKit - Sync Living Specs', true);
         }),

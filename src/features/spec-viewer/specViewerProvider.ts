@@ -61,7 +61,7 @@ import { resetMalformedContext } from "../specs/specContextReset";
 import { reconcileAndPersist } from "../specs/specContextReconciler";
 import { isCompanionInstalled } from "../settings/companionPresetReconciler";
 import { shouldShowInstallPrompt, readInstallPromptEnabled } from "../../speckit/specKitExtensionInstall";
-import { reportInstallPromptShown } from "../../core/telemetry";
+import { reportInstallPromptShown, reportSpecOpened, reportLivingSpecOpened } from "../../core/telemetry";
 import { deriveViewerState, isStepCompleted, findRunningStep } from "./stateDerivation";
 import { enrichLivingSpecs } from "./livingSpecsContent";
 import { StepCompletionNotifier, NotifierContext } from "./stepCompletionNotifier";
@@ -250,6 +250,8 @@ export class SpecViewerProvider {
     let specDirectory = getSpecDirectoryFromPath(filePath);
     let documentType = getDocumentTypeFromPath(filePath);
 
+    reportSpecOpened(specDirectory);
+
     this.outputChannel.appendLine(
       `[SpecViewer] Opening ${documentType} from ${specDirectory}`,
     );
@@ -291,6 +293,7 @@ export class SpecViewerProvider {
    * webview's shell state, so `showingOverview` re-applies its landing rule.
    */
   public async showSpec(specDirectory: string): Promise<void> {
+    reportSpecOpened(specDirectory);
     const existing = this.panels.get(specDirectory);
     if (existing) {
       await this.updateContent(specDirectory, existing.state.currentDocument);
@@ -308,6 +311,8 @@ export class SpecViewerProvider {
   private async showLiving(filePath: string): Promise<void> {
     const specDirectory = path.dirname(filePath);
     const documentType = livingTierType(path.basename(filePath));
+
+    reportLivingSpecOpened(livingCapabilityName(filePath));
 
     const existing = this.panels.get(specDirectory);
     if (existing?.state.living) {
