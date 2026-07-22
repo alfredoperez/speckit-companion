@@ -49,6 +49,18 @@ def _skipped_capability_names(feature_dir: Path) -> set[str]:
     }
 
 
+def _accountability_gap(feature_dir: Path, synced) -> list[str]:
+    """Loaded capabilities completion neither folded (synced) nor recorded a skip
+    for. The core #536 check — computed in BOTH fold branches so a partial
+    multi-capability fold (one delta authored, another capability forgotten)
+    can't silence the gap the way the no-delta-only check did."""
+    loaded = _loaded_capabilities(feature_dir)
+    if not loaded:
+        return []
+    accounted = set(synced) | _skipped_capability_names(feature_dir)
+    return [c for c in loaded if c not in accounted]
+
+
 def _living_requirement_span(living_lines: list[str], heading: str) -> tuple[int, int] | None:
     """Find the [start, end) line span of a `### <heading>` requirement in a living
     spec, end being the next `###`/`##` or EOF. Heading match is exact (stripped)."""
@@ -479,6 +491,23 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
         note = f" — {'; '.join(reasons)}" if reasons else ""
         print(f"[companion] Living-spec fold: {cap['name']} ← {counts} ({spec_rel}){note}",
               file=sys.stderr)
+
+    # Accountability applies even when SOME deltas were authored: a spec that
+    # loaded several capabilities and folded only one still leaves the others
+    # unaccounted. Check loaded − synced − skipped here too, not just on the
+    # no-delta path, so a single delta block can't silence the gap.
+    unaccounted = _accountability_gap(feature_dir, synced)
+    if unaccounted:
+        print(
+            f"[companion] Living-spec fold: folded {len(synced)} capabilit"
+            f"{'y' if len(synced) == 1 else 'ies'} ({', '.join(synced)}) but "
+            f"{len(unaccounted)} loaded capabilit"
+            f"{'y is' if len(unaccounted) == 1 else 'ies are'} neither folded nor "
+            f"skipped ({', '.join(unaccounted)}). The loop did not close for "
+            "those: author a delta block or record a skip "
+            '(write-context.py --living-spec-skip "<name>: <reason>").',
+            file=sys.stderr,
+        )
 
     if not synced:
         return None

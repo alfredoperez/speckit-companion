@@ -555,7 +555,14 @@ def main() -> int:
         if args.living_spec_skips:
             entries = []
             for raw in args.living_spec_skips:
-                name, _, reason = str(raw).partition(":")
+                name, sep, reason = str(raw).partition(":")
+                if name.strip() and not (sep and reason.strip()):
+                    print(
+                        f"[companion] Warning: --living-spec-skip \"{raw}\" has no reason; "
+                        "recording the skip anyway, but use \"<name>: <reason>\" so the "
+                        "note explains why the capability was left unchanged.",
+                        file=sys.stderr,
+                    )
                 entries.append({"name": name.strip(), "reason": reason.strip()})
             target = set_living_specs_skipped(feature_dir, entries)
             if target is not None:

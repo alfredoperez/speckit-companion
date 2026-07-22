@@ -762,6 +762,12 @@ ENABLED_TODOS_YAML = (
     "    - name: todos\n      match: [\"src/todos/**\"]\n"
 )
 
+ENABLED_TWO_CAPS_YAML = (
+    "livingSpecs:\n  enabled: true\n  capabilities:\n"
+    "    - name: todos\n      match: [\"src/todos/**\"]\n"
+    "    - name: about\n      match: [\"src/about/**\"]\n"
+)
+
 
 class DeltaParserTests(unittest.TestCase):
     def test_parses_added_modified_removed_renamed(self) -> None:
@@ -1246,6 +1252,46 @@ class FoldLivingSpecTests(unittest.TestCase):
         # only the unaccounted one.
         self.assertIn("1 unaccounted (todos)", log)
         self.assertIn("The loop did not close", log)
+
+    # A single delta block must NOT silence the backstop for a sibling loaded
+    # capability that was neither folded nor skipped — the multi-capability
+    # partial-coverage hole. The accountability check runs in the delta path too.
+    def test_one_delta_authored_still_flags_a_forgotten_sibling(self) -> None:
+        root = _git_repo(
+            ENABLED_TWO_CAPS_YAML,
+            {"capabilities/todos/spec.md": TODOS_LIVING,
+             "capabilities/about/spec.md": "# About\n\n### A\n\n#### Scenario: s\n- x\n"},
+            code_files=["src/todos/list.ts", "src/about/page.ts"],
+        )
+        # A real delta for todos, but `about` was loaded and left with no delta
+        # and no skip note.
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n<!-- capability: todos -->\n\n"
+            "### Due dates\n\n#### Scenario: s\n- a\n")
+        wc.set_living_specs_loaded(fdir, ["todos", "about"])
+        log = self._fold_log(fdir)
+        # todos folds...
+        self.assertIn("### Due dates", self._living(root))
+        self.assertEqual(self._ctx(fdir)["livingSpecs"]["synced"], ["todos"])
+        # ...but `about` is still flagged loudly, not silenced by the todos delta.
+        self.assertIn("neither folded nor skipped (about)", log)
+        self.assertIn("The loop did not close", log)
+
+    def test_one_delta_with_the_sibling_skipped_stays_quiet(self) -> None:
+        root = _git_repo(
+            ENABLED_TWO_CAPS_YAML,
+            {"capabilities/todos/spec.md": TODOS_LIVING,
+             "capabilities/about/spec.md": "# About\n\n### A\n\n#### Scenario: s\n- x\n"},
+            code_files=["src/todos/list.ts", "src/about/page.ts"],
+        )
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n<!-- capability: todos -->\n\n"
+            "### Due dates\n\n#### Scenario: s\n- a\n")
+        wc.set_living_specs_loaded(fdir, ["todos", "about"])
+        wc.set_living_specs_skipped(fdir, [{"name": "about", "reason": "unchanged"}])
+        log = self._fold_log(fdir)
+        self.assertEqual(self._ctx(fdir)["livingSpecs"]["synced"], ["todos"])
+        self.assertNotIn("The loop did not close", log)
 
     def test_no_delta_and_no_loaded_caps_names_that_reason(self) -> None:
         root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},

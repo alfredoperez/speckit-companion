@@ -1529,6 +1529,14 @@ class MultiFlagDispatchTests(unittest.TestCase):
         )
         self.assertIn("skip note", out)
 
+    def test_living_spec_skip_without_reason_warns_but_still_records(self) -> None:
+        rc, err = self._run_err(["--living-spec-skip", "todos"])
+        self.assertEqual(rc, 0)
+        # The skip is kept (accountability holds) but the caller is nudged.
+        self.assertEqual(_ctx(self.fd)["livingSpecs"]["skipped"],
+                         [{"name": "todos", "reason": ""}])
+        self.assertIn("has no reason", err)
+
     def test_living_spec_skip_never_writes_lifecycle_history(self) -> None:
         self._run(["--living-spec-skip", "todos: reason"])
         ctx = _ctx(self.fd)
