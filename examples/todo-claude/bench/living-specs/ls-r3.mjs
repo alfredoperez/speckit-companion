@@ -4,8 +4,8 @@
 // Proves the write-back loop closes reliably across the real dimensions it
 // broke on: central vs colocated layout, a change that adds a requirement vs one
 // that adds nothing, adopt, go-around-the-pipeline drift, disabled, and
-// idempotency. Every value is captured from a real execFileSync against the
-// shipped scripts pointed at a baked sandbox via --root — never hand-authored.
+// idempotency. Every value is captured from a real spawnSync (stdout + stderr)
+// against the shipped scripts pointed at a baked sandbox via --root — never hand-authored.
 // The only seeded inputs are the prose an AI would write (a feature spec, a delta
 // block, a skip reason); the scripts under test do the rest for real, which is
 // exactly what exercises the #535 (deterministic gate) and #536 (accountability)
