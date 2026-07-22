@@ -266,11 +266,14 @@ export async function updateSpecContext(
     fallback: SpecContext
 ): Promise<SpecContext> {
     const target = path.join(specDir, SPEC_CONTEXT_FILENAME);
+    // Chain key is the RESOLVED absolute path, so two specDir strings that reach
+    // the same file (relative vs absolute, `..` segments) share one queue.
+    const key = path.resolve(target);
     // The get+set below runs synchronously before any await, so two concurrent
     // callers can't interleave here: the second reads the first's tail as its
     // prior and chains behind it. `prior` never rejects (see `tail`), so a
     // failed predecessor still lets us run.
-    const prior = writeChains.get(target) ?? Promise.resolve();
+    const prior = writeChains.get(key) ?? Promise.resolve();
     const result = prior.then(() =>
         runSpecContextUpdate(specDir, target, mutate, fallback)
     );
@@ -278,13 +281,13 @@ export async function updateSpecContext(
         () => undefined,
         () => undefined
     );
-    writeChains.set(target, tail);
+    writeChains.set(key, tail);
     // Self-clean once this is the last write to settle, so the map doesn't grow
     // unbounded across specs. A newer write for the same target replaces `tail`,
     // in which case we leave its entry alone.
     void tail.then(() => {
-        if (writeChains.get(target) === tail) {
-            writeChains.delete(target);
+        if (writeChains.get(key) === tail) {
+            writeChains.delete(key);
         }
     });
     return result;

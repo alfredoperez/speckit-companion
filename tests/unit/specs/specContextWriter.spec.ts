@@ -9,7 +9,7 @@ import {
 } from '../../../src/features/specs/specContextWriter';
 import { readSpecContext } from '../../../src/features/specs/specContextReader';
 import { backfillMinimalContext } from '../../../src/features/specs/specContextBackfill';
-import { HistoryEntry, SpecContext } from '../../../src/core/types/specContext';
+import { SpecContext } from '../../../src/core/types/specContext';
 
 function mkTmp(): string {
     return fs.mkdtempSync(path.join(os.tmpdir(), 'spec-writer-'));
@@ -92,39 +92,38 @@ describe('updateSpecContext — per-spec write serialization', () => {
         expect(subs.size).toBe(N);
     });
 
-    it('overlapping writes to two different specs both complete and do not serialize against each other (FR-002, SC-003)', async () => {
+    it('writes to two different specs run on independent queues — spec B completes while spec A is gated (FR-002, SC-003)', async () => {
         const dirA = mkTmp();
         const dirB = mkTmp();
         await writeSpecContext(dirA, fresh());
         await writeSpecContext(dirB, fresh());
 
-        const order: string[] = [];
-        // Spec A's mutation blocks briefly; spec B must not wait on it.
-        const slowA = updateSpecContext(
-            dirA,
-            ctx => {
-                order.push('A');
-                return setStepStarted(ctx, 'plan', 'extension');
-            },
-            fresh()
+        // Hold spec A's write open by gating its file read; spec B must still
+        // finish. Under a single global queue, B would chain behind the gated A
+        // and this test would deadlock (time out) — that's the point.
+        let releaseA: () => void = () => {};
+        const aGate = new Promise<void>(r => { releaseA = r; });
+        const realRead = fs.promises.readFile;
+        const spy = jest.spyOn(fs.promises, 'readFile').mockImplementation(
+            async (p: any, ...args: any[]) => {
+                if (String(p) === ctxPath(dirA)) await aGate;
+                return (realRead as any)(p, ...args);
+            }
         );
-        const fastB = updateSpecContext(
-            dirB,
-            ctx => {
-                order.push('B');
-                return setStepStarted(ctx, 'plan', 'extension');
-            },
-            fresh()
-        );
-        await Promise.all([slowA, fastB]);
 
-        const a = await readSpecContext(dirA);
+        const slowA = updateSpecContext(dirA, ctx => setStepStarted(ctx, 'plan', 'extension'), fresh());
+        const fastB = updateSpecContext(dirB, ctx => setStepStarted(ctx, 'plan', 'extension'), fresh());
+
+        // B resolves while A is still gated → the queues are independent.
+        await fastB;
         const b = await readSpecContext(dirB);
-        expect(a!.history.some(h => h.step === 'plan' && h.kind === 'start')).toBe(true);
         expect(b!.history.some(h => h.step === 'plan' && h.kind === 'start')).toBe(true);
-        // Both mutations ran (neither was blocked out).
-        expect(order).toContain('A');
-        expect(order).toContain('B');
+
+        releaseA();
+        await slowA;
+        spy.mockRestore();
+        const a = await readSpecContext(dirA);
+        expect(a!.history.some(h => h.step === 'plan' && h.kind === 'start')).toBe(true);
     });
 
     it('a throwing queued write releases the lock so the next same-spec write still runs, and its error propagates (FR-004, SC-004)', async () => {
