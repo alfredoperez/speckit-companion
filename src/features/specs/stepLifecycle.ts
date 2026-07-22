@@ -164,7 +164,10 @@ export async function forceStatus(
                 const aligned: SpecContext = { ...ctx, currentStep: owning.step };
                 return owning.settled
                     ? setStepCompleted(aligned, owning.step, by)
-                    : setStepStarted(aligned, owning.step, by);
+                    // Manual recovery re-stamps an honest boundary even when the
+                    // stranded step already has a start (#347) — opt out of the
+                    // idempotent start-dedup the automatic advance path uses.
+                    : setStepStarted(aligned, owning.step, by, undefined, false);
             },
             buildFallback(specDir, owning.step)
         );

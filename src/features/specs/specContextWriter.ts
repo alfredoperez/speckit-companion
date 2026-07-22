@@ -20,6 +20,7 @@ import {
     StepName,
 } from '../../core/types/specContext';
 import { SPEC_CONTEXT_FILENAME, normalizeSpecContext } from './specContextReader';
+import { hasStepStart } from './historyHelpers';
 
 export async function writeSpecContext(
     specDir: string,
@@ -147,17 +148,27 @@ export function setStepStarted(
     ctx: SpecContext,
     step: StepName,
     by: HistoryEntryBy,
-    at: string = new Date().toISOString()
+    at: string = new Date().toISOString(),
+    dedupe = true
 ): SpecContext {
+    const advanced: SpecContext = {
+        ...ctx,
+        currentStep: step,
+        status: deriveInProgressStatus(step),
+    };
+    // Idempotent per (step, substep=null), mirroring write-context.py's
+    // `_has_step_start`: a step is started once. A re-click, a GUI
+    // start-append race, or an engine double-dispatch would otherwise stamp a
+    // second extension start and flip the phase untrusted (deriveStepHistory
+    // requires exactly one). Still realign currentStep/status — only the
+    // redundant history append is skipped (matches the Python writer). The
+    // `forceStatus` recovery path opts out (`dedupe=false`) so it can re-stamp
+    // an honest override boundary on an already-started stranded step (#347).
+    if (dedupe && hasStepStart(ctx.history, step, null)) {
+        return advanced;
+    }
     const entry: HistoryEntry = { step, substep: null, kind: 'start', by, at };
-    return appendHistory(
-        {
-            ...ctx,
-            currentStep: step,
-            status: deriveInProgressStatus(step),
-        },
-        entry
-    );
+    return appendHistory(advanced, entry);
 }
 
 export function setStepCompleted(
