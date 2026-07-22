@@ -446,6 +446,29 @@ class LifecycleCaptureTests(unittest.TestCase):
         self.assertEqual(len(starts), 1, "must not add a start over a legacy start")
         self.assertEqual(len(completes), 1, "must not add a complete over a legacy self-loop complete")
 
+    def test_fold_then_separate_dispatch_keeps_one_start_per_step(self) -> None:
+        # A fold then a separate plan/tasks re-dispatch must still leave exactly one start per step: the more-advanced guard blocks the plan re-dispatch and the start/complete dedup handles tasks.
+        wc.update_context(self.fd, "specify", "specifying", "extension", "start")
+        wc.update_context(self.fd, "specify", "specified", "extension", "complete")
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        wc.update_context(self.fd, "plan", "planned", "extension", "complete")
+        wc.update_context(self.fd, "tasks", "tasking", "extension", "start")
+        wc.update_context(self.fd, "tasks", "ready-to-implement", "extension", "complete")
+        # The workflow engine now dispatches small-plan / small-tasks again.
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        wc.update_context(self.fd, "plan", "planned", "extension", "complete")
+        wc.update_context(self.fd, "tasks", "tasking", "extension", "start")
+        wc.update_context(self.fd, "tasks", "ready-to-implement", "extension", "complete")
+
+        history = _ctx(self.fd)["history"]
+        for step in ("plan", "tasks"):
+            starts = [e for e in history
+                      if e["step"] == step and e["substep"] is None and wc._entry_kind(e) == "start"]
+            completes = [e for e in history
+                         if e["step"] == step and e["substep"] is None and wc._entry_kind(e) == "complete"]
+            self.assertEqual(len(starts), 1, f"{step} must keep exactly one step-level start")
+            self.assertEqual(len(completes), 1, f"{step} must keep exactly one step-level complete")
+
     def test_kind_complete_respects_no_backward_clobber(self) -> None:
         # A late specify complete must never drag a shipped (implemented) spec back.
         wc.update_context(self.fd, "implement", "implemented", "extension", "complete")

@@ -1,0 +1,39 @@
+{
+  "workflow": "speckit-companion",
+  "specName": "Fast Path Untrust Dedup",
+  "branch": "519-fast-path-untrust-dedup",
+  "currentStep": "implement",
+  "status": "completed",
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 4,
+    "projectedTasks": 3,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "intent": "A second extension start on plan or tasks must not flip the fast-path timing to untrusted; the TypeScript writer dedups redundant starts like the Python one.",
+  "approach": "Add a hasStepStart helper mirroring write-context.py's _has_step_start and guard setStepStarted with it, so a re-click or re-dispatch is a no-op; forceStatus opts out to keep recording honest recovery boundaries.",
+  "context": [
+    "living spec: companion-commands",
+    "area: src/features/specs/specContextWriter.ts (setStepStarted dedup)",
+    "area: src/features/specs/historyHelpers.ts (hasStepStart twin of _has_step_start)",
+    "constraint: cross-language derivation parity — TS dedup must match the Python writer"
+  ],
+  "expectations": [
+    "no change to the fast-path fold bodies or the workflow definition",
+    "forceStatus recovery boundary behavior unchanged (#347)"
+  ],
+  "history": [
+    { "step": "specify", "substep": null, "kind": "start", "by": "extension", "at": "2026-07-21T14:00:00.110Z" },
+    { "step": "specify", "substep": null, "kind": "complete", "by": "extension", "at": "2026-07-21T14:04:30.220Z" },
+    { "step": "plan", "substep": null, "kind": "start", "by": "extension", "at": "2026-07-21T14:04:30.300Z" },
+    { "step": "plan", "substep": null, "kind": "complete", "by": "extension", "at": "2026-07-21T14:04:30.380Z" },
+    { "step": "tasks", "substep": null, "kind": "start", "by": "extension", "at": "2026-07-21T14:04:30.460Z" },
+    { "step": "tasks", "substep": null, "kind": "complete", "by": "extension", "at": "2026-07-21T14:04:30.540Z" },
+    { "step": "implement", "substep": null, "kind": "start", "by": "extension", "at": "2026-07-21T14:04:40.000Z" },
+    { "step": "implement", "task": "T001", "kind": "complete", "by": "ai", "at": "2026-07-21T14:12:10.000Z" },
+    { "step": "implement", "task": "T002", "kind": "complete", "by": "ai", "at": "2026-07-21T14:18:05.000Z" },
+    { "step": "implement", "task": "T003", "kind": "complete", "by": "ai", "at": "2026-07-21T14:24:40.000Z" },
+    { "step": "implement", "substep": null, "kind": "complete", "by": "extension", "at": "2026-07-21T14:25:00.000Z" }
+  ]
+}

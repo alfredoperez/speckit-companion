@@ -132,7 +132,7 @@ export async function setStatus(
 
 
 /**
- * Force-override a spec's status as a manual recovery escape hatch (#347).
+ * Force-override a spec's status as a manual recovery escape hatch.
  *
  * Unlike `setStatus` (which only writes a terminal status and a `complete`
  * boundary for the spec's *existing* `currentStep`), this realigns
@@ -164,7 +164,8 @@ export async function forceStatus(
                 const aligned: SpecContext = { ...ctx, currentStep: owning.step };
                 return owning.settled
                     ? setStepCompleted(aligned, owning.step, by)
-                    : setStepStarted(aligned, owning.step, by);
+                    // Recovery re-stamps a boundary even on an already-started step — opt out of the start-dedup the automatic path uses.
+                    : setStepStarted(aligned, owning.step, by, undefined, false);
             },
             buildFallback(specDir, owning.step)
         );

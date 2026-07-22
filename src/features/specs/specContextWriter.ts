@@ -20,6 +20,7 @@ import {
     StepName,
 } from '../../core/types/specContext';
 import { SPEC_CONTEXT_FILENAME, normalizeSpecContext } from './specContextReader';
+import { hasStepStart } from './historyHelpers';
 
 export async function writeSpecContext(
     specDir: string,
@@ -147,17 +148,20 @@ export function setStepStarted(
     ctx: SpecContext,
     step: StepName,
     by: HistoryEntryBy,
-    at: string = new Date().toISOString()
+    at: string = new Date().toISOString(),
+    dedupe = true
 ): SpecContext {
+    const advanced: SpecContext = {
+        ...ctx,
+        currentStep: step,
+        status: deriveInProgressStatus(step),
+    };
+    // Idempotent per (step, substep=null) like the Python writer: skip a redundant start but still realign currentStep/status; forceStatus opts out via dedupe=false to re-stamp a recovery boundary.
+    if (dedupe && hasStepStart(ctx.history, step, null)) {
+        return advanced;
+    }
     const entry: HistoryEntry = { step, substep: null, kind: 'start', by, at };
-    return appendHistory(
-        {
-            ...ctx,
-            currentStep: step,
-            status: deriveInProgressStatus(step),
-        },
-        entry
-    );
+    return appendHistory(advanced, entry);
 }
 
 export function setStepCompleted(

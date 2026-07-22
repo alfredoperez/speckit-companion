@@ -29,6 +29,39 @@ export function isPerTaskEntry(e: DiscriminatorEntry): boolean {
 }
 
 /**
+ * The entry's kind, inferring it for legacy kind-less rows exactly as the Python
+ * `_entry_kind` does: a self-loop (`from.step === step` with the matching
+ * substep) is a completion, anything else is a start. The TS twin of that rule.
+ */
+function entryKind(e: HistoryEntry): 'start' | 'complete' {
+    if (e.kind === 'start' || e.kind === 'complete') return e.kind;
+    const from = e.from;
+    if (from?.step === e.step && (from?.substep ?? null) === (e.substep ?? null)) {
+        return 'complete';
+    }
+    return 'start';
+}
+
+/**
+ * True iff a step-level `start` for `(step, substep)` already exists anywhere in
+ * the log. The TypeScript twin of `write-context.py`'s `_has_step_start`: a step
+ * is started once, so a redundant start append is a no-op. Per-task finishes
+ * never count; `substep` defaults to `null` (the step-level start).
+ */
+export function hasStepStart(
+    history: HistoryEntry[],
+    step: StepName | string,
+    substep: string | null = null,
+): boolean {
+    return history.some(e =>
+        e.step === step
+        && (e.substep ?? null) === (substep ?? null)
+        && !isPerTaskEntry(e)
+        && entryKind(e) === 'start'
+    );
+}
+
+/**
  * Walk `history` from newest to oldest and report whether the most recent
  * entry for `step` is a completion.
  *
