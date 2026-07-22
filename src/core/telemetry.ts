@@ -177,10 +177,11 @@ export class TelemetryService {
             .get<boolean>('telemetry', true);
     }
 
-    sendEvent(name: string, properties?: TelemetryProperties): void {
-        if (!this.reporter) return;
-        if (!this.isEnabled()) return;
+    sendEvent(name: string, properties?: TelemetryProperties): boolean {
+        if (!this.reporter) return false;
+        if (!this.isEnabled()) return false;
         this.reporter.sendTelemetryEvent(name, properties);
+        return true;
     }
 
     dispose(): void {
@@ -199,8 +200,8 @@ export function initTelemetry(service: TelemetryService): void {
  * Fire a telemetry event through the singleton. A no-op before init or when
  * telemetry is disabled — so event sites can call this unconditionally.
  */
-export function sendTelemetryEvent(name: string, properties?: TelemetryProperties): void {
-    singleton?.sendEvent(name, properties);
+export function sendTelemetryEvent(name: string, properties?: TelemetryProperties): boolean {
+    return singleton?.sendEvent(name, properties) ?? false;
 }
 
 /** The two banner surfaces the install prompt appears on. */
@@ -222,8 +223,10 @@ const installPromptShownSurfaces = new Set<InstallPromptSurface>();
  */
 export function reportInstallPromptShown(surface: InstallPromptSurface): void {
     if (installPromptShownSurfaces.has(surface)) return;
-    installPromptShownSurfaces.add(surface);
-    sendTelemetryEvent(INSTALL_PROMPT_EVENT, { action: 'shown', surface });
+    // Only burn the dedupe slot on a real emit — a show while telemetry is off/uninitialized must still be able to fire once it's enabled.
+    if (sendTelemetryEvent(INSTALL_PROMPT_EVENT, { action: 'shown', surface })) {
+        installPromptShownSurfaces.add(surface);
+    }
 }
 
 /** Emit the install-banner "clicked" event tagged with the surface it came from. */

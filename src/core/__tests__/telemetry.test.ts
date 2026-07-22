@@ -281,6 +281,19 @@ describe('TelemetryService', () => {
             reportInstallPromptClicked('createSpec');
             expect(__captured.events).toHaveLength(0);
         });
+
+        it('a show while telemetry is disabled does not burn the dedupe — it still fires once enabled', () => {
+            mockConfig({ telemetry: false });
+            initTelemetry(new TelemetryService());
+            reportInstallPromptShown('createSpec');   // no-op, must NOT record the dedupe
+            expect(__captured.events).toHaveLength(0);
+            mockConfig({ telemetry: true });
+            initTelemetry(new TelemetryService());
+            reportInstallPromptShown('createSpec');   // now it should emit
+            expect(__captured.events).toEqual([
+                { name: INSTALL_PROMPT_EVENT, properties: { action: 'shown', surface: 'createSpec' } },
+            ]);
+        });
     });
 
     describe('the per-spec correlation id', () => {

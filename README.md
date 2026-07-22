@@ -316,7 +316,9 @@ AppEvents
 | where Name == "extension.activated"
 | summarize installed = countif(tostring(Properties.companionInstalled) == "true"), total = count()
 | extend installRate = 1.0 * installed / total
+```
 
+```kusto
 // Prompt→install conversion: banner Install clicks vs. banner shows
 AppEvents
 | where TimeGenerated > ago(30d)
