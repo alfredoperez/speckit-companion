@@ -1,0 +1,271 @@
+{
+  "workflow": "companion",
+  "specName": "Serialize Context Writes",
+  "branch": "527-serialize-context-writes",
+  "selectedAt": "2026-07-22T13:41:21.321Z",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-22T13:41:21.321Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-22T13:45:53.472Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-22T13:45:53.633Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-22T13:45:53.716Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-22T13:45:53.798Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-22T13:45:53.871Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-22T13:50:42.407Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T13:55:06.427Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T13:55:06.482Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T13:55:06.538Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T13:55:59.637Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T13:55:59.691Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T13:55:59.752Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T13:56:32.890Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-22T13:56:32.972Z"
+    }
+  ],
+  "last_action": "all 7 tasks done — 1790/1790 tests pass, compile clean",
+  "coverage": {
+    "FR-001": {
+      "title": "Writes to a single spec's context file are serialized (one read-modify-write in flight)",
+      "tests": [
+        "tests/unit/specs/specContextWriter.spec.ts::applies both overlapping same-spec writes"
+      ]
+    },
+    "FR-002": {
+      "title": "Serialization is per-spec so different specs never block one another",
+      "tests": [
+        "tests/unit/specs/specContextWriter.spec.ts::overlapping writes to two different specs both complete"
+      ]
+    },
+    "FR-003": {
+      "title": "Concurrent same-spec writes both apply; history stays append-only",
+      "tests": [
+        "tests/unit/specs/specContextWriter.spec.ts::applies both overlapping same-spec writes",
+        "tests/unit/specs/specContextWriter.spec.ts::stress of many overlapping same-spec writes loses no entry"
+      ]
+    },
+    "FR-004": {
+      "title": "A failed write releases the queue and still propagates its error",
+      "tests": [
+        "tests/unit/specs/specContextWriter.spec.ts::a throwing queued write releases the lock"
+      ]
+    },
+    "FR-005": {
+      "title": "Existing write guarantees preserved (non-JSON refusal, atomic, append-only, profile back-fill)",
+      "tests": [
+        "tests/unit/specs/specContextWriter.spec.ts::still refuses to overwrite an existing non-JSON file"
+      ]
+    },
+    "FR-006": {
+      "title": "The racing extension start-writes can no longer overwrite each other",
+      "tests": [
+        "tests/unit/specs/specContextWriter.spec.ts::applies both overlapping same-spec writes"
+      ]
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 3,
+    "projectedTasks": 7,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "context": [
+    "area: src/features/specs/specContextWriter.ts (updateSpecContext read-modify-write)",
+    "area: src/features/specs/specCommands.ts (executeWorkflowStep progress/start race)",
+    "constraint: preserve append-only history + atomic write + non-JSON refusal",
+    "constraint: per-spec scope only — never a global write gate"
+  ],
+  "intent": "Serialize per-spec .spec-context.json writes so a concurrent read-modify-write can't drop a step-start and untrust timing",
+  "expectations": [
+    "No schema change to .spec-context.json",
+    "No cross-process / file-system lock — single extension host is the only writer",
+    "No change to what is written (finish-only, append-only) — ordering only"
+  ],
+  "approach": "Per-target write queue in updateSpecContext (keyed by target path) + remove the redundant unawaited startStep in executeWorkflowStep",
+  "livingSpecs": {
+    "loaded": [
+      "specs"
+    ],
+    "synced": [
+      "specs"
+    ]
+  },
+  "telemetryInstanceId": "35ed8164-4d0f-4b49-a0d3-cab66e1cc538",
+  "currentTask": "T007",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added a per-target write chain (Map keyed by resolved path) in updateSpecContext so each spec's read-modify-write runs one at a time; self-cleaning, failure-safe tail",
+      "files": [
+        "src/features/specs/specContextWriter.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Chain is keyed by target path so different specs get independent chains and run concurrently — no global gate",
+      "files": [
+        "src/features/specs/specContextWriter.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Awaited updateStepProgress (was fire-and-forget) and removed the redundant complete-on-advance + startStep block so exactly one start-write occurs; dropped now-unused imports",
+      "files": [
+        "src/features/specs/specCommands.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Test: overlapping same-spec writes both land, history append-only, start survives; plus 25-write stress loses nothing (FR-001/003/006, SC-001)",
+      "files": [
+        "tests/unit/specs/specContextWriter.spec.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Test: overlapping writes to two different specs both complete and both mutations run (FR-002, SC-003)",
+      "files": [
+        "tests/unit/specs/specContextWriter.spec.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Test: a throwing write propagates its error and releases the queue so the next same-spec write runs; non-JSON file still refused (FR-004/005, SC-004)",
+      "files": [
+        "tests/unit/specs/specContextWriter.spec.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "npm test (1790 pass) + npm run compile clean — no regressions in the context-write path"
+    }
+  },
+  "verified": [
+    {
+      "what": "Full unit + integration suite after the serialization change",
+      "command": "npm test",
+      "result": "126 suites / 1790 tests pass, incl. 5 new specContextWriter serialization tests",
+      "warnings": []
+    },
+    {
+      "what": "TypeScript build after dropping now-unused imports",
+      "command": "npm run compile",
+      "result": "clean, no errors",
+      "warnings": []
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Serialize per target path via a module-level Map of promise chains; store a never-rejecting tail as the next writers prior",
+      "why": "Keeps different specs concurrent (per-key chains) while a failed write releases the queue instead of poisoning it (FR-002, FR-004)",
+      "rejected": "A single global write mutex — would throttle unrelated specs and violate FR-002"
+    },
+    {
+      "decision": "Removed the redundant complete-on-advance + startStep block in executeWorkflowStep and awaited updateStepProgress instead",
+      "why": "updateStepProgress already completes the prior step and starts the new one; awaiting it leaves exactly one start-write and removes the racing second writer (FR-006)",
+      "rejected": "Keeping both writers and only awaiting — leaves dead duplicate code relying on start-dedup"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "Serialized per-spec .spec-context.json writes (per-target promise chain) and removed the racing second start-write in executeWorkflowStep; 5 new tests, full suite green"
+    }
+  }
+}

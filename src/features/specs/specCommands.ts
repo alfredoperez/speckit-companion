@@ -18,11 +18,10 @@ import {
 } from '../workflows';
 import { updateStepProgress, readSpecContextSync } from './specContextManager';
 import { resolveDispatchWithFallback, resolveDispatchForRoot } from './profileDispatch';
-import { startStep, completeStep, setStatus, forceStatus, reactivate } from './stepLifecycle';
-import { lastEntryIsCompletionFor } from './historyHelpers';
+import { startStep, setStatus, forceStatus, reactivate } from './stepLifecycle';
 import { updateSelectionContextKeys } from './selectionContextKeys';
 import { track as trackTerminal } from './terminalStepTracker';
-import type { HistoryEntry, StepName, Status } from '../../core/types/specContext';
+import type { StepName, Status } from '../../core/types/specContext';
 import { SpecsFilterState } from './specsFilterState';
 import { SpecsSortState } from './specsSortState';
 import { ALL_SORT_MODES, SortMode } from './specsSortMode';
@@ -58,9 +57,6 @@ const FORCE_STATUS_CHOICES: Status[] = [
     'implemented',
     'completed',
 ];
-
-// `lastEntryIsCompletionFor` is shared with messageHandlers (Approve button
-// path) — lifted into a stdlib-only helper module to avoid the duplicate.
 
 /**
  * Register SpecKit workflow commands (create, specify, plan, tasks, etc.)
@@ -689,12 +685,18 @@ async function executeWorkflowStep(
 
     outputChannel.appendLine(`[SpecKit] Using workflow: ${workflow.displayName || workflow.name}`);
 
-    // Update step progress in .spec-context.json
+    // Update step progress in .spec-context.json. Awaited (not fire-and-forget)
+    // so it fully settles before any later lifecycle write for this spec —
+    // `updateSpecContext` also serializes per file, but awaiting here keeps the
+    // single start-write ordered ahead of dispatch. A write failure must not
+    // block dispatch (R002), so the error is logged, not thrown.
     const normalized = normalizeWorkflowConfig(workflow);
     const workflowStepNames = (normalized.steps || []).map(s => s.name);
-    updateStepProgress(targetDir, step, workflowStepNames).catch(err => {
+    try {
+        await updateStepProgress(targetDir, step, workflowStepNames);
+    } catch (err) {
         outputChannel.appendLine(`[SpecKit] Failed to update step progress: ${err}`);
-    });
+    }
 
     // Resolve the command for this step from the spec's workflow (a `companion`
     // spec resolves the /speckit.companion.* command family).
@@ -746,35 +748,11 @@ async function executeWorkflowStep(
         prompt += refinementContext;
     }
 
-    if (LIFECYCLE_STEPS.has(step)) {
-        // Complete-on-advance: terminal-close completion only fires when the
-        // step is run via an actual terminal. IDE Chat (Copilot/Cursor)
-        // returns no terminal handle, so `trackTerminal` no-ops and the
-        // prior step's `completedAt` stays null forever. Emit completion
-        // here whenever the user advances to a different lifecycle step.
-        try {
-            const prevCtx = readSpecContextSync(targetDir);
-            const prev = prevCtx?.currentStep;
-            // Derive per-step timing from history[] (the canonical log) — the
-            // on-disk `stepHistory` is no longer populated by the new writer,
-            // so reading it would make this guard fail-open and emit redundant
-            // completion entries on every advance.
-            const prevHistory = (prevCtx?.history ?? []) as HistoryEntry[];
-            const prevStepDone =
-                prev != null && lastEntryIsCompletionFor(prevHistory, prev as StepName);
-            if (
-                prev &&
-                prev !== step &&
-                LIFECYCLE_STEPS.has(prev) &&
-                !prevStepDone
-            ) {
-                await completeStep(targetDir, prev as StepName, 'extension');
-            }
-        } catch (err) {
-            outputChannel.appendLine(`[SpecKit] Complete-on-advance check failed: ${err}`);
-        }
-        await startStep(targetDir, step as StepName, 'extension');
-    }
+    // The step's complete-on-advance + start-write is owned entirely by the
+    // awaited `updateStepProgress` above (its lifecycle path completes the prior
+    // step and starts this one). A second start-write here is what raced with
+    // that one and could drop the start marker — so there is exactly one
+    // start-write per step now.
     const wrapped = buildPrompt({
         command: prompt,
         step,

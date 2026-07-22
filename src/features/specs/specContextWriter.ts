@@ -244,8 +244,21 @@ function deriveCompletedStatus(step: StepName): SpecContext['status'] {
 }
 
 /**
+ * Per-target write chains. Each `.spec-context.json` gets its own promise so
+ * its read-modify-write runs strictly one at a time (FR-001). Keyed by the
+ * resolved target path, so different specs keep independent chains and run
+ * concurrently (FR-002). The stored tail never rejects, so a failed write
+ * releases the queue instead of poisoning it (FR-004).
+ */
+const writeChains = new Map<string, Promise<unknown>>();
+
+/**
  * Convenience wrapper: take an existing raw file (or missing), apply a
  * draft-mutation callback, and persist atomically.
+ *
+ * Serialized per target path: two concurrent updates to the same spec run one
+ * after the other, so the later one reads the state the earlier one wrote and
+ * can't drop its `history` entry.
  */
 export async function updateSpecContext(
     specDir: string,
@@ -253,6 +266,36 @@ export async function updateSpecContext(
     fallback: SpecContext
 ): Promise<SpecContext> {
     const target = path.join(specDir, SPEC_CONTEXT_FILENAME);
+    // The get+set below runs synchronously before any await, so two concurrent
+    // callers can't interleave here: the second reads the first's tail as its
+    // prior and chains behind it. `prior` never rejects (see `tail`), so a
+    // failed predecessor still lets us run.
+    const prior = writeChains.get(target) ?? Promise.resolve();
+    const result = prior.then(() =>
+        runSpecContextUpdate(specDir, target, mutate, fallback)
+    );
+    const tail = result.then(
+        () => undefined,
+        () => undefined
+    );
+    writeChains.set(target, tail);
+    // Self-clean once this is the last write to settle, so the map doesn't grow
+    // unbounded across specs. A newer write for the same target replaces `tail`,
+    // in which case we leave its entry alone.
+    void tail.then(() => {
+        if (writeChains.get(target) === tail) {
+            writeChains.delete(target);
+        }
+    });
+    return result;
+}
+
+async function runSpecContextUpdate(
+    specDir: string,
+    target: string,
+    mutate: (ctx: SpecContext) => SpecContext,
+    fallback: SpecContext
+): Promise<SpecContext> {
     let current: SpecContext;
     try {
         const raw = await fs.promises.readFile(target, 'utf-8');

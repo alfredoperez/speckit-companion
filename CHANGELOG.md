@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **A phase no longer flips to "untrusted timing" at random when a spec advances.** Advancing a step fired two context updates at once, and if they overlapped, the later one could overwrite the step's start marker — which is what made a phase's duration occasionally read as untrusted. Updates to a single spec's context now happen one at a time, so both always land and the start marker is never lost. Updates to different specs still run in parallel, so nothing gets slower. ([#527](https://github.com/alfredoperez/speckit-companion/issues/527))
+
 ## [0.30.0] - 2026-07-22
 
 ### Added
