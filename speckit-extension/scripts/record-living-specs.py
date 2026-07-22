@@ -67,10 +67,7 @@ def main(argv=None) -> int:
     try:
         args = ap.parse_args(argv)
     except SystemExit:
-        # A malformed invocation (argparse exits 2, or --help exits 0) must not fail
-        # the host command — the recorder is best-effort. SystemExit is a
-        # BaseException, so it escapes the `except Exception` below; catch it here.
-        return 0
+        return 0  # a malformed arg must not fail the host command (SystemExit escapes `except Exception`)
 
     try:
         feature_dir = Path(args.feature_dir)

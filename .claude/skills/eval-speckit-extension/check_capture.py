@@ -412,19 +412,14 @@ def _fastpath(r: Report, history: list, ctx: dict) -> None:
     r.add(status in _FOLDED_STATUSES, "fast-path-ready-to-implement",
           f"status={status}" + ("" if status in _FOLDED_STATUSES else " — expected ready-to-implement after a fold"))
 
-    # Overview-capture parity (#522): a fast-tracked run writes the Approach section
-    # into spec.md, so it must also record `approach` on the context — else the
-    # viewer's APPROACH card reads blank. This is deterministic in simple mode.
+    # A fast-tracked run writes Approach into spec.md, so it must also record `approach` on the context or the Overview card reads blank.
     approach = ctx.get("approach")
     has_approach = isinstance(approach, str) and approach.strip() != ""
     r.add(has_approach, "fast-path-approach",
           "approach recorded for the Overview card" if has_approach
-          else "no approach on a fast-tracked spec — the Overview APPROACH card reads blank (#522 gap A)")
+          else "no approach on a fast-tracked spec — the Overview APPROACH card reads blank")
 
-    # Living-spec record (#522 gap 1): the deterministic recorder writes
-    # livingSpecs.loaded when the touched files match a capability. It is legitimately
-    # absent when the change touches no covered area, so absence is INFO, not FAIL;
-    # a present record must be a non-empty list of capability-name strings.
+    # livingSpecs.loaded is legitimately absent when no covered area matched (INFO); a present record must be a non-empty list of name strings.
     living = ctx.get("livingSpecs")
     if living is not None and not isinstance(living, dict):
         r.add(False, "fast-path-living-specs", f"livingSpecs is malformed: {living!r} — expected an object with a loaded[] list")
