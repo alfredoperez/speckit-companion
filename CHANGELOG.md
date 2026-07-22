@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-07-22
+
 ### Added
 
 - **Telemetry now sees the engagement the extension can actually observe — spec opens, living-spec runs, steering opens.** Specs created in the terminal never fire a "spec created" signal, so five new anonymous events measure what happens inside the extension instead: opening a spec in the viewer, opening a living/capability spec, running a living-spec drift report, running a living-spec sync, and opening a steering doc. Every one is a bare event — no spec name, path, or capability name is ever attached — and spec/living-spec opens are counted once per session so re-renders don't inflate them. All still gated on `speckit.telemetry`. The README's Telemetry section adds the new signals, sample Azure queries, and a pointer to a ready-to-paste workbook (`docs/telemetry-workbook.json`). ([#531](https://github.com/alfredoperez/speckit-companion/issues/531))
