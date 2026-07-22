@@ -56,12 +56,17 @@ function readCtx(root, featureRel) {
 // them. spawnSync returns both regardless of exit code.
 function sh(root, args, script, cmdLabel) {
   const p = spawnSync('python3', [script, ...args], { encoding: 'utf8', cwd: root })
-  const merged = `${p.stdout || ''}${p.stderr || ''}`.trim()
+  let merged = `${p.stdout || ''}${p.stderr || ''}`.trim()
+  // A signal-killed process (status null) or a spawn error is a failure, not a
+  // clean exit 0 — otherwise a crashed script could record a false PASS.
+  const exit = typeof p.status === 'number' ? p.status : 1
+  if (p.signal) merged += `\n[harness] process killed by signal ${p.signal}`
+  if (p.error) merged += `\n[harness] spawn error: ${p.error.message}`
   const clean = merged.split(`${REPO_ROOT}/`).join('').split(`${root}/`).join('')
   return {
     cwd: rel(root),
     cmd: cmdLabel,
-    exit: p.status ?? 0,
+    exit,
     stdout: clean,          // merged stdout+stderr — for message matching
     out: (p.stdout || '').trim(),  // pure stdout — for JSON parsing
     tail: clean.split('\n').slice(-8).join('\n'),
@@ -100,11 +105,15 @@ function runRegister(root, args) {
   return sh(root, ['--root', root, ...args], REGISTER, `python3 ${rel(REGISTER)} --root . ${args.join(' ')}`)
 }
 
+// Inline git identity so the harness works without global git config (matches
+// gitCommitCellBaseline's -c flags) — a clean CI/dev box has no user.email set.
+const GIT_ID = ['-c', 'user.email=bench@local', '-c', 'user.name=bench']
+
 function branchWithChange(root, slug, file, content) {
-  execFileSync('git', ['checkout', '-q', '-b', slug], { cwd: root })
+  execFileSync('git', ['-C', root, 'checkout', '-q', '-b', slug])
   write(root, file, content)
-  execFileSync('git', ['add', '-A'], { cwd: root })
-  execFileSync('git', ['commit', '-qm', slug], { cwd: root })
+  execFileSync('git', ['-C', root, 'add', '-A'])
+  execFileSync('git', ['-C', root, ...GIT_ID, 'commit', '-qm', slug])
 }
 
 function finishedContext(slug) {

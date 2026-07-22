@@ -1,7 +1,7 @@
 {
   "id": "S1-install-sanity",
   "title": "the resolver + gate run against all four registry shapes",
-  "ranAt": "2026-07-22T16:58:49.767Z",
+  "ranAt": "2026-07-22T17:13:11.301Z",
   "mode": "real+seeded-prose",
   "verdict": "PASS",
   "assertions": [
