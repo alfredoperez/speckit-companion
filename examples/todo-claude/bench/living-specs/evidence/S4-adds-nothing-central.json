@@ -1,7 +1,7 @@
 {
   "id": "S4-adds-nothing-central",
   "title": "an untouched capability needs a skip note; without one the fold shouts",
-  "ranAt": "2026-07-22T17:21:00.003Z",
+  "ranAt": "2026-07-22T17:24:54.826Z",
   "mode": "real+seeded-prose",
   "verdict": "PASS",
   "assertions": [
@@ -49,7 +49,7 @@
       "cwd": "examples/bench-sandboxes/ls-r3-central",
       "cmd": "python3 speckit-extension/scripts/write-context.py --feature-dir specs/002-rename-vars --fold-living-spec --by ai",
       "exit": 0,
-      "stdoutTail": "[companion] Living-spec fold: all 1 loaded capability (todos) have explicit skip notes; nothing to fold — correctly nothing."
+      "stdoutTail": "[companion] Living-spec fold: all 1 loaded capability (todos) is accounted for (folded earlier or skipped); nothing to fold — correctly nothing."
     }
   ],
   "livingSpec": {

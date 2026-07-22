@@ -460,6 +460,12 @@ scenario('S8-idempotency-central', 're-folding and re-adopting change nothing th
     assert('first-fold-writes', fold1.exit === 0 && after1.includes('### Users can set a due date on a todo'), 'first fold applied the delta'),
     assert('refold-byte-identical', after2 === after1 && after3 === after1, 're-fold (x2) left the spec byte-identical'),
     assert('refold-reports-noop', /up to date|no change|already/i.test(fold2.stdout), `second fold stdout: ${fold2.tail.split('\n').pop()}`),
+    // Regression guard: an already-synced capability is accounted for across
+    // re-folds, so the #536 backstop must NOT fire on a refold. This is the exact
+    // false-alarm this matrix caught and #541 fixed.
+    assert('refold-does-not-false-alarm',
+      !/loop did not close/i.test(fold2.stdout) && !/loop did not close/i.test(fold3.stdout),
+      'no "loop did not close" backstop on an idempotent refold'),
   ]
   return {
     assertions: a,

@@ -1,7 +1,7 @@
 {
   "id": "S8-idempotency-central",
   "title": "re-folding and re-adopting change nothing the second time",
-  "ranAt": "2026-07-22T17:21:01.309Z",
+  "ranAt": "2026-07-22T17:24:56.139Z",
   "mode": "real+seeded-prose",
   "verdict": "PASS",
   "assertions": [
@@ -18,7 +18,12 @@
     {
       "id": "refold-reports-noop",
       "status": "PASS",
-      "detail": "second fold stdout: [companion] Living-spec fold: folded 0 capabilities () but 1 loaded capability is neither folded nor skipped (todos). The loop did not close for those: author a delta block or record a skip (write-context.py --living-spec-skip \"<name>: <reason>\")."
+      "detail": "second fold stdout: [companion] Living-spec fold: todos already up to date (capabilities/todos/spec.md); no change."
+    },
+    {
+      "id": "refold-does-not-false-alarm",
+      "status": "PASS",
+      "detail": "no \"loop did not close\" backstop on an idempotent refold"
     }
   ],
   "commands": [
@@ -32,13 +37,13 @@
       "cwd": "examples/bench-sandboxes/ls-r3-central",
       "cmd": "python3 speckit-extension/scripts/write-context.py --feature-dir specs/001-add-due-dates --fold-living-spec --by ai",
       "exit": 0,
-      "stdoutTail": "[companion] Living-spec fold: todos already up to date (capabilities/todos/spec.md); no change.\n[companion] Living-spec fold: folded 0 capabilities () but 1 loaded capability is neither folded nor skipped (todos). The loop did not close for those: author a delta block or record a skip (write-context.py --living-spec-skip \"<name>: <reason>\")."
+      "stdoutTail": "[companion] Living-spec fold: todos already up to date (capabilities/todos/spec.md); no change."
     },
     {
       "cwd": "examples/bench-sandboxes/ls-r3-central",
       "cmd": "python3 speckit-extension/scripts/write-context.py --feature-dir specs/001-add-due-dates --fold-living-spec --by ai",
       "exit": 0,
-      "stdoutTail": "[companion] Living-spec fold: todos already up to date (capabilities/todos/spec.md); no change.\n[companion] Living-spec fold: folded 0 capabilities () but 1 loaded capability is neither folded nor skipped (todos). The loop did not close for those: author a delta block or record a skip (write-context.py --living-spec-skip \"<name>: <reason>\")."
+      "stdoutTail": "[companion] Living-spec fold: todos already up to date (capabilities/todos/spec.md); no change."
     }
   ]
 }
