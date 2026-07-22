@@ -252,8 +252,9 @@ export const STEERING_OPENED_EVENT = 'steering.opened';
 
 // Dedupe the two "opened-in-viewer" events per session: the viewer re-renders and
 // re-reveals the same panel constantly, and each pass would otherwise re-emit. The
-// key is a spec directory / source path used ONLY as an internal Set member — it is
-// never sent as a property, so distinct-open counts stay honest without emitting an identifier.
+// key is an internal identity (a spec directory for spec.opened, a capability name
+// for livingSpec.opened) used ONLY as a Set member — it is never sent as a property,
+// so distinct-open counts stay honest without emitting an identifier.
 const specOpenedKeys = new Set<string>();
 const livingSpecOpenedKeys = new Set<string>();
 

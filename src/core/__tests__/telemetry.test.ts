@@ -440,7 +440,7 @@ describe('engagement events', () => {
             ]);
         });
 
-        it('send nothing when telemetry is disabled', () => {
+        it('sends nothing when telemetry is disabled', () => {
             mockConfig({ telemetry: false });
             initTelemetry(new TelemetryService());
             reportLivingSpecDrift();
