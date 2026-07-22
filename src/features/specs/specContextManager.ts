@@ -171,7 +171,7 @@ export async function updateSpecContext(
  */
 export function deriveSpecName(specDir: string): string {
     const slug = path.basename(specDir);
-    const withoutPrefix = slug.replace(/^\d+-/, '');
+    const withoutPrefix = slug.replace(/^\d+[-_]/, '');
     return formatDocName(withoutPrefix);
 }
 

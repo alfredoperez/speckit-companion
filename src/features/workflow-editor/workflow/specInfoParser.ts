@@ -166,11 +166,11 @@ function getRelatedDocs(dirPath: string, currentFileName: string, documentType: 
 }
 
 /**
- * Format document name: capitalize and replace dashes with spaces
+ * Format document name: capitalize and replace dashes/underscores with spaces
  */
 export function formatDocName(name: string): string {
     return name
-        .split('-')
+        .split(/[-_]/)
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
 }

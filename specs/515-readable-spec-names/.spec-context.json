@@ -1,0 +1,255 @@
+{
+  "workflow": "companion",
+  "specName": "Readable Spec Names",
+  "branch": "515-readable-spec-names",
+  "selectedAt": "2026-07-21T23:21:18.827Z",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T23:21:18.827Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T23:27:06.309Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T23:27:06.396Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T23:27:06.487Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T23:27:06.575Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T23:27:06.677Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-21T23:37:27.387Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T23:39:48.012Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T23:41:00.458Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T23:41:00.512Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T23:41:00.564Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T23:44:45.773Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T23:44:45.827Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-21T23:45:00.983Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-21T23:45:01.060Z"
+    }
+  ],
+  "last_action": "all 7 tasks done — 1750/1750 tests pass, tsc clean",
+  "coverage": {
+    "FR-001": {
+      "title": "Display a readable spec name for each sidebar row instead of the raw slug",
+      "tests": [
+        "src/features/specs/__tests__/specExplorerProvider.test.ts::readable spec names (#502)"
+      ]
+    },
+    "FR-002": {
+      "title": "Resolve name by preference: recorded specName, then document heading, then humanized slug",
+      "tests": [
+        "src/core/utils/__tests__/specDisplayName.test.ts"
+      ]
+    },
+    "FR-003": {
+      "title": "Humanized-slug fallback drops leading number, replaces dashes/underscores, capitalizes words"
+    },
+    "FR-004": {
+      "title": "Viewer header uses the same resolution rule as the sidebar"
+    },
+    "FR-005": {
+      "title": "Presentation only: directory slug and branch name remain the stable identifier"
+    },
+    "FR-006": {
+      "title": "Resolution is stable: same spec always resolves to the same readable name"
+    },
+    "FR-007": {
+      "title": "Empty or whitespace recorded name is treated as absent"
+    },
+    "FR-008": {
+      "title": "Slug-dependent affordances (filter, sort, dup description, open command) keep working",
+      "tests": [
+        "src/features/specs/__tests__/specExplorerProvider.test.ts::keeps the slug as the identifier",
+        "matches by specName when slug alone does not match"
+      ]
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 5,
+    "projectedTasks": 8,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "context": [
+    "area: src/features/specs/specExplorerProvider.ts (sidebar tree rows)",
+    "area: src/features/spec-viewer/specViewerProvider.ts (header title)",
+    "reuse: deriveSpecName() humanizer in specContextManager.ts",
+    "constraint: presentation only — never rename dir or branch"
+  ],
+  "intent": "Show a readable, humanized spec name in the sidebar and viewer header instead of the raw NNN-dash slug, keeping the slug as the stable id",
+  "expectations": [
+    "Do not rename the spec directory or the git branch",
+    "No new second humanizer — reuse deriveSpecName",
+    "Slug stays the identifier for filter, sort, and open commands"
+  ],
+  "telemetryInstanceId": "60b9c2a2-5e7e-4f75-8259-b22e2867c55f",
+  "currentTask": "T007",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Add pure resolveSpecDisplayName resolver: recorded name → heading → humanized slug",
+      "files": [
+        "src/core/utils/specDisplayName.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Sidebar spec rows render resolveSpecDisplayName(specContext.specName, slug); slug kept as identifier",
+      "files": [
+        "src/features/specs/specExplorerProvider.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Viewer header derivation (both sites) routed through resolveSpecDisplayName so sidebar and header agree",
+      "files": [
+        "src/features/spec-viewer/specViewerProvider.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Verified slug-keyed affordances unchanged: fuzzy filter, sort comparators, duplicate-name description, openSpec arg all still key off slug/path",
+      "files": [
+        "src/features/specs/specExplorerProvider.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Unit-test resolver: recorded wins, whitespace/empty falls through, humanized fallback, number-only slug unchanged, heading source, idempotent",
+      "files": [
+        "src/core/utils/__tests__/specDisplayName.test.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Sidebar test asserts rows render readable name; updated sort/filter/tooltip assertions to readable labels (order/filter unchanged)",
+      "files": [
+        "src/features/specs/__tests__/specExplorerProvider.test.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "docs/sidebar.md notes rows show readable name with slug as stable identifier; viewer header agrees",
+      "files": [
+        "docs/sidebar.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "resolver + sidebar unit tests",
+      "command": "npx jest specDisplayName specExplorerProvider",
+      "result": "84 pass, 0 fail"
+    },
+    {
+      "what": "full test suite + typecheck",
+      "command": "npx jest && tsc --noEmit",
+      "result": "1750 pass, 0 fail; no TS errors"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Shared pure resolver in src/core/utils/specDisplayName.ts with optional heading param",
+      "why": "Both sidebar and viewer call one rule so they cannot drift; heading param keeps FR-002 order (recorded > heading > slug) without file I/O",
+      "rejected": "Duplicating the fallback logic in each surface"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "Sidebar rows and viewer header now render a readable spec name via one shared resolver; slug stays the identifier"
+    }
+  }
+}

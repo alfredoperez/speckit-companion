@@ -24,6 +24,7 @@ import { fuzzyMatch } from './fuzzyMatch';
 import { SpecsSortState } from './specsSortState';
 import { comparators, DEFAULT_SORT_MODE } from './specsSortMode';
 import { fileNameToDisplayName } from '../../core/utils/fileNaming';
+import { resolveSpecDisplayName } from '../../core/utils/specDisplayName';
 import { CONTEXT_KEYS, setContextKey } from '../../core/utils/contextKeys';
 
 export interface SpecInfo {
@@ -263,8 +264,9 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 const isActive = this.activeSpecName === spec.name;
                 const specFullPath = path.join(basePath, spec.path);
                 const specContext = readSpecContextSync(specFullPath);
+                const displayName = resolveSpecDisplayName(specContext?.specName, spec.name);
                 const item = new SpecItem(
-                    spec.name,
+                    displayName,
                     this.expandAllSpecs
                         ? vscode.TreeItemCollapsibleState.Expanded
                         : vscode.TreeItemCollapsibleState.Collapsed,

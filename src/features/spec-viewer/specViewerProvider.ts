@@ -48,7 +48,7 @@ import { ConfigKeys, SpecStatuses } from "../../core/constants";
 import { coerceLegacyBoolean } from "../../core/settingsMigration";
 import type { CustomCommandConfig } from "../../core/types/config";
 import { deriveChangeRoot } from "../../core/specDirectoryResolver";
-import { deriveSpecName } from "../specs/specContextManager";
+import { resolveSpecDisplayName } from "../../core/utils/specDisplayName";
 import { readSpecContext, SPEC_CONTEXT_FILENAME, SpecContextParseError } from "../specs/specContextReader";
 import { writeSpecContext } from "../specs/specContextWriter";
 import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
@@ -798,7 +798,7 @@ export class SpecViewerProvider {
         derived.badgeText,
         derived.createdDate,
         derived.lastUpdatedDate,
-        featureCtx?.specName ?? deriveSpecName(specDirectory),
+        resolveSpecDisplayName(featureCtx?.specName, specDirectory),
         featureCtx?.workingBranch ?? featureCtx?.branch ?? null,
         doc?.filePath ?? null,
         featureCtx?.currentStep ?? doc?.type ?? null,
@@ -1130,7 +1130,7 @@ export class SpecViewerProvider {
       badgeText: derived.badgeText,
       createdDate: derived.createdDate,
       lastUpdatedDate: derived.lastUpdatedDate,
-      specContextName: featureCtx?.specName ?? deriveSpecName(specDirectory),
+      specContextName: resolveSpecDisplayName(featureCtx?.specName, specDirectory),
       branch: featureCtx?.workingBranch ?? featureCtx?.branch ?? null,
       currentStep: featureCtx?.currentStep ?? resolvedType ?? null,
       filePath: doc?.filePath ?? null,
