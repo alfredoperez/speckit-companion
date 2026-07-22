@@ -1,0 +1,44 @@
+{
+  "id": "S8-idempotency-central",
+  "title": "re-folding and re-adopting change nothing the second time",
+  "ranAt": "2026-07-22T16:58:52.210Z",
+  "mode": "real+seeded-prose",
+  "verdict": "PASS",
+  "assertions": [
+    {
+      "id": "first-fold-writes",
+      "status": "PASS",
+      "detail": "first fold applied the delta"
+    },
+    {
+      "id": "refold-byte-identical",
+      "status": "PASS",
+      "detail": "re-fold (x2) left the spec byte-identical"
+    },
+    {
+      "id": "refold-reports-noop",
+      "status": "PASS",
+      "detail": "second fold stdout: [companion] Living-spec fold: folded 0 capabilities () but 1 loaded capability is neither folded nor skipped (todos). The loop did not close for those: author a delta block or record a skip (write-context.py --living-spec-skip \"<name>: <reason>\")."
+    }
+  ],
+  "commands": [
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-central",
+      "cmd": "python3 speckit-extension/scripts/write-context.py --feature-dir specs/001-add-due-dates --fold-living-spec --by ai",
+      "exit": 0,
+      "stdoutTail": "[companion] Folded feature deltas into living spec(s): todos (examples/bench-sandboxes/ls-r3-central/specs/001-add-due-dates/.spec-context.json)\n[companion] Living-spec fold: todos ← +1 added, ~0 modified, -0 removed, ↻0 renamed (capabilities/todos/spec.md)"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-central",
+      "cmd": "python3 speckit-extension/scripts/write-context.py --feature-dir specs/001-add-due-dates --fold-living-spec --by ai",
+      "exit": 0,
+      "stdoutTail": "[companion] Living-spec fold: todos already up to date (capabilities/todos/spec.md); no change.\n[companion] Living-spec fold: folded 0 capabilities () but 1 loaded capability is neither folded nor skipped (todos). The loop did not close for those: author a delta block or record a skip (write-context.py --living-spec-skip \"<name>: <reason>\")."
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-central",
+      "cmd": "python3 speckit-extension/scripts/write-context.py --feature-dir specs/001-add-due-dates --fold-living-spec --by ai",
+      "exit": 0,
+      "stdoutTail": "[companion] Living-spec fold: todos already up to date (capabilities/todos/spec.md); no change.\n[companion] Living-spec fold: folded 0 capabilities () but 1 loaded capability is neither folded nor skipped (todos). The loop did not close for those: author a delta block or record a skip (write-context.py --living-spec-skip \"<name>: <reason>\")."
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "id": "S7-disabled-off",
+  "title": "with living specs disabled every verb no-ops",
+  "ranAt": "2026-07-22T16:58:51.694Z",
+  "mode": "real+seeded-prose",
+  "verdict": "PASS",
+  "assertions": [
+    {
+      "id": "gate-not-configured",
+      "status": "PASS",
+      "detail": "last_action = \"living specs evaluated — skipped (not configured)\", livingSpecs absent"
+    },
+    {
+      "id": "fold-inert",
+      "status": "PASS",
+      "detail": "disabled fold left the spec byte-identical, no livingSpecs written"
+    },
+    {
+      "id": "drift-inert",
+      "status": "PASS",
+      "detail": "drift exit 0 (opt-in: reports nothing when off)"
+    }
+  ],
+  "commands": [
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-off",
+      "cmd": "python3 speckit-extension/scripts/record-living-specs.py --feature-dir specs/001-add-due-dates --changed src/todos/list.ts",
+      "exit": 0
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-off",
+      "cmd": "python3 speckit-extension/scripts/write-context.py --feature-dir specs/001-add-due-dates --fold-living-spec --by ai",
+      "exit": 0,
+      "stdoutTail": "[companion] Living-spec fold: living specs are off in this repo (livingSpecs.enabled is not true); nothing folded."
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-off",
+      "cmd": "python3 speckit-extension/scripts/drift.py --root . --json",
+      "exit": 0,
+      "stdoutTail": "{\n  \"enabled\": false,\n  \"working\": false,\n  \"checked\": 0,\n  \"capabilities\": [],\n  \"skipped\": []\n}"
+    }
+  ]
+}

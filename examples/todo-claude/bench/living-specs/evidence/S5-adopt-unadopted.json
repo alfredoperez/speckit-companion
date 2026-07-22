@@ -1,0 +1,55 @@
+{
+  "id": "S5-adopt-unadopted",
+  "title": "an unadopted area resolves nothing until it is registered",
+  "ranAt": "2026-07-22T16:58:51.092Z",
+  "mode": "real+seeded-prose",
+  "verdict": "PASS",
+  "assertions": [
+    {
+      "id": "unadopted-resolves-nothing",
+      "status": "PASS",
+      "detail": "before register: matched 0"
+    },
+    {
+      "id": "register-succeeds",
+      "status": "PASS",
+      "detail": "register-capability.py exit 0"
+    },
+    {
+      "id": "adopted-then-loads",
+      "status": "PASS",
+      "detail": "after register: matched [billing]"
+    },
+    {
+      "id": "re-adopt-detects-existing",
+      "status": "PASS",
+      "detail": "re-register stdout: [companion] capability 'billing' already registered — no change."
+    }
+  ],
+  "commands": [
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-unadopted",
+      "cmd": "python3 speckit-extension/scripts/resolve-spec-paths.py --root . --changed src/billing/invoice.ts --json",
+      "exit": 0,
+      "stdoutTail": "{\n  \"changed\": [\n    \"src/billing/invoice.ts\"\n  ],\n  \"matched\": []\n}"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-unadopted",
+      "cmd": "python3 speckit-extension/scripts/register-capability.py --root . --name billing --match src/billing/**",
+      "exit": 0,
+      "stdoutTail": "[companion] created capability 'billing' (capabilities/billing/spec.md) in living-specs.yml"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-unadopted",
+      "cmd": "python3 speckit-extension/scripts/resolve-spec-paths.py --root . --changed src/billing/invoice.ts --json",
+      "exit": 0,
+      "stdoutTail": "          \"path\": \"capabilities/billing/spec.coverage.md\",\n          \"exists\": false\n        }\n      },\n      \"specificity\": 11\n    }\n  ]\n}"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-unadopted",
+      "cmd": "python3 speckit-extension/scripts/register-capability.py --root . --name billing --match src/billing/**",
+      "exit": 0,
+      "stdoutTail": "[companion] capability 'billing' already registered — no change."
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "id": "S1-install-sanity",
+  "title": "the resolver + gate run against all four registry shapes",
+  "ranAt": "2026-07-22T16:58:49.767Z",
+  "mode": "real+seeded-prose",
+  "verdict": "PASS",
+  "assertions": [
+    {
+      "id": "resolver-runs-central",
+      "status": "PASS",
+      "detail": "resolve-spec-paths --all --json exit 0, JSON parsed"
+    },
+    {
+      "id": "resolver-runs-coloc",
+      "status": "PASS",
+      "detail": "resolve-spec-paths --all --json exit 0, JSON parsed"
+    },
+    {
+      "id": "resolver-runs-unadopted",
+      "status": "PASS",
+      "detail": "resolve-spec-paths --all --json exit 0, JSON parsed"
+    },
+    {
+      "id": "resolver-runs-off",
+      "status": "PASS",
+      "detail": "resolve-spec-paths --all --json exit 0, JSON parsed"
+    },
+    {
+      "id": "scripts-present",
+      "status": "PASS",
+      "detail": "record-living-specs.py, write-context.py, register-capability.py all present"
+    }
+  ],
+  "commands": [
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-central",
+      "cmd": "python3 speckit-extension/scripts/resolve-spec-paths.py --root . --all --json",
+      "exit": 0,
+      "stdoutTail": "          \"path\": \"capabilities/todos/spec.coverage.md\",\n          \"exists\": false\n        }\n      }\n    }\n  ],\n  \"orphans\": []\n}"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-coloc",
+      "cmd": "python3 speckit-extension/scripts/resolve-spec-paths.py --root . --all --json",
+      "exit": 0,
+      "stdoutTail": "          \"path\": \"src/todos/todos.coverage.md\",\n          \"exists\": false\n        }\n      }\n    }\n  ],\n  \"orphans\": []\n}"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-unadopted",
+      "cmd": "python3 speckit-extension/scripts/resolve-spec-paths.py --root . --all --json",
+      "exit": 0,
+      "stdoutTail": "{\n  \"capabilities\": [],\n  \"orphans\": []\n}"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-off",
+      "cmd": "python3 speckit-extension/scripts/resolve-spec-paths.py --root . --all --json",
+      "exit": 0,
+      "stdoutTail": "{\n  \"capabilities\": [],\n  \"orphans\": []\n}"
+    }
+  ]
+}

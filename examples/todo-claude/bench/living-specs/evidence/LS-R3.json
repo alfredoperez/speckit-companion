@@ -1,0 +1,46 @@
+{
+  "ranAt": "2026-07-22T16:58:52.210Z",
+  "verdict": "PASS",
+  "scenarios": [
+    {
+      "id": "S1-install-sanity",
+      "verdict": "PASS",
+      "title": "the resolver + gate run against all four registry shapes"
+    },
+    {
+      "id": "S2-simple-adds-req-coloc",
+      "verdict": "PASS",
+      "title": "a fast-path change folds one requirement into the colocated spec"
+    },
+    {
+      "id": "S3-normal-adds-req-central",
+      "verdict": "PASS",
+      "title": "a normal change folds one requirement into the central spec"
+    },
+    {
+      "id": "S4-adds-nothing-central",
+      "verdict": "PASS",
+      "title": "an untouched capability needs a skip note; without one the fold shouts"
+    },
+    {
+      "id": "S5-adopt-unadopted",
+      "verdict": "PASS",
+      "title": "an unadopted area resolves nothing until it is registered"
+    },
+    {
+      "id": "S6-drift-then-sync-coloc",
+      "verdict": "PASS",
+      "title": "a direct edit shows as drift, then reads in-sync after the spec updates"
+    },
+    {
+      "id": "S7-disabled-off",
+      "verdict": "PASS",
+      "title": "with living specs disabled every verb no-ops"
+    },
+    {
+      "id": "S8-idempotency-central",
+      "verdict": "PASS",
+      "title": "re-folding and re-adopting change nothing the second time"
+    }
+  ]
+}
