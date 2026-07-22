@@ -809,7 +809,8 @@ class ApplyDeltasTests(unittest.TestCase):
 
     # --- Applied, not attempted ---
 
-    def test_unmatched_targets_are_not_counted_as_applied(self) -> None:
+    def test_unmatched_modified_is_promoted_to_added(self) -> None:
+        # A MODIFIED with no existing heading to replace is a new requirement mis-labeled — promote it to ADDED (append), never drop it.
         d = wc.parse_spec_deltas(
             "## MODIFIED Requirements\n\n"
             "### Ghost one\n\n#### Scenario: a\n- x\n\n"
@@ -817,8 +818,32 @@ class ApplyDeltasTests(unittest.TestCase):
             "### Ghost three\n\n#### Scenario: c\n- z\n")
         self.assertEqual(len(d["modified"]), 3)
         out, applied = wc.apply_deltas(TODOS_LIVING, d)
-        self.assertEqual(out, TODOS_LIVING)
+        self.assertNotEqual(out, TODOS_LIVING)
+        self.assertIn("### Ghost one", out)
+        self.assertIn("### Ghost three", out)
         self.assertEqual(applied["modified"], 0)
+        self.assertEqual(applied["promoted"], 3)
+
+    def test_promoted_modified_is_idempotent_on_re_fold(self) -> None:
+        d = wc.parse_spec_deltas(
+            "## MODIFIED Requirements\n\n### Ghost one\n\n#### Scenario: a\n- x\n")
+        once, _ = wc.apply_deltas(TODOS_LIVING, d)
+        twice, applied = wc.apply_deltas(once, d)
+        self.assertEqual(twice, once)               # re-fold changes nothing (heading now matches)
+        self.assertEqual(applied["promoted"], 0)    # not re-added
+
+    def test_promoted_modified_already_present_counts_as_present_not_unmatched(self) -> None:
+        # One delta set ADDs a new requirement and also MODIFIEs the same new heading:
+        # the MODIFIED can't match (heading is new), promotes, but the ADDED already
+        # placed it — counted as promoted_present, never a false unmatched.
+        d = wc.parse_spec_deltas(
+            "## ADDED Requirements\n\n### Fresh req\n\n#### Scenario: s\n- a\n\n"
+            "## MODIFIED Requirements\n\n### Fresh req\n\n#### Scenario: s\n- a\n")
+        out, applied = wc.apply_deltas(TODOS_LIVING, d)
+        self.assertEqual(out.count("### Fresh req"), 1)   # present exactly once
+        self.assertEqual(applied["added"], 1)
+        self.assertEqual(applied["promoted_present"], 1)
+        self.assertEqual(applied["promoted"], 0)
 
     def test_partial_match_counts_only_what_landed(self) -> None:
         d = wc.parse_spec_deltas(
@@ -1071,7 +1096,8 @@ class FoldLivingSpecTests(unittest.TestCase):
         log = self._fold_log(fdir)
         self.assertIn("+1 added, ~0 modified", log)
         self.assertNotIn("~2 modified", log)
-        self.assertIn("2 change(s) skipped", log)
+        self.assertIn("2 added (MODIFIED with no existing match)", log)
+        self.assertNotIn("already up to date", log)
 
     def test_fold_log_is_unchanged_when_everything_applies(self) -> None:
         root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
@@ -1081,6 +1107,19 @@ class FoldLivingSpecTests(unittest.TestCase):
         log = self._fold_log(fdir)
         self.assertIn("+1 added, ~0 modified, -0 removed, ↻0 renamed", log)
         self.assertNotIn("skipped", log)
+
+    def test_redundant_promoted_modified_reports_up_to_date_not_a_skip(self) -> None:
+        # A MODIFIED whose requirement is already in the living spec (a re-fold, or
+        # a heading already present) is redundant — the receipt must say "up to date",
+        # not warn "matched no requirement".
+        already = TODOS_LIVING.rstrip() + "\n\n### Due dates\n\n#### Scenario: s\n- a\n"
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": already},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## MODIFIED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+        log = self._fold_log(fdir)
+        self.assertIn("already up to date", log)
+        self.assertNotIn("matched no requirement", log)
 
     def test_fold_log_names_the_right_reason_for_a_skipped_addition(self) -> None:
         root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
