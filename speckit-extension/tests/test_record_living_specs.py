@@ -117,6 +117,25 @@ class RecordLivingSpecsTests(unittest.TestCase):
         self.assertEqual(rc, 0)
         self.assertEqual(_loaded(fd), {"loaded": ["checkout"]})
 
+    def test_malformed_registry_is_a_noop(self) -> None:
+        # A registry that parses but is not a mapping must degrade to disabled,
+        # never crash or write.
+        root = _make_root("- just\n- a\n- list\n")
+        fd = root / "specs" / "001-feature"
+        fd.mkdir(parents=True)
+        self.assertEqual(rls.record(fd, ["src/checkout/pay.ts"], str(root)), [])
+        self.assertIsNone(_loaded(fd))
+
+    def test_non_utf8_registry_is_a_noop(self) -> None:
+        # A non-UTF-8 registry raises UnicodeDecodeError on read (a ValueError,
+        # not an OSError); the loader must swallow it and record nothing.
+        root = Path(tempfile.mkdtemp())
+        (root / "living-specs.yml").write_bytes(b"enabled: true\ncap: \xff\xfe\n")
+        fd = root / "specs" / "001-feature"
+        fd.mkdir(parents=True)
+        self.assertEqual(rls.record(fd, ["src/checkout/pay.ts"], str(root)), [])
+        self.assertIsNone(_loaded(fd))
+
 
 if __name__ == "__main__":
     unittest.main()
