@@ -152,7 +152,7 @@ def _last_action(feature_dir: Path):
 
 
 class BreadcrumbTests(unittest.TestCase):
-    """The deterministic audit trail replaces the AI's prose gate (#535): the
+    """The deterministic audit trail replaces the AI's prose gate: the
     script itself stamps last_action for every outcome, so 'correctly did
     nothing' can't be misjudged as 'not configured'."""
 

@@ -418,7 +418,7 @@ def check_prompting(r: Report, commands_dir: Path) -> None:
 def check_living_specs_accountability(r: Report, spec_dir: Path) -> None:
     """A completed spec that loaded living-spec capabilities must account for each
     one — a folded delta (synced) or an explicit skip note. A loaded capability
-    that is neither is the 'silently nothing' hole #536 closes: WARN, never fail."""
+    that is neither is the 'silently nothing' hole this closes: WARN, never fail."""
     target = spec_dir / ".spec-context.json"
     try:
         ctx = json.loads(target.read_text(encoding="utf-8"))

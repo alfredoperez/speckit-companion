@@ -650,7 +650,7 @@ class RecordLoadedLivingSpecsTests(unittest.TestCase):
             self.assertIn(k, wc.PROTECTED_SET_KEYS)
 
 
-# #536 — the skip note: completion accounts for a loaded capability it did NOT
+# The skip note: completion accounts for a loaded capability it did NOT
 # change with an explicit {name, reason}, so "correctly nothing" is a record, not
 # silence. Mirrors the loaded/synced writers: additive, de-duped, no lifecycle write.
 class RecordSkippedLivingSpecsTests(unittest.TestCase):
@@ -690,6 +690,12 @@ class RecordSkippedLivingSpecsTests(unittest.TestCase):
     def test_blank_name_is_filtered(self) -> None:
         d = make_ctx_dir()
         self.assertIsNone(wc.set_living_specs_skipped(d, [{"name": "  ", "reason": "x"}]))
+        self.assertNotIn("livingSpecs", self._read(d))
+
+    def test_blank_reason_is_dropped(self) -> None:
+        # A skip must justify itself; a reasonless entry is not accountability.
+        d = make_ctx_dir()
+        self.assertIsNone(wc.set_living_specs_skipped(d, [{"name": "todos", "reason": "  "}]))
         self.assertNotIn("livingSpecs", self._read(d))
 
     def test_does_not_touch_lifecycle_keys(self) -> None:
@@ -1215,7 +1221,7 @@ class FoldLivingSpecTests(unittest.TestCase):
         self.assertIsNone(wc.fold_living_spec(fdir, "ai"))
         self.assertEqual(self._living(root), before)  # nothing written
         self.assertIn("todos", log)
-        # #536: a loaded-but-unaccounted capability is the loud backstop, not a
+        # a loaded-but-unaccounted capability is the loud backstop, not a
         # soft "nothing to fold yet." Name it and say the loop did not close.
         self.assertIn("unaccounted", log)
         self.assertIn("The loop did not close", log)
@@ -1224,7 +1230,7 @@ class FoldLivingSpecTests(unittest.TestCase):
         self.assertNotIn("feature off", log)
         self.assertNotIn("already up to date", log)
 
-    # #536: an explicit skip note turns "silently nothing" into "correctly
+    # an explicit skip note turns "silently nothing" into "correctly
     # nothing" — the backstop must go quiet only when every loaded capability is
     # accounted for.
     def test_all_loaded_caps_skipped_is_correctly_nothing(self) -> None:

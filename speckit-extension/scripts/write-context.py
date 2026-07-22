@@ -558,9 +558,10 @@ def main() -> int:
                 name, sep, reason = str(raw).partition(":")
                 if name.strip() and not (sep and reason.strip()):
                     print(
-                        f"[companion] Warning: --living-spec-skip \"{raw}\" has no reason; "
-                        "recording the skip anyway, but use \"<name>: <reason>\" so the "
-                        "note explains why the capability was left unchanged.",
+                        f"[companion] Warning: --living-spec-skip \"{raw}\" has no reason and "
+                        "was NOT recorded — an unexplained skip isn't accountability. Use "
+                        "\"<name>: <reason>\"; the capability stays unaccounted until you fold a "
+                        "delta or record a reasoned skip.",
                         file=sys.stderr,
                     )
                 entries.append({"name": name.strip(), "reason": reason.strip()})

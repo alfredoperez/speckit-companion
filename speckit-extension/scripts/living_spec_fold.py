@@ -51,7 +51,7 @@ def _skipped_capability_names(feature_dir: Path) -> set[str]:
 
 def _accountability_gap(feature_dir: Path, synced) -> list[str]:
     """Loaded capabilities completion neither folded (synced) nor recorded a skip
-    for. The core #536 check — computed in BOTH fold branches so a partial
+    for. The core accountability check — computed in BOTH fold branches so a partial
     multi-capability fold (one delta authored, another capability forgotten)
     can't silence the gap the way the no-delta-only check did."""
     loaded = _loaded_capabilities(feature_dir)
@@ -392,7 +392,7 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
             if unaccounted:
                 # The loud, actionable backstop: a capability was loaded, no delta
                 # was authored, and no skip note explains why. This is the exact
-                # "silently nothing" state #527 hit — surface it, never bless it.
+                # the "silently nothing" state — surface it, never bless it.
                 print(
                     f"[companion] Living-spec fold: {len(loaded)} capabilit"
                     f"{'y' if len(loaded) == 1 else 'ies'} loaded "
