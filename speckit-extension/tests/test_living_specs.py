@@ -829,9 +829,21 @@ class ApplyDeltasTests(unittest.TestCase):
             "## MODIFIED Requirements\n\n### Ghost one\n\n#### Scenario: a\n- x\n")
         once, _ = wc.apply_deltas(TODOS_LIVING, d)
         twice, applied = wc.apply_deltas(once, d)
-        self.assertEqual(twice, once)               # already present → not re-added
+        self.assertEqual(twice, once)               # re-fold changes nothing (heading now matches)
+        self.assertEqual(applied["promoted"], 0)    # not re-added
+
+    def test_promoted_modified_already_present_counts_as_present_not_unmatched(self) -> None:
+        # One delta set ADDs a new requirement and also MODIFIEs the same new heading:
+        # the MODIFIED can't match (heading is new), promotes, but the ADDED already
+        # placed it — counted as promoted_present, never a false unmatched.
+        d = wc.parse_spec_deltas(
+            "## ADDED Requirements\n\n### Fresh req\n\n#### Scenario: s\n- a\n\n"
+            "## MODIFIED Requirements\n\n### Fresh req\n\n#### Scenario: s\n- a\n")
+        out, applied = wc.apply_deltas(TODOS_LIVING, d)
+        self.assertEqual(out.count("### Fresh req"), 1)   # present exactly once
+        self.assertEqual(applied["added"], 1)
+        self.assertEqual(applied["promoted_present"], 1)
         self.assertEqual(applied["promoted"], 0)
-        self.assertEqual(applied["promoted_present"], 1)   # counted as redundant, not unmatched
 
     def test_partial_match_counts_only_what_landed(self) -> None:
         d = wc.parse_spec_deltas(
