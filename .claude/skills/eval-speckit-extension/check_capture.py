@@ -425,7 +425,11 @@ def _fastpath(r: Report, history: list, ctx: dict) -> None:
     # livingSpecs.loaded when the touched files match a capability. It is legitimately
     # absent when the change touches no covered area, so absence is INFO, not FAIL;
     # a present record must be a non-empty list of capability-name strings.
-    loaded = ((ctx.get("livingSpecs") or {}).get("loaded"))
+    living = ctx.get("livingSpecs")
+    if living is not None and not isinstance(living, dict):
+        r.add(False, "fast-path-living-specs", f"livingSpecs is malformed: {living!r} — expected an object with a loaded[] list")
+        return
+    loaded = (living or {}).get("loaded")
     if loaded is None:
         r.add(None, "fast-path-living-specs", "no living specs recorded (no covered area matched, or feature off)")
     else:
