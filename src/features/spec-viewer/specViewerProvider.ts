@@ -61,6 +61,7 @@ import { resetMalformedContext } from "../specs/specContextReset";
 import { reconcileAndPersist } from "../specs/specContextReconciler";
 import { isCompanionInstalled } from "../settings/companionPresetReconciler";
 import { shouldShowInstallPrompt, readInstallPromptEnabled } from "../../speckit/specKitExtensionInstall";
+import { reportInstallPromptShown } from "../../core/telemetry";
 import { deriveViewerState, isStepCompleted, findRunningStep } from "./stateDerivation";
 import { enrichLivingSpecs } from "./livingSpecsContent";
 import { StepCompletionNotifier, NotifierContext } from "./stepCompletionNotifier";
@@ -182,11 +183,19 @@ export class SpecViewerProvider {
     if (this.context.globalState.get<boolean>(ConfigKeys.globalState.installBannerDismissed, false)) {
       return false;
     }
+    // The banner renders inside the Activity panel — with it off there is no surface, so don't report a "shown".
+    if (!this.readActivityPanelEnabled()) {
+      return false;
+    }
     const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-    return shouldShowInstallPrompt(
+    const visible = shouldShowInstallPrompt(
       readInstallPromptEnabled(),
       root ? isCompanionInstalled(root) : false
     );
+    if (visible) {
+      reportInstallPromptShown('activity');
+    }
+    return visible;
   }
 
   /**

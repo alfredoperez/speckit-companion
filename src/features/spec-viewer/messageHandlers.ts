@@ -6,7 +6,7 @@
 import * as path from "path";
 import * as vscode from "vscode";
 import { formatCommandForProvider, getConfiguredProviderType } from "../../ai-providers/aiProvider";
-import { sendTelemetryEvent, getSpecTelemetryContext, phaseTelemetryId } from "../../core/telemetry";
+import { sendTelemetryEvent, getSpecTelemetryContext, phaseTelemetryId, reportInstallPromptClicked } from "../../core/telemetry";
 import {
   buildLifecyclePrompt,
   buildPrompt,
@@ -173,6 +173,7 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
       else deps.outputChannel.appendLine(`[SpecViewer] Unknown footerAction id: ${msg.id}`);
     },
     installSpecKitExtension: async (_msg, _dir, _deps) => {
+      reportInstallPromptClicked('activity');
       await vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
     },
     openReadme: async (_msg, _dir, _deps) => {

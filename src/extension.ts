@@ -28,7 +28,7 @@ import { ConfigKeys } from './core/constants';
 import { ConfigManager } from './core/utils/configManager';
 import { migrateBetaTriStateSettings, removeRetiredSettings } from './core/settingsMigration';
 import { openSpecFile } from './core/utils/fileOpener';
-import { TelemetryService, initTelemetry, sendTelemetryEvent, buildBetaSnapshot } from './core/telemetry';
+import { TelemetryService, initTelemetry, sendTelemetryEvent, buildActivatedProperties } from './core/telemetry';
 import { getConfiguredProviderType } from './ai-providers/aiProvider';
 import { resolveSpecDirectories } from './core/specDirectoryResolver';
 
@@ -352,22 +352,24 @@ async function refreshCompanionInstalledContext(root: string): Promise<void> {
  */
 async function fireActivatedEvent(context: vscode.ExtensionContext): Promise<void> {
     let specCount = 0;
+    let companionInstalled = false;
     try {
         const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         if (root) {
             specCount = (await resolveSpecDirectories(root)).length;
+            companionInstalled = isCompanionInstalled(root);
         }
     } catch {
         /* spec discovery failure is non-fatal — report 0 */
     }
-    sendTelemetryEvent('extension.activated', {
+    sendTelemetryEvent('extension.activated', buildActivatedProperties({
         extensionVersion: String(context.extension.packageJSON.version ?? 'unknown'),
         vscodeVersion: vscode.version,
         // No CLI version detector exists today — the detector only checks presence.
         speckitCliVersion: 'unknown',
-        specCount: String(specCount),
-        ...buildBetaSnapshot(),
-    });
+        specCount,
+        companionInstalled,
+    }));
 }
 
 /**

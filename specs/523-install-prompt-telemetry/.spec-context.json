@@ -1,0 +1,365 @@
+{
+  "workflow": "speckit",
+  "specName": "install prompt telemetry",
+  "branch": "523-install-prompt-telemetry",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-22T01:57:26.656Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-22T01:58:39.460Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-22T01:58:55.911Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T01:59:49.632Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T01:59:49.743Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-22T02:00:03.324Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-22T02:00:17.621Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-22T02:00:53.540Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-22T02:01:08.075Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T02:01:25.619Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T02:01:39.240Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T02:02:26.973Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T02:03:09.607Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T02:03:18.952Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T02:05:32.748Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T02:05:53.753Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T02:06:07.911Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T02:06:48.303Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-22T02:06:48.372Z"
+    }
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "extension.activated carries a boolean companionInstalled dimension",
+      "tasks": [
+        "T002",
+        "T006"
+      ],
+      "tests": [
+        "src/core/__tests__/telemetry.test.ts::emits companionInstalled through the reporter on extension.activated"
+      ]
+    },
+    "FR-002": {
+      "title": "companion.installPrompt action=shown emitted with surface when banner becomes visible",
+      "tasks": [
+        "T001",
+        "T003",
+        "T004",
+        "T006"
+      ],
+      "tests": [
+        "src/core/__tests__/telemetry.test.ts::emits action=shown with the surface the first time a surface is shown"
+      ]
+    },
+    "FR-003": {
+      "title": "shown event deduped once per surface per session",
+      "tasks": [
+        "T001",
+        "T006"
+      ],
+      "tests": [
+        "src/core/__tests__/telemetry.test.ts::dedupes a repeated shown for the same surface within a session"
+      ]
+    },
+    "FR-004": {
+      "title": "companion.installPrompt action=clicked emitted with surface on Install click",
+      "tasks": [
+        "T001",
+        "T003",
+        "T004",
+        "T006"
+      ],
+      "tests": [
+        "src/core/__tests__/telemetry.test.ts::emits action=clicked with the originating surface (not deduped)"
+      ]
+    },
+    "FR-005": {
+      "title": "new telemetry fields are booleans/enums only, no identifiers/paths",
+      "tasks": [
+        "T001",
+        "T002",
+        "T006"
+      ],
+      "tests": [
+        "src/core/__tests__/telemetry.test.ts::carries only the action + surface enum fields — no identifier or path"
+      ]
+    },
+    "FR-006": {
+      "title": "new events respect the existing telemetry opt-in gates",
+      "tasks": [
+        "T001",
+        "T006"
+      ],
+      "tests": [
+        "src/core/__tests__/telemetry.test.ts::sends nothing when telemetry is disabled"
+      ]
+    },
+    "FR-007": {
+      "title": "existing usage events remain emitted for used-vs-installed",
+      "tasks": [
+        "T005"
+      ]
+    },
+    "FR-008": {
+      "title": "telemetry docs list new signals + AppEvents sample query",
+      "tasks": [
+        "T007",
+        "T008"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 6,
+    "projectedTasks": 9,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "context": [
+    "area: src/core/telemetry.ts (scrubbing boundary)",
+    "area: install banner (spec-editor + spec-viewer) + specKitExtensionInstallCommands",
+    "constraint: booleans/enums only, no identifiers/paths; respect existing telemetry gate"
+  ],
+  "intent": "Measure companion spec-kit install rate and install-banner prompt→install conversion via opt-in, privacy-scrubbed telemetry",
+  "expectations": [
+    "No new usage event for used-vs-installed — reuse existing spec/phase/workflow events",
+    "No identifiers, paths, or free text in any new telemetry field"
+  ],
+  "approach": "Add companionInstalled boolean to extension.activated; new companion.installPrompt event with action(shown|clicked)+surface(createSpec|activity); emit helpers + session dedupe live in telemetry.ts; shown from render sites, clicked from banner message handlers only.",
+  "decisions": [
+    {
+      "decision": "single companion.installPrompt event with action dimension",
+      "why": "conversion is one aggregation, no join; enum stays in privacy allow-list",
+      "rejected": "two separate event names"
+    },
+    {
+      "decision": "emit shown from server render sites, deduped per session via module Set",
+      "why": "banner is server-rendered and regenerates on every refresh; render decision is the only reliable signal",
+      "rejected": "client DOM-mount emit needing new postMessage plumbing"
+    },
+    {
+      "decision": "emit clicked from banner message handlers, not shared install command",
+      "why": "install command is also fired by sidebar/upgrade menu; banner handlers isolate prompt conversion",
+      "rejected": "emit in registerSpecKitExtensionInstallCommands"
+    },
+    {
+      "decision": "extract buildActivatedProperties pure helper in telemetry.ts",
+      "why": "fireActivatedEvent is private with no harness; a pure assembler makes companionInstalled emit-provable in the reporter-mock test",
+      "rejected": "a bespoke extension.ts activation test harness"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Telemetry plan: one boolean on activation + one two-dimension installPrompt event, all allow-listed enums",
+      "key_finding": "clicked must be scoped to the banner handlers, not the shared install command, or the conversion denominator inflates"
+    },
+    "tasks": {
+      "summary": "9 tasks across setup(0)/foundational(1)/US1(1)/US2(2)/US3(1 verify)/polish(4); waves parallelize spec-editor+spec-viewer and docs+tests"
+    },
+    "implement": {
+      "summary": "Shipped install-rate (companionInstalled on extension.activated) + banner conversion (companion.installPrompt shown/clicked × surface) telemetry, privacy-scrubbed, with emit-proof tests"
+    }
+  },
+  "currentTask": "T009",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added InstallPromptSurface/Action types, companion.installPrompt event const, session-dedupe Set, reportInstallPromptShown/Clicked + test reset helper",
+      "files": [
+        "src/core/telemetry.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "extension.activated now reports companionInstalled boolean via isCompanionInstalled(root), false when no workspace root",
+      "files": [
+        "src/extension.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Create-Spec panel emits reportInstallPromptShown('createSpec') when banner visible and reportInstallPromptClicked('createSpec') on the banner Install message",
+      "files": [
+        "src/features/spec-editor/specEditorProvider.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Activity/viewer panel emits reportInstallPromptShown('activity') in computeShowInstallPrompt and reportInstallPromptClicked('activity') in the banner Install handler",
+      "files": [
+        "src/features/spec-viewer/specViewerProvider.ts",
+        "src/features/spec-viewer/messageHandlers.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Confirmed spec.created/spec.completed/phase.dispatched/workflow.selected still emit; used-vs-installed computable, no new event needed",
+      "files": [
+        "(verification)"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added emit-proof tests: extension.activated carries boolean companionInstalled (via reporter mock); companion.installPrompt shown+dedupe, clicked, enum-only fields, disabled-gate suppression",
+      "files": [
+        "src/core/__tests__/telemetry.test.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "README Telemetry section: added companionInstalled + install-prompt shown/clicked signals and an AppEvents sample query (install rate + banner conversion)",
+      "files": [
+        "README.md"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "CHANGELOG [Unreleased] Added entry for install-rate + banner-conversion telemetry (user-facing, no internal symbol names)",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "npm run compile clean; npm test green (125 suites / 1768 tests)",
+      "files": [
+        "(build+test)"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "full compile + test suite",
+      "command": "npm run compile && npm test",
+      "result": "compile clean; 125 suites / 1768 tests pass",
+      "warnings": []
+    },
+    {
+      "what": "install-prompt telemetry emit-proof",
+      "command": "npx jest src/core/__tests__/telemetry.test.ts",
+      "result": "companionInstalled emitted via reporter mock; installPrompt shown(deduped)/clicked verified enum-only + gated",
+      "warnings": []
+    }
+  ],
+  "last_action": "all 9 tasks done — compile clean, 1768 tests pass"
+}
