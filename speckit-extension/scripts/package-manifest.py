@@ -51,6 +51,7 @@ RUNTIME_SCRIPTS = frozenset({
     "status-context.py",
     "derive-from-files.py",
     "resolve-spec-paths.py",
+    "record-living-specs.py",
     "companion_config.py",
     "register-capability.py",
     "relocate-capability.py",

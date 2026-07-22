@@ -199,3 +199,16 @@ The drift script SHALL accept a working-tree mode that widens each capability's 
 #### Scenario: an uncommitted edit in a capability's area
 - **WHEN** drift runs without the flag and then with it
 - **THEN** the default run reads the capability as in sync and the working-tree run reports the file as drifted
+
+### Recording which living specs cover a change MUST be deterministic, not AI-judged
+
+The capture runtime SHALL provide a script that, given a feature directory and the changed files, reads the living-specs registry, gates on `enabled: true`, runs the shipped resolver to find the capabilities that own those files, and records their names (most-specific first) onto `livingSpecs.loaded`. The specify command bodies call this script instead of asking the model to gate-and-decide, so the record cannot be lost to a misjudged "not configured." Like every capture script it is best-effort, opt-in, and read-only: any miss is a silent no-op that exits successfully.
+
+#### Scenario: an enabled registry with a matching change
+- **WHEN** the recorder runs with changed files a configured capability owns
+- **THEN** `livingSpecs.loaded` lists the matched capabilities most-specific first
+- **AND** the command is never failed or slowed by the recording
+
+#### Scenario: the feature is off or nothing matches
+- **WHEN** the registry is absent or disabled, or no capability owns the changed files
+- **THEN** the recorder writes nothing and exits successfully
