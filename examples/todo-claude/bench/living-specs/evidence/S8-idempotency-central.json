@@ -1,0 +1,49 @@
+{
+  "id": "S8-idempotency-central",
+  "title": "re-folding and re-adopting change nothing the second time",
+  "ranAt": "2026-07-22T17:38:09.289Z",
+  "mode": "real+seeded-prose",
+  "verdict": "PASS",
+  "assertions": [
+    {
+      "id": "first-fold-writes",
+      "status": "PASS",
+      "detail": "first fold applied the delta"
+    },
+    {
+      "id": "refold-byte-identical",
+      "status": "PASS",
+      "detail": "re-fold (x2) left the spec byte-identical"
+    },
+    {
+      "id": "refold-reports-noop",
+      "status": "PASS",
+      "detail": "second fold stdout: [companion] Living-spec fold: todos already up to date (capabilities/todos/spec.md); no change."
+    },
+    {
+      "id": "refold-does-not-false-alarm",
+      "status": "PASS",
+      "detail": "no \"loop did not close\" backstop on an idempotent refold"
+    }
+  ],
+  "commands": [
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-central",
+      "cmd": "python3 speckit-extension/scripts/write-context.py --feature-dir specs/001-add-due-dates --fold-living-spec --by ai",
+      "exit": 0,
+      "stdoutTail": "[companion] Folded feature deltas into living spec(s): todos (examples/bench-sandboxes/ls-r3-central/specs/001-add-due-dates/.spec-context.json)\n[companion] Living-spec fold: todos ← +1 added, ~0 modified, -0 removed, ↻0 renamed (capabilities/todos/spec.md)"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-central",
+      "cmd": "python3 speckit-extension/scripts/write-context.py --feature-dir specs/001-add-due-dates --fold-living-spec --by ai",
+      "exit": 0,
+      "stdoutTail": "[companion] Living-spec fold: todos already up to date (capabilities/todos/spec.md); no change."
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-central",
+      "cmd": "python3 speckit-extension/scripts/write-context.py --feature-dir specs/001-add-due-dates --fold-living-spec --by ai",
+      "exit": 0,
+      "stdoutTail": "[companion] Living-spec fold: todos already up to date (capabilities/todos/spec.md); no change."
+    }
+  ]
+}

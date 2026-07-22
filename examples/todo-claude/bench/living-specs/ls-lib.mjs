@@ -592,11 +592,14 @@ export function runRegister(root, args) {
   }
 }
 
-// Read the registry block from the sandbox's companion.yml (raw text), so the
-// evidence can show the appended capability verbatim.
+// Read the registry (raw text), so the evidence can show the appended capability
+// verbatim. Prefers the canonical root `living-specs.yml` the register writer now
+// emits, falling back to the legacy `.specify/companion.yml`.
 export function readConfig(root) {
-  const p = join(root, '.specify', 'companion.yml')
-  return existsSync(p) ? readFileSync(p, 'utf8') : ''
+  const rootReg = join(root, 'living-specs.yml')
+  if (existsSync(rootReg)) return readFileSync(rootReg, 'utf8')
+  const legacy = join(root, '.specify', 'companion.yml')
+  return existsSync(legacy) ? readFileSync(legacy, 'utf8') : ''
 }
 
 // Seed a drafted living spec — the STRUCTURE under test. This is a fixture the
