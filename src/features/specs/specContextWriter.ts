@@ -156,14 +156,7 @@ export function setStepStarted(
         currentStep: step,
         status: deriveInProgressStatus(step),
     };
-    // Idempotent per (step, substep=null), mirroring write-context.py's
-    // `_has_step_start`: a step is started once. A re-click, a GUI
-    // start-append race, or an engine double-dispatch would otherwise stamp a
-    // second extension start and flip the phase untrusted (deriveStepHistory
-    // requires exactly one). Still realign currentStep/status — only the
-    // redundant history append is skipped (matches the Python writer). The
-    // `forceStatus` recovery path opts out (`dedupe=false`) so it can re-stamp
-    // an honest override boundary on an already-started stranded step (#347).
+    // Idempotent per (step, substep=null) like the Python writer: skip a redundant start but still realign currentStep/status; forceStatus opts out via dedupe=false to re-stamp a recovery boundary.
     if (dedupe && hasStepStart(ctx.history, step, null)) {
         return advanced;
     }

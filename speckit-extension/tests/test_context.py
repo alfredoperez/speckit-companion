@@ -447,12 +447,7 @@ class LifecycleCaptureTests(unittest.TestCase):
         self.assertEqual(len(completes), 1, "must not add a complete over a legacy self-loop complete")
 
     def test_fold_then_separate_dispatch_keeps_one_start_per_step(self) -> None:
-        # #519 path 1: the specify body folds plan+tasks (simple mode), then the
-        # workflow-engine `small` route separately dispatches plan/tasks whose
-        # bodies stamp their own extension start+complete. Two guards keep each
-        # step at exactly one start (the trust rule needs `explicitStarts == 1`):
-        # the more-advanced guard blocks the earlier-step (plan) re-dispatch, and
-        # `_has_step_start`/`_has_complete` dedup the same-step (tasks) re-dispatch.
+        # A fold then a separate plan/tasks re-dispatch must still leave exactly one start per step: the more-advanced guard blocks the plan re-dispatch and the start/complete dedup handles tasks.
         wc.update_context(self.fd, "specify", "specifying", "extension", "start")
         wc.update_context(self.fd, "specify", "specified", "extension", "complete")
         wc.update_context(self.fd, "plan", "planning", "extension", "start")

@@ -86,9 +86,7 @@ describe('setStepStarted', () => {
         expect(e.from).toBeUndefined();
     });
 
-    // #519: a step is started once. A re-click / GUI start-append race / engine
-    // double-dispatch must not stamp a second step-level start (the trust rule
-    // needs exactly one extension start). Mirrors write-context.py `_has_step_start`.
+    // A re-click / race / double-dispatch must not stamp a second step-level start (the trust rule needs exactly one extension start).
     it('does not append a second step-level start when one already exists (dedup)', () => {
         const existing = entry({ step: 'plan', substep: null, kind: 'start', by: 'extension', at: '2026-04-29T01:00:00Z' });
         const ctx = makeContext({ currentStep: 'plan', status: 'planning', history: [existing] });
@@ -129,9 +127,7 @@ describe('setStepStarted', () => {
         expect(result.history[0]).toMatchObject({ step: 'plan', kind: 'start' });
     });
 
-    // #519 end-to-end: a re-click on an already-folded plan step goes through
-    // setStepStarted again. The dedup keeps ONE extension step-level start, so
-    // deriveStepHistory's trust rule (explicitStarts.length === 1) still trusts it.
+    // A re-click on a folded plan step re-runs setStepStarted; the dedup keeps ONE extension start, so deriveStepHistory still trusts it.
     it('a re-started folded step stays duration-trusted through deriveStepHistory', () => {
         let ctx = makeContext({ currentStep: 'tasks', status: 'ready-to-implement', history: [
             entry({ step: 'specify', kind: 'start', at: '2026-04-29T00:00:00Z' }),
