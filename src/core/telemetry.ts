@@ -90,6 +90,32 @@ export function buildBetaSnapshot(): BetaSnapshot {
     };
 }
 
+/** The per-activation facts reported once with `extension.activated`. */
+export interface ActivationSnapshot {
+    extensionVersion: string;
+    vscodeVersion: string;
+    speckitCliVersion: string;
+    specCount: number;
+    companionInstalled: boolean;
+}
+
+/**
+ * Assemble the `extension.activated` payload from the activation facts plus the
+ * settings snapshot. All values are stringified booleans, versions, counts, and
+ * enum-like snapshot fields — no identifier or path. `companionInstalled` reports
+ * whether the companion spec-kit extension is present in the active workspace.
+ */
+export function buildActivatedProperties(snapshot: ActivationSnapshot): TelemetryProperties {
+    return {
+        extensionVersion: snapshot.extensionVersion,
+        vscodeVersion: snapshot.vscodeVersion,
+        speckitCliVersion: snapshot.speckitCliVersion,
+        specCount: String(snapshot.specCount),
+        companionInstalled: String(snapshot.companionInstalled),
+        ...buildBetaSnapshot(),
+    };
+}
+
 /**
  * Per-spec telemetry correlation context: the spec's pipeline profile and a
  * stable random id. The id is minted + persisted lazily on first read for a
@@ -175,6 +201,39 @@ export function initTelemetry(service: TelemetryService): void {
  */
 export function sendTelemetryEvent(name: string, properties?: TelemetryProperties): void {
     singleton?.sendEvent(name, properties);
+}
+
+/** The two banner surfaces the install prompt appears on. */
+export type InstallPromptSurface = 'createSpec' | 'activity';
+
+/** The two funnel moments measured for the install banner. */
+export type InstallPromptAction = 'shown' | 'clicked';
+
+/** Event carrying the install-banner funnel: `action` (shown/clicked) × `surface`. */
+export const INSTALL_PROMPT_EVENT = 'companion.installPrompt';
+
+// Dedupe "shown" per session: the banner is server-rendered and re-emitted on every webview refresh.
+const installPromptShownSurfaces = new Set<InstallPromptSurface>();
+
+/**
+ * Emit the install-banner "shown" event once per surface per session. The
+ * `surface`/`action` values are fixed literals produced only by our own call
+ * sites (never user data), so they satisfy the privacy allow-list as-is.
+ */
+export function reportInstallPromptShown(surface: InstallPromptSurface): void {
+    if (installPromptShownSurfaces.has(surface)) return;
+    installPromptShownSurfaces.add(surface);
+    sendTelemetryEvent(INSTALL_PROMPT_EVENT, { action: 'shown', surface });
+}
+
+/** Emit the install-banner "clicked" event tagged with the surface it came from. */
+export function reportInstallPromptClicked(surface: InstallPromptSurface): void {
+    sendTelemetryEvent(INSTALL_PROMPT_EVENT, { action: 'clicked', surface });
+}
+
+/** Reset the per-session "shown" dedupe. Test-only — never called in production. */
+export function __resetInstallPromptShownDedupe(): void {
+    installPromptShownSurfaces.clear();
 }
 
 // Re-export so call sites importing from this module have the filename handy.

@@ -302,8 +302,30 @@ The extension sends **anonymous, PII-free** usage telemetry to help prioritize w
 | Feature-flag on/off states | a snapshot reported once per session |
 | Extension / VS Code versions, spec count | for version distribution and scale |
 | Chosen workflow | the built-in id, or the literal `custom` |
+| Whether the companion spec-kit extension is installed | `true` / `false`, reported once per session |
+| Whether the install banner was shown or its Install button clicked | `shown` / `clicked`, per surface (`createSpec` / `activity`) |
 
 **What is never collected**: prompt content, file paths, spec names, or custom workflow names — only enum-like values, booleans, versions, counts, and a random per-spec id.
+
+**Reading these in App Insights**: the extension's telemetry is a **workspace-based** Application Insights resource, so events land in the `AppEvents` table (not `customEvents`). Install rate and prompt→install conversion are both computable there. Sample query — install rate and banner conversion over the last 30 days:
+
+```kusto
+// Install rate: share of activations that already have the companion spec-kit extension
+AppEvents
+| where TimeGenerated > ago(30d)
+| where Name == "extension.activated"
+| summarize installed = countif(tostring(Properties.companionInstalled) == "true"), total = count()
+| extend installRate = 1.0 * installed / total
+
+// Prompt→install conversion: banner Install clicks vs. banner shows
+AppEvents
+| where TimeGenerated > ago(30d)
+| where Name == "companion.installPrompt"
+| summarize shown = countif(tostring(Properties.action) == "shown"),
+            clicked = countif(tostring(Properties.action) == "clicked")
+    by surface = tostring(Properties.surface)
+| extend conversion = 1.0 * clicked / shown
+```
 
 That per-spec id is a **random UUID, not the spec name or path**. It correlates a single spec's events into a funnel (created → dispatched → completed) without ever revealing which spec it is. It is stored in the spec's `.spec-context.json` so the same id rides every event for that spec.
 

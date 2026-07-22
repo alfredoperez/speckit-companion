@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **Telemetry now measures the spec-kit extension install rate and whether the install banner converts.** Each activation reports whether the companion spec-kit extension is installed, and the install banner reports when it's shown and when its Install button is clicked (per surface — Create New Spec vs. the spec viewer). Together they answer "how many installs have the extension, and does the prompt work?" without any new personal data — the fields are booleans and fixed labels only, still gated on `speckit.telemetry`. The README's Telemetry section lists the new signals and a sample query. ([#506](https://github.com/alfredoperez/speckit-companion/issues/506))
 - **Sync living specs from my changes — one click in the Living Specs view.** A new title-bar action dispatches `/speckit.companion.living-sync` to your AI assistant: it groups your current working-tree changes — uncommitted and untracked files included — by capability and updates every affected living spec in one pass, leaving the spec edits uncommitted so they ship in the same commit as the code. It sits next to the existing Adopt Code Area… action and appears only when the companion spec-kit extension is installed.
 
 ### Changed

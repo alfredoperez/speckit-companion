@@ -6,9 +6,15 @@ import {
     TelemetryService,
     getSpecTelemetryContext,
     buildBetaSnapshot,
+    buildActivatedProperties,
     phaseTelemetryId,
     profileTelemetryId,
     defaultWorkflowTelemetryId,
+    initTelemetry,
+    reportInstallPromptShown,
+    reportInstallPromptClicked,
+    __resetInstallPromptShownDedupe,
+    INSTALL_PROMPT_EVENT,
     APP_INSIGHTS_CONNECTION_STRING,
 } from '../telemetry';
 // `@vscode/extension-telemetry` is mapped to the test mock (jest.config.js).
@@ -174,6 +180,106 @@ describe('TelemetryService', () => {
             expect(defaultWorkflowTelemetryId('my-custom-workflow')).toBe('speckit');
             expect(defaultWorkflowTelemetryId('')).toBe('speckit');
             expect(defaultWorkflowTelemetryId(undefined)).toBe('speckit');
+        });
+    });
+
+    describe('the extension.activated payload (install rate)', () => {
+        const baseSnapshot = {
+            extensionVersion: '1.2.3',
+            vscodeVersion: '1.90.0',
+            speckitCliVersion: 'unknown',
+            specCount: 4,
+        };
+
+        it('reports companionInstalled as a stringified boolean when installed', () => {
+            mockConfig({ telemetry: true });
+            const props = buildActivatedProperties({ ...baseSnapshot, companionInstalled: true });
+            expect(props.companionInstalled).toBe('true');
+            expect(props.specCount).toBe('4');
+        });
+
+        it('reports companionInstalled as "false" when the companion extension is absent', () => {
+            mockConfig({ telemetry: true });
+            const props = buildActivatedProperties({ ...baseSnapshot, companionInstalled: false });
+            expect(props.companionInstalled).toBe('false');
+        });
+
+        it('emits companionInstalled through the reporter on extension.activated', () => {
+            mockConfig({ telemetry: true });
+            const service = new TelemetryService();
+            service.sendEvent(
+                'extension.activated',
+                buildActivatedProperties({ ...baseSnapshot, companionInstalled: true }),
+            );
+
+            expect(__captured.events).toHaveLength(1);
+            expect(__captured.events[0].name).toBe('extension.activated');
+            expect(__captured.events[0].properties?.companionInstalled).toBe('true');
+        });
+
+        it('carries only booleans/versions/counts/enums — no identifier or path', () => {
+            mockConfig({ telemetry: true });
+            const props = buildActivatedProperties({ ...baseSnapshot, companionInstalled: false });
+            for (const value of Object.values(props)) {
+                expect(value).not.toContain('/');
+                expect(value).not.toContain('\\');
+            }
+        });
+    });
+
+    describe('the install-prompt funnel (companion.installPrompt)', () => {
+        beforeEach(() => {
+            __resetInstallPromptShownDedupe();
+            mockConfig({ telemetry: true });
+            initTelemetry(new TelemetryService());
+        });
+
+        it('emits action=shown with the surface the first time a surface is shown', () => {
+            reportInstallPromptShown('createSpec');
+            expect(__captured.events).toEqual([
+                { name: INSTALL_PROMPT_EVENT, properties: { action: 'shown', surface: 'createSpec' } },
+            ]);
+        });
+
+        it('dedupes a repeated shown for the same surface within a session', () => {
+            reportInstallPromptShown('createSpec');
+            reportInstallPromptShown('createSpec');
+            reportInstallPromptShown('createSpec');
+            expect(__captured.events).toHaveLength(1);
+        });
+
+        it('emits shown independently for each distinct surface', () => {
+            reportInstallPromptShown('createSpec');
+            reportInstallPromptShown('activity');
+            expect(__captured.events.map(e => e.properties?.surface)).toEqual(['createSpec', 'activity']);
+            expect(__captured.events.every(e => e.properties?.action === 'shown')).toBe(true);
+        });
+
+        it('emits action=clicked with the originating surface (not deduped)', () => {
+            reportInstallPromptClicked('activity');
+            reportInstallPromptClicked('activity');
+            expect(__captured.events).toEqual([
+                { name: INSTALL_PROMPT_EVENT, properties: { action: 'clicked', surface: 'activity' } },
+                { name: INSTALL_PROMPT_EVENT, properties: { action: 'clicked', surface: 'activity' } },
+            ]);
+        });
+
+        it('carries only the action + surface enum fields — no identifier or path', () => {
+            reportInstallPromptShown('activity');
+            reportInstallPromptClicked('createSpec');
+            for (const event of __captured.events) {
+                expect(Object.keys(event.properties ?? {}).sort()).toEqual(['action', 'surface']);
+                expect(['shown', 'clicked']).toContain(event.properties?.action);
+                expect(['createSpec', 'activity']).toContain(event.properties?.surface);
+            }
+        });
+
+        it('sends nothing when telemetry is disabled', () => {
+            mockConfig({ telemetry: false });
+            initTelemetry(new TelemetryService());
+            reportInstallPromptShown('createSpec');
+            reportInstallPromptClicked('createSpec');
+            expect(__captured.events).toHaveLength(0);
         });
     });
 

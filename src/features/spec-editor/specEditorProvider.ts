@@ -17,7 +17,7 @@ import { isCompanionInstalled } from '../settings/companionPresetReconciler';
 import { shouldShowInstallPrompt, readInstallPromptEnabled } from '../../speckit/specKitExtensionInstall';
 import { renderInstallBannerHtml } from './installBanner';
 import { AIProviders, WorkflowSteps, ConfigKeys, COMPANION_WORKFLOW_NAME } from '../../core/constants';
-import { sendTelemetryEvent } from '../../core/telemetry';
+import { sendTelemetryEvent, reportInstallPromptShown, reportInstallPromptClicked } from '../../core/telemetry';
 import * as crypto from 'crypto';
 
 /** The Companion specify command the picker dispatches when the Companion workflow is chosen. */
@@ -264,6 +264,7 @@ export class SpecEditorProvider {
                 break;
 
             case 'installSpecKitExtension':
+                reportInstallPromptClicked('createSpec');
                 void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
                 break;
 
@@ -555,13 +556,16 @@ export class SpecEditorProvider {
             ConfigKeys.globalState.installBannerDismissed,
             false
         );
-        const installBanner = renderInstallBannerHtml(
+        const installBannerVisible =
             !bannerDismissed &&
             shouldShowInstallPrompt(
                 readInstallPromptEnabled(),
                 workspaceRoot ? isCompanionInstalled(workspaceRoot) : false
-            )
-        );
+            );
+        if (installBannerVisible) {
+            reportInstallPromptShown('createSpec');
+        }
+        const installBanner = renderInstallBannerHtml(installBannerVisible);
 
         return `<!DOCTYPE html>
 <html lang="en">
