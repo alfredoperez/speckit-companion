@@ -1,7 +1,7 @@
 {
   "id": "S7-disabled-off",
   "title": "with living specs disabled every verb no-ops",
-  "ranAt": "2026-07-22T17:24:55.640Z",
+  "ranAt": "2026-07-22T17:28:11.463Z",
   "mode": "real+seeded-prose",
   "verdict": "PASS",
   "assertions": [
@@ -24,7 +24,7 @@
   "commands": [
     {
       "cwd": "examples/bench-sandboxes/ls-r3-off",
-      "cmd": "python3 speckit-extension/scripts/record-living-specs.py --feature-dir specs/001-add-due-dates --changed src/todos/list.ts",
+      "cmd": "python3 speckit-extension/scripts/record-living-specs.py --feature-dir specs/001-add-due-dates --changed src/todos/list.ts --root .",
       "exit": 0
     },
     {

@@ -1,7 +1,7 @@
 {
   "id": "S2-simple-adds-req-coloc",
   "title": "a fast-path change folds one requirement into the colocated spec",
-  "ranAt": "2026-07-22T17:24:54.047Z",
+  "ranAt": "2026-07-22T17:28:09.958Z",
   "mode": "real+seeded-prose",
   "verdict": "PASS",
   "assertions": [
@@ -34,9 +34,9 @@
   "commands": [
     {
       "cwd": "examples/bench-sandboxes/ls-r3-coloc",
-      "cmd": "python3 speckit-extension/scripts/record-living-specs.py --feature-dir specs/001-add-due-dates --changed src/todos/list.ts",
+      "cmd": "python3 speckit-extension/scripts/record-living-specs.py --feature-dir specs/001-add-due-dates --changed src/todos/list.ts --root .",
       "exit": 0,
-      "stdoutTail": "[companion] Recorded living specs (todos) in examples/bench-sandboxes/ls-r3-coloc/specs/001-add-due-dates/.spec-context.json"
+      "stdoutTail": "[companion] Recorded living specs (todos) in specs/001-add-due-dates/.spec-context.json"
     },
     {
       "cwd": "examples/bench-sandboxes/ls-r3-coloc",

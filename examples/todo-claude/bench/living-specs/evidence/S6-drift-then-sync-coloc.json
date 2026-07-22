@@ -1,7 +1,7 @@
 {
   "id": "S6-drift-then-sync-coloc",
   "title": "a direct edit shows as drift, then reads in-sync after the spec updates",
-  "ranAt": "2026-07-22T17:24:55.350Z",
+  "ranAt": "2026-07-22T17:28:11.186Z",
   "mode": "real+seeded-prose",
   "verdict": "PASS",
   "assertions": [
@@ -27,7 +27,7 @@
       "cwd": "examples/bench-sandboxes/ls-r3-coloc",
       "cmd": "python3 speckit-extension/scripts/drift.py --root . --json",
       "exit": 0,
-      "stdoutTail": "      \"spec\": \"src/todos/todos.spec.md\",\n      \"commit\": \"836e48bb\",\n      \"drifted\": [],\n      \"inSync\": true\n    }\n  ],\n  \"skipped\": []\n}"
+      "stdoutTail": "      \"spec\": \"src/todos/todos.spec.md\",\n      \"commit\": \"c3fe7df0\",\n      \"drifted\": [],\n      \"inSync\": true\n    }\n  ],\n  \"skipped\": []\n}"
     }
   ]
 }

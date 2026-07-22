@@ -73,22 +73,26 @@ function sh(root, args, script, cmdLabel) {
   }
 }
 
+// All feature-dir runners pass paths relative to the sandbox (cwd is the
+// sandbox), so the recorded `cmd` in the committed evidence matches the real
+// invocation exactly — no absolute home path, no label/reality drift.
+
 // The #535 gate: record which living specs cover the change + write the breadcrumb.
 function runRecord(root, featureRel, changed) {
-  const r = sh(root, ['--feature-dir', join(root, featureRel), '--changed', ...changed, '--root', root], RECORD,
-    `python3 ${rel(RECORD)} --feature-dir ${featureRel} --changed ${changed.join(' ')}`)
+  const r = sh(root, ['--feature-dir', featureRel, '--changed', ...changed, '--root', '.'], RECORD,
+    `python3 ${rel(RECORD)} --feature-dir ${featureRel} --changed ${changed.join(' ')} --root .`)
   return { ...r, ctx: readCtx(root, featureRel) }
 }
 
 // The #536 skip note.
 function runSkip(root, featureRel, note) {
-  const r = sh(root, ['--feature-dir', join(root, featureRel), '--living-spec-skip', note], WRITE_CONTEXT,
+  const r = sh(root, ['--feature-dir', featureRel, '--living-spec-skip', note], WRITE_CONTEXT,
     `python3 ${rel(WRITE_CONTEXT)} --feature-dir ${featureRel} --living-spec-skip "${note}"`)
   return { ...r, ctx: readCtx(root, featureRel) }
 }
 
 function runFold(root, featureRel) {
-  const r = sh(root, ['--feature-dir', join(root, featureRel), '--fold-living-spec', '--by', 'ai'], WRITE_CONTEXT,
+  const r = sh(root, ['--feature-dir', featureRel, '--fold-living-spec', '--by', 'ai'], WRITE_CONTEXT,
     `python3 ${rel(WRITE_CONTEXT)} --feature-dir ${featureRel} --fold-living-spec --by ai`)
   return { ...r, ctx: readCtx(root, featureRel) }
 }

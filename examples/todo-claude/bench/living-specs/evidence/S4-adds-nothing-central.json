@@ -1,7 +1,7 @@
 {
   "id": "S4-adds-nothing-central",
   "title": "an untouched capability needs a skip note; without one the fold shouts",
-  "ranAt": "2026-07-22T17:24:54.826Z",
+  "ranAt": "2026-07-22T17:28:10.694Z",
   "mode": "real+seeded-prose",
   "verdict": "PASS",
   "assertions": [
@@ -29,9 +29,9 @@
   "commands": [
     {
       "cwd": "examples/bench-sandboxes/ls-r3-central",
-      "cmd": "python3 speckit-extension/scripts/record-living-specs.py --feature-dir specs/002-rename-vars --changed src/todos/list.ts",
+      "cmd": "python3 speckit-extension/scripts/record-living-specs.py --feature-dir specs/002-rename-vars --changed src/todos/list.ts --root .",
       "exit": 0,
-      "stdoutTail": "[companion] Recorded living specs (todos) in examples/bench-sandboxes/ls-r3-central/specs/002-rename-vars/.spec-context.json"
+      "stdoutTail": "[companion] Recorded living specs (todos) in specs/002-rename-vars/.spec-context.json"
     },
     {
       "cwd": "examples/bench-sandboxes/ls-r3-central",
