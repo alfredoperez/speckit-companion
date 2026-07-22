@@ -29,7 +29,7 @@ A group with zero specs is omitted entirely.
 
 **Individual spec rows start collapsed**, including active ones. A workspace with hundreds of completed specs therefore opens to a short, readable list rather than a flood of document rows. Use **Expand All** (from More Actions, or the Command Palette) to open every row for the session.
 
-**Each row shows a readable name, not the raw directory slug.** A spec in `specs/515-readable-spec-names/` reads as "Readable Spec Names". The name is resolved by preference: the recorded name (`specName` in `.spec-context.json`), then the spec document's own heading where one exists, then a humanized version of the slug (leading number dropped, dashes replaced, words capitalized). This is presentation only — the slug stays the stable identifier, so filtering, sorting, duplicate-name disambiguation, and opening a spec all key off the slug and are unchanged. The viewer header resolves the name the same way, so the sidebar and the header always agree on what a spec is called.
+**Each row shows a readable name, not the raw directory slug.** A spec in `specs/515-readable-spec-names/` reads as "Readable Spec Names". The name is resolved by preference: the recorded name (`specName` in `.spec-context.json`), then the spec document's own heading where one exists, then a humanized version of the slug (leading number dropped, dashes and underscores replaced with spaces, words capitalized). This is presentation only — the slug stays the stable identifier, so filtering, sorting, duplicate-name disambiguation, and opening a spec all key off the slug and are unchanged. The viewer header resolves the name the same way, so the sidebar and the header always agree on what a spec is called.
 
 ## Opening a spec
 

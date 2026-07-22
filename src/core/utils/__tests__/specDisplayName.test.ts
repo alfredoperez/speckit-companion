@@ -58,6 +58,12 @@ describe('resolveSpecDisplayName', () => {
         expect(resolveSpecDisplayName(undefined, 'my-feature')).toBe('My Feature');
     });
 
+    it('replaces underscores as well as dashes when humanizing the slug', () => {
+        expect(resolveSpecDisplayName(undefined, 'my_feature')).toBe('My Feature');
+        expect(resolveSpecDisplayName(undefined, '042_readable_spec_names'))
+            .toBe('Readable Spec Names');
+    });
+
     it('is stable / idempotent for the same inputs', () => {
         const a = resolveSpecDisplayName(undefined, '515-readable-spec-names');
         const b = resolveSpecDisplayName(undefined, '515-readable-spec-names');
