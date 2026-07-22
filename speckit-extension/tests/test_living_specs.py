@@ -809,7 +809,8 @@ class ApplyDeltasTests(unittest.TestCase):
 
     # --- Applied, not attempted ---
 
-    def test_unmatched_targets_are_not_counted_as_applied(self) -> None:
+    def test_unmatched_modified_is_promoted_to_added(self) -> None:
+        # A MODIFIED with no existing heading to replace is a new requirement mis-labeled — promote it to ADDED (append), never drop it.
         d = wc.parse_spec_deltas(
             "## MODIFIED Requirements\n\n"
             "### Ghost one\n\n#### Scenario: a\n- x\n\n"
@@ -817,8 +818,19 @@ class ApplyDeltasTests(unittest.TestCase):
             "### Ghost three\n\n#### Scenario: c\n- z\n")
         self.assertEqual(len(d["modified"]), 3)
         out, applied = wc.apply_deltas(TODOS_LIVING, d)
-        self.assertEqual(out, TODOS_LIVING)
+        self.assertNotEqual(out, TODOS_LIVING)
+        self.assertIn("### Ghost one", out)
+        self.assertIn("### Ghost three", out)
         self.assertEqual(applied["modified"], 0)
+        self.assertEqual(applied["promoted"], 3)
+
+    def test_promoted_modified_is_idempotent_on_re_fold(self) -> None:
+        d = wc.parse_spec_deltas(
+            "## MODIFIED Requirements\n\n### Ghost one\n\n#### Scenario: a\n- x\n")
+        once, _ = wc.apply_deltas(TODOS_LIVING, d)
+        twice, applied = wc.apply_deltas(once, d)
+        self.assertEqual(twice, once)               # already present → not re-added
+        self.assertEqual(applied["promoted"], 0)
 
     def test_partial_match_counts_only_what_landed(self) -> None:
         d = wc.parse_spec_deltas(
@@ -1071,7 +1083,8 @@ class FoldLivingSpecTests(unittest.TestCase):
         log = self._fold_log(fdir)
         self.assertIn("+1 added, ~0 modified", log)
         self.assertNotIn("~2 modified", log)
-        self.assertIn("2 change(s) skipped", log)
+        self.assertIn("2 added (MODIFIED with no existing match)", log)
+        self.assertNotIn("already up to date", log)
 
     def test_fold_log_is_unchanged_when_everything_applies(self) -> None:
         root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},

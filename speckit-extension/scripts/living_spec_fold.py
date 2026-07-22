@@ -102,7 +102,10 @@ def apply_deltas(living_text: str, deltas: dict) -> tuple[str, dict]:
 
     ADDED appends a requirement, MODIFIED replaces the matching requirement in
     place, REMOVED deletes it, RENAMED rewrites the matching heading's name.
-    Unmatched MODIFIED/REMOVED/RENAMED targets are skipped (best-effort).
+    Unmatched REMOVED/RENAMED targets are skipped (best-effort). An unmatched
+    MODIFIED (no existing heading to replace) is promoted to ADDED and appended,
+    counted under `promoted`, so a genuinely-new requirement authored under
+    `## MODIFIED Requirements` still lands instead of being silently dropped.
 
     Re-applying a delta set to its own output is a no-op. ADDED runs last, so it
     resolves its heading through this delta set's renames before both the
@@ -118,7 +121,7 @@ def apply_deltas(living_text: str, deltas: dict) -> tuple[str, dict]:
 
     Returns the updated text and the per-verb count of what was applied."""
     lines = living_text.splitlines()
-    applied = {"added": 0, "modified": 0, "removed": 0, "renamed": 0}
+    applied = {"added": 0, "modified": 0, "removed": 0, "renamed": 0, "promoted": 0}
     renames = _rename_map(deltas)
     modified_bodies = {head: section for head, section in deltas["modified"]}
 
@@ -144,6 +147,7 @@ def apply_deltas(living_text: str, deltas: dict) -> tuple[str, dict]:
             del lines[span[0]:span[1]]
             applied["removed"] += 1
 
+    promoted_modified: list[tuple[str, str]] = []
     for head, section in deltas["modified"]:
         span = _living_requirement_span(lines, head)
         if span:
@@ -152,6 +156,8 @@ def apply_deltas(living_text: str, deltas: dict) -> tuple[str, dict]:
                 body.append("")  # keep the blank line separating the next requirement
             lines[span[0]:span[1]] = body
             applied["modified"] += 1
+        else:
+            promoted_modified.append((head, section))
 
     appended = "\n".join(lines).rstrip() + "\n"
     for head, section in deltas["added"]:
@@ -161,6 +167,13 @@ def apply_deltas(living_text: str, deltas: dict) -> tuple[str, dict]:
             continue  # already present under its final heading
         appended = appended.rstrip() + "\n\n" + _retitle(body, target).rstrip() + "\n"
         applied["added"] += 1
+
+    for head, section in promoted_modified:
+        target = _resolve_rename(head, renames)
+        if _living_requirement_span(appended.splitlines(), target) is not None:
+            continue  # already present under its final heading
+        appended = appended.rstrip() + "\n\n" + _retitle(section, target).rstrip() + "\n"
+        applied["promoted"] += 1
     return appended, applied
 
 
@@ -389,12 +402,24 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
         except OSError:
             continue
         after, applied = apply_deltas(before, cap_deltas)
+        unmatched = (
+            (len(cap_deltas["modified"]) - applied["modified"] - applied["promoted"])
+            + (len(cap_deltas["removed"]) - applied["removed"])
+            + (len(cap_deltas["renamed"]) - applied["renamed"])
+        )
         if after == before:
-            print(
-                f"[companion] Living-spec fold: {cap['name']} already up to date "
-                f"({spec_rel}); no change.",
-                file=sys.stderr,
-            )
+            if unmatched:
+                print(
+                    f"[companion] Living-spec fold: {cap['name']} — {unmatched} "
+                    f"delta(s) matched no requirement in {spec_rel}; nothing applied.",
+                    file=sys.stderr,
+                )
+            else:
+                print(
+                    f"[companion] Living-spec fold: {cap['name']} already up to date "
+                    f"({spec_rel}); no change.",
+                    file=sys.stderr,
+                )
             continue
         try:
             living_path.parent.mkdir(parents=True, exist_ok=True)
@@ -407,10 +432,12 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
             f"+{applied['added']} added, ~{applied['modified']} modified, "
             f"-{applied['removed']} removed, ↻{applied['renamed']} renamed"
         )
-        unmatched = sum(len(cap_deltas[verb]) - applied[verb]
-                        for verb in ("modified", "removed", "renamed"))
         already_present = len(cap_deltas["added"]) - applied["added"]
         reasons = []
+        if applied["promoted"]:
+            reasons.append(
+                f"{applied['promoted']} added (MODIFIED with no existing match)"
+            )
         if unmatched:
             reasons.append(f"{unmatched} change(s) skipped: no matching requirement heading")
         if already_present:
