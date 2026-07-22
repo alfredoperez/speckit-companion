@@ -1,7 +1,7 @@
 {
   "id": "S3-normal-adds-req-central",
   "title": "a normal change folds one requirement into the central spec",
-  "ranAt": "2026-07-22T17:13:12.073Z",
+  "ranAt": "2026-07-22T17:20:59.606Z",
   "mode": "real+seeded-prose",
   "verdict": "PASS",
   "assertions": [

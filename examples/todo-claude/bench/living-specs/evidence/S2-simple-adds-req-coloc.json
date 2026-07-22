@@ -1,7 +1,7 @@
 {
   "id": "S2-simple-adds-req-coloc",
   "title": "a fast-path change folds one requirement into the colocated spec",
-  "ranAt": "2026-07-22T17:13:11.704Z",
+  "ranAt": "2026-07-22T17:20:59.245Z",
   "mode": "real+seeded-prose",
   "verdict": "PASS",
   "assertions": [

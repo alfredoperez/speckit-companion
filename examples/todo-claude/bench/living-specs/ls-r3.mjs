@@ -94,15 +94,15 @@ function runFold(root, featureRel) {
 }
 
 function runResolver(root, args) {
-  return sh(root, ['--root', root, ...args], RESOLVER, `python3 ${rel(RESOLVER)} --root . ${args.join(' ')}`)
+  return sh(root, ['--root', '.', ...args], RESOLVER, `python3 ${rel(RESOLVER)} --root . ${args.join(' ')}`)
 }
 
 function runDrift(root, args = []) {
-  return sh(root, ['--root', root, ...args], DRIFT, `python3 ${rel(DRIFT)} --root . ${args.join(' ')}`.trim())
+  return sh(root, ['--root', '.', ...args], DRIFT, `python3 ${rel(DRIFT)} --root . ${args.join(' ')}`.trim())
 }
 
 function runRegister(root, args) {
-  return sh(root, ['--root', root, ...args], REGISTER, `python3 ${rel(REGISTER)} --root . ${args.join(' ')}`)
+  return sh(root, ['--root', '.', ...args], REGISTER, `python3 ${rel(REGISTER)} --root . ${args.join(' ')}`)
 }
 
 // Inline git identity so the harness works without global git config (matches
