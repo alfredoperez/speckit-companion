@@ -121,7 +121,7 @@ def apply_deltas(living_text: str, deltas: dict) -> tuple[str, dict]:
 
     Returns the updated text and the per-verb count of what was applied."""
     lines = living_text.splitlines()
-    applied = {"added": 0, "modified": 0, "removed": 0, "renamed": 0, "promoted": 0}
+    applied = {"added": 0, "modified": 0, "removed": 0, "renamed": 0, "promoted": 0, "promoted_present": 0}
     renames = _rename_map(deltas)
     modified_bodies = {head: section for head, section in deltas["modified"]}
 
@@ -171,7 +171,8 @@ def apply_deltas(living_text: str, deltas: dict) -> tuple[str, dict]:
     for head, section in promoted_modified:
         target = _resolve_rename(head, renames)
         if _living_requirement_span(appended.splitlines(), target) is not None:
-            continue  # already present under its final heading
+            applied["promoted_present"] += 1  # redundant: the requirement is already there
+            continue
         appended = appended.rstrip() + "\n\n" + _retitle(section, target).rstrip() + "\n"
         applied["promoted"] += 1
     return appended, applied
@@ -403,7 +404,7 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
             continue
         after, applied = apply_deltas(before, cap_deltas)
         unmatched = (
-            (len(cap_deltas["modified"]) - applied["modified"] - applied["promoted"])
+            (len(cap_deltas["modified"]) - applied["modified"] - applied["promoted"] - applied["promoted_present"])
             + (len(cap_deltas["removed"]) - applied["removed"])
             + (len(cap_deltas["renamed"]) - applied["renamed"])
         )

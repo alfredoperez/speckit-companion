@@ -831,6 +831,7 @@ class ApplyDeltasTests(unittest.TestCase):
         twice, applied = wc.apply_deltas(once, d)
         self.assertEqual(twice, once)               # already present → not re-added
         self.assertEqual(applied["promoted"], 0)
+        self.assertEqual(applied["promoted_present"], 1)   # counted as redundant, not unmatched
 
     def test_partial_match_counts_only_what_landed(self) -> None:
         d = wc.parse_spec_deltas(
@@ -1094,6 +1095,19 @@ class FoldLivingSpecTests(unittest.TestCase):
         log = self._fold_log(fdir)
         self.assertIn("+1 added, ~0 modified, -0 removed, ↻0 renamed", log)
         self.assertNotIn("skipped", log)
+
+    def test_redundant_promoted_modified_reports_up_to_date_not_a_skip(self) -> None:
+        # A MODIFIED whose requirement is already in the living spec (a re-fold, or
+        # a heading already present) is redundant — the receipt must say "up to date",
+        # not warn "matched no requirement".
+        already = TODOS_LIVING.rstrip() + "\n\n### Due dates\n\n#### Scenario: s\n- a\n"
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": already},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## MODIFIED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+        log = self._fold_log(fdir)
+        self.assertIn("already up to date", log)
+        self.assertNotIn("matched no requirement", log)
 
     def test_fold_log_names_the_right_reason_for_a_skipped_addition(self) -> None:
         root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
