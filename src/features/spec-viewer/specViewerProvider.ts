@@ -312,7 +312,7 @@ export class SpecViewerProvider {
     const specDirectory = path.dirname(filePath);
     const documentType = livingTierType(path.basename(filePath));
 
-    reportLivingSpecOpened(filePath);
+    reportLivingSpecOpened(livingCapabilityName(filePath));
 
     const existing = this.panels.get(specDirectory);
     if (existing?.state.living) {
