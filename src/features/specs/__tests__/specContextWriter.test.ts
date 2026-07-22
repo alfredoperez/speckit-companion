@@ -151,6 +151,24 @@ describe('setStepStarted', () => {
         const sh = deriveStepHistory(ctx.history, ctx.currentStep, ctx.status);
         expect(sh.plan.durationTrusted).toBe(true);
     });
+
+    // The forceStatus recovery path opts out of the dedup (dedupe=false) so it can
+    // re-stamp an honest override boundary on an already-started stranded step.
+    // Without this, a manual recovery could not record a fresh start.
+    it('appends a second start when dedupe is disabled, even though one exists', () => {
+        const existing = entry({ step: 'plan', substep: null, kind: 'start', by: 'extension', at: '2026-04-29T01:00:00Z' });
+        const ctx = makeContext({ currentStep: 'plan', status: 'planning', history: [existing] });
+
+        const result = setStepStarted(ctx, 'plan', 'user', '2026-04-29T01:05:00Z', false);
+
+        const planStarts = result.history.filter(
+            e => e.step === 'plan' && e.kind === 'start' && e.substep == null
+        );
+        expect(planStarts).toHaveLength(2);
+        expect(planStarts[1].at).toBe('2026-04-29T01:05:00Z');
+        expect(result.currentStep).toBe('plan');
+        expect(result.status).toBe('planning');
+    });
 });
 
 describe('setStepCompleted', () => {

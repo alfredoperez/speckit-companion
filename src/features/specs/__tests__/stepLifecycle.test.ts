@@ -3,6 +3,7 @@ import {
     completeStep,
     startSubstep,
     completeSubstep,
+    forceStatus,
 } from '../stepLifecycle';
 
 const SPEC_DIR = '/workspace/specs/061-extension-lifecycle-writes';
@@ -68,6 +69,21 @@ describe('stepLifecycle', () => {
                 expect.any(Object),
                 'tasks',
                 'extension'
+            );
+        });
+    });
+
+    describe('forceStatus', () => {
+        it('re-stamps a start with the dedup disabled for an in-flight status', async () => {
+            await forceStatus(SPEC_DIR, 'planning', 'user');
+            const [, mutate] = mockUpdateSpecContext.mock.calls[0];
+            mutate({ currentStep: 'implement', status: 'implementing', history: [] });
+            expect(mockSetStepStarted).toHaveBeenCalledWith(
+                expect.any(Object),
+                'plan',
+                'user',
+                undefined,
+                false
             );
         });
     });
