@@ -49,15 +49,30 @@ def _skipped_capability_names(feature_dir: Path) -> set[str]:
     }
 
 
+def _synced_capability_names(feature_dir: Path) -> set[str]:
+    """The capability names already folded on a prior run (livingSpecs.synced),
+    or empty. A re-fold writes nothing new (idempotent), so its in-run synced list
+    is empty — but the capability IS accounted for. Best-effort."""
+    try:
+        ctx = read_ctx(feature_dir / ".spec-context.json")
+    except Exception:  # noqa: BLE001 - best-effort
+        return set()
+    synced = (ctx.get("livingSpecs") or {}).get("synced") or []
+    return {c for c in synced if isinstance(c, str) and c.strip()}
+
+
 def _accountability_gap(feature_dir: Path, synced) -> list[str]:
-    """Loaded capabilities completion neither folded (synced) nor recorded a skip
-    for. The core accountability check — computed in BOTH fold branches so a partial
+    """Loaded capabilities completion neither folded nor recorded a skip for. The
+    core accountability check — computed in BOTH fold branches so a partial
     multi-capability fold (one delta authored, another capability forgotten)
-    can't silence the gap the way the no-delta-only check did."""
+    can't silence the gap the way the no-delta-only check did. A capability counts
+    as accounted if it was folded THIS run (`synced` arg), folded on a PRIOR run
+    (persisted livingSpecs.synced — so an idempotent re-fold doesn't false-alarm),
+    or explicitly skipped."""
     loaded = _loaded_capabilities(feature_dir)
     if not loaded:
         return []
-    accounted = set(synced) | _skipped_capability_names(feature_dir)
+    accounted = set(synced) | _synced_capability_names(feature_dir) | _skipped_capability_names(feature_dir)
     return [c for c in loaded if c not in accounted]
 
 
@@ -388,7 +403,9 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
         loaded = _loaded_capabilities(feature_dir)
         if loaded:
             skipped = _skipped_capability_names(feature_dir)
-            unaccounted = [c for c in loaded if c not in skipped]
+            # Accounted = folded on a prior run (persisted synced) OR skipped, so a
+            # re-fold of an already-synced spec doesn't false-alarm.
+            unaccounted = _accountability_gap(feature_dir, [])
             if unaccounted:
                 # The loud, actionable backstop: a capability was loaded, no delta
                 # was authored, and no skip note explains why. This is the exact
@@ -404,14 +421,15 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
                     file=sys.stderr,
                 )
             else:
-                # Every loaded capability carries an explicit skip note: this change
-                # genuinely touched none of their behavior. "Correctly nothing,"
+                # Every loaded capability is accounted for — folded on an earlier
+                # run and/or carrying an explicit skip note. "Correctly nothing,"
                 # visibly distinct from the unaccounted case above.
                 print(
                     f"[companion] Living-spec fold: all {len(loaded)} loaded "
                     f"capabilit{'y' if len(loaded) == 1 else 'ies'} "
-                    f"({', '.join(loaded)}) have explicit skip notes; nothing to "
-                    "fold — correctly nothing.",
+                    f"({', '.join(loaded)}) {'is' if len(loaded) == 1 else 'are'} "
+                    "accounted for (folded earlier or skipped); nothing to fold — "
+                    "correctly nothing.",
                     file=sys.stderr,
                 )
         else:
