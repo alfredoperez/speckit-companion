@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-07-22
+
 ### Added
 
 - **The commands themselves are now under test, not just what they capture.** A new command-quality eval scores a finished spec on three things a human used to judge by eyeball: did the run write too much (each of spec, plan, and tasks is measured against a size budget with a warn band and a hard fail band), did it waste time (a step whose start/finish wasn't reliably stamped is called out as untrusted, a step far out of line with the others is flagged, and the old everything-finished-in-the-same-second task-journaling bug shape fails outright), and does each command prompt correctly (the commands that must never stop to ask — the lifecycle hooks, the living-spec reports and sync, mark-complete, status, resume, classify — are scanned for ask-the-user instructions, while the clarify step is required to ask). It runs on every pull request against two real completed specs and the shipped command sources, so a command that regresses into verbosity, burst journaling, or a wrong prompt now fails the build instead of shipping quietly.

@@ -10,7 +10,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/extension-companion-0b6dd9" alt="extension: companion">
-  <img src="https://img.shields.io/badge/version-0.18.0-0b6dd9" alt="version 0.18.0">
+  <img src="https://img.shields.io/badge/version-0.20.0-0b6dd9" alt="version 0.20.0">
   <img src="https://img.shields.io/badge/spec--kit-%E2%89%A50.9.5-008080" alt="requires spec-kit >= 0.9.5">
   <img src="https://img.shields.io/badge/license-MIT-gold" alt="license MIT">
 </p>
