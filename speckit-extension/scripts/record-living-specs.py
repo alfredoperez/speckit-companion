@@ -39,24 +39,36 @@ def _load_resolver():
     return mod
 
 
-def record(feature_dir: Path, changed: list[str], root: str) -> list[str]:
+def record(feature_dir: Path, changed: list[str], root: str) -> tuple[list[str], str]:
     """Resolve the capabilities that own `changed` and record them leaf-first.
 
-    Returns the recorded names (possibly empty). Writes nothing when the feature
-    is off, no files are given, or nothing matches."""
+    Returns (recorded names, outcome) where outcome is one of
+    `not-configured` / `no-match` / `loaded`. Writes `livingSpecs.loaded` only
+    when something matched; the outcome drives the deterministic breadcrumb."""
     rsp = _load_resolver()
     living = rsp.load_living(root)
     if not living.get("enabled"):
-        return []
+        return [], "not-configured"
     files = [f for f in changed if f and f.strip()]
     if not files:
-        return []
+        return [], "no-match"
     names = [m["name"] for m in rsp.match_changed(files, living, root)]
     if not names:
-        return []
+        return [], "no-match"
     from capture import set_living_specs_loaded
     set_living_specs_loaded(feature_dir, names)
-    return names
+    return names, "loaded"
+
+
+def _breadcrumb(names: list[str], outcome: str) -> str:
+    """The one-line audit trail the specify command used to ask the AI to write —
+    now derived from the script's own outcome, so 'correctly did nothing' can't be
+    misjudged as 'not configured'."""
+    if outcome == "loaded":
+        return f"living specs loaded ({', '.join(names)})"
+    if outcome == "no-match":
+        return "living specs evaluated — no capabilities matched"
+    return "living specs evaluated — skipped (not configured)"
 
 
 def main(argv=None) -> int:
@@ -75,7 +87,9 @@ def main(argv=None) -> int:
         if not root:
             from spec_context import _repo_root_for
             root = str(_repo_root_for(feature_dir))
-        names = record(feature_dir, args.changed, root)
+        names, outcome = record(feature_dir, args.changed, root)
+        from capture import set_fields
+        set_fields(feature_dir, [f"last_action={_breadcrumb(names, outcome)}"])
         if names:
             print(f"[companion] Recorded living specs ({', '.join(names)}) in {feature_dir}/.spec-context.json")
     except Exception as exc:  # never fail the host command

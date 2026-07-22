@@ -57,38 +57,39 @@ class RecordLivingSpecsTests(unittest.TestCase):
         root = _make_root(ENABLED_REGISTRY)
         fd = root / "specs" / "001-feature"
         fd.mkdir(parents=True)
-        names = rls.record(fd, ["src/checkout/cart/basket.ts"], str(root))
+        names, outcome = rls.record(fd, ["src/checkout/cart/basket.ts"], str(root))
         # Both the leaf (checkout-cart) and its parent (checkout) own the file;
         # the resolver returns most-specific first.
         self.assertEqual(names, ["checkout-cart", "checkout"])
+        self.assertEqual(outcome, "loaded")
         self.assertEqual(_loaded(fd), {"loaded": ["checkout-cart", "checkout"]})
 
     def test_disabled_registry_is_a_noop(self) -> None:
         root = _make_root(DISABLED_REGISTRY)
         fd = root / "specs" / "001-feature"
         fd.mkdir(parents=True)
-        self.assertEqual(rls.record(fd, ["src/checkout/cart/basket.ts"], str(root)), [])
+        self.assertEqual(rls.record(fd, ["src/checkout/cart/basket.ts"], str(root))[0], [])
         self.assertIsNone(_loaded(fd))
 
     def test_absent_registry_is_a_noop(self) -> None:
         root = _make_root(None)
         fd = root / "specs" / "001-feature"
         fd.mkdir(parents=True)
-        self.assertEqual(rls.record(fd, ["src/checkout/cart/basket.ts"], str(root)), [])
+        self.assertEqual(rls.record(fd, ["src/checkout/cart/basket.ts"], str(root))[0], [])
         self.assertIsNone(_loaded(fd))
 
     def test_no_match_is_a_noop(self) -> None:
         root = _make_root(ENABLED_REGISTRY)
         fd = root / "specs" / "001-feature"
         fd.mkdir(parents=True)
-        self.assertEqual(rls.record(fd, ["docs/README.md"], str(root)), [])
+        self.assertEqual(rls.record(fd, ["docs/README.md"], str(root))[0], [])
         self.assertIsNone(_loaded(fd))
 
     def test_empty_changed_is_a_noop(self) -> None:
         root = _make_root(ENABLED_REGISTRY)
         fd = root / "specs" / "001-feature"
         fd.mkdir(parents=True)
-        self.assertEqual(rls.record(fd, ["", "   "], str(root)), [])
+        self.assertEqual(rls.record(fd, ["", "   "], str(root))[0], [])
         self.assertIsNone(_loaded(fd))
 
     def test_recording_is_idempotent(self) -> None:
@@ -129,7 +130,7 @@ class RecordLivingSpecsTests(unittest.TestCase):
         root = _make_root("- just\n- a\n- list\n")
         fd = root / "specs" / "001-feature"
         fd.mkdir(parents=True)
-        self.assertEqual(rls.record(fd, ["src/checkout/pay.ts"], str(root)), [])
+        self.assertEqual(rls.record(fd, ["src/checkout/pay.ts"], str(root))[0], [])
         self.assertIsNone(_loaded(fd))
 
     def test_non_utf8_registry_is_a_noop(self) -> None:
@@ -139,8 +140,47 @@ class RecordLivingSpecsTests(unittest.TestCase):
         (root / "living-specs.yml").write_bytes(b"enabled: true\ncap: \xff\xfe\n")
         fd = root / "specs" / "001-feature"
         fd.mkdir(parents=True)
-        self.assertEqual(rls.record(fd, ["src/checkout/pay.ts"], str(root)), [])
+        self.assertEqual(rls.record(fd, ["src/checkout/pay.ts"], str(root))[0], [])
         self.assertIsNone(_loaded(fd))
+
+
+def _last_action(feature_dir: Path):
+    ctx_path = feature_dir / ".spec-context.json"
+    if not ctx_path.is_file():
+        return None
+    return json.loads(ctx_path.read_text(encoding="utf-8")).get("last_action")
+
+
+class BreadcrumbTests(unittest.TestCase):
+    """The deterministic audit trail replaces the AI's prose gate (#535): the
+    script itself stamps last_action for every outcome, so 'correctly did
+    nothing' can't be misjudged as 'not configured'."""
+
+    def _run(self, registry, changed):
+        root = _make_root(registry)
+        fd = root / "specs" / "001-feature"
+        fd.mkdir(parents=True)
+        rls.main(["--feature-dir", str(fd), "--changed", *changed, "--root", str(root)])
+        return fd
+
+    def test_loaded_outcome_writes_named_breadcrumb(self) -> None:
+        fd = self._run(ENABLED_REGISTRY, ["src/checkout/pay.ts"])
+        self.assertEqual(_last_action(fd), "living specs loaded (checkout)")
+
+    def test_no_match_writes_evaluated_breadcrumb(self) -> None:
+        fd = self._run(ENABLED_REGISTRY, ["docs/README.md"])
+        self.assertEqual(_last_action(fd), "living specs evaluated — no capabilities matched")
+        # No capability recorded, but the breadcrumb still proves the gate ran.
+        self.assertIsNone(_loaded(fd))
+
+    def test_disabled_writes_not_configured_breadcrumb(self) -> None:
+        fd = self._run(DISABLED_REGISTRY, ["src/checkout/pay.ts"])
+        self.assertEqual(_last_action(fd), "living specs evaluated — skipped (not configured)")
+        self.assertIsNone(_loaded(fd))
+
+    def test_absent_registry_writes_not_configured_breadcrumb(self) -> None:
+        fd = self._run(None, ["src/checkout/pay.ts"])
+        self.assertEqual(_last_action(fd), "living specs evaluated — skipped (not configured)")
 
 
 if __name__ == "__main__":

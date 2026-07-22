@@ -1520,6 +1520,21 @@ class MultiFlagDispatchTests(unittest.TestCase):
         self.assertEqual(ctx["step_summaries"]["plan"]["summary"], "s1")
         self.assertEqual(ctx["livingSpecs"]["loaded"], ["todos"])
 
+    def test_living_spec_skip_parses_name_and_reason(self) -> None:
+        rc, out = self._run(["--living-spec-skip", "todos: render-only refactor"])
+        self.assertEqual(rc, 0)
+        self.assertEqual(
+            _ctx(self.fd)["livingSpecs"]["skipped"],
+            [{"name": "todos", "reason": "render-only refactor"}],
+        )
+        self.assertIn("skip note", out)
+
+    def test_living_spec_skip_never_writes_lifecycle_history(self) -> None:
+        self._run(["--living-spec-skip", "todos: reason"])
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["history"], [])
+        self.assertEqual(ctx["status"], "planning")
+
     def test_a_classification_alongside_a_decision_records_both(self) -> None:
         rc, _ = self._run([
             "--classification", '{"projectedFiles": 2, "projectedTasks": 3, "verdict": "simple"}',

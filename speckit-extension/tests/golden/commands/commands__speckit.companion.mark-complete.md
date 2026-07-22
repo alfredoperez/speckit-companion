@@ -37,13 +37,23 @@ completed`, preserving the canonical invariant that the last `history` entry's s
 
 ### Fold living-spec deltas (opt-in, best-effort)
 
-**Author the deltas first.** Living specs stay current only if completion writes the change back, so
-before folding, read `livingSpecs.loaded` in this feature's `.spec-context.json`. For each loaded
-capability whose *behavior* this feature actually changed, append a delta block to this feature's
-`spec.md` — `## ADDED / MODIFIED / REMOVED / RENAMED Requirements` — capturing the real new or
-changed requirement, and mark each block with `<!-- capability: <name> -->` so the fold routes it to
-the right spec. Write one block per changed capability; skip the ones you merely read, and never
-invent requirements to pad the list. The write lands in the feature's PR diff, so it is reviewed there.
+**Account for every loaded capability first — a delta or an explicit skip, never silence.** Living
+specs stay current only if completion writes the change back, so before folding, read
+`livingSpecs.loaded` in this feature's `.spec-context.json` and go through **every** name in it. For a
+loaded capability whose *behavior* this feature actually changed, append a delta block to this
+feature's `spec.md` — `## ADDED / MODIFIED / REMOVED / RENAMED Requirements` — capturing the real new
+or changed requirement, and mark each block with `<!-- capability: <name> -->` so the fold routes it
+to the right spec. For a loaded capability this feature did **not** change (one you merely read for
+context), record an explicit skip instead — one call per untouched capability, so "correctly nothing"
+stays distinguishable from "silently nothing":
+
+```bash
+python3 .specify/extensions/companion/scripts/write-context.py --living-spec-skip "<name>: <one-line reason it wasn't changed>"
+```
+
+Never invent requirements to pad the list. By the end, every name in `livingSpecs.loaded` is
+accounted for — a delta block or a recorded skip; a capability that is neither is a hole the fold
+flags loudly. The writes land in the feature's PR diff, so they are reviewed there.
 
 After the completion write succeeds, fold the deltas you just authored into the durable living
 spec(s) — OpenSpec's "archive" step. Run from the repository root:

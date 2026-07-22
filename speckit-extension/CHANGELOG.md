@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Fixed
+
+- **Finishing a feature can no longer quietly skip a living spec it should have updated.** The write-back loop had two places where it depended on the assistant's judgement and could silently do nothing. Before drafting, whether an area's living specs applied was decided by eyeball — a wrong "not configured" call recorded nothing, so completion had nothing to fold. And at completion, writing zero updates was allowed ("skip the ones you merely read"), so a feature that loaded three capabilities could finish having updated none, looking exactly like a feature that correctly had nothing to update. Now which living specs apply is worked out and recorded automatically from the files you touched, and completion has to account for every one it loaded — either a real update or a one-line note saying why it was left alone (`--living-spec-skip "<name>: <reason>"`). A loaded capability that gets neither is called out with a loud, actionable message instead of passing silently, and the command-quality eval warns when a finished feature leaves one unaccounted. "Correctly nothing" is now a visible record, not an assumption. Still off by default and never fails your run.
+
 ## [0.20.0] - 2026-07-22
 
 ### Added

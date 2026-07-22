@@ -650,6 +650,58 @@ class RecordLoadedLivingSpecsTests(unittest.TestCase):
             self.assertIn(k, wc.PROTECTED_SET_KEYS)
 
 
+# #536 — the skip note: completion accounts for a loaded capability it did NOT
+# change with an explicit {name, reason}, so "correctly nothing" is a record, not
+# silence. Mirrors the loaded/synced writers: additive, de-duped, no lifecycle write.
+class RecordSkippedLivingSpecsTests(unittest.TestCase):
+    def _read(self, d: Path) -> dict:
+        return _json.loads((d / ".spec-context.json").read_text(encoding="utf-8"))
+
+    def test_records_name_and_reason(self) -> None:
+        d = make_ctx_dir()
+        wc.set_living_specs_skipped(d, [{"name": "todos", "reason": "render-only"}])
+        self.assertEqual(
+            self._read(d)["livingSpecs"]["skipped"],
+            [{"name": "todos", "reason": "render-only"}],
+        )
+
+    def test_dedups_on_name_first_reason_wins(self) -> None:
+        d = make_ctx_dir()
+        wc.set_living_specs_skipped(d, [{"name": "todos", "reason": "first"}])
+        wc.set_living_specs_skipped(d, [{"name": "todos", "reason": "second"}])
+        self.assertEqual(
+            self._read(d)["livingSpecs"]["skipped"],
+            [{"name": "todos", "reason": "first"}],
+        )
+
+    def test_coexists_with_loaded_without_dropping_it(self) -> None:
+        d = make_ctx_dir()
+        wc.set_living_specs_loaded(d, ["todos", "checkout"])
+        wc.set_living_specs_skipped(d, [{"name": "checkout", "reason": "unrelated"}])
+        block = self._read(d)["livingSpecs"]
+        self.assertEqual(block["loaded"], ["todos", "checkout"])
+        self.assertEqual(block["skipped"], [{"name": "checkout", "reason": "unrelated"}])
+
+    def test_no_entries_is_a_noop(self) -> None:
+        d = make_ctx_dir()
+        self.assertIsNone(wc.set_living_specs_skipped(d, []))
+        self.assertNotIn("livingSpecs", self._read(d))
+
+    def test_blank_name_is_filtered(self) -> None:
+        d = make_ctx_dir()
+        self.assertIsNone(wc.set_living_specs_skipped(d, [{"name": "  ", "reason": "x"}]))
+        self.assertNotIn("livingSpecs", self._read(d))
+
+    def test_does_not_touch_lifecycle_keys(self) -> None:
+        d = make_ctx_dir({"status": "implemented", "currentStep": "implement",
+                          "history": [{"step": "specify", "kind": "start"}]})
+        wc.set_living_specs_skipped(d, [{"name": "todos", "reason": "r"}])
+        ctx = self._read(d)
+        self.assertEqual(ctx["status"], "implemented")
+        self.assertEqual(ctx["currentStep"], "implement")
+        self.assertEqual(len(ctx["history"]), 1)
+
+
 # LS·3 — the write path (archive-as-merge): write-context.py --fold-living-spec
 # parses the feature spec's requirement deltas and folds them into the resolved
 # capability's living spec on mark-complete. Covers ADDED/MODIFIED/REMOVED/RENAMED,
@@ -1157,11 +1209,43 @@ class FoldLivingSpecTests(unittest.TestCase):
         self.assertIsNone(wc.fold_living_spec(fdir, "ai"))
         self.assertEqual(self._living(root), before)  # nothing written
         self.assertIn("todos", log)
-        self.assertIn("nothing to fold yet", log)
-        self.assertIn("no ADDED/MODIFIED/REMOVED/RENAMED delta block", log)
+        # #536: a loaded-but-unaccounted capability is the loud backstop, not a
+        # soft "nothing to fold yet." Name it and say the loop did not close.
+        self.assertIn("unaccounted", log)
+        self.assertIn("The loop did not close", log)
+        self.assertIn("--living-spec-skip", log)
         # Not an OR-string of every possible reason.
         self.assertNotIn("feature off", log)
         self.assertNotIn("already up to date", log)
+
+    # #536: an explicit skip note turns "silently nothing" into "correctly
+    # nothing" — the backstop must go quiet only when every loaded capability is
+    # accounted for.
+    def test_all_loaded_caps_skipped_is_correctly_nothing(self) -> None:
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat", "# Feat\n\nRender-only refactor, no behavior change.\n")
+        wc.set_living_specs_loaded(fdir, ["todos"])
+        wc.set_living_specs_skipped(fdir, [{"name": "todos", "reason": "render-only refactor"}])
+        before = self._living(root)
+        log = self._fold_log(fdir)
+        self.assertIsNone(wc.fold_living_spec(fdir, "ai"))
+        self.assertEqual(self._living(root), before)  # byte-identical
+        self.assertIn("correctly nothing", log)
+        self.assertIn("explicit skip notes", log)
+        self.assertNotIn("The loop did not close", log)
+
+    def test_partial_skip_still_flags_the_unaccounted_one(self) -> None:
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat", "# Feat\n\nNo delta block.\n")
+        wc.set_living_specs_loaded(fdir, ["todos", "checkout"])
+        wc.set_living_specs_skipped(fdir, [{"name": "checkout", "reason": "unrelated"}])
+        log = self._fold_log(fdir)
+        # One loaded cap is skip-accounted, the other is not → still loud, names
+        # only the unaccounted one.
+        self.assertIn("1 unaccounted (todos)", log)
+        self.assertIn("The loop did not close", log)
 
     def test_no_delta_and_no_loaded_caps_names_that_reason(self) -> None:
         root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},

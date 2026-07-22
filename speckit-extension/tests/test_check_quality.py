@@ -409,5 +409,59 @@ class CliTests(QualityEvalBase):
         self.assertEqual(ctx.exception.code, 2)
 
 
+class LivingSpecsAccountabilityTests(QualityEvalBase):
+    def _write_ctx(self, ctx: dict) -> None:
+        (self.spec_dir / ".spec-context.json").write_text(json.dumps(ctx))
+
+    def _row(self, r: "cq.Report"):
+        return {cid: (status, detail) for status, cid, detail in r.rows}.get(
+            "living-specs-accountability")
+
+    def _report(self) -> "cq.Report":
+        r = cq.Report()
+        cq.check_living_specs_accountability(r, self.spec_dir)
+        return r
+
+    def test_completed_with_unaccounted_capability_warns(self) -> None:
+        self._write_ctx({"status": "completed",
+                         "livingSpecs": {"loaded": ["todos", "checkout"], "synced": ["todos"]}})
+        status, detail = self._row(self._report())
+        self.assertEqual(status, "WARN")
+        self.assertIn("checkout", detail)
+
+    def test_completed_all_folded_passes(self) -> None:
+        self._write_ctx({"status": "completed",
+                         "livingSpecs": {"loaded": ["todos"], "synced": ["todos"]}})
+        self.assertEqual(self._row(self._report())[0], "PASS")
+
+    def test_completed_all_skipped_passes(self) -> None:
+        self._write_ctx({"status": "completed",
+                         "livingSpecs": {"loaded": ["todos"],
+                                         "skipped": [{"name": "todos", "reason": "render-only"}]}})
+        self.assertEqual(self._row(self._report())[0], "PASS")
+
+    def test_mixed_folded_and_skipped_passes(self) -> None:
+        self._write_ctx({"status": "completed",
+                         "livingSpecs": {"loaded": ["todos", "checkout"], "synced": ["todos"],
+                                         "skipped": [{"name": "checkout", "reason": "unrelated"}]}})
+        self.assertEqual(self._row(self._report())[0], "PASS")
+
+    def test_not_completed_is_not_checked(self) -> None:
+        self._write_ctx({"status": "implemented",
+                         "livingSpecs": {"loaded": ["todos"]}})
+        self.assertIsNone(self._row(self._report()))
+
+    def test_completed_with_no_loaded_caps_is_not_checked(self) -> None:
+        self._write_ctx({"status": "completed", "livingSpecs": {"loaded": []}})
+        self.assertIsNone(self._row(self._report()))
+
+    def test_warn_never_fails_the_run(self) -> None:
+        self._write_ctx({"status": "completed",
+                         "livingSpecs": {"loaded": ["todos"]}})
+        r = self._report()
+        self.assertEqual(self._row(r)[0], "WARN")
+        self.assertEqual(r.failed, 0)
+
+
 if __name__ == "__main__":
     unittest.main()
