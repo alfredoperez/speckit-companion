@@ -11,7 +11,7 @@ python3 .specify/extensions/companion/scripts/record-living-specs.py --feature-d
 | Flag | Required | Meaning |
 |---|---|---|
 | `--feature-dir <fd>` | yes | Spec directory whose `.spec-context.json` receives `livingSpecs.loaded`. |
-| `--changed <files…>` | yes | Repo-relative changed files to resolve capabilities for (append-style, one or more). |
+| `--changed <files…>` | no | Repo-relative changed files to resolve capabilities for (append-style). Defaults to empty — with no files there is nothing to resolve, so the script writes nothing and exits 0. |
 | `--root <dir>` | no | Repo root the registry + resolver read from. Defaults to the feature dir's git repo root, else cwd. |
 
 ## Behavior

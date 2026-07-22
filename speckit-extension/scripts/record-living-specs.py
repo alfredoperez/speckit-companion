@@ -64,7 +64,13 @@ def main(argv=None) -> int:
     ap.add_argument("--feature-dir", required=True, help="spec dir whose .spec-context.json receives livingSpecs.loaded")
     ap.add_argument("--changed", nargs="+", default=[], help="changed files to resolve capabilities for")
     ap.add_argument("--root", default=None, help="repo root the registry + resolver read from (default: the feature dir's git root)")
-    args = ap.parse_args(argv)
+    try:
+        args = ap.parse_args(argv)
+    except SystemExit:
+        # A malformed invocation (argparse exits 2, or --help exits 0) must not fail
+        # the host command — the recorder is best-effort. SystemExit is a
+        # BaseException, so it escapes the `except Exception` below; catch it here.
+        return 0
 
     try:
         feature_dir = Path(args.feature_dir)

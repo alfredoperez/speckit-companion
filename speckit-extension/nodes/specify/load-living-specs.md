@@ -20,5 +20,5 @@ reads: [resolve-dir]
      ```bash
      python3 .specify/extensions/companion/scripts/record-living-specs.py --feature-dir <feature_directory> --changed <in-scope files…>
      ```
-     This writes only the additive `livingSpecs.loaded` list on `.spec-context.json`; it never touches the lifecycle log, and it is a silent no-op (exit 0) when the feature is off, nothing matches, or `python3`/the script is unavailable — so it never fails the command. The AI reading above stays best-effort context for drafting; this call is the reliable record the later `plan` step and the Overview chips read.
+     This writes only the additive `livingSpecs.loaded` list on `.spec-context.json`; it never touches the lifecycle log. Once it runs, the script is a silent no-op that exits 0 when the feature is off, nothing matches, or the registry/resolver can't be read — so it never fails the command; and, exactly like every other capture call here, skip it silently if `python3` or the script is unavailable. The AI reading above stays best-effort context for drafting; this call is the reliable record the later `plan` step and the Overview chips read.
 

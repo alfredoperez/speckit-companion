@@ -109,6 +109,12 @@ class RecordLivingSpecsTests(unittest.TestCase):
         self.assertEqual(rc, 0)
         self.assertIsNone(_loaded(fd))
 
+    def test_main_exits_zero_on_malformed_invocation(self) -> None:
+        # argparse raises SystemExit (exit 2) on a bad/missing arg; that must NOT
+        # escape and fail the host command — the recorder is best-effort.
+        self.assertEqual(rls.main(["--bogus-flag"]), 0)          # unknown flag
+        self.assertEqual(rls.main([]), 0)                        # missing required --feature-dir
+
     def test_main_records_via_cli(self) -> None:
         root = _make_root(ENABLED_REGISTRY)
         fd = root / "specs" / "001-feature"
