@@ -1259,9 +1259,8 @@ class FoldLivingSpecTests(unittest.TestCase):
         wc.fold_living_spec(fdir, "ai")                       # first fold — writes + records synced
         self.assertEqual(self._ctx(fdir)["livingSpecs"]["synced"], ["todos"])
         after_first = self._living(root)
-        log = self._fold_log(fdir)                            # re-fold
-        wc.fold_living_spec(fdir, "ai")
-        self.assertEqual(self._living(root), after_first)     # byte-identical
+        log = self._fold_log(fdir)                            # the re-fold (captures its stderr)
+        self.assertEqual(self._living(root), after_first)     # byte-identical, same run as `log`
         self.assertNotIn("The loop did not close", log)
         self.assertNotIn("unaccounted", log)
 

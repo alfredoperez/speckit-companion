@@ -58,7 +58,7 @@ def _synced_capability_names(feature_dir: Path) -> set[str]:
     except Exception:  # noqa: BLE001 - best-effort
         return set()
     synced = (ctx.get("livingSpecs") or {}).get("synced") or []
-    return {c for c in synced if isinstance(c, str) and c.strip()}
+    return {c.strip() for c in synced if isinstance(c, str) and c.strip()}
 
 
 def _accountability_gap(feature_dir: Path, synced) -> list[str]:
