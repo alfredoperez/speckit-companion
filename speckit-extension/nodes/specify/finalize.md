@@ -18,12 +18,21 @@ python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <fe
 ```
 Omit the `--expectation` call when the spec declares no non-goals — never invent them.
 
+**Capture the approach (simple mode only).** A `simple` run writes the plan inline as the `## Approach` section of `spec.md` and never reaches `plan` (which is where a full run records `--set approach`). So when `verdict == "simple"`, persist that same one-line approach onto `.spec-context.json` so the viewer Overview's APPROACH card reads it (best-effort; skip silently if `python3` is unavailable):
+```bash
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --set approach="<one-line summary of the Approach section>"
+```
+
 **Record completion.** After `spec.md` is written, close the specify step — the extension stamps the real end (do **not** hand-write an `ai` complete for specify):
 ```bash
 python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step specify --status specified --kind complete --by extension
 ```
 
-**Fast-path living-spec load (simple mode only — best-effort, opt-in, read-only).** A `simple` run never reaches `plan`, which is where a full run loads living specs a second time with the touched files known. So if the pre-draft load recorded nothing (the surface wasn't known yet), do that load **now** — the touched files are known post-draft. Read `<feature_directory>/.spec-context.json`: if `livingSpecs.loaded` is already populated, skip this (never re-resolve or duplicate). Otherwise run the **living-specs load step from the top of this command** against the files this change touches — resolve the owning capabilities, read each match leaf-first, and record them with `write-context.py --living-specs <leaf> --living-specs <parent> …`. Same contract as up there: any missing config, resolver, or spec file is skipped silently and never blocks the fold.
+**Fast-path living-spec load (simple mode only — best-effort, opt-in, read-only).** A `simple` run never reaches `plan`, which is where a full run loads living specs a second time with the touched files known. So if the pre-draft load recorded nothing (the surface wasn't known yet), do that load **now** — the touched files are known post-draft. Read `<feature_directory>/.spec-context.json`: if `livingSpecs.loaded` is already populated, skip this (never re-resolve or duplicate). Otherwise record what applies with the deterministic recorder against the files this change touches — it gates on `enabled`, runs the resolver, and writes the matched capabilities (leaf-first) onto `livingSpecs.loaded` itself, so the fast path can't lose the record to a misjudged "not configured":
+```bash
+python3 .specify/extensions/companion/scripts/record-living-specs.py --feature-dir <feature_directory> --changed <files this change touches…>
+```
+You may still read the matched specs into context for drafting (best-effort), but the recorder is the reliable write. Same contract as the load step: any missing config, resolver, or spec file is a silent no-op that never blocks the fold.
 
 **Fast-path lifecycle fold (simple mode only).** When `verdict == "simple"`, record the folded `plan` and `tasks` steps so the history-driven panels read them as satisfied-by-fast-path — pairing with the lean `plan.md` / `tasks.md` files above, which make the file-driven stepper, sidebar, and implement progress agree — and the spec lands ready for implement. These are the step's real lifecycle boundaries, stamped by the extension like every other trusted step (**`--by extension`, step-level, no substep**), so the timing display counts specify, plan, and tasks as measured phases. Run them **in order, after** the specify completion above (each call stamps its own real clock — do not hand-write these, and do not run them for a `normal` verdict):
 ```bash

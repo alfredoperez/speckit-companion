@@ -1,0 +1,385 @@
+{
+  "workflow": "speckit",
+  "specName": "fastpath overview capture",
+  "branch": "522-fastpath-overview-capture",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-22T00:34:55.675Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-22T00:36:29.980Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-22T00:36:43.900Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T00:37:55.804Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T00:37:55.874Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-22T00:38:02.144Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-22T00:38:11.598Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T00:38:47.827Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-22T00:38:47.972Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-22T00:38:59.665Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T00:39:47.977Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T00:39:48.028Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T00:40:38.389Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T00:41:05.893Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T00:41:50.315Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T00:41:50.373Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T00:42:38.009Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T00:44:24.057Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T00:44:24.110Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T00:46:13.674Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-22T00:46:13.750Z"
+    }
+  ],
+  "livingSpecs": {
+    "loaded": [
+      "capture-runtime",
+      "companion-commands"
+    ],
+    "synced": [
+      "capture-runtime"
+    ]
+  },
+  "coverage": {
+    "FR-001": {
+      "title": "Fast-path finalize writes a one-line approach field onto .spec-context.json",
+      "tasks": [
+        "T004"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_record_living_specs.py",
+        ".claude/skills/eval-speckit-extension/check_capture.py::fast-path-approach"
+      ]
+    },
+    "FR-002": {
+      "title": "New deterministic recorder gates on enabled, runs the resolver, records matched capabilities leaf-first",
+      "tasks": [
+        "T001"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_record_living_specs.py::test_enabled_match_records_leaf_first"
+      ]
+    },
+    "FR-003": {
+      "title": "Recorder reuses the shipped resolver's matching logic rather than reimplementing it",
+      "tasks": [
+        "T001"
+      ]
+    },
+    "FR-004": {
+      "title": "load-living-specs and fast-path finalize call the deterministic recorder instead of AI gate-and-decide",
+      "tasks": [
+        "T005",
+        "T006"
+      ]
+    },
+    "FR-005": {
+      "title": "Recorder is best-effort, opt-in, read-only: any miss is a silent no-op exiting 0",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_record_living_specs.py::test_main_exits_zero_on_unresolvable_input",
+        "test_disabled_registry_is_a_noop"
+      ]
+    },
+    "FR-006": {
+      "title": "Recorder does not duplicate or re-resolve when livingSpecs.loaded is already populated",
+      "tasks": [
+        "T003",
+        "T006"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_record_living_specs.py::test_recording_is_idempotent"
+      ]
+    },
+    "FR-007": {
+      "title": "New script is added to package-manifest RUNTIME_SCRIPTS and --check passes",
+      "tasks": [
+        "T002"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_packaging.py"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 7,
+    "projectedTasks": 9,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "context": [
+    "living spec: capture-runtime",
+    "living spec: companion-commands",
+    "area: speckit-extension/scripts (capture writers + resolver)",
+    "area: speckit-extension/nodes/specify (finalize, load-living-specs)",
+    "constraint: recording must never fail or slow the host command (best-effort/opt-in/read-only)"
+  ],
+  "intent": "Make the fast path record approach + living-spec matches into .spec-context.json so the viewer Overview is as complete as a full run.",
+  "expectations": [
+    "not changing the viewer/Overview rendering code (it already reads ctx.approach and livingSpecs)",
+    "not making the AI's reading of living specs deterministic — only the recording"
+  ],
+  "approach": "Add --set approach to the fast-path finalize node, and a deterministic record-living-specs.py that gates on enabled, reuses resolve-spec-paths.py, and writes livingSpecs.loaded via capture.set_living_specs_loaded; node bodies call the script instead of AI gate-and-decide.",
+  "decisions": [
+    {
+      "decision": "Move living-spec recording from AI prose into a deterministic script",
+      "why": "a real fast-path run skipped it, mis-judging not-configured; run-a-script is reliable",
+      "rejected": "sharpen the prompt to insist the AI record"
+    },
+    {
+      "decision": "Reuse resolve-spec-paths.py via importlib path-load",
+      "why": "one fact one derivation; the glob/ordering rules are subtle",
+      "rejected": "reimplement matching or subprocess+JSON round-trip"
+    },
+    {
+      "decision": "approach captured simple-mode only in finalize",
+      "why": "normal-mode plan step already records approach; simple mode is the only path that folds it inline and skipped the write",
+      "rejected": "write approach in both modes"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Deterministic recorder + approach write close the two fast-path Overview gaps, all in the capture runtime + specify nodes",
+      "key_finding": "the read side already consumes ctx.approach and livingSpecs.loaded — only the write side is missing on the fast path"
+    },
+    "tasks": {
+      "summary": "10 tasks across 4 phases (foundational recorder+manifest+tests, US1 approach, US2 node bodies+assemble, polish docs+eval+validate)"
+    },
+    "implement": {
+      "summary": "Fast path now records approach + living-spec matches via a deterministic recorder, filling the viewer Overview to full-run parity"
+    }
+  },
+  "currentTask": "T010",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added record-living-specs.py: deterministic recorder that gates on enabled, reuses resolve-spec-paths.py, writes livingSpecs.loaded via capture; best-effort exit-0 on any error",
+      "files": [
+        "speckit-extension/scripts/record-living-specs.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added record-living-specs.py to package-manifest RUNTIME_SCRIPTS so a real install ships it",
+      "files": [
+        "speckit-extension/scripts/package-manifest.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added test_record_living_specs.py: 8 cases covering enabled+match leaf-first, disabled/absent/no-match/empty no-op, idempotence, and exit-0 on unresolvable input",
+      "files": [
+        "speckit-extension/tests/test_record_living_specs.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added a simple-mode --set approach capture to finalize.md so a fast-path run ends with a non-empty approach field for the Overview card",
+      "files": [
+        "speckit-extension/nodes/specify/finalize.md"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Replaced the AI gate-and-decide living-spec recording in load-living-specs.md with the deterministic record-living-specs.py call",
+      "files": [
+        "speckit-extension/nodes/specify/load-living-specs.md"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Fast-path finalize now records living specs via record-living-specs.py instead of asking the AI to gate-and-record",
+      "files": [
+        "speckit-extension/nodes/specify/finalize.md"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Regenerated assembled command bodies and re-blessed golden; assemble --check, shape-parity, golden all green; changes present in speckit.companion.specify.md",
+      "files": [
+        "speckit-extension/commands/speckit.companion.specify.md",
+        "speckit-extension/tests/golden/commands"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Documented the deterministic recorder + fast-path approach write in docs/capture-and-timing.md (#522 section)",
+      "files": [
+        "docs/capture-and-timing.md"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Added fast-path-approach (hard) and fast-path-living-specs (shape/INFO) assertions to check_capture.py; 514 fixture passes and CI quality-eval fixtures stay green",
+      "files": [
+        ".claude/skills/eval-speckit-extension/check_capture.py"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Ran full validation: deterministic proofs, npm compile+test (1751), python unittest (512), shape-parity, manifest --check, eval fixtures — all green",
+      "files": [
+        "(verification only)"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "deterministic recorder writes livingSpecs.loaded leaf-first",
+      "command": "record-living-specs.py --changed src/features/specs/... src/features/spec-viewer/...",
+      "result": "livingSpecs.loaded=[spec-viewer, specs]"
+    },
+    {
+      "what": "fast-path finalize ends with approach field",
+      "command": "write-context.py --set approach=... in a sim fast-path dir",
+      "result": "approach present"
+    },
+    {
+      "what": "TypeScript build + tests",
+      "command": "npm run compile && npm test",
+      "result": "compile clean; 1751 tests, 125 suites pass"
+    },
+    {
+      "what": "Python suite + capture/quality evals + manifest/parity/golden",
+      "command": "unittest discover; check_capture 514; check_quality strict 509/510/514; package-manifest --check; check-shape-parity",
+      "result": "512 tests OK; all evals + gates green"
+    }
+  ],
+  "last_action": "all 10 tasks done — 1751 TS + 512 py tests pass, evals + gates green"
+}

@@ -16,9 +16,9 @@ reads: [resolve-dir]
      ```
      The resolver is inert when the feature is off, so a non-empty `matched` list already means living specs apply. Read each match's `spec` path.
    - **Read the living specs, leaf first.** For each matched capability, read the `spec` path the resolver returned for it (centralized capabilities resolve to `capabilities/<name>/spec.md`; colocated ones carry their own path) into your working context **in the resolver's order — most-specific first**: the leaf capability is the **primary** frame for this change, a parent capability is the surrounding **context**. Skip any the resolver marked `"exists": false` (or that is missing on disk); load the rest. These living specs are background you must honor while drafting — they describe how the area already behaves.
-   - **Record what you loaded** so the later `plan` step reuses it instead of re-resolving (run once, listing every capability you actually read, leaf-first):
+   - **Record what applies — deterministically.** Don't hand-judge whether living specs are configured or which capabilities to record; run the deterministic recorder with the files this change touches. It re-reads the registry, gates on `enabled`, runs the same resolver, and writes the matched capabilities (leaf-first) onto `livingSpecs.loaded` itself — so the record can't be skipped by a misjudged "not configured":
      ```bash
-     python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --living-specs <leaf> --living-specs <parent> …
+     python3 .specify/extensions/companion/scripts/record-living-specs.py --feature-dir <feature_directory> --changed <in-scope files…>
      ```
-     This writes only the additive `livingSpecs.loaded` list on `.spec-context.json`; it never touches the lifecycle log. If `python3` or the script is unavailable, skip this recording without failing the command.
+     This writes only the additive `livingSpecs.loaded` list on `.spec-context.json`; it never touches the lifecycle log. Once it runs, the script is a silent no-op that exits 0 when the feature is off, nothing matches, or the registry/resolver can't be read — so it never fails the command; and, exactly like every other capture call here, skip it silently if `python3` or the script is unavailable. The AI reading above stays best-effort context for drafting; this call is the reliable record the later `plan` step and the Overview chips read.
 
