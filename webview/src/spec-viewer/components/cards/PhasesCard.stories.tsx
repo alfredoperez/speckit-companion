@@ -40,8 +40,14 @@ const trusted = (start: string, end: string) => ({
     durationTrusted: true,
 });
 
-export const CompleteTrustworthyTiming: Story = {
-    name: 'Timing · complete trustworthy run',
+// ── Overall stats only ───────────────────────────────────────
+// Completed run whose timing totals are known (started / elapsed /
+// ended). No per-phase substeps were recorded, so the card shows
+// only the overall block. The compact coverage line and phase strip
+// now live solely in the Overview, not here.
+
+export const OverallStatsOnly: Story = {
+    name: 'Overall stats — complete run',
     render: () => (
         <PhasesCard state={baseState({
             status: 'completed',
@@ -63,220 +69,70 @@ export const CompleteTrustworthyTiming: Story = {
     ),
 };
 
-export const Feature484PartialTiming: Story = {
-    name: 'Timing · 484 partial (Implement 6m 30s)',
+// ── Overall stats + per-phase events ─────────────────────────
+// A completed run whose implement phase carries recorded substeps.
+// Both unique blocks render: the Started / Elapsed / Ended overall
+// stats and the grouped per-phase event timeline.
+
+export const OverallStatsWithEvents: Story = {
+    name: 'Overall stats + per-phase events',
     render: () => (
         <PhasesCard state={baseState({
             status: 'completed',
             stepHistory: {
-                specify: { startedAt: '2026-07-02T09:00:00Z', completedAt: '2026-07-02T09:04:00Z', durationTrusted: false },
-                plan: { startedAt: '2026-07-02T09:04:00Z', completedAt: '2026-07-02T09:15:00Z', durationTrusted: false },
-                tasks: { startedAt: '2026-07-02T09:15:00Z', completedAt: '2026-07-02T09:18:00Z', durationTrusted: false },
-                implement: trusted('2026-07-02T09:18:00Z', '2026-07-02T09:24:30Z'),
+                specify: trusted('2026-07-02T10:00:00Z', '2026-07-02T10:05:00Z'),
+                plan: trusted('2026-07-02T10:05:00Z', '2026-07-02T10:12:00Z'),
+                tasks: trusted('2026-07-02T10:12:00Z', '2026-07-02T10:15:00Z'),
+                implement: {
+                    ...trusted('2026-07-02T10:15:00Z', '2026-07-02T10:24:00Z'),
+                    substeps: [
+                        { name: 'phase1', startedAt: '2026-07-02T10:15:00Z', completedAt: '2026-07-02T10:20:00Z' },
+                        { name: 'code-review', startedAt: '2026-07-02T10:20:00Z', completedAt: '2026-07-02T10:24:00Z' },
+                    ],
+                },
             },
-            timing: { measuredPhases: 1, expectedPhases: 4, complete: false },
+            timing: {
+                measuredPhases: 4,
+                expectedPhases: 4,
+                complete: true,
+                startedAt: '2026-07-02T10:00:00Z',
+                endedAt: '2026-07-02T10:24:00Z',
+                elapsedMs: 1_440_000,
+            },
         })} />
     ),
 };
 
-export const AnomalousSequence: Story = {
-    name: 'Timing · anomalous overlap',
+// ── Events only (in flight, no totals) ───────────────────────
+// A run still in flight — no completed timing totals — but the live
+// specify phase has recorded substeps. The overall block is absent;
+// only the per-phase event timeline renders.
+
+export const EventsOnlyInFlight: Story = {
+    name: 'Events only — in flight (no totals)',
     render: () => (
         <PhasesCard state={baseState({
+            status: 'specifying',
+            activeStep: 'specify',
             stepHistory: {
-                specify: { startedAt: '2026-07-02T10:00:00Z', completedAt: '2026-07-02T10:10:00Z', durationTrusted: false },
-                plan: { startedAt: '2026-07-02T10:05:00Z', completedAt: '2026-07-02T10:15:00Z', durationTrusted: false },
+                specify: {
+                    startedAt: iso(300_000),
+                    completedAt: null,
+                    substeps: [
+                        { name: 'parsing', startedAt: iso(290_000), completedAt: iso(250_000) },
+                        { name: 'exploring', startedAt: iso(250_000), completedAt: iso(120_000) },
+                        { name: 'writing-spec', startedAt: iso(120_000), completedAt: null },
+                    ],
+                },
             },
         })} />
     ),
 };
-
-export const InFlightUnmeasured: Story = {
-    name: 'Timing · in flight (not measured)',
-    render: () => (
-        <PhasesCard state={baseState({
-            status: 'implementing',
-            stepHistory: {
-                implement: { startedAt: '2026-07-02T10:00:00Z', completedAt: null, durationTrusted: false },
-            },
-        })} />
-    ),
-};
-
-export const RepeatedStartUntrusted: Story = {
-    name: 'Timing · repeated start',
-    render: () => (
-        <PhasesCard state={baseState({
-            stepHistory: {
-                plan: { startedAt: '2026-07-02T10:00:00Z', completedAt: '2026-07-02T10:08:00Z', durationTrusted: false },
-            },
-        })} />
-    ),
-};
-
-export const CompletionBeforeStartUntrusted: Story = {
-    name: 'Timing · completion before start',
-    render: () => (
-        <PhasesCard state={baseState({
-            stepHistory: {
-                plan: { startedAt: '2026-07-02T10:08:00Z', completedAt: '2026-07-02T10:00:00Z', durationTrusted: false },
-            },
-        })} />
-    ),
-};
-
-// ── Specify just started, in flight ──────────────────────────
-// Mirrors the ngx-dev-toolbar screenshot moment: the specify step
-// is running; specify has startedAt, no completedAt; substeps are
-// streaming in. Duration shows "so far" because the step is live.
-
-export const SpecifyInFlight: Story = {
-    name: 'Specify in flight (just started)',
-    render: () => (
-        <PhasesCard
-            state={baseState({
-                status: 'specifying',
-                activeStep: 'specify',
-                stepHistory: {
-                    specify: { startedAt: iso(45_000), completedAt: null },
-                },
-                transitions: [
-                    { step: 'specify', substep: 'parsing', from: null, by: 'cli', at: iso(44_000) },
-                    { step: 'specify', substep: 'exploring', from: { step: 'specify', substep: 'parsing' }, by: 'cli', at: iso(40_000) },
-                    { step: 'specify', substep: 'writing-spec', from: { step: 'specify', substep: 'exploring' }, by: 'cli', at: iso(15_000) },
-                ],
-            })}
-        />
-    ),
-};
-
-// ── Specify completed, plan in flight ────────────────────────
-// User clicked the "Plan" forward button; specify got a
-// completedAt; plan has startedAt and is now the in-flight phase.
-// Specify's row reads "duration" with no "so far" suffix.
-
-export const PlanInFlight: Story = {
-    name: 'Plan in flight (specify completed)',
-    render: () => (
-        <PhasesCard
-            state={baseState({
-                status: 'planning',
-                activeStep: 'plan',
-                stepHistory: {
-                    specify: { startedAt: iso(900_000), completedAt: iso(720_000) },
-                    plan: { startedAt: iso(120_000), completedAt: null },
-                },
-                transitions: [
-                    { step: 'specify', substep: 'writing-spec', from: null, by: 'cli', at: iso(800_000) },
-                    { step: 'plan', substep: 'research', from: { step: 'specify', substep: null }, by: 'cli', at: iso(110_000) },
-                    { step: 'plan', substep: 'design', from: { step: 'plan', substep: 'research' }, by: 'cli', at: iso(60_000) },
-                ],
-            })}
-        />
-    ),
-};
-
-// ── All four phases recorded, implement in flight ───────────
-// Final state of the pipeline — specify, plan, tasks all have
-// completedAt; implement is live. The card shows a full vertical
-// timeline of every phase with extension-stamped step durations.
-
-export const FullPipelineImplementInFlight: Story = {
-    name: 'All four phases — implement in flight',
-    render: () => (
-        <PhasesCard
-            state={baseState({
-                status: 'implementing',
-                activeStep: 'implement',
-                stepHistory: {
-                    specify: { startedAt: iso(3_600_000), completedAt: iso(3_300_000) },
-                    plan: { startedAt: iso(3_300_000), completedAt: iso(2_700_000) },
-                    tasks: { startedAt: iso(2_700_000), completedAt: iso(2_400_000) },
-                    implement: { startedAt: iso(900_000), completedAt: null },
-                },
-                transitions: [
-                    { step: 'specify', substep: 'writing-spec', from: null, by: 'cli', at: iso(3_500_000) },
-                    { step: 'plan', substep: 'design', from: { step: 'specify', substep: null }, by: 'cli', at: iso(3_000_000) },
-                    { step: 'tasks', substep: null, from: { step: 'plan', substep: null }, by: 'cli', at: iso(2_600_000) },
-                    { step: 'implement', substep: 'phase1', from: { step: 'tasks', substep: null }, by: 'cli', at: iso(800_000) },
-                    { step: 'implement', substep: 'code-review', from: { step: 'implement', substep: 'phase1' }, by: 'cli', at: iso(300_000) },
-                ],
-            })}
-        />
-    ),
-};
-
-// ── Completed spec ───────────────────────────────────────────
-// Terminal state — every step has a completedAt. No "so far"
-// suffix anywhere; durations are final.
-
-export const Completed: Story = {
-    name: 'Completed (terminal state)',
-    render: () => (
-        <PhasesCard
-            state={baseState({
-                status: 'completed',
-                activeStep: 'implement',
-                stepHistory: {
-                    specify: { startedAt: iso(7_200_000), completedAt: iso(6_900_000) },
-                    plan: { startedAt: iso(6_900_000), completedAt: iso(6_300_000) },
-                    tasks: { startedAt: iso(6_300_000), completedAt: iso(6_000_000) },
-                    implement: { startedAt: iso(6_000_000), completedAt: iso(60_000) },
-                },
-                transitions: [],
-            })}
-        />
-    ),
-};
-
-// ── Overall-header span ───────────────────────────────
-// Multi-phase completed spec. The overall header at the top must
-// render all three stats with real values: "Started" (absolute of
-// the first phase start), "Total" (full span, no "so far"), and
-// "Ended" (absolute of the last phase completion). Nothing is in
-// flight, so no stat reads "in progress".
-
-export const OverallHeaderSpan: Story = {
-    name: 'Overall header span (started / total / ended)',
-    render: () => (
-        <PhasesCard
-            state={baseState({
-                status: 'completed',
-                activeStep: 'implement',
-                stepHistory: {
-                    specify: { startedAt: iso(10_800_000), completedAt: iso(10_200_000) },
-                    plan: { startedAt: iso(10_200_000), completedAt: iso(9_000_000) },
-                    tasks: { startedAt: iso(9_000_000), completedAt: iso(8_400_000) },
-                    implement: { startedAt: iso(8_400_000), completedAt: iso(3_600_000) },
-                },
-                transitions: [
-                    { step: 'specify', substep: 'writing-spec', from: null, by: 'cli', at: iso(10_700_000) },
-                    { step: 'plan', substep: 'design', from: { step: 'specify', substep: null }, by: 'cli', at: iso(10_000_000) },
-                    { step: 'tasks', substep: 'breakdown', from: { step: 'plan', substep: null }, by: 'cli', at: iso(8_800_000) },
-                    { step: 'implement', substep: 'phase1', from: { step: 'tasks', substep: null }, by: 'cli', at: iso(8_200_000) },
-                ],
-            })}
-        />
-    ),
-};
-
-// ── Per-substep timing ────────────────────────────────
-// A single phase whose stepHistory carries tracked `substeps`,
-// each with distinct startedAt/completedAt. Every substep row
-// should render its own real duration (not just an offset),
-// because tracked substeps carry both timestamps.
-
-// ── Duplicate-row collapse ────────────────────────────
-// An `implement` phase whose transitions repeat the same substep
-// name (`phase1` ×4) interspersed-then-followed by a distinct
-// `code-review`. After sort, the four `phase1` events are
-// consecutive and collapse to a single `phase1` row; `code-review`
-// remains its own row. Expect exactly two substep rows.
 
 // ── Author-at-start ───────────────────────────────────
 // Multiple substeps authored by the same actor (`cli`). The actor
 // badge must appear exactly once — in the card header, driven by
-// the first transition's `by` — and NOT repeated per substep row.
+// the first history entry's `by` — and NOT repeated per substep row.
 
 export const AuthorAtStartOnly: Story = {
     name: 'Author badge at start only (not per row)',
@@ -296,7 +152,7 @@ export const AuthorAtStartOnly: Story = {
                         ],
                     },
                 },
-                transitions: [
+                history: [
                     { step: 'specify', substep: 'parsing', from: null, by: 'cli', at: iso(290_000) },
                     { step: 'specify', substep: 'exploring', from: { step: 'specify', substep: 'parsing' }, by: 'cli', at: iso(250_000) },
                     { step: 'specify', substep: 'writing-spec', from: { step: 'specify', substep: 'exploring' }, by: 'cli', at: iso(120_000) },
@@ -306,61 +162,27 @@ export const AuthorAtStartOnly: Story = {
     ),
 };
 
-// ── In-flight "ago" ───────────────────────────────────
-// Last phase has completedAt: null. Only that phase shows the
-// relative age ("ago"); earlier completed phases do not. The
-// overall "Ended" stat reads "in progress".
+// ── Empty collapses to null ──────────────────────────────────
+// The card has phases in stepHistory but nothing unique to show —
+// no completed timing totals and no recorded per-phase events. With
+// the redundant strip gone, the card must render nothing rather than
+// an empty shell.
 
-export const InFlightAgo: Story = {
-    name: 'In-flight "ago" + overall in progress',
+export const EmptyCollapsesToNull: Story = {
+    name: 'Empty — collapses to null (no totals, no events)',
     render: () => (
-        <PhasesCard
-            state={baseState({
-                status: 'implementing',
-                activeStep: 'implement',
+        <div>
+            <p style="opacity: 0.6; font-style: italic;">
+                Phases exist but there are no timing totals and no events — nothing renders below this line:
+            </p>
+            <PhasesCard state={baseState({
+                status: 'planning',
                 stepHistory: {
-                    specify: { startedAt: iso(7_200_000), completedAt: iso(6_900_000) },
-                    plan: { startedAt: iso(6_900_000), completedAt: iso(6_300_000) },
-                    tasks: { startedAt: iso(6_300_000), completedAt: iso(6_000_000) },
-                    implement: { startedAt: iso(600_000), completedAt: null },
+                    specify: { startedAt: '2026-07-02T10:00:00Z', completedAt: '2026-07-02T10:05:00Z', durationTrusted: false },
+                    plan: { startedAt: '2026-07-02T10:05:00Z', completedAt: null, durationTrusted: false },
                 },
-                transitions: [
-                    { step: 'specify', substep: 'writing-spec', from: null, by: 'cli', at: iso(7_100_000) },
-                    { step: 'plan', substep: 'design', from: { step: 'specify', substep: null }, by: 'cli', at: iso(6_800_000) },
-                    { step: 'tasks', substep: 'breakdown', from: { step: 'plan', substep: null }, by: 'cli', at: iso(6_200_000) },
-                    { step: 'implement', substep: 'phase1', from: { step: 'tasks', substep: null }, by: 'cli', at: iso(500_000) },
-                ],
-            })}
-        />
-    ),
-};
-
-// ── Terminal-finalized completed spec ────────────────────────
-// Last phase has a real completedAt (no in-flight anywhere). No
-// step renders "so far", no "ago" badge appears, and the overall
-// "Ended" stat shows an absolute timestamp rather than "in
-// progress".
-
-export const TerminalFinalized: Story = {
-    name: 'Terminal finalized (nothing running)',
-    render: () => (
-        <PhasesCard
-            state={baseState({
-                status: 'completed',
-                activeStep: 'implement',
-                stepHistory: {
-                    specify: { startedAt: iso(9_000_000), completedAt: iso(8_700_000) },
-                    plan: { startedAt: iso(8_700_000), completedAt: iso(8_100_000) },
-                    tasks: { startedAt: iso(8_100_000), completedAt: iso(7_800_000) },
-                    implement: { startedAt: iso(7_800_000), completedAt: iso(120_000) },
-                },
-                transitions: [
-                    { step: 'specify', substep: 'writing-spec', from: null, by: 'cli', at: iso(8_900_000) },
-                    { step: 'implement', substep: 'phase1', from: { step: 'tasks', substep: null }, by: 'cli', at: iso(7_700_000) },
-                    { step: 'implement', substep: 'code-review', from: { step: 'implement', substep: 'phase1' }, by: 'cli', at: iso(600_000) },
-                ],
-            })}
-        />
+            })} />
+        </div>
     ),
 };
 
