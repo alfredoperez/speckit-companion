@@ -578,27 +578,12 @@ is finalized to its last transition's `at` instead of reading as in-flight
 forever. The AI is told (via `promptBuilder.ts`) not to write this field;
 whatever it ships on disk gets ignored.
 
-**Phases card timing.** The card surfaces all the timing it derives:
-- An **overall header** — spec-wide *started* (first group's `startedAt`),
-  *ended* (last group's `completedAt`, or *in progress*), and *total*.
-- **Active time per step** in each step heading. Elapsed is computed as the
-  sum of gaps between recorded activity timestamps, with any gap longer than
-  `IDLE_GAP_CAP_MS` (5 min) capped — so idle pauses (including an overnight gap
-  *between* substeps) don't count as work. The overall **Total** is the sum of
-  per-step active time.
-- **Per-substep timing** on each substep row — for a tracked substep, its
-  active duration (gap to the next event, idle-capped); otherwise the offset
-  from the step start (`+5s`, `+1m 30s`).
-- **The in-flight step pulses** (animated dot + accent-colored time); there is
-  no separate "last active" line (staleness is surfaced by the StaleBanner).
-- **Per-step start dates** appear only on a multi-day spec — a step shows its
-  absolute start date when it began on a different calendar day than the spec
-  start; single-day specs show no per-step dates (the whole-spec *Started* is
-  always in the header).
-- The **author (`by`) badge** appears once, on the spec-start transition —
-  not on every per-substep row (it's uniform within a phase, so repeating
-  it is noise).
-- **Timing coverage denominator.** The "Timing coverage: N of M phases" line (and whether the *Started / Elapsed / Ended* block shows at all — it appears only when coverage is complete) counts `M` as the workflow's steps that can actually be *measured*. A step flagged `untimed` in the workflow config is excluded: `mark-complete` only flips `status: completed` and never writes a start/complete boundary, so counting it would leave every finished Companion spec stuck one short of complete and the elapsed block would never render. `untimed` is the discriminator, not `actionOnly` — `implement` is action-only yet timed. So a completed Companion run reads **4 of 4** (specify/plan/tasks/implement) and shows the elapsed block; the stock 4-step workflow is unchanged.
+**Phases card timing.** The compact run-timing *summary* — the "N of M phases" coverage line and the per-phase strip with durations — lives in exactly one place, the always-visible Overview (`OverviewTiming` in `OverviewDossier.tsx`). The collapsed Phases card no longer repeats it; it keeps only the detail the strip can't hold:
+- An **overall header** — spec-wide *Started*, *Elapsed*, and *Ended* — shown only when timing coverage is complete.
+- The **per-phase recorded event timeline**, grouped by step: each recorded event renders with its offset from the step start (`+5s`, `+1m 30s`), idle-capped by `IDLE_GAP_CAP_MS` (5 min) so idle pauses don't count as work.
+- The **author (`by`) badge**, once, on the spec-start entry — not on every event row (it's uniform within a phase, so repeating it is noise).
+- **Nothing when there is nothing unique.** With the redundant strip gone, a card that has neither completed timing totals nor recorded events renders `null` rather than an empty shell (staleness is surfaced by the StaleBanner).
+- **Timing coverage denominator.** The Overview's "N of M phases" line (and whether the Phases card's *Started / Elapsed / Ended* block shows at all — it appears only when coverage is complete) counts `M` as the workflow's steps that can actually be *measured*. A step flagged `untimed` in the workflow config is excluded: `mark-complete` only flips `status: completed` and never writes a start/complete boundary, so counting it would leave every finished Companion spec stuck one short of complete and the elapsed block would never render. `untimed` is the discriminator, not `actionOnly` — `implement` is action-only yet timed. So a completed Companion run reads **4 of 4** (specify/plan/tasks/implement) and shows the elapsed block; the stock 4-step workflow is unchanged.
 
 Substep `at` values are still AI-typed when `by ∈ {cli, ai}`, so absolute
 substep times are best-effort; the offsets/durations are displayed as a

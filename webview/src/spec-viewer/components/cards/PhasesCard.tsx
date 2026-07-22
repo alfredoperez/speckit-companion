@@ -65,10 +65,8 @@ export function PhasesCard({ state }: PhasesCardProps) {
         && timing.endedAt !== undefined
         && timing.elapsedMs !== undefined;
 
-    // Per-step start dates are noise on a single-day spec; show a step's start
-    // date only when it began on a different calendar day than the spec start
-    // (i.e. a multi-day spec). With no trusted start, there's no reference day.
-    const specStartDay = timing?.startedAt ? new Date(timing.startedAt).toDateString() : null;
+    const hasEvents = groups.some(group => group.events.length > 0);
+    if (!completeTiming && !hasEvents) return null;
 
     // Author only at spec start: the first history entry's actor.
     const firstEntry = (state.history ?? [])[0];
@@ -106,39 +104,7 @@ export function PhasesCard({ state }: PhasesCardProps) {
                         </div>
                     </div>
                 )}
-                {!completeTiming && timing && timing.measuredPhases > 0 && (
-                    <p class="phases-coverage">
-                        Timing coverage: {timing.measuredPhases} of {timing.expectedPhases} phases
-                    </p>
-                )}
-                <div class="phases-strip" role="list">
-                    {groups.map((group, idx) => {
-                        const inFlight = group.completedAt === null;
-                        // Timing honesty: a step shows elapsed time only when its span
-                        // was extension-stamped; journaled steps render name-only.
-                        const trusted = state.stepHistory?.[group.step]?.durationTrusted === true;
-                        const duration = trusted && group.completedAt
-                            ? formatElapsed(Date.parse(group.completedAt) - Date.parse(group.startedAt))
-                            : null;
-                        const showStepDate = specStartDay !== null &&
-                            new Date(group.startedAt).toDateString() !== specStartDay;
-                        return (
-                            <div
-                                key={group.step}
-                                role="listitem"
-                                class={`phases-strip__node${inFlight ? ' is-in-flight' : ''}`}
-                                data-step={group.step}
-                                title={showStepDate ? formatAbsolute(group.startedAt) : undefined}
-                            >
-                                {idx > 0 && <span class="phases-strip__connector" aria-hidden="true" />}
-                                <span class="phases-strip__dot" aria-hidden="true" />
-                                <span class="phases-strip__name">{group.step}</span>
-                                {duration && <span class="phases-strip__time">{duration}</span>}
-                            </div>
-                        );
-                    })}
-                </div>
-                {groups.some(group => group.events.length > 0) && (
+                {hasEvents && (
                     <div class="phases-events" aria-label="Recorded phase events">
                         {groups.filter(group => group.events.length > 0).map(group => (
                             <div class="phases-events__group" key={`${group.step}-events`}>

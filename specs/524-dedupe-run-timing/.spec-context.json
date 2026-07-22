@@ -1,0 +1,236 @@
+{
+  "workflow": "companion",
+  "specName": "Dedupe Run Timing",
+  "branch": "524-dedupe-run-timing",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-22T10:49:59.114Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-22T10:52:21.726Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-22T10:52:21.821Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-22T10:52:21.921Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-22T10:52:22.045Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-22T10:52:22.127Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-22T11:13:10.015Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T11:14:35.004Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T11:14:35.063Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T11:17:11.941Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T11:17:12.001Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T11:17:12.062Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T11:18:35.919Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-22T11:18:36.007Z"
+    }
+  ],
+  "selectedAt": "2026-07-22T10:48:13.715Z",
+  "last_action": "all 6 tasks done — webview typechecks, webpack builds, 1769 tests pass",
+  "coverage": {
+    "FR-001": {
+      "title": "Compact run-timing summary renders in exactly one always-visible Overview location"
+    },
+    "FR-002": {
+      "title": "Phases card must not repeat the coverage line or per-phase strip"
+    },
+    "FR-003": {
+      "title": "Phases card retains overall stats and per-phase event timeline"
+    },
+    "FR-004": {
+      "title": "Phases card renders nothing when it has no unique content left",
+      "tests": [
+        "PhasesCard.stories.tsx::EmptyCollapsesToNull",
+        "PhasesCard.stories.tsx::PureDraftHidden"
+      ]
+    },
+    "FR-005": {
+      "title": "No empty timing scaffolding when a spec has no recorded timing"
+    },
+    "FR-006": {
+      "title": "Change is render-only; does not alter captured timing data"
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 4,
+    "projectedTasks": 6,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "context": [
+    "area: webview/src/spec-viewer/components (OverviewDossier + cards/PhasesCard)",
+    "constraint: render-only — no change to captured timing in .spec-context.json"
+  ],
+  "intent": "Show the run-timing summary once — Overview keeps the compact strip, Phases card keeps the deeper detail",
+  "expectations": [
+    "No change to what timing data is captured or stored in .spec-context.json",
+    "Not removing the Phases card's unique detail (overall stamps + per-phase event timeline)"
+  ],
+  "approach": "Differentiate the two components: OverviewTiming keeps the compact coverage strip; PhasesCard drops the redundant strip/coverage line, keeps overall stats + per-phase events, and renders null when nothing unique is left",
+  "livingSpecs": {
+    "loaded": [
+      "viewer-ui"
+    ]
+  },
+  "telemetryInstanceId": "aa8a1358-4837-463b-96f3-7a4b4ef93e43",
+  "currentTask": "T006",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Removed redundant phases-coverage line and phases-strip block from PhasesCard",
+      "files": [
+        "webview/src/spec-viewer/components/cards/PhasesCard.tsx"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added guard so PhasesCard returns null when it has neither overall stats nor events",
+      "files": [
+        "webview/src/spec-viewer/components/cards/PhasesCard.tsx"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Rewrote PhasesCard stories: dropped strip-only variants, kept overall-stats + events, added empty-collapses-to-null",
+      "files": [
+        "webview/src/spec-viewer/components/cards/PhasesCard.stories.tsx"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Dropped unused phases-strip and phases-coverage CSS rules; kept phases-overall/phases-events",
+      "files": [
+        "webview/styles/spec-viewer/_activity.css"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Updated viewer-states.md Phases-card timing section to reflect the trimmed card and single-home strip",
+      "files": [
+        "docs/viewer-states.md"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Verified strip/coverage render once (Overview only via dossier-timing) and Phases card keeps overall stamps + events",
+      "files": [
+        "(verification)"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "webview typecheck + webpack build",
+      "command": "npx tsc --noEmit -p tsconfig.webview.json && npm run compile-web",
+      "result": "no errors; bundle compiled successfully"
+    },
+    {
+      "what": "full jest suite",
+      "command": "npx jest",
+      "result": "1769 pass, 0 fail"
+    },
+    {
+      "what": "single-home confirmation: coverage line + phase strip render only in OverviewTiming (dossier-timing__* classes), removed phases-strip/phases-coverage from PhasesCard",
+      "command": "grep OverviewDossier.tsx + PhasesCard.tsx",
+      "result": "no overlap remains"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Differentiate granularity rather than delete: Overview keeps the compact strip, Phases card keeps overall stamps + per-phase events",
+      "why": "reader sees at-a-glance summary without expanding, detail stays where they dig",
+      "rejected": "delete the Phases card entirely"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "Removed duplicate coverage line + phase strip from PhasesCard, added null-collapse guard, kept overall stamps + events; strip now lives only in the Overview"
+    }
+  }
+}
