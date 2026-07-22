@@ -29,6 +29,7 @@ const baseState = (overrides: Partial<ViewerState>): ViewerState => ({
     activeSubstep: null,
     footer: [],
     transitions: [],
+    history: [],
     stepHistory: {},
     timing: { measuredPhases: 0, expectedPhases: 4, complete: false },
     ...overrides,
