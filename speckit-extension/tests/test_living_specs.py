@@ -1244,8 +1244,25 @@ class FoldLivingSpecTests(unittest.TestCase):
         self.assertIsNone(wc.fold_living_spec(fdir, "ai"))
         self.assertEqual(self._living(root), before)  # byte-identical
         self.assertIn("correctly nothing", log)
-        self.assertIn("explicit skip notes", log)
+        self.assertIn("accounted for", log)
         self.assertNotIn("The loop did not close", log)
+
+    def test_refold_of_a_synced_spec_does_not_false_alarm(self) -> None:
+        # A capability folded on the first run is accounted for by the persisted
+        # livingSpecs.synced; an idempotent re-fold (which writes nothing new, so
+        # its in-run synced list is empty) must NOT print "the loop did not close".
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+        wc.set_living_specs_loaded(fdir, ["todos"])
+        wc.fold_living_spec(fdir, "ai")                       # first fold — writes + records synced
+        self.assertEqual(self._ctx(fdir)["livingSpecs"]["synced"], ["todos"])
+        after_first = self._living(root)
+        log = self._fold_log(fdir)                            # the re-fold (captures its stderr)
+        self.assertEqual(self._living(root), after_first)     # byte-identical, same run as `log`
+        self.assertNotIn("The loop did not close", log)
+        self.assertNotIn("unaccounted", log)
 
     def test_partial_skip_still_flags_the_unaccounted_one(self) -> None:
         root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
