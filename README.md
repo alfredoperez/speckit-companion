@@ -304,30 +304,50 @@ The extension sends **anonymous, PII-free** usage telemetry to help prioritize w
 | Chosen workflow | the built-in id, or the literal `custom` |
 | Whether the companion spec-kit extension is installed | `true` / `false`, reported once per session |
 | Whether the install banner was shown or its Install button clicked | `shown` / `clicked`, per surface (`createSpec` / `activity`) |
+| A spec was opened in the viewer | a bare event, once per spec per session |
+| A living/capability spec was opened in the viewer | a bare event, once per capability per session |
+| A living-spec drift report was run | a bare event, per run |
+| A living-spec sync was run | a bare event, per run |
+| A steering doc was opened | a bare event, per open |
 
-**What is never collected**: prompt content, file paths, spec names, or custom workflow names — only enum-like values, booleans, versions, counts, and a random per-spec id.
+**What is never collected**: prompt content, file paths, spec names, capability names, or custom workflow names — only enum-like values, booleans, versions, counts, and a random per-spec id. The five engagement events above are **bare** — they carry no properties at all.
 
-**Reading these in App Insights**: the extension's telemetry is a **workspace-based** Application Insights resource, so events land in the `AppEvents` table (not `customEvents`). Install rate and prompt→install conversion are both computable there. Sample query — install rate and banner conversion over the last 30 days:
+**Reading these in App Insights**: query these from the Application Insights component's `customEvents` table — the event name is the `name` column and every property lives under the `customDimensions` dynamic column. Sample queries over the last 30 days:
 
 ```kusto
 // Install rate: share of activations that already have the companion spec-kit extension
-AppEvents
-| where TimeGenerated > ago(30d)
-| where Name == "extension.activated"
-| summarize installed = countif(tostring(Properties.companionInstalled) == "true"), total = count()
+customEvents
+| where timestamp > ago(30d)
+| where name endswith "extension.activated"
+| summarize installed = countif(tostring(customDimensions.companionInstalled) == "true"), total = count()
 | extend installRate = 1.0 * installed / total
 ```
 
 ```kusto
 // Prompt→install conversion: banner Install clicks vs. banner shows
-AppEvents
-| where TimeGenerated > ago(30d)
-| where Name == "companion.installPrompt"
-| summarize shown = countif(tostring(Properties.action) == "shown"),
-            clicked = countif(tostring(Properties.action) == "clicked")
-    by surface = tostring(Properties.surface)
+customEvents
+| where timestamp > ago(30d)
+| where name endswith "companion.installPrompt"
+| summarize shown = countif(tostring(customDimensions.action) == "shown"),
+            clicked = countif(tostring(customDimensions.action) == "clicked")
+    by surface = tostring(customDimensions.surface)
 | extend conversion = 1.0 * clicked / shown
 ```
+
+```kusto
+// Engagement: how often each observable action fires (spec opens, living-spec runs, steering opens)
+customEvents
+| where timestamp > ago(30d)
+| where name endswith "spec.opened"
+    or name endswith "livingSpec.opened"
+    or name endswith "livingSpec.drift"
+    or name endswith "livingSpec.sync"
+    or name endswith "steering.opened"
+| summarize count() by name
+| order by count_ desc
+```
+
+The Azure workbook lives at [`docs/telemetry-workbook.json`](./docs/telemetry-workbook.json) — paste it into the workbook's Advanced Editor.
 
 That per-spec id is a **random UUID, not the spec name or path**. It correlates a single spec's events into a funnel (created → dispatched → completed) without ever revealing which spec it is. It is stored in the spec's `.spec-context.json` so the same id rides every event for that spec.
 

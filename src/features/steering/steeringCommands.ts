@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { SteeringManager } from './steeringManager';
 import { SteeringExplorerProvider } from './steeringExplorerProvider';
+import { reportSteeringOpened } from '../../core/telemetry';
 
 /**
  * Register steering-related commands
@@ -12,6 +13,11 @@ export function registerSteeringCommands(
     outputChannel: vscode.OutputChannel
 ): void {
     context.subscriptions.push(
+        vscode.commands.registerCommand('speckit.steering.open', async (uri: vscode.Uri) => {
+            reportSteeringOpened();
+            await vscode.commands.executeCommand('vscode.open', uri);
+        }),
+
         vscode.commands.registerCommand('speckit.steering.create', async () => {
             await steeringManager.createCustom();
         }),

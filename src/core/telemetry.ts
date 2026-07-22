@@ -239,5 +239,64 @@ export function __resetInstallPromptShownDedupe(): void {
     installPromptShownSurfaces.clear();
 }
 
+/**
+ * Engagement events the extension can observe directly (a terminal-created spec
+ * never fires `spec.created`). Every one is a BARE event — no spec name, path,
+ * capability name, or any other identifier rides as a property (privacy contract).
+ */
+export const SPEC_OPENED_EVENT = 'spec.opened';
+export const LIVING_SPEC_OPENED_EVENT = 'livingSpec.opened';
+export const LIVING_SPEC_DRIFT_EVENT = 'livingSpec.drift';
+export const LIVING_SPEC_SYNC_EVENT = 'livingSpec.sync';
+export const STEERING_OPENED_EVENT = 'steering.opened';
+
+// Dedupe the two "opened-in-viewer" events per session: the viewer re-renders and
+// re-reveals the same panel constantly, and each pass would otherwise re-emit. The
+// key is a spec directory / source path used ONLY as an internal Set member — it is
+// never sent as a property, so distinct-open counts stay honest without emitting an identifier.
+const specOpenedKeys = new Set<string>();
+const livingSpecOpenedKeys = new Set<string>();
+
+/**
+ * Emit `spec.opened` once per spec per session. `specKey` is an internal dedupe
+ * key (never emitted). Records the dedupe only AFTER a real emit, so an open while
+ * telemetry is off/uninitialized can still fire once it's enabled (the #506 rule).
+ */
+export function reportSpecOpened(specKey: string): void {
+    if (specOpenedKeys.has(specKey)) return;
+    if (sendTelemetryEvent(SPEC_OPENED_EVENT)) {
+        specOpenedKeys.add(specKey);
+    }
+}
+
+/** Emit `livingSpec.opened` once per capability per session (same dedupe rules as {@link reportSpecOpened}). */
+export function reportLivingSpecOpened(specKey: string): void {
+    if (livingSpecOpenedKeys.has(specKey)) return;
+    if (sendTelemetryEvent(LIVING_SPEC_OPENED_EVENT)) {
+        livingSpecOpenedKeys.add(specKey);
+    }
+}
+
+/** Emit `livingSpec.drift` — the drift report ran. A user-initiated run, counted each time. */
+export function reportLivingSpecDrift(): void {
+    sendTelemetryEvent(LIVING_SPEC_DRIFT_EVENT);
+}
+
+/** Emit `livingSpec.sync` — living-sync ran. A user-initiated run, counted each time. */
+export function reportLivingSpecSync(): void {
+    sendTelemetryEvent(LIVING_SPEC_SYNC_EVENT);
+}
+
+/** Emit `steering.opened` — a steering doc was opened. A user-initiated open, counted each time. */
+export function reportSteeringOpened(): void {
+    sendTelemetryEvent(STEERING_OPENED_EVENT);
+}
+
+/** Reset the per-session opened dedupe. Test-only — never called in production. */
+export function __resetEngagementDedupe(): void {
+    specOpenedKeys.clear();
+    livingSpecOpenedKeys.clear();
+}
+
 // Re-export so call sites importing from this module have the filename handy.
 export { SPEC_CONTEXT_FILENAME };

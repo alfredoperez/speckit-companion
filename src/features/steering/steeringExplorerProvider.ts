@@ -229,7 +229,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                         doc.path,
                         this.context,
                         {
-                            command: 'vscode.open',
+                            command: 'speckit.steering.open',
                             title: 'Open Steering Document',
                             arguments: [vscode.Uri.file(doc.path)]
                         },
@@ -375,7 +375,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             'steering-document',
             filePath,
             this.context,
-            { command: 'vscode.open', title: 'Open Reference', arguments: [vscode.Uri.file(filePath)] },
+            { command: 'speckit.steering.open', title: 'Open Reference', arguments: [vscode.Uri.file(filePath)] },
             path.relative(root, filePath)
         );
         try {
