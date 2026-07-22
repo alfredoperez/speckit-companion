@@ -207,3 +207,15 @@ The Living Specs view's title bar SHALL carry a sync action that dispatches the 
 #### Scenario: the action is triggered
 - **WHEN** the user triggers the sync title action with the companion extension installed
 - **THEN** the sync slash command is dispatched to the AI provider and nothing is edited by the extension itself
+
+### Concurrent writes to a spec's state record are serialized, never lost
+
+Two updates to the same spec's state record that arrive at the same time both land: writes to a single spec's `.spec-context.json` run one at a time, so a concurrent read-modify-write can never overwrite another writer's entry. Writes to different specs stay independent and never wait on each other, and a failed write releases the queue for the next one instead of wedging it.
+
+#### Scenario: two updates race on the same spec
+- **WHEN** a step-progress update and another write to the same spec overlap
+- **THEN** both entries land in the lifecycle log and neither writer's change is lost
+
+#### Scenario: a queued write fails
+- **WHEN** a serialized write throws
+- **THEN** its error reaches its caller and the next queued write for that spec still runs

@@ -63,6 +63,15 @@ Both gaps the financial-page E2E exposed were closed by moving capture off the A
 
 All remaining `by:ai` writes (the plan/tasks/clarify/analyze self-closes and substep boundaries) now go through `write-context.py --finish`, never a hand-edited JSON file — so the duplicate-`status`-key corruption can't recur. They are the plan/tasks/clarify/analyze self-closes and substep boundaries. History: `Projects/speckit companion/backlog/specify-duration-and-duplicate-start.md`.
 
+## Fixed — serialized context writes (2026-07-22, #527)
+
+The extension-side write path (`updateSpecContext`) does a read-modify-write of `.spec-context.json`. When a step advanced, two of those ran effectively at once and both read the same base `history` before either wrote — so whichever landed last silently dropped the other's entry. When the loser was the step's `start`, that phase read as untrusted timing. #519 removed the *sequential* double-write; this closes the remaining *simultaneous* one.
+
+- **Per-spec write serialization.** `updateSpecContext` now chains each read-modify-write onto a per-target promise (keyed by the resolved file path), so at most one runs for a given spec at a time and a later write sees the earlier write's state. Different specs keep independent chains and still run concurrently — there is no global write gate. The chain is self-cleaning and failure-safe: a throwing write releases the queue (the next write still runs) and still propagates its error.
+- **One start-write per advance.** The dispatch caller (`executeWorkflowStep`) used to fire a progress update and then a second start-write that raced it. The progress update is now awaited and already owns complete-on-advance + start, so the redundant second start-write is gone.
+
+This is ordering only — no schema change, and the finish-only / append-only timing model is unchanged.
+
 ## Finish-only journaling (2026-06-08, v2)
 
 The 2026-06-08 fix above made per-task capture *reliable* (the hook owns it) but at the cost of *cadence*: writing a `start` **and** a `complete` for each task at one end-of-step instant produces `0s` ticks (start == complete) and a burst (all tasks share a tight window). v2 moves to a **finish-only** model that recovers honest cadence without re-introducing hand-authored JSON:
