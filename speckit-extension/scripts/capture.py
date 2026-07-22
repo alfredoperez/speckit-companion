@@ -123,6 +123,49 @@ def set_living_specs_synced(feature_dir: Path, names: list[str]) -> Path | None:
     return target
 
 
+def set_living_specs_skipped(feature_dir: Path, entries: list[dict]) -> Path | None:
+    """Record capabilities completion deliberately did NOT fold, with a reason.
+
+    Mirrors set_living_specs_synced: merges onto ctx["livingSpecs"]["skipped"]
+    (a list of {name, reason}), de-duped on the stripped name (first reason
+    wins), never touching lifecycle keys. This is what turns "silently nothing"
+    into "correctly nothing" — a loaded capability the change didn't alter records
+    an explicit skip note here instead of leaving the fold to guess. A skip must
+    both name a capability AND justify it: an entry with a blank reason is
+    dropped, so an unexplained skip never counts as accountability (the capability
+    stays unaccounted and the fold's backstop keeps nagging). With no valid
+    entries it is a no-op."""
+    cleaned: list[dict] = []
+    for e in entries:
+        if not isinstance(e, dict):
+            continue
+        name = str(e.get("name", "")).strip()
+        reason = str(e.get("reason", "")).strip()
+        if not name or not reason:
+            continue
+        cleaned.append({"name": name, "reason": reason})
+    if not cleaned:
+        return None
+    target = feature_dir / ".spec-context.json"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
+    ctx = read_ctx(target)
+    fill_required(ctx, feature_dir, branch)
+    block = ctx.get("livingSpecs")
+    if not isinstance(block, dict):
+        block = {}
+    prior = block.get("skipped")
+    merged: list = list(prior) if isinstance(prior, list) else []
+    seen = {str(e.get("name", "")).strip() for e in merged if isinstance(e, dict)}
+    for e in cleaned:
+        if e["name"] not in seen:
+            merged.append(e)
+            seen.add(e["name"])
+    block["skipped"] = merged
+    ctx["livingSpecs"] = block
+    atomic_write(target, ctx)
+    return target
+
+
 # --- Reasoning-trail capture --------------------------------------------------
 #
 # Additive, de-duped, best-effort writers for the run's reasoning trail:

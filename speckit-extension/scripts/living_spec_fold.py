@@ -34,6 +34,33 @@ def _loaded_capabilities(feature_dir: Path) -> list[str]:
     return [c for c in loaded if isinstance(c, str) and c.strip()]
 
 
+def _skipped_capability_names(feature_dir: Path) -> set[str]:
+    """The capability names completion explicitly recorded skipping
+    (livingSpecs.skipped[*].name), or empty. Best-effort."""
+    try:
+        ctx = read_ctx(feature_dir / ".spec-context.json")
+    except Exception:  # noqa: BLE001 - best-effort
+        return set()
+    skipped = (ctx.get("livingSpecs") or {}).get("skipped") or []
+    return {
+        str(e.get("name", "")).strip()
+        for e in skipped
+        if isinstance(e, dict) and str(e.get("name", "")).strip()
+    }
+
+
+def _accountability_gap(feature_dir: Path, synced) -> list[str]:
+    """Loaded capabilities completion neither folded (synced) nor recorded a skip
+    for. The core accountability check — computed in BOTH fold branches so a partial
+    multi-capability fold (one delta authored, another capability forgotten)
+    can't silence the gap the way the no-delta-only check did."""
+    loaded = _loaded_capabilities(feature_dir)
+    if not loaded:
+        return []
+    accounted = set(synced) | _skipped_capability_names(feature_dir)
+    return [c for c in loaded if c not in accounted]
+
+
 def _living_requirement_span(living_lines: list[str], heading: str) -> tuple[int, int] | None:
     """Find the [start, end) line span of a `### <heading>` requirement in a living
     spec, end being the next `###`/`##` or EOF. Heading match is exact (stripped)."""
@@ -360,15 +387,33 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
         # actionable instead of a silent success.
         loaded = _loaded_capabilities(feature_dir)
         if loaded:
-            print(
-                f"[companion] Living-spec fold: {len(loaded)} capabilit"
-                f"{'y' if len(loaded) == 1 else 'ies'} loaded "
-                f"({', '.join(loaded)}) but this feature's spec carries no "
-                "ADDED/MODIFIED/REMOVED/RENAMED delta block — nothing to fold yet. "
-                "Add a delta block for the changed requirement(s), or run "
-                "/speckit.companion.living-drift to sync the capability spec.",
-                file=sys.stderr,
-            )
+            skipped = _skipped_capability_names(feature_dir)
+            unaccounted = [c for c in loaded if c not in skipped]
+            if unaccounted:
+                # The loud, actionable backstop: a capability was loaded, no delta
+                # was authored, and no skip note explains why. This is the exact
+                # "silently nothing" state — surface it, never bless it.
+                print(
+                    f"[companion] Living-spec fold: {len(loaded)} capabilit"
+                    f"{'y' if len(loaded) == 1 else 'ies'} loaded "
+                    f"({', '.join(loaded)}), 0 delta blocks, {len(skipped)} skip "
+                    f"note(s) — {len(unaccounted)} unaccounted "
+                    f"({', '.join(unaccounted)}). The loop did not close: for each, "
+                    "author a delta block or record a skip "
+                    '(write-context.py --living-spec-skip "<name>: <reason>").',
+                    file=sys.stderr,
+                )
+            else:
+                # Every loaded capability carries an explicit skip note: this change
+                # genuinely touched none of their behavior. "Correctly nothing,"
+                # visibly distinct from the unaccounted case above.
+                print(
+                    f"[companion] Living-spec fold: all {len(loaded)} loaded "
+                    f"capabilit{'y' if len(loaded) == 1 else 'ies'} "
+                    f"({', '.join(loaded)}) have explicit skip notes; nothing to "
+                    "fold — correctly nothing.",
+                    file=sys.stderr,
+                )
         else:
             print(
                 "[companion] Living-spec fold: this feature's spec carries no delta "
@@ -446,6 +491,23 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
         note = f" — {'; '.join(reasons)}" if reasons else ""
         print(f"[companion] Living-spec fold: {cap['name']} ← {counts} ({spec_rel}){note}",
               file=sys.stderr)
+
+    # Accountability applies even when SOME deltas were authored: a spec that
+    # loaded several capabilities and folded only one still leaves the others
+    # unaccounted. Check loaded − synced − skipped here too, not just on the
+    # no-delta path, so a single delta block can't silence the gap.
+    unaccounted = _accountability_gap(feature_dir, synced)
+    if unaccounted:
+        print(
+            f"[companion] Living-spec fold: folded {len(synced)} capabilit"
+            f"{'y' if len(synced) == 1 else 'ies'} ({', '.join(synced)}) but "
+            f"{len(unaccounted)} loaded capabilit"
+            f"{'y is' if len(unaccounted) == 1 else 'ies are'} neither folded nor "
+            f"skipped ({', '.join(unaccounted)}). The loop did not close for "
+            "those: author a delta block or record a skip "
+            '(write-context.py --living-spec-skip "<name>: <reason>").',
+            file=sys.stderr,
+        )
 
     if not synced:
         return None

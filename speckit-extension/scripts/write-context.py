@@ -84,6 +84,7 @@ from capture import (  # noqa: E402,F401
     set_classification,
     set_fields,
     set_living_specs_loaded,
+    set_living_specs_skipped,
     set_living_specs_synced,
     upsert_coverage,
     upsert_step_summary,
@@ -380,6 +381,15 @@ def main() -> int:
              "never a lifecycle key.",
     )
     parser.add_argument(
+        "--living-spec-skip", dest="living_spec_skips", action="append", default=None,
+        metavar="NAME: REASON",
+        help="Record a loaded living-specs capability completion deliberately did NOT "
+             "fold, with a reason (onto livingSpecs.skipped as {name, reason}). This is "
+             "how completion accounts for a loaded capability the change didn't alter — "
+             "'correctly nothing' instead of 'silently nothing'. Additive metadata; "
+             "never a lifecycle key. Repeatable. Format: \"<name>: <reason>\".",
+    )
+    parser.add_argument(
         "--fold-living-spec", dest="fold_living_spec", action="store_true",
         help="Fold this feature spec's ADDED/MODIFIED/REMOVED/RENAMED requirement "
              "deltas into the resolved capability's living spec (LS·3 archive-as-merge). "
@@ -447,7 +457,7 @@ def main() -> int:
         args.decisions or args.verified or args.concerns or args.expectations
         or args.coverage_req or args.step_summary or args.classification or args.context_entries
     )
-    if not args.tasks_file and not args.task and not args.mark_complete and not args.set_pairs and not args.living_specs and not args.fold_living_spec and not args.materialize and not args.finish and not args.advance and not capture_mode and (args.step == "done" or args.step not in CANONICAL_STEPS):
+    if not args.tasks_file and not args.task and not args.mark_complete and not args.set_pairs and not args.living_specs and not args.living_spec_skips and not args.fold_living_spec and not args.materialize and not args.finish and not args.advance and not capture_mode and (args.step == "done" or args.step not in CANONICAL_STEPS):
         print(
             f"[companion] Skipping: '{args.step}' is not a canonical currentStep "
             f"({', '.join(sorted(CANONICAL_STEPS))}).",
@@ -542,6 +552,23 @@ def main() -> int:
             target = set_living_specs_loaded(feature_dir, args.living_specs)
             captured.append(
                 f"[companion] Recorded loaded living specs ({', '.join(args.living_specs)}) in {target}")
+        if args.living_spec_skips:
+            entries = []
+            for raw in args.living_spec_skips:
+                name, sep, reason = str(raw).partition(":")
+                if name.strip() and not (sep and reason.strip()):
+                    print(
+                        f"[companion] Warning: --living-spec-skip \"{raw}\" has no reason and "
+                        "was NOT recorded — an unexplained skip isn't accountability. Use "
+                        "\"<name>: <reason>\"; the capability stays unaccounted until you fold a "
+                        "delta or record a reasoned skip.",
+                        file=sys.stderr,
+                    )
+                entries.append({"name": name.strip(), "reason": reason.strip()})
+            target = set_living_specs_skipped(feature_dir, entries)
+            if target is not None:
+                names = ", ".join(e["name"] for e in entries if e["name"])
+                captured.append(f"[companion] Recorded living-spec skip note(s) ({names}) in {target}")
         if args.fold_living_spec:
             target = fold_living_spec(feature_dir, args.by)
             if target is not None:
@@ -556,7 +583,7 @@ def main() -> int:
     # A no-op fold already named its own exact reason on stderr (from
     # fold_living_spec) — don't paper over it with a generic OR-string.
 
-    if captured or capture_mode or args.set_pairs or args.living_specs or args.fold_living_spec:
+    if captured or capture_mode or args.set_pairs or args.living_specs or args.living_spec_skips or args.fold_living_spec:
         for line in captured:
             print(line)
         skipped = [
