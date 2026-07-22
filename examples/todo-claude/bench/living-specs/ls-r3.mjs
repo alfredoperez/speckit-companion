@@ -483,7 +483,8 @@ function main() {
     try {
       out = s.fn()
     } catch (e) {
-      out = { assertions: [assert('ran', false, `threw: ${e.message}`)], commands: [], error: String(e.stack || e) }
+      const err = e instanceof Error ? e : new Error(String(e))
+      out = { assertions: [assert('ran', false, `threw: ${err.message}`)], commands: [], error: String(err.stack || err) }
     }
     const allPass = out.assertions.length > 0 && out.assertions.every((x) => x.status === 'PASS')
     const evidence = {

@@ -1,7 +1,7 @@
 {
   "id": "S8-idempotency-central",
   "title": "re-folding and re-adopting change nothing the second time",
-  "ranAt": "2026-07-22T17:33:08.718Z",
+  "ranAt": "2026-07-22T17:38:09.289Z",
   "mode": "real+seeded-prose",
   "verdict": "PASS",
   "assertions": [

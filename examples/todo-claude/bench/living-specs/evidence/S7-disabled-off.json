@@ -1,7 +1,7 @@
 {
   "id": "S7-disabled-off",
   "title": "with living specs disabled every verb no-ops",
-  "ranAt": "2026-07-22T17:33:08.185Z",
+  "ranAt": "2026-07-22T17:38:08.793Z",
   "mode": "real+seeded-prose",
   "verdict": "PASS",
   "assertions": [
