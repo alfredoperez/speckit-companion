@@ -87,7 +87,7 @@ function runRecord(root, featureRel, changed) {
 // The #536 skip note.
 function runSkip(root, featureRel, note) {
   const r = sh(root, ['--feature-dir', featureRel, '--living-spec-skip', note], WRITE_CONTEXT,
-    `python3 ${rel(WRITE_CONTEXT)} --feature-dir ${featureRel} --living-spec-skip "${note}"`)
+    `python3 ${rel(WRITE_CONTEXT)} --feature-dir ${featureRel} --living-spec-skip ${JSON.stringify(note)}`)
   return { ...r, ctx: readCtx(root, featureRel) }
 }
 
@@ -382,9 +382,7 @@ scenario('S5-adopt-unadopted', 'an unadopted area resolves nothing until it is r
 
 // ---- S6: go around the pipeline — a direct commit drifts; a fold clears it.
 scenario('S6-drift-then-sync-coloc', 'a direct edit shows as drift, then reads in-sync after the spec updates', () => {
-  const root = bakeColoc()
-  // Commit the colocated spec + code as the in-sync baseline.
-  execFileSync('git', ['-C', root, 'add', '-A'], { encoding: 'utf8' })
+  const root = bakeColoc()  // already committed the colocated spec + code as the in-sync baseline
   // A direct edit to the capability area, committed AFTER the spec's last commit — bypassing the pipeline.
   write(root, 'src/todos/list.ts', '// todos — edited directly, no spec update\n')
   execFileSync('git', ['-C', root, 'add', '-A'], { encoding: 'utf8' })

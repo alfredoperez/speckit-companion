@@ -12,7 +12,7 @@ node ls-r3.mjs                 # 8 scenarios across 4 sandboxes → evidence/LS-
 node ls-demos.mjs LS3          # LS1 | LS2 | LS3 | LS4 | LS5 | LS6 | LS8
 ```
 
-Both exit non-zero if any assertion fails, so they gate in CI as-is.
+Both exit non-zero if any assertion fails, so they can gate CI as-is.
 
 ## The round-3 matrix (`ls-r3.mjs`)
 
