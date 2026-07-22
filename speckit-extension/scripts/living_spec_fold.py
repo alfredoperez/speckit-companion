@@ -392,7 +392,7 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
             if unaccounted:
                 # The loud, actionable backstop: a capability was loaded, no delta
                 # was authored, and no skip note explains why. This is the exact
-                # the "silently nothing" state — surface it, never bless it.
+                # "silently nothing" state — surface it, never bless it.
                 print(
                     f"[companion] Living-spec fold: {len(loaded)} capabilit"
                     f"{'y' if len(loaded) == 1 else 'ies'} loaded "
