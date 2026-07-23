@@ -65,7 +65,14 @@ describe('SteeringExplorerProvider', () => {
     });
 
     describe('root order', () => {
-        it('puts Companion first, then the provider, and omits empty sections', async () => {
+        it('omits the Companion node when not installed, leading with the provider', async () => {
+            const roots = await provider.getChildren();
+            expect(roots.map(r => r.label)).toEqual(['Gemini']);
+        });
+
+        it('leads with Companion when installed, then the provider', async () => {
+            (isCompanionInstalled as jest.Mock).mockReturnValue(true);
+            provider = createProvider();
             const roots = await provider.getChildren();
             expect(roots.map(r => r.label)).toEqual(['Companion', 'Gemini']);
         });
@@ -77,7 +84,7 @@ describe('SteeringExplorerProvider', () => {
 
             const roots = await provider.getChildren();
 
-            expect(roots.map(r => r.label)).toEqual(['Companion', 'Gemini', 'SpecKit Project Files']);
+            expect(roots.map(r => r.label)).toEqual(['Gemini', 'SpecKit Project Files']);
         });
 
         it('renders no create-rule rows at the root', async () => {
@@ -89,12 +96,9 @@ describe('SteeringExplorerProvider', () => {
     });
 
     describe('companion node', () => {
-        it('warns and offers no children when the extension is not installed', async () => {
+        it('is retired (absent) when the extension is not installed', async () => {
             const roots = await provider.getChildren();
-            const companion = roots[0];
-            expect(companion.description).toBe('Not installed');
-            expect(companion.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
-            expect(await provider.getChildren(companion)).toEqual([]);
+            expect(roots.some(r => r.label === 'Companion')).toBe(false);
         });
 
         it('makes Configuration open the config file directly while keeping its children', async () => {

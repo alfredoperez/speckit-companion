@@ -79,6 +79,7 @@ export const ConfigKeys = {
         lastUpdateCheck: 'speckit.lastUpdateCheck',
         initSuggestionDismissed: 'speckit.initSuggestionDismissed',
         installBannerDismissed: 'speckit.installBannerDismissed',
+        installNudgeDismissed: 'speckit.installNudgeDismissed',
     },
     workspaceState: {
         specsFilterQuery: 'speckit.specs.filter.query',

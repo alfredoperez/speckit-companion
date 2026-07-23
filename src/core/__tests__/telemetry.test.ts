@@ -13,6 +13,7 @@ import {
     initTelemetry,
     reportInstallPromptShown,
     reportInstallPromptClicked,
+    coerceInstallPromptSurface,
     __resetInstallPromptShownDedupe,
     INSTALL_PROMPT_EVENT,
     APP_INSIGHTS_CONNECTION_STRING,
@@ -264,6 +265,26 @@ describe('TelemetryService', () => {
             reportInstallPromptShown('activity');
             expect(__captured.events.map(e => e.properties?.surface)).toEqual(['createSpec', 'activity']);
             expect(__captured.events.every(e => e.properties?.action === 'shown')).toBe(true);
+        });
+
+        it('records the new sidebar/pinned/welcome surfaces distinctly', () => {
+            reportInstallPromptShown('sidebarBadge');
+            reportInstallPromptShown('pinnedRow');
+            reportInstallPromptClicked('welcome');
+            expect(__captured.events.map(e => `${e.properties?.action}:${e.properties?.surface}`)).toEqual([
+                'shown:sidebarBadge',
+                'shown:pinnedRow',
+                'clicked:welcome',
+            ]);
+        });
+
+        it('coerces an untrusted surface value at the boundary', () => {
+            expect(coerceInstallPromptSurface('pinnedRow')).toBe('pinnedRow');
+            expect(coerceInstallPromptSurface('welcome')).toBe('welcome');
+            expect(coerceInstallPromptSurface('__proto__')).toBeUndefined();
+            expect(coerceInstallPromptSurface('nope')).toBeUndefined();
+            expect(coerceInstallPromptSurface(undefined)).toBeUndefined();
+            expect(coerceInstallPromptSurface(42)).toBeUndefined();
         });
 
         it('emits action=clicked with the originating surface (not deduped)', () => {

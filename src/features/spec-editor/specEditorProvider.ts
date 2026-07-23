@@ -70,10 +70,12 @@ export class SpecEditorProvider {
         const customWorkflows = config.get<WorkflowConfig[]>('customWorkflows', []);
         const activeProvider = getConfiguredProviderType();
 
-        // SpecKit is always offered. Companion is added to the Create-Spec picker
-        // whenever the companion spec-kit extension is installed — same predicate as
-        // the workflow manager — so the picker never lists an option that silently
-        // falls back to stock.
+        // SpecKit is always offered. Companion is ALWAYS listed too — even when the
+        // spec-kit extension isn't installed — so the highest-intent moment (starting
+        // a spec) can present its benefits and a one-click install. A not-installed
+        // pick shows the benefits+install prompt first, then falls through the graceful
+        // stock downgrade if declined.
+        const companionInstalled = isCompanionSelectable();
         const workflows: WorkflowDefinition[] = [
             {
                 name: 'speckit',
@@ -82,15 +84,14 @@ export class SpecEditorProvider {
                 stepSpecify: `/${formatCommandForProvider('speckit.specify')}`
             }
         ];
-        if (isCompanionSelectable()) {
-            workflows.push({
-                name: COMPANION_WORKFLOW_NAME,
-                displayName: 'SpecKit Companion',
-                description: 'Leaner SpecKit Companion pipeline with built-in right-sizing, through to mark-complete.',
-                stepSpecify: `/${formatCommandForProvider(COMPANION_SPECIFY_COMMAND)}`,
-                supportsAuto: true,
-            });
-        }
+        workflows.push({
+            name: COMPANION_WORKFLOW_NAME,
+            displayName: companionInstalled ? 'SpecKit Companion' : 'SpecKit Companion · Install to enable',
+            description: 'Living specs, full lifecycle capture, fast-path for small changes, and hands-off Auto.',
+            stepSpecify: `/${formatCommandForProvider(COMPANION_SPECIFY_COMMAND)}`,
+            supportsAuto: true,
+            installed: companionInstalled,
+        });
 
         // Add custom workflows the active provider supports
         for (const wf of customWorkflows) {
@@ -152,6 +153,32 @@ export class SpecEditorProvider {
                     void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
                 }
             });
+    }
+
+    /**
+     * The highest-intent install moment: the user picked SpecKit Companion in
+     * Create Spec but the spec-kit extension isn't installed. Presents the benefits
+     * and a one-click install FIRST (no surprise install), then lets the caller
+     * proceed. Returns 'install' (install + still create), 'continue' (graceful
+     * stock downgrade), or 'cancel' (abort, create nothing).
+     */
+    private async promptCompanionInstallFirst(): Promise<'install' | 'continue' | 'cancel'> {
+        reportInstallPromptShown('createSpec');
+        const choice = await vscode.window.showInformationMessage(
+            'SpecKit Companion adds living specs, full lifecycle capture, a fast-path for small changes, and hands-off Auto. Install it to enable the full workflow — or continue with standard SpecKit.',
+            { modal: true },
+            'Install SpecKit Companion',
+            'Use SpecKit Instead',
+        );
+        if (choice === 'Install SpecKit Companion') {
+            reportInstallPromptClicked('createSpec');
+            void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
+            return 'install';
+        }
+        if (choice === 'Use SpecKit Instead') {
+            return 'continue';
+        }
+        return 'cancel';
     }
 
     /**
@@ -304,6 +331,25 @@ export class SpecEditorProvider {
             return;
         }
 
+        // Highest-intent install moment: a not-installed Companion pick (normal
+        // Create Spec path) shows benefits + one-click install before any dispatch.
+        // Auto has its own suppress-and-warn path; custom commands opt out.
+        const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        const companionNeedsInstall =
+            workflowName === COMPANION_WORKFLOW_NAME &&
+            !auto &&
+            !customCommand &&
+            !(root ? isCompanionInstalled(root) : false);
+        let installFirstHandled = false;
+        if (companionNeedsInstall) {
+            const decision = await this.promptCompanionInstallFirst();
+            if (decision === 'cancel') {
+                // Nothing was posted yet, so the editor stays interactive — just abort.
+                return;
+            }
+            installFirstHandled = true;
+        }
+
         try {
             this.postMessage({ type: 'submissionStarted' });
             this.outputChannel.appendLine(`[SpecEditor] Submitting spec with workflow: ${workflowName}, ${imageIds.length} images`);
@@ -388,7 +434,7 @@ export class SpecEditorProvider {
                 const resolution = resolveDispatchForRoot(COMPANION_SPECIFY_COMMAND, workspaceRoot);
                 // specify always has a stock twin, so command is never suppressed (null) here.
                 command = `/${formatCommandForProvider(resolution.command ?? 'speckit.specify')}`;
-                if (resolution.fellBack) {
+                if (resolution.fellBack && !installFirstHandled) {
                     this.warnFellBackToStock();
                 }
             }

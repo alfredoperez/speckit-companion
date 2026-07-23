@@ -1,0 +1,72 @@
+{
+  "workflow": "companion",
+  "specName": "surface install companion",
+  "branch": "535-surface-install-companion",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-23T18:20:00Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T18:22:00Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-23T18:23:00Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T18:25:00Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-23T18:26:00Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T18:28:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "ai",
+      "at": "2026-07-23T18:29:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T18:31:00Z"
+    },
+    {
+      "step": "mark-complete",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T18:32:00Z"
+    }
+  ]
+}

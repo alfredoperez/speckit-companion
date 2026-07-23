@@ -863,32 +863,26 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
         return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     }
 
-    /** Root Companion node; icon/description reflect install state, collapsible only when it has children. */
+    /** Root Companion node — only present when installed (Configuration + Commands). The
+     * not-installed nudge now lives where users look: the activity-bar badge, the pinned
+     * Specs CTA, and Create Spec — so the buried "Not installed" badge here is retired. */
     private buildCompanionHeaderNode(): SteeringItem | undefined {
         const root = this.companionWorkspaceRoot();
-        if (!root) {
+        if (!root || !isCompanionInstalled(root)) {
             return undefined;
         }
-        const installed = isCompanionInstalled(root);
 
-        // When installed the node always offers Configuration + Commands, so it's
-        // collapsible without reading any file to decide; not installed = badge only.
+        // Installed: the node always offers Configuration + Commands, so it's
+        // collapsible without reading any file to decide.
         const item = new SteeringItem(
             'Companion',
-            installed ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
+            vscode.TreeItemCollapsibleState.Collapsed,
             TreeItemContext.companionHeader,
             '',
             this.context
         );
-
-        if (installed) {
-            item.iconPath = vscode.Uri.joinPath(this.context.extensionUri, 'assets/icons/moss.svg');
-            item.tooltip = 'SpecKit Companion configuration and commands';
-        } else {
-            item.iconPath = new vscode.ThemeIcon('warning');
-            item.description = 'Not installed';
-            item.tooltip = 'SpecKit Companion extension is not installed in this project';
-        }
+        item.iconPath = vscode.Uri.joinPath(this.context.extensionUri, 'assets/icons/moss.svg');
+        item.tooltip = 'SpecKit Companion configuration and commands';
         return item;
     }
 

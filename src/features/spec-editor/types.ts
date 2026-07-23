@@ -168,6 +168,8 @@ export interface WorkflowDefinition {
     specifyCommands?: Array<{ name: string; title: string; command: string; tooltip?: string }>;
     /** Workflow has a hands-off auto orchestrator — surfaces the Auto button when selected */
     supportsAuto?: boolean;
+    /** For the Companion workflow: whether the spec-kit extension is installed (drives the install-first prompt) */
+    installed?: boolean;
 }
 
 // ============================================

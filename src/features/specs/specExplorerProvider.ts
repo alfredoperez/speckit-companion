@@ -26,6 +26,8 @@ import { comparators, DEFAULT_SORT_MODE } from './specsSortMode';
 import { fileNameToDisplayName } from '../../core/utils/fileNaming';
 import { resolveSpecDisplayName } from '../../core/utils/specDisplayName';
 import { CONTEXT_KEYS, setContextKey } from '../../core/utils/contextKeys';
+import { isCompanionInstalled } from '../settings/companionPresetReconciler';
+import { reportInstallPromptShown } from '../../core/telemetry';
 
 export interface SpecInfo {
     name: string;
@@ -126,6 +128,31 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
     }
 
     /**
+     * Build the pinned "Get Companion" CTA row, or undefined when installed.
+     */
+    private buildInstallCtaItem(basePath: string): SpecItem | undefined {
+        if (isCompanionInstalled(basePath)) {
+            return undefined;
+        }
+        reportInstallPromptShown('pinnedRow');
+        const item = new SpecItem(
+            'Get Companion — living specs, capture, fast-path',
+            vscode.TreeItemCollapsibleState.None,
+            'companion-install-cta',
+            this.context,
+            undefined,
+            undefined,
+            {
+                command: 'speckit.companion.installNudge',
+                title: 'Install SpecKit Companion',
+                arguments: ['pinnedRow'],
+            }
+        );
+        item.id = 'spec:companion-install-cta';
+        return item;
+    }
+
+    /**
      * Read spec context to determine status for grouping
      */
     private getSpecStatus(specFullPath: string): SpecStatus {
@@ -212,6 +239,14 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             filteredArchived.sort(cmp);
 
             const items: SpecItem[] = [];
+
+            // Pinned install CTA: an on-brand, one-click install nudge atop the tree
+            // whenever the spec-kit extension is missing. Persists until installed
+            // (ambient, no dismiss); the empty-view case is covered by viewsWelcome.
+            const cta = this.buildInstallCtaItem(basePath);
+            if (cta) {
+                items.push(cta);
+            }
 
             // Group items get stable ids so VS Code preserves the user's
             // manual expand/collapse state across refreshes — the toggle
@@ -664,6 +699,9 @@ class SpecItem extends vscode.TreeItem {
         if (contextValue === 'spec-loading') {
             this.iconPath = new vscode.ThemeIcon('sync~spin');
             this.tooltip = 'Loading specs...';
+        } else if (contextValue === 'companion-install-cta') {
+            this.iconPath = new vscode.ThemeIcon('rocket', new vscode.ThemeColor('charts.yellow'));
+            this.tooltip = 'Install SpecKit Companion — living specs, lifecycle capture, fast-path, and Auto';
         } else if (isSpecGroupItem(contextValue)) {
             const groupIcons: Record<string, vscode.ThemeIcon> = {
                 'Active': new vscode.ThemeIcon('pulse'),
