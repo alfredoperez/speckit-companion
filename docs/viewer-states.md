@@ -630,6 +630,20 @@ pipeline document while the Overview was showing bounced straight back to
 the Overview. Any new navigation path must keep this property: the webview
 is a single page, and only its content is swapped.
 
+**Artifacts nest under their step.** Under the `Pipeline` group, each step's
+related artifact docs render as an indented sub-list (`ul.step-substeps`)
+directly beneath that step's tab — Data Model / Living Components / Research
+under **Plan**, Requirements under **Specification** — so "where does this
+file come from" is answered in place rather than in separate "<Step> files"
+groups below the rail. A step owns a related doc when the doc's `parentStep`
+names it (a doc with no `parentStep` falls back to the first pipeline step).
+Clicking a sub-item dispatches `switchDocument`; the parent step tab keeps
+opening the step's own document. Only an **orphan** artifact — one whose
+owning step has no rail entry (a hidden action step like Implement, or a
+step absent from the workflow) — keeps a labeled fallback group at the
+bottom so no artifact is ever dropped. Action steps stay hidden from the
+Pipeline group entirely (Implement / Mark Complete never render as tabs).
+
 ---
 
 ## Sidebar Grouping

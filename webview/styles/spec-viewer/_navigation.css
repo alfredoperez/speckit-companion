@@ -274,12 +274,33 @@
     flex-wrap: wrap;
 }
 
-/* Rail form: full-width buttons in a column. */
-.doc-rail .step-children-tabs {
+/* Rail form: a step's artifact files nest as a sub-list directly under it —
+   full-width buttons in a column, indented so they read as children of the
+   step tab above them. Also hosts the orphan fallback group (no indent). */
+.step-substeps {
+    list-style: none;
+    margin: 2px 0 0;
+    padding: 0;
+    display: flex;
     flex-direction: column;
-    align-items: stretch;
-    flex-wrap: nowrap;
+    gap: 2px;
     width: 100%;
+    min-width: 0;
+}
+
+.step-substeps > li {
+    display: flex;
+    min-width: 0;
+}
+
+.step-substeps .step-child {
+    width: 100%;
+}
+
+/* Indent only when nested beneath a step tab; the orphan fallback sits under
+   its own rail-label and needs no extra indent. */
+.step-tab-group .step-substeps {
+    padding-left: 18px;
 }
 
 .step-child {
@@ -295,6 +316,8 @@
     border-radius: var(--radius-sm);
     transition: color var(--transition-fast), background var(--transition-fast);
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     text-align: left;
 }
 

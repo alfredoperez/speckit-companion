@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **A step's artifact files now nest directly under it in the spec viewer's side rail.** The rail used to list the workflow steps under a Pipeline heading and then repeat each step's files in separate "Plan files" / "Specification files" groups below — so a file was visually decoupled from the step it came from. Now Data Model, Living Components, and Research sit indented under **Plan**, Requirements sits under **Specification**, and so on, so "where does this file come from" is answered in place. Every file is still one click away, the Overview stays at the top, and a file whose step isn't shown in the rail keeps a labeled fallback group so nothing goes missing. ([#504](https://github.com/alfredoperez/speckit-companion/issues/504))
+
 ### Fixed
 
 - **Fast-path folded phases now read "folded into Specify" instead of a misleading "<1s".** A small change run through the fast path does its planning and task work inside the specify run, so the Plan and Tasks phases have no duration of their own — but the Overview's run timing strip showed them as `Plan <1s` / `Tasks <1s`, which looked like a bug. Those phases now carry a "folded into Specify" note and a hollow dot instead of a duration; genuinely measured phases, coverage counts, and the run's elapsed total are unchanged. ([#523](https://github.com/alfredoperez/speckit-companion/issues/523))
