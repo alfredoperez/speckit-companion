@@ -166,9 +166,9 @@ Read in full: the extension manifest, all part files, the node order and a sampl
 - Most individual node bodies under `nodes/` — read the order files, frontmatter shape, and three representative bodies.
 - `speckit-extension/workflows/speckit-companion.workflow.yml`.
 
-### Completion authors a delta block per changed capability before folding
+### Completion accounts for every loaded capability — a delta or an explicit skip, never silence
 
-The mark-complete step instructs the AI to read `livingSpecs.loaded` and, for each loaded capability whose behavior the feature changed, append a marked delta block to the feature spec capturing the real requirement, then fold. Capabilities merely read are skipped.
+The completion step (both the implement-time close and the terminal `mark-complete`) instructs the AI to read `livingSpecs.loaded` and account for **every** name in it before folding — each gets exactly one of two outcomes. A loaded capability whose *behavior* the feature changed gets a marked delta block appended to the feature spec capturing the real requirement. A loaded capability merely read for context gets an explicit recorded skip (`write-context.py --living-spec-skip "<name>: <reason>"`), so "correctly nothing" stays distinguishable from "silently nothing." A loaded capability that is neither is a hole the fold flags loudly. The delta verb is chosen by whether the requirement's heading already exists in that capability's living spec: a heading not already there goes under `## ADDED Requirements` even when it revises the same behavior area, and `## MODIFIED Requirements` is reserved for editing the body of a heading that already matches one in the living spec.
 
 #### Scenario: a feature changed a loaded capability
 
@@ -178,7 +178,12 @@ The mark-complete step instructs the AI to read `livingSpecs.loaded` and, for ea
 #### Scenario: a capability was read but not changed
 
 - **WHEN** the feature loaded a capability but did not change its behavior
-- **THEN** no delta block is authored for it and its spec is left untouched
+- **THEN** an explicit skip is recorded for it, not silence, and its spec is left untouched
+
+#### Scenario: a loaded capability is left unaccounted
+
+- **WHEN** a name in `livingSpecs.loaded` gets neither a delta block nor a recorded skip
+- **THEN** the fold flags it loudly as a hole
 
 ### Step boundaries are extension-stamped in order on every dispatch path
 
@@ -230,3 +235,31 @@ The commands under the never-halts contract — the four lifecycle hooks, the li
 
 - **WHEN** the clarify-type command body no longer contains an ask instruction
 - **THEN** the quality gate fails — asking is that command's purpose
+
+### The specify-time living-spec load is recorded deterministically, not by AI judgment
+
+Pre-briefing at specify no longer asks the AI to decide whether the project is configured or which capabilities apply — that hand-judgment is exactly what silently skipped the load on real runs. Given the files the change will touch, a deterministic recorder script re-reads the capability registry (`living-specs.yml`, or the legacy `livingSpecs` block), gates on `enabled`, runs the resolver, and writes the matched capabilities (leaf-first) onto `livingSpecs.loaded` **plus the one-line audit breadcrumb itself** — all on `.spec-context.json`, never touching the lifecycle log. The AI then only reads `livingSpecs.loaded` back to pull those specs into context; the reading is best-effort background, the recorder is the reliable write. The recorder is a silent no-op that exits 0 when the feature is off, nothing matches, or the registry/resolver can't be read, and is skipped without failing when the interpreter is unavailable — so it never fails or slows the command.
+
+#### Scenario: the project keeps living specs for a touched area
+
+- **WHEN** the recorder runs with the change's in-scope files against an enabled registry that matches
+- **THEN** it writes the matched capabilities leaf-first onto `livingSpecs.loaded` with the audit breadcrumb, and the AI reads those specs back from the record
+
+#### Scenario: nothing is configured or nothing matches
+
+- **WHEN** the recorder runs with the feature off or no capability owning the touched files
+- **THEN** it is a silent no-op that exits successfully, and the breadcrumb marks "correctly did nothing" apart from a broken capture
+
+### A simple-verdict run captures the same context a full run would, on the fast path
+
+When the classify step returns `simple`, specify writes the plan inline as the spec's `## Approach` section and never reaches `plan` or `tasks`. To keep the viewer honest, that fast path SHALL still capture what a full run would: the one-line approach is persisted onto `.spec-context.json` so the Overview APPROACH card reads it; the living-spec load is run **again post-draft** when the pre-draft load recorded nothing (the touched files are known by then, and the record is skipped if already populated); and the folded `plan` and `tasks` boundaries are stamped `by: extension` at step level — not as AI substeps — so the timing display counts specify, plan, and tasks as measured phases. All of it is best-effort and skipped silently when the interpreter is unavailable, and no `completed` status is written — the terminal gate stays its own step.
+
+#### Scenario: classify returns simple
+
+- **WHEN** the specify command finishes a simple-verdict draft
+- **THEN** the approach is captured, the folded plan and tasks boundaries are stamped as extension step-level events, and the spec lands at tasks with `status: ready-to-implement`
+
+#### Scenario: the pre-draft load recorded nothing
+
+- **WHEN** the simple run reaches the fold and `livingSpecs.loaded` is still empty
+- **THEN** the deterministic recorder runs once against the now-known touched files, and never re-resolves when the load already populated it

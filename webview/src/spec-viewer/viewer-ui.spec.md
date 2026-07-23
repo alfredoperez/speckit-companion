@@ -71,6 +71,13 @@ Any value that originated in the spec's record or in user configuration — a st
 
 The rendering pipeline MUST emit each source line as an addressable, hoverable unit carrying its own line number and an affordance to attach a comment, so annotation works anywhere in the document without a separate mode. Authoring scaffolding that belongs to the generator rather than the reader — front matter, notation legends, metadata already shown in the header — SHALL be stripped rather than rendered. Structured passages the specs use repeatedly (user stories, phased task lists, requirement blocks, acceptance scenarios, callouts) SHOULD be recognised and rendered as their own components rather than as generic prose, and those components stay commentable too.
 
+The attach-a-comment affordance MUST name the specific line it targets in its accessible label rather than carrying a generic one, so that identical controls repeated down the document are distinguishable to assistive technology; the glyph inside it is decorative and MUST be hidden from that tree.
+
+#### Scenario: a line's comment affordance is reached without a pointer
+- **WHEN** the reader tabs to a line's add-comment control
+- **THEN** it announces the particular line it will annotate, not a generic "add comment"
+- **AND** the glyph inside it is hidden from assistive technology
+
 #### Scenario: a document written with foreign line endings
 - **WHEN** the source uses carriage returns
 - **THEN** line endings are normalised before any block-level parsing
@@ -124,10 +131,17 @@ Anything that marks an element on open — an editor, a comment container — MU
 
 Adding, editing, or removing a comment MUST post the change to the extension rather than write anything itself; the local card is a rendering of the record, not the record. An edit that changes nothing, or that resolves to no target, SHALL be a no-op rather than a posted mutation. Dispatching refinement for a document MUST clear the local cards and let the refreshed record re-render them, so what is shown after the round trip is what was actually persisted.
 
+The line-level structural actions (remove a story, scenario, task, section, or line) are likewise requests the webview posts, not edits it performs. They MUST be labelled as suggestions rather than as direct removals, so the reader is never told a click deletes content the webview does not itself remove.
+
 #### Scenario: a comment is deleted
 - **WHEN** the reader deletes a card
 - **THEN** the removal is posted, the card unmounts, and focus returns to the line's own control
 - **AND** the pending count updates
+
+#### Scenario: a reader picks a structural line action
+- **WHEN** the reader chooses to remove a story, scenario, task, section, or line from its menu
+- **THEN** the control reads as a suggestion, not a direct removal
+- **AND** the request is posted for the AI to act on rather than editing the document in place
 
 ### A settled spec is readable but not annotatable
 
@@ -199,6 +213,40 @@ Readable content MUST use the body and primary text tokens; the secondary and mu
 - **WHEN** a step is in flight
 - **THEN** the in-flight indicator renders without animation
 
+### Run timing is a summary the extension provides, not a duration the webview sums
+
+Elapsed time and per-phase coverage MUST be read from the timing summary the extension sends, never recomputed in the webview from per-step activity timestamps. The webview SHALL NOT sum step spans, cap idle gaps, or otherwise derive a working-time figure of its own; it renders the summary's completion flag, its elapsed figure, and its measured-of-expected phase count as given. A run that has not settled surfaces phase coverage — "N of M phases" — not a fabricated wall-clock total; only a summary that reports itself complete surfaces a start, an elapsed figure, and an end.
+
+Recorded substep events are journal moments, not measured work. Each event carries the timestamp at which it was recorded, is ordered by it, and is shown as "recorded at" that moment. The webview SHALL NOT present the gap between a substep's start and finish as a duration, because an AI or CLI finish is a cadence record rather than a measured piece of work.
+
+#### Scenario: a run is still in flight
+- **WHEN** the timing summary reports itself not yet complete
+- **THEN** the run surfaces measured-of-expected phase coverage
+- **AND** no start, elapsed, or end figure is shown as if the run had settled
+
+#### Scenario: a recorded substep event is displayed
+- **WHEN** a tracked substep is rendered in the phase history
+- **THEN** it reads as "recorded at" its journal timestamp
+- **AND** the span between its start and finish is not presented as a work duration
+
+### The pipeline rail lists document-producing steps only
+
+The rail MUST render only steps that produce a document of their own; steps that merely act — Implement, Mark Complete, any custom step with no document — never appear as rail entries. Every index the rail computes — its root phase, the host of the live implement percent, the in-flight step that locks later tabs — MUST be computed against the rendered list, so a hidden acting step can neither shift a tab nor lock one. An acting step that is running therefore contributes no lock, because it holds no rail position to lock from.
+
+#### Scenario: an acting step is the running step
+- **WHEN** a step with no document of its own is in flight
+- **THEN** it does not appear in the rail
+- **AND** it locks none of the document tabs
+
+### Durable context leads the panel; the granular run history stays collapsed
+
+The activity panel MUST lead with the run's lifecycle signal and durable context — intent, the run's timing overview, the living specs it touched, verified proof, decisions, coverage — and demote the granular run history (phase events, tasks, concerns, files, comments) into a collapsed log below. The living specs a feature touched and its run-timing overview belong to that durable context and render inline in the overview's intent, not as separate run-log cards. A living-spec chip is always a link that opens its capability by name; a stored spec path, when present, rides along but is not required for the chip to be clickable.
+
+#### Scenario: a spec touched living specs
+- **WHEN** the overview renders
+- **THEN** the touched capabilities appear as links inside the intent, not as a separate card
+- **AND** selecting one opens that capability by name
+
 ## Uncovered
 
 The following files were not read in full — their exported surface and role were established, but their bodies were not reviewed line by line:
@@ -206,19 +254,14 @@ The following files were not read in full — their exported surface and role we
 - `webview/src/spec-viewer/markdown/preprocessors.ts` (read partially; only the first ~60 lines and the export inventory)
 - `webview/src/spec-viewer/toc.ts`
 - `webview/src/spec-viewer/highlighting.ts`
-- `webview/src/spec-viewer/timelineEvents.ts`
 - `webview/src/spec-viewer/relativeTime.ts`
 - `webview/src/spec-viewer/activityHeroModel.ts`
 - `webview/src/spec-viewer/elapsedFormat.ts`
-- `webview/src/spec-viewer/types.ts`
 - `webview/src/spec-viewer/components/InlineEditor.tsx`
-- `webview/src/spec-viewer/components/TimelineEvent.tsx`
 - `webview/src/spec-viewer/components/cards/TasksCard.tsx`
 - `webview/src/spec-viewer/components/cards/FilesCard.tsx`
 - `webview/src/spec-viewer/components/cards/ConcernsCard.tsx`
 - `webview/src/spec-viewer/components/cards/CommentsCard.tsx`
-- `webview/src/spec-viewer/components/cards/LivingSpecsCard.tsx`
-- `webview/src/spec-viewer/components/cards/PhasesCard.tsx`
 - `webview/src/spec-viewer/components/cards/toStringArray.ts`
 - `webview/src/spec-viewer/components/index.ts`
 - All `*.stories.tsx` files and all files under `__tests__/`

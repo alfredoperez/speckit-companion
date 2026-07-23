@@ -45,7 +45,7 @@ The workflow list SHALL be built from what the active AI provider supports and w
 
 ### A missing dependency degrades or refuses, but never dispatches something unresolvable
 
-When a chosen action needs the companion piece and it is absent, the host SHALL either downgrade to the equivalent stock action or, when there is no equivalent, refuse to start at all. Either way the user gets a non-blocking explanation and a one-click way to install. Dispatching a command the AI cannot resolve is never acceptable.
+When a chosen action needs the companion piece and it is absent, the host SHALL either downgrade to the equivalent stock action or, when there is no equivalent, refuse to start at all. Either way the user gets a non-blocking explanation and a one-click way to install. Dispatching a command the AI cannot resolve is never acceptable. When the panel surfaces its install prompt, and when the user takes it, the host SHALL record the exposure and the click so install-prompt adoption can be measured.
 
 #### Scenario: the Companion entry point is chosen without the companion piece
 - **WHEN** the user submits

@@ -21,6 +21,7 @@ The extension SHALL provide the stock SpecKit pipeline and the SpecKit Companion
 - **WHEN** a spec selects it
 - **THEN** each step dispatches the Companion command family
 - **AND** the pipeline ends at a terminal step that marks the spec complete
+- **AND** that terminal step is marked untimed — it only flips status, so it is excluded from the pipeline's timing-coverage denominator rather than counted as a step that should record a duration
 
 ### Built-in names are reserved at every scope
 
@@ -33,7 +34,7 @@ A custom workflow SHALL NOT be able to claim a built-in workflow's name, includi
 
 ### Selection filters, resolution does not
 
-Surfaces that let a user *pick* a workflow SHALL hide workflows the active provider cannot run and built-ins whose prerequisites are absent. Resolving a workflow a spec has *already recorded* SHALL NOT filter. A spec that loses its real steps because the user switched providers would render the wrong pipeline and dispatch the wrong command.
+Surfaces that let a user *pick* a workflow SHALL hide workflows the active provider cannot run and built-ins whose prerequisites are absent. The Companion pipeline's only selection prerequisite is that the companion spec-kit extension is installed in the project — there is no separate enabling setting gating its offer. Resolving a workflow a spec has *already recorded* SHALL NOT filter. A spec that loses its real steps because the user switched providers would render the wrong pipeline and dispatch the wrong command.
 
 #### Scenario: an existing spec is opened under a provider that could not have selected its workflow
 - **WHEN** the spec's recorded workflow is resolved for display
@@ -41,7 +42,7 @@ Surfaces that let a user *pick* a workflow SHALL hide workflows the active provi
 - **AND** the same workflow is still absent from the picker
 
 #### Scenario: the Companion pipeline's prerequisites are not met
-- **WHEN** its enabling setting is off, or the companion spec-kit extension is not installed in the project
+- **WHEN** the companion spec-kit extension is not installed in the project
 - **THEN** it is not offered for selection
 - **AND** every surface that builds a picker uses the same predicate, so no picker can offer it while another hides it
 
@@ -117,7 +118,7 @@ The document panel SHALL derive its phase stepper, document tabs, and next-docum
 #### Scenario: a document is opened that matches a pipeline step's output file
 - **WHEN** the panel renders
 - **THEN** the phase, the completed phases, and the tab set derive from the recorded workflow's step order and the files present on disk
-- **AND** files that are not step outputs surface as related documents rather than as phases
+- **AND** files that are not step outputs surface as related documents rather than as phases, their display names capitalizing each word and turning both dashes and underscores into spaces
 
 #### Scenario: a spec is on a workflow whose pipeline ends in a terminal step
 - **WHEN** the panel renders that spec's document
