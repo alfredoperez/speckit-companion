@@ -17,9 +17,11 @@ export class AntigravityCliProvider extends CliTerminalProvider {
     public readonly type = AIProviders.ANTIGRAVITY;
 
     protected readonly cliBinary = 'antigravity';
+    // Antigravity is a download, not a package-manager one-liner — surface the
+    // install page as an openable URL rather than a copyable (misleading) command.
     protected readonly installHint = {
         displayName: 'Antigravity CLI',
-        installCommand: 'See https://antigravity.google for installation',
+        installUrl: 'https://antigravity.google',
     };
     protected readonly defaultTerminalTitle = 'SpecKit - Antigravity';
     protected readonly headlessTerminalName = 'Antigravity Background';

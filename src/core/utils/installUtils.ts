@@ -11,9 +11,10 @@ import { NotificationUtils } from './notificationUtils';
  */
 export async function ensureCliInstalled(
     cliName: string,
-    installCommand: string,
+    installCommand: string | undefined,
     checkCommand: string,
-    outputChannel: vscode.OutputChannel
+    outputChannel: vscode.OutputChannel,
+    installUrl?: string
 ): Promise<void> {
     const { exec } = require('child_process');
     const { promisify } = require('util');
@@ -22,13 +23,25 @@ export async function ensureCliInstalled(
     try {
         await execAsync(checkCommand);
     } catch {
-        const action = await vscode.window.showErrorMessage(
-            `${cliName} is not installed. Install it with: ${installCommand}`,
-            'Copy Install Command'
-        );
-        if (action === 'Copy Install Command') {
-            await vscode.env.clipboard.writeText(installCommand);
-            NotificationUtils.showStatusBarMessage('$(check) Install command copied to clipboard');
+        // A download-based tool (no package-manager one-liner) gets an "Open
+        // Install Page" action; a real installCommand keeps copy-to-clipboard.
+        if (installUrl) {
+            const action = await vscode.window.showErrorMessage(
+                `${cliName} is not installed. Get it at: ${installUrl}`,
+                'Open Install Page'
+            );
+            if (action === 'Open Install Page') {
+                await vscode.env.openExternal(vscode.Uri.parse(installUrl));
+            }
+        } else {
+            const action = await vscode.window.showErrorMessage(
+                `${cliName} is not installed. Install it with: ${installCommand}`,
+                'Copy Install Command'
+            );
+            if (action === 'Copy Install Command' && installCommand) {
+                await vscode.env.clipboard.writeText(installCommand);
+                NotificationUtils.showStatusBarMessage('$(check) Install command copied to clipboard');
+            }
         }
         throw new Error(`${cliName} is not installed`);
     }
