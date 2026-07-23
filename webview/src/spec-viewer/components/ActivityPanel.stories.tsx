@@ -338,6 +338,32 @@ export const DossierMidPipeline: Story = {
     },
 };
 
+// Fast-path run: folded plan/tasks read "folded into Specify" (hollow dot), never "<1s".
+export const DossierFastPathFolded: Story = {
+    render: () => {
+        viewerState.value = {
+            ...richReasoningState,
+            classification: { projectedFiles: 3, projectedTasks: 4, scopeSignal: 'smaller', verdict: 'simple' },
+            stepHistory: {
+                specify: { startedAt: '2026-07-02T10:00:00.100Z', completedAt: '2026-07-02T10:05:47.100Z', durationTrusted: true },
+                plan: { startedAt: '2026-07-02T10:05:47.200Z', completedAt: '2026-07-02T10:05:47.400Z', durationTrusted: true, folded: true },
+                tasks: { startedAt: '2026-07-02T10:05:47.500Z', completedAt: '2026-07-02T10:05:47.600Z', durationTrusted: true, folded: true },
+                implement: { startedAt: '2026-07-02T10:08:00.000Z', completedAt: '2026-07-02T10:31:00.000Z', durationTrusted: true },
+            },
+            timing: {
+                measuredPhases: 4,
+                expectedPhases: 4,
+                complete: true,
+                startedAt: '2026-07-02T10:00:00.100Z',
+                endedAt: '2026-07-02T10:31:00.000Z',
+                elapsedMs: 31 * 60_000,
+            },
+        };
+        navState.value = { showInstallPrompt: false } as NavState;
+        return <div style="max-width: 900px;"><ActivityPanel /></div>;
+    },
+};
+
 // Log-only payload: no durable-context fields at all — the dossier renders
 // nothing above the collapsed "Run log" disclosure, which carries the work.
 export const DossierLogOnly: Story = {

@@ -134,4 +134,59 @@ describe('OverviewTiming', () => {
         render(h(OverviewTiming, { state: base({}) }), host);
         expect(host.querySelector('.dossier-timing')).toBeNull();
     });
+
+    describe('fast-path folded phases', () => {
+        const foldedState = () => base({
+            stepHistory: {
+                specify: { startedAt: '2026-07-22T20:45:44.521Z', completedAt: '2026-07-22T20:51:14.340Z', durationTrusted: true },
+                plan: { startedAt: '2026-07-22T20:51:14.423Z', completedAt: '2026-07-22T20:51:14.505Z', durationTrusted: true, folded: true },
+                tasks: { startedAt: '2026-07-22T20:51:14.584Z', completedAt: '2026-07-22T20:51:14.665Z', durationTrusted: true, folded: true },
+                implement: { startedAt: '2026-07-22T20:54:43.271Z', completedAt: '2026-07-22T20:58:00.000Z', durationTrusted: true },
+            },
+            timing: { measuredPhases: 4, expectedPhases: 4, complete: true, elapsedMs: 12 * 60_000 },
+        });
+
+        it('labels folded phases "folded into Specify" and never renders "<1s"', () => {
+            const host = document.createElement('div');
+            render(h(OverviewTiming, { state: foldedState() }), host);
+            const foldedNotes = Array.from(host.querySelectorAll('.dossier-timing__duration--folded'));
+            expect(foldedNotes.map(node => node.textContent)).toEqual(['folded into Specify', 'folded into Specify']);
+            expect(host.textContent).not.toContain('<1s');
+        });
+
+        it('marks folded phases visually and keeps measured phases untouched', () => {
+            const host = document.createElement('div');
+            render(h(OverviewTiming, { state: foldedState() }), host);
+            const phases = Array.from(host.querySelectorAll('.dossier-timing__phase'));
+            expect(phases.map(node => node.classList.contains('is-folded'))).toEqual([false, true, true, false]);
+            expect(host.textContent).toContain('5m 29s');
+        });
+
+        it('renders a plain "folded" note when no earlier non-folded phase exists', () => {
+            const host = document.createElement('div');
+            render(h(OverviewTiming, {
+                state: base({
+                    stepHistory: {
+                        plan: { startedAt: '2026-07-22T20:51:14.423Z', completedAt: '2026-07-22T20:51:14.505Z', durationTrusted: true, folded: true },
+                    },
+                    timing: { measuredPhases: 1, expectedPhases: 4, complete: false },
+                }),
+            }), host);
+            expect(host.querySelector('.dossier-timing__duration--folded')?.textContent).toBe('folded');
+        });
+
+        it('never renders the folded note for a measured phase', () => {
+            const host = document.createElement('div');
+            render(h(OverviewTiming, {
+                state: base({
+                    stepHistory: {
+                        specify: { startedAt: '2026-07-21T10:00:00Z', completedAt: '2026-07-21T10:04:00Z', durationTrusted: true },
+                    },
+                    timing: { measuredPhases: 1, expectedPhases: 4, complete: false },
+                }),
+            }), host);
+            expect(host.querySelector('.dossier-timing__duration--folded')).toBeNull();
+            expect(host.textContent).toContain('4m');
+        });
+    });
 });

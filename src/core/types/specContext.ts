@@ -93,6 +93,13 @@ export interface StepHistoryEntry {
      * for an untrusted span.
      */
     durationTrusted?: boolean;
+    /**
+     * True when the step's boundaries were stamped as a fast-path fold (an
+     * extension-stamped pair written back-to-back inside the specify run).
+     * Renderers present a folded step as "folded into" its anchoring phase,
+     * never as a near-zero duration. Set only by `deriveStepHistory`.
+     */
+    folded?: boolean;
 }
 
 /**

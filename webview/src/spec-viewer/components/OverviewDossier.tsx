@@ -18,6 +18,18 @@ function phaseNames(state: ViewerState): string[] {
     return [...known, ...keys.filter(step => !PHASE_ORDER.includes(step))];
 }
 
+function capitalize(phase: string): string {
+    return phase.charAt(0).toUpperCase() + phase.slice(1);
+}
+
+/** The phase a fold collapsed into: the nearest earlier non-folded phase. */
+function foldAnchor(phases: string[], stepHistory: ViewerState['stepHistory'], index: number): string | null {
+    for (let i = index - 1; i >= 0; i--) {
+        if (stepHistory[phases[i]]?.folded !== true) return phases[i];
+    }
+    return null;
+}
+
 /** Compact lifecycle signal for the top of Overview; task events stay in Run Log. */
 export function OverviewTiming({ state }: { state: ViewerState }) {
     const phases = phaseNames(state);
@@ -41,20 +53,25 @@ export function OverviewTiming({ state }: { state: ViewerState }) {
                 {phases.map((phase, index) => {
                     const entry = state.stepHistory[phase];
                     const inFlight = entry.completedAt === null;
-                    const duration = entry.durationTrusted && entry.completedAt
+                    const folded = entry.folded === true;
+                    const anchor = folded ? foldAnchor(phases, state.stepHistory, index) : null;
+                    const duration = !folded && entry.durationTrusted && entry.completedAt
                         ? formatElapsed(Date.parse(entry.completedAt) - Date.parse(entry.startedAt))
                         : null;
                     return (
                         <div
                             key={phase}
                             role="listitem"
-                            class={`dossier-timing__phase${inFlight ? ' is-in-flight' : ''}`}
+                            class={`dossier-timing__phase${inFlight ? ' is-in-flight' : ''}${folded ? ' is-folded' : ''}`}
                         >
                             {index > 0 && <span class="dossier-timing__connector" aria-hidden="true" />}
                             <span class="dossier-timing__dot" aria-hidden="true" />
-                            <span class="dossier-timing__name">
-                                {phase.charAt(0).toUpperCase() + phase.slice(1)}
-                            </span>
+                            <span class="dossier-timing__name">{capitalize(phase)}</span>
+                            {folded && (
+                                <span class="dossier-timing__duration dossier-timing__duration--folded">
+                                    {anchor ? `folded into ${capitalize(anchor)}` : 'folded'}
+                                </span>
+                            )}
                             {duration && <span class="dossier-timing__duration">{duration}</span>}
                         </div>
                     );

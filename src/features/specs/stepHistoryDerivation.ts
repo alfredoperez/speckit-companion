@@ -281,6 +281,9 @@ function buildSubsteps(
     return out;
 }
 
+/** A fold's stamps land tens of ms apart in one hook run; a real phase takes multiple seconds. */
+const FOLD_WINDOW_MS = 1000;
+
 export function deriveStepHistory(
     transitions: HistoryEntry[],
     currentStep?: StepName,
@@ -412,6 +415,27 @@ export function deriveStepHistory(
             completedAt,
         };
         entry.durationTrusted = spanTrusted;
+
+        // Fold detection anchors on the step's own stamped pair, not the derived close (which can be a much later next-step start).
+        const foldClose = rawStepTransitions.find(t =>
+            isStepLevelEntry(t)
+            && t.kind === 'complete'
+            && t.by === 'extension'
+            && Number.isFinite(Date.parse(t.at))
+            && Date.parse(t.at) >= startMs
+        );
+        const prevGroupClose = i > 0
+            ? [...groups[i - 1].transitions].reverse().find(t =>
+                isStepLevelEntry(t) && t.kind === 'complete' && t.by === 'extension')
+            : undefined;
+        const foldSpanMs = foldClose ? Date.parse(foldClose.at) - startMs : NaN;
+        const foldGapMs = prevGroupClose ? startMs - Date.parse(prevGroupClose.at) : NaN;
+        if (trustedStart !== null
+            && foldSpanMs >= 0 && foldSpanMs < FOLD_WINDOW_MS
+            && foldGapMs >= 0 && foldGapMs < FOLD_WINDOW_MS) {
+            entry.folded = true;
+        }
+
         if (substeps.length > 0) entry.substeps = substeps;
         out[g.step] = entry;
     }

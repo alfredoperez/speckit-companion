@@ -1,0 +1,398 @@
+{
+  "workflow": "companion",
+  "specName": "folded steps label",
+  "branch": "532-folded-steps-label",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-23T21:31:29.905Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-23T21:33:19.124Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-23T21:33:33.171Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T21:35:35.261Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T21:35:35.709Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-23T21:35:35.760Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-23T21:35:50.674Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T21:36:21.779Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-23T21:36:22.422Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-23T21:36:32.983Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T21:37:27.570Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T21:38:12.470Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T21:38:12.588Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T21:39:06.680Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T21:39:06.800Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T21:39:51.098Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T21:40:50.381Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T21:40:50.499Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T21:40:50.621Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T21:41:59.139Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-23T21:41:59.209Z"
+    }
+  ],
+  "livingSpecs": {
+    "loaded": [
+      "viewer-ui",
+      "specs",
+      "core"
+    ],
+    "skipped": [
+      {
+        "name": "core",
+        "reason": "only a type declaration (StepHistoryEntry.folded) was added in src/core/types; spec detection/resolution behavior untouched"
+      }
+    ],
+    "synced": [
+      "specs",
+      "viewer-ui"
+    ]
+  },
+  "last_action": "all 10 tasks done — compile clean, 1801 tests pass, real 528 data renders folded",
+  "coverage": {
+    "FR-001": {
+      "title": "A folded phase never renders a near-zero duration; it renders a folded note",
+      "tasks": [
+        "T004",
+        "T006"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx::labels folded phases"
+      ]
+    },
+    "FR-002": {
+      "title": "The folded note names the nearest earlier non-folded phase (folded into Specify)",
+      "tasks": [
+        "T004",
+        "T006"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx::labels folded phases",
+        "webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx::anchorless fallback"
+      ]
+    },
+    "FR-003": {
+      "title": "Folded detection derived once in the shared step-history derivation, read as a flag",
+      "tasks": [
+        "T001",
+        "T002",
+        "T003"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/stepHistoryDerivation.test.ts::flags the folded plan and tasks steps"
+      ]
+    },
+    "FR-004": {
+      "title": "Only the deterministic fast-path signature reads as folded; everything else unchanged",
+      "tasks": [
+        "T001",
+        "T003",
+        "T006"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/stepHistoryDerivation.test.ts::does not flag a sub-second step that is not adjacent",
+        "src/features/specs/__tests__/stepHistoryDerivation.test.ts::does not flag any step of a normal-paced run"
+      ]
+    },
+    "FR-005": {
+      "title": "A same-instant fold also reads as folded despite the untrusted span",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/stepHistoryDerivation.test.ts::flags a same-instant fold"
+      ]
+    },
+    "FR-006": {
+      "title": "Folded phases still count as measured; coverage and total elapsed unchanged",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/stepHistoryDerivation.test.ts::counts the folded steps as measured timing coverage"
+      ]
+    },
+    "FR-007": {
+      "title": "A folded phase is visually distinct from measured phases",
+      "tasks": [
+        "T005",
+        "T007"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx::marks folded phases visually"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 10,
+    "projectedTasks": 7,
+    "scopeSignal": "smaller",
+    "verdict": "normal"
+  },
+  "context": [
+    "living spec: viewer-ui",
+    "living spec: specs",
+    "area: webview/src/spec-viewer (Run overview timing strip)",
+    "constraint: one fact one derivation — folded flag derived only in stepHistoryDerivation",
+    "constraint: run-timing coverage and elapsed totals unchanged"
+  ],
+  "intent": "Present fast-path folded plan/tasks phases as folded into Specify instead of a misleading <1s duration",
+  "expectations": [
+    "No change to timing coverage counts or total elapsed",
+    "No change to PhasesCard (folded steps already render no events there)",
+    "No new setting or toggle — folded detection is built-in"
+  ],
+  "approach": "Derive a folded flag once in deriveStepHistory from the deterministic fast-path signature (extension-stamped pair within 1s, adjacent to the previous step's close); OverviewTiming renders 'folded into Specify' with a distinct visual instead of a duration. No schema, coverage, or elapsed-total changes.",
+  "decisions": [
+    {
+      "decision": "Derive folded in deriveStepHistory, exposed as a flag on StepHistoryEntry",
+      "why": "One fact one derivation; the module already owns spans and trust",
+      "rejected": "Renderer-side near-zero threshold (would drift across surfaces)"
+    },
+    {
+      "decision": "Fold window 1000ms on both own span and gap to previous close; anchored to the stamped pair, not the derived completedAt",
+      "why": "Fold chain stamps land under 350ms apart while real phases take multiple seconds; derived close can absorb idle time before implement",
+      "rejected": "Span-only check or classification.verdict as the signal"
+    },
+    {
+      "decision": "folded independent of durationTrusted",
+      "why": "A same-instant fold is untrusted but still a fold; provenance vs measurability",
+      "rejected": "Piggybacking folded on durationTrusted"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan: single folded derivation + Overview strip label; docs, stories, tests scoped",
+      "key_finding": "The folded tasks step derived close can be the next step start minutes later, so detection must anchor on the stamped pair itself"
+    },
+    "tasks": {
+      "summary": "10 tasks across 5 phases in 6 waves; derivation first, render+style parallel, docs/stories polish"
+    },
+    "implement": {
+      "summary": "Folded flag derived once + Overview folded-into-Specify rendering; 10/10 tasks, suite green"
+    }
+  },
+  "currentTask": "T010",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Derived folded flag in deriveStepHistory (1s fold window, stamped-pair + adjacency signature) and added folded?: boolean to StepHistoryEntry",
+      "files": [
+        "src/features/specs/stepHistoryDerivation.ts",
+        "src/core/types/specContext.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Mirrored folded?: boolean on the webview StepHistoryEntry",
+      "files": [
+        "webview/src/spec-viewer/types.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Pinned folded derivation: fold flags plan/tasks not specify, same-instant fold folded+untrusted, non-adjacent and ai-start spans not folded, normal run unflagged (52 tests green)",
+      "files": [
+        "src/features/specs/__tests__/stepHistoryDerivation.test.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "OverviewTiming renders 'folded into <anchor>' for folded phases (duration suppressed, is-folded class, anchor = nearest earlier non-folded phase)",
+      "files": [
+        "webview/src/spec-viewer/components/OverviewDossier.tsx"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Styled folded phases: hollow success dot (inset ring), italic body-token folded note",
+      "files": [
+        "webview/styles/spec-viewer/_overview-dossier.css"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Component tests pin folded rendering: folded into Specify note, no <1s, is-folded classes, measured phases untouched, anchorless fallback (12 tests green)",
+      "files": [
+        "webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Added DossierFastPathFolded story: folded plan/tasks with hollow dots and folded-into-Specify notes",
+      "files": [
+        "webview/src/spec-viewer/components/ActivityPanel.stories.tsx"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Documented folded-phase timing semantics (fold signature, folded-vs-trusted, unchanged coverage) in the viewer state machine doc",
+      "files": [
+        "docs/viewer-states.md"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Root CHANGELOG Unreleased entry for the folded-phase label fix",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "npm run compile clean; full suite 126 suites / 1801 tests green; real 528 data derives plan+tasks folded, specify+implement not"
+    }
+  },
+  "verified": [
+    {
+      "what": "TypeScript compile",
+      "command": "npm run compile",
+      "result": "clean"
+    },
+    {
+      "what": "full jest suite",
+      "command": "npm test",
+      "result": "126 suites, 1801 tests pass"
+    },
+    {
+      "what": "SC-001 against real fast-path data (specs/528-footer-done-guard)",
+      "command": "node -e deriveStepHistory(...528 history)",
+      "result": "plan folded:true span 161ms, tasks folded:true, specify/implement folded:false"
+    }
+  ]
+}
