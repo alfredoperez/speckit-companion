@@ -410,9 +410,7 @@
     grid-template-columns: minmax(0, 1.55fr) minmax(120px, 0.55fr) minmax(130px, 0.5fr);
     gap: var(--space-4);
     padding: 0 12px 8px;
-    /* Own the single divider under the column labels; the coverage container no
-       longer adds a second border-top (which stacked with these labels as a
-       doubled rule). */
+    /* The one divider under the labels — .dossier-coverage adds none in wide mode. */
     border-bottom: 1px solid var(--border);
     color: var(--text-label);
     font-family: var(--font-mono);
@@ -420,11 +418,6 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-}
-
-.dossier-coverage {
-    /* No border-top: the label row above owns the divider. In narrow mode the
-       label row is hidden (below), so the border-top is restored there. */
 }
 
 .dossier-coverage__row {
