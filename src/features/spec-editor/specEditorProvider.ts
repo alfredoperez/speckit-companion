@@ -158,9 +158,9 @@ export class SpecEditorProvider {
     /**
      * The highest-intent install moment: the user picked SpecKit Companion in
      * Create Spec but the spec-kit extension isn't installed. Presents the benefits
-     * and a one-click install FIRST (no surprise install), then lets the caller
-     * proceed. Returns 'install' (install + still create), 'continue' (graceful
-     * stock downgrade), or 'cancel' (abort, create nothing).
+     * and a one-click install FIRST (no surprise install). Returns 'install'
+     * (install kicked off — the caller aborts so no stock spec is silently made),
+     * 'continue' (graceful stock downgrade), or 'cancel' (abort, create nothing).
      */
     private async promptCompanionInstallFirst(): Promise<'install' | 'continue' | 'cancel'> {
         reportInstallPromptShown('createSpec');
@@ -341,10 +341,14 @@ export class SpecEditorProvider {
         let installFirstHandled = false;
         if (companionNeedsInstall) {
             const decision = await this.promptCompanionInstallFirst();
-            if (decision === 'cancel') {
-                // Nothing was posted yet, so the editor stays interactive — just abort.
+            // Nothing was posted yet, so the editor stays interactive on abort.
+            if (decision === 'cancel') return;
+            if (decision === 'install') {
+                // Install kicked off (async); creating a stock spec now would silently run the wrong workflow. Abort — re-run once installed.
+                void vscode.window.showInformationMessage('Installing SpecKit Companion — re-run New Spec once it finishes to use the Companion workflow.');
                 return;
             }
+            // decision === 'continue' → the user chose stock; proceed with the graceful downgrade.
             installFirstHandled = true;
         }
 

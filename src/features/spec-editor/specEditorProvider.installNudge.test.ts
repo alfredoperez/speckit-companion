@@ -85,4 +85,19 @@ describe('Create Spec — Companion install nudge', () => {
         }).promptCompanionInstallFirst();
         expect(decision).toBe('cancel');
     });
+
+    it('choosing Install aborts the submission instead of silently creating a stock spec', async () => {
+        (vscode.window.showInformationMessage as jest.Mock).mockResolvedValue('Install SpecKit Companion');
+        const provider = createProvider();
+        (provider as unknown as { sessionId: string }).sessionId = 'sess';
+        const posted: Array<{ type: string }> = [];
+        (provider as unknown as { postMessage: (m: { type: string }) => void }).postMessage = (m) => posted.push(m);
+        await (provider as unknown as {
+            handleSubmit(c: string, i: string[], w: string, cmd?: string, auto?: boolean): Promise<void>;
+        }).handleSubmit('build a thing', [], COMPANION_WORKFLOW_NAME, undefined, false);
+        // Install kicked off, but no dispatch — submissionStarted must never post.
+        expect(vscode.commands.executeCommand).toHaveBeenCalledWith('speckit.companion.installSpecKitExtension');
+        expect(posted.find((m) => m.type === 'submissionStarted')).toBeUndefined();
+        expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(expect.stringContaining('re-run New Spec'));
+    });
 });
