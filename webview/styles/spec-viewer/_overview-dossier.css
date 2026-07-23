@@ -410,16 +410,14 @@
     grid-template-columns: minmax(0, 1.55fr) minmax(120px, 0.55fr) minmax(130px, 0.5fr);
     gap: var(--space-4);
     padding: 0 12px 8px;
+    /* The one divider under the labels — .dossier-coverage adds none in wide mode. */
+    border-bottom: 1px solid var(--border);
     color: var(--text-label);
     font-family: var(--font-mono);
     font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-}
-
-.dossier-coverage {
-    border-top: 1px solid var(--border);
 }
 
 .dossier-coverage__row {
@@ -563,6 +561,11 @@
 
     .dossier-coverage__head {
         display: none;
+    }
+
+    .dossier-coverage {
+        /* Labels are hidden here, so the container owns the single top divider. */
+        border-top: 1px solid var(--border);
     }
 
     .dossier-coverage__row {
