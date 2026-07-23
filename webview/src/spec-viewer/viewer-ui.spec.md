@@ -282,3 +282,12 @@ A step whose completion is recorded in the run's history is read as settled, and
 - **THEN** the step reads as running and the forward action stays withheld
 
 > The companion requirement for #492 — fold-back naming its exact outcome and surfacing loaded-but-unfolded capabilities — is recorded in the `capture-runtime` living spec's own change record and the spec-kit extension CHANGELOG, not folded here: the fold grammar applies one delta set to its target, so routing this feature's cross-cutting change through a single `viewer-ui` block keeps each capability spec honest.
+
+### A folded phase is presented as folded, never as a near-zero duration
+
+A phase the derivation marks as folded (a fast-path plan or tasks whose boundaries were stamped inside the specify run) MUST NOT render its span as a duration. The run timing strip SHALL render a "folded into" note naming the nearest earlier non-folded phase (a plain "folded" when none exists), with a visual distinct from a measured phase, while measured phases, coverage counts, and the elapsed total render unchanged.
+
+#### Scenario: a fast-path spec is opened
+- **WHEN** the run timing strip renders a phase carrying the folded marker
+- **THEN** the phase shows "folded into Specify" instead of a sub-second duration
+- **AND** the specify phase keeps its real measured duration

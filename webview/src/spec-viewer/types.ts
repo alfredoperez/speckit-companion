@@ -182,6 +182,8 @@ export interface StepHistoryEntry {
     substeps?: SubstepEntry[] | Record<string, { startedAt: string; completedAt: string | null }>;
     /** True only when both boundaries were extension-stamped — spans safe to present as durations. */
     durationTrusted?: boolean;
+    /** True when the step was stamped as a fast-path fold — render "folded into", never a duration. */
+    folded?: boolean;
 }
 
 export interface TimingSummary {

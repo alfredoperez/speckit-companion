@@ -478,6 +478,55 @@ describe('deriveStepHistory', () => {
             expect(timing.measuredPhases).toBe(3);
             expect(timing.expectedPhases).toBe(4);
         });
+
+        it('flags the folded plan and tasks steps, never specify', () => {
+            const sh = deriveStepHistory(foldedRun(), 'tasks', 'ready-to-implement');
+            expect(sh.specify.folded).toBeUndefined();
+            expect(sh.plan.folded).toBe(true);
+            expect(sh.tasks.folded).toBe(true);
+        });
+
+        it('flags a same-instant fold even though its span is untrusted', () => {
+            const sh = deriveStepHistory([
+                tx({ step: 'specify', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00.100Z' }),
+                tx({ step: 'specify', kind: 'complete', by: 'extension', at: '2026-07-01T10:03:00.100Z' }),
+                tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-01T10:03:00.200Z' }),
+                tx({ step: 'plan', kind: 'complete', by: 'extension', at: '2026-07-01T10:03:00.200Z' }),
+            ], 'plan', 'planned');
+            expect(sh.plan.folded).toBe(true);
+            expect(sh.plan.durationTrusted).toBe(false);
+        });
+
+        it('does not flag a sub-second step that is not adjacent to the previous close', () => {
+            const sh = deriveStepHistory([
+                tx({ step: 'specify', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00.100Z' }),
+                tx({ step: 'specify', kind: 'complete', by: 'extension', at: '2026-07-01T10:03:00.100Z' }),
+                tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-01T10:09:00.000Z' }),
+                tx({ step: 'plan', kind: 'complete', by: 'extension', at: '2026-07-01T10:09:00.300Z' }),
+            ], 'plan', 'planned');
+            expect(sh.plan.folded).toBeUndefined();
+        });
+
+        it('does not flag any step of a normal-paced run', () => {
+            const sh = deriveStepHistory([
+                tx({ step: 'specify', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
+                tx({ step: 'specify', kind: 'complete', by: 'extension', at: '2026-07-01T10:04:00Z' }),
+                tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-01T10:04:01Z' }),
+                tx({ step: 'plan', kind: 'complete', by: 'extension', at: '2026-07-01T10:12:00Z' }),
+            ], 'plan', 'planned');
+            expect(sh.specify.folded).toBeUndefined();
+            expect(sh.plan.folded).toBeUndefined();
+        });
+
+        it('does not flag a fold whose start was ai-journaled', () => {
+            const sh = deriveStepHistory([
+                tx({ step: 'specify', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00.100Z' }),
+                tx({ step: 'specify', kind: 'complete', by: 'extension', at: '2026-07-01T10:03:00.100Z' }),
+                tx({ step: 'plan', kind: 'start', by: 'ai', at: '2026-07-01T10:03:00.200Z' }),
+                tx({ step: 'plan', kind: 'complete', by: 'extension', at: '2026-07-01T10:03:00.285Z' }),
+            ], 'plan', 'planned');
+            expect(sh.plan.folded).toBeUndefined();
+        });
     });
 });
 

@@ -104,6 +104,17 @@
     white-space: nowrap;
 }
 
+.dossier-timing__phase.is-folded .dossier-timing__dot {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--success);
+}
+
+.dossier-timing__duration--folded {
+    color: var(--text-body);
+    font-style: italic;
+    font-variant-numeric: normal;
+}
+
 /* ── Intent — the reason the spec exists, set as the page's thesis ── */
 
 .dossier-intent {

@@ -219,3 +219,15 @@ Two updates to the same spec's state record that arrive at the same time both la
 #### Scenario: a queued write fails
 - **WHEN** a serialized write throws
 - **THEN** its error reaches its caller and the next queued write for that spec still runs
+
+### A fast-path folded step is derived as folded, once
+
+The shared step-history derivation SHALL mark a step folded when its own extension-stamped step-level start/complete pair spans under one second and its start lands within one second of the previous step's extension-stamped close — anchored on the stamped pair, never on the derived close, which can be a much later next-step start. The flag is independent of duration trust (a same-instant fold is folded but untrusted), is set nowhere else, and folded steps keep counting as measured timing coverage.
+
+#### Scenario: a fast-path run's history is derived
+- **WHEN** plan and tasks were stamped back-to-back inside the specify run
+- **THEN** their derived entries carry the folded marker and specify's does not
+
+#### Scenario: a sub-second step far from the previous close
+- **WHEN** a step's stamped pair spans under a second but starts minutes after the previous step closed
+- **THEN** its entry carries no folded marker

@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **Fast-path folded phases now read "folded into Specify" instead of a misleading "<1s".** A small change run through the fast path does its planning and task work inside the specify run, so the Plan and Tasks phases have no duration of their own — but the Overview's run timing strip showed them as `Plan <1s` / `Tasks <1s`, which looked like a bug. Those phases now carry a "folded into Specify" note and a hollow dot instead of a duration; genuinely measured phases, coverage counts, and the run's elapsed total are unchanged. ([#523](https://github.com/alfredoperez/speckit-companion/issues/523))
+
 - **A phase no longer flips to "untrusted timing" at random when a spec advances.** Advancing a step fired two context updates at once, and if they overlapped, the later one could overwrite the step's start marker — which is what made a phase's duration occasionally read as untrusted. Updates to a single spec's context now happen one at a time, so both always land and the start marker is never lost. Updates to different specs still run in parallel, so nothing gets slower. ([#527](https://github.com/alfredoperez/speckit-companion/issues/527))
 
 ## [0.30.0] - 2026-07-22
