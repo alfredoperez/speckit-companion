@@ -199,3 +199,12 @@ Each render MUST emit its own content-security policy with a freshly generated p
 ## Uncovered
 
 _None — every file in the area was read, though the test files under `__tests__/` were read only for the contracts they pin, not line by line._
+
+### A done spec offers only its finish actions, never the forward advance
+
+Once a spec has reached a done-building state, the footer MUST offer only its finish actions (Mark Completed / Archive) and MUST NOT surface the forward advance action, regardless of what the recorded current step says. A fast-path finish can flip the status to done before the pipeline records the final step's boundary, leaving the recorded current step transiently behind; the done status alone SHALL suppress the forward action so advance and finish are never offered together.
+
+#### Scenario: the status is done but the recorded current step still trails
+- **WHEN** a spec's status reports it is done building while its recorded current step lags at an earlier step
+- **THEN** the footer offers only the finish actions
+- **AND** the forward advance action is absent

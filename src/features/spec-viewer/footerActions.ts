@@ -97,6 +97,9 @@ function shouldShowApprove(
     stepHistory: DerivedHistory,
     workflowSteps?: WorkflowStepConfig[]
 ): boolean {
+    // A done spec never advances: guards the fast-path skew where `status` flips
+    // to done before `currentStep` catches up (else advance + finish show together).
+    if (isSpecDone(ctx)) return false;
     // Implement step closure is owned by `Mark Completed` (gated on
     // `isSpecDone(ctx)`). Approve here would surface a duplicate
     // "Complete" button the moment every task box gets ticked, before

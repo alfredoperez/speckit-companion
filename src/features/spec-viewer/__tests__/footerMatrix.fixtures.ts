@@ -149,6 +149,16 @@ export const FOOTER_MATRIX: FooterMatrixRow[] = [
         right: ['archive', 'complete'],
     },
     {
+        // Fast-path skew: `status` is done while `currentStep` still trails at
+        // `tasks`; the done-state guard must drop Approve, leaving only finish.
+        name: 'implemented (fast-path skew: currentStep still at tasks)',
+        status: 'implemented',
+        currentStep: 'tasks',
+        history: historyThrough('tasks'),
+        left: ['regenerate'],
+        right: ['archive', 'complete'],
+    },
+    {
         name: 'completed',
         status: 'completed',
         currentStep: 'implement',

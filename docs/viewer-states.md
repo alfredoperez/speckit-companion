@@ -262,13 +262,15 @@ Zones: **Left** = `regenerate`. **Right** = `refine`, `approve`, `reactivate`,
 | `specified` | Regenerate | Approve → **Plan** | forward action present |
 | `planned` | Regenerate | Approve → **Tasks** | |
 | `ready-to-implement` | Regenerate | Approve → **Implement** | |
-| `implemented` | Regenerate | **Mark Completed**, **Archive** | Approve hidden; closure controls appear |
+| `implemented` | Regenerate | **Mark Completed**, **Archive** | Approve hidden; closure controls appear. A done spec (`status` ∈ {`implemented`, `completed`}) offers **only** its finish actions regardless of the recorded `currentStep` — see the done-state guard below. |
 | `completed` | — | **Reactivate**, **Archive** | terminal; Regenerate hidden |
 | `archived` | — | **Reactivate** | terminal; Archive hidden |
 
 The `Approve` label resolves to the next workflow step (`getApproveLabel`); it is hidden on the final `implement` step and whenever a past tab is viewed (the footer always reflects the true workflow stage, not the viewed tab). While a step is in flight the `CatalogFooter` suppresses its forward-motion button and keeps `Regenerate` (plus any closure/refine actions); the moment the step settles — its `status` settles **or** its completion is recorded in history (`FooterActions` reads the resilient `isStepInFlight`, not the status string alone, so a lagging status can't keep it locked, #491) — the forward button reappears; it never leaves the action bar empty.
 
 A status recovered via the sidebar gear maps to the **same row** as its normal pause stage: forcing `ready-to-implement` after an interrupted implement run restores Approve → **Implement**, and forcing `planned` restores Approve → **Tasks** — the stale start left by the interrupted run does not suppress the forward button (#414, "Rollback recovery" above). The oracle rows in `footerMatrix.fixtures.ts` pin these recovered states alongside the normal ones.
+
+**Done-state guard**: once a spec is done building (`status` ∈ {`implemented`, `completed`}), the footer offers **only** its finish actions (**Mark Completed** / **Archive**) — the forward **Approve** never appears, regardless of what `currentStep` records. During a fast-path finish, `status` can flip to `implemented` before the pipeline stamps the final step's boundary, so `currentStep` transiently trails (e.g. still `tasks`). Without the guard that skew would light **Approve → Implement** next to **Mark Completed** — advance-and-finish side by side. `shouldShowApprove` returns early on `isSpecDone(ctx)` so the footer stays correct through the skew; the oracle's `implemented (fast-path skew: currentStep still at tasks)` row pins it.
 
 The source-tab **Refine** button (`✨ Refine (N)`) still appears dynamically
 when pending inline comments are collected. Each comment is persisted to
