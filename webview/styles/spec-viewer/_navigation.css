@@ -295,6 +295,7 @@
 
 .step-substeps .step-child {
     width: 100%;
+    min-width: 0;
 }
 
 /* Indent only when nested beneath a step tab; the orphan fallback sits under
