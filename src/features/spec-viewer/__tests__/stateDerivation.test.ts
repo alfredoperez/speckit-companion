@@ -217,6 +217,25 @@ describe('deriveViewerState', () => {
             expect(timing.elapsedMs).toBeGreaterThan(0);
         });
 
+        it('a completed fast-path spec with same-instant folded plan/tasks still reaches 4 of 4', () => {
+            // 528-footer-done-guard shape: specify real, plan+tasks folded at the same instant
+            // as specify-complete (by:extension, sub-second), implement real. Must not read "0 of 4".
+            const folded = makeContext({
+                currentStep: 'implement',
+                status: 'completed',
+                history: [
+                    ...extPair('specify', '2026-07-22T20:45:44.000Z', '2026-07-22T20:51:14.000Z'),
+                    ...extPair('plan', '2026-07-22T20:51:14.000Z', '2026-07-22T20:51:14.082Z'),
+                    ...extPair('tasks', '2026-07-22T20:51:14.082Z', '2026-07-22T20:51:14.164Z'),
+                    ...extPair('implement', '2026-07-22T20:54:43.000Z', '2026-07-22T20:58:59.000Z'),
+                ],
+            });
+            const timing = deriveViewerState(folded, 'implement', companionSteps).timing;
+            expect(timing.measuredPhases).toBe(4);   // folded phases still count as measured
+            expect(timing.complete).toBe(true);
+            expect(timing.elapsedMs).toBeGreaterThan(0);
+        });
+
         it('a fast-path spec parked at ready-to-implement shows 3 of 4, not complete', () => {
             const parked = makeContext({
                 currentStep: 'tasks',
