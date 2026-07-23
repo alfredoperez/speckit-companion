@@ -279,11 +279,7 @@ export async function activate(context: vscode.ExtensionContext) {
             // below when the extension dir appears/disappears (e.g. after the
             // one-click install terminal completes).
             void refreshCompanionInstalledContext(root);
-            // Activity-bar install nudge: badge the Specs view (VS Code aggregates it
-            // onto the seedling container icon) when the spec-kit extension is missing;
-            // clear it once installed. Refreshed by the watcher below so it flips
-            // without a reload. Also refreshes the Specs + Steering trees so the pinned
-            // CTA row and the retired Steering node track install state.
+            // Badge the Specs view when the spec-kit extension is missing and refresh the Specs + Steering trees; the watcher below reruns this so it flips without a reload.
             const syncInstallAffordances = (): void => {
                 const installed = isCompanionInstalled(root);
                 specsTreeView.badge = installed

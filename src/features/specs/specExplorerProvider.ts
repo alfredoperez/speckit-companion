@@ -14,7 +14,7 @@ import {
     SpecStatus,
 } from '../workflows';
 import { resolveSpecDirectories, hasDuplicateNames, deriveChangeRoot, type SpecDirectoryInfo } from '../../core/specDirectoryResolver';
-import { SpecStatuses, WorkflowSteps } from '../../core/constants';
+import { SpecStatuses, WorkflowSteps, ConfigKeys } from '../../core/constants';
 import { readSpecContextSync } from './specContextManager';
 import { deriveDocumentState } from './stepHistoryDerivation';
 import { deriveLastTransition } from './lastTransition';
@@ -178,6 +178,12 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
 
             const specs = await this.getSpecs();
             if (specs.length === 0) {
+                // Empty Specs view renders the viewsWelcome install button; report its "shown" under the same not-installed + not-dismissed gate the block renders on.
+                const root = vscode.workspace.workspaceFolders![0].uri.fsPath;
+                const dismissed = this.context.globalState.get<boolean>(ConfigKeys.globalState.installNudgeDismissed, false);
+                if (!isCompanionInstalled(root) && !dismissed) {
+                    reportInstallPromptShown('welcome');
+                }
                 return [];
             }
 
@@ -240,12 +246,12 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
 
             const items: SpecItem[] = [];
 
-            // Pinned install CTA: an on-brand, one-click install nudge atop the tree
-            // whenever the spec-kit extension is missing. Persists until installed
-            // (ambient, no dismiss); the empty-view case is covered by viewsWelcome.
-            const cta = this.buildInstallCtaItem(basePath);
-            if (cta) {
-                items.push(cta);
+            // Pinned one-click install nudge atop the tree while the spec-kit extension is missing (ambient, no dismiss; empty view uses viewsWelcome). Suppressed during a no-match filter so the clear-filter welcome shows.
+            if (!noFilterMatch) {
+                const cta = this.buildInstallCtaItem(basePath);
+                if (cta) {
+                    items.push(cta);
+                }
             }
 
             // Group items get stable ids so VS Code preserves the user's

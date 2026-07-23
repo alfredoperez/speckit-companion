@@ -863,17 +863,14 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
         return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     }
 
-    /** Root Companion node — only present when installed (Configuration + Commands). The
-     * not-installed nudge now lives where users look: the activity-bar badge, the pinned
-     * Specs CTA, and Create Spec — so the buried "Not installed" badge here is retired. */
+    /** Root Companion node — present only when installed (Configuration + Commands); the not-installed nudge lives in the activity-bar badge, the pinned Specs CTA, and Create Spec. */
     private buildCompanionHeaderNode(): SteeringItem | undefined {
         const root = this.companionWorkspaceRoot();
         if (!root || !isCompanionInstalled(root)) {
             return undefined;
         }
 
-        // Installed: the node always offers Configuration + Commands, so it's
-        // collapsible without reading any file to decide.
+        // Installed: the node always offers Configuration + Commands, so it's collapsible without reading any file.
         const item = new SteeringItem(
             'Companion',
             vscode.TreeItemCollapsibleState.Collapsed,

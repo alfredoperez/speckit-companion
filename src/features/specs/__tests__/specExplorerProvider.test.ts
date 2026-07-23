@@ -44,8 +44,7 @@ jest.mock('../specContextManager', () => ({
     deriveSpecName: jest.requireActual('../specContextManager').deriveSpecName,
 }));
 
-// Companion installed by default so the pinned install CTA row is absent for the
-// pre-existing tree-shape tests; the CTA-specific tests flip this to false.
+// Companion installed by default so the pinned CTA row is absent for pre-existing tree-shape tests; CTA tests flip this to false.
 jest.mock('../../settings/companionPresetReconciler', () => ({
     isCompanionInstalled: jest.fn().mockReturnValue(true),
 }));

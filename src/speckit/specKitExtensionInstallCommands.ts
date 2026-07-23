@@ -17,8 +17,7 @@ export function registerSpecKitExtensionInstallCommands(
             const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
             runInstallSpecKitExtension(root);
         }),
-        // Surface-tagged install trigger used by the sidebar CTA row and the
-        // empty-state welcome button so the install funnel records which surface converted.
+        // Surface-tagged install trigger for the CTA row and welcome button; records which surface converted.
         vscode.commands.registerCommand('speckit.companion.installNudge', (surface?: unknown) => {
             const known = coerceInstallPromptSurface(surface);
             if (known) {

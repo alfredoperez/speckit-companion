@@ -331,9 +331,7 @@ export class SpecEditorProvider {
             return;
         }
 
-        // Highest-intent install moment: a not-installed Companion pick (normal
-        // Create Spec path) shows benefits + one-click install before any dispatch.
-        // Auto has its own suppress-and-warn path; custom commands opt out.
+        // A not-installed Companion pick shows benefits + one-click install before any dispatch (Auto/custom opt out).
         const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         const companionNeedsInstall =
             workflowName === COMPANION_WORKFLOW_NAME &&
