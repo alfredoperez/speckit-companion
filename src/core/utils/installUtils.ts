@@ -23,8 +23,7 @@ export async function ensureCliInstalled(
     try {
         await execAsync(checkCommand);
     } catch {
-        // A download-based tool (no package-manager one-liner) gets an "Open
-        // Install Page" action; a real installCommand keeps copy-to-clipboard.
+        // A download-based tool gets "Open Install Page"; a real command keeps copy-to-clipboard.
         if (installUrl) {
             const action = await vscode.window.showErrorMessage(
                 `${cliName} is not installed. Get it at: ${installUrl}`,
