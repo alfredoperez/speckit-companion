@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **Antigravity joins the provider list.** You can now pick **Antigravity** — Google's agentic coding assistant — under **Settings > speckit.aiProvider**, and SpecKit commands dispatch to the `antigravity` CLI in an integrated terminal, the same way Codex, Gemini, and Qwen do. ([#546](https://github.com/alfredoperez/speckit-companion/issues/546))
+
 ### Changed
 
 - **A step's artifact files now nest directly under it in the spec viewer's side rail.** The rail used to list the workflow steps under a Pipeline heading and then repeat each step's files in separate "Plan files" / "Specification files" groups below — so a file was visually decoupled from the step it came from. Now Data Model, Living Components, and Research sit indented under **Plan**, Requirements sits under **Specification**, and so on, so "where does this file come from" is answered in place. Every file is still one click away, the Overview stays at the top, and a file whose step isn't shown in the rail keeps a labeled fallback group so nothing goes missing. ([#504](https://github.com/alfredoperez/speckit-companion/issues/504))

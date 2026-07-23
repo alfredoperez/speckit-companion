@@ -975,7 +975,8 @@
               "opencode",
               "ide-chat",
               "wibey",
-              "wibey-vscode"
+              "wibey-vscode",
+              "antigravity"
             ],
             "enumItemLabels": [
               "Claude Code",
@@ -987,7 +988,8 @@
               "OpenCode",
               "IDE Chat (Copilot · Cursor · Windsurf)",
               "Wibey CLI",
-              "Wibey (VS Code)"
+              "Wibey (VS Code)",
+              "Antigravity"
             ],
             "enumDescriptions": [
               "Claude Code - Full feature support (steering, agents, skills, hooks)",
@@ -999,7 +1001,8 @@
               "OpenCode - Steering and agents support (AGENTS.md)",
               "IDE Chat - Routes prompts to the host editor's built-in AI chat (Copilot / Cursor / Windsurf)",
               "Wibey CLI - Walmart's built-in AI coding assistant (dispatches SpecKit commands to the wibey CLI in a VS Code terminal)",
-              "Wibey (VS Code) - Opens the Wibey chat panel and pre-fills the command (uses wibey.sendPrompt when available, clipboard fallback otherwise)"
+              "Wibey (VS Code) - Opens the Wibey chat panel and pre-fills the command (uses wibey.sendPrompt when available, clipboard fallback otherwise)",
+              "Antigravity - Google's agentic coding assistant (dispatches SpecKit commands to the antigravity CLI in a VS Code terminal)"
             ],
             "scope": "machine",
             "order": 2,

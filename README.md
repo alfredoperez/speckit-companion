@@ -18,7 +18,7 @@ A spec workspace that turns AI-assisted, spec-driven development into something 
 - **Catch bad specs before they become bad code.** Review AI-generated specs the way you review pull requests: inline comments on specific lines, refine in place, and kill a vague requirement before it turns into 200 lines of wrong implementation.
 - **Watch every feature flow through its phases.** Specify → Plan → Tasks → Done, each a one-click action, with live progress, a phase timeline, and an Activity overview of everything the spec tracks.
 - **Pick one pipeline, run it end to end.** Choose stock **SpecKit** or the leaner **SpecKit Companion** workflow once — smaller specs, files-and-dependencies tasks, built-in right-sizing for small changes — and every step of the run dispatches that choice.
-- **Bring your own AI and your own workflow.** Ten providers, custom phases, custom commands. Drop in your own SDD process; the sidebar and viewer adapt.
+- **Bring your own AI and your own workflow.** Eleven providers, custom phases, custom commands. Drop in your own SDD process; the sidebar and viewer adapt.
 
 ## Recently Shipped
 
@@ -33,7 +33,7 @@ A spec workspace that turns AI-assisted, spec-driven development into something 
 
 **Review AI-generated specs the way you review code.** Add inline comments on specific lines, refine requirements, and catch a vague requirement before the AI turns it into 200 lines of wrong code. Every comment persists to the spec's `.spec-context.json` the moment you add it, so an in-progress review is durable across sessions and committable to source control.
 
-**Plug any AI assistant into any spec-driven workflow.** Ten providers ship today (Claude Code, Gemini, GitHub Copilot, Codex, Qwen, OpenCode, IDE Chat, Claude in VS Code, Wibey CLI, Wibey in VS Code), and the workflow engine accepts custom phases, commands, and sub-documents. Drop in [Agent Teams Lite](https://github.com/Gentleman-Programming/agent-teams-lite), your own SDD process, or anything that takes commands and produces markdown.
+**Plug any AI assistant into any spec-driven workflow.** Eleven providers ship today (Claude Code, Gemini, GitHub Copilot, Codex, Qwen, OpenCode, IDE Chat, Claude in VS Code, Wibey CLI, Wibey in VS Code, Antigravity), and the workflow engine accepts custom phases, commands, and sub-documents. Drop in [Agent Teams Lite](https://github.com/Gentleman-Programming/agent-teams-lite), your own SDD process, or anything that takes commands and produces markdown.
 
 **Spec-driven phases without leaving VS Code.** Each feature flows through Specify, Plan, Tasks, Done, with progress tracking, sticky headers, and a structured viewer built for long specs.
 
@@ -219,14 +219,14 @@ Compare the file lists side by side to see the contrast between the full and min
 <!-- Column count must match the `speckit.aiProvider` enum length in package.json.
      The docs-consistency test in tests/integration/docs-consistency.test.ts enforces this on every `npm test`. -->
 
-| Feature | Claude Code | GitHub Copilot CLI | Gemini CLI | Codex CLI | Qwen Code | OpenCode | IDE Chat | Claude in VS Code | Wibey CLI | Wibey (VS Code) |
-|---------|-------------|-------------------|------------|-----------|-----------|----------|----------|-------------------|-----------|-----------------|
-| **Steering File** | CLAUDE.md | .github/copilot-instructions.md | GEMINI.md | AGENTS.md | QWEN.md | AGENTS.md | Not supported | CLAUDE.md | AGENTS.md | AGENTS.md |
-| **Steering Path** | .claude/steering/ | .github/instructions/*.instructions.md | Hierarchical GEMINI.md | Hierarchical AGENTS.md | .qwen/steering/ | Hierarchical AGENTS.md | Not supported | .claude/steering/ | Project root | Project root |
-| **Agents** | .claude/agents/*.md | .github/agents/*.agent.md | Limited support | Hierarchical AGENTS.md | Not supported | .opencode/agent/*.md | Not supported | .claude/agents/*.md | .wibey/agents/*.md | .wibey/agents/*.md |
-| **Hooks** | .claude/settings.json | Not supported | Not supported | Not supported | Not supported | Not supported | Not supported | .claude/settings.json | .wibey/hooks/hooks.json | .wibey/hooks/hooks.json |
-| **MCP Servers** | .claude/settings.json | ~/.copilot/mcp-config.json | ~/.gemini/settings.json | ~/.codex/config.toml | ~/.qwen/settings.json | ~/.opencode/opencode.jsonc | Not supported | .claude/settings.json | .wibey/.mcp.json | .wibey/.mcp.json |
-| **CLI Command** | `claude` | `ghcs` / `gh copilot` | `gemini` | `codex` | `qwen` | `opencode` | Built-in editor chat (Copilot / Composer / Cascade) | Claude Code GUI panel (no terminal) | `wibey` | Wibey chat panel (no terminal) |
+| Feature | Claude Code | GitHub Copilot CLI | Gemini CLI | Codex CLI | Qwen Code | OpenCode | IDE Chat | Claude in VS Code | Wibey CLI | Wibey (VS Code) | Antigravity |
+|---------|-------------|-------------------|------------|-----------|-----------|----------|----------|-------------------|-----------|-----------------|-------------|
+| **Steering File** | CLAUDE.md | .github/copilot-instructions.md | GEMINI.md | AGENTS.md | QWEN.md | AGENTS.md | Not supported | CLAUDE.md | AGENTS.md | AGENTS.md | AGENTS.md |
+| **Steering Path** | .claude/steering/ | .github/instructions/*.instructions.md | Hierarchical GEMINI.md | Hierarchical AGENTS.md | .qwen/steering/ | Hierarchical AGENTS.md | Not supported | .claude/steering/ | Project root | Project root | Project root |
+| **Agents** | .claude/agents/*.md | .github/agents/*.agent.md | Limited support | Hierarchical AGENTS.md | Not supported | .opencode/agent/*.md | Not supported | .claude/agents/*.md | .wibey/agents/*.md | .wibey/agents/*.md | Not supported |
+| **Hooks** | .claude/settings.json | Not supported | Not supported | Not supported | Not supported | Not supported | Not supported | .claude/settings.json | .wibey/hooks/hooks.json | .wibey/hooks/hooks.json | Not supported |
+| **MCP Servers** | .claude/settings.json | ~/.copilot/mcp-config.json | ~/.gemini/settings.json | ~/.codex/config.toml | ~/.qwen/settings.json | ~/.opencode/opencode.jsonc | Not supported | .claude/settings.json | .wibey/.mcp.json | .wibey/.mcp.json | Not supported |
+| **CLI Command** | `claude` | `ghcs` / `gh copilot` | `gemini` | `codex` | `qwen` | `opencode` | Built-in editor chat (Copilot / Composer / Cascade) | Claude Code GUI panel (no terminal) | `wibey` | Wibey chat panel (no terminal) | `antigravity` |
 
 Configure your preferred provider: **Settings > speckit.aiProvider**
 

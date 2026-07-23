@@ -1,0 +1,321 @@
+{
+  "workflow": "companion",
+  "specName": "antigravity provider",
+  "branch": "534-antigravity-provider",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-23T22:45:19.386Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-23T22:46:19.082Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-23T22:46:37.868Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:47:12.401Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:47:12.471Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-23T22:47:12.598Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-23T22:47:18.170Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:47:36.042Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-23T22:47:36.091Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-23T22:47:41.747Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:52:29.283Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:52:29.332Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:52:29.381Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:52:29.432Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:52:29.482Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:52:29.532Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:52:29.581Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:52:29.629Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:52:29.678Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:52:29.727Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:52:29.775Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:52:29.823Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:52:29.870Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-23T22:52:29.938Z"
+    }
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "speckit.aiProvider offers antigravity as a selectable enum value with label and description"
+    },
+    "FR-002": {
+      "title": "Selecting antigravity dispatches prompts/commands to the Antigravity CLI in a terminal"
+    },
+    "FR-003": {
+      "title": "Provider registry includes an antigravity entry that passes module-load validation"
+    },
+    "FR-004": {
+      "title": "Unknown/renamed aiProvider value falls back to default without crashing"
+    },
+    "FR-005": {
+      "title": "Provider count/matrix docs stay consistent with the manifest enum"
+    }
+  },
+  "context": [
+    "area: src/ai-providers (provider registry + dispatch)",
+    "constraint: adding enum value must keep unknown-value fallback (feedback_provider_rename_breaks_settings)",
+    "constraint: docs-consistency test enforces enum==matrix==count"
+  ],
+  "intent": "Add Antigravity as a selectable AI provider so SpecKit commands dispatch to its CLI",
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 11,
+    "projectedTasks": 8,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "approach": "Add antigravity as an 11th terminal-CLI provider mirroring qwen; update manifest enum, docs matrix/counts, and tests",
+  "currentTask": "T013",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Add ANTIGRAVITY constant to AIProviders",
+      "files": [
+        "src/core/constants.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Add conservative PROVIDER_PATHS entry for antigravity",
+      "files": [
+        "src/ai-providers/aiProvider.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Create AntigravityCliProvider (terminal CLI, mirrors qwen)",
+      "files": [
+        "src/ai-providers/antigravityCliProvider.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Register provider in PROVIDER_CONSTRUCTORS",
+      "files": [
+        "src/ai-providers/aiProviderFactory.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Export provider from barrel",
+      "files": [
+        "src/ai-providers/index.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Add antigravity to manifest enum + label + description",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Add matrix column and bump provider counts to Eleven",
+      "files": [
+        "README.md"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Bump count and name provider file in inventory",
+      "files": [
+        "docs/architecture.md"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Bump count and add to provider list",
+      "files": [
+        "docs/how-it-works.md"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Add Unreleased changelog entry",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Extend docs-consistency test (idToFile + wordForCount)",
+      "files": [
+        "tests/integration/docs-consistency.test.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Add provider-resolution test; map antigravity icon to rocket codicon",
+      "files": [
+        "src/ai-providers/__tests__/antigravityProvider.test.ts",
+        "src/features/steering/providerIcon.ts"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Verify compile, full test suite (1811 pass), and package"
+    }
+  },
+  "livingSpecs": {
+    "skipped": [
+      {
+        "name": "ai-providers",
+        "reason": "new provider added through the existing factory+registry contract; no documented capability requirement changed (matches the 'a new assistant is supported' scenario already in the living spec)"
+      }
+    ]
+  }
+}

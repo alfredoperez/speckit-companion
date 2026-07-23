@@ -46,7 +46,7 @@ describe('docs consistency', () => {
       // The architecture doc must claim a provider count that matches the enum.
       // We accept any English digit phrasing ("8 supported providers", "eight providers ship", etc.).
       const wordForCount: Record<number, string> = {
-        5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine', 10: 'ten',
+        5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine', 10: 'ten', 11: 'eleven',
       };
       const expectedWord = wordForCount[count];
       const hasNumeric = new RegExp(`\\b${count}\\b[^.\\n]*provider`, 'i').test(arch);
@@ -69,6 +69,7 @@ describe('docs consistency', () => {
         'ide-chat': 'ideChatProvider.ts',
         wibey: 'wibeyCliProvider.ts',
         'wibey-vscode': 'wibeyPanelProvider.ts',
+        antigravity: 'antigravityCliProvider.ts',
       };
       for (const id of enumValues) {
         const file = idToFile[id];

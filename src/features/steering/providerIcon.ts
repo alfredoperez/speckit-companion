@@ -24,6 +24,11 @@ const MONOCHROME: Record<string, string> = {
     [AIProviders.OPENCODE]: 'opencode',
 };
 
+/** Providers with no shipped vendor mark fall back to a themed Codicon that matches their QuickPick icon rather than the neutral chat glyph. */
+const CODICON: Record<string, string> = {
+    [AIProviders.ANTIGRAVITY]: 'rocket',
+};
+
 const IDE_CHAT_MARKS: Record<HostIde, ProviderIconKey> = {
     vscode: { kind: 'mono', name: 'copilot' },
     cursor: { kind: 'mono', name: 'cursor' },
@@ -49,6 +54,9 @@ export function resolveProviderIconKey(providerId: string, host: HostIde): Provi
     }
     if (MONOCHROME[providerId]) {
         return { kind: 'mono', name: MONOCHROME[providerId] };
+    }
+    if (CODICON[providerId]) {
+        return { kind: 'codicon', id: CODICON[providerId] };
     }
     return NEUTRAL_PROVIDER_ICON;
 }
