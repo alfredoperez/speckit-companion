@@ -108,6 +108,19 @@ Creating, initializing, refining, and cleaning up after deleting a steering docu
 - **THEN** a follow-up prompt asks the assistant to drop references to it from the project rules file
 - **AND** a failure of that follow-up is surfaced without leaving the deletion half-reported
 
+### Opening a steering document is counted as a usage signal
+
+Clicking a generated steering document or a workflow reference row SHALL route through the extension's own open command, which records a `steering.opened` telemetry event before handing the file to the editor. The count is what tells us whether the view is actually consulted; a raw editor-open would open the file but leave that use invisible. Only these extension-authored and reference rows are counted — provider-owned, SpecKit-owned, and Companion command and template rows open directly and emit nothing.
+
+#### Scenario: the user opens a generated steering document from the tree
+- **WHEN** the row is clicked
+- **THEN** a `steering.opened` event is recorded, counted once per open
+- **AND** the document then opens in the editor
+
+#### Scenario: the user opens a provider-owned or SpecKit-owned file
+- **WHEN** that row is clicked
+- **THEN** the file opens directly with no `steering.opened` event
+
 ### Unreadable or malformed configuration degrades to an empty section
 
 Any parse or read failure while assembling a section SHALL yield an empty result for that section rather than an error dialog or a failed render. The steering view is ambient context, so one broken YAML file must not take the tree down.

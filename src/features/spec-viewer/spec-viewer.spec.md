@@ -36,6 +36,20 @@ Everything the reader sees about *where the spec stands* — the status badge, w
 - **THEN** those earlier steps are treated as completed by their position in the ordering
 - **AND** no step is left falsely pulsing
 
+### Timing is reported by real wall-clock spans, and only timed steps count toward coverage
+
+The viewer MUST derive a timing summary from the spec's recorded step history and surface a step's wall-clock duration only when both of that step's boundaries were stamped by the extension and fall in order; a span that fails that trust test is withheld rather than shown as a guessed or capped figure. When the run is not fully trusted the viewer reports a plain "X of Y phases" coverage statement instead. The coverage denominator MUST count only steps that are expected to be timed — a step declared untimed (one that merely flips the spec's status without ever writing a start/complete boundary, such as the terminal completion step) SHALL be excluded from Y, so a fully-captured completed run reaches its full coverage and shows its elapsed span rather than stalling one short.
+
+#### Scenario: a completed run includes a status-only terminal step
+- **WHEN** a completed spec's workflow ends with an untimed step that only records completion
+- **THEN** that step is left out of the timing denominator
+- **AND** the run reads as fully covered and its started/elapsed/ended span is shown
+
+#### Scenario: a step's boundaries are not both trustworthy
+- **WHEN** one of a step's start/complete stamps is missing, out of order, or overlaps an adjacent phase
+- **THEN** no duration is claimed for that step
+- **AND** the viewer falls back to the coverage statement rather than a fabricated time
+
 ### One fact has exactly one derivation
 
 Any fact this feature shares with another surface — the sidebar tree, the Living Specs panel, task counting, in-flight detection — MUST be read from that fact's single owning module rather than recomputed here. Two independent derivations of the same fact will drift, and every time this repo has shipped one, the two surfaces eventually contradicted each other in front of the user.
@@ -49,6 +63,11 @@ Any fact this feature shares with another surface — the sidebar tree, the Livi
 - **WHEN** the header shows both a requirement count and a covered-of-total ratio
 - **THEN** both are counted off the same requirement identifiers
 - **AND** the count and the denominator always match
+
+#### Scenario: the header and the sidebar both name a spec
+- **WHEN** the header renders a spec's display name and the sidebar tree renders the same spec's row
+- **THEN** both resolve the name through one shared resolver — recorded name first, then the document heading, then a humanized slug — so a raw directory slug is never shown when a readable title exists
+- **AND** the two surfaces cannot show different names for the same spec, while the slug stays the stable identifier behind filtering, sorting, and open
 
 ### Every refresh ships a complete state snapshot from one builder
 
@@ -175,17 +194,36 @@ When a step's recorded completion appears, the viewer SHOULD tell the reader, wi
 
 ### A living spec is presented as a capability, not a run
 
-A living-spec panel MUST drop the workflow machinery entirely — no run state, no phases, no forward actions — and present the capability's tiers as the only navigation. Its title comes from the capability's own spec document whichever tier is displayed, so the title belongs to the capability rather than to the tab on screen. A document that declares itself a draft SHALL be badged as one rather than presented as settled.
+A living-spec panel MUST drop the workflow machinery entirely — no run state, no phases, no workflow forward action — and present the capability's tiers as the only navigation. Its title comes from the capability's own spec document whichever tier is displayed, so the title belongs to the capability rather than to the tab on screen. A document that declares itself a draft SHALL be badged as one rather than presented as settled. The one action the panel MAY offer is a capability-maintenance affordance — an Update control that folds code changes back into the spec — which resolves the capability's spec tier from the panel's own source anchor and hands off to the shared living-specs update command so it builds the same prompt the sidebar's Update-drifted action does.
 
 #### Scenario: the architecture tier is selected
 - **WHEN** a non-spec tier is displayed
 - **THEN** the header still shows the capability's title as authored in its spec tier
 - **AND** no workflow status or forward action appears
 
+#### Scenario: the reader asks to update a drifted living spec
+- **WHEN** the reader triggers Update from a living-spec panel
+- **THEN** the capability's spec-tier path is resolved from the panel's source anchor, not from the tab on screen
+- **AND** the request is routed through the same living-specs update command the sidebar uses, so both entry points fold back identically
+
 #### Scenario: the document carries a draft banner near its top
 - **WHEN** the spec declares itself a draft
 - **THEN** the header badges it as a draft
 - **AND** the in-document banner is left intact
+
+### Living specs surfaced in the run log are compact chips that hand off to their own viewer
+
+When a run loaded living specs, the viewer MUST surface them in the run log as compact, clickable chips rather than dumping each capability's purpose and requirements inline — the full content belongs in the Living Specs viewer, not the run strip. A capability earns a clickable chip only when its spec resolves to a file that exists within the workspace root; a capability that cannot be resolved or falls outside the root stays present but unavailable, and any unexpected failure leaves the names-only list untouched. Clicking a chip MUST open that capability in the viewer's living mode, confining the supplied path within the root before it reaches the filesystem.
+
+#### Scenario: a loaded capability resolves within the workspace
+- **WHEN** the run log lists a living spec whose document exists inside the workspace
+- **THEN** it renders as a chip carrying that capability's workspace-relative path
+- **AND** clicking it opens the capability in the living-spec viewer rather than expanding content in place
+
+#### Scenario: a capability cannot be resolved
+- **WHEN** a loaded living spec has no resolvable in-root document
+- **THEN** it is still listed but is not made clickable
+- **AND** the run log never renders the capability's purpose or requirement rows inline
 
 ### The webview shell is generated under a locked-down policy
 

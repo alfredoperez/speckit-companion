@@ -202,7 +202,7 @@ The drift script SHALL accept a working-tree mode that widens each capability's 
 
 ### Recording which living specs cover a change MUST be deterministic, not AI-judged
 
-The capture runtime SHALL provide a script that, given a feature directory and the changed files, reads the living-specs registry, gates on `enabled: true`, runs the shipped resolver to find the capabilities that own those files, and records their names (most-specific first) onto `livingSpecs.loaded`. The specify command bodies call this script instead of asking the model to gate-and-decide, so the record cannot be lost to a misjudged "not configured." Like every capture script it is best-effort, opt-in, and read-only: any miss is a silent no-op that exits successfully.
+The capture runtime SHALL provide a script that, given a feature directory and the changed files, reads the living-specs registry, gates on `enabled: true`, runs the shipped resolver to find the capabilities that own those files, and records their names (most-specific first) onto `livingSpecs.loaded`. The specify command bodies call this script instead of asking the model to gate-and-decide, so the record cannot be lost to a misjudged "not configured." Like every capture script it is best-effort, opt-in, and read-only: any miss is a silent no-op that exits successfully. The recorder also returns its own outcome — `loaded`, `no-match`, or `not-configured` — and writes a deterministic `last_action` breadcrumb from that outcome, so the one-line audit trail the specify command used to ask the AI to author is now derived from what the script actually did rather than the model's reading of it. This is what stops "correctly did nothing" from being misjudged as "not configured."
 
 #### Scenario: an enabled registry with a matching change
 - **WHEN** the recorder runs with changed files a configured capability owns
@@ -212,3 +212,40 @@ The capture runtime SHALL provide a script that, given a feature directory and t
 #### Scenario: the feature is off or nothing matches
 - **WHEN** the registry is absent or disabled, or no capability owns the changed files
 - **THEN** the recorder writes nothing and exits successfully
+
+#### Scenario: the recorder writes its own audit breadcrumb
+- **WHEN** the recorder finishes — whether it matched, found no match, or found the feature not configured
+- **THEN** it writes a `last_action` breadcrumb naming that outcome itself, rather than the specify command asking the model to author the line
+
+### Completion accounts for every loaded capability — fold it, or record a reasoned skip
+
+A capability recorded on `livingSpecs.loaded` is a promise the run will settle it. Completion MUST close that loop for each loaded capability: either fold a requirement delta into its spec, or record an explicit skip note saying why it was left untouched. The runtime SHALL provide a skip writer (`--living-spec-skip "<name>: <reason>"`) that appends `{name, reason}` to `livingSpecs.skipped`, de-duped on the name with the first reason winning. A skip MUST both name a capability and justify it — an entry with a blank reason is dropped and warned about on stderr, so an unexplained skip never counts as accountability and the capability stays unaccounted. The fold's backstop then computes, in BOTH its no-delta branch and its partial-fold branch, the loaded capabilities that are neither folded (this run or on a prior run) nor skipped, and reports that gap loudly and actionably; when every loaded capability is accounted for it says so out loud — "correctly nothing," visibly distinct from the silently-nothing gap.
+
+#### Scenario: a loaded capability the change didn't alter
+- **WHEN** completion records a reasoned skip for a loaded capability
+- **THEN** the note lands on `livingSpecs.skipped` and the fold treats that capability as accounted
+
+#### Scenario: a skip with no reason
+- **WHEN** a skip note carries a name but a blank reason
+- **THEN** it is not recorded, the omission is warned on stderr, and the capability stays unaccounted
+
+#### Scenario: a loaded capability is neither folded nor skipped
+- **WHEN** the fold runs with a loaded capability that has no delta block and no skip note
+- **THEN** the fold names it as unaccounted and points at the two ways to close the loop
+- **AND** a partial fold that authored a delta for one capability does not silence the gap for the others
+
+#### Scenario: an already-synced spec is folded again
+- **WHEN** a spec whose capabilities were folded on a prior run is re-folded, writing nothing new
+- **THEN** the persisted `livingSpecs.synced` names keep those capabilities accounted and the backstop does not false-alarm
+
+### An unmatched MODIFIED requirement is promoted to ADDED, not dropped
+
+A requirement authored under `## MODIFIED Requirements` that matches no existing heading in the living spec is a genuinely-new requirement, not a mistake. The fold SHALL append it as if it were ADDED — resolving its heading through the delta set's renames first — and count it separately from applied modifications, rather than silently discarding it as an unmatched target. This promotion stays idempotent: a re-fold that finds the promoted requirement already present appends nothing.
+
+#### Scenario: a MODIFIED heading matches nothing
+- **WHEN** the fold applies a MODIFIED delta whose heading is absent from the living spec
+- **THEN** the requirement is appended and reported as promoted, not skipped
+
+#### Scenario: the promoted requirement is folded again
+- **WHEN** the same delta set is folded a second time
+- **THEN** the already-present requirement is left in place and nothing is duplicated

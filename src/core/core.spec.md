@@ -74,6 +74,11 @@ A span SHALL be reported as trustworthy only when both of its boundaries were st
 - **WHEN** a step's start or end was written by something other than the extension
 - **THEN** the span is marked untrusted and no elapsed time is rendered for it
 
+#### Scenario: the whole run's elapsed time is requested
+- **WHEN** a run-level timing summary is derived from the history log
+- **THEN** a start, end, and elapsed span appear only if every expected phase has a trustworthy closed span; otherwise the summary reports how many phases were measured and stays incomplete
+- **AND** the summary is derived in memory, never persisted, so the history log stays the only timing source on disk
+
 ### The extension notices spec changes wherever specs live
 
 File watchers SHALL be registered from the configured spec patterns, not from a single hardcoded directory, so a workspace using any supported layout still gets live updates. Watching only one layout is a known regression shape: a context write goes unobserved, the open viewer never refreshes, and a newly created spec never clears the empty state.
@@ -131,6 +136,22 @@ Every telemetry payload SHALL contain only enum-like values, booleans, versions,
 - **THEN** a random identifier is minted and persisted so later events for the same spec correlate
 - **AND** a failure to persist it does not block the event
 
+#### Scenario: the extension activates
+- **WHEN** the activation event fires
+- **THEN** it carries only versions, a spec count, a companion-installed boolean, and enum-like feature-flag states — never a spec name, path, or user-authored workflow name
+
+### Engagement is counted without naming what was engaged
+
+The extension SHALL emit a bare event when a spec, a living spec, or a steering document is opened, and when a living-spec drift or sync runs — carrying no property at all, so a count can never be tied to a name or path. The install-banner funnel is likewise reported as fixed `shown`/`clicked` × surface literals produced only by our own call sites. Opened-in-viewer events MUST be de-duplicated per session so a re-rendering panel cannot inflate the count, and the de-dupe key used for that MUST be an internal identity that is never sent. A de-dupe slot MUST be claimed only after an event actually emits, so an open that happened while telemetry was off or uninitialized still fires once telemetry becomes available.
+
+#### Scenario: the same spec is re-revealed in the viewer
+- **WHEN** the panel re-renders and would re-emit the open event
+- **THEN** only the first open of that spec this session is sent, keyed by an identity that never leaves the process
+
+#### Scenario: a spec is opened while telemetry is disabled
+- **WHEN** the event cannot be sent yet
+- **THEN** no de-dupe slot is consumed, so the first successful send still happens once telemetry turns on
+
 ### Context keys have one writer and one catalogue
 
 VS Code context keys SHALL be written through a single wrapper that accepts only catalogued key names and logs failures. Activation MUST reset every catalogued key, so a value from a previous session cannot leak into the new one and leave a menu affordance stuck.
@@ -142,6 +163,14 @@ VS Code context keys SHALL be written through a single wrapper that accepts only
 #### Scenario: the extension activates
 - **WHEN** startup runs
 - **THEN** every catalogued key is reset to its default
+
+### A spec's display name resolves by preference without changing its identity
+
+A readable display name SHALL be resolved by preference — a recorded name first, then a document heading, then a humanized form of the directory slug — while the directory slug remains the stable identifier. A blank or whitespace-only candidate MUST be treated as absent so it can never win over the humanized-slug fallback.
+
+#### Scenario: a spec has no recorded name
+- **WHEN** a display name is needed and the recorded name is empty or whitespace
+- **THEN** a document heading is used when present, otherwise the humanized slug — and the slug still identifies the spec
 
 ### Shared primitives absorb host and shell differences
 

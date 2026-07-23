@@ -101,9 +101,17 @@ While the extension is working, the editor MUST prevent a second submission from
 
 ### The Storybook mock stays a faithful stand-in for the real form
 
-Because the shipped editor is imperative DOM rather than a component tree, a separate Preact mock exists purely as the visual baseline. That mock MUST reflect the real form's states — empty, over-limit, submitting, and hands-off-available-or-not — so a reviewer reading Storybook is not shown an arrangement the product never produces. When the real form gains or loses a state, updating the mock is part of that change, not a follow-up. [inferred]
+Because the shipped editor is imperative DOM rather than a component tree, a separate Preact mock exists purely as the visual baseline. That mock MUST reflect the real form's states — empty, over-limit, submitting, hands-off-available-or-not, attachments-present, and a narrow (split-pane) layout — so a reviewer reading Storybook is not shown an arrangement the product never produces. To keep the visuals honest, the mock MUST render through the shipped `spec-editor.css` using the real form's class names and native controls (`textarea`, workflow `select`) rather than bespoke inline styles, so it inherits the product's styling instead of re-declaring it. When the real form gains or loses a state, updating the mock is part of that change, not a follow-up. [inferred]
 
-This duplication is accepted for now and its cost is recorded plainly: the mock is hand-maintained, nothing enforces that it matches, and a stale mock misrepresents the product to every reviewer who trusts it.
+This duplication is accepted for now and its cost is recorded plainly: the mock is still hand-maintained and nothing enforces that its structure matches the real DOM, so a stale mock misrepresents the product to every reviewer who trusts it — though sharing the shipped stylesheet narrows the drift to structure rather than appearance.
+
+#### Scenario: attachments are present
+- **WHEN** the form is shown with images attached
+- **THEN** the mock renders each as a thumbnail carrying its name and a remove control, matching the real preview list
+
+#### Scenario: the panel is narrow
+- **WHEN** the editor is shown in a constrained (split-pane) width
+- **THEN** the mock exercises that layout so the responsive arrangement is reviewable
 
 #### Scenario: a submission state is added or changed
 - **WHEN** the real form gains a new visual state
